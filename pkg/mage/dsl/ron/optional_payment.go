@@ -21,11 +21,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 			i++
 			continue
 		}
-		if part.Name == "PlayerMayCost" || part.Name == "MayCost" {
+		if part.Name == "PlayerMayCost" || part.Name == "MayCost" || part.Name == "MustCost" {
 			if i+1 == len(parts) {
 				return nil, problem(part, "payment requires an adjacent payment continuation")
 			}
-			effect, err := compileOptionalPayment(part, parts[i+1], ctx)
+			effect, err := compileResolutionPayment(part, parts[i+1], ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -42,10 +42,10 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	return effects, nil
 }
 
-func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
 	var player playerReferencePlan
 	var cost Node
-	if payment.Name == "MayCost" {
+	if payment.Name == "MayCost" || payment.Name == "MustCost" {
 		if err := arity(payment, 1); err != nil {
 			return nil, err
 		}
@@ -65,7 +65,11 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 	var mana core.ManaCost
 	var costs []costFactory
 	var err error
-	if cost.Name == "MillNumberCards" {
+	if payment.Name == "MustCost" {
+		var build costFactory
+		build, err = compileRequiredSacrificeCost(cost, ctx)
+		costs = []costFactory{build}
+	} else if cost.Name == "MillNumberCards" {
 		var amount int
 		amount, err = compileMillCount(cost, true)
 		costs = []costFactory{func() mage.Cost { return mage.MillCost(amount) }}
@@ -109,6 +113,12 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		effects := make([]mage.Effect, len(body))
 		for i, build := range body {
 			effects[i] = build(bindings)
+		}
+		if payment.Name == "MustCost" {
+			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
+				return mage.IfRequiredPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
+			}
+			return mage.UnlessRequiredPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 		}
 		if dynamic != nil {
 			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {

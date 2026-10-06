@@ -193,6 +193,12 @@
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].
 //
+// Use [IfRequiredPaid] or [UnlessRequiredPaid] for a mandatory matching
+// sacrifice payment during resolution. The branch keeps its own result.
+// Source exclusion uses the original incarnation, so a returned source can pay.
+// [SacrificePermanentAction] permits exile replacements through the shared
+// pipeline. A replaced sacrifice can pay without causing a death event.
+//
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.

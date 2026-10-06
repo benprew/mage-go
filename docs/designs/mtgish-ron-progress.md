@@ -20590,3 +20590,177 @@ Ranked next candidates, to reassess from fresh complete records:
 
 One descriptive commit includes only this slice; its hash is reported in the
 final response. User archive/design edits remain unstaged. No second slice starts.
+
+## Slice: mandatory resolution sacrifice payments (2026-10-05)
+
+Status: complete for the matching-sacrifice payment shape. Migration remains
+incomplete. No second slice was started.
+
+### Fresh evidence and candidate selection
+
+The initial working tree contained user changes to `.gitignore`, this ledger,
+and `mtgish-ron-execution.md`, plus untracked `mtgish-ron-completed.md`. Those
+changes are preserved and excluded from the slice commit. This entry is appended
+to the user's working ledger; only this entry is staged against the committed
+ledger. No card implementation was read as a requirement.
+
+Fresh `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+Strict loading and semantic inspection both exited 1 for collection rejection:
+2,445 records, 986 unique names, 1,689 compiled / 756 rejected records,
+627 accepted / 359 rejected unique names. Inspection visited 72,950 nodes,
+8,539 signatures, and 7,242 unknown-role occurrences. Collection rejection was
+not a build or test failure.
+
+Complete RON records and nested forms were read for the following candidates.
+Reprints count once in the estimates.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 7 after prerequisites | The choice service omits objects referred to by stack/replacement/delayed objects and command-zone sources (CR 609.7a); the shield compares only UUIDs and lacks source-property rechecks. Also enables Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage, whose operation/result/redirection bodies add blockers. | High: source enumeration, identity, property rechecks, replacement and RON contracts. |
+| Battlefield-count CDAs in every zone | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats | 4 without source repair; 5 with repair | Existing CDA services work only on the battlefield. Need all-zone owner/controller evaluation, layer ordering and numeric/name adapters. Enables Wood Elemental after entry sacrifice history. Gaea's Avenger's RON counts your artifacts; local ATQ Oracle says opponents' artifacts. | High: shared zone-characteristic contract plus compiler and layer tests. |
+| Untapped costed mana conversion and history bodies | Farrelite Priest, Initiates of the Ebon Hand | 2 | Existing activation history is ready. Need converter solver planning, repeated untapped activations, immediate conditional execution and cost rollback. Both share the delayed-sacrifice body. | Medium/high: solver and activation changes with recursion/payment tests. |
+| Mandatory resolution payments | Lord of the Pit, Transmute Artifact; related mandatory actions in Cosmic Horror and Energy Tap | 1 now | Matching sacrifice is the shared prerequisite for Lord and Transmute. Transmute also needs artifact search, saved sacrifice/found-card values, IfElse and its destination audit. Cosmic Horror needs successful destruction; Energy Tap needs typed target tap payment and repeated mana. | Initially low/medium: shared transaction, compiler adapter, identity and branch tests. Increased to medium after sacrifice replacements and simultaneous replacement planning proved missing. |
+
+Selection: complete the smaller shared mandatory-payment prerequisite with one
+credible immediate gain. It reuses the existing cost transaction and lexical
+continuations rather than adding general result state. The engine boundary was
+narrowed explicitly to matching sacrifice costs; RON adds the complete singular
+matching-sacrifice context. Mandatory destruction, typed tap and mana payment
+remain rejected. The discovered sacrifice replacement prerequisite is included
+in this same slice. This is not a card-specific executor.
+
+Acceptance cases stated before editing: no may choice; resolution-time payment;
+transaction rollback; payment-local branch polarity; original source incarnation;
+control, phasing, clones and copies; replacement-modified sacrifice; invalid
+bindings/declarations. The added simultaneous contract checks that a replacement
+source sacrificed in the same batch still applies to the other payment objects.
+
+### Exact signatures, contexts and engine reuse
+
+- `IfRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect) ResolvingEffect`.
+- `UnlessRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect) ResolvingEffect`.
+- Each engine group must be nonempty and contain matching sacrifice costs only.
+  Existing definition validation rejects captured payment results. Other cost
+  families are rejected, including mandatory mana, preserving CR 118.3c.
+- `SacrificePermanentAction.PermanentID()`, `.Destination()` and
+  `.WithExile(sourceID uuid.UUID) *SacrificePermanentAction` expose the proposed
+  sacrifice to the existing replacement pipeline. The action saves incarnation.
+- RON action sequences support adjacent
+  `MustCost(SacrificeAPermanent(filter))` and `If`/`Unless` with symbol
+  `CostWasPaid` or `CostWasntPaid` and a nonempty action list. Spell, activated,
+  and triggered sequences use the same adapter. Result reads cannot escape the
+  adjacent pair. Nested and independent pairs keep separate continuations.
+- The existing sacrifice-filter grammar applies. `Other(ThisPermanent)` at the
+  root or under conjunctions excludes the original source incarnation. An
+  exclusion under a disjunction, a target/host exclusion, or an unavailable
+  source scope remains rejected. No new general resolving If support is claimed.
+
+The engine reuses `CostGroup`, matching sacrifice costs,
+`prepareActionPaymentTransaction`, clone/preflight validation, typed controller
+references, definition validation, source incarnation, shared damage/prevention,
+trigger LKI and zone batches. Each factory builds its own costs and effects.
+The success predicate is local; it does not read a global last-action slot.
+Original optional-payment callers keep their choices and signatures.
+
+Mandatory payment starts only after legal full-cost preparation. A changed exile
+destination or prevented move still takes the paid branch (CR 118.12).
+Sacrifice checks current control and phase status; failed/stale selections do
+not consume a different object. Source control changes do not change a queued
+trigger's payer. Copies use their own controller. A returned source can pay the
+old trigger because it is a different object (CR 400.7).
+
+`DoSacrifice` now uses the shared replacement pipeline. Regeneration does not
+apply. The existing exile-instead service also handles sacrifice. Exile keeps
+sacrifice and zone events, including source LKI, but causes no death event or
+death-history increment. Matching multi-permanent sacrifice costs choose every
+replacement before any move. The shared batch preserves the pre-move battlefield
+for leave-event detection and defers trigger processing until all moves finish.
+No new APNAP, mana-planning or general zone-replacement compiler contract is
+claimed. Rule evidence: local CR 118.3c, 118.12, 400.7, 701.21a and 616.1.
+
+### TDD and gameplay mappings
+
+Engine tests first failed for absent `IfRequiredPaid`/`UnlessRequiredPaid` APIs.
+Real RON tests first failed on `MustCost` in Lord of the Pit. The sacrifice
+replacement case exposed the native destroy-only interception. A later test
+failed because a departing replacement source was lost during a simultaneous
+payment; all replacements are now planned before moves. A batch fixture was
+corrected to assert the pre-move battlefield used for leave-event detection,
+plus the completed post-move battlefield. The first fixture also used `Game`
+instead of `GameReader` for a trigger condition and was corrected. No assertion
+was removed to conceal an implementation failure.
+
+| Card/contract | Tests and coverage |
+| --- | --- |
+| Lord of the Pit, complete LEA/LEB/2ED/3ED/CED/CEI records | `TestRONRequiredPaymentLordOfThePit`, `AllReprintsAndNativeCasting`: 4BBB casting and rollback, 7/7 flying/trample metadata, native upkeep, forced other-creature sacrifice and seven damage when payment fails. `TestCR702_9b_FlyingGroundCannotBlock`, `TestCR702_9b_FlyingCanBlockGround`, and `TestCR702_19b_TrampleExcessDamageGoesToPlayer` map the native keywords. |
+| Trigger identity and payment legality | Lord test plus `InvalidChoice`: opponent upkeep, wrong controller, phased payment, source phasing/departure/return/control, removed ability, clone, copied trigger, regeneration and damage prevention, invalid/stale choices. |
+| Compiler scope/branch/registry contracts | `TestRONRequiredPaymentScopes`, `Invalid`, `InventoryAndStrictLoad`: spell payments, all four branch polarities, nested results, nonempty bodies, malformed/incompatible exclusions, unsupported cost families, detached reads, fresh factory identities, reprint canonicalization, semantic cost role and atomic rejection preserving the registry. |
+| Engine payment contracts | `TestRequiredPayment`, `NestedAndClone`, `Definition`, `SourceIdentity`: forced payment, missing/phased/opponent objects, total-cost rollback, owner destination, nested results, clones, source incarnation and copy payer. |
+| Replacement and simultaneous contracts | `TestRequiredPaymentReplacementEventsAndOrdering`, `ReplacementPreventsMove`, `SimultaneousSacrifices`, `SimultaneousReplacementSource`: controller selection among competing replacements, rechecks, clone isolation, sacrifice/source-LKI events without deaths, started-payment semantics, pre-move batch snapshot and a departing replacement source. |
+
+One complete unique-card mapping is added. Transmute Artifact's mandatory
+sacrifice now compiles but its record remains rejected at artifact search.
+Compilation and complete gameplay coverage remain separate; collection-wide
+engine-validated/behavior-verified counts remain null.
+
+### Measurements, source defects and validation
+
+Final strict loader: 1,695 compiled / 750 rejected records; 628 accepted /
+358 rejected unique names. Newly accepted name: exactly Lord of the Pit, in six
+records. No accepted name regresses. The estimate of one unlock matches the gain.
+Semantic inspection: 72,950 nodes, 8,539 signatures, 7,168 unknown-role
+occurrences. Both strict and inventory commands keep exit 1 for rejection.
+Remaining selected diagnostics: Transmute Artifact: unsupported basic land
+search filter `(IsCardtype)`; Cosmic Horror: unsupported mandatory sacrifice cost
+`(DestroyPermanent)`; Energy Tap: unsupported mandatory sacrifice cost
+`(TapPermanent)`. Diagnostics do not claim later nested forms are supported.
+
+No RON source was changed, so the vocabulary source snapshot is unchanged.
+Local `data/ATQ.json` confirms the Gaea's Avenger controller transcription
+problem; repair belongs with its CDA slice. Local `data/LEA.json` confirms Lord's
+mandatory sacrifice Oracle text. `data/LEG.json` confirms Cosmic Horror checks
+successful destruction, so it cannot use a started-sacrifice/payment result.
+No source correction was folded into this slice.
+
+Commands/results on the final formatted code:
+
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run
+  'Test(RON)?RequiredPayment|TestInventory' -count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `go test ./... -short -count=1`: PASS (skill verification).
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1, counts above.
+- `go run ./cmd/loadcards -inventory`: expected exit 1, counts above.
+
+Initial full test runs failed only on two stale inventory-count assertions; the
+exact expected counts were updated from fresh measurements, retaining all
+registry/gameplay assertions. Early lint reported a shadowed builtin and a
+redundant type declaration; both were fixed. Automatic lint import/iterator
+changes were reviewed. Final focused, engine, whole-repository short/test,
+build/vet/lint checks passed after the simultaneous replacement fix. There is
+no environment or pre-existing validation blocker.
+
+Updated files: mandatory engine payment and sacrifice replacement services and
+tests; RON sequence/filter lowering, semantic inventory and exact-count tests;
+engine API reference, rules contracts, authoring API reference and this ledger.
+Go card definitions, runtime startup, generators and DSL exports remain below
+the design's removal gates. No DSL deletion was attempted without a caller audit.
+
+Ranked next candidates, to reassess with fresh complete records:
+
+1. Chosen-source enumeration/identity prerequisite, then the seven Circle/Realm
+   prevention consumers with property rechecks.
+2. All-zone battlefield-count CDAs, with the identical Gaea's Avenger source
+   correction backed by local Oracle data.
+3. Untapped mana-conversion planning for the two history-dependent mana creatures.
+4. Saved resolution-sacrifice values and artifact-search/destination contracts
+   for Transmute Artifact; mandatory destruction success for Cosmic Horror and
+   typed tap payment for Energy Tap remain distinct contexts.
+
+The slice commit contains only its implementation, tests, documentation and this
+entry. Its hash is reported in the final response. User ledger/archive/design
+changes remain unstaged. No second slice starts.

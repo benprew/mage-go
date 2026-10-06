@@ -4163,3 +4163,40 @@ strict registry rejection and semantic roles. Existing flying and banding engine
 contracts remain in force. This change adds no replacement or simultaneous-action
 service. The mana-conversion compiler context remains rejected; synchronous mana
 execution and planning require their own complete integration.
+
+## Mandatory resolution sacrifices and replacement destinations
+
+`IfRequiredPaid` and `UnlessRequiredPaid` accept a nonempty group of matching
+sacrifice costs. They use the total-cost transaction at resolution and do not
+offer a may choice. The branch remains local to its payment. Definition
+validation rejects other cost families and captured payment values. The service
+preserves current optional-payment callers.
+
+The payer controls each current, unphased payment permanent; its owner receives
+the card unless a replacement changes the destination (CR 701.21a). A cost that
+excludes the source excludes the resolving ability's original incarnation.
+A returned source can therefore pay the old ability (CR 400.7). Copies keep the
+source identity but use their own controller as payer. Source departure or
+phasing does not cancel the pending payment. Failed full payments leave all
+payment objects in place. Independent and nested payments do not overwrite a
+result.
+
+`DoSacrifice` now creates a `SacrificePermanentAction` before the move. The
+existing replacement pipeline supplies priority, affected-controller choices,
+cloning and rechecks (CR 616.1). The existing
+`AddExileIfWouldGoToGraveyardThisTurn` service also matches this action.
+The action retains the chosen incarnation. An exile destination still causes a
+sacrifice event, including the source's LKI trigger, but does not cause a death
+event or increase creature-death counts. If a replacement prevents the move,
+a legal mandatory payment that started still takes the paid branch (CR 118.12).
+Regeneration cannot replace the sacrifice. Matching multi-permanent sacrifice costs select all replacements before
+any payment object moves. Existing batch services preserve the pre-move
+battlefield and defer events until the sacrifice batch finishes.
+
+Evidence: `TestRequiredPayment`, `NestedAndClone`, `Definition`,
+`ReplacementEventsAndOrdering`, `ReplacementPreventsMove`, `SourceIdentity`, `SimultaneousSacrifices`, and
+`SimultaneousReplacementSource`;
+`TestRONRequiredPaymentLordOfThePit`, `Scopes`, `Invalid`,
+`AllReprintsAndNativeCasting`, `InvalidChoice`, and `InventoryAndStrictLoad`.
+These establish the mandatory matching-sacrifice context, not general mandatory
+mana, destruction, tap payments, or saved resolution-payment values.

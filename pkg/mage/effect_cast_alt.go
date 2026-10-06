@@ -339,11 +339,19 @@ type exileInsteadOfGraveyardReplacement struct {
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) bool {
-	act, ok := a.(*DestroyPermanentAction)
-	if !ok {
+	var permanentID uuid.UUID
+	switch act := a.(type) {
+	case *DestroyPermanentAction:
+		permanentID = act.PermanentID()
+	case *SacrificePermanentAction:
+		if act.Destination() != ZoneGraveyard {
+			return false
+		}
+		permanentID = act.PermanentID()
+	default:
 		return false
 	}
-	perm := g.FindPermanent(act.PermanentID())
+	perm := g.FindPermanent(permanentID)
 	if perm == nil {
 		return false
 	}
@@ -351,6 +359,9 @@ func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) boo
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
+	if sacrifice, ok := a.(*SacrificePermanentAction); ok {
+		return sacrifice.WithExile(r.sourceID)
+	}
 	act, ok := a.(*DestroyPermanentAction)
 	if !ok {
 		return a
@@ -378,7 +389,7 @@ func (r *exileInsteadOfGraveyardReplacement) Clone() ReplacementEffect {
 // battlefield this turn, it is exiled instead. Used by Scholar of the Lost
 // Trove for the spell it grants a free cast of.
 //
-// Note: this only intercepts the destroy/death path for permanents (CR 614).
+// This rule also applies to sacrifice, so payment can change the destination.
 // Instants and sorceries put into the graveyard after resolving are handled
 // directly by the resolver (see ResolveStackObject).
 func (g *Game) AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID) {

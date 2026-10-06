@@ -734,10 +734,11 @@ func (r permanentOwnerRef) inspectDefinition() definitionNode {
 }
 
 type unlessPaidEffect struct {
-	player PlayerRef
-	costs  CostGroup
-	effect ResolvingEffect
-	ifPaid bool
+	player   PlayerRef
+	costs    CostGroup
+	effect   ResolvingEffect
+	ifPaid   bool
+	required bool
 }
 
 // UnlessPaid offers one player a payment through the total-cost transaction.
@@ -750,6 +751,18 @@ func UnlessPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) Resol
 func IfPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
 	return &unlessPaidEffect{player: player, costs: costs, effect: effect, ifPaid: true}
 }
+
+// IfRequiredPaid runs the body after a mandatory sacrifice payment succeeds.
+// The player does not receive an optional payment choice.
+func IfRequiredPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
+	return &unlessPaidEffect{player: player, costs: costs, effect: effect, ifPaid: true, required: true}
+}
+
+// UnlessRequiredPaid runs the body when a mandatory sacrifice payment fails.
+func UnlessRequiredPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
+	return &unlessPaidEffect{player: player, costs: costs, effect: effect, required: true}
+}
+
 func (e *unlessPaidEffect) Text() string {
 	if e.ifPaid {
 		return "if the player pays"
@@ -767,13 +780,31 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	texts := make([]string, len(e.costs.costs))
-	for i, cost := range e.costs.costs {
+	costs := e.costs.costs
+	if e.required {
+		costs = make([]Cost, len(e.costs.costs))
+		for i, cost := range e.costs.costs {
+			costs[i] = cost
+			if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && !sacrifice.includeSource {
+				copied := *sacrifice
+				original := sacrifice.filter
+				sourceID, incarnation := ctx.SourceID, ctx.sourceIncarnation
+				copied.includeSource = true
+				// A returned card is a new object and can pay the old ability.
+				copied.filter = NewPermanentFilter(original.Text(), func(p *Permanent, g *Game) bool {
+					return (p.ID() != sourceID || p.incarnationID != incarnation) && original.Match(p, g)
+				})
+				costs[i] = &copied
+			}
+		}
+	}
+	texts := make([]string, len(costs))
+	for i, cost := range costs {
 		texts[i] = cost.Text()
 	}
 	paid := false
 	available := true
-	for _, cost := range e.costs.costs {
+	for _, cost := range costs {
 		var canPay bool
 		if mana, ok := cost.(*ManaCostPayment); ok {
 			// Activation reductions do not change a payment during resolution.
@@ -786,9 +817,9 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 			break
 		}
 	}
-	if available && ctx.Game.GetPlayer(id).ChooseMayAbility("pay "+strings.Join(texts, ", ")) {
+	if available && (e.required || ctx.Game.GetPlayer(id).ChooseMayAbility("pay "+strings.Join(texts, ", "))) {
 		tx, err := ctx.Game.prepareActionPaymentTransaction(actionPaymentSpec{
-			SourceID: ctx.SourceID, Controller: id, Costs: e.costs.costs,
+			SourceID: ctx.SourceID, Controller: id, Costs: costs,
 			Targets: ctx.Targets, XValue: ctx.Game.XValue(),
 		})
 		paid = err == nil && tx.Commit() == nil
@@ -803,7 +834,20 @@ func (e *unlessPaidEffect) inspectDefinition() definitionNode {
 	if e.ifPaid {
 		role, branch = "if-paid", "paid"
 	}
+	if e.required {
+		role = "required-" + role
+	}
 	n := definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"player", e.player}, {"costs", e.costs}, {branch, e.effect}}}
+	if e.required {
+		if len(e.costs.costs) == 0 {
+			n.problem = "supply at least one mandatory sacrifice cost"
+		}
+		for _, cost := range e.costs.costs {
+			if _, ok := cost.(*sacrificeMatchingCost); !ok {
+				n.problem = "mandatory resolution payment requires matching sacrifice costs"
+			}
+		}
+	}
 	return n
 }
 func (c CostGroup) inspectDefinition() definitionNode {

@@ -601,7 +601,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "counter_instruction"
 			}
-		case "MayCost":
+		case "MayCost", "MustCost":
 			if len(n.Args) == 1 {
 				return "resolution_cost"
 			}

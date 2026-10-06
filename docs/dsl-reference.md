@@ -3654,3 +3654,41 @@ Dragon Whelp and Nalathni Dragon use this shape. All identical records now count
 activations, as Oracle requires. Farrelite Priest and Initiates of the Ebon Hand
 receive the same source correction but remain rejected. Compilation does not
 claim support for these two mana creatures.
+
+## Mandatory resolution sacrifice payments
+
+`IfRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect)` and
+`UnlessRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect)`
+use the shared total-cost transaction without an optional payment choice.
+The supported group contains one or more matching sacrifice costs. Empty groups,
+other cost types, and captured payment values are rejected by definition
+validation. This restriction does not require a player to activate mana abilities
+for a mandatory cost (CR 118.3c).
+
+A source-excluding cost excludes the source incarnation saved by the resolving
+ability. A returned card is a new object and can pay that old ability.
+Payment branches depend on the start of a legal payment, including a sacrifice
+whose move is replaced. Failed total payments leave the game unchanged.
+
+RON supports adjacent `MustCost(SacrificeAPermanent(filter))` and
+`If(condition, [actions])` or `Unless(condition, [actions])` in supported spell,
+activation, and trigger action sequences. The condition is the symbol
+`CostWasPaid` or `CostWasntPaid`. Bodies must be nonempty. Each pair keeps its
+own result, including nested pairs. The current resolving controller pays.
+The filter uses the existing sacrifice filter grammar, with
+`Other(ThisPermanent)` also permitted at the root or in nested `And` filters
+when the source is a permanent. Source exclusions inside `Or` remain rejected.
+Mandatory tap, destroy, mana, plural sacrifice, saved sacrifice values, and
+`IfElse` continuations remain unsupported RON shapes.
+
+`SacrificePermanentAction` sends sacrifice through the shared replacement
+pipeline. `WithExile(sourceID)` redirects the move to exile. The controller
+chooses among replacements in the same priority tier; each replacement applies
+once and the pipeline checks the changed action again. A redirected sacrifice
+fires sacrifice and zone-change events with the final destination. It does not
+fire a death event or update creature-death history. Regeneration does not
+replace sacrifice.
+
+Evidence: `TestRequiredPayment*` and `TestRONRequiredPayment*`. The complete RON
+Lord of the Pit records use this adapter; Transmute Artifact still requires
+search and saved-payment-value support.

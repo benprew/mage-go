@@ -35,6 +35,33 @@ func (g *Game) ClearSacrificed() { g.resolution.SetLastSacrificedID(uuid.Nil) }
 // captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
 // transition is "put into a graveyard," including sacrifice).
 func (g *Game) DoSacrifice(perm *Permanent) {
+	g.performSacrifice(g.prepareSacrifice(perm))
+}
+
+func (g *Game) prepareSacrifice(perm *Permanent) *SacrificePermanentAction {
+	if perm == nil || perm.PhasedOut {
+		return nil
+	}
+	current := g.FindPermanent(perm.ID())
+	if current == nil || current.incarnationID != perm.incarnationID {
+		return nil
+	}
+	action := &SacrificePermanentAction{permanentID: perm.ID(), incarnation: perm.incarnationID, destination: ZoneGraveyard}
+	result, ok := g.effects.ApplyReplacements(action, g).(*SacrificePermanentAction)
+	if !ok {
+		return nil
+	}
+	return result
+}
+
+func (g *Game) performSacrifice(result *SacrificePermanentAction) {
+	if result == nil {
+		return
+	}
+	perm := g.FindPermanent(result.permanentID)
+	if perm == nil || perm.PhasedOut || perm.incarnationID != result.incarnation {
+		return
+	}
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
@@ -50,14 +77,15 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 	g.RemoveFromBattlefield(perm)
 	selfTriggers := g.LKIAbilities(permID)
 
-	if !isToken {
-		p := g.GetPlayer(owner)
-		if p != nil {
+	if result.destination == ZoneExile {
+		g.ExileCard(card, result.exileSource)
+	} else if !isToken {
+		if p := g.GetPlayer(owner); p != nil {
 			p.AddToGraveyard(card)
 		}
 	}
 
-	if isCreature {
+	if isCreature && result.destination == ZoneGraveyard {
 		g.trackers.Turn.RecordCreatureDeath()
 		g.recordCreatureDeath(controller)
 	}
@@ -68,7 +96,7 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 		PlayerID: controller,
 		Flag:     true, // sacrifice path (vs. destroy/SBA)
 		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
+		ToZone:   result.destination,
 	}
 	g.FireEvent(zoneEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &zoneEvt, permID, controller)
@@ -80,7 +108,7 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 		PlayerID:          controller,
 		Flag:              isCreature, // Flag=true means the sacrificed permanent was a creature
 		FromZone:          ZoneBattlefield,
-		ToZone:            ZoneGraveyard,
+		ToZone:            result.destination,
 	}
 	g.FireEvent(sacEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
@@ -398,10 +426,13 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 		c.selected = selected
 	}
 	g.withZoneChangeBatch(func() {
-		for _, choice := range selected {
-			p := g.FindPermanent(choice.id)
-			g.CaptureSacrificed(p)
-			g.DoSacrifice(p)
+		actions := make([]*SacrificePermanentAction, len(selected))
+		for i, choice := range selected {
+			actions[i] = g.prepareSacrifice(g.FindPermanent(choice.id))
+		}
+		for i, choice := range selected {
+			g.CaptureSacrificed(g.FindPermanent(choice.id))
+			g.performSacrifice(actions[i])
 		}
 	})
 	return nil
