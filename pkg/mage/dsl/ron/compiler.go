@@ -1085,7 +1085,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "RemoveCounters":
-		build, err := compileAllCounterRemoval(n, ctx)
+		build, err := compileResolvingCounterRemoval(n, ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -4357,3 +4357,34 @@ references/shapes and semantic roles. These are clause mappings; the full record
 still reject their other unsupported rules. Existing `TestRONStaticUntap*` proves
 that previously accepted source restrictions and their optional payments remain
 functional. No replacement ordering or zone operation changes.
+
+## RON resolving single-counter removal
+
+`RemoveCounters([ACounterOfTypeFromPermanent(counter, subject)])` lowers to
+`RemoveCountersFrom(subject, counter, Fixed(1))`. The action removes one counter
+of that kind if available; it does not require a counter as payment. It reads
+current counters at resolution, preserves other kinds, and continues later
+instructions when none remains (CR 101.3, 122.1, 608.2c).
+
+The subject uses the existing typed source, Aura attachment, target or event
+reference. Absent and phased subjects are not modified; LKI is not used to
+change counters. A returned subject has a new incarnation (CR 400.7, 702.26b/d).
+Host actions follow the current attachment at resolution, or the original
+source's retained attachment after departure. A saved event reference remains
+the event object even after reattachment. Illegal targets prevent resolution
+through the normal stack checks (CR 608.2b). Native copies retain their source
+and use their own ability controller; game clones isolate counter mutations.
+
+This adapter adds no removal event, replacement order, simultaneous batch or
+cost contract. In particular, Divine Intervention's last-counter trigger is
+still unsupported. Existing transactional counter costs remain separate.
+
+Evidence: `TestRONSingleCounterRemovalVenarianGold` covers real Aura casting,
+unpaid rollback, announced X, entry tapping, conditional untap and the correct
+upkeep through zero counters. `VenarianCopies` covers copied permanent spells,
+X, token entry, independent upkeep removals and clone isolation. `Source`,
+`Target`, `Host`, `Event` and `Declarations` cover identity, legality, phasing,
+attachments, pending bindings, copies, clones, continuation and invalid forms.
+`Clauses` executes exact removal actions from Divine Intervention, Ebon Praetor,
+Merseine, Tourach's Gate, Armageddon Clock, Clockwork Avian, Clockwork Beast and
+Glyph of Delusion; their complete records still reject independent blockers.

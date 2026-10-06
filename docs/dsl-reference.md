@@ -3760,8 +3760,12 @@ use it. Each factory creates a fresh state-trigger ability.
 one resolving instruction with a typed source, Aura host, declared permanent
 target or bound permanent event reference. It uses `RemoveAllCounters`, reads
 the live count at resolution and removes only that kind. It is not a payment.
-Plural instruction lists and other removal shapes remain rejected in actions;
-existing counter payment forms remain available in costs.
+`RemoveCounters([ACounterOfTypeFromPermanent(counter, subject)])` uses the same
+typed references and removes one available counter with `RemoveCountersFrom`
+and `Fixed(1)`. No counter is required for the action to resolve. Later
+instructions still run when no counter remains. Plural instruction lists and
+numbered or chosen removal shapes remain rejected in actions; existing counter
+payment forms remain available in costs.
 
 `WhenState` and `SourceHasCounters` supply arming and the native stack lifecycle.
 The threshold is not an intervening-if condition. Reducing the count after the
@@ -3791,3 +3795,14 @@ legal. Optional source untap retains its existing adapter; optional host untap a
 mixed conditional rule/layer bodies remain unsupported. `TestRONHostStaticUntap*`
 and `TestSubjectUntap*` supply declaration and execution evidence. The four
 inventory consumers retain other blockers; this is not full-card support.
+
+## RON resolving single-counter removal
+
+The single-counter action uses the existing source, Aura host, declared target
+and bound event scopes. Each factory builds its own references. It adds no
+payment, replacement or entry context. Invalid counter kinds, arity, lists and
+unbound references fail compilation.
+
+Evidence: `TestRONSingleCounterRemoval*` in `counter_removal_test.go` covers
+complete Venarian Gold gameplay and eight exact removal clauses from rejected
+records. See the [rules contract](engine-rules-contracts.md#ron-resolving-single-counter-removal).

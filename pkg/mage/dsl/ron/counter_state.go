@@ -55,7 +55,7 @@ func compileCounterStateTrigger(event, body Node, ctx scope) (optionFactory, err
 	}, nil
 }
 
-func compileAllCounterRemoval(n Node, ctx scope) (effectFactory, error) {
+func compileResolvingCounterRemoval(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func compileAllCounterRemoval(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n, "counter removal requires one instruction")
 	}
 	instruction := instructions[0]
-	if instruction.Name != "AllCountersOfTypeFromPermanent" {
+	if instruction.Name != "AllCountersOfTypeFromPermanent" && instruction.Name != "ACounterOfTypeFromPermanent" {
 		return nil, unsupported(instruction, "counter removal instruction")
 	}
 	if err := arity(instruction, 2); err != nil {
@@ -82,6 +82,9 @@ func compileAllCounterRemoval(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		if instruction.Name == "ACounterOfTypeFromPermanent" {
+			return mage.RemoveCountersFrom(subject.build(bindings), counter, mage.Fixed(1))
+		}
 		return mage.RemoveAllCounters(subject.build(bindings), counter)
 	}, nil
 }

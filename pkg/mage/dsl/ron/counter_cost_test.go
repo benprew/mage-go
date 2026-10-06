@@ -333,7 +333,7 @@ func TestRONCounterCostInvalid(t *testing.T) {
 	}
 	remove := `RemoveCounters([ACounterOfTypeFromPermanent(ChargeCounter, ThisPermanent)])`
 	for _, rule := range []string{
-		`Activated(PayMana([]), ActionList([` + remove + `]))`,
+		`Activated(PayMana([]), ActionList([RemoveCounters([NumberCountersOfTypeFromPermanent(Integer(1), ChargeCounter, ThisPermanent)])]))`,
 		`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList([MayCost(` + remove + `), If(CostWasPaid, [GainLife(Integer(1))])]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name: "Invalid context", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [`+rule+`])`), "context.ron")

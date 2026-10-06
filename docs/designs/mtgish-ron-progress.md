@@ -21503,3 +21503,157 @@ Changed files: `pkg/mage/untap_subject.go`, its tests and untap decision integra
 RON static/conditional untap lowering and host gameplay tests; the existing source
 invalid-declaration test; engine API/rules and DSL reference documentation; this
 ledger entry. The commit contains only this slice. Its hash is in the final reply.
+
+## 2026-10-05: resolving single-counter removal
+
+Status: completed adapter slice `RESOLVING-SINGLE-COUNTER`. Stop after this slice.
+Initial user changes to `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`, are preserved. Only this entry is staged from
+this ledger; the user's existing reorganization is excluded from the commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline RON tests with `-count=1`, short engine tests and `make build`: PASS.
+Strict loader and semantic inventory exit 1 for unsupported collection records,
+not a build/test failure: **1,704 compiled / 741 rejected records; 632 accepted /
+354 rejected unique names**. Inventory visits 72,950 nodes / 8,539 signatures /
+6,797 unknown-role occurrences. The instructions, engine reference, execution
+design, vocabulary snapshot, current ledger, selected compiler and engine code,
+complete candidate records and their nested forms were read. Relevant API and
+rules contracts and CR 122, 400.7, 608.2 and 702.26b were checked. Local
+`data/LEG.json` confirms Venarian Gold's complete RON rules. Reprints count once.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Resolving single-counter removal, selected | Venarian Gold, Divine Intervention, Ebon Praetor, Merseine, Tourach's Gate, Armageddon Clock, Clockwork Avian, Clockwork Beast, Glyph of Delusion; **1 full-card unlock**. | Supplies a shared resolving instruction for all nine names. Other cards need last-counter events/game draw, sacrifice-result conditions, host activation permission and mana-cost payment, controlled filters/host tap costs, draw-step/counter-count damage and shared activation permission, end-combat/history/restricted counter placement, or multiple targets/granted triggers respectively. | Low/medium: lower to an existing exact typed engine service; full Aura gameplay, eight real clause tests, identity/legality/clone/copy and rejection tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7 eventual / 0 adapter-only unlocks**. | Complete records need source enumeration, choice bindings, retained source identity, property rechecks and next-event consumption. Enables shared Circle/Realm prevention; other choice consumers have further blockers. | High: new decision and source contracts, replacement ordering, simultaneous packets and shield consumption. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5 eventual / 0 battlefield-only unlocks**. | Complete records need all-zone characteristic queries, owner/controller context, copiable CDA declarations and exact count filters. Enables future CDA consumers; Gaea's Avenger has a separate recorded data defect and is excluded. | High: engine zone characteristics, CDA layers, copy, count/control and nonbattlefield tests. |
+
+Selection: the ready typed removal service gives the smallest credible effort,
+one full card and a concrete prerequisite for eight more. No new engine contract
+is required. The first pre-edit commentary estimated zero unlocks; inspection of
+`compileBoundStepTriggerWithCondition` established that host-controller upkeep
+is already supported. The estimate was corrected to one before editing.
+Paralyze's unsupported HostController payment-body read is a different context.
+First-error frequency was not used to estimate unlocks. The contract, reuse
+boundary and acceptance cases were stated before implementation. No skill,
+agent delegation, Go-card requirements or card/set generator was used.
+
+### Supported signatures, contexts and engine reuse
+
+- Resolving `RemoveCounters([ACounterOfTypeFromPermanent(counter, subject)])`
+  has one list instruction, two instruction arguments, a validated permanent
+  counter kind and a typed permanent reference. It lowers to
+  `RemoveCountersFrom(subject, counter, Fixed(1))`.
+- Subjects use the existing source, Aura host, declared permanent target and
+  matching bound permanent event scopes. Resolving activation, trigger and spell
+  action lists retain their existing binding contexts. No target is declared by
+  this instruction. `Trigger_ThatPermanent` remains local to matching events;
+  numbered or unbound refs are not invented.
+- `compileResolvingCounterRemoval` replaces the private misleading
+  `compileAllCounterRemoval` name and preserves the existing all-counter shape.
+  Factories build references from their own `instanceBindings`. No engine API
+  or DSL export changes. Semantic inventory already visits and classifies the
+  instruction's descendants; no inventory role changes are needed.
+- One available counter is removed at resolution. Zero counters do not fail the
+  action or prevent later instructions. Other counter kinds stay unchanged.
+  Source/target/event references keep incarnation identity. No counters are
+  removed from absent or phased subjects, and no LKI counter mutation applies.
+  Host reads follow current attachment or the original departed source's saved
+  attachment. Saved event references do not follow reattachment.
+- Ordinary stack legality, captured source identity, independent pending event
+  frames, copy controllers, game clone isolation, entry counters, casting/X
+  payment and static untap services are reused. Counter-cost rollback tests
+  remain separate and pass. No removal-event, replacement ordering or
+  simultaneous-operation contract is added. Divine Intervention's event remains
+  unsupported rather than being replaced with a state trigger.
+- Empty/plural instructions, malformed kinds/arity, incompatible/unbound refs,
+  chosen or numbered action removals reject. Existing activation counter costs
+  retain their support; optional payment and replacement/entry removal contexts
+  are not added. No fallback, skipped production record or partial registry.
+
+### TDD and card-to-test mapping
+
+The new tests first failed on `unsupported counter removal instruction
+(ACounterOfTypeFromPermanent)`, including the complete Venarian Gold record and
+all eight exact resolving clauses. The adapter then passed gameplay tests.
+An old declaration test asserted rejection of the now-supported action; it now
+checks the still-unsupported numbered action. Optional payment rejection remains.
+Two fixed inventory counts and the static-counter complete-record expectation
+were updated to the measured one-card gain. No gameplay assertion was weakened.
+
+Fixture corrections: a pending ETB trigger had to resolve before the isolated
+host-upkeep lifecycle scenarios; an event fixture initially used nonexistent
+API names, then used `core.GameEvent` and `core.EvtUpkeep`. These were test setup
+errors, not environment failures. Native full-card gameplay already passed.
+
+| Card or contract | Tests in `counter_removal_test.go` |
+| --- | --- |
+| Venarian Gold, complete LEG record | `TestRONSingleCounterRemovalVenarianGold`: definition validation, real targeted casting, unpaid rollback, X=3 entry tapping/counters, wrong versus correct upkeep, conditional native untap and one-counter removal through zero. `VenarianCopies`: copied Aura spell X, token entry, two independent removal abilities, clone isolation and repeated zero removal. Existing host/static-counter tests retain conditional restriction and source/recipient ability-removal evidence. |
+| Divine Intervention, Ebon Praetor, Merseine, Tourach's Gate, Armageddon Clock, Clockwork Avian, Clockwork Beast, Glyph of Delusion | `Clauses`: parse each complete real record, retain full-record rejection, extract the exact resolving removal action and execute it through the engine. Clause coverage only; no complete-card claim. |
+| Source references and continuation | `Source`: pre-resolution timing, counts 0/1/3, other counter kinds, control, absence/return, phase/phase cycle, separate factories, copies with different controllers, stack clone isolation and later life instructions. |
+| Target identity and legality | `Target`: invalid announcement target, legal resolution, target return, phasing and shroud; all-illegal targets stop the later life instruction. |
+| Real host-upkeep identity | `Host`: full Venarian record's queued trigger, current reattachment, original Aura departure/return, host return/phasing/phase cycle, control change and clone isolation. |
+| Event binding isolation | `Event`: two pending tapped-host triggers, reattachment and reverse resolution preserve each captured permanent. |
+| Declarations and inventory | `Declarations`: malformed list/kind/arity, incompatible/out-of-scope subjects and unsupported shapes reject; the supported instruction/counter/reference roles compile and remain classified. |
+| Existing contracts | `TestRONCounterState*`, `TestRONCounterCost*`, typed engine removal and all repository tests pass. |
+
+Coverage gain: **one complete unique-card gameplay mapping** plus eight exact
+card-clause mappings. Compilation and gameplay totals remain separate;
+collection-wide engine-validation and behavior-verification totals remain null.
+
+### Validation, actual gains and remaining gates
+
+Actual gain matches the corrected estimate: **Venarian Gold only, 1 unique name /
+1 record**. No previously accepted name is lost. Strict loader and inventory
+exit 1: **1,705 compiled / 740 rejected records; 633 accepted / 353 rejected
+unique names**. Inventory remains **72,950 nodes / 8,539 signatures / 6,797
+unknown-role occurrences**. All 12 source hashes are unchanged. No RON source
+or data defect was changed; no vocabulary-source refresh is needed.
+
+Fresh first diagnostics for the other clause consumers:
+
+- Divine Intervention: `unsupported trigger (WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent)`.
+- Ebon Praetor: `unsupported activation history condition (APermanentWasSacrificedThisWay)`.
+- Merseine: `unsupported activation modifier (OnlyPlayerMayActivate)`.
+- Tourach's Gate: `unsupported permanent filter (ControlledByAPlayer)`.
+- Armageddon Clock: `unsupported trigger (AtTheBeginningOfAPlayersDrawStep)`.
+- Clockwork Avian and Clockwork Beast: `unsupported intervening-if event (AtTheEndOfCombat)`.
+- Glyph of Delusion: `multiple target bindings are not supported (Targeted)`.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONSingleCounterRemoval\|TestRONCounterState\|TestRONCounterCost\|TestInventory\|TestRONStaticCounter' -count=1` | PASS after lint. Earlier TDD failures and fixture corrections are recorded above. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS, repeated after lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues; automatic import spacing reviewed. |
+| `git diff --check` | PASS after removal of the new entry's extra trailing blank line. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,705 compiled / 740 rejected records; repeated after lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 633 accepted / 353 rejected names and unchanged inventory totals. |
+| Accepted-name and source audit | Only Venarian Gold is newly accepted; no accepted name is lost. All 12 source hashes are unchanged. |
+
+No environment or pre-existing validation blocker remains. Full loading,
+collection gameplay and runtime wiring remain below the removal gate. No Go
+card definitions, startup consumers, obsolete generators or DSL exports are
+removed. No caller audit is needed to delete an API because no API is deleted;
+the engine service remains reused by RON. API/rules documentation records only
+this established adapter and its existing engine contracts.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Shared chosen-source enumeration/identity/property contracts for the seven
+   Circle/Realm next-event prevention consumers.
+2. All-zone count CDA evaluation for the five direct consumers; keep the
+   recorded Gaea's Avenger data defect separate.
+3. Shared end-combat intervening-if/history plus restricted counter placement
+   for Clockwork Beast and Clockwork Avian; single-counter removal is now ready.
+
+Changed files: RON `counter_state.go`, `compiler.go`, new
+`counter_removal_test.go`, `counter_cost_test.go`, `inventory_test.go`,
+`static_counter_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger entry. One descriptive commit
+contains only this slice; its hash is reported in the final response. No second
+slice starts.
