@@ -4388,3 +4388,19 @@ attachments, pending bindings, copies, clones, continuation and invalid forms.
 `Clauses` executes exact removal actions from Divine Intervention, Ebon Praetor,
 Merseine, Tourach's Gate, Armageddon Clock, Clockwork Avian, Clockwork Beast and
 Glyph of Delusion; their complete records still reject independent blockers.
+
+## RON completed-draw event adapter
+
+`WhenAPlayerDrawsACard` uses the existing typed completed-draw patterns for any
+player, the current opponent, or the current controller. CR 121.2 requires one
+event per card drawn. Replaced draws produce no draw event (CR 603.2g).
+`Trigger_ThatPlayer` keeps the event player through control changes, source
+departure, ability copies and game clones. Filtering occurs at detection; it
+is not checked again at resolution. Source phasing prevents detection but does
+not cancel an existing trigger. Damage remains source damage through the shared
+replacement pipeline. No new engine rule or replacement order is introduced.
+
+Evidence: `TestRONDrawEventUnderworldDreams`, `Bindings`, `ActualDraws`,
+`SeparateInstances`, `FastingClause`, `Declarations`, and `Inventory` in
+`pkg/mage/dsl/ron/draw_event_test.go`. Underworld Dreams uses its complete RON
+record; Fasting has clause coverage only and remains rejected as a full card.

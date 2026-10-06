@@ -48,6 +48,7 @@ type scope struct {
 	deathCard         *deathCardPlan
 	damageTarget      *damageTargetPlan
 	castEvent         *castEventPlan
+	drawEvent         *drawEventPlan
 	stepEvent         *stepEventPlan
 	permanentEvent    *permanentEventPlan
 	landManaEvent     *landManaEventPlan

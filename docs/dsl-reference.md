@@ -3806,3 +3806,12 @@ unbound references fail compilation.
 Evidence: `TestRONSingleCounterRemoval*` in `counter_removal_test.go` covers
 complete Venarian Gold gameplay and eight exact removal clauses from rejected
 records. See the [rules contract](engine-rules-contracts.md#ron-resolving-single-counter-removal).
+
+### RON completed card draws
+
+`TriggerA(WhenAPlayerDrawsACard(players), actions)` accepts `AnyPlayer`,
+`Opponent`, or `SinglePlayer(You)`. The event supplies the typed player reference
+`Trigger_ThatPlayer` only within its action body. Each factory builds a separate
+binding. The adapter uses `PlayerDrawsCard`, `OpponentDrawsCard`, or
+`ControllerDrawsCard`; it does not declare a target. Other player filters and
+card references remain unsupported in this context.

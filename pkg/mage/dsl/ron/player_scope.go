@@ -14,6 +14,7 @@ type playerReferencePlan struct {
 	target          *playerTargetPlan
 	spell           *spellReferencePlan
 	event           *castEventPlan
+	draw            *drawEventPlan
 	step            *stepEventPlan
 	landMana        *landManaEventPlan
 	graveyard       *graveyardEventPlan
@@ -39,6 +40,7 @@ type instanceBindings struct {
 	counters             map[*counterPaymentPlan]*mage.NumberBinding
 	sacrifices           map[*sacrificeValuePlan]sacrificeValueBindings
 	events               map[*castEventPlan]castEventBindings
+	drawPlayers          map[*drawEventPlan]*mage.PlayerBinding
 	steps                map[*stepEventPlan]*mage.PlayerBinding
 	landMana             map[*landManaEventPlan]landManaEventBindings
 	tapped               map[*permanentEventPlan]*mage.PermanentBinding
@@ -72,6 +74,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 				return *ctx.damageRecipient, nil
 			}
 		case "Trigger_ThatPlayer":
+			if ctx.drawEvent != nil {
+				return playerReferencePlan{draw: ctx.drawEvent}, nil
+			}
 			if ctx.damagePlayer != nil {
 				return playerReferencePlan{damagePlayer: ctx.damagePlayer}, nil
 			}
@@ -131,6 +136,9 @@ func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
 	}
 	if p.permanent != nil {
 		return mage.ControllerOfWithLKI(p.permanent.build(bindings))
+	}
+	if p.draw != nil {
+		return mage.FromPlayer(bindings.drawPlayers[p.draw])
 	}
 	if p.step != nil {
 		return mage.FromPlayer(bindings.steps[p.step])

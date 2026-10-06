@@ -21657,3 +21657,107 @@ Changed files: RON `counter_state.go`, `compiler.go`, new
 `docs/engine-rules-contracts.md` and this ledger entry. One descriptive commit
 contains only this slice; its hash is reported in the final response. No second
 slice starts.
+
+## 2026-10-05: completed-draw event bindings
+
+Status: completed implementation slice `COMPLETED-DRAW-EVENT`. This run stops
+at this slice. Initial user changes to `.gitignore`, the execution design and
+progress ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only
+this entry is staged from the ledger; its pre-existing reorganization is not
+included in this commit.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, mage/doc.go, the execution design, vocabulary snapshot, ledger,
+selected compiler and typed event code, API/rules contracts, and CR 121 and 603.
+Baseline RON tests (`-count=1`) and `make build` passed. Loader and semantic
+inventory exited 1 for collection rejection: 1,705 compiled / 740 rejected
+records; 633 accepted / 353 rejected names. All 2,445 records parse. Inventory
+had 72,950 nodes, 8,539 signatures and 6,797 unknown-role occurrences. Reprints
+count once. Complete records and nested forms were read for these candidates:
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Completed-draw event, selected | Underworld Dreams, Fasting; **1 full card**, plus Fasting's exact draw clause | Fasting's upkeep counter condition is independently rejected (`activation history requires the resolving activated ability`). Its draw-step replacement already exists; this slice supplies its remaining draw event. Any/controller/opponent event bindings enable future draw consumers without a second event system. | Low: three exact existing engine patterns, typed scope/instance lowering, declaration and lifecycle/replacement/gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7 eventual / 0 adapter-only** | Each complete record needs source enumeration/choice, saved source identity and properties, and next-event shield installation. Existing damage-source LKI is ready, but choice and shield contracts are missing. Enables further selected-source replacement consumers. | High: shared choices, object identity across zones, property rechecks, competing replacement and batch tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5 eventual / 0 battlefield-only** | Needs all-zone characteristic evaluation, owner/controller context, copiable CDA declarations and exact count filters (non-Wall, named, land subtype). Gaea's Avenger remains a separate recorded source defect. Enables later characteristic queries and copying. | High: zone/layer/copy services and count/control/nonbattlefield gameplay tests. |
+
+Selection: draw events offer one full card and a concrete second-card prerequisite
+using exact existing engine contracts. The credible gain per effort exceeds the
+larger capabilities that require new engine services. This is a shared event
+adapter, with no card-name dispatch. No first-error frequency was treated as an
+unlock estimate. Contract, reuse boundary and acceptance cases were stated
+before editing. No skill, delegation or Go-card requirements were used.
+
+### Supported forms, dependencies and reuse
+
+`TriggerA(WhenAPlayerDrawsACard(players), actions)` accepts exactly `AnyPlayer`,
+`Opponent` or `SinglePlayer(You)`. The event body supplies typed
+`Trigger_ThatPlayer`; it does not supply a card/permanent/spell reference.
+`drawEventPlan`, `playerReferencePlan.draw` and `instanceBindings.drawPlayers`
+keep this scope separate from step, damage and spell events. Each factory
+builds a fresh binding and action graph. Outside-body, incompatible, malformed
+and unsupported filters reject at declaration time.
+
+Lowering reuses mage `PlayerDrawsCard`, `OpponentDrawsCard` and
+`ControllerDrawsCard`, plus `WhenEvent`, `FromPlayer`, ordinary trigger placement,
+source damage and player actions. RON owns spelling/scope; the engine owns event
+capture, controller filtering, replacement processing, copying and cloning.
+A draw event occurs once per completed draw. Replaced draws do not trigger.
+Filtering uses the current controller at detection; pending triggers retain
+their event player and controller. Source phasing prevents detection. Departure,
+return, later phasing and trigger copies do not redirect the saved drawer.
+No new LKI, cost, replacement ordering or simultaneous-action engine contract
+is introduced. Costs, damage and draw replacements use their existing services.
+
+### Tests and coverage
+
+New gameplay tests first failed on `unsupported trigger (WhenAPlayerDrawsACard)`.
+A fixture initially used the wrong draw-step enum; it was corrected before the
+expected failure was confirmed. A player-damage prevention fixture initially
+used a permanent filter; it now uses the existing player prevention shield.
+The broader tests initially failed only on two fixed inventory counts, which
+were updated to the measured one-record gain. No behavior assertion was removed
+or weakened.
+
+| Mapping | Tests in `draw_event_test.go` |
+| --- | --- |
+| Underworld Dreams, complete LEG record | `TestRONDrawEventUnderworldDreams`: definition validation, failed/successful real casting, controller exclusion, one trigger per drawn card, untargeted drawer, pre-resolution timing, source departure/return/phasing, changed-controller trigger copy, clone isolation and damage prevention. `ActualDraws`: native draw step, completed versus replaced empty-library draws. |
+| Fasting, exact clause from complete DRK record | `FastingClause`: full record still rejects its independent condition; exact controller-draw clause destroys its source at resolution and ignores opponent draws. Clause coverage only. |
+| Shared contract | `Bindings`: all three player filters, current control, distinct pending drawers, source phasing/return and clone isolation. `SeparateInstances`: two factory instances keep separate event/controller bindings. `Declarations`: malformed filters, unbound/out-of-scope and incompatible refs reject. `Inventory`: nested player roles remain unverified rather than claiming gameplay. |
+
+Coverage gain: **one complete unique-card gameplay mapping and one exact card
+clause mapping**. Collection-wide engine-validation and behavior-verification
+totals remain null; compilation does not establish complete gameplay coverage.
+
+### Validation and actual gains
+
+Actual gain matches the estimate: Underworld Dreams only, **1 name / 1 record**.
+No accepted name regressed. Strict loading remains atomic and exits 1:
+**1,706 compiled / 739 rejected records; 634 accepted / 352 rejected names**.
+Semantic inventory remains 72,950 nodes / 8,539 signatures, with unknown-role
+occurrences reduced to 6,794 by classifying draw-event player filters.
+No RON record or source defect changed; vocabulary source hashes remain valid.
+Fasting retains `DRK.lines.ron:35:266: activation history requires the resolving
+activated ability (If)`. Source data, compiler gaps and engine prerequisites
+remain separate. There is no environment blocker.
+
+Required final checks: focused tests with `-count=1`, short mage tests with
+`-count=1`, `make test`, `make build`, `go vet ./...`, `make lint`, and
+`git diff --check` pass. Loader and inventory exit 1 as expected for remaining
+unsupported records. Automatic lint formatting is reviewed and affected tests
+are rerun. No partial registry is installed.
+
+Changed files: new RON `draw_event.go` and `draw_event_test.go`; `compiler.go`,
+`player_scope.go`, `triggers.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
+Runtime cutover and removal gates remain unmet. No Go definitions, generator,
+DSL function or production caller is removed; no deletion caller audit is needed.
+
+Ranked next candidates to reassess:
+
+1. Shared chosen-source enumeration/identity/property contracts for seven
+   Circle/Realm next-event prevention consumers.
+2. All-zone count CDA service for the five direct consumers.
+3. Shared end-combat intervening-if/history and restricted counter placement
+   for Clockwork Beast and Clockwork Avian.
