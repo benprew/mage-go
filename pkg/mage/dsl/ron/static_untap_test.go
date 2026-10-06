@@ -286,7 +286,6 @@ func TestRONStaticUntapInvalid(t *testing.T) {
 		`PermanentRuleEffect(ThisPermanent, [DoesntUntapDuringControllersUntap, MayChooseNotToUntapDuringUntap])`,
 		`Activated(PayMana([]), ActionList([DoesntUntapDuringControllersUntap]))`,
 		`Activated(PermanentRuleEffect(ThisPermanent, [DoesntUntapDuringControllersUntap]), ActionList([UntapPermanent(ThisPermanent)]))`,
-		`If(PermanentPassesFilter(ThisPermanent, IsTapped), [PermanentRuleEffect(ThisPermanent, [DoesntUntapDuringControllersUntap])])`,
 	} {
 		nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name:"Invalid", Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[%s])`, rule)), "invalid.ron")
 		if err != nil {

@@ -5,6 +5,40 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
+func compileStaticUntapRule(n Node, ctx scope) (optionFactory, error) {
+	if err := arity(n, 2); err != nil {
+		return nil, err
+	}
+	operations, err := list(n.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	if len(operations) == 1 && operations[0].Name == "DoesntUntapDuringControllersUntap" {
+		subject, err := compileUntapSubject(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.Static(mage.PreventUntapDuringStep(subject, mage.PermanentMatchesFilter(subject, mage.AnyPermanent))))
+		}, nil
+	}
+	return compileSelfUntapRule(n)
+}
+
+func compileUntapSubject(n Node, ctx scope) (mage.PermanentRef, error) {
+	if err := arity(n, 2); err != nil {
+		return nil, err
+	}
+	operations, err := list(n.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "DoesntUntapDuringControllersUntap" {
+		return nil, unsupported(n.Args[1], "static untap operations")
+	}
+	return compileConditionalSubject(n.Args[0], ctx)
+}
+
 func compileSelfUntapRule(n Node) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err

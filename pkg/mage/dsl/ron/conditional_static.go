@@ -17,6 +17,15 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(rules) == 1 && rules[0].Name == "PermanentRuleEffect" {
+		subject, err := compileUntapSubject(rules[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.Static(mage.PreventUntapDuringStep(subject, condition)))
+		}, nil
+	}
 	var builds []func() mage.ContinuousModification
 	var layer core.Layer
 	for _, rule := range rules {

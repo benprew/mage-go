@@ -1199,8 +1199,8 @@ simultaneous operation changes. Exact declaration limits are in
 ## RON self static untap prohibition adapter
 
 RON `PermanentRuleEffect(ThisPermanent,
-[DoesntUntapDuringControllersUntap])` reuses the existing source-bound static
-ability service and `AttrDoesNotUntap`. The turn service reads that attribute
+[DoesntUntapDuringControllersUntap])` uses the source-bound static ability
+service and `PreventUntapDuringStep`. The turn service checks this rule
 when it determines which permanents untap (CR 502.3). It does not prohibit
 untapping from other effects. The source must retain its static ability
 (CR 604.2); ability removal disables this rule through the existing ability
@@ -1216,7 +1216,8 @@ mana, optional payment, and upkeep-only activation behavior.
 restoration of abilities, returned objects, factory isolation and game clones.
 `TestRONStaticUntapInvalid` keeps unsupported roles and scopes rejected.
 No engine execution rule, replacement ordering, or simultaneous operation was
-changed. Aura-host, collection, conditional and temporary forms remain open.
+changed. The later typed subject contract below adds Aura-host and conditional
+forms. Temporary forms remain open.
 
 ## RON global landwalk blocking overrides
 
@@ -4327,3 +4328,32 @@ Evidence in `counter_state_test.go`:
   attachment, incarnation, phasing and replaced entry counts.
 - `Declarations`, `Inventory`: scope, type, arity and threshold rejection;
   supported comparison/value/counter/reference descendant roles.
+
+## RON live subject untap restrictions
+
+`PreventUntapDuringStep(subject PermanentRef, condition StateCondition) StaticRule`
+checks a typed subject and pure condition before the simultaneous untap decision
+(CR 502.3). It shares the collection restriction pipeline. All conditions and
+subjects are read before any permanent untaps. The rule does not grant a host
+ability; removing the host's abilities cannot remove the source's restriction.
+Removing the source's static ability disables it. Source presence, phasing and
+incarnation checks use the printed static effect service. Current control and
+attachment are read at the decision; returned hosts cannot inherit old attachments.
+Static conditions use current state without LKI (CR 611.3a–b). Other untap effects
+remain legal. Clones copy source state and effect wrappers independently.
+
+RON adds `PermanentRuleEffect(subject,[DoesntUntapDuringControllersUntap])`
+with `ThisPermanent` or an Aura's `HostPermanent`, either as a top-level rule or
+as the sole body rule of static `If(condition,[rule])`. The condition uses the
+existing static condition grammar. Mixed conditional rule/layer bodies, optional
+host untap, collections and resolving/cost contexts are not added by this adapter.
+
+`TestSubjectUntapRestriction`, `TestSubjectUntapDefinition` and
+`TestSubjectUntapDecisionSnapshot` establish the engine contract. RON
+`TestRONHostStaticUntap*` covers exact Cocoon, Merseine, Venarian Gold and Paralyze
+clauses, live counter changes, native untap, attachment/control/phase/zone changes,
+source and recipient ability removal, independent factories and clones, invalid
+references/shapes and semantic roles. These are clause mappings; the full records
+still reject their other unsupported rules. Existing `TestRONStaticUntap*` proves
+that previously accepted source restrictions and their optional payments remain
+functional. No replacement ordering or zone operation changes.

@@ -11,7 +11,7 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	if len(operations) != 1 {
-		return compileSelfUntapRule(n)
+		return compileStaticUntapRule(n, ctx)
 	}
 	operation := operations[0]
 	switch operation.Name {
@@ -35,7 +35,7 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		return compileStaticAttackPermission(n, operation, ctx)
 	case "CantBeBlockedExceptByDefenders", "CantBeBlockedByDefenders", "CantBlockAttackers":
 	default:
-		return compileSelfUntapRule(n)
+		return compileStaticUntapRule(n, ctx)
 	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
 	if err != nil {

@@ -21387,3 +21387,119 @@ and inventory/static-counter/singular-entry regressions; `docs/dsl-reference.md`
 `docs/engine-rules-contracts.md` and this ledger entry. One descriptive commit
 contains only this slice. Its hash is reported in the final response. No second
 slice starts.
+
+## 2026-10-05: live source and Aura-host untap restrictions
+
+Status: completed dependency slice `LIVE-SUBJECT-UNTAP`. This run stops here.
+The initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked completed ledger, are preserved. Only this entry is staged
+from this ledger; its existing reorganization is excluded from the commit.
+
+### Fresh evidence and selection
+
+Baseline RON tests (`-count=1`), short engine tests and `make build` passed.
+Strict loading exited 1 for collection rejection: 1,704 compiled / 741 rejected
+records, 632 accepted / 354 rejected names. Semantic inventory visited 72,950
+nodes / 8,539 signatures / 6,797 unknown-role occurrences. Complete affected
+records and nested candidate forms were inspected, along with engine/reference
+and rules-contract documentation, and CR 502.3 and 611.3. Reprints count once.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Live conditional host untap, selected | Cocoon, Merseine, Venarian Gold, Paralyze; **0 immediate** | Cocoon needs controlled Aura targets, mandatory counter payment and lasting host modifications. Merseine needs host-controller activation permission, host mana-cost payment and single-counter removal. Venarian Gold needs resolving single-counter removal. Paralyze needs a host-controller player reference for its optional resolution payment. Supplies all four cards' untap restriction and a reusable typed decision rule. | Low/medium: reuse static conditions, typed source/host references and simultaneous untap. Add the missing subject/condition engine contract and tests for recipient ability removal. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7 eventual / 0 adapter-only** | Enumeration, retained damage-source choice, property rechecks and next-event consumption are required by each complete record. Enables shared next-event prevention; other ChooseADamageSource consumers have further blockers and are excluded. | High: decisions, typed binding, replacement ordering, simultaneous damage and shield consumption. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5 eventual / 0 battlefield-only** | All-zone characteristic evaluation, owner/controller context, copiable CDA declarations and count filters remain prerequisites. Gaea's Avenger has a separate recorded source defect and is excluded. | High: zone characteristics, layers, copy, named counts and control tests. |
+
+The selected shared prerequisite has the smallest effort with a concrete four-card
+benefit. Complete records show that its first-error advances cannot unlock full
+cards. The contract, reuse boundary, acceptance cases and zero-unlock estimate
+were stated before editing. The initial attribute lowering failed the recipient
+ability-removal case: an Aura's untap prohibition is not a host ability. The
+existing collection untap decision pipeline supplied the correct reuse boundary;
+a typed subject/condition API was missing. The implement-engine skill was used
+for that contract. No card/set skill, Go-card requirements, source correction,
+fallback, partial production registry or agent delegation was used.
+
+### Exact supported shape and ownership
+
+- `PermanentRuleEffect(subject,[DoesntUntapDuringControllersUntap])`, where
+  `subject` is bare `ThisPermanent` or `HostPermanent` in Aura scope.
+- `If(condition,[PermanentRuleEffect(subject,
+  [DoesntUntapDuringControllersUntap])])` in static rule context. The body contains
+  exactly one rule and one bare operation. Conditions reuse the existing
+  `compileStaticCondition` grammar, including source/host counter filters.
+  This adds no new filter grammar or resolving/cost/entry operation.
+- Optional source untap keeps the previous adapter. Optional host untap,
+  collections in conditional bodies, mixed rule/layer bodies and other rule
+  operations remain rejected. Invalid scope/type/kind/arity reject at compile time.
+- Engine API: `PreventUntapDuringStep(subject PermanentRef,
+  condition StateCondition) StaticRule`. The compiler owns spelling/scope only.
+  The engine owns pure condition evaluation and the native untap decision.
+- Uses printed source ability/incarnation checks, current `This` and
+  `AttachedPermanent` references, `PermanentMatchesFilter`, the existing condition
+  service, matching untap restrictions, clone wrappers and simultaneous selection.
+  Conditions and subjects are read before any untap. No LKI applies to static
+  membership. Departed/phased sources disable the rule; returned hosts do not
+  inherit old attachments. Source ability removal disables it; recipient ability
+  removal does not. Other untap effects remain legal. No global action state.
+- No Go definitions, startup consumers, generators or DSL exports are removed:
+  the cutover gate is unmet. No DSL caller deletion is attempted in this slice.
+
+### TDD and card-to-test mapping
+
+New RON tests failed first at the expected missing conditional body and host
+subject diagnostics. Engine tests then failed for the missing
+`PreventUntapDuringStep` API. The initial fixture used unqualified counter names
+and lacked a source owner; those fixture errors were corrected. The expected API
+failure was confirmed after the names were corrected. No gameplay assertion was
+weakened. Attribute-state checks were replaced with native untap assertions when
+the contract moved to the decision pipeline. The old invalid-declaration case
+for conditional source untap is replaced by `TestRONHostStaticUntapSource`.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Merseine, exact enchant and conditional rule clauses | `TestRONHostStaticUntapClauses/Merseine`: native casting, failed payment rollback, source net-counter transitions and untap; `Lifecycle`: attachment, source/host return, phase cycles, control, source/recipient ability removal, clones and separate factories. |
+| Venarian Gold, exact enchant and conditional rule clauses | `TestRONHostStaticUntapClauses/Venarian_Gold`: host sleep-counter transitions and native untap. |
+| Paralyze, exact enchant and unconditional rule clauses | `TestRONHostStaticUntapClauses/Paralyze`: real casting and repeated native untap; other untap effects remain legal. |
+| Cocoon, exact conditional rule clause | `TestRONHostStaticUntapCocoonClause`: pupa-counter presence/removal changes native untap. Its controlled enchant target is an independent unsupported declaration. |
+| Engine subject/condition contract | `TestSubjectUntapRestriction`: presence, source and recipient ability removal, attachment/control/zone/phase changes and clone isolation. `TestSubjectUntapDefinition`: nil, unbound and negative declarations. `TestSubjectUntapDecisionSnapshot`: source untap cannot change the host decision within the simultaneous batch. |
+| Declaration and semantic inventory | `TestRONHostStaticUntapInvalid`, `Inventory`, `Source`: scope/type/kind/arity, unsupported bodies and exact operation role; valid conditional source execution. |
+| Existing accepted consumers | `TestRONStaticUntap*`, `TestMatchingUntap*`, conditional/static/collection regression tests and complete repository checks. |
+
+Coverage gain: **four exact card-clause mappings and one shared engine contract**;
+**zero complete unique-card gameplay mappings**, as estimated. Full records for
+these cards still reject. Compilation and gameplay totals remain separate.
+
+### Validation and measurements
+
+Focused engine/RON tests with `-count=1`: PASS, including after lint.
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make build`,
+`go vet ./...`, `make lint`, and `git diff --check`: PASS. Automatic lint edits
+were reviewed; affected checks were rerun. No environmental or pre-existing
+validation failure remains.
+
+Final strict loader and inventory both exit 1 as expected: **1,704 compiled /
+741 rejected records; 632 accepted / 354 rejected unique names**. Actual full-card
+unlock gain is **0**, matching the estimate. No previously accepted name is lost.
+Inventory remains **72,950 nodes / 8,539 signatures / 6,797 unknown-role
+occurrences**. All source file hashes match baseline; no source or vocabulary
+snapshot refresh is needed. No new source defect was found or corrected.
+
+Fresh diagnostics (first occurrence; reprints share the same blocker):
+
+- Merseine: `FEM.lines.ron:61:582: unsupported activation modifier (OnlyPlayerMayActivate)`.
+- Venarian Gold: `LEG.lines.ron:286:649: unsupported counter removal instruction (ACounterOfTypeFromPermanent)`.
+- Paralyze: `2ED.lines.ron:179:458: unbound or incompatible player reference (HostController)`.
+- Cocoon: `LEG.lines.ron:48:169: unsupported permanent filter (ControlledByAPlayer)`.
+
+Ranked next candidates to reassess:
+
+1. Resolving single-counter removal for Venarian Gold, Divine Intervention,
+   Ebon Praetor and Tourach's Gate; inspect complete records for further blockers.
+2. Shared chosen-source prevention for the seven Circle/Realm consumers.
+3. All-zone battlefield-count CDAs for the five direct consumers.
+
+Changed files: `pkg/mage/untap_subject.go`, its tests and untap decision integration;
+RON static/conditional untap lowering and host gameplay tests; the existing source
+invalid-declaration test; engine API/rules and DSL reference documentation; this
+ledger entry. The commit contains only this slice. Its hash is in the final reply.

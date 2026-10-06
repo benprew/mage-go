@@ -284,6 +284,11 @@
 // Use [LimitUntapsDuringStep] with [Static] for a fixed untap-step limit.
 // The active player chooses a set that satisfies all limits before untap.
 // Type overlap counts against each limit. Other untap effects remain legal.
+// Use [PreventUntapDuringStep] with a typed subject and state condition for
+// a live source or Aura-host restriction. The untap decision reads both before
+// any permanent untaps. Recipient ability removal does not remove this rule.
+// Other untap effects can still untap the subject.
+//
 // Use [PreventUntapDuringStepForMatching] for a static untap-step restriction.
 // It checks final characteristics before the untap operation. Other untap
 // effects remain legal. Recipient ability removal does not remove the rule.

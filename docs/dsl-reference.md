@@ -3773,3 +3773,21 @@ Evidence: `TestRONCounterState*` in `counter_state_test.go`; full Homarid gamepl
 exact Tidal Influence reset clause, declaration rejection, inventory roles,
 entry replacements, targets, hosts, state arming and instance identity. See the
 [rules contract](engine-rules-contracts.md#ron-source-counter-state-cycles).
+
+## RON source and Aura-host untap rules
+
+`PermanentRuleEffect(ThisPermanent,[DoesntUntapDuringControllersUntap])` and
+`PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap])` lower to
+`mage.PreventUntapDuringStep`. The host reference requires Aura scope. Static
+`If(condition,[PermanentRuleEffect(subject,[DoesntUntapDuringControllersUntap])])`
+uses the same rule and the existing static condition compiler, including live
+source or host counter checks. The body must contain exactly this one operation
+and one rule. Returned objects do not inherit old attachment references.
+
+The restriction is checked before simultaneous untap, after characteristic layers.
+Source removal, phasing and ability removal disable it. Removing the recipient's
+abilities does not disable a separate source's rule. Other untap effects remain
+legal. Optional source untap retains its existing adapter; optional host untap and
+mixed conditional rule/layer bodies remain unsupported. `TestRONHostStaticUntap*`
+and `TestSubjectUntap*` supply declaration and execution evidence. The four
+inventory consumers retain other blockers; this is not full-card support.
