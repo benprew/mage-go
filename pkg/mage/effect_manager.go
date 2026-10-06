@@ -447,9 +447,20 @@ func (em *EffectManager) retimestampAttachment(sourceID uuid.UUID) {
 
 // A later tap or phase-in must not start the old duration again.
 func (em *EffectManager) expireSourceTapped(sourceID uuid.UUID) bool {
-	changed := false
+	changed := em.expireCapturedControlSource(sourceID, true)
 	for _, effect := range em.effects {
 		if e, ok := effect.(*composedLayerEffect); ok && e.sourceTapped && e.SourceID() == sourceID && !e.expired {
+			e.expired = true
+			changed = true
+		}
+	}
+	return changed
+}
+
+func (em *EffectManager) expireCapturedControlSource(sourceID uuid.UUID, tappedOnly bool) bool {
+	changed := false
+	for _, effect := range em.effects {
+		if e, ok := effect.(*controlContinuousEffect); ok && e.sourceIncarnation != uuid.Nil && e.SourceID() == sourceID && !e.expired && (!tappedOnly || e.sourceTapped) {
 			e.expired = true
 			changed = true
 		}

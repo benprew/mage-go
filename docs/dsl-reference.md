@@ -3546,3 +3546,32 @@ Mountain count for full targeted damage and half-up self damage. Both use one
 simultaneous damage instruction. The corrected Eternal Flame source matches
 `data/DRK.json`; it previously halved targeted damage and rounded self damage
 down. Evidence: `TestRONRoundedDamage*` and `TestOpponentOrPlaneswalkerTarget*`.
+
+## RON source-conditioned control
+
+`GainControlOfPermanentUntil(subject, duration)` supports typed permanent
+subjects in existing resolving permanent action scopes. `duration` is exactly
+`UntilPermanentChangesControl(You, ThisPermanent)` or
+`Or([UntilPermanentChangesControl(You, ThisPermanent),
+ForAsLongAsPermanentRemainsTapped(ThisPermanent)])`. `Or` gives the two endpoints:
+either loss of source control or loss of its tapped state ends the duration.
+It is not a disjunction of conditions that keep the effect active. Other players,
+sources, durations, missing endpoints and incompatible bindings remain errors.
+Spell-source, static, entry, cost and replacement-operation contexts gain no
+support. Each factory creates its own typed target declarations.
+
+The compiler lowers these forms to
+`mage.GainControlWhileSourceControlled(subject, requireTapped)`. The action
+keeps the resolving controller and the original source and target incarnations.
+It starts only if the source duration is valid at resolution. Source departure,
+phasing and loss of control end both forms; untapping also ends the second.
+Target phasing preserves a valid duration. Ability removal does not erase an
+installed effect. Copies keep their source identity and use their own controller
+and target frame. No source LKI or returned object can start the old duration.
+
+Aladdin and Thrull Champion use the control-only endpoint. Rubinia Soulsinger
+and Willow Satyr use both endpoints and retain their independent optional untap
+permission after the target leaves. Thrull Champion's global Thrull bonus uses
+the existing static creature layer. Tests: `TestRONSourceControlCards`,
+`RollbackAndCasting`, `UntapAndInstances`, `CopiesAndContexts`, `Invalid`, and
+`Inventory`. Compilation counts remain separate from gameplay coverage.

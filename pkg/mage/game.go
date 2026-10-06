@@ -218,6 +218,7 @@ func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 	for _, permanentID := range phased {
 		g.combat.RemoveFromCombat(permanentID)
 		expired = g.effects.expireSourceTapped(permanentID) || expired
+		expired = g.effects.expireCapturedControlSource(permanentID, false) || expired
 	}
 	if expired {
 		g.ApplyContinuousEffects()

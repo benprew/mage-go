@@ -125,6 +125,12 @@
 // trigger placement. RON source-death bodies use this capture with
 // [EventSourceIsSelf]; the capture stays separate for each pending event.
 //
+// Use [GainControlWhileSourceControlled] for control that ends when you lose
+// control of the original source. Set requireTapped when untapping must also
+// end the effect. A returned source or target cannot restore the old effect.
+// Target phasing preserves a valid duration; source phasing ends it.
+// The separate permission to remain tapped stays optional after target departure.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

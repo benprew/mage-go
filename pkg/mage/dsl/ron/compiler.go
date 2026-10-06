@@ -1053,6 +1053,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "GainControlOfPermanentUntil":
+		build, err := compileSourceControl(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "Exile":
 		build, err := compilePermanentExile(n, ctx)
 		if err != nil {

@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **607 accepted / 379 rejected unique card
-names** (986 total), and **1,634 compiled / 811 rejected records** (2,445 total).
+The latest recorded inventory reports **619 accepted / 367 rejected unique card
+names** (986 total), and **1,651 compiled / 794 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`FIXED-MILL-ACTION-AND-PAYMENT` slice and its validation evidence are recorded
+`SOURCE-CONDITIONED-CONTROL` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -19964,3 +19964,146 @@ Slice files: `pkg/mage/target.go`, `composable_actions.go`, `doc.go`, new
 `cards/mtgish/DRK.lines.ron`; API/rules-contract docs; vocabulary snapshot and
 this ledger entry. One descriptive commit contains only this slice; its hash is
 reported in the final response. User changes remain outside that commit.
+
+## Slice: source-conditioned captured control (2026-10-05)
+
+Capability ID: `SOURCE-CONDITIONED-CONTROL`. Status: implemented, declaration
+validated and behavior tested. This run stops after this slice.
+
+### Fresh evidence and candidate comparison
+
+Initial user changes in `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, are preserved. The commit includes only the
+new status measurements and this ledger entry; the user's archive reorganization
+remains unstaged.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot, progress
+ledger, selected compiler/reference/control/layer/untap/phasing/copy code, relevant
+API and rules contracts, and complete candidate RON records. Local `data/ARN.json`,
+`data/FEM.json` and `data/LEG.json` agree with the four selected records. Relevant
+rules: CR 400.7, 602.2, 608.2b, 611.2b/c, 613.1b and 702.26b/f. The
+`implement-engine` skill supplied the reusable engine workflow; no removed card
+skill, Go card requirements, stubs or fallback was used.
+
+Fresh compiler tests, short engine tests, `make test` and `make build` passed.
+Strict loading and inventory exited 1 because the collection remains unsupported:
+**1,647 compiled / 798 rejected records**, **615 accepted / 371 rejected names**.
+Inventory: 72,950 nodes / 8,539 signatures / 8,393 unknown-role occurrences.
+Complete records and nested forms supplied these estimates; reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Source-conditioned control, selected | Aladdin; Thrull Champion; Rubinia Soulsinger; Willow Satyr: **4** complete names / **4** records. | No other compiler blockers in these full records. Existing control conditions and Layer 2 reconciliation need a typed resolving adapter with captured identities and transition expiry. Enables reusable source-control and combined control/tapped lifetimes. Temporary control such as Disharmony remains a separate duration shape. | Low implementation / moderate tests: identity, legality, pending/installed duration, ownership/controller separation, clones/copies, native untap and rollback. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential complete names. | Needs public-zone choices, saved source identity and next-event consumption, including absent referenced and command-zone sources under CR 609.7a. Other first-error consumers (Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage) have additional prevention/redirection/result blockers and are excluded. Enables source-selective prevention and later redirection. | High engine/compiler effort and choice, identity, replacement and shield lifecycle tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods: **5** potential complete names. | Requires all-zone characteristic evaluation, owner/controller context, named counts and CDA/copy/layer contracts. Gaea's Avenger, Gaea's Liege and Wood Elemental have additional blockers and are excluded. Enables off-battlefield characteristics and copying. | High engine/adapter effort with zone, control, layer and copy tests. |
+
+Selection rationale: four complete consumers share existing exact control-layer
+execution with less implementation effort than either larger family. This is
+multi-card work, not a single-card shortcut. The contract, reuse boundary and
+acceptance cases were stated before edits. Actual gains match the estimate.
+
+### Exact signatures, contexts, dependencies and reuse
+
+Engine API: `GainControlWhileSourceControlled(subject PermanentRef,
+requireTapped bool) ResolvingEffect`. Definition validation requires a permanent
+source and a bound non-nil subject. Resolution uses typed source/subject references
+and the resolving controller. No LKI or returned source can start a duration.
+Installed effects save both source and target incarnations and controller. Private
+capture fields extend `controlContinuousEffect`; existing `ControlEffectSpec`,
+`GainControl` and legacy tap-maintained callers retain their behavior.
+
+RON action: `GainControlOfPermanentUntil(subject,
+UntilPermanentChangesControl(You, ThisPermanent))`, or the same action with
+`Or([UntilPermanentChangesControl(You, ThisPermanent),
+ForAsLongAsPermanentRemainsTapped(ThisPermanent)])`. The ordered two-element
+`Or` gives duration endpoints: either ending condition terminates the effect.
+Other players, sources, endpoints, arities and incompatible references remain
+errors. Subjects use existing typed permanent references in resolving permanent
+scopes. Spell-source, static, entry, cost and replacement contexts gain no support.
+Factories build fresh declarations; each stack frame keeps its own target.
+Inventory reports the target as `permanent_reference`, duration terms as
+`source_control_duration`, and their typed player/source arguments, including
+expressions after an unsupported sibling without accepting the record.
+
+The engine owns Layer 2 conditions, reconciliation/timestamps, control-change
+sickness, prohibition on changing control, transactional costs, legality rechecks,
+copy frames and cloning. Source departure, phasing or loss of control ends both
+forms permanently. Actual untapping also ends the tapped form; stun replacement
+preserves it. Source phasing and untap hooks expire captured durations before
+phase-in/retap or untap notifications, including simultaneous untaps. Target
+phasing preserves a valid source duration; target return cannot inherit control.
+Cleanup and source ability removal do not erase installed durations. Separate
+printed optional untap permissions remain choices after target departure.
+
+No parallel zone/layer system, card-name branch, game-time declaration panic,
+global result slot, Go fallback, skipped rule or production subset registry is
+introduced. This slice adds no replacement ordering or APNAP contract.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed on the missing typed action; real RON tests first
+failed on unsupported `GainControlOfPermanentUntil`. Initial fixture mistakes
+were corrected before recording the intended failures: use `TapCost(This)` and
+existing metadata constructors. Further tests exposed the immediate phase-cycle
+expiry gap and the incorrect legacy target-dependent untap policy; both were
+fixed. Copy-on-write tests read current permanents after clone mutations. Native
+casting uses owner-held hands. Instance tests use distinct legendary names so
+state-based legend removal does not obscure control assertions. No gameplay
+requirement was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Aladdin, complete ARN record | `TestRONSourceControlCards`: typed artifact target, mana/tap/stack timing, source and target departure/return/phasing/control, shroud, copy controller, pending clone, owner/controller separation. `RollbackAndCasting`: full casting cost and 1/1 metadata; sick/tapped/foreign/phased sources, wrong artifact type, extra/phased targets and unpaid activation preserve resources. |
+| Thrull Champion, complete FEM record | Same card/rollback/casting tests: full casting cost, 2/2 printed stats and global +1/+1 Thrull bonus (including source and opposing Thrulls), Thrull target restriction and control-only duration. |
+| Rubinia Soulsinger; Willow Satyr, complete LEG records | Same card/rollback/casting tests: exact costs and P/T, any creature versus legendary creature target, tapped/control endpoints and optional untap. `UntapAndInstances`: actual untap decline/accept, stun replacement, departed/phased targets, independent installed durations and clones. `CopiesAndContexts`: retargeted same-controller copy controls two distinct targets without changing the original frame; untapping ends both. |
+| Reusable engine lifetime | `TestGainControlWhileSourceControlled`: source departure/return/phasing/phase cycle/control, target return/phasing, untap/retap, source ability removal, permanent expiry and clone isolation. `StartAndValidation`: invalid duration starts, tapped returned source identity, foreign-controller copy installs no effect, nil/unbound declarations and spell sources. `UntapNotifications`: simultaneous expiry precedes all untap notifications. Existing `TestControl*` and `TestUntilSourceUntaps*` retain shared layer/lifecycle regressions. |
+| Compiler declarations and reporting | `TestRONSourceControlInvalid`: malformed endpoints, unsupported players/references/durations and arities. `CopiesAndContexts`: fresh factory abilities, modal/entry-trigger declaration contexts, wrong-source and unbound/incompatible subjects. `Inventory`: nested duration and reference roles remain visible in rejected records. Existing inventory tests retain strict registry isolation and real Lightning Bolt gameplay. |
+
+Four complete-card gameplay mappings are added. Collection-wide engine-validation
+and behavior-verification totals remain null; compilation is separate from
+collection gameplay coverage.
+
+### Measurements, validation and remaining gates
+
+Final strict and semantic loading: **1,651 compiled / 794 rejected records**,
+**619 accepted / 367 rejected names**. Exactly Aladdin, Thrull Champion, Rubinia
+Soulsinger and Willow Satyr are newly accepted; no accepted name is lost.
+Inventory: **72,950 nodes / 8,539 signatures / 8,348 unknown-role occurrences**.
+Both loaders exit 1 and install no partial registry. Remaining diagnostics include
+`ChooseADamageSource`, `CDA_Power`, `Targeted_Modal` and unrelated nested gaps.
+No source defect or environment/pre-existing check failure was found. RON source
+and vocabulary hashes are unchanged; no vocabulary refresh is needed.
+
+| Command | Final result |
+| --- | --- |
+| Focused source-control, existing control/tapped-duration and inventory tests with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS after lint. |
+| `go test ./... -short -count=1` | PASS after lint (engine skill check). |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues; variable scopes and test allocation fixed, then rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,651 compiled / 794 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 619 accepted / 367 rejected names; 72,950 nodes / 8,539 signatures / 8,348 unknown-role occurrences. |
+
+Automatic lint edits were reviewed; no unrelated file was changed. Final
+focused and repository checks were rerun after lint. Go definitions, runtime
+consumers, generators and DSL functions are retained: complete RON loading,
+collection gameplay and runtime cutover remain below the removal gates. No DSL
+function is removed without a fresh caller audit. API/rules docs describe only
+this slice's established behavior. No second slice is started.
+
+Ranked next candidates to reassess from fresh complete records:
+
+1. Chosen-source choice/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone battlefield-count CDAs for the five direct consumers.
+3. Exile payment and paid-object bindings: Feldon's Cane, City of Shadows,
+   Necropolis and Night Soil need their distinct nested result consumers too.
+
+Slice files: engine `composable_source_control.go`, its tests, `effect_control.go`,
+`effect_manager.go`, `game.go`, `doc.go`; compiler `source_control.go`, its tests,
+`compiler.go`, `inventory.go`, `inventory_test.go`; API/rules-contract documents
+and this ledger entry. The completed slice receives one descriptive commit; its
+hash is reported in the final response. User changes remain outside that commit.

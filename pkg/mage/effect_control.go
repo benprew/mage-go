@@ -63,12 +63,15 @@ type ControlEffectSpec struct {
 }
 
 type controlContinuousEffect struct {
-	targetID      uuid.UUID
-	controllerID  uuid.UUID
-	duration      Duration
-	conditions    []ControlConditionData
-	expired       bool
-	tapMaintained bool
+	sourceIncarnation uuid.UUID
+	targetIncarnation uuid.UUID
+	sourceTapped      bool
+	targetID          uuid.UUID
+	controllerID      uuid.UUID
+	duration          Duration
+	conditions        []ControlConditionData
+	expired           bool
+	tapMaintained     bool
 	effectSource
 }
 
@@ -87,15 +90,22 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 	if e.expired {
 		return false
 	}
-	// Phasing does not end a duration, but its conditions must still hold.
+	// Target phasing preserves the duration while its source conditions hold.
 	target := g.FindPermanent(e.targetID)
-	if target == nil && g.FindPermanentIncludingPhased(e.targetID) == nil {
+	presentTarget := g.FindPermanentIncludingPhased(e.targetID)
+	if presentTarget == nil || (e.targetIncarnation != uuid.Nil && presentTarget.incarnationID != e.targetIncarnation) {
 		if latchExpiration {
 			e.expired = true
 		}
 		return false
 	}
 	source := g.FindPermanent(e.SourceID())
+	if e.sourceIncarnation != uuid.Nil && (source == nil || source.incarnationID != e.sourceIncarnation) {
+		if latchExpiration {
+			e.expired = true
+		}
+		return false
+	}
 	for _, condition := range e.conditions {
 		if !condition.controlCondition(g, source, target, e.controllerID) {
 			if latchExpiration {

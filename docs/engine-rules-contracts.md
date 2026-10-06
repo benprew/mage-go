@@ -4026,3 +4026,40 @@ the engine declaration, legal candidates, rollback, copies and clones.
 complete Banshee and Eternal Flame records and the shared value shapes.
 The existing `TestDivideValues*`, `TestDamagePackets*` and `TestRONDamagePackets*`
 retain arithmetic validation and replacement/batch contracts.
+
+## Source-conditioned captured control
+
+`GainControlWhileSourceControlled(subject PermanentRef, requireTapped bool)
+ResolvingEffect` creates a Layer 2 control effect for the resolving controller.
+It uses typed reference resolution and the existing control condition and layer
+reconciliation services. Definition validation requires a permanent source and a
+bound, non-nil subject. The declaration contains no chosen object or game state.
+
+The duration starts only while the original source is present, phased in and
+controlled by the resolving controller, and tapped when required (CR 611.2b).
+Source LKI cannot start this duration. A returned source cannot substitute for
+the captured source. Each installed effect saves both source and target
+incarnations and the resolving controller. Source departure, phasing or loss of
+control ends it permanently. The tapped form also ends on actual untapping.
+Ability removal and cleanup do not end an installed duration. Losing and then
+regaining control, retapping, or phasing back in does not restart it.
+
+Untap transition hooks expire these effects before untap notifications. The
+simultaneous untap service expires all affected durations before notifications.
+A stun replacement that prevents untapping preserves the duration. Phasing
+expires the source duration before an immediate phase-in (CR 702.26f). Target
+phasing suspends application and preserves a valid source duration; target
+return cannot receive the old effect (CR 400.7, 611.2c). Cloned games copy the
+captured identities and expiration state independently.
+
+The separate printed permission to remain tapped stays optional after target
+departure or phasing. This action does not register the legacy target-dependent
+untap policy. `GainControl`, `ControlEffectSpec`, and legacy tap-maintained
+callers retain their behavior. The existing control layer owns timestamp order,
+control-change events, summoning sickness and prohibitions on changing control.
+The adapter adds no replacement-ordering, APNAP or simultaneous zone contract.
+
+Evidence: `TestGainControlWhileSourceControlled`,
+`TestGainControlWhileSourceControlledStartAndValidation`, the existing
+`TestControl*` suites, and `TestRONSourceControl*` with the full Aladdin,
+Thrull Champion, Rubinia Soulsinger and Willow Satyr records.
