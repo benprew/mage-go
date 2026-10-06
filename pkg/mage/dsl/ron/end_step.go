@@ -37,6 +37,9 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 		step = your
 	}
 	ctx.stepEvent = &stepEventPlan{playerName: "Trigger_ThatPlayer"}
+	if attached {
+		ctx.permanentEvent = &permanentEventPlan{name: "Trigger_ThatPermanent"}
+	}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
@@ -44,11 +47,13 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 	return func() mage.CardOption {
 		player := mage.BindPlayer(ctx.stepEvent.playerName)
 		bindings := instanceBindings{steps: map[*stepEventPlan]*mage.PlayerBinding{ctx.stepEvent: player}}
-		actions := plan.buildWithBindings(bindings)
 		var pattern mage.EventPattern = mage.TurnStepBegins(step, player)
 		if attached {
-			pattern = mage.AttachedControllerUpkeep(mage.BindPermanent("upkeep host"), player)
+			host := mage.BindPermanent(ctx.permanentEvent.name)
+			bindings.tapped = map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: host}
+			pattern = mage.AttachedControllerUpkeep(host, player)
 		}
+		actions := plan.buildWithBindings(bindings)
 		var options []mage.TriggerOption
 		if condition != nil {
 			options = append(options, mage.WithInterveningIf(condition))

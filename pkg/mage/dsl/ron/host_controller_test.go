@@ -352,8 +352,12 @@ func TestRONHostControllerInstancesAndReprints(t *testing.T) {
 
 func TestRONHostControllerCurseDamageClause(t *testing.T) {
 	n := hostUntapRecord(t, "DRK", "Curse Artifact")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "optional payment cost (SacrificePermanent)") {
-		t.Fatalf("full card blocker: %v", err)
+	fullFactory, err := Compile(n)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Curse Artifact", fullFactory()); err != nil {
+		t.Fatal(err)
 	}
 	erosion := hostUntapRecord(t, "DRK", "Erosion")
 	erosionFactory, err := Compile(erosion)
@@ -424,9 +428,7 @@ func TestRONHostControllerCurseDamageClause(t *testing.T) {
 			g.ResolveStack()
 			for _, game := range []*mage.Game{g, clone} {
 				recipient := b.PlayerID()
-				if scenario == "control" || scenario == "move" {
-					recipient = a.PlayerID()
-				}
+
 				amount := 2
 				switch scenario {
 				case "copy":

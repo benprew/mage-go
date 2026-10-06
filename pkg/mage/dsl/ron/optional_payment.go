@@ -61,6 +61,7 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		}
 		cost = payment.Args[1]
 	}
+	var sacrifice *permanentReferencePlan
 	var dynamic valueFactory
 	var mana core.ManaCost
 	var costs []costFactory
@@ -69,6 +70,13 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		var build costFactory
 		build, err = compileRequiredSacrificeCost(cost, ctx)
 		costs = []costFactory{build}
+	} else if cost.Name == "SacrificePermanent" {
+		if err := arity(cost, 1); err != nil {
+			return nil, err
+		}
+		ref, compileErr := compilePermanentRef(cost.Args[0], ctx)
+		err = compileErr
+		sacrifice = &ref
 	} else if cost.Name == "MillNumberCards" {
 		var amount int
 		amount, err = compileMillCount(cost, true)
@@ -123,6 +131,12 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 				return mage.IfRequiredPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 			}
 			return mage.UnlessRequiredPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
+		}
+		if sacrifice != nil {
+			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
+				return mage.IfSacrificePaid(player.build(bindings), sacrifice.build(bindings), mage.Sequence(effects...))
+			}
+			return mage.UnlessSacrificePaid(player.build(bindings), sacrifice.build(bindings), mage.Sequence(effects...))
 		}
 		if dynamic != nil {
 			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {

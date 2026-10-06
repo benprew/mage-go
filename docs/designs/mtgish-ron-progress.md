@@ -22075,3 +22075,156 @@ Ranked next candidates to reassess:
    Gaea's Avenger's source defect separate.
 
 One descriptive commit contains only this slice. No second slice is started.
+
+## 2026-10-05: typed optional sacrifice and captured upkeep subjects
+
+Status: completed slice `TYPED-OPTIONAL-SACRIFICE`. This run stops here.
+Pre-existing changes to `.gitignore`, the execution design and this ledger,
+and untracked `mtgish-ron-completed.md`, remain intact and unstaged. Only this
+appended entry is included from the ledger in this slice's commit.
+
+### Fresh evidence, candidates and selection
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary, progress, complete
+candidate RON records, compiler scopes/events/payment services, API/rules
+contracts, and CR 118, 400.7, 608.2 and 701.21. The baseline short engine tests
+and build passed. Strict loading and semantic inventory exited 1 for collection
+rejection: 2,445 records, 1,714 compiled / 731 rejected, 637 accepted / 349
+rejected unique names. Semantic inventory: 72,950 nodes, 8,539 signatures and
+6,779 unknown-role occurrences. Reprints count once. No Go card definition was
+used as a requirement and no removed skill or agent delegation was used.
+
+| Candidate | Distinct affected names; estimated complete-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Typed optional sacrifice, selected | Curse Artifact, Mindstab Thrull, Necrite, Safe Haven; **1 immediate**. Knowledge Vault also uses the mandatory spelling, which is outside this contract. | Mindstab Thrull needs a captured defending player; Necrite also needs its player-relative target filter. Safe Haven needs linked exile/return. A shared typed payment removes the sacrifice prerequisite for all four optional consumers. Complete Oracle checking revealed an additional source-data identity defect in Curse Artifact, resolved below. | Medium: a resolving engine primitive, narrow compiler adapter, existing upkeep-host binding exposure, identity/payment/copy/clone/replacement tests and one source correction. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **0 adapter-only / 7 eventual**. | Complete records need source enumeration and choice, saved source information and next-event shields. These also enable later Dark Sphere, Jade Monolith, Eye for an Eye and Reverse Damage work, whose additional operations remain excluded. | High: source-choice and replacement contracts with simultaneous damage and property rechecks. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **0 battlefield-only / 5 eventual**. | Needs characteristic evaluation in all zones, owner/controller count context, named counts and copy/layer contracts. Gaea's Avenger additionally has its previously recorded controller-predicate source defect and arithmetic form. | High: shared all-zone characteristic services before adapters and gameplay/copy/layer evidence. |
+
+The selected shared prerequisite has a smaller implementation boundary and an
+immediate complete consumer, with three concrete dependent consumers. First
+errors were checked against nested expressions and full records, rather than
+counted as complete unlocks. The contract, reuse boundary and acceptance cases
+were stated before editing. Used the implement-engine skill for the engine
+service; the broader user task authorizes the compiler and RON wiring.
+
+### Exact signatures, contexts and reuse
+
+New engine APIs:
+
+- `IfSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect) ResolvingEffect`.
+- `UnlessSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect) ResolvingEffect`.
+
+These resolve one typed subject before offering payment and build a fresh
+identity-restricted `SacrificeMatchingIncludingSourceCost`. The existing optional
+payment service checks payer control and affordability, takes the player's
+choice, and runs the action transaction. A captured incarnation restricts both
+validation and commit. Missing, uncontrolled and phased subjects cannot pay;
+phase cycles preserve identity; leave/return does not. A source can pay its own
+cost. Graveyard/exile destinations use the existing sacrifice action and zone
+replacement pipeline. Regeneration and indestructibility do not prevent
+sacrifice. Failed or declined payments take the unpaid branch. An absent payer
+runs no branch, as with existing resolution payments.
+
+RON action-list contexts accept `MayCost(SacrificePermanent(ref))` and
+`PlayerMayCost(player, SacrificePermanent(ref))`. `ref` uses the existing bound
+singular permanent grammar: source, Aura host, target, or an available event
+reference. `player` uses the existing typed player grammar. Each declaration
+requires one adjacent nonempty `If` or `Unless` list and symbol `CostWasPaid` or
+`CostWasntPaid`; all four polarities work. Nested/consecutive pairs keep local
+results. `MustCost`, composite/alternative sacrifice payments, collections,
+new activation/casting costs and linked results remain unsupported.
+
+`AtTheBeginningOfAPlayersUpkeep(SinglePlayer(HostController))` now exposes
+`Trigger_ThatPermanent`, backed by the existing `AttachedControllerUpkeep`
+host snapshot. Its existing `Trigger_ThatPlayer` retains the upkeep player.
+These are event-local, fresh per factory and retained per pending trigger or
+copy. Other step contexts do not gain a permanent binding. RON owns spelling,
+validation and lowering; mage owns identities, choices, transactions and rules.
+No parallel cost, zone, event or replacement service is introduced. No new
+simultaneous-operation or replacement-ordering rule is claimed.
+
+### Source defect and TDD evidence
+
+`data/DRK.json` specifies damage to “that player” unless they sacrifice “that
+artifact.” The old DRK record instead read HostController and HostPermanent
+again at resolution. This redirected payment/damage after control changes or
+reattachment. CR 608.2c requires the written instructions; CR 701.21a prevents
+a player from sacrificing an artifact they no longer control. Corrected only
+Curse Artifact's payer, subject and damage recipient to captured event bindings.
+The collection contains one record of this card, so there are no reprints to
+update. Existing exact engine host/player snapshots supply this behavior.
+Oracle text was checked locally and against the
+[card record](https://mtg.wtf/card?q=%21Curse+Artifact); rules evidence also comes
+from the repository's Comprehensive Rules and the
+[Wizards rules document](https://media.wizards.com/2025/downloads/MagicCompRules%2020251114.pdf).
+
+Engine tests first failed because both payment APIs were undefined. New RON
+acceptance tests then failed on the expected unsupported `SacrificePermanent`
+diagnostic. After source correction, restoring the old record temporarily
+made the new host-control and reattachment assertions fail; the corrected
+record was restored. Initial test fixtures needed a creature's CardPT and an
+Aura owner for native state-based actions. Clone tests explicitly account for
+SearchPlayer declining this optional sacrifice independently of live scripted
+players. No gameplay assertions were removed to pass these checks. The old
+Curse Artifact rejection assertion now requires full definition validation;
+its prior damage-clause test retains its interactions with corrected identity.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Curse Artifact, complete corrected DRK record | `TestRONTypedSacrificeCurseArtifact`: real casting, insufficient mana, illegal creature target and rollback, attachment, upkeep selection, resolution payment, decline, control changes, reattachment, source departure/return/phasing, host return/phasing/phase cycle, ability removal before/after triggering, pending copies, independent clone choices, exile replacement and damage prevention. `TestRONTypedSacrificeNativeUpkeep`: native upkeep and state-based actions. `TestRONHostControllerCurseDamageClause` retains the independent damage-clause coverage. |
+| Typed engine subject payment | `TestResolutionSacrificeIdentity`: paid/unpaid branches, control, owner destination, absence/return, phasing, stale object during the offer, clone isolation, regeneration, indestructibility and exile replacement. `TestResolutionSacrificeDefinition`: nil/unbound inputs reject before execution. |
+| RON declaration and instance contracts | `TestRONTypedSacrificeDeclarationsAndLocalResults`: malformed and unbound/wrong-role references and all branch polarities. `TestRONTypedSacrificeTargetsAndInstances`: fresh target bindings across factories, nested independent outcomes, retargeted copies, original/copy independence and exhausted subjects. |
+| Mindstab Thrull prerequisite only | `TestRONTypedSacrificeUnblockedSourceClause`: the complete record still rejects the defending-player reference. A synthetic unblocked source-event declaration verifies the exact `Trigger_ThatCreature` sacrifice shape and resolution timing. No complete-card gameplay claim. |
+
+### Final evidence and remaining work
+
+Actual gain matches the estimate: **1 unique card / 1 record**, Curse Artifact.
+No accepted name is lost. Full-card gameplay mappings gain one; collection-wide
+engine-validation and gameplay totals remain null. Strict loading still exits
+1 and installs no partial registry: **1,715 compiled / 730 rejected records;
+638 accepted / 348 rejected names**, all 2,445 records parsed. Final inventory:
+72,950 nodes, 8,537 semantic signatures, 6,779 unknown-role occurrences. The
+signature decrease reflects the corrected reference contexts, not dropped AST
+nodes. Syntax snapshot refreshed through the RON AST: 1,104 vocabulary entries,
+600 tuple signatures and 51 top-level rule names remain unchanged. All file
+hashes and first loader diagnostics are fresh.
+
+Remaining diagnostics include:
+
+- Mindstab Thrull: `FEM.lines.ron:62:334: unbound or incompatible player reference (Trigger_DefendingPlayer)`.
+- Necrite: `FEM.lines.ron:63:286: unsupported permanent filter (ControlledByPlayer)`.
+- Safe Haven: `DRK.lines.ron:88:463: unsupported action (PutEachExiledCardOntoTheBattlefield)`.
+- Knowledge Vault: `LEG.lines.ron:149:232: unsupported exile subject (TheTopCardOfLibrary)`; mandatory typed sacrifice and other linked operations remain unsupported too.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS. |
+| Focused engine and RON payment/host/inventory tests with `-count=1` | PASS after the expected TDD failures; repeated after formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic import formatting reviewed. |
+| Additional skill check `go test ./... -short -count=1` | PASS, including expanded regeneration/indestructibility/clone tests. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `go run ./cmd/loadcards -inventory -json` | Expected exit 1 for the remaining collection gaps; final counts above. |
+
+No environment or pre-existing validation failure remains. Changed files:
+new engine `resolution_sacrifice.go` and its tests; compiler `optional_payment.go`
+and `end_step.go`, new `typed_sacrifice_test.go`, updated host/inventory tests;
+DRK source record and vocabulary snapshot; mage/doc.go, API/rules-contract docs
+and this ledger entry. A fresh repository payment-service caller search found
+206 references across code/docs, plus 74 DSL dot-import callers. No DSL export
+is made obsolete by this slice and none is removed. The complete loading,
+runtime cutover, Go-definition/generator removal and DSL cleanup gates remain
+unmet; existing callers and production registries are preserved.
+
+Ranked next candidates to reassess:
+
+1. Captured defending-player event binding and player-relative permanent target
+   filter: completes Mindstab Thrull and Necrite after this payment prerequisite.
+2. Chosen-source next-event prevention prerequisite: seven Circle/Realm consumers.
+3. All-zone count CDA service: five direct consumers; retain Gaea's Avenger's
+   separate source defect.
+
+One descriptive commit includes only this slice. No second slice is started.

@@ -4465,3 +4465,29 @@ phasing, changed-controller and retargeted copies, prevention of countering,
 regeneration, clone isolation and declaration rejection. Existing exact
 attachment/LKI and stack identities determine recipients; these changes add
 no new identity, replacement-order or simultaneous-operation rule.
+
+## Optional sacrifice of a typed subject
+
+`IfSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect)` and
+`UnlessSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect)` offer a payment
+at resolution. Definition validation rejects nil or unbound inputs. The subject
+is read once before the offer. Its ID and incarnation restrict the existing
+`SacrificeMatchingIncludingSourceCost`; `IfPaid`/`UnlessPaid` payment behavior
+supplies affordability, the payer's choice and the atomic action transaction.
+The payer must control that incarnation (CR 701.21a). Missing and phased subjects
+cannot pay; phase cycles preserve identity, while zone changes do not (CR 400.7).
+A change during the offer cannot make the transaction sacrifice a returned card.
+
+Sacrifice uses the shared action and zone replacement pipeline. Regeneration
+cannot replace it. A graveyard-to-exile replacement still pays the cost
+(CR 118.11–12). Each invocation creates its own cost; no choice or payment result
+is stored in the declaration. Pending copies and cloned games retain their own
+bindings and state. Clone search players make their own optional choices.
+An absent payer runs no branch, as in the existing resolution payment service.
+This contract adds no mandatory, multiple-subject, simultaneous payment or
+replacement-ordering service.
+
+`TestResolutionSacrificeIdentity` and `TestResolutionSacrificeDefinition` cover
+payment polarity, legality, decline, control, owner destination, absence,
+leave/return, phasing, stale payment, replacements, cloning and invalid inputs.
+RON gameplay and target/copy/result contracts map to `TestRONTypedSacrifice*`.

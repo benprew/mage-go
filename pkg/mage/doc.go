@@ -195,6 +195,11 @@
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].
 //
+// Use [IfSacrificePaid] or [UnlessSacrificePaid] for an optional payment of
+// one typed permanent. The payer must control the original incarnation.
+// Returned and phased permanents cannot pay. Zone replacements can change
+// the destination without changing successful payment.
+//
 // Use [IfRequiredPaid] or [UnlessRequiredPaid] for a mandatory matching
 // sacrifice payment during resolution. The branch keeps its own result.
 // Source exclusion uses the original incarnation, so a returned source can pay.

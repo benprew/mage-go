@@ -3871,3 +3871,28 @@ exact upkeep clause of Season of the Witch; its full record remains rejected
 for the independent end-step history filter. `Declarations`,
 `NestedAndInventory`, and `PolarityAndZero` establish grammar, scope, result and
 zero-payment contracts. Inventory role labels do not assert gameplay support.
+
+### RON optional sacrifice of a declared permanent
+
+`MayCost(SacrificePermanent(ref))` and
+`PlayerMayCost(player, SacrificePermanent(ref))` accept a bound singular permanent
+reference in resolving action lists. The adjacent nonempty `If` or `Unless`
+continuation uses the symbols `CostWasPaid` or `CostWasntPaid`; all four branch
+polarities work. Results stay local to each pair, including nested pairs.
+`MustCost`, composite/alternative costs, and collections gain no new support.
+
+The adapter uses `IfSacrificePaid` or `UnlessSacrificePaid`. These engine effects
+resolve the subject once and use the existing matching-sacrifice transaction
+with its captured ID and incarnation. The payer must control the subject.
+Missing, phased, returned, or uncontrolled subjects cannot pay. A declined or
+failed payment does not sacrifice another object. Zone replacements can change
+the destination without changing successful payment.
+
+An Aura host-controller upkeep exposes `Trigger_ThatPermanent` as the captured
+host and `Trigger_ThatPlayer` as the upkeep player. These bindings are local to
+the trigger and are fresh in each factory instance. Curse Artifact uses these
+references because its Oracle text refers to that artifact and player. Its
+complete record is covered by `TestRONTypedSacrificeCurseArtifact` and
+`TestRONTypedSacrificeNativeUpkeep`. The remaining `TestRONTypedSacrifice*` tests
+cover rejection, independent targets, copies, nested results and the source
+unblocked-event clause. Mindstab Thrull still lacks its defending-player binding.
