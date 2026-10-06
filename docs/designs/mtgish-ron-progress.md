@@ -21761,3 +21761,151 @@ Ranked next candidates to reassess:
 2. All-zone count CDA service for the five direct consumers.
 3. Shared end-combat intervening-if/history and restricted counter placement
    for Clockwork Beast and Clockwork Avian.
+
+## 2026-10-05: resolving Aura host-controller references
+
+Status: completed implementation slice `RESOLVING-HOST-CONTROLLER`. Stop after
+this slice. Initial user changes to `.gitignore`, the execution design and
+progress ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only
+this entry is staged from the ledger; its pre-existing reorganization is not
+included in the commit.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected compiler/typed reference/attachment/information/payment/event code,
+API and rules contracts, and CR 303.4, 603 and 608. Baseline compiler tests and
+short engine tests passed with `-count=1`; `make build` passed. Strict loading
+and semantic inspection exited 1 for unsupported records, not build failure:
+2,445 parsed records; 1,706 compiled / 739 rejected; 634 accepted / 352 rejected
+unique names. Inventory: 72,950 nodes, 8,539 signatures, 6,794 unknown-role
+occurrences. Complete candidate records and nested forms were inspected;
+reprints count once.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers; downstream capability | Effort |
+| --- | --- | --- | --- |
+| Resolving host controller, selected | Paralyze, Curse Artifact, Erosion; **1 immediate**, 3 eventual | Curse Artifact needs optional host sacrifice. Erosion needs alternative mana/life payment. Supplies the resolving payer and damage recipient without confusing the saved upkeep player. | Low: reuse exact typed attachment and LKI services; declaration, payment, lifecycle, copying and gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **0 adapter-only**, 7 eventual | Source enumeration/choice, saved source identity/properties and next-event shields need shared engine contracts. Enables selected-source prevention consumers. | High: source choices, zone identity, property checks, replacement ordering and damage batches. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **0 battlefield-only**, 5 eventual | Needs nonbattlefield characteristic evaluation, owner/controller context, copiable declarations and exact count filters. Gaea's Avenger has a separate previously recorded source defect. | High: zone, layer and copying contracts plus gameplay in applicable zones. |
+
+Selection rationale: a dependency-ready shared reference completes one card and
+supplies a concrete prerequisite for two more at lower effort than the larger
+engine additions. This is not a card-specific capability. First-error frequency
+was not an unlock estimate. The contract, reuse boundary and acceptance cases
+were stated before editing. No skills, delegation, Go definitions as requirements,
+production subset registry, fallback, card-name branch or game-time declaration
+panic was used.
+
+All records with `HostController` were checked. Cursed Land, Feedback,
+Wanderlust, Warp Artifact, Unstable Mutation, Power Leak and Takklemaggot use it
+only in the existing upkeep-event selector; their execution is unchanged.
+Power Leak and Takklemaggot retain their independent action/host-death blockers.
+Only Paralyze, Curse Artifact and Erosion use the new resolving player context.
+
+### Supported shape, contexts, dependencies and engine reuse
+
+Bare `HostController` is accepted by `compilePlayerRef` only in an Aura scope.
+It produces `playerReferencePlan{permanent: permanentHost}` and lowers through
+`ControllerOfWithLKI(AttachedPermanent)`. Existing resolving player actions,
+player damage recipients and optional-payment lowering can consume it. Trigger
+and activated action contexts are tested. Tuple forms, non-Aura scope and
+incompatible references reject at compilation. No event binding is invented.
+
+The resolving reference reads the current attachment and its current controller
+at the action. It is distinct from the event's captured `Trigger_ThatPlayer`
+and the ability controller. Source departure uses its saved exact attachment;
+source return cannot substitute a new attachment. Host departure/return uses the
+original host's controller information. Phasing retains information but does
+not make the host available to an untap action. A payment can occur when the host
+is already untapped or absent. Copies retain source identity separately from the
+copy's controller. Factories, pending instances and clones reuse existing typed
+reference isolation. No mutable chosen state is added to the compiler.
+
+No engine API or rules change. Reuse includes `AttachedPermanent`,
+`ControllerOfWithLKI`, `AttachedControllerUpkeep`, `IfPaid`, transactional costs,
+mana-ability payment, ordinary trigger placement, `UntapSubject`, source damage,
+prevention, stack copying and `Game.Clone`. No new replacement-order,
+simultaneous-operation, duration or cost-result contract is introduced.
+No Go definitions, generators, startup callers or DSL exports are removed:
+complete loading, collection gameplay and runtime wiring remain below the gate.
+No deletion is attempted without a caller audit.
+
+### TDD, gameplay coverage and test mappings
+
+New Paralyze gameplay/lifecycle tests first failed specifically with
+`unbound or incompatible player reference (HostController)`. Declaration
+rejections passed. Implementation adds only the scoped typed reference adapter.
+Fixture corrections preserved contracts: search clones decline the optional
+untap payment under their existing noninteractive policy; a returned Paralyze
+queues a separate ETB trigger, which is resolved before the old upkeep trigger;
+mana must be supplied after native untap because step boundaries empty pools.
+Clone payment expectations now explicitly verify that policy. The separate
+Curse Artifact damage-clause test verifies recipient bindings through clones
+without a payment choice. No behavior requirement or assertion was weakened.
+
+Tests are in `pkg/mage/dsl/ron/host_controller_test.go`:
+
+| Card/contract | Test mapping (all use `TestRONHostController` prefix) |
+| --- | --- |
+| Paralyze, complete record and all six reprints | `Paralyze`: validation, failed/illegal casting rollback, creature-only targeting, entry tap timing, untap restriction, explicit payer, decline/unaffordable/payment, mana abilities and other untap permission. `NativeUpkeep`: real untap/upkeep execution. `InstancesAndReprints`: all reprints validate, distinct factories/controllers and concurrent pending events. |
+| Paralyze identity and resolution | `ResolutionIdentity`: control before/after detection, attachment move, source control/departure/return, host return, phase before/after/cycle, ability removal before/after, unattached source, copied trigger controller, source identity, optional payment on absent hosts and clone isolation/policy. |
+| Curse Artifact exact unpaid damage clause only | `CurseDamageClause`: the AST preserves the real upkeep event and exact damage action from the complete record, with the independently unsupported payment omitted only in a test fixture. Current attachment/controller, source departure, returned host LKI, phased host, prevention, changed-controller copy and clone isolation are checked. The full record remains rejected for optional host sacrifice. |
+| Erosion remaining gap | `CurseDamageClause` asserts the complete record still rejects its alternative payment `Or`; no gameplay claim. |
+| Shared reference contexts and validity | `Activation`: Aura activation uses resolving host controller for a player action. `Declarations`: tuple symbol, incompatible permanent/event references and non-Aura use reject. Existing `TestRONHostUpkeep*`, `TestRONHostStaticUntap*` and `TestInventory*` regressions pass. |
+
+Coverage gain: **one complete unique-card gameplay mapping**, plus one exact
+Curse Artifact damage-clause mapping. Compilation and gameplay counts remain
+separate. Collection-wide engine-validation and behavior-verification totals
+remain null; no collection-wide gameplay claim is made.
+
+### Actual gain, remaining diagnostics and validation
+
+Actual gain matches the estimate: **Paralyze only, 1 unique name / 6 records**.
+No accepted name is lost. Final strict loading exits 1 and installs no partial
+registry: **1,712 compiled / 733 rejected records; 635 accepted / 351 rejected
+unique names**. All 2,445 records parse. Semantic inventory remains
+72,950 nodes / 8,539 signatures / 6,794 unknown-role occurrences.
+
+Fresh remaining direct-consumer diagnostics:
+
+- Curse Artifact: `DRK.lines.ron:21:317: unsupported optional payment cost (SacrificePermanent)`.
+- Erosion: `DRK.lines.ron:32:297: unsupported optional payment cost (Or)`.
+
+These are compiler payment gaps, not source defects or environment failures.
+No source defect is corrected and no RON record changes. Vocabulary file hashes
+remain valid; no source snapshot refresh is required. API/rules documents update
+only this established reference and its reused rules contracts.
+
+All required checks pass. The first lint run reported one missing test-slice
+preallocation. It was corrected, lint passed with zero issues, and focused
+checks were rerun with `-count=1`. Automatic formatting was reviewed; no
+unrelated file was changed. No environment or pre-existing blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short mage tests and `make build` | PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONHostController\|TestRONHostUpkeep\|TestRONHostStaticUntap\|TestInventory' -count=1` | PASS, repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after correcting test preallocation; zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,712 compiled / 733 rejected, repeated after lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 635 accepted / 351 rejected names; unchanged semantic totals. |
+| Accepted-name and source-hash audit | Only Paralyze is newly accepted; no name is lost. All 12 vocabulary source hashes match. |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Shared optional typed host-sacrifice and alternative mana/life resolution
+   payments, for Curse Artifact and Erosion. Preserve payer identity, cost
+   legality, choice timing, rollback and replacement processing.
+2. Shared chosen-source enumeration/identity/property and next-event prevention
+   contracts, for the seven Circle/Realm consumers.
+3. All-zone count CDA service for the five direct consumers; keep Gaea's
+   Avenger's source defect separate.
+
+Changed files: RON `player_scope.go`, new `host_controller_test.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger entry. One descriptive commit contains only this slice.
+No second slice is started.

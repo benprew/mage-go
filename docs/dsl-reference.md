@@ -1848,9 +1848,8 @@ The event's internal host capture does not replace that reference. A departed
 Aura uses the existing attachment LKI and cannot follow its new incarnation.
 
 Complete-record tests cover Cursed Land, Feedback, Wanderlust, Warp Artifact,
-and Unstable Mutation. This adapter does not add a resolving `HostController`
-reference, optional payments, host-death triggers, or a host-controller end-step
-pattern. Unsupported declarations remain errors.
+and Unstable Mutation. Host-death triggers and host-controller end-step patterns
+remain unsupported. Resolving references use the separate contract below.
 
 ## RON static collection attack restrictions
 
@@ -3815,3 +3814,23 @@ records. See the [rules contract](engine-rules-contracts.md#ron-resolving-single
 binding. The adapter uses `PlayerDrawsCard`, `OpponentDrawsCard`, or
 `ControllerDrawsCard`; it does not declare a target. Other player filters and
 card references remain unsupported in this context.
+
+### RON resolving Aura host controller
+
+Bare `HostController` is a typed player reference in an Aura's resolving actions.
+It lowers to `ControllerOfWithLKI(AttachedPermanent)`. `HostController()` and
+uses outside an Aura reject during compilation. The reference reads the current
+attachment and its controller when the action runs. It does not read the Aura's
+controller or the upkeep event's saved `Trigger_ThatPlayer`.
+
+A departed Aura supplies its last attachment. A departed or phased host supplies
+its retained controller information. Returned objects cannot replace the saved
+incarnations. These information reads do not permit actions on absent hosts.
+The existing `HostPermanent` action still requires a present host.
+
+Paralyze's complete record now compiles, including entry tap, normal untap
+restriction, and optional four-mana payment by the resolving host controller.
+Payment remains optional even when the host is already untapped or absent.
+Curse Artifact still rejects optional `SacrificePermanent(HostPermanent)`;
+Erosion still rejects alternative `Or` mana/life costs. Neither full card is
+claimed supported. Evidence: `TestRONHostController*` in `pkg/mage/dsl/ron`.

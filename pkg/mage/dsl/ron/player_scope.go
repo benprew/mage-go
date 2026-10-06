@@ -69,6 +69,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "HostController":
+			if ctx.aura {
+				return playerReferencePlan{permanent: &permanentReferencePlan{kind: permanentHost}}, nil
+			}
 		case "DealsDamage_ThatPlayer":
 			if ctx.damageRecipient != nil {
 				return *ctx.damageRecipient, nil

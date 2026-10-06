@@ -1703,9 +1703,9 @@ source LKI and prevention services.
 `NativeCast`, `NativeStep`, `Reprints`, and `Invalid` in `pkg/mage/dsl/ron`
 verify these contracts through complete RON records. The supported event is
 `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(HostController)), body)`
-on an Aura. Resolving `HostController`, optional payments, host-death events,
-intervening-if host conditions, and host-controller end-step events remain
-separate compiler work.
+on an Aura. Host-death events, intervening-if host conditions, and
+host-controller end-step events remain separate compiler work. Resolving
+`HostController` uses the separate contract below.
 
 ## Static collection attack restrictions
 
@@ -4404,3 +4404,34 @@ Evidence: `TestRONDrawEventUnderworldDreams`, `Bindings`, `ActualDraws`,
 `SeparateInstances`, `FastingClause`, `Declarations`, and `Inventory` in
 `pkg/mage/dsl/ron/draw_event_test.go`. Underworld Dreams uses its complete RON
 record; Fasting has clause coverage only and remains rejected as a full card.
+
+## RON resolving Aura host controller
+
+The bare Aura-scoped `HostController` reference reuses
+`ControllerOfWithLKI(AttachedPermanent)`. No engine API or rules change.
+CR 303.4b and 608.2h require the attachment and its controller at the information
+read, separate from the player saved by `AttachedControllerUpkeep` when the event
+occurs. The Aura's controller owns the trigger; the resolving host controller
+receives its payment choice. A control or attachment change before resolution
+can change that payer without changing the captured event player (CR 603.3a).
+
+Exact-incarnation attachment, departure and phase information reuse the existing
+engine service. Source departure or return retains the old attachment; host
+return cannot substitute a new controller. Host phasing retains information,
+but `UntapSubject` cannot affect the absent host. An optional payment can still
+occur when a later untap action cannot change the host (CR 603.5, 608.2c/d/g).
+Cost transactions and mana-ability payment remain in the shared cost service.
+Copies keep their source reference independently of the new ability controller.
+Search clones use their normal noninteractive choice policy and isolated state.
+No replacement order or simultaneous-operation contract changes.
+
+`TestRONHostControllerParalyze`, `ResolutionIdentity`, `NativeUpkeep`, and
+`InstancesAndReprints` cover complete Paralyze, its six reprints, casting
+rollback, creature legality, entry timing, untap restriction, paid/declined and
+unaffordable choices, mana abilities, control/attachment changes, source and
+host identity, phasing, ability removal, independent pending instances, copies
+and clones. `CurseDamageClause` covers the exact unpaid damage clause from
+Curse Artifact with current-controller reads, LKI, prevention, copies and clone
+isolation; the full card remains rejected for its optional sacrifice cost.
+Erosion remains rejected for its alternative mana/life cost. `Activation` and
+`Declarations` verify shared action context and declaration rejection.
