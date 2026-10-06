@@ -522,6 +522,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "AtTheBeginningOfPlayersNextUpkeep" && len(n.Args) == 1 {
 			return "player_reference"
 		}
+	case "activation_history_condition":
+		if n.Name == "TimesThisAbilityHasBeenActivatedThisTurnIs" && len(n.Args) == 1 {
+			return "activation_history_comparison"
+		}
+	case "activation_history_comparison":
+		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
+			return "value"
+		}
 	case "action":
 		switch n.Name {
 		case "GainControlOfPermanentUntil":
@@ -602,6 +610,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"player_reference", "resolution_cost"}[index]
 			}
 		case "Unless", "If":
+			if n.Name == "If" && len(n.Args) == 2 && n.Args[0].Name == "TimesThisAbilityHasBeenActivatedThisTurnIs" {
+				return []string{"activation_history_condition", "action"}[index]
+			}
 			if len(n.Args) == 2 {
 				return []string{"condition", "action"}[index]
 			}

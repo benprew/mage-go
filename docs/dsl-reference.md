@@ -3621,3 +3621,36 @@ The color replaces existing colors without changing mana symbols. It lasts
 through cleanup, control changes and phasing, and carries from a permanent
 spell to the permanent it becomes. Later zone changes end it. Color changes
 are not copiable values. Existing layer timestamps and protection checks apply.
+
+## RON activation history at resolution
+
+`BindActivationHistory(name string) *ActivationHistoryBinding` declares history
+for one activated ability. Supply it once with
+`WithActivationHistory(binding *ActivationHistoryBinding) ActionOption` on
+`NewAction(ActionActivated, ...)`. Use
+`IfActivationsAtLeast(binding *ActivationHistoryBinding, minimum int,
+body ResolvingEffect) ResolvingEffect` to read the current turn's count during
+resolution. Validation rejects missing declarations, nil or empty bindings,
+negative thresholds, duplicate options, spell declarations and one binding
+shared by different abilities.
+
+The RON compiler supports this resolving action in nonmodal activated abilities
+that use the stack:
+
+```ron
+If(TimesThisAbilityHasBeenActivatedThisTurnIs(GreaterThanOrEqualTo(Integer(4))),
+   [CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,
+       ActionList([SacrificePermanent(ThisPermanent)]))])
+```
+
+The threshold can be any nonnegative integer. The branch must have at least one
+supported action. Its declarations use the enclosing ability's lexical scope.
+A delayed body cannot read this enclosing history condition. Spell, static,
+trigger and modal contexts remain unsupported. Mana bodies remain rejected
+until mana-conversion planning supports their complete conditional execution.
+The obsolete resolution-count spelling remains rejected.
+
+Dragon Whelp and Nalathni Dragon use this shape. All identical records now count
+activations, as Oracle requires. Farrelite Priest and Initiates of the Ebon Hand
+receive the same source correction but remain rejected. Compilation does not
+claim support for these two mana creatures.

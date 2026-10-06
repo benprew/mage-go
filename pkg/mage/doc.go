@@ -65,6 +65,11 @@
 // [SetBasePower] changes only base power. Bonuses and counters still apply. [TargetOtherThanSource] excludes the
 // source from a typed permanent target.
 //
+// Use [BindActivationHistory] and [WithActivationHistory] to keep activation
+// counts separate for each ability and source incarnation. [IfActivationsAtLeast]
+// reads the count at resolution. Countered activations count; copies do not add
+// activations. Clones keep separate history. Final cleanup clears the count.
+//
 // Use [Activate] with [Mana] costs and [Until] with [ModifyPT] of [This]
 // for a temporary source bonus. Each resolution adds a separate bonus to
 // the original permanent. A returned card does not receive that bonus.

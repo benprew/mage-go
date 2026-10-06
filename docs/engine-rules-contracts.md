@@ -4128,3 +4128,38 @@ Evidence: `TestSetObjectColorDefinition`, `TestSetObjectColorIdentity`, existing
 `TestSpellColorOverrideCloneAndCopyIsolation`, and RON `TestRONLaceCards`,
 `RetargetedCopy`, `Legality`, `OrderingAndProtection`, `Invalid`, and
 `RegistryAndInventory`. The RON tests cover all five lace names and 30 records.
+
+## Activation history read during resolution
+
+`WithActivationHistory` opts one `ActionDefinition` into a game-owned turn
+tracker. The key contains the declaration binding and original battlefield
+incarnation. A successful payment records one activation before stack placement
+or immediate mana resolution. A failed declaration, target choice or payment
+records none. A source sacrificed as a cost keeps its original incarnation.
+This tracker does not alter activation limits or existing callers.
+
+`IfActivationsAtLeast` reads this history when its instruction executes. The
+current activation and countered activations count. Multiple pending activations
+can all see the same later count. A copied ability reads the original history;
+copying does not activate it (CR 707.10). Source departure does not erase the
+old count. A returned source has separate history (CR 400.7). Control changes
+and phasing retain history (CR 702.26). `TurnTrackers.Clone` copies the map;
+final cleanup clears it with other turn history (CR 514.3).
+
+The RON adapter supports only the nonmodal stack context. Existing `AtNext`
+captures the source incarnation and resolving controller (CR 603.7). A delay
+created after an end step begins waits for a later end step. Each qualifying
+resolution creates its own delay. A returned permanent cannot replace the
+captured source. A phased source cannot be sacrificed when the delay resolves;
+the one-shot delay then ends. A player who no longer controls the source cannot
+sacrifice it (CR 701.17a).
+
+`TestActivationHistory*` covers declaration checks, independent abilities,
+source incarnation, clones, turn reset, countered activations, copies, payment
+failure and sacrifice costs. `TestRONActivationHistory*` covers all seven dragon
+records, native casting/payment, temporary bonuses, thresholds, pending and
+countered activations, copies, delayed timing, source return/phasing/control,
+strict registry rejection and semantic roles. Existing flying and banding engine
+contracts remain in force. This change adds no replacement or simultaneous-action
+service. The mana-conversion compiler context remains rejected; synchronous mana
+execution and planning require their own complete integration.

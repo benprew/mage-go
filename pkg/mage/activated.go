@@ -184,6 +184,8 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
+	activationHistory        *ActivationHistoryBinding
+	activationHistoryOptions int
 	BaseAbility
 	kind                ActionKind
 	effects             []Effect
@@ -352,7 +354,14 @@ func (a *ActionDefinition) activationCount(g *Game) int {
 	return a.activationsThisTurn
 }
 
-func (a *ActionDefinition) markActivatedInGame(g *Game) {
+func (a *ActionDefinition) markActivatedInGame(g *Game, incarnation uuid.UUID) {
+	if a.activationHistory != nil {
+		if g.trackers.Turn.abilityActivations == nil {
+			g.trackers.Turn.abilityActivations = make(map[activationHistoryKey]int)
+		}
+		g.trackers.Turn.abilityActivations[activationHistoryKey{binding: a.activationHistory, incarnation: incarnation}]++
+	}
+
 	if a.staticGrant {
 		if a.limits.MaxActivationsPerTurn > 0 {
 			if g.trackers.Turn.grantedActivations == nil {

@@ -42,6 +42,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	ctx.x = hasX
 	ctx.activation = true
+	ctx.activationHistory = &activationHistoryPlan{}
 	var plan actionPlan
 	var modes []actionPlan
 	if n.Args[1].Name == "Modal_ChooseOne" {
@@ -51,6 +52,14 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+	if ctx.activationHistory.used {
+		if modes != nil {
+			return nil, problem(n, "activation history in modes is not supported")
+		}
+		if containsManaAction(n.Args[1]) {
+			return nil, problem(n, "activation history mana bodies require mana-conversion planning")
+		}
 	}
 	return func() mage.CardOption {
 		bindings := instanceBindings{counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
@@ -77,7 +86,13 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			}
 			return mage.WithAbility(action)
 		}
+		if ctx.activationHistory.used {
+			bindings.activationHistory = mage.BindActivationHistory("this activated ability")
+		}
 		options := actionOptions(plan.buildWithBindings(bindings))
+		if ctx.activationHistory.used {
+			options = append(options, mage.WithActivationHistory(bindings.activationHistory))
+		}
 		for _, build := range costs {
 			options = append(options, mage.WithCost(build(bindings)))
 		}

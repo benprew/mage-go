@@ -20431,3 +20431,162 @@ compiler `spell_color.go`, `lace_test.go`, `compiler.go`, semantic inventory and
 count tests; API/rules-contract docs and this ledger entry. One descriptive
 commit includes only this slice; user archive edits remain unstaged. Its hash
 is reported in the final response. No second slice is started.
+
+## Slice: activation history and conditional delayed sacrifice (2026-10-05)
+
+Capability ID: `ACTIVATION-HISTORY-STACK`. Status: implemented and behavior tested.
+This run stops after one complete nonmodal stack-activation context.
+
+### Baseline and candidate comparison
+
+Initial edits to `.gitignore`, this ledger and the execution design, and the
+untracked `mtgish-ron-completed.md`, are preserved. Only this new ledger entry is
+staged; the user's archive reorganization remains unstaged. Read AGENTS.md,
+`pkg/mage/doc.go`, the execution design, vocabulary and current ledger, selected
+compiler/engine code, complete candidate records and identical reprints, relevant
+API/rules contracts and CR 400.7, 514.3, 603.7, 605.3, 701.17 and 707.10. Applied
+[implement-engine](../../.agents/skills/implement-engine/SKILL.md) for the shared
+history service. No removed card/set skill or Go definition supplied requirements.
+
+Fresh baseline `make build` and short engine tests passed. Strict loading exited
+1 for collection rejection: **1,682 compiled / 763 rejected records** and
+**625 accepted / 361 rejected unique names**, out of 2,445 records / 986 names.
+Semantic inventory: 72,950 nodes, 8,539 signatures, 7,260 unknown-role occurrences.
+
+| Candidate | Distinct affected names; estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Activation history and resolving conditional delayed sacrifice, selected | Dragon Whelp, Nalathni Dragon, Farrelite Priest, Initiates of the Ebon Hand: initial estimate **4**, refined to **2** stack consumers / **7 records** before adapter implementation. | Complete nested inspection found an Oracle source defect and missing untapped mana-conversion planning for the two mana consumers. Shared history separates abilities/incarnations, permits resolution-time count reads and enables those later mana consumers. Native delayed sacrifice, bonuses and cost transactions already exist. | Medium for the stack context: small tracker, definition validation and compiler adapter; threshold, pending/countered/copy, return/phasing/control, clone, payment and timing tests. Full mana context needs separate planning and execution work. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential complete unlocks, **0** adapter-only gains. | Needs public-zone and absent referenced-source choices, identity binding, next-event consumption and replacement rechecks. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage add distinct operations and no immediate estimate. Enables chosen-source prevention/redirection. | High: choice and replacement services with identity, ordering and clone contracts. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** potential complete unlocks, **0** adapter-only gains. | Needs characteristic queries in all zones, owner/controller context, CDA/copy/layer contracts and name counts. Gaea's Avenger adds arithmetic and source-data questions and is excluded from the estimate. Enables reusable characteristic definitions. | High: all-zone service and layer/copy/control tests. |
+
+Selection rationale: after the source and mana audit, the stack context provides
+two immediate complete consumers with one compact reusable service, while
+providing a concrete prerequisite for two additional consumers. Both larger
+candidates need several new rules boundaries. No first-error frequency was used
+as a complete-card estimate. The selected contract, reuse boundary and acceptance
+cases were stated before edits; scope was refined when exact dependencies became
+clear. Actual gain matches the refined estimate: **2 names / 7 records**. The
+initial four-card estimate would have hidden the mana-planning prerequisite.
+
+### Source defect and correction
+
+All nine records for these four names used
+`TimesThisAbilityHasResolvedThisTurnIs`. Oracle counts activations, including
+countered activations, and reads that count when the conditional instruction
+resolves. Several waiting abilities can therefore see the same later count.
+Copies read the count without adding an activation. Local `data/LEA.json`,
+`data/4ED.json`, `data/4th_edition.json` and `data/FEM.json` confirm the three local
+names. [Gatherer Nalathni Dragon](https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=97050)
+confirms the fourth. A direct Scryfall API attempt returned HTTP 400; Gatherer's
+primary Oracle page supplied the needed evidence, so this did not block work.
+
+Corrected all identical consumers together to
+`TimesThisAbilityHasBeenActivatedThisTurnIs`: Dragon Whelp in LEA, LEB, 2ED, 3ED,
+CED and CEI; Nalathni Dragon in PROMOS; both mana creatures in FEM. The obsolete
+resolution-count spelling stays rejected. The two FEM records remain rejected
+with `activation history mana bodies require mana-conversion planning`.
+The parser rebuilt the vocabulary snapshot, including all source positions,
+constructor signatures, counts and hashes. Fresh loader diagnostics replace its
+old baseline. No other source defect was changed.
+
+### Exact signatures, contexts and reuse boundary
+
+Engine API:
+
+- `BindActivationHistory(name string) *ActivationHistoryBinding` declares one
+  ability's history; it contains no chosen or mutable game state.
+- `WithActivationHistory(binding *ActivationHistoryBinding) ActionOption` opts
+  one `NewAction(ActionActivated, ...)` declaration into tracking.
+- `IfActivationsAtLeast(binding *ActivationHistoryBinding, minimum int,
+  body ResolvingEffect) ResolvingEffect` reads the count during resolution.
+
+`TurnTrackers` owns the map keyed by immutable binding and saved incarnation,
+clone copying and final-cleanup reset. The successful activation payment path
+records once before stack placement; failed target/payment paths do not record.
+The caller supplies the original incarnation, including when a cost sacrifices
+the source. Existing activation-limit callers retain their behavior. A copied
+stack object shares the immutable declaration, reads original-incarnation history
+and does not add an activation. Control/phasing retain the count; return does
+not. Definition validation rejects nil/empty/undeclared bindings, negative
+thresholds, duplicate options, spell declarations and sharing a binding between
+different abilities on one card.
+
+RON supports resolving
+`If(TimesThisAbilityHasBeenActivatedThisTurnIs(GreaterThanOrEqualTo(Integer(n))),
+[actions])`, with nonnegative literal `n` and a nonempty supported action list,
+in nonmodal `Activated` and `ActivatedWithModifiers` stack bodies. Each factory
+constructs a fresh binding and action together. Branch bodies keep their lexical
+scope and instruction order. Other comparisons, malformed forms, delayed reads,
+spell/static/trigger/modal and mana contexts stay rejected. Generic resolving
+`If` remains partial. Inventory assigns history conditions/comparisons their
+proper roles, including nested rejected mana records.
+
+Native `AtNext` supplies delayed timing, controller and source capture. Native
+`Until` and `ModifyPT` supply stacking bonuses, cleanup, identity and phasing.
+Native casting/activation services supply costs and rollback. Native sacrifice
+requires the effect controller to control the permanent: losing control before
+the delay resolves prevents sacrifice. A phased source cannot be sacrificed;
+the one-shot delay is consumed. A returned source cannot replace the old one.
+No new LKI, replacement-ordering or simultaneous-operation rule is required.
+
+### TDD and card-to-test mapping
+
+The first engine tests failed for the missing typed API. The first real RON tests
+failed at resolving `If` on both dragons. A separate declaration test exposed a
+shared history binding between two abilities; validation was added after that
+failure. A final audit added a failing duplicate-action declaration test and
+closed that case before rerunning validation. The failed-payment case also
+resolves older pending activations before another successful activation, so it
+detects a count added by a failed payment through observable gameplay. Invalid-context tests failed for the missing valid compiler shape before
+implementation. During implementation, a duplicate inventory switch case caused
+a build failure and was corrected. Timing fixture failures were corrected:
+end-step execution empties mana, and another player cannot sacrifice a creature
+that the original delay controller no longer controls. No test was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Dragon Whelp, all six complete RON reprints | `TestRONActivationHistoryDragons`, `AllReprints`: native 2RR casting and R payments, flying metadata, accumulated +1/+0 bonuses, first three resolutions, fourth threshold, delayed source sacrifice and clone isolation. Existing flying engine tests map its native keyword behavior. |
+| Nalathni Dragon, complete PROMOS record | Same tests: native 2RR casting/R activation, 1/1 base stats, flying and banding, temporary bonus and delayed sacrifice. Existing RON band incoming/outgoing damage and native banding contract tests map its shared keyword behavior. |
+| Pending counts, copies, source identity and timing | `TestRONActivationHistoryDragonTimingAndIdentity`: four waiting activations, countered fourth activation, third/fourth copies, source return, phasing/cycle, lost control, delay created after end-step start, one-shot phasing behavior. |
+| Invalid declarations, per-factory bindings and registry/inventory | `TestRONActivationHistoryInvalid`, `AllReprints`: malformed and obsolete predicates, comparison/threshold/body errors, delayed scope, independent factories, reprint canonicalization, semantic roles and rejection without partial registry publication. |
+| Reusable history service | `TestActivationHistory`, `Definition`, `IndependentDeclarations`, `SeparateAbilitiesAndSacrificeCost`: pure resolution reads, pending/countered/copy counts, clones, different abilities, sacrifice payment incarnation, turn reset, source return/phasing/control, failed payment and invalid declarations. |
+
+Two complete-card mappings are added. Collection-wide engine-validated and
+behavior-verified totals remain null; compiled counts remain separate from game
+coverage. The FEM source corrections do not add complete-card mappings.
+
+### Validation and final measurements
+
+Final strict loader: **1,689 compiled / 756 rejected records**. Semantic inspection:
+**627 accepted / 359 rejected unique names**, 72,950 nodes, 8,539 signatures and
+7,242 unknown-role occurrences. Both commands exit 1 for collection rejection.
+Newly accepted names are exactly Dragon Whelp and Nalathni Dragon; no accepted
+name regresses. Remaining diagnostics include ChooseADamageSource, CDA_Power,
+resolving conditions and the explicit two-consumer mana-planning prerequisite.
+
+Commands/results: focused history and inventory tests with `-count=1` PASS;
+`go test ./pkg/mage/... -short -count=1` PASS; `make test` PASS;
+`go test ./... -short -count=1` PASS; `make build` PASS; `go vet ./...` PASS;
+`make lint` PASS; `git diff --check` PASS. Strict and inventory loader commands
+have the expected exit 1 and counts above. Automatic lint changes to imports and a recursive slice predicate were reviewed.
+The final focused, short-engine, whole-repository short/test/build/vet checks and
+lint were rerun after the last declaration-validation change. No environment or pre-existing test
+blocker remains.
+
+Changes include new engine/compiler history services and tests; activation,
+mana-planning call-site identity, trackers and definition validation; compiler
+scope, instance binding, activation construction and inventory; eight RON files;
+engine reference, API/rules-contract docs, refreshed vocabulary and this entry.
+Go definitions, runtime startup and generators remain below the removal gates.
+No DSL function was deleted without an audit, and no cutover was attempted.
+
+Ranked next candidates, to reassess from fresh complete records:
+
+1. Chosen-source next-event prevention: seven Circle/Realm consumers.
+2. All-zone battlefield-count CDAs: five direct consumers.
+3. Untapped costed mana-conversion planning and conditional execution: Farrelite
+   Priest and Initiates of the Ebon Hand now have a reusable history prerequisite;
+   assess all converter records before selecting a complete shared context.
+
+One descriptive commit includes only this slice; its hash is reported in the
+final response. User archive/design edits remain unstaged. No second slice starts.

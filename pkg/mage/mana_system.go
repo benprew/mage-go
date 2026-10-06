@@ -415,7 +415,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 			return err
 		}
 	case *SimpleActivatedAbility:
-		activated.markActivatedInGame(g)
+		activated.markActivatedInGame(g, sourceIncarnation)
 	}
 	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: true})
 	ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions), productionTypes(action.Productions))

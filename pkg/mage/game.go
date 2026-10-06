@@ -3237,7 +3237,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	// Mark once-per-turn abilities as used
 	if saa, ok := aa.(*SimpleActivatedAbility); ok {
-		saa.markActivatedInGame(g)
+		saa.markActivatedInGame(g, perm.incarnationID)
 	}
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)

@@ -132,6 +132,12 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.activationHistoryOptions > 0 {
+			if e.kind != ActionActivated || e.activationHistory == nil || e.activationHistoryOptions != 1 {
+				n.problem = "supply one activation history binding on an activated ability"
+			}
+			n.children = append(n.children, definitionEdge{"activationHistory", activationHistoryDeclaration{e.activationHistory}})
+		}
 		if e.groupedTargets && len(e.targets) == 0 {
 			n.problem = "grouped targets require declarations"
 		}
@@ -290,6 +296,7 @@ func ValidateCardDefinition(name string, card Card) error {
 	if nilDefinition(card) {
 		return fmt.Errorf("%s: card: supply a card definition", name)
 	}
+	historyOwners := make(map[*ActivationHistoryBinding]bool)
 	var assigned map[savedBinding]bool
 	var names map[string]any
 	var targets map[*targetDeclaration]bool
@@ -315,6 +322,12 @@ func ValidateCardDefinition(name string, card Card) error {
 			defer delete(active, value)
 		}
 		n := describeDefinition(value)
+		if action, ok := value.(*ActionDefinition); ok && action.activationHistory != nil {
+			if historyOwners[action.activationHistory] {
+				fail("activation history must belong to one ability")
+			}
+			historyOwners[action.activationHistory] = true
+		}
 		if _, allocated := value.(*allocatedDamageEffect); allocated && !allocationAllowed {
 			fail("allocated damage requires one instruction in a spell or activation body with one target group")
 		}
@@ -442,6 +455,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			visit(edge.value, path+"."+edge.name, spell, active, allowAllocation)
 			_, eventTrigger := value.(*GenericTriggered)
 			_, capture := edge.value.(activationCapture)
+			_, history := edge.value.(activationHistoryDeclaration)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
 			paidTap, tapCost := edge.value.(*tapNOtherMatchingCost)
 			exileCost, exilePayment := edge.value.(*exileMatchingCardFromGraveyardCost)
@@ -455,7 +469,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !history && !paidCost && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}

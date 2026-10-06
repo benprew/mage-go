@@ -17,38 +17,39 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
-	enteringSource   bool
-	actionPlayer     *playerActionsPlan
-	damageRecipient  *playerReferencePlan
-	activation       bool
-	castingCondition mage.StateCondition
-	castingCost      *Node
-	damagePlayer     *damagePlayerPlan
-	damageAmount     *damageAmountPlan
-	delayedStep      bool
-	sourceAttack     bool
-	sourceBlock      bool
-	combatOpponent   *permanentEventPlan
-	targetNamespace  string
-	counterPayment   *counterPaymentPlan
-	sacrificeValue   *sacrificeValuePlan
-	target           string
-	x                bool
-	permanent        bool
-	aura             bool
-	player           playerReferencePlan
-	playerTarget     *playerTargetPlan
-	permanentTarget  *permanentTargetPlan
-	permanentTargets *permanentTargetsPlan
-	spellTarget      *spellTargetPlan
-	cardTarget       *cardTargetPlan
-	deathCard        *deathCardPlan
-	damageTarget     *damageTargetPlan
-	castEvent        *castEventPlan
-	stepEvent        *stepEventPlan
-	permanentEvent   *permanentEventPlan
-	landManaEvent    *landManaEventPlan
-	graveyardEvent   *graveyardEventPlan
+	activationHistory *activationHistoryPlan
+	enteringSource    bool
+	actionPlayer      *playerActionsPlan
+	damageRecipient   *playerReferencePlan
+	activation        bool
+	castingCondition  mage.StateCondition
+	castingCost       *Node
+	damagePlayer      *damagePlayerPlan
+	damageAmount      *damageAmountPlan
+	delayedStep       bool
+	sourceAttack      bool
+	sourceBlock       bool
+	combatOpponent    *permanentEventPlan
+	targetNamespace   string
+	counterPayment    *counterPaymentPlan
+	sacrificeValue    *sacrificeValuePlan
+	target            string
+	x                 bool
+	permanent         bool
+	aura              bool
+	player            playerReferencePlan
+	playerTarget      *playerTargetPlan
+	permanentTarget   *permanentTargetPlan
+	permanentTargets  *permanentTargetsPlan
+	spellTarget       *spellTargetPlan
+	cardTarget        *cardTargetPlan
+	deathCard         *deathCardPlan
+	damageTarget      *damageTargetPlan
+	castEvent         *castEventPlan
+	stepEvent         *stepEventPlan
+	permanentEvent    *permanentEventPlan
+	landManaEvent     *landManaEventPlan
+	graveyardEvent    *graveyardEventPlan
 }
 
 type actionPlan struct {
@@ -976,6 +977,13 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "If":
+		build, err := compileActivationHistoryBranch(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+
 	case "SearchLibrary":
 		build, err := compileLibrarySearch(n)
 		if err != nil {
