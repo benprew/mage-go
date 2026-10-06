@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **619 accepted / 367 rejected unique card
-names** (986 total), and **1,651 compiled / 794 rejected records** (2,445 total).
+The latest recorded inventory reports **620 accepted / 366 rejected unique card
+names** (986 total), and **1,652 compiled / 793 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`SOURCE-CONDITIONED-CONTROL` slice and its validation evidence are recorded
+`COMBAT-TIMING-HISTORY` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -20107,3 +20107,169 @@ Slice files: engine `composable_source_control.go`, its tests, `effect_control.g
 `compiler.go`, `inventory.go`, `inventory_test.go`; API/rules-contract documents
 and this ledger entry. The completed slice receives one descriptive commit; its
 hash is reported in the final response. User changes remain outside that commit.
+
+## Slice: combat timing history and RON restrictions (2026-10-05)
+
+Capability ID: `COMBAT-TIMING-HISTORY`. Status: implemented and behavior tested.
+This run stops after this one shared prerequisite slice.
+
+### Baseline and candidate selection
+
+Initial user edits to `.gitignore`, the execution design, and this progress ledger,
+and untracked `mtgish-ron-completed.md`, are preserved. Only this entry and the
+current measurements are staged from the ledger; the user's archive reorganization
+is not staged. AGENTS.md, engine reference, execution design, vocabulary snapshot,
+ledger, selected compiler/turn/schedule/condition/clone/prevention code, complete
+candidate records and identical reprints, and API/rules contracts were read.
+CR 506.1 and 506.7a-g supply the timing contract. The [official rules](https://media.wizards.com/2026/downloads/MagicCompRules%2020260619.pdf) confirm the local timing text. Local Oracle data in LEA, LEG
+and 4ED agrees with all six selected consumers. Go card definitions were not
+used as requirements. The implement-engine skill supplied the engine workflow.
+
+Fresh baseline compiler tests (`go test ./pkg/mage/dsl/ron -count=1`) and
+`make build` passed. Strict and semantic loading exited 1 for unsupported
+collection records, not a build failure: **1,651 compiled / 794 rejected records**,
+**619 accepted / 367 rejected unique names**, out of 2,445 records / 986 names.
+The AST inventory had 72,950 nodes, 8,539 signatures and 8,348 unknown-role
+occurrences. Counts include nested expressions under unsupported parents.
+
+| Candidate | Distinct affected names; estimated complete-card gain | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Combat timing, selected | Berserk; Blaze of Glory; Disharmony; Siren's Call; Rapid Fire; Angus Mackenzie. **1** immediate full-card unlock, **5** additional concrete prerequisite consumers. | Berserk needs power capture and delayed attack-history conditions. Blaze needs defending-player targets and blocking requirements. Disharmony needs end-of-turn control. Siren's Call needs collection attack requirements and history/control filters. Rapid Fire needs a resolving conditional and rampage grant. Enables first/current combat conditions with first-strike, skipped and extra-combat semantics shared by spells and activations. | Medium: turn/schedule history, four casting predicates and one activation predicate, focused lifecycle/casting/payment/gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation. **7** potential full-card unlocks, **0** adapter-only gains. | Public-zone source choice, exact saved source identity including absent referenced sources, next-event consumption and replacement rechecks are prerequisites. Other first-error consumers have additional blockers and are excluded. Enables later source-selective redirection. | High: source-choice service, bindings and shield lifetime with replacement, copy and zone tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods. **5** potential full-card unlocks, **0** adapter-only gains. | All-zone characteristic evaluation, owner/controller context, named counts and CDA/copy/layer contracts are prerequisites. Other CDA consumers have additional blockers and are excluded. | High: characteristic service and count lowering with zone/control/layer/copy tests. |
+
+The initial comparison also inspected Glyph of Reincarnation as an after-combat
+consumer. The final supported before-combat shape has six concrete consumers and lower effort
+than the two larger service additions. It is not an isolated single-card adapter.
+Full records showed that five names would remain rejected after timing support;
+first-error frequency was not used as the unlock estimate. The contract, reuse
+boundary, acceptance cases and expected gain were stated before edits. The
+actual gain is **one name / one record**, exactly Angus Mackenzie, matching the
+estimate. No previously accepted name is lost. After-combat predicates were excluded
+during the final scope review; they are a
+separate shape, and Glyph of Reincarnation remains rejected at IsAfterCombat.
+No second slice is started.
+
+### Exact signatures, contexts, state ownership and reuse
+
+Engine declarations:
+
+- `BeforeCombatStep(point PhaseStep, during bool) StateCondition`: points are
+  DeclareAttackers, DeclareBlockers or CombatDamage; other points fail definition
+  validation. False uses the first combat of the turn. True requires a current
+  combat and uses that phase's boundary. The first actual damage step, including
+  first strike, closes the damage window.
+- `TurnReader.CombatWindowOpen(PhaseStep, bool) bool` is a pure query. TurnSystem
+  owns value-only history, clones copy it,
+  and both turn mutation paths reset it. No action-result slot is introduced.
+
+Native step execution closes blockers/damage windows when an empty attackers
+step ends. Skipped blockers, damage and absent first-strike steps do not become
+current steps. Current layers are applied before first-strike existence is read.
+TurnSchedule retains full-phase skip consumption at build/pop time so a skipped
+first combat closes windows at the precombat-main boundary even when an extra
+combat follows. Skipping only the beginning step retains the remaining combat.
+EndCombat completion and transitions out of combat retain the first boundary.
+Current-combat windows can reopen in extra combats, including a skipped beginning
+step; first-combat windows cannot. Schedule and history clones stay independent.
+
+RON casting context: one nonmodal instant/sorcery
+`CastEffect(CantBeCastUnless(condition))` beside SpellActions gains the four bare
+symbols `IsDuringCombat`, `IsBeforeAttackersDeclared`, `IsBeforeBlockersDeclared`,
+and `IsBeforeCombatDamageStep`. `IsAfterCombat` remains unsupported. Existing
+nonempty nested And
+conditions and player-turn conditions remain valid. An explicit IsDuringCombat
+anywhere in the And tree makes its before predicates current-combat predicates;
+operand order does not change that context. Tuple forms, wrong arities, empty
+And, unsupported predicates, modal/permanent casting contexts and duplicate
+CastEffect declarations remain rejected. Existing casting gates apply the
+condition before choices and payment and do not recheck it on stack copies or
+resolution. No casting permission is granted.
+
+RON activation context adds only
+`ActivatedWithModifiers(cost, body, ActivateOnlyIf(IsBeforeCombatDamageStep))`.
+The shared activation gate reads first-combat history before cost payment.
+Other before/after activation predicates are not added. Existing mana/tap costs,
+source legality, ownership/control, stack frames and transactional rollback are
+reused. Angus reuses global combat prevention, shared damage replacements,
+source departure behavior and native cleanup. No engine damage or replacement
+ordering contract is changed. RON spelling/context stays in ron; reusable timing
+state stays in mage. No card-name branch, Go fallback, skipped card rule, global
+last-action slot, game-time declaration panic or partial production registry is
+introduced.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing BeforeCombatStep and an exploratory
+after-combat API that was removed from the final slice. The real
+RON gameplay test failed for unsupported IsBeforeCombatDamageStep. Damage test
+fixture API mistakes were corrected before recording that intended RON failure.
+A later granted-first-strike fixture passed a modification directly to Static;
+it was corrected to use While before rerunning all affected checks. No test was
+weakened. Two former invalid symbol declarations became supported and their
+rejection tests now use malformed tuple declarations. Inventory count assertions
+were updated to fresh measurements.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Angus Mackenzie, complete LEG record | TestRONCombatTimingAngus: exact mana/tap payment, late first-strike rejection and rollback, actual combat prevention and noncombat damage. TestRONCombatTimingAngusLifetime: full native casting cost, legendary 2/2 metadata, sickness rollback, source departure/phasing/control, different-controller stack copy, pending clone, late resolution, both players/permanents, multiple combat rounds, lifelink/trample, cleanup and clone isolation through the retained global-prevention assertion. |
+| Timing declarations needed by Berserk, Blaze of Glory, Disharmony, Siren's Call, Rapid Fire | TestRONCombatTimingCasting exercises every turn step, either player, queries/casts and late stack-copy resolution; ExtraCombat tests explicit/nested/reversed combat conjunctions; Invalid tests malformed tuple shapes. These are capability mappings only; the five complete cards remain unverified and rejected for their other rules. Existing TestRONCastingWindow* preserves accepted Reset/Teleport gameplay, identity, target legality, copies and scopes. |
+| Reusable engine timing contract | TestCombatTimingHistory: exact boundaries, first strike, first/current extra combats, turn reset and clone isolation. SkippedPoints: missing points and declaration validation. NativeSkippedSteps: empty combat, native skipped steps and phase skips. SkippedFirstThenExtraCombat: both build-time and execution-time skips followed by an extra combat. NativeDamageSteps: absent, printed and continuously granted first strike. SkippedBeginningStep: single-step skip and extra combat with no beginning step. |
+| Reporting and strict loading | Updated TestInventoryRepositoryCollection and LeavesRealRONGameplayAndRegistryUnchanged retain nested reporting, collection counts, production registry isolation and accepted Lightning Bolt gameplay. |
+
+One new complete-card gameplay mapping is added. Collection-wide engine-validation
+and behavior-verification totals remain null. Compilation is separate from
+collection gameplay coverage.
+
+### Final measurements and checks
+
+Strict loading: **1,652 compiled / 793 rejected records**.
+Semantic inspection: **620 accepted / 366 rejected unique names**,
+**72,950 nodes / 8,539 signatures / 8,348 unknown-role occurrences**.
+Both loaders exit 1 and install no partial registry. Angus is newly accepted;
+all old accepted names remain accepted. The next diagnostics for the other timing
+consumers are PowerOfPermanent, SpellDefendingPlayer,
+CreateEachPermanentRuleEffectUntil, unsupported spell-source control duration
+and resolving If. Other collection diagnostics
+still include ChooseADamageSource, CDA_Power and Targeted_Modal.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine timing, RON timing, existing casting-window and inventory tests with `-count=1` | PASS after final scope change. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `go test ./... -short -count=1` | PASS (engine skill check). |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues; automatic ContainsFunc and formatting changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,652 compiled / 793 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 620 accepted / 366 rejected names; counts above. |
+
+The final scoped code passed all required checks. No production source changed
+after the final lint pass; focused tests were rerun. Prior failures in this run
+were new test-fixture API errors and stale measurement assertions, not accepted
+RON regressions. All were corrected and affected checks rerun.
+
+No source-data correction was needed; RON source and vocabulary hashes are
+unchanged. No environmental or pre-existing check blocker remains. Automatic
+lint edits were reviewed. Go definitions, startup consumers, Go-set generators
+and DSL functions remain because complete loading, full gameplay and startup
+wiring are below the removal gates. No DSL function was deleted without an audit.
+API/rules docs describe only this established timing behavior.
+
+Ranked next candidates, to reassess from fresh complete records:
+
+1. Chosen-source choice/identity and next-event prevention: seven Circle/Realm
+   consumers; the largest identified complete-card opportunity.
+2. All-zone battlefield-count CDAs: five complete direct consumers.
+3. Resolving conditional and resolution-count services: Dragon Whelp, Nalathni
+   Dragon, Farrelite Priest, Initiates of the Ebon Hand, Eater of the Dead and
+   Rapid Fire have different predicate/body requirements. Compare complete
+   supported subshapes before estimating full-card gains.
+
+Slice files: new engine combat_timing.go and tests; turn_system.go,
+turn_schedule.go, turn.go, game_mutator.go and doc.go; compiler casting_window.go,
+activation_timing.go, new combat_timing_test.go, casting_window_test.go and
+inventory_test.go; API/rules-contract docs and this ledger. One descriptive
+commit includes only this slice; the final response reports its hash.

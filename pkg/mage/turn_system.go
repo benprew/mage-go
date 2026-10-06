@@ -13,6 +13,7 @@ import (
 // extra turns queue, turn step scheduling and skips (CR 500.7–500.11), and
 // per-permanent untap skipping.
 type TurnSystem struct {
+	combatTiming         combatTimingHistory
 	stepTurn             int
 	firstUpkeepEnded     bool
 	pendingStepLifeGains []LifeGainAction
@@ -41,6 +42,7 @@ func NewTurnSystem() TurnSystem {
 // Clone creates an independent deep copy of TurnSystem.
 func (ts TurnSystem) Clone() TurnSystem {
 	clone := TurnSystem{
+		combatTiming:         ts.combatTiming,
 		stepTurn:             ts.stepTurn,
 		firstUpkeepEnded:     ts.firstUpkeepEnded,
 		pendingStepLifeGains: slices.Clone(ts.pendingStepLifeGains),
@@ -68,6 +70,10 @@ func (ts *TurnSystem) Turn() int {
 // SetTurn overrides the current turn number.
 func (ts *TurnSystem) SetTurn(n int) {
 	if ts.turn != n {
+		ts.combatTiming = combatTimingHistory{}
+		if ts.schedule != nil {
+			ts.schedule.firstCombatSkipped = false
+		}
 		ts.firstUpkeepEnded = false
 	}
 	ts.turn = n
@@ -75,6 +81,10 @@ func (ts *TurnSystem) SetTurn(n int) {
 
 // IncrementTurn advances the turn number by 1.
 func (ts *TurnSystem) IncrementTurn() {
+	ts.combatTiming = combatTimingHistory{}
+	if ts.schedule != nil {
+		ts.schedule.firstCombatSkipped = false
+	}
 	ts.firstUpkeepEnded = false
 	ts.turn++
 }
@@ -86,6 +96,15 @@ func (ts *TurnSystem) Step() PhaseStep {
 
 // SetStep sets the current phase or step.
 func (ts *TurnSystem) SetStep(s PhaseStep) {
+	previous := ts.step
+	if ts.stepTurn != ts.turn {
+		previous = Untap
+	}
+	if previous == PrecombatMain && s != PrecombatMain && ts.schedule != nil && ts.schedule.firstCombatSkipped {
+		ts.combatTiming.closeWindows()
+		ts.combatTiming.firstEnded = true
+	}
+	ts.combatTiming.enter(previous, s)
 	if ts.stepTurn == ts.turn && ts.step == Upkeep && ts.step != s {
 		ts.firstUpkeepEnded = true
 	}
@@ -256,6 +275,14 @@ func (ts *TurnSystem) consumeCapturedUntap(playerID uuid.UUID) map[uuid.UUID]boo
 }
 
 func (ts *TurnSystem) finishStep(step PhaseStep) {
+	if ts.stepTurn == ts.turn && step == PrecombatMain && ts.schedule != nil && ts.schedule.firstCombatSkipped {
+		ts.combatTiming.closeWindows()
+		ts.combatTiming.firstEnded = true
+	}
+	if ts.stepTurn == ts.turn && step == EndCombat {
+		ts.combatTiming.closeWindows()
+		ts.combatTiming.firstEnded = true
+	}
 	if ts.stepTurn == ts.turn && step == Upkeep {
 		ts.firstUpkeepEnded = true
 	}

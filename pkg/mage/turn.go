@@ -29,6 +29,15 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
+	if step == FirstStrikeDamage {
+		g.effects.Apply(g)
+		if !g.combat.HasFirstStrikers(g) {
+			return
+		}
+	}
+	if (step == DeclareBlockers || step == CombatDamage) && len(g.combat.Groups) == 0 {
+		return
+	}
 	if step == Draw {
 		if g.turns.Turn() == 1 && g.turns.ActivePlayerIndex() == 0 && len(g.players) == 2 {
 			return
@@ -100,6 +109,9 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.doDeclareAttackers()
 		g.PutTriggersOnStack()
 		g.runPriorityRound(false)
+		if len(g.combat.Groups) == 0 {
+			g.turns.combatTiming.closeWindows()
+		}
 
 	case DeclareBlockers:
 		// 508.8: Skip if no creatures are attacking.

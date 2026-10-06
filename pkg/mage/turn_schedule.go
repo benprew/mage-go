@@ -16,6 +16,7 @@ import (
 // schedule instead of iterating core.AllSteps() directly, so that cards and
 // effects can mutate the turn shape.
 type TurnSchedule struct {
+	firstCombatSkipped bool
 	// Remaining is the ordered list of steps still to execute in the
 	// current turn. The driver pops from the front. Extra steps inserted
 	// via AppendExtraStep / InsertStepAfter land here.
@@ -46,6 +47,7 @@ func (ts *TurnSchedule) Clone() *TurnSchedule {
 		return nil
 	}
 	cs := newTurnSchedule()
+	cs.firstCombatSkipped = ts.firstCombatSkipped
 	if len(ts.Remaining) > 0 {
 		cs.Remaining = make([]core.PhaseStep, len(ts.Remaining))
 		copy(cs.Remaining, ts.Remaining)
@@ -77,10 +79,14 @@ func newTurnSchedule() *TurnSchedule {
 // any pending one-shot step skips. Called by the driver at the start of a
 // turn.
 func (ts *TurnSchedule) buildNextTurn() {
+	ts.firstCombatSkipped = false
 	canonical := core.AllSteps()
 	out := make([]core.PhaseStep, 0, len(canonical))
 	for _, s := range canonical {
 		if ts.SkipNextStep[s] > 0 {
+			if s == core.BeginCombat && ts.hasCombatPhaseSkip() {
+				ts.firstCombatSkipped = true
+			}
 			ts.SkipNextStep[s]--
 			continue
 		}
@@ -96,12 +102,24 @@ func (ts *TurnSchedule) popNextStep() (core.PhaseStep, bool) {
 		step := ts.Remaining[0]
 		ts.Remaining = ts.Remaining[1:]
 		if ts.SkipNextStep[step] > 0 {
+			if step == core.BeginCombat && ts.hasCombatPhaseSkip() {
+				ts.firstCombatSkipped = true
+			}
 			ts.SkipNextStep[step]--
 			continue
 		}
 		return step, true
 	}
 	return 0, false
+}
+
+func (ts *TurnSchedule) hasCombatPhaseSkip() bool {
+	for _, step := range []core.PhaseStep{core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat} {
+		if ts.SkipNextStep[step] == 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // AppendExtraStep queues step to run at the end of the remaining schedule

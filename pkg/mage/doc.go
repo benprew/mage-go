@@ -48,6 +48,10 @@
 // and payment. Conditions read the caster. [IsDuringSteps] reads the current
 // step through [TurnReader]. [AfterFirstUpkeep] permits later upkeeps after
 // the first upkeep ends. A restriction does not grant casting permission.
+// Use [BeforeCombatStep] for attackers, blockers, or combat damage boundaries.
+// A first-combat window stays closed during later combats. Set during to true
+// for a window in each combat phase.
+// Skipped combat points close their windows at the applicable phase boundary.
 //
 // Use [TargetToughnessLessThanSourcePower] on typed permanent targets for
 // a strict current toughness comparison. Source departure uses retained power;

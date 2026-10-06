@@ -2897,6 +2897,22 @@ repeat this check. Casting a copy of a card does repeat it. Modal spells,
 permanent cards, other CastEffect operations, other predicates and duplicate
 CastEffect declarations remain errors.
 
+Combat conditions also support bare `IsDuringCombat`, `IsBeforeAttackersDeclared`,
+`IsBeforeBlockersDeclared`, and `IsBeforeCombatDamageStep`.
+The before conditions use the first combat of the turn. A nonempty nested `And`
+that includes `IsDuringCombat` uses the current combat for its before conditions,
+regardless of operand order. This permits the window in an extra combat phase
+(CR 506.7c/d). `IsAfterCombat` remains unsupported.
+Skipped blockers/damage close their windows when the attackers step ends;
+a skipped combat phase closes them when the precombat main phase ends.
+First-strike damage closes the combat-damage window. Tuple forms remain errors.
+
+`ActivateOnlyIf(IsBeforeCombatDamageStep)` uses the same first-combat history
+through the existing activation gate. It does not grant priority or remove other
+activation restrictions. Angus Mackenzie uses this form with its mana/tap cost
+and existing end-of-turn combat prevention. Other before/after activation
+predicates are not added in this slice.
+
 Resolving `UntapEachPermanent(filter)` uses `UntapEach` and the existing typed
 collection services. Filters support the existing pure permanent filters and
 controller restrictions expressed as

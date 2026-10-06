@@ -155,6 +155,11 @@ func compileActivationTiming(n Node) ([]mage.ActionOption, error) {
 	}
 	filter := n.Args[0]
 	if filter.Kind == Symbol {
+		if filter.Name == "IsBeforeCombatDamageStep" {
+			return []mage.ActionOption{mage.WithActivationCondition(func(g *mage.Game, _ *mage.Permanent, _ uuid.UUID) bool {
+				return g.CombatWindowOpen(core.CombatDamage, false)
+			})}, nil
+		}
 		var steps []core.PhaseStep
 		switch filter.Name {
 		case "IsDuringCombat":

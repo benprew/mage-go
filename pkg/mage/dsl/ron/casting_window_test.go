@@ -132,7 +132,7 @@ func TestRONCastingWindowInvalid(t *testing.T) {
 		`CastEffect()`, `CastEffect(CantBeCastUnless())`, `CastEffect(CantBeCastUnless(IsDuringUpkeep()))`,
 		`CastEffect(CantBeCastUnless(And([])))`, `CastEffect(CantBeCastUnless(And([IsDuringUpkeep, Unknown])))`,
 		`CastEffect(CantBeCastUnless(IsAPlayersTurn(Ref_TargetPlayer)))`, `CastEffect(CantBeCastUnless(IsPlayersTurn(You())))`,
-		`CastEffect(CantBeCastUnless(IsAfterCombat))`, `CastEffect(CantBeCastUnless(IsBeforeCombatDamageStep))`,
+		`CastEffect(CantBeCastUnless(IsAfterCombat))`, `CastEffect(CantBeCastUnless(IsBeforeCombatDamageStep()))`,
 		`CastEffect(CantBeCastUnless(IsDuringUpkeep)), CastEffect(CantBeCastUnless(IsDuringUpkeep))`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Instant], Subtypes: []), Rules: [%s, SpellActions(ActionList([GainLife(Integer(1))]))])`, declaration)

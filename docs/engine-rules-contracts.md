@@ -4063,3 +4063,40 @@ Evidence: `TestGainControlWhileSourceControlled`,
 `TestGainControlWhileSourceControlledStartAndValidation`, the existing
 `TestControl*` suites, and `TestRONSourceControl*` with the full Aladdin,
 Thrull Champion, Rubinia Soulsinger and Willow Satyr records.
+
+## Combat timing history (RON migration slice)
+
+`BeforeCombatStep(point PhaseStep, during bool) StateCondition` supports
+`DeclareAttackers`, `DeclareBlockers`, and `CombatDamage`. Invalid points fail
+engine definition validation. `during=false` reads the first combat boundary in
+the turn; `during=true` requires a current combat and reads its boundary.
+`TurnReader.CombatWindowOpen(PhaseStep, bool)` supplies pure
+queries. These conditions grant no casting or activation permission.
+
+TurnSystem owns the value-only history and copies it during game cloning.
+SetTurn and IncrementTurn reset it. Entering attackers or blockers closes that
+point even when no creature is declared. First-strike damage is the first damage
+boundary when that step exists (CR 506.7a/b). Native execution does not enter a
+skipped first-strike, blockers, or damage step. It checks current continuous
+abilities before deciding whether the first-strike step exists. An empty combat
+closes the blockers/damage windows when its attackers step ends (CR 506.7e).
+EndCombat completion or transition out of combat records the phase boundary.
+Later combats restore only current-combat windows (CR 506.7c/d/g).
+
+TurnSchedule retains a consumed full combat-phase skip for the precombat-main
+boundary. Both construction-time and execution-time skips close first-combat
+windows before an inserted extra combat. Skipping only BeginCombat does not
+skip the phase. Schedule clones retain this information independently.
+
+The RON compiler adds four symbol casting predicates and propagates the explicit
+IsDuringCombat condition across a nonempty nested And tree. Activation lowering
+adds only IsBeforeCombatDamageStep. Shared casting and activation gates retain
+payment rollback; stack copies and resolution do not repeat timing checks.
+No target, replacement-order, source-LKI, or simultaneous-damage rule is changed.
+Angus Mackenzie reuses existing global combat prevention through cleanup.
+
+Evidence: TestCombatTimingHistory, SkippedPoints, NativeSkippedSteps,
+SkippedFirstThenExtraCombat, NativeDamageSteps and SkippedBeginningStep;
+TestRONCombatTimingCasting, ExtraCombat, Invalid, Angus and AngusLifetime.
+The existing casting-window and global-combat-prevention suites retain their
+identity, target legality, copy, clone, damage and cleanup contracts.

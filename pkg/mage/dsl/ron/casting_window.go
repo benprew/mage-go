@@ -1,6 +1,8 @@
 package ron
 
 import (
+	"slices"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -20,6 +22,22 @@ func compileCastingWindow(n Node) (mage.StateCondition, error) {
 }
 
 func compileCastingCondition(n Node) (mage.StateCondition, error) {
+	return compileCastingConditionInCombat(n, hasDuringCombat(n))
+}
+
+func hasDuringCombat(n Node) bool {
+	if n.Kind == Symbol && n.Name == "IsDuringCombat" {
+		return true
+	}
+	if n.Name == "And" && n.Kind == Tuple && len(n.Args) == 1 && n.Args[0].Kind == List {
+		if slices.ContainsFunc(n.Args[0].Args, hasDuringCombat) {
+			return true
+		}
+	}
+	return false
+}
+
+func compileCastingConditionInCombat(n Node, during bool) (mage.StateCondition, error) {
 	if n.Name == "And" {
 		if err := arity(n, 1); err != nil {
 			return nil, err
@@ -33,7 +51,7 @@ func compileCastingCondition(n Node) (mage.StateCondition, error) {
 		}
 		conditions := make([]mage.StateCondition, len(parts))
 		for i, part := range parts {
-			conditions[i], err = compileCastingCondition(part)
+			conditions[i], err = compileCastingConditionInCombat(part, during)
 			if err != nil {
 				return nil, err
 			}
@@ -61,6 +79,14 @@ func compileCastingCondition(n Node) (mage.StateCondition, error) {
 		return nil, err
 	}
 	switch n.Name {
+	case "IsDuringCombat":
+		return mage.IsDuringSteps(core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat), nil
+	case "IsBeforeAttackersDeclared":
+		return mage.BeforeCombatStep(core.DeclareAttackers, during), nil
+	case "IsBeforeBlockersDeclared":
+		return mage.BeforeCombatStep(core.DeclareBlockers, during), nil
+	case "IsBeforeCombatDamageStep":
+		return mage.BeforeCombatStep(core.CombatDamage, during), nil
 	case "IsDuringUpkeep":
 		return mage.IsDuringSteps(core.Upkeep), nil
 	case "IsDuringDeclareAttackersStep":
