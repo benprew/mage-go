@@ -22381,3 +22381,159 @@ Ranked next candidates to reassess:
    inspect full records and linked-object lifetimes before estimating unlocks.
 
 One descriptive commit contains only this slice. No second slice is started.
+
+## 2026-10-05: source-relative combat target prerequisite
+
+Status: completed slice `SOURCE-COMBAT-TARGET`. Stop after this slice. Initial
+user changes to `.gitignore`, the execution design and this ledger, and the
+untracked `mtgish-ron-completed.md`, are preserved. Only this entry is staged
+from this ledger; its existing user edits are excluded from the commit.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` pass. Strict
+loading and semantic inventory both exit 1 because the collection is incomplete:
+2,445 parsed records, 1,717 compiled, 728 rejected; 640 accepted and 346 rejected
+unique names. All candidate consumers below were inspected as complete RON
+records, including nested forms. Reprints count once. The inventory and first
+loader errors do not establish gameplay support.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Source-relative combat targets, selected | Lesser Werewolf and Sentinel directly; **0 immediate full-card unlocks**. Further combat-relation consumers: Feint, Sewers of Estark, The Wretched, Wall of Caltrops, Wall of Shadows, Wall of Vapor, Tidal Flats, Spitting Slug. | Missing source-relative target restriction and reusable incarnation-aware pair query. Lesser Werewolf also needs its resolving power condition; Sentinel needs indefinite dynamic base toughness. The other eight need collection, prevention, loop, trigger, conditional, or target-only spell/ability services. Establishes the live pair query shared by those adapters. | Low/medium: reuse combat groups, typed targets, stack source snapshots, copies, validation and transactional costs; add direction/identity/native combat tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 credible eventual unlocks**, zero adapter-only gains before the engine prerequisites. | Complete records need choice from legal damage sources, source identity and current properties, and next-event prevention. Additional first-error consumers Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have partial-prevention, history, redirection or actual-outcome blockers and are excluded from the seven-card estimate. Enables a shared source-choice and replacement service. | High: source enumeration, choice bindings, zone/stack identity, next-event consumption, prevention properties and replacement interactions. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 credible eventual unlocks** after engine and adapter work. | Characteristic evaluation outside the battlefield, zone-aware owner/controller context, count/name adapters and CDA layers remain missing. Gaea's Avenger has a recorded controller-filter source defect; Wood Elemental needs entry sacrifice results. Those two are excluded. Enables reusable cross-zone dynamic characteristics. | High: all-zone evaluation, layers, copy, control, ability-removal and count contracts. |
+
+The combat prerequisite wins on bounded effort and concrete shared demand: two
+blocked target consumers and eight further relation consumers. Neither competing
+family can reuse an exact complete engine contract yet. This is a complete
+supported target context, not an assertion of complete combat-filter support.
+The selection, contract, reuse boundary and acceptance cases were stated before
+implementation. The `implement-engine` skill was used for engine work. No card
+implementation skill, Go-card requirement, source edit, production subset,
+fallback, card-name branch or global result slot was used.
+
+### Contract, exact shapes and dependencies
+
+Engine APIs:
+
+- `TargetBlocksSource() PermanentTargetOption`.
+- `TargetBlockedBySource() PermanentTargetOption`.
+- `TargetInCombatWithSource() PermanentTargetOption`, a union of the two directions.
+- `(*Combat).BlocksIncarnations(blockerID, blockerIncarnation, attackerID,
+  attackerIncarnation uuid.UUID) bool` for live combat pairs.
+
+The options compose conjunctively with other permanent target restrictions.
+Engine definition validation requires a battlefield source. Both target
+selection and resolution use the existing combat groups and incarnation maps.
+Blocks of an attacking band and multiple blockers retain their pair identity.
+The source passed to resolution target queries retains its original incarnation,
+including live, absent, returned and phased cases. LKI supplies no live relation.
+A blocked attacker remains blocked when a blocker leaves, but that departed
+blocker is no longer a member of the pair (CR 509.1g/h). Departure, control
+change, phasing, regeneration and explicit combat exit use the existing removal
+contract (CR 506.4). Tapping does not remove a pair (CR 506.4b). Phase-in does
+not restore combat membership. Removing source abilities does not cancel a
+pending ability. Existing target legality, stack copies, clone isolation, cost
+transactions and simultaneous/event/replacement pipelines retain their services.
+This slice adds no new replacement or simultaneous-operation contract.
+
+RON supports `IsBlockingAttacker(ThisPermanent)` and
+`IsBlockedByDefender(ThisPermanent)` as permanent target filters, alone or
+nested in `And`, and the exact two-direction `Or` in either order. Arguments
+must be the bare `ThisPermanent` symbol in permanent scope. Other disjunctions,
+duplicate directions, malformed declarations and host/event/target references
+are rejected. Empty target disjunctions are rejected. Non-target collection,
+static prevention and loop contexts remain unsupported. The spelling and
+scope checks stay in `ron`; live pair behavior stays in `mage`. Factories
+construct fresh typed target bindings; compiled plans retain no chosen state.
+Semantic inventory classifies relation arguments as permanent references even
+under unsupported parents, without implying those contexts are executable.
+
+### TDD and test mappings
+
+Engine tests first failed for the three absent APIs, after correcting a fixture's
+mana constructor. RON tests first failed at the actual target clauses in both
+complete LEG records and at invalid empty target disjunctions. After implementation
+focused tests passed. A later native fixture exposed that an attacking target
+was already tapped; the fixture now untaps it before activation, as CR 506.4b
+permits, so the assertion distinguishes resolution from target rejection. No
+behavioral assertion was removed or weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Lesser Werewolf and Sentinel target clauses | `TestRONCombatTargetRealDeclarations` reads each complete record, executes its actual target AST with native attackers/blockers, proves target rejection before blockers without spending mana, fresh declaration identity, and successful legal resolution. It also confirms the complete record still has other blockers. This is clause evidence only. |
+| RON shape/context and native factories | `TestRONCombatTargetDeclarations` covers malformed/wrong-role/unbound refs, incomplete/duplicate/mixed disjunctions, both orders/directions and definition validation. `TestRONCombatTargetNativeFactories` compiles full synthetic RON abilities and runs both directions, combat exit, changed-controller copies and clones through native combat and resolution. |
+| Engine identity, legality and timing | `TestTargetCombatRelation` covers both directions and union, pre-combat target rejection/payment rollback, tap, source/target combat exit, departure/return with new combat membership, phasing/phase cycles, control change, shroud, source ability removal, changed-controller copies and clone isolation. `TestTargetCombatRelationDefinition` rejects the options on a spell source. |
+| Multiple combat pairs and bands | `TestTargetCombatRelationBandsAndMultiplePairs` uses native attackers and blockers with an attacking band and two blockers, removes one pair, checks separate pending abilities and retained blocked status. |
+| Existing source/target contracts | `TestTargetToughness*`, `TestTargetSource*`, the complete short engine suite and all repository tests remain passing. |
+
+### Measurements and validation
+
+Actual compilation gain is **0 records / 0 unique names**, matching the
+prerequisite estimate. No accepted name is lost. No complete-card gameplay
+mapping is added; two real target-clause mappings and shared engine contracts
+are added. Collection engine-validation and behavior-verification totals remain
+null. The strict loader still publishes no registry and exits 1 for
+**1,717 compiled / 728 rejected records; 640 accepted / 346 rejected unique
+names**. All 2,445 records parse. Final semantic inventory has 72,950 nodes,
+8,537 signatures and 6,761 unknown-role occurrences (11 fewer from reference
+classification). All 12 source hashes match baseline and the vocabulary
+snapshot. RON source is unchanged; no vocabulary refresh is required.
+
+Fresh diagnostics:
+
+- Lesser Werewolf, `LEG.lines.ron:161:349`: unsupported activation history
+  condition `PermanentPassesFilter`; its target declaration now succeeds.
+- Sentinel, `LEG.lines.ron:233:381`: unsupported indefinite type modification
+  `SetToughness`; its target declaration now succeeds.
+- Feint, `LEG.lines.ron:82:255`: unsupported permanent filter
+  `IsBlockingAttacker` in a collection context.
+- Wall of Vapor, `LEG.lines.ron:299:242`: unsupported permanent filter
+  `IsBlockedByDefender` in a static prevention context.
+- Circle of Protection: Black, `2ED.lines.ron:33:215`: unsupported action
+  `ChooseADamageSource`.
+- Dakkon Blackblade, `LEG.lines.ron:58:205`: unsupported rule `CDA_Power`.
+
+These are capability gaps, not build/test failures. No new source defect or
+unevidenced source correction is introduced. The existing Gaea's Avenger defect
+and other source defects remain explicit. No environment blocker was found.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests and build | PASS. |
+| Focused engine `go test ./pkg/mage -run 'TestTargetCombatRelation\|TestTargetToughness\|TestTargetSource' -count=1` | PASS after expected initial failures. |
+| Focused RON `go test ./pkg/mage/dsl/ron -run TestRONCombatTarget -count=1` | PASS after expected initial failures and native fixture correction. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic formatting reviewed. |
+| Skill check `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS before staging; repeated before commit. |
+| `go run ./cmd/loadcards -json`; `go run ./cmd/loadcards -inventory -json` | Expected exit 1; final counts and diagnostics above. |
+| Accepted names / source hash audit | No name gained or lost; all source hashes unchanged. |
+
+Changed files: engine `target_combat_relation.go` and tests; `target.go`,
+`composable_target.go`, `target_source_lki.go`; RON `combat_target.go` and tests,
+`temporary_animation.go`, `inventory.go`; `mage/doc.go`, API/rules-contract docs,
+and this ledger entry. A fresh repository code/docs caller audit found 229
+matching files, including tests, generators and dot imports. No DSL function
+became unused; no existing export or engine service was removed. Complete
+loading, complete gameplay, application cutover, Go-definition/generator removal
+and unused DSL removal gates remain unmet.
+
+Ranked next candidates to reassess:
+
+1. Pure resolving permanent-filter conditions: Lesser Werewolf is now past its
+   target blocker; Sewers of Estark and other condition consumers share the gap.
+   Reassess complete records before claiming full-card unlocks.
+2. Chosen-source enumeration/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+3. All-zone count CDA prerequisite for the five direct consumers, with the
+   Gaea's Avenger defect kept separate.
+4. Combat-relation collections and static prevention, reusing `BlocksIncarnations`
+   while adding typed reference and source-lifetime contracts for their contexts.
+
+One descriptive commit contains only this slice after all checks pass.
+No second slice is started.

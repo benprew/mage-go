@@ -51,6 +51,12 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 }
 
 func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "Or" && containsCombatTarget(n) {
+		return compileCombatTarget(n, ctx)
+	}
+	if n.Name == "Or" && len(n.Args) == 1 && n.Args[0].Kind == List && len(n.Args[0].Args) == 0 {
+		return mage.PermanentFilter{}, nil, problem(n, "target disjunction requires operands")
+	}
 	if n.Name == "ManaValueIs" {
 		if err := compileManaValueXRestriction(n, ctx); err != nil {
 			return mage.PermanentFilter{}, nil, err

@@ -807,6 +807,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	controllerRefs               []PlayerRef
+	combatRelations              []targetCombatRelation
 	manaValueEqualX              bool
 	excludeSource                bool
 	attachedToControllerOnly     bool
@@ -886,6 +887,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.ContainsFunc(t.combatRelations, func(relation targetCombatRelation) bool { return !relation.matches(p, sourceCard, g) }) {
+			continue
+		}
 		if slices.ContainsFunc(controllers, func(id uuid.UUID) bool { return p.ControllerID() != id }) {
 			continue
 		}

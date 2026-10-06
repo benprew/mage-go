@@ -962,7 +962,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "HasNumberCountersOfType" && len(n.Args) == 2 {
 			return []string{"static_counter_comparison", "permanent_counter_type"}[index]
 		}
-		if n.Name == "AttachedToPermanent" && len(n.Args) == 1 {
+		if (n.Name == "AttachedToPermanent" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if n.Name == "IsEnchantmentType" && len(n.Args) == 1 {

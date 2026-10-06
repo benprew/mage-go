@@ -4538,3 +4538,31 @@ Engine evidence: `TestTargetPlayerReferenceEvent`, `Definition` and
 `ScopeAndInventory` and `Declarations`. These also cover target control,
 return/phasing/shroud, inactive sources, ability removal, casting rollback,
 source payment identity, current hand size, copies, clone isolation and syntax.
+
+## Live combat pairs in typed permanent targets
+
+`TargetBlocksSource`, `TargetBlockedBySource`, and `TargetInCombatWithSource`
+return `PermanentTargetOption` values. They require a battlefield source in
+engine definition validation. The last option permits either direction; separate
+options require all supplied restrictions. Target selection and resolution check
+current combat pairs with both battlefield incarnations. `Combat.BlocksIncarnations`
+uses the existing groups and incarnation maps, including blocks of attacking
+bands and multiple blockers (CR 509.1g/h, 702.22).
+
+A source or target that leaves combat no longer qualifies. A departed, returned,
+or phased source cannot supply the old relation. Source information retained for
+target queries now includes its incarnation; LKI does not create a combat pair.
+Phasing removes combat membership, so a phase cycle preserves object identity
+but does not restore the block (CR 506.4). Tapping does not end the relation
+(CR 506.4b). Control changes remove combat membership. Ordinary shroud and target
+identity checks still apply. Removing source abilities does not remove an ability
+already on the stack. Copies retain the source incarnation even when their
+controller changes; clones retain separate combat and target state.
+
+Evidence: `TestTargetCombatRelation`, `TestTargetCombatRelationDefinition`, and
+`TestTargetCombatRelationBandsAndMultiplePairs`. RON evidence:
+`TestRONCombatTargetRealDeclarations`, `TestRONCombatTargetDeclarations`, and
+`TestRONCombatTargetNativeFactories`. The real-record tests cover only the target
+clauses of Lesser Werewolf and Sentinel. Their complete records remain rejected.
+Costs, replacement ordering, simultaneous actions, and event ordering use the
+existing services without changes.

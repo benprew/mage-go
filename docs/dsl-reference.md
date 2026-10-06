@@ -3934,3 +3934,25 @@ destruction forbids regeneration and still respects indestructibility.
 Evidence: `TestRONDefendingPlayerNative`, `Pending`, `InstancesAndCopy`,
 `ScopeAndInventory` and `Declarations` in `pkg/mage/dsl/ron`, and
 `TestTargetPlayerReferenceEvent`, `Definition` and `SnapshotsAndQueries` in mage.
+
+## RON targets that share a blocking pair with the source
+
+Permanent target filters accept `IsBlockingAttacker(ThisPermanent)` and
+`IsBlockedByDefender(ThisPermanent)`, alone or in `And` filters. The former
+selects a blocker of the source; the latter selects an attacker blocked by the
+source. `Or([IsBlockingAttacker(ThisPermanent),
+IsBlockedByDefender(ThisPermanent)])` permits either direction, in either order.
+Other combat disjunctions, host/event/target references, and non-target contexts
+remain unsupported. An empty target disjunction is invalid.
+
+The compiler lowers these forms to the engine's `TargetBlocksSource`,
+`TargetBlockedBySource`, and `TargetInCombatWithSource` options on fresh typed
+target declarations. No target choice is stored in the compiled plan. The engine
+checks live combat membership and both incarnations at selection and resolution.
+LKI cannot restore an ended relation. Tapping preserves it; phasing, control
+changes, and combat exit end it. Copies and clones use the existing target services.
+
+Evidence: `TestRONCombatTargetRealDeclarations`, `Declarations`, and
+`NativeFactories`. Lesser Werewolf still requires its conditional resolving
+body; Sentinel still requires indefinite dynamic base toughness. These target
+clauses do not establish full-card gameplay support.

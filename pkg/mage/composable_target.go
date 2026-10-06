@@ -199,6 +199,9 @@ func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
 	if spec, ok := b.spec.(*PermanentTarget); ok {
+		for i, relation := range spec.combatRelations {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("combatRelations[%d]", i), targetCombatRelationOption{relation}})
+		}
 		for i, player := range spec.controllerRefs {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("controllerRefs[%d]", i), targetControlledByOption{player}})
 		}

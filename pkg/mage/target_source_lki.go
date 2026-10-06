@@ -9,9 +9,10 @@ import (
 // A returned card must not supply characteristics for its previous battlefield visit.
 type targetSourceLKI struct {
 	Card
-	colors     []core.Color
-	power      int
-	powerKnown bool
+	incarnation uuid.UUID
+	colors      []core.Color
+	power       int
+	powerKnown  bool
 }
 
 func (g *Game) resolutionTargetSource(obj *StackObject) Card {
@@ -36,12 +37,12 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 			if lki := g.zones.phaseInformation[obj.sourceIncarnation]; lki != nil {
 				power = lki.Power
 			}
-			return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors(), power: power, powerKnown: true}
+			return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors(), power: power, powerKnown: true, incarnation: obj.sourceIncarnation}
 		}
-		return card
+		return targetSourceLKI{Card: card, colors: p.Colors(), incarnation: obj.sourceIncarnation}
 	}
 	if lki := g.zones.LKIByIncarnation(obj.sourceIncarnation); lki != nil && lki.Snapshot != nil && lki.ID == obj.SourceID {
-		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors(), power: lki.Power, powerKnown: true}
+		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors(), power: lki.Power, powerKnown: true, incarnation: obj.sourceIncarnation}
 	}
-	return card
+	return targetSourceLKI{Card: card, colors: cardColors(card), incarnation: obj.sourceIncarnation}
 }
