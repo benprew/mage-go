@@ -41,6 +41,11 @@
 // restoring an old entry before the next layer pass.
 // Use [PayOrElse] for one optional payment with two resolution branches.
 // The payment result stays local to the operation.
+// Resolution counter payments use PayCountersOrElse for a fixed count and
+// PayChosenCountersOrElse for an optional chosen count. Each payment requires
+// the original live permanent. The chosen count is available only in its paid
+// branch. Counter choices and removal use the shared payment transaction.
+//
 // Use [UnlessManaPaid] or [IfManaPaid] for a mana payment during resolution.
 // Supply a mana cost with X and a [ResolutionValue]. The amount is read once
 // before the payment choice. Activation cost reductions do not change it.

@@ -156,7 +156,7 @@ func TestRONEnchantControllerClauses(t *testing.T) {
 
 func TestRONEnchantControllerReporting(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
-		{"LEG", "Cocoon", "unsupported mandatory sacrifice cost (RemoveCounters)"},
+		{"LEG", "Cocoon", "unsupported indefinite type modification (AddAbility)"},
 		{"LEG", "Relic Bind", "unsupported action list (Modal_ChooseOne)"},
 		{"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"},
 	} {

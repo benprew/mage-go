@@ -331,7 +331,7 @@ func TestRONCounterCostInvalid(t *testing.T) {
 			}
 		})
 	}
-	remove := `RemoveCounters([ACounterOfTypeFromPermanent(ChargeCounter, ThisPermanent)])`
+	remove := `RemoveCounters([ACounterOfTypeFromPermanent(ChargeCounter, HostPermanent)])`
 	for _, rule := range []string{
 		`Activated(PayMana([]), ActionList([RemoveCounters([NumberCountersOfTypeFromPermanent(Integer(1), ChargeCounter, ThisPermanent)])]))`,
 		`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList([MayCost(` + remove + `), If(CostWasPaid, [GainLife(Integer(1))])]))`,

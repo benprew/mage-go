@@ -233,8 +233,12 @@ func TestRONDamageReceivedControllerClause(t *testing.T) {
 		})
 	}
 	n := hostUntapRecord(t, "LEB", "Living Artifact")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "optional payment cost (RemoveCounters)") {
-		t.Fatalf("full record must retain counter payment gap: %v", err)
+	factory, err := Compile(n)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Living Artifact", factory()); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -320,7 +324,12 @@ func TestRONDamageReceivedReprintsAndInventory(t *testing.T) {
 			t.Fatal("event subject role")
 		}
 	}
-	files["unsupported.ron"] = &fstest.MapFile{Data: damageReceivedRecord(t, "LEB", "Living Artifact")}
+	files["living.ron"] = &fstest.MapFile{Data: damageReceivedRecord(t, "LEB", "Living Artifact")}
+	complete, err := LoadFS(files, "*.ron")
+	if err != nil || complete == nil || len(complete.RegisteredCardNames()) != 2 {
+		t.Fatalf("supported records failed loading: %v", err)
+	}
+	files["unsupported.ron"] = &fstest.MapFile{Data: damageReceivedRecord(t, "LEG", "Cocoon")}
 	if partial, err := LoadFS(files, "*.ron"); err == nil || partial != nil {
 		t.Fatal("partial registry published")
 	}

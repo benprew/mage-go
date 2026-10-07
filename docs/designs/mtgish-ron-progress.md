@@ -30390,3 +30390,159 @@ Changed files: engine next_untaps.go and tests, turn_system.go and doc.go;
 RON next_untaps.go and tests, compiler.go, inventory.go and inventory_test.go;
 dsl-reference.md, engine-rules-contracts.md and this appended ledger entry.
 No second slice is started.
+
+## 2026-10-07: resolution counter payments
+
+Status: completed slice `RESOLUTION-COUNTER-PAYMENTS`. This run stops here.
+Initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked completed-history document, are preserved. Only this entry
+is staged from the ledger; its pre-existing reorganization remains unstaged.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loader exit 1 was collection rejection: **1,828 compiled / 617 rejected
+records**, **704 accepted / 282 rejected unique names**, 2,445 records and
+986 names total. Semantic inventory: **72,962 occurrences / 8,557 signatures /
+5,395 unknown-role occurrences**. The design, ledger, historical vocabulary,
+engine API, relevant payment API/rules contracts and complete candidate records
+were read. CR 118.3, 122.2, 400.7, 608.2c/d/f and 702.26 provide the contract.
+Requirements came from RON and local Oracle data, not Go card definitions.
+
+| Candidate | Unique names and estimated full-card unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Resolution counter payments, selected | Living Artifact; Cocoon; Tetravus. **1 immediate complete-card unlock**, Living Artifact (6 reprints). | Cocoon needs an indefinite flying grant, retained attachment behavior after sacrifice, and a controller-untap source correction. Tetravus needs token rules, per-source created-token links, optional token exile and its result count. Shared resolution payment, mandatory failure and scoped chosen-count contracts enable these two consumers. | Medium: reuse counter transactions, add one resolving engine operation family and scoped adapter, identity/choice/clone/declaration tests plus one full-card mapping. |
+| Battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods. **5 estimated full-card unlocks**. | All-zone characteristic evaluation, owner/controller context and CDA/copy/layer behavior remain prerequisites. Gaea's Avenger and Wood Elemental have independent data/entry blockers and are excluded. | High: shared all-zone service and five complete gameplay mappings. |
+| Chosen-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation. **7 estimated full-card unlocks**. | Source discovery and choice, spell/permanent continuity, property checks and one-event replacement shields remain prerequisites. Other source-choice consumers have additional blockers and are excluded. | High: decision, identity and replacement integration plus seven complete mappings. |
+
+Selection: a smaller extension of existing exact counter-payment transactions
+provides one full card and a concrete shared prerequisite for two more cards.
+It does not claim three full unlocks from first diagnostics. Reprints count once.
+The selection, engine/compiler boundary and acceptance cases were stated before
+editing. The implement-engine skill supplied the engine contract workflow;
+no card/set implementation skill, delegation, Go stub or production fallback
+was used.
+
+### Exact supported shapes and boundary
+
+Engine:
+- `PayCountersOrElse(player PlayerRef, subject PermanentRef, counter
+  core.CounterType, count int, optional bool, paid, unpaid ResolvingEffect)
+  ResolvingEffect`: fixed nonnegative count, optional decision or mandatory
+  payment, then one branch. A nil branch has no action.
+- `PayChosenCountersOrElse(player PlayerRef, subject PermanentRef, counter
+  core.CounterType, result *NumberBinding, paid, unpaid ResolvingEffect)
+  ResolvingEffect`: optional count from zero through available counters; result
+  exists only inside the paid branch. Nested results are separate and restored
+  after the branch.
+
+These use existing RemoveCountersCost / RemoveAnyCountersCost, shared choice
+locking, prepareActionPaymentTransaction and commit. Original live incarnation
+and phasing are checked before payment, after the may decision and at commit.
+Absent/returned objects cannot use LKI to pay. Control changes preserve the
+subject and resolving actor; copies pay anew; clones have separate state.
+Counter transactions retain their existing atomic removal and rollback rules.
+The new private result declaration makes paid-branch dominance visible to
+engine definition validation, without exporting a new authoring function.
+Existing generic IfPaid and activation counter-payment restrictions remain.
+
+RON: resolving permanent-source action lists accept
+`MayCost(RemoveCounters([instruction]))`,
+`PlayerMayCost(payer, RemoveCounters([instruction]))`, and
+`MustCost(RemoveCounters([instruction]))`, each followed immediately by
+`If(condition, [actions])` or `Unless(condition, [actions])`.
+Condition is the symbol CostWasPaid or CostWasntPaid. The action list is nonempty.
+Fixed instruction signatures:
+- `ACounterOfTypeFromPermanent(counter, ThisPermanent)/2`.
+- `NumberCountersOfTypeFromPermanent(Integer(n), counter, ThisPermanent)/3`, n >= 0.
+Optional chosen instruction:
+- `AnyNumberOfCountersOfTypeFromPermanent(counter, ThisPermanent)/2`.
+Its paid continuation can read the symbol TheNumberOfCountersRemovedThisWay.
+Each payment/factory gets a fresh typed NumberBinding. RON spelling and scope
+remain in ron; transactions and identity stay in mage. Spell sources, other
+subjects, mandatory chosen amounts, dynamic fixed counts, multiple instructions
+and IfElse continuations remain explicit errors. This is one complete supported
+payment context, not support for every RemoveCounters form.
+
+### Tests and gameplay mapping
+
+Engine tests first failed to build for the absent APIs. Real RON tests then
+failed with `unsupported optional payment cost (RemoveCounters)`. Initial test
+setup used wrong attachment/damage helpers; these were corrected before the
+RON red run. Later tests caught an invalid empty-sequence omitted branch.
+The adapter now omits that branch, and complete card definition validation passes.
+Other setup corrections used the RON's green casting cost and the engine's
+SearchPlayer clone type. No assertion or allocation budget was weakened.
+
+| Card / contract | Mapping |
+| --- | --- |
+| Living Artifact, full LEA/LEB/2ED/3ED/CED/CEI records | TestRONResolutionCounterLivingArtifact; LivingArtifactCasting; FullRecords. Enchant artifact and casting cost/target rollback; controller actual damage and prevention; vitality accumulation; correct upkeep and resolution timing; optional acceptance/decline and insufficient counters; source return/phasing/control; copied triggers and pending clone isolation. Existing TestRONDamageReceivedControllerClause/Batch covers multiple sources, damage snapshots, source identity and clones. |
+| Cocoon, partial payment prerequisite only | TestRONResolutionCounterMandatory and engine TestResolutionCounterPayment mandatory case. Fixed counter removal when possible; no optional choice; unpaid continuation only when payment fails. FullRecords and updated TestRONEnchantControllerReporting still require strict rejection at AddAbility. No complete gameplay claim. |
+| Tetravus, partial payment prerequisite only | TestRONResolutionCounterTokenCount verifies a synthetic chosen-payment/token-count shape, without its unsupported token rule or linked-exile ability. FullRecords still requires strict rejection at the token PermanentRuleEffect. No altered production record or complete gameplay claim. |
+| Choice, identity, rollback and scope | TestResolutionCounterPayment*, TestRONResolutionCounterChosenBranches, ChosenCopiesAndClones, Invalid. Fixed/chosen/zero/declined/short/mandatory; returned and phased subjects, phase cycles, control changes; stale may/number choices and invalid counts; nested counts, paid-only dominance, nonescape, fresh instances, copied actors and clones with different choices. |
+| Strict loading and existing callers | TestRONDamageReceivedReprintsAndInventory now requires Living Artifact plus Fungusaur to load, and still rejects a collection containing Cocoon without publishing a partial registry. CounterCostInvalid retains malformed/invalid declarations and now rejects an out-of-scope host payment instead of the newly supported source payment. Inventory tests require fresh counts and continued acceptance. |
+
+One complete-card gameplay mapping is added, separately from compilation gains.
+Collection-wide engine_validated and behavior_verified totals remain null.
+No replacement-ordering, targeting, event or simultaneous batch contract changes.
+
+### Measurements, source defects and validation
+
+Final strict loader: **1,834 compiled / 611 rejected records; 705 accepted /
+281 rejected unique names**. Gain matches the estimate: exactly Living Artifact,
+6 records / 1 unique name. No accepted name is lost. Two other diagnostics advance:
+Cocoon -> `unsupported indefinite type modification (AddAbility)`;
+Tetravus -> `unsupported token keyword (PermanentRuleEffect)`.
+Semantic inventory remains **72,962 occurrences / 8,557 signatures / 5,395
+unknown-role occurrences**; existing role classification already covers this
+payment syntax. Strict loader and inventory each exit 1 for collection rejection,
+not a build failure, and install no partial production registry.
+
+Local data/LEA.json agrees with Living Artifact's complete record. Local
+ATQ.json and LEG.json were also checked for the other payment consumers.
+Source defect found: LEG Cocoon's conditional
+PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap]) follows
+the host controller, while Oracle in data/LEG.json specifies the Aura
+controller's untap step. CR 109.5 and 502 define the relevant player and step.
+This slice leaves the source and vocabulary hashes unchanged; Cocoon remains
+rejected. Its eventual correction needs a controller-specific untap contract
+and control-change tests. Tetravus's remaining linked/token forms are compiler
+and engine gaps, not authorization to omit its rules. No environment blocker
+was found.
+
+Initial broad tests found four obsolete gap assertions. They now require the
+newly supported record to validate/load, preserve invalid-declaration checks,
+and retain strict rejection with the updated Cocoon blocker. Lint initially
+reported two redundant type declarations; both were fixed. Automatic import,
+range-loop and declaration formatting changes were reviewed and confined to
+this slice. All final required checks pass:
+
+- Focused engine/RON/inventory and affected older tests, `-count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `go test ./... -short -count=1`: PASS (skill verification).
+- `make lint`: PASS.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1, counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1, counts above.
+
+Changed files: engine resolution_counter_payment.go and tests, mage/doc.go;
+RON resolution_counter_payment.go and tests, optional_payment.go,
+counter_cost_test.go, damage_received_test.go, enchant_controller_test.go,
+inventory_test.go; API/rules-contract docs; this appended ledger entry.
+No Go card definitions, generators or DSL functions are removed: runtime,
+complete-loading and complete-gameplay removal gates remain unmet.
+
+Ranked next candidates to reassess:
+1. Battlefield-count CDA service with five clean consumers.
+2. Chosen-source shield contracts with seven clean consumers.
+3. Shared indefinite keyword grants and retained attachment references, with
+   a controller-specific untap correction for Cocoon; compare other grant
+   consumers before selecting a single-card continuation.
+4. Token static rules and linked created-token identities for Tetravus and
+   other token/link consumers.
+
+No second slice is started. Complete collection loading, collection gameplay,
+application cutover, Go-definition removal and unused DSL cleanup remain open.

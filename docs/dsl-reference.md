@@ -5199,3 +5199,35 @@ nonnegative literals. References use the existing instance scope; filters use
 contextual collection queries. These are actions, not costs or static rules.
 Complete gameplay mappings cover Telekinesis and Spore Cloud. See the counted
 untap contract in `engine-rules-contracts.md` for timing and identity evidence.
+
+## RON resolution counter payments
+
+Resolving permanent-source action lists accept `MayCost`, `PlayerMayCost`
+and `MustCost` with `RemoveCounters([instruction])`, followed immediately by
+`If` or `Unless` with `CostWasPaid` or `CostWasntPaid` and a nonempty action
+list. Fixed instructions are `ACounterOfTypeFromPermanent(counter,
+ThisPermanent)` and `NumberCountersOfTypeFromPermanent(Integer(n), counter,
+ThisPermanent)` with nonnegative n. Optional payments also accept
+`AnyNumberOfCountersOfTypeFromPermanent(counter, ThisPermanent)`.
+
+A chosen payment's paid continuation can read the symbol
+`TheNumberOfCountersRemovedThisWay`. The compiler makes a fresh NumberBinding
+per factory instance and payment. The value is unavailable before payment,
+after the continuation, or on its unpaid path. Fixed resolution payments do
+not produce this value. Spell sources, other subjects, mandatory chosen counts,
+multiple instructions, dynamic fixed counts and IfElse continuations remain
+rejected. Existing activation counter payments retain their contract.
+
+Lowering uses `PayCountersOrElse` or `PayChosenCountersOrElse` and the engine's
+shared transaction. The payment occurs at resolution, with presence, phasing
+and original-incarnation checks. It cannot use LKI to remove counters from an
+absent object. Copies pay separately; clones keep separate state.
+
+Living Artifact's six complete reprints compile and pass definition validation.
+Its gameplay mapping covers enchant/casting costs and legality, actual damage
+counter accumulation, controller upkeep timing, decline, insufficient counters,
+source identity, control, phasing, copied triggers and clones. Cocoon and
+Tetravus still fail strict compilation at their remaining rule adapters.
+Synthetic mandatory and token-count tests establish the payment prerequisite;
+they do not establish either card's complete gameplay. Evidence:
+`TestRONResolutionCounter*` and `TestResolutionCounterPayment*`.

@@ -6150,3 +6150,31 @@ Evidence: `TestNextUntapsCountAndOverlap`, `IdentityAndTiming`,
 `SharedContextsAndInstances`. Real-card tests execute unchanged complete LEG
 Telekinesis and FEM Spore Cloud records through casting, prevention, cleanup
 and native untap steps. Existing single-step regression tests remain in use.
+
+## Resolution counter payments
+
+`PayCountersOrElse(player, subject, counter, count, optional, paid, unpaid)`
+pays a fixed count from a typed permanent reference during resolution.
+`PayChosenCountersOrElse(player, subject, counter, result, paid, unpaid)`
+offers a choice from zero through the available count. Both use the shared
+counter-cost transaction. A nil branch means no action in that branch.
+Invalid counter kinds, negative fixed counts, nil references and unbound
+result reads fail definition validation. The chosen result is available only
+inside the paid branch, including nested actions; it cannot escape to an
+unpaid branch or a later sibling.
+
+The subject must be present and phased in with its original incarnation.
+Retained information cannot supply counters for payment. Control changes do
+not change subject identity or the resolving ability's player. Optional
+payment can be declined; mandatory fixed payment gives no choice. A zero
+count is a successful payment from a present subject. Insufficient counters,
+out-of-range choices and stale subjects fail without removing counters.
+The payment checks identity after the optional decision; the transaction locks
+identity across the number choice and checks it again at commit. This uses
+CR 118.3, 122.2, 400.7, 608.2d/f and 702.26. A copied ability makes a separate
+resolution payment. Game clones keep separate choices, counts and counters.
+
+The count is written only after successful commit and restored after its paid
+branch. Nested payments use distinct bindings. No activation payment contract,
+replacement order or counter-removal batch contract changes.
+Evidence: `TestResolutionCounterPayment*` and `TestRONResolutionCounter*`.
