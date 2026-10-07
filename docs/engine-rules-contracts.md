@@ -6021,3 +6021,22 @@ Evidence: `TestRONSourceLeaveCards`, `Casting`, `Shrine`,
 `SkipsPhasedAndReturnedTargets`, `QueuesSourceLeaveTrigger` and
 `TokenDoesNotRemainInExile` remain the shared engine evidence. This integration
 adds no replacement ordering, APNAP, cost or zone-movement service.
+
+## RON ordinary draw-step event integration
+
+RON `TriggerA(AtTheBeginningOfAPlayersDrawStep(players), body)` reuses the existing
+`TurnStepBegins(EachDrawStep, binding)` event service. `AnyPlayer` is unrestricted;
+`SinglePlayer(You)` adds `EventPlayerIsController` at detection. A fresh factory
+creates a fresh player binding. Pending events and copies save the event player;
+`You` in resolution reads the ability controller. No condition is checked again
+for this ordinary trigger.
+
+The native timing contract remains CR 603.2b, 603.3a and 504.1–2: detection at
+step start, normal draw, APNAP placement, then priority and resolution. A phased
+source cannot detect an event (CR 702.26b); its departure or phasing after
+detection does not cancel an independent triggered ability (CR 113.7a).
+`TestRONOrdinaryDrawStepBindings`, `EventLifecycle`, `NativeTiming`, `Copy`,
+`Declarations` and `InventoryAndBoundaries` establish this adapter's integration.
+The lifecycle test uses the unchanged Armageddon Clock event with a test body;
+it does not establish Clock's missing counter-value or activation contracts.
+No new engine rule, damage batch, replacement ordering or payment service is added.

@@ -29781,3 +29781,156 @@ Slice files: ron compiler.go, triggers.go, permanent_scope.go, permanent_exile.g
 inventory.go, inventory_test.go and source_leave_test.go; docs/dsl-reference.md,
 docs/engine-rules-contracts.md and this appended ledger entry. Stage only this
 slice. Keep initial user edits and unrelated files unstaged.
+
+## Run 2026-10-07: ORDINARY-DRAW-STEP-EVENTS
+
+Status: completed dependency slice. Stop after this slice. Complete collection
+loading, collection gameplay, runtime cutover and removal gates remain incomplete.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, current
+ledger, selected compiler/engine code, API/rules contracts and complete candidate
+RON records, including nested forms. Requirements came from RON records, not Go
+card definitions. No card skill, Go stub generation or delegation was used.
+Preserved initial user changes to `.gitignore`, the execution design and ledger,
+and the untracked `mtgish-ron-completed.md`. Only this appended ledger entry is
+staged; the user's ledger consolidation remains unstaged.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build`: PASS. Strict native
+loading exits 1 for collection rejection, not build failure: **1,824 compiled /
+621 rejected records**, **701 accepted / 285 rejected unique names**, from
+2,445 records / 986 names. Fresh semantic inventory: **72,962 occurrences /
+8,557 signatures / 5,443 unknown-role occurrences**. Aggregate engine_validated
+and behavior_verified remain null; compilation is separate from gameplay.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- |
+| Ordinary draw-step events, selected | Armageddon Clock; Sylvan Library. **0 immediate full-card unlocks**, two concrete dependent cards. Existing Howling Mine and Mana Vault use the separate intervening-if context. | Clock also needs source-counter values and OtherPlayersMayActivate with upkeep restriction. Library also needs optional drawing, repeated life payments, draw-history choices/results and exact library-top disposition. Establishes the shared unconditional event and typed player scope without approximating either body. | Low: adapter to existing binding/timing/controller services; declaration, lifecycle, native timing, copy/clone tests and existing real-RON regressions. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; Gaea's Avenger is an additional blocked consumer. **5 clean full-card unlocks** after the engine prerequisite. | Battlefield-only CDA effects cannot establish all-zone characteristics. Needs outside-battlefield owner/controller context, live evaluation, copying and layer evidence. Avenger's controller-filter source defect and nested Plus exclude it from the estimate. Enables characteristic queries in hand, library, graveyard, exile and stack. | High: engine all-zone service, value/filter adapters and five full-card gameplay mappings. |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **7 clean full-card unlocks** after discovery/identity and next-event shield support. | Needs CR 609.7a source discovery, typed resolution choices, identity/property rechecks, spell-to-permanent continuity and prevention ordering. Additional redirection consumers have independent amount/result gaps. | High: reusable engine prerequisites, scoped choices, shields and seven complete mappings. |
+
+The selected prerequisite has the smallest measured implementation boundary and
+concrete shared use by two cards. It removes an event blocker without requiring
+an approximate rule body. Zero immediate unlocks was stated before editing.
+The larger multi-card gains remain ranked next and need engine prerequisites.
+Complete records and nested forms, not first-error frequency, informed the
+estimates. Reprints count once. This run does not begin a second slice.
+
+### Exact signatures, contexts and reuse boundary
+
+On permanent definitions:
+`TriggerA(AtTheBeginningOfAPlayersDrawStep(players), body)`.
+TriggerA takes two arguments; the event takes one. `players` is the bare symbol
+AnyPlayer or `SinglePlayer(You)` with a bare You and exactly one argument.
+Existing action-list/target compilation supplies body support independently.
+Other player selectors, malformed constructors and instant/sorcery rule contexts
+remain rejected. `Trigger_ThatPlayer` is a singular typed player reference only
+inside that rule's body; another ability cannot borrow it.
+
+RON owns spelling, validation and dispatch. It reuses compileBoundStepAbility
+with EachDrawStep and fresh BindPlayer/instanceBindings for each factory.
+SinglePlayer(You) adds EventPlayerIsController, exactly as the existing
+intervening-if draw adapter does. The engine has no YourDrawStep export, so no
+new engine API is introduced merely for that spelling. No mutable chosen state,
+global result slot, card-name branch, fallback or partial production registry
+is added. Existing TriggerI code remains unchanged.
+
+Engine reuse: TurnStepBegins, EachDrawStep, EventPlayerIsController, generic
+pending events, source incarnation/damage information, APNAP placement, stack
+copies, Clone, DealDamageEach and the native draw-step sequence. Detection occurs
+at step start; normal draw precedes priority and resolution (CR 603.2b,
+603.3a/b, 504.1–2). Controller eligibility is checked at detection only. Pending
+ordinary triggers remain independent after departure/ability removal/phasing
+(CR 113.7a); phased sources cannot detect events (CR 702.26b). Event players
+stay captured; You reads the resolving ability controller, including copies.
+No new LKI, payment, legality, replacement-order or simultaneous-operation
+engine contract is claimed. Existing shared services supply those contracts.
+
+### TDD and card-to-test mappings
+
+Initial meaningful tests failed at the expected unsupported ordinary draw-step
+event for both player forms and Clock's real event. After dispatch, Clock's exact
+body exposed unsupported TheTotalNumberOfCountersOfTypeAmongPermanents. The
+initial test fixture incorrectly demanded that independent value prerequisite;
+it was replaced by an explicitly named event probe, with the unchanged real
+Clock event and a fixed-damage test body. Complete-card rejection assertions
+retain the missing value as a blocker. No production body is simplified and no
+existing test is weakened. No full Clock gameplay claim follows from the probe.
+An initial compile attempt referenced nonexistent YourDrawStep; final lowering
+uses the existing controller predicate instead. Final focused tests pass.
+
+All new tests are in `pkg/mage/dsl/ron/ordinary_draw_step_test.go` with prefix
+TestRONOrdinaryDrawStep:
+
+| Card / contract | Test mapping and limit |
+| --- | --- |
+| Typed event-player binding | Bindings: AnyPlayer and SinglePlayer(You), wrong event, multiple pending players, detection versus resolution, source return under another controller and cloned pending events. |
+| Armageddon Clock event prerequisite | EventLifecycle: unchanged RON event with explicit test body; control before/after detection, new-controller eligibility, departure/return, phasing before/after/cycle, ability removal before/after, independent factories and countered trigger. NativeTiming: normal draw before first priority, no early damage, controller-only native step. The complete Clock body remains rejected. |
+| Copies | Copy: saved event player and changed copied-ability controller. |
+| Declarations and strict loading | Declarations: malformed events/player constructors, unbound player reads, cross-rule reads, host controller and spell contexts. InventoryAndBoundaries: supported synthetic record strictly loads and engine-validates, semantic roles remain correct, complete Clock and Library records still reject at independent body gaps. |
+| Existing real RON gameplay | Existing TestRONDrawStep* tests: complete Howling Mine and Mana Vault across six records each, native normal-draw/replacement timing, intervening-if rechecks, LKI, phasing, controller, costs, prevention and clones. These existing mappings remain valid; they are not new card coverage. |
+
+Coverage gain: **one supported event shape/context**, **0 new complete unique-card
+mappings** and **0 additional compiled records**. The exact Clock event is a
+prerequisite mapping; Library has compilation-boundary evidence only.
+
+### Source defect and remaining diagnostics
+
+Local `data/LEG.json` supplies Sylvan Library's Oracle text: after optional extra
+drawing, choose two cards in hand drawn this turn; for each, pay four life or put
+it on top of the library. `LEG.lines.ron:253` instead uses
+`DiscardNumberCardsDrawnThisTurn(TheNumberOfRepeatedCostsNotPaid)`, following
+RepeatedMayCost. Discard is not movement to the library (CR 701.9a defines it as
+hand-to-graveyard), and independent repeated payments do not express the required
+card-linked choices. This is a source-data defect, separate from missing optional
+drawing, repeated-payment results and draw-history services. No compiler semantics
+are invented for that spelling. Correction is deferred to a slice that establishes
+the necessary card-choice/zone-result vocabulary and updates all identical records.
+There is one Library record. No RON source changed; vocabulary syntax/hashes need
+no refresh. Previously recorded source defects remain unresolved.
+
+Final first diagnostics:
+- Armageddon Clock: `ATQ.lines.ron:6:392: unsupported value (TheTotalNumberOfCountersOfTypeAmongPermanents)`.
+- Sylvan Library: `LEG.lines.ron:253:231: unsupported optional payment cost (DrawNumberCards)`.
+
+Fresh strict/semantic counts match baseline: **1,824 compiled / 621 rejected
+records**, **701 accepted / 285 rejected names**. Inventory remains **72,962
+occurrences / 8,557 signatures / 5,443 unknown-role occurrences**. Only the two
+listed first diagnostics change; no accepted name is lost. Actual zero full-card
+gain matches the estimate; Clock's counter-value gap further limits downstream
+readiness but does not change the selected event prerequisite's supported contract.
+Strict collection loading continues to reject atomically and install no registry.
+
+### Validation and stopping point
+
+- Baseline focused tests, engine short tests and build: PASS.
+- Focused `go test ./pkg/mage/dsl/ron -run 'TestRONOrdinaryDrawStep|TestRONDrawStep|TestInventory' -count=1`: PASS, including after lint.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues; automatic formatting reviewed, no unrelated file changed.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection, counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1, unchanged counts, semantic inventory and source hashes.
+- Accepted-name and diagnostic comparison: PASS; only Clock and Library advance.
+
+No environment failure is found. No Go card, generator or DSL export is removed:
+complete collection loading/gameplay/startup remain below their removal gates.
+No fresh caller audit authorizes unrelated deletion. API and rules documentation
+changes describe only the event integration established here.
+
+Ranked next candidates to reassess:
+1. All-zone battlefield-count CDA prerequisite and its five clean consumers.
+2. Chosen damage-source discovery/identity and seven source shields.
+3. Source-counter information values, comparing Armageddon Clock, Voodoo Doll,
+   Icatian Moneychanger, City of Shadows and Primordial Ooze. Distinguish live
+   counters from required LKI before adapting the existing live-only CountersOn.
+   Clock also needs any-player activation permission; Library needs corrected
+   source vocabulary plus per-card optional drawing/payment/history operations.
+
+Slice files: ron draw_step.go, triggers.go, ordinary_draw_step_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
+Stop after this prerequisite slice. Preserve all initial user changes.

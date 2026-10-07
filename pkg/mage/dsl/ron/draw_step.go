@@ -2,6 +2,21 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+func compileDrawStepTrigger(event, body Node, ctx scope) (optionFactory, error) {
+	build, err := compileBoundStepAbility(event, body, ctx, mage.EachDrawStep, mage.EachDrawStep, "draw-step", nil)
+	if err != nil {
+		return nil, err
+	}
+	own := event.Args[0].Name == "SinglePlayer"
+	return func() mage.CardOption {
+		trigger := build()
+		if own {
+			trigger.AndConditionData(mage.EventPlayerIsController{})
+		}
+		return mage.WithAbility(trigger)
+	}, nil
+}
+
 func compileDrawStepIntervening(n Node, ctx scope) (optionFactory, error) {
 	event := n.Args[0]
 	if err := arity(event, 1); err != nil {

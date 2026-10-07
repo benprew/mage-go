@@ -2245,7 +2245,7 @@ reprints. `TestRONDrawStepCards`, `ConditionsAndIdentity`, `VaultPayment`,
 `Bindings`, `Invalid`, `InventoryAndReprints`, `BeforeNormalDrawReplacement` and
 `VaultDamagePrevention` (all with prefix `TestRONDrawStep`) cover their rules
 and interactions. The vocabulary family remains partial: this does not add
-other intervening-if events, conditions, or ordinary `TriggerA` draw-step rules.
+other intervening-if events or conditions.
 
 `mage.SourceTappedStateWithLKI(bool) StateCondition` is a source-only condition
 for information reads at resolution. At detection, with no captured incarnation,
@@ -5095,3 +5095,31 @@ covers Hazezon Tamar's entry trigger, next-upkeep tokens and departure exile.
 `StrictLoad` cover payment, declarations, independent pending events, role
 reporting, fresh factories and atomic rejection. Existing `TestExileEach*` tests
 supply the reusable batch, identity, phasing and token contracts.
+
+## RON ordinary draw-step triggers
+
+Permanent definitions support
+`TriggerA(AtTheBeginningOfAPlayersDrawStep(players), actions)` with exactly one
+event argument: bare `AnyPlayer` or `SinglePlayer(You)`. The existing action
+compiler supplies the body; this declaration does not add missing body operations.
+`Trigger_ThatPlayer` is a typed player reference local to that body. Each factory
+creates a separate binding, and each pending event saves its player. `You` reads
+the resolving ability controller. The controller filter reads the source at
+detection; it is not checked again at resolution.
+
+The adapter reuses `compileBoundStepAbility`, `TurnStepBegins(EachDrawStep, binding)`
+and `EventPlayerIsController` for the `SinglePlayer(You)` restriction. It has no
+intervening-if condition. Other players, malformed declarations, cross-rule
+reads and instant/sorcery rule contexts fail compilation. Detection precedes the
+normal draw; priority and trigger resolution follow it. Phased sources cannot
+trigger, but departure or phasing after detection does not cancel a pending rule.
+Copies retain the event player and use their own controller; clones keep separate
+resolution state.
+
+`TestRONOrdinaryDrawStep*` covers declarations, bindings, copies, clones, source
+lifecycle and native timing. Armageddon Clock's unchanged RON event is tested
+with an explicit probe body. Its complete record still rejects the source-counter
+value. Sylvan Library still rejects optional drawing payment and has a separate
+source-data defect in its drawn-card disposition. Neither has a complete-card
+mapping from this prerequisite. Existing `TestRONDrawStep*` mappings for Howling
+Mine and Mana Vault remain valid.

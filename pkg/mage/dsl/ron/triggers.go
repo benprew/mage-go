@@ -53,6 +53,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return compileBoundStepTrigger(trigger, n.Args[1], ctx, mage.EachBeginCombat, mage.YourBeginCombat, "begin-combat")
 	case "WhenAPlayerDrawsACard":
 		return compileDrawEventTrigger(trigger, n.Args[1], ctx)
+	case "AtTheBeginningOfAPlayersDrawStep":
+		return compileDrawStepTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentHasNumberCountersOfType":
 		return compileCounterStateTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentDealsDamageToAPlayer":
