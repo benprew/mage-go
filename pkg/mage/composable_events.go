@@ -2249,9 +2249,6 @@ func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect
 	if p.captureAnnouncedX {
 		captures = append(captures, &eventAmountCapture{binding: p.announcedX, amount: event.CastAnnouncedX})
 	}
-	if p.captureSpell {
-		captures = append(captures, &eventSpellCapture{binding: p.spell, id: event.TargetID})
-	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}
 }
@@ -2259,6 +2256,7 @@ func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect
 type eventSpellCapture struct {
 	binding *SpellBinding
 	id      uuid.UUID
+	source  DamageSource
 }
 
 func (*eventSpellCapture) Text() string                 { return "remember cast spell" }

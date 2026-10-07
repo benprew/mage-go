@@ -37897,3 +37897,155 @@ Ranked next candidates, to reassess with fresh evidence:
 
 No second slice starts in this run. The descriptive commit hash is reported in
 the final response after required checks pass.
+
+## Run 2026-10-07: STACK-BOUND-SPELL-SOURCES
+
+Status: complete dependency slice. Stop after this slice. Runtime cutover,
+Go-card removal and DSL removal gates remain unmet.
+
+Initial user changes to `.gitignore`, the execution design and this ledger,
+and untracked `mtgish-ron-completed.md`, remain outside this slice. Only this
+appended ledger entry is staged. No delegation was used.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests, short engine tests and build passed. Strict loading
+and semantic inspection exit 1 for collection rejection: **1,962 compiled /
+483 rejected records; 762 accepted / 224 rejected unique names**, from 2,445
+records and 986 names. Inventory contains **72,952 occurrences / 8,556 signatures /
+3,988 unknown-role occurrences**. Collection engine-validation and gameplay totals
+remain null. Nested forms and complete records, including reprints, were read;
+first-error frequency was not treated as an unlock estimate.
+
+Read: AGENTS.md, engine API reference, execution design, current progress entries,
+vocabulary snapshot, selected engine/compiler files, complete candidate RON
+records, API/rules contracts and CR 120.7, 400.7, 608.2h, 609.7a–c and 707.
+The implement-engine skill supplied the engine workflow. No removed card skill,
+Go card requirement, card-name executor, fallback or partial registry was used.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Typed spell-event references on stack objects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate**, prerequisite for **7 cards / 31 records**. | Complete shield records require mana payment, filtered choice and next-event prevention. Delayed frames, other references, waiting effects, command objects, general enumeration and shield continuity/rechecks remain. This completes the saved cast-spell reference category. | Small/medium: reuse detected captures, stack departure maps, exact spell information, choices and copies; native identity/clone/declaration/RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8 credible unlocks** with complete engine and adapters. | Formation matching and both damage assignment directions remain beyond ordinary banding. Complete records need static/token grants, named/legendary matching, temporary removal and upkeep timing. | High: combinatorial combat and layer/token/removal gameplay. |
+| Static animation and dynamic base values | Animate Artifact and Gaea's Liege: **1 credible unlock**, Animate Artifact. | Conditional noncreature membership, type additions and live mana-value base P/T; Liege additionally needs defending-player count filters, source-leave duration and investigation of duplicate `IsntAttacking` branches. | High: layer membership/dependencies/live values plus separate source investigation. |
+
+Selection: a complete source-reference category reuses established services and
+has concrete seven-card downstream value at lower effort than the combat family.
+Single-card animation is deferred while shared work remains. The contract,
+reuse boundary, acceptance cases and zero immediate gain were stated before edits.
+Missing behavior is an engine contract; no compiler adapter is added prematurely.
+No source-data correction or environment repair is part of this slice.
+
+### Supported contract and reuse boundary
+
+Capability `STACK-BOUND-SPELL-SOURCES`:
+
+- `Game.StackBoundSpellSources() []DamageSource` reads immutable typed
+  `eventSpellCapture` identities through sequence wrappers on stack objects.
+  Results follow stack insertion/capture traversal order with exact deduplication.
+  Nil declarations, invalid sources, incompatible permanent identities and
+  mismatched stack IDs are excluded. No future producer, capture execution,
+  global result-slot read, target declaration or RNG is used.
+- `ChooseDamageSourceFromStackSpellBindings(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect` uses the shared filtered non-targeted
+  resolution choice. Typed declaration validation and producer order, independent
+  outputs, copied options, invalid-answer fallback, absent-player/empty clearing
+  and cloned frames retain the existing contract.
+- Cast detection now saves the spell ID and source information through
+  `captureDetectedEvent`. This replaces the placement-time ID-only capture while
+  keeping the existing spell binding body semantics. Pending triggers qualify
+  only after placement. An absent spell at placement uses its detection snapshot.
+- Live queries read current color, types and control for the exact stack identity.
+  Pop, ID removal, source-ID removal, countering and stack-to-ante removal retain
+  departure information on each referring object through `saveBoundSpellInformation`.
+  This shared service now checks damage-source and spell-event captures; its
+  existing copy-on-write map and copy/clone behavior supply isolation.
+  Query information does not alter the body's saved spell ID. Recasts and
+  battlefield entry cannot replace the original spell. Removal of the final
+  referer ends eligibility; the currently resolving object has left the stack.
+
+Reuses spell event patterns, detected/pending captures, sequence traversal,
+`DamageSource.SameObject`, `CaptureSpellDamageSource`, native stack departure,
+`boundSpellSources`, copy/cloning, source filters and `damageSourceChoice`.
+No parallel event, zone, payment, damage or replacement service is introduced.
+No production RON syntax, role or context is expanded. General
+`ChooseADamageSource` stays rejected. Saved delayed frames, other references,
+waiting effects, face-up command objects and spell-to-permanent shield continuity
+remain separate contracts. Existing callers are preserved.
+
+### TDD and card-to-test mapping
+
+Tests first failed for missing query/choice APIs and the missing spell capture
+snapshot field. A missing `core.GameEvent` qualification was fixed during
+implementation. Two fixture errors were corrected without changing requirements:
+a synthetic observer needed an owner before destruction; an enchantment recast
+needed an empty stack, so its referring trigger was removed and restored around
+native casting. Focused tests then passed with `-count=1`.
+
+| Contract/card | Test mapping |
+| --- | --- |
+| Exact spell/departure identity | `TestStackBoundSpellSourcesDeparture`: live/pop/ID/source-ID/counter paths, changed color/control, recast, copies, clones before/after departure, copied query data and immutable body identity. |
+| Choice/declaration contracts | `TestStackBoundSpellSourcesChoiceAndDeclarations`: nil player/output, invalid name/filter, consumer-before-producer rejection, fallback, independent outputs, mutable option isolation, absent/empty clearing and cloned results. |
+| Ordering and excluded identities | `TestStackBoundSpellSourcesBoundaries`: nested traversal order, nil/mismatched/permanent identities and future/global results excluded. |
+| Timing and pending snapshot | `TestStackBoundSpellSourcesPendingAndResolving`: pending exclusion, departure before placement, observer departure, detected snapshot and resolving/final-reference lifetime with clone isolation. |
+| Permanent spells and spell copies | `TestStackBoundSpellSourcesPermanentSpellAndCopy`: native casting/entry, separate spell-copy identities/controllers, retained spell information after entry and cloned departure maps. |
+| Presence of the Master; Nether Void, full LEG records | `TestRONStackBoundSpellSourcePrerequisite`: real Crusade cast/counter, unpaid rollback, current color/control, source departure/phasing, recast identity, trigger copies, resolution-only filtered choices and independent clones. A synthetic category-only consumer uses the real Circle of Protection: White filter; its damage executes through the engine. |
+| Nether Void instances; Lightning Bolt, full LEB record | `TestRONStackBoundSpellSourceIndependentEvents`: two factory instances/controllers, two native casts, APNAP placement, duplicate reference removal, independent spell events, native counters and game clones. |
+| Existing spell-event semantics | `TestRONSpellCastReference*`: real optional payment, legality, invalid lexical scopes, countering, copies, caster/current-controller distinctions and independent event declarations. |
+| Seven shields | Complete records remain rejected. Category tests use their real filter; no complete shield gameplay is claimed. |
+
+Compilation and gameplay remain separate. **0** new complete-card mappings;
+accepted Nether Void and Presence of the Master gain stronger source-reference
+coverage. Existing simultaneous damage, replacement ordering and rollback
+contracts pass the required suites; this slice does not change those operations.
+
+### Final validation and measurements
+
+All required checks pass; no pre-existing or environment blocker remains.
+Lint reformatted import groups in new files and reported one preallocation
+issue in the new two-source test. The slice allocation was corrected and lint
+passed. Formatting changes were reviewed, followed
+by focused, short engine, full test, build and vet checks on the final code.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestStackBoundSpell\|TestRONStackBoundSpell\|TestRONSpellCastReference\|TestStackBoundDamage' -count=1` | PASS before and after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS before and after lint |
+| `go test ./... -short -count=1` | PASS; engine-skill verification |
+| `make test` | PASS before and after lint |
+| `make build` | PASS before and after lint |
+| `go vet ./...` | PASS before and after lint |
+| `make lint` | PASS, automatic formatting reviewed |
+| `git diff --check` | PASS for worktree and staged slice |
+| `go run ./cmd/loadcards -json` | Expected exit 1, unchanged collection diagnostics |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, unchanged inventory |
+| Vocabulary audit | All 12 hashes and loader baseline match; no source refresh needed |
+
+Estimated and actual gains both equal **0 names / 0 records**. Final counts
+remain **1,962 compiled / 483 rejected records; 762 accepted / 224 rejected names**;
+**72,952 occurrences / 8,556 signatures / 3,988 unknown-role occurrences**.
+Loader and inventory JSON exactly match fresh baseline. No accepted record is
+lost. Representative gaps remain `unsupported action (ChooseADamageSource)`,
+`unsupported static ability grant (BandsWithOthers)` and `unsupported combined
+or collective static base values (SetPowerAndToughnessBoth)`. Strict loading
+rejects atomically; collection gameplay/engine-validation totals remain null.
+No source defect was corrected. Liege's prior source uncertainty remains.
+
+Changed files: new engine `stack_bound_spell_source.go` and tests, RON
+`stack_bound_spell_source_test.go`; `composable_events.go`,
+`stack_bound_damage_source.go`, `damage_source_choice.go`, `doc.go`;
+API/rules docs and this appended entry. No Go definitions, generator, startup
+caller or DSL function is removed. No deletion gate or fresh whole-repository
+caller audit is claimed. Only slice changes are committed; user work remains.
+
+Ranked next candidates to reassess:
+
+1. Saved delayed resolution-frame source references and other typed references,
+   to finish the referred-by-stack categories needed by the seven shields.
+2. Waiting replacement/prevention/delayed references and face-up command objects,
+   then complete source-choice enumeration and consuming shield continuity/rechecks.
+3. Parameterized bands with others across the eight compared contexts.
+
+No second slice starts. The descriptive commit hash is reported in the final
+response after validation.

@@ -260,6 +260,10 @@
 // the event information used by the trigger body. Spell departure information
 // stays on each referring object and remains separate in cloned games.
 // [ChooseDamageSourceFromStackDamageBindings] chooses only from this category.
+// [Game.StackBoundSpellSources] reads spell identities saved by cast events.
+// Detection saves information before a pending trigger reaches the stack.
+// Current queries and departure snapshots keep the exact spell identity.
+// [ChooseDamageSourceFromStackSpellBindings] chooses only from this category.
 // Saved delayed frames and other binding types need separate source contracts.
 // General source choices also need the other referred and command-zone objects.
 // A general source choice needs all categories before it can use the complete list.

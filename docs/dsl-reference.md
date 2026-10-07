@@ -6480,3 +6480,28 @@ category required by CR 609.7a; saved delayed frames, other typed references,
 waiting effects and face-up command objects remain separate dependencies. General
 RON `ChooseADamageSource` and the seven chosen-source shields remain rejected.
 Existing production declarations and callers do not change.
+
+### Spell-event bindings referred to by stack objects
+
+`mage.Game.StackBoundSpellSources() []mage.DamageSource` reads spell references
+saved by typed cast-event bindings on stack objects. Detection saves identity and
+information before placement. Nested sequences expose immutable captures without
+running them. Live spells use current information; departing spells use the shared
+copy-on-write stack snapshot service. A spell absent before placement uses its
+detection snapshot. Recasts and permanent entry retain separate identities.
+
+The query returns copied card data in stack insertion/capture traversal order,
+with exact duplicates removed. Nil, invalid and incompatible captures are
+excluded. Pending triggers and the currently resolving object are outside the
+category. Copies retain references; clones keep independent departure information.
+
+`mage.ChooseDamageSourceFromStackSpellBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` performs a filtered, non-targeted choice at resolution.
+It uses shared definition validation, producer order, independent output bindings,
+empty/absent-player clearing, invalid-answer fallback and cloned result frames.
+
+This establishes the typed spell-event context of CR 609.7a. Saved delayed frames,
+other reference types, waiting effects, face-up command objects and consuming
+shields remain separate dependencies. General RON `ChooseADamageSource` remains
+rejected; no new RON spelling or compiler adapter is established here.

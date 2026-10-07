@@ -77,7 +77,7 @@ func stackBoundDamageSources(object *StackObject) []DamageSource {
 }
 
 func (obj *StackObject) saveBoundSpellInformation(source DamageSource) {
-	for _, saved := range stackBoundDamageSources(obj) {
+	for _, saved := range append(stackBoundDamageSources(obj), stackBoundSpellSources(obj)...) {
 		if saved.SameObject(source) {
 			// Query information must not change the saved event information.
 			obj.boundSpellSources = maps.Clone(obj.boundSpellSources)

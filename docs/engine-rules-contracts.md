@@ -7816,3 +7816,49 @@ an engine observer and category-only consumer using real Circle of Protection
 filters. It covers sickness/payment rollback, return/recast, phasing, current
 control/color, copied controllers, resolution-only choice and independent clones.
 These strengthen accepted-card evidence without claiming complete shield gameplay.
+
+## Spell-event bindings referred to by stack objects
+
+`Game.StackBoundSpellSources() []DamageSource` supplies the CR 609.7a category
+for typed `SpellBinding` event captures in objects still on the stack. Cast
+detection saves the exact stack ID and source information through the existing
+pending-trigger capture service. Placement installs the immutable capture in
+sequence wrappers. Queries traverse those wrappers without executing effects,
+evaluating future producers, or reading global resolution bindings.
+
+Live spells supply current characteristics and control. Native pop, ID removal,
+source-ID removal, countering and stack-to-ante removal retain departure data
+in the existing copy-on-write `boundSpellSources` map. The same departure service
+now checks both damage-source and spell-event captures. A source absent before
+placement uses its detection snapshot. Recasts and permanent entry cannot replace
+the saved spell (CR 400.7, 608.2h). Shield continuity from spell to permanent
+remains a separate CR 400.7c contract. The body still uses its saved spell ID;
+query snapshots do not change its counter or current-controller behavior.
+
+Results follow stack insertion and capture traversal order, with exact identity
+deduplication. Nil declarations, invalid sources, mismatched stack IDs and
+permanent identities are excluded. No damage ability or targeting permission is
+required. Queries make no choices, use no RNG, change no state and return copied
+card data. Pending triggers qualify only after placement; the resolving object
+has left the stack. Removal of the final referrer ends eligibility. Stack copies
+and game clones preserve references and separate departure information.
+
+`ChooseDamageSourceFromStackSpellBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` uses the shared resolution choice service.
+Definition validation checks typed player/filter/output declarations and binding
+producer order. Independent results, empty/absent-player clearing, invalid-answer
+fallback, copied options and cloned frames retain their established contracts.
+This adds no replacement, prevention, damage-batch or payment behavior.
+
+Evidence: `TestStackBoundSpellSourcesDeparture`, `ChoiceAndDeclarations`,
+`Boundaries`, `PendingAndResolving`, and `PermanentSpellAndCopy` cover this category,
+native departure paths, pure reads, copies, clones and exact source information.
+`TestRONStackBoundSpellSourcePrerequisite` executes full Nether Void and Presence
+of the Master records with Crusade, unpaid casting rollback, source departure
+and phasing, recast separation, copied triggers, and a synthetic category choice
+using Circle of Protection: White's real filter. `IndependentEvents` uses two
+RON Nether Void instances and two Lightning Bolt casts to check independent
+captures, APNAP placement, deduplication, native counters and clones. Existing
+`TestRONSpellCastReference*` covers invalid scopes, legality, optional payment,
+current versus event controller and copied counters. Complete shield gameplay
+and the full CR 609.7a source list remain unfinished.
