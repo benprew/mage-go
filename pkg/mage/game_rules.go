@@ -40,6 +40,8 @@ type GameRules struct {
 	cantPlayLands            bool                        // true if players can't play lands (Worms of the Earth)
 	landsCantEnter           bool                        // true if lands can't enter the battlefield (Worms of the Earth)
 	deepWaterActive          map[uuid.UUID]bool          // player -> if true, lands they control produce {U} instead of other types (Deep Water)
+
+	revealedHand map[uuid.UUID]bool
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
@@ -95,6 +97,7 @@ func (r *GameRules) ResetPerCycle() {
 	r.FlashGrants = r.FlashGrants[:0]
 	clear(r.cantCastSpells)
 	clear(r.revealedTopCard)
+	clear(r.revealedHand)
 	clear(r.playLandsFromZones)
 	clear(r.additionalLandPlays)
 	r.cantPlayLands = false

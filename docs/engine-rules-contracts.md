@@ -5431,3 +5431,39 @@ consumer mappings, casting/payment rollback, native upkeep, attachment/control
 changes, original and copied triggers, destruction/regeneration distinctions
 and collection rejection. Low-level event fixtures apply layers after phase
 changes before detection, as native step execution does.
+
+## Continuous public visibility
+
+`RevealAllHands() StaticRule` marks every player's current hand as public.
+`RevealAllLibraryTops() StaticRule` reuses `RevealTopCardsOfAllLibraries()`.
+Both use the existing battlefield static-effect lifecycle and layer-6 source
+ability checks. They introduce no resolving action, target, choice, event,
+replacement, zone move, or saved object reference. Control changes do not change
+which players are affected. Phasing or departure suspends visibility; phasing in
+or a new entry restores the live rule. Source ability removal suspends the rule
+until the removal expires. Multiple active sources retain visibility when one
+leaves. The World rule can remove an older source.
+
+Hand visibility is rebuilt with other per-cycle `GameRules` state.
+`Game.IsHandRevealed(uuid.UUID) bool` and `GameRules.IsHandRevealed(uuid.UUID) bool`
+read that state without mutation. `GameRules.AddRevealedHand(uuid.UUID)` registers
+it for the current pass. Clones copy the hand and library-top maps independently,
+so queries before a new layer pass retain the original visibility. Existing
+`Game.IsTopCardRevealed` and library inspection primitives retain their contracts.
+No private inspection history is made public by these rules.
+
+Interactive snapshots include the current hand when it is public and redact it
+again when the rule ends; hand counts remain available. Draws, discard and other
+hand moves change the next snapshot's contents. No hand card moves because of
+visibility (CR 400.2, 402.3, 611.3, 701.20b). These rules do not grant permission
+to cast cards or change the order of a library. Library announcement timing and
+library object visits are unchanged; this slice adds no library-target reference
+or intermediate announcement display.
+
+Evidence: `TestPublicVisibilityLifecycle`, `TestSnapshotPublicHands`, and
+`TestRONPublicVisibilityCards`, `Lifecycle`, `Contents`, `Invalid`, and
+`InventoryAndAtomicLoad`. The RON tests compile complete Field of Dreams and
+Revelation records. They cover casting payment rollback, pre-resolution timing,
+both players, current contents, empty libraries, phase cycles, control changes,
+ability suppression and cleanup, departure/return, independent clones, World
+state checks, semantic roles and atomic rejection of invalid collections.

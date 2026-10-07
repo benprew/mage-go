@@ -101,7 +101,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 		ManaPool:       snapshotManaPool(p.ManaPool()),
 	}
 
-	if showHand {
+	if showHand || g.IsHandRevealed(p.PlayerID()) {
 		for _, c := range p.Hand() {
 			cs := CardState{
 				ID:        c.ID(),

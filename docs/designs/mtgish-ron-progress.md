@@ -26917,3 +26917,164 @@ Slice files: `pkg/mage/granted_trigger.go` and its tests; `pkg/mage/doc.go`;
 One descriptive commit contains only this slice; its hash is reported in the
 final response. Initial user edits and the unrelated untracked history file are
 preserved. No second slice is started.
+
+## Run 2026-10-06: CONTINUOUS-PUBLIC-VISIBILITY
+
+Status: completed implementation slice. This run stops after this slice.
+The initial user changes to `.gitignore`, the execution design and this progress
+ledger, and the untracked `mtgish-ron-completed.md`, are preserved. Only this
+entry is staged from the ledger; the user's existing reorganization is not
+included in the slice commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests with `-count=1`, short engine tests with `-count=1`, and
+`make build` passed. Fresh semantic inspection rejected the unsupported
+collection with exit 1: **1,795 compiled / 650 rejected records**, **677 accepted /
+309 rejected unique names**, out of 2,445 records / 986 names. It reported
+72,962 nodes, 8,559 signatures and 5,655 unknown-role occurrences. Collection
+rejection is separate from a build/test failure. The design, ledger, syntax
+snapshot, engine reference, complete candidate RON records, selected compiler
+and engine code, relevant API/rules contracts, local LEG Oracle data, and CR
+400.2, 401, 402.3, 611.3, 701.20 and 702.26 were inspected.
+
+| Candidate | Distinct affected names; estimated full-card gain | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Continuous public visibility, selected | Field of Dreams; Revelation. **2 unique names / 2 records**. | Library-top visibility already has an exact engine service. Public-hand state and snapshot use are missing; clone drops existing library visibility. Enables shared live public visibility and independent clone observations. No other rule in either complete record blocks the gain. | Low/medium: one small engine state/service addition, typed static adapters, lifecycle, casting, content, snapshot, invalid declaration and strict-load tests. |
+| Chosen-source, next-event prevention | Circle of Protection: White, Blue, Black, Red, Green, Artifacts; Greater Realm of Preservation. **7 credible complete names** after the prerequisites; adapter alone gives zero. | Complete records combine fixed mana payment, filtered source choice and next-time prevention. Source-domain selection, saved source identity and one-shot simultaneous-event semantics are still missing. The other four first-error consumers (Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage) also need different replacement bodies/results and are excluded from the estimate. Enables multiple prevention and redirection consumers. | High: source choices across zones and retained information, scoped bindings, source-filter rechecks, batch consumption and replacement order. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats. **4 credible complete names** after the prerequisite; battlefield-only lowering gives zero complete cards. | Complete records need all-zone characteristics, controller/owner contexts and layer 7a. Keldon Warlord excludes Walls; Nightmare counts Swamps; Plague Rats counts named creatures for both players. Gaea's Avenger has the separate recorded source defect and is excluded. Enables zone-aware CDA queries and later copying/count consumers. | High: shared zone characteristic queries, CDA layer/copy/ability-removal contracts and four gameplay mappings. |
+
+Selection rationale: the selected two-card capability is dependency-ready after
+a small public-hand addition and a clone repair. It reuses existing library
+behavior and has substantially less implementation and validation work than the
+seven-source-choice and four-CDA prerequisites. Reprints count once. The choice
+uses complete nested records, not first-error frequency. Scope, reuse boundary
+and acceptance cases were stated before edits. The `implement-engine` skill was
+used for the engine service; no removed card/set skill or agent delegation was
+used. No Go card definition supplied requirements.
+
+### Exact shapes, dependencies and reuse boundary
+
+RON permanent-rule declarations support exactly:
+
+- `EachPlayerEffect(AnyPlayer, [PlaysWithHandRevealed])`
+- `EachPlayerEffect(AnyPlayer, [PlaysWithTopOfLibraryRevealed])`
+
+Both selectors and operations must be symbols, and the list must contain one
+operation. Other selectors, operation tuples, extra arguments, combined
+operations, `PlayerEffect`, resolving actions, costs, and instant/sorcery static
+rules remain rejected. `compileAllPlayerRule` dispatches these two operations;
+existing all-player untap limits retain `compilePlayerUntapLimit`. Existing
+inventory roles already classify these descendants as `player_rule_operation`.
+
+Engine signatures:
+
+- `RevealAllHands() StaticRule`
+- `RevealAllLibraryTops() StaticRule`
+- `(*Game).IsHandRevealed(uuid.UUID) bool`
+- `(*GameRules).IsHandRevealed(uuid.UUID) bool`
+- `(*GameRules).AddRevealedHand(uuid.UUID)` registers one per-cycle flag.
+
+Library rules reuse `RevealTopCardsOfAllLibraries()` and existing
+`IsTopCardRevealed` / `RevealTopN`. Hand state belongs to `GameRules` and resets
+with each layer pass. Both static rules use `mage.Static`, battlefield source
+checks and the printed-ability lifecycle. Every factory creates its own ability
+and effect state; there are no target/choice/result bindings in these shapes.
+The global selector refers to all players, independent of source control.
+Phasing/departure and source ability removal suspend the rule. Phase-in/new
+entry or expired suppression restores it. Multiple sources preserve the rule
+when one leaves. World state checks can remove an older source.
+
+`cloneGameRules` copies both visibility maps. `maps.Clone` preserves nil maps,
+so inactive visibility adds no clone allocation. Active maps remain independent
+before and after subsequent layer passes. `snapshotPlayer` reads the public-hand
+flag and shows current contents; the debug display option is unchanged. Public
+visibility does not move cards, grant casting/playing permission, create reveal
+history, or change library order. Library announcement timing and object-visit
+services are unchanged; no intermediate library announcement display or
+library-target binding is added by this slice. LKI, target legality, APNAP,
+replacement ordering and simultaneous actions do not add contracts here because
+these declarations perform no such operations. Casting continues to use normal
+transactional payment and stack resolution.
+
+### TDD and complete card-to-test mappings
+
+Test-first checks failed for missing `RevealAllHands` / `IsHandRevealed`, then
+for the unsupported RON public-visibility operations after the engine service
+was added. The focused engine tests passed before compiler lowering.
+A later content fixture used a nonexistent `PlayerDraw` method; it was corrected
+to the existing `PlayerDrawCard` without changing the draw assertions.
+
+The required short engine suite and initial `make test` caught a real clone
+allocation regression: 140 allocations versus the existing budget of 138.
+Two calls to the map clone helper allocated empty maps. Replacing them with
+`maps.Clone` preserves nil maps and passes the unchanged budget test. The final
+short and full suites pass. No tests were weakened, and no environment or
+pre-existing validation blocker remains.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Field of Dreams, complete LEG record | `TestRONPublicVisibilityCards`: World metadata, exact U casting cost, unpaid rollback, pre-resolution timing, both players' library flags, departure and independent clones. `Lifecycle`: phase cycles, control, suppression/cleanup, return and native World state checks. `Contents`: both libraries, draws, changed top contents, empty library, later contents, and no hand exposure. |
+| Revelation, complete LEG record | Same `Cards`: World metadata, exact G casting cost, rollback, timing, both players' hand flags, departure and clones. Same `Lifecycle`: phase/control/suppression/cleanup/return and World state checks. `TestSnapshotPublicHands`: private/public transition, current faces and IDs, hand additions/removal, suppression/cleanup, source departure and clone isolation. |
+| Engine state and lifecycle | `TestPublicVisibilityLifecycle`: both engine constructors, definition validation, both players, source departure/phasing/control, ability removal/cleanup, multiple sources, clone visibility before a layer pass and independent clone mutation. `TestCloneStackHeavyGameAllocationBudget`: existing budget remains unchanged and passes. |
+| RON declaration and registry contracts | `TestRONPublicVisibilityInvalid`: wrong symbol/tuple shape, selector, arity, operation combination and action context. `InventoryAndAtomicLoad`: complete real records load in a test-only collection, exact semantic roles, and invalid collection rejection leaves the registry unchanged. Existing `TestInventory*` keeps production registry and Lightning Bolt gameplay intact. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay remain
+separate: collection-wide engine-validation and behavior totals remain null.
+No broader player-selector, library-target or private-knowledge contract is
+claimed. No production subset registry or Go fallback is introduced.
+
+### Final measurements, source audit and required validation
+
+The actual gain matches the estimate: **2 unique names / 2 records**, exactly
+Field of Dreams and Revelation. Fresh strict loading reports **1,797 compiled /
+648 rejected records**; inspection reports **679 accepted / 307 rejected names**.
+No accepted record is lost and no remaining diagnostic changes. Representative
+remaining gaps include conditional `AddCardtype` (Animate Artifact),
+`EnchantGraveyardCard` (Animate Dead), and all-player sacrifice selection (Balance).
+The loader exits 1 and publishes no partial production registry.
+
+Final semantic totals remain **72,962 nodes / 8,559 signatures / 5,655 unknown-role
+occurrences**. The RON files and their twelve hashes are unchanged. Local LEG
+Oracle text confirms both complete visibility records; no selected source defect
+was found or corrected. The vocabulary source snapshot needs no refresh because
+no RON source changes. Previously recorded unrelated defects remain unresolved.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler test, short engine suite, `make build` | PASS |
+| Test-first focused engine/RON checks | Expected missing API and unsupported operation failures confirmed |
+| Focused engine, RON, snapshot, inventory and clone-budget tests with `-count=1` | PASS after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS after the allocation repair |
+| `make test` | PASS for final code; the initial allocation failure is described above |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `go test ./... -short -count=1` | PASS; additional engine-skill verification |
+| `make lint` | PASS, zero issues; import grouping/formatting changes reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,797 compiled / 648 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 679 accepted / 307 rejected names; semantic totals above |
+| Baseline/final diagnostics and file hashes | Exactly two names/records unlock; no new rejection or changed remaining error; hashes unchanged |
+
+Complete collection loading, collection gameplay and runtime wiring remain
+below the removal gate. No Go card definitions or generators are removed.
+No DSL deletion is authorized without a fresh whole-repository caller audit;
+this slice retains existing callers and reusable engine services. API and rules
+documents describe only the visibility behavior established here.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source selection plus one-shot prevention for the seven Circle/Realm
+   names; establish source-domain and simultaneous-event contracts first.
+2. All-zone battlefield-count CDAs for Dakkon Blackblade, Keldon Warlord,
+   Nightmare and Plague Rats; keep Gaea's Avenger's source defect separate.
+3. Mana-conversion planning with activation history for Farrelite Priest and
+   Initiates of the Ebon Hand; both complete records need repeated {1} conversion
+   and independent delayed sacrifice after the fourth activation.
+
+Changed files: engine `public_visibility.go` and its tests, `game_rules.go`,
+`clone.go`, `doc.go`; compiler `public_visibility.go` and its tests,
+`compiler.go`, `inventory_test.go`; interactive `snapshot.go` and
+`public_visibility_test.go`; `dsl-reference.md`, `engine-rules-contracts.md`,
+and this ledger entry. One descriptive commit contains only this slice; its hash
+is reported in the final response. No second slice is started.

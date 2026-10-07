@@ -4629,3 +4629,28 @@ Pendrell Vale (creature destruction unless {1} is paid).
 payments, recipient identity, attachment, control, phasing, copies, clones,
 ability removal, later members, multiple donors, malformed declarations and
 strict loading. Compilation and collection-wide gameplay coverage stay separate.
+
+## RON continuous public visibility
+
+In a permanent declaration, the compiler supports exactly one operation in:
+
+- `EachPlayerEffect(AnyPlayer, [PlaysWithHandRevealed])`
+- `EachPlayerEffect(AnyPlayer, [PlaysWithTopOfLibraryRevealed])`
+
+These are static player rules, not actions or one-time reveals. The operation
+and `AnyPlayer` must be symbols. Tuple operations, extra arguments, combined
+operations and other player selectors are rejected. Existing all-player untap
+limit declarations keep their compiler and engine behavior.
+
+The compiler lowers the declarations to `mage.Static(mage.RevealAllHands())` or
+`mage.Static(mage.RevealAllLibraryTops())`. Each factory builds its own ability
+and effect state. Visibility follows current contents while the printed ability
+is active, regardless of its controller. The engine owns source lifecycle,
+phasing, ability suppression and cloned visibility flags. Public hands appear
+in interactive snapshots without enabling the debug hand-display option.
+
+Complete-card mappings: Field of Dreams and Revelation use
+`TestRONPublicVisibilityCards`, `Lifecycle`, and `Contents`;
+`TestRONPublicVisibilityInvalid` and `InventoryAndAtomicLoad` cover declaration
+validation, nested semantic roles and strict loading. See the continuous public
+visibility contract for engine and snapshot evidence.

@@ -434,6 +434,8 @@ func cloneGameRules(gr *GameRules) *GameRules {
 	clone.channelActive = cloneUUIDBoolMap(gr.channelActive)
 	clone.minimumLife = cloneUUIDBoolMap(gr.minimumLife)
 	clone.maxHandSize = cloneUUIDIntMap(gr.maxHandSize)
+	clone.revealedTopCard = maps.Clone(gr.revealedTopCard)
+	clone.revealedHand = maps.Clone(gr.revealedHand)
 	clone.NullifiedLandwalks = cloneAttrBoolMap(gr.NullifiedLandwalks)
 	clone.ActivationCostReductions = cloneUUIDIntMap(gr.ActivationCostReductions)
 	if len(gr.SpellCostReducers) > 0 {

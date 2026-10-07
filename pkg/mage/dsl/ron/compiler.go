@@ -431,7 +431,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	switch n.Name {
 	case "EachPlayerEffect":
-		return compilePlayerUntapLimit(n)
+		return compileAllPlayerRule(n)
 	case "PlayerEffect":
 		return compilePlayerCostReduction(n)
 	case "PreventDamage":

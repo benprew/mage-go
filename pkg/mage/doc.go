@@ -482,6 +482,11 @@
 // Use [CantAttackIf] for a live conditional attack restriction. A later condition
 // change does not remove attackers already declared.
 //
+// Use [RevealAllHands] or [RevealAllLibraryTops] with [Static] for public
+// visibility while the source ability is active. Control changes do not change
+// the affected players. [Game.IsHandRevealed] reads current hand visibility.
+// Clones retain separate hand and library-top visibility flags.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
