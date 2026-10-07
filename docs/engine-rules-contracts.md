@@ -7717,3 +7717,51 @@ identity, current recoloring, copies, resolution timing and pending clones. A
 synthetic engine consumer uses the real Circle of Protection: Red source filter;
 complete shields remain rejected. This query adds no replacement or simultaneous
 operation; existing damage and prevention tests retain those contracts.
+
+## Permanent event and payment bindings referred to by stack objects
+
+`Game.StackBoundPermanentSources() []DamageSource` establishes the CR 609.7a
+category for exact permanent incarnations retained by event, announcement and
+payment bindings on spells and abilities still on the stack. `capturedPermanents`
+supplies announcement/payment captures; the private typed
+`stackPermanentBindingReferences` interface supplies immutable
+`eventPermanentCapture` values through `sequenceEffect` wrappers. Neither path
+runs capture effects or reads a global resolution result. Future action results
+cannot create candidates before their producers run.
+
+Results follow stack insertion order and sorted permanent ID/incarnation bytes
+within each object. Exact identities are deduplicated. Nil declarations and
+missing, unknown or incompatible identities cannot produce sources. Pending
+triggers are excluded until placement. The object currently resolving has
+already left the stack. Removal or countering of the final referring object
+ends eligibility. Copies retain the saved identities; existing stack copying
+and cloning already preserve the maps and immutable event effects.
+
+The shared exact-incarnation information reader supplies live characteristics
+and controller, phase information or departure LKI (CR 400.7, 608.2h, 702.26).
+Returned cards cannot replace old references. Face-down snapshots hide printed
+characteristics. Shroud, later subtype changes and lack of a damage ability do
+not remove a referred source. Queries return separate snapshots, make no
+choices, use no RNG and do not change state.
+
+`ChooseDamageSourceFromStackBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` reuses the existing non-targeted choice,
+filter, definition validation, producer/consumer, fallback, snapshot and cloned
+resolution-frame contracts. Empty categories and absent players clear only the
+named result. This adds no damage batch or replacement operation. Saved delayed
+frames, other binding types, waiting effects and command objects remain outside
+this category; unrestricted RON source choices and shields stay rejected.
+
+Evidence: `TestStackBoundPermanentSources`, `SourceOrderAndBoundaries`,
+`SourceChoice`, `SourceDeclarations`, `SourceNativeCaptures`,
+`SourceNativePayment`, `SourceResolvingLifetime` and `SourceAnnouncement`
+(all use the `TestStackBoundPermanent` prefix). These cover simultaneous death
+captures, APNAP placement, event/announcement/payment identities, native rollback,
+source departure/return/phasing, current control/color, copying, cloning, snapshot
+isolation and final-reference lifetime. `TestRONStackBoundSourcePrerequisite`
+executes complete Battering Ram and Infernal Medusa records through native
+casting and normal blocker declaration with priority. It uses complete Wall of
+Air and Water Elemental records as blockers and a synthetic choice consumer
+with Circle of Protection: Blue's real filter. It verifies retained choices,
+actual damage and native delayed destruction. These strengthen accepted-card
+evidence; they do not establish complete shield gameplay.

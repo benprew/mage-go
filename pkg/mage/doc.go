@@ -251,6 +251,11 @@
 // objects still on the stack. Departure information remains available until
 // the final referring object leaves. Recasts keep separate stack identities.
 // [ChooseDamageSourceFromStackSpellTargets] chooses only from this category.
+// [Game.StackBoundPermanentSources] reads saved event and payment incarnations
+// referred to by objects still on the stack. Announcement captures also qualify.
+// Immutable event captures supply references without running their effects.
+// [ChooseDamageSourceFromStackBindings] chooses only from these binding contexts.
+// Saved delayed frames and other binding types need separate source contracts.
 // General source choices also need the other referred and command-zone objects.
 // A general source choice needs all categories before it can use the complete list.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.

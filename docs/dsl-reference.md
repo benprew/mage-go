@@ -6423,3 +6423,32 @@ empty/absent-player clearing and clone behavior remain the same. This service
 covers only spell targets, not the complete CR 609.7a source list. Other saved
 bindings, waiting effects, command objects and chosen-source shields remain
 separate dependencies. No additional production RON shape is accepted.
+
+### Permanent bindings referred to by stack objects
+
+`mage.Game.StackBoundPermanentSources() []mage.DamageSource` reads exact
+permanent incarnations saved by event, announcement and payment bindings on
+spells and abilities still on the stack. It reads both `capturedPermanents` and
+immutable event-capture effects in their sequence wrappers. It does not execute
+an effect or evaluate an unproduced binding. Results follow stack insertion
+order, then permanent ID and incarnation byte order within each object, with
+exact duplicates removed. Queries return separate card snapshots.
+
+Live incarnations use current information; phased and departed incarnations
+use their separate retained information. Returned objects cannot replace them.
+Shroud and damage capability do not restrict this non-targeted source category.
+Copies keep saved references. Removal of the last referring stack object ends
+eligibility. Pending triggers and the currently resolving object are excluded.
+
+`mage.ChooseDamageSourceFromStackBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` reuses the shared filtered resolution choice service.
+Definition validation checks the player, filter, output and binding dominance.
+Empty categories and absent players clear only that output. Choices and cloned
+resolution frames stay separate.
+
+This is a complete category contract for event, announcement and payment
+permanent bindings, not the complete CR 609.7a source list. Saved delayed frames,
+other binding types, waiting replacement/prevention/delayed references and
+face-up command objects remain separate dependencies. General RON
+`ChooseADamageSource` remains rejected. Existing Go callers stay compatible.

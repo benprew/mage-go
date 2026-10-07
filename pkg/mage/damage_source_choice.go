@@ -33,6 +33,7 @@ type damageSourceChoice struct {
 	stackAbilities    bool
 	stackTargets      bool
 	stackSpellTargets bool
+	stackBindings     bool
 	sources           []DamageSourceRef
 	binding           *DamageSourceBinding
 }
@@ -42,7 +43,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 && !e.liveObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets {
+	if len(e.sources) == 0 && !e.liveObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -73,6 +74,9 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	}
 	if e.stackSpellTargets {
 		candidates = append(candidates, ctx.Game.StackTargetSpellSources()...)
+	}
+	if e.stackBindings {
+		candidates = append(candidates, ctx.Game.StackBoundPermanentSources()...)
 	}
 	for _, ref := range e.sources {
 		candidates = append(candidates, ref.resolveDamageSource(ctx))
