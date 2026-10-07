@@ -6888,7 +6888,16 @@ cover these contracts.
 `TestRONCharacteristicPrerequisiteGameplay` runs complete RON Giant Growth,
 Unsummon and Swords to Plowshares against a synthetic count-CDA fixture,
 including casting rollback, cleanup, original-controller LKI and clones.
-`TestRONCharacteristicPrerequisiteKeepsAdapterGate` checks every reprint of
-five future CDA consumers still rejects, along with malformed/unbound CDA
-forms. RON `CDA_Power`/`CDA_Toughness` lowering remains unfinished. These tests
-establish engine prerequisites and regressions, not new complete-card mappings.
+`TestRONCharacteristicCountReprints` now validates and strictly loads all twenty
+records for the five count-CDA consumers. `TestRONCharacteristicCountGameplay`,
+`Membership`, `ZonesLayersAndLKI`, and `SpellController` execute complete RON
+Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats and People of the Woods.
+They establish owner and controller queries, current membership, Wall/name/type
+filters, dual lands, spell payment rollback and entry timing, flying and legendary
+metadata, phasing, copy and clone isolation, source return, ability removal,
+bonuses, counters and original power/controller LKI for exile life gain.
+`TestRONCharacteristicCountInvalid` rejects malformed, duplicate, unbound,
+incompatible and unsupported declaration contexts. Inventory tests retain strict
+collection rejection. This adapter adds no new engine execution or payment rule;
+existing layer-set/switch and incarnation contracts remain covered by the engine
+tests above. RON arithmetic and entry-result CDAs remain unfinished.

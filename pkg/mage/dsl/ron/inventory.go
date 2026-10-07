@@ -228,6 +228,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if (n.Name == "CDA_Power" || n.Name == "CDA_Toughness") && len(n.Args) == 1 {
+			return "characteristic_count_value"
+		}
 		if n.Name == "ActivatedAbilityEffect" && len(n.Args) == 2 {
 			return []string{"activation_cost_subject", "activation_cost_operation"}[index]
 		}
@@ -1090,6 +1093,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "pt_coordinate":
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "value"
+		}
+	case "characteristic_count_value":
+		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
+			return "permanent_filter"
 		}
 	case "static_value":
 		if n.Name == "Integer" && len(n.Args) == 1 {

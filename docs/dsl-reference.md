@@ -5789,4 +5789,28 @@ a card without a controller uses its owner. Battlefield queries use layer result
 including ability removal, base overrides, bonuses, counters and switching.
 Use saved-information services for LKI; this current-object query cannot preserve
 a departed incarnation. See the count-CDA contract in `engine-rules-contracts.md`.
-RON count-CDA adapters are still rejected and are not added by this prerequisite.
+RON count-CDA lowering is described below.
+
+### RON battlefield count CDAs
+
+Creature rules can declare `CDA_Power(TheNumberOfPermanentsOnTheBattlefield(filter))`
+and `CDA_Toughness(TheNumberOfPermanentsOnTheBattlefield(filter))` together with
+identical position-free count expressions. They lower to one fresh
+`PTEqualsCount` or `PTEqualsControlledCount` declaration per factory instance.
+A toughness-only declaration requires a `ControlledByAPlayer(SinglePlayer(You))`
+restriction and lowers to `ToughnessEqualsControlledCount`. Duplicate axes,
+unequal expressions, power-only counts and noncreature declarations reject.
+
+Count filters accept nonempty `And`/`Or`, explicit card names through
+`IsNamed(NamedCard(nonempty_string))`, card types, creature/land/enchantment
+subtypes, colors and supertypes, including their existing negative forms.
+Controller restrictions must occur in conjunctions and use `You`; disjunctions
+cannot contain a controller restriction. Object references, current P/T,
+ability filters, arithmetic and entry/payment results remain unsupported.
+The engine supplies owner/current spell controller context outside the
+battlefield, layer 7a execution, phasing, per-incarnation binding and copying.
+
+Evidence: `TestRONCharacteristicCount*` executes the complete Dakkon Blackblade,
+Keldon Warlord, Nightmare, Plague Rats and People of the Woods records and checks
+all twenty records, including reprints. The strict full collection still rejects
+remaining gaps. Compilation counts do not establish full collection gameplay.

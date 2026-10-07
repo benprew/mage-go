@@ -33874,3 +33874,148 @@ Slice files: new `pkg/mage/characteristic_pt.go` and its tests;
 new `dsl/ron/characteristic_prerequisite_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and only this appended ledger entry.
 No second slice is started.
+
+## Run 2026-10-07: RON-BATTLEFIELD-COUNT-CDA
+
+Status: complete adapter and gameplay slice. No second slice started.
+
+### Evidence, comparison and selection
+
+Preserved user changes in `.gitignore`, the execution design, and the restructured
+progress ledger, plus untracked `mtgish-ron-completed.md`. The commit adds only
+this entry to the HEAD ledger; the user's restructuring remains unstaged.
+No agents or removed card/set skills were used. No Go definitions supplied card
+requirements. Read AGENTS.md, engine reference, migration design, vocabulary and
+ledger, selected compiler/filter/count/loader/inventory and engine characteristic
+code, API/rules contracts, and CR 109.5, 208.2a, 604.3–4 and 613.4–5.
+Full RON records and nested expressions, including reprints, supplied requirements.
+
+Fresh baseline: compiler tests, `go test ./pkg/mage/... -short -count=1`, and
+`make build` passed. Strict and inventory loaders exited 1 for collection
+rejection: **1,888 compiled / 557 rejected records; 728 accepted / 258 rejected
+unique names**. Inventory: 72,962 occurrences, 8,557 signatures and 4,940
+unknown-role occurrences. This is not a build/test or environment failure.
+
+| Candidate | Distinct affected names and estimated full unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Battlefield count-CDA adapters, selected | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **five names / 20 records**. Gaea's Avenger and Wood Elemental are separate dependent consumers. | All-zone query, incarnation binding and count layers now exist. Five complete records have only supported metadata/keywords plus count CDAs. Gaea's Avenger also needs arithmetic and an opponent-artifact source correction; Wood Elemental needs entry sacrifice and saved entry results. Enables native count-card execution and later arithmetic/entry-result adapters. | Moderate: coherent attribute lowering, pure filter validation, reprint and five-card gameplay evidence; no engine changes. |
+| Complete damage-source enumeration and consuming prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **seven names / 31 records** after prerequisites; zero from enumeration alone. | Complete CR 609.7a source universe, typed choice bindings and one-event consuming shields remain missing. Full nested records also require filter and replacement lowering. Enables shared source choices and prevention. | High: enumeration, source continuity, replacement ordering/batches and seven complete mappings. |
+| Parameterized bands with other | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **eight potential names** after prerequisites; zero from the combat prerequisite alone. | Needs formation/damage-assignment engine contracts plus static/token grants and general removal. Master includes a named-token filter; Tolaria includes ordinary banding removal and upkeep timing. | High: engine combat rules, multiple adapter contexts, legality/assignment and eight complete mappings. |
+
+Selected the count adapters for the largest credible immediate gain at moderate
+cost. Existing shared engine support makes this slice dependency-ready. This
+comparison uses complete nested records, not first-error frequency. Contract,
+reuse boundary, acceptance cases and estimated gain were stated before edits.
+
+### Exact declarations and reuse boundary
+
+Supported only at the top level of a permanent creature's `Rules`:
+
+- A single `CDA_Power(TheNumberOfPermanentsOnTheBattlefield(filter))/1` paired
+  with a single `CDA_Toughness(TheNumberOfPermanentsOnTheBattlefield(filter))/1`.
+  Both values must have identical position-free ASTs. Pair order does not matter.
+- A single toughness-only declaration with the same count shape and a
+  `ControlledByAPlayer(SinglePlayer(You))` restriction.
+- Nonempty `And/1` and `Or/1` filter lists; `IsNamed(NamedCard(string))/1` with
+  a nonempty name; existing card-type, creature/land/enchantment-subtype, color
+  and supertype filters, including their existing negative forms. Controller
+  restrictions use only `You` and conjunctions; source-dependent disjunctions
+  reject. Exclusion references, P/T/ability predicates and arbitrary values reject.
+
+Paired declarations lower to one fresh `PTEqualsCount` or
+`PTEqualsControlledCount` effect per factory call; controlled toughness-only
+lowers to `ToughnessEqualsControlledCount`. RON owns declaration grouping,
+position-free equality, role/context/filter validation and diagnostics.
+The engine owns current nonphased membership, owner/current spell controller
+queries, layer 7a, source incarnations, copies and clones. Static declarations
+contain no chosen state or target binding. There is no game-time declaration
+panic, fallback, card-name branch or global result slot.
+
+Power-only, uncontrolled toughness-only, unequal count expressions, duplicate
+axes, arithmetic, entry/payment results, noncreature declarations and CDA actions
+inside spell/activation bodies remain errors. This is a complete supported
+count context, not support for the entire CDA family. No new cost, event,
+replacement or simultaneous-operation execution contract is introduced.
+Existing set/modify/switch ordering remains covered by `TestCharacteristicPT*`;
+real RON tests add counter/bonus/ability-removal and LKI evidence.
+
+### TDD and card-to-test mappings
+
+After correcting a test method spelling (`HasSuperType`), new gameplay/reprint
+tests failed at the expected missing `CDA_Power`/`CDA_Toughness` adapters.
+Inventory-role evidence separately failed with an unknown role before the role
+adapter. Both expected failures now pass. Existing prerequisite gate tests were
+replaced by stronger positive reprint and invalid-declaration cases; their prior
+malformed/unbound declarations still reject. No behavior assertion was weakened.
+
+All test names below have the prefix `TestRONCharacteristicCount` and are in
+`pkg/mage/dsl/ron/characteristic_count_test.go`.
+
+| Card/contract | Complete RON evidence |
+| --- | --- |
+| Dakkon Blackblade | `Gameplay`, `Membership`, `ZonesLayersAndLKI`, `SpellController`, `Reprints`: lands, current owner/controller, legendary metadata, real colored casting/payment/entry, independent copied spell controller, pending clones. |
+| Keldon Warlord | `Gameplay`, `Membership/WallsAndTypes`, `ZonesLayersAndLKI`, `Reprints`: self included, either controller, opponent exclusion, Walls excluded, live layer-4 Wall addition and other noncreatures excluded. |
+| Nightmare | `Gameplay`, `Membership`, `ZonesLayersAndLKI`, `Reprints`: Swamps including nonbasic Bayou, Forest/opponent exclusion, flying retained. |
+| Plague Rats | `Gameplay`, `Membership/Names`, `ZonesLayersAndLKI`, `Reprints`: both players' exact-name creatures and self included, named land and other creature excluded, card-copy definition and phasing. |
+| People of the Woods | `Gameplay`, `Membership`, `ZonesLayersAndLKI`, `Reprints`: Forests including Bayou, printed power one retained, Swamp/opponent exclusion. |
+| All five lifetime/layer/zone contracts | `Gameplay`: unpaid rollback, entry only on resolution, pending clone, membership phasing/control, source control/departure/return and owner hand. `ZonesLayersAndLKI`: unzoned/library/graveyard/exile queries, copied definitions with another owner, counters, source phase cycle, ability removal and cleanup restoration, real Giant Growth timing/bonus, real Swords exile with original power/controller LKI and cloned resolution. |
+| Every reprint and factory | `Reprints`: all **20 records / five names**, fresh factory IDs, engine definition validation and strict canonical subset loading. This is test-only subset loading, not a partial production registry. |
+| Invalid declarations | `Invalid`: malformed arity, ValueX, unbound targets/player, empty/named filters, duplicate/unequal axes, missing power pair, uncontrolled toughness-only, source exclusion, P/T dependency, control disjunction, noncreature and action contexts. |
+| Inventory/accepted regressions | `PairOrderAndInstances`: reversed attribute order, property disjunction, dual land counted once, independent factory controllers and clone membership. `InventoryRoles` plus `TestInventory*`: count value/filter/player roles, fresh collection totals, unchanged production registry after rejection. Existing `TestRONCharacteristicPrerequisiteGameplay` retains Giant Growth/Unsummon/Swords regression evidence. |
+
+Compilation gain and new complete-card gameplay mappings are separately **five
+unique names each**. No full collection gameplay total is claimed.
+
+### Source checks and final measurements
+
+Local `data/LEA.json`, `data/LEG.json`, and `data/DRK.json` Oracle text confirms
+all five complete declarations. No RON source changed; all twelve file hashes
+remain unchanged, so the vocabulary source snapshot needs no refresh.
+Local `data/ATQ.json` confirms Gaea's Avenger counts opponents' artifacts;
+its RON still uses `You`. That known source defect is unchanged; arithmetic remains
+unsupported. Wood Elemental entry-sacrifice results remain unsupported.
+
+Actual gain equals the estimate: **20 records / five unique names**, with no lost
+accepted cards. Final strict and semantic loaders: **1,908 compiled / 537 rejected
+records; 733 accepted / 253 rejected names**, from 2,445 records / 986 names.
+Semantic inventory: **72,962 occurrences / 8,557 signatures / 4,600 unknown-role
+occurrences**. Aggregate engine-validated and behavior-verified totals remain
+null. The whole collection still exits 1 and publishes no registry.
+
+Two remaining first diagnostics changed because declaration grouping validates
+CDA values before rule lowering:
+
+- Gaea's Avenger: `ATQ.lines.ron:32:316: unsupported characteristic count value (Plus)`.
+- Wood Elemental: `LEG.lines.ron:307:384: unsupported characteristic count value (TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield)`.
+
+All other remaining diagnostics are unchanged. Source defects, missing adapters
+and engine prerequisites remain separate. No environment blocker was found.
+
+### Validation and remaining work
+
+Required checks: focused `go test ./pkg/mage/dsl/ron -run
+'TestRONCharacteristic|TestInventory' -count=1`, short engine tests with `-count=1`,
+`make test`, `make build`, `go vet ./...`, `make lint`, and `git diff --check` pass.
+Automatic lint changes were reviewed; final post-lint focused tests pass.
+Both final loader commands exit 1 as expected with the counts above.
+
+No Go definitions, generators, startup wiring or DSL exports are removed.
+Complete loading, gameplay and startup wiring do not meet the removal gate.
+No caller audit authorizes a DSL deletion in this slice. API/rules documentation
+changes describe only this lowering and its existing engine execution contract.
+One descriptive commit stages only the slice, including only this appended ledger
+entry. The user restructuring and unrelated files remain unstaged.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete damage-source enumeration, then consuming source-choice prevention
+   for the seven clean Circle/Greater Realm consumers.
+2. Parameterized bands-with-other engine contract, then its eight consumers.
+3. General arithmetic count-CDA prerequisite, followed by source-corrected
+   Gaea's Avenger; defer this single-card consumer while useful multi-card work
+   remains. Wood Elemental additionally needs entry-sacrifice result bindings.
+
+Slice files: new RON `characteristic_count.go` and `characteristic_count_test.go`;
+`compiler.go`, `inventory.go`, `inventory_test.go`,
+`characteristic_prerequisite_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and only this appended ledger entry.

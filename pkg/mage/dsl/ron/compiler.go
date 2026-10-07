@@ -294,6 +294,13 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		characteristic, err := compileCharacteristicCounts(rules, permanent && slices.Contains(types, core.TypeCreature))
+		if err != nil {
+			return nil, err
+		}
+		if characteristic != nil {
+			options = append(options, characteristic)
+		}
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err
@@ -323,7 +330,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			}
 		}
 		for _, rule := range rules {
-			if rule.Name == "CastEffect" {
+			if rule.Name == "CastEffect" || rule.Name == "CDA_Power" || rule.Name == "CDA_Toughness" {
 				continue
 			}
 			if rule.Name == "SpellActions" {

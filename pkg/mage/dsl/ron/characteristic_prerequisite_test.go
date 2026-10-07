@@ -1,8 +1,6 @@
 package ron
 
 import (
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -76,49 +74,5 @@ func TestRONCharacteristicPrerequisiteGameplay(t *testing.T) {
 				t.Fatal("clone LKI")
 			}
 		})
-	}
-}
-
-func TestRONCharacteristicPrerequisiteKeepsAdapterGate(t *testing.T) {
-	names := map[string]bool{"Dakkon Blackblade": true, "Keldon Warlord": true, "Nightmare": true, "Plague Rats": true, "People of the Woods": true}
-	files, err := os.ReadDir("../../../../cards/mtgish")
-	if err != nil {
-		t.Fatal(err)
-	}
-	seen := map[string]bool{}
-	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".ron") {
-			continue
-		}
-		data, err := os.ReadFile("../../../../cards/mtgish/" + file.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-		nodes, err := Parse(strings.NewReader(string(data)), file.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, node := range nodes {
-			name := node.Fields["Name"].String
-			if !names[name] {
-				continue
-			}
-			seen[name] = true
-			if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "unsupported rule (CDA_") {
-				t.Fatalf("%s crossed incomplete adapter gate: %v", name, err)
-			}
-		}
-	}
-	if len(seen) != len(names) {
-		t.Fatal("missing candidate records")
-	}
-	for _, rule := range []string{`CDA_Power()`, `CDA_Power(ValueX)`, `CDA_Toughness(Ref_TargetPermanent)`, `CDA_Toughness(TheNumberOfPermanentsOnTheBattlefield(And([])))`} {
-		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),Rules:[`+rule+`],CardPT:(Power:0,Toughness:0))`), "invalid.ron")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, err := Compile(nodes[0]); err == nil {
-			t.Fatalf("invalid CDA accepted: %s", rule)
-		}
 	}
 }
