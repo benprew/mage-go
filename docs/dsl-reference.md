@@ -6262,3 +6262,40 @@ announced X and P/T reads remain invalid in this context.
 Combined modifications and collective base-value operations remain rejected.
 This prerequisite does not accept the complete Animate Artifact, Angry Mob or
 Gaea's Liege records. Their remaining rules require separate slices.
+
+### RON basic land type choices
+
+`AsPermanentEnters(ThisPermanent,[ChooseABasicLandType])` declares one saved
+entry choice on a permanent. The operation must be a symbol. Duplicate choices,
+combined operations and nonpermanent declarations are errors. Rule order does
+not change this declaration's scope. On an Aura,
+`PermanentLayerEffect(HostPermanent,[SetLandTypeVariable(TheChosenLandType)])`
+uses that entry declaration and accepts exactly one modification.
+
+The engine runs `ChooseBasicLandTypeAsEnters` before battlefield registration.
+The entry controller chooses Plains, Island, Swamp, Mountain or Forest through
+`ChooseString`. The permanent stores `core.BasicLandType` separately from its
+chosen color and other entry choices. `BecomesChosenBasicLandTypeAttachedEffect`
+uses the existing attachment and land-type services. It replaces land subtypes
+and printed abilities, supplies intrinsic mana, preserves supertypes and follows
+reattachment. Source phasing and departure stop the effect. Ability removal in
+layer 6 does not undo the type change already applied in layer 4.
+
+In an action sequence, bare `ChooseABasicLandType` must immediately precede
+`CreatePermanentLayerEffectUntil(subject,
+[AddAbility([Landwalk(IsLandTypeVariable(TheChosenLandType))])],duration)`.
+The subject and duration use their existing supported contexts, including the
+body of a supported delayed step trigger. This bounded pair declares no target
+and exposes no result outside its continuation. The compiler builds five fixed
+branches through the existing temporary keyword compiler. `ChooseAtResolution`
+selects one branch for each invocation; no mutable compiler or global result
+slot stores the choice. The controller chooses at resolution, even if the saved
+source has left. A grant still requires its original live incarnation.
+
+The complete Phantasmal Terrain records (six reprints) map to
+`TestRONBasicLandChoiceTerrain`, `TestRONBasicLandChoiceTerrainIdentity` and
+`TestRONBasicLandChoiceInventoryAndReprints`. Giant Slug maps to
+`TestRONBasicLandChoiceSlug` and `TestRONBasicLandChoiceSlugIdentity`.
+`TestRONBasicLandChoiceInvalid` and `TestRONBasicLandChoiceStrictLoading` cover
+scope errors and atomic rejection. General subtype choices, plural choice
+consumers, mixed modifications and other saved-land-choice reads remain errors.

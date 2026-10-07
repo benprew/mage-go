@@ -635,9 +635,10 @@ type Permanent struct {
 	// ETB choices (e.g. Jihad: choose a color and an opponent;
 	// Herald's Horn: choose a creature type). Set by "as ~ enters" replacement
 	// effects (CR 614.12) and read by other abilities of the same permanent.
-	ChosenColor   Color
-	ChosenPlayer  uuid.UUID
-	ChosenSubtype string
+	ChosenColor         Color
+	ChosenPlayer        uuid.UUID
+	ChosenSubtype       string
+	ChosenBasicLandType BasicLandType
 
 	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
 	ControlledPermanent uuid.UUID

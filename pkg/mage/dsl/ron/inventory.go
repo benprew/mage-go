@@ -1007,6 +1007,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if (role == "static_modification" || role == "resolving_modification") && len(n.Args) == 1 {
 				return "land_subtype"
 			}
+		case "SetLandTypeVariable":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "basic_land_type_choice_reference"
+			}
 		case "SetController":
 			if role == "static_modification" && len(n.Args) == 1 {
 				return "player_reference"
@@ -1129,6 +1133,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color_list"
 		}
 	case "landwalk_filter":
+		if n.Name == "IsLandTypeVariable" && len(n.Args) == 1 {
+			return "basic_land_type_choice_reference"
+		}
 		if n.Name == "IsSupertype" && len(n.Args) == 1 {
 			return "supertype"
 		}

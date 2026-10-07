@@ -95,10 +95,13 @@ func TestInventoryRepositoryCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 1946 || len(report.Issues) != 499 {
+	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 1953 || len(report.Issues) != 492 {
 		t.Fatalf("collection counts: %d/%d/%d/%d", report.Records, report.UniqueCards, report.Compiled, len(report.Issues))
 	}
 	for _, issue := range report.Issues {
+		if issue.Card == "Phantasmal Terrain" || issue.Card == "Giant Slug" {
+			t.Fatalf("supported land choice card rejected: %v", issue)
+		}
 		if issue.Card == "Delif's Cube" {
 			t.Fatalf("supported combat assignment card rejected: %v", issue)
 		}
@@ -151,7 +154,7 @@ func TestInventoryLeavesRealRONGameplayAndRegistryUnchanged(t *testing.T) {
 	old := mage.DefaultRegistry
 	bolt := repositoryCard(t, "LEB", "Lightning Bolt")
 	report, err := InspectFS(os.DirFS("../../../../cards/mtgish"), "*.ron")
-	if err != nil || report.Compiled != 1946 {
+	if err != nil || report.Compiled != 1953 {
 		t.Fatalf("inspection: %v", err)
 	}
 	if mage.DefaultRegistry != old {

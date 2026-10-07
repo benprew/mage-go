@@ -17,13 +17,14 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
-	spellTargets        bool
-	destructionCount    *destructionCountPlan
-	chosenAbility       *temporaryAbilityPlan
-	sourceTapped        bool
-	sourceLeaves        bool
-	counterStateSource  bool
-	opponentEntryChoice *opponentEntryChoicePlan
+	spellTargets         bool
+	destructionCount     *destructionCountPlan
+	chosenAbility        *temporaryAbilityPlan
+	sourceTapped         bool
+	sourceLeaves         bool
+	counterStateSource   bool
+	opponentEntryChoice  *opponentEntryChoicePlan
+	basicLandEntryChoice *basicLandEntryChoicePlan
 
 	activationHistory *activationHistoryPlan
 	enteringSource    bool
@@ -303,6 +304,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 			options = append(options, characteristic)
 		}
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
+		if err != nil {
+			return nil, err
+		}
+		ctx.basicLandEntryChoice, err = compileBasicLandEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err
 		}

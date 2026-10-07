@@ -7466,3 +7466,46 @@ in isolation, including reattachment, returned objects and source departure.
 conditions. Invalid declaration and inventory tests cover strict shape/context
 rejection and role reporting. These tests establish subrule contracts, not
 complete-card gameplay evidence. Complete records still fail strict compilation.
+
+## Basic land type choice before entry and at delayed resolution
+
+`ChooseBasicLandTypeAsEnters() AsEntersBattlefieldAbility` uses the existing
+entry preparation hook before battlefield registration (CR 614.12a). The entry
+controller chooses exactly one of the five basic land subtypes (CR 205.3e,i).
+The caller receives fresh string options through `Player.ChooseString`.
+An invalid answer uses Plains, consistent with the engine's deterministic
+choice fallback policy. The choice is stored as `core.BasicLandType` in
+`Permanent.ChosenBasicLandType`; zero denotes no choice. It does not overwrite
+chosen color, player or creature subtype. Definition validation rejects the
+entry ability on an instant or sorcery.
+
+Each incarnation makes a new choice. Control changes and phase cycles retain
+it; a copied permanent spell makes its own choice when it enters (CR 400.7,
+702.26, 707). `Game.Clone` copies the typed field as independent permanent state.
+`BecomesChosenBasicLandTypeAttachedEffect() ContinuousEffect` reads it during
+layer 4. Missing or invalid values have no effect. The shared `AttachedEffect`
+and `applyBecomesBasicLand` services own attachment identity, phasing, layer
+ordering, dependencies, printed ability removal and intrinsic mana (CR 305.7,
+613.1d,f). A layer 6 ability-removal effect cannot undo a layer 4 type change.
+These APIs do not change the legacy chosen-color or ETB-choice APIs.
+
+RON resolving basic-land choices use five fixed `ResolutionOption` branches
+and `ChooseAtResolution`, then existing `Until` and keyword modifications.
+The choice is local to that resolution. Giant Slug's complete RON activation
+reuses `AtNext(YourUpkeep,...)`: payment and scheduling occur first, the choice
+occurs when the next controller-upkeep trigger resolves, and the captured
+original source gains that landwalk until cleanup. Opponent upkeep does not
+consume the schedule. Source departure, control change, phasing or ability
+removal does not cancel it; an absent or returned source cannot receive the
+old grant (CR 113.7a, 400.7, 603.7, 702.14). Copies and clones retain separate
+resolution choices. No new scheduling, cost or layer system is introduced.
+
+Evidence: `TestChooseBasicLandTypeAsEnters` covers all five options, invalid
+answers, defensive option copying, controller versus owner, pre-entry timing,
+phase/control persistence, new entry, declaration validation and clone isolation.
+`TestRONBasicLandChoice*` covers both complete cards, all reprints, native casts
+and costs, illegal announcement and Aura resolution, all five choices, intrinsic
+mana, evasion, expiry, reattachment, source identity, phasing, control, ability
+removal, copied permanent spells, copied delayed triggers and cloned choices.
+The existing land-type, dependency, fixed-landwalk and delayed-step regressions
+supply the underlying service contracts.

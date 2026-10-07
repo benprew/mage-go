@@ -173,6 +173,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		ChosenColor:                src.ChosenColor,
 		ChosenPlayer:               src.ChosenPlayer,
 		ChosenSubtype:              src.ChosenSubtype,
+		ChosenBasicLandType:        src.ChosenBasicLandType,
 		ControlledPermanent:        src.ControlledPermanent,
 		turnControlGained:          src.turnControlGained,
 		controlGainedTurns:         maps.Clone(src.controlGainedTurns),

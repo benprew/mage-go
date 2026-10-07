@@ -615,6 +615,9 @@
 // Use [ChooseOpponentAsEnters] for an opponent choice before battlefield entry.
 // Each permanent keeps its choice through control changes and phasing.
 // [EventIsChosenPlayerUpkeep] checks that choice when the upkeep event occurs.
+// Use [ChooseBasicLandTypeAsEnters] for a land choice before battlefield entry.
+// [Permanent.ChosenBasicLandType] keeps the typed choice separate from color.
+// [BecomesChosenBasicLandTypeAttachedEffect] applies it to the current host.
 //
 // Use [AddCountersUpTo] for an optional counter amount with an action limit.
 // The effect controller chooses at resolution. The limit still applies after

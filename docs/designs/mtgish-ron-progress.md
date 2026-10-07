@@ -36646,3 +36646,144 @@ Ranked next candidates, to reassess with fresh evidence:
 3. Parameterized bands with others for the eight named consumers.
 
 No second slice starts in this run.
+
+## Run 2026-10-07: BASIC-LAND-TYPE-CHOICES
+
+Status: completed implementation slice. This run stops after this slice.
+The initial user changes were `.gitignore`, the execution design, the progress
+ledger reorganization, and untracked `mtgish-ron-completed.md`. They are preserved.
+Only this appended ledger entry is included in the slice commit; the user's
+ledger reorganization remains outside it. This entry supplies the fresh totals.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Strict loading and AST inventory exited 1 because the collection was unsupported:
+2,445 records, 1,946 compiled / 499 rejected; 756 accepted / 230 rejected unique
+names. Inventory: 72,953 occurrences, 8,554 signatures, 4,109 unknown-role
+occurrences. The vocabulary snapshot is syntax evidence, not support evidence.
+Complete selected records, reprints and nested candidate forms were inspected;
+reprints count once in the estimates below.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Basic land type choices, selected | Phantasmal Terrain; Giant Slug: **2** | Terrain needs a typed saved pre-entry choice and host consumer. Slug needs a local resolving choice in an already-supported delayed upkeep. Existing land-type, landwalk, attachment and timing services satisfy the remaining rules. Enables bounded entry and delayed choice consumers without new zone or timing systems. | Small engine service and compiler adapters; medium choice/identity/layer tests. |
+| Complete chosen damage-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites/adapters | Complete records require filtered source choice and a next-damage shield. CR 609.7a enumeration still lacks referred objects and face-up command-zone sources. Enables further redirection/prevention consumers. | High enumeration, identity, replacement and batch effort. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after prerequisites/adapters | Complete records need legendary/named parameters, static and token grants, or removal of all variants. Formation and damage assignment contracts remain missing. Enables shared combat consumers. | High formation, damage, layer, token and clone effort. |
+
+The selected capability offers two credible complete-card gains at lower effort
+than the larger missing engine contracts. It is not selected from reprint count
+or first-error frequency. The selection, contract, reuse boundary and acceptance
+cases were stated before edits. `implement-engine` supplied the workflow for the
+missing pre-entry choice service; no removed card/set skill was used.
+
+### Exact supported contract and reuse
+
+- Entry: `AsPermanentEnters(ThisPermanent,[ChooseABasicLandType])`, with a bare
+  operation, one operation and one declaration per permanent. Declaration scope
+  spans the card's static rules irrespective of textual order.
+- Static consumer: exactly
+  `PermanentLayerEffect(HostPermanent,[SetLandTypeVariable(TheChosenLandType)])`
+  on an Aura with the entry declaration. No mixed/plural modification support.
+- Resolving consumer: bare `ChooseABasicLandType` immediately followed by
+  `CreatePermanentLayerEffectUntil(subject,
+  [AddAbility([Landwalk(IsLandTypeVariable(TheChosenLandType))])],duration)`.
+  Subjects/durations use their existing supported contexts, including delayed
+  upkeep bodies. Only this adjacent continuation receives the local result.
+- Engine: `core.BasicLandType` and `Permanent.ChosenBasicLandType` are separate
+  from color/player/subtype choice state. `ChooseBasicLandTypeAsEnters()` uses
+  the existing pre-entry hook and the entry controller's `ChooseString`.
+  Five fresh options are supplied; invalid answers deterministically use Plains.
+  Definition validation rejects nonpermanent sources.
+- `BecomesChosenBasicLandTypeAttachedEffect()` uses existing `AttachedEffect`
+  and `applyBecomesBasicLand`: layer 4, land-subtype replacement, printed ability
+  removal, intrinsic mana, attachment incarnation, source phasing/departure and
+  dependencies. No parallel layer implementation. Layer 6 ability removal does
+  not undo layer 4. `clonePermanentInto` preserves the independent typed field.
+- Resolving choices lower to five fixed branches using the existing temporary
+  keyword compiler, `ResolutionOption`, `ChooseAtResolution`, `Until`, and
+  `GrantKeywordModification`. Each factory creates its own effects. No mutable
+  target/choice state is shared, and no global last-choice slot exists.
+- Giant Slug reuses `AtNext(YourUpkeep,...)` and the existing activation payment
+  transaction. Scheduling and choice occur at their separate declared times.
+  Source information cannot make an absent/returned permanent receive an action.
+- RON owns spelling, shapes, lexical validation and inventory roles. Engine
+  services own decisions and saved state. General subtype choices, detached
+  choice reads, combined/multiple entry choices, plural grants and other
+  variable-land consumers remain rejected. No fallbacks, partial production
+  registry, Go-card branch, declaration panic or new broad DSL export.
+
+Rules evidence: CR 205.3e,i, 305.7, 400.7, 503.1, 603.7, 613.1d,f, 614.12a,
+702.14 and 702.26; existing API and rules-contract documentation. Local
+`data/LEA.json` and `data/LEG.json` Oracle text matches both complete RON records.
+No source defect was found in this slice. No RON source changes were made;
+vocabulary hashes and syntax snapshot need no refresh.
+
+### TDD and complete-card gameplay mappings
+
+The initial new RON tests failed at the expected unsupported entry operation,
+resolving action and static consumer. The engine test failed at the missing
+`ChooseBasicLandTypeAsEnters` API. New fixture mistakes (mana-cost construction,
+hand ownership, AST position field, entry lookup visibility and the layer 6
+expectation) were corrected before final validation. No engine behavior test
+was weakened. The original inventory count assertions failed after the real
+seven-record gain, then were updated to the exact new totals with explicit
+new-card membership assertions.
+
+| Complete card or shared contract | Tests and covered rules |
+| --- | --- |
+| Phantasmal Terrain, all six reprints | `TestRONBasicLandChoiceTerrain`: native cast, unpaid/illegal-target rollback, all five entry choices, mana abilities, subtype replacement, unchanged supertype, host/source phase cycles, reattachment, departure and clone. `TestRONBasicLandChoiceTerrainIdentity`: illegal resolution, control, layer 6 ability removal, copied permanent spell entry choices and new-entry choice. `TestRONBasicLandChoiceInventoryAndReprints`: full-record definition validation across LEA/LEB/2ED/3ED/CED/CEI. |
+| Giant Slug | `TestRONBasicLandChoiceSlug`: native cast, metadata, five-mana activation, unpaid rejection, no early choice, opponent/next controller upkeep, five landwalk variants, defending land/phasing legality, cleanup and one-shot timing. `TestRONBasicLandChoiceSlugIdentity`: saved controller/source incarnation, departure/return, source phasing, ability removal, countered/copied delayed trigger, independent factory and cloned resolution choices. `TestRONBasicLandChoiceIndependentSchedules`: two activations retain distinct resolving choices and grants. |
+| Shared pre-entry service | `TestChooseBasicLandTypeAsEnters`: choices before battlefield registration, next entry operation, controller versus owner, all types, invalid/empty answers, defensive options, no stack object, phase/control persistence, new entry, clone isolation and declaration validation. |
+| Scope/strict reporting | `TestRONBasicLandChoiceInvalid`: arity, missing/duplicate declaration, wrong source, result-before-producer, intervening instructions, result escape, incompatible result and unbound subject. `TestRONBasicLandChoiceStrictLoading`: order-independent declaration and atomic collection rejection. `TestRONBasicLandChoiceInventoryAndReprints`: descendant role for the choice reference. |
+
+Existing fixed-landwalk, static-land-type, land-type dependency, resolution-choice
+and delayed-step regressions were run with `-count=1`. Existing replacement,
+attachment, mana, scheduling and cost services retain their broader contracts;
+this slice does not introduce a new simultaneous operation or replacement-order
+policy. Two new complete-card gameplay mappings are established. The collection's
+aggregate gameplay and engine-validation counters remain unmeasured/null in the
+inventory; compilation and behavior evidence remain separate.
+
+### Final validation and measurements
+
+| Command | Result |
+| --- | --- |
+| Focused new tests and relevant regressions with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on fresh rerun after exact inventory-count updates. |
+| `make test` | PASS on fresh rerun after exact inventory-count updates. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues; import formatting reviewed and affected tests/build/vet rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,953 compiled / 492 rejected; no registry published. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same membership; 72,953 occurrences, 8,554 signatures, 4,102 unknown-role occurrences. |
+
+Actual gains match estimates: **2 unique cards**, **7 records**, and two complete
+RON gameplay mappings. Fresh membership is **758 accepted / 228 rejected unique
+names**. No formerly accepted name or record becomes rejected. The seven unknown
+reference occurrences now have semantic roles. Remaining diagnostics include
+Animate Artifact's combined static base values, Angry Mob's top-level `IfElse`,
+the seven chosen-source shield actions and parameterized bands with others.
+The loader's collection rejection is expected and is distinct from check failure.
+No environment or pre-existing failure blocks this slice. Runtime cutover,
+Go-card deletion and DSL-removal gates remain unmet. No definition, generator,
+existing caller or DSL function was removed; no removal caller audit is claimed.
+
+Changed files: engine `core/basic_land_type.go`, `basic_land_entry_choice.go`,
+`basic_land_entry_choice_test.go`, `card.go`, `clone.go`, `doc.go`; RON
+`basic_land_choice.go`, `basic_land_choice_test.go`, `compiler.go`, `entry_tapped.go`,
+`layers.go`, `optional_payment.go`, `inventory.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this appended ledger entry.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Mixed static type/base-value membership, then static turn branches/opponent
+   counts: enables Animate Artifact and Angry Mob using the completed live-value
+   prerequisite. Correct the documented Mob data defect in its complete slice.
+2. Complete CR 609.7a source enumeration, then seven chosen-source shields.
+3. Parameterized bands with others for the eight consumers compared above.
+
+No second slice starts in this run.

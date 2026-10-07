@@ -9,6 +9,18 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "ChooseABasicLandType" {
+			if i+1 == len(parts) {
+				return nil, problem(part, "basic land choice requires an adjacent landwalk continuation")
+			}
+			effect, err := compileBasicLandChoice(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if part.Name == "ChooseAColor" || part.Name == "ChooseColors" {
 			if i+1 == len(parts) {
 				return nil, problem(part, "color choice requires an adjacent color-setting continuation")
