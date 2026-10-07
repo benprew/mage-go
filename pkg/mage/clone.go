@@ -371,6 +371,12 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 	}
 	// A clone must keep these rules for queries before the next layer pass.
+	if len(em.allCreaturesMustBlockRules) > 0 {
+		clone.allCreaturesMustBlockRules = make(map[uuid.UUID][]PermanentFilter, len(em.allCreaturesMustBlockRules))
+		for id, filters := range em.allCreaturesMustBlockRules {
+			clone.allCreaturesMustBlockRules[id] = slices.Clone(filters)
+		}
+	}
 	if len(em.cantBeBlockedExceptByRules) > 0 {
 		clone.cantBeBlockedExceptByRules = make(map[uuid.UUID][]PermanentFilter, len(em.cantBeBlockedExceptByRules))
 		for id, filters := range em.cantBeBlockedExceptByRules {

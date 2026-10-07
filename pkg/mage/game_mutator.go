@@ -1105,30 +1105,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 	blockedBefore := g.blockedAttackersBeforeDeclaration()
 	pairsBefore := g.blockerPairsBeforeDeclaration()
-	blockerCount := make(map[uuid.UUID]int)
-	for _, ba := range assignments {
-		blocker := g.FindPermanent(ba.BlockerID)
-		attacker := g.FindPermanent(ba.AttackerID)
-		if blocker == nil || attacker == nil {
-			continue
-		}
-		if !blocker.CanDeclareAsBlocker(g) || !CanBlock(blocker, attacker, g) {
-			continue
-		}
-		maxBlocks := 1
-		if blocker.HasKeyword(CanBlockAny) {
-			maxBlocks = 999
-		} else if blocker.HasKeyword(CanBlockAdditional) {
-			maxBlocks = 2
-		}
-		if blockerCount[ba.BlockerID] >= maxBlocks {
-			continue
-		}
-		blockerCount[ba.BlockerID]++
-		g.combat.AddBlockerIncarnation(ba.BlockerID, blocker.incarnationID, ba.AttackerID)
-		g.trackers.Turn.RecordBlocked(ba.BlockerID, ba.AttackerID)
-	}
-	g.enforceMinimumBlockers()
+	g.commitBlockAssignments(g.combatDefender(), assignments)
 	g.combat.SnapshotBlockedAlone()
 	g.fireDeclaredBlockerPairs(pairsBefore)
 	g.fireNewBlockerPairs(pairsBefore)

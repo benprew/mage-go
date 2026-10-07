@@ -5397,3 +5397,31 @@ Evidence: `TestAttackHistoryReferenceIdentity`,
 Erg Raiders still needs its source intervening-if and continuous-control
 conditions. Season of the Witch still needs its inability-to-attack history
 and exclusion filter. Their full records remain rejected.
+
+## RON filtered compulsory blockers
+
+RON supports
+`PermanentRuleEffect(ThisPermanent, [AllCreaturesMustBlockIt(filter)])` and,
+for an Aura with an enchant declaration,
+`PermanentRuleEffect(HostPermanent, [AllCreaturesMustBlockIt(filter)])`.
+The operation has exactly one permanent-filter argument. It uses the existing
+filter compiler, including supported nonempty conjunctions/disjunctions.
+Unbound targets, non-Aura hosts, malformed operations and incompatible filters
+remain declaration errors. No temporary, collection, cost or entry context is
+added by this adapter.
+
+The compiler lowers the operation to
+`Static(While(condition, AllCreaturesMustBlock(subject, filter)))`.
+The engine owns live attachment identity, rule storage and the maximum legal
+blocking assignment. It uses both native and search declaration paths and does
+not redirect every block to the first compulsory attacker. Lure requires all
+able creatures to block its current host. Marble Priest requires only able
+Walls and retains its separate combat-damage prevention rule.
+
+For Go engine consumers, `AllCreaturesMustBlock(PermanentRef, PermanentFilter)`
+can also use the existing `Until` duration contract. The pure
+`Game.CompleteBlockAssignments(uuid.UUID, []BlockAssignment) []BlockAssignment`
+query keeps legal maximum proposals and completes unmet requirements without
+writing combat state. The engine contract documents capacity, bands, minimum
+blocker counts, identity and search behavior. Evidence is in
+`TestBlockingRequirement*` and `TestRONBlockingRequirement*`.

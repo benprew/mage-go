@@ -31466,3 +31466,179 @@ Complete RON loading, collection gameplay and runtime startup remain below the
 removal gate. No Go definitions, generation tools, existing callers or DSL
 functions are deleted. No caller audit authorizes a DSL deletion in this slice.
 Stop after this completed slice. Migration remains incomplete.
+
+## 2026-10-07: filtered compulsory blockers
+
+Status: completed slice `FILTERED-BLOCKING-REQUIREMENTS`. This run stops here.
+Initial user changes to `.gitignore`, the execution design, and this ledger's
+reorganization, plus untracked `mtgish-ron-completed.md`, are preserved. Only
+this appended ledger entry is staged; the user's ledger edits are not staged.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Both loader commands (`-json` and `-inventory -json`) exited 1 for collection
+rejection: **1,854 compiled / 591 rejected records**, **715 accepted / 271
+rejected unique names**. There were 2,445 records and 986 names. The fresh AST
+inventory reported 72,962 occurrences, 8,557 signatures, and 5,226 occurrences
+with unknown roles. First-error counts were not used as unlock estimates.
+
+The instructions, engine reference, execution design, vocabulary snapshot and
+ledger were read. Complete candidate records and their nested operations were
+inspected, including all seven selected records. Selected compiler, layer,
+combat, event, cloning and declaration code, API/rules-contract documentation,
+local Oracle data and applicable CR sections were read. No Go card definition
+was used as a requirement. The `implement-engine` skill supplied the engine
+workflow; no removed card/set skill or Go stub generator was used.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Filtered compulsory blockers, selected | Lure, Marble Priest: **2**. Lure has six identical reprints; Marble Priest has one record. | The compiler lacks the adapter; the engine lacks exact shared requirement completion. Marble Priest's separate Wall combat prevention is already supported. Enables filtered requirements, competing compulsory attackers, independent requirement multiplicity, legal band blocks and both declaration paths. | Medium: one operation adapter, one reusable assignment planner, layer/reset/clone integration, native/search and complete-record contracts. |
+| Chosen damage-source enumeration and shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 after the prerequisite and shield work**, **0 from enumeration alone**. Other consumers: Jade Monolith, Reverse Damage, Eye for an Eye, Dark Sphere. | Existing permanent shields and exact spell identity do not enumerate all CR 120.7/609.7a objects. Need referenced departed objects, pending replacements/delays, command-zone sources, typed choices, property rechecks, and permanent-spell continuation. The other four consumers also need redirection, prevention results/reflection or partial prevention. Enables eleven distinct source-choice consumers. | High: shared source discovery and identity lifetime, typed choices and filters, replacement rechecks/continuity, then four different operations. |
+| All-zone battlefield-count CDAs | Keldon Warlord, Nightmare, Plague Rats, Dakkon Blackblade, People of the Woods: **5 after the all-zone prerequisite and adapters**, **0 from a battlefield-only adapter**. Additional consumers: Gaea's Avenger, Wood Elemental. | Need contextual characteristics in all zones, owner/controller contexts, named counts, and CDA/copy/layer contracts. Gaea's Avenger also needs arithmetic and a data correction: its RON counts your artifacts, but local ATQ Oracle data says opponents' artifacts. Wood Elemental needs an entry-sacrifice result. Enables seven distinct CDA consumers and zone characteristic queries. | High: all-zone query ownership and caller integration, count/value lowering, copy/layer/controller interactions and gameplay in each zone. |
+
+Selection rationale: the two complete blocking consumers can reuse all other
+rules, at materially lower effort than the two broader engine prerequisites.
+The new planner is needed by both cards and replaces two inconsistent existing
+paths. This is shared multi-card work, not an isolated card-specific adapter.
+The contract, reuse boundary, estimated gain and acceptance cases were stated
+before edits. The phase order and previous next-slice ranking did not fix the
+selection. No additional slice is started.
+
+### Exact signatures, contexts and ownership
+
+RON adds exactly
+`PermanentRuleEffect(ThisPermanent, [AllCreaturesMustBlockIt(filter)])` and
+`PermanentRuleEffect(HostPermanent, [AllCreaturesMustBlockIt(filter)])` for a
+properly declared Aura. The operation requires one argument and uses the
+existing permanent-filter compiler. The subject must be the live source or
+current host; unbound targets, non-Aura hosts, wrong filter/reference types,
+malformed arguments and other contexts remain declaration errors.
+The semantic inventory now assigns its argument the `permanent_filter` role.
+
+Engine APIs:
+
+- `AllCreaturesMustBlock(PermanentRef, PermanentFilter) ContinuousModification`.
+  Existing `While` uses current source/host membership. Existing `Until` saves
+  the recipient incarnation. The layer map resets on application and clones
+  copy each filter slice. Each installation contributes an independent
+  requirement. A separate Aura's rule survives host ability removal; source
+  ability removal or phasing suspends its static rule. A returned host cannot
+  inherit the old attachment. Nil and undeclared subjects fail validation.
+- `(*Game).CompleteBlockAssignments(uuid.UUID, []BlockAssignment)
+  []BlockAssignment`. Pure query; preserves legal maximum proposals and
+  completes unmet requirements. Both declaration paths call the same planner
+  before combat/history writes and final-pair events. Existing pairs remain
+  fixed. Candidate pairs require the original attacking incarnation, a live
+  untapped defending creature, existing restrictions/evasion/protection and
+  landwalk legality. Duplicate pairs do not consume capacity. Normal,
+  additional and unlimited capacity are shared across all requirements.
+- `(*EffectManager).AddAllCreaturesMustBlock(uuid.UUID, PermanentFilter)` is
+  the per-layer installation service. RON does not own assignment or storage.
+
+The planner counts independent filtered and legacy attribute requirements,
+including repeated copies. It maximizes the satisfied count under minimum
+blocker restrictions, including menace. Band members share the resulting pairs
+but use one declaration slot; direct declarations and indirect blocking are
+separate, so an indirectly blocked member's evasion or minimum cannot forbid a
+legal block of another member. The exact search has admissible bounds and lazy
+subsets, with no partial-result cutoff. Complex combinations can still require
+exponential work. Ordinary legal proposals with no unmet requirement avoid the
+search. No new blocking-cost or player-choice service is claimed.
+
+Reuse: existing typed references and factory bindings, `While`/`Until`, layer
+capture, permanent incarnations, attachment legality, phasing, transactional
+casting and targets, normal pair restrictions/protection/landwalk, band
+propagation, combat damage/prevention and declaration-event snapshots. The
+planner writes no history until a final declaration is committed. No new LKI
+permission restores an absent object. No card-name branch, Go fallback, global
+last-action slot, game-time declaration panic or partial production registry is
+introduced. The former first-Lure redirection and two post-declaration helper
+functions are replaced; a repository search found no remaining helper caller.
+
+Rules: CR 400.7, 506.4, 509.1a–c/g–i, 611.3a–b, 702.22g–h, 702.26b–g and
+702.111. LEA Lure and LEG Marble Priest local Oracle records agree with all
+selected RON rules. No selected data correction is needed. The Gaea's Avenger
+candidate mismatch is recorded above and left for its own slice. RON files are
+unchanged; all twelve hashes match the vocabulary snapshot, so it is retained.
+
+### TDD and card-to-test mappings
+
+The first focused run failed for missing `AllCreaturesMustBlock`/layer storage
+and rejected the real Lure and Marble Priest records at the new declaration.
+The final focused run passes. The broader regressions exposed and resolved the
+search path's active-player assumption, phased blocker exclusion and band
+proposal identity. An existing menace fixture intentionally asserted the old
+incorrect one-blocker behavior; it now expects the attacker to deal unblocked
+damage, with new minimum/band requirement contracts. No assertion was weakened.
+A minimum-blocker fixture initially reset its manually installed restriction
+while adding a support creature; it now installs the restriction after setup.
+The independent weighted oracle was updated to count repeated single-block
+requirements, matching its new input values rather than counting each only once.
+Final review added a failing creature-type-loss test for both sides of a block.
+The planner now checks current creature type as well as combat attributes; the
+new regression passes.
+
+| Complete card or contract | Test mapping |
+| --- | --- |
+| Lure, all six complete records | `TestRONBlockingRequirementCards`: unpaid/paid casting, Aura attachment, all able blockers and native combat damage. `LureLifetime`: current host, control, departure/return, phasing/phase cycle, source/host ability removal, reattachment and clone isolation. `LureAnnouncement`: illegal land/shroud rollback, absent/returned/phased target legality, copied Aura declarations and pending clone resolution. `StrictRecordsAndInventory`: all reprints, separate factories and opposing controllers, competing proposals, semantic role and atomic rejected loads. |
+| Marble Priest, complete LEG record | `TestRONBlockingRequirementCards`: paid artifact-creature casting, Wall-only compulsory blocks, independent combat prevention and cloned combat resolution. `StrictRecordsAndInventory`: exact record loading/validation and role evidence. Existing `TestRONStaticCombatPrevention*` provides the shared prevention contracts. |
+| Engine maximum and legality | `TestBlockingRequirementsBothPaths`, `MaximumAndMinimum`: native/search final pairs and events, duplicates, wrong controller, tapped creatures, competing and weighted requirements, additional/unlimited capacity, evasion, landwalk and attainable/impossible minimums. `AgainstExhaustiveAssignments`: 96 independent small assignment problems checked against exhaustive enumeration. `LargeMultiBlockAndSingleCoverage`: 32 attackers with unlimited capacity or separate compulsory coverage, plus query purity. |
+| Identity and lifecycle | `TestBlockingRequirementDefinitionAndIdentity`, `CapturedDuration`, `RepeatedAttributes`, `Band`, `BandRestrictions`: nil/undeclared subjects, returned incarnations, fixed prior pairs, clone/map isolation, cleanup, phasing, ability removal, repeated independent requirements, band capacity and direct/indirect restrictions. Existing combat-event, combat-pair and declaration regressions pass. |
+| Invalid RON | `TestRONBlockingRequirementInvalid`: missing/extra arguments, malformed symbols, unbound or incompatible subjects/filters and non-Aura hosts. |
+
+Two complete-card behavior mappings are added. Collection-wide engine-validated
+and behavior-verified counts remain unmeasured; compilation and gameplay counts
+are separate.
+
+### Validation and final evidence
+
+Actual gain matches the estimate: **2 unique cards / 7 records**. No previously
+accepted name is lost. Final loader: **1,861 compiled / 584 rejected records**;
+**717 accepted / 269 rejected unique names**. Both loader/report commands exit 1
+and install no partial registry. Semantic inventory: **72,962 occurrences /
+8,557 signatures / 5,212 unknown-role occurrences** (14 fewer unknown-role
+occurrences). Remaining candidate diagnostics still reject `ChooseADamageSource`,
+`CDA_Power`/`CDA_Toughness`, and their other unsupported nested requirements.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestBlockingRequirement\|TestRONBlockingRequirement\|TestDeclaredBlocker\|TestNormalBlockDeclaration\|TestTargetCombatRelationBands\|TestInventoryRepositoryCollection' -count=1` | PASS after final lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint. |
+| `make test` | PASS after final lint. |
+| `make build` | PASS after final lint. |
+| `go vet ./...` | PASS after final lint. |
+| `make lint` | PASS, zero issues. The first run reported one `gocritic` unnamed-result style issue; the named return fix passes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,861 compiled / 584 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 717 accepted / 269 rejected names, semantic counts above. |
+| Source hash audit | All twelve RON hashes match the vocabulary snapshot. |
+
+Automatic lint changes were reviewed: import spacing and blank-line formatting
+in the new engine/tests and the edited combat code. No unrelated file was
+changed. Required checks were repeated after the final creature-type fix and
+lint. There is no environment or pre-existing validation blocker. The validated
+slice is committed separately; its hash is reported in the final response.
+
+Files: engine `blocking_requirement.go` and `_test.go`, `composable_continuous.go`,
+`effect_manager.go`, `combat_restrictions.go`, `clone.go`, `game_mutator.go`,
+`turn_execution.go`, `combat.go`, `doc.go`; RON `filtered_blocking.go`,
+`blocking_requirement_test.go`, `inventory.go`, `inventory_test.go`; the corrected
+menace fixture in `gametest/rules_ch07b_keyword_abilities_test.go`; API/rules
+contract docs and this appended ledger entry. No source RON changes.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Chosen damage-source enumeration and typed choice prerequisite, followed by
+   rechecked shields and permanent-spell continuation for the seven clean cards.
+2. All-zone battlefield-count CDA prerequisite for the five clean cards;
+   investigate and correct Gaea's Avenger with its reprint/data evidence.
+3. Continuous-control history adapters and resolving collection requirements
+   for Erg Raiders, Nettling Imp and Siren's Call; inability-to-attack history
+   remains a separate Season of the Witch blocker.
+
+Complete RON loading, collection gameplay and startup remain below the removal
+gate. Go card definitions and generators are retained. No DSL function is
+removed without the required whole-repository caller audit; this slice removes
+only the replaced internal combat helpers. User changes remain outside the
+slice's commit. Migration remains incomplete.

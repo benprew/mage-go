@@ -60,6 +60,12 @@
 // for a window in each combat phase.
 // Skipped combat points close their windows at the applicable phase boundary.
 //
+// Use [AllCreaturesMustBlock] with [While] for a live filtered blocking rule.
+// [AttachedPermanent] follows the current host. Separate requirements share
+// block capacity and cannot bypass evasion or minimum blocker counts.
+// [Game.CompleteBlockAssignments] reads a proposal without changing combat.
+// Both declaration paths commit a legal maximum before they send events.
+//
 // Use [TargetBlocksSource], [TargetBlockedBySource], or [TargetInCombatWithSource]
 // for a target in a current blocking pair with the original source. Both
 // incarnations must remain in combat. LKI cannot restore the pair.

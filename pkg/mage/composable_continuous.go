@@ -16,31 +16,32 @@ type ContinuousModification interface {
 	modification() *layerModification
 }
 type layerModification struct {
-	subject          PermanentRef
-	subjects         PermanentSet
-	controller       PlayerRef
-	power, toughness ResolutionValue
-	keyword          Attr
-	removeKeyword    bool
-	removeLandwalk   bool
-	removeAbilities  bool
-	cantBeBlocked    bool
-	cantBlock        bool
-	blockerFilter    *PermanentFilter
-	setBasePT        bool
-	setPowerOnly     bool
-	setToughnessOnly bool
-	isSwitch         bool
-	layer            Layer
-	colors           []Color
-	family           SubtypeFamily
-	subtypes         []string
-	addSubtypes      bool
-	addType          Attr
-	typeAddition     bool
-	ability          *ActionDefinition
-	trigger          *GenericTriggered
-	triggerGrant     bool
+	subject               PermanentRef
+	subjects              PermanentSet
+	controller            PlayerRef
+	power, toughness      ResolutionValue
+	keyword               Attr
+	removeKeyword         bool
+	removeLandwalk        bool
+	removeAbilities       bool
+	cantBeBlocked         bool
+	cantBlock             bool
+	blockerFilter         *PermanentFilter
+	requiredBlockerFilter *PermanentFilter
+	setBasePT             bool
+	setPowerOnly          bool
+	setToughnessOnly      bool
+	isSwitch              bool
+	layer                 Layer
+	colors                []Color
+	family                SubtypeFamily
+	subtypes              []string
+	addSubtypes           bool
+	addType               Attr
+	typeAddition          bool
+	ability               *ActionDefinition
+	trigger               *GenericTriggered
+	triggerGrant          bool
 }
 
 func (*layerModification) continuousModification()            {}
@@ -132,6 +133,12 @@ func CantBeBlocked(subject PermanentRef) ContinuousModification {
 // Use this rule with a duration; it does not give the subject an ability.
 func CantBeBlockedExceptBy(subject PermanentRef, filter PermanentFilter) ContinuousModification {
 	return &layerModification{subject: subject, blockerFilter: &filter, layer: LayerAbility}
+}
+
+// AllCreaturesMustBlock requires each matching creature to block the subject if able.
+// Install the rule with a duration. It does not give the subject an ability.
+func AllCreaturesMustBlock(subject PermanentRef, filter PermanentFilter) ContinuousModification {
+	return &layerModification{subject: subject, requiredBlockerFilter: &filter, layer: LayerAbility}
 }
 
 // GrantEachKeyword grants a keyword to each member of a permanent set.
@@ -247,6 +254,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.requiredBlockerFilter != nil {
+			return "must be blocked by each " + m.requiredBlockerFilter.Text()
+		}
 		if m.blockerFilter != nil {
 			return "can’t be blocked except by " + m.blockerFilter.Text()
 		}
@@ -297,35 +307,36 @@ func (m *layerModification) members(ctx *EffectContext) []*Permanent {
 }
 
 type capturedModification struct {
-	permanent        capturedPermanent
-	controller       uuid.UUID
-	power, toughness int
-	keyword          Attr
-	removeKeyword    bool
-	removeLandwalk   bool
-	removeAbilities  bool
-	cantBeBlocked    bool
-	cantBlock        bool
-	blockerFilter    *PermanentFilter
-	setBasePT        bool
-	setPowerOnly     bool
-	setToughnessOnly bool
-	isSwitch         bool
-	colors           []Color
-	family           SubtypeFamily
-	subtypes         []string
-	addSubtypes      bool
-	addType          Attr
-	ability          *ActionDefinition
-	trigger          *GenericTriggered
-	grantID          uuid.UUID
+	permanent             capturedPermanent
+	controller            uuid.UUID
+	power, toughness      int
+	keyword               Attr
+	removeKeyword         bool
+	removeLandwalk        bool
+	removeAbilities       bool
+	cantBeBlocked         bool
+	cantBlock             bool
+	blockerFilter         *PermanentFilter
+	requiredBlockerFilter *PermanentFilter
+	setBasePT             bool
+	setPowerOnly          bool
+	setToughnessOnly      bool
+	isSwitch              bool
+	colors                []Color
+	family                SubtypeFamily
+	subtypes              []string
+	addSubtypes           bool
+	addType               Attr
+	ability               *ActionDefinition
+	trigger               *GenericTriggered
+	grantID               uuid.UUID
 }
 
 func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, blockerFilter: m.blockerFilter, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -384,7 +395,9 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			p.toughBonus += v.toughness
 		}
 	case LayerAbility:
-		if v.cantBlock {
+		if v.requiredBlockerFilter != nil {
+			g.effects.AddAllCreaturesMustBlock(p.ID(), *v.requiredBlockerFilter)
+		} else if v.cantBlock {
 			g.effects.AddCanBlockOnly(p.ID(), Not(AnyPermanent))
 		} else if v.blockerFilter != nil {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), *v.blockerFilter)

@@ -15,6 +15,25 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "AllCreaturesMustBlockIt":
+		if err := arity(operation, 1); err != nil {
+			return nil, err
+		}
+		subject, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if subject.kind != permanentSource && subject.kind != permanentHost {
+			return nil, unsupported(n.Args[0], "static blocking requirement reference")
+		}
+		filter, err := compileFilter(operation.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			condition := mage.StateConditionFunc("live blocking requirement", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+			return mage.WithAbility(mage.Static(mage.While(condition, mage.AllCreaturesMustBlock(subject.build(instanceBindings{}), filter))))
+		}, nil
 	case "CantBeEnchantedByAnEnchantment":
 		return compileAuraRestriction(n, operation, ctx)
 	case "CantBeTheTargetOfSpells":

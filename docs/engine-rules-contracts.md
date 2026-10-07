@@ -6375,3 +6375,60 @@ declaration validation, resolution recheck); `TestAttackHistoryBothDeclarationPa
 (illegal and successful declarations); the complete-record
 `TestRONAttackHistoryBerserk*` and `TestRONAttackHistoryFireAndBrimstone*` tests.
 No new cost, replacement, combat declaration or intervening-if service is added.
+
+## Filtered blocking requirements
+
+`AllCreaturesMustBlock(subject PermanentRef, filter PermanentFilter)` is a
+continuous rule modification. `While` reads the current source or attachment;
+`Until` captures the recipient's incarnation. Each installation contributes
+one independent requirement for every matching blocker. Layer reapplication
+resets the requirement map. Clones copy its filter slices. The rule does not
+add an ability to the recipient, so removing the host's abilities does not
+remove a separate Aura's requirement. Removing or phasing the source suspends
+its static rule; a returned host cannot inherit its former attachment.
+Definition validation rejects nil and undeclared subjects.
+
+`Game.CompleteBlockAssignments(defender, proposed)` is a pure declaration query.
+It retains a legal proposal if that proposal satisfies the maximum number of
+blocking requirements. Otherwise it returns a legal maximum, in deterministic
+battlefield and combat order. Both native and search declarations use this
+service before combat/history writes and declaration events. This preserves the
+engine's existing completion of compulsory declarations; the query itself does
+not ask the player to make choices or pay costs. Existing combat pairs remain
+fixed. Later rule changes do not undo declared blocks.
+
+Candidate pairs require a current, phased-in attacking creature incarnation, a current
+untapped creature controlled by the defender, the existing pair restrictions,
+evasion and protection checks, and landwalk legality. Duplicate pairs do not
+use extra capacity. Normal, additional and unlimited block capacities are
+shared by all requirements. Minimum-blocker restrictions, including menace,
+apply before requirements are counted. Multiple compulsory attackers compete
+for capacity; independent repeated requirements contribute independently.
+The existing `MustBeBlocked` and `AttrMustBeBlockedIfAble` attributes use the
+same service. A single-blocker menace declaration is now rejected; its previous
+regression fixture intentionally asserted the old engine gap and now checks the
+rules result.
+
+A block declared against one legal band member blocks the other members under
+CR 702.22h. It uses one declaration slot and satisfies applicable requirements
+for those members. Evasion and minimum-blocker restrictions on an indirectly
+blocked member do not prevent choosing a different legal member. The planner
+keeps direct declarations separate from the resulting band pairs.
+
+The exact search uses admissible requirement bounds and lazy subsets. It has
+no depth limit or partial-result cutoff. Complex combinations can require
+exponential work; normal proposals with no unmet requirement avoid the search.
+The service adds no new blocking cost or player-choice API.
+
+Evidence: `TestBlockingRequirementsBothPaths`, `MaximumAndMinimum`,
+`DefinitionAndIdentity`, `CapturedDuration`, `RepeatedAttributes`, `CreatureTypeLoss`,
+`Band`, `BandRestrictions`,
+`AgainstExhaustiveAssignments` (96 independent small assignment problems),
+and `LargeMultiBlockAndSingleCoverage` (32 attackers).
+`TestRONBlockingRequirementCards`, `LureLifetime`, `LureAnnouncement`,
+`Invalid`, and `StrictRecordsAndInventory` supply complete Lure and Marble
+Priest records, all reprints, payment/target rollback, combat damage, prevention,
+source/host identity, phasing, ability removal, copy/clone isolation, declaration
+roles and atomic loading. Existing combat-event and pair regressions remain in
+force. Rules: CR 400.7, 506.4, 509.1a–c/g–i, 611.3a–b, 702.22g–h,
+702.26b–g and 702.111.

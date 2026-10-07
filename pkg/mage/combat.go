@@ -343,7 +343,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	if attacker.HasKeyword(CantBeBlockedExceptByWalls) && !blocker.HasSubType("Wall") {
 		return false
 	}
-	// Menace: must be blocked by two or more creatures (simplified - we don't enforce here)
+	// The declaration service checks the number of blockers for menace.
 	return true
 }
 

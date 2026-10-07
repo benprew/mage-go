@@ -17,12 +17,10 @@ import (
 //     match a candidate blocker for the block to be legal (CR 509.1b).
 //   - canBlockOnlyRules[blockerID]: ALL filters must match a candidate
 //     attacker for this blocker to be allowed to block it.
-//   - cantBeBlockedByFewerThan[attackerID]: minimum number of blockers
-//     required (e.g. Goblin Goon "can't be blocked except by three or more
-//     creatures"). Enforced post-declaration: if fewer than N creatures are
-//     declared as blockers, ALL of them are removed from this attacker.
-//   - mustBeBlockedIfAble[attackerID]: CR 509.1c — defender must designate
-//     at least one able blocker for this attacker.
+//   - minBlockers[attackerID]: the declaration must meet this minimum
+//     before combat pairs and history are written.
+//   - allCreaturesMustBlockRules[attackerID]: each filter supplies one
+//     requirement for each matching blocker. Declaration checks all requirements.
 
 // AddCantBeBlockedExceptBy registers a per-attacker block restriction.
 // A potential blocker must satisfy filter (and all other filters registered
@@ -80,6 +78,7 @@ func (em *EffectManager) AttackCosts(permID uuid.UUID) []Cost {
 // resetCombatRestrictions clears all per-cycle restriction maps. Called from
 // EffectManager.Apply alongside blockPairRestrictions.
 func (em *EffectManager) resetCombatRestrictions() {
+	clear(em.allCreaturesMustBlockRules)
 	clear(em.cantBeBlockedExceptByRules)
 	clear(em.canBlockOnlyRules)
 	clear(em.minBlockers)
@@ -88,7 +87,7 @@ func (em *EffectManager) resetCombatRestrictions() {
 
 // passesCombatRestrictions returns true if blocker is allowed to block
 // attacker under the registered filter-based restrictions. (Numeric
-// minimum-blocker checks are enforced separately, post-declaration.)
+// minimum-blocker checks belong to the declaration planner.)
 func (em *EffectManager) passesCombatRestrictions(blocker, attacker *Permanent, g *Game) bool {
 	if filters, ok := em.cantBeBlockedExceptByRules[attacker.ID()]; ok {
 		for _, f := range filters {

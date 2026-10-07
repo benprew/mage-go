@@ -556,9 +556,6 @@ func TestCR702_23b_RampageBonusPerExtraBlocker(t *testing.T) {
 
 // TestCR702_110b_MenaceRequiresTwoBlockers verifies that a creature with Menace can't be
 // blocked by fewer than two creatures (CR 702.111).
-// XXX: the engine does NOT currently enforce the Menace blocking restriction
-// (combat.go comment: "simplified — we don't enforce here"). This test documents
-// the gap: a single-blocker block is accepted when it should be illegal.
 func TestCR702_110b_MenaceRequiresTwoBlockers(t *testing.T) {
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, "Test Menace Creature") // 2/2 Menace
@@ -567,10 +564,7 @@ func TestCR702_110b_MenaceRequiresTwoBlockers(t *testing.T) {
 	tg.Block(1, PlayerB, "Grizzly Bears", "Test Menace Creature") // single block — illegal under Menace
 	tg.StopAt(1, core.EndCombat)
 	tg.Execute()
-	// With correct Menace enforcement: single block illegal → attacker unblocked → PlayerB at 18.
-	// Current engine: single block accepted → both 2/2s trade → PlayerB at 20.
-	// Asserting 20 (engine behavior); this test FAILS when engine enforces Menace correctly.
-	tg.AssertLife(PlayerB, 20)
+	tg.AssertLife(PlayerB, 18)
 }
 
 // ── 702.8 Flash ───────────────────────────────────────────────────────────────
