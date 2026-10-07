@@ -50,6 +50,7 @@ type scope struct {
 	player            playerReferencePlan
 	playerTarget      *playerTargetPlan
 	permanentTarget   *permanentTargetPlan
+	permanentGroups   map[string]*permanentTargetPlan
 	permanentTargets  *permanentTargetsPlan
 	spellTarget       *spellTargetPlan
 	abilityTarget     *abilityTargetPlan
@@ -71,6 +72,7 @@ type actionPlan struct {
 	targets          []targetFactory
 	playerTarget     *playerTargetPlan
 	permanentTarget  *permanentTargetPlan
+	permanentGroups  []*permanentTargetPlan
 	permanentTargets *permanentTargetsPlan
 	spellTarget      *spellTargetPlan
 	abilityTarget    *abilityTargetPlan
@@ -103,7 +105,11 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget(bindings)
 		if target, ok := targets[i].(*mage.PermanentTargetBinding); ok {
-			bindings.permanents[p.permanentTarget] = target
+			if len(p.permanentGroups) != 0 {
+				bindings.permanents[p.permanentGroups[i]] = target
+			} else {
+				bindings.permanents[p.permanentTarget] = target
+			}
 		}
 		if target, ok := targets[i].(*mage.PermanentTargetsBinding); ok {
 			bindings.permanentSets[p.permanentTargets] = target
@@ -702,8 +708,11 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if err != nil {
 			return plan, err
 		}
-		if len(targets) != 1 {
-			return plan, problem(n, "multiple target bindings are not supported")
+		if len(targets) > 1 {
+			return compileSingularPermanentGroups(n, targets, ctx)
+		}
+		if len(targets) == 0 {
+			return plan, problem(n, "target declaration list must not be empty")
 		}
 		buildTarget, binding, err := compileTarget(targets[0], ctx)
 		if err != nil {
@@ -781,13 +790,8 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	case "OneOrMoreTargetPermanents":
 		return compilePluralPermanentTarget(n, ctx)
 	case "TargetPermanent":
-		filter, options, err := compilePlayerRelativeTargetFilter(n.Args[0], ctx)
-		if err != nil {
-			return nil, "", err
-		}
-		return func(bindings instanceBindings) mage.Target {
-			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options(bindings)...)
-		}, "Ref_TargetPermanent", nil
+		build, err := compileSingularPermanentTarget(n, ctx, "Ref_TargetPermanent")
+		return build, "Ref_TargetPermanent", err
 	case "TargetPlayer":
 		players := n.Args[0]
 		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent" && players.Name != "AttackedThisTurn") {

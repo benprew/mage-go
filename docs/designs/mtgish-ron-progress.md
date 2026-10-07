@@ -31828,3 +31828,165 @@ Ranked next candidates to reassess with fresh evidence:
 Complete collection gameplay/loading, application startup, Go-card deletion and
 DSL cleanup remain below their removal gates. No definitions or generators are
 deleted. No second slice is started. Migration remains incomplete.
+
+## 2026-10-07: numbered singular permanent target groups
+
+Status: completed prerequisite slice `NUMBERED-SINGULAR-PERMANENT-GROUPS`.
+This run stops after this slice.
+
+### Baseline, candidate comparison and selection
+
+Initial user changes were `.gitignore`, `mtgish-ron-execution.md`, this ledger,
+and untracked `mtgish-ron-completed.md`. They are preserved. Only this appended
+entry is staged against the committed ledger; the user's document rearrangement
+remains unstaged. No Go card definition is used as a requirement.
+
+Fresh compiler tests, short engine tests and `make build` passed. Strict loader
+and semantic inventory commands exited 1 for unsupported collection records,
+not a build or environment failure: **1,863 compiled / 582 rejected records**,
+**719 accepted / 267 rejected unique names**, out of 2,445 records / 986 names.
+The AST inventory reports **72,962 occurrences / 8,557 signatures / 5,207
+unknown-role occurrences**. Complete records and nested forms were inspected for
+all named candidates. Reprints count once. Instructions, `doc.go`, design,
+vocabulary, ledger, selected compiler/target services, API/rules contracts and
+CR 400.7, 601.2c/e/h, 602.2b, 603.7c and 608.2b/h were read.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Numbered singular target groups, selected | Gauntlets of Chaos, Glyph of Delusion, Arena directly; Cuombajj Witches and Drafna's Restoration share the wider target-group family. **0 immediate full-card unlocks / 0 records**. | Gauntlets needs dependent shared-type targets, exchange outcomes and attachment destruction; Glyph needs blocked-history targets, counter values and conditional ability grants; Arena needs opponent-choice targeting, collection tapping and fight. Witches needs opponent-choice damage targets; Drafna needs player/graveyard groups and ordered library returns. Establishes typed numbered permanent plans for three concrete downstream consumers. | Medium: compiler scope/instance mapping with existing fixed target services, declaration and RON gameplay tests. No engine state or rule addition. |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 eventual unlocks / 31 records**, **0 enumeration-only gains**. Further names: Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage. | Need source enumeration, choice binding/lifetime, property rechecks, permanent-spell continuation and exact shields. Further consumers need partial prevention, damage continuation, redirection or prevented-amount results. Enables eleven source-choice consumers. | High: shared enumeration and replacement contracts before adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 eventual unlocks / 20 records**, **0 battlefield-only gains**. Further names: Gaea's Avenger, Wood Elemental. | Need zone-aware characteristics, controller/owner counts, named counts and CDA/copy/layer integration. Avenger has the recorded own/opponent artifact-count defect and arithmetic; Wood Elemental needs entry-sacrifice results. Enables seven CDA consumers. | High: all-zone engine integrations before full-card mappings. |
+
+Selection favors a bounded compiler prerequisite with existing exact engine
+behavior and concrete reuse by three blocked cards. The wider alternatives need
+new engine lifecycle contracts. First-error frequency was not used as an unlock
+estimate. No single-card capability was selected. The contract, reuse boundary,
+acceptance cases and zero-unlock estimate were stated before implementation.
+
+### Exact supported shape, contexts and reuse
+
+`Targeted([TargetPermanent(filter1), TargetPermanent(filter2), ...], actions)`
+with two or more ordinary singular permanent declarations binds one-based
+`Ref_TargetPermanent1`, `Ref_TargetPermanent2`, and subsequent names. Each plan
+has a separate identity; each factory build maps each plan to a fresh
+`PermanentTargetBinding`. Single-target callers retain their unnumbered binding.
+The multiple-target body rejects the unnumbered alias, out-of-range/zero/leading
+zero names, tuple references, incompatible player reads and mode-scope leaks.
+
+Existing spell, activation, triggered and mode-local action contexts are
+supported. Existing delayed bodies save numbered references independently.
+Existing singular target filters/options are reused; this slice adds no new
+filter spelling or dependent target relation. Empty lists, mixed declaration
+kinds, plural groups, opponent choices and nested target declarations reject.
+The shared singular adapter also rejects conflicting `You`/`Opponent` controller
+restrictions during compilation, before they can cause a factory panic.
+
+RON owns names, scope and lowering. Reused engine services are
+`DeclarePermanentTarget`, `WithTargets`, fixed target declaration offsets,
+announcement/payment transactions, resolution target legality, saved-reference
+frames, `AtNext`, `PowerOfWithLKI`, temporary layers, native cleanup, stack copy
+retargeting and game cloning. The same object can occur in separate groups when
+it meets both filters (CR 601.2c). A partly illegal spell or ability still resolves
+its legal actions; all-illegal targets prevent independent life gain too.
+Return invalidates an announced incarnation; a phase cycle preserves it.
+Copies retain separate target frames and can choose new targets per group.
+Delayed reads preserve the exact information object's LKI after its departure;
+a returned object with different power cannot replace it.
+
+No engine rule, replacement ordering, simultaneous operation, cost service or
+new LKI semantics is added. No RON action executes in the compiler. No fallback,
+card-name branch, global last-action slot, partial production registry, definition
+deletion, generator removal or DSL cleanup is introduced. Removal gates remain
+unmet, and current callers remain intact.
+
+### TDD and card-to-test mappings
+
+New RON gameplay tests first failed solely with `multiple target bindings are not
+supported`. Fixture compilation errors (the `LoadInto` return count and record
+helper name) were corrected before that expected failure was confirmed. A new
+invalid-controller declaration test then failed because compilation accepted
+conflicting restrictions; it passes after compile-time rejection. The entry
+trigger fixture initially used a Creature without `CardPT`; it now uses an
+Artifact, and retains the trigger-departure and target assertions.
+
+| Contract or affected complete record | Evidence |
+| --- | --- |
+| Two numbered groups in synthetic RON spells and activations | `TestRONSingularGroupsGameplay`: unpaid and illegal announcements, wrong counts/order, rollback, no early action, distinct tap/untap actions, partial/all-illegal rechecks, shroud, return, phasing/cycle, control, copies and pending clone isolation. |
+| Three groups and repeated legal object | `InstancesAndRepeatedObject`: separate factory bindings, action order, same legal artifact creature in two distinct groups, and third-group identity. |
+| Spell and ability retargeting | `CopyRetarget`: phase out original candidates, choose two new targets, restore originals, and resolve copy/original independently. Copies do not repeat payment. |
+| Delayed numbered references and information | `DelayedLKI`: capture two targets, remove/return the information object with different power, read its original power, modify the original recipient, clone resolution and separate cleanup. |
+| Trigger and mode contexts | `TriggeredAndModal`: targeted entry trigger after source departure, mode-local target actions; `Invalid` also rejects references in another mode. |
+| Invalid declarations and atomic loading | `Invalid`, `StrictLoadAndConsumers`: malformed/unbound/incompatible names, unsupported target shapes, nested declarations, controller conflicts, factory validation, rejected load preserves existing registry. |
+| Gauntlets of Chaos, complete LEG record | `StrictLoadAndConsumers` confirms the next blocker is `SharesACardtypeWithPermanentFromAmongCardtypes`; no complete gameplay claim. |
+| Glyph of Delusion, complete LEG record | `StrictLoadAndConsumers` confirms the next blocker is `WasBlockedByDefenderThisTurn`; no complete gameplay claim. |
+| Arena, complete PROMOS record | `StrictLoadAndConsumers` confirms opponent-choice declaration rejection; no complete gameplay claim. |
+| Previously accepted RON records | Focused numbered-target/modal/controller tests, full compiler tests, short engine tests and `make test`; final loader preserves every previously accepted name. |
+
+This slice adds compiler-prerequisite gameplay contracts, **zero complete-card
+behavior mappings**, and **zero compiled records/names**, matching the estimate.
+Collection-wide engine-validated and behavior-verified totals remain unmeasured.
+Compilation and synthetic gameplay evidence do not establish complete-card coverage.
+
+### Validation, source evidence and remaining gaps
+
+Focused `go test ./pkg/mage/dsl/ron -run
+'TestRONSingularGroups|TestRONNumberedTargets|TestRONModal|TestRONControlledTarget'
+-count=1` passes. Required short engine tests, full `make test`, `make build`,
+`go vet ./...`, `make lint` and `git diff --check` pass. Lint changes are reviewed;
+final verification after formatting is recorded below. There is no environment
+or pre-existing failure blocking this slice.
+
+Final strict loader and semantic inspection exit 1 for the remaining unsupported
+collection, with no partial registry: **1,863 compiled / 582 rejected records**;
+**719 accepted / 267 rejected unique names**. AST counts remain **72,962 / 8,557 /
+5,207** for occurrences/signatures/unknown-role occurrences. No accepted name is
+lost. Source files are unchanged; all twelve hashes match the vocabulary
+snapshot, which is retained. The recorded Avenger and Liege source defects remain
+outside this prerequisite; no source correction is made.
+
+Fresh representative diagnostics:
+
+- Gauntlets of Chaos: `LEG.lines.ron:95:416: expected 1 positional arguments
+  (SharesACardtypeWithPermanentFromAmongCardtypes)`.
+- Glyph of Delusion: `LEG.lines.ron:100:233: unsupported permanent filter
+  (WasBlockedByDefenderThisTurn)`.
+- Arena: `PROMOS.lines.ron:1:263: unsupported singular permanent target group
+  (TargetPermanentOfAPlayersChoiceTheyControl)`.
+- Cuombajj Witches: `ARN.lines.ron:15:201: unsupported singular permanent target
+  group (AnyTarget)`.
+- Drafna's Restoration: `ATQ.lines.ron:27:154: unsupported singular permanent
+  target group (TargetPlayer)`.
+
+Changed files: RON `compiler.go`, `permanent_scope.go`, new
+`singular_target_groups.go` and `singular_target_groups_test.go`; API/rules
+contract documentation and this appended ledger entry.
+
+Ranked next candidates to reassess:
+
+1. Opponent-choice singular permanent target contract, collection tap and fight
+   for Arena, using this numbered binding prerequisite. Opponent choices also
+   support Preacher, The Abyss and Nova Pentacle with their remaining contracts.
+2. Shared combat-history-dependent targets for Glyph of Delusion and Glyph of
+   Doom, followed by their remaining counter/ability and delayed-step adapters.
+3. Chosen damage-source enumeration/bindings and exact shields for seven clean
+   prevention consumers; all-zone count CDAs remain a larger shared prerequisite.
+
+Complete collection loading/gameplay, runtime integration, Go-card deletion and
+DSL cleanup remain unfinished. This run begins no second slice.
+
+Final check evidence after lint review:
+
+| Command | Result |
+| --- | --- |
+| Focused RON group/numbered/modal/controller tests with `-count=1` | PASS before and after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS before and after lint. |
+| `make test` | PASS before and after lint. |
+| `make build` | PASS before and after lint. |
+| `go vet ./...` | PASS before and after lint. |
+| `make lint` | PASS, zero issues; import grouping and an equivalent `if`-to-`switch` change in the new pure controller-validation helper were reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,863 compiled / 582 rejected records, unchanged accepted/rejected name sets. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; unchanged compilation and semantic inventory counts. |
+| Source hash audit | All twelve hashes match the vocabulary snapshot. |
+
+The completed slice is committed separately; the final response supplies its hash.

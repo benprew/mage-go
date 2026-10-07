@@ -5461,3 +5461,35 @@ contexts. Invalid references and declarations fail compilation.
 
 Evidence: `TestRONExtendedAnimationCards`, `XenicLifetime`, `DruidMembership`,
 `Copy`, `Invalid` and `StrictLoad` in `extended_animation_test.go`.
+
+## RON numbered singular permanent groups
+
+`Targeted([TargetPermanent(filter1), TargetPermanent(filter2), ...], actions)`
+accepts two or more ordinary singular permanent declarations. The resolving body
+uses `Ref_TargetPermanent1`, `Ref_TargetPermanent2`, and subsequent one-based
+names. Each declaration has a separate typed plan and each factory call builds
+separate engine target bindings. Single declarations retain the unnumbered
+`Ref_TargetPermanent` spelling. A multiple-declaration body cannot use that alias.
+
+This shape works in existing spell, activation, triggered and mode-local action
+contexts. Existing delayed bodies capture each numbered reference separately.
+Filters reuse the singular permanent target compiler. Each group requires one
+legal permanent at announcement. A permanent can be chosen once in each separate
+group when it meets both filters. The normal target service checks each group
+again at resolution. Legal groups still act when another group is illegal; all
+illegal groups prevent resolution. An action cannot act on an illegal target.
+Copies can retarget each group, and clones keep their own resolving frames.
+Delayed actions retain the captured incarnation and existing information reads.
+
+Empty lists, mixed declaration kinds, plural groups, opponent-choice declarations,
+unbound or malformed numbered references, mode-scope leaks, nested declarations,
+and conflicting `You`/`Opponent` target controller restrictions are rejected.
+This adds no dependent target filter, exchange, fight or graveyard group adapter.
+Gauntlets of Chaos and Glyph of Delusion now reach their dependent-filter gaps;
+Arena, Cuombajj Witches and Drafna's Restoration still need other target forms.
+No complete-card gameplay mapping is added by this prerequisite.
+
+Evidence: `TestRONSingularGroupsGameplay`, `InstancesAndRepeatedObject`,
+`CopyRetarget`, `DelayedLKI`, `TriggeredAndModal`, `Invalid`, and
+`StrictLoadAndConsumers`. Execution reuses `DeclarePermanentTarget`, `WithTargets`,
+existing target legality, payment transactions, saved references and stack copies.

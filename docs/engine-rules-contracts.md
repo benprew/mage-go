@@ -6459,3 +6459,25 @@ card characteristics when its ability resolves, including a full characteristic
 copy before resolution; later changes cannot alter the captured base values.
 No general card-copy, all-zone characteristic, type replacement, replacement
 ordering or new LKI service is established by this slice.
+
+## RON numbered singular target binding reuse
+
+RON's multiple ordinary `TargetPermanent` declarations reuse the existing fixed
+singular target services; no engine rule or state is added. Per-declaration plans
+map `Ref_TargetPermanent1`, `Ref_TargetPermanent2`, and subsequent names to
+separate `PermanentTargetBinding` instances at each factory build. Separate
+instances of the word "target" can select the same legal permanent (CR 601.2c).
+Target rechecks, partial legality, all-illegal resolution and payment rollback
+remain engine operations (CR 601.2e/h, 602.2b, 608.2b). Spell and ability copies
+can retarget groups independently. Mode bodies cannot read another mode's plans.
+
+Delayed bodies reuse saved reference frames. A returned object cannot replace a
+captured incarnation; a phase cycle preserves it. Information reads keep the
+existing exact-object LKI contract (CR 400.7, 603.7c, 608.2h). The new tests cover
+separate group actions, repeated-object choices, cast/activation failures,
+shroud, phasing, return, control changes, copies with new targets, factory and
+clone isolation, trigger-source departure, mode scope and delayed LKI capture.
+No new replacement ordering or simultaneous operation is established.
+
+Evidence: `TestRONSingularGroups*`. Complete collection coverage remains separate
+from this compiler prerequisite's synthetic RON gameplay evidence.
