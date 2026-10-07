@@ -6106,7 +6106,31 @@ Each installation saves its own frame, including original targets and X.
 Other delayed combat events, durations, target declarations inside this body,
 and unsupported body operations still reject.
 
-Delif's Cone and Delif's Cube use this event. Their complete records remain
-unsupported. Real-record clause tests establish Cone's power/life expression
-and Cube's counter instruction with their actual activation costs and target
-restrictions; they do not establish optional life or combat-damage assignment.
+Delif's Cone and Delif's Cube use this event. Real-record clause tests establish
+Cone's power/life expression and Cube's counter instruction with their actual
+activation costs and target restrictions. Cone remains unsupported on optional
+life gain. Cube's complete gameplay uses the assignment rule described below.
+
+### Combat damage assignment suppression
+
+`mage.AssignsNoCombatDamage(subject mage.PermanentRef) mage.ContinuousModification` can be installed with `mage.Until`. It changes a
+combat rule and remains effective after ability removal. The resolved subject
+keeps its incarnation; source departure and subject control changes do not end
+an end-of-turn installation. A phase cycle keeps it. Cleanup ends it, including
+while the subject is phased out. An absent or phased-out subject at installation
+receives no rule. This service does not prevent damage or change power.
+
+RON resolving action lists accept
+`CreatePermanentRuleEffectUntil(permanentRef, [AssignsNoCombatDamage],
+UntilEndOfTurn)`. There are exactly three arguments, one symbol operation, and
+one symbol duration. The permanent reference must be bound in that action's
+scope: source, target, Aura host, or a supported permanent event binding.
+Factory construction uses that instance's typed references. Other durations and
+mixed operation lists are not added by this adapter.
+
+`TestRONCombatAssignmentCube` executes the complete Delif's Cube record,
+including casting, its delayed combat trigger, cube counter payment and
+regeneration. `RollbackAndIdentity`, `EventAndInstances`, `SourceAndHost` and
+`Invalid` establish the supported scopes, legality, copies and declaration
+rejections. Optional action payments and host unblocked events remain separate
+gaps for the other assignment-suppression consumers.

@@ -90,7 +90,7 @@ func (c *Combat) assignIncomingBandDamage(g *Game, plan *combatDamagePlan, membe
 	total, overflow := 0, false
 	for _, id := range blockers {
 		blocker := g.FindPermanent(id)
-		if blocker == nil || blocker.PhasedOut || !c.DealsDamageInStep(blocker, firstStrike) {
+		if blocker == nil || blocker.PhasedOut || !c.assignsDamageInStep(g, blocker, firstStrike) {
 			continue
 		}
 		amount := combatDamageValue(blocker, g)

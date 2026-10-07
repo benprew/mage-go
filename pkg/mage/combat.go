@@ -301,6 +301,12 @@ func (c *Combat) DealsDamageInStep(p *Permanent, isFirstStrikeStep bool) bool {
 	return !c.FirstStruck[p.ID()] // only if didn't already deal first-strike damage
 }
 
+// Strike eligibility must remain recorded when assignment is suppressed.
+func (c *Combat) assignsDamageInStep(g *Game, p *Permanent, firstStrike bool) bool {
+	eligible := c.DealsDamageInStep(p, firstStrike)
+	return eligible && g.effects.noCombatAssignmentRules[p.ID()] != p.incarnationID
+}
+
 // CanBlock returns true if blocker can legally block the attacker.
 func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	// Unblockable creatures can't be blocked
@@ -424,7 +430,7 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 		if !group.Blocked {
 			// Unblocked — damage to defending player.
 			// Forcefield and bodyguard are now replacement effects in the pipeline.
-			if c.DealsDamageInStep(atk, isFirstStrikeStep) {
+			if c.assignsDamageInStep(g, atk, isFirstStrikeStep) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := combatDamageValue(atk, g)
@@ -434,7 +440,7 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 		} else if len(group.BlockerIDs) == 0 {
 			// CR 509.1h + 510.1c: blocked but all blockers removed.
 			// Deals no damage unless it has trample.
-			if atk.HasKeyword(Trample) && c.DealsDamageInStep(atk, isFirstStrikeStep) {
+			if atk.HasKeyword(Trample) && c.assignsDamageInStep(g, atk, isFirstStrikeStep) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := atk.CurrentPower(g)
@@ -475,7 +481,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, plan *combatDamagePlan, atk *Per
 		c.doNontrampleBlockedDamage(g, plan, atk, group, isFirstStrikeStep)
 		return
 	}
-	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
+	if c.assignsDamageInStep(g, atk, isFirstStrikeStep) {
 		atkPower := combatDamageValue(atk, g)
 		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
 		// order. Default is the BlockerIDs order recorded at block declaration.
@@ -542,7 +548,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, plan *combatDamagePlan, atk *Per
 		if blk == nil {
 			continue
 		}
-		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
+		if c.assignsDamageInStep(g, blk, isFirstStrikeStep) {
 			plan.permanent(g, atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
@@ -656,7 +662,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, plan *combatDamagePlan, atk *Perm
 	}
 
 	// Attacker deals damage — defending player distributes it across the blocking band.
-	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
+	if c.assignsDamageInStep(g, atk, isFirstStrikeStep) {
 		atkPower := combatDamageValue(atk, g)
 
 		var defendingPlayerID uuid.UUID
@@ -702,7 +708,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, plan *combatDamagePlan, atk *Perm
 
 	// Each blocker still deals its own damage to the attacker.
 	for _, blk := range blockerPerms {
-		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
+		if c.assignsDamageInStep(g, blk, isFirstStrikeStep) {
 			plan.permanent(g, atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
@@ -744,7 +750,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, plan *combatDamagePlan, bandMembe
 			if member == nil {
 				continue
 			}
-			if !c.DealsDamageInStep(member, isFirstStrikeStep) {
+			if !c.assignsDamageInStep(g, member, isFirstStrikeStep) {
 				continue
 			}
 			dmg := combatDamageValue(member, g)

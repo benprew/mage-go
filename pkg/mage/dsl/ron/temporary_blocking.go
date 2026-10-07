@@ -44,12 +44,23 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if subject.kind != permanentTarget && subject.kind != permanentSource {
-		return nil, unsupported(n.Args[0], "temporary combat rule reference")
-	}
 	operations, err := list(n.Args[1])
 	if err != nil {
 		return nil, err
+	}
+	if len(operations) == 1 && operations[0].Name == "AssignsNoCombatDamage" {
+		if operations[0].Kind != Symbol {
+			return nil, unsupported(operations[0], "combat assignment rule")
+		}
+		if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
+			return nil, unsupported(n.Args[2], "duration")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.Until(core.EndOfTurn, mage.AssignsNoCombatDamage(subject.build(bindings)))
+		}, nil
+	}
+	if subject.kind != permanentTarget && subject.kind != permanentSource {
+		return nil, unsupported(n.Args[0], "temporary combat rule reference")
 	}
 	for _, operation := range operations {
 		switch operation.Name {

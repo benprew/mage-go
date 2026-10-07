@@ -17,8 +17,8 @@ import (
 func unblockedDelayClause(t *testing.T, name string) mage.CardFactory {
 	t.Helper()
 	n := hostUntapRecord(t, "FEM", name)
-	if _, err := Compile(n); err == nil {
-		t.Fatal("complete card unexpectedly supported")
+	if _, err := Compile(n); (err == nil) != (name == "Delif's Cube") {
+		t.Fatalf("complete card support changed for %s: %v", name, err)
 	}
 	rule := n.Fields["Rules"].Args[0]
 	delay := rule.Args[1].Args[1].Args[0].Args[0]

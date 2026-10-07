@@ -97,7 +97,7 @@ func (c *Combat) assignOutgoingBandDamage(g *Game, plan *combatDamagePlan, membe
 	var sources []outgoingBandSource
 	for _, id := range members {
 		member := g.FindPermanent(id)
-		if member == nil || member.PhasedOut || !c.Attackers[id] || !c.DealsDamageInStep(member, firstStrike) {
+		if member == nil || member.PhasedOut || !c.Attackers[id] || !c.assignsDamageInStep(g, member, firstStrike) {
 			continue
 		}
 		if incarnation := c.AttackerIncarnations[id]; incarnation != uuid.Nil && incarnation != member.incarnationID {

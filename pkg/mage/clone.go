@@ -372,6 +372,7 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 	}
 	// A clone must keep these rules for queries before the next layer pass.
+	clone.noCombatAssignmentRules = maps.Clone(em.noCombatAssignmentRules)
 	if len(em.blockAnyNumberRules) > 0 {
 		clone.blockAnyNumberRules = make(map[uuid.UUID]bool, len(em.blockAnyNumberRules))
 		maps.Copy(clone.blockAnyNumberRules, em.blockAnyNumberRules)

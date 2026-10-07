@@ -26,6 +26,7 @@ type layerModification struct {
 	removeAbilities       bool
 	cantBeBlocked         bool
 	cantBlock             bool
+	assignsNoCombatDamage bool
 	blockerFilter         *PermanentFilter
 	requiredBlockerFilter *PermanentFilter
 	blockEachAttacker     bool
@@ -124,6 +125,12 @@ func RemoveAbilities(subject PermanentRef) ContinuousModification {
 // RemoveAbilitiesEach removes all abilities from each selected permanent in layer 6.
 func RemoveAbilitiesEach(subjects PermanentSet) ContinuousModification {
 	return &layerModification{subjects: subjects, removeAbilities: true, layer: LayerAbility}
+}
+
+// AssignsNoCombatDamage stops combat assignment without adding an ability.
+// Use a duration to keep the rule after ability removal.
+func AssignsNoCombatDamage(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, assignsNoCombatDamage: true, layer: LayerAbility}
 }
 
 // CantBlock restricts blocking without adding an ability to the subject.
@@ -279,6 +286,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.assignsNoCombatDamage {
+			return "assigns no combat damage"
+		}
 		if m.blockAnyNumber {
 			return "can block any number of creatures"
 		}
@@ -347,6 +357,7 @@ type capturedModification struct {
 	removeAbilities       bool
 	cantBeBlocked         bool
 	cantBlock             bool
+	assignsNoCombatDamage bool
 	blockerFilter         *PermanentFilter
 	requiredBlockerFilter *PermanentFilter
 	blockEachAttacker     bool
@@ -369,7 +380,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -428,7 +439,12 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			p.toughBonus += v.toughness
 		}
 	case LayerAbility:
-		if v.blockAnyNumber {
+		if v.assignsNoCombatDamage {
+			if g.effects.noCombatAssignmentRules == nil {
+				g.effects.noCombatAssignmentRules = make(map[uuid.UUID]uuid.UUID)
+			}
+			g.effects.noCombatAssignmentRules[p.ID()] = p.incarnationID
+		} else if v.blockAnyNumber {
 			if g.effects.blockAnyNumberRules == nil {
 				g.effects.blockAnyNumberRules = make(map[uuid.UUID]bool)
 			}

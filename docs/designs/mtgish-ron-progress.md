@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **746 accepted / 240 rejected unique card
-names** (986 total), and **1,936 compiled / 509 rejected records** (2,445 total).
+The latest recorded inventory reports **747 accepted / 239 rejected unique card
+names** (986 total), and **1,937 compiled / 508 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`TURN-UNBLOCKED-SUBSCRIPTION` slice and its contract evidence are recorded
-at the end of this ledger. It adds a shared delayed combat prerequisite and
-two real-record clause mappings. It adds no complete-card unlocks.
+`COMBAT-ASSIGNMENT-SUPPRESSION` slice and its contract evidence are recorded
+at the end of this ledger. It adds a shared combat rule and one complete RON
+card mapping, Delif's Cube.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35811,3 +35811,151 @@ Changed files: `pkg/mage/composable_conditions.go`, `game.go`, `doc.go`,
 `permanent_scope.go`, `inventory.go`, `unblocked_delay.go`,
 `unblocked_delay_test.go`; `cards/mtgish/FEM.lines.ron`; API/rules contracts,
 vocabulary snapshot and this ledger. No second slice starts.
+
+## 2026-10-07: combat damage assignment suppression
+
+Status: complete slice `COMBAT-ASSIGNMENT-SUPPRESSION`; stop after this slice.
+Initial user changes to `.gitignore`, the execution design and the ledger split,
+plus untracked `mtgish-ron-completed.md`, are preserved. Only this entry and the
+current-status update are staged from the ledger.
+
+### Fresh evidence and candidate comparison
+
+Before editing, `go build ./...` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. Strict loader and semantic inventory exited 1 for collection rejection,
+not build/test failure: 2,445 records / 986 names, 1,936 compiled / 509 rejected
+records, 746 accepted / 240 rejected names, 72,953 nodes / 8,554 semantic
+signatures. Read instructions, engine reference, execution design, ledger,
+vocabulary, selected code, complete candidate records with nested forms, local
+Oracle data and the relevant API/rules contracts. Rules: CR 400.7, 510.1–4,
+514.2, 611.2 and 702.26. The implement-engine skill supplied the engine workflow.
+No Go card definitions supplied requirements. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Assignment suppression, selected | Delif's Cone, Delif's Cube, Farrel's Mantle, Farrel's Zealot, Floral Spuzzem; **1**, Cube. | Cone needs optional life gain; Mantle needs host unblocked events, optional damage and binding review; Zealot needs optional damage; Spuzzem needs optional destruction. Enables the common combat-assignment rule for all five, using completed delayed subscriptions. | Low/medium: existing typed references, captured modifications, layers and clones; one combat eligibility check integrated into all paths, a RON adapter and focused identity/combat/gameplay tests. |
+| General damage-source choice and next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage; **7** after prerequisites. | Complete legal enumeration still needs referred and command-zone objects. The other four need partial prevention, reflection, redirection or retained prevention results. Enables choices and shields for eleven names. | High: legal source categories, saved per-choice identities, future shield operations and competing replacements. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **8** after prerequisites. | Five static grants, token ability and two removal consumers need parameterized formation and damage assignment, layers, copies and storage; ordinary banding is insufficient. | High: coupled combat, layer, token and ability-removal contracts. |
+
+Selection: the completed subscription prerequisite makes the five-consumer
+assignment rule dependency-ready. It delivers one complete card with a smaller
+implementation/test surface and concrete reuse in four blocked consumers. The
+larger candidates have more potential unlocks but need substantially broader
+engine prerequisites. Complete records established the one-card estimate;
+first-error counts did not stand in for unlocks. Contract, reuse boundary and
+acceptance cases were stated before editing.
+
+### Exact shape, engine contract and reuse
+
+Engine API: `AssignsNoCombatDamage(subject PermanentRef)
+ContinuousModification`. `Until` captures the resolved subject incarnation.
+Source departure, subject control changes and ability removal do not end an
+end-of-turn installation. Phasing preserves identity; returned objects do not
+inherit the rule. Absent or phased subjects at installation receive no rule.
+Cleanup expires it. The effect manager rebuilds an incarnation map each layer
+pass and copies it for game clones.
+
+All combat paths check assignment eligibility: ordinary/unblocked/blocked
+attackers, blockers, trample with live or departed blockers, blocking bands,
+and incoming/outgoing/unblocked attacking bands. Strike-step history is recorded
+before suppression, including first/double strike. No suppressed packet reaches
+the damage pipeline: no damage event, lifelink, shield consumption or replacement
+choice results from that source. Unpreventable damage cannot bypass the rule.
+Noncombat and incoming damage retain the existing behavior. Public
+`Combat.DealsDamageInStep` and all existing callers remain compatible.
+
+RON resolving form:
+`CreatePermanentRuleEffectUntil(permanentRef, [AssignsNoCombatDamage],
+UntilEndOfTurn)`. Exactly three positional arguments, one symbol operation and
+one symbol duration. Bound source, target, host and supported event references
+use `compilePermanentRef` and `instanceBindings`. Only this single-operation
+shape is added; unknown/mixed operations and other durations reject. Engine
+owns assignment, capture, identity and duration; RON owns spelling, scopes,
+validation and lowering. No game-time declaration panic, global action slot,
+card-name executor, fallback or partial production registry is added.
+
+Reused services: permanent targets and snapshots, delayed captured frames,
+`Until`, composed continuous effects, definition validation, effect-manager
+layer passes, cloning, combat declarations, simultaneous damage, replacement
+pipeline, activation/counter payment transactions and cleanup. Inventory already
+walks the exact reference/operation/duration roles, so no inventory role change
+is needed. No Go definitions or DSL functions are removed; the cutover/removal
+gates remain unmet and no deletion caller audit is claimed.
+
+### TDD and card-to-test mappings
+
+The first engine test compile failed on the missing API plus a fixture option
+error. After correcting that fixture, it failed only on the missing API.
+The RON gameplay test failed on Cube's unsupported `AssignsNoCombatDamage`.
+Implementation then passed the focused tests. Later fixture fixes used the
+existing attachment API, kept snapshot/read operations in one resolution frame,
+and reset combat before starting a separate combat. Assertions were preserved.
+
+| Card / contract | Tests and coverage |
+| --- | --- |
+| Delif's Cube, complete RON record | `TestRONCombatAssignmentCube`: unpaid/paid casting, validated definition, original activation costs/target, blocked/unblocked timing, assignment suppression, cube counter, counter payment and regeneration, clone execution and cleanup. `CubeRollbackAndIdentity`: insufficient mana/counters, opposing target, shroud, return, phase/cycle, source departure/return, control/ability changes and copied activation; mana rollback remains checked. `CubeRepeatedCombat`: each combat generates a separate counter until cleanup, then ordinary damage resumes. |
+| Delif's Cone, clause only | Existing `TestRONUnblockedDelayRealClauses`, `ConePaidBranch`, `Bindings`, `LegalityAndRollback`, `ParentEventBinding` and `Invalid` retain exact delayed clause and binding evidence. The complete card remains rejected on optional life gain. No new full-card claim. |
+| Farrel's Mantle, Farrel's Zealot, Floral Spuzzem | Full records inspected; common assignment rule established by synthetic contracts. No complete-card gameplay claim; their optional-action/host-event blockers remain. |
+| Engine assignment paths | `TestCombatAssignmentRulePaths` covers attacker/blocker suppression across seven paths, other band sources and incoming damage. `StrikeSteps` covers first/double strike without changing eligibility history. |
+| Engine identity and execution | `IdentityAndCleanup`: phase cycle, ability removal, returned incarnation, cloned rule/cleanup and noncombat damage. `Installation`: saved target, source departure, control, phase cycle and absent/phased installation. `NoDamageEvent`: unpreventable/lifelink source, no notification/history, unspent shield and later noncombat damage. `Declarations`: nil and unbound references reject. |
+| RON scopes / rejection | `EventAndInstances`: event-local reference, independent factories/controllers/targets, clone and unaffected attacker. `SourceAndHost`: source/host references and Aura departure. `Invalid`: wrong operation shape, duration, unbound/wrong-kind reference, empty/mixed operations. Existing unblocked clause helper now requires Cube to compile and Cone to reject. |
+| Collection regression | Updated measured-count assertions in `inventory_test.go` and `numeric_consumers_test.go`; explicit Cube acceptance and production-registry preservation checks remain. |
+
+Coverage gain: **one complete-card mapping**, plus reusable assignment-rule
+contracts. Compilation and gameplay remain separate; no collection-wide verified
+total is inferred. No RON source changes or confirmed new source corrections.
+Mantle's `Trigger_ThatPermanent` versus attacker binding needs review with its
+host/optional-action work; this slice does not invent its meaning. Vocabulary
+source hashes and syntax remain unchanged, so no snapshot refresh is needed.
+
+### Validation and actual gains
+
+Estimated full-card gain **1**; actual **1 unique name / 1 record**, Delif's Cube.
+Fresh loader/inventory: **1,937 compiled / 508 rejected records**, **747 accepted /
+239 rejected names**, 2,445 records / 986 names, **72,953 nodes / 8,554
+signatures**. No previously accepted name or record was lost. Engine-validated
+and behavior-verified collection totals remain null. The loader still exits 1
+and publishes no partial registry.
+
+The initial broad checks failed only on three old measured-count assertions
+(1,936/509). Updated them to 1,937/508 and added explicit Cube acceptance,
+without weakening rejection or gameplay assertions. Automatic lint changes were
+reviewed. Final required results are recorded below.
+
+| Command | Final result |
+| --- | --- |
+| Focused `Test(CombatAssignmentRule\|RONCombatAssignment\|RONUnblockedDelay\|BandOutgoing\|BandIncoming)`, `-count=1` | PASS. |
+| Focused inventory/count regression tests, `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS, additional skill check. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 508 rejected records; no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same rejection membership and fresh semantic counts. |
+
+Remaining diagnostics: Cone `FEM.lines.ron:11:436` optional `GainLife`; Mantle
+`FEM.lines.ron:28:254` host source-combat reference; Zealot
+`FEM.lines.ron:29:310` optional `HavePermanentDealDamage`; Spuzzem
+`LEG.lines.ron:88:361` optional `DestroyPermanent`. Cube has no diagnostic.
+No environment failure blocks validation. Runtime cutover, collection gameplay,
+Go-card deletion, obsolete generation retirement and DSL cleanup remain pending.
+One descriptive commit follows passing checks; no second slice starts.
+
+Ranked next candidates to reassess:
+
+1. Shared optional resolving actions/payment-result branching for Cone, Zealot
+   and Spuzzem; then Mantle's host event and binding requirements.
+2. Complete legal damage-source enumeration and choices, then seven basic
+   source-specific shields.
+3. Parameterized bands with others for eight grant/token/removal consumers.
+
+Changed files: `pkg/mage/composable_continuous.go`, `effect_manager.go`,
+`combat_restrictions.go`, `clone.go`, `combat.go`, `nontrample_assignment.go`,
+`band_incoming_damage.go`, `band_outgoing_damage.go`,
+`combat_assignment_rule_test.go`, `doc.go`; `pkg/mage/dsl/ron/temporary_blocking.go`,
+`combat_assignment_rule_test.go`, `unblocked_delay_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.

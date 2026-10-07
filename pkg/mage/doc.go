@@ -93,6 +93,11 @@
 // changes can change membership. Source departure does not end the rules.
 // Attack requirements do not force a player to pay an attack cost.
 //
+// Use [AssignsNoCombatDamage] with [Until] to stop combat assignment for
+// the resolved permanent. The rule survives ability removal and source departure.
+// A phase cycle keeps its identity; a returned card cannot inherit it.
+// Noncombat damage and incoming damage still use the damage services.
+//
 // Use [AllCreaturesMustBlock] with [While] for a live filtered blocking rule.
 // [AttachedPermanent] follows the current host. Separate requirements share
 // block capacity and cannot bypass evasion or minimum blocker counts.

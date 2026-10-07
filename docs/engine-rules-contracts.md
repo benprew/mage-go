@@ -7309,3 +7309,34 @@ frames. No replacement or cost service is added. Evidence:
 `TestUnblockedDelay*` and `TestRONUnblockedDelay*`, including native RON combat,
 rollback and resolution target legality, repeated installations, absent/stale
 identity, LKI, APNAP, phasing, pending cleanup, copies and clones.
+
+### Combat damage assignment suppression
+
+`AssignsNoCombatDamage(PermanentRef) ContinuousModification` uses the existing
+`Until` capture, layer installation, source-independent duration and definition
+validation services. It installs a rule separately from abilities (CR 611.2).
+The effect manager rebuilds an ID-to-incarnation map on each layer pass and
+copies the map for game clones. Returned objects cannot inherit an old rule
+(CR 400.7); control changes and phasing cycles preserve the original identity
+(CR 702.26). An absent or phased subject receives no installation. Cleanup
+expires the rule (CR 514.2).
+
+Every engine combat assignment path checks the rule before choices or damage
+packets: unblocked attackers, blocked attackers, trample with or without live
+blockers, blocking bands, and outgoing and incoming attacking-band damage.
+First/double-strike eligibility still records the first-step history
+(CR 510.4). The rule stops assignment, so no damage event, lifelink, prevention
+consumption or replacement-order choice can result from the suppressed source.
+Unpreventable damage does not bypass it. Incoming and noncombat damage still
+use the existing simultaneous damage and replacement services (CR 510.1–2).
+
+`TestCombatAssignmentRulePaths`, `IdentityAndCleanup`, `StrikeSteps`,
+`Declarations`, `NoDamageEvent` and `Installation` establish these contracts.
+RON `TestRONCombatAssignment*` adds complete Delif's Cube gameplay, both
+abilities, casting/payment rollback, target rechecks, source departure,
+control/ability changes, phase/return identity, copied activations, pending
+clones, event and factory isolation, and source/host bindings. Existing
+`TestRONUnblockedDelay*` retains delayed event and clause evidence. The other
+four real consumers still reject; this change does not establish their optional
+actions or host-event contracts. No replacement ordering or payment service is
+changed.

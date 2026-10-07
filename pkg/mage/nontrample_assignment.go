@@ -47,7 +47,7 @@ func (c *Combat) doNontrampleBlockedDamage(g *Game, plan *combatDamagePlan, atta
 		return
 	}
 	blockers := liveNormalBlockers(g, group)
-	if c.DealsDamageInStep(attacker, firstStrike) {
+	if c.assignsDamageInStep(g, attacker, firstStrike) {
 		amount := combatDamageValue(attacker, g)
 		if amount > 0 && len(blockers) > 0 {
 			source := g.CaptureDamageSource(attacker.ID())
@@ -67,7 +67,7 @@ func (c *Combat) doNontrampleBlockedDamage(g *Game, plan *combatDamagePlan, atta
 		}
 	}
 	for _, blocker := range blockers {
-		if c.DealsDamageInStep(blocker, firstStrike) {
+		if c.assignsDamageInStep(g, blocker, firstStrike) {
 			plan.permanent(g, attacker, combatDamageValue(blocker, g), blocker.ID())
 		}
 	}
