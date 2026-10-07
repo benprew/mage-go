@@ -18,7 +18,18 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	if len(rules) == 1 && rules[0].Name == "PermanentRuleEffect" {
-		subject, err := compileUntapSubject(rules[0], ctx)
+		rule := rules[0]
+		if len(rule.Args) == 2 && rule.Args[1].Kind == List && len(rule.Args[1].Args) == 1 && rule.Args[1].Args[0].Name == "CantAttack" {
+			if _, err := symbol(rule.Args[1].Args[0]); err != nil {
+				return nil, err
+			}
+			subject, err := compileConditionalSubject(rule.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return func() mage.CardOption { return mage.WithAbility(mage.Static(mage.CantAttackIf(subject, condition))) }, nil
+		}
+		subject, err := compileUntapSubject(rule, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -96,6 +107,24 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		subject, err := compileConditionalSubject(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
+		}
+		if n.Args[1].Name == "AttackedDuringLastPlayersTurn" {
+			history := n.Args[1]
+			if err := arity(history, 1); err != nil {
+				return nil, err
+			}
+			player, err := symbol(history.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			switch player {
+			case "You":
+				return mage.PermanentAttackedDuringLastTurn(subject, mage.You), nil
+			case "ItsController":
+				return mage.PermanentAttackedDuringLastTurn(subject, mage.ControllerOf(subject)), nil
+			default:
+				return nil, unsupported(history.Args[0], "last-turn history player")
+			}
 		}
 		if n.Args[1].Kind == Symbol && n.Args[1].Name == "IsUntapped" {
 			return mage.PermanentIsUntapped(subject), nil

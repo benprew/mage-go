@@ -237,7 +237,6 @@ func TestRONHostStaticUntapInvalid(t *testing.T) {
 		`PermanentRuleEffect(HostPermanent,[])`,
 		`PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap,DoesntUntapDuringControllersUntap])`,
 		`PermanentRuleEffect(HostPermanent,[MayChooseNotToUntapDuringUntap])`,
-		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[PermanentRuleEffect(HostPermanent,[CantAttack])])`,
 		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[EachPermanentRuleEffect(AnyPermanent,[DoesntUntapDuringControllersUntap])])`,
 		`If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(NetCounter)),[PermanentRuleEffect(HostPermanent,[DoesntUntapDuringControllersUntap]),PermanentLayerEffect(HostPermanent,[AdjustPT(1,1)])])`,
 	} {

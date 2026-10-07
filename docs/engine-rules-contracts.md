@@ -5190,3 +5190,38 @@ production, optional hand entry, targeted graveyard entry, failed activation
 rollback, graveyard visit identity, source return, copies and clones. Existing
 `TestRONGraveyardReturn*` and `TestRONOptionalHandEntry*` supply the shared zone,
 entry and choice contracts.
+
+## Last completed turn attack history
+
+`PermanentAttackedDuringLastTurn(subject PermanentRef, player PlayerRef)` reads
+one live source or attachment and the specified player's most recent completed
+turn. It uses the same live subject resolver as `PermanentMatchesFilter`.
+`You` reads the current ability controller; `ControllerOf(This)` and
+`ControllerOf(AttachedPermanent)` read current subject control. Neither query
+uses LKI. Invalid subjects and players fail definition validation.
+
+The shared turn tracker archives both card IDs and incarnations at final cleanup.
+Current turn attacks and new combat phases do not overwrite the prior archive.
+Another player's cleanup does not overwrite it. A later completed turn with no
+attacks clears that player's history. Multiple combats contribute to one turn.
+Both native and explicit attack declarations already record incarnations.
+Clones copy the nested archive maps independently. Existing ID-only queries and
+callers retain their behavior. CR 400.7 prevents returned cards from inheriting
+history. CR 702.26b–d preserves history through phasing while excluding phased
+subjects from live queries. CR 611.3a–b requires current attachment and control.
+
+`CantAttackIf(subject PermanentRef, condition StateCondition)` extends the shared
+attack restriction service with a pure condition. Source presence and printed
+ability wrappers retain their existing lifecycle. The condition reads current
+state at attack declaration (CR 508.1c); it does not remove a declared attacker.
+Removing a recipient's abilities does not remove a separate Aura's rule.
+Conditional untap continues to use the shared simultaneous decision snapshot
+before untapping (CR 502.3); other untap effects remain permitted.
+
+Evidence: `TestLastTurnAttackIdentity`, `ConditionalRule`, `Declaration` and
+`MultipleCombatsAndPlayers`; `TestRONLastTurnAttackCards`, `Lifecycle`,
+`KelpEntryTimingAndLegality`, `ConditionalBodyReuse`, `Invalid` and
+`InventoryAndStrictLoad`. Complete records cover Giant Turtle's attack rule,
+Goblin Rock Sled's trample, Mountain requirement and history untap rule, and
+Tangle Kelp's creature enchant, entry tap and current-host history untap rule.
+No new payment, replacement, simultaneous move or damage contract is introduced.

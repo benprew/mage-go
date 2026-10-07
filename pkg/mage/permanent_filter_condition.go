@@ -15,22 +15,8 @@ func PermanentMatchesFilter(subject PermanentRef, filter PermanentFilter) StateC
 func (permanentFilterCondition) stateCondition() {}
 
 func (c permanentFilterCondition) checkState(g GameReader, ctx StateContext) bool {
-	source := g.FindPermanent(ctx.SourceID)
-	if source == nil || source.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && source.incarnationID != ctx.SourceIncarnation) {
-		return false
-	}
-	p := source
-	switch c.subject.(type) {
-	case sourceRef:
-	case attachedPermanentRef:
-		p = g.FindPermanent(source.AttachedTo)
-		if p == nil || source.attachedIncarnation == uuid.Nil || p.incarnationID != source.attachedIncarnation {
-			return false
-		}
-	default:
-		return false
-	}
-	if p.PhasedOut {
+	p := resolveStatePermanent(g, ctx, c.subject)
+	if p == nil {
 		return false
 	}
 	for _, match := range g.FilterBattlefield(c.filter) {
@@ -49,4 +35,26 @@ func (c permanentFilterCondition) inspectDefinition() definitionNode {
 		n.problem = "state condition requires This or AttachedPermanent"
 	}
 	return n
+}
+
+func resolveStatePermanent(g GameReader, ctx StateContext, subject PermanentRef) *Permanent {
+	source := g.FindPermanent(ctx.SourceID)
+	if source == nil || source.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && source.incarnationID != ctx.SourceIncarnation) {
+		return nil
+	}
+	p := source
+	switch subject.(type) {
+	case sourceRef:
+	case attachedPermanentRef:
+		p = g.FindPermanent(source.AttachedTo)
+		if p == nil || source.attachedIncarnation == uuid.Nil || p.incarnationID != source.attachedIncarnation {
+			return nil
+		}
+	default:
+		return nil
+	}
+	if p.PhasedOut {
+		return nil
+	}
+	return p
 }

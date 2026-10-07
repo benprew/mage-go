@@ -68,6 +68,7 @@ type TrackerReader interface {
 	PlayerLifeGainedThisTurn(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
 	HasAttackedThisTurnIncarnation(uuid.UUID, uuid.UUID) bool
+	AttackedDuringLastTurnIncarnation(uuid.UUID, uuid.UUID, uuid.UUID) bool
 	HasAttackedOrBlockedThisTurnIncarnation(uuid.UUID, uuid.UUID) bool
 	HasAttackedOrBlockedThisCombatIncarnation(uuid.UUID, uuid.UUID) bool
 	CreatureDeaths() int

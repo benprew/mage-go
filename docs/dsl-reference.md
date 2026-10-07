@@ -4430,3 +4430,29 @@ Egg modes. Its corrected graveyard mode targets a creature card in your
 graveyard at announcement; the hand mode makes an optional choice at resolution.
 Tourach's Gate has activation-condition clause evidence only; its complete record
 still rejects the separate host tap cost.
+
+## RON last-turn attack conditions
+
+Static `PermanentPassesFilter(subject, AttackedDuringLastPlayersTurn(player))`
+accepts bare `ThisPermanent` or an Aura's `HostPermanent`. The player is bare
+`You` or `ItsController`: the latter reads the current subject controller,
+which can differ from the Aura controller. The condition reads the player's
+most recent completed turn and the live subject's exact incarnation. Current
+turn attacks do not replace that history. Phasing preserves history; absent,
+phased and returned objects cannot use an old incarnation's history.
+
+Static `If(condition, [PermanentRuleEffect(subject, [CantAttack])])` now uses
+`mage.CantAttackIf(PermanentRef, StateCondition)`. The body has exactly one rule
+and one bare operation. It reuses the existing static condition grammar,
+including the last-turn condition. Existing conditional untap bodies keep
+`PreventUntapDuringStep`. Mixed bodies and additional operations still reject.
+History predicates in resolving, activation, cost, target and nested property
+filter contexts are not added by this slice.
+
+Engine `PermanentAttackedDuringLastTurn(PermanentRef, PlayerRef) StateCondition`
+accepts `This` or `AttachedPermanent`; the player is `You` or `ControllerOf`
+a live source/attachment. Invalid declarations fail definition validation.
+Turn cleanup archives incarnation history per player; cloning copies all maps.
+The existing ID-only history API remains available to its callers.
+Evidence: `TestLastTurnAttack*` and `TestRONLastTurnAttack*`, including complete
+Giant Turtle, Goblin Rock Sled and Tangle Kelp records.

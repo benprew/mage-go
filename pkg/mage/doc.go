@@ -466,6 +466,12 @@
 // replacements, because this action cannot cause an excess on its subject.
 // Other actions can add counters above this limit.
 //
+// Use [PermanentAttackedDuringLastTurn] for the live source or attachment's
+// attack history during one player's last completed turn. Cleanup saves exact
+// incarnations. Phasing keeps history; returned objects cannot use old history.
+// Use [CantAttackIf] for a live conditional attack restriction. A later condition
+// change does not remove attackers already declared.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

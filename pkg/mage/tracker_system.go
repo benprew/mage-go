@@ -34,10 +34,11 @@ type TurnTrackers struct {
 	damageTaken         map[uuid.UUID]int
 	artifactDamageTaken map[uuid.UUID]int
 
-	attacked            map[uuid.UUID]bool
-	attackedIncarnation map[uuid.UUID]uuid.UUID
-	attackedLastTurn    map[uuid.UUID]map[uuid.UUID]bool
-	blocked             map[uuid.UUID][]uuid.UUID
+	attacked                    map[uuid.UUID]bool
+	attackedIncarnation         map[uuid.UUID]uuid.UUID
+	attackedLastTurn            map[uuid.UUID]map[uuid.UUID]bool
+	attackedLastTurnIncarnation map[uuid.UUID]map[uuid.UUID]uuid.UUID
+	blocked                     map[uuid.UUID][]uuid.UUID
 
 	instantsCast  map[uuid.UUID]int
 	sorceriesCast map[uuid.UUID]int
@@ -292,6 +293,10 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	lastMap := make(map[uuid.UUID]bool, len(t.attacked))
 	maps.Copy(lastMap, t.attacked)
 	t.attackedLastTurn[activePlayerID] = lastMap
+	if t.attackedLastTurnIncarnation == nil {
+		t.attackedLastTurnIncarnation = make(map[uuid.UUID]map[uuid.UUID]uuid.UUID)
+	}
+	t.attackedLastTurnIncarnation[activePlayerID] = maps.Clone(t.attackedIncarnation)
 
 	t.abilityActivations = nil
 	t.grantedActivations = nil
@@ -490,6 +495,12 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 	}
 	if len(t.attackedLastTurn) > 0 {
 		c.attackedLastTurn = cloneNestedUUIDMap(t.attackedLastTurn)
+	}
+	if t.attackedLastTurnIncarnation != nil {
+		c.attackedLastTurnIncarnation = make(map[uuid.UUID]map[uuid.UUID]uuid.UUID, len(t.attackedLastTurnIncarnation))
+		for player, history := range t.attackedLastTurnIncarnation {
+			c.attackedLastTurnIncarnation[player] = maps.Clone(history)
+		}
 	}
 	return c
 }

@@ -6,18 +6,27 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type cantAttackEachRule struct{ subjects PermanentSet }
+type cantAttackEachRule struct {
+	subjects  PermanentSet
+	condition StateCondition
+}
 
 // CantAttackEach checks current collection membership at attack declaration.
 // Changes to the rule do not remove creatures already in combat.
 func CantAttackEach(subjects PermanentSet) StaticRule {
-	return cantAttackEachRule{subjects: subjects}
+	return cantAttackEachRule{subjects: subjects, condition: StateConditionFunc("always", []StateDependency{StateBattlefield}, func(StateReader, StateContext) bool { return true })}
 }
 
 // CantAttack prevents the current subject from attacking.
 // The rule remains separate from the subject's abilities.
 func CantAttack(subject PermanentRef) StaticRule {
 	return CantAttackEach(grantRecipientSet{subject: subject})
+}
+
+// CantAttackIf prevents attacks while the current condition is true.
+// A later condition change does not remove declared attackers.
+func CantAttackIf(subject PermanentRef, condition StateCondition) StaticRule {
+	return cantAttackEachRule{subjects: grantRecipientSet{subject: subject}, condition: condition}
 }
 
 func (cantAttackEachRule) staticRule() {}
@@ -27,7 +36,7 @@ func (r cantAttackEachRule) inspectDefinition() definitionNode {
 	if nilDefinition(r.subjects) {
 		n.problem = "attack restriction requires a permanent set"
 	} else {
-		n.children = []definitionEdge{{"subjects", r.subjects}}
+		n.children = []definitionEdge{{"subjects", r.subjects}, {"condition", r.condition}}
 	}
 	return n
 }
@@ -36,16 +45,18 @@ func (r cantAttackEachRule) staticEffects() []ContinuousEffect {
 	return []ContinuousEffect{&matchingAttackRestriction{
 		funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect),
 		subjects:             r.subjects,
+		condition:            r.condition,
 	}}
 }
 
 type matchingAttackRestriction struct {
 	*funcContinuousEffect
-	subjects PermanentSet
+	subjects  PermanentSet
+	condition StateCondition
 }
 
 func (e *matchingAttackRestriction) inspectDefinition() definitionNode {
-	return cantAttackEachRule{subjects: e.subjects}.inspectDefinition()
+	return cantAttackEachRule{subjects: e.subjects, condition: e.condition}.inspectDefinition()
 }
 
 func (e *matchingAttackRestriction) cloneEffect() ContinuousEffect {
@@ -70,6 +81,9 @@ func (g *Game) restrictedFromAttacking(p *Permanent) bool {
 		}
 		source := g.FindPermanent(rule.SourceID())
 		if source == nil {
+			continue
+		}
+		if nilDefinition(rule.condition) || !rule.condition.checkState(g, StateContext{SourceID: source.ID(), ControllerID: source.ControllerID(), SourceIncarnation: source.incarnationID}) {
 			continue
 		}
 		ctx := &EffectContext{Game: g, SourceID: source.ID(), Controller: source.ControllerID(), sourceIncarnation: source.incarnationID}

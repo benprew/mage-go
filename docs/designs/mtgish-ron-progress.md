@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **665 accepted / 321 rejected unique card
-names** (986 total), and **1,758 compiled / 687 rejected records** (2,445 total).
+The latest recorded inventory reports **668 accepted / 318 rejected unique card
+names** (986 total), and **1,761 compiled / 684 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`LIVE-ACTIVATION-PROPERTY` slice and its gameplay evidence are recorded at the
-end of this ledger. It adds complete Triassic Egg gameplay and activation-clause
-evidence for Tourach's Gate.
+`LAST-TURN-ATTACK-CONDITION` slice and its gameplay evidence are recorded at the
+end of this ledger. It adds complete Giant Turtle, Goblin Rock Sled and Tangle
+Kelp gameplay mappings.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -25640,3 +25640,182 @@ expectations in inventory_test.go, enchant_controller_test.go,
 resolving_counter_test.go and optional_hand_entry_test.go; LEG.lines.ron;
 dsl-reference.md, engine-rules-contracts.md, vocabulary snapshot and this ledger.
 The final response records the slice commit. No second slice begins.
+
+## 2026-10-06: last completed turn attack conditions
+
+Status: completed slice `LAST-TURN-ATTACK-CONDITION`. This run stops after this
+slice. Complete collection loading, gameplay validation and runtime/removal
+cutover remain unfinished.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot,
+current ledger, selected engine/compiler code, API/rules contracts and complete
+RON records. Refreshed both loader and semantic inventory. Baseline compiler
+tests, short engine tests and make build passed. Loader and inventory exited 1
+for collection rejection: 1,758 compiled / 687 rejected records, 665 accepted /
+321 rejected names. There are 2,445 records, 986 unique names, 72,962 AST nodes,
+8,559 semantic signatures and 6,333 unknown-role occurrences. Compilation does
+not establish collection gameplay or definition validation totals.
+
+Initial user changes: .gitignore, execution design, ledger archival changes and
+untracked mtgish-ron-completed.md. Preserve these changes. Only this slice's
+status changes and appended entry are staged in the ledger; archival changes
+remain unstaged. No sub-agents or removed card/set skills are used. The
+implement-engine skill supplies the reusable engine workflow.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Last-turn attack conditions, selected | Giant Turtle, Goblin Rock Sled, Tangle Kelp: **3** full-card unlocks | Exact per-player, per-incarnation completed-turn history is missing. Turtle also requires a conditional attack body. Sled's trample/Mountain rule and Kelp's enchant/entry tap already have exact services. Enables shared source/host history conditions and conditional attack restrictions. | Moderate: extend existing history archive and clone, typed live condition, shared conditional attack rule, compiler lowering, lifecycle/native gameplay and invalid declarations. |
+| Beginning-of-combat events | Battering Ram, Goblin Flotilla, Johan: **0** adapter-only unlocks | Ram additionally needs EndOfCombat in this scope, the Wall pair filter and a corrected delayed reference; Flotilla needs temporary pair triggers; Johan needs optional rule grants and its player rule. Enables recurring combat-step bodies for all three. | Small event prerequisite; medium/high full-consumer work with temporary and optional rules. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after the prerequisite chain, **0** adapter-only | Eligible damage-source selection, local producer bindings, source identity and one-event shield consumption are missing. These complete bodies otherwise share fixed payments and explicit player recipients. | High: source eligibility/decisions, per-instance bindings, shields, simultaneous packets and competing replacement contracts. |
+
+Selection: three immediate complete consumers for substantially less engine state
+and test effort than chosen-source prevention. The combat-step adapter gives no
+full-card gain with its nested blockers. First-error frequency was not used as
+an unlock estimate. Reprints count once. Contract, reuse boundary and acceptance
+cases were stated before editing. All three selected names have one record each.
+CR evidence: 400.7, 502.3, 508.1c, 611.3a–b and 702.26b–d. Local data/LEG.json and
+data/DRK.json Oracle text agrees with all selected complete records.
+
+### Exact shapes, dependencies and engine reuse
+
+RON static condition:
+`PermanentPassesFilter(subject, AttackedDuringLastPlayersTurn(player))`.
+Subject is bare ThisPermanent on a permanent or HostPermanent in Aura scope.
+Player is bare You or ItsController; the latter reads the current subject
+controller, which can differ from the Aura controller. The predicate is a direct
+static property condition, not a general permanent filter. Nested And/Or property
+filters, resolving branches, activation conditions, costs and targets do not
+receive this history form. Wrong arity, tuple references/players, unsupported
+players and unbound/incompatible subjects reject at compilation.
+
+RON static body:
+`If(condition,[PermanentRuleEffect(subject,[CantAttack])])`.
+The body has one rule and one bare operation. Subject uses the existing live
+source/Aura-host grammar. All existing supported static conditions are reused,
+including counter conditions; mixed bodies and extra operations remain rejected.
+Conditional untap bodies retain their existing grammar and execution service.
+
+Engine APIs:
+
+- `AttackedDuringLastTurnIncarnation(player, permanent, incarnation uuid.UUID)
+  bool` reads the specified player's most recent completed turn. Final cleanup
+  archives exact incarnations beside the existing ID-only history. Native and
+  explicit attack declarations already supply these identities. Current-turn
+  attacks and combat resets do not overwrite prior history. Another player's
+  cleanup preserves it; a later empty completed turn clears it. Nested maps are
+  copied independently by TrackerSystem.Clone. Existing ID-only callers remain.
+- `PermanentAttackedDuringLastTurn(PermanentRef, PlayerRef) StateCondition`
+  accepts This or AttachedPermanent and You or ControllerOf a live source/host.
+  It shares resolveStatePermanent with PermanentMatchesFilter. Queries are pure,
+  read current control/attachment and exact live incarnation, and use no LKI.
+  Absent/phased subjects check false; a phase cycle keeps history; returned
+  objects cannot inherit it. Invalid/nil declarations fail definition validation.
+- `CantAttackIf(PermanentRef, StateCondition) StaticRule` adds a condition to the
+  existing matchingAttackRestriction service. Conditional and unconditional
+  callers use the same attack checks and printed static source lifecycle.
+  Conditions check before declaration and cannot remove declared attackers.
+  Removing host abilities cannot remove a separate Aura rule. Source removal,
+  phasing and ability removal use the existing printed-effect wrappers.
+
+Reuse: TrackerSystem archive/clone, typed source/host/controller references,
+printed continuous effects, attack legality, PreventUntapDuringStep and its
+simultaneous decision snapshot, land dependence, Aura targeting/attachment,
+entry events, native cleanup and cost rollback. No parallel zone, event, target,
+payment, damage or replacement subsystem. No global result slot, card-name
+executor, Go fallback or partial production registry. No new replacement or
+simultaneous-operation rule is needed; existing services retain their contracts.
+
+### TDD and card-to-test evidence
+
+Initial engine tests failed for missing history/condition/conditional-attack
+APIs. RON gameplay failed for unsupported AttackedDuringLastPlayersTurn on all
+three complete records. Focused implementation tests then passed. Expanded
+lifecycle tests exposed fixture expectations: native untap phases Sled back in,
+and the inactive player's other creature remains tapped. Corrected the fixture
+to assert native turn behavior. A broader compiler regression exposed missing
+dependencies on the unconditional callback wrapper; fixed the definition rather
+than weakening validation. The old rejection of a conditional Aura-host attack
+rule was replaced with gameplay assertions for that newly supported shape.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Giant Turtle, full LEG:99 record | TestRONLastTurnAttackCards: casting/unpaid rollback, first legal attack, native history cleanup, later untap with prohibited attack, empty next turn and clone isolation. Lifecycle: current control, phase cycle, source/subject return, source departure/ability removal and independent factories. TestLastTurnAttackConditionalRule: native explicit attack, later rule cannot remove declared attacker. |
+| Goblin Rock Sled, full DRK:50 record | Cards: casting/unpaid rollback, trample metadata, defending Mountain legality, native attack/cleanup and untap restriction, other untap permitted and later empty turn. Lifecycle: control, native phase-in, return, source removal and independent factories/clones. Existing TestRONLandDependence* and native trample engine tests supply shared rule contracts. |
+| Tangle Kelp, full DRK:104 record | Cards: casting/unpaid rollback, attachment/entry tap, opponent-controlled host history, restricted native untap and permitted other untap. KelpEntryTimingAndLegality: creature-only target rollback, no announcement tap, trigger stack timing and pending clone. Lifecycle: current host control/attachment, host return, Aura return/removal/phasing, host ability removal, two factories and archive isolation. |
+| Engine identity/history | TestLastTurnAttackIdentity: current turn vs completed turn, per-player archives, empty/other turns, current control, phasing, return, wrong incarnation and cloned archive. MultipleCombatsAndPlayers: explicit attacks in two combats, native cleanup, another player's empty turn, own empty turn. Declaration: valid and nil/unbound subject/player/condition rejection. |
+| Compiler grammar and reuse | TestRONLastTurnAttackInvalid: malformed players/references/arity and mixed/tuple operations. ConditionalBodyReuse: live source counters and host conditional attack, source vs recipient ability removal and independent clones. InventoryAndStrictLoad: all three complete records, semantic player role, definition validation and strict atomic rejection with unsupported input. Existing TestInventory* retains exact fresh collection counts. |
+
+Three complete-card mappings are added; collection-wide engine_validated and
+behavior_verified totals remain null. These tests do not claim support for other
+history filters or all collection gameplay.
+
+### Measurements, source defects and removal gates
+
+Actual gain matches the estimate: **3 unique names / 3 records**, exactly Giant
+Turtle, Goblin Rock Sled and Tangle Kelp. No accepted record or name regresses.
+Final strict loader: **1,761 compiled / 684 rejected records**, **668 accepted /
+318 rejected names**. Semantic inventory: 72,962 nodes / 8,559 signatures / 6,330
+unknown-role occurrences. The three history-player arguments now have semantic
+roles. Strict loading exits 1 and returns no production registry. Remaining
+first diagnostics include `2ED.lines.ron:3:299: unsupported conditional static
+modification (AddCardtype)` for Animate Artifact and
+`2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)` for Animate Dead.
+
+No selected source defects. The deferred Battering Ram ATQ:14 record destroys
+Trigger_TheAttackingCreature instead of the blocking Wall; local data/ATQ.json
+Oracle text says to destroy that Wall. Its filter also remains unsupported.
+This run records the defect and does not change that unrelated record.
+RON source files and hashes are unchanged, so no vocabulary refresh is needed.
+Fresh measurements are recorded here and collection test expectations updated.
+
+Complete loading, collection gameplay and startup wiring remain below the
+removal gate. No Go card definitions/generators or DSL functions are deleted;
+no deletion is authorized by a caller audit. Existing callers remain intact.
+No environment or pre-existing validation blocker remains.
+
+### Required checks and next candidates
+
+All required checks pass on final code. Lint changed only import spacing in the
+new tests; those edits were reviewed, then focused tests, broad tests, build and
+vet were rerun. A test-only API assumption used a nonexistent EffectContext
+reader field during development; replacing it with the shared pure live subject
+resolver kept GameReader queries read-only. Failed intermediate checks are not
+used as final validation; no test requirement is waived.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestLastTurnAttack\|TestRONLastTurnAttack\|TestCantAttackEach\|TestRONAttackRule\|TestRONHostStaticUntap\|TestInventory' -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated on final code |
+| `go test ./... -short -count=1` | PASS; additional skill verification |
+| `make test` | PASS, repeated on final code |
+| `make build` | PASS, repeated after lint |
+| `go vet ./...` | PASS, repeated after lint |
+| `make lint` | PASS, zero issues; automatic edits reviewed |
+| `git diff --check` and staged diff check | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,761 compiled / 684 rejected, 668 accepted / 318 rejected names |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same collection counts; semantic totals above |
+| Record-level before/after diagnostic comparison | Exactly the three selected records leave rejection; no accepted record regresses and no remaining diagnostic changes |
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. Chosen-source prevention prerequisites for the seven circles/Greater Realm
+   consumers. Keep source eligibility and local binding distinct from next-event
+   shield consumption and competing replacements.
+2. Mana-conversion planning with activation history for Farrelite Priest and
+   Initiates of the Ebon Hand. Their full FEM:30/60 records need repeated generic
+   payment, immediate fixed mana, fourth-activation history and delayed sacrifice;
+   current compiler explicitly rejects that combination. Two credible full-card
+   consumers after solver/transaction support.
+3. Beginning-of-combat events for Battering Ram, Goblin Flotilla and Johan; the
+   nested blockers and Ram defect above keep adapter-only unlocks at zero.
+
+Slice files: engine last_turn_attack.go/test.go, attack_matching.go,
+permanent_filter_condition.go, tracker_system.go, game_mutator.go and doc.go;
+RON conditional_static.go, inventory.go, last_turn_attack_test.go,
+inventory_test.go and host_static_untap_test.go; dsl-reference.md,
+engine-rules-contracts.md and this ledger. One descriptive commit is made after
+validation; the final response records its hash. User edits remain unstaged.
+No second slice starts.
