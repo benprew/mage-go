@@ -144,8 +144,8 @@ func TestRONCombatCollectionInvalid(t *testing.T) {
 	for _, action := range []string{
 		`TapEachPermanent(And([IsCardtype(Creature),IsBlockingAttacker(Ref_TargetPlayer)]))`,
 		`TapEachPermanent(IsBlockingAttacker(Ref_TargetPermanent,ThisPermanent))`,
-		`TapEachPermanent(And([IsCardtype(Land),IsBlockingAttacker(Ref_TargetPermanent)]))`,
-		`TapEachPermanent(And([IsCardtype(Creature),IsBlockingAttacker(Ref_TargetPermanent),IsUntapped]))`,
+		`TapEachPermanent(And([IsCardtype(Land),IsBlockingAttacker(Ref_TargetPermanent())]))`,
+		`TapEachPermanent(And([IsCardtype(Creature),IsBlockingAttacker(Ref_TargetPermanent),IsUntapped()]))`,
 		`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(Or([])),[PreventThatDamage],UntilEndOfTurn)`,
 		`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(SinglePermanent(Ref_TargetPermanent)),[PreventThatDamage()],UntilEndOfTurn)`,
 		`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(SinglePermanent(Ref_TargetPermanent)),[PreventThatDamage],UntilYourNextTurn)`,

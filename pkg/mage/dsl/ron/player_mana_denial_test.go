@@ -295,9 +295,9 @@ func TestRONManaDenialInvalidAndInventory(t *testing.T) {
 		`PlayerAction(ActionPlayer,LoseUnspentMana)`,
 		`PlayerActions(You,[]),PlayerAction(ActionPlayer,LoseUnspentMana)`,
 		`TapEachPermanent(ControlledByAPlayer(SinglePlayer(ActionPlayer)))`,
-		`TapEachPermanent(Or([IsCardtype(Land),ControlledByAPlayer(SinglePlayer(You))]))`,
-		`TapEachPermanent(And([ControlledByAPlayer(SinglePlayer(You)),ControlledByAPlayer(SinglePlayer(You))]))`,
-		`TapEachPermanent(ControlledByAPlayer(Opponent))`,
+		`TapEachPermanent(Or([IsCardtype(Land),ControlledByAPlayer(SinglePlayer(You()))]))`,
+		`TapEachPermanent(And([ControlledByAPlayer(SinglePlayer(You)),ControlledByAPlayer(SinglePlayer(Ref_TargetPlayer))]))`,
+		`TapEachPermanent(ControlledByAPlayer(Opponent()))`,
 		`TapEachPermanent(HasAbility(ManaAbility()))`,
 	} {
 		source := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),ActionList([` + action + `]))])`

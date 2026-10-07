@@ -340,6 +340,9 @@ type grantRecipientSet struct{ subject PermanentRef }
 
 func (grantRecipientSet) permanentSet() {}
 func (s grantRecipientSet) resolvePermanents(ctx *EffectContext) []*Permanent {
+	if nilDefinition(s.subject) {
+		return nil
+	}
 	if p, ok := s.subject.resolvePermanent(ctx); ok {
 		return []*Permanent{p}
 	}
@@ -347,6 +350,11 @@ func (s grantRecipientSet) resolvePermanents(ctx *EffectContext) []*Permanent {
 }
 func (s grantRecipientSet) inspectDefinition() definitionNode {
 	return definitionNode{Role: "permanent-set", children: []definitionEdge{{"subject", s.subject}}}
+}
+
+// SingletonPermanent keeps the identity and legality checks of its reference.
+func SingletonPermanent(subject PermanentRef) PermanentSet {
+	return grantRecipientSet{subject}
 }
 
 func grantRecipient(subject PermanentRef) PermanentSet {

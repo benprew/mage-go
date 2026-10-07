@@ -349,7 +349,7 @@ func TestRONOpponentTargetsTriggerAndModes(t *testing.T) {
 func TestRONOpponentTargetsRecordFragments(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
 		{"DRK", "Preacher", "source control duration"},
-		{"PROMOS", "Arena", "SinglePermanent"},
+		{"PROMOS", "Arena", "Fight"},
 		{"LEG", "Nova Pentacle", "CreateFutureReplaceWouldDealDamage"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

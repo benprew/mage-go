@@ -4,6 +4,25 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
 	switch n.Name {
+	case "SinglePermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		ref, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.SingletonPermanent(ref.build(bindings))
+		}, nil
+	case "Ref_TargetPermanents":
+		ref, err := compilePermanentTargetsRef(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return bindings.permanentSets[ref]
+		}, nil
 	case "IsBlockingAttacker", "IsBlockedByDefender":
 		if err := arity(n, 1); err != nil {
 			return nil, err

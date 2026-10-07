@@ -1329,58 +1329,19 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "UntapEachPermanent":
+	case "TapEachPermanent", "UntapEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
-		if n.Args[0].Name == "Ref_TargetPermanents" {
-			collection, err := compilePermanentTargetsRef(n.Args[0], ctx)
-			if err != nil {
-				return nil, err
-			}
-			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.UntapEach(bindings.permanentSets[collection])
-			})
-		}
-		var controller *playerReferencePlan
-		filter, err := compileCountFilter(n.Args[0], ctx, &controller)
+		set, err := compileContextualCollection(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
 		return one(func(bindings instanceBindings) mage.Effect {
-			if controller != nil {
-				return mage.UntapEach(mage.PermanentsControlledBy(controller.build(bindings), filter))
+			if n.Name == "UntapEachPermanent" {
+				return mage.UntapEach(set(bindings))
 			}
-			return mage.UntapEach(mage.MatchingPermanents(filter))
-		})
-	case "TapEachPermanent":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		if containsCombatTarget(n.Args[0]) {
-			set, err := compileCombatCollection(n.Args[0], ctx)
-			if err != nil {
-				return nil, err
-			}
-			return one(func(bindings instanceBindings) mage.Effect { return mage.TapEach(set(bindings)) })
-		}
-		if n.Args[0].Name == "Ref_TargetPermanents" {
-			collection, err := compilePermanentTargetsRef(n.Args[0], ctx)
-			if err != nil {
-				return nil, err
-			}
-			return one(func(bindings instanceBindings) mage.Effect { return mage.TapEach(bindings.permanentSets[collection]) })
-		}
-		var controller *playerReferencePlan
-		filter, err := compileCountFilter(n.Args[0], ctx, &controller)
-		if err != nil {
-			return nil, err
-		}
-		return one(func(bindings instanceBindings) mage.Effect {
-			if controller != nil {
-				return mage.TapEach(mage.PermanentsControlledBy(controller.build(bindings), filter))
-			}
-			return mage.TapEach(mage.MatchingPermanents(filter))
+			return mage.TapEach(set(bindings))
 		})
 	case "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 		if err := arity(n, 1); err != nil {

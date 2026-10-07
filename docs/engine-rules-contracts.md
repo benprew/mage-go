@@ -5598,7 +5598,7 @@ queries, controller-local opponents, departure without LKI membership, new-objec
 membership and nil nested player declarations. `Declarations` verifies all new
 set nodes reject empty/nil operands and unbound player targets.
 
-RON lowers contextual predicates only in resolving return/destruction collections;
+RON lowers contextual predicates in resolving tap, untap, return and destruction collections;
 its permanent target owner adapter uses the existing `TargetYouOwn` service.
 `TestRONContextualCollectionObelisk`, `ObeliskLegality` and
 `CastingAndInventory` cover the full ATQ Obelisk of Undoing record: casting,
@@ -6504,3 +6504,44 @@ identity, affordability, control changes, return, phasing and clone isolation.
 partial and all-illegal resolution, malformed choices, source departure, copies,
 factory isolation and trigger/mode contexts. Replacement ordering, simultaneous
 operations and information reads retain their existing engine contracts.
+
+
+## Typed singleton references in resolving collections
+
+`SingletonPermanent(subject PermanentRef) PermanentSet` exposes the existing
+singleton selection used by granted activations. It stores a declaration, not a
+selected object. Nil and unbound target references fail definition validation.
+Selection delegates to the reference: source and target references retain their
+original incarnation; a live attachment reads its current host, and a departed
+or phased source uses the existing saved attachment relation. The selected host
+must still be a live original incarnation. LKI cannot supply an absent member.
+
+RON `SinglePermanent(ref)/1` and symbolic `Ref_TargetPermanents` are operands in
+contextual resolving collections. `And([collections])/1` intersects and
+`Or([collections])/1` unions references, live filters and existing contextual
+operands. Results contain each live incarnation once in battlefield order.
+`TapEachPermanent`, `UntapEachPermanent`, `DestroyEachPermanent`,
+`DestroyEachPermanentNoRegen`, and `PutEachPermanentIntoItsOwnersHand` share this
+compiler service. Existing typed target declarations are constructed per factory.
+The engine performs tap/untap and zone actions through existing simultaneous
+batches. No new payment, replacement, targeting or LKI policy is introduced.
+
+A singular reference can use the existing delayed capture service. Its identity
+is saved when the delayed trigger is created; later shroud does not make that
+saved reference a new target. Plural delayed target collections remain rejected.
+References cannot escape their ability or mode. This adapter does not add entry,
+cost, static, damage-collection or target-filter syntax.
+
+Evidence: `TestSingletonPermanentSet*` covers definition validation, source
+incarnation, phasing, control changes, pure selection, clone isolation and
+simultaneous tap. `TestRONReferenceCollection*` covers all four action consumers,
+union duplicates, current filtered plural membership, scope rejection, copied
+and independent targets, source/host identities, delayed captures and full RON
+Winter Blast partial legality. Existing real-card tests for Candelabra of Tawnos,
+Word of Binding, Mana Short, Reset, Feint, Arena of the Ancients and contextual
+return/destruction consumers remain required regression evidence. Arena and
+Volcanic Eruption remain rejected at Fight and destruction-result count,
+respectively. This prerequisite verifies neither complete card.
+
+Rules: CR 113.7a, 400.7, 608.2b/h and 702.26b-d. Existing target bindings,
+attachment relations, delayed captures and collection batches supply these rules.

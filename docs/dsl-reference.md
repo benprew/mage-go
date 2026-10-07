@@ -5523,3 +5523,26 @@ Evidence: `TestRONOpponentTargets*` and
 source-record target-fragment tests and explicit next-blocker checks. Those
 fragments establish targeting and original activation-cost behavior. They do
 not establish complete-card gameplay or permit partial production loading.
+
+
+## RON reference collections for resolving actions
+
+`SinglePermanent(ref)` is a typed contextual collection operand. Symbolic
+`Ref_TargetPermanents` uses its scoped numbered target group. Both can occur in
+nonempty `And([...])` and `Or([...])` compositions with existing live filters,
+controller/owner sets, attachments and combat relations. The action consumers
+are `TapEachPermanent`, `UntapEachPermanent`, `DestroyEachPermanent`,
+`DestroyEachPermanentNoRegen` and `PutEachPermanentIntoItsOwnersHand`.
+
+These forms use `mage.SingletonPermanent(PermanentRef) PermanentSet`, existing
+target sets, `IntersectPermanents` and `UnionPermanents`. The reference keeps its
+identity and legality checks; collection selection does not add targets. Each
+factory builds separate bindings. Action selection excludes absent and phased
+members and uses existing batch services. Existing saved attachment and singular
+delayed capture behavior remains in effect. Plural delayed target collections,
+unbound or incompatible references and empty compositions reject. These forms
+do not add support in costs, entry operations, static filters or damage sets.
+
+Evidence: `TestSingletonPermanentSet*`, `TestRONReferenceCollection*`, and the
+existing full RON tap/untap and contextual collection gameplay tests. Arena still
+needs Fight; Volcanic Eruption still needs its actual destruction-result count.

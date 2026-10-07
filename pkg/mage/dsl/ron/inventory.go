@@ -165,7 +165,7 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 	if role == "permanent_collection" && n.Kind != List {
 		if n.Name == "Ref_TargetPermanents" {
 			role = "permanent_collection_reference"
-		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" {
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "SinglePermanent" {
 			role = "permanent_filter"
 		}
 	}
@@ -779,11 +779,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
+		case "TapEachPermanent", "UntapEachPermanent":
+			if len(n.Args) == 1 {
+				return "permanent_collection"
+			}
 		case "ChooseAnyNumberPermanentsAndPayManaForEach":
 			if len(n.Args) == 2 {
 				return []string{"permanent_filter", "metadata"}[index]
 			}
-		case "TapEachPermanent", "UntapEachPermanent", "EachPermanentDoesntUntapDuringControllersNextUntap":
+		case "EachPermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				if n.Args[0].Name == "Ref_TargetPermanents" || n.Args[0].Name == "TheChosenPermanents" {
 					return "permanent_collection_reference"
@@ -1111,6 +1115,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "recipient"}[index]
 		}
 	case "permanent_collection":
+		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
 			return role
 		}

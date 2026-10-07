@@ -234,6 +234,10 @@
 // selects attachments on current host-set members with the same incarnation.
 // [PermanentsControlledByPlayers] permits a [PlayerSet] controller restriction.
 // Queries use the resolving context and cannot restore absent members with LKI.
+// Use [SingletonPermanent] to use a typed permanent reference in a collection.
+// It retains the reference's identity and legality checks. RON resolving tap,
+// untap, return and destruction collections can combine these references with
+// target collections and live filters through union and intersection.
 //
 // Mana payment plans save activation colors in [ManaTap] with
 // [ManaActivationPayment]. The saved payment prevents an activation from

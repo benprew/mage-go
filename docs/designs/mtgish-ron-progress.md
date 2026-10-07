@@ -32166,3 +32166,159 @@ Ranked next candidates to reassess:
 
 Complete collection loading/gameplay, runtime cutover, Go-card deletion and DSL
 cleanup remain unfinished. No second slice is started. Migration is incomplete.
+
+
+## 2026-10-07: typed references in contextual resolving collections
+
+Capability: `CONTEXTUAL-REFERENCE-COLLECTIONS`, complete for the shapes below.
+This run implements one shared prerequisite. It does not start a second slice.
+
+### Baseline and selection
+
+The working tree already contained user changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`. Those changes
+are preserved and excluded from this slice's commit. The ledger entry alone is
+staged against the committed ledger; the user's earlier ledger edits remain in
+the working tree. No card source or Go definition changed.
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+`go run ./cmd/loadcards -json` exited 1 as expected: 2,445 records, 1,863
+compiled, 582 rejected; 719 accepted and 267 rejected unique names. Strict
+collection rejection is separate from successful native build/tests. Fresh
+semantic inventory, complete records and nested expressions informed selection.
+
+| Candidate | Distinct affected cards and estimated complete unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| **Selected: scoped singleton/plural collection operands and tap/untap consumers** | Arena, Volcanic Eruption: **0** immediate full-card unlocks. Existing accepted tap/untap and return/destruction consumers provide regression evidence. | Arena still needs Fight; Volcanic Eruption still needs its actual destruction-result count. Supplies typed set operands to shared tap, untap, return and destruction, including mixed reference/filter union and intersection. Both incomplete cards then reach their last distinct action/result families. | Small: expose existing private singleton selection, lower two operand forms, consolidate existing action consumers, test reference and batch contracts. |
+| Chosen damage sources and next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible full-card unlocks. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage are additional distinct dependent consumers. | Must implement CR 609.7a enumeration (including departed objects referred to by pending effects), scoped choice identity and exact next-event shields first. Other four consumers need rounding, actual prevention results, reflection or redirection. Nova Pentacle and Personal Incarnation also depend on future redirection. | Large: enumeration/decision contract, per-instance bindings, replacement ordering, source identity, shield consumption and real-card tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** credible full-card unlocks after prerequisites. Gaea's Avenger is a sixth distinct consumer, excluded from unlock estimate. | Needs characteristic evaluation outside battlefield, owner/controller context, subtype/name counts and CDA/copy/layer contracts. Gaea's Avenger additionally needs Plus and a source-data correction. Enables later all-zone CDA/copy capabilities. | Large: all-zone query and characteristic services before compiler lowering and gameplay/copy tests. |
+| Bands with other grants/removal | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel: **5** possible unlocks only after the engine prerequisite. Shelkin Brownie, Tolaria and Master of the Hunt are three further distinct consumers. | No reusable bands-with-other service was found. Needs band formation and incoming/outgoing damage assignment contracts, filtered ability grants, token grants and removal. Ordinary banding is insufficient. | Large: combat and layer contracts before adapters. |
+
+The selected slice has the smallest coherent dependency-ready implementation
+and shares the same engine service across two concrete incomplete cards and
+multiple accepted consumers. It avoids implementing new combat, all-zone or
+replacement policy in the compiler. The zero immediate gain was explicit before
+editing; the two downstream blockers remain errors. No single-card executor was
+added. Candidate estimates were reassessed against full records, not only their
+first diagnostics. The earlier six-card CDA estimate was corrected to five after
+checking Gaea's Avenger's complete record and local Oracle data.
+
+### Supported contract, dependencies and reuse
+
+- `SinglePermanent(ref)/1`: a contextual collection operand using the existing
+  scoped permanent reference plan (source, host, singular/numbered target or
+  available event reference). Wrong arity, wrong type and unbound reads reject.
+- Symbolic `Ref_TargetPermanents`: the current scoped plural target declaration;
+  tuple spelling and delayed plural reads reject.
+- Nonempty `And([operands])/1` and `Or([operands])/1`: existing contextual
+  intersection/union now accepts the typed reference operands alongside live
+  filters, controller/owner collections, attachment sets and combat relations.
+- `TapEachPermanent(collection)/1` and `UntapEachPermanent(collection)/1` now
+  use `compileContextualCollection`, as do existing resolving return/destruction
+  actions. Entry, cost, static and damage-set contexts are unchanged.
+- `mage.SingletonPermanent(subject PermanentRef) PermanentSet` exposes the
+  existing `grantRecipientSet`; no parallel singleton evaluator is introduced.
+  Nil/unbound references fail definition validation. Runtime reads use the
+  existing reference's current identity/legality checks. Per-factory target plans
+  create separate declarations. No selected state is stored in the factory.
+- Existing `UnionPermanents`, `IntersectPermanents`, target sets, attachment
+  relations and delayed captures own selection, deduplication and incarnation
+  checks. Existing `TapEach`, `UntapEach`, return and destruction services own
+  simultaneous batches and replacement behavior. Costs use existing transactions.
+- Singular delayed references use the established capture service. Later shroud
+  does not create a new target check. Source departure and phasing retain the
+  original host relation; a returned Aura cannot redirect that relation to its
+  new host. An absent/returned host cannot be restored as a live member by LKI.
+
+Acceptance cases were specified before editing: invalid declarations, per-instance
+bindings, partial target legality, returned objects, phasing, clones and
+simultaneous actions. Tests first failed for unsupported SinglePermanent and
+Ref_TargetPermanents operands and Arena's earlier collection diagnostic; the
+engine test failed for the missing public singleton constructor. The initial
+test fixture needed sourceCaptured=true and an Aura subtype; those fixture
+errors were corrected. Host tests were aligned with the existing retained-host
+contract after reading its engine implementation. No engine identity policy was
+changed to satisfy a test.
+
+Old rejection assertions for Boolean controller/combat collections now use
+malformed or unbound declarations; positive gameplay tests explicitly cover the
+formerly rejected compositions. Old Arena diagnostic assertions now require
+Fight. Test strictness is retained for unsupported forms.
+
+### Card-to-test mappings and coverage
+
+| Cards/capability | Evidence |
+| --- | --- |
+| Singleton engine service | `TestSingletonPermanentSetSourceIdentity`, `Declaration`, `Batch`: pure source selection, nil/unbound declaration rejection, original incarnation, control change, phasing, clone isolation, no intermediate state during duplicate union tap. |
+| All resolving collection action consumers | `TestRONReferenceCollectionTargets`, `PluralIntersection`, `Invalid`, `ScopeIsolation`, `Inventory`: tap/untap/return/destruction, duplicates, current filter membership, partial legality, returned objects, shroud, phasing, clones, malformed references and ability/mode scope. |
+| Copies, sources, hosts and delayed capture | `TestRONReferenceCollectionInstancesAndCopy`, `SourceAndHost`, `DelayedCapture`: factory isolation, independent activations, retargeted copies, live reattachment, original departed/phased Aura host, absent/returned host, saved delayed identity and clone-local resolution. |
+| Generalized live controller/combat collections | `TestRONReferenceCollectionControllerUnion`, `CombatIntersection`: repeated operands, union, opponents and narrowed combat relations. |
+| Winter Blast | New `TestRONReferenceCollectionWinterBlast` executes the full repository RON record and checks partial legality shared by tap and damage, plus pending clone isolation. Existing `TestRONCollectionDamage*` retains full-record regression coverage. |
+| Word of Binding, Candelabra of Tawnos | Existing `TestRONNumberedTargets*`, `TestRONXActivation*` retain real RON targeting, payment/rollback, tap/untap, incarnation and clone evidence. |
+| Mana Short, Power Sink, Reset, Arena of the Ancients, Feint | Existing `TestRONManaDenial*`, `TestRONCastingWindow*`, `TestRONCollectionUntap*`, `TestRONCombatCollection*` retain their complete-record gameplay contracts. |
+| Return/destruction consumers | Existing `TestRONContextualCollection*` and `TestRONReturnCollection*` retain simultaneous return/destruction, ownership, attachments and replacement behavior. |
+| Arena, Volcanic Eruption | `TestRONReferenceCollectionDownstream` reads full records and proves continued rejection at Fight and destruction-result count. These are compiler dependency probes, not full-card gameplay claims. |
+
+**Estimated gain: 0 complete cards. Actual gain: 0.** Compilation acceptance
+remains 1,863/2,445 records and 719/986 unique names. Existing accepted-name and
+rejected-name sets are unchanged. Gameplay evidence expands for shared typed
+collection contracts and Winter Blast; collection-wide engine-validated and
+behavior-verified totals remain unmeasured. No compiler count is promoted to a
+complete gameplay claim.
+
+### Validation, diagnostics and source defects
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestSingletonPermanentSet\|TestRONReferenceCollection\|TestRONCombatCollection\|TestRONManaDenial\|TestRONContextualCollection\|TestRONOpponentTargets\|TestRONSingularGroups\|TestRONCollectionDamage\|TestRONNumberedTargets\|TestRONCastingWindow\|TestRONCollectionUntap\|TestRONXActivation' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` (skill verification) | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; changes reviewed, no additional files changed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,863 compiled / 582 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 719 accepted / 267 rejected unique names. |
+
+Focused and short tests were run after lint. All required checks passed. Earlier
+fixture failures were resolved; no test or check remains waived.
+
+Final loader diagnostics advance only for the two incomplete consumers:
+
+- Arena: `PROMOS.lines.ron:1:454: unsupported action (Fight)`.
+- Volcanic Eruption: `LEB.lines.ron:265:323: unsupported value
+  (TheNumberOfPermanentsPutIntoAPlayersGraveyardThisWay)` (the LEA probe also
+  reaches the same missing result).
+
+Semantic inventory remains 72,962 occurrences, 8,557 signatures and 5,186
+unknown-role occurrences. Tap/untap operand roles now reflect contextual
+collections and nested singleton references. All twelve source hashes match the
+vocabulary snapshot; no RON source changed, so no syntax snapshot refresh is
+needed.
+
+Source defect observed while comparing candidates: ATQ Gaea's Avenger has
+`ControlledByAPlayer(SinglePlayer(You))` in both CDA counts. Local authoritative
+`data/ATQ.json` Oracle text states that its P/T counts artifacts opponents control.
+This prevents claiming faithful support after CDA compilation alone. It is
+recorded for the future CDA slice and is not corrected here. Other earlier source
+defects remain outside this slice. No environment failure blocks this work.
+
+The removal gate remains closed: complete collection loading and gameplay,
+runtime startup wiring, Go-card/test migration and DSL caller cleanup remain.
+No Go card definitions or DSL functions were removed. Existing callers remain.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen damage-source enumeration/bindings and exact next-event shields: seven
+   clean consumers; four additional consumers need their distinct operations.
+2. Scoped actual destruction-result adapters shared by Volcanic Eruption and
+   Hellfire. Use existing engine result services; inspect value/context gaps first.
+3. All-zone count CDA prerequisite, then five clean cards and Gaea's Avenger
+   only after its data/count correction and Plus support.
+
+Changed implementation files: engine composable_costs.go, doc.go and new
+singleton_permanent_set_test.go; RON compiler.go, contextual_collection.go,
+inventory.go and new reference_collection_test.go; four existing RON regression
+files; API/rules documentation and this entry. This is one completed supported
+shape/context prerequisite. Migration remains incomplete.
