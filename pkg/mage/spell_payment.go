@@ -124,6 +124,11 @@ func (g *Game) modifySpellTotalCost(spec spellPaymentSpec, total ManaCost) (modi
 			break
 		}
 	}
+	for _, tax := range g.effects.Rules.spellCostTaxes {
+		if tax.applies(g, spec.Controller, spec.Card) {
+			addActionManaCost(&total, tax.increase)
+		}
+	}
 	for _, color := range cardColors(spec.Card) {
 		if reduction := g.effects.Rules.SpellCostReduction(color); reduction > 0 {
 			total.Generic = max(0, total.Generic-reduction)

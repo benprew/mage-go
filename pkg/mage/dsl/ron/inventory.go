@@ -299,6 +299,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_rule_operation":
+		if n.Name == "IncreaseSpellCost" && len(n.Args) == 2 {
+			return []string{"cost_spell_filter", "cost"}[index]
+		}
 		if n.Name == "CantUntapMoreThanNumberPermanentsDuringTheirUntapStep" && len(n.Args) == 2 {
 			return []string{"value", "permanent_filter"}[index]
 		}
@@ -306,6 +309,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"cost_spell_filter", "spell_cost_reduction"}[index]
 		}
 	case "cost_spell_filter":
+		if n.Name == "IsColor" && len(n.Args) == 1 {
+			return "color"
+		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}

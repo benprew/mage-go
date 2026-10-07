@@ -5720,3 +5720,24 @@ RON `DamageDealtToPlayerThisTurn(player)` uses the first value.
 second. Other source filters remain errors. References use existing resolution
 bindings, including target, scoped action and delayed player references. These
 values do not supply casting costs, entry amounts or static characteristics.
+
+### Static fixed mana increases
+
+Use `mage.IncreaseSpellCostStatic(filter, increase, controllerOnly)` with
+`WithStaticAbility` to add fixed generic or colored mana to matching spells.
+The increase uses the live source controller when `controllerOnly` is true;
+otherwise, it applies to all casters. Increases precede reductions in the shared
+spell payment transaction. It accepts nonnegative generic and W/U/B/R/G counts,
+including zero; X, hybrid mana and nil filters are invalid declarations.
+Source departure, phasing and ability removal stop the tax. A returned source
+starts a new instance. Stack copies require no extra payment.
+
+RON permanent rules support `PlayerEffect(You, [IncreaseSpellCost(filter,
+PayMana(mana))])` and `EachPlayerEffect(AnyPlayer, [IncreaseSpellCost(filter,
+PayMana(mana))])`. The operation list contains exactly one rule, and `mana`
+contains fixed mana symbols. Spell-cost filters support `AnySpell`, nonland
+`IsCardtype`, `IsColor` for W/U/B/R/G, and nonempty nested `And`/`Or`.
+`IsColor` reads card colors, including an indicator. It also works in the existing
+static generic-reduction context. This support does not include an
+`ActivatedAbilityEffect` tax. Derelor is a complete RON consumer; Gloom still
+requires that separate activation contract.

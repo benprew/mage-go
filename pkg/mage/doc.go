@@ -39,6 +39,10 @@
 // cast by the current controller. A phased or departed source cannot supply
 // the reduction. The saved source incarnation prevents a returned card from
 // restoring an old entry before the next layer pass.
+// Use [IncreaseSpellCostStatic] for fixed generic and colored spell taxes.
+// Increases apply before reductions in the shared total spell cost.
+// With controllerOnly, the source's current controller must cast the spell.
+// Source departure, phasing and ability removal stop the tax.
 // Use [DamageTakenThisTurn] or [ArtifactDamageTakenThisTurn] for a typed
 // player damage total at resolution. The total uses actual damage this turn
 // and the source types at the time of damage. Later type changes do not change it.

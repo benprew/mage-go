@@ -6775,3 +6775,45 @@ Evidence: `TestPlayerDamageHistoryValues`, `SourceInformation`, `TypesAndSpells`
 and `ReplacementOrdering`; `TestRONPlayerDamageHistoryCards`, `Bindings`,
 `CopyController`, `DelayedBinding`, `Invalid` and `RecordsAndInventory`.
 The real RON mappings cover all rules of Simulacrum and Reverse Polarity.
+
+## Fixed mana increases for static spell costs
+
+`IncreaseSpellCostStatic(filter SpellPredicate, increase core.ManaCost,
+controllerOnly bool) ContinuousEffect` adds fixed generic and colored mana to
+matching spell costs. With `controllerOnly`, the caster must be the source's
+current controller. Otherwise, the rule applies to every caster. Each source
+instance contributes once per matching spell, even if several filter alternatives
+match. Separate sources accumulate. Definition validation rejects nil filters,
+negative mana, X and hybrid declarations. A zero increase is valid.
+
+The shared continuous-effect pass registers each tax with its source incarnation.
+Payment ignores absent, phased or returned sources. Control changes use the live
+controller. Ability removal suppresses the printed tax through the existing layer
+and dependency service. Clones keep separate registration slices. No LKI permits
+an absent source to tax a new spell.
+
+The shared spell transaction adds these increases to the complete mana total
+before reductions (CR 601.2f). Generic reductions cannot pay colored increases.
+Additional costs, announced X and alternate costs keep their existing contracts.
+The total stays locked if the tax source leaves during payment. Failed payment
+cannot commit mana, sacrifice or stack changes. Copying a spell on the stack
+requires no payment. This changes no activation or resolution-payment costs and
+adds no replacement effect.
+
+RON supports `PlayerEffect(You, [IncreaseSpellCost(filter, PayMana(mana))])`
+and `EachPlayerEffect(AnyPlayer, [IncreaseSpellCost(filter, PayMana(mana))])`
+on permanent definitions. Each list must have one operation. `mana` is a list
+of fixed generic and W/U/B/R/G symbols. Filters reuse the spell-cost predicate
+compiler: `AnySpell`, nonland `IsCardtype`, nonempty nested `And`/`Or`, and
+`IsColor` for one of the five Magic colors. Color uses the existing card-color
+filter, including color indicators; it does not derive color solely from cost.
+The shared predicate compiler also permits these color filters for static generic
+reductions. Other player scopes, dynamic increases, nonmana costs, resolving
+durations, and activated-ability taxes remain unsupported.
+
+Evidence: `TestStaticSpellCostIncreasePayment`, `Lifecycle`, `Declarations`,
+and `StackingAndLock`; `TestRONSpellCostIncreaseDerelor`, `Lifecycle`, `Filters`,
+`Invalid`, and `RecordsAndInventory`. Derelor has complete gameplay evidence.
+Gloom's spell-tax rule compiles, but all six complete records remain rejected
+for `ActivatedAbilityEffect`. No complete Gloom gameplay claim is made.
+Rules: CR 400.7, 601.2f-h, 601.7, 611.3a-b and 702.26b.

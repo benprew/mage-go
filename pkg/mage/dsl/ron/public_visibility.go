@@ -14,6 +14,9 @@ func compileAllPlayerRule(n Node) (optionFactory, error) {
 		return nil, problem(n.Args[1], "supply one all-player rule operation")
 	}
 	operation := operations[0]
+	if operation.Name == "IncreaseSpellCost" {
+		return compileStaticSpellCostIncrease(n)
+	}
 	if operation.Name != "PlaysWithHandRevealed" && operation.Name != "PlaysWithTopOfLibraryRevealed" {
 		return compilePlayerUntapLimit(n)
 	}

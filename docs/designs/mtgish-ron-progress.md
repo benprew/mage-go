@@ -33390,3 +33390,174 @@ Changed files: `pkg/mage/player_damage_history.go` and its tests, `pkg/mage/doc.
 RON `player_damage_history.go` and its tests, `sacrifice_value.go`, `inventory.go`
 and `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
 and this appended ledger entry. No second slice started.
+
+## Run 2026-10-07: STATIC-SPELL-MANA-INCREASE
+
+Status: complete implementation slice. Stop after this slice. Complete loading,
+collection gameplay, startup cutover and removal gates remain unfinished.
+This entry's measurements supersede the older summary counts above.
+
+### Working tree and fresh candidate comparison
+
+The run began with user changes to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. Preserve all of those changes.
+Only this appended entry is staged from the ledger; its existing history move
+and link edits remain unstaged. No Go card requirements, removed card/set skills,
+Go stubs, card-name branches, fallback registries or delegated agents are used.
+The implement-engine skill supplies the reusable engine workflow.
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict
+loading exited 1 for collection rejection, not a build or test error: 2,445
+records, **1,880 compiled / 565 rejected**, **725 accepted / 261 rejected unique
+names**. Inventory: **72,962 occurrences / 8,557 signatures / 5,053 unknown-role
+occurrences**. Engine-validation and behavior totals remain null. The source
+snapshot, fresh inventory, complete nested candidate records, compiler and
+engine code, API/rules contracts and CR 400.7, 601.2f-h, 601.7, 611.3a-b,
+609.7a-b and 702.26b were inspected. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Implementation/test effort |
+| --- | --- | --- | --- |
+| Static fixed spell mana increases, selected | Derelor, Gloom: **1** immediate full-card unlock (Derelor), with **1** additional complete consumer (Gloom) after its separate activation tax. Seven records contain these spell-tax rules. | No exact shared typed colored-mana tax existed. Gloom also needs `ActivatedAbilityEffect` for white enchantments. Establishes fixed generic/colored increases for the source controller or every caster, live spell predicates, and total-cost ordering. | Small/medium: one typed engine effect and registered cost entries, shared payment/clone integration, two RON static scopes, declaration/payment/lifecycle/copy tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** full-card unlocks after the all-zone characteristic prerequisite and count adapters. Gaea's Avenger is an additional affected name, excluded from the clean estimate. | Needs owner/controller context outside the battlefield, all-zone characteristic evaluation, named counts, CDA/set/modify/copy order. Gaea's Avenger's own-controller artifact count remains a separate source defect; Wood Elemental has entry-payment blockers. | High: all-zone queries and characteristic service, compiler count/CDA lowering, broad zone/copy/layer tests and five complete gameplay mappings. |
+| Complete damage-source enumeration and chosen-source consuming shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** full-card unlocks after enumeration and shield adapters; **0** enumeration-only unlocks. | Existing choices accept explicit references rather than the complete CR 609.7a universe. Needs permanents, stack spells, referred objects, waiting effects/delays and face-up command objects, followed by exact source continuity and consuming prevention. Other source-choice consumers have additional operations. | High: source-universe contracts, scoped bindings, prevention rechecks/ordering/consumption and seven gameplay mappings. |
+
+The smaller static-tax boundary was selected for its credible gain relative to
+integration effort. It is a shared prerequisite for two distinct consumers,
+including Gloom's six reprints, rather than a card-specific execution rule.
+The multi-card alternatives require substantially broader engine services.
+The contract, reuse boundary, expected one-card gain and acceptance cases were
+stated before editing. Gloom was never counted as an immediate unlock.
+
+### Exact supported signatures, dependencies and reuse
+
+Engine: `IncreaseSpellCostStatic(filter SpellPredicate, increase core.ManaCost,
+controllerOnly bool) ContinuousEffect`.
+
+The fixed mana vector supports nonnegative generic and W/U/B/R/G counts,
+including zero. Declaration traversal rejects nil filters, negative counts,
+X/stray XCount and hybrid declarations. The shared continuous-effect service
+registers taxes per source incarnation, clears them each pass, and suppresses
+printed taxes after ability removal. Payment rechecks presence/incarnation and
+reads the live source controller. Phasing stops the tax; phase-in restores it.
+A returned source cannot revive an old entry. Each tax applies once even when
+several alternatives match; separate sources accumulate. Clone registration
+slices are independent. Permanent spell copying reuses the engine's existing
+separate static-source identities.
+
+`modifySpellTotalCost` adds these mana vectors after existing increases and
+before all reductions. Shared `addActionManaCost`, spell total-cost locking,
+additional/alternate costs, announced X, mana planning and payment rollback
+are reused. Generic reductions cannot erase colored requirements. Sacrificing
+a tax source during payment does not change the locked total. A spell copied
+on the stack pays nothing again. Activation and resolution-payment costs are
+unchanged; this adds no replacement effect or alternate payment system.
+
+RON permanent-definition contexts:
+
+- `PlayerEffect(You, [IncreaseSpellCost(filter, PayMana(mana))])/2`.
+- `EachPlayerEffect(AnyPlayer, [IncreaseSpellCost(filter, PayMana(mana))])/2`.
+- `IncreaseSpellCost(filter, PayMana(mana))/2`, one operation per parent list.
+- `mana` is the existing fixed generic and W/U/B/R/G symbol list; no X.
+- `filter` uses `AnySpell`, nonland `IsCardtype(type)/1`, `IsColor(color)/1`
+  for the five Magic colors, and nonempty nested `And(list)/1` or `Or(list)/1`.
+
+Color lowering reuses `HasColorCardFilter`, including card color indicators.
+The shared cost predicate compiler also permits that filter in the existing
+static generic-reduction context. RON owns spelling, scope and diagnostics;
+the engine owns registration, live source identity and total payment.
+Each factory constructs fresh static effects. Other player scopes, dynamic
+increases, nonmana tax payments, resolving durations, activation taxes and
+other rule contexts remain rejected. Inventory assigns complete roles to the
+new nested forms; it still labels gameplay support as unverified.
+
+### TDD and card-to-test mappings
+
+Initial engine tests failed for the missing tax constructor and registration
+field; RON gameplay failed for unsupported `IncreaseSpellCost`. One test fixture
+initially assigned two different concrete player types; it was corrected and
+the intended failures were confirmed before implementation. The first adapter
+used the mana-production compiler in place of the mana-cost parser; that build
+error was corrected to use the existing `manaCost` parser. No behavior assertion
+was removed. Two repository inventory assertions now use the fresh exact counts.
+The additional permanent-copy test passed through the existing copy service;
+no new copying subsystem was necessary.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Derelor, complete FEM record | `TestRONSpellCostIncreaseDerelor`: actual 3B casting and entry timing, 4/4 Thrull metadata, black versus white spells, caster versus opponent, colored payment and failure rollback. `Lifecycle`: two factory instances and stacking, phase cycle, live control, ability removal/cleanup, departure/return, clone isolation and actual four-point combat damage. `PermanentSpellCopy`: original and copied creature spells enter under separate controllers and independently tax each controller's black spells. |
+| Gloom, all six complete records | `TestRONSpellCostIncreaseRecordsAndInventory` verifies its spell-tax rule compiles and every full record still rejects `ActivatedAbilityEffect`. This is prerequisite compilation evidence only, not complete gameplay coverage. `Filters` executes the shared global generic-tax shape with all five color indicators and source departure. |
+| Shared compiler scopes and declarations | `TestRONSpellCostIncreaseFilters`: controller-only versus all-player scopes, nested spell predicates and all five indicators. `Invalid`: wrong player scopes, X, negative mana, malformed lists/arity, multiple operations, empty logical filters and malformed color symbols. `RecordsAndInventory`: fresh factories, definition validation, all real reprints, complete descendant roles, strict valid loading and atomic mixed-collection rejection. |
+| Engine fixed colored tax | `TestStaticSpellCostIncreasePayment`: both caster scopes, hand and alternate graveyard casts, additional mana and X, reductions after increases, colored payment, rollback and unpaid spell copies. `Lifecycle`: owner/controller distinction, live control, phase cycle, source removal/return and old-entry identity, ability removal and separate clones. `Declarations`: nil filter, negative counts, X/stray XCount and hybrid declarations. `StackingAndLock`: multiple taxes, multicolor filter counted once, underpayment rollback and source sacrifice after cost locking. |
+
+New complete-card gameplay mappings: **1** (Derelor). Compilation and gameplay
+coverage remain separate; whole-collection validated/behavior totals remain null.
+No collection-wide gameplay support is claimed.
+
+### Source evidence and actual measurements
+
+Local `data/FEM.json` Oracle text confirms Derelor's black-spell controller tax
+and additional B. `data/LEA.json` confirms both Gloom instructions: white-spell
+3 generic tax and white-enchantment activation 3 generic tax. No selected record
+has a source defect. No RON source was changed, and the vocabulary snapshot's
+twelve source hashes remain unchanged. Local `data/ATQ.json` also confirms that Gaea's Avenger must count opponents'
+artifacts, so its inspected own-controller RON count is excluded from the clean
+CDA estimate. Existing defects are not corrected in
+this slice; the syntax snapshot needs no source refresh.
+
+Estimated gain: **1 unique name / 1 record**. Actual gain: **1 / 1**, exactly
+Derelor. No previously accepted name is rejected. Final strict loading reports
+**1,881 compiled / 564 rejected records**, **726 accepted / 260 rejected names**.
+Gloom's six first errors advance from `IncreaseSpellCost` to
+`unsupported rule (ActivatedAbilityEffect)`; every other remaining diagnostic
+is unchanged. Strict loading exits 1 and installs no partial registry.
+Final inventory: **72,962 occurrences / 8,557 signatures / 5,012 unknown-role
+occurrences**. Forty-one nested occurrences gain roles without source changes.
+
+### Validation, removal gates and next work
+
+All required checks passed. There is no environment or pre-existing validation
+blocker. Lint changed import spacing and function formatting; those changes were
+reviewed. Short engine tests, full tests, build, vet and strict measurements were
+rerun after lint. The permanent-spell-copy gameplay test also passed with
+`-count=1` before lint and in the final suites.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestStaticSpellCostIncrease\|TestRONSpellCostIncrease' -count=1` | PASS after the expected TDD failures. |
+| Expanded focused engine/RON cost increase, cost reduction, total modifier, inventory and CLI tests, `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS, repeated after lint and the final copy test. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `go test ./... -short -count=1` (engine skill) | PASS. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS, including the appended ledger and staged diff. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,881 compiled / 564 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 726 accepted / 260 rejected names; counts above. |
+| Diagnostic and source-hash audit | Every other remaining diagnostic unchanged; all twelve snapshot source hashes match. |
+
+No Go definitions, startup callers or generators are removed. Complete RON
+loading, gameplay mapping and runtime wiring remain below the removal gate.
+No whole-repository caller audit authorizes DSL export removal. Existing engine
+services and callers are preserved. API/rules docs describe only the established
+static tax and shared filter behavior. No second slice is started.
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Shared static activation-cost modifiers: Gloom and Power Artifact, two
+   complete consumers. Power Artifact needs a generic reduction with a minimum
+   one-mana total; Gloom needs additive white-enchantment taxes. Integrate both
+   ordinary activation and mana-solver payment, zero-mana base costs, total
+   increases/reductions, source/host identity, layers and rollback before adapters.
+2. All-zone count CDAs for the five clean consumers named above; keep Gaea's
+   Avenger's source defect and Wood Elemental's entry payments separate.
+3. Complete CR 609.7a source enumeration, then consuming shields for the seven
+   clean Circle/Greater Realm consumers.
+
+Slice files: engine `spell_cost_increase.go`, its tests, `game_rules.go`,
+`clone.go`, `spell_payment.go`, `doc.go`; RON `spell_cost_increase.go`, its tests,
+`spell_cost_reduction.go`, `public_visibility.go`, `inventory.go`,
+`inventory_test.go`; `dsl-reference.md`, `engine-rules-contracts.md`, and only
+this appended progress entry. User edits and the completed-history file remain
+unstaged. The descriptive commit hash is reported in the final response.

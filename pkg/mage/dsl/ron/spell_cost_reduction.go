@@ -1,6 +1,8 @@
 package ron
 
 import (
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -24,6 +26,9 @@ func compilePlayerCostReduction(n Node) (optionFactory, error) {
 		return nil, problem(n.Args[1], "supply one spell cost reduction operation")
 	}
 	operation := operations[0]
+	if operation.Name == "IncreaseSpellCost" {
+		return compileStaticSpellCostIncrease(n)
+	}
 	if operation.Name != "DecreaseSpellCost" {
 		return nil, unsupported(operation, "player rule operation")
 	}
@@ -68,6 +73,18 @@ func compileCostSpellFilter(n Node) (mage.SpellPredicate, error) {
 		return nil, err
 	}
 	switch n.Name {
+	case "IsColor":
+		value, err := color(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		if value == core.Colorless {
+			return nil, problem(n.Args[0], "spell color requires one of the five Magic colors")
+		}
+		filter := mage.HasColorCardFilter(value)
+		return func(_ *mage.Game, _ uuid.UUID, card mage.Card, _ uuid.UUID) bool {
+			return filter.Match(card)
+		}, nil
 	case "IsCardtype":
 		kind, err := cardType(n.Args[0])
 		if err != nil {
