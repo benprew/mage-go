@@ -4908,3 +4908,34 @@ that the restoration ability cannot cause a total above four or seven. This is
 not the static maximum in CR 122.4. No collection or simultaneous placement
 shape is added. `TestAddCountersUpTo*` and `TestRONBoundedCounters*` establish
 bounds, choice timing, incarnation, phasing, clones and replacement behavior.
+
+## Static prevention from sources with a card type
+
+`PreventDamageFromCardType(subject PermanentRef, kind core.CardType) StaticRule`
+uses the same live subject, source incarnation, cycle replacement, definition
+validation and clone services as static combat prevention. It prevents combat
+and noncombat damage with no amount limit. Nil or undeclared subjects and card
+types outside the engine enum fail validation. The RON adapter accepts only
+`IsCardtype(type)` with a source or declared Aura host in a static rule.
+
+The damage-source type check reads current characteristics while the original
+permanent is present, retained characteristics after departure or phasing, and
+the captured card for a spell source. Unknown captured permanent incarnations
+cannot use a later UUID match. UUID-only legacy actions retain live lookup.
+An Aura follows its current attachment. Recipient ability removal does not erase
+an Aura's rule; source ability removal does. Source departure or phasing stops
+the rule, and a returned source cannot restore an old replacement entry.
+
+Matching is repeated after other replacements. Source-type changes, source
+phasing, and redirection can change applicability. The shared damage pipeline
+retains affected-player choices, simultaneous packets, unpreventable damage and
+recipient incarnation checks. This slice adds no choice, cost, allocation,
+source-enumeration, next-event shield, or spell-to-permanent link contract.
+Existing permanent-only prevention filters retain their spell exclusion.
+
+Evidence: `TestStaticSourceTypePrevention`, `Declarations`, `LiveHost` and
+`Recheck`; `TestRONStaticSourceTypePreventionTreefolk`, `SpellsAndActivations`,
+`Host`, `Invalid`, `Ordering`, `StrictInventory`, `Combat` and `Instances`.
+The RON Treefolk tests use its entire repository record. Host tests use a
+synthetic RON Aura fixture; they do not claim complete Artifact Ward support.
+Rules: CR 400.7, 609.7c, 611.3a–b, 615.1–6, 615.12, 616.1/616.1f and 702.26b–i.

@@ -433,6 +433,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
+	case "damage_source_filter":
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
 	case "card_filter":
 		if n.Name == "IsColor" || n.Name == "IsNonColor" {
 			if len(n.Args) == 1 {
@@ -516,6 +520,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "token_subtype"
 		}
 	case "prevention_event":
+		if n.Name == "DamageWouldBeDealtByASourceToRecipient" && len(n.Args) == 2 {
+			return []string{"damage_source_filter", "prevention_recipient"}[index]
+		}
 		if n.Name == "NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient" && len(n.Args) == 2 {
 			return []string{"value", "prevention_recipient"}[index]
 		}

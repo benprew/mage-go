@@ -7,6 +7,9 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "DamageWouldBeDealtByASourceToRecipient" {
+		return compileStaticSourceTypePrevention(n, ctx)
+	}
 	if event.Name == "Or" || event.Name == "CombatDamageWouldBeDealtByCreature" || event.Name == "CombatDamageWouldBeDealtToRecipient" || event.Name == "CombatDamageWouldBeDealtByACreatureToRecipient" {
 		operations, err := list(n.Args[1])
 		if err != nil {

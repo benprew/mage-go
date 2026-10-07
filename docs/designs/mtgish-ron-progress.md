@@ -24239,3 +24239,161 @@ Ranked next candidates to reassess with fresh evidence:
    declaration across multiple attackers before accepting adapters.
 
 No second slice is started.
+
+## Run 2026-10-06: STATIC-SOURCE-TYPE-PREVENTION
+
+Status: complete implementation slice. Stop after this slice. Initial user
+changes were `.gitignore`, the execution design, this ledger's history
+reorganization, and untracked `mtgish-ron-completed.md`. Preserve all of them.
+The commit adds this entry to the HEAD ledger; the user's existing ledger
+reorganization stays in the working tree.
+
+### Evidence, candidates and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, complete candidate records, selected compiler/engine services,
+API/rules contracts, and CR 400.7, 609.7c, 611.3a–b, 615, 616.1 and 702.26b–i.
+Fresh baseline compiler tests (`-count=1`) and `make build` passed. Strict loader
+exited 1 with **1,746 compiled / 699 rejected records; 657 accepted / 329 rejected
+unique names**, independently of build success. Reprints count once. A fresh
+semantic report before the role adapter confirmed 72,954 nodes / 8,543 signatures
+and 6,431 unknown-role occurrences. Source syntax was unchanged.
+
+| Candidate | Affected unique names; estimated complete unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Static prevention by source card type, selected | Argothian Treefolk and Artifact Ward; **1 complete name / 1 record** now, 2 direct prevention consumers. | Treefolk has only this rule. Ward also has supported enchant/blocking clauses and an unsupported artifact-source ability-target restriction. Establishes live self/host prevention and exact source-type matching for permanent and spell damage; supplies source-property behavior for later artifact defenses and prevention work. | Low/medium: extend existing static prevention lifecycle; one type matcher and validated adapter; shared identity, spell, host, batch and ordering tests. |
+| Activation-history mana conversion | Farrelite Priest and Initiates of the Ebon Hand; **2 eventual names / 2 records**, zero with only the compiler guard removed. | Full bodies need repeated untapped/summoning-sick mana conversion in the solver, exact generic costs, immediate execution, activation counts and delayed sacrifice. Existing solver sources require a tap and are consumed once. Enables other non-tap costed mana sources. | High: planning/search bounds, execution metadata, pure affordability, repeated activation and transactional rollback contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5 eventual names / 20 records**, zero with only a layer adapter. | Full records need characteristics outside the battlefield, owner/controller context and CDA/copy integration. Gaea's Avenger has the previously recorded controller source defect; Wood Elemental has separate entry payment/saved-result blockers. Enables reusable characteristic evaluation in all zones. | High: characteristic services and zone, copy, control and layer contracts. |
+
+Selection: the chosen capability is shared by two distinct records, has one
+credible immediate full-card gain, and reuses substantially more established
+engine behavior than the larger alternatives. It is not a card-name-specific
+implementation. The comparison uses complete records and nested bodies rather
+than first errors. The smaller shared prerequisite is complete for its declared
+shape/context; Artifact Ward remains explicitly rejected at its next blocker.
+Contract, reuse boundary and acceptance cases were stated before edits. The
+`implement-engine` skill was used for the engine prerequisite. No delegation,
+removed skill, Go-card requirement, fallback or production allowlist was used.
+
+### Exact signatures and contracts
+
+Engine: `PreventDamageFromCardType(subject PermanentRef, kind core.CardType)
+StaticRule`. Compose with `Static`. Valid card types are the engine enum;
+nil/undeclared subjects and invalid types fail definition validation. The source
+must be an active original battlefield incarnation. `This` protects that source;
+`AttachedPermanent` follows the current host. The shared rule checks these
+identities on every proposed damage event, including after another replacement.
+
+RON static declaration:
+`PreventDamage(DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),
+Permanent(subject)), [PreventThatDamage])`. Exactly two event arguments, one
+valid type symbol, one typed subject and one symbol operation are required.
+Subjects are `ThisPermanent` or a declared Aura's `HostPermanent`. Targets,
+event refs, unbound hosts, player recipients, malformed arities, other filter
+shapes, alternate operations and resolving/cost contexts reject. Source-type
+syntax has a separate inventory role, `damage_source_filter`; its operand has
+role `card_type`. This does not claim other source-filter shapes.
+
+RON owns spelling, shape/scope validation, diagnostics and lowering. The engine
+owns live subject resolution, exact damage-source type matching, static lifecycle
+and replacement execution. Existing static combat prevention now shares private
+`staticDamagePrevention*` types with this rule. Its public API and combat-only
+behavior stay unchanged. No mutable choice or game state enters the factory.
+
+Damage filters read current types while the original source permanent is live,
+retained types after departure/phasing, and the captured card for spell sources.
+Unknown captured permanent incarnations cannot fall back to another UUID visit.
+Legacy UUID-only actions retain live lookup. Both combat and noncombat packets
+can be prevented repeatedly; other recipients and nonmatching types receive
+damage. Source-type changes and redirection are rechecked. The affected recipient
+chooses the replacement order. Unpreventable damage still uses the shared rule.
+Source ability removal ends prevention; removing a host's abilities does not
+remove an Aura's separate rule. Attachment/control changes, phasing/phase cycles,
+source departure/return, copies and game clones use existing identity services.
+
+No new targeting, source choice, next-event consumption, spell-entry link,
+allocation, timing, cost, LKI storage or simultaneous-operation service is added.
+The existing shared services provide those applicable contracts. Accepted
+permanent-only prevention still excludes captured spell sources.
+
+### TDD and card-to-test mapping
+
+The first engine test failed for missing `PreventDamageFromCardType`. The full
+Treefolk record independently failed for unsupported
+`DamageWouldBeDealtByASourceToRecipient`. The semantic test failed for missing
+`damage_source_filter` before inventory traversal was added. One fixture used a
+nonexistent card type-removal method and was corrected before confirming the
+engine API failure. A host fixture initially omitted its Aura subtype; it now
+supplies the subtype in RON before compilation. A Catapult test removed flying
+and therefore invalidated the target; ability-removal evidence instead uses
+legal direct damage and host/instance tests. No requirement was weakened.
+
+| Card/contract | Tests |
+| --- | --- |
+| Argothian Treefolk, complete repository record | `TestRONStaticSourceTypePreventionTreefolk`: definition validation, unpaid casting, exact cost, entry timing, 3/5 metadata, repeated matching and nonmatching damage. `Combat`: native attack/block damage. `SpellsAndActivations`: real RON Grapeshot Catapult activation, original-source departure/return/phasing, ability copies, game clones and an artifact instant declared in a synthetic RON fixture. `Instances`: separate static ability declarations and self ability removal. |
+| Artifact Ward prevention clause, not full-card coverage | `Host`: synthetic RON Aura with the exact prevention shape, cast/attachment, reattachment, host/source return/phasing, recipient/source ability removal, control changes and cloned execution. `StrictInventory`: entire actual Ward record reaches its remaining restriction error; strict mixed load publishes no registry. No rule is omitted from a production factory. |
+| Reusable engine contract | `TestStaticSourceTypePrevention`: combat/noncombat, repeat and simultaneous packet scope, spell/permanent/nonmatching sources, current type changes, LKI, return/phasing, unknown identities and unpreventable damage. `Declarations`: invalid types, nil/undeclared refs and static targets. `LiveHost`: attachment, source/host lifecycle, ability removal, controller changes and clone isolation. `Recheck`: type gain/loss, rule phasing/return and redirection inside a competing replacement. |
+| Replacement order, loading and reporting | `TestRONStaticSourceTypePreventionOrdering`: both affected-player orders and redirect recheck. `Invalid`: malformed/unbound/incompatible and wrong-context declarations. `StrictInventory`: distinct roles, exact remaining diagnostic, validated factories, reprint deduplication and atomic registry preservation after rejected loading. Existing combat/permanent-only prevention tests pass. |
+
+Compilation and gameplay remain separate: this adds one complete-card behavior
+mapping plus one shared host-context contract, not complete Artifact Ward coverage.
+Collection-wide behavior and engine-validation counts remain null.
+
+### Results, defects and gates
+
+Actual gain equals estimate: **Argothian Treefolk, 1 name / 1 record**. No accepted
+name regressed. Final loader: **1,747 compiled / 698 rejected records; 658 accepted
+/ 328 rejected unique names**. Both strict and inventory commands exit 1 for
+remaining collection gaps. Inventory remains 72,954 nodes / 8,543 signatures;
+unknown-role occurrences decrease from 6,431 to **6,423**.
+Artifact Ward now reports `ATQ.lines.ron:9:431: unsupported self untap source
+(HostPermanent)` in its `CantBeTheTargetOfAbilities(AbilityOfASource(...))` clause.
+This diagnostic comes from existing rule dispatch; it does not describe an
+untap requirement. The complete record remains rejected.
+
+Local `data/ATQ.json` Oracle text confirms the source-wide prevention in both
+records. No source defect was found or corrected in this slice. All 12 RON hashes
+still match the vocabulary snapshot; no vocabulary source refresh is needed.
+Known Gaea's Avenger defects remain outside scope. Source enumeration, count
+CDAs and repeated mana conversion remain unsupported. No Go card definitions,
+startup callers, generators or DSL functions are removed: collection loading,
+gameplay mappings and runtime cutover have not met their removal gates.
+
+### Validation and changed files
+
+Required checks pass. `make lint` automatic formatting changes were reviewed;
+affected tests were rerun after lint. There is no environment or pre-existing
+check blocker. Loader rejection is the expected collection result.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`; `make build` | PASS. |
+| Focused engine/compiler/CLI tests with `-count=1` for source-type, static combat/permanent prevention and inventory | PASS after confirmed TDD failures and fixture corrections. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| Post-lint `go test ./... -short -count=1` and affected focused tests | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1; counts and diagnostic above. |
+| Source hash audit | All 12 unchanged. |
+
+Changed files: engine `static_combat_prevention.go`,
+`static_source_type_prevention_test.go` and `doc.go`; RON
+`static_source_type_prevention.go` and tests, `static_prevention.go`,
+`inventory.go` and inventory count expectations; API/rules contract docs and
+this ledger entry. The commit hash is reported in the final response.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration and next-event prevention for the six Circles of
+   Protection and Greater Realm of Preservation: seven eventual names. This
+   slice supplies a source-type static contract, but not enumeration or shields.
+2. All-zone count CDAs for the five direct consumers listed above; preserve
+   separate source-data and Wood Elemental payment blockers.
+3. Repeatable non-tap mana conversion with activation history for Farrelite
+   Priest and Initiates of the Ebon Hand: two complete consumers after the
+   solver/execution prerequisites. Do not remove the compiler guard alone.
+
+No second slice is started.

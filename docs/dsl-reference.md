@@ -4228,3 +4228,22 @@ identity, target legality, copies, clones, replacement ordering and instances.
 `TestRONEndCombatClockwork` and `TestRONEndCombatInterveningIdentity` now use
 complete records for entry, characteristics and combat-history interactions.
 Other counter instructions and restriction shapes remain errors.
+
+## Static prevention by source card type
+
+`mage.PreventDamageFromCardType(subject mage.PermanentRef, kind core.CardType)
+mage.StaticRule` prevents combat and noncombat damage from sources with the
+specified card type. Compose it with `mage.Static`. The subject is live: `This`
+protects the ability source, and `AttachedPermanent` follows the current host.
+Invalid card types, nil subjects, and undeclared bindings fail definition
+validation. Source types use the exact damage source's current or retained
+information. Captured spells can match; a returned permanent cannot replace an
+older source. The rule uses the existing static lifecycle and damage pipeline.
+
+RON accepts the static rule
+`PreventDamage(DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),
+Permanent(subject)), [PreventThatDamage])`, where `subject` is `ThisPermanent`
+or a declared Aura's `HostPermanent`. Other filter shapes and resolving
+contexts remain unsupported. Argothian Treefolk uses the complete shape.
+Artifact Ward uses its host context, but its separate ability-target restriction
+still prevents complete loading.

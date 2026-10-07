@@ -6,46 +6,61 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type staticCombatPreventionRule struct {
-	subject  PermanentRef
-	from     PermanentFilter
-	outgoing bool
+type staticDamagePreventionRule struct {
+	subject    PermanentRef
+	from       PermanentFilter
+	outgoing   bool
+	allDamage  bool
+	sourceType core.CardType
 }
 
 // PreventCombatDamageFrom prevents combat damage from the current subject.
 func PreventCombatDamageFrom(subject PermanentRef) StaticRule {
-	return staticCombatPreventionRule{subject: subject, outgoing: true}
+	return staticDamagePreventionRule{subject: subject, outgoing: true}
 }
 
 // PreventCombatDamageTo prevents matching combat damage to the current subject.
 // A zero source filter permits every source.
 func PreventCombatDamageTo(subject PermanentRef, from PermanentFilter) StaticRule {
-	return staticCombatPreventionRule{subject: subject, from: from}
+	return staticDamagePreventionRule{subject: subject, from: from}
 }
 
-func (staticCombatPreventionRule) staticRule() {}
-func (r staticCombatPreventionRule) inspectDefinition() definitionNode {
-	return definitionNode{Role: "static-rule", Text: "prevent combat damage", battlefieldSource: true, children: []definitionEdge{{"subject", r.subject}}}
-}
-func (r staticCombatPreventionRule) staticEffects() []ContinuousEffect {
-	return []ContinuousEffect{&staticCombatPreventionEffect{funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect), rule: r}}
+// PreventDamageFromCardType prevents damage from sources with the specified type.
+// The rule reads the current subject so an Aura can change its attachment.
+func PreventDamageFromCardType(subject PermanentRef, kind core.CardType) StaticRule {
+	return staticDamagePreventionRule{subject: subject, allDamage: true, sourceType: kind}
 }
 
-type staticCombatPreventionEffect struct {
+func (staticDamagePreventionRule) staticRule() {}
+func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
+	node := definitionNode{Role: "static-rule", Text: "prevent combat damage", battlefieldSource: true, children: []definitionEdge{{"subject", r.subject}}}
+	if r.allDamage {
+		node.Text = "prevent damage from a card type"
+		if r.sourceType < core.TypeCreature || r.sourceType > core.TypePlaneswalker {
+			node.problem = "supply a valid damage source card type"
+		}
+	}
+	return node
+}
+func (r staticDamagePreventionRule) staticEffects() []ContinuousEffect {
+	return []ContinuousEffect{&staticDamagePreventionEffect{funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect), rule: r}}
+}
+
+type staticDamagePreventionEffect struct {
 	*funcContinuousEffect
-	rule staticCombatPreventionRule
+	rule staticDamagePreventionRule
 }
 
-func (e *staticCombatPreventionEffect) inspectDefinition() definitionNode {
+func (e *staticDamagePreventionEffect) inspectDefinition() definitionNode {
 	return e.rule.inspectDefinition()
 }
-func (e *staticCombatPreventionEffect) cloneEffect() ContinuousEffect {
+func (e *staticDamagePreventionEffect) cloneEffect() ContinuousEffect {
 	cloned := *e
 	inner := *e.funcContinuousEffect
 	cloned.funcContinuousEffect = &inner
 	return &cloned
 }
-func (e *staticCombatPreventionEffect) ApplyContinuous(ctx *EffectContext) error {
+func (e *staticDamagePreventionEffect) ApplyContinuous(ctx *EffectContext) error {
 	if nilDefinition(e.rule.subject) {
 		return nil
 	}
@@ -58,7 +73,7 @@ func (e *staticCombatPreventionEffect) ApplyContinuous(ctx *EffectContext) error
 	if !ok {
 		return nil
 	}
-	ctx.Game.effects.AddCycleReplacement(&staticCombatPreventionReplacement{
+	ctx.Game.effects.AddCycleReplacement(&staticDamagePreventionReplacement{
 		replacementBase:   replacementBase{sourceID: source.ID()},
 		sourceIncarnation: source.incarnationID,
 		rule:              e.rule,
@@ -66,13 +81,13 @@ func (e *staticCombatPreventionEffect) ApplyContinuous(ctx *EffectContext) error
 	return nil
 }
 
-type staticCombatPreventionReplacement struct {
+type staticDamagePreventionReplacement struct {
 	replacementBase
 	sourceIncarnation uuid.UUID
-	rule              staticCombatPreventionRule
+	rule              staticDamagePreventionRule
 }
 
-func (r *staticCombatPreventionReplacement) Matches(action Action, reader GameReader) bool {
+func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameReader) bool {
 	// The source can phase out before the next layer cycle.
 	g := reader.(*Game)
 	source := g.FindPermanent(r.sourceID)
@@ -86,7 +101,10 @@ func (r *staticCombatPreventionReplacement) Matches(action Action, reader GameRe
 	}
 	id, incarnation := subject.ID(), subject.incarnationID
 	identity := NewPermanentFilter("current prevention subject", func(p *Permanent, _ *Game) bool { return p.ID() == id && p.incarnationID == incarnation })
-	match := &damagePreventionRuleReplacement{combatOnly: true}
+	match := &damagePreventionRuleReplacement{combatOnly: !r.rule.allDamage}
+	if r.rule.allDamage && !damageSourceHasCardType(action, g, r.rule.sourceType) {
+		return false
+	}
 	if r.rule.outgoing {
 		match.from = identity
 	} else {
@@ -95,10 +113,10 @@ func (r *staticCombatPreventionReplacement) Matches(action Action, reader GameRe
 	}
 	return match.Matches(action, reader)
 }
-func (*staticCombatPreventionReplacement) Replace(Action, *Game) Action { return nil }
-func (*staticCombatPreventionReplacement) IsActive(GameReader) bool     { return true }
-func (*staticCombatPreventionReplacement) IsPreventionEffect() bool     { return true }
-func (r *staticCombatPreventionReplacement) Clone() ReplacementEffect   { cloned := *r; return &cloned }
+func (*staticDamagePreventionReplacement) Replace(Action, *Game) Action { return nil }
+func (*staticDamagePreventionReplacement) IsActive(GameReader) bool     { return true }
+func (*staticDamagePreventionReplacement) IsPreventionEffect() bool     { return true }
+func (r *staticDamagePreventionReplacement) Clone() ReplacementEffect   { cloned := *r; return &cloned }
 
 // DamageSourceIsEnchanted reads the source's current or retained Aura status.
 // A returned permanent cannot replace the departed source's information.
@@ -114,4 +132,21 @@ func DamageSourceIsEnchanted() PermanentFilter {
 		information := g.zones.LKIByIncarnation(p.incarnationID)
 		return information != nil && information.ID == p.ID() && information.Enchanted
 	})
+}
+
+func damageSourceHasCardType(action Action, g *Game, kind core.CardType) bool {
+	var source DamageSource
+	switch damage := action.(type) {
+	case *DamageToCreatureAction:
+		source = damage.DamageSource()
+	case *DamageToPlayerAction:
+		source = damage.DamageSource()
+	default:
+		return false
+	}
+	if permanent := g.damageFilterSource(action.ActionSource(), source); permanent != nil {
+		return permanent.HasType(kind)
+	}
+	// A saved permanent must not use a later visit of the same card.
+	return source.Valid() && source.ID() == action.ActionSource() && source.Incarnation() == uuid.Nil && source.HasType(kind)
 }

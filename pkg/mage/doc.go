@@ -131,6 +131,11 @@
 // Absent, returned and phased-out targets do not qualify. Copies use their own
 // stack identity and controller. Combine card filters to restrict the spell type.
 //
+// Use [PreventDamageFromCardType] with [Static] for damage from sources
+// with a specified card type. The current subject can be [This] or
+// [AttachedPermanent]. Source types use current or retained information for
+// the exact object, including spell sources. This rule has no damage limit.
+//
 // Use [PreventCombatDamageFrom] and [PreventCombatDamageTo] with [Static]
 // for live combat prevention. [AttachedPermanent] follows the current host.
 // The rule checks source presence and incarnation for each damage event.
