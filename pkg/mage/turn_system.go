@@ -18,6 +18,7 @@ type TurnSystem struct {
 	firstUpkeepEnded     bool
 	pendingStepLifeGains []LifeGainAction
 	turn                 int
+	turnStarts           [2]int
 	step                 PhaseStep
 	activePlayer         int // index into players
 	extraTurns           []uuid.UUID
@@ -47,6 +48,7 @@ func (ts TurnSystem) Clone() TurnSystem {
 		firstUpkeepEnded:     ts.firstUpkeepEnded,
 		pendingStepLifeGains: slices.Clone(ts.pendingStepLifeGains),
 		turn:                 ts.turn,
+		turnStarts:           ts.turnStarts,
 		step:                 ts.step,
 		activePlayer:         ts.activePlayer,
 		skipNextUntap:        cloneUUIDMap(ts.skipNextUntap),

@@ -30992,3 +30992,159 @@ Ranked next candidates to reassess with fresh evidence:
    declaration paths and maximum requirement satisfaction.
 
 No second slice is started. Migration completion criteria remain unmet.
+
+## 2026-10-07: hand and continuous-control activation restrictions
+
+Status: completed implementation slice `ACTIVATION-HAND-CONTROL-GATES`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and this progress ledger, and the untracked completed-history
+file are preserved. The commit includes only this appended ledger entry, not
+the user's ledger reorganization.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Fresh strict loading exited 1 for unsupported records: **1,845 compiled /
+600 rejected records**, **711 accepted / 275 rejected unique names**.
+Semantic inspection found **72,962 occurrences / 8,557 signatures / 5,229
+unknown-role occurrences**. All candidate records and nested forms were read;
+reprints count once. The architecture, vocabulary snapshot, prior ledger,
+engine reference, selected compiler and engine services, API/rules contracts,
+local ARN/ATQ Oracle data, and CR 400.7, 500.7, 500.11, 602 and 608 were read.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Hand/control activation gates, selected | Library of Alexandria, Rocket Launcher: **2** unique cards / **3** records. | Both complete records otherwise use supported mana, draw, targets, damage and delayed destruction. Investigation exposed a shared continuous-control turn-history defect; fix it before lowering. Enables pure announcement and mana-planning gates with exact hand counts and source/host control history. | Low/medium: two validated adapters, small shared turn-history correction, real gameplay, declarations, native execution, planning, clone and allocation contracts. |
+| Battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean eventual unlocks, **0** adapter-only unlocks. Gaea's Avenger is a sixth affected name excluded from the estimate. | All-zone characteristic context and CDA layer/copy contracts remain missing. Plague Rats also needs named counts. Gaea's Avenger's recorded opponent-versus-own artifact source defect remains unresolved. Enables all-zone characteristics and count consumers. | High: shared characteristic evaluation and layer/query integration before five complete gameplay mappings. |
+| Chosen-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** eventual unlocks, **0** adapter-only unlocks. | Full records need a typed source choice, saved source identity, and one-event prevention. CR 609.7a departed referenced objects and permanent spells require explicit support. Enables repeatable shields and later source-choice consumers; Dark Sphere, Reverse Damage and Jade Monolith have additional blockers and are excluded. | High: decision/identity services, shield consumption, replacement rechecks and ordering, simultaneous packets, copy/clone and seven-card gameplay. |
+
+Selection: the two complete consumers have the largest credible gain for the
+smallest dependency-ready effort. The engine prerequisite increased the estimate
+from adapter-only work but remained small. First-error frequency was not used as
+an unlock estimate. The contract, reuse boundary and acceptance cases were
+stated before edits. The `implement-engine` skill was applied only to the shared
+engine prerequisite. No removed card skill, Go card requirement, stub, card-name
+branch, fallback, skipped record or partial production registry was used.
+
+### Exact signatures, contexts and engine reuse
+
+Activation modifiers:
+
+- `ActivateOnlyIf(PlayerPassesFilter(You,
+  NumCardsInHandIs(EqualTo(Integer(n)))))`, with nonnegative integer literal `n`.
+- `ActivateOnlyIf(PermanentPassesFilter(subject,
+  ControlledSinceBeginningOfMostRecentTurn))`, with a bare predicate and bare
+  `ThisPermanent`, or `HostPermanent` in an Aura declaration.
+
+These forms work with ordinary and modal activated bodies and existing nested
+modifier `And` lists. They lower to `WithActivationStateCondition` with
+`ControllerHandSizeIs(n)` and `ControlledSinceTurnStart(subject)`. Other hand
+comparisons, dynamic values, player references, malformed arities, tuple predicate
+spellings, target/event reads and non-Aura hosts remain declaration errors.
+Resolving and static property filters do not gain these predicates.
+Inventory assigns the hand predicate/comparison/value/literal roles below the
+activation player filter, including descendants of unsupported parents.
+RON owns spelling, role validation and lowering. The engine owns pure checks,
+transactional payment, live identity, source/host presence, current controller,
+mana planning and classification, stack copies, delayed capture and cloning.
+Restrictions do not repeat during resolution or stack copying.
+
+Engine prerequisite: the old `Permanent.ControlledSinceTurnStart` compared its
+control-gain stamp with the current global turn, incorrectly granting permission
+on the opponent's next turn. It now compares with
+`TurnReader.MostRecentTurnStart(uuid.UUID) int`. `TurnSystem` owns a fixed
+`[2]int` of observed starts; cloning copies it by value. Native `RunTurn` records
+the active turn before step scheduling, and direct `RunStepWithPriority` records
+it before step actions. Untap can be skipped without losing the start. Skipped
+turns in `Run` do not execute these paths. Public setup setters save the prior
+active turn before changing turn/player. The pure reader returns the current
+turn for the active player, stored start for the inactive player, and zero for
+unknown players or missing history. Entry and control changes reuse their
+existing control-gain stamps; phase cycles retain them, and returned cards get
+new incarnations and stamps. Haste does not bypass an explicit control gate.
+Existing `WithControlledSinceTurnStart`, typed conditions and mana planning share
+the corrected read. No new damage, payment, zone or replacement system is added.
+
+### TDD and card-to-test mappings
+
+The first runnable tests failed for the intended reasons: the engine regression
+reported permission during an opponent's turn; real RON records rejected the
+hand tuple and control predicate; inventory lacked the nested hand roles.
+Initial test setup used a nonexistent player shroud setter and a singular
+argument to PhaseIn; corrected fixtures confirmed the intended failures before
+implementation. The Aura planning fixture needed an explicit Aura subtype and
+had initially compiled an artifact form before its Aura branch; this setup was
+corrected without weakening behavior assertions.
+
+The first broad engine run found that a cloned history map added two allocations
+beyond `TestCloneStackHeavyGameAllocationBudget`'s existing 138-allocation budget.
+The fixed two-player array removes those allocations; the test stays unchanged.
+Both broad suites then found a stale invalid-declaration fixture for the newly
+supported seven-card form. It now checks a negative hand count, and positive
+seven-card behavior has direct coverage. No gameplay assertion was weakened.
+
+| Card or contract | Test mapping and behavior established |
+| --- | --- |
+| Library of Alexandria, complete ARN record | `TestRONActivationHistoryLibrary`: six/seven/eight-card restriction, activating player versus owner/opponent hand, tap payment and rollback, unrestricted colorless mana classification, delayed draw, changed hand/control after announcement, copied draw and pending-game clone isolation. `CastingAndPlaying`: native land play without stack. |
+| Rocket Launcher, complete ATQ record; identical 3ED reprint | `TestRONActivationHistoryLauncher`: entry/next-opponent-turn rejection and mana rollback, own-turn permission, paid activation timing, player target damage, permanent target shroud, all-illegal resolution, copies/clones, source departure/return/control/phasing, delayed next-end-step destruction and ordinary regeneration. `CastingAndPlaying`: unpaid cast rollback, four-mana cost and permanent entry timing. |
+| Pure gates and fresh factories | `TestRONActivationHistoryManaAndInstances`: combined hand/control restrictions, source and Aura host contexts, pure affordability queries, independent factories/controllers/owners, clone hand changes, phased sources, mana classification and tap payment. |
+| Engine turn/identity contract | `TestContinuousControlUsesControllersTurn`: opponent and opponent extra turns, own-turn restoration, control changes, phase cycles, returned incarnation and clone isolation. `TestContinuousControlNativeTurnHistory`: native direct step execution, opponent extra turns, skipped untap and independent clone starts. `TestContinuousControlSkippedTurn` uses the native run loop to prove skipped turns leave no observed start. Existing `TestControlledSinceTurnStart*`, `TestControllerHandSize*` and allocation contracts pass. |
+| Declaration/inventory/strict loading | `TestRONActivationHistoryInvalidAndInventory`: negative/dynamic counts, wrong comparisons/player/arity, tuple predicate, unbound target and non-Aura host, nested semantic roles, valid construction and atomic rejection of unsupported additions. Repository inventory guards both newly accepted names and retains strict rejection. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay remain
+separate: collection-wide engine_validated and behavior_verified totals remain
+null. Local ARN and ATQ Oracle text agrees with both complete RON records.
+No source defect was found or corrected in this slice. No RON source changes,
+so the syntax/hash vocabulary snapshot does not need refresh.
+
+### Final measurements and validation
+
+Actual gains match the estimate: **2 unique cards / 3 records**, exactly Library
+of Alexandria and Rocket Launcher (ATQ and 3ED). No previously accepted name is
+lost. Final loading: **1,848 compiled / 597 rejected records**, **713 accepted /
+273 rejected unique names**. Strict loading still exits 1 and installs no partial
+registry. Inventory: **72,962 occurrences / 8,557 signatures / 5,226 unknown-role
+occurrences**. The three removed first errors belong exactly to the selected
+records; remaining first diagnostics are unchanged.
+
+All required final checks passed. The loader's nonzero result is collection
+rejection, not build/test failure. Lint reports zero issues. Automatic formatting
+was reviewed; no unrelated source file changed. The final full short run passed
+after lint, including both new test files. No environment or pre-existing blocker
+remains.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestContinuousControl\|TestRONActivationHistory\|TestRONActivationTiming\|TestControlledSinceTurnStart\|TestControllerHandSize\|TestInventory\|TestCloneStackHeavyGameAllocationBudget' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; zero issues. |
+| `go test ./... -short -count=1` | PASS after lint; engine skill verification. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,848 compiled / 597 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; final semantic counts above. |
+
+The slice is committed separately with the descriptive activation-gates title;
+its hash is reported in the final response.
+
+Files: compiler activation_timing.go, inventory.go, inventory_test.go,
+activation_timing_test.go and new activation_history_condition_test.go; engine
+card.go, game_mutator.go, turn.go, turn_system.go and new
+control_turn_history_test.go; API/rules-contract documents and this ledger entry.
+Existing callers remain intact. Removal gates remain unmet: full loading,
+collection gameplay and runtime cutover are unfinished. No Go definition,
+generator, startup caller or DSL function is removed; no caller audit supports
+DSL deletion as part of this slice.
+
+Ranked next candidates to reassess:
+1. Battlefield-count CDA prerequisite, then the five clean consumers; separately
+   resolve Gaea's Avenger's recorded source defect with Oracle evidence.
+2. Chosen damage-source choice/identity and next-event shield prerequisites for
+   the seven complete protection consumers.
+3. Filtered blocking requirements for Lure and Marble Priest, through both
+   declaration paths and maximum requirement satisfaction; Marble Priest also
+   needs its filtered combat prevention adapter.
+
+No second slice is started. Migration completion criteria remain unmet.

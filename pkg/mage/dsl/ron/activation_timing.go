@@ -226,6 +226,12 @@ func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
 		if err != nil {
 			return nil, err
 		}
+		if filter.Args[1].Name == "ControlledSinceBeginningOfMostRecentTurn" {
+			if _, err := symbol(filter.Args[1]); err != nil {
+				return nil, err
+			}
+			return []mage.ActionOption{mage.WithActivationStateCondition(mage.ControlledSinceTurnStart(subject))}, nil
+		}
 		property, err := compileResolvingPropertyFilter(filter.Args[1])
 		if err != nil {
 			return nil, err
@@ -273,6 +279,13 @@ func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
 	if player != "You" {
 		return nil, unsupported(filter.Args[0], "activation timing player")
 	}
+	if filter.Args[1].Name == "NumCardsInHandIs" {
+		count, err := compileActivationHandCount(filter.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		return []mage.ActionOption{mage.WithActivationStateCondition(mage.ControllerHandSizeIs(count))}, nil
+	}
 	condition, err := symbol(filter.Args[1])
 	if err != nil {
 		return nil, err
@@ -285,4 +298,28 @@ func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
 	default:
 		return nil, unsupported(filter.Args[1], "activation timing filter")
 	}
+}
+
+func compileActivationHandCount(n Node) (int, error) {
+	if err := arity(n, 1); err != nil {
+		return 0, err
+	}
+	comparison := n.Args[0]
+	if comparison.Name != "EqualTo" {
+		return 0, unsupported(comparison, "activation hand comparison")
+	}
+	if err := arity(comparison, 1); err != nil {
+		return 0, err
+	}
+	value := comparison.Args[0]
+	if value.Name != "Integer" {
+		return 0, unsupported(value, "activation hand count")
+	}
+	if err := arity(value, 1); err != nil {
+		return 0, err
+	}
+	if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
+		return 0, problem(value, "hand count requires a nonnegative integer literal")
+	}
+	return value.Args[0].Integer, nil
 }

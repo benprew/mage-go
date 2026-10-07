@@ -10,6 +10,7 @@ import (
 // from g.Schedule so that effects can skip or insert steps mid-turn.
 // stopAt is checked: if we reach the specified turn+step, we stop.
 func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
+	g.recordActiveTurnStart()
 	g.turns.BuildNextTurn()
 	for {
 		step, ok := g.turns.PopNextStep()
@@ -29,6 +30,7 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
+	g.recordActiveTurnStart()
 	if step == FirstStrikeDamage {
 		g.effects.Apply(g)
 		if !g.combat.HasFirstStrikers(g) {

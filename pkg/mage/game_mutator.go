@@ -47,6 +47,7 @@ type TurnReader interface {
 	UpkeepHasEnded() bool
 	GetStep() PhaseStep
 	CurrentTurn() int
+	MostRecentTurnStart(uuid.UUID) int
 	ActivePlayerIndex() int
 }
 
@@ -940,10 +941,37 @@ func (g *Game) SetStep(s PhaseStep) { g.turns.SetStep(s) }
 func (g *Game) GetStep() PhaseStep { return g.turns.Step() }
 
 // SetTurn sets the current turn number.
-func (g *Game) SetTurn(n int) { g.turns.SetTurn(n) }
+func (g *Game) SetTurn(n int) {
+	g.recordActiveTurnStart()
+	g.turns.SetTurn(n)
+}
 
 // SetActivePlayerIndex sets which player is the active player by index.
-func (g *Game) SetActivePlayerIndex(idx int) { g.turns.SetActivePlayerIndex(idx) }
+func (g *Game) SetActivePlayerIndex(idx int) {
+	g.recordActiveTurnStart()
+	g.turns.SetActivePlayerIndex(idx)
+}
+
+// MostRecentTurnStart reads the player's last turn that began.
+// Extra turns belong to their active player; skipped turns do not count.
+func (g *Game) MostRecentTurnStart(player uuid.UUID) int {
+	if g.GetPlayer(player) == nil {
+		return 0
+	}
+	if g.ActivePlayerObj().PlayerID() == player {
+		return g.CurrentTurn()
+	}
+	for index, candidate := range g.players {
+		if candidate.PlayerID() == player {
+			return g.turns.turnStarts[index]
+		}
+	}
+	return 0
+}
+
+func (g *Game) recordActiveTurnStart() {
+	g.turns.turnStarts[g.turns.ActivePlayerIndex()] = g.CurrentTurn()
+}
 
 // PopExtraTurn removes and returns the next extra turn player ID, if any.
 func (g *Game) PopExtraTurn() (uuid.UUID, bool) {

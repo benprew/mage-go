@@ -5300,3 +5300,27 @@ plural subjects, wrong arities, unbound reads, empty bodies, modes and new body
 target declarations remain compile errors. This shape does not add generic
 `CreateTriggerUntil` event support. War Barge and Sandals of Abdallah use the
 complete records, with their separate regeneration restrictions.
+
+## RON hand and continuous-control activation restrictions
+
+`ActivateOnlyIf(PermanentPassesFilter(subject,
+ControlledSinceBeginningOfMostRecentTurn))` accepts a bare predicate with
+`ThisPermanent` or an Aura's `HostPermanent`. It uses
+`mage.ControlledSinceTurnStart(subject)`. The subject must remain present,
+phased in, and under the activating player's control. An opponent's turn or
+extra turn cannot grant permission before the controller's next turn begins.
+Control changes and zone changes restart the requirement; phasing preserves
+control history. Resolving and static filters do not accept this predicate.
+
+`ActivateOnlyIf(PlayerPassesFilter(You,
+NumCardsInHandIs(EqualTo(Integer(n)))))` accepts a nonnegative literal `n`.
+It uses `mage.ControllerHandSizeIs(n)` before payment. The activating player's
+current hand supplies the count, including when another player owns the source.
+Other comparisons, dynamic counts, and other player references remain errors.
+Both restrictions combine with existing modifiers and use the shared pure check
+for mana planning. Stack copies and resolution do not repeat the check.
+
+`TestRONActivationHistory*` maps the complete Library of Alexandria and Rocket
+Launcher records to gameplay and declaration tests. Casting, land play, tap/mana
+payment, target legality, delayed destruction, copies, clones, source return,
+phasing, and current controller behavior use their existing engine services.

@@ -385,6 +385,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
 			return []string{"player_reference", "activation_player_filter"}[index]
 		}
+	case "activation_player_filter":
+		if n.Name == "NumCardsInHandIs" && len(n.Args) == 1 {
+			return "activation_hand_comparison"
+		}
+	case "activation_hand_comparison":
+		if n.Name == "EqualTo" && len(n.Args) == 1 {
+			return "activation_hand_value"
+		}
+	case "activation_hand_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 	case "casting_restriction":
 		if n.Name == "AdditionalCastingCost" && len(n.Args) == 1 {
 			return "cost"

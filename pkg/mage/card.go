@@ -708,7 +708,7 @@ func (p *Permanent) ControllerID() uuid.UUID { return p.computedController }
 // ControlledSinceTurnStart reports whether the current controller has
 // controlled this permanent continuously since their most recent turn began.
 func (p *Permanent) ControlledSinceTurnStart(g GameReader) bool {
-	return p.turnControlGained < g.CurrentTurn()
+	return p.turnControlGained < g.MostRecentTurnStart(p.ControllerID())
 }
 
 // HasAttr returns true if this permanent currently has the given attribute.

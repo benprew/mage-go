@@ -253,7 +253,7 @@ func TestRONActivationTimingInvalid(t *testing.T) {
 		`ActivateOnlyIf(PlayerPassesFilter(Ref_TargetPlayer, IsTheirTurn))`,
 		`ActivateOnlyIf(PlayerPassesFilter(Opponent, IsTheirUpkeep))`,
 		`ActivateOnlyIf(PlayerPassesFilter(SinglePlayer(You), IsTheirTurn))`,
-		`ActivateOnlyIf(PlayerPassesFilter(You, NumCardsInHandIs(EqualTo(Integer(7)))))`,
+		`ActivateOnlyIf(PlayerPassesFilter(You, NumCardsInHandIs(EqualTo(Integer(-1)))))`,
 		`ActivateOnlyIf(PlayerPassesFilter(You))`, `ActivateOnlyIf(You)`,
 		`And([])`,
 	} {

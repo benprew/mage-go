@@ -6255,3 +6255,37 @@ zone batch and its former battlefield snapshot. `TestDelayedDepartureReplacedDes
 checks single and simultaneous operations, pending timing, destination, counts,
 returned incarnations, expiry and cloned games. This establishes no new
 replacement ordering or generic delayed-event API.
+
+## Continuous control through each player's turns
+
+`Permanent.ControlledSinceTurnStart(GameReader)` compares the turn of the
+latest control gain with `MostRecentTurnStart(currentController)`. It does not
+compare with the current global turn. An opponent's turn, including extra turns,
+cannot restore the permission. The existing `ControlledSinceTurnStart` state
+condition and `WithControlledSinceTurnStart` activation option share this read.
+The state condition also requires the original, live, phased-in subject and
+matching controller. Haste does not bypass this explicit restriction.
+
+`TurnSystem` owns a fixed two-player array of observed turn starts. Native
+`RunTurn` records the active turn before scheduling steps; `RunStepWithPriority`
+also records it for direct step execution. Skipping untap still starts a turn;
+turns skipped by `Run` execute neither path and do not update this history.
+`MostRecentTurnStart` is pure: it reads the current turn for the active player,
+the stored start for the inactive player, and zero for an unknown player or a
+player with no recorded turn. The public test/setup setters save the previous
+active turn before changing turn or player. The array is copied by value with
+`TurnSystem.Clone`, without new clone allocations.
+
+Battlefield entry and control changes retain the existing control-gain stamp.
+Returning cards start with a new incarnation and stamp. Phasing preserves the
+stamp and turn history. No retained information can grant activation permission
+to an absent or phased subject. Activation restrictions run before transactional
+payment and do not repeat at resolution or when an ability is copied.
+
+Evidence: `TestContinuousControlUsesControllersTurn` and
+`TestContinuousControlNativeTurnHistory` cover opponent and extra turns,
+control changes, returned objects, phase cycles, direct native steps with skipped
+untap, and clone isolation. Existing typed declaration, attached subject,
+activation, hand-size, and clone-allocation contracts remain in force.
+RON gameplay and pure mana-planning evidence is in `TestRONActivationHistory*`.
+Rules: CR 400.7, 500.7, 500.11, 602.1b, 602.2 and 602.5.
