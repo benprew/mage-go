@@ -5777,3 +5777,16 @@ casts and Basalt Monolith interactions cover its artifact enchant restriction,
 generic reduction, stacking, zero mana and one-mana minimum. All six Gloom
 reprints and the Power Artifact record pass declaration and strict subset
 loading tests; the production collection still rejects remaining gaps.
+
+### Current card P/T queries for count CDAs
+
+Use `g.CardPowerToughness(card)` when the current value of a card matters.
+`card.Power()` and `card.Toughness()` remain printed values for copy construction.
+The existing `PTEqualsCount`, `PTEqualsControlledCount` and
+`ToughnessEqualsControlledCount` declarations work with this query outside the
+battlefield. Counts use current nonphased permanents. A spell uses its controller;
+a card without a controller uses its owner. Battlefield queries use layer results,
+including ability removal, base overrides, bonuses, counters and switching.
+Use saved-information services for LKI; this current-object query cannot preserve
+a departed incarnation. See the count-CDA contract in `engine-rules-contracts.md`.
+RON count-CDA adapters are still rejected and are not added by this prerequisite.

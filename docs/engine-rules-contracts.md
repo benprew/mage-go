@@ -6848,3 +6848,47 @@ Evidence: `TestStaticActivationCostTotal`, `Lifecycle`, `Payment`,
 `ColoredAndLocked`; `TestRONActivationCostRealCards`, `Invalid`,
 `RecordsAndInventory`, `GloomBothRules`, `PowerArtifactManaAndFloor`.
 No replacement ordering or simultaneous zone-action contract is changed.
+
+## Current card P/T from count CDAs
+
+`Game.CardPowerToughness(card Card) (int, int)` is a pure current-object query.
+It returns zeroes for a nil card. A live battlefield object uses
+`CurrentPower`/`CurrentToughness`, including layers, counters and switching.
+A phased object uses its retained layer results. This query is not an LKI or
+saved-incarnation reference; a caller that needs departed-object information
+must use the existing snapshots and typed references.
+
+`PTEqualsCount(PermanentFilter)`, `PTEqualsControlledCount(PermanentFilter)`
+and `ToughnessEqualsControlledCount(PermanentFilter)` now retain inspectable
+count declarations. Their signatures and battlefield behavior remain available.
+Outside the battlefield, the query evaluates these declarations against current
+nonphased battlefield membership. “You” uses the current spell controller on
+the stack and the card owner when there is no controller (CR 109.5, 208.2a,
+604.3). Unzoned cards, library, hand, graveyard and exile cards use the same
+owner context. This includes cards before entry and copied definitions.
+Printed `Card.Power`/`Card.Toughness` still supply copiable printed values;
+queries do not overwrite them. This service does not add other all-zone
+continuous effects or an announcement-time would-be-controller query.
+
+The effect manager applies these counts in layer 7a before setting, modifying,
+and switching P/T (CR 613.4). Each battlefield entry or face-up registration
+binds a separate effect to the source incarnation. Returning a card cannot
+reactivate an old bound effect. Game clones copy bound effects independently.
+The layer reset includes prior CDA values, so layer-6 ability removal does not
+leave an old layer-7a value on the object. Phased members do not contribute to
+counts. Existing filter and zone services perform the queries; there is no
+second battlefield store. A zero filter retains its existing match-all meaning.
+The native snapshot uses this query for visible hand, graveyard and exile cards.
+
+`TestCharacteristicPTZonesAndController`, `SpellAndCopies`,
+`LayersRemovalAndPhase`, `SharedDeclarationsAndClone`, `KindsAndPurity`,
+`CountsMembership`, `CopiedDefinitionAndStaleEffect` and `DirectEffectCaller`
+cover these contracts.
+`TestSnapshotCharacteristicPT` covers native display reads.
+`TestRONCharacteristicPrerequisiteGameplay` runs complete RON Giant Growth,
+Unsummon and Swords to Plowshares against a synthetic count-CDA fixture,
+including casting rollback, cleanup, original-controller LKI and clones.
+`TestRONCharacteristicPrerequisiteKeepsAdapterGate` checks every reprint of
+five future CDA consumers still rejects, along with malformed/unbound CDA
+forms. RON `CDA_Power`/`CDA_Toughness` lowering remains unfinished. These tests
+establish engine prerequisites and regressions, not new complete-card mappings.

@@ -507,45 +507,21 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 // are each equal to the count of permanents matching countFilter (on whole battlefield).
 // This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.MutablePermanent(sourceID)
-		if src == nil {
-			return nil
-		}
-		count := g.CountBattlefield(countFilter)
-		src.SetCDAPowerToughness(count, count)
-		return nil
-	})
+	return newCountCharacteristicPT(countFilter, false, true, true)
 }
 
 // PTEqualsControlledCount creates a continuous effect where the source creature's power and toughness
 // are each equal to the count of permanents matching countFilter that you control.
 // This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.MutablePermanent(sourceID)
-		if src == nil {
-			return nil
-		}
-		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
-		src.SetCDAPowerToughness(count, count)
-		return nil
-	})
+	return newCountCharacteristicPT(countFilter, true, true, true)
 }
 
 // ToughnessEqualsControlledCount creates a continuous effect where the source creature's toughness
 // is equal to the count of permanents matching countFilter that you control.
 // This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func ToughnessEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.MutablePermanent(sourceID)
-		if src == nil {
-			return nil
-		}
-		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
-		src.SetCDAToughness(count)
-		return nil
-	})
+	return newCountCharacteristicPT(countFilter, true, false, true)
 }
 
 // GrantKeywordToAll grants a keyword ability to all matching creatures (excluding source).

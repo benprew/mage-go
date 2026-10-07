@@ -618,6 +618,8 @@ func (em *EffectManager) Apply(g *Game) {
 			p.hasSubtypeFamilyEffects() ||
 			p.printedAbilitiesSuppressed ||
 			p.ptSwitched ||
+			p.cdaPower != nil ||
+			p.cdaToughness != nil ||
 			p.BasePTOverride != nil ||
 			p.ColorOverride != nil ||
 			p.powerBonus != 0 ||

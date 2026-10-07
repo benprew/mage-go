@@ -103,13 +103,14 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 
 	if showHand || g.IsHandRevealed(p.PlayerID()) {
 		for _, c := range p.Hand() {
+			power, toughness := g.CardPowerToughness(c)
 			cs := CardState{
 				ID:        c.ID(),
 				Name:      c.Name(),
 				ManaCost:  c.ManaCost().String(),
 				IsLand:    c.HasType(core.TypeLand),
-				Power:     c.Power(),
-				Toughness: c.Toughness(),
+				Power:     power,
+				Toughness: toughness,
 				RulesText: buildRulesText(c),
 			}
 			for _, t := range c.Types() {
@@ -129,13 +130,14 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 	}
 
 	for _, c := range p.Graveyard() {
+		power, toughness := g.CardPowerToughness(c)
 		cs := CardState{
 			ID:        c.ID(),
 			Name:      c.Name(),
 			ManaCost:  c.ManaCost().String(),
 			IsLand:    c.HasType(core.TypeLand),
-			Power:     c.Power(),
-			Toughness: c.Toughness(),
+			Power:     power,
+			Toughness: toughness,
 			RulesText: buildRulesText(c),
 		}
 		for _, t := range c.Types() {
@@ -165,11 +167,12 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 		}
 		if ec.VisibleTo(viewerID) {
 			c := ec.Card
+			power, toughness := g.CardPowerToughness(c)
 			cs.Name = c.Name()
 			cs.ManaCost = c.ManaCost().String()
 			cs.IsLand = c.HasType(core.TypeLand)
-			cs.Power = c.Power()
-			cs.Toughness = c.Toughness()
+			cs.Power = power
+			cs.Toughness = toughness
 			cs.RulesText = buildRulesText(c)
 			for _, t := range c.Types() {
 				if cs.Types != "" {

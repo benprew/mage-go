@@ -32,6 +32,14 @@
 // [PlayerReader], [BattlefieldReader], [ResolutionReader], [TurnReader],
 // [CombatReader], [TrackerReader], and [StackReader], which compose into [GameReader].
 //
+// Use [Game.CardPowerToughness] for current card P/T with count CDAs.
+// Cards without a controller use their owner. Spells use their current
+// controller. Battlefield reads use the existing layer results.
+// [PTEqualsCount], [PTEqualsControlledCount] and [ToughnessEqualsControlledCount]
+// keep their count declarations outside the battlefield. Copies keep those
+// declarations; each battlefield instance has a separate source binding.
+// Saved object information must use the existing LKI services.
+//
 // Spell definitions can use OnlyDuring to restrict casting to one or more turn steps.
 // Game checks the restriction before choices and payment. Copies of stack spells
 // and spell resolution do not repeat the casting check.

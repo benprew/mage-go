@@ -348,6 +348,11 @@ func (g *Game) PushStack(obj *StackObject) {
 
 // AddContinuousEffect registers a continuous effect with the effect manager.
 func (g *Game) AddContinuousEffect(e ContinuousEffect) {
+	if _, ok := e.(*countCharacteristicPT); ok {
+		if source := g.FindPermanent(e.SourceID()); source != nil {
+			e = g.bindCharacteristicEffect(e, source)
+		}
+	}
 	g.effects.Add(e)
 	g.effects.Apply(g)
 }
