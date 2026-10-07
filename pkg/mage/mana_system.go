@@ -110,6 +110,7 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 		}
 		sources = append(sources, manaSourceInfo{
 			PermanentID: perm.ID(),
+			Incarnation: perm.incarnationID,
 			Colors:      colors,
 			Abilities:   abilities,
 			Bonuses:     ms.ManaBonuses(g, perm.ID()),
@@ -376,6 +377,9 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if perm == nil || action.AbilityIndex < 0 || action.AbilityIndex >= len(perm.RuntimeAbilities) {
 		return ErrPermanentNotFound
 	}
+	if action.SourceIncarnation != uuid.Nil && action.SourceIncarnation != perm.incarnationID {
+		return fmt.Errorf("planned mana source has left the battlefield")
+	}
 	if perm.ControllerID() != playerID {
 		return fmt.Errorf("you don't control that permanent")
 	}
@@ -400,7 +404,11 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if !player.ManaPool().CanPay(ability.ManaCost, nil) {
 		return fmt.Errorf("cannot pay mana ability activation cost %s", ability.ManaCost)
 	}
-	if err := player.ManaPool().Pay(ability.ManaCost, nil); err != nil {
+	if action.ActivationPayment != nil {
+		if err := payManaActivationPayment(player.ManaPool(), ability.ManaCost, *action.ActivationPayment); err != nil {
+			return err
+		}
+	} else if err := player.ManaPool().Pay(ability.ManaCost, nil); err != nil {
 		return err
 	}
 

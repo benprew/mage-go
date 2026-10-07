@@ -2794,6 +2794,7 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 // it can currently activate. Colors is the union used only by preservation
 // scoring; payment planning operates on Abilities without merging their output.
 type manaSourceInfo struct {
+	Incarnation uuid.UUID
 	PermanentID uuid.UUID
 	Colors      []Color
 	Abilities   []manaSourceAbility

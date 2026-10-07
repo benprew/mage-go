@@ -27824,3 +27824,157 @@ Slice files: engine `permanent_set_composition.go` and its tests, `doc.go`; RON
 `return_collection.go`, `return_collection_test.go`, `inventory_test.go`; API/rules
 contract documents; this appended progress entry. Only this entry is staged from
 this ledger, preserving the user's pre-existing archive/compaction changes.
+
+## 2026-10-06: exact mana activation payment prerequisite
+
+Status: completed slice `MANA-ACTIVATION-PAYMENT`. This run stops here.
+The initial user changes to `.gitignore`, the execution design and this ledger,
+and untracked `mtgish-ron-completed.md`, are preserved. Only this appended entry
+is included in the commit from the ledger.
+
+### Fresh evidence, candidate comparison and selection
+
+Baseline compiler tests, `go test ./pkg/mage/... -short -count=1` and `make build`
+passed. Loader and semantic inventory each exited 1 for collection rejection:
+**1,804 compiled / 641 rejected records; 686 accepted / 300 rejected unique
+names**, from 2,445 records and 986 names. Nested inventory remains 8,559
+signatures. Complete candidate records were read, with identical reprints counted
+once. First-error frequency was not used as a full-card unlock estimate.
+
+| Candidate | Distinct names and estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after prerequisites. | Typed source choices must cover eligible stack, permanent and retained sources; exact source identity, artifact/color semantics and next-event consumption need contracts. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage also share selection but have additional redirection, outcome or replacement bodies and are excluded from the estimate. | High: source selection, replacement lifecycle, simultaneous damage, ordering, identity and full gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after the zone characteristic prerequisite. | Counts must work outside the battlefield, with controller context, named/subtype counts and CDA layer/copy behavior. Gaea's Avenger has a source defect; Wood Elemental needs entry sacrifice results and is excluded. Enables further characteristic evaluation and count consumers. | High: all-zone characteristics, pure counts, layer and copy contracts, five full-card tests. |
+| Repeatable mana conversion with history | Farrelite Priest, Initiates of the Ebon Hand: **2** after planner prerequisites. | Existing per-instance activation history and delayed step sacrifice can be reused. Planner currently permits tap sources only, rejects mana history bodies and chooses one greedy activation payment. Needs repeated non-tap planning, synchronous body execution and exact cost allocation. Standing Stones additionally needs life-cost planning. | Medium/high for both cards; low/medium for exact activation payment prerequisite selected here. |
+
+The initial candidate was the two conversion cards. Code inspection and a new
+failing solver test revealed a shared prerequisite: a fixed generic-payment order
+can consume colors required by the final cost. Full RON Celestial Prism gameplay
+confirmed the same failure. This slice therefore establishes exact activation
+payment planning and execution first, with **0 expected immediate compiler
+unlocks**. It is required by both conversion cards and strengthens already
+accepted Celestial Prism, Apprentice Wizard and Fire Sprites. This smaller shared
+prerequisite has a concrete two-card downstream benefit and an independently
+observable defect; no single-card adapter was selected. The scope change and
+acceptance contract were stated before implementation.
+
+Read: AGENTS.md, engine reference, execution design, current/latest ledger entries,
+vocabulary snapshot, fresh semantic inventory, selected solver/payment/compiler
+code, complete affected RON records and local LEA/LEG/DRK/FEM Oracle data. Relevant
+API/rules contracts and CR 107.4e, 400.7, 601.2f-h, 602.2 and 605.3 were inspected.
+The `implement-engine` skill supplied the engine workflow. No removed card skill,
+Go-card requirement, Go stub, card-name executor, fallback or production subset
+registry was used.
+
+### Exact contract, context and reuse boundary
+
+Engine type: `ManaActivationPayment [AnyColor + 1]int`. New optional fields:
+`ManaTap.ActivationPayment *ManaActivationPayment` and
+`ManaTap.SourceIncarnation uuid.UUID`. Internal source discovery records the
+incarnation; every solver-produced action saves its payment colors by value.
+
+`SolveMana(ManaSolverInputs) (*ManaSolution, error)` and `CanSolveMana` now search
+all legal color allocations for each supported source's activation cost, rather
+than paying the first legal allocation. Generic, colored and supported hybrid
+pips and current mana conversions use the existing pool candidate and legality
+services. Equivalent allocations are deduplicated. Spell-restricted mana cannot
+pay ability costs. Zero costs have one empty allocation. Queries do not spend
+mana, activate sources, consume RNG or ask for choices.
+
+`ManaSystem.ActivatePlannedManaSource` rechecks source incarnation, current
+controller, tap legality, ability, productions, reduced cost and saved payment.
+An invalid payment fails before spending or tapping. It executes the selected
+colors and retains the existing production, event, bonus and activation-history
+services. A departed/returned source cannot execute its prior discovered plan;
+a phased source is unavailable, and a phase cycle retains incarnation. Clones
+can execute a plan independently. Nil payment and zero incarnation preserve
+legacy caller behavior. Existing sequential direct `ApplyManaSolution` behavior
+and the casting/activation payment transaction boundary are unchanged.
+
+RON signatures and contexts are unchanged. The complete existing spell, permanent
+entry and activation forms for Celestial Prism, Apprentice Wizard and Fire Sprites
+still lower through `ron`; reusable payment behavior stays in `mage`. Static,
+entry-choice, replacement, loop and delayed-binding contexts are not widened.
+No LKI restores a missing source. Replacement order and simultaneous-operation
+semantics are unchanged. No partial converter adapter is enabled: Farrelite Priest
+and Initiates of the Ebon Hand still reject with the original history/planning
+diagnostic. Standing Stones' life cost remains a separate planner blocker.
+
+### Tests and card mappings
+
+First tests failed for the intended behavioral cause, before engine edits:
+`TestManaActivationPaymentPreservesFinalColors` reported that a legal `{W}{U}`
+payment was unsolvable; `TestRONManaActivationPaymentPrism` rejected the same
+payment with the full LEA record. The engine now spends red and green on the
+Prism's `{2}` activation and retains white for the final spell.
+
+| Mapping | Evidence |
+| --- | --- |
+| Celestial Prism, full LEA record and all six reprints | `TestRONManaActivationPaymentPrism`: shared planner, exact activation colors, immediate mana production, tap payment, final spell casting and resolution. `Rollback`: failed additional life payment preserves mana, source, hand and stack. `StrictLoad`: reprint deduplication, factory validation, inventory and atomic rejection. Existing `TestRONFixedMana*` retains manual activation/color-choice evidence. |
+| Apprentice Wizard, full DRK record | `TestRONManaActivationPaymentColoredSources`: creature casting/entry, blue activation payment, tap/sickness legality, immediate three colorless mana, unsupported unfunded payment and clone isolation. `StrictLoad` validates its complete factory. |
+| Fire Sprites, full LEG record | `TestRONManaActivationPaymentColoredSources`: creature casting/entry, flying, green activation payment, tap/sickness legality, immediate red mana, unfunded rejection and clone isolation. `StrictLoad` validates its complete factory. |
+| Engine payment contract | `TestManaActivationPaymentEnumeration`: independent small-pool exhaustive allocation oracle for generic, colored, hybrid and conversion costs; unique results and restricted mana exclusion. `PreservesFinalColors` and `ConvertedPip`: solver plan and legal execution for final costs, pure queries. `PlanLifecycle`: exact discovered incarnation/payment, source departure/return, phasing/cycle, control/tap/ability removal, changed reduced cost, unavailable/restricted/negative/wrong-total allocations, clone execution and legacy callers. |
+| Invalid declarations and strict loading | `TestRONManaActivationPaymentInvalid`: negative mana costs, unbound cost references and bad production arity reject. `StrictLoad`: eight complete records, three unique names, definition validation and atomic invalid-collection rejection. |
+
+Two later fixture assertions were corrected: a converted red mana can itself pay
+a blue final pip, so either legal color allocation must be accepted; phased
+permanents must be inspected with the including-phased reader. These were test
+fixture errors. No existing assertion was weakened, and the exact preserved-white
+regression remains mandatory. Added evidence strengthens three accepted cards;
+it does not establish collection-wide behavior coverage or new full-card unlocks.
+
+### Actual gain, source defects and removal audit
+
+Actual compiler gain is **0 names / 0 records**, matching the selected prerequisite
+estimate after the scope adjustment. The initial two-card estimate belongs to the
+remaining converter/history adapter, not this prerequisite. Fresh loader output
+and full semantic inventory are byte-for-byte equivalent after JSON parsing to
+the baseline: **1,804 compiled / 641 rejected records; 686 accepted / 300 rejected
+names**. Every remaining diagnostic is unchanged. Inventory still has 72,962
+occurrences, 8,559 signatures and 5,623 unknown-role occurrences. Strict loading
+exits 1 and publishes no partial registry. Engine-validated and behavior-verified
+collection totals remain unset, distinct from compilation.
+
+Local `data/ATQ.json` confirms that Gaea's Avenger counts opponents' artifacts;
+its complete RON record instead restricts the count to `You`. This existing source
+defect is outside the selected slice and was not corrected. The selected records
+agree with local Oracle data. No RON source changed; all twelve hashes match, so
+no vocabulary source refresh was needed. No environmental failure was found.
+
+A fresh whole-repository `rg -n 'payManaForSearch' .` audit found only its private
+engine declaration after the new payment service replaced its caller. That unused
+helper was removed. No DSL function, Go card definition, generator or authoring
+instruction was removed: complete loading, gameplay migration and runtime cutover
+remain below their removal gates. New API/rules documentation covers only the
+saved activation payment contract.
+
+### Validation and next candidates
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine suite and `make build` | PASS |
+| New solver and RON test-first regression checks | Expected behavioral failures confirmed |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(ManaActivationPayment\|RONManaActivationPayment\|SolveMana_\|AutoTapForCost_)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS: zero issues; automatic test import formatting reviewed |
+| Post-lint `go test ./pkg/mage ./pkg/mage/dsl/ron -count=1` | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,804 compiled, 641 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; unchanged counts, diagnostics and source hashes |
+
+Ranked next candidates, subject to fresh evidence:
+
+1. Repeatable non-tap conversion planning and synchronous activation-history body
+   execution for Farrelite Priest and Initiates of the Ebon Hand. Exact color
+   payment is now available; repeated-use state, solver termination, reduced costs,
+   history and deferred sacrifice still need complete contracts.
+2. Chosen-source next-event prevention for the six Circles and Greater Realm.
+3. All-zone count CDA service for the five clean consumers, with Avenger's source
+   defect and Wood Elemental's entry results kept separate.
+
+Slice files: new engine payment service and tests; `mana_solver.go`,
+`mana_system.go`, `game.go`, `doc.go`; RON payment regression tests; API and rules
+contract docs; this appended entry. No second slice was started.

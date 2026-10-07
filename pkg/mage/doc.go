@@ -204,6 +204,12 @@
 // [PermanentsControlledByPlayers] permits a [PlayerSet] controller restriction.
 // Queries use the resolving context and cannot restore absent members with LKI.
 //
+// Mana payment plans save activation colors in [ManaTap] with
+// [ManaActivationPayment]. The saved payment prevents an activation from
+// spending colors required by the final cost. Execution checks the current
+// cost and source incarnation before payment. A returned source cannot use
+// its former plan. Payment queries do not spend mana or make choices.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

@@ -26,10 +26,12 @@ type ManaSolverInputs struct {
 // Productions and BonusColors are concrete, so AnyColor and AnyCombination
 // choices are preserved through execution.
 type ManaTap struct {
-	PermanentID  uuid.UUID
-	AbilityIndex int
-	Productions  []ManaProduction
-	BonusColors  []Color
+	SourceIncarnation uuid.UUID
+	ActivationPayment *ManaActivationPayment
+	PermanentID       uuid.UUID
+	AbilityIndex      int
+	Productions       []ManaProduction
+	BonusColors       []Color
 }
 
 // ManaSolution is an ordered list of mana-ability activations.
@@ -183,41 +185,46 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 					productionChoices[sourceIndex][abilityIndex] = manaProductionChoicesForDemand(ability.Productions, source.Bonuses, choiceCaps)
 					choicesComputed[sourceIndex][abilityIndex] = true
 				}
-				for _, choice := range productionChoices[sourceIndex][abilityIndex] {
-					nextPool := cloneManaPoolForSearch(node.pool, in.Conversions)
-					if !payManaForSearch(nextPool, ability.ManaCost) {
-						continue
-					}
-					addConcreteManaForSearch(nextPool, choice.Productions, choice.BonusColors)
+				for _, payment := range manaActivationPayments(node.pool, ability.ManaCost) {
+					for _, choice := range productionChoices[sourceIndex][abilityIndex] {
+						nextPool := cloneManaPoolForSearch(node.pool, in.Conversions)
+						if payManaActivationPayment(nextPool, ability.ManaCost, payment) != nil {
+							continue
+						}
+						addConcreteManaForSearch(nextPool, choice.Productions, choice.BonusColors)
 
-					nextUsed := manaSourceSetWith(node.used, sourceIndex)
-					nextAction := ManaTap{
-						PermanentID:  source.PermanentID,
-						AbilityIndex: ability.AbilityIndex,
-						Productions:  choice.Productions,
-						BonusColors:  choice.BonusColors,
+						nextUsed := manaSourceSetWith(node.used, sourceIndex)
+						savedPayment := payment
+						nextAction := ManaTap{
+							SourceIncarnation: source.Incarnation,
+							ActivationPayment: &savedPayment,
+							PermanentID:       source.PermanentID,
+							AbilityIndex:      ability.AbilityIndex,
+							Productions:       choice.Productions,
+							BonusColors:       choice.BonusColors,
+						}
+						nextScore := node.score + max(scoreAt(in.Scores, sourceIndex), 0)
+						nextDepth := node.depth + 1
+						nextCost := nextScore*weight + nextDepth
+						nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext)
+						if known, ok := bestCost[nextKey]; ok && known <= nextCost {
+							continue
+						}
+						bestCost[nextKey] = nextCost
+						seq++
+						next := &manaSearchNode{
+							pool:   nextPool,
+							used:   nextUsed,
+							parent: node,
+							action: nextAction,
+							score:  nextScore,
+							depth:  nextDepth,
+							cost:   nextCost,
+							seq:    seq,
+						}
+						next.priority = nextCost + manaSearchLowerBound(next, in)
+						heap.Push(&queue, next)
 					}
-					nextScore := node.score + max(scoreAt(in.Scores, sourceIndex), 0)
-					nextDepth := node.depth + 1
-					nextCost := nextScore*weight + nextDepth
-					nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext)
-					if known, ok := bestCost[nextKey]; ok && known <= nextCost {
-						continue
-					}
-					bestCost[nextKey] = nextCost
-					seq++
-					next := &manaSearchNode{
-						pool:   nextPool,
-						used:   nextUsed,
-						parent: node,
-						action: nextAction,
-						score:  nextScore,
-						depth:  nextDepth,
-						cost:   nextCost,
-						seq:    seq,
-					}
-					next.priority = nextCost + manaSearchLowerBound(next, in)
-					heap.Push(&queue, next)
 				}
 			}
 		}
@@ -422,24 +429,6 @@ func cloneManaPoolForSearch(pool *ManaPool, conversions map[Color]Color) *ManaPo
 		pool:            append([]Mana(nil), pool.pool...),
 		ManaConversions: conversions,
 	}
-}
-
-func payManaForSearch(pool *ManaPool, cost ManaCost) bool {
-	plan, ok := pool.paymentPlan(cost, nil)
-	if !ok {
-		return false
-	}
-	remaining := plan
-	kept := pool.pool[:0]
-	for _, mana := range pool.pool {
-		if remaining[mana.Color] > 0 && manaUsable(mana, nil) {
-			remaining[mana.Color]--
-			continue
-		}
-		kept = append(kept, mana)
-	}
-	pool.pool = kept
-	return true
 }
 
 func addConcreteManaForSearch(pool *ManaPool, productions []ManaProduction, bonusColors []Color) {

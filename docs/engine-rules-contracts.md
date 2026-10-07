@@ -5618,3 +5618,31 @@ Existing ReturnEachToHand, DestroyEach, DestroyEachWithoutRegeneration and
 battlefield/target services perform all actions. This slice changes no replacement
 ordering, optional choice, target identity or LKI policy. It does not establish
 static, entry, replacement-operation or cost contexts for contextual collections.
+
+## Saved mana ability activation payments
+
+`ManaActivationPayment` and `ManaTap.ActivationPayment` preserve the exact color
+counts chosen by `SolveMana`. Payment search considers all legal allocations,
+including generic costs, colored pips, hybrid pips and existing color conversions.
+It deduplicates equivalent allocations. Queries make no player choices and do
+not change pools, RNG, activation counts or tapped state. Restricted mana remains
+unavailable for ability costs, even during payment for an eligible spell.
+
+Before one planned activation starts, execution checks the current source
+incarnation, ability, controller, tap legality, output choices and saved payment
+against the current reduced cost. A bad or stale allocation fails before any
+resource is spent. Source departure and return invalidate a discovered plan;
+phasing out prevents activation and a phase cycle retains identity. A nil payment
+or zero source incarnation preserves compatibility with earlier callers.
+Cloned games execute a saved plan with independent pools and permanent state.
+Casting and activation keep their existing payment transaction and rollback
+boundary. Direct `ApplyManaSolution` retains its sequential execution contract;
+it does not add a transaction around the entire plan.
+
+Evidence: `TestManaActivationPaymentPreservesFinalColors`, `Enumeration`,
+`ConvertedPip` and `PlanLifecycle`; full RON `TestRONManaActivationPaymentPrism`,
+`ColoredSources`, `Rollback`, `Invalid` and `StrictLoad`. These cover legal
+alternative payments, duplicate allocations, restrictions, stale costs and
+incarnations, ability removal, phasing, control, clones, compatibility, immediate
+production and casting rollback. CR 400.7, 601.2f-h, 602.2 and 605.3 apply.
+No replacement order or simultaneous-operation contract changes.

@@ -4788,3 +4788,27 @@ Evidence: `TestResolutionChoice*`, `TestRONResolutionChoice*`, existing
 and next-upkeep duration contracts. Modal/spell and ordinary activation target
 bindings have definition tests; the ordinary trigger has resolution and expiry
 tests. These mappings do not establish collection-wide gameplay coverage.
+
+## Mana ability activation payment plans
+
+`ManaTap.ActivationPayment` is an optional `*ManaActivationPayment`, a fixed
+array of counts indexed by color. `SolveMana` now searches all legal color
+payments for each supported mana ability's activation cost. It saves the chosen
+payment with that action's production choices. For example, a Celestial Prism
+can spend red and green mana for its `{2}` activation and retain white mana for
+a final `{W}{U}` cost. Generic, colored, hybrid and existing color conversion
+payments use the same mana-pool legality rules. Spell-restricted mana cannot
+pay an activation cost.
+
+`ManaTap.SourceIncarnation` saves the discovered source's incarnation. Execution
+checks that incarnation, current ability, production, controller, tap legality,
+current reduced cost and saved payment before it spends mana or taps the source.
+A phase cycle keeps the incarnation. A departed or returned source cannot execute
+an old discovered plan. `Game.Clone` can execute the same plan independently.
+Callers that omit either new field retain the previous behavior for that field.
+
+The RON syntax and supported cost contexts do not change. Celestial Prism,
+Apprentice Wizard and Fire Sprites reuse their existing full-record compilation
+and the shared solver. This service is a prerequisite for repeatable non-tap
+conversion abilities. Those abilities, mana bodies with activation history, and
+Standing Stones' additional life cost still need planner support.
