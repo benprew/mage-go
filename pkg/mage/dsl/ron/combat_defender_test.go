@@ -344,7 +344,15 @@ func TestRONCombatDefenderRecords(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if _, err := Compile(nodes[0]); err == nil || strings.Contains(err.Error(), "permanent target controller") {
+				factory, err := Compile(nodes[0])
+				if nodes[0].Fields["Name"].String == "Blaze of Glory" {
+					if err != nil {
+						t.Fatal(err)
+					}
+					if err := mage.ValidateCardDefinition("Blaze of Glory", factory()); err != nil {
+						t.Fatal(err)
+					}
+				} else if err == nil || strings.Contains(err.Error(), "permanent target controller") {
 					t.Fatal("complete record must reject its remaining operation, after the target", err)
 				}
 			}

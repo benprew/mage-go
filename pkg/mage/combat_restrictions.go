@@ -78,6 +78,8 @@ func (em *EffectManager) AttackCosts(permID uuid.UUID) []Cost {
 // resetCombatRestrictions clears all per-cycle restriction maps. Called from
 // EffectManager.Apply alongside blockPairRestrictions.
 func (em *EffectManager) resetCombatRestrictions() {
+	clear(em.blockAnyNumberRules)
+	clear(em.blockEachAttackerRules)
 	clear(em.allCreaturesMustBlockRules)
 	clear(em.cantBeBlockedExceptByRules)
 	clear(em.canBlockOnlyRules)

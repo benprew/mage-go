@@ -360,6 +360,8 @@ type EffectManager struct {
 	effects                    []ContinuousEffect
 	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
+	blockAnyNumberRules        map[uuid.UUID]bool
+	blockEachAttackerRules     map[uuid.UUID]int
 	allCreaturesMustBlockRules map[uuid.UUID][]PermanentFilter
 	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter // attacker -> conjunction of filters blockers must match
 	canBlockOnlyRules          map[uuid.UUID][]PermanentFilter // blocker -> conjunction of filters attackers must match

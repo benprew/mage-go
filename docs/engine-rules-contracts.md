@@ -6951,3 +6951,38 @@ RON source-choice bindings, consuming shields, property rechecks (CR 609.7b,
 remain unsupported. These tests do not add complete Circle/Greater Realm card
 coverage or establish new payment, replacement-order or simultaneous-operation
 contracts. Source data, startup wiring and Go-card/DSL removal are unchanged.
+
+## Captured blocking permissions and blocker requirements
+
+`BlockAnyNumber(PermanentRef) ContinuousModification` permits the subject to
+block any number of attackers. `BlockEachAttacker(PermanentRef)
+ContinuousModification` supplies one requirement for each attacking creature.
+Install these with `Until(EndOfTurn, ...)` to capture the resolved incarnation.
+Both modify rules without granting abilities. Ability removal cannot erase
+them. Absent or phased subjects cannot receive a resolving effect; control
+changes and phase cycles retain an installed rule. A returned card is a new
+object (CR 400.7, 611.2c, 702.26).
+
+The existing blocking planner combines these rules with capacity, evasion,
+minimum blocker counts, attacking bands, and independent requirements. It
+maximizes satisfied requirements without violating restrictions (CR 509.1b–c).
+A single creature can satisfy each requirement only within its legal capacity.
+Multiple installations supply separate requirements. Both blocker declaration
+paths use the planner. Computed rule maps are rebuilt on each layer pass and
+copied for game clones. Cleanup ends the captured effects.
+
+RON `CreatePermanentRuleEffectUntil(permanentRef, operations, UntilEndOfTurn)`
+accepts a nonempty list of bare `CantBeRegenerated`,
+`CanBlockAnyNumberOfCreatures`, and `MustBlockEachAttacker` operations. Source
+and declared permanent-target references use existing per-instance bindings.
+Regeneration prohibition reuses `GrantKeywordModification(..., CantRegenerate)`
+and the existing destruction replacement check; shield creation remains legal
+(CR 701.19c). Other operation families retain their existing supported shapes.
+Damage prevention/redirection prohibitions and other durations remain rejected.
+
+Evidence: `TestBlockEachAttackerRequirements`, `TestBlockEachAttackerIdentity`,
+and `TestRONTemporaryRuleList*`. Complete Blaze of Glory and Hurr Jackal records
+cover real casting/activation, timing and legality, rollback, captured identities,
+phasing, ability removal, independent pending targets, copied spell retargeting,
+clone isolation, native blocking/destruction, and cleanup. Whippoorwill and
+Runesword retain separate unsupported operations.

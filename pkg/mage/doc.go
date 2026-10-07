@@ -83,6 +83,10 @@
 // for a window in each combat phase.
 // Skipped combat points close their windows at the applicable phase boundary.
 //
+// Use [BlockAnyNumber] and [BlockEachAttacker] with [Until] for captured
+// blocking permission and requirements. These rules survive ability removal.
+// The shared blocker planner still checks evasion and minimum blocker counts.
+//
 // Use [AllCreaturesMustBlock] with [While] for a live filtered blocking rule.
 // [AttachedPermanent] follows the current host. Separate requirements share
 // block capacity and cannot bypass evasion or minimum blocker counts.

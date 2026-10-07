@@ -143,6 +143,7 @@ func (g *Game) newBlockingPlan(defender uuid.UUID, proposed []BlockAssignment) *
 				}
 				choice.groups = append(choice.groups, j)
 				if p := g.liveCombatAttacker(member); p != nil {
+					choice.weight += g.effects.blockEachAttackerRules[blocker.ID()]
 					choice.weight += blockingAttributeCount(p, MustBeBlocked)
 					for _, filter := range g.effects.allCreaturesMustBlockRules[p.ID()] {
 						if filter.Match(blocker, g) {
@@ -158,7 +159,11 @@ func (g *Game) newBlockingPlan(defender uuid.UUID, proposed []BlockAssignment) *
 				row.choices = append(row.choices, choice)
 			}
 		}
-		capacity := max(0, blockCapacity(blocker, len(plan.groups))-len(existing))
+		limit := blockCapacity(blocker, len(plan.groups))
+		if g.effects.blockAnyNumberRules[blocker.ID()] {
+			limit = len(plan.groups)
+		}
+		capacity := max(0, limit-len(existing))
 		if capacity == 0 || len(row.choices) == 0 {
 			continue
 		}

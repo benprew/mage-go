@@ -51,6 +51,12 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	for _, operation := range operations {
+		switch operation.Name {
+		case "CantBeRegenerated", "CanBlockAnyNumberOfCreatures", "MustBlockEachAttacker":
+			return compileTemporaryRuleList(n, subject, operations)
+		}
+	}
 	if len(operations) != 1 {
 		return nil, unsupported(n.Args[1], "temporary blocking operations")
 	}
@@ -96,5 +102,37 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	}
 	return func(bindings instanceBindings) mage.Effect {
 		return mage.Until(core.EndOfTurn, modification(subject.build(bindings)))
+	}, nil
+}
+
+func compileTemporaryRuleList(n Node, subject permanentReferencePlan, operations []Node) (effectFactory, error) {
+	if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
+		return nil, unsupported(n.Args[2], "duration")
+	}
+	modifications := make([]func(mage.PermanentRef) mage.ContinuousModification, len(operations))
+	for i, operation := range operations {
+		if operation.Kind != Symbol {
+			return nil, unsupported(operation, "temporary rule operation")
+		}
+		switch operation.Name {
+		case "CantBeRegenerated":
+			modifications[i] = func(ref mage.PermanentRef) mage.ContinuousModification {
+				return mage.GrantKeywordModification(ref, core.CantRegenerate)
+			}
+		case "CanBlockAnyNumberOfCreatures":
+			modifications[i] = mage.BlockAnyNumber
+		case "MustBlockEachAttacker":
+			modifications[i] = mage.BlockEachAttacker
+		default:
+			return nil, unsupported(operation, "temporary rule operation")
+		}
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		ref := subject.build(bindings)
+		values := make([]mage.ContinuousModification, len(modifications))
+		for i, build := range modifications {
+			values[i] = build(ref)
+		}
+		return mage.Until(core.EndOfTurn, values...)
 	}, nil
 }

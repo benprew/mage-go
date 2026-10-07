@@ -34174,3 +34174,161 @@ Slice files: `pkg/mage/live_damage_source.go`, `live_damage_source_test.go`,
 `pkg/mage/dsl/ron/live_damage_source_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`; only this appended ledger entry. The completed
 slice is committed after all required checks pass. User changes remain unstaged.
+
+## Run 2026-10-07: TEMPORARY-PERMANENT-RULE-LISTS
+
+Status: completed implementation slice. This run stops after this slice.
+The initial user edits to `.gitignore`, the execution design and this ledger,
+and the untracked `mtgish-ron-completed.md` are preserved. Only this entry is
+staged from the ledger; its pre-existing restructuring is excluded.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loaders exited 1 for unsupported collection records:
+**1,908 compiled / 537 rejected records**, **733 accepted / 253 rejected unique
+names**, out of 2,445 records / 986 names. Semantic inventory has 72,962
+occurrences, 8,557 signatures and 4,600 unknown-role occurrences. Nested forms
+and complete records were inspected; first-error counts are not unlock counts.
+The execution design, current ledger, vocabulary snapshot, engine reference,
+selected compiler/engine files, API/rules contracts and CR 400.7, 509.1b–c,
+611.2c, 701.19 and phasing identity were reviewed. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- |
+| Temporary permanent-rule lists, selected | Blaze of Glory, Hurr Jackal, Whippoorwill, Runesword (4); **2** full cards, Blaze and Jackal, after the blocker-side requirement prerequisite. | Whippoorwill also needs damage prevention/redirection prohibition and a death/exile continuation. Runesword uses a different collection context with damage history and a future graveyard replacement. Shared captured rule operations enable blocking capacity, per-attacker requirements and regeneration prohibition without card policy. | Medium: two small engine rule maps in the existing continuous service and blocker planner, one list adapter, native card gameplay and declaration/lifecycle tests. |
+| Complete damage-source enumeration and consuming shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Dark Sphere; Eye for an Eye; Jade Monolith; Reverse Damage (11); **0** for enumeration alone, estimated **7** clean Circle/Realm consumers after shields. | Live objects already exist. Retained references in stack objects, waiting effects/triggers, and face-up command-zone sources remain missing contracts. The four other consumers also need finite damage arithmetic, prevented results, redirection or replacement continuations. | High: several source categories, identity continuity, lexical choice bindings, property rechecks, shield consumption, batch/replacement tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria (8); **0** for a spelling adapter alone, estimated **8** after engine and consumers. | Parameterized band formation and incoming/outgoing assignment contracts are missing. Complete records require static grants, named token abilities, removal of all variants and clone/layer interactions. | High: combat, continuous ability state, tokens, temporary removal and eight full-card mappings. |
+
+Selection rationale: two full records can execute with existing targeting,
+capture, cost and replacement services plus a small shared blocker prerequisite.
+The competing prerequisites have larger eventual gains but substantially more
+subsystem work before complete consumers. This is multi-card work, not a
+single-card exception. The contract, reuse boundary, rationale and acceptance
+cases were stated before editing. The `implement-engine` skill supplied the
+engine workflow; no agents, removed card skills, stubs or Go-card requirements
+were used.
+
+### Exact signatures, contexts and reuse boundary
+
+New engine services:
+
+- `BlockAnyNumber(subject PermanentRef) ContinuousModification`.
+- `BlockEachAttacker(subject PermanentRef) ContinuousModification`.
+
+Both use existing `layerModification`, captured permanent identity and `Until`.
+They modify rules without adding abilities. The permission supplies unlimited
+block capacity; the requirement supplies one independent requirement for each
+attacking creature. Multiple installations accumulate requirements. The existing
+maximum-requirement planner combines them with other requirements, capacity,
+evasion, minimum blocker counts and attacking bands. Both blocker declaration
+paths retain their shared planner. Layer passes reset computed rule maps; game
+clones copy those maps for queries before the next pass. No parallel combat
+solver or targeting service is added.
+
+RON resolving shape:
+`CreatePermanentRuleEffectUntil(permanentRef, [operations...], UntilEndOfTurn)`.
+The new list is nonempty and contains only bare `CantBeRegenerated`,
+`CanBlockAnyNumberOfCreatures`, and `MustBlockEachAttacker` symbols. These lower
+to the existing regeneration prohibition and new blocking rules. Source and
+already declared permanent-target references use the existing lexical scope
+and per-instance bindings. The adapter shares resolving action lowering;
+real consumers exercise spell and activation contexts. Existing singleton
+combat-rule shapes retain their restrictions. Other operation families, host
+references, incompatible/unbound reads, malformed symbols, and other durations
+remain rejected. Static, entry, cost and replacement contexts are not added.
+
+Resolution captures the exact current recipient. An absent/phased or illegal
+target receives no effect; no LKI enables actions on absent objects. Installed
+rules retain identity through control changes and phase cycles. Source departure
+and recipient ability removal do not erase them. Returned objects cannot inherit
+an old installation. Copies and cloned games retain independent declarations
+and resolutions. Cleanup removes the effects. Regeneration prohibition reuses
+`GrantKeywordModification(..., CantRegenerate)` and the destruction replacement
+check; creating shields remains legal and shields cannot replace prohibited
+destruction. The slice does not add damage replacement ordering or payments;
+existing targeting and atomic payment services are reused.
+
+### TDD and gameplay mappings
+
+Engine tests first failed for the missing `BlockEachAttacker` API. RON gameplay
+and declaration tests then failed for unsupported rule lists and
+`CantBeRegenerated`. A further ability-removal assertion failed when unlimited
+blocking was represented as a removable keyword. The expected missing
+`BlockAnyNumber` failure was confirmed, then a captured rule permission fixed
+that failure without reducing the assertion. Fixture repairs used actual combat
+groups, restored phased subjects before live assertions, and set the retarget
+fixture's active player explicitly. These were test setup errors, not engine
+behavior concessions or environmental failures.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Blaze of Glory, full LEA record; all five identical reprints compile | `TestRONTemporaryRuleListCards`: W payment and announcement, pre-resolution timing, native multiple blocks, phase/return/control identity, copies, ability removal and pending clones. `Legality`: creature/defending-player restriction, shroud/phasing, blocker-step casting restriction, failed-payment rollback, resolution legality. `BindingsAndExpiry`: native copy retargeting with original target isolation, installed phase cycles, separate captured recipients and clone/cleanup behavior. Existing `TestRONCombatTiming*` and `TestRONCombatDefender*` retain full timing/defender contracts. |
+| Hurr Jackal, full ARN record | Same `Cards`: R casting cost, 1/1 creature metadata, sickness and tap payment, original source departure, target return/phasing/control, pending copies/clones, prohibition after ability removal, actual destruction with shields and unaffected other recipients. `Legality`: invalid target rejection with tap rollback, control-independent targeting, late shroud/phasing. `BindingsAndExpiry`: two factories/activations keep separate targets, cleanup restores regeneration and clones remain prohibited. |
+| RON declaration boundary | `TestRONTemporaryRuleListDeclarations` and `InvalidScope`: valid lists, empty/malformed/unsupported operations, invalid durations, source/target/player/host scope errors. Existing temporary blocking and combat-rule invalid tests remain intact. |
+| Shared engine rules | `TestBlockEachAttackerRequirements`: ordinary/unlimited capacity, flying, menace with and without a helper, legal maxima and clone expiry. `TestBlockEachAttackerIdentity`: departure/return, phasing, phase cycles, control, ability removal, cleanup and invalid undeclared subject. Existing `TestBlockingRequirement*` covers competing/repeated requirements, bands, both native declaration paths and event finality. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay totals
+remain separate; collection-wide engine-validation and behavior counts remain
+null. Whippoorwill and Runesword have no new complete-card gameplay claim.
+
+### Measurements, defects and validation
+
+Actual gain matches the estimate: **2 unique names / 6 records**, exactly Blaze
+of Glory and Hurr Jackal. No previously accepted record or name is lost.
+Final strict and semantic loading report **1,914 compiled / 531 rejected
+records**, **735 accepted / 251 rejected unique names**. Both exit 1 for
+remaining unsupported records and publish no partial registry. Semantic counts
+remain **72,962 occurrences / 8,557 signatures / 4,600 unknown-role occurrences**.
+
+Local `data/LEA.json` and `data/ARN.json` Oracle text agrees with both selected
+complete records. No source-data correction is needed; RON files and their
+hashes are unchanged, so the vocabulary source snapshot is not regenerated.
+Known source defects outside this slice remain unresolved. No environment
+failure was found.
+
+Initial broad checks failed only at migration-state assertions: the two old
+1,908 inventory totals and the defender test that required Blaze to be rejected.
+They now assert exact 1,914/531 counts, explicitly forbid rejection of both new
+cards, validate every complete Blaze record, and still require the other
+unsupported defender records to fail. No gameplay assertion was weakened.
+Lint first reported a built-in `copy` variable name and an unused test assignment;
+both were corrected. Automatic import formatting and map-copy modernization
+were reviewed. No unrelated source changes resulted.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestBlockEachAttacker\|TestBlockingRequirement\|TestRONTemporaryRuleList\|TestRONTemporaryCombatRule\|TestRONTemporaryBlocking' -count=1` | PASS. |
+| Focused inventory/defender/rule-list regressions with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after refreshing migration-state assertions. |
+| `go test ./... -short -count=1` | PASS; additional skill verification after lint corrections. |
+| `make test` | PASS after refreshing migration-state assertions. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after test lint corrections; automatic edits reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,914/531; all remaining diagnostics retained. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, 735 accepted / 251 rejected names. |
+
+Complete loading, collection gameplay, embedded startup and test migration
+remain below the removal gate. No Go definitions or generators are removed.
+No fresh whole-repository caller audit authorizes DSL deletion. Reusable engine
+services remain. API/rules documentation describes only this established slice.
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. Complete retained-reference and command-zone damage-source enumeration,
+   then consuming shields for the six Circles and Greater Realm.
+2. Parameterized bands-with-others engine contract and its eight consumers.
+3. Damage prevention/redirection prohibition and exact death-card exile for
+   Whippoorwill; reassess alongside the shared damage-history/replacement work
+   for Runesword rather than implementing a single-card shortcut.
+
+Changed files: engine `composable_continuous.go`, `blocking_requirement.go`,
+`effect_manager.go`, `combat_restrictions.go`, `clone.go`, `doc.go`, and new
+`block_each_attacker_test.go`; RON `temporary_blocking.go`, new
+`temporary_rule_list_test.go`, `combat_defender_test.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended entry.
+Only this slice is committed after checks pass. Its commit hash is reported in
+the final response. No second slice is started.

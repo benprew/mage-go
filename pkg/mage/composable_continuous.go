@@ -28,6 +28,8 @@ type layerModification struct {
 	cantBlock             bool
 	blockerFilter         *PermanentFilter
 	requiredBlockerFilter *PermanentFilter
+	blockEachAttacker     bool
+	blockAnyNumber        bool
 	setBasePT             bool
 	setPowerOnly          bool
 	setToughnessOnly      bool
@@ -145,6 +147,17 @@ func CantBeBlockedExceptBy(subject PermanentRef, filter PermanentFilter) Continu
 // Install the rule with a duration. It does not give the subject an ability.
 func AllCreaturesMustBlock(subject PermanentRef, filter PermanentFilter) ContinuousModification {
 	return &layerModification{subject: subject, requiredBlockerFilter: &filter, layer: LayerAbility}
+}
+
+// BlockAnyNumber permits multiple blocks without granting an ability.
+func BlockAnyNumber(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, blockAnyNumber: true, layer: LayerAbility}
+}
+
+// BlockEachAttacker requires the subject to block each attacker if able.
+// Use a duration to keep the rule after ability removal.
+func BlockEachAttacker(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, blockEachAttacker: true, layer: LayerAbility}
 }
 
 // GrantEachKeyword grants a keyword to each member of a permanent set.
@@ -266,6 +279,12 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.blockAnyNumber {
+			return "can block any number of creatures"
+		}
+		if m.blockEachAttacker {
+			return "blocks each attacker if able"
+		}
 		if m.requiredBlockerFilter != nil {
 			return "must be blocked by each " + m.requiredBlockerFilter.Text()
 		}
@@ -330,6 +349,8 @@ type capturedModification struct {
 	cantBlock             bool
 	blockerFilter         *PermanentFilter
 	requiredBlockerFilter *PermanentFilter
+	blockEachAttacker     bool
+	blockAnyNumber        bool
 	setBasePT             bool
 	setPowerOnly          bool
 	setToughnessOnly      bool
@@ -348,7 +369,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -407,7 +428,17 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			p.toughBonus += v.toughness
 		}
 	case LayerAbility:
-		if v.requiredBlockerFilter != nil {
+		if v.blockAnyNumber {
+			if g.effects.blockAnyNumberRules == nil {
+				g.effects.blockAnyNumberRules = make(map[uuid.UUID]bool)
+			}
+			g.effects.blockAnyNumberRules[p.ID()] = true
+		} else if v.blockEachAttacker {
+			if g.effects.blockEachAttackerRules == nil {
+				g.effects.blockEachAttackerRules = make(map[uuid.UUID]int)
+			}
+			g.effects.blockEachAttackerRules[p.ID()]++
+		} else if v.requiredBlockerFilter != nil {
 			g.effects.AddAllCreaturesMustBlock(p.ID(), *v.requiredBlockerFilter)
 		} else if v.cantBlock {
 			g.effects.AddCanBlockOnly(p.ID(), Not(AnyPermanent))

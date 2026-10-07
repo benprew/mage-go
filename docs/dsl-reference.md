@@ -5838,3 +5838,19 @@ or prevention effects, or waiting delayed triggers, and face-up command-zone
 objects require further engine contracts. RON `ChooseADamageSource/1` remains
 rejected. Its consumer cannot use this restricted list as its whole legal list.
 No source files or production registry change in this slice.
+
+### Captured blocking rule permissions
+
+Use `Until(EndOfTurn, BlockAnyNumber(subject), BlockEachAttacker(subject))` for a
+permanent that can block every legal attacker and must do so. These operations
+change rules; they do not grant abilities. The shared blocker planner respects
+capacity, evasion and minimum blockers. Captured subjects keep their incarnation
+through control changes and phasing. Ability removal does not remove the rules.
+
+RON `CreatePermanentRuleEffectUntil(subject, operations, UntilEndOfTurn)` accepts
+nonempty lists of the bare operations `CantBeRegenerated`,
+`CanBlockAnyNumberOfCreatures`, and `MustBlockEachAttacker`. The subject is a
+permanent source or declared permanent target. Regeneration prohibition uses
+`Until` with `GrantKeywordModification(subject, CantRegenerate)`; it does not
+prevent creation of a regeneration shield. Each factory keeps separate target
+bindings. Unsupported operations and durations fail compilation.
