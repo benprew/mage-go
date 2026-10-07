@@ -5701,3 +5701,22 @@ records still reject at resolving `Unless` and activation `XIs`, respectively.
 `StateRecords` covers all four selected records, independent factories,
 semantic roles and atomic loading. No complete gameplay claim is made for
 those two blocked names.
+
+### Typed player damage-history values
+
+```go
+mage.DamageTakenThisTurn(subject mage.PlayerRef) mage.ResolutionValue
+mage.ArtifactDamageTakenThisTurn(subject mage.PlayerRef) mage.ResolutionValue
+```
+
+These pure resolution-time values read actual damage taken this turn. Prevention
+and redirection affect the saved amounts; ordinary life loss does not. Artifact
+classification uses the source's type at damage time. Later type or zone changes
+do not change history. An absent player supplies zero. Definition validation
+checks the typed reference. Clones keep separate totals, and cleanup clears them.
+
+RON `DamageDealtToPlayerThisTurn(player)` uses the first value.
+`DamageDealtToPlayerThisTurnByPermanents(player, IsCardtype(Artifact))` uses the
+second. Other source filters remain errors. References use existing resolution
+bindings, including target, scoped action and delayed player references. These
+values do not supply casting costs, entry amounts or static characteristics.

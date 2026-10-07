@@ -33245,3 +33245,148 @@ Changed slice files: `pkg/mage/end_step_history_condition.go` and its tests,
 `end_step_intervening_test.go`, `counter_information_test.go`, `inventory.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
 and this appended ledger entry. No second slice started.
+
+## Run 2026-10-07: PLAYER-DAMAGE-HISTORY-VALUES
+
+Status: completed implementation slice. Stop after this slice.
+
+### Fresh evidence and selection
+
+Initial user changes to `.gitignore`, the execution design and this progress
+ledger, plus untracked `mtgish-ron-completed.md`, are preserved. The ledger's
+existing history restructuring is excluded from this slice's staged changes.
+No subagents, removed card/set skills, Go card requirements or generated stubs
+were used. The engine gap used the `implement-engine` skill.
+
+Baseline RON tests (`-count=1`), short engine tests (`-count=1`) and `make build`
+passed. Strict loading and semantic inspection exited 1 for collection rejection,
+not build failure: **1,872 compiled / 573 rejected records**, **723 accepted /
+263 rejected names**, out of 2,445 records and 986 unique names. Inventory:
+72,962 occurrences, 8,557 signatures, 5,071 unknown-role occurrences.
+
+The design, vocabulary snapshot, ledger, engine reference, selected compiler,
+player-reference, value, damage-source and tracker code, relevant API/rules
+contracts, and CR 120.3–4 and 608.2b–c/h were read. Complete nested RON records
+were inspected for all three candidates below. Selected reprints were parsed,
+compared and engine-validated individually. Reprints count once in estimates.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Player turn-damage history, selected | Simulacrum, Reverse Polarity: **2** full-card unlocks, **8** records. | Missing compiler adapters and typed resolution-value APIs. Actual total and artifact-source histories already exist. Existing targets, controller filters, damage, life gain and `Twice` cover every other nested rule. Enables explicit-player history amounts in resolving actions and delayed bodies. | Low/moderate: two pure typed values, one adapter, invalid declarations, real gameplay, target/identity, source LKI, copies/clones, payments, ordering and batch tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** full-card unlocks after the all-zone prerequisite. | Existing battlefield CDAs do not establish characteristics in every zone. Needs owner/controller query context, all readers, copies and layer integration. Gaea's Avenger and Wood Elemental have additional data/entry blockers and are not included in the estimate. | High: all-zone engine prerequisite, count lowering and all-zone/copy/layer gameplay evidence. |
+| Complete damage-source enumeration and choices | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** full-card unlocks after enumeration and consuming shields. | Explicit-source choice APIs do not enumerate the CR 609.7a universe. Needs battlefield, stack, referred effect/delayed sources and face-up command objects, then scoped choice and next-event prevention adapters. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have additional consuming-operation blockers. | High: complete source universe, retained information, local bindings, shields and broad replacement/gameplay tests. |
+
+The selected slice gives two complete consumers through exact existing histories
+with much less integration work than the five/seven-card alternatives. It is
+shared behavior, not a single-card exception. The comparison uses full nested
+records rather than first-error frequency. Contract, reuse boundary and acceptance
+cases were stated before implementation.
+
+### Exact contract, dependencies and reuse
+
+Engine signatures:
+
+- `DamageTakenThisTurn(subject PlayerRef) ResolutionValue`.
+- `ArtifactDamageTakenThisTurn(subject PlayerRef) ResolutionValue`.
+
+These pure values resolve the explicit player in the current frame and read the
+existing `DamageTakenByPlayer` / `GetArtifactDamageTaken` services. Missing players
+supply zero. Definition traversal checks references, including nil and unbound
+bindings. Each application reads at resolution, not announcement. Life loss or
+life gain does not change damage history. Actual damage after prevention and
+redirection enters the shared tracker. Artifact classification uses the source's
+types when damage occurs, including retained permanent and spell information.
+Later control/type/departure/phasing changes cannot alter saved amounts. Clones
+keep separate histories and native cleanup clears them.
+
+RON signatures in existing resolving-value contexts:
+
+- `DamageDealtToPlayerThisTurn(player)/1`.
+- `DamageDealtToPlayerThisTurnByPermanents(player, IsCardtype(Artifact))/2`.
+
+Both require tuples. `player` uses the existing typed player-reference compiler
+and per-factory `instanceBindings`, including target, controller, action and
+saved delayed references. The source filter is exactly `IsCardtype(Artifact)`;
+other filters, malformed declarations and unbound/incompatible references remain
+errors. Existing arithmetic supports `Twice` and compositions. No static, entry,
+cost, announcement or arbitrary source-filter context is added.
+
+Reuse includes `TurnTrackers`, actual damage execution, typed targets and player
+references, stack copies/clone frames, `AtNext`, prevention/redirection ordering,
+simultaneous damage and transactional casting. No new history store, zone system,
+last-action slot, card-name executor, fallback or partial production registry is
+introduced. Compiler spelling remains in `ron`; engine values have no RON names.
+
+### TDD, source evidence and gameplay mapping
+
+The first fixture used a nonexistent artifact-creature convenience constructor;
+it was replaced with `NewCreature(..., WithCardType(TypeArtifact))`. Separate red
+runs then confirmed only the expected missing typed engine APIs and unsupported
+RON history values. The replacement fixture likewise used the existing
+`SetArtifactDamageRedirect` API. New tests passed after implementation. Two
+existing exact inventory assertions were updated to the measured collection
+counts; no behavior assertion was removed or weakened.
+
+Local `data/4ED.json` confirms both Simulacrum instructions. `data/ATQ.json`
+confirms Reverse Polarity counts twice damage from artifacts. The collection's
+`ByPermanents` history spelling is lowered to artifact-source history, not a query
+of present permanents; artifact spells and retained sources also count, as Oracle
+requires. The only complete-record consumer of that shape is Reverse Polarity.
+No RON record or source defect was changed. All twelve vocabulary source hashes
+remain identical, so the syntax snapshot does not need a source refresh. Existing
+recorded source defects remain separate blockers.
+
+| Card / contract | Tests and coverage |
+| --- | --- |
+| Simulacrum, complete six reprints | `TestRONPlayerDamageHistoryCards`: 1B payment/rollback, controlled-creature target restriction, zero/normal/late damage totals, partial prevention, source departure/return/phasing, announcement timing, shroud/control/phase/returned target invalidation, life gain before outgoing damage, outgoing prevention, copied spells and clone isolation. `CopyController`: a copy with a different controller cannot use the original controller's creature. |
+| Reverse Polarity, complete two reprints | Same `Cards` test: WW payment/rollback, zero and repeated total reads, artifact/nonartifact simultaneous sources, partial prevention, source identity and saved types, timing, copies and clones. `CopyController`: each controller reads its own artifact damage total. |
+| Typed player bindings and delayed reads | `TestRONPlayerDamageHistoryBindings`: explicit targeted players, nested action-player scopes, two factories and pending spells. `DelayedBinding`: saved target player with a later damage total at the native end step. |
+| Declarations, records, inventory and strict loading | `TestRONPlayerDamageHistoryInvalid`: missing/extra arguments, symbol/tuple errors, unbound/wrong-role players and unsupported source filters. `RecordsAndInventory`: every affected complete AST, identical reprints, fresh factories, engine definition validation, no unknown descendant roles, strict valid loading and atomic rejection of a mixed invalid collection. Existing inventory/registry isolation tests pass. |
+| Engine history contract | `TestPlayerDamageHistoryValues`: actual simultaneous damage, both players, life loss/gain exclusion, partial/full prevention, absent/unbound player reads, nil declaration rejection, clone isolation and clearing. `SourceInformation`: source departure/return/phasing/control. `TypesAndSpells`: effective type changes at damage time, retained artifact spell information, pure repeated queries and native cleanup. `ReplacementOrdering`: both affected-player ordering choices preserve zero player history after prevention/redirection. Existing source identity/filter/attribution and artifact tracker tests pass. |
+
+New complete-card gameplay mappings: **2**. Compilation and gameplay evidence
+remain separate; collection-wide engine-validation and behavior totals remain
+null. These tests do not claim full collection gameplay or source enumeration.
+
+### Final measurements, validation and next work
+
+Estimate **2 unique names / 8 records**; actual **2 / 8**, exactly Simulacrum and
+Reverse Polarity. Every previously accepted name remains accepted. Final strict
+loading reports **1,880 compiled / 565 rejected records**, **725 accepted /
+261 rejected names**; exit 1 remains expected and no registry is published.
+Every remaining diagnostic is byte-for-byte unchanged. Inventory: **72,962
+occurrences / 8,557 signatures / 5,053 unknown-role occurrences**. Eighteen
+unknown descendants acquire player/filter/type roles; RON source is unchanged.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine tests and `make build` | PASS. |
+| Focused engine/RON history, inventory, prior damage-source/filter/attribution and artifact-history tests, `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` (engine skill) | PASS. |
+| `make lint` | PASS. Automatic formatting reviewed; affected checks rerun. |
+| `git diff --check` | PASS, working and staged changes. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,880 compiled / 565 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 725 accepted / 261 rejected names, counts above. |
+
+No environment or pre-existing validation blocker remains. Go card definitions,
+startup wiring, obsolete generators and DSL exports remain unchanged: the removal
+gate is closed. No caller audit authorizes DSL deletion. API/rules docs describe
+only this established behavior. Only this slice is committed; initial user changes
+and the untracked completed-history file remain unstaged.
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Complete damage-source enumeration and consuming prevention for the seven
+   clean Circle/Greater Realm consumers.
+2. All-zone count CDA prerequisite and adapters for the five clean consumers.
+3. Parameterized bands-with-other formation and damage-assignment contracts for
+   the five legendary land grants, Master of the Hunt, Shelkin Brownie and Tolaria.
+
+Changed files: `pkg/mage/player_damage_history.go` and its tests, `pkg/mage/doc.go`;
+RON `player_damage_history.go` and its tests, `sacrifice_value.go`, `inventory.go`
+and `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this appended ledger entry. No second slice started.

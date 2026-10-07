@@ -6745,3 +6745,33 @@ Complete Osai Vultures behavior uses `TestRONOsaiVulturesEndStep`, `Activation`
 and `NativeSteps`: native steps for both controllers, one counter per end step,
 zero/late/multiple/token deaths, counter payments and rollback, independent
 pending bonuses, cleanup, phasing, departure/return, copies and clones.
+
+## Resolution values: player damage this turn
+
+`DamageTakenThisTurn(PlayerRef) ResolutionValue` and
+`ArtifactDamageTakenThisTurn(PlayerRef) ResolutionValue` read the selected
+player's current turn damage totals. They are pure queries and return zero for
+an absent or unresolved player. Definition validation rejects nil and unbound
+player references. Each factory, target, copied stack object and delayed context
+keeps its own typed player binding.
+
+The values reuse `TurnTrackers` and the damage executor. Damage enters history
+after prevention and redirection; life loss and life gain do not enter it.
+Artifact history uses the source's effective type when damage occurs, including
+retained permanent and spell information. Later source type, control, zone or
+phasing changes cannot change a recorded amount. Simultaneous packets contribute
+their actual amounts. Clones have independent histories. Native cleanup clears
+both totals. Each application reads the current total, rather than a casting-time
+snapshot (CR 120.3–4, 608.2b–c/h).
+
+RON resolution values support `DamageDealtToPlayerThisTurn(player)/1` and
+`DamageDealtToPlayerThisTurnByPermanents(player, IsCardtype(Artifact))/2`.
+The latter is the collection's artifact-source history spelling, including
+retained source information; it does not enumerate current permanents.
+Other source filters remain unsupported. Existing `Twice` lowers the multiplier.
+No static, entry, cost or announcement history-value context is added.
+
+Evidence: `TestPlayerDamageHistoryValues`, `SourceInformation`, `TypesAndSpells`
+and `ReplacementOrdering`; `TestRONPlayerDamageHistoryCards`, `Bindings`,
+`CopyController`, `DelayedBinding`, `Invalid` and `RecordsAndInventory`.
+The real RON mappings cover all rules of Simulacrum and Reverse Polarity.

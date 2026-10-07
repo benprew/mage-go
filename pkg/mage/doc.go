@@ -39,6 +39,9 @@
 // cast by the current controller. A phased or departed source cannot supply
 // the reduction. The saved source incarnation prevents a returned card from
 // restoring an old entry before the next layer pass.
+// Use [DamageTakenThisTurn] or [ArtifactDamageTakenThisTurn] for a typed
+// player damage total at resolution. The total uses actual damage this turn
+// and the source types at the time of damage. Later type changes do not change it.
 // Use [PayOrElse] for one optional payment with two resolution branches.
 // The payment result stays local to the operation.
 // Resolution counter payments use PayCountersOrElse for a fixed count and

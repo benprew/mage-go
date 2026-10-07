@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "DamageDealtToPlayerThisTurn" || n.Name == "DamageDealtToPlayerThisTurnByPermanents" {
+		return compilePlayerDamageHistory(n, ctx)
+	}
 	if isDestructionCount(n) {
 		return compileDestructionCountValue(n, ctx)
 	}
