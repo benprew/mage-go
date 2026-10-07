@@ -4281,3 +4281,15 @@ combat or noncombat damage event. Former pairs cannot match through LKI.
 Wall of Vapor has complete RON gameplay coverage in
 `TestRONBlockedDamagePreventionWall`, `StrictInventory` and `Ordering`.
 Wall of Shadows shares this rule but still fails its separate targeting rule.
+
+RON resolving `CreatePermanentLayerEffect(subject, [SetToughness(value)])`
+sets base toughness indefinitely through `mage.SetBaseToughness`. It preserves
+base power, bonuses and counters. The value is captured at resolution.
+Supported values are integer literals, binary nested `Plus`/`Minus`, typed
+permanent power/toughness reads, and a matching graveyard-card count with one
+`InAPlayersGraveyard(SinglePlayer(playerRef))` and one card filter in `And`.
+The operands can appear in either order. Existing lexical bindings apply.
+Static and temporary RON forms and chosen-number values remain unsupported.
+Sentinel and Wall of Tombstones have complete-record gameplay evidence in
+`TestRONIndefiniteToughness*`; shared engine contracts are documented in
+`engine-rules-contracts.md` under “RON indefinite base toughness.”

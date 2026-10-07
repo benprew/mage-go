@@ -795,6 +795,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "static_modification", "temporary_modification", "resolving_modification":
 		switch n.Name {
+		case "SetToughness":
+			if role == "resolving_modification" && len(n.Args) == 1 {
+				return "value"
+			}
 		case "SetPower":
 			if role == "temporary_modification" && len(n.Args) == 1 {
 				return "value"
@@ -911,6 +915,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "TheNumberOfGraveyardCards" && len(n.Args) == 1 {
+			return "card_filter"
+		}
 		if n.Name == "ManaValueOfExiled" && len(n.Args) == 1 {
 			return "exile_payment_reference"
 		}
@@ -923,7 +930,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
-		if n.Name == "Minus" && len(n.Args) == 2 {
+		if (n.Name == "Minus" || n.Name == "Plus") && len(n.Args) == 2 {
 			return "value"
 		}
 		if n.Name == "TheNumberOfCardsOfTypeInPlayersHand" && len(n.Args) == 2 {

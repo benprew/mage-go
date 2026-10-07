@@ -1220,11 +1220,17 @@ const (
 	valueMultiply
 	valueDivideDown
 	valueDivideUp
+	valueAdd
 )
 
 type arithmeticValue struct {
 	left, right ResolutionValue
 	operation   arithmeticOperation
+}
+
+// AddValues supplies the sum of two values.
+func AddValues(left, right ResolutionValue) ResolutionValue {
+	return arithmeticValue{left, right, valueAdd}
 }
 
 // SubtractValues subtracts the right value from the left value.
@@ -1259,6 +1265,8 @@ func DivideRoundUp(numerator, denominator ResolutionValue) ResolutionValue {
 
 func (v arithmeticValue) operationName() string {
 	switch v.operation {
+	case valueAdd:
+		return "add"
 	case valueMultiply:
 		return "multiply"
 	case valueSubtract:
@@ -1290,6 +1298,8 @@ func (v arithmeticValue) Text() string {
 func (v arithmeticValue) resolveValue(ctx *EffectContext) int {
 	left, right := v.left.resolveValue(ctx), v.right.resolveValue(ctx)
 	switch v.operation {
+	case valueAdd:
+		return left + right
 	case valueMultiply:
 		return left * right
 	case valueSubtract:

@@ -24675,3 +24675,167 @@ not a build failure. Changed files: `pkg/mage/dsl/ron/activation_timing.go`,
 `sorcery_activation_test.go`, `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry. No production registry,
 card definition, engine execution, DSL export, or source RON file changes.
+
+## 2026-10-06: indefinite base toughness
+
+Completed slice `INDEFINITE-BASE-TOUGHNESS`. Stop after this slice.
+Fresh status: **661 accepted / 325 rejected unique names** and **1,750 compiled /
+695 rejected records**, out of 986 names / 2,445 records. Compilation and complete
+collection gameplay remain separate; the strict loader rejects and publishes no
+partial production registry. Engine-validated and behavior-verified inventory
+collection counts remain null. The two added names have complete-record native
+engine gameplay tests, rather than only compilation evidence.
+
+### Baseline, candidates and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, relevant compiler/engine services, API/rules contracts, and all
+complete affected records. Baseline short engine tests and build passed. Strict
+loader and inventory exited 1 for collection rejection: 1,748 compiled / 697
+rejected records; 659 accepted / 327 rejected names. Semantic inventory had
+72,954 nodes, 8,543 context signatures and 6,423 unknown-role occurrences.
+
+The working tree initially contained edits to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`. Preserve those edits
+and the ledger reorganization. Stage only this new entry for the ledger.
+No sub-agents, removed card/set skills, generated stubs, Go-card requirements,
+production subset registry or fallback are used. The `implement-engine` skill
+supplies the engine primitive workflow.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Indefinite base toughness, selected | Sentinel, Wall of Tombstones: **2 names / 2 records**. Shapeshifter uses a different static context and is excluded. | Missing one-coordinate engine setting, sum value and pure graveyard count; combat-pair targets, upkeep triggers, typed references, LKI and duration capture already exist. Shared setting/count services enable both complete consumers and future static/entry number choices. | Small/medium: three small engine primitives, one bounded RON value context, layer/identity/clone and real-card tests. |
+| Activation property restriction | Rocket Launcher, Triassic Egg: **1 credible immediate name**, 2 Rocket records; 2 eventual names after other prerequisites/data repair. | Rocket requires continuous-control history checked before payment. Egg still needs hand entry and graveyard modal targets; both RON modes currently repeat hand entry. Shared property restrictions also enable counter-gated abilities. | Medium: history/counter condition adapters, legality, timing, phasing and rollback; Egg's full body remains blocked. |
+| Beginning-of-combat triggers | Battering Ram, Goblin Flotilla, Johan: **0 adapter-only / 3 eventual names**, 3 records. | Ram also needs end-of-combat temporary banding and its delayed subject repaired. Flotilla needs combat-scoped installed triggers and other-creature event bindings. Johan needs optional nonmana effect payment and conditional no-tap attacking. Enables combat step events and future shared combat durations. | Medium for event adapter; high for complete bodies, delayed identities and combat timing. |
+
+Complete nested records were inspected before edits; first-error frequency was
+not treated as an unlock estimate. A later read-only AST probe replaced candidate
+restrictions/events only to expose subsequent diagnostics; it confirmed Rocket's
+otherwise supported body, Egg's hand-entry gap, Ram's `UntilEndOfCombat` gap,
+Flotilla's `CreateTriggerUntil` gap and Johan's optional-payment gap. No probe
+record was installed. Selection favors two complete consumers for bounded effort
+over one history consumer or three heavily blocked combat consumers. Contract,
+reuse boundary and acceptance cases were stated before edits.
+
+### Exact signatures, contexts and dependencies
+
+Engine APIs:
+
+- `SetBaseToughness(PermanentRef, ResolutionValue) ContinuousModification`:
+  layer 7b, preserving printed/CDA power and earlier base-power settings;
+  shared `Until` captures the value and incarnation. Shared `While` evaluates
+  live values. Bonuses/counters and switches retain layer 7c/7d ordering.
+- `AddValues(ResolutionValue, ResolutionValue) ResolutionValue`: extend the
+  existing typed arithmetic service, with definition validation of operands.
+- `CountGraveyardCards(PlayerRef, CardFilter) ResolutionValue`: pure current
+  selected-player matching-card count; zero filter means all cards, absent
+  player means zero. Reuse player identity and existing card filters/zone state.
+  This does not establish all-zone CDAs or change card-characteristic queries.
+
+RON supported shape:
+`CreatePermanentLayerEffect(typedPermanentRef, [SetToughness(value)])`, only in
+resolving action contexts. Keep the existing single-modification boundary.
+Values accept `Integer(integer)`, nested binary `Plus(left, right)` and
+`Minus(left, right)`, `PowerOfPermanent(typedRef)` and
+`ToughnessOfPermanent(typedRef)` through current/LKI queries, and
+`TheNumberOfGraveyardCards(And([cardFilter,
+InAPlayersGraveyard(SinglePlayer(typedPlayerRef))]))`. The latter accepts either
+operand order and exactly one card filter and one graveyard player. Reuse the
+existing nonempty type/color `And`/`Or` card-filter grammar and enclosing typed
+player scope. No binding is fabricated. Unsupported static/temporary contexts,
+chosen numbers, undeclared X, invalid arities, duplicate zones, unbound reads
+and mixed modifications still reject at declaration time.
+
+RON owns spelling, scope, validated factories and semantic inventory roles.
+The engine owns layers, arithmetic, current graveyard queries and execution.
+No mutable state is retained by a compiler plan. Factory targets and abilities
+remain separate. The setting captures its subject and number at resolution;
+control changes, source departure and cleanup cannot change the installed
+number. Phasing preserves an installed setting. A returned permanent cannot
+receive an old setting. Source/target departures cannot restore a combat pair
+through LKI. Payment, APNAP, copies, retargeting and game clones use shared
+services; no replacement ordering or simultaneous-operation rule changes.
+Read CR 400, 506.4, 608.2b/h, 611.2a–d, 613.4b–d/613.7 and 702.26b/d–f.
+Local authoritative `data/LEG.json` confirms both selected Oracle requirements.
+
+### TDD and card-to-test mapping
+
+Engine tests first failed for undefined `SetBaseToughness`, `AddValues` and
+`CountGraveyardCards`. A definition-validation fixture incorrectly used a spell
+with a battlefield-source read; changing it to a permanent activation matched
+the intended API contract. RON tests then failed for unsupported
+`SetToughness` on both full records and strict test-collection loading. Test
+helper names and nonexistent convenience calls were corrected to existing
+APIs. No assertions or rules were weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Sentinel, complete `LEG.lines.ron:233` | `TestRONIndefiniteToughnessSentinel`: both combat directions; noncombat rejection; changed power at resolution; lost combat pair, source/target return and phasing; ability copies; pending clone resolution; indefinite cleanup survival and counters. `CastingAndInstances`: real mana casting/rollback, factory ability/target isolation. Existing `TestRONCombatTarget*` retains its combat legality coverage and now requires the full Sentinel record to compile. |
+| Wall of Tombstones, complete `LEG.lines.ron:298` | `TestRONIndefiniteToughnessWall`: own/opponent upkeep, creature-only own-graveyard count, changes before versus after resolution, next-upkeep overwrite, source control/return/phasing, pending clones and copied trigger controller with different graveyard counts. `CastingAndInstances`: real casting payment/rollback, independent simultaneous upkeep triggers and defender attack rejection. |
+| Shared engine | `TestBaseToughness*`: independent coordinate/layers, previous setting, signed values, counters, switches, CDA power preservation, static context, phase cycle, return, clone isolation, captured count and invalid definitions. `TestGraveyardCountAndAdditionQueries`: pure repeated filtered/all-card queries, signed sum, clone separation and nil operands. |
+| RON scopes and reporting | `TestRONIndefiniteToughnessInvalid`, `LKIAndContexts`, `ValueShapes`, `StrictLoad`: invalid declarations and contexts, sacrificed/returned source LKI, typed targets, nested arithmetic/filter/reversed operands, semantic roles, reprint canonicalization and engine validation. Updated whole-collection count assertions preserve strict rejection and real RON Lightning Bolt gameplay/registry checks. |
+
+Initial broad tests caught the expected stale inventory counts (1,748/697) and
+an existing test that expected Sentinel rejection. Assertions were updated to
+new exact measured support, retaining all gameplay and registry checks.
+
+### Final measurements, source defects and gates
+
+Actual gain **2 names / 2 records**, equal to the estimate. Strict loader and
+inventory still exit 1: **1,750 compiled / 695 rejected records; 661 accepted /
+325 rejected names**. Set difference against baseline shows only Sentinel and
+Wall of Tombstones became accepted, with **zero new rejected records**.
+Semantic inventory remains 72,954 nodes / 8,543 signatures; unknown-role
+occurrences drop from 6,423 to 6,407. Remaining example diagnostics include
+`ChooseADamageSource` (11 distinct consumers), `CreateTriggerUntil` (8), and
+`CDA_Power` (5). Compilation alone does not verify those families.
+
+No source RON changed, and all 12 hashes match the vocabulary snapshot; no
+syntax refresh is needed. Candidate review identified deferred source defects
+with local Oracle evidence: Triassic Egg's second mode repeats hand entry
+rather than a targeted creature return from your graveyard (`data/LEG.json`);
+Battering Ram's delayed destroy reads `Trigger_TheAttackingCreature`, whereas
+Oracle destroys the blocking Wall (`data/ATQ.json`). These are separate
+source-data blockers; neither is corrected or given gameplay support here.
+Shapeshifter's static chosen-number setting remains a separate context.
+No environmental failure was found. The collection's unsupported records are
+compiler/engine/data gaps, not build failures.
+
+Removal gates remain unmet: no Go card definitions, generators or DSL exports
+are removed. Existing callers and production startup wiring are preserved.
+Only API/rules documentation for this slice changes. No second slice starts.
+
+Ranked next candidates to reassess:
+
+1. Aggregate attack-declaration payment prerequisite: Brainwash and Leviathan,
+   with collective reservations and complete-declaration rollback.
+2. Chosen-source enumeration and next-event prevention: six Circles of
+   Protection and Greater Realm of Preservation, seven concrete consumers.
+3. All-zone count CDAs: Dakkon Blackblade, Keldon Warlord, Nightmare,
+   Plague Rats and People of the Woods, five consumers with zone/copy contracts.
+   Keep Gaea's Avenger source defects and Wood Elemental entry costs separate.
+
+### Required checks
+
+Validation results are added after final checks below.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS. |
+| Focused engine `TestBaseToughness*`, `TestGraveyardCountAndAdditionQueries` with `-count=1` | PASS after confirmed missing-API TDD failure and fixture correction. |
+| Focused `TestRONIndefiniteToughness*`, `TestRONCombatTarget*`, affected inventory tests with `-count=1` | PASS after confirmed unsupported-declaration TDD failures. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after exact inventory-count update. |
+| `make test` | PASS after exact inventory-count update. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic formatting changes reviewed, no unrelated implementation changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1 for 695 unsupported records; counts and unchanged acceptance above. |
+| Vocabulary source hash audit | All 12 unchanged. |
+
+Changed files: engine `composable_continuous.go`, `composable_target.go`,
+`graveyard_count.go`, `base_toughness_test.go`; RON `indefinite_type.go`,
+`indefinite_toughness.go`, `indefinite_toughness_test.go`,
+`combat_target_test.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended
+ledger entry. The descriptive commit hash is in the final response.

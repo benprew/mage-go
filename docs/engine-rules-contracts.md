@@ -4986,3 +4986,41 @@ factory instances, clones, live attachments, ability removal, source return,
 phasing, current type changes, batches, both affected-player replacement orders
 and strict collection rejection. No timing, cost, LKI storage or damage batch
 service changes in this slice.
+
+## RON indefinite base toughness
+
+`SetBaseToughness(PermanentRef, ResolutionValue) ContinuousModification` sets
+only base toughness in layer 7b (CR 613.4b). It preserves printed/CDA power and
+earlier base-power settings. Layer 7c bonuses/counters and layer 7d switches
+still apply. `Until(Indefinite, ...)` captures the value and subject incarnation
+at resolution (CR 608.2h, 611.2a–d). Later source departure and control changes
+do not end an installed effect. Phasing preserves it; a returned card cannot
+receive the old effect. `While` uses the same modification with live values.
+
+`AddValues(ResolutionValue, ResolutionValue) ResolutionValue` uses the shared
+arithmetic service. `CountGraveyardCards(PlayerRef, CardFilter) ResolutionValue`
+is a pure count of the selected player's current matching cards. An absent
+player gives zero; a zero filter counts all cards. A resolving ability's `You`
+is its saved controller, even after source control changes. Counts captured by
+`Until` do not change when more cards enter the graveyard. This API does not add
+all-zone CDA evaluation or change existing card-characteristic queries.
+
+RON accepts `CreatePermanentLayerEffect(subject, [SetToughness(value)])` only
+in resolving action contexts with typed subjects and a single modification.
+Values accept integer literals, nested binary `Plus`/`Minus`, typed
+`PowerOfPermanent`/`ToughnessOfPermanent` reads through the existing current/LKI
+service, and `TheNumberOfGraveyardCards(And([cardFilter,
+InAPlayersGraveyard(SinglePlayer(playerRef))]))` with either operand order.
+Card filters use the existing type/color and nonempty `And`/`Or` grammar;
+player references must be valid in the enclosing scope. Static or temporary
+RON `SetToughness`, chosen numbers and undeclared X remain unsupported.
+
+Sentinel checks its combat-pair target at announcement and resolution. A source
+or target removed from combat cannot retain the pair through LKI (CR 506.4,
+608.2b). Once installed, its setting lasts indefinitely. Wall of Tombstones
+triggers only on its controller's upkeep, counts at resolution, and keeps the
+count until another setting supersedes it. Defender remains in force.
+Evidence: `TestBaseToughness*`, `TestGraveyardCountAndAdditionQueries`, and
+`TestRONIndefiniteToughness*`. Existing incarnation, target, stack-copy, cloning,
+transaction and layer services retain ownership. No replacement ordering or
+simultaneous-operation contract changes.
