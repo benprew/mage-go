@@ -28133,3 +28133,142 @@ Slice files: `pkg/mage/composable_continuous.go`, `definition.go`,
 `inventory_test.go`, `temporary_rampage_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this appended progress entry.
 No second slice was started.
+
+## 2026-10-06: permanent-source next-event prevention prerequisite
+
+Status: completed engine slice `NEXT-PERMANENT-SOURCE-PREVENTION`. This run stops
+after this slice. Existing changes to `.gitignore`, the execution design and this
+ledger, and untracked `mtgish-ron-completed.md`, are preserved. Only this appended
+entry is staged from the ledger.
+
+### Fresh evidence, candidate comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, current ledger, vocabulary
+snapshot, fresh strict loader and semantic inventory, selected engine services,
+complete candidate RON records, relevant API/rules contracts and CR 113.7a,
+400.7, 609.7, 615.3–9/615.12, 616.1 and 702.26b. Local Oracle data confirms the
+relevant prevention and damage contracts where available. No Go card definition
+was used as a requirement. Baseline compiler tests, short engine suite and build
+passed. The loader exited 1 for collection rejection, with 1,806 compiled / 639
+rejected records and 688 accepted / 298 rejected names. Inventory contained
+72,962 occurrences, 8,559 signatures and 5,621 unknown-role occurrences.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Chosen-source next-event prevention, selected prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Complete family: **7**; this prerequisite: **0**. | Existing source shield uses UUID equality. Exact permanent identity, property rechecks and simultaneous event consumption are needed first. Remaining work includes typed choices with all CR 609.7a candidates, spell identity and spell-to-permanent continuity, per-instance chosen bindings and compiler continuation. This slice supplies the permanent source shield for all seven consumers. | Medium for the prerequisite: typed installation, retained source views, shared batch integration and gameplay contracts. Full source selection requires a larger follow-up. |
+| Repeatable mana conversion | Farrelite Priest, Initiates of the Ebon Hand: **2** after prerequisites. | Exact color payment is ready; repeated non-tap solver state, termination, synchronous activation history and deferred sacrifice execution remain. Standing Stones has an additional life-payment planner blocker and is excluded. Enables repeatable mana conversion. | Medium/high, with solver and execution lifecycle tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites. | Needs zone-aware characteristics, owner/controller scope, named and non-Wall count adapters, copy/layer contracts. Gaea's Avenger's previously recorded source defect and Wood Elemental's entry results are excluded. Enables characteristic queries in all zones. | High, with a shared characteristic service and five full gameplay mappings. |
+
+Full records and nested bodies support these estimates; reprints count once.
+The selected prerequisite supplies a smaller, reusable contract for seven
+consumers, ahead of the two broader engine alternatives. Selection, reuse
+boundary and acceptance cases were stated before edits. The implement-engine
+skill guided reusable engine work. No compiler adapter was partially enabled.
+Other inspected families were not started.
+
+### Exact contract, reuse and remaining contexts
+
+New engine signature:
+`PreventNextDamageFromPermanent(subject PermanentRef, recipient PlayerRef,
+filter PermanentFilter) ResolvingEffect`.
+
+Installation resolves typed references in the existing frame, requires a live
+matching source, and captures its incarnation and recipient. Nil, unbound and
+undeclared references reject during definition validation. A zero filter permits
+all permanent sources. Each damage event rechecks current source properties or
+the retained departure/phase view for the exact incarnation. Missing source
+information cannot fall back to a returned card. Nonmatching sources, zero
+amounts and other recipients do not consume the shield. Cleanup removes it.
+
+The existing `sourcePreventionReplacement` owns consumption and cloning.
+`damageFilterSource`, typed target bindings and the shared resolution frame own
+identity and retained information. The batch pipeline groups matching packets
+from the captured source to the saved player as one use. Affected-player ordering
+remains in the shared replacement service; another effect that prevents the whole
+event leaves this shield unused. Independent installations and copied activations
+keep independent consumption. Legacy `AddSourcePrevention` callers retain UUID
+behavior and do not opt into captured batch grouping.
+
+RON spelling, supported signatures and contexts are unchanged. Complete RON
+source selection remains rejected. The new effect can serve typed permanent
+references in resolving engine bodies; it does not select sources, install from
+an absent permanent, support a spell source, follow a spell onto the battlefield,
+or collect objects referred to by pending stack/replacement/delayed effects or
+face-up command-zone objects. Those contracts are required before the seven
+cards can be enabled. Generic filter callbacks must use the supplied permanent.
+The existing engine's unpreventable-damage attribute applies to a permanent
+recipient; this player-recipient slice introduces no rule for unpreventable
+player damage or damage from an unpreventable source.
+
+### Test-first evidence and mappings
+
+Initial engine tests failed for the missing typed installation API. After adding
+it, `TestNextPermanentSourcePreventionOneSimultaneousEvent` failed because two
+packets from the same source consumed the shield separately. The shared batch
+integration fixes that behavioral failure. Fixture corrections used the actual
+replacement slice, variadic damage API, constructors, mana payment and stack
+resolution APIs. A source-side use of the recipient-only unpreventable attribute
+was removed from the new fixture; a replacement-order expectation was corrected
+to account for the remaining finite shield. No existing test was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Prodigal Sorcerer, complete LEA record | `TestRONNextPermanentSourcePrevention`: full factory validation, tap/sickness legality and rollback, typed protection activation, native RON damage resolution, original source departure/return, phasing/cycle, control, copies and pending clone isolation. One copy consumes one shield; a second damage event proceeds. |
+| Orcish Artillery, complete LEA record | Same test covers its complete simultaneous target/self damage instructions and saved controller. `TestRONNextPermanentSourcePreventionArtillerySelf` targets its own controller: both damage packets are prevented in one event, then later damage proceeds. |
+| Permanent source identity and information | `TestNextPermanentSourcePreventionIdentity`, `Declarations`, `PropertyRechecks`, `MissingInformation`: live/control/departure/return, retained information after ordinary LKI cleanup, phase/cycle, combat and noncombat damage, cleanup, clone isolation, invalid declarations, absent/phased installation, color/type rechecks, initial mismatches and missing/unknown incarnations. |
+| Per-instance bindings, legality and costs | `IndependentBindings`: separate target frames for multiple paid activations and a copied activation, unpaid rollback, illegal phased target at resolution and independent clone consumption. |
+| Simultaneous operation and replacement ordering | `Simultaneous`, `OneSimultaneousEvent`, `ReplacementOrder`: other sources/recipients remain independent, same-source packets use one shield, later events proceed, affected player chooses competing prevention, unused shields remain available. Existing `TestPreventionAllocation*` and `TestDamageSourceFilter*` pass. |
+
+These are additional gameplay interactions for two already accepted cards.
+They do not constitute full gameplay verification of the seven blocked consumers
+or the collection. Collection-wide engine-validated and behavior-verified totals
+remain unset, separate from compilation.
+
+### Actual gain, source defects and removal gates
+
+Actual compiler gain: **0 names / 0 records**, matching the prerequisite estimate.
+Fresh loader and inventory JSON are exactly equal to baseline after parsing:
+**1,806 compiled / 639 rejected records; 688 accepted / 298 rejected names**.
+Every diagnostic, signature, occurrence count and source hash is unchanged.
+Strict loading still exits 1 for rejection and publishes no partial registry.
+No environment failure or new source defect was found. No RON source changed,
+so the vocabulary source snapshot does not need a refresh.
+
+A whole-repository caller audit for `AddSourcePrevention`,
+`sourcePreventionReplacement` and the new API found existing engine and Go-card
+callers. No DSL function, definition, generator or authoring instruction was
+removed. Collection loading, gameplay migration and runtime cutover remain below
+the removal gates. API and rules-contract updates describe only this established
+permanent-source shield contract.
+
+### Validation and next candidates
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine suite, make build | PASS |
+| Initial typed API and simultaneous-event tests | Expected missing API and behavioral failures confirmed |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(NextPermanentSourcePrevention\|RONNextPermanentSourcePrevention\|PreventionAllocation\|DamageSourceFilter)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS: zero issues; automatic import formatting reviewed |
+| Post-lint short engine tests and make test | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,806 compiled / 639 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: unchanged inventory, issues and source hashes |
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Typed damage-source choices with complete CR 609.7a candidate discovery,
+   spell identity/entry continuity and source bindings, followed by the seven
+   prevention consumers after all choice and recheck contracts are ready.
+2. Repeatable non-tap mana conversion and synchronous activation-history bodies
+   for Farrelite Priest and Initiates of the Ebon Hand.
+3. All-zone count CDA service for the five clean consumers.
+
+Slice files: `next_source_prevention.go`, `next_source_prevention_test.go`,
+`replacement.go`, `prevention_allocation.go`, `doc.go` under `pkg/mage`;
+`pkg/mage/dsl/ron/next_source_prevention_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this entry. No second slice was started.
+The commit hash is reported in the final response after all checks pass.

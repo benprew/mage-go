@@ -406,20 +406,31 @@ func (r *colorPreventionReplacement) Clone() ReplacementEffect {
 
 type sourcePreventionReplacement struct {
 	replacementBase
-	playerID  uuid.UUID
-	dmgSource uuid.UUID
-	consumed  bool
+	playerID    uuid.UUID
+	dmgSource   uuid.UUID
+	incarnation uuid.UUID
+	from        PermanentFilter
+	consumed    bool
 }
 
-func (r *sourcePreventionReplacement) Matches(a Action, _ GameReader) bool {
+func (r *sourcePreventionReplacement) Matches(a Action, reader GameReader) bool {
 	act, ok := a.(*DamageToPlayerAction)
+	if !ok || act.Amount() <= 0 || act.PlayerID() != r.playerID || act.ActionSource() != r.dmgSource {
+		return false
+	}
+	if r.incarnation == uuid.Nil {
+		return true
+	}
+	source := act.DamageSource()
+	if source.Incarnation() != r.incarnation {
+		return false
+	}
+	g, ok := reader.(*Game)
 	if !ok {
 		return false
 	}
-	if act.PlayerID() != r.playerID {
-		return false
-	}
-	return act.ActionSource() == r.dmgSource
+	p := g.damageFilterSource(act.ActionSource(), source)
+	return p != nil && r.from.Match(p, g)
 }
 
 func (r *sourcePreventionReplacement) Replace(a Action, g *Game) Action {

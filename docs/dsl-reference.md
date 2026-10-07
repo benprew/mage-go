@@ -4841,3 +4841,24 @@ Evidence: `TestTemporaryTrigger*`, `TestRONTemporaryRampage*`, existing
 `TestGrantedTrigger*` and `TestRampage*`. Gabriel Angelfire's four choices and
 saved-player next-upkeep duration, and Rapid Fire's casting restriction,
 resolution-time rampage condition and end-of-turn grants have complete RON tests.
+
+## Permanent-source next-event prevention prerequisite
+
+`PreventNextDamageFromPermanent(subject PermanentRef, recipient PlayerRef,
+filter PermanentFilter) ResolvingEffect` installs one shield until cleanup.
+The subject must be present and pass the filter when the effect resolves.
+The recipient is saved at resolution. Targets and saved references use their
+existing declaration and incarnation checks.
+
+The next matching damage event to that player is prevented in full. Current
+source properties are checked again; departure or phasing uses the retained
+view for that exact incarnation. A returned card cannot use or consume the old
+shield. Nonmatching and zero damage do not consume it. All matching packets
+from one simultaneous event are prevented with one use. Separate installations,
+copied activations and cloned games keep separate consumption state.
+
+The zero filter matches all permanent sources. Filter callbacks must read the
+supplied permanent, rather than look up its UUID again. This prerequisite does
+not choose a source or support spell-to-permanent source continuity. RON
+`ChooseADamageSource` and its continuation remain rejected. The existing UUID
+`Game.AddSourcePrevention` installer retains its caller behavior.

@@ -5680,3 +5680,36 @@ Evidence: `TestTemporaryTriggerLifecycle`, `Declarations`, `SpellScope`,
 `RapidFireLifecycle`, `GabrielChoices`, `Invalid`, `StrictLoad`, `TimingAndShapes`;
 existing `TestGrantedTrigger*`, `TestRampage*` and RON rampage tests. The full
 Gabriel Angelfire and Rapid Fire records have separate behavior mappings.
+
+## Next-event prevention for a captured permanent source
+
+`PreventNextDamageFromPermanent(PermanentRef, PlayerRef, PermanentFilter)` uses
+the shared source-prevention replacement and damage batch pipeline. Installation
+requires a live, matching permanent and a valid player. Definition validation
+rejects nil, unbound and undeclared references. Resolution saves the source
+incarnation and recipient. It cannot restore a departed or phased subject with
+LKI at installation.
+
+Damage matches the saved source incarnation. Current characteristics or retained
+departure/phase information supply the property check (CR 113.7a, 400.7,
+609.7b, 615.8–9, 702.26b). Nonmatching sources, other recipients, missing source
+information and nonpositive amounts do not consume the shield. Control changes
+and phase cycles preserve it; returning the physical card cannot inherit it.
+Cleanup removes it. Consumption remains separate in game clones.
+
+The affected player chooses among competing replacements through the existing
+pipeline (CR 616.1). If another prevention removes all damage, this shield stays
+unused. If this shield is selected, it prevents all currently matching packets
+from the source to that player in the simultaneous event before damage executes.
+Other sources and recipients remain independent. Later events can use other
+installed shields, including shields from copies of activated abilities.
+
+Evidence: `TestNextPermanentSourcePreventionIdentity`, `Declarations`,
+`PropertyRechecks`, `ReplacementOrder`, `Simultaneous`, `OneSimultaneousEvent`,
+`IndependentBindings`, `MissingInformation`, and
+`TestRONNextPermanentSourcePrevention` for complete Prodigal Sorcerer and Orcish
+Artillery RON records. These tests establish the permanent-source prerequisite;
+source choice, spell sources, source continuity on spell entry, command-zone and
+pending-object candidates remain separate contracts. The engine currently models
+unpreventable damage with a permanent-recipient rule; this player-recipient
+service adds no unpreventable-player or unpreventable-source rule.

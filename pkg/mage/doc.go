@@ -255,6 +255,11 @@
 // Each source keeps its own trample and deathtouch. Shared assignments can
 // supply lethal damage before a source with trample damages the defender.
 //
+// Use [PreventNextDamageFromPermanent] for one damage event from a typed
+// permanent source to a player this turn. The filter is checked at installation
+// and before damage. A returned source cannot consume the old shield.
+// All matching packets in one simultaneous event use the shield together.
+//
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].
 //
