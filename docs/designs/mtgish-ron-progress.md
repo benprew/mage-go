@@ -36374,3 +36374,139 @@ Ranked next candidates to reassess:
 2. Parameterized bands with others for the eight consumers above.
 3. Entry color-choice bindings and live color reads for Psychic Allergy and Jihad;
    the latter also needs combined choices and its state-trigger contract.
+
+## Run 2026-10-07: TEMPORARY-ABILITY-GRANTS
+
+Status: complete slice. Fresh results below supersede the earlier collection
+counts. No second slice starts. Baseline had user edits to `.gitignore`, the
+execution design and this ledger, plus untracked `mtgish-ron-completed.md`.
+Those changes remain outside this commit. Only this new ledger entry is staged.
+
+### Fresh evidence, candidates and selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build` passed. Strict loading
+and AST inventory both rejected the collection as expected: 1,944 compiled /
+501 rejected records; 754 accepted / 232 rejected unique names. Reprints count
+once. Complete records and nested forms were inspected for these candidates.
+
+| Candidate | Distinct affected cards and estimated full unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Temporary ability grants, selected | Goblin Wizard, Part Water: **2** | Wizard's hand-entry ability already compiles. Part Water's XX costs and X target bounds already compile. Missing typed protection modification and plural keyword adapter are the remaining gaps. Extends the shared temporary ability plan and plural target layer capture. | Small adapters, medium engine/interaction tests. Protection ordering and attachment audits found shared prerequisites, fixed here. |
+| Complete source-choice shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after enumeration and adapter work | Complete records all use a filtered source choice followed by the next matching damage shield. CR 609.7a also requires referred objects and face-up command-zone objects; live-object enumeration alone is insufficient. Enables later redirection and prevention-result consumers, which have further blockers. | High: legal source enumeration, retained identity, lexical source binding and shield tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after engine/adapter work | Complete records require legendary or named-token membership, token grants and removal of all variants. Parameter storage and band formation/assignment contracts are missing. | High: combat, layers, tokens and copy/clone tests. |
+
+Two complete cards offered the largest credible gain for the smaller effort.
+The selected contract, reuse boundary and acceptance cases were stated before
+editing. The discovered protection-ordering prerequisite belongs to this same
+ability-grant slice: a protection adapter must execute the full protection rule.
+This adds no card-specific engine branch. The local `implement-engine` skill
+was used for the typed primitive and its prerequisite. No removed card skill,
+Go-card requirement or generated stub was used.
+
+### Exact shapes, contexts and engine reuse
+
+- `Protection(FromColor(Colors([color, ...])))` is a temporary ability plan.
+  At least one of White, Blue, Black, Red, Green is required. It works in
+  `AddAbility/1` within `CreatePermanentLayerEffectUntil/3` and in the existing
+  scoped `ChooseAnAbility/1` continuation with `AddAbilityVariable/1`.
+  Existing resolving action contexts, typed permanent references and temporary
+  durations retain their restrictions. The immutable bit set keeps choice plans
+  comparable and gives each factory fresh engine declarations.
+- `CreateEachPermanentLayerEffectUntil(Ref_TargetPermanents,
+  [AddAbility([keyword, ...]), ...], UntilEndOfTurn)/3` uses the existing plural
+  target declaration, including `NumberTargetPermanents(ValueX, filter)/2` and
+  `OneOrMoreTargetPermanents(filter)/1`. Nonempty supported temporary keywords
+  and fixed landwalk reuse one shared validator with filtered collection grants.
+  All legal members are captured together at resolution. Mixed color/keyword
+  operations, plural protection/rampage and delayed collection references remain
+  rejected; other target kinds do not become collection bindings.
+- New engine API: `GrantProtectionColors(subject PermanentRef,
+  colors ...core.Color) ContinuousModification`. Copies colors, validates the
+  subject and actual colors, and installs wrapped protection in layer 6 through
+  existing `Until` capture, duration, identity and clone services. Layer passes
+  do not accumulate runtime abilities. Normal targeting, Aura legality and
+  blocking use existing protection services; no Ward exemption is added. Equipment
+  and Fortification attachment checks now reject matching protection and detach
+  existing illegal attachments without destroying them. Both attachment sides
+  are updated through mutable permanent access.
+- Protection damage prevention is now a dynamic candidate in the shared single
+  and simultaneous replacement selectors. Source snapshots and the current
+  recipient determine applicability after each replacement. Affected players
+  can choose protection or another shield first. Legacy direct damage and
+  self-fight paths no longer discard protected damage before the selector.
+  Existing unpreventable-damage bypasses remain effective.
+
+RON owns spelling, arity, lexical scope and lowering. The engine owns protection,
+layer state, source information, replacement choices, batches, and capture.
+No global last-action result, game-time declaration panic, fallback factory,
+production subset registry or independent rules store was introduced.
+Rules evidence: CR 702.14c, 702.16b-f, 611.2c, 613.1f and 616.1e-f.
+Local `data/DRK.json` and `data/LEG.json` Oracle text agrees with both full records.
+No source defect was corrected and no RON hash changed; vocabulary refresh was
+not needed. Existing unrelated source defects remain separate blockers.
+
+### TDD and complete-card gameplay mappings
+
+Engine tests first failed for undefined `GrantProtectionColors`. Real RON tests
+then failed at the expected unsupported `Protection` and plural `AddAbility`
+adapters. The replacement-order test failed because protection suppressed damage
+before offering either effect. Attachment tests also failed for retained Equipment/Fortification and repeated
+attachment. Implementations resolved these failures.
+Fixtures were corrected to use `HasLandwalkEvasion` for defending lands and a
+live colored object for protection reads. No gameplay assertion was weakened.
+The old Wizard rejection assertion now validates its accepted full definition.
+
+| Card or contract | Tests |
+| --- | --- |
+| Goblin Wizard, full DRK record | `TestRONTemporaryAbilityGoblinWizard`: native cast, red payment, Goblin target filter, either controller, source departure, target return/phasing/shroud, copies, pending clones, cleanup. `TestRONTemporaryAbilityGoblinWizardHandEntry`: its other ability, sickness rejection, tap payment, resolution choice, accept/decline, Goblin hand filtering, source departure. `TestRONTemporaryAbilityProtectionRules`: native white Aura falls off, targeting, blocking, white damage and changed source color. Shared hand-entry copy/controller contracts remain in `optional_hand_entry_test.go`. |
+| Part Water, full LEG record | `TestRONTemporaryAbilityPartWater`: native XX payment and rollback, X=0 and X=2, exact/distinct targets, both controllers, partial/all-illegal resolution, returned/phased objects, copies, pending clones, captured membership, Island-dependent evasion and cleanup. |
+| Adapter contracts | `TestRONTemporaryAbilityInvalid`: malformed/empty/invalid protection and collective declarations. `TestRONTemporaryAbilityFactoriesAndInventory`: separate factory targets, strict two-card test collection, semantic roles. `TestRONTemporaryAbilityColorsAndChoices`: all five colors, combined grants and scoped resolution choices. |
+| Engine contracts | `TestProtectionModificationCaptureAndLayers`, `TestProtectionModificationValidation`, `TestProtectionModificationReplacementOrder`, `TestProtectionModificationRedirectionAndBatch`, `TestProtectionModificationAttachments`: declaration validation, copied inputs, layer reset/order, incarnation/phase cycle, cloning, both shield orders, recipient rechecks, simultaneous packets, unpreventable damage, Equipment/Fortification detachment and attachment rejection. Existing source-identity, color and fight regressions were rerun. |
+
+This adds **2 complete-card gameplay mappings**. Collection-wide behavior and
+engine-validation totals remain unmeasured/null; compilation is separate.
+
+### Validation, actual gain and remaining work
+
+Actual gain equals the estimate: exactly **Goblin Wizard and Part Water**, each
+one unique name and one record. No previously accepted name was lost. Final
+strict loading and inventory report **1,946 compiled / 499 rejected records**,
+**756 accepted / 230 rejected unique names**, 2,445 records and 986 names.
+Inventory remains 72,953 occurrences / 8,554 signatures; unknown-role occurrences
+fall from 4,216 to 4,212 through protection argument-role reporting.
+
+| Command | Result |
+| --- | --- |
+| Focused engine and RON tests with `-count=1` | PASS after the expected failures above. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS; collection counts and old rejection assertion updated. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including after lint. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,946/499, no registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same membership and measurements above. |
+
+No environmental or pre-existing failure blocks the completed slice. Remaining
+fresh examples: Circle of Protection: Red `2ED.lines.ron:36:213`, unsupported
+`ChooseADamageSource`; Adventurers' Guildhouse `LEG.lines.ron:5:255`, unsupported
+`BandsWithOthers`; Animate Artifact `2ED.lines.ron:3:299`, unsupported conditional
+static `AddCardtype`. Full runtime loading, full gameplay mapping, Go-definition
+removal and DSL removal gates remain unmet. Existing callers and generators
+remain intact. No DSL function was deleted; no removal audit is claimed.
+
+Changed files: engine `composable_continuous.go`, `protection_replacement.go`,
+`protection_modification_test.go`, `effect_manager.go`, `damage_system.go`,
+`effect_damage.go`, `effect_fight.go`, `game.go`, `state_based_actions.go`; RON `temporary_keyword.go`, `plural_color.go`,
+`temporary_collection.go`, `inventory.go`, `temporary_ability_grant_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `optional_hand_entry_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete CR 609.7a damage-source enumeration, then seven source-choice shields.
+2. Parameterized bands with others for the eight named consumers above.
+3. Shared static base-P/T values for Animate Artifact, Angry Mob and Gaea's Liege;
+   inspect the known Liege predicate defect before assigning complete-card gains.

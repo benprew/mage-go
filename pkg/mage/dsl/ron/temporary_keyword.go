@@ -37,12 +37,35 @@ func compileTemporaryKeywordRemoval(n Node, subject permanentReferencePlan) (fun
 }
 
 type temporaryAbilityPlan struct {
-	keyword   core.Attr
-	rampage   int
-	isRampage bool
+	keyword    core.Attr
+	rampage    int
+	isRampage  bool
+	protection uint8
 }
 
 func compileTemporaryAbility(n Node) (temporaryAbilityPlan, error) {
+	if n.Name == "Protection" {
+		if err := arity(n, 1); err != nil {
+			return temporaryAbilityPlan{}, err
+		}
+		colors, err := protectionColors(n.Args[0])
+		if err != nil {
+			return temporaryAbilityPlan{}, err
+		}
+		if len(colors) == 0 {
+			return temporaryAbilityPlan{}, problem(n, "supply at least one protection color")
+		}
+		for _, color := range colors {
+			if color < core.White || color > core.Green {
+				return temporaryAbilityPlan{}, problem(n, "supply one of the five protection colors")
+			}
+		}
+		var mask uint8
+		for _, color := range colors {
+			mask |= 1 << uint(color-core.White)
+		}
+		return temporaryAbilityPlan{protection: mask}, nil
+	}
 	if n.Name == "Rampage" {
 		if err := arity(n, 1); err != nil {
 			return temporaryAbilityPlan{}, err
@@ -57,6 +80,9 @@ func compileTemporaryAbility(n Node) (temporaryAbilityPlan, error) {
 }
 
 func (p temporaryAbilityPlan) label() string {
+	if p.protection != 0 {
+		return fmt.Sprintf("protection from %v", p.protectionColors())
+	}
 	if p.isRampage {
 		return fmt.Sprintf("rampage %d", p.rampage)
 	}
@@ -64,9 +90,22 @@ func (p temporaryAbilityPlan) label() string {
 }
 
 func (p temporaryAbilityPlan) modification(subject mage.PermanentRef) mage.ContinuousModification {
+	if p.protection != 0 {
+		return mage.GrantProtectionColors(subject, p.protectionColors()...)
+	}
 	if p.isRampage {
 		trigger := mage.WhenEvent(mage.BecomesBlocked(mage.This), mage.RampageEffect(p.rampage)).(*mage.GenericTriggered)
 		return mage.TriggeredAbilityModification(subject, trigger)
 	}
 	return mage.GrantKeywordModification(subject, p.keyword)
+}
+
+func (p temporaryAbilityPlan) protectionColors() []core.Color {
+	var colors []core.Color
+	for color := core.White; color <= core.Green; color++ {
+		if p.protection&(1<<uint(color-core.White)) != 0 {
+			colors = append(colors, color)
+		}
+	}
+	return colors
 }

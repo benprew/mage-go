@@ -1022,6 +1022,17 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 			}
 		}
 	}
+	// A replacement can change the recipient before protection applies.
+	if damage, ok := action.(*DamageToCreatureAction); ok {
+		source := damage.DamageSource()
+		if !source.Valid() {
+			source = g.CaptureDamageSource(damage.ActionSource())
+		}
+		protection := &protectionDamageReplacement{source: source}
+		if protection.Matches(action, g) {
+			candidates = append(candidates, protection)
+		}
+	}
 	if len(candidates) == 0 {
 		return nil
 	}

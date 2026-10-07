@@ -40,6 +40,19 @@ func compilePluralColor(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(operations) > 0 && operations[0].Name == "AddAbility" {
+		keywords, err := compileCollectionKeywords(operations)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			modifications := make([]mage.ContinuousModification, len(keywords))
+			for i, keyword := range keywords {
+				modifications[i] = mage.GrantEachKeyword(bindings.permanentSets[ctx.permanentTargets], keyword)
+			}
+			return mage.Until(core.EndOfTurn, modifications...)
+		}, nil
+	}
 	if len(operations) != 1 {
 		return nil, problem(n.Args[1], "supply one plural color modification")
 	}

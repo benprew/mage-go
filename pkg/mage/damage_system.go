@@ -609,9 +609,6 @@ func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest)
 	if !source.Valid() {
 		source = g.CaptureDamageSource(sourceID)
 	}
-	if protectedFromDamageSource(perm, source) {
-		return nil
-	}
 	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
 	return action
 }

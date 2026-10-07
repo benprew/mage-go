@@ -21,6 +21,8 @@ type layerModification struct {
 	controller            PlayerRef
 	power, toughness      ResolutionValue
 	keyword               Attr
+	protectionColors      []Color
+	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
 	removeAbilities       bool
@@ -89,6 +91,12 @@ func SwitchPowerToughness(subject PermanentRef) ContinuousModification {
 // ModifyEachPT applies a power and toughness modification to a permanent set.
 func ModifyEachPT(subjects PermanentSet, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subjects: subjects, power: power, toughness: toughness, layer: LayerPT}
+}
+
+// GrantProtectionColors grants protection without an attachment exception.
+// The layer service keeps the subject's original incarnation.
+func GrantProtectionColors(subject PermanentRef, colors ...Color) ContinuousModification {
+	return &layerModification{subject: subject, protectionColors: append([]Color(nil), colors...), protectionGrant: true, layer: LayerAbility}
 }
 
 // GrantKeywordModification grants a keyword. DSL exports it as GrantKeyword.
@@ -254,6 +262,16 @@ func (m *layerModification) inspectDefinition() definitionNode {
 		subject = m.subjects
 	}
 	n := definitionNode{Role: "continuous-modification", Text: m.description(), children: []definitionEdge{{"subject", subject}}}
+	if m.protectionGrant {
+		if len(m.protectionColors) == 0 {
+			n.problem = "supply at least one protection color"
+		}
+		for _, color := range m.protectionColors {
+			if color < White || color > Green {
+				n.problem = "supply one of the five protection colors"
+			}
+		}
+	}
 	if m.typeAddition && m.addType == 0 {
 		n.problem = "supply a supported permanent card type"
 	}
@@ -286,6 +304,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.protectionGrant {
+			return fmt.Sprintf("protection from %v", m.protectionColors)
+		}
 		if m.assignsNoCombatDamage {
 			return "assigns no combat damage"
 		}
@@ -352,6 +373,8 @@ type capturedModification struct {
 	controller            uuid.UUID
 	power, toughness      int
 	keyword               Attr
+	protectionColors      []Color
+	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
 	removeAbilities       bool
@@ -380,7 +403,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -439,7 +462,9 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			p.toughBonus += v.toughness
 		}
 	case LayerAbility:
-		if v.assignsNoCombatDamage {
+		if v.protectionGrant {
+			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ProtectionFromColors(append([]Color(nil), v.protectionColors...)...)))
+		} else if v.assignsNoCombatDamage {
 			if g.effects.noCombatAssignmentRules == nil {
 				g.effects.noCombatAssignmentRules = make(map[uuid.UUID]uuid.UUID)
 			}

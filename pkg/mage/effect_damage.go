@@ -416,11 +416,6 @@ func (e *dealDamageEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 
-	sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
-	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, ctx.Game) {
-		return nil
-	}
-
 	ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
 	return nil
 }

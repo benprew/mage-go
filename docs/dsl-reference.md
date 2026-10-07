@@ -6214,3 +6214,32 @@ permanent or in shared mutable declaration state. The existing layer capture
 service owns incarnation identity, phase cycles, timestamps and game cloning.
 Accepted Alchor's Tomb and Dream Coat records have gameplay mappings in
 `color_choice_test.go`; this does not certify all accepted collection records.
+
+## RON temporary ability grants
+
+`CreatePermanentLayerEffectUntil(ref, [AddAbility([Protection(FromColor(
+Colors([White])))])], UntilEndOfTurn)` accepts one or more of the five Magic
+colors. Empty lists, colorless, unknown qualities, malformed constructors and
+unbound subjects fail compilation. Protection is part of the existing temporary
+ability plan, including its scoped `ChooseAnAbility` continuation. The plan keeps
+an immutable color set; factory calls build separate target declarations.
+Existing permanent references and temporary durations keep their scope checks.
+
+`CreateEachPermanentLayerEffectUntil(Ref_TargetPermanents,
+[AddAbility([Landwalk(IsLandType(Island))])], UntilEndOfTurn)` accepts nonempty
+lists of existing temporary keywords, including fixed landwalk. It uses the
+existing plural target binding from `NumberTargetPermanents` or
+`OneOrMoreTargetPermanents`. Multiple `AddAbility` operations share one captured
+installation. Mixed color/keyword modifications, plural protection/rampage and
+delayed plural target reads remain unsupported.
+
+`mage.GrantProtectionColors(subject mage.PermanentRef, colors ...core.Color)
+mage.ContinuousModification` is the typed engine primitive. Definition validation
+rejects missing subjects, undeclared targets and invalid color sets. Use it with
+`Until` to capture the live subject incarnation in layer 6. Normal protection
+rules apply to targeting, attachment, blocking and damage; there is no Ward
+attachment exception. Repeated layer passes do not accumulate abilities.
+
+Goblin Wizard and Part Water have complete RON gameplay mappings in
+`temporary_ability_grant_test.go`. Their native costs, choices, targets, copies,
+clones, object identity and cleanup are tested separately from loader acceptance.

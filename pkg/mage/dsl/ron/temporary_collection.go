@@ -103,8 +103,22 @@ func compileTemporaryCollectionKeywords(n Node, ctx scope) (effectFactory, error
 	if err != nil {
 		return nil, err
 	}
+	keywords, err := compileCollectionKeywords(n.Args[1].Args)
+	if err != nil {
+		return nil, err
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		modifications := make([]mage.ContinuousModification, len(keywords))
+		for i, keyword := range keywords {
+			modifications[i] = mage.GrantEachKeyword(subjects(bindings), keyword)
+		}
+		return mage.Until(core.EndOfTurn, modifications...)
+	}, nil
+}
+
+func compileCollectionKeywords(operations []Node) ([]core.Attr, error) {
 	var keywords []core.Attr
-	for _, part := range n.Args[1].Args {
+	for _, part := range operations {
 		if part.Name != "AddAbility" {
 			return nil, unsupported(part, "temporary collection keyword modification")
 		}
@@ -126,11 +140,5 @@ func compileTemporaryCollectionKeywords(n Node, ctx scope) (effectFactory, error
 			keywords = append(keywords, keyword)
 		}
 	}
-	return func(bindings instanceBindings) mage.Effect {
-		modifications := make([]mage.ContinuousModification, len(keywords))
-		for i, keyword := range keywords {
-			modifications[i] = mage.GrantEachKeyword(subjects(bindings), keyword)
-		}
-		return mage.Until(core.EndOfTurn, modifications...)
-	}, nil
+	return keywords, nil
 }

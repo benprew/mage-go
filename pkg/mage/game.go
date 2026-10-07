@@ -1589,10 +1589,10 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 			return false
 		}
 	} else if src.HasSubType("Equipment") {
-		if src.HasType(TypeCreature) || !target.HasType(TypeCreature) || src.ID() == target.ID() {
+		if src.HasType(TypeCreature) || !target.HasType(TypeCreature) || src.ID() == target.ID() || target.HasProtectionFromInGame(src.Card, g) {
 			return false
 		}
-	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() {
+	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() || target.HasProtectionFromInGame(src.Card, g) {
 		return false
 	}
 	return true

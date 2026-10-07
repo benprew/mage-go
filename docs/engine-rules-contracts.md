@@ -7412,3 +7412,35 @@ Copied activations ask their own controller. Pending choices and resolved layers
 remain separate in game clones; search clones use their existing choice defaults.
 Alchor's Tomb retains its controlled-target and payment rules. Dream Coat retains
 its Aura subject and once-per-turn activation rule. No engine API changes.
+
+## Typed temporary protection and replacement ordering
+
+`GrantProtectionColors(PermanentRef, ...core.Color) ContinuousModification`
+uses the shared layer capture service. Its color list is copied at declaration.
+Definition validation requires a subject and at least one of the five Magic
+colors. `Until` binds the live incarnation at resolution. A departed or phased
+subject cannot receive a new grant. Phasing after installation keeps the captured
+identity; departure and return do not. Source departure does not end the grant.
+Wrapped protection is reset on each layer pass, obeys later ability removal,
+and expires with its duration. Clones retain independent effect and runtime state.
+
+Permanent protection is now an applicable prevention candidate in both the
+single damage and simultaneous damage replacement selectors. The affected
+player can choose protection before or after another shield (CR 616.1).
+The candidate reads the current recipient after each replacement and retains
+the proposed damage source information. Redirecting to a protected recipient
+can prevent damage; redirecting away can permit it. Unpreventable damage uses
+the existing bypass. Legacy damage and self-fight paths also reach this service.
+Protection no longer discards damage before those choices. Targeting, Aura
+legality, blocking and current color reads reuse CR 702.16 services. Equipment
+and Fortification attachment rejects matching protection. Existing attachments
+become unattached through state-based actions, keep the attachment permanent on
+the battlefield, and update both sides of the attachment relation (CR 702.16d).
+
+Evidence: `TestProtectionModificationCaptureAndLayers`,
+`TestProtectionModificationValidation`,
+`TestProtectionModificationReplacementOrder`,
+`TestProtectionModificationRedirectionAndBatch`,
+`TestProtectionModificationAttachments`, and the real RON
+`TestRONTemporaryAbility*` tests. Existing source-identity, color, prevention
+allocation, fight and replacement tests remain regression evidence.

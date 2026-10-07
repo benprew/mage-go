@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -81,17 +83,21 @@ func (g *Game) checkStateBasedActions() bool {
 			})
 		}
 
-		// Equipment attached to a non-creature or missing host becomes unattached (CR 704.5n).
+		// Protection can make an existing Equipment or Fortification attachment illegal.
 		for _, p := range g.zones.battlefield {
 			if p.PhasedOut {
 				continue
 			}
-			if p.HasSubType("Equipment") && p.IsAttached() {
+			if (p.HasSubType("Equipment") || p.HasSubType("Fortification")) && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
-				if host == nil || !host.HasType(TypeCreature) {
+				if host == nil || (p.HasSubType("Equipment") && !host.HasType(TypeCreature)) || (p.HasSubType("Fortification") && !host.HasType(TypeLand)) || host.HasProtectionFromInGame(p.Card, g) {
 					p = g.MutablePermanent(p.ID())
 					if p == nil {
 						continue
+					}
+					if host != nil {
+						host = g.MutablePermanent(host.ID())
+						host.Attachments = slices.DeleteFunc(host.Attachments, func(id uuid.UUID) bool { return id == p.ID() })
 					}
 					p.AttachedTo = uuid.Nil
 					p.attachedIncarnation = uuid.Nil

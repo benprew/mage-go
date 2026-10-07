@@ -1070,7 +1070,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "color_list":
-		if n.Name == "SimpleColorList" && len(n.Args) == 1 {
+		if (n.Name == "SimpleColorList" || n.Name == "Colors") && len(n.Args) == 1 {
 			return "color"
 		}
 	case "permanent_rule_operation":
@@ -1115,8 +1115,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "TriggerA" && len(n.Args) == 2 {
 			return []string{"event", "actions"}[index]
 		}
+		if n.Name == "Protection" && len(n.Args) == 1 {
+			return "protection_filter"
+		}
 		if n.Name == "Landwalk" && len(n.Args) == 1 {
 			return "landwalk_filter"
+		}
+	case "protection_filter":
+		if n.Name == "FromColor" && len(n.Args) == 1 {
+			return "color_list"
 		}
 	case "landwalk_filter":
 		if n.Name == "IsSupertype" && len(n.Args) == 1 {

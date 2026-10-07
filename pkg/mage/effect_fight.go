@@ -76,8 +76,7 @@ func fightPermanents(ctx *EffectContext, first, second *Permanent) {
 	firstPower := first.CurrentPower(ctx.Game)
 	secondPower := second.CurrentPower(ctx.Game)
 	if first.incarnationID == second.incarnationID {
-		firstCard := ctx.Game.FindCardAnywhere(first.ID())
-		if firstPower > 0 && (firstCard == nil || !first.HasProtectionFromInGame(firstCard, ctx.Game)) {
+		if firstPower > 0 {
 			ctx.Game.DealDamageToPermanent(first, 2*firstPower, first.ID())
 		}
 		ctx.Game.FireEvent(GameEvent{Type: EvtFight, SourceID: first.ID(), TargetID: first.ID(), PlayerID: ctx.Controller})
