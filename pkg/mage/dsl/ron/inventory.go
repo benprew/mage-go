@@ -634,6 +634,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "counter_removal_instruction"
 			}
+		case "PutCountersWithRestriction":
+			if len(n.Args) == 2 {
+				return []string{"counter_instruction", "counter_placement_restriction"}[index]
+			}
 		case "PutCounters":
 			if len(n.Args) == 1 {
 				return "counter_instruction"
@@ -746,8 +750,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ACounterOfTypeOnPermanent" && len(n.Args) == 2 {
 			return []string{"permanent_counter_type", "permanent_reference"}[index]
 		}
-		if n.Name == "NumberCountersOfTypeOnPermanent" && len(n.Args) == 3 {
+		if (n.Name == "NumberCountersOfTypeOnPermanent" || n.Name == "UptoNumberCountersOfTypeOnPermanent") && len(n.Args) == 3 {
 			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
+		}
+	case "counter_placement_restriction":
+		if n.Name == "CantCauseTheNumberOfCountersOfTypeOnPermanentToBeGreaterThan" && len(n.Args) == 3 {
+			return []string{"permanent_counter_type", "permanent_reference", "value"}[index]
 		}
 	case "counter_removal_instruction":
 		if (n.Name == "ACounterOfTypeFromPermanent" || n.Name == "AnyNumberOfCountersOfTypeFromPermanent" || n.Name == "AllCountersOfTypeFromPermanent") && len(n.Args) == 2 {

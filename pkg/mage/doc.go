@@ -431,6 +431,11 @@
 // Each permanent keeps its choice through control changes and phasing.
 // [EventIsChosenPlayerUpkeep] checks that choice when the upkeep event occurs.
 //
+// Use [AddCountersUpTo] for an optional counter amount with an action limit.
+// The effect controller chooses at resolution. The limit still applies after
+// replacements, because this action cannot cause an excess on its subject.
+// Other actions can add counters above this limit.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -15,40 +15,7 @@ import (
 
 func clockworkTriggerCard(t *testing.T, set, name string) mage.Card {
 	t.Helper()
-	data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	nodes, err := Parse(strings.NewReader(string(data)), set+".ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, node := range nodes {
-		if node.Fields["Name"].String != name {
-			continue
-		}
-		rules := node.Fields["Rules"]
-		var selected []Node
-		for _, rule := range rules.Args {
-			if rule.Name != "ActivatedWithModifiers" {
-				selected = append(selected, rule)
-			}
-		}
-		// The restoration rule has a separate compiler gap. This fixture tests the other rules.
-		rules.Args = selected
-		node.Fields["Rules"] = rules
-		factory, err := Compile(node)
-		if err != nil {
-			t.Fatal(err)
-		}
-		card := factory()
-		if err := mage.ValidateCardDefinition(name, card); err != nil {
-			t.Fatal(err)
-		}
-		return card
-	}
-	t.Fatal("missing record", name)
-	return nil
+	return repositoryCard(t, set, name)
 }
 
 func TestRONEndCombatClockwork(t *testing.T) {
@@ -225,8 +192,8 @@ func TestRONEndCombatInvalid(t *testing.T) {
 	}
 }
 
-func TestRONEndCombatFullRecordsRemainRejected(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"LEA", "Clockwork Beast", "PutCountersWithRestriction"}, {"LEB", "Clockwork Beast", "PutCountersWithRestriction"}, {"2ED", "Clockwork Beast", "PutCountersWithRestriction"}, {"3ED", "Clockwork Beast", "PutCountersWithRestriction"}, {"CED", "Clockwork Beast", "PutCountersWithRestriction"}, {"CEI", "Clockwork Beast", "PutCountersWithRestriction"}, {"ATQ", "Clockwork Avian", "PutCountersWithRestriction"}, {"LEG", "The Wretched", "GainControlOfEachPermanentUntil"}} {
+func TestRONEndCombatFullRecordLoading(t *testing.T) {
+	for _, tc := range []struct{ set, name, blocker string }{{"LEA", "Clockwork Beast", ""}, {"LEB", "Clockwork Beast", ""}, {"2ED", "Clockwork Beast", ""}, {"3ED", "Clockwork Beast", ""}, {"CED", "Clockwork Beast", ""}, {"CEI", "Clockwork Beast", ""}, {"ATQ", "Clockwork Avian", ""}, {"LEG", "The Wretched", "GainControlOfEachPermanentUntil"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)
@@ -238,7 +205,7 @@ func TestRONEndCombatFullRecordsRemainRejected(t *testing.T) {
 			}
 		}
 		_, err = LoadFS(fstest.MapFS{"full.ron": {Data: []byte(record)}}, "*.ron")
-		if err == nil || !strings.Contains(err.Error(), tc.blocker) {
+		if (tc.blocker == "" && err != nil) || (tc.blocker != "" && (err == nil || !strings.Contains(err.Error(), tc.blocker))) {
 			t.Fatalf("%s: %v", tc.name, err)
 		}
 	}

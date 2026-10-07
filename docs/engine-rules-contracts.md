@@ -4873,3 +4873,38 @@ covers event selection, departure and copied controllers. Existing
 No engine execution, replacement ordering, cost or simultaneous-operation
 contract changes in this slice. Full-card loading remains blocked by bounded
 counter restoration and blocking-collection control effects.
+
+## Bounded optional counter placement
+
+`AddCountersUpTo(subject PermanentRef, counter CounterType,
+amount ResolutionValue, limit int) ResolvingEffect` gives the effect controller
+a resolution choice from zero through `min(amount, max(limit-current, 0))`.
+The declaration requires a valid typed reference and value, a valid permanent
+counter type and a limit from zero through 255. Larger limits are rejected
+because the current engine stores each counter count in one byte. Nil and
+unbound declarations fail engine validation. Invalid player responses place no counters. No choice is made for
+an absent or phased subject, a nonpositive amount, or a full subject.
+
+The subject retains the reference service's captured incarnation. Control
+changes and phase cycles preserve it; departure, return and unresolved phasing
+prevent placement. The amount and current room are read during resolution,
+not announcement. Announced X comes from the individual stack frame. Copies
+use their controller for choices. Game clones retain independent counter and
+stack state; native cloned players use their normal simulation decisions.
+
+Placement uses the existing `AddCountersAction` replacement pipeline and its
+affected-player order and rechecks (CR 614–616). A private optional limit leaves
+existing `AddCountersWithReplacement` callers unchanged. After replacements,
+placement on the original subject requires its original incarnation. The final
+amount for the restricted counter on that subject is limited to its current room.
+Replacements that cancel placement still allow later instructions. A replacement
+that changes the counter or destination does not transfer the original subject's
+restriction. The limit belongs to this instruction, not a static counter maximum:
+other actions can exceed it, and this action does not remove existing excess.
+
+The resolution choice follows CR 608.2c–d; counter identity and zone changes
+follow CR 122.1–2 and 400.7. Clockwork source records and local Oracle data specify
+that the restoration ability cannot cause a total above four or seven. This is
+not the static maximum in CR 122.4. No collection or simultaneous placement
+shape is added. `TestAddCountersUpTo*` and `TestRONBoundedCounters*` establish
+bounds, choice timing, incarnation, phasing, clones and replacement behavior.

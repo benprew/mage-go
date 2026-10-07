@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **655 accepted / 331 rejected unique card
-names** (986 total), and **1,739 compiled / 706 rejected records** (2,445 total).
+The latest recorded inventory reports **657 accepted / 329 rejected unique card
+names** (986 total), and **1,746 compiled / 699 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`OPPONENT-ENTRY-UPKEEP` slice and its validation evidence are recorded
+`BOUNDED-COUNTER-RESTORATION` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -24068,5 +24068,174 @@ Ranked next candidates to reassess with fresh evidence:
    after source-choice and replacement prerequisites.
 3. All-zone count CDAs: five direct consumers after characteristic services;
    retain Gaea's Avenger's source defect and Wood Elemental's entry-payment gap.
+
+No second slice is started.
+
+## Run 2026-10-06: BOUNDED-COUNTER-RESTORATION
+
+Status: complete implementation slice. Stop after this slice. Initial user edits
+were `.gitignore`, the execution design and this progress ledger, plus the
+untracked completed-history file. Preserve these changes. The commit adds only
+this entry to the HEAD ledger; the user's history reorganization stays in the
+working tree.
+
+### Fresh evidence and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+progress ledger, selected compiler and engine files, complete candidate RON
+records, API/rules contracts and CR 122, 400.7, 608.2c–h, 614.5–6 and 616.1.
+Baseline compiler tests, short engine tests and build passed. Strict loading and
+semantic inspection exited 1 for unsupported collection records, independently
+of build/test success: **1,739 compiled / 706 rejected records; 655 accepted /
+331 rejected unique names**. Total: 2,445 records / 986 names. Inventory: 72,954
+nodes, 8,543 signatures, 6,522 unknown-role occurrences. Reprints count once.
+
+| Candidate | Distinct affected names and estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Bounded optional counter restoration, selected | Clockwork Avian and Clockwork Beast: **2 complete names / 7 records**. | End-combat history, entry counters, counter removal, X payment and upkeep timing now exist. Missing resolution choice and action cap through replacements. Enables optional bounded counter placement for typed source, host, target and event references. | Medium/low: one shared engine action, private optional pipeline limit, validated adapter, identity/choice/replacement/gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7 eventual** unlocks, **0 adapter-only**. | Complete records need source enumeration/choice including nonbattlefield sources, spell-to-permanent source identity, next-event consumption and property rechecks. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage retain separate blockers. | High: source-choice and replacement contracts, ordering, batch and identity tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 eventual** unlocks, **0 adapter-only**. | Complete records need characteristic evaluation outside the battlefield, owner/controller context and CDA/copy integration. Gaea's Avenger's source defect and Wood Elemental's entry-payment requirements remain separate. | High: characteristic engine services, zone/copy/layer/controller tests. |
+
+Selection: two complete consumers now have a single action gap, with fewer new
+engine contracts than the larger families. Nested forms and complete records,
+not first-error frequency, establish the estimate. Contract, reuse boundary and
+acceptance cases were stated before editing. The `implement-engine` skill was
+used for the engine prerequisite; no delegation or removed card skill was used.
+No second slice is started.
+
+### Exact signatures, contexts and reuse
+
+Engine: `AddCountersUpTo(subject PermanentRef, counter CounterType,
+amount ResolutionValue, limit int) ResolvingEffect`. At resolution, the effect
+controller chooses zero through `min(amount, max(limit-current, 0))`. Nonpositive
+amounts, full/overfull or absent/phased subjects require no choice. Invalid
+responses place nothing. Definition validation rejects nil/unbound references,
+nil values, invalid counters and limits outside 0–255. This range follows the
+existing counter storage; larger limits remain explicit unsupported declarations.
+
+RON resolving action:
+`PutCountersWithRestriction([UptoNumberCountersOfTypeOnPermanent(amount,
+counter, subject)], CantCauseTheNumberOfCountersOfTypeOnPermanentToBeGreaterThan(
+counter, subject, Integer(limit)))`. Exactly one placement and matching counter
+and typed subject are required. Amounts reuse `compileInstanceCounterAmount`,
+including correctly scoped announced X; counter types and references reuse the
+existing validators. Fixed limits use 0–255. Malformed arity/lists, multiple
+instructions, other instructions/restrictions, mismatched counter/subject,
+unbound or wrong-category references and cost/static/entry contexts reject.
+This action declares no new target or binding. Existing resolving spell, mode,
+activation and trigger scopes continue to govern its references and values.
+
+RON owns shape/scope/lowering and inventory roles. The engine owns the numeric
+choice, incarnation checks and optional action limit. Each factory uses its own
+existing typed declarations; each resolution reads its own stack X/controller.
+No mutable choice is captured in a factory. Reuse: typed reference resolution,
+`ChooseNumber`, `AddCountersAction`, the existing affected-player replacement
+pipeline, X mana transactions, tap costs, upkeep restrictions, counter layers,
+stack copies and clones. Existing counter placement callers keep their behavior.
+
+The final amount for the restricted counter on the original subject is capped
+after replacements using current room. Replacements retain normal ordering,
+rechecks and cancellation. Original-destination placement requires the original
+incarnation; a changed destination/counter does not inherit its restriction.
+The action does not remove excess counters from other effects and establishes
+no static maximum under CR 122.4. Control changes and phase cycles preserve the
+subject; departure/return and unresolved phasing prevent placement. A pending
+activation survives ability removal. Copies choose with their controller and
+keep their own announced X. Clones have independent counters and frames; native
+cloned simulation players choose their default amount. No new simultaneous
+collection placement, LKI information read or payment contract is introduced.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing `AddCountersUpTo`; real complete-card
+RON tests independently failed for unsupported `PutCountersWithRestriction`.
+Inventory tests then failed on unknown nested roles before role traversal was
+added. New compilation gains exposed old fixed inventory counts and two prior
+tests that expected the clockworks to remain unsupported. Those expectations
+now require full support for all seven records and retain rejection for other
+unsupported cards; removal gameplay assertions remain intact.
+
+Fixture corrections: direct `EffectContext` tests must set `sourceCaptured` to
+check the saved incarnation; activation tests locate the activated ability after
+entry/trigger abilities; native clones convert custom players to simulation
+players and therefore use default maximum choices. Clone assertions check that
+actual native decision contract and independent counters/frames. No gameplay
+requirement was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Clockwork Avian and Clockwork Beast, complete records | `TestRONBoundedCountersFullCards`: mana costs, unpaid casting, entry timing/counters, P/T/flying, summoning sickness, X/tap payment, restoration, clones and definition validation. `Resolution`: zero/partial/decline/full/overfull choices; changing room and announced X; source departure/return/phasing/cycle/control; copied activation controller; ability removal; wrong step, opponent upkeep, unpaid and wrong-controller rollback. `Instances`: two pending abilities with different controllers and X. |
+| Both complete clockworks' combat interactions | `TestRONEndCombatClockwork`, `TestRONEndCombatInterveningIdentity` now use complete records with no omitted rules. Native attack/block/end-combat, idle and enters-attacking exclusion, history after removal, extra-combat reset, both history flags, double intervening check, copies, source control/phase/return and independent clones. |
+| Typed target and replacement contracts | `TestRONBoundedCountersTypedTarget`: RON instant gameplay, player exclusion, source-independent target, target shroud/return/phasing/control and copies. `Replacements`: both affected-player orders, cancellation, independent chooser and final cap. |
+| Engine contract | `TestAddCountersUpTo`: partial/zero/decline, room/full/overfull, negative amount, invalid responses, zero cap, storage-bound cap and doubling. `Identity`: control, absence, return, phasing/cycle and clones. `Declarations`: nil values/refs, invalid counters and limits. `ReplacementRecheck`: current room changes, cancellation, departure/return and phasing within the pipeline. |
+| Validation, reprints and inventory | `TestRONBoundedCountersInvalid` and `Inventory`; `StrictRegistry` loads all seven actual records as two names, validates factories, and proves invalid mixed loading preserves the prior registry. `TestRONEndCombatFullRecordLoading` and `TestRONSingleCounterRemovalClauses` retain their real-record gameplay and loading checks with updated support expectations. |
+
+Two complete-card mappings are established. Compilation progress and gameplay
+coverage remain separate; collection-wide engine-validation and behavior totals
+remain null. The source/host/event reference services are reused, rather than
+claiming new reference contracts from target/source tests.
+
+### Source data, measurements and remaining gates
+
+Local `data/ATQ.json` and `data/LEA.json` Oracle text agrees with complete clockwork
+records. No source defect was found or corrected. A web lookup attempted the
+Gatherer ruling page (403); it is not required for acceptance because local
+Oracle text supplies the explicit action cap and the local CR supplies choice,
+identity and replacement contracts. No behavior depends on an inaccessible page.
+All 12 RON hashes remain unchanged, so no source vocabulary snapshot refresh is
+required. The vocabulary's diagnostics remain a dated syntax snapshot; fresh
+loader and semantic measurements are recorded here.
+
+Actual gain equals the estimate: **2 names / 7 records**, only Clockwork Avian
+and Clockwork Beast. No previously accepted name is lost. Final strict loader:
+**1,746 compiled / 699 rejected records; 657 accepted / 329 rejected names**.
+Inventory: 72,954 nodes / 8,543 signatures / **6,431 unknown-role occurrences**.
+Both loader modes exit 1 for remaining collection gaps, not compilation failure.
+The Wretched still reports unsupported `GainControlOfEachPermanentUntil`;
+chosen-source prevention still reports `ChooseADamageSource`; CDAs still reject
+`CDA_Power` or `CDA_Toughness`. The strict collection installs no partial registry.
+
+No Go definitions, generation tools, runtime callers or DSL functions are
+removed. Complete collection loading, gameplay mappings and runtime cutover
+remain below the removal gates. No dead-function removal audit is claimed.
+API/rules documentation covers only this slice. User edits remain unstaged.
+
+### Validation
+
+All required checks pass after the final changes and lint. Initial final-suite
+failures came from the old clockwork rejection expectations, which are now
+explicit support checks. Initial lint found two local variables named `cap`;
+they are now `limit`. Automatic import spacing was reviewed. No environment or
+pre-existing blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine suite, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestAddCountersUpTo\|TestRONBoundedCounters\|TestRONEndCombat\|TestRONSingleCounterRemovalClauses\|TestInventory' -count=1` | PASS after confirmed failures and fixture/support-expectation corrections. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, final run after lint. |
+| `make test` | PASS, final run after lint. |
+| `go test ./... -short -count=1` | PASS, additional skill check after lint. |
+| `make build` | PASS, final run after lint. |
+| `go vet ./...` | PASS, final run after lint. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS after code, documentation and ledger updates. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1: 1,746 compiled / 699 rejected records, 329 rejected names; final runs after lint. |
+| Source hash audit | All 12 source hashes match the vocabulary snapshot. |
+
+Changed files: engine `bounded_counters.go` and tests, `game_mutator.go`,
+`doc.go`; RON `bounded_counters.go` and tests, `compiler.go`, `inventory.go` and
+count expectations, complete-record fixtures/loading in `end_combat_test.go` and
+support expectations in `counter_removal_test.go`; API/rules contracts and this
+ledger entry. The descriptive commit hash is reported in the final response.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source enumeration and next-event prevention for seven direct consumers;
+   preserve spell entry identity, source-property rechecks and damage batches.
+2. All-zone battlefield-count CDAs for five direct consumers; retain separate
+   Gaea's Avenger data and Wood Elemental entry-payment blockers.
+3. Aggregate attack-declaration payments before `CantAttackUnlessCost` for
+   Brainwash and Leviathan; reassess full records and establish one atomic
+   declaration across multiple attackers before accepting adapters.
 
 No second slice is started.

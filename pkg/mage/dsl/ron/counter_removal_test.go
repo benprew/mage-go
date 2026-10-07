@@ -190,7 +190,10 @@ func TestRONSingleCounterRemovalTarget(t *testing.T) {
 }
 
 func TestRONSingleCounterRemovalClauses(t *testing.T) {
-	for _, tc := range []struct{ set, name string }{{"LEG", "Divine Intervention"}, {"FEM", "Ebon Praetor"}, {"FEM", "Merseine"}, {"FEM", "Tourach's Gate"}, {"ATQ", "Armageddon Clock"}, {"ATQ", "Clockwork Avian"}, {"2ED", "Clockwork Beast"}, {"LEG", "Glyph of Delusion"}} {
+	for _, tc := range []struct {
+		set, name string
+		complete  bool
+	}{{"LEG", "Divine Intervention", false}, {"FEM", "Ebon Praetor", false}, {"FEM", "Merseine", false}, {"FEM", "Tourach's Gate", false}, {"ATQ", "Armageddon Clock", false}, {"ATQ", "Clockwork Avian", true}, {"2ED", "Clockwork Beast", true}, {"LEG", "Glyph of Delusion", false}} {
 		t.Run(tc.name, func(t *testing.T) {
 			data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 			if err != nil {
@@ -217,8 +220,8 @@ func TestRONSingleCounterRemovalClauses(t *testing.T) {
 			}
 			for _, n := range nodes {
 				if n.Fields["Name"].String == tc.name {
-					if _, err := Compile(n); err == nil {
-						t.Fatal("unexpected full-card support")
+					if _, err := Compile(n); (err == nil) != tc.complete {
+						t.Fatalf("full-card support: %v, expected complete=%v", err, tc.complete)
 					}
 					for _, r := range n.Fields["Rules"].Args {
 						walk(r)

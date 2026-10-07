@@ -685,6 +685,10 @@ func (g *Game) AddReplacementEffect(r ReplacementEffect) {
 // permanent's enter-the-battlefield resolution, before EvtEntersBattlefield
 // fires (used by EntersWithXCounters and EntersWithNCounters).
 func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool) {
+	g.addCountersWithReplacementLimit(perm, ct, n, sourceID, onEntry, nil)
+}
+
+func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, n int, sourceID uuid.UUID, onEntry bool, limit *int) {
 	if perm == nil || n <= 0 {
 		return
 	}
@@ -709,8 +713,18 @@ func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int
 	if target == nil {
 		return
 	}
-	if aca.Amount() > 0 {
-		target.AddCounter(aca.CounterType(), aca.Amount())
+	amount := aca.Amount()
+	if limit != nil && aca.PermanentID() == perm.ID() {
+		live := g.FindPermanent(perm.ID())
+		if live == nil || live.incarnationID != perm.incarnationID {
+			return
+		}
+		if aca.CounterType() == ct {
+			amount = min(amount, max(*limit-int(target.Counters[ct]), 0))
+		}
+	}
+	if amount > 0 {
+		target.AddCounter(aca.CounterType(), amount)
 	}
 }
 

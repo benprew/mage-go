@@ -4201,3 +4201,30 @@ complete Clockwork Avian and Clockwork Beast records, plus synthetic plain-event
 identity and invalid-declaration contracts. Their restoration rules remain
 unsupported. Neither clockwork nor The Wretched has complete gameplay coverage
 from this adapter, and their complete records still fail strict loading.
+
+## RON bounded optional counter placement
+
+`PutCountersWithRestriction([UptoNumberCountersOfTypeOnPermanent(amount,
+ counter, subject)], CantCauseTheNumberOfCountersOfTypeOnPermanentToBeGreaterThan(
+ counter, subject, Integer(limit)))` accepts one placement and one restriction.
+The counter and typed permanent reference must match. The limit is an integer
+literal from zero through 255; the amount uses existing resolving counter values,
+including
+announced `ValueX` only in an X-enabled scope. Permanent counter types use the
+existing placement validator. Source, attachment, target and event references
+retain their existing scope requirements. This is a resolving action, not a
+cost, static modification, entry operation or replacement declaration.
+
+The adapter builds `mage.AddCountersUpTo` with fresh instance bindings. At
+resolution, the effect controller chooses zero through the smaller of the
+amount and available counter room. An absent or phased subject, nonpositive
+amount or full subject causes no choice. Invalid choice responses place nothing.
+The action limit applies to its counter on its original subject after counter
+replacements; it does not remove excess counters supplied by other actions.
+
+Clockwork Avian and Clockwork Beast now compile from their complete records.
+`TestRONBoundedCounters*` covers casting, choices, payment, upkeep timing,
+identity, target legality, copies, clones, replacement ordering and instances.
+`TestRONEndCombatClockwork` and `TestRONEndCombatInterveningIdentity` now use
+complete records for entry, characteristics and combat-history interactions.
+Other counter instructions and restriction shapes remain errors.
