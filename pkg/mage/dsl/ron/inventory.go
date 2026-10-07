@@ -228,6 +228,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "ActivatedAbilityEffect" && len(n.Args) == 2 {
+			return []string{"activation_cost_subject", "activation_cost_operation"}[index]
+		}
 		if n.Name == "EachPlayerEffect" && len(n.Args) == 2 {
 			return []string{"player_filter", "player_rule_operation"}[index]
 		}
@@ -297,6 +300,20 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "activation_cost_subject":
+		if n.Name == "AbilityOfAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
+		if n.Name == "AbilityOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+	case "activation_cost_operation":
+		if n.Name == "IncreaseManaCost" && len(n.Args) == 1 {
+			return "metadata"
+		}
+		if n.Name == "ReduceManaCostNotLessThanOne" && len(n.Args) == 1 {
+			return "spell_cost_reduction"
 		}
 	case "player_rule_operation":
 		if n.Name == "IncreaseSpellCost" && len(n.Args) == 2 {

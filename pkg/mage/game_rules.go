@@ -12,6 +12,7 @@ import (
 // Channel, Sanctuary, and minimum life. It is owned by EffectManager and
 // exposed as a public field.
 type GameRules struct {
+	activationCostModifiers  []activationCostModifier
 	spellCostTaxes           []spellCostTax
 	ManaConversion           map[Color]Color             // from color -> to color (Sunglasses of Urza)
 	SpellCostIncreases       map[Color]int               // color -> additional generic cost for spells of that color
@@ -95,6 +96,7 @@ func (r *GameRules) ResetPerCycle() {
 	r.entersTappedRules = r.entersTappedRules[:0]
 	r.SpellCostReducers = r.SpellCostReducers[:0]
 	r.spellCostTaxes = r.spellCostTaxes[:0]
+	r.activationCostModifiers = r.activationCostModifiers[:0]
 	r.UncounterableFilters = r.UncounterableFilters[:0]
 	r.FlashGrants = r.FlashGrants[:0]
 	clear(r.cantCastSpells)

@@ -723,16 +723,16 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 				component.HasX = false
 				component.XCount = 0
 			}
-			if spec.ApplyActivationReduction {
-				resolved := ManaCostPayment{MC: component}
-				component = resolved.reducedCost(spec.SourceID, g)
-			}
 			addActionManaCost(&mana, component)
 		case *xManaCost:
 			mana.Generic += spec.XValue
 		default:
 			nonMana = append(nonMana, cost)
 		}
+	}
+
+	if spec.ApplyActivationReduction {
+		mana = g.modifyActivationManaCost(spec.SourceID, mana)
 	}
 
 	return g.prepareCostPaymentTransaction(costPaymentSpec{

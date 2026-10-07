@@ -3080,8 +3080,15 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if perm.Tapped || !perm.CanTapForEffect(g) {
 			return fmt.Errorf("cannot tap %s for mana", perm.Name())
 		}
+		payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{Controller: playerID, SourceID: perm.ID(), Costs: []Cost{Tap()}, Hint: AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: true}, ApplyActivationReduction: true})
+		if err != nil {
+			return err
+		}
 		manaSourceIncarnation := perm.incarnationID
-		g.TapPermanent(perm)
+		if err := payment.Commit(); err != nil {
+			return err
+		}
+		perm = g.FindPermanent(permanentID)
 		p := g.GetPlayer(playerID)
 		produced := 0
 		var types []Color

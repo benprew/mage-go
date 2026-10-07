@@ -5741,3 +5741,39 @@ contains fixed mana symbols. Spell-cost filters support `AnySpell`, nonland
 static generic-reduction context. This support does not include an
 `ActivatedAbilityEffect` tax. Derelor is a complete RON consumer; Gloom still
 requires that separate activation contract.
+
+## RON static activation mana modifiers
+
+Permanent definitions accept `ActivatedAbilityEffect(subject, operation)/2`:
+
+- `AbilityOfAPermanent(filter)/1` with `IncreaseManaCost(manaSymbols)/1`.
+  The filter accepts `IsCardtype(type)/1`, `IsColor(color)/1`, and nonempty
+  nested `And(list)/1` or `Or(list)/1`. Mana symbols use fixed, nonnegative
+  generic and W/U/B/R/G costs. X is rejected.
+- An Aura accepts `AbilityOfPermanent(HostPermanent)/1` with
+  `ReduceManaCostNotLessThanOne([CostReduceGeneric(n)])/1`, where `n` is a
+  nonnegative integer literal. Other references and reduction lists fail
+  declaration checks.
+
+These lower to `IncreaseActivationCostStatic(filter PermanentFilter,
+increase core.ManaCost) ContinuousEffect` and
+`ReduceActivationCostStatic(subject PermanentRef, reduction, minimum int)
+ContinuousEffect`. They use live source incarnations and typed Aura host
+references. Sources can affect either player's abilities. Source departure,
+phasing and printed ability removal disable them. Reattachment changes the
+subject; a returned host does not inherit an old attachment.
+
+The shared activation transaction combines all mana components and announced
+X, adds increases once, then reduces generic mana. Colored mana is retained.
+A minimum limits the reduction; it does not add mana to a zero cost. Multiple
+sources accumulate. The legacy `AddActivationCostReduction` caller remains
+supported. Ordinary activation affordability, actual payment, native mana
+abilities and solver plans use the shared total. Spells and resolution payments
+do not acquire these modifiers. Copies of abilities do not pay again.
+
+Evidence: `TestStaticActivationCost*`, `TestRONActivationCost*`. Complete RON
+Gloom tests cover both its spell and activation taxes. Complete Power Artifact
+casts and Basalt Monolith interactions cover its artifact enchant restriction,
+generic reduction, stacking, zero mana and one-mana minimum. All six Gloom
+reprints and the Power Artifact record pass declaration and strict subset
+loading tests; the production collection still rejects remaining gaps.

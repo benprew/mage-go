@@ -22,10 +22,12 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 		if len(productions) == 0 {
 			return manaSourceAbility{}, false
 		}
+		manaCost := g.modifyActivationManaCost(sourceID, ManaCost{})
 		return manaSourceAbility{
 			AbilityIndex:    abilityIndex,
+			ManaCost:        manaCost,
 			Productions:     append([]ManaProduction(nil), productions...),
-			Interchangeable: manaAbility.dynamicProductions == nil && len(manaAbility.postProduction) == 0,
+			Interchangeable: manaAbility.dynamicProductions == nil && len(manaAbility.postProduction) == 0 && manaCost.IsZero(),
 		}, true
 	}
 
@@ -48,7 +50,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 		switch payment := cost.(type) {
 		case *ManaCostPayment:
 			hasX = hasX || payment.MC.HasX
-			addActionManaCost(&manaCost, payment.reducedCost(sourceID, g))
+			addActionManaCost(&manaCost, payment.MC)
 		case *tap:
 			if hasTapCost {
 				return manaSourceAbility{}, false
@@ -58,6 +60,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 			return manaSourceAbility{}, false
 		}
 	}
+	manaCost = g.modifyActivationManaCost(sourceID, manaCost)
 	if !hasTapCost && (hasX || manaCostUnits(manaCost) < productionsTotalAmount(productions) ||
 		activated.limits.OncePerTurn || activated.limits.MaxActivationsPerTurn > 0 ||
 		len(activated.activationConds) != 0) {

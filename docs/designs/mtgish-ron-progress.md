@@ -33561,3 +33561,157 @@ Slice files: engine `spell_cost_increase.go`, its tests, `game_rules.go`,
 `inventory_test.go`; `dsl-reference.md`, `engine-rules-contracts.md`, and only
 this appended progress entry. User edits and the completed-history file remain
 unstaged. The descriptive commit hash is reported in the final response.
+
+## Run 2026-10-07: STATIC-ACTIVATION-MANA-MODIFIERS
+
+Status: complete implementation slice. This run stops here. Collection gameplay,
+complete loading, runtime cutover and removal gates remain unfinished. These
+measurements supersede the older summary at the top of the working ledger.
+
+### Baseline and candidate comparison
+
+Initial user changes: `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`. All are preserved. Only this appended entry
+is staged from the ledger; the prior user restructuring remains unstaged.
+Read AGENTS.md, engine API reference, execution design, vocabulary snapshot,
+ledger, selected engine/compiler code, complete candidate RON records, local
+Oracle data, API/rules contracts and CR 118.7a, 400.7, 601.2f-h, 602.2b,
+605.3, 611.3a-b and 702.26b. No Go card definition supplied requirements.
+The implement-engine skill supplied the engine workflow. No agents were spawned.
+
+Fresh baseline short engine/compiler tests and `make build` passed. Strict
+loading exited 1 for collection rejection, with 2,445 records: **1,881 compiled /
+564 rejected**, **726 accepted / 260 rejected unique names**. Inventory:
+**72,962 occurrences / 8,557 signatures / 5,012 unknown-role occurrences**.
+Engine-validation and collection gameplay totals remain null.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Static activation mana modifiers, selected | Gloom, Power Artifact: **2 unique names / 7 records**. | Missing typed static increases and Aura reductions, total-cost aggregation and zero-mana native/planned mana integration. Gloom's separate spell tax is already supported. Enables shared activation total costs and source/host lifecycle behavior. No source defect in either complete consumer. | Medium: continuous rules, shared payment/query/planner integration, two compiler shapes, declaration/lifecycle/rollback/native gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 clean full-card unlocks**, zero for the all-zone prerequisite alone. Gaea's Avenger and Wood Elemental are additional affected names excluded from this estimate. | Requires owner/controller context outside the battlefield, all-zone characteristic queries, named counts and CDA/copy/layer ordering. Gaea's Avenger has the recorded opponent-artifact source defect; Wood Elemental has entry-sacrifice payments. | High: new characteristic service and adapters, zone/copy/layer tests and five full gameplay mappings. |
+| Damage-source enumeration and consuming shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7 clean full-card unlocks**, zero for enumeration alone. | Existing explicit-reference source choices do not enumerate the complete CR 609.7a universe. Needs permanents, stack objects, referred objects and pending effects, then source continuity, consuming shields and replacement rechecks. Other source-choice cards retain separate blockers. | High: complete source service, compiler bindings, replacement consumption/ordering, seven gameplay mappings. |
+
+Selected the shared two-card activation boundary for its credible gain relative
+to effort. The five- and seven-card alternatives need broader missing services.
+Complete nested records, rather than first-error counts, establish the estimates.
+The contract, reuse boundary and acceptance cases were stated before editing.
+
+### Supported shapes, engine contracts and reuse
+
+Permanent definition rule `ActivatedAbilityEffect(subject, operation)/2`:
+
+- `AbilityOfAPermanent(filter)/1` with `IncreaseManaCost(manaSymbols)/1`.
+  Filters: `IsCardtype(type)/1`, `IsColor(color)/1`, nonempty nested
+  `And(list)/1` and `Or(list)/1`. Mana is fixed nonnegative generic or W/U/B/R/G.
+- Aura definition: `AbilityOfPermanent(HostPermanent)/1` with
+  `ReduceManaCostNotLessThanOne([CostReduceGeneric(n)])/1`, where `n` is a
+  nonnegative integer literal. Other subjects, contexts and reduction lists
+  remain errors. X increases, malformed shapes and unbound host reads reject.
+
+Engine signatures:
+`IncreaseActivationCostStatic(filter PermanentFilter, increase core.ManaCost)
+ContinuousEffect`; `ReduceActivationCostStatic(subject PermanentRef, reduction,
+minimum int) ContinuousEffect`.
+
+The existing effect manager registers rules per source incarnation and clears
+them each layer cycle. Queries require the live source, current filter match or
+current typed attachment, and unsuppressed printed abilities. Sources and hosts
+can have different controllers. Phasing, removal and return use existing exact
+object services; LKI does not enable an absent static rule. Reattachment changes
+the host. Each factory makes fresh static effects and independent card identities.
+Rules slices are cloned independently.
+
+The shared calculator combines mana components and announced X, adds increases
+once, and then reduces generic mana. A minimum limits reductions without raising
+zero costs. Colored mana remains required. Multiple sources stack. The existing
+legacy reduction map/API is preserved. Ordinary ability affordability and the
+locked payment transaction, native mana activation, and mana solver metadata use
+the same total. Taxed native sources cannot use the free interchangeable-source
+solver path. Copying stack abilities does not repeat payment. Spells and explicit
+resolution-payment policies remain separate. Payment rollback, source reservation,
+attachment legality and ability copying reuse existing services. No card-name
+branch, fallback, parallel cost system, global result slot or partial production
+registry is added. Replacement ordering and simultaneous zone operations are
+unchanged, so this slice adds no new contract for them.
+
+### TDD and gameplay mapping
+
+New engine tests initially failed for missing constructors, calculator and rules
+registration; RON gameplay failed at unsupported `ActivatedAbilityEffect` after
+fixture API errors were corrected. A synthetic Aura fixture first used an ordinary
+enchantment and was corrected to an artifact-enchanting Aura. An added Basalt
+Monolith test first used its static ability index; that fixture was corrected.
+The first expanded suite then failed only on that owned fixture. No behavior
+assertion was weakened. Inventory assertions now use the fresh exact counts, and
+an old test that expected Gloom rejection now validates its complete definition.
+
+| Card / contract | Tests |
+| --- | --- |
+| Gloom, complete six reprints | `TestRONActivationCostRealCards`: actual 2B cast and native zero-base activation tax, opponent-owned source, rollback and effect resolution. `GloomBothRules`: real Healing Salve casting and white-enchantment activations for each player; nonwhite enchantment and white nonenchantment exclusions. |
+| Power Artifact, complete ATQ record | `RealCards`: actual UU cast targeting an opposing artifact, attachment, reduced activation, rollback and resolution. `PowerArtifactManaAndFloor`: complete RON Basalt Monolith with two complete RON Auras, free mana ability remains free, untap costs one mana after stacking. |
+| Compiler declarations, all records and registry | `TestRONActivationCostInvalid`: negative/dynamic/malformed costs, empty filters, wrong arity/scopes, unbound/wrong-role hosts, unsupported lists and instant context. `RecordsAndInventory`: seven complete ASTs, two fresh factory instances each, engine validation, no unknown descendants, strict valid subset loading and atomic rejection after adding an invalid record. Default registry unchanged. |
+| Shared engine costs | `TestStaticActivationCostTotal`: stacking, increases before reductions, colored requirements and minimums. `Payment`: zero-base ordinary/native mana costs and rollback. `SplitAndX`: combined components, announced X, copies without payment. `ManaPlanning`: taxed native sources and reduced split-cost mana sources, pure affordability, actual automatic payment. `ColoredAndLocked`: colored increase cannot use generic payment; locked total survives tax source departure. |
+| Lifecycle and invalid engine declarations | `Lifecycle`: phase cycle, printed ability removal/restoration, source departure/return, saved incarnation and clone isolation. `HostIdentity`: opposing host, reattachment, host phasing, control change and leave/return. `Declarations`: nil/empty subjects and filters, negative costs/reductions/minimums and X increases. |
+
+**Two new complete-card gameplay mappings.** Compilation gains and gameplay
+coverage remain separate; no whole-collection gameplay claim is made.
+
+### Measurements, defects, validation and next work
+
+Estimated gain **2 unique names / 7 records**; actual **2 / 7**, exactly Gloom and
+Power Artifact. Every previously accepted name remains accepted. All remaining
+diagnostics are byte-for-byte unchanged. Strict loader: **1,888 compiled /
+557 rejected records**, **728 accepted / 258 rejected names**, expected exit 1,
+no partial registry. Inventory: **72,962 occurrences / 8,557 signatures /
+4,940 unknown-role occurrences**; 72 descendants gain roles.
+
+Local `data/LEA.json` confirms both Gloom instructions; `data/ATQ.json` confirms
+Power Artifact's enchant-artifact restriction and one-mana minimum. No source
+record was changed. All twelve source hashes still match the vocabulary snapshot;
+no syntax refresh is required. Recorded source defects remain separate blockers.
+
+All required checks passed after the owned Basalt fixture was corrected and
+lint changes were reviewed. Lint changed import grouping and method formatting
+in the new files; no unrelated automatic change remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused new engine/RON modifiers, prior spell tax and inventory tests, `-count=1` | PASS after the intended TDD failures and corrected fixtures; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint. |
+| `make test` | PASS after lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `go test ./... -short -count=1` (engine skill) | PASS after lint. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS, working and staged slice. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,888 compiled / 557 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 728 accepted / 258 rejected names; counts above. |
+| Source and diagnostic audit | All twelve source hashes match; remaining diagnostics unchanged. |
+
+No environment or pre-existing check failure remains. The earlier suite failures
+were owned test-fixture/count issues described above and were corrected before
+the final passing checks. The commit includes only the validated slice; its hash
+is reported in the final response.
+
+No Go definitions, generators, runtime wiring or DSL functions are removed.
+The removal gate remains closed. No caller audit authorizes DSL removal in this
+slice. API/rules documentation describes only the established behavior.
+
+Ranked next candidates, to reassess from fresh loader and nested inventory:
+
+1. All-zone characteristic prerequisite and count CDAs for the five clean
+   consumers above; keep Gaea's Avenger and Wood Elemental blockers separate.
+2. Complete CR 609.7a damage-source enumeration, then consuming prevention for
+   the seven clean Circle/Greater Realm consumers.
+3. Parameterized bands-with-other formation and damage assignment: Adventurers'
+   Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy
+   Citadel, Master of the Hunt, Shelkin Brownie and Tolaria. Requires the shared
+   combat prerequisite before adapters; no immediate unlock is assumed.
+
+Slice files: new engine and RON `activation_cost_modifier.go` and their tests;
+engine `activated.go`, `clone.go`, `cost.go`, `costed_mana.go`, `game.go`,
+`game_rules.go`, `payment_transaction.go`, `doc.go`; RON `compiler.go`,
+`inventory.go`, `inventory_test.go`, `spell_cost_increase_test.go`;
+`dsl-reference.md`, `engine-rules-contracts.md` and this appended ledger entry.
+Only this slice is staged. No second slice started.

@@ -255,8 +255,12 @@ func TestRONSpellCostIncreaseRecordsAndInventory(t *testing.T) {
 			}
 			if name == "Gloom" {
 				glooms++
-				if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "ActivatedAbilityEffect") {
-					t.Fatal("Gloom must retain its activation-tax gap", err)
+				factory, err := Compile(node)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := mage.ValidateCardDefinition(name, factory()); err != nil {
+					t.Fatal(err)
 				}
 				rules := node.Fields["Rules"].Args
 				if _, err := compileRule(rules[0], scope{permanent: true}); err != nil {

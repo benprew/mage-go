@@ -323,10 +323,22 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 			}
 		}
 	}
+	var mana ManaCost
 	for _, c := range a.costs {
-		if !c.CanPay(a.source, controller, g) {
+		if payment, ok := c.(*ManaCostPayment); ok {
+			component := payment.MC
+			if component.HasX {
+				component.Generic += g.resolution.X() * max(1, component.XCount)
+				component.HasX = false
+				component.XCount = 0
+			}
+			addActionManaCost(&mana, component)
+		} else if !c.CanPay(a.source, controller, g) {
 			return false
 		}
+	}
+	if !g.CanAfford(controller, g.modifyActivationManaCost(a.source, mana), nil) {
+		return false
 	}
 
 	// CR 307.5 / 602.5d — "activate only as a sorcery" means the ability can

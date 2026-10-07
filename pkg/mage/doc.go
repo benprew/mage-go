@@ -39,6 +39,14 @@
 // cast by the current controller. A phased or departed source cannot supply
 // the reduction. The saved source incarnation prevents a returned card from
 // restoring an old entry before the next layer pass.
+// Use [IncreaseActivationCostStatic] for fixed mana increases on abilities
+// of matching live permanents. Use [ReduceActivationCostStatic] with
+// [AttachedPermanent] for a generic reduction with a minimum mana payment.
+// The payment service combines mana costs and announced X before modifiers.
+// Increases precede reductions. Mana planning uses the same total.
+// Phasing, source departure and ability removal stop the modifier.
+// Aura reattachment changes the subject; a returned host cannot restore it.
+//
 // Use [IncreaseSpellCostStatic] for fixed generic and colored spell taxes.
 // Increases apply before reductions in the shared total spell cost.
 // With controllerOnly, the source's current controller must cast the spell.

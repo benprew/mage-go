@@ -102,24 +102,8 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	return tx.Commit()
 }
 
-// reducedCost applies activation cost reductions (e.g. Power Artifact) to the mana cost.
-// The reduction lowers the generic component but can't reduce total mana below 1.
 func (c *ManaCostPayment) reducedCost(sourceID uuid.UUID, g *Game) ManaCost {
-	reduction := g.effects.Rules.ActivationCostReductions[sourceID]
-	if reduction <= 0 {
-		return c.MC
-	}
-	mc := c.MC
-	// Total colored mana in the cost
-	coloredTotal := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
-	total := coloredTotal + mc.Generic
-	// Can't reduce below 1 total mana
-	minGeneric := 0
-	if total > 0 {
-		minGeneric = max(0, 1-coloredTotal)
-	}
-	mc.Generic = max(minGeneric, mc.Generic-reduction)
-	return mc
+	return g.modifyActivationManaCost(sourceID, c.MC)
 }
 
 func (c *ManaCostPayment) Text() string {

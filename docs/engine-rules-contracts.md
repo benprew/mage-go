@@ -6817,3 +6817,34 @@ and `StackingAndLock`; `TestRONSpellCostIncreaseDerelor`, `Lifecycle`, `Filters`
 Gloom's spell-tax rule compiles, but all six complete records remain rejected
 for `ActivatedAbilityEffect`. No complete Gloom gameplay claim is made.
 Rules: CR 400.7, 601.2f-h, 601.7, 611.3a-b and 702.26b.
+
+## Static activation mana modifiers
+
+`IncreaseActivationCostStatic(PermanentFilter, core.ManaCost)` and
+`ReduceActivationCostStatic(PermanentRef, reduction, minimum int)` register
+per-source rules through the existing continuous-effect service. Definition
+validation rejects missing subjects/filters, negative amounts and nonfixed
+increases. Each rule reads its exact live source incarnation, current matching
+permanent characteristics, or current typed attachment. No LKI grants a cost
+modifier. Source phasing, departure and printed ability removal stop it. Host
+phasing and return use the existing attachment identity service. Control changes
+cannot change which object is enchanted. Separate sources accumulate; cloned
+rule slices are independent.
+
+The total mana cost is computed after announced X and before payment. Fixed
+increases apply once to the sum of all mana components, followed by generic
+reductions. The minimum cannot increase the original cost. Colored mana is
+retained, and reductions cannot change X stored on the stack. Ordinary ability
+queries and transactional payment, native mana activation, and mana-source
+planning use the shared calculator. A mana ability with a tax cannot use the
+solver's interchangeable free-source path. The transaction locks the total;
+later source departure does not recalculate it. Failed payment leaves mana,
+tap state and stack unchanged. Copied abilities pay nothing again. Existing
+spell and resolution-payment policies are retained.
+
+Rules: CR 118.7a, 400.7, 601.2f-h, 602.2b, 605.3, 611.3a-b and 702.26b.
+Evidence: `TestStaticActivationCostTotal`, `Lifecycle`, `Payment`,
+`Declarations`, `SplitAndX`, `HostIdentity`, `ManaPlanning`,
+`ColoredAndLocked`; `TestRONActivationCostRealCards`, `Invalid`,
+`RecordsAndInventory`, `GloomBothRules`, `PowerArtifactManaAndFloor`.
+No replacement ordering or simultaneous zone-action contract is changed.
