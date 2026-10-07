@@ -140,6 +140,7 @@ type PermanentLKI struct {
 	Toughness       int
 	IsToken         bool
 	Attacking       bool
+	Unblocked       bool
 	Enchanted       bool
 	combatOpponents []capturedPermanent
 

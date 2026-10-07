@@ -330,6 +330,13 @@
 // control. Payment can sacrifice the attacker when it matches the cost filter.
 // An absent source cannot become an attacker or produce an attack event.
 //
+// Use [RedirectDamageToPermanentIf] for conditional player damage redirection
+// from matching permanent sources. [DamageSourceIsUnblocked] reads the status
+// set after blocker declaration, or the saved departure or phasing status.
+// Use [RedirectDamageFromCardTypeToPermanentIf] to include matching sources
+// outside the battlefield. Both rules use live player and destination references.
+// Redirection preserves the source, amount and combat status for later replacements.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

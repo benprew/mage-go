@@ -32,6 +32,7 @@ type CombatGroup struct {
 	BlockerIncarnations []uuid.UUID
 	DefenderID          uuid.UUID
 	Blocked             bool
+	Unblocked           bool
 	blockedBy           map[capturedPermanent]bool
 }
 
@@ -91,11 +92,21 @@ func (c *Combat) AddBlockerIncarnation(blockerID, incarnation, attackerID uuid.U
 		g.BlockerIDs = append(g.BlockerIDs, blockerID)
 		g.BlockerIncarnations = append(g.BlockerIncarnations, incarnation)
 		g.Blocked = true
+		g.Unblocked = false
 		if g.blockedBy == nil {
 			g.blockedBy = make(map[capturedPermanent]bool)
 		}
 		g.blockedBy[capturedPermanent{blockerID, incarnation}] = true
 	}
+}
+
+// IsUnblockedIncarnation requires the original attacker after blocker declaration.
+func (c *Combat) IsUnblockedIncarnation(id, incarnation uuid.UUID) bool {
+	if !c.IsAttackingIncarnation(id, incarnation) {
+		return false
+	}
+	group := c.GroupFor(id)
+	return group != nil && group.Unblocked && !group.Blocked
 }
 
 // IsBlockingIncarnation checks the object that entered combat.
@@ -777,6 +788,7 @@ func (c *Combat) removeFromCombatAndUnblock(id uuid.UUID) {
 	for _, group := range c.Groups {
 		if len(group.BlockerIDs) == 1 && group.BlockerIDs[0] == id {
 			group.Blocked = false
+			group.Unblocked = true
 		}
 	}
 	c.RemoveFromCombat(id)
@@ -791,6 +803,7 @@ func (c *Combat) removeIncarnationAndUnblock(id, incarnation uuid.UUID) {
 		for i, blockerID := range group.BlockerIDs {
 			if blockerID == id && i < len(group.BlockerIncarnations) && group.BlockerIncarnations[i] == incarnation {
 				group.Blocked = false
+				group.Unblocked = true
 				break
 			}
 		}

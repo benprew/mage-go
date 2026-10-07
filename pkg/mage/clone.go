@@ -342,6 +342,7 @@ func cloneCombat(c *Combat) *Combat {
 				AttackerID: g.AttackerID,
 				DefenderID: g.DefenderID,
 				Blocked:    g.Blocked,
+				Unblocked:  g.Unblocked,
 				blockedBy:  maps.Clone(g.blockedBy),
 			}
 			if len(g.BlockerIDs) > 0 {

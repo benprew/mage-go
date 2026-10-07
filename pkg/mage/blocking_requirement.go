@@ -400,6 +400,7 @@ func (g *Game) commitBlockAssignments(defender uuid.UUID, proposed []BlockAssign
 		g.trackers.Turn.RecordBlocked(blocker.ID(), assignment.AttackerID)
 	}
 	for _, group := range g.combat.Groups {
+		group.Unblocked = !group.Blocked
 		attacker := g.liveCombatAttacker(group)
 		for i, id := range group.BlockerIDs {
 			if i >= len(group.BlockerIncarnations) {

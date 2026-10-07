@@ -36936,3 +36936,181 @@ Ranked next candidates to reassess with fresh evidence:
    Liege source defect separately. Single-card work remains lower priority.
 
 No second slice starts in this run.
+
+## Run 2026-10-07: CONDITIONAL-STATIC-DAMAGE-REDIRECTION
+
+Status: completed implementation slice. This run stops after this slice.
+Initial user edits to `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, remain outside the slice commit. Only this
+appended ledger entry is staged; the user's ledger reorganization is preserved.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loader and semantic inventory exited 1 for unsupported records:
+2,445 records, 1,955 compiled / 490 rejected; 760 accepted / 226 rejected unique
+names. Inventory contained 72,952 occurrences, 8,553 signatures and 4,065
+unknown-role occurrences. Read the instructions, engine reference, execution
+design, ledger, syntax snapshot, relevant engine/compiler files, complete candidate
+RON records and API/rules contracts. Reprints count once. The old Go definitions
+were not requirements. The syntax snapshot had missing closing JSON delimiters;
+the refresh restores valid JSON without changing its schema.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Conditional static damage redirection, selected | Martyrs of Korlis; Veteran Bodyguard: **2** cards / **7** records | Missing typed static redirection and exact retained unblocked status. Martyrs source restricts artifacts to permanents and needs correction. Reuses source identity, static conditions, printed-effect lifecycle, damage batches and replacement ordering. Enables shared conditional player-to-permanent redirection. | Medium: small engine service, combat/LKI prerequisite, adapter, lifecycle/order/gameplay tests and one source correction. |
+| Complete chosen-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites | Complete records require filtered source choice and next-damage consuming shields. Referred objects and face-up command-zone objects are missing from CR 609.7a enumeration. Enables other chosen-source prevention/redirection consumers. | High: enumeration, source continuity, shield bindings, replacement ordering and batch contracts. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after prerequisites | Complete records need legendary/named parameters, global grants, token grants or removal of all variants. Formation and damage assignment contracts remain missing. | High: parameterized abilities, formation/assignment, token/layer, timing, identity and clone tests. |
+
+Selection rationale: two complete cards share a modest dependency-ready engine
+addition. The existing redirection helpers cannot supply exact source/identity
+behavior: the legacy Bodyguard helper is combat-only, but local Oracle includes
+noncombat damage from unblocked creatures. Reimplementing that policy would be
+wrong. The new service uses the existing replacement and damage services instead.
+The shared prerequisite distinguishes attacking before blockers from unblocked
+status after blockers. Selection, contract, reuse boundary and acceptance cases
+were stated before edits. The `implement-engine` skill was used for the engine
+subtask; the user authorized RON integration and evidence-based source correction.
+No removed card/set skill, card-name executor, fallback, global action slot,
+declaration panic or partial production registry was introduced.
+
+### Exact supported shapes, dependencies and engine reuse
+
+Engine API:
+
+- `RedirectDamageToPermanentIf(player PlayerRef, subject PermanentRef,
+  from PermanentFilter, condition StateCondition) StaticRule`: damage from
+  matching permanent sources. A zero filter means every permanent source.
+- `RedirectDamageFromCardTypeToPermanentIf(player PlayerRef,
+  subject PermanentRef, kind core.CardType, condition StateCondition) StaticRule`:
+  includes source information outside the battlefield, including captured spells.
+- `DamageSourceIsUnblocked() PermanentFilter` and
+  `Combat.IsUnblockedIncarnation(id, incarnation uuid.UUID) bool`.
+  `CombatGroup.Unblocked` is set in the common blocker commit before block events,
+  not when attackers are declared. Added blockers clear it; removing blockers
+  alone does not restore it. Explicit unblock effects set it. Combat removal
+  ends it. `PermanentLKI.Unblocked` saves departure and phase information.
+  Current sources use live state; absent/phased sources use their original
+  information. Phase-in does not restore combat status. Clones preserve it.
+
+Static rules require valid player/permanent references and a condition; type
+validation rejects invalid card types. The rule saves its source incarnation and
+checks current condition, controller, player and destination for each event.
+Destinations must remain creatures or planeswalkers. Attachment references follow
+current attachment identity. Phasing, departure and ability removal stop the rule;
+returned sources cannot reactivate their former rule. Fresh instances work.
+
+RON context: exactly one
+`ReplaceWouldDealDamage(event,[DealToCreatureOrPlaneswalkerInstead(ref)])`
+in an existing top-level permanent `If`, `Unless` or `IfElse` branch. Each branch
+compiles, including inactive ones. The recipient is exactly `Player(You)`; the
+destination is `ThisPermanent` or `HostPermanent` in an Aura.
+
+- `DamageWouldBeDealtByAPermanentToRecipient(filter,Player(You))` accepts bare
+  `IsUnblocked`, supported type/subtype/supertype/color predicates and nonempty
+  nested `And`/`Or`. References, dynamic controller predicates and unsupported
+  source predicates remain errors.
+- `DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),Player(You))`
+  accepts exactly one valid card type. Other source-filter forms remain errors.
+- Extra operations, malformed arities, empty filters, unbound/incompatible
+  destinations, target recipients, resolving contexts and top-level redirection
+  remain rejected. No target binding is invented.
+
+RON owns spellings, declaration checks and semantic roles. Engine code reuses
+`Static`, state conditions, typed references, continuous-effect cycle replacements,
+`damageFilterSource`, `damageSourceHasCardType`, source/phase LKI, transactional
+casting, native combat, stack copies, clones and cleanup. Redirection preserves
+amount, combat status and full damage source; shared replacements recheck the
+new recipient, protection and prevention. Shared simultaneous damage preserves
+actual damage, history and lifelink. No parallel replacement/combat/damage service
+is added. Existing Go helpers and callers remain compatible.
+
+Rules evidence: local CR 120.3, 400.7, 506.4, 509.1h, 609.7c, 614.5–9,
+616.1/616.2 and 702.26. Local `data/LEA.json` and `data/ATQ.json` supply Oracle
+text. API and rules documentation describe only this established slice.
+
+### TDD, source defects and card-to-test mappings
+
+Initial engine tests failed for missing redirection constructors; initial RON
+card tests failed for unsupported conditional `ReplaceWouldDealDamage`.
+A nonexistent artifact-creature fixture helper was replaced with the existing
+creature constructor and artifact keyword. Explicit combat helper calls were
+corrected to `ExecuteAttackers`/`ExecuteBlockers`. The invalid-type test used 0,
+which is a valid creature type; it now supplies 255. The ordering expectation was
+corrected to the existing persistent-before-cycle candidate order. These were
+fixture/API errors, not reduced requirements.
+
+After adapter lowering, the RON artifact-spell test failed: Martyrs did not redirect
+artifact spell damage. `ATQ.lines.ron:41` uses the same existing all-source event
+spelling as other supported source-type consumers instead of the permanent-only
+spelling. Oracle says artifacts without a battlefield restriction (CR 609.7c).
+There is one Martyrs record; no reprint correction is omitted. All six Veteran
+Bodyguard records already match Oracle. No uncertain source defects are hidden.
+The parser-backed vocabulary walk refreshes all occurrence counts/examples,
+file hashes, top-level rules and loader diagnostics. Only ATQ's hash changes;
+601 constructor signatures and 51 top-level rule names remain.
+
+| Card or shared contract | Test mappings |
+| --- | --- |
+| Martyrs of Korlis, complete ATQ record | `TestRONStaticRedirectCards`, `Lifecycle`, `Combat`, `ArtifactSpell`, `PendingAbility`, `IndependentInstances`: metadata, native cast, unpaid rollback, entry timing, untapped/live controller checks, phasing/return/ability removal, artifact matching and retained source types, actual native combat, artifact spell/copy damage, real Rod of Ruin activations/copies with departed/returned/phased source, cloned pending resolution and opposing instances. |
+| Veteran Bodyguard, complete LEA record and six accepted reprints | Same card/lifecycle/combat/ability/instance tests: unblocked status before versus after declaration, blocked exclusion, noncombat damage, combat damage, live/retained combat status, real Prodigal Sorcerer activations/copies with departed/returned/phased source, source phase-in, untapped/controller/identity and cloned resolution. |
+| RON declarations, roles and loading | `TestRONStaticRedirectInvalid`, `Inventory`, `ReprintsAndHost`, `TestInventoryRepositoryCollection`: malformed/unbound/incompatible refs, operations, source filters, wrong context, strict atomic invalid loading, independent factories and descendant role reporting. Existing branch and accepted-card regression tests remain. |
+| Engine rules | `TestStaticDamageRedirectLifecycle`, `Invalid`, `SourceInformation`, `Ordering`, `DestinationAndRechecks`, `OriginalInstance`: definition validation, live controller and untapped state, ability removal, phasing, clones, exact source/incarnation LKI, blocker timing, removed blockers, explicit combat removal, simultaneous packets, actual lifelink, competing prevention choices, current attachment/returned host, noncreature destination, recipient prevention recheck, stale source rule rejection, fresh instance and native cleanup. |
+
+Two complete-card RON gameplay mappings are added. Compilation and gameplay
+coverage are separate; collection-wide engine-validation and behavior totals
+remain null. The existing combat/target/copy/prevention suites retain additional
+rollback, source attribution and replacement-order evidence.
+
+### Validation and actual gain
+
+Focused tests ran with `-count=1`. The first broad runs found one stale numeric
+inventory assertion expecting 1,955/490; it now asserts the fresh 1,962/483 totals.
+The first lint run reported one redundant test variable type; it was removed.
+Automatic lint edits changed import spacing and function formatting only and
+were reviewed. Tests were not weakened. All final required checks passed; no environment or pre-existing failure blocks
+this slice.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine/RON/inventory regressions with `-count=1` | PASS, including final real ability, reprint and host cases. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final tests and lint. |
+| `go test ./... -short -count=1` | PASS; additional engine-skill verification. |
+| `make test` | PASS, repeated after final tests and lint. |
+| `make build` | PASS, repeated after documentation changes. |
+| `go vet ./...` | PASS, repeated after documentation changes. |
+| `make lint` | PASS, 0 issues in final runs; automatic edits reviewed. |
+| `git diff --check` | PASS after the completed ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,962 compiled / 483 rejected; atomic collection rejection. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same membership and fresh roles/counts below. |
+| Snapshot/membership audit | All hashes and diagnostics match; exactly seven gained records, no formerly accepted record lost. |
+
+Actual gain matches the estimate: **2 unique cards / 7 records**,
+exactly Martyrs of Korlis and Veteran Bodyguard. Fresh totals:
+**1,962 compiled / 483 rejected records; 762 accepted / 224 rejected unique names**.
+No previously accepted name or record becomes rejected. Inventory:
+**72,952 occurrences / 8,556 signatures / 3,988 unknown-role occurrences**.
+Unknown-role changes include nested reporting for unsupported redirection shapes;
+roles do not imply execution support. The loader exits 1 for unsupported records
+and installs no partial production registry.
+
+No Go definitions, generators, startup callers or DSL functions are removed.
+Complete loading, collection gameplay and runtime integration remain below the
+removal gates. No fresh removal caller audit is claimed. User changes remain
+outside the slice commit.
+
+Changed files: engine `static_damage_redirect.go` and its test,
+`blocking_requirement.go`, `combat.go`, `clone.go`, `lki.go`, `zone_system.go`,
+`doc.go`; RON `static_redirect.go` and its test, `conditional_static.go`,
+`inventory.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`cards/mtgish/ATQ.lines.ron`; API/rules contracts, vocabulary snapshot and this
+appended ledger entry.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete CR 609.7a source enumeration, before the seven chosen-source shields.
+2. Parameterized bands with others for the eight compared consumers.
+3. Shared static membership across layers/dynamic counts before Animate Artifact
+   and Gaea's Liege; keep the documented Liege source defect separate.
+
+No second slice starts in this run.

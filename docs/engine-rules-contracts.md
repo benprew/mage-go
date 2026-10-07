@@ -7531,3 +7531,55 @@ mana, evasion, expiry, reattachment, source identity, phasing, control, ability
 removal, copied permanent spells, copied delayed triggers and cloned choices.
 The existing land-type, dependency, fixed-landwalk and delayed-step regressions
 supply the underlying service contracts.
+
+## Conditional static player damage redirection
+
+`RedirectDamageToPermanentIf(PlayerRef, PermanentRef, PermanentFilter,
+StateCondition) StaticRule` redirects damage from matching permanent sources.
+`RedirectDamageFromCardTypeToPermanentIf(PlayerRef, PermanentRef, core.CardType,
+StateCondition) StaticRule` also includes matching sources outside the battlefield.
+The condition is required. Definition validation checks references, condition
+bindings and card types. A zero permanent filter permits every permanent source.
+
+The shared continuous-effect lifecycle installs cycle replacements. Each keeps
+its source incarnation and reads the current source controller, condition, player
+and destination at each proposed damage event. Departure, phasing and ability
+removal stop the rule. A returned source cannot activate the original rule.
+Attached destinations follow the current attachment and retain host incarnation.
+A missing, phased or returned host cannot receive the old redirection. The
+resolved destination must be a creature or planeswalker (CR 614.9).
+
+The shared source query uses live characteristics or retained information for the
+original incarnation, including phasing snapshots. Card-type redirection also
+reads captured spell information. The replacement preserves amount, combat status
+and the complete damage source. The shared pipeline then rechecks recipient
+prevention and protection, permits affected-player ordering, and applies each
+replacement once. Simultaneous damage, actual damage, lifelink and damage history
+use the existing damage executor (CR 120.3, 609.7c, 614.5–9, 616.1/616.2).
+
+`CombatGroup.Unblocked` distinguishes attackers before blocker declaration from
+unblocked creatures after declaration (CR 509.1h). Both native blocker paths set
+it before block events. Adding a blocker clears it; removing blockers alone does
+not restore it. Explicit unblock effects set it. Removal from combat ends the
+status. `Combat.IsUnblockedIncarnation` requires the exact live attacker.
+`PermanentLKI.Unblocked` retains departure and phasing information, and
+`DamageSourceIsUnblocked() PermanentFilter` uses the current or retained status.
+Phase-in uses current combat state. Returned objects cannot replace old facts.
+Game clones preserve independent combat and source information (CR 400.7,
+506.4, 509.1h, 702.26).
+
+RON conditional static bodies accept exactly one
+`ReplaceWouldDealDamage(event,[DealToCreatureOrPlaneswalkerInstead(reference)])`.
+The recipient is exactly `Player(You)`; the destination is the source or a valid
+Aura host. Permanent-source events use supported property predicates and nonempty
+`And`/`Or`; bare `IsUnblocked` uses the retained query. All-source events accept
+exactly `IsCardtype(type)`. Other operations, dynamic targets, resolving contexts,
+empty filters and incompatible references remain errors. Top-level redirection
+and other replacement families remain unsupported.
+
+Evidence: `TestStaticDamageRedirectLifecycle`, `Invalid`, `SourceInformation`,
+`Ordering`, `DestinationAndRechecks`, `OriginalInstance`; real RON
+`TestRONStaticRedirectCards`, `ArtifactSpell`, `Lifecycle`, `Combat`, `Invalid`,
+`Inventory`, and `TestInventoryRepositoryCollection`. These establish complete
+Martyrs of Korlis and Veteran Bodyguard mappings. They do not establish general
+source choices, temporary redirection or collection-wide gameplay validation.

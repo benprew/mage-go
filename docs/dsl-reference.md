@@ -6323,3 +6323,25 @@ The complete Phantasmal Terrain records (six reprints) map to
 `TestRONBasicLandChoiceInvalid` and `TestRONBasicLandChoiceStrictLoading` cover
 scope errors and atomic rejection. General subtype choices, plural choice
 consumers, mixed modifications and other saved-land-choice reads remain errors.
+
+### Conditional static damage redirection
+
+Use `mage.RedirectDamageToPermanentIf(player, destination, sourceFilter,
+condition)` with `mage.Static` for player damage from permanent sources.
+Use `mage.RedirectDamageFromCardTypeToPermanentIf(player, destination, cardType,
+condition)` for a type restriction that includes sources outside the battlefield.
+Both constructors require a condition. The rule reads current controller and
+attachment references, and the destination must remain a creature or planeswalker.
+The shared replacement pipeline preserves source information and damage facts.
+`mage.DamageSourceIsUnblocked()` reads current or retained combat status. An
+attacker becomes unblocked only after blocker declaration; removal of its last
+blocker does not make a blocked attacker unblocked.
+
+RON `If`, `Unless` and `IfElse` static branches can contain one
+`ReplaceWouldDealDamage(DamageWouldBeDealtByAPermanentToRecipient(filter,
+Player(You)),[DealToCreatureOrPlaneswalkerInstead(ThisPermanent)])`.
+`HostPermanent` is also valid in an Aura. Permanent filters accept nonempty
+`And`/`Or`, bare `IsUnblocked`, and the supported type, subtype, supertype and
+color predicates. `DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),
+Player(You))` includes captured spell sources. This does not add resolving
+replacement operations or target declarations.

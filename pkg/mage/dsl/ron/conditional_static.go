@@ -39,6 +39,9 @@ func compileConditionalStaticBody(body Node, ctx scope, condition mage.StateCond
 	if err != nil {
 		return nil, err
 	}
+	if len(rules) == 1 && rules[0].Name == "ReplaceWouldDealDamage" {
+		return compileStaticDamageRedirect(rules[0], ctx, condition)
+	}
 	if len(rules) == 1 && rules[0].Name == "EachPlayerEffect" {
 		return compileConditionalPlayerUntapLimit(rules[0], condition)
 	}
