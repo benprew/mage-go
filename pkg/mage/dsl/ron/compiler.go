@@ -17,7 +17,8 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
-	counterStateSource bool
+	counterStateSource  bool
+	opponentEntryChoice *opponentEntryChoicePlan
 
 	activationHistory *activationHistoryPlan
 	enteringSource    bool
@@ -269,6 +270,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 	spellCount, enchantCount := 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
+		if err != nil {
+			return nil, err
+		}
+		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err
 		}

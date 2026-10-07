@@ -427,6 +427,9 @@
 // The library is shuffled even when that graveyard is empty.
 // RON exile payments use [ExileMatchingCardFromGraveyardCostInto] to keep
 // a separate paid mana value for each pending activation.
+// Use [ChooseOpponentAsEnters] for an opponent choice before battlefield entry.
+// Each permanent keeps its choice through control changes and phasing.
+// [EventIsChosenPlayerUpkeep] checks that choice when the upkeep event occurs.
 //
 // # Further Documentation
 //

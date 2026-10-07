@@ -220,7 +220,7 @@ func TestRONEntryTappedInvalid(t *testing.T) {
 		`AsPermanentEnters(ThisPermanent, [])`, `AsPermanentEnters(ThisPermanent, [EntersTapped()])`,
 		`AsPermanentEnters(ThisPermanent(), [EntersTapped])`, `AsPermanentEnters(HostPermanent, [EntersTapped])`,
 		`AsPermanentEnters(Ref_TargetPermanent, [EntersTapped])`, `AsPermanentEnters(ThisPermanent, [EntersTapped, DrawNumberCards(Integer(1))])`,
-		`AsPermanentEnters(ThisPermanent, [ChooseAPlayer(Opponent)])`, `EntersTapped`,
+		`AsPermanentEnters(ThisPermanent, [ChooseAPlayer(Opponent())])`, `EntersTapped`,
 		`Activated(TapPermanent(ThisPermanent), ActionList([EntersTapped]))`,
 	} {
 		t.Run(rule, func(t *testing.T) {

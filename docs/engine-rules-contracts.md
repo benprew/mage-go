@@ -4808,3 +4808,44 @@ instances and pending activations, modes, copied controllers, cloned resolution,
 source control/departure/return/phasing, paid-card departure, and strict loading.
 Existing `TestExiledGraveyardCostManaValue*` and `TestPaidExile*` supply the reused
 payment's stale-visit, result-declaration, and transaction regression evidence.
+
+## Opponent choice before entry and RON chosen-player upkeep
+
+`ChooseOpponentAsEnters() AsEntersBattlefieldAbility` saves the opponent of the
+entry controller in the entering permanent's `ChosenPlayer` field. The existing
+`prepareBattlefieldEntry` hook runs it before battlefield registration, subsequent
+`AsEntersBattlefieldAbility` operations, and zone/entry observers (CR 614.12a).
+The two-player engine has one eligible opponent, so this choice needs no prompt,
+target, stack object, or payment. The owner does not determine the choice.
+Definition validation rejects the ability on an instant or sorcery.
+
+Each permanent owns its saved choice. Control changes and phase cycles preserve
+it (CR 702.26); a new entry makes a new choice (CR 400.7). Permanent spell copies
+choose for their own entry controllers. Clones keep independent permanent state.
+The legacy `ETBChooseOpponent` and `ChooseOpponentOnETB` APIs retain their existing
+timing for current callers. This constructor does not add a general player-choice
+service, entry replacement ordering service, or multiplayer decision policy.
+
+RON supports exactly `AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])`
+with one operation and one declaration per card. This declaration permits
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(TheChosenPlayer)),body)`.
+The compiler checks the entry declaration before compiling the other rules;
+their textual order does not change the static declaration's scope. Other choice
+filters, combined entry operations, resolving choices, chosen-player action reads,
+and chosen-player end-step filters remain unsupported.
+
+The trigger reuses `TurnStepBegins(EachUpkeep,playerBinding)` and
+`EventIsChosenPlayerUpkeep`. It checks the permanent's choice when the event
+occurs and captures that event's player before trigger placement. The check is
+not an intervening-if condition. Changing control, removing abilities, phasing,
+departing, or returning after the event cannot erase or redirect a queued trigger
+(CR 113.7a). Inactive sources cannot generate new triggers. Copies keep the saved
+event player while using their own controller. Black Vise and The Rack read that
+player's current hand size at resolution, then deal damage through the existing
+damage, source LKI, prevention and lifelink services (CR 608.2h).
+
+Evidence: `TestChooseOpponentAsEntersTiming`, `Identity`, `Declaration` and
+`TestRONOpponentEntryRealCards`, `Identity`, `InstancesAndLoading`,
+`NativeAndCopy`, `DeclarationScopeAndInventory`, `Invalid`. The RON tests use the
+complete Black Vise and The Rack records. Cursed Rack's maximum-hand-size effect
+and Jihad's combined choices remain separate prerequisites.

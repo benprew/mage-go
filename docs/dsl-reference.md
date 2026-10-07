@@ -4156,3 +4156,22 @@ Bare `ShuffleGraveyardIntoLibrary` in a resolving action list lowers to
 then shuffles that library even when the graveyard is empty. A changed-controller
 copy uses its own controller. This action makes no target declaration.
 Evidence: `TestRONExilePayment*` and `TestGraveyardOnlyShuffleBatch`.
+
+## RON opponent entry choice
+
+`AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])` lowers to
+`mage.ChooseOpponentAsEnters()`. It saves the entry controller's opponent on
+the permanent before battlefield registration. The choice stays with that
+incarnation through control changes and phasing. A returned card chooses again.
+
+With this declaration, an upkeep trigger can select
+`SinglePlayer(TheChosenPlayer)`. Its body reads the saved event player through
+`Trigger_ThatPlayer`. Black Vise and The Rack use that reference for both
+`TheNumberOfCardsInPlayersHand` and damage, so their amounts use the current hand
+at resolution and their recipients survive source departure and stack copying.
+
+Exactly one opponent choice operation and declaration are supported. The rules
+may list the upkeep consumer before its entry declaration. Duplicate and unbound
+declarations are errors. Combined entry choices, other player filters, resolving
+choices, chosen-player action reads and chosen-player end-step triggers remain
+unsupported. The legacy opponent ETB helpers retain their current behavior.

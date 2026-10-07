@@ -754,6 +754,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "mana_production"
 		}
 	case "entry_operation":
+		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "EntersWithACounter" && len(n.Args) == 1 {
 			return "permanent_counter_type"
 		}

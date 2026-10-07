@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **653 accepted / 333 rejected unique card
-names** (986 total), and **1,731 compiled / 714 rejected records** (2,445 total).
+The latest recorded inventory reports **655 accepted / 331 rejected unique card
+names** (986 total), and **1,739 compiled / 706 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`EXILE-ACTIVATION-PAYMENTS` slice and its validation evidence are recorded
+`OPPONENT-ENTRY-UPKEEP` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -23760,4 +23760,181 @@ Ranked next candidates to reassess with fresh evidence:
    Both need their own exact choice/identity/transaction contracts; the source
    and numeric result adapters added here do not establish those behaviors.
 
+No second slice is started.
+
+## Run 2026-10-06: OPPONENT-ENTRY-UPKEEP
+
+Status: complete supported entry-choice/upkeep slice. Stop after this slice.
+The initial user edits to `.gitignore`, the execution design, and the progress
+ledger, plus the untracked completed-history file, remain outside this commit.
+Only this entry and the current-status update are staged from this ledger.
+
+### Fresh evidence and selection
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict loading
+and semantic inventory rejected the collection with exit 1, not a build failure:
+**1,731 compiled / 714 rejected records; 653 accepted / 333 rejected names**.
+There are 2,445 records and 986 distinct names. All nested AST descendants remain
+in the semantic inventory: 72,954 nodes, 8,543 signatures, 6,567 unknown-role
+occurrences. A first read of a reused temporary file occurred before baseline
+completion and showed an older 1,717 count; the completed command and inventory
+agree on 1,731. Final evidence uses a separate run directory.
+
+The execution design, current ledger, vocabulary snapshot, `AGENTS.md`, engine
+reference, selected compiler/engine files, full candidate records and nested
+forms, API/rules contracts and relevant CR sections were inspected. Requirements
+come from RON and local Oracle data, never Go card definitions. Reprints count once.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Opponent entry choice and chosen-player upkeep, selected | Black Vise, The Rack, Cursed Rack: **2** complete unlocks, Black Vise and The Rack. | Cursed Rack also needs its static maximum-hand-size rule. Jihad has combined color/player choices and static chosen-color/player conditions; resolving choices in Backdraft, Rainbow Vale and Rohgahh of Kher Keep have separate scopes. Establishes pre-entry saved opponent identity and upkeep selection with event-player capture. | Low/medium: a small native pre-entry primitive, two compiler adapters, scope validation, and native timing/identity/copy/gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White, and Greater Realm of Preservation: **7** eventual direct unlocks, **0** adapter-only unlocks. | Complete source enumeration (CR 609.7a), spell-to-permanent identity, source choice, next-event shield consumption and property rechecks are prerequisites. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have additional fractional prevention, proposed-event information, reflection, redirection or prevented-damage results. Enables shared source choices and future damage replacements. | High: new source/choice/replacement contracts plus ordering, batch and gameplay tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** eventual direct unlocks, **0** adapter-only unlocks. | Cross-zone characteristic queries, controller/owner context, CDA layer and copy integration are required. Gaea's Avenger has the already recorded controller-count source defect; Wood Elemental needs entry sacrifice results. Enables reusable all-zone P/T definitions. | High: shared characteristic services, count lowering, all-zone/copy/controller/layer evidence. |
+
+Selection rationale: the selected complete records reuse exact step, hand-count,
+damage and choice-state behavior, and need a much smaller prerequisite than the
+seven-card source family or five-card CDA family. Two credible complete unlocks
+are the largest bounded gain for that effort. First-error counts were not used
+as unlock estimates. Selection, contract, reuse boundary and acceptance cases
+were stated before implementation. No second slice is started.
+
+### Exact signatures, contexts and dependencies
+
+Engine API: `ChooseOpponentAsEnters() AsEntersBattlefieldAbility`. It runs through
+the existing `prepareBattlefieldEntry` hook before battlefield registration and
+entry observers. In this two-player engine, the entry controller has one eligible
+opponent. The choice is saved on that entering permanent's `ChosenPlayer`, without
+targeting, a stack object, payment, or an optional choice. The owner is irrelevant.
+Definition metadata rejects the ability on instants and sorceries. New factory
+calls make new abilities; copied permanent spells choose for their own entry
+controllers. Control changes and phase cycles preserve the choice. New entries
+choose again. Clones keep separate permanent state.
+
+The existing `ETBChooseOpponent` helper sets the choice after registration. That
+timing did not satisfy CR 614.12a, so it is not used by the new adapter. The
+implement-engine skill supplied the prerequisite workflow. Legacy helpers and
+their callers retain their behavior. The new primitive adds no parallel entry,
+replacement, zone or choice subsystem and no general replacement ordering policy.
+
+RON accepts exactly:
+
+- `AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])`: one operation,
+  one choice declaration per permanent card.
+- `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(TheChosenPlayer)),body)`
+  when that entry declaration exists. The declaration is checked before the
+  other static card rules, so textual rule order does not change its scope.
+
+RON owns spelling, arity, source/context validation, duplicate/unbound errors and
+the private `opponentEntryChoicePlan`. The saved value lives in each permanent,
+not in that compilation plan or a global last-action slot. Wrong arity, tuple
+symbols, alternate player filters, combined entry operations, duplicate producers,
+nonpermanent entry declarations, resolving player choices, chosen-player action
+reads and chosen-player end-step filters remain errors. Cursed Rack reaches its
+next unsupported static player operation; Jihad's combined entry remains rejected.
+
+The upkeep adapter reuses `TurnStepBegins(EachUpkeep,playerBinding)`,
+`EventIsChosenPlayerUpkeep`, each factory's existing step-event binding and the
+standard pending-trigger frame. It checks the chosen player at event time and
+captures that event's player before stack placement. It is not an intervening-if
+check. Later control/choice changes, departure, return, phasing and ability removal
+cannot redirect a pending trigger. Inactive sources cannot create new triggers.
+Copies retain the event player even with another controller. The hand amount is
+read at resolution; damage uses existing prevention, source LKI and lifelink.
+CR 113.7a, 400.7, 603.6, 608.2h, 614.12a and 702.26 support these contracts.
+
+### TDD and card-to-test mappings
+
+Initial real-record tests failed at unsupported `ChooseAPlayer` entry operations.
+Engine tests then failed for the missing `ChooseOpponentAsEnters` constructor.
+An added nonpermanent-definition test failed before the definition metadata was
+added. These were the expected failures, confirmed before each implementation.
+One expanded test initially used nonexistent `Ability.ID()`; it was corrected to
+compare factory ability instances. An old entry rejection fixture had classified
+the newly supported opponent choice as invalid. It now tests malformed
+`Opponent()`; positive real-record tests cover the supported declaration.
+No rules assertion was weakened.
+
+| Card or contract | Test evidence |
+| --- | --- |
+| Black Vise, complete LEA/LEB/2ED/3ED/CED/CEI records | `TestRONOpponentEntryRealCards`: native casting, unpaid rollback, artifact metadata, no pre-resolution entry, chosen-only upkeep, current hand counts 0/2/3/4/7 and nonpositive damage. `Identity`: control before/after the event, departure/return, phasing/cycles, ability removal, copies, prevention, source LKI lifelink and clone isolation. |
+| The Rack, complete ATQ/3ED records | Same real-record and identity tests with its reversed subtraction; hand changes after trigger placement prove resolution-time amounts. Both cards use saved event players for amounts and recipients. |
+| Native entry, spell copies and upkeep | `TestRONOpponentEntryNativeAndCopy`: pre-registration entry probes on complete records, opponent choice before subsequent entry operations, permanent spell copies entering as separate tokens, each copy's controller and native upkeep resolution. |
+| Bindings, pending events, loading and diagnostics | `TestRONOpponentEntryInstancesAndLoading`: two factory instances/controllers, two pending event players, changed choice before placement, all eight identical reprints, strict valid loading and atomic invalid-collection rejection. `DeclarationScopeAndInventory`: producer after consumer, fresh factory abilities, definition validation, typed AST roles and nonpermanent/resolving context rejection. `Invalid`: malformed, duplicate, unbound and unsupported-context declarations. |
+| Native prerequisite | `TestChooseOpponentAsEntersTiming`, `Identity`, `Declaration`: choice before registration and later entry hooks, owner versus controller, copies, control, phasing, return, clones, no stack operation and invalid nonpermanent definition. |
+| Existing callers and accepted RON | Focused `TestRONHandSize*`, `TestRONEntryTapped*`, `TestRONEndStep*`, inventory tests and required repository suites. Current legacy choice helpers are retained. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay coverage
+remain separate; collection-wide engine-validation and behavior totals remain
+null. This slice establishes no new cost, target-legality, simultaneous damage,
+replacement ordering or multiplayer contract.
+
+### Source data and final measurements
+
+Local `data/LEA.json` and `data/ATQ.json` Oracle text agrees with the complete
+Black Vise, The Rack and Cursed Rack records. No source defect was found or
+corrected. Existing Gaea's Avenger and other source defects remain outside this
+slice. RON sources and hashes are unchanged, so no vocabulary source snapshot
+refresh is required. Semantic inventory now types the opponent filter inside
+`ChooseAPlayer` entry operations, including descendants of rejected parents.
+
+Actual gain matches the estimate: **2 distinct names / 8 records**, exactly
+Black Vise and The Rack. No formerly accepted name is lost. Final loader:
+**1,739 compiled / 706 rejected records; 655 accepted / 331 rejected names**.
+Inventory: **72,954 nodes / 8,543 signatures / 6,557 unknown-role occurrences**.
+The strict loader still exits 1 and publishes no partial registry.
+
+### Validation and removal gates
+
+All required checks passed. Lint reported zero issues. Automatic import spacing
+was reviewed. Post-lint full tests, the all-package short suite, build and vet
+passed. No validation or environment failure remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestChooseOpponentAsEnters\|TestRONOpponentEntry\|TestInventory\|TestRONHandSize\|TestRONEntryTapped\|TestRONEndStep' -count=1` | PASS after the confirmed TDD failures and fixture correction. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS, repeated after lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues; automatic formatting reviewed. |
+| Skill check `go test ./... -short -count=1` | PASS after lint. |
+| `git diff --check` | PASS, including the final ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,739 compiled / 706 rejected records, 655 accepted / 331 rejected names; no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts; 72,954 nodes / 8,543 signatures / 6,557 unknown-role occurrences. |
+| Source hash audit | All 12 RON hashes equal the fresh baseline. |
+
+Remaining diagnostic examples: Cursed Rack reports `unsupported spell cost
+reduction player (TheChosenPlayer)` at ATQ.lines.ron:24:206; Jihad reports
+`opponent entry requires one player choice` at ARN.lines.ron:44:142. Both remain
+strict failures for unsupported contexts.
+
+
+No Go definitions, generators, application startup callers or DSL functions are
+removed. Complete collection loading, collection gameplay and runtime wiring
+remain below the removal gates. No whole-repository dead-function audit or DSL
+removal is claimed. API/rules documentation describes only the new established
+entry choice and upkeep behavior. No environment blocker remains.
+
+Slice files: engine `opponent_entry.go`, tests and `doc.go`; RON
+`opponent_entry.go`, tests, declaration scope in `compiler.go`, entry adapter in
+`entry_tapped.go`, upkeep selection in `end_step.go`, inventory roles/count tests
+and the updated malformed entry fixture; API/rules contracts and this ledger.
+The descriptive commit hash is reported in the final response. User edits remain
+unstaged, including their ledger-history reorganization.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source enumeration and next-event prevention: seven direct consumers
+   after the shared source-choice and replacement prerequisites.
+2. All-zone battlefield-count CDAs: five direct consumers after characteristic
+   services; retain Gaea's Avenger's source defect and Wood Elemental's separate
+   entry-payment blockers.
+3. Aggregate attack-declaration payments, then `CantAttackUnlessCost` for
+   Brainwash and Leviathan. Existing per-attacker payment cannot prove one
+   atomic declaration across multiple attackers; establish that engine contract
+   before accepting the adapters. Their complete RON records were inspected.
+
+Cursed Rack's static maximum-hand-size rule is now exposed by loading but is a
+single-card consumer; defer it while useful shared multi-card work remains.
 No second slice is started.

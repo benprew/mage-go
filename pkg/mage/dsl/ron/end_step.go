@@ -19,6 +19,7 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 	players := event.Args[0]
 	var step mage.TurnStepPattern
 	attached := false
+	chosen := false
 	if players.Kind == Symbol && players.Name == "AnyPlayer" {
 		step = each
 	} else {
@@ -31,10 +32,18 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 		player := players.Args[0]
 		if player.Kind == Symbol && player.Name == "HostController" && label == "upkeep" && ctx.aura {
 			attached = true
+		} else if player.Kind == Symbol && player.Name == "TheChosenPlayer" && label == "upkeep" {
+			if ctx.opponentEntryChoice == nil {
+				return nil, problem(player, "unbound opponent entry choice")
+			}
+			chosen = true
 		} else if player.Kind != Symbol || player.Name != "You" {
 			return nil, unsupported(player, label+" player reference")
 		}
 		step = your
+		if chosen {
+			step = each
+		}
 	}
 	ctx.stepEvent = &stepEventPlan{playerName: "Trigger_ThatPlayer"}
 	if attached {
@@ -59,6 +68,9 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 			options = append(options, mage.WithInterveningIf(condition))
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
+		if chosen {
+			trigger.AndConditionData(mage.EventIsChosenPlayerUpkeep{})
+		}
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

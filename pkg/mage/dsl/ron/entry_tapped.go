@@ -23,6 +23,12 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		return nil, problem(n, "entry requires one entry operation")
 	}
 	operation := operations[0]
+	if operation.Name == "ChooseAPlayer" {
+		if err := validateOpponentEntryChoice(n); err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(mage.ChooseOpponentAsEnters()) }, nil
+	}
 	if operation.Name == "EntersWithACounter" {
 		if err := arity(operation, 1); err != nil {
 			return nil, err
