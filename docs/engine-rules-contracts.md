@@ -5847,3 +5847,32 @@ legality, resolution timing, target identity/phasing, shroud, regeneration,
 indestructibility, source departure/phasing, copies and clones.
 `TestRONTapMatchingWarMachineActivationClauses` covers both real activation
 clauses and expiry, with explicit rejection of the incomplete full record.
+
+
+## RON any-player activation permission
+
+RON `OtherPlayersMayActivate(AnyPlayer)` reuses
+`WithAnyPlayerMay() ActionOption` for ordinary and modal activated actions.
+No engine state or payment service changes. The compiler rejects duplicate
+permissions before it builds a factory. Each factory builds its own action.
+
+The activating player pays the costs and controls the stack ability
+(CR 113.8, 602.1a, 602.2a–b). Resolving `You`, modes and target-controller
+restrictions use this player. Damage still comes from the source object
+(CR 120.7), with current or saved information for its original incarnation
+(CR 400.7, 608.2h). Lifelink therefore uses the source controller, including
+when the opponent activates or copies the ability. A returned source cannot
+replace its saved information. Source phasing or departure after activation
+does not remove the pending ability (CR 113.7a); absent/phased sources cannot
+start a new battlefield activation. Existing timing, target checks, resource
+transactions and per-source ability limits remain in force (CR 602.2, 602.5).
+
+Evidence: `TestRONActivationPermissionEfreet`, `Identity`, `ActorsAndTiming`,
+`ModalChoices`, `IndependentInstances`, `CostRollback`, `TargetsAndPresence`,
+`EfreetPreventionAndMembership`, `Invalid` and `StrictLoad`. These tests use
+the complete Efreet RON record and synthetic declaration contracts. They prove
+independent actor contexts, invalid discard rollback, source LKI and lifelink,
+cloned pending resolution, target-control rechecks, simultaneous damage,
+protection/prevention, independent factories and strict atomic collection
+rejection. Existing mixed-damage tests retain replacement and batch evidence.
+This slice adds no new replacement ordering or mana-solver contract.

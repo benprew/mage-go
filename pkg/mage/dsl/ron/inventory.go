@@ -352,6 +352,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "activation_modifier":
+		if n.Name == "OtherPlayersMayActivate" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "activation_modifier"
 		}

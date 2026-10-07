@@ -28879,3 +28879,132 @@ Slice files: `pkg/mage/cost_tap_matching_many.go`,
 `tap_matching_cost.go`, `tap_matching_cost_test.go`, `inventory.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
 and this appended ledger entry. No second slice is started.
+
+
+## 2026-10-07: any-player activation permission
+
+Status: completed implementation slice `ACTIVATION-PERMISSION-ANY-PLAYER`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this progress ledger, plus the untracked completed-entry archive,
+are preserved. Only this entry is staged from the ledger; the user's existing
+ledger reorganization remains unstaged.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, the engine reference, execution design, vocabulary snapshot,
+existing progress, selected compiler/engine code, complete candidate RON records,
+local ARN Oracle data, relevant API/rules contracts and CR 113.8, 120.7,
+400.7, 602.1–5, 608.2h and 609.7. Card requirements came from RON, not Go card
+factories. Baseline RON tests, short engine suite and build passed. Strict loader
+and inventory exited 1: **1,815 compiled / 630 rejected records; 692 accepted /
+294 rejected unique names**. Inventory: 72,962 occurrences / 8,559 signatures /
+5,487 unknown-role occurrences. First-error counts were checked against complete
+records and nested dependencies; reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Any-player activation permission, selected | Ifh-Bíff Efreet, Land's Edge: **1** full unique-card unlock (Efreet). | Efreet's fixed mana cost and simultaneous flying-creature/player damage already have exact services. Land's Edge additionally needs a typed discarded-card result and resolving property test. Shared permission closes one of its two prerequisites. Ordinary and modal action construction can reuse the same permission. | Small adapter, moderate integration tests: one modifier, duplicate validation, semantic roles, both actors, cost rollback, timing/target checks, copies/clones and source LKI. |
+| All-zone battlefield-count CDAs | Keldon Warlord, Nightmare, Plague Rats, Dakkon Blackblade, People of the Woods: **5** credible full-card unlocks after the engine prerequisite. Gaea's Avenger and Wood Elemental also have CDA signatures. | No complete all-zone characteristic evaluation contract; owner/controller contexts, named/subtype counts, ability removal and layer ordering need evidence. Gaea's Avenger's count uses You despite its observed opponent-count source defect; Wood Elemental needs entry sacrifice/results. Enables zone-aware characteristics and later count CDAs. | High: engine characteristic queries across zones, compiler values/CDA lowering, layer/copy/LKI contracts and gameplay tests. The five clean consumers include the toughness-only People of the Woods, beyond the older four-card estimate. |
+| Typed damage-source choice and next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** potential full unlocks after discovery, identity and prevention integration. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere share the choice. | Existing UUID chooser selects only battlefield permanents and stack spells. CR 120.7/609.7a additionally require referenced departed sources, pending replacements/delayed triggers, command-zone objects and permanent-spell-to-permanent identity. Next-event shields need property rechecks and independent choice bindings. The four further consumers need redirection, prevented-damage results, continued damage or fractional prevention. | High: typed source discovery/identity prerequisite, choice scope, shield consumption/rechecks, competing replacements and multi-card gameplay. Adapter-only unlock estimate is zero. |
+
+Selection rationale: the selected shared capability has two concrete consumers
+and one immediate complete-card gain using existing exact engine behavior. It
+has the largest credible gain for this slice's small implementation effort.
+The higher total unlock estimates require substantial new engine contracts.
+The source-choice and CDA candidates remain valuable next work. This is a
+compiler adapter, not a new engine rule or a single-card branch. Contract, reuse
+boundary and acceptance cases were stated before implementation. No removed
+skill, Go stub, Go-card requirement or fallback was used. The engine skill was
+inspected while assessing candidates, but no engine implementation was selected.
+
+### Supported signatures, contexts and reuse
+
+- `ActivatedWithModifiers(cost, actions, OtherPlayersMayActivate(AnyPlayer))`.
+  One bare AnyPlayer symbol is required. The modifier is allowed in nested
+  `And([...])` modifier lists, with ordinary action bodies and `Modal_ChooseOne`.
+  Duplicate permissions, wrong arity, tuple/foreign/unbound player selectors,
+  `OnlyPlayerMayActivate`, rule/action/cost placements and the separate
+  conditional-mana context remain declaration errors.
+- Each factory constructs its own action with `mage.WithAnyPlayerMay()`.
+  Both players can activate; the activator pays, chooses modes/targets and
+  controls the stack ability. Resolving You and target-control restrictions
+  use that player. Timing, source presence/phasing, per-source limits and target
+  legality still apply. No per-game last-action storage is introduced.
+- Reuses ActionDefinition permissions, native transactional payment,
+  modal/target services, resolving contexts, source incarnation/LKI and
+  `DealDamageEach`/DamageRecipients batch execution. Source characteristics and
+  lifelink use current or retained information for the source, independent of
+  the ability controller. Copies have their own controllers; clones retain
+  isolated pending state. No engine API/state or replacement-order changes.
+- Semantic inspection maps OtherPlayersMayActivate's nested argument to
+  player_filter even when the surrounding record still rejects.
+
+### TDD, complete-card coverage and mappings
+
+New tests first had a fixture compile error from the wrong StackObject field;
+it was corrected to Controller. Gameplay/strict-loading tests then failed only
+at the missing OtherPlayersMayActivate modifier, before production changes.
+After implementation, a strict-load fixture incorrectly indexed a keyword as
+an ability; it was corrected to the actual action index. Initial broad suites
+then found the two exact inventory-count assertions and Land's Edge's old
+first diagnostic. They now assert the measured count and its remaining typed
+result gap. No rejection or gameplay assertion was removed or weakened.
+
+| Card/contract | Tests |
+| --- | --- |
+| Ifh-Bíff Efreet, complete ARN record | `TestRONActivationPermissionEfreet`: native spell cost/rollback, 3/3 flying Efreet metadata, both activators, opponent's payment and stack controller, no early damage, shroud/phased/ground exclusions and complete simultaneous damage visibility. |
+| Efreet source identity and interactions | `TestRONActivationPermissionIdentity`: current source control, departure/return LKI, phasing/phase cycles, ability removal, lifelink ownership, copied abilities and cloned pending resolution. `EfreetPreventionAndMembership`: resolution-time flying changes, green protection, finite player shield and lethal damage. |
+| Land's Edge, remaining gap only | `TestRONChosenDiscardCostStrictBoundaries` and `TestRONActivationPermissionStrictLoad` preserve full-record rejection at DiscardedCardPassesFilter. No complete gameplay coverage is claimed. |
+| Shared permission and instance contracts | `ActorsAndTiming`: ordinary/modal opponent activation with sorcery restriction. `ModalChoices`: separate mode choices/controllers for two activators and clones. `IndependentInstances`: factory isolation, shared per-source limit across activators and copied ability controller. `CostRollback`: invalid opponent discard rolls back life/cards; valid payment uses only that player. `TargetsAndPresence`: activator-relative target legality at announcement/resolution, mana rollback and phased source rejection. |
+| Declarations, inventory and atomic loading | `Invalid`: arities, selectors, nested duplicates and unsupported contexts. `StrictLoad`: full Efreet records/reprints, fresh factories, rejected mixed collection preserves installed registry, real nested semantic role. Existing inventory gameplay/registry assertions continue to pass. |
+
+Complete unique-card gameplay coverage increases by **one**. Compilation and
+behavior coverage remain separate; collection-wide engine-validated and
+behavior-verified totals stay unset. Existing mixed-damage and activation
+regressions retain the shared replacement, target, timing and batch contracts.
+
+### Final measurements, gates and validation
+
+Actual gain equals estimate: **Ifh-Bíff Efreet, 1 unique card / 1 record**.
+No accepted name is lost. Strict loader exits 1 with **1,816 compiled /
+629 rejected records; 693 accepted / 293 rejected unique names**. Land's Edge:
+`LEG.lines.ron:160:287: unsupported activation history condition (DiscardedCardPassesFilter)`.
+Inventory: **72,962 occurrences / 8,559 signatures / 5,483 unknown-role
+occurrences**. Four former unknown-role occurrences now have player-filter
+roles. All 12 RON hashes are unchanged; no source change or vocabulary refresh
+is needed. No selected source defect or environment failure was found.
+The CDA candidate's previously observed Gaea's Avenger defect remains deferred.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, short engine suite, make build | PASS |
+| New focused tests before implementation | Expected FAIL at unsupported OtherPlayersMayActivate after fixture correction |
+| `go test ./pkg/mage/dsl/ron -run 'TestRON(ActivationPermission\|MixedDamage\|ModalActivation\|ActivationLimit\|ActivationTiming\|SorceryActivation)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS after exact inventory/boundary updates |
+| `make test` | PASS after exact inventory/boundary updates |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `go test ./... -short -count=1` | PASS |
+| `make lint` | PASS, zero issues; formatting reviewed, no unrelated code changes |
+| After-lint RON tests with `-count=1` | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,816 compiled / 629 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same counts and semantic measurements above |
+
+Complete registry loading, collection gameplay and startup wiring remain below
+the removal gates. No Go definitions, generators or DSL functions were removed;
+this slice does not authorize cleanup or cutover. API/rules documents record
+only the supported adapter and its proven use of existing engine behavior.
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. All-zone battlefield-count CDA prerequisite and five clean consumers.
+2. Typed damage-source discovery/identity prerequisite, then the six Circles of
+   Protection and Greater Realm of Preservation.
+3. Typed discarded-card payment result/property condition for Land's Edge;
+   compare other payment-result consumers before choosing a narrow adapter.
+
+Slice files: compiler `activation_timing.go`, `inventory.go`; tests
+`activation_permission_test.go`, `chosen_discard_cost_test.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger entry. A descriptive commit contains only this slice.

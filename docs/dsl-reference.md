@@ -4744,7 +4744,8 @@ Machine's upkeep/payment/damage clause have engine tests in
 `TestRONChosenDiscardCostArmorerClause` and `TestRONChosenDiscardCostWarMachineClause`.
 Armorer's complete choice now uses the resolving-choice adapter below. War
 Machine's actual-damage-result rule remains a gap. Land's Edge
-still needs shared activation permission and a typed discarded-card result.
+still needs a typed discarded-card result. Its shared activation permission
+is supported by the adapter described below.
 Other evidence: `TestRONChosenDiscardCostOptional`, `IndependentPayers`,
 `ReplacementsAndInstances`, `Invalid` and `StrictBoundaries`.
 
@@ -4953,3 +4954,33 @@ controller clauses, or controller clauses inside disjunctions are rejected.
 These adapters do not provide paid-object history or resolution tap payments.
 Hand of Justice has complete RON gameplay tests. Vodalian War Machine's two
 activation clauses have tests, but its death rule still needs paid-object history.
+
+
+## RON activation permission for any player
+
+`ActivatedWithModifiers(cost, actions, OtherPlayersMayActivate(AnyPlayer))`
+permits either player to activate the ability. This modifier also works inside
+nested `And([...])` modifier lists and with `Modal_ChooseOne` action bodies.
+It lowers to `mage.WithAnyPlayerMay()` on each fresh action definition.
+The compiler requires one bare `AnyPlayer` symbol and rejects duplicate
+permissions, including duplicates in nested modifier lists. Other player
+filters, `OnlyPlayerMayActivate`, top-level rules, action/cost uses and the
+separate conditional-mana activation context remain unsupported.
+
+The activator pays, chooses modes and targets, controls the stack ability and
+supplies resolving `You`. Target controller restrictions are checked against
+that player at announcement and resolution. Source characteristics and damage
+ownership use the original source's current or retained information, rather
+than the stack ability's controller. Permission does not bypass payment,
+phasing, activation limits, timing or target legality.
+
+`TestRONActivationPermissionEfreet` proves the complete Ifh-Bíff Efreet ARN
+record, native casting, both activators, payment rollback, flying recipients,
+shroud, phasing and simultaneous damage. `Identity` covers source control,
+departure/return, phase cycles, ability removal, lifelink, copies and clones.
+`ActorsAndTiming`, `ModalChoices`, `IndependentInstances`, `CostRollback`,
+`TargetsAndPresence`, `EfreetPreventionAndMembership`, `Invalid` and
+`StrictLoad` cover the remaining permission contracts and atomic loading.
+Land's Edge shares the supported permission and discard cost, but its full
+record still rejects `DiscardedCardPassesFilter`. It has no complete gameplay
+mapping from this slice.
