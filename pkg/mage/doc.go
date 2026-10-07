@@ -78,6 +78,10 @@
 // Use [WithActivationStateCondition] with [PermanentMatchesFilter] for a
 // live source or attachment restriction before activation payment. Mana planning
 // uses the same pure check. Copies and resolution do not repeat it.
+// Use [PlayerIsPermanentOwner] or [PlayerIsPermanentController] with
+// [WithActivationStateCondition] for a live player restriction.
+// Combine this condition with [WithAnyPlayerMay] when the permitted player
+// can differ from the source controller. Use [This] or [AttachedPermanent].
 //
 // Use [EachBeginCombat] or [YourBeginCombat] for combat-start triggers.
 // Combine [TurnStepBegins] with a player binding to save the event player.

@@ -30084,3 +30084,150 @@ Slice files: pkg/mage/composable_counter_information.go and tests;
 ron counter_information.go and tests, sacrifice_value.go, inventory.go,
 inventory_test.go, ordinary_draw_step_test.go and counter_removal_test.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
+
+## Run 2026-10-07: RESTRICTED-ACTIVATION-PLAYER
+
+Status: complete dependency slice; stop here. Complete loading/gameplay/runtime,
+Go-card deletion and unused-DSL removal gates remain closed.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary and progress
+ledger, selected compiler/engine contracts and complete candidate RON records,
+including nested forms. Requirements came from RON; no Go card definition was
+used. Applied implement-engine for the shared pure player condition. No agents,
+removed card skills, Go stubs or RON source edits.
+
+Preserve initial changes to .gitignore, execution design and progress ledger,
+and untracked mtgish-ron-completed.md. Commit only this appended ledger entry
+against HEAD; the user's ledger consolidation remains in the working tree.
+
+Baseline: focused RON tests, engine short tests and native build PASS.
+Completed strict loader exits 1 for collection rejection, not build failure:
+2,445 records, 986 names, **1,826 compiled / 619 rejected records**,
+**702 accepted / 284 rejected names**. A read while the baseline command was
+still running saw an older /tmp report (1,824); the completed command and fresh
+inventory establish 1,826. Inventory: 72,962 occurrences, 8,557 signatures,
+5,425 unknown-role occurrences. Syntax snapshot is historical support evidence
+only; current code already includes ordinary draw-step and counter information.
+
+| Candidate | Unique affected names / estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Restricted activation players, selected | Merseine; Personal Incarnation. **0 immediate unlocks**. Seven records, two unique names. | Merseine still needs host-mana-cost payment; Personal Incarnation needs future finite damage redirection, resolving owner reads and its source-death owner/life-value body. Establishes the shared live owner/controller permission prerequisite for both, ordinary/modal bodies and future static grants. | Low: reuse pure incarnation lookup, native conditions, permission, transactions and stack services; two condition contracts and six RON test groups. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods; blocked Gaea's Avenger. **5 clean unlocks**. | Needs all-zone characteristic evaluation, owner/controller context and copy/layer contracts; Avenger also has the previously recorded controller-filter source defect and nested Plus. Wood Elemental has separate entry-result prerequisites. | High: reusable characteristic service and five complete gameplay mappings. |
+| Chosen damage-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **7 clean unlocks**. Additional blocked consumers: Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage. | Needs CR 609.7 source discovery, choices, typed source identity, spell-to-permanent continuity, property rechecks and one-event shields. Additional consumers need amounts, prevention results or redirection. | High: shared decision/identity/replacement services and seven complete mappings. |
+
+The selected shared prerequisite has no independent subsystem dependency and
+has a small, well-defined contract with concrete use in two rejected cards.
+The larger estimated gains require much broader services and verification.
+This is shared multi-card work, not a single-card executor. Complete nested
+records show that a permission adapter cannot honestly claim either full-card
+unlock. Selection, engine boundary and acceptance cases were stated before edits.
+
+### Supported contract and reuse boundary
+
+Supported RON activation modifier forms:
+`OnlyPlayerMayActivate(OwnerOfPermanent(ref))` and
+`OnlyPlayerMayActivate(ControllerOfPermanent(ref))`, with one bare
+`ThisPermanent` or an Aura's `HostPermanent` reference. Ordinary and modal
+`ActivatedWithModifiers` bodies and nested modifier `And` lists are supported.
+Duplicate/conflicting permissions reject, regardless of nesting or order.
+Announcement targets, event bindings, resolving player scope, other player
+constructors, costs/actions/top-level rules, and conditional-mana activation
+contexts are not added. Source owner/controller and host owner/controller
+combinations all have engine gameplay tests.
+
+New engine APIs:
+`PlayerIsPermanentOwner(PermanentRef) StateCondition`;
+`PlayerIsPermanentController(PermanentRef) StateCondition`.
+They compare StateContext.ControllerID with live owner/controller information.
+They accept This and AttachedPermanent; declaration validation rejects nil,
+target and saved-binding subjects without a game-time declaration panic.
+Reuse resolveStatePermanent for source presence, phasing, source incarnation
+and the saved attachment incarnation. Unknown players, absent/phased sources,
+and absent/phased/stale hosts fail. LKI cannot grant permission. Control and
+attachment changes affect subsequent checks; returned objects do not restore
+an old attachment or captured state context. Pure reads make no choices and
+store no mutable state.
+
+RON owns spelling, arity, scope and diagnostics. It combines the engine
+conditions with WithAnyPlayerMay and WithActivationStateCondition. Each
+factory builds a fresh ordinary/modal action and uses existing independent
+target declarations. Payment, mode/target choice, stack control and resolving
+You belong to the eligible activator. Timing, limits and target legality remain
+in force. Copies and resolution do not recheck activation permission.
+CR 602.2/2a/2b/5, 113.8, 400.7 and 702.26b/d support these contracts.
+No new LKI, replacement ordering, APNAP, simultaneous-operation or mana-solver
+contract is claimed; no damage/cost/zone/stack service is changed.
+
+No card-name branch, global result slot, fallback, partial registry or skipped
+rule is introduced. No broad DSL export or old caller is removed. The complete
+collection and startup/test migration are below their removal gates; no caller
+audit authorizes unrelated deletion. Source syntax did not change, so no
+vocabulary snapshot/hash refresh is needed. No new source defect was found;
+previous ledger source defects remain separate blockers.
+
+### TDD and gameplay mappings
+
+Initial engine tests failed because both condition APIs were missing. Initial
+RON tests failed at unsupported OnlyPlayerMayActivate from the real records.
+After implementation, a test setup error added mana to the original player
+instead of the cloned game's player; this was corrected. An inventory test
+used a nonexistent convenience API and then trimmed a reference incorrectly;
+it now uses InspectFS and verifies actual semantic roles. A synthetic Aura
+fixture uses the correct subtype metadata. No production behavior or rule test
+was weakened to fix these setup errors.
+
+| Contract / card | Test mapping |
+| --- | --- |
+| Engine identity and declarations | TestActivationPlayerConditionIdentity: both conditions and source/host subjects, owner/control separation, control changes, phasing/cycles, stale attachment/source incarnation, absence/return, unknown players and clones. Declarations: nil, target and saved-binding rejection; valid source/attachment definitions. |
+| Merseine permission prerequisite (FEM:61) | TestRONOnlyPlayerActivationRealModifierProbes and PresenceAndReattachment: unchanged actual RON modifier node, explicit synthetic cost/body; host control changes, absent/phased hosts/sources, reattachment, returned host, payment and stack controller, departure, copies and clones. No complete-card gameplay claim. |
+| Personal Incarnation permission prerequisite (LEA:180, LEB/2ED/CED/CEI:181, 3ED:185) | RealModifierProbes: unchanged actual owner permission, source controller excluded, owner pays and controls pending resolution, departure/copies/clones. Complete identical reprint records were inspected; count as one unique card. No complete-card gameplay claim. |
+| Supported combinations and interaction | TimingTargetsAndInstances: source/host owner/controller, sorcery timing, controlled targets at announcement/resolution, activation limits, independent factories. RollbackAndModes: invalid discard rolls back life/cards, valid owner payment and chosen-mode ownership. |
+| Declarations, inventory and loading | InvalidAndBoundaries: malformed arities/symbols, incompatible/unbound/out-of-context references, host outside Aura scope, duplicate/conflicting nested permissions, unsupported rule/action/cost/conditional-mana contexts, complete-card independent gaps and atomic collection rejection. Inventory: permission/player/permanent semantic roles. Existing TestRONActivationPermission* and TestInventory* remain passing. |
+
+Compilation gain: **0 records / 0 unique names**, matching the estimate.
+Complete-card gameplay gain: **0 unique cards**, separately from two real
+permission-clause prerequisite mappings and synthetic engine gameplay coverage.
+
+### Final measurements and validation
+
+Final strict loader: **1,826 compiled / 619 rejected records**;
+**702 accepted / 284 rejected unique names**. No accepted name is lost.
+Only two unique first diagnostics advance:
+- Merseine: FEM.lines.ron:61:455, unsupported cost (PayManaCostOfPermanent).
+- Personal Incarnation: LEA.lines.ron:180:259 (and equivalent reprints),
+  unsupported action (CreateFutureReplaceWouldDealDamage).
+
+Final semantic inventory: 72,962 occurrences, 8,557 signatures,
+**5,410 unknown-role occurrences** (15 fewer). It inspects descendants beneath
+unsupported parents, including resolving owner syntax without claiming support.
+Engine-validated and behavior-verified aggregate fields remain null. Strict
+production loading continues to reject the incomplete collection atomically.
+
+Validation results:
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestActivationPlayerCondition|TestRONOnlyPlayerActivation|TestRONActivationPermission|TestInventory' -count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues. Automatic import formatting reviewed; no unrelated code change. Focused checks pass again after lint.
+- `git diff --check`: PASS, including final ledger and documentation changes.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection; counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1; counts above.
+- Accepted/rejected name and diagnostic comparison: no accepted loss; only the two listed diagnostics advance.
+
+No environment or pre-existing test/build failure was found. API/rules docs
+cover only the established live conditions and restricted activation integration.
+
+Ranked next candidates to reassess:
+1. All-zone battlefield-count CDA service and five clean consumers.
+2. Chosen damage-source choice/identity/shields and seven clean consumers.
+3. Dynamic mana-cost payment using a live Aura host (Merseine), compared with
+   dynamic resolution/activation payment consumers; owner-only redirection can
+   now reuse this permission prerequisite when its replacement contract exists.
+
+Slice files: pkg/mage/activation_player_condition.go and tests;
+ron only_player_activation.go and tests, activation_timing.go, inventory.go;
+pkg/mage/doc.go, docs/dsl-reference.md, docs/engine-rules-contracts.md and this
+ledger entry. Stop after this slice.

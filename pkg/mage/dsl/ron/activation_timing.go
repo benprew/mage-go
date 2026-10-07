@@ -148,6 +148,16 @@ func compileActivationModifier(n Node, ctx scope, seenMaximum, seenSorcery, seen
 			options = append(options, next...)
 		}
 		return options, nil
+	case "OnlyPlayerMayActivate":
+		if *seenPermission {
+			return nil, problem(n, "multiple activation permissions are not supported")
+		}
+		options, err := compileOnlyPlayerActivation(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		*seenPermission = true
+		return options, nil
 	case "OtherPlayersMayActivate":
 		if err := arity(n, 1); err != nil {
 			return nil, err

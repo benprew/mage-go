@@ -359,6 +359,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "activation_modifier":
+		if n.Name == "OnlyPlayerMayActivate" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "OtherPlayersMayActivate" && len(n.Args) == 1 {
 			return "player_filter"
 		}
@@ -1108,7 +1111,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ControllerOfAbility" && len(n.Args) == 1 {
 			return "ability_reference"
 		}
-		if n.Name == "ControllerOfPermanent" && len(n.Args) == 1 {
+		if (n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {

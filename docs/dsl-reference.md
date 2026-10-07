@@ -4968,7 +4968,7 @@ nested `And([...])` modifier lists and with `Modal_ChooseOne` action bodies.
 It lowers to `mage.WithAnyPlayerMay()` on each fresh action definition.
 The compiler requires one bare `AnyPlayer` symbol and rejects duplicate
 permissions, including duplicates in nested modifier lists. Other player
-filters, `OnlyPlayerMayActivate`, top-level rules, action/cost uses and the
+filters, top-level rules, action/cost uses and the
 separate conditional-mana activation context remain unsupported.
 
 The activator pays, chooses modes and targets, controls the stack ability and
@@ -5146,3 +5146,38 @@ upkeep activation, payment rollback, countered payment, removal, draw timing,
 simultaneous damage, prevention, copies, clones and incarnation changes.
 Other consumers remain rejected at independent gaps. See
 [the counter information contract](engine-rules-contracts.md#counter-information-values).
+
+## RON restricted activation players
+
+`OnlyPlayerMayActivate(OwnerOfPermanent(ref))` and
+`OnlyPlayerMayActivate(ControllerOfPermanent(ref))` are activation modifiers.
+`ref` must be the bare `ThisPermanent` symbol or, for an Aura,
+`HostPermanent`. They work in ordinary and modal `ActivatedWithModifiers`
+abilities and nested modifier `And` lists. Exactly one permission modifier is
+permitted, including when combined with `OtherPlayersMayActivate`.
+Announcement targets and event bindings cannot supply the permission subject.
+Other player references, action/cost/rule uses and conditional-mana activations
+remain unsupported. This does not add resolving `OwnerOfPermanent` support.
+
+Lowering combines `WithAnyPlayerMay()` and `WithActivationStateCondition()`
+with `PlayerIsPermanentOwner(PermanentRef) StateCondition` or
+`PlayerIsPermanentController(PermanentRef) StateCondition`. These engine
+conditions accept `This` and `AttachedPermanent`, compare
+`StateContext.ControllerID`, and require the current source and attachment
+incarnations. They use live information; absent or phased objects cannot grant
+permission. Control and attachment changes affect future activations.
+
+The eligible player pays costs, chooses modes and targets, controls the stack
+ability, and supplies resolving `You`. Timing, limits and target legality still
+apply. Permission is not repeated during resolution or for a stack copy.
+No mutable choice is stored in the condition. Engine declaration validation
+rejects nil, target and saved-binding subjects before gameplay.
+
+Evidence: `TestActivationPlayerConditionIdentity` and `Declarations`;
+`TestRONOnlyPlayerActivationRealModifierProbes`, `PresenceAndReattachment`,
+`TimingTargetsAndInstances`, `RollbackAndModes`, `Inventory`, and
+`InvalidAndBoundaries`. The probes retain the unchanged permission nodes from
+Merseine and Personal Incarnation, with explicitly synthetic costs and bodies.
+Neither complete card is supported: Merseine still needs
+`PayManaCostOfPermanent(HostPermanent)` and Personal Incarnation still needs
+`CreateFutureReplaceWouldDealDamage` and its independent death body.

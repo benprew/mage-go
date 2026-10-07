@@ -6072,3 +6072,39 @@ Evidence: `TestCounterInformationLifecycle`, `Declaration`, and
 in `pkg/mage/dsl/ron/counter_information_test.go`. Target legality is checked
 before resolution (CR 608.2b); information reads after an earlier instruction
 moves a legal target use the retained count (CR 608.2c/h).
+
+## Live player conditions for restricted RON activations
+
+`PlayerIsPermanentOwner(PermanentRef) StateCondition` and
+`PlayerIsPermanentController(PermanentRef) StateCondition` compare the player
+in `StateContext.ControllerID` with the current owner or controller of `This`
+or `AttachedPermanent`. Definition validation rejects all other subjects.
+The shared `resolveStatePermanent` query checks source presence, phasing,
+optional source incarnation and the attachment's saved host incarnation.
+An unknown player, absent source, stale attachment or phased subject fails.
+No LKI grants activation permission (CR 602.2, 602.5, 400.7, 702.26b/d).
+
+RON `OnlyPlayerMayActivate` combines these pure conditions with the existing
+any-player permission. The source's controller does not acquire permission
+unless they satisfy the condition. The activator still pays transactionally,
+chooses modes and targets, and controls the stack object (CR 113.8,
+602.2a/b). Checks apply before payment; control or attachment changes after
+activation do not cancel the stack object, and copies do not repeat permission.
+Source information for damage and resolving attachment references retain their
+existing contracts. This slice changes no damage, replacement, cost, APNAP,
+simultaneous-operation or mana-solver service.
+
+Engine evidence: `TestActivationPlayerConditionIdentity` covers both predicates
+and both subjects, owner versus controller, control changes, phasing and phase
+cycles, stale host/source incarnations, absence, return, unknown players and
+clones. `Declarations` covers nil, target and saved-binding rejection and valid
+source/attachment declarations. RON evidence:
+`TestRONOnlyPlayerActivationRealModifierProbes` covers actual source permission
+nodes, payment, control changes, departure, copies and clones;
+`PresenceAndReattachment` covers live hosts and returned attachments;
+`TimingTargetsAndInstances` covers all four supported reference combinations,
+sorcery timing, activation limits, independent factories and target legality;
+`RollbackAndModes` covers payment rollback and mode ownership;
+`Inventory` and `InvalidAndBoundaries` cover nested semantic reporting,
+declaration rejection, independent complete-card gaps and strict atomic loading.
+Complete-card coverage for Merseine and Personal Incarnation remains open.
