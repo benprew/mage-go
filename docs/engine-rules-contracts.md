@@ -7024,3 +7024,28 @@ RON `TestRONStaticUntapCards`, `Casting`, `Interactions`,
 `ReprintsAndInventory`, `Declarations`, `TestRONStasisUpkeep` and
 `TestRONStasisNativeTurn` map every rule of Stasis and Winter Orb. These tests
 establish no additional draw, damage, entry or resolving-action replacement shape.
+
+
+## RON numeric consumer reuse
+
+The RON resolving numeric-consumer adapters use the existing `ResolutionValue`
+services. `GainLifeForEach/2` lowers to `MultiplyValues` and `GainLifeFor`;
+single-permanent counter amounts lower to `AddCountersTo`, and bounded amounts
+to `AddCountersUpTo`. Both operands are read at resolution, in the action's
+private binding frame. This establishes adapter coverage; it changes no engine
+API, information lifetime, payment, replacement, or simultaneous-operation rule.
+
+Living Armor uses `ManaValueOfWithLKI` with its declared permanent target.
+Target legality is checked first (CR 608.2b), so an illegal target cannot use LKI
+to receive counters. A live legal target supplies its mana value when placement
+executes (CR 202.3, 608.2h). Icatian Moneychanger uses `CountersOnWithLKI` with
+the sacrificed source's captured incarnation; each departure keeps its own
+counter snapshot (CR 400.7, 608.2h). Copies use their own controller and preserve
+bindings, while retargeted copies read their own target's value. P/T counters
+use the existing layer 7c service and persist through cleanup (CR 122.1a/122.2).
+
+Evidence: `TestRONNumericConsumerLivingArmor`, `LivingArmorRetarget`,
+`Moneychanger`, `MoneychangerPendingIncarnations`, `ResolutionAndInstances`,
+`ReplacementOrder`, `Contexts`, `BoundedPlacement`, `Nonpositive`, `Invalid` and
+`Inventory` in `pkg/mage/dsl/ron/numeric_consumers_test.go`. These tests keep
+compilation counts separate from complete-card gameplay evidence.

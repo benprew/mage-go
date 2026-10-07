@@ -477,7 +477,7 @@ func TestRONCounterPlacementInvalid(t *testing.T) {
 		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Ref_TargetPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, HostPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Trigger_ThatPermanent)])`, `PutCounters([ACounterOfTypeOnPlayer(ChargeCounter, You)])`,
 		`PutCounters([NumberCountersOfTypeOnPermanent(ValueX, ChargeCounter, ThisPermanent)])`,
-		`PutCounters([NumberCountersOfTypeOnPermanent(Integer(1), ChargeCounter)])`, `PutCounters([NumberCountersOfTypeOnPermanent(ManaValueOfPermanent(ThisPermanent), ChargeCounter, ThisPermanent)])`,
+		`PutCounters([NumberCountersOfTypeOnPermanent(Integer(1), ChargeCounter)])`, `PutCounters([NumberCountersOfTypeOnPermanent(ManaValueOfPermanent(Ref_TargetPlayer), ChargeCounter, ThisPermanent)])`,
 	} {
 		t.Run(action, func(t *testing.T) {
 			src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [Activated(PayMana([]), ActionList([%s]))])`, action)

@@ -889,6 +889,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "value", "recipient"}[index]
 			}
+		case "GainLifeForEach":
+			if len(n.Args) == 2 {
+				return "value"
+			}
 		case "MillNumberCards", "DrawNumberCards", "DiscardNumberCards", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 			if len(n.Args) == 1 {
 				return "value"
@@ -1162,6 +1166,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "GainLifeForEach" && len(n.Args) == 2 {
+			return "value"
+		}
+
 		if n.Name == "ChooseAnyNumberPermanentsAndPayManaForEach" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "metadata"}[index]
 		}

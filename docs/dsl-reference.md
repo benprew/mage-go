@@ -1301,7 +1301,7 @@ unsupported. See [the exact contract and tests](designs/mtgish-ron-sacrifice-cos
 
 `PutCounters([ACounterOfTypeOnPermanent(counter, permanentRef)])` places one
 counter. `NumberCountersOfTypeOnPermanent(value, counter, permanentRef)` in the
-same one-instruction list uses an integer literal value or already bound ValueX.
+same one-instruction list uses the typed resolving values described below.
 Nonpositive amounts place nothing. Typed source, Aura host and declared permanent
 target references use the same scope and incarnation rules as other actions.
 Placement uses AddCountersTo and the shared replacement pipeline. Counters
@@ -5881,3 +5881,37 @@ its unrestricted selection. The next untap step reads its new state. Separate
 instances, control changes and cloned games retain independent source contexts.
 Stasis and Winter Orb have complete RON gameplay mappings in
 `static_player_untap_test.go`; identical reprints also pass definition validation.
+
+
+## RON resolving numeric consumers
+
+`GainLifeForEach(value, count)` resolves both typed values, multiplies them with
+`mage.MultiplyValues`, and sends one life-gain action through `mage.GainLifeFor`.
+It uses the current action's player, including explicit `PlayerAction` and
+`PlayerActions` scopes. Spell, mode, activation and ordinary trigger bodies use
+the same instance value compiler as `GainLife`. The existing restriction on
+life actions in a directly captured event-player scope still applies. This form
+adds no static, entry, payment, or replacement-operation declaration.
+
+`NumberCountersOfTypeOnPermanent(value, counter, ref)` now uses that same typed
+instance value compiler. It supports arithmetic and in-scope permanent
+mana-value, power, counter-information and saved payment/event values, along
+with existing integer and announced-X values. The existing top-level
+`NumCreaturesOrPlaneswalkersThatDiedThisTurn(IsCardtype(Creature))` form remains
+supported. `UptoNumberCountersOfTypeOnPermanent` uses the same amount compiler;
+its fixed cap, optional number choice and other restrictions stay in force.
+Player counter placement retains its fixed-integer amount restriction.
+
+Values are read when each action executes. A legal target's current mana value
+supplies Living Armor's +0/+1 counter count. Icatian Moneychanger reads the
+original source's retained credit counters after its sacrifice cost. Returned
+objects cannot replace that information. An information read cannot make an
+illegal, absent or phased recipient eligible for placement. Nonpositive final
+amounts do nothing. Unknown, wrong-type and out-of-scope references fail at
+compilation; each factory keeps its own target and payment bindings.
+
+`TestRONNumericConsumer*` covers both complete RON records, sequencing,
+resolution-time values, supported contexts, invalid declarations, LKI, timing,
+target legality, copy retargeting, independent instances and clones, and
+replacement ordering. These adapters add no engine service or new simultaneous
+operation contract.

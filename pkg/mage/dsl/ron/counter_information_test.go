@@ -306,10 +306,13 @@ func TestRONCounterInformationInventoryAndBoundaries(t *testing.T) {
 			t.Fatal("missing semantic role", name, role)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{{"FEM", "Icatian Moneychanger", "GainLifeForEach"}, {"ARN", "Cyclone", "PayManaForEach"}, {"DRK", "City of Shadows", "APermanent"}, {"LEG", "Primordial Ooze", "CreateValueX"}, {"LEG", "Voodoo Doll", "XIs"}} {
+	for _, tc := range []struct{ set, name, gap string }{{"ARN", "Cyclone", "PayManaForEach"}, {"DRK", "City of Shadows", "APermanent"}, {"LEG", "Primordial Ooze", "CreateValueX"}, {"LEG", "Voodoo Doll", "XIs"}} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
 			t.Fatalf("%s gap: %v", tc.name, err)
 		}
+	}
+	if _, err := Compile(hostUntapRecord(t, "FEM", "Icatian Moneychanger")); err != nil {
+		t.Fatalf("supported counter information consumer: %v", err)
 	}
 	files["bad.ron"] = &fstest.MapFile{Data: []byte(strings.ReplaceAll(record, "SinglePermanent(ThisPermanent)", "SinglePermanent(Ref_TargetPermanent)"))}
 	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 1 {

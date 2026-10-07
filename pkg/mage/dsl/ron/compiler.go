@@ -1395,7 +1395,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
+	case "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
@@ -1609,6 +1609,22 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "GainLifeForEach" {
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		per, err := compileInstanceValue(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		count, err := compileInstanceValue(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return compileLifeEffect(n, ctx, func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.MultiplyValues(per(bindings), count(bindings))
+		})
+	}
 	if n.Name == "MillNumberCards" {
 		return compileMillAction(n, ctx)
 	}
@@ -1653,19 +1669,23 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return mage.DrawFor(ctx.player.build(bindings), amount(bindings))
 		}}, nil
 	case "GainLife", "LoseLife":
-		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
-			return nil, unsupported(n, "life action in an event player scope")
-		}
-		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			player := ctx.player.build(bindings)
-			if n.Name == "GainLife" {
-				return mage.GainLifeFor(player, amount(bindings))
-			}
-			return mage.LoseLifeFor(player, amount(bindings))
-		}}, nil
+		return compileLifeEffect(n, ctx, amount)
 	default:
 		return nil, unsupported(n, "player action")
 	}
+}
+
+func compileLifeEffect(n Node, ctx scope, amount valueFactory) ([]effectFactory, error) {
+	if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
+		return nil, unsupported(n, "life action in an event player scope")
+	}
+	return []effectFactory{func(bindings instanceBindings) mage.Effect {
+		player := ctx.player.build(bindings)
+		if n.Name == "LoseLife" {
+			return mage.LoseLifeFor(player, amount(bindings))
+		}
+		return mage.GainLifeFor(player, amount(bindings))
+	}}, nil
 }
 
 func compileFixedDiscard(n Node, ctx scope) ([]effectFactory, error) {

@@ -34502,3 +34502,153 @@ Changed files: engine `static_untap.go`, `static_untap_test.go`, `untap_limit.go
 `conditional_static.go`, `untap_limit.go`, `static_player_untap_test.go`,
 `inventory_test.go`; API/rules docs and this appended ledger entry.
 No second slice is started.
+
+## Run 2026-10-07: RESOLVING-NUMERIC-CONSUMERS
+
+Status: complete adapter slice. This run stops after this slice. Initial user
+changes to `.gitignore`, the execution design and this ledger, and the untracked
+`mtgish-ron-completed.md` are preserved. Only this appended entry is staged from
+the ledger; the user's existing restructuring is excluded.
+
+### Fresh evidence and selection
+
+Baseline compiler tests, short engine tests and build passed. Strict and semantic
+loaders exited 1 for unsupported collection records, not build/test failure:
+**1,926 compiled / 519 rejected records**, **737 accepted / 249 rejected unique
+names**, out of 2,445 records / 986 names. Inventory had 72,962 occurrences,
+8,557 signatures and 4,600 unknown-role occurrences. Read the execution design,
+current ledger, vocabulary snapshot, engine reference, selected compiler and
+engine services, full candidate RON records, relevant API/rules contracts and
+CR 202.3, 605 and 608.2. Existing documented CR 400.7, 122 and replacement
+contracts supply the unchanged identity/counter/life services.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- |
+| Resolving numeric consumers, selected | Living Armor, Icatian Moneychanger: **2**. Both occur once. | Both complete records use supported costs, targets, entry counters, damage, triggers and upkeep restrictions. Only numeric consumer adapters are missing. Enables typed information/arithmetic/payment values in counter amounts and typed life multiplication. | Low/moderate: shared lowering, invalid declarations, full-card gameplay, identity, timing, bindings and replacements. |
+| Paid sacrifice mana | Priest of Yawgmoth: **1**. | Existing sacrifice-value capture can supply the amount, but native mana classification and automatic planning for a selected sacrifice require contract verification before a full-card claim. Enables further paid-value mana consumers; deferred while useful multi-card work remains. | Moderate/high: adapter plus mana-planning/payment evidence. |
+| Complete damage-source choices and shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 after prerequisites**, **0** from enumeration alone. | Full records require a source choice and a next-event consuming shield. Retained and command-zone enumeration, choice bindings, shield consumption and simultaneous-damage contracts remain prerequisites. Enables the seven protection consumers and later source-based replacements. | High: source categories, bindings, shield lifetime and competing replacements. |
+
+Selection rationale: two complete records reuse exact existing engine behavior
+with a smaller cost than source choices/shields. First errors alone did not
+supply unlock estimates. The contract, reuse boundary and acceptance cases were
+stated before edits. No engine prerequisite was missing for this slice. No
+skill, agent, removed card skill, Go stub, Go card requirement, card-name branch,
+fallback or partial production registry was used.
+
+### Supported signatures, contexts and reuse
+
+- `NumberCountersOfTypeOnPermanent(value, counter, permanentRef)` inside the
+  existing single-instruction `PutCounters/1`: amounts now use
+  `compileInstanceValue`. Existing integer/X amounts remain supported; typed
+  information values, arithmetic and locally bound payment/event values use
+  their existing scope checks. The special top-level creature-death history
+  amount keeps its prior grammar. `UptoNumberCountersOfTypeOnPermanent/3` in
+  `PutCountersWithRestriction/2` shares the amount compiler and retains its
+  optional number decision, fixed cap and matching-subject checks. Player
+  counter placement still requires fixed integer amounts.
+- `GainLifeForEach(value, count)` in resolving action bodies: both operands
+  compile through the same typed value service, then lower to `MultiplyValues`
+  and one `GainLifeFor` action. `GainLife`, `LoseLife` and this multiplier share
+  one private compiler life-action helper. Explicit `PlayerAction` and
+  `PlayerActions` scopes retain their indicated player and private bindings.
+  The existing direct event-player life restriction remains enforced.
+- Spell, modal spell, activation, ordinary trigger and Aura-host resolving
+  contexts reuse their existing instance scopes. Static rules, entry operations,
+  costs and replacement operations gain no numeric action declaration. Malformed
+  arity, incompatible refs, unbound targets/payment values, absent Aura scopes
+  and unannounced X fail at compile time. Plural counter instructions, player
+  counters and unsupported caps retain their prior boundaries.
+
+Reuse: `ManaValueOfWithLKI`, `CountersOnWithLKI`, typed permanent/player/target
+references, `instanceBindings`, `MultiplyValues`, `AddCountersTo`,
+`AddCountersUpTo`, `GainLifeFor`, the shared replacement pipeline, source
+incarnation/LKI snapshots, transactional payments, trigger scheduling,
+copy/retarget frames and game cloning. Values execute when each operation runs;
+they are not captured at announcement. Illegal targets cannot use information
+reads to receive counters. Moneychanger's sacrifice cost leaves its original
+credit-counter information available, even after the same card returns and
+leaves again. P/T counters remain through cleanup through the existing service.
+No engine API or execution contract changes. No new simultaneous operation is
+introduced; existing damage batches and counter/life actions remain intact.
+
+### TDD and gameplay evidence
+
+New full-card tests first failed for unsupported `ManaValueOfPermanent` as a
+counter amount and unsupported `GainLifeForEach`. The semantic inventory test
+failed for unknown nested operand roles. A later explicit `PlayerActions` test
+failed for its scoped-action whitelist, before that adapter was enabled.
+The initial inventory test used a nonexistent helper; it was corrected before
+confirming the expected missing-adapter failures.
+
+Fixture corrections selected Moneychanger's actual runtime activation after its
+entry/trigger abilities, supplied two modes, used an artifact trigger probe and
+a supported explicit controller player ref. Returned Moneychanger correctly
+fires its separate entry-damage trigger; the assertion now accounts for that
+three damage. These were fixture errors, not environment failures or relaxed
+rules. The old Moneychanger rejection assertion is replaced by a positive
+compilation assertion. The old rejection of a now-supported source mana-value
+counter amount is replaced by an incompatible player reference; the new context
+and amount tests cover valid declarations.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Living Armor, complete DRK record | `TestRONNumericConsumerLivingArmor`: mana-value counter counts, zero/no-cost and battlefield X values, invalid-target payment rollback, sacrifice/tap timing, control, phase/cycle, departure/return, shroud, countered activation, copies and clones. `LivingArmorRetarget`: casting cost and unpaid rollback, copied activation with a different target and mana value, original binding and clone isolation. |
+| Icatian Moneychanger, complete FEM record | `TestRONNumericConsumerMoneychanger`: W casting cost/rollback, three entry counters, actual three entry damage, 0/2 metadata, controller upkeep trigger/timing, own-upkeep restriction, player permission, source phasing, source sacrifice before life gain, zero count, control change, return, copy controller, countered activation and clones. `MoneychangerPendingIncarnations`: two simultaneous pending activations from successive incarnations retain separate 3/9 counts through a second departure and clones. `ReplacementOrder`: both affected-player orders for doubling and incrementing life gain. |
+| Typed amounts and contexts | `ResolutionAndInstances`: two factories/controllers/targets, values changed after announcement and separate cloned state. `Contexts`: spell, modal spell, activation, ordinary trigger, Aura host and explicit singular/plural player scopes, with definition validation. `BoundedPlacement`: dynamic amount plus the existing optional choice and cap. `Nonpositive`: zero/negative final amounts and arithmetic. |
+| Declarations, inventory and ordering | `Invalid`: malformed forms, wrong-role/unbound references, Aura/payment scope and unannounced X. `Inventory`: multiplier operand roles and strict fresh collection counts, with explicit protection against rejection of both cards. `ReplacementOrder`: counter replacement recheck and later life-information read, in both orders. Existing counter placement/information, bounded counters, player life, typed information and inventory regressions pass. |
+
+All names above use the `TestRONNumericConsumer` prefix unless stated otherwise.
+Both complete real cards validate through the engine. Two complete-card gameplay
+mappings are added; compilation and gameplay coverage remain separate.
+Collection-wide engine-validation and behavior totals remain null.
+
+### Measurements, source defects and validation
+
+Actual gains match the estimate: **2 unique names / 2 records**, exactly Living
+Armor and Icatian Moneychanger. Baseline/final positioned diagnostics show two
+removed issues and zero newly rejected records. Final strict and semantic
+loading: **1,928 compiled / 517 rejected records**, **739 accepted / 247 rejected
+unique names**. Inventory: 72,962 occurrences / 8,557 signatures / 4,594
+unknown-role occurrences. The six newly classified occurrences are the nested
+multiplier operands. Strict loading still exits 1 and publishes no registry.
+
+Local `data/DRK.json` and `data/FEM.json` Oracle text agrees with both complete
+records. No source defect or correction was required. All twelve vocabulary
+snapshot file hashes match. RON sources are unchanged, so no syntax snapshot
+refresh is needed; the fresh loader results here supersede its older errors.
+Known source defects outside this slice remain unresolved. No environment or
+pre-existing validation blocker was found.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused numeric consumer, counter placement/information, bounded counter, player-life and inventory tests with `-count=1` | PASS, including final explicit real-card definition validation after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic import spacing reviewed. |
+| `git diff --check` | PASS, including final docs and ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,928/517; collection rejection, not a build failure. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same record counts, 739/247 names and semantic counts above. |
+
+Complete loading, collection gameplay, embedded startup and test migration
+remain below the removal gate. No Go definitions, generators or DSL functions
+are removed. No caller audit authorizes DSL deletion in this slice. API/rules
+documentation describes only established adapter behavior. Only this completed
+slice is committed; the hash is reported in the final response.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete damage-source enumeration/retained references, then consuming
+   shields for six Circles of Protection and Greater Realm of Preservation.
+2. Parameterized bands with others for the eight consumers identified by the
+   prior ledger; verify combat and damage-assignment prerequisites first.
+3. Captured combat-rule collections for Festival, Siren's Call and Runesword,
+   with their control/damage-history and replacement prerequisites.
+
+Changed files: RON `compiler.go`, `counter_placement.go`, `player_actions.go`,
+`inventory.go`, new `numeric_consumers_test.go`, updated
+`counter_placement_test.go`, `counter_information_test.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended
+ledger entry. No second slice is started.
