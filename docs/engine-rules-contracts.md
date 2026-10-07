@@ -5713,3 +5713,43 @@ source choice, spell sources, source continuity on spell entry, command-zone and
 pending-object candidates remain separate contracts. The engine currently models
 unpreventable damage with a permanent-recipient rule; this player-recipient
 service adds no unpreventable-player or unpreventable-source rule.
+
+## Repeatable fixed mana conversion planning
+
+`ManaSystem` now discovers non-tap activated abilities with fixed, unconditional
+mana-only bodies and fixed mana-only costs. The reduced cost must consume at
+least as many mana units as the body produces. X costs, activation limits,
+arbitrary activation conditions, targets, choice costs, and mixed bodies remain
+outside automatic conversion planning. Explicit activation keeps its existing
+behavior. In particular, activation-history branches are not advertised as pure
+mana bodies, so Farrelite Priest and Initiates of the Ebon Hand remain rejected
+by RON until their complete synchronous bodies can be executed.
+
+The solver can use a conversion repeatedly, before or after a tap ability on the
+same source. Only a tap consumes that source's tap availability. Exact activation
+payments preserve the colors needed for the final cost. Conversions cannot
+increase total mana, and tap sources have finite availability, so visited pool
+and tap-availability states give finite search without an arbitrary depth limit.
+Preservation score and activation count use lexicographic comparison; repeated
+paths can be longer than the number of sources. Source-equivalence pruning stays
+active for tap-only sources. Conversion sources retain distinct availability.
+
+Summoning sickness restricts tap-symbol costs. It does not restrict these
+mana-only costs, and a tapped source can still pay them (CR 302.6, 605.3).
+Execution rechecks the exact incarnation, current controller, source presence,
+activation restrictions, current reduced cost and exact saved payment. A phase
+cycle preserves identity; departure and return invalidate an old plan (CR 400.7,
+702.26). Conversion produces mana immediately and emits an ability-activation
+event, but supplies no tapped-for-mana bonus or event (CR 106.12, 605.3b).
+Hypothetical mana and X upper bounds do not count conversion as new mana.
+Queries and game clones do not change live resources. The existing total-cost
+transaction owns casting rollback. This slice adds no new replacement, LKI,
+choice, target, or simultaneous-operation service.
+
+Evidence: `TestRepeatableManaPlanning`, `ExactPayment`, `Cycles`,
+`ExcludedShapes`, `PlanLifecycle`, `TapEventsAndBonuses`, `CostRollback`, and
+`BoundAndPreference`. `TestRONRepeatableManaPayment` uses complete Mountain,
+Swamp, Forest, Sinkhole and Hymn to Tourach RON records with a synthetic engine
+conversion fixture. It covers automatic repeated payment, target rejection,
+stack timing, destruction, random discard, and pending game-clone isolation.
+It does not verify the two history-bearing conversion cards.

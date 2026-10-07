@@ -51,7 +51,6 @@ type manaSearchNode struct {
 	action   ManaTap
 	score    int
 	depth    int
-	cost     int
 	priority int
 	seq      int
 }
@@ -81,13 +80,22 @@ type manaSearchStats struct {
 	ExpandedNodes int
 }
 
+type manaSearchCost struct{ score, depth int }
+
+func (c manaSearchCost) less(other manaSearchCost) bool {
+	return c.score < other.score || (c.score == other.score && c.depth < other.depth)
+}
+
 func (q manaSearchQueue) Len() int { return len(q) }
 func (q manaSearchQueue) Less(i, j int) bool {
+	if q[i].score != q[j].score {
+		return q[i].score < q[j].score
+	}
 	if q[i].priority != q[j].priority {
 		return q[i].priority < q[j].priority
 	}
-	if q[i].cost != q[j].cost {
-		return q[i].cost < q[j].cost
+	if q[i].depth != q[j].depth {
+		return q[i].depth < q[j].depth
 	}
 	return q[i].seq < q[j].seq
 }
@@ -130,7 +138,14 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	}
 	rootPool.ManaConversions = in.Conversions
 
-	weight := len(in.Sources) + 1
+	for _, source := range in.Sources {
+		for _, ability := range source.Abilities {
+			// A bounded pool permits repeated conversions without a search limit.
+			if ability.Repeatable && (ability.ManaCost.HasX || manaCostUnits(ability.ManaCost) < productionsTotalAmount(ability.Productions)) {
+				return nil, false
+			}
+		}
+	}
 	root := &manaSearchNode{
 		pool: rootPool,
 		used: emptyManaSourceSet(len(in.Sources)),
@@ -138,7 +153,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	root.priority = manaSearchLowerBound(root, in)
 	queue := manaSearchQueue{root}
 	heap.Init(&queue)
-	bestCost := map[manaSearchKey]int{manaSearchStateKey(rootPool, root.used, in.SpellContext): 0}
+	bestCost := map[manaSearchKey]manaSearchCost{manaSearchStateKey(rootPool, root.used, in.SpellContext): {}}
 	choiceCaps := manaChoiceCapsForInputs(in)
 	productionChoices := make([][][]manaProductionChoice, len(in.Sources))
 	choicesComputed := make([][]bool, len(in.Sources))
@@ -154,7 +169,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	for queue.Len() > 0 {
 		node := heap.Pop(&queue).(*manaSearchNode)
 		key := manaSearchStateKey(node.pool, node.used, in.SpellContext)
-		if known, ok := bestCost[key]; ok && node.cost > known {
+		if known, ok := bestCost[key]; ok && known.less(manaSearchCost{node.score, node.depth}) {
 			continue
 		}
 		if stats != nil {
@@ -169,7 +184,11 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 
 		groupGeneration++
 		for sourceIndex, source := range in.Sources {
-			if manaSourceSetContains(node.used, sourceIndex) {
+			available := !manaSourceSetContains(node.used, sourceIndex)
+			for _, ability := range source.Abilities {
+				available = available || ability.Repeatable
+			}
+			if !available {
 				continue
 			}
 			group := sourceGroups[sourceIndex]
@@ -178,11 +197,18 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 			}
 			seenGroups[group] = groupGeneration
 			for abilityIndex, ability := range source.Abilities {
+				if !ability.Repeatable && manaSourceSetContains(node.used, sourceIndex) {
+					continue
+				}
 				if !node.pool.CanPay(ability.ManaCost, nil) {
 					continue
 				}
 				if !choicesComputed[sourceIndex][abilityIndex] {
-					productionChoices[sourceIndex][abilityIndex] = manaProductionChoicesForDemand(ability.Productions, source.Bonuses, choiceCaps)
+					bonuses := source.Bonuses
+					if ability.Repeatable {
+						bonuses = nil
+					}
+					productionChoices[sourceIndex][abilityIndex] = manaProductionChoicesForDemand(ability.Productions, bonuses, choiceCaps)
 					choicesComputed[sourceIndex][abilityIndex] = true
 				}
 				for _, payment := range manaActivationPayments(node.pool, ability.ManaCost) {
@@ -194,6 +220,9 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 						addConcreteManaForSearch(nextPool, choice.Productions, choice.BonusColors)
 
 						nextUsed := manaSourceSetWith(node.used, sourceIndex)
+						if ability.Repeatable {
+							nextUsed = node.used
+						}
 						savedPayment := payment
 						nextAction := ManaTap{
 							SourceIncarnation: source.Incarnation,
@@ -205,9 +234,9 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 						}
 						nextScore := node.score + max(scoreAt(in.Scores, sourceIndex), 0)
 						nextDepth := node.depth + 1
-						nextCost := nextScore*weight + nextDepth
+						nextCost := manaSearchCost{nextScore, nextDepth}
 						nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext)
-						if known, ok := bestCost[nextKey]; ok && known <= nextCost {
+						if known, ok := bestCost[nextKey]; ok && !nextCost.less(known) {
 							continue
 						}
 						bestCost[nextKey] = nextCost
@@ -219,10 +248,9 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 							action: nextAction,
 							score:  nextScore,
 							depth:  nextDepth,
-							cost:   nextCost,
 							seq:    seq,
 						}
-						next.priority = nextCost + manaSearchLowerBound(next, in)
+						next.priority = nextDepth + manaSearchLowerBound(next, in)
 						heap.Push(&queue, next)
 					}
 				}
@@ -240,6 +268,9 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		}
 		bestAbility := 0
 		for _, ability := range source.Abilities {
+			if ability.Repeatable {
+				continue
+			}
 			usable := 0
 			for _, production := range ability.Productions {
 				if productionRestrictionUsable(production.Restriction, in.SpellContext) {
@@ -261,15 +292,20 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		}
 	}
 	for sourceIndex, source := range in.Sources {
-		if manaSourceSetContains(node.used, sourceIndex) {
-			continue
-		}
+		used := manaSourceSetContains(node.used, sourceIndex)
 		for _, ability := range source.Abilities {
+			if used && !ability.Repeatable {
+				continue
+			}
 			for _, production := range ability.Productions {
 				if !productionRestrictionUsable(production.Restriction, in.SpellContext) {
 					continue
 				}
 				amount := normalizedManaAmount(production.Amount)
+				// Repeated conversion can supply a color up to the total pool bound.
+				if ability.Repeatable {
+					amount = maxUsableMana
+				}
 				if production.Color != AnyColor {
 					available[production.Color] += amount
 					continue
@@ -278,6 +314,9 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 					available[color] += amount
 				}
 			}
+		}
+		if used {
+			continue
 		}
 		for _, bonus := range source.Bonuses {
 			if bonus == MatchProduced {
@@ -358,6 +397,10 @@ func manaSourcesEquivalentForSearch(a, b manaSourceInfo, aScore, bScore int, spe
 		}
 	}
 	for i := range a.Abilities {
+		// A used tap cost can differ even when both sources can still convert.
+		if a.Abilities[i].Repeatable || b.Abilities[i].Repeatable {
+			return false
+		}
 		if !a.Abilities[i].Interchangeable || !b.Abilities[i].Interchangeable {
 			return false
 		}

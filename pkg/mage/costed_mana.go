@@ -11,6 +11,7 @@ type manaSourceAbility struct {
 	Productions     []ManaProduction
 	ManaCost        ManaCost
 	Interchangeable bool
+	Repeatable      bool
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {
@@ -41,9 +42,11 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 
 	var manaCost ManaCost
 	hasTapCost := false
+	hasX := false
 	for _, cost := range activated.costs {
 		switch payment := cost.(type) {
 		case *ManaCostPayment:
+			hasX = hasX || payment.MC.HasX
 			addActionManaCost(&manaCost, payment.reducedCost(sourceID, g))
 		case *tap:
 			if hasTapCost {
@@ -54,7 +57,9 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 			return manaSourceAbility{}, false
 		}
 	}
-	if !hasTapCost {
+	if !hasTapCost && (hasX || manaCostUnits(manaCost) < productionsTotalAmount(productions) ||
+		activated.limits.OncePerTurn || activated.limits.MaxActivationsPerTurn > 0 ||
+		len(activated.activationConds) != 0) {
 		return manaSourceAbility{}, false
 	}
 	return manaSourceAbility{
@@ -62,6 +67,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 		Productions:     productions,
 		ManaCost:        manaCost,
 		Interchangeable: true,
+		Repeatable:      !hasTapCost,
 	}, true
 }
 

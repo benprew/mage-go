@@ -65,23 +65,19 @@ func (ms *ManaSystem) ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusCol
 	return bonuses
 }
 
-// GetUntappedManaSources returns all untapped permanents with mana abilities for a player.
+// GetUntappedManaSources includes conversions because they do not require a tap.
 func (ms *ManaSystem) GetUntappedManaSources(g *Game, playerID uuid.UUID) []manaSourceInfo {
 	var sources []manaSourceInfo
 	return ms.AppendUntappedManaSources(g, playerID, sources)
 }
 
-// AppendUntappedManaSources appends untapped mana sources for a player to the target slice.
+// AppendUntappedManaSources includes conversions even on tapped creatures.
 func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
 	for _, perm := range g.zones.battlefield {
-		if perm.ControllerID() != playerID || perm.Tapped {
+		if perm.ControllerID() != playerID || perm.PhasedOut {
 			continue
 		}
 		if perm.HasAttr(AttrCantActivate) {
-			continue
-		}
-		// Skip summoning-sick creatures without haste
-		if !perm.CanTapForEffect(g) {
 			continue
 		}
 		var colors []Color
@@ -90,6 +86,9 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 		for abilityIndex, ability := range perm.RuntimeAbilities {
 			sourceAbility, ok := manaSourceAbilityForPlanning(ability, perm.ID(), abilityIndex, g)
 			if !ok {
+				continue
+			}
+			if !sourceAbility.Repeatable && (perm.Tapped || !perm.CanTapForEffect(g)) {
 				continue
 			}
 			abilities = append(abilities, sourceAbility)
@@ -383,10 +382,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if perm.ControllerID() != playerID {
 		return fmt.Errorf("you don't control that permanent")
 	}
-	if perm.Tapped {
-		return fmt.Errorf("permanent is already tapped")
-	}
-	if perm.HasAttr(AttrCantActivate) || !perm.CanTapForEffect(g) {
+	if perm.HasAttr(AttrCantActivate) {
 		return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
 	}
 
@@ -394,7 +390,14 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if !ok {
 		return fmt.Errorf("ability is not a supported mana ability")
 	}
-	if !plannedManaChoiceAvailable(ability.Productions, ms.ManaBonuses(g, perm.ID()), action) {
+	if !ability.Repeatable && (perm.Tapped || !perm.CanTapForEffect(g)) {
+		return fmt.Errorf("cannot tap mana source %s", perm.Name())
+	}
+	bonuses := ms.ManaBonuses(g, perm.ID())
+	if ability.Repeatable {
+		bonuses = nil
+	}
+	if !plannedManaChoiceAvailable(ability.Productions, bonuses, action) {
 		return fmt.Errorf("planned mana production is no longer available")
 	}
 	player := g.GetPlayer(playerID)
@@ -413,7 +416,9 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	}
 
 	sourceIncarnation := perm.incarnationID
-	g.TapPermanent(perm)
+	if !ability.Repeatable {
+		g.TapPermanent(perm)
+	}
 	addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
 
 	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
@@ -426,7 +431,9 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		activated.markActivatedInGame(g, sourceIncarnation)
 	}
 	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: true})
-	ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions), productionTypes(action.Productions))
+	if !ability.Repeatable {
+		ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions), productionTypes(action.Productions))
+	}
 	return nil
 }
 
@@ -637,6 +644,9 @@ func productionsTotalAmount(productions []ManaProduction) int {
 func maxManaSourceOutput(source manaSourceInfo) int {
 	maximum := 0
 	for _, ability := range source.Abilities {
+		if ability.Repeatable {
+			continue
+		}
 		maximum = max(maximum, productionsTotalAmount(ability.Productions)+len(source.Bonuses))
 	}
 	return maximum

@@ -514,6 +514,14 @@
 // Supply a pure When condition if an option has a legality restriction.
 // Costs and targets are selected before this choice. Copies choose separately.
 //
+// Automatic mana payment can use fixed mana-only conversions without a tap.
+// The reduced cost must consume at least the produced mana count. Repeated
+// conversion keeps the source available, even when it is tapped or newly entered.
+// It does not receive tap bonuses or emit a tapped-for-mana event. X costs,
+// activation limits, arbitrary conditions and mixed bodies are not planned.
+// Exact payments keep the final cost colors. The shared cost transaction
+// keeps failed casting payments separate from live resources.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

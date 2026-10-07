@@ -28272,3 +28272,132 @@ Slice files: `next_source_prevention.go`, `next_source_prevention_test.go`,
 `pkg/mage/dsl/ron/next_source_prevention_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this entry. No second slice was started.
 The commit hash is reported in the final response after all checks pass.
+
+## 2026-10-07: repeatable fixed mana conversion planning prerequisite
+
+Status: completed engine slice `REPEATABLE-FIXED-MANA-PLANNING`. This run stops
+here. Initial user changes to `.gitignore`, the execution design, the ledger
+reorganization and untracked `mtgish-ron-completed.md` are preserved. Only this
+new entry is staged from the ledger; its existing reorganization is not staged.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, current
+ledger, selected compiler and engine services, complete candidate RON records,
+API/rules contracts and CR 302.6, 400.7, 602/605, 106.12 and phasing contracts.
+No Go card definition supplied requirements. Baseline compiler tests, short engine
+tests and build passed. Fresh strict loading exited 1 for collection rejection:
+**2,445 records; 1,806 compiled / 639 rejected; 688 accepted / 298 rejected names**.
+Fresh semantic inventory: 72,962 occurrences, 8,559 signatures and 5,621 unknown
+role occurrences. Build and collection rejection are separate results.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream reuse | Implementation/test effort |
+| --- | --- | --- | --- |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Complete family: **7**. | Permanent source shield is ready, but full source discovery, spell identity/entry continuity, typed choices and per-instance source bindings remain. Shared benefit spans seven prevention consumers. | High: multiple source categories, shared choice/identity contracts and replacement-order tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods. Complete family: **5**. | Zone-aware characteristics, controller/owner scope, named/non-Wall count adapters and copy/layer contracts remain. Gaea's Avenger's known source defect and Wood Elemental's entry results are excluded. | High: characteristic service plus five gameplay mappings across zones and layer/copy interactions. |
+| Repeatable fixed mana conversion, selected prerequisite | Farrelite Priest; Initiates of the Ebon Hand. Complete family: **2**; this slice: **0**. | Exact color payments and explicit immediate mana activation exist. Repeated solver use and non-tap planned execution were missing. History-bearing synchronous bodies remain a separate blocker after this slice. Standing Stones has a life-cost planner blocker and is excluded. | Medium: three existing engine files, finite-search/identity/payment tests and RON-backed payment integration. Smaller boundary than either broad alternative. |
+
+Complete records, including nested history/delayed-sacrifice instructions, support
+these estimates. Reprints count once. This shared prerequisite wins on a narrow,
+dependency-ready engine boundary with concrete reuse for two cards, without
+partially enabling their history-bearing compiler forms. Selection, contract,
+reuse boundary and acceptance cases were stated before edits. The
+`implement-engine` skill guided engine work. No second slice was started.
+
+### Exact supported context and engine reuse
+
+No RON spelling or compiler signature changes. Existing engine
+`Activate(Costs(ManaPayment(...)), AddMana(...))` and unconditional nested mana
+sequences can enter automatic planning without a tap cost. The reduced fixed
+mana-only cost must consume at least the fixed output's total units. Pure fixed
+mana bodies use the existing production adapters and concrete production choices.
+X costs, turn activation limits, arbitrary activation conditions, targets,
+non-mana costs and mixed bodies remain excluded from automatic conversion
+planning. Explicit activation remains available through its existing services.
+
+`manaSourceAbility.Repeatable` is private planning metadata. `ManaSystem` discovers
+conversions on tapped or summoning-sick creatures, while tap-cost sources keep
+their existing restrictions. The solver tracks tap availability separately from
+repeatable use, keeps exact color payments for every activation, and uses bounded
+pool states to terminate reversible cycles without an arbitrary search limit.
+Its relaxation can advertise a repeated output color up to the pool's finite
+bound. It compares preservation score before activation count rather than using
+the old source-count weight, which could choose a worse score on a long repeated
+path. Tap-only symmetry pruning remains active; conversion sources keep separate
+availability so a used tap cannot hide another source's unused tap.
+
+`ActivatePlannedManaSource` reuses current cost, controller, presence, timing,
+activation restriction and captured incarnation checks. Only tap-cost execution
+taps, receives tap bonuses and emits tapped-for-mana events. Conversion produces
+mana immediately and fires a mana ability-activation event. The shared total-cost
+transaction owns casting rollback. Hypothetical mana and X bounds do not count
+conversions as new mana. Existing APIs/callers remain; no parallel payment system,
+new target/choice/replacement/LKI contract, card-name branch or fallback was added.
+
+### Test-first evidence and card-to-test mappings
+
+After correcting a fixture's ActionOption/ActivationOption mismatch, the initial
+engine tests failed because non-tap conversions were absent from discovery and
+payment planning. Both real RON spell tests failed with cannot-pay diagnostics.
+The implementation fixes those expected failures. A cost-change fixture was
+corrected to start with a two-mana cost: the existing reduction contract cannot
+reduce a one-mana activation below one. No existing test was weakened.
+
+| Contract or card | Test mapping |
+| --- | --- |
+| Repeated/chained non-tap production | `TestRepeatableManaPlanning`: repeated use, tapped/newly entered creatures, exact output, immediate timing, pure queries and cloned execution. `ExactPayment` preserves white while converting red to two blue mana. |
+| Finite search and preservation | `Cycles` forces exploration of an unfundable color branch alongside reversible blue/black conversions; repeated pool states terminate and cannot manufacture mana. `BoundAndPreference` rejects unbounded repeated metadata and keeps a five-activation lower-score path ahead of a one-activation higher-score tap. |
+| Identity, legality and payment | `PlanLifecycle`: departure/return, phasing, legal phase cycle, control, ability removal, prohibitions, absent payment and changed reduced cost. Invalid plans leave resources unchanged. `ExcludedShapes` checks unsupported planner contexts and rejects a nil amount during definition validation. |
+| Tap-specific behavior and rollback | `TapEventsAndBonuses`: one tap with bonus, then two conversions on the same source; three activation events but one tapped-for-mana event, exact output and no inflated hypothetical mana/X. `CostRollback`: unpaid total casting cost cannot commit a planned tap or conversion. |
+| Sinkhole; Hymn to Tourach | `TestRONRepeatableManaPayment`: complete real RON factories with a synthetic engine converter; native repeated payment from two real RON Mountains, illegal target rejection, stack timing, destruction/random discard and pending clone isolation. Existing target/destruction/random-discard suites retain wider gameplay contracts. |
+| Mountain; Swamp; Forest | Same integration test uses their complete RON records for intrinsic red supply, a land target and discarded hand cards. No Go card factory fallback. |
+| Farrelite Priest; Initiates of the Ebon Hand | Dependency mapping only. Their full RON history/delayed-sacrifice bodies remain rejected and are not claimed as gameplay-verified. |
+
+Collection-wide engine-validated and behavior-verified totals remain unset.
+Gameplay evidence and compilation totals remain separate.
+
+### Actual gains, source defects and removal gates
+
+Actual compiler gain: **0 unique cards / 0 records**, matching this prerequisite's
+estimate. Strict loader and semantic inventory JSON are unchanged from baseline,
+including every issue, signature, source hash and occurrence count. The loader
+still rejects the collection without publishing a partial registry. No RON source
+changed, so the vocabulary snapshot needs no source refresh. No new source-data
+defect or environment failure was found.
+
+Caller inspection covers planning, hypothetical mana, X limits, cost transactions,
+AI consumers and existing tests. No DSL function, engine service, Go definition,
+generator, fixture or authoring instruction was removed: loading, gameplay and
+runtime cutover remain below the design's removal gates. API documentation changes
+describe only this engine prerequisite.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine suite, build | PASS |
+| Initial engine and real RON payment tests | Expected discovery/payment failures confirmed |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(RepeatableMana\|RONRepeatableMana\|ManaActivationPayment\|ManaSolver\|SolveMana)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS; automatic formatting reviewed |
+| Post-lint focused tests, short engine suite and make test | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,806 compiled / 639 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; unchanged inventory and diagnostics |
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Synchronous planned mana bodies with per-instance activation history and
+   deferred-sacrifice execution; then the complete Farrelite Priest and Initiates
+   of the Ebon Hand RON adapters after their bodies and planning agree.
+2. Typed damage-source discovery/choice, spell identity and entry continuity for
+   the seven prevention consumers.
+3. All-zone count CDA service for the five clean consumers.
+
+Slice files: `pkg/mage/costed_mana.go`, `mana_solver.go`, `mana_system.go`,
+`repeatable_mana_test.go`, `doc.go`; `pkg/mage/dsl/ron/repeatable_mana_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this entry. The
+completed-slice commit hash is reported in the final response.

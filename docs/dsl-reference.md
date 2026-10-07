@@ -4862,3 +4862,20 @@ supplied permanent, rather than look up its UUID again. This prerequisite does
 not choose a source or support spell-to-permanent source continuity. RON
 `ChooseADamageSource` and its continuation remain rejected. The existing UUID
 `Game.AddSourcePrevention` installer retains its caller behavior.
+
+### Engine planning prerequisite: repeatable fixed mana conversion
+
+The existing `Activate(Costs(ManaPayment(...)), AddMana(...))` engine API can
+participate in automatic payment without a tap cost when the body is fixed and
+mana-only and the reduced cost consumes at least its produced mana count.
+The source may be tapped or summoning-sick. Automatic planning excludes X costs,
+activation limits, arbitrary activation conditions, targets, non-mana costs and
+mixed bodies. Explicit activation retains the existing broader behavior.
+No tap bonus or tapped-for-mana event is generated for a conversion.
+
+RON vocabulary is unchanged. `Activated(PayMana(...), ActionList([AddMana(...),
+If(TimesThisAbilityHasBeenActivatedThisTurnIs(...), ...)]))` remains unsupported:
+its history branch must execute synchronously before it can be planned.
+`TestRepeatableMana*` and `TestRONRepeatableManaPayment` establish this engine
+prerequisite; they do not establish full Farrelite Priest or Initiates of the
+Ebon Hand gameplay support.
