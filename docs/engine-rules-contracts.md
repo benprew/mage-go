@@ -5899,3 +5899,31 @@ capture, invalid scope/shape, fresh factories, reprints and atomic rejection.
 `RemainingGap` keeps Wall of Dust rejected for its separate temporary combat
 rule context; its next-turn duration also remains unsupported. These tests have
 the prefix `TestRONCombatPairReference`. No new engine API is established.
+
+## RON grouped source combat trigger adapters
+
+The paired RON `WhenACreatureBlocksAnyNumberOfCreatures` and
+`WhenACreatureBecomesBlockedByAnyNumberOfCreatures` union accepts one common
+`SinglePermanent(ThisPermanent)` subject and one common `IsCreatureType(S)`
+filter. It reuses `BlocksOrBecomesBlockedBy(This).OfSubtype(S)` and the existing
+new-pair group events. Multiple matching members in one group create one
+trigger. A later new group can create another trigger. Subtypes are checked at
+detection; later subtype changes or opposing-object departure do not change
+a pending trigger (CR 509.3f, 603.2). Illegal pairs produce no trigger. Entry
+while blocking produces no blocking trigger, but can trigger the attacked
+source's blocked-by group (CR 509.4).
+
+RON `WhenACreatureBecomesBlocked(SinglePermanent(ThisPermanent))` reuses
+`BecomesBlocked(This)` and the first transition to blocked (CR 509.3c).
+Additional blockers and per-pair events do not repeat it. The body can read
+`Trigger_ThatCreature` through the pending ability's source incarnation.
+Neither adapter invents one opponent from a group or supplies a defending
+player. Source return cannot redirect a pending modification. A phased source
+cannot receive that modification; a phase cycle retains identity. Control
+changes do not redirect it. Copies and clones retain separate execution state.
+
+No engine event, replacement, cost, LKI or simultaneous-operation service changes.
+`TestRONGroupedCombatSoldier`, `Identity`, `CastingAndEntry`, `Damage`,
+`LegalityAndMatching`, `Declarations`, `StrictLoad`, `BecomesBlocked`,
+`BecomesBlockedIdentity`, `InvalidBlockedDeclarations`, and `SpittingSlugBoundary`
+cover the adapters, complete Dwarven Soldier record and remaining source gap.

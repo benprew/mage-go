@@ -4988,3 +4988,30 @@ departure/return, phase cycles, ability removal, lifelink, copies and clones.
 Land's Edge shares the supported permission and discard cost, but its full
 record still rejects `DiscardedCardPassesFilter`. It has no complete gameplay
 mapping from this slice.
+
+### RON grouped source combat events
+
+`TriggerA` supports this exact event union, in either order:
+
+```text
+Or([
+  WhenACreatureBlocksAnyNumberOfCreatures(SinglePermanent(ThisPermanent), IsCreatureType(S)),
+  WhenACreatureBecomesBlockedByAnyNumberOfCreatures(SinglePermanent(ThisPermanent), IsCreatureType(S))
+])
+```
+
+Both entries must use the same source and creature subtype. The compiler lowers
+this union to `BlocksOrBecomesBlockedBy(This).OfSubtype(S)`. One matching new
+group creates one trigger, even when multiple members match. These forms do not
+support a standalone direction, an Aura host, or a singular opponent binding.
+
+`WhenACreatureBecomesBlocked(SinglePermanent(ThisPermanent))` lowers to
+`BecomesBlocked(This)`. It fires on the source's first transition to blocked,
+including a transition caused by entry of a blocker. Later blockers do not
+repeat this event. Both adapters permit `Trigger_ThatCreature` as the original
+source in the resolving body. They do not supply `Trigger_DefendingPlayer` or
+an opposing-creature reference. Each factory builds fresh actions and abilities.
+
+Dwarven Soldier has complete RON gameplay coverage in `TestRONGroupedCombat*`.
+Spitting Slug still rejects its unsupported `MayCost`/`IfElse` continuation;
+this event adapter does not establish payment branches or collection grants.

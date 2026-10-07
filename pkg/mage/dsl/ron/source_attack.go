@@ -22,8 +22,8 @@ func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, err
 	if ref.kind != permanentSource {
 		return nil, unsupported(subject.Args[0], "source combat reference")
 	}
-	ctx.sourceAttack = event.Name != "WhenACreatureBlocks"
-	ctx.sourceBlock = event.Name == "WhenACreatureBlocks"
+	ctx.sourceAttack = event.Name == "WhenACreatureAttacks" || event.Name == "WhenACreatureAttacksAndIsntBlocked"
+	ctx.sourceBlock = event.Name == "WhenACreatureBlocks" || event.Name == "WhenACreatureBecomesBlocked"
 	if ctx.sourceAttack {
 		ctx.defendingPlayer = &sourceCombatPlayerPlan{name: "Trigger_DefendingPlayer"}
 	}
@@ -43,6 +43,8 @@ func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, err
 		switch event.Name {
 		case "WhenACreatureBlocks":
 			pattern = mage.Blocks(mage.This)
+		case "WhenACreatureBecomesBlocked":
+			pattern = mage.BecomesBlocked(mage.This)
 		case "WhenACreatureAttacksAndIsntBlocked":
 			pattern = mage.AttacksUnblocked(mage.This).WithDefendingPlayer(defender)
 		case "WhenACreatureAttacks":

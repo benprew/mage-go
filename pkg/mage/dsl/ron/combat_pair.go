@@ -16,6 +16,9 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 			return nil, problem(event, "combat pair union requires both directions")
 		}
 		first, second := parts[0], parts[1]
+		if first.Name == "WhenACreatureBlocksAnyNumberOfCreatures" || first.Name == "WhenACreatureBecomesBlockedByAnyNumberOfCreatures" || second.Name == "WhenACreatureBlocksAnyNumberOfCreatures" || second.Name == "WhenACreatureBecomesBlockedByAnyNumberOfCreatures" {
+			return compileGroupedCombatTrigger(event, body, ctx)
+		}
 		if first.Name == "WhenACreatureBecomesBlockedByACreature" {
 			first, second = second, first
 		}

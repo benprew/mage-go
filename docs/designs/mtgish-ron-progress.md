@@ -29156,3 +29156,141 @@ Slice files: compiler permanent_scope.go; new combat_pair_reference_test.go;
 begin_combat_test.go, combat_characteristic_test.go, inventory_test.go;
 ATQ/LEG RON records; vocabulary; DSL reference, rules contracts and this entry.
 No second slice is started.
+
+## Run 2026-10-07: GROUPED-SOURCE-COMBAT-EVENTS
+
+Status: complete implementation slice; this run stops after this slice.
+Collection loading, complete gameplay, startup cutover and removal gates remain
+incomplete.
+
+### Fresh evidence and selection
+
+Preserved initial user changes to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. Only this new entry is staged
+from the ledger. Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary,
+progress, selected compiler/engine code, API/rules-contract sections and CR 509.1,
+509.3, 509.4 and 603.2. Complete RON records and nested expressions supplied the
+requirements; Go card definitions did not. No removed skill, Go stub or agent
+was used.
+
+Baseline: `go test ./pkg/mage/dsl/ron -count=1`, `go build ./...` and
+`go test ./pkg/mage/... -short -count=1` passed. Strict loader and semantic
+inventory exited 1 for collection rejection: **1,818 compiled / 627 rejected
+records**, **695 accepted / 291 rejected unique names**. Inventory: **72,962
+occurrences / 8,557 signatures / 5,483 unknown-role occurrences**.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers; downstream capability | Effort |
+| --- | --- | --- | --- |
+| Grouped source combat events, selected | Dwarven Soldier; Spitting Slug; **1** immediate unlock | Soldier's complete nested body is already supported. Slug needs MayCost/IfElse payment branches and temporary first-strike grants to its combat relation union. Existing BlocksOrBecomesBlockedBy and BecomesBlocked supply the exact engine events. This slice completes the event prerequisite for both cards. | Small: adapters, exact declarations, complete Soldier gameplay and synthetic transition/identity tests; no engine change. |
+| All-zone battlefield-count CDA | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger; **5** clean unlocks after prerequisite | Battlefield layers do not establish all-zone characteristics. Owner/controller context, copy/layer behavior and values need a reusable engine contract. Gaea's Avenger has a previously recorded source controller-filter concern; it is excluded from the clean estimate. Enables all-zone count CDAs and later characteristic work. | High: engine prerequisite, compiler values, cross-zone/copy/layer tests and five complete gameplay mappings. |
+| Chosen damage source | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** unlocks after prerequisites | Legal discovery must include nonpermanent sources; choice identity, scoped result and next-event prevention need contracts. Other source-choice consumers add redirection or amounts and are excluded. Enables exact chosen-source shields. | High: discovery/choice/identity and prevention ordering, then seven complete gameplay mappings. |
+
+The small shared event prerequisite wins on credible gain per effort. It adds
+one complete card and completes an event dependency for a second card without
+creating engine behavior. The larger multi-card candidates remain next work.
+First-error counts alone did not determine unlock estimates. Contract, reuse
+boundary and acceptance cases were stated before production edits.
+
+### Exact shapes, contexts and dependencies
+
+Supported in a permanent's TriggerA event role:
+
+- `Or([WhenACreatureBlocksAnyNumberOfCreatures(SinglePermanent(ThisPermanent),
+  IsCreatureType(S)), WhenACreatureBecomesBlockedByAnyNumberOfCreatures(
+  SinglePermanent(ThisPermanent), IsCreatureType(S))])/1`, either order.
+  Both directions, the same subject and the same valid creature subtype are
+  mandatory. Neither standalone direction, an Aura host, nor an arbitrary
+  filter is supported. It lowers to
+  `BlocksOrBecomesBlockedBy(This).OfSubtype(S)`.
+- `WhenACreatureBecomesBlocked(SinglePermanent(ThisPermanent))/1`, lowered to
+  `BecomesBlocked(This)`. The first transition creates one trigger; later
+  blockers and per-pair events do not repeat it.
+- Both bodies may read `Trigger_ThatCreature` as their original source through
+  the existing pending source incarnation. No singular opposing creature or
+  defending player is fabricated. Malformed, mismatched, wrong-zone and unbound
+  declarations reject before execution. Factory calls build fresh actions and
+  abilities. Typed target/payment frames in supported bodies remain unchanged.
+
+Engine reuse: final legal combat assignments, new-pair groups, event-time
+subtype matching, TriggerSystem, pending source incarnation, WhenEvent,
+TriggerA, existing continuous modifications, Until/EndOfTurn, copies and clones.
+No engine API, LKI read, replacement ordering, cost or simultaneous-operation
+contract changes. Grouping retains native batch boundaries. Phased sources
+cannot receive a resolving modification; phase cycles preserve identity.
+Returned sources cannot inherit it. Detection uses current source abilities
+and opponent subtypes; later opponent changes do not change a pending event.
+
+### TDD and card-to-test mapping
+
+New gameplay tests first failed at `unsupported combat pair union (Or)` for the
+complete Soldier and `unsupported trigger (WhenACreatureBecomesBlocked)` for a
+synthetic transition. Initial fixture compilation mistakes (nonexistent subtype
+removal/record rendering helpers) were corrected before confirming these semantic
+failures. After implementation, a synthetic P/T expectation was corrected to the
+shared fixture's printed 0/8, plus one +0/+2 bonus. The old Dwarven Soldier
+rejection boundary is now an explicit success assertion. No behavior assertion
+was weakened.
+
+| Card / contract | Tests (prefix TestRONGroupedCombat) |
+| --- | --- |
+| Dwarven Soldier, complete FEM record | Soldier: both directions, zero/one/two Orc matches, mixed groups, one bonus per group, repeated assignments and cleanup. CastingAndEntry: 1R cost/rollback, Dwarf Soldier 2/1 metadata, stack entry timing, fresh factory ability and no blocking trigger on entry. Damage: boosted Soldier survives simultaneous damage from two Orcs and deals its printed two damage. |
+| Soldier's event and duration interactions | Identity: subtype changes, opponent/source phasing, source phase cycle, source return/control, ability removal, copied triggers, pending clones and a second instance. LegalityAndMatching: tapped/phased/noncreature blockers, other source, later subtype changes, new groups and entry of a blocker for the attacking Soldier. |
+| Source becomes blocked prerequisite | BecomesBlocked: entry of two blockers creates one bonus. BecomesBlockedIdentity: returned/phased source, phase cycle, control, copies, clones, other source, removed ability and per-pair exclusion. Synthetic evidence only; no full Spitting Slug gameplay claim. |
+| Compiler / registry | Declarations and InvalidBlockedDeclarations: exact union, reversed order, subtype/subject mismatches, arity, incompatible references and instant/sorcery rejection. StrictLoad: identical full-record reprints count once; a rejected collection returns no partial registry. SpittingSlugBoundary: complete Slug still rejects its payment continuation. |
+
+Existing combat characteristic, source block, source attack, pair reference and
+inventory tests remain in the broad suites. Added **one complete unique-card
+mapping**. Engine-validation and behavior totals remain unset in inventory;
+compilation progress does not imply collection gameplay coverage.
+
+### Final measurements, source defects and gates
+
+Actual gain matches estimate: **1 unique name / 1 record**, Dwarven Soldier.
+No formerly accepted name is lost. Final strict loader exits 1 with **1,819
+compiled / 626 rejected records**, **696 accepted / 290 rejected unique names**.
+Final inventory retains **72,962 occurrences / 8,557 signatures / 5,483
+unknown-role occurrences**. Collection rejection is expected and is separate
+from build/test success. No partial production registry is published.
+
+Spitting Slug's first error remains exactly:
+`DRK.lines.ron:99:285: payment requires an adjacent payment continuation (IfElse)`.
+Its second trigger has the same payment branch and collection-grant blockers;
+both were inspected. The new event does not bypass these gaps. No RON source
+changed; no new source-data defect or environment failure was found. Existing
+source defects remain deferred. Vocabulary syntax/hashes did not change, so the
+snapshot was not rewritten; fresh loader/inventory measurements are above.
+
+No Go definitions, generators or DSL functions are removed. Complete loading,
+collection gameplay and native startup remain below their removal gates.
+No caller audit authorizes deletion in this slice. API/rules docs record only
+the adapter behavior and exact engine reuse established here.
+
+### Validation
+
+- Focused `go test ./pkg/mage/dsl/ron -run 'TestRONGroupedCombat|TestRONCombatCharacteristicConsumers|TestInventory' -count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS, baseline and final.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues. Automatic formatting was reviewed; all
+  affected checks ran after lint. No unrelated file was changed by lint.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1; final counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1; final counts above.
+- Accepted-name regression comparison: PASS; only Dwarven Soldier leaves the
+  rejected-name set.
+
+Ranked next candidates, to reassess from fresh full-record evidence:
+
+1. All-zone battlefield-count CDA engine prerequisite, then five clean consumers.
+2. Damage-source discovery/choice/identity prerequisite, then six Circles and
+   Greater Realm of Preservation.
+3. Scoped MayCost/IfElse resolution branches, comparing Cyclone, Imprison,
+   Spitting Slug and Takklemaggot before choosing an exact supported context.
+   Slug also requires the combat relation union's temporary first-strike grant.
+
+Slice files: grouped_combat.go, grouped_combat_test.go, combat_pair.go,
+source_attack.go, triggers.go, combat_characteristic_test.go, inventory_test.go;
+DSL reference, engine rules contracts and this ledger entry. No second slice
+is started. Only these changes are committed; initial user changes remain
+unstaged.

@@ -39,7 +39,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return compileDamageAmountTrigger(trigger, n.Args[1], ctx)
 	case "Or", "WhenACreatureBlocksACreature", "WhenACreatureBecomesBlockedByACreature":
 		return compileCombatPairTrigger(trigger, n.Args[1], ctx)
-	case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks":
+	case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenACreatureBecomesBlocked":
 		return compileSourceCombatTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerControlsNoPermanents":
 		return compileNoLandTrigger(trigger, n.Args[1], ctx)

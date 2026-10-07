@@ -128,7 +128,7 @@ func TestRONCombatCharacteristicConsumers(t *testing.T) {
 		rule               int
 	}{
 		{"ATQ", "Battering Ram", "", 1},
-		{"FEM", "Dwarven Soldier", "combat pair union", 0},
+		{"FEM", "Dwarven Soldier", "", 0},
 		{"LEG", "Infinite Authority", "Trigger_ThatCreature", 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
