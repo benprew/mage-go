@@ -5533,4 +5533,44 @@ use their declared identity. These adapters add no saved discarded-card result.
 Rules: CR 118.3, 118.10–12, 601.2h, 602.2b, 608.2c/g, 701.9 and 732.1.
 Evidence: `TestRONChosenDiscardCost*`, existing selected-discard transaction,
 visit, replacement and batch tests. Real RON clauses are tested separately
-from the still-rejected full Armorer, War Machine and Land's Edge records.
+from complete-record coverage. Armorer now has complete-record tests in
+`TestRONResolutionChoiceArmorer`; War Machine and Land's Edge still reject.
+
+
+## Fixed alternatives during resolution
+
+`ChooseAtResolution(PlayerRef, ...ResolutionOption) ResolvingEffect` selects
+one available alternative while the effect resolves (CR 608.2c-d). This service
+is for instructed resolution choices. Modal spells and modal abilities keep
+their announcement mode contracts (CR 700.2a-b). It does not add targets,
+change payments, or provide priority during resolution.
+
+The declaration copies its option slice and stores no selected index. Each
+`ResolutionOption.When` is a pure condition checked before the choice, using
+the resolving source incarnation and controller. Callers must supply all
+restrictions that make an option unavailable. The chosen player uses the typed
+player reference. No available option or missing player performs no action;
+one available option needs no prompt. Invalid indices select the first
+available option, following the existing engine choice policy.
+
+The body receives the same `EffectContext`. It retains target group identity,
+source incarnation, saved information and event bindings. Copies and clones
+use their own frames. Conditions precede bodies in definition inspection;
+branch binding writes cannot validate reads in another branch or after the
+choice. Declaration validation rejects nil references/bodies, empty labels,
+empty option lists and unbound target/result reads. It inspects every branch.
+Existing action pipelines own replacements, batches and rollback.
+
+RON lowers the complete Dwarven Armorer and Urza's Avenger records through
+this service. Armorer's payments occur before its counter choice; illegal
+resolution targets prevent the choice. Avenger's choice and P/T change occur
+at resolution, with a separate choice on each copy or activation. Ability
+choices are bound to one adjacent layer continuation. Temporary effects keep
+the original permanent incarnation and their normal expiry (CR 400.7,
+611.2a-c, 613.1f, 613.4c, 702.26). Phasing and departure use the existing
+reference rules; no new LKI or simultaneous-operation policy is introduced.
+
+Evidence: `TestResolutionChoiceDispatch`, `AvailableOptions`, `Declarations`;
+`TestRONResolutionChoiceArmorer`, `Avenger`, `PendingInstances`, `Contexts`,
+`Invalid`, `InventoryAndAtomicLoad`; existing chosen-discard transaction,
+counter replacement-order, temporary keyword and next-upkeep tests.

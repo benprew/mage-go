@@ -9,6 +9,18 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "ChooseAnAbility" {
+			if i+1 == len(parts) {
+				return nil, problem(part, "ability choice requires an adjacent layer continuation")
+			}
+			effect, err := compileAbilityChoice(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if isPaidUntapChoice(part) {
 			if i+1 == len(parts) {
 				return nil, problem(part, "paid choice requires an adjacent untap of its result")

@@ -487,6 +487,11 @@
 // the affected players. [Game.IsHandRevealed] reads current hand visibility.
 // Clones retain separate hand and library-top visibility flags.
 //
+// Use [ChooseAtResolution] with [ResolutionOption] for a choice made while an
+// effect resolves. Each option runs in the existing resolution frame.
+// Supply a pure When condition if an option has a legality restriction.
+// Costs and targets are selected before this choice. Copies choose separately.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

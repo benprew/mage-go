@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	chosenAbility       *core.Attr
 	sourceTapped        bool
 	counterStateSource  bool
 	opponentEntryChoice *opponentEntryChoicePlan
@@ -991,6 +992,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "ChooseAnAction":
+		build, err := compileCounterChoice(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ShuffleGraveyardIntoLibrary":
 		if _, err := symbol(n); err != nil {
 			return nil, err
@@ -1434,6 +1441,19 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		var modifications []func(instanceBindings) mage.ContinuousModification
 		for _, part := range parts {
+			if part.Name == "AddAbilityVariable" {
+				if err := arity(part, 1); err != nil {
+					return nil, err
+				}
+				if part.Args[0].Kind != Symbol || part.Args[0].Name != "TheChosenAbility" || ctx.chosenAbility == nil {
+					return nil, problem(part.Args[0], "unbound or incompatible chosen ability")
+				}
+				keyword := *ctx.chosenAbility
+				modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+					return mage.GrantKeywordModification(subject.build(bindings), keyword)
+				})
+				continue
+			}
 			if part.Name == "SetPower" {
 				build, err := compileTemporaryPower(part, subject)
 				if err != nil {

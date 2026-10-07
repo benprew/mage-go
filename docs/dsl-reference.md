@@ -4720,7 +4720,50 @@ alternatives are not added. Unsupported complete records still reject.
 Dwarven Armorer's cost/target/first counter-choice clause and Mishra's War
 Machine's upkeep/payment/damage clause have engine tests in
 `TestRONChosenDiscardCostArmorerClause` and `TestRONChosenDiscardCostWarMachineClause`.
-Their action-choice and actual-damage-result rules remain gaps. Land's Edge
+Armorer's complete choice now uses the resolving-choice adapter below. War
+Machine's actual-damage-result rule remains a gap. Land's Edge
 still needs shared activation permission and a typed discarded-card result.
 Other evidence: `TestRONChosenDiscardCostOptional`, `IndependentPayers`,
 `ReplacementsAndInstances`, `Invalid` and `StrictBoundaries`.
+
+
+## RON choices during resolution
+
+`ChooseAnAction/1` accepts a list of at least two alternatives. Each alternative
+is a list containing exactly one `PutCounters([ACounterOfTypeOnPermanent(
+PTCounter(p, t), Ref_TargetPermanent)])` action. P/T coordinates use the existing
+counter type grammar. The permanent target must be declared outside the choice.
+Choices that add targets, use another subject, use plural counters, or run other
+actions remain errors. This shape executes Dwarven Armorer's complete record.
+
+`ChooseAnAbility/1` accepts at least two distinct keywords supported by the
+existing temporary keyword adapter. It must be followed immediately by
+`CreatePermanentLayerEffectUntil/3`, whose modification list contains
+`AddAbilityVariable(TheChosenAbility)`. The reference is a bare symbol and is
+bound only in that adjacent continuation. Other supported modifications, such
+as `AdjustPT`, may share the list. Subjects and durations retain their existing
+typed contracts. Fixed branches lower the selected keyword without a mutable
+result slot. Parameterized rampage, saved choices outside the continuation,
+wrong references, duplicate options and missing continuations remain errors.
+This shape executes Urza's Avenger's complete record. Gabriel Angelfire still
+rejects its temporary `Rampage(3)` option.
+
+Both forms use `mage.ChooseAtResolution(PlayerRef, ...ResolutionOption)`.
+`ResolutionOption` has `Label string`, `Body ResolvingEffect` and optional
+`When StateCondition`. The condition supplies any choice restrictions; arbitrary
+action legality is not inferred. Zero available options do nothing. One option
+runs without a prompt. Multiple options use the selected player's `ChooseMode`;
+an invalid answer uses the first available option. Definition validation checks
+all bodies, conditions and references, and prevents branch results from escaping.
+
+Choices occur during resolution after targets and payments. The selected branch
+uses the current frame, including target groups, controller, source incarnation,
+event bindings and saved information. Copies make separate choices. Each factory
+builds fresh effects and target bindings. Existing counters, layers, transaction,
+replacement, copy and clone services own the resulting actions.
+
+Evidence: `TestResolutionChoice*`, `TestRONResolutionChoice*`, existing
+`TestRONChosenDiscardCostArmorerClause`, counter placement, temporary keyword
+and next-upkeep duration contracts. Modal/spell and ordinary activation target
+bindings have definition tests; the ordinary trigger has resolution and expiry
+tests. These mappings do not establish collection-wide gameplay coverage.

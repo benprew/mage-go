@@ -333,7 +333,6 @@ func TestRONChosenDiscardCostIndependentPayers(t *testing.T) {
 
 func TestRONChosenDiscardCostStrictBoundaries(t *testing.T) {
 	for _, tc := range []struct{ set, name, gap string }{
-		{"FEM", "Dwarven Armorer", "ChooseAnAction"},
 		{"ATQ", "Mishra's War Machine", "activation history requires the resolving activated ability"},
 		{"LEG", "Land's Edge", "OtherPlayersMayActivate"},
 	} {

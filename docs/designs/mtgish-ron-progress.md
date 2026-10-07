@@ -27511,3 +27511,162 @@ started. Complete RON gameplay/loading, runtime cutover, Go-card deletion,
 generator retirement and unused DSL removal gates are unmet. No card definition,
 generator or DSL function is removed; no caller audit authorizes removal here.
 Migration remains incomplete.
+
+## Run 2026-10-06: RESOLUTION-CHOICES
+
+Status: completed implementation slice. This run stops after this slice.
+Fresh status supersedes the older summary above: **684 accepted / 302 rejected
+unique names**, **1,802 compiled / 643 rejected records**. Compilation and
+complete gameplay mappings remain separate measurements.
+
+### Fresh evidence and candidate comparison
+
+Initial user work: modified `.gitignore`, execution design and progress ledger;
+untracked `mtgish-ron-completed.md`. All are preserved. Only this entry is staged
+from the ledger; the user's compaction and archive remain unstaged. The design,
+engine reference, ledger, vocabulary, selected compiler/engine files and complete
+candidate RON records were read. Requirements came from RON and local Oracle
+records, never Go card definitions. Relevant rules: CR 400.7, 608.2b-d/h,
+611.2a-c, 613.1f/4c, 700.2a-b and the established phasing/reference contracts.
+
+Baseline compiler tests, short engine suite and build passed. Strict loading and
+semantic inventory exited 1 for collection rejection: 2,445 records, 1,800
+compiled, 645 rejected; 682 accepted and 304 rejected distinct names. Semantic
+inventory: 72,962 occurrences, 8,559 signatures, 5,652 unknown-role occurrences.
+First-error counts were not treated as complete-card unlock estimates.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Resolving choices, selected | Dwarven Armorer and Urza's Avenger: **2** complete cards. Gabriel Angelfire and Island Sanctuary are additional consumers, excluded from that estimate. | Gabriel needs temporary parameterized rampage; Sanctuary needs draw replacement, attack restriction and next-turn duration contracts. Shared typed resolution dispatch enables both consumers now and later constrained choice adapters, without using announcement modes or mutable choice slots. | Low/medium: new engine dispatcher with validation, two bounded adapters, gameplay/identity/copy/clone/timing and rejection tests. |
+| Filtered source choice plus next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible cards after the full prerequisite. | Typed source selection must cover all eligible sources and exact incarnation identity; one next damage event must be consumed correctly across batches and competing replacements. Dark Sphere additionally needs partial prevention; Reverse Damage needs actual prevented amount; Eye for an Eye and Jade Monolith need different damage replacement operations. | High: source-choice lifecycle, captured references, next-event replacement and simultaneous damage contracts, then adapters/gameplay. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible cards after all-zone characteristic evaluation. Gaea's Avenger and Wood Elemental also contain CDAs but are excluded. | Avenger's record counts controller artifacts rather than opponent artifacts, plus arithmetic; Wood Elemental needs entry sacrifice results. CDAs need owner/controller context outside the battlefield and layer/copy integration. | High: shared characteristic query prerequisites, count lowering, all-zone/copy/layer/control tests and gameplay. |
+
+Resolving choices provide two immediate complete consumers at lower effort than
+the seven-consumer prevention or four-consumer CDA prerequisites. The selection,
+contract, reuse boundary and acceptance cases were stated before implementation.
+The `implement-engine` skill supplied the shared engine workflow. No removed card
+skill, Go stubs, fallback, card-name executor or partial production registry was
+used. The implementation does not start a second slice.
+
+### Supported signatures, contexts and reuse
+
+Engine API: `ChooseAtResolution(player PlayerRef, options ...ResolutionOption)
+ResolvingEffect`; each option has `Label string`, `Body ResolvingEffect`, optional
+`When StateCondition`. Options are copied at construction. Conditions supply
+choice legality and are read at resolution with source incarnation/controller.
+Zero available options or an absent player do nothing; one option needs no
+prompt; multiple options use `Player.ChooseMode`. Invalid answers select the
+first available option. The selected body receives the existing EffectContext.
+Every body and condition is validated. Branch results cannot validate reads in
+another branch or after the choice. No selected index is stored in a declaration.
+
+RON `ChooseAnAction/1` accepts at least two alternatives, each a one-action list:
+`PutCounters([ACounterOfTypeOnPermanent(PTCounter(p,t), Ref_TargetPermanent)])`.
+The target is declared outside the choice and uses the existing typed target
+binding. Coordinates must name a supported counter. Other actions, subjects,
+plural instructions, target declarations and replacement-operation contexts are
+not added. This is a complete counter-choice shape, not general action choice.
+
+RON `ChooseAnAbility/1` accepts at least two distinct existing temporary keywords
+and an adjacent `CreatePermanentLayerEffectUntil/3` continuation. That list must
+contain `AddAbilityVariable(TheChosenAbility)/1`. The reference must be bare and
+is bound only in that continuation. Existing supported modifications can share
+the list. Subjects and durations keep their existing contracts. Each fixed
+branch lowers one typed keyword; there is no game-time choice binding or global
+last-action slot. Missing/separated continuations, escaped/incompatible reads,
+duplicate options, malformed keywords and parameterized rampage reject.
+
+Both forms operate in supported resolving sequences. Ordinary spell, activation,
+trigger and modal target bindings have definition evidence; real activations and
+an ordinary upkeep trigger have gameplay evidence. No new static, entry, cost or
+replacement-operation context is accepted. Modal spell/ability announcement
+selection remains with its current service. Resolution copies choose separately.
+
+Reused services: typed PermanentRef/PlayerRef, per-factory instanceBindings,
+EffectContext and target group captures, Sequence, AddCountersTo, current P/T
+counter types, DiscardCost(1), total-payment transaction and hand visits,
+GrantKeywordModification, ModifyPT, existing durations, layered ability removal,
+stack copies, clone frames, replacement pipelines and native cleanup. The engine
+adds only typed resolution dispatch. No LKI, combat, simultaneous-operation or
+replacement-order policy is changed.
+
+### Test-first evidence and card mappings
+
+Engine tests first failed for missing `ResolutionOption`/`ChooseAtResolution`.
+RON tests first failed at the full Armorer `ChooseAnAction` and full Avenger
+`ChooseAnAbility`. Early fixture errors used unavailable API names and omitted
+the main step for permanent casting. These were corrected; the expected missing
+behavior failures were confirmed before adapters. Expiry fixtures were corrected
+to run layer recomputation after direct effect removal. Expanded declaration
+fixtures use an activation so source references are valid. Inventory assertions
+were updated from 1,800/645 to the freshly measured 1,802/643; no assertion was
+weakened. No environment or pre-existing validation failure remains.
+
+| Card or contract | Mapping |
+| --- | --- |
+| Dwarven Armorer, complete FEM record | `TestRONResolutionChoiceArmorer`: R casting, 0/2 Dwarf metadata, R/tap/discard payment before choice, sickness/target rollback, both counter choices, source departure/control, target shroud/phasing/return, copied activation controller and independent selection, pending clone and permanent counters. Existing `TestRONChosenDiscardCostArmorerClause` retains selected-hand/mana/empty-hand/invalid-choice/full-payment rollback coverage. |
+| Urza's Avenger, complete ATQ record | `TestRONResolutionChoiceAvenger`: six-mana casting, 4/4 artifact creature/Shapeshifter metadata, zero-cost activation, all four keywords and -1/-1, resolution timing, phasing/return/control, copy choices, layer ability removal, clone isolation and expiry. `PendingInstances`: two factories/controllers, pending clone, repeated activation with a choice changed after announcement, accumulating distinct grants and -1/-1 effects, native cleanup. Existing keyword/banding/first-strike/trample/flying engine contracts remain the execution services. |
+| Other contexts | `TestRONResolutionChoiceContexts`: definition validation of spell, activation, trigger and modal target scopes; synthetic upkeep resolution and next-upkeep expiry. This does not claim complete Gabriel gameplay. |
+| Engine dispatcher | `TestResolutionChoiceDispatch`, `AvailableOptions`, `Declarations`: no declaration-time choice, defensive option copy, selected branch/chooser, invalid indices, pure conditions rechecked at resolution, zero/one/multiple available choices, nil/bad declarations, unbound target/result and cross-branch/escaped-result rejection. |
+| Strict loading and syntax roles | `TestRONResolutionChoiceInvalid`, `InventoryAndAtomicLoad`: malformed declarations and lexical boundaries, fresh validated factories, complete two-card fixture load, rejected collection preserves prior registry, explicit Gabriel rampage rejection, nested counter/keyword/ability reference roles. Updated repository inventory tests retain exact counts. |
+
+**Two new complete-card gameplay mappings** are added. Collection-wide
+engine-validation and behavior totals remain unmeasured. Compilation alone does
+not establish gameplay for the other 682 accepted names.
+
+### Source evidence, measurements and validation
+
+Local FEM/ATQ Oracle data agree with the complete Armorer and Avenger records.
+No source defect was found in either consumer. Gaea's Avenger's known candidate
+source concern remains deferred. No RON file changes; all twelve vocabulary
+source hashes remain unchanged, so no source snapshot regeneration is needed.
+
+Actual gain matches the estimate: **2 names / 2 records**, exactly Dwarven Armorer
+and Urza's Avenger. No previously accepted name/record is lost. Final strict load:
+1,802 compiled / 643 rejected records; 684 accepted / 302 rejected names.
+Gabriel's diagnostic advances from `unsupported action (ChooseAnAbility)` to
+`LEG.lines.ron:93:315: unsupported temporary keyword (Rampage)`.
+Inventory retains 72,962 occurrences and 8,559 signatures; new nested roles
+reduce unknown-role occurrences from 5,652 to 5,623. Strict loading exits 1 and
+publishes no partial registry.
+
+Validation results are recorded below after the final checks. This slice changes
+engine/compiler code, tests, API/rules contracts and this appended ledger entry.
+Initial user changes and the untracked archive remain outside the commit.
+No Go card definition, generator or DSL function is removed. Complete collection
+loading/gameplay/runtime wiring remain below the removal gates. No whole-repo
+caller audit has authorized a DSL deletion.
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. Filtered typed damage-source choice and next-event prevention: seven clean
+   Circle/Realm consumers; resolve the source/batch/replacement prerequisites.
+2. All-zone battlefield-count CDA service: four clean consumers, with Avenger's
+   source defect and Wood Elemental's entry results kept separate.
+3. Extend resolution choices when a shared downstream prerequisite is ready:
+   temporary parameterized trigger grants for Gabriel, or draw replacement and
+   attack-duration contracts for Island Sanctuary. Do not select a single-card
+   extension ahead of useful shared multi-card work without a prerequisite reason.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine suite, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestResolutionChoice\|TestRONResolutionChoice\|TestRONChosenDiscardCost\|TestInventory' -count=1` | PASS after the expected test-first failures and exact inventory refresh |
+| `go test ./pkg/mage/... -short -count=1` | PASS after exact inventory refresh |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic import spacing reviewed |
+| Post-lint focused tests and `go test ./... -short -count=1` | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,802 compiled / 643 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts and diagnostics; 684 accepted / 302 rejected names |
+| Source/loader audit | All 12 source hashes unchanged; final loader/inventory diagnostics identical; no accepted name lost |
+
+Slice files: `pkg/mage/resolution_choice.go`, `resolution_choice_test.go`,
+`doc.go`; `pkg/mage/dsl/ron/resolution_choice.go`, `resolution_choice_test.go`,
+`compiler.go`, `optional_payment.go`, `inventory.go`, `inventory_test.go`,
+`chosen_discard_cost_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, this appended progress entry.
+The descriptive commit hash is reported in the final response. Existing user
+changes remain unstaged. Migration remains incomplete; no second slice starts.

@@ -593,6 +593,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "action":
+		if n.Name == "ChooseAnAction" && len(n.Args) == 1 {
+			return "action"
+		}
+		if n.Name == "ChooseAnAbility" && len(n.Args) == 1 {
+			return "keyword"
+		}
 		switch n.Name {
 		case "GainControlOfPermanentUntil":
 			if len(n.Args) == 2 {
@@ -824,6 +830,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "static_modification", "temporary_modification", "resolving_modification":
+		if n.Name == "AddAbilityVariable" && len(n.Args) == 1 {
+			return "ability_reference"
+		}
 		switch n.Name {
 		case "SetToughness":
 			if role == "resolving_modification" && len(n.Args) == 1 {
