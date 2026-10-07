@@ -6432,3 +6432,30 @@ source/host identity, phasing, ability removal, copy/clone isolation, declaratio
 roles and atomic loading. Existing combat-event and pair regressions remain in
 force. Rules: CR 400.7, 506.4, 509.1a–c/g–i, 611.3a–b, 702.22g–h,
 702.26b–g and 702.111.
+
+
+## Captured collection animation
+
+`SetEachBasePowerToughness(PermanentSet, ResolutionValue, ResolutionValue)
+ContinuousModification` sets both base values in layer 7b.
+`AddEachCardType(PermanentSet, core.CardType) ContinuousModification` adds one
+supported permanent type in layer 4. Both use the existing `layerModification`
+executor and definition inspector. Nil sets/values and unsupported type additions
+fail definition validation. Existing singular callers are unchanged.
+
+One `Until` installation captures the collection and all values before layer
+application. No member is added because of the type change, a later entry, or
+later control/subtype changes (CR 611.2c-d, 613.6). Phased-out members are absent
+at capture. A captured member retains its effect through control changes and a
+phase cycle; a returned incarnation does not inherit it (CR 400.7, 702.26).
+Existing types, subtypes, abilities and colors remain (CR 205.1b). Creature type
+addition supplies P/T identity. Base values apply before bonuses, counters and
+switches (CR 613.4b-d). Clones and cleanup use the existing independent lifecycle.
+
+Evidence: `TestCollectionAnimationCapture` and `TestCollectionAnimationInvalid`.
+Real RON gameplay and factory/target isolation are covered by
+`TestRONExtendedAnimation*`. Xenic Poltergeist's mana-value read uses the current
+card characteristics when its ability resolves, including a full characteristic
+copy before resolution; later changes cannot alter the captured base values.
+No general card-copy, all-zone characteristic, type replacement, replacement
+ordering or new LKI service is established by this slice.

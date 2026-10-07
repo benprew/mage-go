@@ -1528,6 +1528,22 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				modifications = append(modifications, build)
 				continue
 			}
+			if part.Name == "SetCardtypes" {
+				builds, err := compileTemporaryArtifactCreature(part, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, builds...)
+				continue
+			}
+			if part.Name == "SetPowerAndToughnessBoth" {
+				build, err := compileTemporaryEqualPT(part, ctx, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
 			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "AddCreatureType" || part.Name == "SetCreatureType" {
 				var build func(instanceBindings) mage.ContinuousModification
 				var err error

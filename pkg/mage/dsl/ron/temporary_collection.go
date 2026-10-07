@@ -15,6 +15,13 @@ func compileTemporaryCollection(n Node, ctx scope) (effectFactory, error) {
 	if n.Args[1].Kind == List && len(n.Args[1].Args) > 0 && n.Args[1].Args[0].Name == "AddAbility" {
 		return compileTemporaryCollectionKeywords(n, ctx)
 	}
+	if n.Args[1].Kind == List {
+		for _, part := range n.Args[1].Args {
+			if part.Name == "SetPT" || part.Name == "AddCardtype" {
+				return compileTemporaryCollectionAnimation(n, ctx)
+			}
+		}
+	}
 	subjects, err := compileStaticPermanentFilter(n.Args[0])
 	if err != nil {
 		return nil, err
@@ -47,6 +54,47 @@ func compileTemporaryCollection(n Node, ctx scope) (effectFactory, error) {
 			modifications[i] = mage.ModifyEachPT(subjects.build(), mage.Fixed(value.power), mage.Fixed(value.toughness))
 		}
 		return mage.Until(core.EndOfTurn, modifications...)
+	}, nil
+}
+
+func compileTemporaryCollectionAnimation(n Node, ctx scope) (effectFactory, error) {
+	subjects, err := compileContextualCollection(n.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	var power, toughness int
+	var hasPT, hasType bool
+	for _, part := range n.Args[1].Args {
+		if err := arity(part, 1); err != nil {
+			return nil, err
+		}
+		switch part.Name {
+		case "SetPT":
+			if hasPT || part.Args[0].Name != "PT" {
+				return nil, problem(part, "supply one fixed base P/T pair")
+			}
+			power, toughness, err = compilePT(part.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			hasPT = true
+		case "AddCardtype":
+			if hasType || part.Args[0].Kind != Symbol || part.Args[0].Name != "Creature" {
+				return nil, problem(part, "supply one Creature type addition")
+			}
+			hasType = true
+		default:
+			return nil, unsupported(part, "temporary collection animation modification")
+		}
+	}
+	if !hasPT || !hasType {
+		return nil, problem(n, "collection animation requires base values and Creature type")
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		set := subjects(bindings)
+		return mage.Until(core.EndOfTurn,
+			mage.SetEachBasePowerToughness(set, mage.Fixed(power), mage.Fixed(toughness)),
+			mage.AddEachCardType(set, core.TypeCreature))
 	}, nil
 }
 

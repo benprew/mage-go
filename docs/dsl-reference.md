@@ -1195,7 +1195,8 @@ or under `And` with existing filters. They use the engine's source-exclusion
 option at announcement and resolution. `Other` in disjunctions or with other
 reference kinds remains unsupported. Exact scope, engine reuse, source corrections
 and gameplay evidence: [temporary animation](designs/mtgish-ron-temporary-animation.md).
-Dynamic base values, collection animation and additional durations remain gaps.
+The supported collection animation and equal base-value extensions are described
+in the temporary collection animation contract below. Other shapes remain gaps.
 
 ### RON temporary collection P/T
 
@@ -5425,3 +5426,38 @@ query keeps legal maximum proposals and completes unmet requirements without
 writing combat state. The engine contract documents capacity, bands, minimum
 blocker counts, identity and search behavior. Evidence is in
 `TestBlockingRequirement*` and `TestRONBlockingRequirement*`.
+
+
+## RON temporary collection animation and equal base values
+
+`CreateEachPermanentLayerEffectUntil(collection,
+[SetPT(PT(integer, integer)), AddCardtype(Creature)], UntilEndOfTurn)` accepts
+exactly one fixed P/T pair and one Creature addition, in either order. Collections
+use the existing contextual collection compiler, including typed controller,
+intersection and union queries. Both operations share one `Until` installation.
+It captures current members and their incarnations at resolution; later entries
+and phased-out members do not join. Prior types, subtypes, colors and abilities
+remain. This is the complete Thelonite Druid record, including its transactional
+mana, tap and creature-sacrifice costs; the source can pay its own sacrifice.
+
+In `CreatePermanentLayerEffectUntil/3`,
+`SetCardtypes([Artifact, Creature])` accepts exactly those two types once each,
+in either order. It lowers to two type additions because becoming an artifact
+creature retains prior types under CR 205.1b. Other type-setting lists remain
+errors; this does not establish general type replacement.
+`SetPowerAndToughnessBoth(value)` lowers to the existing base-value operation
+with the temporary-value compiler. Its supported values are fixed integers,
+bound announced X, subtraction of supported values, and typed permanent
+power/toughness or mana-value reads. `ActionPermanent` means this modification's
+subject. A mana-value read must refer to that subject. The engine captures values
+at resolution, rather than recalculating them on each layer pass.
+
+Xenic Poltergeist uses these operations with the existing
+`UntilNextUpkeep(You)` duration. Its noncreature-artifact target is checked at
+announcement and resolution; the saved caster/controller selects the expiry
+upkeep. Source departure does not end the installed effect. These additions
+apply only to resolving temporary modifications, not static, entry or cost
+contexts. Invalid references and declarations fail compilation.
+
+Evidence: `TestRONExtendedAnimationCards`, `XenicLifetime`, `DruidMembership`,
+`Copy`, `Invalid` and `StrictLoad` in `extended_animation_test.go`.

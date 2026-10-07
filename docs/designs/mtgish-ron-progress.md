@@ -31642,3 +31642,189 @@ gate. Go card definitions and generators are retained. No DSL function is
 removed without the required whole-repository caller audit; this slice removes
 only the replaced internal combat helpers. User changes remain outside the
 slice's commit. Migration remains incomplete.
+
+
+## Run 2026-10-07: CAPTURED-TEMPORARY-ANIMATION
+
+Status: complete supported temporary animation slice. This run stops here.
+
+### Baseline, candidate comparison and selection
+
+Initial user changes: `.gitignore`, `mtgish-ron-execution.md`, this ledger, and
+untracked `mtgish-ron-completed.md`. They are preserved. Only this new ledger
+entry is staged against the previous committed ledger; the user's document
+rearrangement remains a working-tree change.
+
+Fresh `go test ./pkg/mage/... -short -count=1` and `go build ./...` passed.
+`go run ./cmd/loadcards -inventory -json` exited 1 for collection rejection:
+**1,861 compiled / 584 rejected records**, **717 accepted / 269 rejected unique
+names**. There are 2,445 records and 986 names. The AST inventory contained
+72,962 occurrences, 8,557 signatures and 5,212 unknown-role occurrences.
+
+Instructions, engine reference, execution design, vocabulary and ledger were
+read. Complete records and nested forms were inspected for all named candidates
+below, including the four excluded chosen-source consumers and two excluded CDA
+consumers. Reprints count once. Requirements come from RON, local Oracle data
+and rules, not Go card definitions. The `implement-engine` skill supplied the
+engine workflow; no removed card/set skill or stub generator was used.
+
+| Candidate | Affected unique names and estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Captured temporary animation, selected | Thelonite Druid; Xenic Poltergeist: **2 immediate full-card unlocks / 2 records**. | Missing collection type/base-value constructors and compiler adapters. Existing payment, target, layer and next-upkeep services supply the other rules. Enables typed collection animation and captured equal base values. General/static type replacement and mixed conditional animation remain separate. | Low/medium: two small engine constructors, temporary modification adapters, declaration and full-record identity/payment/layer/duration tests. |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 eventual unlocks / 31 records**, **0 from enumeration alone**. Additional affected names: Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage. | Need full CR 120.7/609.7a source enumeration, typed choice bindings, property rechecks, permanent-spell continuation and exact shields. The additional four require partial prevention, extra damage, redirection or prevented-amount results. Enables eleven source-choice consumers. | High: enumeration/lifetime/choices and replacement contracts before full-card adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 eventual unlocks / 20 records**, **0 from battlefield-only lowering**. Additional affected names: Gaea's Avenger, Wood Elemental. | Need all-zone characteristic contexts, owner/controller counts, named counts and CDA/copy/layer integration. Avenger has the recorded own-versus-opponent artifact-count defect and arithmetic; Wood Elemental needs entry-sacrifice results. Enables seven CDA consumers and zone characteristic reads. | High: shared all-zone engine contract and integrations before five complete gameplay mappings. |
+
+Selection favors two complete consumers whose remaining rules already have
+exact engine contracts, at materially lower effort than the broader shared
+prerequisites. The previous ledger ranking is a suggestion, not a fixed order.
+First-error frequency was not used as an unlock estimate. Contract, reuse
+boundary and acceptance cases were stated before editing. The intended gain
+was two unique cards and matches the actual gain.
+
+### Exact signatures, contexts and dependencies
+
+Engine adds:
+
+```go
+func SetEachBasePowerToughness(subjects PermanentSet, power, toughness ResolutionValue) ContinuousModification
+func AddEachCardType(subjects PermanentSet, kind core.CardType) ContinuousModification
+```
+
+These construct existing layer operations. `Until` captures members and values
+before type application. Definition inspection rejects nil sets/values and
+unsupported permanent types. Existing types, subtypes, colors and abilities
+remain; Creature adds P/T identity. Layers 4 and 7b apply before bonuses, counters
+and switches. The existing capture/clone/cleanup service retains incarnations;
+control/subtype changes and phase cycles do not alter captured membership.
+Phased-out members cannot join at resolution; later entries and returned
+incarnations cannot inherit it. No separate state or executor is introduced.
+
+RON resolving temporary contexts add:
+
+- `CreateEachPermanentLayerEffectUntil(collection,
+  [SetPT(PT(integer, integer)), AddCardtype(Creature)], UntilEndOfTurn)`.
+  Exactly one fixed base pair and one Creature addition are required, in either
+  order. Other/mixed operations, duplicate declarations, missing components and
+  other durations remain errors. Collections reuse `compileContextualCollection`
+  for typed controller/owner restrictions, intersections/unions and other
+  already supported collection shapes. The existing keyword and bonus-only
+  collection paths remain unchanged.
+- `SetCardtypes([Artifact, Creature])` in
+  `CreatePermanentLayerEffectUntil/3`, exactly those two types once each in either
+  order. CR 205.1b requires preserving prior types for becoming an artifact
+  creature, so this shape lowers to the shared singular type additions. Other
+  type-setting lists remain errors; general type replacement is not implemented.
+- `SetPowerAndToughnessBoth(value)` in the same singular temporary context.
+  Uses `compileTemporaryValue`: integer, bound ValueX, subtraction, typed
+  power/toughness reads with the existing information contract, and mana-value
+  reads of the modified permanent. `ActionPermanent` is this subject, not a
+  global result. Captured base values use the shared layer service. Unbound,
+  incompatible or out-of-scope references fail compilation. Static, entry and
+  cost contexts are not added.
+
+Dependencies/reuse: typed permanent references and per-factory instance
+bindings, contextual set queries, `SetBasePowerToughness`, `AddCardType`,
+`Until`/`UntilNextUpkeep`, target announcement/resolution/copying, transactional
+mana/tap/sacrifice costs (including source sacrifice), native combat, state-based
+zero-toughness movement, existing retained information and clone services.
+No RON rule execution is placed in the compiler. No card-name branch, Go-card
+fallback, global last-action slot, game-time declaration panic or partial
+production registry is introduced. No replacement ordering or new LKI behavior
+is claimed. No DSL function is removed; existing callers remain below cutover.
+
+The inventory assigns nested temporary `SetCardtypes` members the `card_type`
+role and `SetPowerAndToughnessBoth` operands the `value` role. Support remains
+shape/context-specific, not inferred from these role labels.
+
+Source evidence: local ATQ Xenic Poltergeist and FEM Thelonite Druid Oracle texts
+agree with the complete RON records. CR 205.1a-b explains artifact-creature
+retention; CR 400.7, 503.1, 601.2g-h, 602.2, 608.2b/h, 611.2c-d, 613.1/4/6 and
+702.26b/d-f provide identity, payment, target, capture, layers and phasing rules.
+No selected source defect or RON edit is needed. All twelve source hashes match
+the vocabulary snapshot; it is retained. The earlier Avenger defect remains
+unresolved and is excluded from this slice.
+
+### TDD and card-to-test mapping
+
+The first engine test failed to compile for the two missing constructors. After
+correcting unrelated fixture API spellings, it still failed only for those
+constructors. The first real-RON run rejected Druid at `SetPT` and Xenic at
+`SetCardtypes`. A separate inventory test first failed because the equal-base
+operand had an unknown role. These expected failures precede their implementations.
+
+The initial mana-value-change fixture used the limited Doppelganger effect,
+which copies only P/T and keywords. It therefore did not change mana cost.
+The corrected fixture uses `BaseCard.CloneFrom` for a full characteristic copy;
+the assertion remains seven at resolution and four after a later copy. This
+establishes value capture, not general production copy support. Broad tests
+initially failed only at the two old inventory count assertions; those snapshots
+now assert 1,863/582 and explicitly reject regression of the two newly accepted
+names. No gameplay assertion was weakened.
+
+| Complete card or contract | Tests |
+| --- | --- |
+| Thelonite Druid, complete FEM record | `TestRONExtendedAnimationCards`: unpaid/paid casting, tap-symbol sickness, failed mana rollback, paying mana/tap/self-sacrifice, no early animation, native animated combat, cloned pending resolution and cleanup. `DruidMembership`: control before/after, phasing before/cycle, return and subtype change after capture. `StrictLoad`: factory validation and atomic rejected loading. |
+| Xenic Poltergeist, complete ATQ record | `TestRONExtendedAnimationCards`: paid/unpaid casting, tap payment, retained artifact/land/enchantment types and Forest subtype, captured 4/4 values, native combat, next own upkeep versus opponent upkeep and clone isolation. `XenicLifetime`: land/creature/shroud rejection without payment, returned/phased/newly-creature target rechecks, phase cycle, control/source departure, ability removal, changed characteristics before/after resolution. `Copy`: distinct factory targets, retargeted ability copy and separate 4/4 versus 7/7 values. `ZeroManaValue`: zero-toughness state-based movement to the owner's graveyard. `StrictLoad`: factory validation and atomic load rejection. |
+| Collection engine contract | `TestCollectionAnimationCapture`: noncreature membership before type changes, opponent/phased/later exclusions, layers 4/7b/7c/7d, control and phase cycle, returned incarnation, clone and cleanup. `Invalid`: nil set/value and unsupported card type. |
+| Invalid RON and reporting | `TestRONExtendedAnimationInvalid`: wrong/duplicate type lists, missing arguments, unbound value reference, malformed base pair, unsupported type/duration. `StrictLoad`: nested value/type roles and all-or-nothing registry behavior. `TestInventory*`: repository counts, retained accepted names and inspection purity. |
+
+Two complete-card behavior mappings are added. The collection-wide
+engine-validated and behavior-verified totals remain unmeasured; compilation
+counts do not establish complete gameplay coverage.
+
+### Validation and final evidence
+
+Final loader: **1,863 compiled / 582 rejected records**;
+**719 accepted / 267 rejected unique names**. Gain: **2 records / 2 unique names**,
+matching the estimate. No previously accepted name is lost. Both loader commands
+exit 1 because unsupported collection records remain, and publish no partial
+registry. Semantic inventory: **72,962 occurrences / 8,557 signatures / 5,207
+unknown-role occurrences** (five fewer unknown-role occurrences).
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestCollectionAnimation\|TestRONExtendedAnimation\|TestRONTemporaryAnimation\|TestRONTemporaryCollection\|TestRONNextUpkeep\|TestInventory' -count=1` | PASS after formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after formatting and updated count assertions. |
+| `make test` | PASS after formatting and updated count assertions. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,863 compiled / 582 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 719 accepted / 267 rejected unique names, semantic counts above. |
+| Source hash audit | All twelve hashes match the vocabulary snapshot. |
+
+Automatic lint formatting was reviewed. It made only import/blank-line style
+changes in this slice; no unrelated file was changed. Focused, short engine,
+full test, build and vet checks were run again after formatting. There is no
+remaining environment or pre-existing check blocker. The slice is committed
+separately; the final response reports the commit hash.
+
+Representative remaining diagnostics:
+`2ED.lines.ron:36:213: unsupported action (ChooseADamageSource)` for Circle of
+Protection: Red; `LEG.lines.ron:58:205: unsupported rule (CDA_Power)` for Dakkon
+Blackblade; `3ED.lines.ron:82:255: unsupported end-step history filter
+(DidntAttackThisTurn)` for Erg Raiders; `2ED.lines.ron:172:645: unsupported
+activation timing condition (IsAPlayersTurn)` for Nettling Imp;
+`2ED.lines.ron:227:238: unsupported action (CreateEachPermanentRuleEffectUntil)`
+for Siren's Call; `2ED.lines.ron:3:299: unsupported conditional static
+modification (AddCardtype)` for Animate Artifact.
+
+Files: engine `composable_continuous.go`, `collection_animation_test.go`,
+`doc.go`; RON `compiler.go`, `temporary_animation.go`, `temporary_collection.go`,
+`extended_animation_test.go`, `inventory.go`, `inventory_test.go`; API/rules
+contract documentation and this ledger entry. RON assets are unchanged.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Chosen damage-source enumeration and typed choice prerequisite, then exact
+   shields for the seven clean prevention consumers.
+2. All-zone battlefield-count CDA prerequisite for the five clean consumers;
+   investigate the Avenger source defect with its reprint evidence separately.
+3. Continuous-control/history, timing and collection attack requirements for
+   Erg Raiders, Nettling Imp and Siren's Call. Season of the Witch still needs
+   inability-to-attack history. Static animation and general type replacement
+   remain separate; do not treat these temporary adapters as static support.
+
+Complete collection gameplay/loading, application startup, Go-card deletion and
+DSL cleanup remain below their removal gates. No definitions or generators are
+deleted. No second slice is started. Migration remains incomplete.

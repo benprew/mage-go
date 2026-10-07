@@ -80,6 +80,8 @@
 // and [HasToughnessEqual] for exact current P/T targets.
 //
 // Use [SetBasePowerToughness] with [Until] to set captured base values.
+// Use [SetEachBasePowerToughness] and [AddEachCardType] for a set animation.
+// Until saves the members before any type change. Later entries cannot join it.
 // Combine [AddCardType] and [AddSubtypeFamily] with these base values for
 // temporary animation. The added types permit the subtype checks in one effect.
 // [ValidateSubtypeFamily] permits declaration checks before factory construction.

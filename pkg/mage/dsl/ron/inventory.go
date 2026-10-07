@@ -891,6 +891,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "ability_reference"
 		}
 		switch n.Name {
+		case "SetCardtypes":
+			if role == "temporary_modification" && len(n.Args) == 1 {
+				return "card_type"
+			}
+		case "SetPowerAndToughnessBoth":
+			if role == "temporary_modification" && len(n.Args) == 1 {
+				return "value"
+			}
 		case "SetToughness":
 			if role == "resolving_modification" && len(n.Args) == 1 {
 				return "value"

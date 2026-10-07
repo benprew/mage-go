@@ -2,7 +2,52 @@ package ron
 
 import (
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
+
+func compileTemporaryArtifactCreature(n Node, subject permanentReferencePlan) ([]func(instanceBindings) mage.ContinuousModification, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	types, err := list(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	if len(types) != 2 {
+		return nil, problem(n, "temporary type setting supports only an artifact creature")
+	}
+	seen := map[core.CardType]bool{}
+	var builds []func(instanceBindings) mage.ContinuousModification
+	for _, node := range types {
+		kind, err := cardType(node)
+		if err != nil {
+			return nil, err
+		}
+		if (kind != core.TypeArtifact && kind != core.TypeCreature) || seen[kind] {
+			return nil, problem(node, "supply Artifact and Creature once each")
+		}
+		seen[kind] = true
+		// An artifact creature keeps its prior types under CR 205.1b.
+		builds = append(builds, func(bindings instanceBindings) mage.ContinuousModification {
+			return mage.AddCardType(subject.build(bindings), kind)
+		})
+	}
+	return builds, nil
+}
+
+func compileTemporaryEqualPT(n Node, ctx scope, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	value, err := compileTemporaryValue(n.Args[0], ctx, subject)
+	if err != nil {
+		return nil, err
+	}
+	return func(bindings instanceBindings) mage.ContinuousModification {
+		amount := value(bindings)
+		return mage.SetBasePowerToughness(subject.build(bindings), amount, amount)
+	}, nil
+}
 
 func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
 	if err := arity(n, 1); err != nil {

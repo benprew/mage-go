@@ -62,6 +62,12 @@ func SetBasePowerToughness(subject PermanentRef, power, toughness ResolutionValu
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT, setBasePT: true}
 }
 
+// SetEachBasePowerToughness sets base values for each member of a permanent set.
+// Until saves the members and values when the effect begins.
+func SetEachBasePowerToughness(subjects PermanentSet, power, toughness ResolutionValue) ContinuousModification {
+	return &layerModification{subjects: subjects, power: power, toughness: toughness, layer: LayerPT, setBasePT: true}
+}
+
 // SetBasePower sets base power and preserves base toughness.
 func SetBasePower(subject PermanentRef, power ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: Fixed(0), layer: LayerPT, setBasePT: true, setPowerOnly: true}
@@ -214,6 +220,12 @@ func AddSubtypeFamily(subject PermanentRef, family SubtypeFamily, subtypes ...st
 // AddCardType keeps existing types and abilities during a type addition.
 func AddCardType(subject PermanentRef, kind CardType) ContinuousModification {
 	return &layerModification{subject: subject, addType: CardTypeAttr(kind), typeAddition: true, layer: LayerType}
+}
+
+// AddEachCardType keeps prior types and abilities for each member of a set.
+// Until saves the members before the type change.
+func AddEachCardType(subjects PermanentSet, kind CardType) ContinuousModification {
+	return &layerModification{subjects: subjects, addType: CardTypeAttr(kind), typeAddition: true, layer: LayerType}
 }
 
 func (m *layerModification) inspectDefinition() definitionNode {
