@@ -26424,3 +26424,156 @@ No second slice is started. Slice files: `pkg/mage/cost_put_counter.go` and test
 `payment_transaction.go`, `definition.go`; RON `counter_placement_payment.go`
 and tests, `optional_payment.go`, `inventory.go/test.go`, `land_entry_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger entry.
+
+## 2026-10-06: beginning-of-combat prerequisite
+
+Status: completed slice `BEGIN-COMBAT-STEP`. This run stops after this slice.
+Fresh collection status is **1,786 compiled / 659 rejected records**, and
+**674 accepted / 312 rejected unique names**, of 2,445 records / 986 names.
+Compilation and complete gameplay verification remain separate.
+
+### Fresh evidence and candidate selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Both loader commands exited 1 for unsupported records, not a build failure.
+The AST inventory reported 72,962 nodes, 8,559 signatures, and 6,266 unknown-role
+occurrences. Complete candidate records, including nested bodies and reprints,
+were read. The execution design, current ledger, vocabulary snapshot, engine
+reference, step/binding/duration implementations, API/rules contracts and
+CR 113.7a, 400.7, 507, 511.2 and 603.2–3 supplied the contracts.
+
+| Candidate | Unique affected names; estimated unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Beginning-of-combat prerequisite, selected | Battering Ram, Goblin Flotilla, Johan: **0 immediate / 3 eventual** complete cards | Ram needs its Wall combat-pair filter and corrected delayed subject. Flotilla needs a combat-scoped installed pair trigger. Johan needs optional nonmana effect payment and conditional attack tap rules. This slice supplies the common step event and immediate combat duration. | Low: two step patterns, shared adapter and duration permission; focused native, identity, binding, copy/clone and rejection tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible complete cards after their prerequisite | Needs all-zone characteristic evaluation, CDA layer/copy behavior, count owner/controller context and named counts. Gaea's Avenger's controller source defect is excluded. Enables dynamic characteristics in all zones. | High: new characteristic contract plus CDA lowering, zone/layer/copy tests and four complete-card mappings. |
+| Chosen-source one-shot prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible complete cards after prerequisites | Needs typed damage-source choices across the legal source domain, per-instance selection results and next-event shields, including simultaneous events. Other ChooseADamageSource consumers have redirection/replacement blockers and are excluded. Enables source selection and captured one-shot shields. | High: selection domain, source identity/LKI, replacement ordering and simultaneous consumption contracts plus seven complete-card mappings. |
+
+The selected prerequisite has concrete consumers and a much smaller implementation
+boundary. Its zero immediate unlock estimate accounts for every later body,
+including the Ram source defect; first-error frequency is not an unlock estimate.
+This run establishes the complete shared event/context instead of accepting any
+partial card. The contract, reuse boundary and acceptance cases were stated before
+editing. The implement-engine skill supplied the engine workflow. No delegation,
+Go-card requirements, fallback, name branch or partial production registry was used.
+
+### Exact shapes, contexts, dependencies and reuse
+
+Engine API: `EachBeginCombat` and `YourBeginCombat`, both `stepPattern` values
+that implement `TurnStepPattern`. They match `EvtBeginCombat`; the latter adds
+`EventPlayerIsController` at detection. Existing `At`, `TurnStepBegins` and
+`AtNext` work through the shared service. Delayed patterns retain their original
+controller and trigger once. Native scheduling supplies the event; skipped
+combats emit none, and extra combats emit separate events.
+
+RON permanent-source rule:
+`TriggerA(AtTheBeginningOfCombatDuringAPlayersTurn(players), actions)`, with
+exactly bare `AnyPlayer` or `SinglePlayer(You)`. Existing action-list and target
+contexts apply. `Trigger_ThatPlayer` is a local typed step-player reference,
+separate from `You`. Factory calls build fresh `PlayerBinding` objects; each
+pending event saves its own player. Controller-only matching uses control at
+detection. Departure, return, phasing, control change and ability removal after
+detection cannot change saved players/controllers. Copies retain event players
+and use their own controller; clones retain independent pending state.
+
+Immediate temporary permanent layer effects in this body can use bare
+`UntilEndOfCombat`. Nested delayed-step bodies do not inherit the permission.
+Effects use the original source incarnation; absent or phased objects cannot
+receive a bonus. A phase cycle preserves identity. Control changes do not end a
+resolved bonus. The existing end-combat endpoint removes the bonus. Malformed
+arity/kinds, other player filters, unbound or escaping step players and unsupported
+durations reject at compilation. No `TriggerI`, RON delayed combat-start spelling,
+static/entry/cost/replacement context or installed temporary trigger is added.
+
+Reuse: `compileBoundStepTrigger`, `stepEventPlan`, `instanceBindings`,
+`TurnStepBegins`, `WhenEvent`, `BindPlayer`/`FromPlayer`, `stepPattern`,
+`EventPlayerIsController`, pending-event captures, APNAP placement, typed source
+references, continuous modifications, end-combat cleanup, stack copying and
+`Game.Clone`. No new event dispatcher, scratch slot or game-state subsystem exists.
+No payment or replacement behavior changes; cost rollback, damage replacement
+ordering and simultaneous damage are not new contracts in this slice.
+The inventory now assigns the event child its correct `player_filter` role.
+Expression support remains unverified in the inventory schema.
+
+### TDD and card-to-test mappings
+
+Tests first failed for missing `EachBeginCombat` / `YourBeginCombat` and
+unsupported RON combat-start events. The engine fixture initially omitted its
+core-qualified event names; those were corrected and the expected missing-pattern
+failure was confirmed alone. No assertion was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Battering Ram, complete combat-start clause | `TestRONBeginCombatBatteringRamClause` compiles the original first rule and tests event/resolution timing, own/opponent turns, source control, return, phasing before/after detection, phase cycles, ability removal, independent factories, copies, clones and combat expiry. `NativeAndControl` tests native steps, repeated combats and a new controller. The full record stays rejected. |
+| Goblin Flotilla and Johan, original combat-start event declarations | `TestRONBeginCombatConsumerBoundaries` uses each complete RON record, checks its remaining rejection, and executes the original event with a test-only body through native steps. This is event-clause evidence, not complete body gameplay. |
+| Typed event context | `TestRONBeginCombatBinding` covers multiple pending events, saved controllers, source return and clones. `CopiedEvent` proves event-player versus copied-controller behavior. `Invalid`, `ScopeRejection`, and `Inventory` cover malformed declarations, binding escape, unrelated/delayed duration contexts and nested semantic roles. |
+| Engine patterns | `TestBeginCombatPatterns` covers both patterns, definition validation, wrong events, repeated boundaries, separate captures and clones. `DelayedAndAPNAP` covers one-shot delayed patterns, absent sources, saved event players, clones and APNAP placement. `SkippedNativeStep` proves skipped combat generates no trigger and a later combat does. |
+
+No complete-card gameplay mapping is added. Aggregate engine-validated and
+behavior-verified collection totals remain null. Real-clause evidence is separate
+from full-card compilation and full-card behavior.
+
+### Actual gain, source defects and removal gates
+
+Actual immediate gain equals the estimate: **0 unique cards / 0 records**.
+All accepted records remain accepted. Exactly three first diagnostics advance:
+
+- Battering Ram: `ATQ.lines.ron:14:409`, unsupported combat pair filter
+  `IsCreatureType`.
+- Goblin Flotilla: `FEM.lines.ron:34:309`, unsupported action `CreateTriggerUntil`.
+- Johan: `LEG.lines.ron:140:271`, unsupported optional payment cost
+  `CreatePermanentLayerEffectUntil`.
+
+No other diagnostic changes. Inventory remains 72,962 nodes / 8,559 signatures;
+unknown-role occurrences decrease from 6,266 to **6,261**.
+All twelve RON source hashes are unchanged; no vocabulary source refresh is needed.
+Battering Ram's previously recorded delayed subject defect remains: the RON reads
+`Trigger_TheAttackingCreature`, but local `data/ATQ.json` says to destroy the
+blocking Wall. The defect is not hidden by an alias or repaired in this slice.
+No selected event declaration has a data defect or uncertain meaning.
+
+Full collection loading, full gameplay and runtime wiring do not meet the removal
+gate. Go definitions, generators, callers and DSL functions remain. No function
+removal is attempted, so no caller audit is used to authorize deletion.
+Initial edits to `.gitignore`, the execution design and the progress-ledger
+reorganization, plus untracked `mtgish-ron-completed.md`, remain outside this commit.
+Only this appended ledger entry is staged from the already modified ledger.
+
+### Validation and next work
+
+All required final checks passed. Only this slice is committed.
+
+| Command | Final result |
+| --- | --- |
+| Test-first focused engine and RON tests | Expected missing-pattern and unsupported-event failures confirmed |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestBeginCombat\|TestRONBeginCombat' -count=1` | PASS, including the final copied-event test, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint |
+| `make test` | PASS, repeated after lint |
+| `make build` | PASS, repeated after lint |
+| `go vet ./...` | PASS, repeated after lint |
+| `make lint` | PASS, zero issues; formatting of the new tests reviewed; no unrelated automatic changes |
+| `go test ./... -short -count=1` | PASS, additional engine-skill check, repeated after lint |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,786 compiled / 659 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 674 accepted / 312 rejected unique names; semantic counts above |
+| Baseline/final diagnostic and source comparison | PASS: only the three listed diagnostics advance; no accepted record regression; all twelve source hashes unchanged |
+
+No environmental or pre-existing check failure remains. No check was waived.
+The loader rejection is the remaining collection gap. One descriptive commit
+contains only this slice; its hash is reported in the final response.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source selection and next-event prevention for the seven Circle/Realm
+   consumers; source-domain and simultaneous-event contracts remain prerequisites.
+2. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare and
+   Plague Rats; keep Avenger's source defect separate.
+3. Installed temporary triggers shared by High Tide, Glyph of Life,
+   Reincarnation, Sandals of Abdallah, War Barge and Goblin Flotilla; inspect
+   event-specific scopes and captured objects before estimating unlocks.
+
+Changed slice files: engine `composable_events.go`,
+`composable_begin_combat_test.go`, `doc.go`; RON `compiler.go`, `triggers.go`,
+`source_tapped_duration.go`, `inventory.go`, `begin_combat_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended ledger
+entry. No second slice is started.

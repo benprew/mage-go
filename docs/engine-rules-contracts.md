@@ -5350,3 +5350,27 @@ covers two sources and both saved actors with four pending triggers.
 `Invalid` and `Inventory` cover declaration restrictions, lexical payment
 results, complete nested roles and strict loading. Existing land-entry tests
 retain actor/controller distinction, subtype checks and capture/LKI contracts.
+
+## Beginning-of-combat step patterns
+
+`EachBeginCombat` matches `EvtBeginCombat` for either player.
+`YourBeginCombat` also checks the source controller at event detection.
+Both use the shared `TurnStepPattern` service and support `At`, `TurnStepBegins`,
+and `AtNext`. They do not restrict detection to the first combat of a turn.
+Native combat-start execution emits the event before priority (CR 507.2,
+603.2b). A skipped combat emits no event (CR 603.2g).
+
+`TurnStepBegins` captures the event player for each pending trigger. Source
+control changes, departure, return, or ability removal after detection do not
+change that saved player or the original trigger controller (CR 603.3a).
+Copies retain event captures and use their own controllers. Clones retain
+separate pending state. The existing APNAP stack placement applies (CR 603.3b).
+Inactive or phased sources cannot generate new ordinary triggers. An absent or
+phased source cannot receive a temporary layer effect; a returned source cannot
+receive an effect for its previous incarnation (CR 400.7). End-of-combat layer
+bonuses end at the end of the combat phase (CR 511.2).
+
+Evidence: `TestBeginCombatPatterns`, `TestBeginCombatDelayedAndAPNAP`,
+`TestBeginCombatSkippedNativeStep`, and the `TestRONBeginCombat` tests.
+The engine delayed patterns are tested independently; the RON adapter does not
+add a new delayed combat-start spelling.

@@ -77,6 +77,10 @@
 // live source or attachment restriction before activation payment. Mana planning
 // uses the same pure check. Copies and resolution do not repeat it.
 //
+// Use [EachBeginCombat] or [YourBeginCombat] for combat-start triggers.
+// Combine [TurnStepBegins] with a player binding to save the event player.
+// Extra combats generate separate events; skipped combats generate none.
+//
 // Use [BindActivationHistory] and [WithActivationHistory] to keep activation
 // counts separate for each ability and source incarnation. [IfActivationsAtLeast]
 // reads the count at resolution. Countered activations count; copies do not add

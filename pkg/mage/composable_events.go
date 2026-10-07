@@ -3139,6 +3139,12 @@ var YourEndStep = stepPattern{EvtEndStep, true}
 // EachEndOfCombat matches the beginning of each end-of-combat step.
 var EachEndOfCombat = stepPattern{EvtEndOfCombat, false}
 
+// EachBeginCombat matches the start of each combat, including extra combats.
+var EachBeginCombat = stepPattern{EvtBeginCombat, false}
+
+// YourBeginCombat matches each combat start on the controller's turn.
+var YourBeginCombat = stepPattern{EvtBeginCombat, true}
+
 // YourUpkeep matches the beginning of the controller's upkeep.
 var YourUpkeep = stepPattern{EvtUpkeep, true}
 

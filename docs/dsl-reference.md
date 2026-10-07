@@ -4561,3 +4561,27 @@ supply rollback, game isolation, and replacement ordering.
 Evidence: `TestPutCounterCost*`, `TestRONCounterPlacementPayment*` and the existing
 `TestRONLandEntry*` event contracts. The complete FEM records for Thelon's Chant
 and Tourach's Chant now load and have gameplay tests for both their rules.
+
+## Beginning-of-combat RON triggers
+
+`TriggerA(AtTheBeginningOfCombatDuringAPlayersTurn(players), actions)` supports
+bare `AnyPlayer` and `SinglePlayer(You)`. Each combat begins a separate event,
+including extra combats. `You` uses the source controller at detection.
+`Trigger_ThatPlayer` is a typed, local event-player reference. Each factory call
+creates a separate binding, and each pending event saves its player.
+
+The adapter uses `TurnStepBegins` with `EachBeginCombat` or `YourBeginCombat`.
+Supported action lists retain their existing target and payment contracts.
+Temporary permanent layer effects in this immediate body can use
+`UntilEndOfCombat`. A nested delayed-step body does not inherit that permission.
+Other player filters, malformed tuples, and event references outside their body
+are rejected during compilation. This does not add `TriggerI`, combat-scoped
+installed triggers, optional nonmana effect payments, or conditional attack tap
+rules.
+
+`TestRONBeginCombatBinding`, `BatteringRamClause`, `NativeAndControl`,
+`ConsumerBoundaries`, `Invalid`, `ScopeRejection`, and `Inventory` cover this
+contract. The Battering Ram test executes its complete combat-start RON clause;
+the rest of that card remains rejected. Goblin Flotilla and Johan tests execute
+their original event declarations with test-only bodies. These mappings do not
+claim complete gameplay coverage for any of the three cards.

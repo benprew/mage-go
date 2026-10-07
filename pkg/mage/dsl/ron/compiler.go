@@ -33,6 +33,7 @@ type scope struct {
 	delayedStep       bool
 	sourceAttack      bool
 	sourceBlock       bool
+	beginCombat       bool
 	defendingPlayer   *sourceCombatPlayerPlan
 	combatOpponent    *permanentEventPlan
 	targetNamespace   string
