@@ -174,7 +174,7 @@ func TestRONEndStepInterveningDeclarations(t *testing.T) {
 		`PermanentPassesFilter(ThisPermanent, DealtDamageToAnyPlayerThisTurn(AnyPlayer))`,
 		`PermanentPassesFilter(ThisPermanent, DealtDamageToAnyPlayerThisTurn(Opponent()))`,
 		`PermanentPassesFilter(ThisPermanent, DealtDamageToAnyPlayerThisTurn)`,
-		`ACreatureOrPlaneswalkerDiedThisTurn(IsCardtype(Creature))`,
+		`ACreatureOrPlaneswalkerDiedThisTurn(IsCardtype(Planeswalker))`,
 	} {
 		src := fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),%s,ActionList([GainLife(Integer(1))]))])`, condition)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")

@@ -6712,3 +6712,36 @@ Evidence: `TestPlayerControlsSavedIntervening`, `TestPlayerControlsSavedDeclarat
 `TestOpponentControlsMoreThanYou`, and the RON upkeep-player tests. Existing
 `PlayerControls`, opposing-control, storage-upkeep and event-capture tests remain
 regressions. Land Tax and Ghazbán Ogre's unresolved bodies remain compile errors.
+
+## End-step history conditions
+
+`SourceAttackHistoryThisTurn(attacked bool) StateCondition` reads attack
+history for the exact source incarnation. With no captured incarnation it
+requires a live, unphased source. With a captured incarnation it permits the
+original live or phased source, or its retained departure information. Unknown
+incarnations fail both the positive and negative condition. Control changes,
+combat exit and source departure do not erase an attack declaration. Direct
+placement in combat does not record an attack declaration. A returned card's
+history cannot replace the old history (CR 400.7, 508.1, 608.2i, 702.26).
+The existing live-only `SourceAttackedThisTurnCondition` retains its contract.
+
+`CreatureDiedThisTurnCondition() StateCondition` checks the shared current-turn
+creature death count. It includes tokens and either player's creatures. It does
+not count noncreatures, bounce, exile, prevented destruction or regeneration.
+It makes no choices and does not save a count. Cleanup clears the shared history;
+a clone retains its own history. Existing simultaneous death tracking is reused.
+
+End-step intervening conditions run at detection and resolution (CR 603.4,
+608.2a). `SourceTappedStateWithLKI(false)` supplies current or retained untapped
+state (CR 608.2h); source return cannot replace its old incarnation. A copied
+trigger reads its own controller and retains its original source identity.
+Information reads do not give permission to act on departed or phased objects.
+No new payment, targeting, replacement-order or simultaneous-movement contract
+is added.
+
+Evidence: `TestSourceAttackHistoryThisTurn`, `TestCreatureDiedThisTurnCondition`,
+existing `TestSourceTappedStateWithLKI*`, and RON `TestRONEndStepSourceState`.
+Complete Osai Vultures behavior uses `TestRONOsaiVulturesEndStep`, `Activation`
+and `NativeSteps`: native steps for both controllers, one counter per end step,
+zero/late/multiple/token deaths, counter payments and rollback, independent
+pending bonuses, cleanup, phasing, departure/return, copies and clones.

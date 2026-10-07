@@ -612,6 +612,12 @@
 // Target legality uses the action controller and source. Modal activation keeps
 // the first target choice. A copy uses its controller's permission to retarget.
 //
+// Use [SourceAttackHistoryThisTurn] for the original source's current-turn
+// attack history. A captured incarnation keeps that history after departure.
+// Use [CreatureDiedThisTurnCondition] for a creature death under either player.
+// Both conditions read current history at detection and resolution.
+// Cleanup clears this history. Information reads do not permit absent actions.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

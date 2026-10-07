@@ -5672,3 +5672,32 @@ Spiritual Sanctuary has a complete RON gameplay mapping in
 `TestRONSpiritualSanctuary` and `TestRONSpiritualSanctuaryLifecycle`. Land Tax
 still needs its multi-card search; Ghazbán Ogre still needs its indefinite
 control action. Their condition probes do not establish complete gameplay.
+
+## RON end-step source state and creature death conditions
+
+In `TriggerI(AtTheBeginningOfAPlayersEndStep(players), condition, actions)`,
+`players` can be the symbol `AnyPlayer` or `SinglePlayer(You)`. This slice adds:
+
+- `PermanentPassesFilter(ThisPermanent, IsUntapped)`.
+- `PermanentPassesFilter(ThisPermanent, DidntAttackThisTurn)`.
+- `ACreatureOrPlaneswalkerDiedThisTurn(IsCardtype(Creature))`.
+
+The first two filters are symbols. Other subjects, filter tuples, death filters,
+and contexts remain unsupported. The spelling of the third condition does not
+permit a planeswalker-only death filter. All declarations are checked before
+factory construction.
+
+Lowering uses `SourceTappedStateWithLKI(false)`,
+`SourceAttackHistoryThisTurn(false)` and `CreatureDiedThisTurnCondition()` with
+`TurnStepBegins` and `WithInterveningIf`. Each condition is read at detection and
+resolution. The resolving source keeps its original incarnation. An absent source
+can supply information but cannot receive counters or a bonus.
+
+Osai Vultures has a complete gameplay mapping in `TestRONOsaiVulturesEndStep`,
+`Activation` and `NativeSteps`. `TestRONEndStepSourceState` and `StateRecords`
+provide prerequisite evidence for Erg Raiders and Voodoo Doll. Their complete
+records still reject at resolving `Unless` and activation `XIs`, respectively.
+`TestRONEndStepStateDeclarations` preserves strict declaration rejection;
+`StateRecords` covers all four selected records, independent factories,
+semantic roles and atomic loading. No complete gameplay claim is made for
+those two blocked names.

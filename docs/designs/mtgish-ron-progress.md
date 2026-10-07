@@ -33080,3 +33080,168 @@ Changed files: engine `player_count_condition.go`, `upkeep_player_condition_test
 `composable_conditions.go`, `composable_events.go`, `doc.go`; RON
 `upkeep_player_condition.go`, its tests, `storage_land.go`, `inventory.go`,
 `inventory_test.go`; API/rules docs and this ledger entry. No second slice started.
+
+## Run 2026-10-07: END-STEP-HISTORY-CONDITIONS
+
+Status: complete shared end-step condition slice. Stop after this slice.
+Collection gameplay, runtime loading and removal gates remain unmet.
+
+### Evidence, comparison and selection
+
+Initial user changes were `.gitignore`, the execution design and this ledger;
+`mtgish-ron-completed.md` was already untracked. They remain preserved and
+unstaged. The ledger commit includes only this appended entry, without the
+user's pending history reorganization.
+
+Fresh baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading exited 1 for unsupported records, not for a build failure:
+**1,871 compiled / 574 rejected records**, **722 accepted / 264 rejected unique
+names**, across 2,445 records and 986 names. Complete records and nested forms
+were inspected for all names in the comparison below. Reprints count once.
+The engine reference, design, progress, vocabulary snapshot, selected compiler
+and engine code, API/rules contracts, CR 603.3a, 603.4, 603.5 and 608.2a/h/i
+were read. Local `data/ARN.json` and `data/LEG.json` confirm the selected Oracle
+requirements. No Go card definitions supplied requirements.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Estimated effort |
+| --- | --- | --- | --- |
+| End-step history conditions, selected | Erg Raiders, Voodoo Doll, Osai Vultures: **1** immediate unlock, plus shared condition prerequisites for **2** names. Four records total. | Raiders still needs resolving `Unless` with its controller acquisition history; Doll still needs the fixed-X `XIs` activation modifier. Supports original-source attack history, untapped information and current creature-death history at both intervening-if boundaries. | Low/moderate: one existing step adapter, two pure engine conditions, existing LKI/history services, declaration and lifecycle tests plus one complete card. |
+| Legal damage-source enumeration and consuming choices | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential complete unlocks after enumeration and adapters. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage: **4** additional blocked names. | Enumeration alone unlocks zero. CR 609.7a also needs referred stack/effect/delayed sources and face-up command objects. The four other bodies require partial prevention, continued damage/reflection, redirection or actual prevented-amount results. | High: complete source universe, retained information, local choice bindings and consuming shields; broad damage-order and gameplay evidence. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean potential unlocks. Gaea's Avenger and Wood Elemental: **2** additional blocked names. | All-zone characteristics need owner/controller context, CDA/copy/layer integration and all readers. Avenger has the recorded controller-filter defect; Elemental needs entry sacrifice results. | High: cross-zone engine readers and layers followed by count adapters and comprehensive gameplay. |
+
+Selection rationale: three complete records expose a small shared end-step
+condition gap, with one clean consumer and two concrete downstream consumers.
+The selected slice provides credible immediate and prerequisite value with much
+less integration risk and effort than the seven/five-card alternatives. The
+comparison uses the complete nested bodies, not first-error frequency. The
+contract, reuse boundary and acceptance cases were stated before edits.
+The `implement-engine` skill guided the missing pure engine contracts. No
+subagents, removed card/set skills, Go stubs or fallbacks were used.
+
+### Exact contexts, signatures and engine reuse
+
+RON supports these additional conditions in
+`TriggerI(AtTheBeginningOfAPlayersEndStep(players), condition, actions)`:
+
+- `PermanentPassesFilter(ThisPermanent, IsUntapped)`.
+- `PermanentPassesFilter(ThisPermanent, DidntAttackThisTurn)`.
+- `ACreatureOrPlaneswalkerDiedThisTurn(IsCardtype(Creature))`.
+
+`players` retains the existing symbol `AnyPlayer` or `SinglePlayer(You)` shape.
+The two source filters are symbols, not zero-argument tuples. Other subjects,
+malformed arities, unbound references and death filters remain errors. This
+slice adds no upkeep, static, activation, resolving-action, entry or cost context
+for these condition signatures. Existing end-step conditions retain their path.
+The semantic inventory now classifies the death condition's nested filter and
+card type; role classification remains separate from support.
+
+New engine APIs:
+
+- `SourceAttackHistoryThisTurn(attacked bool) StateCondition` reads exact
+  source-incarnation history. Without a capture it requires a live unphased
+  source; with a capture it accepts original live/phased or retained departure
+  identity. Unknown identity fails both variants. Departure, return, control
+  changes and combat exit cannot substitute a new object's history. Direct
+  insertion into combat does not record an attack declaration.
+- `CreatureDiedThisTurnCondition() StateCondition` reads the shared current-turn
+  creature death count, including tokens and either player's creatures.
+
+The adapter reuses `SourceTappedStateWithLKI(false)`, `TurnStepBegins`,
+`EachEndStep`/`YourEndStep`, `WithInterveningIf`, source incarnation captures,
+per-instance event-player bindings, stack copy/clone frames, retained zone
+information and `TurnTrackers`. Both boundaries read current state/history.
+Cleanup clears history; native cleanup resolves pending stack objects before
+that clear. Counter placement/removal, temporary bonuses and transactional costs
+remain the existing services. Information does not permit actions on an absent
+or phased source. Existing live-only source attack conditions remain unchanged.
+No global action slot, parallel history system, game-time declaration panic,
+card-name executor or partial production registry was introduced.
+
+### TDD and card-to-test mappings
+
+The first RON test run had a counter int/uint8 fixture error. After that was
+fixed, tests failed at the expected unsupported `IsUntapped`,
+`DidntAttackThisTurn` and creature-death conditions. Engine tests failed at the
+two missing APIs before implementation. Subsequent fixture corrections supplied
+owners for destroyed objects, used the engine's runtime ability/counter APIs,
+and reapplied layers after phased cleanup. A cleanup-after probe initially
+expected history to clear before its pending trigger resolved; it now verifies
+native stack resolution before history clearing. No rule assertion was weakened.
+
+An existing declaration test rejected the newly supported creature death shape;
+it now rejects the still unsupported planeswalker filter. The existing Voodoo
+Doll boundary regression now asserts its actual `XIs` blocker. Fixed inventory
+counts reflect the one accepted record, with an explicit Osai Vultures rejection
+regression. Initial lint found missing slice capacity in the two-source native
+fixture; it was corrected. Automatic lint import formatting was reviewed.
+
+| Card / contract | Test mapping and coverage |
+| --- | --- |
+| Osai Vultures, complete LEG record | `TestRONOsaiVulturesEndStep`: paid/unpaid 1W casting and rollback, flying, zero/late/one/multiple/token/noncreature deaths, exile, bounce, regeneration, indestructibility, each end step, resolution timing, source phasing/return/control, copies and clones, cleanup history and pending cleanup timing. |
+| Osai Vultures activated rule and interactions | `TestRONOsaiVulturesActivation`: failed counter payments, two independent paid activations, no early bonus, additive +1/+1 effects, departure/return, phasing/phase cycle, control changes, cleanup and clone isolation. `NativeSteps`: both controllers, earned counters from native end steps, no stale history after cleanup, two separate factories and counter-funded bonuses. |
+| Erg Raiders and Voodoo Doll condition prerequisites | `TestRONEndStepSourceState`: source states checked at both boundaries, controller-only end step, false detection/recheck, original source after departure/return, phasing, control, copied controllers and independent clone rechecks. `TestRONEndStepStateRecords`: conditions taken from all complete records with a test-only life-gain body; full bodies retain rejection. These are prerequisite probes, not complete-card mappings. |
+| Engine retained attack history | `TestSourceAttackHistoryThisTurn`: positive/negative history, exact source identity, departure/return, unknown incarnations, control changes, phasing, clone reads, cleanup and direct-combat insertion. |
+| Engine creature death condition | `TestCreatureDiedThisTurnCondition`: empty and noncreature histories, token death, clone isolation, cleanup and invalid nonpermanent source declaration for the source-history API. Existing death-tracker and tapped-LKI regressions remain intact. |
+| Declarations, inventory, instances and atomic loading | `TestRONEndStepStateDeclarations`, `StateRecords`: wrong arities/types, symbol/tuple distinction, unbound/incompatible subjects, exact death filter, all four selected records and reprint counts, separate factory IDs, strict accepted loading, invalid collection rejection and nested semantic roles. Existing `TestRONEndStepIntervening*`, `TestRONCounterInformationInventoryAndBoundaries` and `TestInventory*` pass. |
+
+New complete-card gameplay mappings: **1**, Osai Vultures. Compilation and
+prerequisite probes remain separate from gameplay coverage. Aggregate
+engine-validation and behavior counts remain null. The slice adds no new
+replacement ordering, damage, simultaneous-operation, target legality or zone
+movement service; established services and their regressions are retained.
+
+### Final measurements and validation
+
+Estimated gain **1 unique name / 1 record**; actual **1 / 1**, exactly Osai
+Vultures. All baseline accepted names remain accepted. Strict loading reports
+**1,872 compiled / 573 rejected records**, **723 accepted / 263 rejected names**.
+It still exits 1 and supplies no partial registry. Exactly three other record
+diagnostics advance: both Erg Raiders reprints now reject `unsupported action
+(Unless)`; Voodoo Doll rejects `unsupported activation modifier (XIs)`.
+Every other diagnostic is unchanged.
+
+Final semantic inventory: **72,962 occurrences / 8,557 signatures / 5,071
+unknown-role occurrences**. The two fewer unknown descendants relative to the
+prior ledger are the death filter and card type. All twelve RON source hashes
+are unchanged. No source-data defect was corrected; no vocabulary source
+refresh is needed. The previously recorded CDA/source defects remain blockers.
+
+All required checks pass on the final state. There is no environment or
+pre-existing validation blocker. The stale boundary assertion and initial lint
+capacity issue were corrected before the final checks. Lint import formatting
+was reviewed; only this slice's files changed. Focused and short engine checks
+were rerun after lint.
+
+| Command | Final result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| Focused engine/RON end-step history, Osai Vultures, declarations, records, prior end-step/counter regressions and inventory tests, `-count=1` | PASS after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` (engine skill) | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS for working and staged changes. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,872 compiled / 573 rejected records. The final report exactly matches the pre-lint report. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 723 accepted / 263 rejected names; 72,962 occurrences / 8,557 signatures / 5,071 unknown-role occurrences. The final report exactly matches the pre-lint report. |
+
+API/rules docs describe only the established behavior. Go definitions, runtime
+wiring, generators and DSL exports remain unchanged. The removal gate is closed;
+complete loading and complete gameplay are not established. No caller audit
+authorizes DSL deletion. Initial user changes and the untracked completed-history
+document remain unstaged. This is the only slice committed in this run.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete damage-source enumeration and consuming choice/prevention adapters
+   for the seven clean consumers; preserve all CR 609.7a source categories.
+2. All-zone count CDA integration for the five clean consumers.
+3. Parameterized bands-with-other formation and damage-assignment contracts for
+   the five land grants and three additional consumers.
+
+Changed slice files: `pkg/mage/end_step_history_condition.go` and its tests,
+`pkg/mage/doc.go`; RON `end_step_intervening.go`, `end_step_state_test.go`,
+`end_step_intervening_test.go`, `counter_information_test.go`, `inventory.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this appended ledger entry. No second slice started.

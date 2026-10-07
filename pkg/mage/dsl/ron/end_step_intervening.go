@@ -12,6 +12,18 @@ func compileEndStepIntervening(n Node, ctx scope) (optionFactory, error) {
 
 func compileEndStepCondition(n Node) (mage.StateCondition, error) {
 	switch n.Name {
+	case "ACreatureOrPlaneswalkerDiedThisTurn":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter := n.Args[0]
+		if err := arity(filter, 1); err != nil {
+			return nil, err
+		}
+		if filter.Name != "IsCardtype" || filter.Args[0].Kind != Symbol || filter.Args[0].Name != "Creature" {
+			return nil, unsupported(filter, "end-step death filter")
+		}
+		return mage.CreatureDiedThisTurnCondition(), nil
 	case "NoPermanentsPassFilter":
 		if err := arity(n, 2); err != nil {
 			return nil, err
@@ -34,6 +46,14 @@ func compileEndStepCondition(n Node) (mage.StateCondition, error) {
 			return nil, unsupported(source, "end-step condition source")
 		}
 		filter := n.Args[1]
+		if filter.Kind == Symbol {
+			switch filter.Name {
+			case "IsUntapped":
+				return mage.SourceTappedStateWithLKI(false), nil
+			case "DidntAttackThisTurn":
+				return mage.SourceAttackHistoryThisTurn(false), nil
+			}
+		}
 		if filter.Name != "DealtDamageToAnyPlayerThisTurn" {
 			return nil, unsupported(filter, "end-step history filter")
 		}
