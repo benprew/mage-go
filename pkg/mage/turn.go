@@ -31,6 +31,13 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
 	g.recordActiveTurnStart()
+	g.clearTurnStartSickness()
+	if step == Untap {
+		g.effects.Apply(g)
+		if g.effects.ApplyReplacements(&beginUntapStepAction{playerID: g.ActivePlayerObj().PlayerID()}, g) == nil {
+			return
+		}
+	}
 	if step == FirstStrikeDamage {
 		g.effects.Apply(g)
 		if !g.combat.HasFirstStrikers(g) {

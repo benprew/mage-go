@@ -5854,3 +5854,30 @@ permanent source or declared permanent target. Regeneration prohibition uses
 `Until` with `GrantKeywordModification(subject, CantRegenerate)`; it does not
 prevent creation of a regeneration shield. Each factory keeps separate target
 bindings. Unsupported operations and durations fail compilation.
+
+### RON static untap-step rules
+
+Permanent rules accept `EachPlayerEffect(AnyPlayer, [SkipsUntapStep])`, with
+exactly one bare operation. It lowers to `Static(SkipUntapSteps())` and replaces
+the whole step before phasing and untap actions. The existing replacement
+pipeline chooses and rechecks competing replacements. Other player selectors,
+tuple operations, multiple operations and resolving/cost/entry contexts remain
+errors. Stasis also uses the existing controller-upkeep payment and sacrifice
+adapters; the skip does not skip that upkeep.
+
+A static `If(condition, [EachPlayerEffect(AnyPlayer,
+[CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(n), filter)])])`
+uses `LimitUntapsDuringStepIf(filter, n, condition)`. The condition uses the
+existing static-condition grammar and typed source/Aura-host references;
+unbound targets and incompatible references remain errors. The limit is one
+nonnegative literal and uses the existing permanent filter grammar. No other
+all-player operation is supported inside this conditional body, and mixed
+bodies remain rejected. This form does not add a target or mutable binding.
+
+Winter Orb's complete record checks `PermanentPassesFilter(ThisPermanent,
+IsUntapped)`. The engine reads that condition after phasing but before the untap
+selection. If a tapped Orb untaps in the same operation, the operation keeps
+its unrestricted selection. The next untap step reads its new state. Separate
+instances, control changes and cloned games retain independent source contexts.
+Stasis and Winter Orb have complete RON gameplay mappings in
+`static_player_untap_test.go`; identical reprints also pass definition validation.

@@ -34332,3 +34332,173 @@ Changed files: engine `composable_continuous.go`, `blocking_requirement.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended entry.
 Only this slice is committed after checks pass. Its commit hash is reported in
 the final response. No second slice is started.
+
+## Run 2026-10-07: STATIC-PLAYER-UNTAP-RULES
+
+Status: complete implementation slice. This run stops after this slice.
+Initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked `mtgish-ron-completed.md` are preserved. Only this appended
+entry is staged from the ledger; its existing restructuring is excluded.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests, short engine tests and `make build` passed. Fresh
+strict and semantic loaders rejected the unsupported collection, rather than
+failing to build: **1,914 compiled / 531 rejected records**, **735 accepted /
+251 rejected unique names**, out of 2,445 records / 986 names. Semantic inventory
+has 72,962 occurrences, 8,557 signatures and 4,600 unknown-role occurrences.
+Complete candidate records and nested forms were inspected. Reprints count once;
+first diagnostics do not determine full-card unlock estimates.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Static player untap rules, selected | Stasis, Winter Orb (2); **2** full cards. | Stasis needs a whole-step replacement and turn-start control independent of untap execution. Winter Orb needs a conditional wrapper for existing limits. All other record forms already have adapters. Enables live player-step rules, replacement checks before step actions, and conditions at simultaneous selection. | Moderate: two reusable engine APIs, two compiler paths, shared turn-start prerequisite, native card and lifecycle tests. |
+| Complete damage-source choices and consuming shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Dark Sphere; Eye for an Eye; Jade Monolith; Reverse Damage (11); **0** for enumeration alone, **7** credible Circle/Realm unlocks after shields. | Live enumeration exists, but retained references and face-up command-zone sources need contracts. The other four need arithmetic, prevented results, redirection or continuations. Enables complete CR 609.7 choices and source-bound consuming shields. | High: source categories, choice scopes, consumption, batch and replacement interactions. |
+| Captured combat-rule collections | Festival, Siren's Call, Runesword (3); **1** immediate full card, Festival. | Siren's Call also needs current active-player collections, control-history exclusions and its full future destruction filter. Runesword needs a dynamic damage-history rule and graveyard replacement. Enables collection attack permissions/requirements and regeneration rules. | Moderate for the first shape; high for all three records. Lower immediate multi-card gain. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria (8); **0** for an adapter alone, **8** after engine and consumers. | Parameterized band formation and damage assignment remain missing. Consumers include static grants, named token abilities and removal of all variants. Enables exact band identity and combat assignment. | High: combat engine, layers, tokens, removal and eight gameplay mappings. |
+
+Selection rationale: two complete records can execute with existing payment,
+trigger, layer and untap services plus small shared prerequisites. The larger
+multi-card candidates require substantially more subsystem work before their
+consumers can execute. Scope, contract, reuse boundary and acceptance cases were
+stated before edits. The `implement-engine` skill supplied the engine workflow.
+No agents, removed card skills, stubs or Go card requirements were used.
+
+### Signatures, contexts, dependencies and engine reuse
+
+New engine APIs:
+
+- `SkipUntapSteps() StaticRule`: use with `Static`. Submit a typed
+  `beginUntapStepAction` through `ApplyReplacements` before starting the step.
+  Replacement identity includes source incarnation and the runtime rule ID.
+  The affected player selects competing replacements. Rechecks reject departed,
+  phased or suppressed sources. A returned source's new ability can supply its
+  own rule; it cannot restore a departed incarnation's replacement.
+- `LimitUntapsDuringStepIf(filter PermanentFilter, maximum int,
+  condition StateCondition) StaticRule`: extends existing `untapLimitRule` and
+  `chooseStepUntaps`. Validate negative limits, nil conditions and invalid
+  references at definition validation. Read current source context after phasing
+  and layers and before selection; only true conditions contribute quotas.
+
+RON permanent rule shape: `EachPlayerEffect(AnyPlayer, [SkipsUntapStep])`, with
+one bare operation. Conditional shape:
+`If(condition, [EachPlayerEffect(AnyPlayer,
+[CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(n), filter)])])`.
+Reuse the existing static-condition grammar, typed source/Aura-host references,
+nonnegative fixed limit and permanent filters. Winter Orb uses
+`PermanentPassesFilter(ThisPermanent, IsUntapped)`. Invalid/unbound/incompatible
+references, malformed symbols, dynamic/negative limits, other player selectors,
+mixed bodies and other conditional operations remain errors. Resolving actions,
+costs and entry contexts gain no static player declaration.
+
+Reuse `Static`, printed ability suppression, cycle replacements, affected-player
+ordering/rechecks, `StateContext`, per-factory effect construction, effect clone
+metadata, untap quotas, simultaneous untap, phasing, upkeep snapshots, optional
+transactional mana payment and source sacrifice. No parallel turn schedule,
+untap planner, zone service or global action-result state is added.
+
+Stasis skips phasing and all untap-step actions. Stun counters, pending untap
+restrictions and mana stay untouched by the skipped step. Upkeep still occurs.
+Ordinary untap effects remain legal. Source control does not change either
+all-player rule. Recipient ability removal does not remove a source's rule.
+An Orb that starts tapped permits the complete unrestricted operation even if
+it untaps during that operation. The next actual step reads its new state.
+Each installation and cloned game retains its own source context.
+
+A turn-start prerequisite was discovered during gameplay review: sickness was
+cleared only inside `doUntap`. `clearTurnStartSickness` now runs in native step
+execution, including skipped untap and turns that start at upkeep. It checks
+current controller and `turnControlGained < CurrentTurn`, including phased
+and face-down objects. New entries and current-turn control changes remain sick. Existing
+turn-history setters remain read/record operations. Other existing untap callers
+and legacy quota fields remain compatible. Rules consulted: CR 302.6, 500.11,
+502.1–4, 503.1a, 611.3a–b, 614.10 and 614.10a.
+
+### TDD and gameplay mappings
+
+Engine tests first failed for missing `SkipUntapSteps` and
+`LimitUntapsDuringStepIf`. RON tests then failed for unsupported `SkipsUntapStep`
+and conditional `EachPlayerEffect`. The later turn-control test failed because
+skipping untap kept older creatures sick. No behavior assertion was reduced.
+Fixture corrections supplied an owner for destruction, used a stack object's
+ID field and direct ability-copy API, and accounted for clones using
+`SearchPlayer` rather than the interactive accepting player. A new test file
+initially collided with an existing filename; the original file was restored
+byte-for-byte and new tests use `static_player_untap_test.go`.
+
+An initial turn-start fix also ran from setters; broad checks caught the
+Instill Energy attack-permission regression. The control check was moved to
+native execution, preserving setter behavior. The unchanged regression and
+new skipped-untap turn-control tests pass. Initial broad failures were caused
+by this implementation, not the environment or a pre-existing failure.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Stasis, full LEA record and six identical records | `TestRONStaticUntapCards`: both players, skipped whole-step timing, tapping, departure, phasing, ability removal, recipient ability removal, control, return, clone isolation and other untap effects. `Casting`: mana cost, failed-payment rollback and entry timing. `TestRONStasisUpkeep`: paid/declined/unaffordable payment, controller upkeep, control, departure/return, pending clones and copied-trigger controller/payment. `NativeTurn`: actual skipped untap, turn-start control, paid native upkeep, later unpaid sacrifice and resumed untap. |
+| Winter Orb, full LEA record and six identical records | `TestRONStaticUntapCards`: both players, one-land limit, tapped/untapped source, source lifecycle, ability removal and independent clones. `Casting`: two mana and entry timing. `Interactions`: Stasis suppresses the whole operation, tapped Orb untaps without limiting that same operation, next-step recheck, separate instances and phased opponent source. |
+| Definition/lexical boundaries | `TestRONStaticUntapDeclarations`: malformed operations/selectors, multiple operations, negative/dynamic limits, host/target scope, malformed condition, forbidden conditional skip. `ReprintsAndInventory`: all twelve records validate and nested roles remain correct. Existing inventory tests assert 1,926/519 and explicitly forbid rejection of both cards. |
+| Whole-step engine contract | `TestStaticUntapSkipWholeStep`: both active players, no phasing, no stun or pending-skip consumption, no step transition/mana emptying, resumed native untap and independent clones. `ReplacementRecheck`: both affected-player choices and source departure before the skip replacement. `TurnControl`: previous-turn control, fresh entry, phasing, face-down state, opponent turns, extra turns and clones. |
+| Conditional selection | `TestConditionalUntapLimitDecision`: condition true/false, phase-in before decision, suppressed ability, source untap versus next decision and clone state. `Declarations`: nil/invalid condition refs and negative limit. Existing `TestUntapLimits*`, `TestRONUntapLimits*`, `TestRONStaticUntap*`, `TestRONAttackPermissionRealCards` and `TestContinuousControl*` retain their contracts. |
+
+Two complete-card gameplay mappings are added. Compilation is separate from
+behavior coverage; collection-wide engine-validation and behavior totals remain
+null. No collection-wide gameplay claim is made.
+
+### Measurements, defects and validation
+
+Actual gain matches the estimate: **2 unique names / 12 records**, exactly
+Stasis and Winter Orb. No previously accepted record or name is lost. Final
+strict and semantic loading report **1,926 compiled / 519 rejected records**,
+**737 accepted / 249 rejected names**. Unsupported collection loading still
+exits 1 and publishes no partial production registry. Semantic counts remain
+72,962 occurrences / 8,557 signatures / 4,600 unknown-role occurrences.
+
+Local `data/LEA.json` Oracle text agrees with both complete records. No new source
+defect or source correction is needed. RON files and hashes are unchanged, so
+the vocabulary source snapshot is not regenerated. Known source defects outside
+this slice remain unresolved. No environment blocker was found.
+
+All required checks passed on the final implementation. Lint reported zero
+issues in both runs. Automatic changes were limited to import formatting and
+function layout in the new files; they were reviewed. Final focused and broad
+checks were repeated after the last control-state assertion and lint.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine and RON static untap, Stasis upkeep/native turn, conditional/static limits, control history and unchanged attack-permission regressions with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after fixing the setter regression; repeated after final lint. |
+| `make test` | PASS after fixing the setter regression; repeated after final lint. |
+| `make build` | PASS, including the final implementation. |
+| `go vet ./...` | PASS, including the final implementation. |
+| `make lint` | PASS, zero issues in both runs. |
+| `go test ./... -short -count=1` | PASS; additional skill verification after final lint. |
+| `git diff --check` | PASS, including final docs and ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,926 compiled / 519 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same records; 737 accepted / 249 rejected names. |
+| Snapshot audit | All twelve file hashes match; no source change. |
+
+Remaining diagnostics include Animate Artifact's unsupported conditional
+`AddCardtype`, Animate Dead's `EnchantGraveyardCard`, and Balance's all-player
+`SacrificeAllPermanentsExceptForNum`. Comparing positioned baseline/final
+rejections finds exactly twelve removed issues and zero new rejected records.
+
+Complete loading, collection gameplay, embedded runtime startup and test
+migration remain below the removal gate. No Go definitions or generators are
+removed. No whole-repository caller audit authorizes DSL deletion in this run.
+The new engine services remain reusable, and API/rules documentation describes
+only established behavior. Only this validated slice is committed; the final
+response reports its hash. Existing user changes remain unstaged.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Complete retained-reference and command-zone damage-source enumeration,
+   then consuming shields for the six Circles and Greater Realm.
+2. Parameterized bands with others and its eight consumers.
+3. Combat-rule collections alongside exact control/damage history prerequisites
+   for Festival, Siren's Call and Runesword.
+
+Changed files: engine `static_untap.go`, `static_untap_test.go`, `untap_limit.go`,
+`game_mutator.go`, `turn.go`, `doc.go`; RON `public_visibility.go`,
+`conditional_static.go`, `untap_limit.go`, `static_player_untap_test.go`,
+`inventory_test.go`; API/rules docs and this appended ledger entry.
+No second slice is started.

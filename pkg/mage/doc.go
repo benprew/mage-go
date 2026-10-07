@@ -455,6 +455,11 @@
 // layers in one application, even if the source loses its ability in layer 6.
 // Each later application uses current membership.
 //
+// Use [SkipUntapSteps] with [Static] to replace each player's whole untap step.
+// Source departure, phasing and ability removal stop the replacement.
+// Turn-start control checks still permit creatures controlled from earlier turns.
+// Use [LimitUntapsDuringStepIf] to check a condition before untap selection.
+// Phasing precedes this check. Untapping cannot change the saved selection.
 // Use [LimitUntapsDuringStep] with [Static] for a fixed untap-step limit.
 // The active player chooses a set that satisfies all limits before untap.
 // Type overlap counts against each limit. Other untap effects remain legal.

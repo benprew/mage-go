@@ -6986,3 +6986,41 @@ cover real casting/activation, timing and legality, rollback, captured identitie
 phasing, ability removal, independent pending targets, copied spell retargeting,
 clone isolation, native blocking/destruction, and cleanup. Whippoorwill and
 Runesword retain separate unsupported operations.
+
+## Static untap-step skipping and conditional limits
+
+`SkipUntapSteps() StaticRule`, used with `Static`, replaces each player's whole
+untap step (CR 500.11, 614.10). `RunStepWithPriority` applies layers and submits
+`beginUntapStepAction` to the shared replacement pipeline before setting the
+step or executing turn-based actions. The affected player chooses between
+competing replacements; source presence, incarnation and runtime ability are
+rechecked after each replacement. Source departure, phasing or ability removal
+stops the rule. No LKI permits an absent static source to keep it active.
+Multiple sources do not queue skips for later steps.
+
+A skipped step does not phase objects in, consume per-permanent untap skips,
+remove stun counters, untap objects, send untap events or empty mana pools.
+Native turn-start control checks still clear summoning sickness for objects
+controlled from an earlier turn (CR 302.6), including phased objects. Entries
+and control changes during the current turn remain sick. Test setters only
+record turn history; they do not run this control check. Other untap effects
+remain legal. Upkeep still occurs, and its triggers use their saved controller
+and source incarnation through the existing payment and sacrifice services.
+
+`LimitUntapsDuringStepIf(filter PermanentFilter, maximum int,
+condition StateCondition) StaticRule` extends the existing untap limit service.
+Definition validation rejects negative limits, nil conditions and invalid
+condition references. The condition reads the current source context after
+phasing and layer evaluation, before any selections or untaps (CR 502.1–3).
+Each true condition contributes a quota to the existing simultaneous selection.
+Untapping the source cannot change that operation's quotas. A later step reads
+new conditions. Overlapping limits and stun replacements keep their existing
+contracts. Effect clones copy source metadata; selections remain local.
+
+Evidence: `TestStaticUntapSkipWholeStep`, `TestStaticUntapSkipReplacementRecheck`,
+`TestStaticUntapSkipTurnControl`, `TestConditionalUntapLimitDecision` and
+`Declarations`; existing `TestUntapLimits*` and `TestContinuousControl*`.
+RON `TestRONStaticUntapCards`, `Casting`, `Interactions`,
+`ReprintsAndInventory`, `Declarations`, `TestRONStasisUpkeep` and
+`TestRONStasisNativeTurn` map every rule of Stasis and Winter Orb. These tests
+establish no additional draw, damage, entry or resolving-action replacement shape.

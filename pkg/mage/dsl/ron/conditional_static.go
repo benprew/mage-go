@@ -17,6 +17,9 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(rules) == 1 && rules[0].Name == "EachPlayerEffect" {
+		return compileConditionalPlayerUntapLimit(rules[0], condition)
+	}
 	if len(rules) == 1 && rules[0].Name == "PermanentRuleEffect" {
 		rule := rules[0]
 		if len(rule.Args) == 2 && rule.Args[1].Kind == List && len(rule.Args[1].Args) == 1 && rule.Args[1].Args[0].Name == "CantAttack" {

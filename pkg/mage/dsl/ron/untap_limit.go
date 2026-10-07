@@ -3,6 +3,10 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compilePlayerUntapLimit(n Node) (optionFactory, error) {
+	return compileConditionalPlayerUntapLimit(n, nil)
+}
+
+func compileConditionalPlayerUntapLimit(n Node, condition mage.StateCondition) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -38,6 +42,10 @@ func compilePlayerUntapLimit(n Node) (optionFactory, error) {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.LimitUntapsDuringStep(filter, value.Args[0].Integer)))
+		rule := mage.LimitUntapsDuringStep(filter, value.Args[0].Integer)
+		if condition != nil {
+			rule = mage.LimitUntapsDuringStepIf(filter, value.Args[0].Integer, condition)
+		}
+		return mage.WithAbility(mage.Static(rule))
 	}, nil
 }

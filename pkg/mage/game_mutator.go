@@ -978,6 +978,17 @@ func (g *Game) recordActiveTurnStart() {
 	g.turns.turnStarts[g.turns.ActivePlayerIndex()] = g.CurrentTurn()
 }
 
+func (g *Game) clearTurnStartSickness() {
+	// The turn-start check must run even if the untap step is skipped.
+	for _, permanent := range g.zones.battlefield {
+		if permanent.ControllerID() == g.ActivePlayerObj().PlayerID() && permanent.turnControlGained < g.CurrentTurn() && permanent.baseAttrs[AttrSummonSick] > 0 {
+			if current := g.MutablePermanentIncludingPhased(permanent.ID()); current != nil {
+				current.RevokeBaseAttr(AttrSummonSick)
+			}
+		}
+	}
+}
+
 // PopExtraTurn removes and returns the next extra turn player ID, if any.
 func (g *Game) PopExtraTurn() (uuid.UUID, bool) {
 	return g.turns.PopExtraTurn()

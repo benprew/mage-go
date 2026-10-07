@@ -7,18 +7,30 @@ import (
 )
 
 type untapLimitRule struct {
-	filter  PermanentFilter
-	maximum int
+	filter      PermanentFilter
+	maximum     int
+	condition   StateCondition
+	conditional bool
 }
 
 // LimitUntapsDuringStep permits a choice within the limit before simultaneous untap.
 // Other untap effects do not use this limit.
 func LimitUntapsDuringStep(filter PermanentFilter, maximum int) StaticRule {
-	return untapLimitRule{filter, maximum}
+	return untapLimitRule{filter: filter, maximum: maximum}
 }
+
+// LimitUntapsDuringStepIf checks the condition before the untap selection.
+// Untapping the source cannot change the saved selection.
+func LimitUntapsDuringStepIf(filter PermanentFilter, maximum int, condition StateCondition) StaticRule {
+	return untapLimitRule{filter: filter, maximum: maximum, condition: condition, conditional: true}
+}
+
 func (untapLimitRule) staticRule() {}
 func (r untapLimitRule) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "static-rule", Text: "untap limit", battlefieldSource: true}
+	if r.conditional {
+		node.children = []definitionEdge{{"condition", r.condition}}
+	}
 	if r.maximum < 0 {
 		node.problem = "untap limit must not be negative"
 	}
@@ -57,10 +69,16 @@ func (g *Game) chooseStepUntaps(active Player, blocked map[uuid.UUID]bool) []*Pe
 			inner = printed.ContinuousEffect
 		}
 		if limit, ok := inner.(*untapLimitEffect); ok {
+			if limit.rule.conditional {
+				source := g.FindPermanent(limit.SourceID())
+				if source == nil || nilDefinition(limit.rule.condition) || !limit.rule.condition.checkState(g, StateContext{SourceID: source.ID(), ControllerID: source.ControllerID(), SourceIncarnation: source.incarnationID}) {
+					continue
+				}
+			}
 			rules = append(rules, limit.rule)
 		}
 	}
-	for _, legacy := range []untapLimitRule{{IsLand, g.effects.Rules.LandUntapMax}, {IsArtifact, g.effects.Rules.ArtifactUntapMax}, {IsCreature, g.effects.Rules.CreatureUntapMax}} {
+	for _, legacy := range []untapLimitRule{{filter: IsLand, maximum: g.effects.Rules.LandUntapMax}, {filter: IsArtifact, maximum: g.effects.Rules.ArtifactUntapMax}, {filter: IsCreature, maximum: g.effects.Rules.CreatureUntapMax}} {
 		if legacy.maximum >= 0 {
 			rules = append(rules, legacy)
 		}

@@ -14,6 +14,15 @@ func compileAllPlayerRule(n Node) (optionFactory, error) {
 		return nil, problem(n.Args[1], "supply one all-player rule operation")
 	}
 	operation := operations[0]
+	if operation.Name == "SkipsUntapStep" {
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
+			return nil, unsupported(n.Args[0], "untap skip player filter")
+		}
+		if _, err := symbol(operation); err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(mage.Static(mage.SkipUntapSteps())) }, nil
+	}
 	if operation.Name == "IncreaseSpellCost" {
 		return compileStaticSpellCostIncrease(n)
 	}
