@@ -216,6 +216,13 @@
 // cost and source incarnation before payment. A returned source cannot use
 // its former plan. Payment queries do not spend mana or make choices.
 //
+// Use [DeclareActivatedAbilityTarget] with [WithTargets] to select an activated
+// ability by its stack identity and source card type. Source types use current
+// information or retained information for the original incarnation or zone visit.
+// Mana abilities do not use the stack. Triggered abilities do not match.
+// [ControllerOfAbility] reads the selected ability's controller, including copies.
+// [CounterAbility] uses the shared counter operation and does not refund costs.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

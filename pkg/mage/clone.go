@@ -268,6 +268,8 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		SourceID:           obj.SourceID,
 		TargetSource:       obj.TargetSource,
 		IsAbility:          obj.IsAbility,
+		activatedAbility:   obj.activatedAbility,
+		abilitySourceVisit: obj.abilitySourceVisit,
 		XValue:             obj.XValue,
 		ModeChoice:         obj.ModeChoice,
 		EventAmount:        obj.EventAmount,

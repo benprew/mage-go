@@ -5044,3 +5044,27 @@ triggers, multiple blockers, payment, first-strike damage, duration, identity,
 phasing, copies and cloning. Synthetic tests cover nested results, polarity,
 target legality, copy retargeting and invalid declarations. This does not claim
 complete Cyclone, Imprison, Bronze Tablet or Transmute Artifact support.
+
+## RON activated ability targets
+
+`Targeted([TargetAbility(And([ActivatedAbility,
+AbilityOfASource(IsCardtype(Artifact))]))], ActionList([CounterAbility(Ref_TargetAbility)]))`
+declares one activated ability target. The two filter operands can appear in
+either order. Exactly one bare `ActivatedAbility` and one
+`AbilityOfASource(IsCardtype(type))` are supported. The source type uses the
+existing card-type grammar. Other ability/source filters remain errors.
+
+`ControllerOfAbility(Ref_TargetAbility)` is a typed player reference. It reads
+the controller of the ability on the stack, independently of source control.
+It can supply the payer of `PlayerMayCost`; the existing adjacent `Unless` or
+`If` payment continuation selects its branch at resolution. `CounterAbility`
+requires a bound ability reference in the same rule. Spell, permanent, delayed,
+undeclared and cross-rule references are rejected. Factories build fresh target
+bindings. Stack objects store their own choices; copies can select other targets.
+
+The engine API is `DeclareActivatedAbilityTarget(name string, sourceType
+core.CardType) *AbilityTargetBinding`, `ControllerOfAbility(AbilityRef) PlayerRef`,
+and `CounterAbility(AbilityRef) ResolvingEffect`. The compiler imports these
+services directly from `mage`; no legacy DSL export is required. Rust and Ayesha
+Tanaka use their complete LEG RON records. Trigger-event ability references,
+including Imprison's `Trigger_ThatActivatedAbility`, remain unsupported.

@@ -4177,11 +4177,19 @@ func (obj *StackObject) targetsPermanentControlledBy(g *Game, controller uuid.UU
 
 func (t *typedSpellTarget) Choose(uuid.UUID, Card, *Game, []uuid.UUID) error { return nil }
 
-type counterReferencedEffect struct{ spell StackObjectRef }
+type counterReferencedEffect struct {
+	spell   StackObjectRef
+	ability bool
+}
 
 // Counter counters the referenced spell if it is still on the stack.
 func Counter(spell StackObjectRef) ResolvingEffect { return &counterReferencedEffect{spell: spell} }
-func (*counterReferencedEffect) Text() string      { return "counter target spell" }
+func (e *counterReferencedEffect) Text() string {
+	if e.ability {
+		return "counter target activated ability"
+	}
+	return "counter target spell"
+}
 func (*counterReferencedEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }

@@ -3260,6 +3260,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
+	obj.activatedAbility = true
 	obj.DamageDistribution = damageDistribution
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)

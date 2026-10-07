@@ -5951,3 +5951,39 @@ cost rollback, absent payers and independent clones. RON gameplay and copying
 are covered by `TestRONPaymentBranches*`. Combat collection grants reuse
 `BlockersOf`, `BlockedAttackersOf`, union/intersection, `GrantEachKeyword` and
 `Until`; they add no LKI, replacement-order or simultaneous-operation contract.
+
+## Activated ability targets with source types
+
+`DeclareActivatedAbilityTarget` declares a singular typed target with a source
+card-type restriction. Native battlefield and graveyard activations mark their
+stack object as activated; triggers and spells do not match. Mana abilities
+resolve immediately and provide no target (CR 605.3b). The graveyard activation
+path now uses the same mana classification and immediate resolution as the
+battlefield path. Copies and game clones
+preserve this classification. Target identity is the stack object's ID, never
+the source card's ID. Multiple abilities from one source remain distinct.
+
+The existing target service checks legality before payment and at resolution
+(CR 608.2b). The original battlefield source uses current characteristics until
+it departs or phases out, then the shared incarnation-indexed information service.
+A returned source cannot replace this information (CR 113.7a, 400.7). Graveyard
+activations retain their source visit and an independent card snapshot before
+payment; self-exile costs cannot erase the source type. A card still in that
+visit supplies current information. Target queries do not mutate state or choose.
+
+`AbilityRef` keeps ability reads separate from spell/permanent reads.
+`ControllerOfAbility` reads the live ability controller, including copied
+abilities with another controller. Source control changes do not change the
+payer. An absent ability supplies no player. `CounterAbility` uses the existing
+counter service (CR 701.6a–b); it cancels only that object, leaves its source
+alone, and does not refund activation costs. No replacement, APNAP, or
+simultaneous-operation rule changes in this contract.
+
+Evidence: `TestActivatedAbilityTargetContract`, `Validation`, `Graveyard`,
+`CopiesAndController`, `SacrificeCost`, `GraveyardMana`, and `SourceTypesAndRollback` cover native
+activation, exclusion, current/retained types, incarnation identity, phasing,
+zone costs, controller reads, independent copy targets, cloning, declaration
+validation and rollback. `TestRONAbilityTargetCards`, `AyeshaCasting`,
+`Declarations`, `RustCopy`, `Invalid`, and `BadPlayers` cover complete source
+records and compiler scopes. Ayesha's Banding grant also maps to existing
+`TestBandIncomingDamage*` and `TestBandOutgoingDamage*` engine contracts.

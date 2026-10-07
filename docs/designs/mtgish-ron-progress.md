@@ -29459,3 +29459,174 @@ optional_payment.go, contextual_collection.go, temporary_collection.go,
 compiler.go, grouped_combat_test.go, temporary_collection_test.go,
 inventory_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
 this ledger entry.
+
+## Run 2026-10-07: ACTIVATED-ABILITY-TARGETS
+
+Status: complete implementation slice. This run stops after this slice.
+Complete collection gameplay, runtime cutover and removal gates remain incomplete.
+
+### Fresh evidence and candidate comparison
+
+Preserved initial changes to `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`. Only this appended entry is staged from
+this ledger. The user's existing changes remain unstaged. Read AGENTS.md,
+pkg/mage/doc.go, execution design, vocabulary snapshot, current ledger, selected
+compiler/engine code, relevant API/rules contracts, and complete candidate RON
+records, including nested forms. No Go card definition supplied requirements.
+Used implement-engine for the reusable engine contract; no removed card skill,
+Go stub generation, delegation or card-name execution branch was used.
+
+Fresh baseline short engine tests and make build passed. Strict loading exited 1
+for collection rejection: **1,820 compiled / 625 rejected records**, **697 accepted /
+289 rejected unique names**, from 2,445 records / 986 names. Inspected the source
+records directly for selection. Also reproduced the pre-slice compiler inventory
+with a read-only Go overlay from HEAD: **72,962 occurrences / 8,557 signatures /
+5,483 unknown-role occurrences**. This overlay measurement was taken after the
+initial implementation; RON source did not change. It does not replace the native
+baseline tests or final checks.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and concrete downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Typed activated-ability targets, selected | Rust and Ayesha Tanaka; **2 complete-card unlocks / 2 records** | Both full LEG records require the same activated artifact-source target and counter operation. Ayesha's white-mana resolution payment already has an exact service. Typed ability identity also supplies a prerequisite for Imprison, which still lacks the host activation event, event ability binding, tap-cost/nonmana filters and grouped host combat trigger. | Small/medium: kind capture on native activations, source-type current/LKI reads, typed target/controller adapter, identity/copy/clone and two complete gameplay mappings. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods and Gaea's Avenger; **5 clean unlocks** | Needs all-zone characteristic evaluation, owner/controller context and CDA layer/copy contracts. Avenger's recorded controller-filter source defect excludes it from the clean estimate; its nested Plus also needs support. Enables characteristics outside the battlefield. | High: reusable zone-characteristic contract, compiler value contexts and five full mappings. |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7 unlocks** | Needs nonpermanent source discovery, typed resolution choices and next-event source identity/prevention ordering. Other consumers (Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage) need amount/result/redirection contracts and are excluded from the seven-card estimate. | High: discovery and scoped choices, exact shields and seven complete mappings. |
+
+The selected shared capability gives two credible full-card gains for less
+implementation effort than the other candidates. Complete records established
+these estimates; first-error frequency did not. The contract, boundary and
+acceptance cases were stated before edits. Reprints count once. No second slice
+is started.
+
+### Exact signatures, contexts, dependencies and engine reuse
+
+RON supports one `Targeted` declaration:
+`TargetAbility(And([ActivatedAbility, AbilityOfASource(IsCardtype(type))]))`.
+And takes one two-member list; the two operands can appear in either order.
+ActivatedAbility must be a bare symbol. AbilityOfASource and IsCardtype each take
+one argument; the latter uses the existing card-type grammar. Other ability and
+source filter forms remain errors. `Ref_TargetAbility` is a singular typed
+reference local to the rule. `CounterAbility(Ref_TargetAbility)` takes one
+argument; `ControllerOfAbility(Ref_TargetAbility)` is a typed player reference.
+It can supply the payer of existing PlayerMayCost/Unless or If continuations.
+Delayed, missing, malformed, incompatible and cross-rule reads are rejected.
+Per-factory maps connect the immutable plan to a fresh target declaration.
+
+Engine API:
+- `AbilityRef` extends StackObjectRef with the ability role.
+- `DeclareActivatedAbilityTarget(name string, sourceType core.CardType) *AbilityTargetBinding`.
+- `ControllerOfAbility(ability AbilityRef) PlayerRef`.
+- `CounterAbility(ability AbilityRef) ResolvingEffect`.
+
+Native battlefield and graveyard activation paths mark stack objects as
+activated. Triggered abilities and spells are excluded; mana abilities do not
+supply a stack target (CR 605.3b). A final failing contract test found that the
+existing graveyard activation path stacked mana abilities. It now reuses
+canProduceMana and resolveStackObject for immediate resolution, preserving
+nonmana stacking and the existing costs and timing restrictions. Copies and game clones retain the kind.
+The target ID is the ability's stack object ID, never the source permanent ID.
+Multiple activations/copies from one source therefore remain distinct.
+
+Source type checks reuse readPermanentInformation and the existing incarnation,
+phase-information and LKI services. Live characteristics can change target
+legality; an absent or phased source uses retained information for its original
+incarnation. A returned source cannot supply the old ability's type (CR 113.7a,
+400.7 and 608.2b). Graveyard activations retain their visit and an independent
+card snapshot before payment. Current cards in that visit supply current type;
+self-exile and later source movement do not erase retained type. Source queries
+make no choices and mutate no state.
+
+ControllerOfAbility reads the live stack object's controller, including copied
+abilities. Source control changes do not change the payer. An absent ability
+supplies no player. CounterAbility uses counterReferencedEffect and
+CounterStackObject, with an ability-specific text label. The original Counter
+caller remains compatible. Countering leaves the source alone and does not
+refund paid costs (CR 701.6a–b). Shared targets perform announcement checks,
+resolution rechecks, copy retargeting and clone-isolated choices. Existing
+optional payment transactions handle Ayesha's one white mana and rollback.
+No replacement ordering, APNAP or simultaneous-operation contract changes.
+
+### TDD and card-to-test mappings
+
+Engine tests failed first for missing DeclareActivatedAbilityTarget and
+CounterAbility, after fixture API names were corrected. Both complete RON
+records failed first at unsupported TargetAbility. Implementation then exposed
+an omitted clone-kind transfer; the clone assertions failed until this was
+fixed. Graveyard coverage exposed the independent native activation path;
+its kind/source capture was added without changing its costs or timing. The
+additional GraveyardMana test failed for a pre-existing native contract gap,
+which was repaired with the shared immediate-resolution service.
+The synthetic graveyard fixture needed its ability source set explicitly, as
+registered factories normally do. Ayesha's printed Banding is an attribute,
+not an extra runtime ActionDefinition; the declaration test's index was corrected.
+These were implementation/fixture corrections, not source defects or weakened
+assertions. Initial lint found one unnecessary Cost conversion in a new fixture;
+it was removed, lint passed, and affected checks were rerun.
+
+| Card / contract | Tests |
+| --- | --- |
+| Rust, complete LEG RON | TestRONAbilityTargetCards: casting cost, announcement/resolution timing, countering real Disrupting Scepter, source departure/return/phasing/control, target removal and pending clones. RustCopy: countering one copied ability from the same source, spell-copy lifecycle and all-illegal original resolution. |
+| Ayesha Tanaka, complete LEG RON | Cards: tap payment, target legality, unpaid/declined/payable/wrong-color payment, payment through Plains, ability controller versus source controller and absent target. AyeshaCasting: WWUU cost rollback, stack entry, 2/2 legendary metadata, Banding and summoning sickness. AyeshaBand: native band combat and clone isolation. AyeshaSourceLifetime: source departure, return, phasing, copied activation controller and one correct payment offer. Banding also maps to TestBandIncomingDamage* and TestBandOutgoingDamage*. |
+| Compiler binding/identity/declarations | TestRONAbilityTargetDeclarations: per-instance targets and detached-read validation. FilterOrder: both supported orders and typed metadata reads. Invalid and BadPlayers: malformed filters, unbound/incompatible/cross-rule refs and wrong player references. TestInventoryRepositoryCollection and TestInventoryLeavesRealRONGameplayAndRegistryUnchanged retain collection/registry evidence. |
+| Engine target contract | TestActivatedAbilityTargetContract: original source identity, current type loss, LKI departure/return, phasing, copies, cloning, absent target and no cost refund. Validation: bad bindings, nil ref, triggered and mana exclusion. Graveyard: live source and self-exile payment with clones. CopiesAndController: separate ability/counter copies, retargeting and copied ability controllers. GraveyardMana: immediate resolution and no legal stack target. SacrificeCost: battlefield source LKI after payment. SourceTypesAndRollback: current gained type, nonartifact rejection, pure target queries, invalid type and nil controller. |
+
+Two complete unique-card RON gameplay mappings are added. Compilation and
+collection gameplay coverage remain separate; collection-wide engine_validated
+and behavior_verified remain null. Synthetic coverage does not complete Imprison
+or unsupported ability filters/events.
+
+### Final measurements, source defects and removal gates
+
+Actual gain matches the estimate: **2 unique names / 2 records**, Rust and
+Ayesha Tanaka. No previously accepted name is lost. Strict native loading exits
+1 with **1,822 compiled / 623 rejected records**, **699 accepted / 287 rejected
+unique names**. Inventory: **72,962 occurrences / 8,557 signatures / 5,467
+unknown-role occurrences**. New ability filter, source filter and reference roles
+remove 16 unknown occurrences; a role annotation does not prove support.
+The loader rejects the full collection and publishes no partial registry.
+
+Remaining diagnostics include:
+- Dakkon Blackblade: `LEG.lines.ron:58:205: unsupported rule (CDA_Power)`.
+- Circle of Protection: Artifacts: `ATQ.lines.ron:17:219: unsupported action (ChooseADamageSource)`.
+- Imprison: `LEG.lines.ron:129:217: supply one artifact source and one non-tap cost filter (And)`.
+- Cyclone: `ARN.lines.ron:16:303: unsupported two-branch payment cost (PayManaForEach)`.
+
+No RON source changed. Vocabulary syntax/hashes therefore stay unchanged and the
+snapshot is not rewritten. No new source defect or environment failure was found; the existing graveyard
+mana stacking defect was an engine-contract gap and is fixed in this slice;
+recorded source defects remain deferred. Go definitions, generators and DSL
+functions remain because collection support, gameplay and startup do not meet
+the removal gates. No caller audit authorizes deletion in this slice. API/rules
+documents describe only the target/source/controller behavior established here.
+
+### Validation
+
+- Baseline `go test ./pkg/mage/... -short -count=1` and `make build`: PASS.
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestActivatedAbilityTarget|TestRONAbilityTarget|TestInventory|TestBandIncomingDamage|TestBandOutgoingDamage' -count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS on final code.
+- `make test`: PASS on final code.
+- `make build`: PASS on final code.
+- `go vet ./...`: PASS on final code.
+- `go test ./... -short -count=1`: PASS; additional implement-engine check.
+- `make lint`: PASS, zero issues. Automatic import/format changes were reviewed;
+  final focused and repository checks passed with those changes included.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1; final native counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1; final native counts above.
+- `go run -overlay /tmp/ron-slice-baseline-overlay/overlay.json ./cmd/loadcards -inventory -json`:
+  expected exit 1; pre-slice compiler inventory reproduced against unchanged source.
+- Accepted-name comparison: PASS; only Rust and Ayesha Tanaka leave the rejected set.
+
+Ranked next candidates to reassess:
+1. All-zone battlefield-count CDA prerequisite and five clean consumers.
+2. Damage-source discovery/choice/identity and the seven chosen-source shields.
+3. Activation-event ability capture, tap-cost/nonmana filtering and grouped host
+   combat events for Imprison. The new typed stack target is a useful identity
+   foundation, but does not fabricate its missing event binding. Compare this
+   with dynamic repeated colored mana payment (Cyclone) before selection.
+
+Slice files: ability_target.go and ability_target_test.go in mage and ron;
+stack.go, game.go, graveyard_activated.go, clone.go, spell_copy.go,
+composable_actions.go, composable_target.go, doc.go; ron compiler.go,
+player_scope.go, inventory.go and inventory_test.go; DSL reference, engine rules
+contracts and this appended entry. Only this slice is committed. Initial user
+changes and unrelated untracked files remain unstaged.

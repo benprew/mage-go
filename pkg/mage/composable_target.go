@@ -233,6 +233,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.manaValueEqualX {
 		n.children = append(n.children, definitionEdge{"mana value", targetManaValueEqualXOption{}})
 	}
+	if spec, ok := b.spec.(*activatedAbilityTarget); ok {
+		n.children = append(n.children, definitionEdge{"source type", spec})
+	}
 	if spec, ok := b.spec.(*typedSpellTarget); ok && spec.manaValueEqualX {
 		n.children = append(n.children, definitionEdge{"mana value", targetManaValueEqualXOption{}})
 	}

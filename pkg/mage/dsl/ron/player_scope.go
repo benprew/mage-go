@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	ability             *abilityTargetPlan
 	landEntry           *landEntryEventPlan
 	defender            *sourceCombatPlayerPlan
 	action              *playerActionsPlan
@@ -33,6 +34,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	abilities            map[*abilityTargetPlan]*mage.AbilityTargetBinding
 	hostDeaths           map[*hostDeathPlan]hostDeathBindings
 	entryActors          map[*landEntryEventPlan]*mage.PlayerBinding
 	exiles               map[*exilePaymentPlan]*mage.NumberBinding
@@ -61,6 +63,13 @@ type instanceBindings struct {
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
+	if n.Name == "ControllerOfAbility" {
+		if err := arity(n, 1); err != nil {
+			return playerReferencePlan{}, err
+		}
+		ability, err := compileAbilityRef(n.Args[0], ctx)
+		return playerReferencePlan{ability: ability}, err
+	}
 	if n.Name == "ControllerOfPermanent" {
 		if err := arity(n, 1); err != nil {
 			return playerReferencePlan{}, err
@@ -142,6 +151,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.ability != nil {
+		return mage.ControllerOfAbility(bindings.abilities[p.ability])
+	}
 	if p.hostDeathController != nil {
 		return mage.FromPlayer(bindings.hostDeaths[p.hostDeathController].controller)
 	}

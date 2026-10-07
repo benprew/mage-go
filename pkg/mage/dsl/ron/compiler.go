@@ -51,6 +51,7 @@ type scope struct {
 	permanentTarget   *permanentTargetPlan
 	permanentTargets  *permanentTargetsPlan
 	spellTarget       *spellTargetPlan
+	abilityTarget     *abilityTargetPlan
 	cardTarget        *cardTargetPlan
 	deathCard         *deathCardPlan
 	hostDeath         *hostDeathPlan
@@ -71,6 +72,7 @@ type actionPlan struct {
 	permanentTarget  *permanentTargetPlan
 	permanentTargets *permanentTargetsPlan
 	spellTarget      *spellTargetPlan
+	abilityTarget    *abilityTargetPlan
 	cardTarget       *cardTargetPlan
 	damageTarget     *damageTargetPlan
 }
@@ -93,6 +95,7 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
 	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)
 	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
+	bindings.abilities = make(map[*abilityTargetPlan]*mage.AbilityTargetBinding)
 	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
 	var declared []mage.TargetBinding
@@ -109,6 +112,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		}
 		if target, ok := targets[i].(*mage.CardTargetBinding); ok {
 			bindings.cards[p.cardTarget] = target
+		}
+		if target, ok := targets[i].(*mage.AbilityTargetBinding); ok {
+			bindings.abilities[p.abilityTarget] = target
 		}
 		if target, ok := targets[i].(*mage.SpellTargetBinding); ok {
 			bindings.spells[p.spellTarget] = target
@@ -703,6 +709,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 			return plan, err
 		}
 		ctx.target = binding
+		if binding == "Ref_TargetAbility" {
+			ctx.abilityTarget = &abilityTargetPlan{name: binding}
+		}
 		if binding == "Ref_TargetPermanent" {
 			ctx.permanentTarget = &permanentTargetPlan{name: binding}
 		}
@@ -733,6 +742,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		plan.permanentTarget = ctx.permanentTarget
 		plan.permanentTargets = ctx.permanentTargets
 		plan.spellTarget = ctx.spellTarget
+		plan.abilityTarget = ctx.abilityTarget
 		plan.cardTarget = ctx.cardTarget
 		plan.damageTarget = ctx.damageTarget
 		return plan, nil
@@ -791,6 +801,8 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}, "Ref_TargetPlayer", nil
 	case "TargetGraveyardCard":
 		return compileGraveyardTarget(n, ctx)
+	case "TargetAbility":
+		return compileAbilityTarget(n, ctx)
 	case "TargetSpell":
 		return compileSpellTarget(n.Args[0], ctx)
 	default:
@@ -1000,6 +1012,16 @@ func requireRef(n Node, name string, ctx scope) error {
 }
 
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "CounterAbility" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		ref, err := compileAbilityRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect { return mage.CounterAbility(bindings.abilities[ref]) }}, nil
+	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
 	case "ChooseAnAction":

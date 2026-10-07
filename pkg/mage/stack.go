@@ -13,6 +13,8 @@ type StackObject struct {
 	// Target incarnations are immutable after stack insertion and shared by clones.
 	targetIncarnations map[uuid.UUID]uuid.UUID
 	sourceIncarnation  uuid.UUID
+	activatedAbility   bool
+	abilitySourceVisit uuid.UUID
 	capturedNumbers    map[*NumberBinding]int
 	capturedPlayers    map[*PlayerBinding]uuid.UUID
 	capturedCards      map[*CardBinding]capturedCard

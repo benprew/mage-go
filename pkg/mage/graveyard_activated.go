@@ -112,6 +112,8 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		}
 	}
 
+	sourceSnapshot := copyCardForCastContext(card)
+	sourceVisit := g.graveyardVisit(card.ID())
 	preparedCosts := g.prepareActionCosts(gaa.Costs(), targets, g.resolution.X())
 	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
 		Controller:               playerID,
@@ -131,15 +133,22 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	gaa.MarkActivated()
 
 	obj := &StackObject{
-		ID:         uuid.New(),
-		Controller: playerID,
-		SourceID:   cardID,
-		IsAbility:  true,
-		Targets:    targets,
-		XValue:     g.resolution.X(),
+		ID:                 uuid.New(),
+		Controller:         playerID,
+		SourceID:           cardID,
+		IsAbility:          true,
+		activatedAbility:   true,
+		abilitySourceVisit: sourceVisit,
+		TargetSource:       sourceSnapshot,
+		Targets:            targets,
+		XValue:             g.resolution.X(),
 	}
 	obj.Effects = append(obj.Effects, gaa.Effects()...)
-	g.pushStack(obj)
+	if canProduceMana(gaa.Effects(), gaa.Targets()) {
+		g.resolveStackObject(obj)
+	} else {
+		g.pushStack(obj)
+	}
 	return nil
 }
 

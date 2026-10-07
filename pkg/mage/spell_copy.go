@@ -55,6 +55,8 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		Card:               copiedCard,
 		Controller:         controller,
 		IsAbility:          original.IsAbility,
+		activatedAbility:   original.activatedAbility,
+		abilitySourceVisit: original.abilitySourceVisit,
 		XValue:             original.XValue,
 		ModeChoice:         original.ModeChoice,
 		EventAmount:        original.EventAmount,

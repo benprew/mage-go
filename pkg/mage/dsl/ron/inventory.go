@@ -414,6 +414,8 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "player_filter"
 			case "TargetGraveyardCard":
 				return "card_filter"
+			case "TargetAbility":
+				return "ability_filter"
 			case "TargetSpell":
 				return "spell_filter"
 			}
@@ -755,6 +757,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_reference"
 			}
+		case "CounterAbility":
+			if len(n.Args) == 1 {
+				return "ability_reference"
+			}
 		case "CounterSpell":
 			if len(n.Args) == 1 {
 				return "spell_reference"
@@ -1070,7 +1076,21 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "EachPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}
+	case "ability_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "AbilityOfASource" && len(n.Args) == 1 {
+			return "ability_source_filter"
+		}
+	case "ability_source_filter":
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
 	case "player_reference":
+		if n.Name == "ControllerOfAbility" && len(n.Args) == 1 {
+			return "ability_reference"
+		}
 		if n.Name == "ControllerOfPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
