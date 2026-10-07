@@ -94,8 +94,10 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 		}
 	}
 	creature := false
+	included := ""
 	excluded := ""
 	colors := false
+	toughness := false
 	var filters []mage.PermanentFilter
 	for _, part := range parts {
 		if err := arity(part, 1); err != nil {
@@ -108,6 +110,19 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 			}
 			creature = true
 			filters = append(filters, mage.IsCreature)
+		case "IsCreatureType":
+			if included != "" {
+				return mage.PermanentFilter{}, problem(part, "supply one required creature subtype")
+			}
+			sub, err := symbol(part.Args[0])
+			if err != nil {
+				return mage.PermanentFilter{}, err
+			}
+			included = subtypeName(sub)
+			if err := mage.ValidateSubtypeFamily(mage.SubtypeCreature, included); err != nil {
+				return mage.PermanentFilter{}, problem(part, err.Error())
+			}
+			filters = append(filters, mage.IsCreature, mage.HasSubType(included))
 		case "IsNonCreatureType":
 			if excluded != "" {
 				return mage.PermanentFilter{}, problem(part, "supply one excluded creature subtype")
@@ -121,6 +136,16 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 				return mage.PermanentFilter{}, problem(part, err.Error())
 			}
 			filters = append(filters, mage.Not(mage.HasSubType(excluded)))
+		case "ToughnessIs":
+			if toughness {
+				return mage.PermanentFilter{}, problem(part, "supply one combat pair toughness comparison")
+			}
+			toughness = true
+			filter, err := compileFixedToughnessFilter(part)
+			if err != nil {
+				return mage.PermanentFilter{}, err
+			}
+			filters = append(filters, filter)
 		case "IsColor", "Or":
 			if colors {
 				return mage.PermanentFilter{}, problem(part, "supply one combat pair color filter")
@@ -149,7 +174,7 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.PermanentFilter{}, unsupported(part, "combat pair filter")
 		}
 	}
-	if !creature {
+	if !creature && included == "" {
 		return mage.PermanentFilter{}, problem(n, "combat pair filter requires the creature type")
 	}
 	return mage.And(filters...), nil

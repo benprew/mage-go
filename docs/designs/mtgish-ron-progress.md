@@ -26577,3 +26577,157 @@ Changed slice files: engine `composable_events.go`,
 `source_tapped_duration.go`, `inventory.go`, `begin_combat_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended ledger
 entry. No second slice is started.
+
+## 2026-10-06: combat-event characteristic filter prerequisite
+
+Status: completed slice `COMBAT-EVENT-CHARACTERISTICS`. Stop after this slice.
+Collection counts stay **1,786 compiled / 659 rejected records**, and
+**674 accepted / 312 rejected unique names** (2,445 records / 986 names).
+Compilation and full-card gameplay remain separate.
+
+### Evidence, comparison and selection
+
+Initial user changes were `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`. They remain outside the commit. Only
+this appended ledger entry is staged from the modified ledger.
+Baseline compiler tests, short engine tests and `make build` passed. Both fresh
+loader commands exited 1 for unsupported records; neither was a build failure.
+The design, ledger, vocabulary snapshot, engine reference, complete candidate
+RON records, selected compiler and engine services, API/rules contracts and
+CR 509.3b/d/f and 603.2 supplied the contract. Reprints count once.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Combat-event characteristic filters, selected | Battering Ram, Dwarven Soldier, Infinite Authority: **0 immediate / 3 downstream consumers** | Ram has an incorrect delayed subject. Soldier needs the grouped one-or-more event. Authority needs destruction-result payment and nested delayed subject semantics. Shared positive creature subtype and fixed toughness predicates remove their filter prerequisite. | Low: compiler adapter only; existing engine filters, event capture and destruction suffice. Declaration, native clause, timing, identity and instance tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full cards after the prerequisite | All-zone characteristic evaluation, owner/controller count context, named counts and CDA/copy/layer behavior. Avenger's source defect is excluded. Enables dynamic characteristics in all zones. | High: engine characteristic contract, lowering and four full-card mappings. |
+| Chosen-source one-shot prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible full cards after prerequisites | Legal source-domain choices, per-instance capture and next-event shields, including simultaneous events. Other source-choice consumers have additional blockers and are excluded. | High: engine selection/identity/LKI/shield contracts and seven full-card mappings. |
+
+Selection rationale: a small shared adapter establishes exact detection behavior
+for three concrete consumers without a new engine subsystem. The much larger
+CDA and chosen-source boundaries remain worthwhile next slices. First-error
+frequency is not an unlock estimate. Complete nested bodies were inspected and
+accounted for before the zero immediate unlock estimate. The contract, reuse
+boundary and acceptance cases were stated before implementation. No removed
+skill, delegation, Go-card requirement, fallback, name branch, global action
+slot or partial production registry was used.
+
+### Exact supported shapes and reuse
+
+`compileCombatPairFilter` accepts bare `IsCreatureType(subtype)` or a one-argument
+`And` list with one required creature subtype. An explicit
+`IsCardtype(Creature)` can also occur once. The positive subtype adds `IsCreature`
+as well as `HasSubType`; a noncreature cannot match it. Subtype declarations use
+`ValidateSubtypeFamily(SubtypeCreature, ...)`. Known subtypes from another family
+are rejected; the existing engine permits unlisted creature subtype names.
+One excluded creature subtype and one established color condition remain legal.
+
+A conjunction also accepts one `ToughnessIs(comparison(Integer(n)))`, where
+comparison is exactly `EqualTo`, `LessThanOrEqualTo`, or `GreaterThanOrEqualTo`.
+It must contain the explicit creature type or a positive creature subtype.
+`compileFixedToughnessFilter` supplies the established pure current-toughness
+queries. Duplicate predicate kinds, wrong arity/kinds, wrong subtype families,
+X/dynamic values, other comparisons, empty conjunctions and unsupported nested
+forms remain compilation errors. No other filter context is broadened.
+
+Supported contexts are permanent-source `TriggerA` events
+`WhenACreatureBlocksACreature(SinglePermanent(ThisPermanent|HostPermanent), filter)`
+and `WhenACreatureBecomesBlockedByACreature(...)`, plus their existing exact
+same-subject/filter two-direction `Or` union. Host references require an Aura.
+Existing typed opponent names and lexical scopes are unchanged. Grouped
+one-or-more events remain rejected, so Soldier is not lowered to per-pair triggers.
+
+Reuse: `BlocksCreatureMatching`, `BecomesBlockedByCreatureMatching`,
+`BlocksOrBecomesBlockedByCreatureMatching`, `WithOpponent`, `instanceBindings`,
+`IsCreature`, `HasSubType`, current toughness predicates, delayed-step frames,
+ordinary destruction, native combat events, stack copying and `Game.Clone`.
+Filters read final current characteristics at event detection (CR 509.3f).
+Later subtype/toughness/attachment/control changes cannot recheck the condition
+or redirect the captured opponent. Source departure cannot cancel a pending
+trigger. Returned opponents are new objects; phased opponents cannot receive
+actions. No reusable engine behavior was missing, so engine code is unchanged.
+Cost rollback and simultaneous damage are not new contracts in this slice;
+existing destruction replacement/regeneration behavior is exercised.
+
+### TDD and gameplay evidence
+
+After correcting two test fixture calls to existing engine constructor names,
+the test-first run failed for unsupported `IsCreatureType` and `ToughnessIs`
+combat-pair filters. The intended missing-adapter failure was confirmed.
+An invalid fixture used `Unknown`, which the engine permits as an unlisted
+creature subtype; the test now uses the known wrong-family `Island` instead.
+Native Aura fixtures initially omitted the Aura subtype and casting declaration;
+these were corrected without reducing assertions.
+
+| Card or contract | Tests and limits |
+| --- | --- |
+| Battering Ram | `TestRONCombatCharacteristicConsumers` inspects the complete record and asserts its remaining unbound delayed subject. `NativeClauses` executes the original Wall event with a test-only life body through native combat with two matching or nonmatching blockers. It does not validate the incorrect destruction body. |
+| Dwarven Soldier | `Consumers` inspects the complete record, asserts the grouped union remains rejected, and executes its original Orc filter against matching, nonmatching and noncreature objects. This is filter evidence only. |
+| Infinite Authority | `Consumers` inspects the complete record and asserts the remaining destruction-payment rejection. `NativeClauses` executes the original toughness union with a test-only body through native blocking and blocked directions, including two opposing creatures. Its full delayed body remains unsupported. |
+| Shared declaration and detection context | `TestRONCombatCharacteristicShapes` covers source/host, both directions and reversed union, required subtype, explicit type, excluded subtype, all three toughness comparisons, shroud and delayed timing. `Invalid` rejects malformed and duplicate declarations and wrong subtype families. |
+| Saved identity and engine reuse | `Identity` tests characteristic changes after detection, opponent return, phase/phase cycle, source return, attachment move, control, copies, regeneration, indestructibility and pending clones. `DetectionAndInstances` tests final layered characteristics, no retroactive trigger, phased detection rejection, two factories/controllers, two saved opponents and clone isolation. |
+
+No complete-card gameplay mapping is added. Collection-wide engine-validation
+and behavior totals remain null. The existing begin-combat consumer-boundary
+assertion now requires Ram's precise later unbound-reference diagnostic; full
+record rejection and all its existing gameplay assertions remain intact.
+
+### Actual gain, defects and validation
+
+Actual gain equals the estimate: **0 full cards / 0 records**. No accepted record
+is lost. Exactly two first diagnostics advance:
+
+- Battering Ram: `ATQ.lines.ron:14:515`, unbound/incompatible
+  `Trigger_TheAttackingCreature`.
+- Infinite Authority: `LEG.lines.ron:133:569`, unsupported mandatory sacrifice
+  cost `DestroyPermanent`.
+
+Semantic inventory stays **72,962 nodes / 8,559 signatures / 6,261 unknown-role
+occurrences**. All twelve file hashes are unchanged. No RON source or vocabulary
+source snapshot changes are needed. Local `data/ATQ.json` confirms Ram must
+destroy the blocking Wall; its RON instead reads the attacking creature. That
+previously recorded defect remains explicit. Local `data/FEM.json` confirms
+Soldier's one-or-more grouping. Local `data/LEG.json` confirms Authority's
+threshold of three and destruction-dependent later counter. Its later bodies
+are not accepted by this prerequisite.
+
+Full loading, gameplay and startup wiring remain below removal gates. No Go
+card definitions, generators or DSL functions are removed. No caller audit is
+used to authorize deletion. API/rules docs change only for established adapter
+behavior; the inventory already assigns these nodes correct semantic roles.
+
+Final required checks all passed. Initial short/full runs found the stale Ram
+boundary expectation; the exact updated diagnostic fixes it without weakening
+record rejection. Initial lint requested capacity for a two-opponent test slice;
+that fix and automatic formatting were reviewed before rerunning checks.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, `make build` | PASS |
+| Test-first focused checks | Expected unsupported-filter failures confirmed |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONCombatCharacteristic\|TestRONCombatPair\|TestRONBeginCombat' -count=1` | PASS after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS for final code |
+| `make test` | PASS for final code |
+| `make build` | PASS for final code |
+| `go vet ./...` | PASS for final code |
+| `make lint` | PASS, zero issues; automatic changes reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,786 compiled / 659 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 674 accepted / 312 rejected names; unchanged semantic totals |
+| Diagnostic/source comparison | Exactly the two diagnostics above advance; no accepted-record regression; twelve unchanged hashes |
+
+Only this slice is committed; the hash is reported in the final response. User
+changes remain unstaged. There is no final environment or validation blocker.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source selection and one-shot prevention for the seven Circle/Realm
+   consumers, with legal source-domain and simultaneous-event contracts.
+2. All-zone battlefield-count CDAs for Dakkon Blackblade, Keldon Warlord,
+   Nightmare and Plague Rats; keep Avenger's source defect separate.
+3. Installed temporary triggers for the shared consumers in the fresh inventory;
+   inspect event-specific bodies, captured subjects and source defects first.
+
+Slice files: `pkg/mage/dsl/ron/combat_pair.go`,
+`combat_characteristic_test.go`, `begin_combat_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended ledger
+entry. No second slice is started.

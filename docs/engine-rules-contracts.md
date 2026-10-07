@@ -2745,6 +2745,21 @@ bindings are not captured by the engine and are rejected in delayed RON bodies.
 
 ## Filtered source and attachment combat-pair capture
 
+RON combat-pair filters now accept a required creature subtype and a fixed
+toughness comparison. They reuse `IsCreature`, `HasSubType`,
+`HasToughnessEqual`, and `HasToughnessGTE` through the existing matching patterns.
+The event reads final current characteristics at detection (CR 509.3f).
+A later subtype or toughness change cannot change a saved event.
+`TestRONCombatCharacteristicShapes`, `Identity`, and `DetectionAndInstances`
+cover these filters, typed opponent capture, delayed destruction, phasing,
+returned objects, independent factories, copies, regeneration and clones.
+`NativeClauses` executes the original Battering Ram and Infinite Authority event
+declarations with test bodies through native combat. `Consumers` inspects their
+complete records and Dwarven Soldier's original Orc filter. These are clause
+and prerequisite tests; none establishes complete gameplay for these cards.
+`Invalid` covers malformed filters, duplicate conditions and wrong subtype
+families. No new engine rule or grouped combat event is established.
+
 `BlocksCreatureMatching(subject PermanentRef, filter PermanentFilter)`,
 `BecomesBlockedByCreatureMatching(subject PermanentRef, filter PermanentFilter)`
 and `BlocksOrBecomesBlockedByCreatureMatching(subject PermanentRef, filter

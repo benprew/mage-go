@@ -2612,12 +2612,18 @@ restrictions, combat events, choices, histories, links, or finite prevention.
 `TriggerA` accepts `WhenACreatureBlocksACreature(subject, filter)` and
 `WhenACreatureBecomesBlockedByACreature(subject, filter)` with
 `SinglePermanent(ThisPermanent)` or, in an Aura, `SinglePermanent(HostPermanent)`.
-The filter is `IsCardtype(Creature)` or a one-argument `And` list containing it
-exactly once, optionally with one `IsNonCreatureType(subtype)` and one color
-condition. The color condition is `IsColor(color)` or a nonempty
+The filter is `IsCardtype(Creature)`, `IsCreatureType(subtype)`, or a
+one-argument `And` list. A conjunction must contain a creature type condition
+or a required creature subtype. It permits one of each, one
+`IsNonCreatureType(subtype)`, one color condition, and one fixed toughness
+comparison. The color condition is `IsColor(color)` or a nonempty
 `Or([IsColor(color), ...])`. Each subtype must pass creature-family validation.
-Other type, history, numeric, controller and nested conjunction forms remain
-unsupported. Duplicate top-level conditions are errors.
+`IsCreatureType` also requires the creature card type. It cannot match a
+noncreature with that subtype. `ToughnessIs` accepts `EqualTo(Integer(n))`,
+`LessThanOrEqualTo(Integer(n))`, or `GreaterThanOrEqualTo(Integer(n))` and reads
+current toughness at detection. Other type, history, numeric, controller and
+nested conjunction forms remain unsupported. Duplicate conditions of one kind
+are errors.
 
 An event union is exactly `Or([blockingEvent, blockedByEvent])`, in either order.
 Both branches must have the same position-free subject and filter declarations.
@@ -2631,7 +2637,8 @@ provides `Trigger_TheBlockingCreature`; the union provides only
 body, including supported delayed step actions. Each factory builds a fresh
 binding. The matching engine patterns save the opposing incarnation at detection.
 Aura events read the current attachment at detection. Later attachment, color,
-subtype or controller changes do not recheck filters or redirect the saved object.
+subtype, toughness or controller changes do not recheck filters or redirect
+the saved object.
 Departure of the source does not end pending or delayed abilities. A returned
 opponent is a new object; a phased-out opponent cannot be destroyed.
 

@@ -211,7 +211,7 @@ func TestRONBeginCombatConsumerBoundaries(t *testing.T) {
 		set, name, remaining string
 		any                  bool
 	}{
-		{"ATQ", "Battering Ram", "combat pair filter", false},
+		{"ATQ", "Battering Ram", "unbound or incompatible permanent reference (Trigger_TheAttackingCreature)", false},
 		{"FEM", "Goblin Flotilla", "CreateTriggerUntil", true},
 		{"LEG", "Johan", "optional payment cost", false},
 	} {
