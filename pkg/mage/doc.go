@@ -154,6 +154,9 @@
 // Use [IfPermanentMatches] for a resolving property condition. It uses the
 // current object or information saved for its exact incarnation. An information
 // read does not make an absent object available for an action.
+// Use [IfPermanentMatchesElse] to select one of two resolution bodies.
+// Use [UnlessPermanentMatches] for a body on a known nonmatching object.
+// Both read the condition once. Missing information runs neither body.
 // [AttackedThisTurn] and [DidntAttackThisTurn] keep each incarnation separate.
 // Entering combat without an attack declaration does not satisfy attack history.
 // [TargetPlayerAttackedThisTurn] checks the player's history at target selection

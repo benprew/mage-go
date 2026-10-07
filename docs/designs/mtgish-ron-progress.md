@@ -34930,3 +34930,148 @@ Post-lint focused tests passed with `-count=1`; final strict loading reproduced
 the same diagnostics and counts. No environment or pre-existing check blocker
 remains. The commit contains only the slice files listed above. User work is
 preserved unstaged. No second slice is started.
+
+## 2026-10-07: permanent property alternatives engine prerequisite
+
+Status: completed slice `RESOLUTION-PERMANENT-ALTERNATIVES-ENGINE`.
+This run stops after the reusable engine prerequisite. RON adapter work is
+not part of this slice. The initial user changes to `.gitignore`, the execution
+and progress documents, and the untracked completed ledger are preserved.
+Only this appended progress entry is staged from the progress document.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading exited 1 for collection rejection, not compilation failure:
+2,445 records, 1,930 compiled, 515 rejected; 741 accepted / 245 rejected
+unique names. Semantic inspection found 72,962 occurrences, 8,557 signatures
+and 4,594 unknown-role occurrences. Engine-validated and behavior-verified
+collection counts remain null. The current compiler, inventory and complete
+records take precedence over the older vocabulary loader diagnostics.
+
+The design, ledger, vocabulary metadata/hashes, engine reference, selected
+engine/compiler code, complete candidate records and relevant API/rules
+contracts were read. CR 400.7, 608.2b/c/h and 702.26 supply the identity,
+resolution-information and phasing requirements. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Remaining blockers and concrete downstream gain | Estimated effort |
+| --- | --- | --- | --- |
+| Permanent property alternatives, selected | Blood Lust; Erg Raiders. **0** compiler unlocks for the engine prerequisite alone; **2** downstream complete consumers after their adapters and control-history filter. | Blood Lust's existing temporary P/T values and target adapters are reusable. Erg Raiders also needs the controller and continuous-control-history resolving filter; its end-step intervening-if and damage action already compile. One-read alternatives and known-nonmatch execution are missing from the typed information branch. Static Angry Mob and Lurker require different contracts and are not counted. | Small: one shared executor extension, two APIs, branch validation, object-information, timing and stack tests. Later adapters are excluded. |
+| Complete damage-source selection | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith; Reverse Damage; Eye for an Eye; Dark Sphere. **0** engine-only unlocks; **11** potential complete consumers across later shield/replacement slices. | Live-only choice cannot enumerate every legal referred or command-zone object. Saved choice bindings and the source-specific next-event adapters remain necessary. Redirection, prevented-amount life gain, reflection and fractional prevention add separate contracts for the four non-circle consumers. Seven basic shields have a shared downstream path. | Large: legal-source enumeration and retained references, then several shield operations and replacement-ordering tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0** engine-only unlocks; **8** potential complete consumers with grant/token/removal adapters. | Ordinary banding does not supply parameterized membership. Attack bands, blocking damage assignment, multiple independent ability instances and ability-class removal require an engine contract before adapters. Complete token and removal consumers need those additional contexts. | Large: combat membership, assignment decisions, layer grants/removal, token metadata and copying tests. |
+
+Selection rationale: a small shared information-executor prerequisite establishes
+both positive/negative alternatives for two concrete resolving consumers. It
+has the smallest complete implementation/test boundary among these candidates.
+It does not add a single-card adapter while multi-card prerequisites remain.
+The larger source-choice and parameterized-combat families still need several
+new subsystem contracts. First-error frequency was not an unlock estimate.
+The contract, boundary, zero immediate unlock estimate and acceptance cases
+were stated before edits. The `implement-engine` skill was used. No sub-agent,
+removed card/set skill, Go card requirements or Go stub was used.
+
+### Exact signatures, contexts and engine reuse
+
+- `mage.IfPermanentMatchesElse(subject PermanentRef, filter PermanentFilter,
+  matching, nonmatching ResolvingEffect) ResolvingEffect`.
+- `mage.UnlessPermanentMatches(subject PermanentRef, filter PermanentFilter,
+  body ResolvingEffect) ResolvingEffect`.
+
+These are resolving effects with typed source, attachment, saved-permanent or
+singular-target information references. They use the same private
+`permanentInformationBranch` and `readPermanentInformation` as the existing
+`IfPermanentMatches`. Existing callers retain their behavior and properties.
+The predicate runs once at the instruction's position. Known information
+selects exactly one alternative (or the known-nonmatch body). Missing information
+runs neither body; it cannot satisfy negation. A zero filter matches known
+information. Current information, phase snapshots and departure LKI retain
+incarnation identity. Neither body can act on an absent or returned incarnation.
+The selected body keeps the resolving controller and bindings, and propagates
+errors through its surrounding sequence. New alternatives have no unconditional
+AI shortcut properties.
+
+Both alternative bodies are validated. Nil bodies, nil/unbound/unsupported
+references and reads without a producer are definition errors. A producer in
+one branch cannot supply another branch or a later outer instruction. A local
+sequence can use its own producer. The existing definition visitor enforces
+this without new global state or a separate binding service.
+
+The compiler owns future `IfElse(PermanentPassesFilter(...), [...], [...])` and
+`Unless(PermanentPassesFilter(...), [...])` spelling/scope adapters. They still
+fail loading in this slice. Static conditions, combat membership, event checks,
+control-history filters and optional-cost result branches do not gain support.
+No rules are moved into `ron`. Existing stack legality, payment rollback,
+copying, cloning, zone services and phasing are reused. No replacement order,
+simultaneous operation, event or payment contract is changed.
+
+### TDD and evidence mapping
+
+New tests first failed for the missing APIs. An initial test used the incorrect
+`UntapSubject` name; after correcting it to `UntapPermanent`, the failure was
+confirmed for the missing APIs alone. The implementation made the contract tests
+pass. A later stack fixture used `R` instead of the engine's `{R}` mana spelling;
+that fixture was corrected without weakening payment assertions.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Branch selection and one-read timing | `TestPermanentPropertyBranchSelection`: matching and nonmatching bodies mutate the checked property; only one runs. `ReadsOnce`: predicate count, zero filter and new-form AI properties. |
+| Typed object information | `TestPermanentPropertyBranchInformation`: source/target/saved/attachment, live nonmatch, departure/return, phase cycles, missing incarnation, control change and independent clones. LKI cannot restore an action on a returned object; missing information cannot satisfy negation. |
+| Definition and binding validity | `TestPermanentPropertyBranchDefinitions`: nil reference/bodies, unbound references including the false branch and valid target declarations. `BindingScope`: cross-branch and outer reads rejected; local producer/read sequences accepted and executed. |
+| Native stack, payments, legality and cloning | `TestPermanentPropertyBranchStack`: paid announcement, unpaid rollback, delayed condition read, copied spell controller, clone state divergence, shroud, returned and phased illegal targets. `ErrorAndSequence`: selected error propagation and no later instruction execution. |
+| Lesser Werewolf, complete LEG record, regression | Existing `TestRONResolvingConditionWerewolf`, `RepeatedWerewolf`, `RollbackAndCasting` exercise real RON casting, activation, combat legality, property timing and lifecycle through the changed shared executor. |
+| Eater of the Dead, complete DRK record, regression | Existing `TestRONResolvingConditionEater` and `RollbackAndCasting` retain real RON conditional exile/untap, target legality and payment coverage. |
+| Blood Lust and Erg Raiders, downstream only | Complete records inspected; **no new full-card gameplay mapping** is claimed. Compiler adapters and Erg Raiders's control-history filter remain explicit gaps. |
+
+New engine contract coverage is separate from collection compilation and full-card
+coverage. Existing real RON mappings are rerun; no unique card is newly behavior
+verified by this engine-only prerequisite.
+
+### Source defects, final measurements and checks
+
+No RON source was changed. All 12 source hashes match the vocabulary snapshot;
+there is no selected-source correction or vocabulary refresh. Previously recorded
+source defects remain outside this slice. No environment, build or test failure
+blocked the work.
+
+Actual gain matches the engine-only estimate: **0 unique names / 0 records**.
+Fresh strict and semantic loading remains **1,930 compiled / 515 rejected
+records**, **741 accepted / 245 rejected names**, with no diagnostic changes.
+Blood Lust still reports `unsupported action (IfElse)` at LEG:33:216;
+Erg Raiders reports `unsupported action (Unless)` at ARN:27:289.
+The loader exits 1 and installs no partial registry. Inventory counts and
+collection-wide null validation/gameplay counters are unchanged.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage -run 'TestPermanentPropertyBranch\|TestIfPermanentMatches' -count=1` | PASS after expected missing-API failures and fixture corrections. |
+| `go test ./pkg/mage/dsl/ron -run TestRONResolvingCondition -count=1` | PASS, real RON gameplay regressions. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS, additional skill verification. |
+| `make lint` | PASS; automatic changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for 515 unsupported records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 245 rejected unique names. |
+
+No Go card definition, generator, runtime caller or DSL function is removed.
+Complete loading and gameplay, runtime cutover and the removal gates remain
+unfinished. No unused-function caller audit or native startup completion is
+claimed. Documentation describes only the new engine prerequisite.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Resolving permanent-property `IfElse` / `Unless` adapters and the exact
+   control-history predicate for Blood Lust and Erg Raiders, using this engine
+   contract; two downstream complete consumers.
+2. Complete damage-source enumeration and saved choice references, followed by
+   the seven basic source-specific shield consumers.
+3. Parameterized bands with others for the eight grant/token/removal consumers.
+
+Slice files: `pkg/mage/resolution_permanent_filter.go`, new
+`pkg/mage/resolution_permanent_branch_test.go`, `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and only this appended
+progress entry. All required checks pass. One descriptive slice commit is made;
+initial user changes remain unstaged. No second slice is started.

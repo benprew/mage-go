@@ -5957,3 +5957,22 @@ and attachment conditions, target legality, identity and clone isolation.
 `TestRONUpkeepPayment*` includes its upkeep payment and sacrifice behavior.
 Gaea's Liege still lacks conditional base-value and defending-player adapters;
 this filter does not establish its gameplay support.
+
+## Engine prerequisite for permanent property alternatives
+
+The engine now exposes
+`mage.IfPermanentMatchesElse(PermanentRef, PermanentFilter, ResolvingEffect,
+ResolvingEffect) ResolvingEffect` and
+`mage.UnlessPermanentMatches(PermanentRef, PermanentFilter, ResolvingEffect)
+ResolvingEffect`. These services use one current or retained information read
+for the exact object. Missing information runs neither body. Both branch bodies
+are required and validated; branch-local producers do not escape their paths.
+Both new services execute their conditions in AI simulations.
+
+This establishes an engine prerequisite for resolving
+`IfElse(PermanentPassesFilter(...), [...], [...])` and
+`Unless(PermanentPassesFilter(...), [...])`. The RON compiler still rejects these
+forms. Static alternatives, combat-membership alternatives and controller/turn
+history filters require separate contracts. Existing resolving RON `If` keeps
+its implementation and caller behavior. See `TestPermanentPropertyBranch*`
+and `TestRONResolvingCondition*` for engine and RON regression evidence.

@@ -7099,3 +7099,37 @@ combat, layer, cost, target or replacement service.
 `ConditionsAndDeclarations` and `TargetLegality` establish these contracts.
 The existing `TestRONUpkeepPayment*` scenarios cover the complete card's
 upkeep payer, timing, color payment, sacrifice, copy and identity contracts.
+
+### Permanent property alternatives at resolution
+
+`IfPermanentMatchesElse(subject PermanentRef, filter PermanentFilter,
+matching, nonmatching ResolvingEffect) ResolvingEffect` selects exactly one body
+from one property read at its position in the resolving sequence.
+`UnlessPermanentMatches(subject PermanentRef, filter PermanentFilter,
+body ResolvingEffect) ResolvingEffect` runs its body on a known nonmatch.
+They extend `IfPermanentMatches` through the same executor and information
+service. Source, attachment, saved-permanent and singular-target references keep
+current, phase-retained or departure information for the exact incarnation.
+An absent object with no usable information runs neither body, including the
+negated form. Failure to obtain required information is not evidence of a
+nonmatch (CR 608.2b/h). A zero filter matches known information.
+
+The condition runs once before either body. A body's changes cannot cause the
+other body to run. Bodies retain the resolution controller and bindings; actions
+still require live legal objects. LKI cannot restore a returned target. Stack
+legality, payment rollback, copying and game cloning use existing services.
+Errors from the selected body stop its surrounding sequence. Both new forms
+have no unconditional AI shortcut properties; their conditions must execute.
+The existing one-body form keeps its properties and callers.
+
+Definition validation requires every body and a supported, bound reference.
+Both alternative bodies are inspected. A producer in one branch cannot supply
+a read in another branch or after the branch. A branch-local sequence can use
+its own producer. No conditional result is promoted to an outer scope.
+No costs, replacement ordering, simultaneous batches or events are changed.
+RON `IfElse` and `Unless` adapters are not established by this engine slice.
+
+Evidence: `TestPermanentPropertyBranchSelection`, `Information`, `Definitions`,
+`ErrorAndSequence`, `ReadsOnce`, `Stack` and `BindingScope`; existing
+`TestIfPermanentMatches*` and `TestRONResolvingCondition*` retain the one-body
+contract and real Lesser Werewolf / Eater of the Dead gameplay evidence.
