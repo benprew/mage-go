@@ -2422,6 +2422,36 @@ RON gameplay tests: `TestRONEnchantedFilter*` cover Ramses Overdark and Wall of
 Putrid Flesh. Enchanted Being still requires an unsupported combat-only static
 prevention event; this filter does not establish support for that event.
 
+## RON land-entry events
+
+Top-level permanent `TriggerA` rules accept these events:
+
+```ron
+WhenAPermanentEntersTheBattlefield(IsCardtype(Land))
+WhenAPlayerPutsAPermanentOnTheBattlefield(AnyPlayer, IsLandType(Swamp))
+```
+
+The second form accepts the five basic land subtypes. Other filters, player
+restrictions, malformed envelopes and tuple-spelled references are rejected.
+Both events declare `Trigger_ThatPermanent` only inside their action body. The
+actor form also declares `Trigger_ThatPlayer`, the player who caused entry.
+An entry without a known actor does not match that form. Setup entry can still
+match the first form. Playing a land and putting a land onto the battlefield
+both cause entry; phasing does not.
+
+Each factory uses a fresh `PermanentBinding` with
+`LandEnters().WithPermanent(binding)`. Actor events also use `OfSubtype` and
+`WithActor` with a separate `PlayerBinding`. Each pending event saves its own
+land incarnation and actor. A returned land cannot replace an old reference.
+`ControllerOfPermanent(Trigger_ThatPermanent)` reads the controller at resolution
+through `ControllerOfWithLKI`; it does not use the actor or freeze entry control.
+Actions on the land require the original, present incarnation. Copies and clones
+retain independent resolution state.
+
+`TestRONLandEntry*` covers Ankh of Mishra's complete six records and both Chant
+event prerequisites. The Chants still reject their optional counter-placement
+payments; these tests do not establish complete Chant gameplay.
+
 ## RON land and artifact graveyard-event adapters
 
 `TriggerA(WhenAPermanentIsPutIntoAPlayersGraveyard(filter, AnyPlayer), actions)`

@@ -26105,3 +26105,158 @@ No further slice starts in this run.
 Slice files: pkg/mage/dsl/ron/damage_received.go/test.go, compiler.go,
 permanent_scope.go, triggers.go, counter_placement.go, inventory.go/test.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this appended entry.
+
+## 2026-10-06: land-entry event capture and RON adapters
+
+Status: completed slice `LAND-ENTRY-EVENTS`. Stop after this slice.
+Collection execution, runtime cutover and removal gates remain open.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected compiler/event/binding/identity services, relevant API/rules contracts,
+and all eight affected complete records. Requirements come from RON and local
+Oracle records in data/LEA.json and data/FEM.json, not Go card definitions.
+Applied implement-engine for the typed event capture prerequisite; no removed
+card/set skill, generated stub or sub-agent. Rules: CR 400.7, 603.2–3, 603.6a–b,
+608.2h and 702.26b. Preserve initial user edits to .gitignore, execution design,
+ledger archival changes and untracked mtgish-ron-completed.md. Stage only this
+entry in the ledger, leaving the user's archival diff unstaged.
+
+Fresh baseline: RON tests with -count=1, short engine tests with -count=1 and
+make build passed. Strict and semantic loaders exited 1 for collection rejection:
+2,445 records / 986 names; 1,778 compiled / 667 rejected records;
+671 accepted / 315 rejected unique names. These are not build failures.
+
+| Candidate | Distinct affected names; estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Land-entry capture/events, selected | Ankh of Mishra, Thelon's Chant, Tourach's Chant; **1 name / 6 records** | Both Chants still need optional counter-placement payments. Typed land identity and known entry actor enable all three event consumers, including current/LKI controller reads for Ankh and saved actor payment/damage for both Chants. | Small engine capture addition and two compiler adapters; moderate lifecycle/gameplay tests. Existing LandEnters controller/actor/subtype services and event captures supply most contracts. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7 names / 31 records** after prerequisites, **0** adapter-only | Eligible source discovery across required zones, saved source identity, local choice bindings, next-event shield consumption and ordering remain. Enables shared prevention selection for further source-choice consumers. | High engine/compiler and replacement/copy/clone test effort. |
+| Battlefield-count P/T characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Wood Elemental; **5 names / 20 records** credible after prerequisite | All-zone characteristic queries, owner/controller semantics and CDA layers are prerequisites. Avenger has its recorded opponent/controller source defect; Wood Elemental also needs entry sacrifice/count retention. | High engine prerequisite effort, then small adapters; all-zone/copy/layer tests. |
+
+Inspected complete nested records for estimates; reprints count once. Selected
+land-entry work for the highest credible immediate gain per effort, with a shared
+three-consumer prerequisite. Larger alternatives need substantially broader engine
+contracts. First-error frequency is not an unlock estimate. Selection, contract,
+reuse boundary and acceptance cases were stated before edits. No second slice.
+
+### Exact shapes, dependencies and reuse boundary
+
+Top-level permanent `TriggerA(event, body)` now accepts:
+
+- `WhenAPermanentEntersTheBattlefield(IsCardtype(Land))`.
+- `WhenAPlayerPutsAPermanentOnTheBattlefield(AnyPlayer, IsLandType(type))`,
+  where type is one bare Plains, Island, Swamp, Mountain or Forest symbol.
+
+Event/filter envelopes must be tuples of the declared arity. Other types,
+collections, restricted actors, unknown/nonbasic subtypes, tuple-spelled references
+and malformed declarations remain rejected. Existing source-entry adapters keep
+their behavior. No general TriggerI, entry replacement or counter-payment support.
+
+Private compiler signature:
+`compileLandEntryTrigger(event, body Node, ctx scope) (optionFactory, error)`.
+Both forms provide a typed `Trigger_ThatPermanent` only in their body. The actor
+form additionally provides typed `Trigger_ThatPlayer`; a plain land-entry event
+does not invent an actor. Sibling abilities cannot read either declaration.
+`landEntryEventPlan{playerName string}` keeps declaration identity nonzero-sized;
+`instanceBindings.entryActors` builds a fresh PlayerBinding for each factory.
+Existing permanent-event plans build fresh PermanentBindings. No global result
+slot or chosen state is stored in a compiler plan.
+
+Engine API: `LandEnters().WithPermanent(binding *PermanentBinding)` returns the
+existing landEntersPattern builder. It captures the exact entering incarnation
+before trigger placement and composes with WithActor and WithController. Nil,
+empty-name, duplicate and unbound declarations fail definition validation.
+The typed capture uses existing eventPermanentCapture/capturedPermanent,
+WhenEvent, trigger snapshots, retention, stack copies and clone services.
+
+RON spelling/scope stay in ron. Reusable event identity stays in mage.
+Existing LandEnters type/subtype matching, known-actor check and native zone
+entry dispatcher are reused. Source lifecycle, APNAP placement, current/LKI
+information reads, phasing, source-aware damage and prevention, transactional
+casting and native land-play legality remain engine-owned. Ankh reads the land's
+current controller at resolution, or its exact incarnation's retained controller
+when absent; actor capture does not freeze that read. Return cannot replace old
+information. Actions need the original present incarnation. A phase cycle retains
+identity and does not create entry events. Chants save the actual entry actor,
+which can differ from owner/controller and can differ from a copied trigger's
+controller. Unknown setup actors do not trigger the actor form.
+
+No alternate zone/damage system, Go fallback, name branch, partial production
+registry or runtime declaration panic. No existing caller changes or DSL removal.
+
+### TDD and gameplay mapping
+
+Tests preceded implementation. Corrected test-only PhaseIn slice type and fixture
+construction before confirming expected unsupported-adapter failures. Engine tests
+failed for missing WithPermanent. After implementation, a return fixture also
+queued a valid new entry trigger; remove its watcher before return to isolate the
+old reference. General subtype-family validation accepts names that LandEnters
+cannot use, so RON declares only the supported basic subtype set and rejects
+unknown names before construction. No assertion or production rule was waived.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Ankh of Mishra; all LEA/LEB/2ED/3ED/CED/CEI records | `TestRONLandEntryAnkh`: event versus resolution timing; current control, LKI after departure/return/phasing, phase cycle, source departure/return/phasing, copies and clone isolation. `CastAndNativeLand`: failed casting rollback, sorcery timing, paid casting and delayed entry, real RON Swamp native play, partial prevention, illegal second land exclusion. `SourcesAndPendingEvents`: independent factories/controllers, nonland exclusion, source phasing/ability removal, separate pending land references and clone isolation. `Reprints`: validation and strict loading of all six complete records into one canonical name; atomic rejection preserves registry. |
+| Thelon's Chant and Tourach's Chant, FEM complete records inspected | `TestRONLandEntryChantEvents`: compile exact source event with the unpaid damage clause as a prerequisite fixture; unknown actor and wrong subtype exclusion, actor versus land controller, source-record event, source land return, trigger copies with a different controller, pending clones and separate actor values. Complete records still reject optional PutCounters payment; no complete-card gameplay claim. `Reprints` includes both complete records in semantic reporting and checks their exact remaining blocker. |
+| Engine capture | `TestLandEntryPermanentDeclaration`: valid/nil/empty/duplicate/unbound declaration validation. `Identity`: action identity after departure/return/phasing/phase cycle, copied trigger and clone isolation. `CombinedCaptures`: typed permanent/actor/controller writes together, two pending entries with different players and lands, cloned pending events. Existing `TestLandEntryController*`, `Actor*`, `Subtype*` remain passing. |
+| RON declaration/reporting | `TestRONLandEntryInvalid`: malformed envelopes, wrong types/actors/subtypes, unknown subtype, tuple-spelled reference, absent actor binding and sibling scope leaks. `Reprints`: semantic actor role and remaining nested blockers. Whole repository inventory tests assert new collection counts and unchanged production registry. |
+
+One complete-card gameplay mapping added, plus two partial event prerequisites.
+Aggregate engine_validated/behavior_verified totals remain null. Compilation and
+gameplay are separate; this slice does not verify every previously accepted card.
+
+### Actual gain, defects, validation and next candidates
+
+Actual gain matches estimate: **1 unique name / 6 records**, Ankh of Mishra.
+Final strict and semantic loaders: **1,784 compiled / 661 rejected records**;
+**672 accepted / 314 rejected names**. Both exit 1 as required while unsupported
+records remain. Exactly six Ankh records leave rejection, with no accepted-record
+regression. Only other changed diagnostics: Thelon's Chant
+`FEM.lines.ron:86:452: unsupported optional payment cost (PutCounters)` and
+Tourach's Chant `FEM.lines.ron:96:454: unsupported optional payment cost
+(PutCounters)`. Strict loading publishes no partial production registry.
+
+Semantic inventory: 72,962 nodes / 8,559 signatures; unknown-role occurrences
+fall from 6,296 to 6,290. Support remains unverified per expression. All twelve
+source hashes still match the vocabulary snapshot, so no refresh is needed.
+No selected source defect or environment failure. Previously recorded Gaea's
+Avenger and Battering Ram source defects remain separate deferred work.
+Missing compiler adapters, engine prerequisites and source defects stay separate.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, short engine tests with -count=1; make build | PASS |
+| Test-first RON focused tests | Expected missing land-entry adapter failures after fixture compilation corrections |
+| Test-first engine capture tests | Expected missing WithPermanent compile failure |
+| Focused go test ./pkg/mage -run TestLandEntry -count=1 | PASS, including existing controller/actor/subtype contracts |
+| Focused go test ./pkg/mage/dsl/ron -run 'TestRONLandEntry\|TestInventory' -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic changes reviewed, focused checks repeated |
+| git diff --check | PASS |
+| go run ./cmd/loadcards -json | Expected exit 1, 1,784 compiled / 661 rejected |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1, same collection counts and semantic totals above |
+| Final source hashes and diagnostic comparison | All source hashes unchanged; no accepted-record regression or diagnostic drift |
+
+All required native checks pass. No check is waived. Test-development failures
+above are separate from final validation. One descriptive commit follows; its
+hash is in the final response. Unrelated user changes remain unstaged.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source prevention prerequisites for the seven Circles/Realm consumers.
+2. Optional resolution counter-placement payment, with typed choosing player,
+   controlled creature choice, exact incarnation, replacement-aware payment and
+   branch result; concrete shared consumers are Thelon's Chant and Tourach's Chant.
+3. All-zone battlefield-count characteristic prerequisite for the five credible
+   complete consumers; Avenger defect and Wood Elemental entry work stay separate.
+
+Runtime/removal gates are unmet. No Go definitions, generators or DSL functions
+are deleted. No removal caller audit or authoring/runtime cutover is claimed.
+Slice files: pkg/mage/composable_events.go, land_entry_capture_test.go;
+pkg/mage/dsl/ron/land_entry.go/test.go, compiler.go, triggers.go, player_scope.go,
+inventory.go/test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
+this ledger entry. Stop after one descriptive commit when required checks pass.

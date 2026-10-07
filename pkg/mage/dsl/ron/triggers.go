@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPlayerPutsAPermanentOnTheBattlefield":
+		return compileLandEntryTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentIsDealtDamage", "WhenAPlayerIsDealtDamage":
 		return compileDamageReceivedTrigger(trigger, n.Args[1], ctx)
 	case "AtTheEndOfCombat":
@@ -63,7 +65,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		permanents := trigger.Args[0]
 		if permanents.Name != "SinglePermanent" {
 			if trigger.Name != "WhenAPermanentDies" {
-				return nil, unsupported(permanents, "trigger subject")
+				return compileLandEntryTrigger(trigger, n.Args[1], ctx)
 			}
 			var err error
 			buildTrigger, err = compileCreatureDeathTrigger(permanents)

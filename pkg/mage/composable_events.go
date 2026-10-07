@@ -1062,6 +1062,9 @@ func (p graveyardLeaveBatchPattern) captureEventEffects(event *GameEvent, effect
 
 // --- from composable_land_entry_event.go ---
 type landEntersPattern struct {
+	permanent           *PermanentBinding
+	capturePermanent    bool
+	duplicatePermanent  bool
 	subtype             string
 	filterSubtype       bool
 	duplicateSubtype    bool
@@ -1075,6 +1078,15 @@ type landEntersPattern struct {
 
 // LandEnters matches each land that enters the battlefield.
 func LandEnters() landEntersPattern { return landEntersPattern{} }
+
+// WithPermanent saves the entering land's incarnation before trigger placement.
+func (p landEntersPattern) WithPermanent(binding *PermanentBinding) landEntersPattern {
+	if p.capturePermanent {
+		p.duplicatePermanent = true
+	}
+	p.permanent, p.capturePermanent = binding, true
+	return p
+}
 
 // OfSubtype limits the event to an entering land with this land subtype.
 func (p landEntersPattern) OfSubtype(subtype string) landEntersPattern {
@@ -1127,6 +1139,14 @@ func (entryActorKnown) CheckTriggerCond(event *GameEvent, observer GameReader, _
 
 func (p landEntersPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "a land enters", battlefieldSource: true}
+	if p.capturePermanent {
+		if p.permanent == nil || p.duplicatePermanent {
+			n.problem = "land entry event: supply one permanent binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.permanent)
+			n.children = append(n.children, definitionEdge{"permanent", &eventPermanentCapture{binding: p.permanent}})
+		}
+	}
 	if p.filterSubtype {
 		n.Text = "a " + p.subtype + " enters"
 		if p.duplicateSubtype || !isLandSubtype(p.subtype) {
@@ -1156,10 +1176,15 @@ func (p landEntersPattern) inspectDefinition() definitionNode {
 }
 
 func (p landEntersPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.captureController && !p.captureActor {
+	if !p.capturePermanent && !p.captureController && !p.captureActor {
 		return nil
 	}
 	var captures []Effect
+	if p.capturePermanent && p.permanent != nil {
+		if land := observer.FindPermanent(event.SourceID); land != nil {
+			captures = append(captures, &eventPermanentCapture{binding: p.permanent, value: capturedPermanent{land.ID(), land.incarnationID}})
+		}
+	}
 	if p.captureController {
 		land := observer.FindPermanent(event.SourceID)
 		if land != nil {

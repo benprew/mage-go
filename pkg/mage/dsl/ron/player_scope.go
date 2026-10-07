@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	landEntry       *landEntryEventPlan
 	defender        *sourceCombatPlayerPlan
 	action          *playerActionsPlan
 	damageRecipient *damageRecipientPlayerPlan
@@ -30,6 +31,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	entryActors          map[*landEntryEventPlan]*mage.PlayerBinding
 	exiles               map[*exilePaymentPlan]*mage.NumberBinding
 	defenders            map[*sourceCombatPlayerPlan]*mage.PlayerBinding
 	activationHistory    *mage.ActivationHistoryBinding
@@ -85,6 +87,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 				return *ctx.damageRecipient, nil
 			}
 		case "Trigger_ThatPlayer":
+			if ctx.landEntryEvent != nil {
+				return playerReferencePlan{landEntry: ctx.landEntryEvent}, nil
+			}
 			if ctx.drawEvent != nil {
 				return playerReferencePlan{draw: ctx.drawEvent}, nil
 			}
@@ -127,6 +132,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.landEntry != nil {
+		return mage.FromPlayer(bindings.entryActors[p.landEntry])
+	}
 	if p.defender != nil {
 		return mage.FromPlayer(bindings.defenders[p.defender])
 	}

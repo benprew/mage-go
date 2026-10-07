@@ -190,6 +190,31 @@ LKI for permanent lifelink. Spell-source LKI, protection, and deathtouch still
 require separate work. No typed damage adapter or simultaneous damage
 instruction is supplied.
 
+## Land-entry permanent capture
+
+`LandEnters().WithPermanent(binding)` saves the entering land's card UUID and
+battlefield incarnation when the event is detected, before trigger placement.
+It can be combined with `WithActor` and `WithController`; all three declarations
+write separate typed bindings. Nil, empty-name, duplicate and unbound declarations
+fail definition validation. Existing callers without this capture keep their
+behavior. This adds no entry replacement or alternative event dispatcher.
+
+`From(binding)` uses the shared permanent reference service. Live actions require
+the saved incarnation to be present. Departure and return cannot redirect an old
+action. Phasing suspends actions; a phase cycle preserves identity. Information
+reads use current or retained information for that incarnation, as required by
+CR 400.7, 603.2–3, 603.6a–b, 608.2h and 702.26b. Pending events, trigger copies
+and game clones retain their own captured values.
+
+Evidence: `TestLandEntryPermanentDeclaration`, `TestLandEntryPermanentIdentity`,
+`TestLandEntryPermanentCombinedCaptures` and `TestRONLandEntry*`. Existing
+`TestLandEntryController*`, `TestLandEntryActor*` and `TestLandEntrySubtype*`
+continue to cover entry controller snapshots, known actors and event-time subtype
+checks. RON Ankh tests cover current versus retained controller reads, source
+departure, native land play, casting rollback, prevention, ability removal,
+independent sources and pending events. Chant tests cover their event prerequisites
+only; optional counter-placement payment remains unsupported.
+
 ## Captured permanent identity and retained information
 
 `Game.PermanentRef` captures a present permanent's card UUID and battlefield
