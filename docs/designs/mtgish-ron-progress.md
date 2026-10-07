@@ -36787,3 +36787,152 @@ Ranked next candidates to reassess with fresh evidence:
 3. Parameterized bands with others for the eight consumers compared above.
 
 No second slice starts in this run.
+
+
+## Run 2026-10-07: CONDITIONAL-STATIC-BRANCHES
+
+Status: completed implementation slice. This run stops after this slice.
+The initial edits to `.gitignore`, the execution design and the progress ledger,
+and untracked `mtgish-ron-completed.md`, are preserved. The commit includes only
+this appended ledger entry, not the user's ledger reorganization.
+
+### Fresh evidence and candidate comparison
+
+Baseline short engine tests, `make test` and `make build` passed. Strict loading
+and semantic inspection exited 1 because records remain unsupported, not because
+of a build failure. Baseline: 2,445 records, 1,953 compiled / 492 rejected;
+758 accepted / 228 rejected distinct names. AST inventory: 72,953 occurrences,
+8,554 signatures, 4,102 unknown-role occurrences. The vocabulary snapshot was
+read as syntax evidence. Complete records and nested forms for all candidates
+were inspected; reprints count once.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Conditional static branches, selected | Angry Mob; Lurker: **2** | Mob needs a current-turn branch and opponent-count adapter plus a source correction. Lurker needs inverted source turn history and a conditional spell-target restriction. Existing turn, history, layer, target and permanent-set services provide the remaining behavior. Enables reusable positive, negative and two-branch static contexts. | Small engine extension and compiler adapters; medium lifecycle, targeting, layer and gameplay tests. |
+| Complete chosen damage-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites/adapters | Full records require filtered source choice and a next-damage shield. Complete CR 609.7a enumeration still lacks referred objects and face-up command-zone sources. Enables additional source-specific redirection and prevention. | High enumeration, identity, replacement-order and batch testing effort. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after prerequisites/adapters | Full records require legendary/named parameters, static and token grants, or removal of every variant. Formation and damage assignment contracts are missing. Enables shared combat consumers. | High formation, assignment, layer, token and clone testing effort. |
+
+Selection rationale: two complete cards share static branch lowering with one
+small reusable targeting extension. This gives the largest credible gain for
+this run's implementation/test effort among the compared candidates. Larger
+multi-card engine contracts remain next work. Selection, contract, reuse boundary
+and acceptance cases were stated before edits. `implement-engine` supplied the
+engine workflow. Its engine-only boundary applies to that subtask; the user
+explicitly authorized RON integration and evidence-based source corrections.
+No removed card/set skill or old Go card definition was used.
+
+### Exact signatures, contexts and engine reuse
+
+- Top-level permanent rules: `If(condition, rules)`, `Unless(condition, rules)`
+  and `IfElse(condition, trueRules, falseRules)`. Each body is a nonempty list
+  of the existing supported conditional modifications with their same-layer
+  limit, or one supported attack/untap rule, or exactly one
+  `PermanentRuleEffect(subject,[CantBeTheTargetOfSpells(filter)])`.
+  Both branches compile even when one is inactive. No branch can declare
+  targets, costs, resolving actions, triggers or bare keyword rules.
+- New static condition: `IsPlayersTurn(You)`; bare You only, checked against
+  the source's current controller. Existing static conditions retain support.
+- New history condition: exactly
+  `PermanentPassesFilter(ThisPermanent,Or([AttackedThisTurn,BlockedThisTurn]))`,
+  with the two bare operands in either order. It uses the exact source
+  incarnation. Host history, individual history predicates, duplicate operands
+  and other history combinations remain rejected.
+- Live static P/T counts additionally accept `ControlledByAPlayer(Opponent)`,
+  alone or in a supported nonempty `And` filter. `SinglePlayer(You)` remains
+  supported. Static validation limits references before the existing contextual
+  collection compiler lowers the count. Resolving counts and all-zone CDAs do
+  not gain support from this change.
+- Engine API:
+  `CantBeTargetedBySpellsIf(PermanentRef, CardFilter, StateCondition) StaticRule`.
+  A condition is required and definition validation checks its dependencies.
+  It is read at each spell-target query with the live source's current controller
+  and incarnation. Unconditional `CantBeTargetedBySpells` retains all callers.
+- Shared services: `IsYourTurn`, `SourceAttackedOrBlockedThisTurnCondition`,
+  `NotCondition`, `While`, `SetBasePowerToughness`, typed permanent references,
+  `OpponentsOf`, `PermanentsControlledByPlayers`, `MatchingPermanents`,
+  `IntersectPermanents`, `CountPermanents`, printed-effect lifecycle, spell-source
+  information, transactional casting, copy/clone services and native cleanup.
+  RON owns spelling, shape checks, lexical validation and inventory roles.
+  Engine services own runtime rules. No card-name branch, fallback, global
+  action slot, declaration panic or partial production registry is added.
+
+Rules evidence: local Comprehensive Rules 115.1, 400.7, 508.1, 509.1, 514.3a,
+611.3a/b, 613.4 and 702.26; the engine reference and API/rules-contract docs.
+No new damage, replacement-order, simultaneous-operation or cost policy is
+introduced. Native combat, casting, copy and history services retain those rules.
+No DSL function or Go definition is removed: complete loading, gameplay and
+runtime wiring remain below the removal gate. No removal caller audit is claimed.
+
+### TDD, source correction and card-to-test mapping
+
+The initial engine test failed for the missing constructor. Fixture errors using
+nonexistent `AnyCard`/`AbilityTargetSource` helpers were corrected, then the
+missing-constructor failure was confirmed alone. New RON gameplay tests failed
+for unsupported `IfElse` and `Unless`. A hand-owner fixture error was corrected.
+After the adapter was implemented, the Mob test failed because the source counted
+its controller's Swamps instead of its opponents' Swamps. No requirement was
+weakened to make the implementation pass.
+
+`DRK.lines.ron:2`, Angry Mob: local `data/DRK.json` Oracle text requires Swamps
+opponents control. The count now uses `ControlledByAPlayer(Opponent)` instead of
+`ControlledByAPlayer(SinglePlayer(You))`. There is exactly one record for this
+name, so no reprint is left inconsistent. The existing isolated branch fixture
+now supplies opposing Swamps; the obsolete full-record rejection assertion is
+replaced by explicit complete-record gameplay, strict loading and membership
+assertions. Lurker's complete record agrees with local Oracle data.
+The vocabulary snapshot was refreshed from the parser-backed AST inventory,
+including hashes, occurrence counts, examples, top-level rules and fresh loader
+errors. The only source hash change is DRK; constructor/rule totals remain
+601/51. The loader portion also catches up earlier completed slice diagnostics.
+
+| Card or shared contract | Tests and evidence |
+| --- | --- |
+| Angry Mob, complete DRK record | `TestRONStaticBranchMob`: native cast, mana rollback, timing, trample, opposing Swamps including a dual land, own-land exclusion, controller versus owner, current turns, live phasing counts, clone isolation, control changes, base/bonus/counter/switch order and ability removal/restoration. `TestRONStaticBranchMobCombat`: independent opposing instances and native trample combat with current branch P/T. |
+| Lurker, complete DRK record | `TestRONStaticBranchLurker`: native cast, forbidden spell-target rollback, ability permission, native attack and block declarations, phase-cycle history, original/copy target identity after return, clone and final cleanup. `TestRONStaticBranchLurkerResolution`: current restriction recheck on original/copied spells, independent cloned resolution, native targeted ability and copied ability with departed source information. |
+| Compiler and loading | `TestRONStaticBranchInvalid`: malformed conditions/branches, invalid inactive branch, unbound/host references, duplicate/constructor history predicates, unsupported combined operations and dynamic static values. `TestRONStaticBranchStrictInventory`: complete-record definition validation, independent factories, all descendant roles and atomic invalid collection rejection. `TestInventoryRepositoryCollection` asserts both names remain accepted. |
+| Reusable engine extension | `TestCantBeTargetedBySpellsIf`: live turn/control changes, phase cycle, ability removal/restoration, spell/ability distinction and clone isolation. `Invalid`: nil/invalid conditions, nil subject and zero filter. `Attachment`: current host, source phasing/departure, returned host, reattachment and cloned lifecycle. Existing `TestCantBeTargetedBySpells*` retains rollback, spell copies/retargeting, partial legality, LKI and source identity coverage. |
+
+Two complete-card RON gameplay mappings are added. Collection-wide engine-
+validation and behavior counters remain null; compile totals do not prove whole-
+collection gameplay. Existing static value, conditional/static layer, target,
+history and strict-loader regressions pass with `-count=1`.
+
+### Validation and actual gains
+
+| Command | Result |
+| --- | --- |
+| New focused tests and relevant regressions with `-count=1` | PASS after expected missing-support failures and fixture corrections. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS; implement-engine verification. |
+| `make test` | PASS. |
+| `make build` | PASS; repeated after documentation updates. |
+| `go vet ./...` | PASS; repeated after documentation updates. |
+| `make lint` | PASS, 0 issues. Automatic import formatting reviewed; affected focused checks rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,955 compiled / 490 rejected; no registry published. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same membership; 72,952 occurrences, 8,553 signatures, 4,065 unknown-role occurrences. |
+
+Actual gain matches the estimate: **2 unique cards / 2 records**, exactly Angry
+Mob and Lurker; **760 accepted / 226 rejected unique names**. No previously
+accepted record or name becomes rejected. AST occurrences fall by one because
+the defective SinglePlayer wrapper was removed. Inventory role improvements are
+separate from execution support. No environment or pre-existing check failure
+blocks this slice. Runtime cutover, Go-card deletion and DSL cleanup remain open.
+
+Changed files: `cards/mtgish/DRK.lines.ron`; engine `spell_target_restriction.go`,
+`conditional_spell_target_test.go`, `doc.go`; RON `compiler.go`,
+`conditional_static.go`, `spell_target_restriction.go`, `static_value.go`,
+`static_branch_test.go`, `static_base_value_test.go`, `inventory.go`,
+`inventory_test.go`, `numeric_consumers_test.go`; API/rules-contract docs,
+vocabulary snapshot, and this appended progress entry.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete CR 609.7a source enumeration as the prerequisite for the seven
+   chosen-source shields compared above.
+2. Parameterized bands with others for the eight compared consumers.
+3. Shared static membership across layers and dynamic count contexts, before
+   remaining Animate Artifact/Gaea's Liege adapters; validate the documented
+   Liege source defect separately. Single-card work remains lower priority.
+
+No second slice starts in this run.

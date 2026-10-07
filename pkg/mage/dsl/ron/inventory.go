@@ -250,9 +250,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "landwalk_filter"
 		}
 		switch n.Name {
-		case "If":
+		case "If", "Unless":
 			if len(n.Args) == 2 {
 				return []string{"static_condition", "rule"}[index]
+			}
+		case "IfElse":
+			if len(n.Args) == 3 {
+				return []string{"static_condition", "rule", "rule"}[index]
 			}
 		case "AsPermanentEnters":
 			if len(n.Args) == 2 {
@@ -353,6 +357,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"player_reference", "static_player_filter"}[index]
 		}
 	case "static_condition":
+		if n.Name == "IsPlayersTurn" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "APlayerPassesFilter" && len(n.Args) == 2 {
 			return []string{"player_filter", "static_player_filter"}[index]
 		}

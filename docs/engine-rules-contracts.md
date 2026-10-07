@@ -2,6 +2,28 @@
 
 ## Live restrictions on spell targeting
 
+`CantBeTargetedBySpellsIf(PermanentRef, CardFilter, StateCondition)` adds a
+required pure condition to the existing restriction. Definition validation
+checks the condition and its reference dependencies. Target queries check the
+condition with the live source's current controller and exact incarnation.
+Turn changes and turn-history changes can therefore change legality before
+selection or resolution, without a saved branch choice (CR 611.3a).
+The existing source lifecycle, attachment, spell information, copy and target
+services apply. Ability targets remain separate; no replacement operation is
+introduced. The unconditional constructor retains its behavior and callers.
+
+`TestCantBeTargetedBySpellsIf*` covers invalid conditions/references/filters,
+live turn and control changes, phasing, ability removal/restoration, clone
+isolation, host reattachment, returned hosts and departed sources.
+`TestRONStaticBranch*` covers complete Angry Mob and Lurker records, payment
+rollback, opponent counts, base/modify/counter/switch layers, native trample,
+attack/block history, phase cycles, final cleanup, source return, target rechecks,
+spell/ability copies, departed ability-source information, strict loading and
+independent factories. Existing history services distinguish declarations from
+objects put into combat and retain history until final cleanup (CR 508.1,
+509.1, 514.3a, 400.7, 702.26). Static branch modifiers use `While` and
+`NotCondition`; no new continuous-effect ordering or history service is added.
+
 `CantBeTargetedBySpells(PermanentRef, CardFilter)` is a static rule evaluated
 against the current subject at each target query. It uses the existing active
 continuous-effect lifecycle and printed-ability suppression. A source must be

@@ -114,9 +114,9 @@ func TestRONStaticBaseValueRealBranches(t *testing.T) {
 	record := staticBaseRecord(t, "DRK", "Angry Mob")
 	branch := record.Fields["Rules"].Args[1]
 	for i, want := range []int{4, 2} {
-		g, a, _ := ronGame()
+		g, a, b := ronGame()
 		for range 2 {
-			g.PutOnBattlefield(repositoryCard(t, "LEB", "Swamp"), a.PlayerID())
+			g.PutOnBattlefield(repositoryCard(t, "LEB", "Swamp"), b.PlayerID())
 		}
 		factory := staticBaseSubrule(t, record, branch.Args[i+1].Args[0])
 		p := g.PutOnBattlefield(factory(), a.PlayerID())
@@ -233,7 +233,6 @@ func TestRONStaticBaseValueArithmeticAndCondition(t *testing.T) {
 func TestRONStaticBaseValueCompleteRecordsStayRejected(t *testing.T) {
 	for _, tc := range []struct{ set, name, gap string }{
 		{"LEB", "Animate Artifact", "combined or collective static base values"},
-		{"DRK", "Angry Mob", "unsupported rule (IfElse)"},
 		{"LEB", "Gaea's Liege", "ControlledByPlayer"},
 	} {
 		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {

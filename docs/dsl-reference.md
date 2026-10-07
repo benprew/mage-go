@@ -26,8 +26,32 @@ spell filter grammar: bare `AnySpell`, `IsEnchantmentType(Aura)`, `IsCardtype`,
 `IsColor`, and nonempty nested `And`/`Or` lists. Wrong arity, constructor-form
 references, unbound references and unsupported spell filters remain declaration
 errors. One spell restriction can share its list with one other-Aura restriction,
-as described below. Other combined lists, conditional rules and ability
+as described below. Other combined lists and ability
 targeting remain separate capabilities.
+
+`CantBeTargetedBySpellsIf(PermanentRef, CardFilter, StateCondition) StaticRule`
+adds a pure condition to the same rule. The condition is required and is checked
+at each target query, with the source's current controller and incarnation.
+Ability targets remain permitted. Use the existing `NotCondition` to invert it.
+
+RON top-level static `If(condition, rules)`, `Unless(condition, rules)` and
+`IfElse(condition, trueRules, falseRules)` accept nonempty lists of the existing
+conditional modifications. Each branch keeps the existing same-layer limit.
+A branch can instead contain exactly one
+`PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`.
+Existing conditional attack and untap bodies retain their support. Branches
+cannot declare targets, costs, keywords as bare rules, triggers or resolving actions.
+Both branches must compile, including the currently inactive branch.
+
+`IsPlayersTurn(You)` reads the current controller's turn. The exact condition
+`PermanentPassesFilter(ThisPermanent, Or([AttackedThisTurn, BlockedThisTurn]))`
+reads the original source incarnation's turn history; the two operands can be
+reversed. Host history, separate history predicates and other logical history
+combinations remain unsupported. Static P/T counts also accept
+`ControlledByAPlayer(Opponent)`, including within a nonempty `And` filter, through
+the shared opponents and permanent-set services. The count reads current control,
+types and phasing. It is not a saved resolution value or an all-zone CDA.
+Angry Mob and Lurker use these forms with complete-record gameplay tests.
 
 ## Static Aura attachment restrictions
 

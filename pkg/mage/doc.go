@@ -39,6 +39,10 @@
 // keep their count declarations outside the battlefield. Copies keep those
 // declarations; each battlefield instance has a separate source binding.
 // Saved object information must use the existing LKI services.
+// Use [CantBeTargetedBySpellsIf] for a live conditional spell target restriction.
+// The condition reads the current source controller at each target query.
+// Ability targets use their existing rules. Source departure, phasing and
+// ability removal stop the restriction through the shared effect lifecycle.
 //
 // Spell definitions can use OnlyDuring to restrict casting to one or more turn steps.
 // Game checks the restriction before choices and payment. Copies of stack spells

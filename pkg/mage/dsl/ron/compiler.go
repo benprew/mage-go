@@ -469,7 +469,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compilePlayerCostReduction(n)
 	case "PreventDamage":
 		return compileStaticPrevention(n, ctx)
-	case "If":
+	case "If", "Unless", "IfElse":
 		return compileConditionalStatic(n, ctx)
 	case "Rampage":
 		if err := arity(n, 1); err != nil {

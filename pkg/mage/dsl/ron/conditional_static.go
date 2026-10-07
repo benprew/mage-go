@@ -6,14 +6,36 @@ import (
 )
 
 func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
-	if err := arity(n, 2); err != nil {
+	count := 2
+	if n.Name == "IfElse" {
+		count = 3
+	}
+	if err := arity(n, count); err != nil {
 		return nil, err
 	}
 	condition, err := compileStaticCondition(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
 	}
-	rules, err := list(n.Args[1])
+	if n.Name == "Unless" {
+		condition = mage.NotCondition(condition)
+	}
+	first, err := compileConditionalStaticBody(n.Args[1], ctx, condition)
+	if err != nil || n.Name != "IfElse" {
+		return first, err
+	}
+	second, err := compileConditionalStaticBody(n.Args[2], ctx, mage.NotCondition(condition))
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.CardOption {
+		a, b := first(), second()
+		return func(card *mage.BaseCard) { a(card); b(card) }
+	}, nil
+}
+
+func compileConditionalStaticBody(body Node, ctx scope, condition mage.StateCondition) (optionFactory, error) {
+	rules, err := list(body)
 	if err != nil {
 		return nil, err
 	}
@@ -22,6 +44,12 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 	}
 	if len(rules) == 1 && rules[0].Name == "PermanentRuleEffect" {
 		rule := rules[0]
+		if err := arity(rule, 2); err != nil {
+			return nil, err
+		}
+		if rule.Args[1].Kind == List && len(rule.Args[1].Args) == 1 && rule.Args[1].Args[0].Name == "CantBeTheTargetOfSpells" {
+			return compileConditionalSpellTargetRestriction(rule, rule.Args[1].Args[0], ctx, condition)
+		}
 		if len(rule.Args) == 2 && rule.Args[1].Kind == List && len(rule.Args[1].Args) == 1 && rule.Args[1].Args[0].Name == "CantAttack" {
 			if _, err := symbol(rule.Args[1].Args[0]); err != nil {
 				return nil, err
@@ -55,7 +83,7 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 		builds = append(builds, next...)
 	}
 	if len(builds) == 0 {
-		return nil, problem(n.Args[1], "conditional static rule requires modifications")
+		return nil, problem(body, "conditional static rule requires modifications")
 	}
 	return func() mage.CardOption {
 		modifications := make([]mage.ContinuousModification, len(builds))
@@ -67,6 +95,15 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 }
 
 func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
+	if n.Name == "IsPlayersTurn" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "You" {
+			return nil, unsupported(n.Args[0], "static turn player")
+		}
+		return mage.IsYourTurn(), nil
+	}
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -110,6 +147,21 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		subject, err := compileConditionalSubject(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
+		}
+		if n.Args[1].Name == "Or" && n.Args[0].Kind == Symbol && n.Args[0].Name == "ThisPermanent" {
+			history := n.Args[1]
+			if err := arity(history, 1); err != nil {
+				return nil, err
+			}
+			parts, err := list(history.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			if len(parts) == 2 && parts[0].Kind == Symbol && parts[1].Kind == Symbol &&
+				((parts[0].Name == "AttackedThisTurn" && parts[1].Name == "BlockedThisTurn") ||
+					(parts[1].Name == "AttackedThisTurn" && parts[0].Name == "BlockedThisTurn")) {
+				return mage.SourceAttackedOrBlockedThisTurnCondition(), nil
+			}
 		}
 		if n.Args[1].Name == "AttackedDuringLastPlayersTurn" {
 			history := n.Args[1]

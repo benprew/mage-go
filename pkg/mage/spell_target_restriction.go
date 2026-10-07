@@ -7,13 +7,20 @@ import (
 )
 
 type spellTargetRestrictionRule struct {
-	subject PermanentRef
-	filter  CardFilter
+	subject     PermanentRef
+	filter      CardFilter
+	condition   StateCondition
+	conditional bool
 }
 
 // CantBeTargetedBySpells prevents matching spells from targeting the current subject.
 func CantBeTargetedBySpells(subject PermanentRef, filter CardFilter) StaticRule {
 	return spellTargetRestrictionRule{subject: subject, filter: filter}
+}
+
+// CantBeTargetedBySpellsIf checks the condition at each spell target query.
+func CantBeTargetedBySpellsIf(subject PermanentRef, filter CardFilter, condition StateCondition) StaticRule {
+	return spellTargetRestrictionRule{subject: subject, filter: filter, condition: condition, conditional: true}
 }
 
 func (spellTargetRestrictionRule) staticRule() {}
@@ -28,24 +35,33 @@ func (r spellTargetRestrictionRule) inspectDefinition() definitionNode {
 	if r.filter.IsZero() {
 		n.problem = "spell target restriction requires a filter"
 	}
+	if r.conditional {
+		if nilDefinition(r.condition) {
+			n.problem = "conditional spell target restriction requires a condition"
+		} else {
+			n.children = append(n.children, definitionEdge{"condition", r.condition})
+		}
+	}
 	return n
 }
 
 func (r spellTargetRestrictionRule) staticEffects() []ContinuousEffect {
 	return []ContinuousEffect{&spellTargetRestriction{
 		funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect),
-		subject:              r.subject, filter: r.filter,
+		subject:              r.subject, filter: r.filter, condition: r.condition, conditional: r.conditional,
 	}}
 }
 
 type spellTargetRestriction struct {
 	*funcContinuousEffect
-	subject PermanentRef
-	filter  CardFilter
+	subject     PermanentRef
+	filter      CardFilter
+	condition   StateCondition
+	conditional bool
 }
 
 func (e *spellTargetRestriction) inspectDefinition() definitionNode {
-	return spellTargetRestrictionRule{subject: e.subject, filter: e.filter}.inspectDefinition()
+	return spellTargetRestrictionRule{subject: e.subject, filter: e.filter, condition: e.condition, conditional: e.conditional}.inspectDefinition()
 }
 
 func (e *spellTargetRestriction) cloneEffect() ContinuousEffect {
@@ -73,6 +89,9 @@ func (g *Game) restrictedSpellTarget(p *Permanent, spell Card) bool {
 			continue
 		}
 		ctx := &EffectContext{Game: g, SourceID: source.ID(), Controller: source.ControllerID(), sourceIncarnation: source.incarnationID}
+		if rule.conditional && (nilDefinition(rule.condition) || !rule.condition.checkState(g, StateContext{SourceID: source.ID(), ControllerID: source.ControllerID(), SourceIncarnation: source.incarnationID})) {
+			continue
+		}
 		subject, _ := rule.subject.resolvePermanent(ctx)
 		if subject != nil && subject.ID() == p.ID() && subject.incarnationID == p.incarnationID {
 			return true

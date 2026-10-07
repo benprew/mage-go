@@ -137,7 +137,11 @@ func compileStaticPTValue(n Node, ctx scope) (valueFactory, error) {
 		if err := validateStaticCountFilter(filter); err != nil {
 			return nil, err
 		}
-		return compileBattlefieldCount(n, ctx)
+		set, err := compileContextualCollection(filter, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue { return mage.CountPermanents(set(bindings)) }, nil
 	default:
 		// P/T reads can depend on this bonus in the same sublayer.
 		return nil, unsupported(n, "live static P/T value")
@@ -219,6 +223,9 @@ func validateStaticCountFilter(n Node) error {
 			return err
 		}
 		player := n.Args[0]
+		if player.Kind == Symbol && player.Name == "Opponent" {
+			return nil
+		}
 		if player.Name != "SinglePlayer" {
 			return unsupported(player, "static count controller")
 		}
