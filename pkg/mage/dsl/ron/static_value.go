@@ -16,7 +16,15 @@ func compileStaticValueLayer(n Node, parts []Node, ctx scope) (optionFactory, er
 	}
 	part := parts[0]
 	var power, toughness valueFactory
+	base := false
 	switch part.Name {
+	case "SetPowerAndToughnessBoth":
+		base = true
+		if err := arity(part, 1); err != nil {
+			return nil, err
+		}
+		power, err = compileStaticPTValue(part.Args[0], ctx)
+		toughness = power
 	case "AdjustPTXY":
 		if err := arity(part, 4); err != nil {
 			return nil, err
@@ -55,7 +63,11 @@ func compileStaticValueLayer(n Node, parts []Node, ctx scope) (optionFactory, er
 	}
 	return func() mage.CardOption {
 		condition := mage.StateConditionFunc("live static P/T bonus", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
-		return mage.WithAbility(mage.Static(mage.While(condition, mage.ModifyPT(subject, power(instanceBindings{}), toughness(instanceBindings{})))))
+		modification := mage.ModifyPT(subject, power(instanceBindings{}), toughness(instanceBindings{}))
+		if base {
+			modification = mage.SetBasePowerToughness(subject, power(instanceBindings{}), toughness(instanceBindings{}))
+		}
+		return mage.WithAbility(mage.Static(mage.While(condition, modification)))
 	}, nil
 }
 
@@ -69,6 +81,33 @@ func compileStaticPTValue(n Node, ctx scope) (valueFactory, error) {
 			return nil, problem(n.Args[0], "expected integer")
 		}
 		return func(instanceBindings) mage.ResolutionValue { return mage.Fixed(n.Args[0].Integer) }, nil
+	case "Plus", "Minus":
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		left, err := compileStaticPTValue(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		right, err := compileStaticPTValue(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			if n.Name == "Plus" {
+				return mage.AddValues(left(bindings), right(bindings))
+			}
+			return mage.SubtractValues(left(bindings), right(bindings))
+		}, nil
+	case "ManaValueOfPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		subject, err := compileConditionalSubject(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(instanceBindings) mage.ResolutionValue { return mage.ManaValueOf(subject) }, nil
 	case "HalfRoundedDown", "HalfRoundedUp", "Twice":
 		if err := arity(n, 1); err != nil {
 			return nil, err

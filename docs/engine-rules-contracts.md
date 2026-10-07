@@ -7444,3 +7444,25 @@ Evidence: `TestProtectionModificationCaptureAndLayers`,
 `TestProtectionModificationAttachments`, and the real RON
 `TestRONTemporaryAbility*` tests. Existing source-identity, color, prevention
 allocation, fight and replacement tests remain regression evidence.
+
+## RON static base-value adapter
+
+`SetPowerAndToughnessBoth/1` in a singular static RON layer lowers to existing
+`SetBasePowerToughness`, `Static` and `While`. This establishes compiler use of
+the existing live layer 7b contract (CR 611.3a-b, 613.4b-d). Values and conditions
+are read on each pass, using the source's current controller and original
+incarnation. A phased or departed source supplies no effect; ability removal
+in layer 6 stops the effect. Aura subjects follow current attachment through
+`AttachedPermanent`. Current mana-value reads use `ManaValueOf`, without LKI.
+The compiler adds no engine service or parallel layer state.
+
+`TestRONStaticBaseValueRealBranches` tests the exact nonattacking Liege branch
+in all six reprints and each Mob base-value branch in isolation. It covers
+native casting, failed payment, factory bindings, live membership/control,
+phasing, cloning, ability removal and set/modify/counter/switch order.
+`TestRONStaticBaseValueHost` tests Animate Artifact's exact mana-value operation
+in isolation, including reattachment, returned objects and source departure.
+`TestRONStaticBaseValueArithmeticAndCondition` tests signed arithmetic and live
+conditions. Invalid declaration and inventory tests cover strict shape/context
+rejection and role reporting. These tests establish subrule contracts, not
+complete-card gameplay evidence. Complete records still fail strict compilation.

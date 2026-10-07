@@ -36510,3 +36510,139 @@ Ranked next candidates to reassess with fresh evidence:
 2. Parameterized bands with others for the eight named consumers above.
 3. Shared static base-P/T values for Animate Artifact, Angry Mob and Gaea's Liege;
    inspect the known Liege predicate defect before assigning complete-card gains.
+
+## Run 2026-10-07: LIVE-STATIC-BASE-VALUES
+
+Status: complete prerequisite slice; no second slice starts. Initial user changes
+were `.gitignore`, the execution design, this ledger, and untracked
+`mtgish-ron-completed.md`. They remain outside this commit. Only this appended
+entry is staged from the ledger; the user's ledger reorganization is preserved.
+
+### Evidence, candidate comparison and selection
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Strict loader and AST inventory returned expected collection rejection (exit 1):
+2,445 records, 1,946 compiled / 499 rejected; 756 accepted / 230 rejected unique
+names. Inventory: 72,953 occurrences, 8,554 context signatures, 4,212 unknown-role
+occurrences. Collection engine-validation and behavior totals remain null.
+The vocabulary snapshot was read as syntax evidence, not support evidence.
+
+Complete RON records and nested forms were read before selecting the slice.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Live singular static base values, selected prerequisite | Animate Artifact, Angry Mob, Gaea's Liege: **0** immediate | Common layer 7b operation and live values enable all three. Animate Artifact still needs mixed type/P/T membership across layers; Mob needs static turn `IfElse`; Liege needs attack-player counts and source-bound land duration. Source defects remain separate. | Small compiler changes; medium identity/layer tests. Existing exact engine services suffice. |
+| Complete chosen-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites/adapters | All seven complete records need a filtered choice and next-source shield. CR 609.7a enumeration must include referred objects and face-up command-zone objects before these adapters. Enables later redirection/prevention consumers. | High engine enumeration, binding, identity, replacement and batch tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after prerequisites/adapters | Missing parameter storage, formation and damage assignment contracts; token grants and all-variant removal. Enables shared combat/ability consumers. | High combat/layer/token/clone tests. |
+
+The small shared prerequisite was selected for its concrete three-card benefit
+and lower effort than either larger missing engine contract. The zero immediate
+unlock estimate was stated before edits. The slice completes one bounded static
+shape and its values; it does not install incomplete card factories in production.
+A subsequent complete-record audit also read Nameless Race, Titania's Song (both
+reprints), and Xenic Poltergeist. Nameless Race shares the singular operation but
+needs life-payment entry state and `TheLifePaid`; it remains rejected. Song uses
+unsupported sticky plural layers and loop-local values; Poltergeist uses the
+already-supported temporary adapter. Neither context is expanded by this slice.
+
+### Contract, dependencies and reuse boundary
+
+- `PermanentLayerEffect(subject, [SetPowerAndToughnessBoth(value)])/2` supports
+  exactly one modification, a singular source or declared Aura host, in an
+  unconditional static rule or an existing static `If/2` body.
+- `SetPowerAndToughnessBoth/1` lowers to `SetBasePowerToughness`, `While` and
+  `Static`, using existing layer 7b, current-controller, attachment, incarnation,
+  phasing, ability removal and clone services. This is not a CDA or a captured
+  resolving bonus. The amount and condition are read on each layer pass.
+- Static values add `Plus(left,right)/2`, `Minus(left,right)/2`, and
+  `ManaValueOfPermanent(subject)/1` to the existing `Integer/1`, `Twice/1`, half
+  rounding and restricted battlefield/attached-Aura counts. Arithmetic recurses
+  through the same static validator. Mana value requires the source or declared
+  Aura host and uses live `ManaValueOf`, not LKI. Arithmetic uses `AddValues` and
+  `SubtractValues`. Existing static bonus adapters share these value services.
+- RON owns names, shape checks, contexts and inventory roles; the engine owns
+  all rules/state. No new engine contract, DSL export, card-name branch, global
+  result slot, declaration panic, fallback or partial production registry.
+- Collective and combined base-value modifications, announced X, P/T reads,
+  targets, event references and payment-result reads remain rejected. Existing
+  mixed-conditional-layer rejection remains intact.
+
+Relevant evidence: CR 611.3a-b and 613.4b-d, typed engine references,
+`composable_continuous.go`, `composable_target.go`, static-value/count adapters,
+API reference and rules-contract documentation. The known exact engine behavior
+was reused; no engine skill or removed card implementation skill was needed.
+
+### TDD and gameplay evidence
+
+New tests first failed at the expected unsupported conditional static operation,
+source static reference and host static operation. After implementation, the
+attack condition test required an explicit layer pass after attack declaration;
+the assertion that the attack was declared remains. An additional arithmetic
+fixture initially lacked required creature P/T. It was corrected to use parsed
+metadata with CardPT. No gameplay assertion was weakened. Both early repository
+checks failed only on that new invalid fixture, then passed on fresh reruns.
+
+| Card subrule or contract | Test mapping |
+| --- | --- |
+| Gaea's Liege, exact first nonattacking branch in six reprints | `TestRONStaticBaseValueRealBranches`: definition validation, native cast, unpaid rollback, pending clone, independent factories/controllers, live Forest counts, land phasing, controller change, counter/bonus/switch order, cleanup, ability removal, attack membership. |
+| Angry Mob, exact two base-value branch operations | `TestRONStaticBaseValueRealBranches`: each branch runs in isolation; current source controller's Swamp count and fixed two. This proves current expression execution, not Oracle fidelity or turn switching. |
+| Animate Artifact, exact host mana-value operation | `TestRONStaticBaseValueHost`: parsed full record, isolated operation with its enchant declaration; native Aura cast, live host mana value, reattachment, clone isolation, source phase cycle, attached host departure/return and source departure. Type animation and its condition are not claimed. |
+| Signed arithmetic/live conditions | `TestRONStaticBaseValueArithmeticAndCondition`: nested addition/subtraction, twice, negative half rounding, repeated passes, tapped-state condition, clone and source phase cycle. |
+| Invalid declarations and semantic inventory | `TestRONStaticBaseValueInvalid`, `TestRONStaticBaseValueInventory`: arity, unbound references, unavailable host, unsupported values, combined/plural forms; strict synthetic collection, factory construction and known descendant roles. |
+| Remaining complete-card gaps | `TestRONStaticBaseValueCompleteRecordsStayRejected`: full records still reject with their real remaining blockers. |
+
+All subrule fixtures derive from complete parsed RON records. They are test-only
+contract fixtures, not alternate production definitions. There are **0 new
+complete-card gameplay mappings** and **0 full-card compilation unlocks**. These
+match the estimate. Accepted collection membership is unchanged.
+
+### Source defects
+
+`DRK.lines.ron:2`, Angry Mob's first branch counts Swamps controlled by `You`.
+Local `data/DRK.json` Oracle text requires Swamps opponents control. This is a
+source-data defect independent of the missing static turn branch adapter.
+Correction is deferred to the full-card slice, with matching count-context tests;
+this slice does not claim the card works. Gaea's Liege still uses `IsntAttacking`
+in both branches across all six reprints, as the design already records. No
+predicate is inverted globally. No RON source was changed, so vocabulary hashes
+and syntax snapshot need no refresh.
+
+### Final validation and measurements
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron -run TestRONStaticBaseValue -count=1` | PASS after expected missing-adapter failures and fixture corrections. |
+| Static-value, conditional-static and animation regressions with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on corrected final tests. |
+| `make test` | PASS on corrected final tests. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; automatic changes reviewed, affected checks rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,946 compiled / 499 rejected; no registry published. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same membership; 72,953 occurrences / 8,554 signatures / 4,109 unknown-role occurrences. |
+
+Twelve record diagnostics advance or become more precise without accepting an
+incomplete card. Fresh examples: Animate Artifact `2ED.lines.ron:3:345`, combined
+static base values; Gaea's Liege `2ED.lines.ron:95:584`, static count
+`ControlledByPlayer`; Angry Mob `DRK.lines.ron:2:166`, top-level `IfElse`.
+Unknown-role occurrences fall by 103; semantic reporting is separate from support.
+No environment or pre-existing failure blocks this slice. Required checks pass.
+Go-card removal, runtime cutover and DSL-removal gates remain unmet. No Go card,
+generator, caller or DSL function was removed; no removal caller audit is claimed.
+
+Changed files: RON `static_value.go`, `conditional_static.go`, `layers.go`,
+`inventory.go`, new `static_base_value_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry.
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. Mixed type/base-value static membership for Animate Artifact, then static
+   turn branches and opponent counts for Angry Mob. Reuse this completed value
+   service; correct the Mob source defect before full gameplay claims.
+2. Complete CR 609.7a damage-source enumeration, then the seven shields.
+3. Parameterized bands with others for the eight named consumers.
+
+No second slice starts in this run.

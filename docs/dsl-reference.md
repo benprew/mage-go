@@ -6243,3 +6243,22 @@ attachment exception. Repeated layer passes do not accumulate abilities.
 Goblin Wizard and Part Water have complete RON gameplay mappings in
 `temporary_ability_grant_test.go`. Their native costs, choices, targets, copies,
 clones, object identity and cleanup are tested separately from loader acceptance.
+
+### RON live static base values
+
+RON supports `PermanentLayerEffect(subject, [SetPowerAndToughnessBoth(value)])`
+for `ThisPermanent` and a declared Aura's `HostPermanent`, alone or inside an
+existing static `If` body. This singular operation uses `SetBasePowerToughness`
+and `While` in layer 7b. Its value is read on each layer pass, before bonuses,
+counters and switches. It is not a characteristic-defining ability.
+
+Static values accept `Integer/1`, `Plus/2`, `Minus/2`, `Twice/1`,
+`HalfRoundedDown/1`, `HalfRoundedUp/1`, and the existing restricted battlefield
+counts. `ManaValueOfPermanent/1` accepts the source or declared Aura host and
+uses current information. These values also work in the existing singular
+static `AdjustPTXY` and `AdjustPTForEach` adapters. Targets, event references,
+announced X and P/T reads remain invalid in this context.
+
+Combined modifications and collective base-value operations remain rejected.
+This prerequisite does not accept the complete Animate Artifact, Angry Mob or
+Gaea's Liege records. Their remaining rules require separate slices.

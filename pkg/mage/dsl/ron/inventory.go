@@ -989,6 +989,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "card_type"
 			}
 		case "SetPowerAndToughnessBoth":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "static_value"
+			}
 			if role == "temporary_modification" && len(n.Args) == 1 {
 				return "value"
 			}
@@ -1141,6 +1144,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "static_value":
+		if (n.Name == "Plus" || n.Name == "Minus") && len(n.Args) == 2 {
+			return role
+		}
+		if n.Name == "ManaValueOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}

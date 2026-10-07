@@ -24,7 +24,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 				}
 			}
 		}
-		if part.Name == "AdjustPTXY" || part.Name == "AdjustPTForEach" {
+		if part.Name == "AdjustPTXY" || part.Name == "AdjustPTForEach" || part.Name == "SetPowerAndToughnessBoth" {
 			return compileStaticValueLayer(n, parts, ctx)
 		}
 	}

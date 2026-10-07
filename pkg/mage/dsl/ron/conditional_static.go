@@ -176,6 +176,24 @@ func compileConditionalModifications(n Node, ctx scope) ([]func() mage.Continuou
 	if err != nil {
 		return nil, 0, err
 	}
+	for _, part := range parts {
+		if part.Name != "SetPowerAndToughnessBoth" {
+			continue
+		}
+		if global || len(parts) != 1 {
+			return nil, 0, unsupported(part, "combined or collective static base values")
+		}
+		if err := arity(part, 1); err != nil {
+			return nil, 0, err
+		}
+		value, err := compileStaticPTValue(part.Args[0], ctx)
+		if err != nil {
+			return nil, 0, err
+		}
+		return []func() mage.ContinuousModification{func() mage.ContinuousModification {
+			return mage.SetBasePowerToughness(subject, value(instanceBindings{}), value(instanceBindings{}))
+		}}, core.LayerPT, nil
+	}
 	var builds []func() mage.ContinuousModification
 	var layer core.Layer
 	for _, part := range parts {
