@@ -3659,7 +3659,8 @@ first graveyard visit through `PermanentDies().WithCard(binding)`, restricted by
 `EventSourceIsSelf`. Copies retain the captured visit; a card that leaves and
 returns is a new object. Existing `PutGraveyardCardIntoHand` can also read this
 typed binding. Battlefield return still requires a creature card target.
-Host death and general filtered death-card bindings remain unsupported.
+Host death has the separate binding contract below. General filtered death-card
+bindings remain unsupported.
 
 Grave Robbers uses the existing any-graveyard artifact target, mana and tap
 payment, and life action. An illegal sole target prevents both exile and life
@@ -4901,3 +4902,32 @@ reads fixed output without executing effects, then executes the complete body
 through normal immediate resolution after payment. No new public API is needed.
 `TestHistoryMana*` and `TestRONHistoryMana*` cover payment, event timing, thresholds,
 instance/clone isolation, cleanup, departure, control, phasing and delayed timing.
+
+## RON attached permanent death bindings
+
+`TriggerA(WhenAPermanentDies(SinglePermanent(HostPermanent)), body)` uses
+`mage.AttachedPermanentDies()`. The source must be an Aura. The event matches
+its attached incarnation moving from the battlefield to a graveyard, including
+simultaneous Aura/host departure. It does not require the host to be a creature.
+`mage.AttachedCreatureDies()` retains its existing creature restriction.
+
+Each factory builds separate typed bindings. Within this trigger body,
+`ControllerOfDeadPermanent` and `OwnerOfDeadPermanent` are saved player references,
+`ToughnessOfDeadPermanent` is a saved number, `Trigger_ThatPermanent` is the
+original departing permanent, and `Trigger_ThatGraveyardCard` is its first
+graveyard visit. Callable symbols and reads outside this body are compile errors.
+Existing player actions, permanent-source damage and graveyard-card actions can
+read these bindings. Source-death and general filtered death contexts do not
+receive the new host bindings.
+
+`DeadGuestPermanentDealsDamage(value, recipient)` is a resolving action in this
+host-death body. It lowers to `DealDamageFrom(DamageSourceOf(This), recipient,
+value)`: the Aura deals the damage. The amount uses supported instance values;
+the recipient uses the existing typed singular damage-recipient declarations.
+It declares no target of its own. Values from the host death are captured at
+detection, not recalculated from a returned card or a later attachment.
+
+Creature Bond has complete RON gameplay evidence in `TestRONHostDeath*`.
+Puppet Master and Takklemaggot can use the event bindings but retain unsupported
+payment, choice, return and Aura-change instructions. Their complete records
+still fail strict compilation.

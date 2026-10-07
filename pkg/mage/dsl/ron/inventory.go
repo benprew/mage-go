@@ -600,6 +600,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "keyword"
 		}
 		switch n.Name {
+		case "DeadGuestPermanentDealsDamage":
+			if len(n.Args) == 2 {
+				return []string{"value", "recipient"}[index]
+			}
 		case "GainControlOfPermanentUntil":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]

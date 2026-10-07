@@ -13,12 +13,14 @@ const (
 	permanentHost
 	permanentTarget
 	permanentEvent
+	permanentDeath
 )
 
 type permanentReferencePlan struct {
 	kind   permanentReferenceKind
 	target *permanentTargetPlan
 	event  *permanentEventPlan
+	death  *hostDeathPlan
 }
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
@@ -48,6 +50,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 				return permanentReferencePlan{kind: permanentHost}, nil
 			}
 		case "Trigger_ThatPermanent":
+			if ctx.hostDeath != nil {
+				return permanentReferencePlan{kind: permanentDeath, death: ctx.hostDeath}, nil
+			}
 			if ctx.counterStateSource || ctx.sourceTapped {
 				return permanentReferencePlan{kind: permanentSource}, nil
 			}
@@ -71,6 +76,8 @@ func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentR
 		return mage.AttachedPermanent
 	case permanentEvent:
 		return mage.From(bindings.tapped[p.event])
+	case permanentDeath:
+		return mage.From(bindings.hostDeaths[p.death].permanent)
 	default:
 		return bindings.permanents[p.target]
 	}

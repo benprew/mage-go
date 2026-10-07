@@ -15,6 +15,14 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "ToughnessOfDeadPermanent" {
+		if n.Kind != Symbol || ctx.hostDeath == nil {
+			return nil, problem(n, "unbound or incompatible death event value")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.hostDeaths[ctx.hostDeath].toughness)
+		}, nil
+	}
 	if n.Name == "ManaValueOfExiled" {
 		return compileExilePaymentValue(n, ctx)
 	}

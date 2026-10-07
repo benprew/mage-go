@@ -28552,3 +28552,175 @@ Slice files: engine `costed_mana.go`, `mana_system.go`, `history_mana_test.go`,
 `history_mana_test.go`, `inventory_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md` and this entry. One descriptive commit is created
 only after required checks pass; the hash is reported in the final response.
+
+## Run 2026-10-07: ATTACHED-PERMANENT-DEATH-BINDINGS
+
+Status: complete dependency-ready slice. This run stops after this slice.
+Production cutover and removal gates remain unmet.
+
+### Baseline and candidate comparison
+
+The initial working tree contained user edits to `.gitignore`,
+`mtgish-ron-execution.md`, and this ledger, plus the untracked
+`mtgish-ron-completed.md`. All are preserved. Only this run's appended ledger
+entry is staged; the user's ledger restructuring remains unstaged.
+
+Fresh baseline compiler tests, short engine tests and build passed. Strict
+loading and semantic inspection exited 1 for collection rejection, not a
+build/test failure: 2,445 records, 1,808 compiled / 637 rejected;
+690 accepted / 296 rejected unique names. Inventory: 72,962 occurrences,
+8,559 signatures, 5,621 unknown-role occurrences. The design, ledger, vocabulary
+snapshot, engine reference, selected compiler/engine code, complete candidate
+RON records, relevant API/rules contracts and CR 400.7e/f, 603.2, 603.6c/e,
+603.10a, 608.2h, 700.4 and 702.26 were read. Reprints count once.
+
+| Candidate | Distinct affected names and estimated complete unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Attached permanent death bindings, selected | Creature Bond, Puppet Master, Takklemaggot: **1** immediate complete-card unlock, shared event prerequisite for **3** names. | Creature Bond also needs its Aura-source damage adapter. Puppet Master needs mandatory return results, optional payment and Aura graveyard continuity; Takklemaggot needs controller choices, return/attachment, non-Aura conversion and trigger grants. Shared host-death facts enable these downstream instructions without inventing a last-death slot. | Medium: existing exact death/attachment capture, damage and binding services; small generic event API, compiler scopes, declaration and lifecycle/gameplay tests. |
+| Chosen damage-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red and White; Greater Realm of Preservation; Dark Sphere; Eye for an Eye; Jade Monolith; Reverse Damage: **11** affected names, **7** credible complete prevention consumers after prerequisites. | Six Circles plus Greater Realm need typed source selection, spell identity/entry continuity and chosen-source future prevention. Dark Sphere also needs fractional prevention; Eye for an Eye needs continued damage and replacement-context values; Jade Monolith needs redirection; Reverse Damage needs an actual prevented-damage result. | High: source discovery/choices across zones and source classes, immutable selection identity, replacement scopes and ordering. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger: **4** clean complete consumers; **5** after justified source correction and the all-zone prerequisite. | Existing battlefield CDA effects cannot prove all-zone characteristics. Owner/controller context, CDA/copy/layer behavior and count lowering are needed. Gaea's Avenger's RON counts your artifacts while local Oracle requires opponents' artifacts. Wood Elemental has entry-sacrifice and saved-entry-result blockers and is excluded. | High: zone-aware characteristic evaluation and layer/copy contracts, plus a source-data correction. |
+
+Selection rationale: this is a shared prerequisite for three real cards, with
+one complete consumer that makes its capture and damage contracts reviewable.
+Existing engine services make it a smaller complete slice than source discovery
+or all-zone characteristics. It is not a one-card special executor. The two
+other host-death consumers remain explicit rejected records. No first-error
+frequency was treated as an unlock estimate. Contract, reuse boundary and
+acceptance cases were stated before edits.
+
+### Exact supported shapes and reuse boundary
+
+Engine constructor: `AttachedPermanentDies() creatureDiesPattern`, where the
+private result implements `EventPattern` and exposes the existing death-pattern
+capture methods. It matches an attached permanent of any type leaving the
+battlefield for a graveyard. `AttachedCreatureDies()` keeps its creature filter.
+The existing attachment-incarnation predicate, zone batch, look-back detection,
+`WithController`, `WithOwner`, `WithToughness`, `WithPermanent` and `WithCard`
+captures are reused. The change also gives generic patterns accurate definition
+text. No existing caller or export is removed.
+
+RON rule: `TriggerA(WhenAPermanentDies(SinglePermanent(HostPermanent)), body)`
+on an Aura. Its body uses the normal resolving action-list/target declaration
+service. Every factory builds its own typed binding declarations:
+
+- `ControllerOfDeadPermanent` and `OwnerOfDeadPermanent`: event-time player facts.
+- `ToughnessOfDeadPermanent`: event-time number.
+- `Trigger_ThatPermanent`: departing permanent incarnation for information and
+  damage-source reads; it cannot restore a departed object for actions.
+- `Trigger_ThatGraveyardCard`: first graveyard visit of that host.
+
+Callable reference symbols, malformed arities, non-Aura hosts and reads outside
+this host-death body are rejected. Existing source-death and general filtered
+contexts do not acquire these new bindings. Existing supported player, permanent
+and graveyard actions use them through the typed reference services.
+
+RON action: `DeadGuestPermanentDealsDamage(value, recipient)` in the host-death
+resolving body. It lowers to
+`DealDamageFrom(DamageSourceOf(This), recipient, value)`. The original Aura is
+the source, not the dying creature. Supported instance values and existing
+singular typed damage recipients are reused. The action declares no target.
+It does not enable replacement operations or arbitrary graveyard Aura return.
+
+Dependencies: phase-0 scope/instance support, typed event bindings, attachment
+incarnations, look-back departure snapshots, graveyard visits, typed permanent
+source damage and the shared replacement pipeline. `ron` owns spelling, scopes,
+diagnostics and lowering. `mage` owns the reusable generic death-pattern API.
+The implement-engine skill supplied the engine workflow. No removed card skill,
+Go-card requirement, card-name branch, fallback, skipped rule, game-time declaration
+panic, global action slot or partial production registry is used.
+
+### TDD and card-to-test evidence
+
+Engine tests first failed for the absent `AttachedPermanentDies` constructor.
+A test initially used the RON spelling for the engine return action; after
+correcting it to `ReturnCardToHand`, only the intended missing constructor
+failure remained. Complete real Creature Bond records then failed on the
+unsupported `HostPermanent` death-trigger reference before compiler edits.
+
+Fixture corrections kept all behavior requirements: generic noncreature hosts
+need an Aura with a matching enchant restriction; destruction requires an owner;
+player prevention uses `WithToPlayer`, not a permanent recipient filter; and
+copied resolutions need persistent prevention rather than a cycle-only rule.
+The final tests use `PreventDamageThisTurn`. The added targeting test initially
+used a nonexistent shroud attribute; it now uses the existing base `Shroud`.
+These errors caused intermediate focused, broad-suite and lint failures; all
+were resolved, with no assertion weakened and no environment blocker found.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Creature Bond, complete LEA record and all six reprints | `TestRONHostDeathCreatureBond`: saved modified toughness, former host controller, pre-resolution timing, both batch orders, attachment changes, host/Aura return, phasing, removal before/after detection, copied controller, prevention and clone isolation. `Casting`: native 1U payment/rollback, creature-only attachment, Aura state checks before trigger resolution. `CastingLegality`: shroud at announcement/resolution, departed and noncreature targets. `DamageSource`: original Aura identity with live/dead/phased/returned sources through exact source-filter prevention. |
+| Factory and pending-event isolation | `TestRONHostDeathIndependentEvents`: two instances from one compiled factory, different controllers/toughness and cloned pending triggers. `RepeatedEvents`: two pending deaths on one ability retain separate facts. |
+| Shared host-death prerequisite | `TestRONHostDeathSavedReferences`: owner versus controller, noncreature host, departing damage-source identity, first/later graveyard visits, returned host and copied trigger. This synthetic record proves bindings; it does not prove full Puppet Master or Takklemaggot gameplay. |
+| Declaration/reporting/registry | `TestRONHostDeathInvalid`: arities, symbols, contexts, incompatible/out-of-scope player/number/permanent/card reads. `ReprintsAndInventory`: six full records compile and validate, deduplicate to one name, retain semantic roles and reject an unsupported collection atomically. Existing inventory tests pin fresh measured counts without weakening rejection/gameplay assertions. |
+| Engine generic event | `TestAttachedPermanentDiesCaptures`: creature/land/artifact, individual and simultaneous source/host death, controller versus owner, graveyard return and clones. `VisitAndPhase`: phase/exile/returned host exclusion and later-visit protection. `Invalid`: nil capture rejection. Existing `TestAttachedCreatureDies*` pass and retain the creature-only behavior and saved toughness/copy contracts. |
+| Shared damage regression | `TestDamageSourceFilter*` pass, including replacement ordering, absent-source identity and simultaneous death. No new replacement ordering or damage batch service is added. |
+
+One complete unique-card gameplay mapping is added. Compilation and gameplay
+coverage are separate. Collection-wide engine-validated and behavior-verified
+totals remain unset. Existing APNAP, transaction, layer and replacement services
+are reused; the slice does not establish new contracts for those systems.
+
+### Source evidence, final measurements and removal gates
+
+Local `data/LEA.json` Oracle text agrees with Creature Bond's full RON record:
+the Aura deals damage using the dead creature's toughness and controller.
+Local `data/LEG.json` identifies the remaining Puppet Master and Takklemaggot
+instructions; they are not skipped. Their new first diagnostics are:
+
+- Puppet Master: `LEG.lines.ron:200:276: unsupported mandatory sacrifice cost (PutGraveyardCardIntoHand)`.
+- Takklemaggot: `LEG.lines.ron:256:437: unsupported action (PlayerMustCost)`.
+
+Actual gain equals the estimate: **1 unique card / 6 records**, exactly Creature
+Bond. No accepted name is lost. Final loader: **1,814 compiled / 631 rejected
+records; 691 accepted / 295 rejected unique names**, with exit 1 and no partial
+registry. Semantic inventory: **72,962 occurrences / 8,559 signatures / 5,603
+unknown-role occurrences**. The 18 fewer unknown-role occurrences are the value,
+recipient and nested player reference on six Creature Bond records. All 12 RON
+hashes match the vocabulary snapshot; no source changes or snapshot refresh are
+needed. Gaea's Avenger's observed opponent-count data defect is deferred with its
+CDA work; no source defect is silently corrected here.
+
+No Go card definition, generator, startup wiring or DSL function is removed.
+Complete loading, collection gameplay and runtime cutover remain below the
+removal gates. No whole-repository caller audit authorizes a DSL deletion in
+this slice. API/rules documentation records only the established death binding
+and damage lowering behavior.
+
+### Required validation
+
+| Command | Final result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`; `go test ./pkg/mage/... -short -count=1`; `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'Test(AttachedPermanentDies\|AttachedCreatureDies\|RONHostDeath\|Inventory\|DamageSourceFilter)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic import formatting reviewed |
+| `go test ./... -short -count=1` | PASS; implement-engine verification |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,814 compiled / 631 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same compilation counts and 295 rejected names; fresh semantic counts above |
+| Source-hash audit | All 12 RON files match the vocabulary snapshot |
+
+Final checks are repeated after the last instance-isolation assertion and lint.
+Only this slice is committed after checks pass; the hash is reported in the final
+response. The initial user edits and untracked completed-history document remain
+outside the commit.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Typed damage-source discovery/choice and spell identity/entry continuity,
+   then six Circles of Protection and Greater Realm of Preservation.
+2. All-zone count CDAs for the four clean consumers and Gaea's Avenger with its
+   evidenced opponent-count correction.
+3. Mandatory typed action results and optional payments for Puppet Master;
+   retain Takklemaggot's choice, graveyard Aura return and layer-change dependencies
+   separately when estimating complete-card gains.
+
+Slice files: engine `composable_events.go`, `attached_permanent_death_test.go`,
+`doc.go`; compiler `host_death.go`, `host_death_test.go`, `compiler.go`,
+`triggers.go`, `permanent_scope.go`, `player_scope.go`, `sacrifice_value.go`,
+`inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this appended ledger entry.
+No second slice is started.

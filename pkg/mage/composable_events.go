@@ -2756,6 +2756,11 @@ func AttachedCreatureDies() creatureDiesPattern {
 	return creatureDiesPattern{creatureOnly: true, attachedOnly: true}
 }
 
+// AttachedPermanentDies matches the attached permanent when it moves to a graveyard.
+func AttachedPermanentDies() creatureDiesPattern {
+	return creatureDiesPattern{attachedOnly: true}
+}
+
 // WithController saves the permanent's controller before it dies.
 func (p creatureDiesPattern) WithController(controller *PlayerBinding) creatureDiesPattern {
 	p.controller = controller
@@ -2926,7 +2931,7 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 		}
 	}
 	if p.attachedOnly {
-		text = "attached creature dies"
+		text = "attached " + subject + " dies"
 	}
 	if p.nontokenOnly {
 		text = strings.Replace(text, subject, "nontoken "+subject, 1)

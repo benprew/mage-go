@@ -7,20 +7,22 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
-	landEntry       *landEntryEventPlan
-	defender        *sourceCombatPlayerPlan
-	action          *playerActionsPlan
-	damageRecipient *damageRecipientPlayerPlan
-	damagePlayer    *damagePlayerPlan
-	permanent       *permanentReferencePlan
-	target          *playerTargetPlan
-	spell           *spellReferencePlan
-	event           *castEventPlan
-	draw            *drawEventPlan
-	step            *stepEventPlan
-	landMana        *landManaEventPlan
-	graveyard       *graveyardEventPlan
-	deathController *graveyardEventPlan
+	landEntry           *landEntryEventPlan
+	defender            *sourceCombatPlayerPlan
+	action              *playerActionsPlan
+	damageRecipient     *damageRecipientPlayerPlan
+	damagePlayer        *damagePlayerPlan
+	permanent           *permanentReferencePlan
+	target              *playerTargetPlan
+	spell               *spellReferencePlan
+	event               *castEventPlan
+	draw                *drawEventPlan
+	step                *stepEventPlan
+	landMana            *landManaEventPlan
+	graveyard           *graveyardEventPlan
+	deathController     *graveyardEventPlan
+	hostDeathController *hostDeathPlan
+	hostDeathOwner      *hostDeathPlan
 }
 
 type castEventPlan struct{ spellName, casterName string }
@@ -31,6 +33,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	hostDeaths           map[*hostDeathPlan]hostDeathBindings
 	entryActors          map[*landEntryEventPlan]*mage.PlayerBinding
 	exiles               map[*exilePaymentPlan]*mage.NumberBinding
 	defenders            map[*sourceCombatPlayerPlan]*mage.PlayerBinding
@@ -109,8 +112,15 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 				return playerReferencePlan{event: ctx.castEvent}, nil
 			}
 		case "ControllerOfDeadPermanent":
+			if ctx.hostDeath != nil {
+				return playerReferencePlan{hostDeathController: ctx.hostDeath}, nil
+			}
 			if ctx.graveyardEvent != nil {
 				return playerReferencePlan{deathController: ctx.graveyardEvent}, nil
+			}
+		case "OwnerOfDeadPermanent":
+			if ctx.hostDeath != nil {
+				return playerReferencePlan{hostDeathOwner: ctx.hostDeath}, nil
 			}
 		case "ActionPlayer":
 			if ctx.actionPlayer != nil {
@@ -132,6 +142,12 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.hostDeathController != nil {
+		return mage.FromPlayer(bindings.hostDeaths[p.hostDeathController].controller)
+	}
+	if p.hostDeathOwner != nil {
+		return mage.FromPlayer(bindings.hostDeaths[p.hostDeathOwner].owner)
+	}
 	if p.landEntry != nil {
 		return mage.FromPlayer(bindings.entryActors[p.landEntry])
 	}

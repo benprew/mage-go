@@ -80,6 +80,9 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		if err := arity(permanents, 1); err != nil {
 			return nil, err
 		}
+		if trigger.Name == "WhenAPermanentDies" && permanents.Args[0].Name == "HostPermanent" {
+			return compileHostDeathTrigger(permanents.Args[0], n.Args[1], ctx)
+		}
 		if permanents.Args[0].Kind != Symbol || permanents.Args[0].Name != "ThisPermanent" {
 			return nil, unsupported(permanents.Args[0], "trigger reference")
 		}

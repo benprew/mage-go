@@ -5786,3 +5786,36 @@ Evidence: `TestHistoryManaPlanning`, `MixedExecution`, `ExcludedBodies` and
 `InventoryAndStrictLoad`. Complete real Farrelite Priest and Initiates of the Ebon Hand records supply the conversion
 abilities; real Armageddon and Sinkhole records exercise native casting payment.
 This adds no target, replacement, LKI or simultaneous-operation service.
+
+## Attached permanent death and RON event captures
+
+`AttachedPermanentDies() creatureDiesPattern` extends the shared death-pattern service
+to any attached permanent type. `AttachedCreatureDies()` retains its creature
+filter. Both match the source's attachment incarnation before the battlefield
+object moves to a graveyard. The shared zone batch preserves attachment,
+abilities and characteristics when the Aura and host leave simultaneously.
+Phasing, exile, an unattached source and a returned host do not supply a matching
+death event. Removing the Aura's ability before detection prevents its trigger;
+removal, departure, phasing or reattachment after detection does not erase it.
+
+`WithController`, `WithOwner`, `WithToughness`, `WithPermanent` and `WithCard`
+reuse the existing typed event captures. Controller, owner and toughness are
+saved for each event. The permanent reference keeps its departing incarnation
+for source information. The card reference keeps its first graveyard visit.
+It cannot move the same physical card from a later visit. Pending triggers,
+copies and cloned games retain separate captured frames. The change adds no
+new zone, replacement, damage, payment or LKI subsystem.
+
+RON lowers `WhenAPermanentDies(SinglePermanent(HostPermanent))` to this pattern.
+Creature Bond's `DeadGuestPermanentDealsDamage` uses the original Aura as its
+damage source and the saved host toughness and controller. It uses the shared
+damage pipeline, including prevention and retained source characteristics.
+Casting still uses the creature-only Aura target and the normal cost transaction.
+
+Evidence: `TestAttachedPermanentDiesCaptures`, `VisitAndPhase`, `Invalid`, existing
+`TestAttachedCreatureDies*`, and `TestRONHostDeathCreatureBond`, `Casting`,
+`CastingLegality`, `IndependentEvents`, `RepeatedEvents`, `SavedReferences`,
+`DamageSource`, `Invalid`, `ReprintsAndInventory`. All six Creature Bond records
+compile and pass definition validation. One complete unique-card gameplay mapping
+is added; synthetic event tests do not establish full Puppet Master or
+Takklemaggot gameplay. Rules: CR 400.7e, 603.2, 603.6c, 603.10a, 608.2h and 702.26.

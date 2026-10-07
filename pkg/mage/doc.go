@@ -526,6 +526,12 @@
 // Each successful activation can install its own delay. Queries and failed
 // payments do not change history or install delays.
 //
+// Use [AttachedPermanentDies] to capture an attached permanent's death.
+// It permits any permanent type. [AttachedCreatureDies] still requires a creature.
+// Controller, owner, toughness, permanent and card bindings save event facts.
+// The card binding keeps the first graveyard visit. A later visit cannot replace it.
+// RON Creature Bond uses these facts with [DealDamageFrom] and the Aura as source.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
