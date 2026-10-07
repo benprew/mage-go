@@ -518,9 +518,13 @@
 // The reduced cost must consume at least the produced mana count. Repeated
 // conversion keeps the source available, even when it is tapped or newly entered.
 // It does not receive tap bonuses or emit a tapped-for-mana event. X costs,
-// activation limits, arbitrary conditions and mixed bodies are not planned.
+// activation limits and arbitrary conditions are not planned.
 // Exact payments keep the final cost colors. The shared cost transaction
 // keeps failed casting payments separate from live resources.
+// Fixed-color mana bodies can include [IfActivationsAtLeast] with [AtNext].
+// Planned payment runs the complete body after it records the activation.
+// Each successful activation can install its own delay. Queries and failed
+// payments do not change history or install delays.
 //
 // # Further Documentation
 //

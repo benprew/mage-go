@@ -66,3 +66,57 @@ func containsManaAction(n Node) bool {
 	}
 	return slices.ContainsFunc(n.Args, containsManaAction)
 }
+
+func validateHistoryManaBody(n Node) error {
+	if n.Name != "ActionList" {
+		return unsupported(n, "history mana body")
+	}
+	if err := arity(n, 1); err != nil {
+		return err
+	}
+	parts, err := list(n.Args[0])
+	if err != nil {
+		return err
+	}
+	mana := false
+	for _, part := range parts {
+		switch part.Name {
+		case "AddMana":
+			if err := arity(part, 1); err != nil {
+				return err
+			}
+			production, err := symbol(part.Args[0])
+			if err != nil {
+				return err
+			}
+			switch production {
+			case "ManaProduceW", "ManaProduceU", "ManaProduceB", "ManaProduceR", "ManaProduceG", "ManaProduceC":
+				mana = true
+			default:
+				return unsupported(part.Args[0], "fixed history mana production")
+			}
+		case "If":
+			if err := arity(part, 2); err != nil {
+				return err
+			}
+			if part.Args[0].Name != "TimesThisAbilityHasBeenActivatedThisTurnIs" {
+				return unsupported(part.Args[0], "history mana condition")
+			}
+			delays, err := list(part.Args[1])
+			if err != nil {
+				return err
+			}
+			for _, delay := range delays {
+				if delay.Name != "CreateFutureTrigger" {
+					return unsupported(delay, "deferred history mana action")
+				}
+			}
+		default:
+			return unsupported(part, "history mana action")
+		}
+	}
+	if !mana {
+		return problem(n, "history mana body requires fixed production")
+	}
+	return nil
+}

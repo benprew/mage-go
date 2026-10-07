@@ -3790,14 +3790,14 @@ If(TimesThisAbilityHasBeenActivatedThisTurnIs(GreaterThanOrEqualTo(Integer(4))),
 The threshold can be any nonnegative integer. The branch must have at least one
 supported action. Its declarations use the enclosing ability's lexical scope.
 A delayed body cannot read this enclosing history condition. Spell, static,
-trigger and modal contexts remain unsupported. Mana bodies remain rejected
-until mana-conversion planning supports their complete conditional execution.
+trigger and modal contexts remain unsupported. Mana bodies support fixed-color
+production with history-gated delayed instructions, as specified below.
 The obsolete resolution-count spelling remains rejected.
 
 Dragon Whelp and Nalathni Dragon use this shape. All identical records now count
 activations, as Oracle requires. Farrelite Priest and Initiates of the Ebon Hand
-receive the same source correction but remain rejected. Compilation does not
-claim support for these two mana creatures.
+use the same per-ability history with immediate mana resolution and automatic
+payment planning. Their complete RON gameplay is covered by `TestRONHistoryMana*`.
 
 ## Mandatory resolution sacrifice payments
 
@@ -4867,15 +4867,37 @@ not choose a source or support spell-to-permanent source continuity. RON
 
 The existing `Activate(Costs(ManaPayment(...)), AddMana(...))` engine API can
 participate in automatic payment without a tap cost when the body is fixed and
-mana-only and the reduced cost consumes at least its produced mana count.
+mana-only (or includes the deferred history shape below), and the reduced cost
+consumes at least its produced mana count.
 The source may be tapped or summoning-sick. Automatic planning excludes X costs,
 activation limits, arbitrary activation conditions, targets, non-mana costs and
-mixed bodies. Explicit activation retains the existing broader behavior.
+mixed bodies except history-gated delayed instructions. Explicit activation
+retains the existing broader behavior.
 No tap bonus or tapped-for-mana event is generated for a conversion.
 
-RON vocabulary is unchanged. `Activated(PayMana(...), ActionList([AddMana(...),
-If(TimesThisAbilityHasBeenActivatedThisTurnIs(...), ...)]))` remains unsupported:
-its history branch must execute synchronously before it can be planned.
+RON vocabulary is unchanged. History-bearing fixed-color conversions now use
+the synchronous execution contract below.
 `TestRepeatableMana*` and `TestRONRepeatableManaPayment` establish this engine
 prerequisite; they do not establish full Farrelite Priest or Initiates of the
 Ebon Hand gameplay support.
+
+### Fixed mana production with activation history
+
+RON supports nonmodal `Activated` bodies with an `ActionList` containing fixed
+`AddMana(ManaProduceW|ManaProduceU|ManaProduceB|ManaProduceR|ManaProduceG|ManaProduceC)`
+actions and `If(TimesThisAbilityHasBeenActivatedThisTurnIs(
+GreaterThanOrEqualTo(Integer(n))), [CreateFutureTrigger(event, ActionList(...))])`.
+The threshold is nonnegative. Each branch contains one or more supported delayed
+step instructions. Existing step-event and delayed-body restrictions apply.
+Immediate branch actions, conditional production, any-color production, extra
+immediate actions and history reads inside delayed bodies are rejected.
+
+Farrelite Priest and Initiates of the Ebon Hand each pay `{1}`, produce one fixed
+mana, and create a next-end-step sacrifice delay at four or more activations.
+Explicit activation and automatic payment share the same per-instance history.
+Each successful activation resolves immediately without entering the stack.
+The planner admits these bodies under its existing cost and timing restrictions,
+reads fixed output without executing effects, then executes the complete body
+through normal immediate resolution after payment. No new public API is needed.
+`TestHistoryMana*` and `TestRONHistoryMana*` cover payment, event timing, thresholds,
+instance/clone isolation, cleanup, departure, control, phasing and delayed timing.

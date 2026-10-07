@@ -4259,8 +4259,9 @@ old count. A returned source has separate history (CR 400.7). Control changes
 and phasing retain history (CR 702.26). `TurnTrackers.Clone` copies the map;
 final cleanup clears it with other turn history (CR 514.3).
 
-The RON adapter supports only the nonmodal stack context. Existing `AtNext`
-captures the source incarnation and resolving controller (CR 603.7). A delay
+The RON adapter supports nonmodal stack abilities and the fixed mana context
+specified below. Existing `AtNext` captures the source incarnation and resolving
+controller (CR 603.7). A delay
 created after an end step begins waits for a later end step. Each qualifying
 resolution creates its own delay. A returned permanent cannot replace the
 captured source. A phased source cannot be sacrificed when the delay resolves;
@@ -4274,8 +4275,8 @@ records, native casting/payment, temporary bonuses, thresholds, pending and
 countered activations, copies, delayed timing, source return/phasing/control,
 strict registry rejection and semantic roles. Existing flying and banding engine
 contracts remain in force. This change adds no replacement or simultaneous-action
-service. The mana-conversion compiler context remains rejected; synchronous mana
-execution and planning require their own complete integration.
+service. Fixed mana conversions with history-gated delayed instructions use
+the synchronous execution contract below.
 
 ## Mandatory resolution sacrifices and replacement destinations
 
@@ -5719,11 +5720,9 @@ service adds no unpreventable-player or unpreventable-source rule.
 `ManaSystem` now discovers non-tap activated abilities with fixed, unconditional
 mana-only bodies and fixed mana-only costs. The reduced cost must consume at
 least as many mana units as the body produces. X costs, activation limits,
-arbitrary activation conditions, targets, choice costs, and mixed bodies remain
-outside automatic conversion planning. Explicit activation keeps its existing
-behavior. In particular, activation-history branches are not advertised as pure
-mana bodies, so Farrelite Priest and Initiates of the Ebon Hand remain rejected
-by RON until their complete synchronous bodies can be executed.
+arbitrary activation conditions, targets, choice costs, and mixed bodies other
+than the deferred history shape below remain outside automatic conversion
+planning. Explicit activation keeps its existing behavior.
 
 The solver can use a conversion repeatedly, before or after a tap ability on the
 same source. Only a tap consumes that source's tap availability. Exact activation
@@ -5753,3 +5752,37 @@ Swamp, Forest, Sinkhole and Hymn to Tourach RON records with a synthetic engine
 conversion fixture. It covers automatic repeated payment, target rejection,
 stack timing, destruction, random discard, and pending game-clone isolation.
 It does not verify the two history-bearing conversion cards.
+
+## Synchronous history-bearing mana conversion
+
+The planner can read fixed concrete-color production alongside
+`IfActivationsAtLeast` branches bound to that same ability. These branches must
+contain only untargeted, nonmodal `AtNext` instructions, or nonempty sequences
+of them. The delayed body runs at its future event, so it cannot change the
+current payment. Other immediate side effects, conditional production and
+any-color output remain excluded from this planning shape. Existing finite
+conversion search, cost bounds and exact saved payments remain in force.
+
+Planned execution pays the saved activation cost, records one activation, emits
+one activation event, and resolves the complete original body immediately
+(CR 602.2, 605.1a, 605.3b). Fixed output is not also inserted by the fast mana path.
+The event's tap flag reflects the actual cost. Non-tap conversion emits no
+`EvtTappedForMana` event and receives no tap bonus. Each qualifying activation
+creates its own one-shot delay (CR 603.7). Explicit and planned activations share
+history; queries, failed payments and copies do not add activations. The existing
+total-cost transaction isolates speculative history and delays from live state.
+
+`AtNext` retains the activating controller and source incarnation. Departure
+and return cannot substitute a new object (CR 400.7). Phasing preserves identity,
+but a phased object cannot pay a sacrifice at the delayed event (CR 702.26).
+Control changes retain history, while the old delayed controller cannot sacrifice
+a source it no longer controls (CR 701.17a). Ability removal does not remove an
+installed delay. Final cleanup resets activation history, and a delay created
+after an end step begins waits for a later end step.
+
+Evidence: `TestHistoryManaPlanning`, `MixedExecution`, `ExcludedBodies` and
+`ActivationEvents`; `TestRONHistoryManaCards`, `PaymentAndLifecycle`, `Invalid`,
+`CostRollback`, `NativeSpellPayment`, `HistoryIdentity` and
+`InventoryAndStrictLoad`. Complete real Farrelite Priest and Initiates of the Ebon Hand records supply the conversion
+abilities; real Armageddon and Sinkhole records exercise native casting payment.
+This adds no target, replacement, LKI or simultaneous-operation service.

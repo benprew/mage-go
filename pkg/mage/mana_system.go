@@ -419,7 +419,9 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if !ability.Repeatable {
 		g.TapPermanent(perm)
 	}
-	addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
+	if !ability.ResolveBody {
+		addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
+	}
 
 	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
 	switch activated := inner.(type) {
@@ -429,8 +431,18 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		}
 	case *SimpleActivatedAbility:
 		activated.markActivatedInGame(g, sourceIncarnation)
+		if ability.ResolveBody {
+			g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: !ability.Repeatable})
+			obj := newStackObject(playerID, perm.ID(), nil, activated.effects, nil, 0, true)
+			obj.sourceIncarnation = sourceIncarnation
+			obj.TargetSource = perm.Card
+			g.resolveStackObject(obj)
+			addConcreteMana(player.ManaPool(), nil, action.BonusColors)
+		}
 	}
-	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: true})
+	if !ability.ResolveBody {
+		g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: !ability.Repeatable})
+	}
 	if !ability.Repeatable {
 		ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions), productionTypes(action.Productions))
 	}

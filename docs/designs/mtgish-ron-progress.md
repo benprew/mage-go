@@ -28401,3 +28401,154 @@ Slice files: `pkg/mage/costed_mana.go`, `mana_solver.go`, `mana_system.go`,
 `repeatable_mana_test.go`, `doc.go`; `pkg/mage/dsl/ron/repeatable_mana_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this entry. The
 completed-slice commit hash is reported in the final response.
+
+## 2026-10-07: synchronous fixed mana bodies with activation history
+
+Status: completed slice `HISTORY-MANA-CONVERSION`. Stop after this slice.
+Initial user changes to `.gitignore`, the execution design, the progress-ledger
+reorganization and untracked `mtgish-ron-completed.md` are preserved. Only this
+new entry is staged from the ledger; existing user edits remain unstaged.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot,
+progress ledger, selected compiler/engine code, complete consumer RON records,
+local FEM Oracle data, API/rules contracts and CR 602.2, 605.1/605.3, with the
+existing history, CR 400.7, 603.7, 701.17 and phasing contracts. The engine work
+uses the `implement-engine` skill. No Go card definition supplied requirements.
+
+Baseline compiler tests and build passed. Completed fresh strict loading exited
+1 for collection rejection: **2,445 records; 1,806 compiled / 639 rejected;
+688 accepted / 298 rejected unique names**. The first commentary reported stale
+counts from an existing temporary file while the fresh command was still running;
+it was corrected after completion. Fresh semantic inventory contains 72,962
+occurrences, 8,559 signatures and 5,621 unknown-role occurrences. The initial
+short-engine attempt included the newly added failing tests; it was not a clean
+baseline engine pass. Final short-engine validation passed after implementation.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Synchronous history-bearing fixed mana conversion, selected | Farrelite Priest; Initiates of the Ebon Hand: **2** | Repeatable fixed-cost planning is ready. Planned execution must run the complete body, record history and install delays. Shared immediate-execution boundary enables both complete consumers. Standing Stones still needs life-cost planning and is excluded. | Medium: reuse output discovery, payment, activation history and immediate resolution; engine and RON timing/payment/identity tests. |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites, zero adapter-only gains | Full source discovery, spell identity/entry continuity, typed choices and saved-source bindings remain. The existing permanent-source shield is a prerequisite, not the complete family. | High: multiple source categories, choice and identity services, replacement rechecks. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites | Zone-aware characteristics, controller/owner count context, named/non-Wall counts and copy/layer contracts remain. Gaea's Avenger's known source defect and Wood Elemental's entry-result blocker are excluded. | High: characteristic service across zones plus five gameplay mappings and layer/copy evidence. |
+
+Selection rationale: the last committed slice supplies finite repeatable payment
+planning. The two complete FEM records now need one narrow engine execution
+boundary and a compiler guard change. That is a smaller dependency-ready effort
+than source discovery or all-zone characteristics. Complete nested records, not
+first-error frequency, establish the two-card estimate. Contract, reuse boundary
+and acceptance cases were stated before implementation. No second slice began.
+
+### Exact signatures, contexts and reuse
+
+No new public engine API or RON spelling. Nonmodal `Activated`/supported
+`ActivatedWithModifiers` contexts can compile an `ActionList` containing fixed
+`AddMana(ManaProduceW|ManaProduceU|ManaProduceB|ManaProduceR|ManaProduceG|ManaProduceC)`
+and `If(TimesThisAbilityHasBeenActivatedThisTurnIs(GreaterThanOrEqualTo(Integer(n))),
+[CreateFutureTrigger(event, ActionList(...))])`. The threshold must be nonnegative,
+branches must be nonempty, and existing delayed-step restrictions apply.
+The enclosing activation supplies a fresh `ActivationHistoryBinding` per factory.
+Immediate history-branch actions, conditional production, any-color production,
+extra immediate actions, modal history and enclosing-history reads inside delayed
+bodies remain rejected. Both real consumers use `PayMana([ManaCostGeneric(1)])`,
+threshold four and a next-end-step sacrifice of `ThisPermanent`.
+
+Engine discovery accepts fixed concrete-color production plus history branches
+bound to that same ability, containing only untargeted, nonmodal `AtNext`
+instructions or nonempty sequences/composites of those instructions. Deferred
+bodies cannot alter current payment. The existing fixed-cost bounds, source
+legality, exact payments, finite search and non-tap restrictions still apply.
+X, non-mana costs, activation limits and arbitrary activation conditions remain
+outside automatic non-tap conversion planning. Explicit activation retains its
+existing cost/timing behavior. These restrictions do not remove current callers.
+
+Private `manaSourceAbility.ResolveBody` selects full immediate resolution rather
+than inserting production alone. Planned execution pays the saved cost, records
+one activation, emits one activation event before resolution, and runs the original
+body through `resolveStackObject`. Fixed output is not added twice. Tap bonuses
+remain separate. The activation-event flag now reflects whether the source was
+tapped, matching explicit activation; a non-tap conversion emits no tap event.
+
+Reuse: `ActivationHistoryBinding`, `markActivatedInGame`, `IfActivationsAtLeast`,
+`AtNext`, captured delayed bodies, incarnation references, the normal immediate
+resolution frame, `ManaSystem`, saved activation payments, finite mana search,
+`TurnTrackers.Clone`, cleanup and the total-cost transaction. Queries do not
+execute bodies. Speculative payment runs in the transaction's game clone.
+No card-name branch, fallback, parallel payment/history/zone service, global
+last-action state, game-time declaration panic or partial production registry.
+
+### TDD, gameplay evidence and mapping
+
+Initial fixture API mistakes (`ActivationOption` versus `ActionOption` and the
+sacrifice constructor) were fixed before confirming the intended failures.
+`TestHistoryManaPlanning` then failed with cannot-pay because discovery rejected
+the history-bearing body. Both real RON records failed the compiler guard.
+After implementation, an explicit-activation assertion assumed generic payment
+would preserve previously produced colored mana. The test now supplies one red
+mana per activation and checks exact single output; the behavior requirement
+was retained. Additional fixture constructor errors were corrected. No existing
+behavior assertion was weakened. The first lint run rejected two explicit
+interface variable types in a test; both now use inferred types.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Farrelite Priest, complete FEM record | `TestRONHistoryManaCards`: immediate white output, no stack, first three versus fourth/fifth delays, end-step sacrifice. `PaymentAndLifecycle`: native 1WW casting, 1/3 metadata, pure planning, repeated payment, separate factories, clones, cleanup, departure/return, phasing, control, ability removal, and creation after an end step begins. `NativeSpellPayment`: complete RON Armageddon payment and resolution, then delayed sacrifice. |
+| Initiates of the Ebon Hand, complete FEM record | Same tests: native B casting, 1/1 metadata, black output, repeated payment and all lifecycle cases; native RON Sinkhole payment/resolution. `CostRollback`: failed total casting payment preserves resources, source history and delays; the next successful payment is the fourth activation. `HistoryIdentity`: pre-fourth control change and phase cycle retain history, returned source resets it, and phased/removed/prohibited sources cannot pay. |
+| Engine execution and discovery | `TestHistoryManaPlanning`: five planned conversions create exactly two delays with exact output, immediate timing and clone isolation. `MixedExecution`: explicit and planned activations share history; unpaid activation adds none. `ExcludedBodies`: immediate side effects, any-color output, conditional mana and mismatched binding are not planned. `ActivationEvents`: five pre-resolution activation events, correct tap flags, zero tap events and no duplicate delays/output. |
+| Declaration/registry contracts | `TestRONHistoryManaInvalid`: invalid production, immediate body, extra action, negative threshold, unbound subject and delayed enclosing-history read. `InventoryAndStrictLoad`: both complete records compile, validate and load in an explicit test registry; an unsupported record prevents partial installation. Collection inventory tests retain exact fresh counts and existing registry/gameplay assertions. |
+| Reused broader contracts | `TestRepeatableMana*`, `TestRONRepeatableManaPayment`, `TestRONActivationHistory*` pass, retaining finite cycles, exact color payment, stale-plan legality, source identity, limits, stack copies and delayed/history contracts. |
+
+Two complete-card gameplay mappings are added. Collection-wide engine-validated
+and behavior-verified totals remain unset. This slice adds no replacement, LKI,
+target or simultaneous-operation service; their existing contracts remain intact.
+Mana abilities resolve immediately and cannot enter the stack for copying.
+
+### Measurements, defects and removal gates
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly
+Farrelite Priest and Initiates of the Ebon Hand. No accepted name is lost.
+Final strict loading: **1,808 compiled / 637 rejected records; 690 accepted /
+296 rejected unique names**. The loader still exits 1 for collection rejection
+and publishes no partial registry. Semantic occurrence/signature/unknown-role
+counts and all RON source hashes remain unchanged. Local FEM Oracle text agrees
+with both complete records; no source-data correction or vocabulary source
+refresh is needed. No environment failure was found.
+
+The first required short suite failed only because two inventory tests pinned
+1,806/639. Those assertions now pin 1,808/637; strict rejection and gameplay
+checks remain. API/rules documentation records only this supported shape.
+No Go definition, startup wiring, generator or DSL function was removed. Complete
+collection loading, collection gameplay and runtime cutover remain below removal
+gates. No whole-repository caller audit authorizes a DSL deletion in this slice.
+
+### Required validation
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`; `make build` | PASS |
+| Initial focused engine and real RON tests | Expected discovery/payment and compiler-guard failures confirmed |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(HistoryMana\|RONHistoryMana\|RepeatableMana\|RONRepeatableMana\|RONActivationHistory)' -count=1` | PASS, including final history-identity cases |
+| `go test ./pkg/mage/... -short -count=1` | PASS after measured inventory-count update; repeated after lint/final tests |
+| `make test` | PASS; repeated after lint/final tests |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS; automatic import formatting reviewed |
+| `go test ./... -short -count=1` | PASS; implement-engine verification |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,808 compiled / 637 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 72,962 occurrences / 8,559 signatures / 5,621 unknown-role occurrences |
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Typed source discovery/choice and spell identity/entry continuity, then the
+   seven chosen-source prevention consumers.
+2. All-zone count CDA service for the five clean consumers.
+3. Shared controller/opponent activation permissions for Personal Incarnation,
+   Merseine, Ifh-Bíff Efreet and Land's Edge; inspect all downstream branches
+   before estimating complete unlocks.
+
+Slice files: engine `costed_mana.go`, `mana_system.go`, `history_mana_test.go`,
+`doc.go`; compiler `activation_history.go`, `activation_timing.go`,
+`history_mana_test.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this entry. One descriptive commit is created
+only after required checks pass; the hash is reported in the final response.

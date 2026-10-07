@@ -12,6 +12,7 @@ type manaSourceAbility struct {
 	ManaCost        ManaCost
 	Interchangeable bool
 	Repeatable      bool
+	ResolveBody     bool
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {
@@ -35,7 +36,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 	if !manaSourceActivationAllowed(activated, sourceID, g) {
 		return manaSourceAbility{}, false
 	}
-	productions, ok := activatedManaEffects(activated.effects)
+	productions, resolveBody, ok := plannedActivatedManaEffects(activated)
 	if !ok {
 		return manaSourceAbility{}, false
 	}
@@ -68,6 +69,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 		ManaCost:        manaCost,
 		Interchangeable: true,
 		Repeatable:      !hasTapCost,
+		ResolveBody:     resolveBody,
 	}, true
 }
 
@@ -239,4 +241,77 @@ func plannedBonusColorsAvailable(bonuses []ManaBonusColor, plannedProductions []
 		total += remaining[color]
 	}
 	return total == matchCount
+}
+
+// plannedActivatedManaEffects permits delays that do not change current payment.
+func plannedActivatedManaEffects(a *SimpleActivatedAbility) ([]ManaProduction, bool, bool) {
+	if productions, ok := activatedManaEffects(a.effects); ok {
+		return productions, false, true
+	}
+	var productions []ManaProduction
+	var walk func([]Effect) bool
+	walk = func(effects []Effect) bool {
+		if len(effects) == 0 {
+			return false
+		}
+		for _, effect := range effects {
+			switch e := effect.(type) {
+			case *sequenceEffect:
+				if !walk(e.effects) {
+					return false
+				}
+			case *compositeEffect:
+				if !walk(e.effects) {
+					return false
+				}
+			case *activationHistoryBranch:
+				if e.binding == nil || e.binding != a.activationHistory || !plannedDeferredManaBody(e.body) {
+					return false
+				}
+			default:
+				values, ok := sequentialManaProductions([]Effect{effect})
+				if !ok {
+					return false
+				}
+				for _, value := range values {
+					if value.Color == AnyColor || value.Amount <= 0 {
+						return false
+					}
+				}
+				productions = append(productions, values...)
+			}
+		}
+		return true
+	}
+	ok := walk(a.effects)
+	return productions, true, ok && len(productions) > 0
+}
+
+func plannedDeferredManaBody(effect Effect) bool {
+	switch e := effect.(type) {
+	case *nextStepEffect:
+		return e.pattern != nil && e.body != nil && len(e.targets) == 0 && len(e.modes) == 0
+	case *sequenceEffect:
+		if len(e.effects) == 0 {
+			return false
+		}
+		for _, part := range e.effects {
+			if !plannedDeferredManaBody(part) {
+				return false
+			}
+		}
+		return true
+	case *compositeEffect:
+		if len(e.effects) == 0 {
+			return false
+		}
+		for _, part := range e.effects {
+			if !plannedDeferredManaBody(part) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }

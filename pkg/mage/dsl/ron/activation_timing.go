@@ -63,7 +63,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, problem(n, "activation history in modes is not supported")
 		}
 		if containsManaAction(n.Args[1]) {
-			return nil, problem(n, "activation history mana bodies require mana-conversion planning")
+			if err := validateHistoryManaBody(n.Args[1]); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return func() mage.CardOption {
