@@ -4533,3 +4533,31 @@ Fungusaur's complete RON record is supported. Living Artifact's damage clause
 is supported, but its complete record still rejects optional counter payment.
 Lich retains its other unsupported contracts. This adapter does not grant
 support for general damage-recipient filters or optional counter payments.
+
+RON optional counter-placement payment accepts
+`PlayerMayCost(payer, PutCounters([ACounterOfTypeOnAPermanent(counter,
+And([IsCardtype(Creature), ControlledByAPlayer(SinglePlayer(payer))]))]))`
+and implicit `MayCost` with `You` as payer. The two filters can appear in either
+order. The controller reference must be the same bound player reference as the
+payer. Counter types use the existing permanent counter vocabulary. The cost
+requires one instruction and one counter; plural amounts, other filters, and
+other controller references remain rejected.
+
+These payments require an adjacent `If` or `Unless` with `CostWasPaid` or
+`CostWasntPaid`, in the existing resolving spell, activation, mode, or trigger
+action sequence. The cost and continuation stay together. A later payment or
+sibling action cannot read that result. Selection occurs during resolution,
+without targeting. A shrouded creature can pay. The engine locks its incarnation
+and verifies current control and presence before payment. Counter replacements
+can change or prevent placement without changing successful payment (CR 118.11–12).
+
+`PutCounterOnMatchingCost(counter core.CounterType, filter PermanentFilter) Cost`
+is the shared engine primitive. It uses the payer's current permanents, permits
+the source, and treats a zero filter as unrestricted. Availability queries do
+not choose or place counters. Preparation locks one choice; commit does not
+choose again. The shared cost transaction and counter replacement pipeline
+supply rollback, game isolation, and replacement ordering.
+
+Evidence: `TestPutCounterCost*`, `TestRONCounterPlacementPayment*` and the existing
+`TestRONLandEntry*` event contracts. The complete FEM records for Thelon's Chant
+and Tourach's Chant now load and have gameplay tests for both their rules.

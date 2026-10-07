@@ -56,6 +56,7 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
 	var player playerReferencePlan
+	payer := Node{Kind: Symbol, Name: "You"}
 	var cost Node
 	if payment.Name == "MayCost" || payment.Name == "MustCost" {
 		if err := arity(payment, 1); err != nil {
@@ -72,6 +73,7 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 			return nil, err
 		}
 		cost = payment.Args[1]
+		payer = payment.Args[0]
 	}
 	var sacrifice *permanentReferencePlan
 	var dynamic valueFactory
@@ -81,6 +83,10 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 	if payment.Name == "MustCost" {
 		var build costFactory
 		build, err = compileRequiredSacrificeCost(cost, ctx)
+		costs = []costFactory{build}
+	} else if cost.Name == "PutCounters" {
+		var build costFactory
+		build, err = compileCounterPlacementPayment(cost, payer, ctx)
 		costs = []costFactory{build}
 	} else if cost.Name == "SacrificePermanent" {
 		if err := arity(cost, 1); err != nil {

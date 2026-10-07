@@ -484,6 +484,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 			return []string{"metadata", "announcement_value"}[index]
 		}
+		if role == "resolution_cost" && n.Name == "PutCounters" && len(n.Args) == 1 {
+			return "counter_payment_instruction"
+		}
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
 			return "counter_removal_instruction"
 		}
@@ -769,6 +772,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "value"
 			}
+		}
+	case "counter_payment_instruction":
+		if n.Name == "ACounterOfTypeOnAPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_filter"}[index]
 		}
 	case "counter_instruction":
 		if n.Name == "ACounterOfTypeOnPlayer" && len(n.Args) == 2 {

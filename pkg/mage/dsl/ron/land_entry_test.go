@@ -82,8 +82,8 @@ func TestRONLandEntryChantEvents(t *testing.T) {
 	for _, tc := range []struct{ name, subtype string }{{"Thelon's Chant", "Swamp"}, {"Tourach's Chant", "Forest"}} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := hostUntapRecord(t, "FEM", tc.name)
-			if _, err := Compile(n); err == nil {
-				t.Fatal("full Chant unexpectedly accepted")
+			if _, err := Compile(n); err != nil {
+				t.Fatal(err)
 			}
 			event := n.Fields["Rules"].Args[1].Args[0]
 			nodes, err := Parse(strings.NewReader(`Card(Name:"Chant event",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[]),Rules:[TriggerA(Placeholder,ActionList([PermanentDealsDamage(ThisPermanent,Integer(3),Player(Trigger_ThatPlayer))]))])`), "chant-event.ron")
@@ -186,13 +186,8 @@ func TestRONLandEntryReprints(t *testing.T) {
 	}
 	files["FEM.ron"] = &fstest.MapFile{Data: append(append(damageReceivedRecord(t, "FEM", "Thelon's Chant"), '\n'), damageReceivedRecord(t, "FEM", "Tourach's Chant")...)}
 	report, err := InspectFS(files, "*.ron")
-	if err != nil || report.Records != 8 || report.Compiled != 6 || len(report.Issues) != 2 {
+	if err != nil || report.Records != 8 || report.Compiled != 8 || len(report.Issues) != 0 {
 		t.Fatalf("inventory: %+v %v", report, err)
-	}
-	for _, issue := range report.Issues {
-		if !strings.Contains(issue.Message, "optional payment cost (PutCounters)") {
-			t.Fatalf("unexpected Chant blocker: %+v", issue)
-		}
 	}
 	found := false
 	for _, sig := range report.Signatures {

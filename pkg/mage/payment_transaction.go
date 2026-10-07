@@ -220,6 +220,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			}
 			validationCost = &locked
 			tx.costs[i] = &locked
+			if placement, ok := locked.options[locked.selected].(*putCounterOnMatchingCost); ok {
+				cost = placement
+				validationCost = placement
+				tx.costs[i] = placement
+			}
 			if counter, ok := locked.options[locked.selected].(*removeCountersCost); ok {
 				cost = counter
 				validationCost = counter
@@ -296,6 +301,16 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			locked.selected = make([]capturedPermanent, 0, locked.count)
 			locked.chooser = tx.game.GetPlayer(tx.controller)
 			validationCost = &locked
+		}
+		if placement, ok := cost.(*putCounterOnMatchingCost); ok {
+			locked := *placement
+			if !locked.locked {
+				if err := locked.choose(tx.controller, validation, tx.game.GetPlayer(tx.controller)); err != nil {
+					return err
+				}
+			}
+			validationCost = &locked
+			tx.costs[i] = &locked
 		}
 		if attached, ok := cost.(*tapAttachedPermanentCost); ok {
 			locked := *attached
@@ -400,7 +415,8 @@ func (tx *costPaymentTransaction) Commit() error {
 	for _, cost := range tx.costs {
 		_, random := cost.(*discardRandomCost)
 		_, isSacrifice := cost.(*sacrificeMatchingCost)
-		if random || isSacrifice {
+		_, isPlacement := cost.(*putCounterOnMatchingCost)
+		if random || isSacrifice || isPlacement {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)
@@ -469,6 +485,9 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 				return fmt.Errorf("cannot pay total counter cost")
 			}
 			counterTotals[counterType] += counterAmount
+		}
+		if placement, ok := cost.(*putCounterOnMatchingCost); ok && !placement.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen counter placement")
 		}
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok && !taps.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen tap cost")

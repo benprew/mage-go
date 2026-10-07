@@ -212,8 +212,8 @@ Evidence: `TestLandEntryPermanentDeclaration`, `TestLandEntryPermanentIdentity`,
 continue to cover entry controller snapshots, known actors and event-time subtype
 checks. RON Ankh tests cover current versus retained controller reads, source
 departure, native land play, casting rollback, prevention, ability removal,
-independent sources and pending events. Chant tests cover their event prerequisites
-only; optional counter-placement payment remains unsupported.
+independent sources and pending events. Complete Chant gameplay is covered by
+`TestRONCounterPlacementPayment*`; its payment contract is below.
 
 ## Captured permanent identity and retained information
 
@@ -5304,3 +5304,49 @@ Evidence: `TestRONDamageReceivedFungusaur`, `CastAndCombat`,
 prefix). Fungusaur tests use its complete record and all six reprints. Living
 Artifact tests isolate its exact damage clause from the complete AST and assert
 that the full record remains rejected. No complete-card claim applies to it.
+
+## Optional counter-placement payments
+
+`PutCounterOnMatchingCost(core.CounterType, PermanentFilter) Cost` places one
+counter on one matching permanent controlled by the payer. A zero filter accepts
+any permanent. The source can pay. The choice is a payment choice, so shroud and
+summoning sickness do not exclude it. Current control, presence, filter membership
+and incarnation determine eligibility. Ownership does not determine the payer.
+Phased objects cannot pay; a phase cycle preserves a prepared choice. A returned
+card cannot replace a previously selected incarnation (CR 400.7, 702.26).
+
+`CanPay` makes no choices or state changes. Payment preparation copies the cost,
+asks the live payer once, verifies the candidate and saves its typed captured
+permanent. Validation places counters only in the payment game. Commit checks
+the saved choice before spending mana or life and uses the shared full-payment
+preflight. A later failed cost, stale candidate, control change or failed filter
+check cannot spend part of the cost. Cost declarations keep no chosen state.
+Nested cost alternatives retain the same locked choice. The source need not
+remain present for a resolving payment that chooses another permanent.
+
+Placement uses `AddCountersWithReplacement`, with the causing source and
+`onEntry=false`. Existing affected-player replacement ordering applies.
+Modified counter type, increased amount, or prevented placement still pays the
+cost (CR 118.11–12, 614, 616). `IfPaid` and `UnlessPaid` retain each invocation's
+branch result. This introduces no new target, counter, event or replacement
+service and no collection-wide simultaneous operation.
+
+`TestPutCounterCostTransaction` covers pure queries, owner/control distinction,
+locked choices, invalid choices, phase/return/filter changes, total rollback and
+doubling. `ResolutionAndDeclaration`, `ReplacementPayment`, `StaleChoice` and
+`AlternativeTransaction` and `ReplacementOrder` cover optional branches, source permission, cloned
+payments, invalid counter types in definition validation, non-targeting shroud,
+replacement prevention/type changes, nested alternatives and both affected-player
+orders for competing increase/doubling replacements.
+
+`TestRONCounterPlacementPaymentChants` uses complete FEM records for Thelon's
+Chant and Tourach's Chant: saved entry actor, payment at resolution, decline,
+missing/opposing/phased creatures, source departure/return/phasing/control,
+phase cycles, ability removal, trigger copies, clones, doubling and damage
+prevention. `CastingAndUpkeep` covers full mana costs, casting timing, rollback,
+entry timing and each colored upkeep payment/sacrifice. `IndependentEvents`
+covers two sources and both saved actors with four pending triggers.
+`NativeLand` covers real RON Swamp/Forest play and illegal second land exclusion.
+`Invalid` and `Inventory` cover declaration restrictions, lexical payment
+results, complete nested roles and strict loading. Existing land-entry tests
+retain actor/controller distinction, subtype checks and capture/LKI contracts.

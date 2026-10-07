@@ -26260,3 +26260,167 @@ Slice files: pkg/mage/composable_events.go, land_entry_capture_test.go;
 pkg/mage/dsl/ron/land_entry.go/test.go, compiler.go, triggers.go, player_scope.go,
 inventory.go/test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
 this ledger entry. Stop after one descriptive commit when required checks pass.
+
+## Run 2026-10-06: OPTIONAL-COUNTER-PLACEMENT-PAYMENT
+
+Status: completed and validated implementation slice. This run stops
+at this slice. Initial changes to `.gitignore`, the execution design and this
+progress ledger, plus untracked `mtgish-ron-completed.md`, are user work.
+Only the new ledger entry is staged; the initial ledger edits remain unstaged.
+
+### Fresh evidence and candidate comparison
+
+Baseline RON tests with `-count=1`, the short engine suite with `-count=1` and
+`make build` passed. Strict and semantic loading exited 1 because unsupported
+collection records remain: 2,445 records, 1,784 compiled / 661 rejected;
+672 accepted / 314 rejected unique names out of 986. Semantic inventory had
+72,962 nodes / 8,559 signatures / 6,290 unknown-role occurrences. The execution
+design, progress ledger, vocabulary snapshot, engine API, selected payment,
+counter, definition-validation, event-capture, compiler and inventory code,
+API/rules contracts and CR 118, 122, 400.7, 603, 608, 614, 616 and 702.26 were
+read. Complete candidate records and nested forms were inspected. Reprints are
+counted once; first-error frequency was not used as an unlock estimate.
+
+| Candidate | Distinct affected names and estimated complete-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Optional counter placement, selected | Thelon's Chant, Tourach's Chant: **2** full cards, each one FEM record. | Missing reusable matching-permanent placement payment and its RON adapter. Both other upkeep clauses and land-entry actor capture already work. Enables replacement-aware choice payments through the shared cost transaction. | Medium: lock a candidate incarnation, pure availability, rollback/preflight, replacement and clone tests, complete card gameplay. |
+| Chosen-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible full-card unlocks after prerequisites, **0** selection-only unlocks. | Complete records require a restricted damage-source choice and next-event prevention scoped to that source and player. Other first-error consumers Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have additional replacement/result work and are excluded. Enables typed chosen sources for multiple replacement consumers. | High: CR 609.7 source domain, stack/permanent/incarnation selection, retained source identity, one-shot consumption, simultaneous packets and affected-player ordering. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks. Gaea's Avenger is affected but excluded from this estimate. | All-zone characteristic evaluation, owner/controller context, count and name filters, CDA/copy/layer behavior. Avenger has a recorded controller-filter source defect; Wood Elemental also needs entry sacrifice work. Enables dynamic characteristics outside the battlefield. | High: zone-aware characteristic prerequisite, layer/copy contracts, counts and gameplay. |
+
+Selection rationale: two complete consumers have no further compiler blockers
+and use established land events, damage and mana payment. A small shared engine
+cost completes them with less effort than the source-selection/prevention or
+all-zone characteristic services. This is multi-card work. The selected contract,
+reuse boundary and acceptance cases were stated before edits. The
+`implement-engine` skill supplied the engine workflow; no removed card skill,
+Go card requirement, generated stub, fallback, name branch or partial production
+registry was used.
+
+### Exact shapes, contracts and dependencies
+
+Engine API: `PutCounterOnMatchingCost(core.CounterType, PermanentFilter) Cost`.
+It places one counter on a matching permanent currently controlled by the payer.
+Zero filter accepts any permanent; the source can pay. Queries are pure.
+Preparation copies the cost and locks a candidate's ID and incarnation. Commit
+rechecks live presence, control and filter membership before resources are spent.
+Departure/return invalidates the saved choice; phasing suspends it; a phase cycle
+preserves it. Invalid/stale chooser objects fail. Selection is not targeting;
+shroud and summoning sickness do not prohibit payment. The source need not remain
+present when another object pays. Nested alternatives preserve the locked choice.
+
+RON resolving action-sequence envelope:
+`PlayerMayCost(payer, PutCounters([ACounterOfTypeOnAPermanent(counter,
+And([IsCardtype(Creature), ControlledByAPlayer(SinglePlayer(payer))]))]))`.
+Implicit `MayCost` uses `You`. The two filter parts can appear in either order;
+there must be exactly one creature type and one controller clause. The same
+bound player expression must supply the payer and control clause. Existing
+permanent counter types are accepted. One adjacent nonempty `If`/`Unless` body
+with `CostWasPaid`/`CostWasntPaid` stays with its payment. Existing spell,
+activation, mode and trigger action-list contexts apply. No announcement cost,
+static, replacement-operation or entry-operation context is added. Plural
+instructions, other filters/counts/controllers and escaping result reads reject
+at compilation. The complete FEM records need only the explicit event-player form.
+
+Reuse: `IfPaid`/`UnlessPaid`, `playerReferencePlan`/`instanceBindings`, saved
+land-entry actors, `capturedPermanent`, payment preparation and full-cost
+preflight, definition validation, `AddCountersWithReplacement`, affected-player
+replacement selection, stack copying and game cloning. A modified type, doubled
+amount or prevented placement still counts as payment (CR 118.11–12). No new
+counter, target, damage, event, zone, timing or replacement dispatcher exists.
+Each branch keeps its own result; no global last-action slot is introduced.
+The single-object placement shape introduces no simultaneous collection action.
+
+### TDD, gameplay and reporting evidence
+
+Tests first failed for the missing engine constructor and unsupported optional
+`PutCounters` cost in both complete records. A test-only nonexistent type-change
+helper was replaced by a real filter-membership change, then the intended
+missing-constructor failure was confirmed alone. After initial implementation,
+definition tests exposed the missing cost-inspection integration; it was added.
+An additional nested-alternative test failed because choice was not locked in
+that preparation path; the selected placement cost now follows the shared
+transaction path. No behavior assertion was waived.
+
+Fixture corrections: actor-specific land events use `PutOnBattlefieldBy`; bare
+`PutOnBattlefield` deliberately has no actor. Game clones use search players,
+so tests replace their optional choice policy explicitly while retaining the
+cloned player state. Inventory uses the existing `player_filter` role for
+`SinglePlayer`, not a new role. These were test/API corrections, not source
+or environment defects. The existing tests that expected unsupported Chants now
+assert successful compilation. Their capture, subtype, LKI and atomic-registry
+rejection assertions remain.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Thelon's Chant, complete FEM record | `TestRONCounterPlacementPaymentChants`: Swamp event, saved actor, event/resolution separation, all payment and source identity cases, control, phase cycles, ability removal, copies/clones, doubling, prevention and irrelevant events. `CastingAndUpkeep`: 1GG casting, unpaid and illegal-timing rollback, entry timing, controller upkeep G payment or sacrifice. `NativeLand`: real RON Swamp play, pay/decline, illegal second land exclusion. |
+| Tourach's Chant, complete FEM record | Same tests: Forest event, 1BB casting, controller upkeep B payment or sacrifice, real RON Forest play. |
+| Pending events and declarations | `IndependentEvents`: two source factories/controllers and both saved actors, four pending triggers, separate paid creatures. `Invalid`: wrong arity/count/type/filter/payer, unbound actor, malformed counters, result leakage and missing/empty continuation. `Inventory`: strict two-card loading and complete nested role paths. Existing `TestRONLandEntryChantEvents` retains actor versus current land-controller, source/land departure, return, copies, subtype and clone evidence. |
+| Engine payment | `TestPutCounterCostTransaction`: pure queries, owner versus controller, selection once, invalid choice, stale identity/control/filter/phase, full mana/life rollback, later failure and doubling. `ResolutionAndDeclaration`: paid/declined/missing/opposing/phased/source/clone cases and invalid counter validation. `StaleChoice`: returned chooser object cannot pay. `AlternativeTransaction`: nested alternatives lock once. `ReplacementPayment`: shroud, prevented/type-modified/doubled placement, paid result. `ReplacementOrder`: both affected-payer choices for competing increase/doubling replacements; no repeated live choice. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay remain
+separate. Aggregate engine-validated and behavior-verified counts remain null;
+this run does not validate gameplay for the whole accepted collection.
+
+### Actual gain, source data and removal gates
+
+Actual gain equals the estimate: **2 unique names / 2 records**, exactly Thelon's
+Chant and Tourach's Chant. Strict and semantic loaders now report **1,786 compiled /
+659 rejected records**, **674 accepted / 312 rejected names**. No accepted record
+regressed and no other diagnostic changed. Semantic inventory remains 72,962 nodes /
+8,559 signatures; unknown roles fall to **6,266**. The new
+`counter_payment_instruction` role keeps payment selection distinct from resolving
+counter-placement subjects. Support remains unverified at expression level.
+
+Local `data/FEM.json` Oracle text confirms both complete records, including the
+colored upkeep payment, exact basic land subtype, saved entering player and
+controlled creature payment. There is no selected source defect and no RON file
+changes; all twelve source hashes remain unchanged. The vocabulary snapshot needs
+no source refresh. Previously recorded source defects remain separate.
+
+Go definitions, generators, startup callers and DSL functions remain. Full
+collection loading, full gameplay and runtime wiring do not meet the removal
+gate. No fresh caller audit authorizes DSL deletion. API/rules documentation
+records only the behavior established here.
+
+### Validation
+
+All final native checks passed after the last implementation and test changes.
+Lint first reported two `paramTypeCombine` issues in new signatures; both were
+corrected. Automatic lint changes only reformatted new imports, functions and
+structs; those changes were reviewed. Final focused tests and all required
+checks below passed against that code. No environment or pre-existing failure
+remains. Loader rejection is collection rejection, not build/test failure.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine suite, `make build` | PASS |
+| Test-first engine and RON tests | Expected missing constructor and unsupported `PutCounters` failures; fixture corrections and expected failure confirmed |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestPutCounterCost\|TestRONCounterPlacementPayment\|TestRONLandEntry\|TestInventory' -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated for final code |
+| `make test` | PASS, repeated for final code |
+| `make build` | PASS, repeated for final code |
+| `go vet ./...` | PASS, repeated for final code |
+| `make lint` | PASS, zero issues after the signature fixes |
+| `go test ./... -short -count=1` | PASS; additional implement-engine skill check |
+| `git diff --check` | PASS after final docs and staging |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,786 compiled / 659 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same collection counts, 674 accepted / 312 rejected unique names; final semantic totals above |
+| Source and diagnostic comparison | All twelve source hashes unchanged; exactly the two Chant errors removed, no unrelated diagnostic drift |
+
+One descriptive commit contains only this slice. Its hash is reported in the
+final response. Initial user changes remain unstaged; no check was waived.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source selection and one-shot prevention for the seven Circle/Realm
+   consumers; retain exact source domain, incarnation and simultaneous-event rules.
+2. All-zone battlefield-count CDAs for Dakkon Blackblade, Keldon Warlord,
+   Nightmare and Plague Rats; separate Avenger's source defect and Wood Elemental.
+3. General delayed temporary triggers for shared consumers such as High Tide,
+   Glyph of Life, Reincarnation, Runesword, Sandals of Abdallah and War Barge;
+   inspect complete bodies and linked objects before estimating full unlocks.
+
+No second slice is started. Slice files: `pkg/mage/cost_put_counter.go` and tests,
+`payment_transaction.go`, `definition.go`; RON `counter_placement_payment.go`
+and tests, `optional_payment.go`, `inventory.go/test.go`, `land_entry_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger entry.
