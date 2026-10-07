@@ -5324,3 +5324,34 @@ for mana planning. Stack copies and resolution do not repeat the check.
 Launcher records to gameplay and declaration tests. Casting, land play, tap/mana
 payment, target legality, delayed destruction, copies, clones, source return,
 phasing, and current controller behavior use their existing engine services.
+
+## Spell damage-source identity prerequisite
+
+The engine APIs are:
+
+```go
+func (g *Game) CaptureSpellDamageSource(stackID uuid.UUID) DamageSource
+func DamageSourceOfSpell(spell StackObjectRef) DamageSourceRef
+func SnapshotDamageSource(source DamageSourceRef, binding *DamageSourceBinding) ResolvingEffect
+func (s DamageSource) StackID() uuid.UUID
+func (s DamageSource) SameObject(other DamageSource) bool
+```
+
+Capture uses a live stack object ID, including permanent spells, and rejects
+abilities or absent spells. `DamageSourceOfSpell` accepts an existing typed spell
+target or saved spell binding. Snapshot saves independent information in the
+existing resolution environment; `FromDamageSource` can read it after departure.
+The normal definition validator checks declarations and producer dominance.
+An unsuccessful snapshot replaces the binding with an empty source.
+
+Native spell damage retains its exact stack ID while resolving. A saved source
+keeps identity, controller, owner, effective colors and card types through
+departure and cloning. `SameObject` distinguishes separate casts, copied spells
+and permanent incarnations. It does not link a permanent spell to the permanent
+it becomes; that future prevention contract needs an explicit link. A source
+without a stack ID or permanent incarnation cannot match by UUID alone.
+
+These APIs are engine services. No new RON shape is accepted. In particular,
+`ChooseADamageSource` remains rejected until enumeration, source bindings,
+property rechecks and shield installation are complete. Existing callers and
+the permanent-source prevention API remain available.

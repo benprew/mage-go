@@ -44,6 +44,7 @@ type ResolutionState struct {
 	// Card currently being resolved from the stack
 	resolvingCard       Card
 	resolvingController uuid.UUID
+	resolvingStackID    uuid.UUID
 
 	// Color state installed before target legality check during resolution
 	resolvingColorSourceID uuid.UUID
@@ -94,6 +95,10 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 	s.currentEventSourceID = obj.EventSourceID
 	s.resolvingCard = obj.Card
 	s.resolvingController = obj.Controller
+	s.resolvingStackID = uuid.Nil
+	if obj.Card != nil && !obj.IsAbility {
+		s.resolvingStackID = obj.ID
+	}
 	s.resolvingTargets = obj.Targets
 	s.resolvingDamageDistribution = obj.DamageDistribution
 	s.resolvingCounterDistribution = obj.CounterDistribution
@@ -138,6 +143,7 @@ func (s *ResolutionState) Clear() {
 	s.currentEventSourceID = uuid.Nil
 	s.resolvingCard = nil
 	s.resolvingController = uuid.Nil
+	s.resolvingStackID = uuid.Nil
 	s.resolvingTargets = nil
 	s.resolvingDamageDistribution = nil
 	s.resolvingCounterDistribution = nil
@@ -214,6 +220,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		currentEventSourceID:   s.currentEventSourceID,
 		resolvingCard:          s.resolvingCard,
 		resolvingController:    s.resolvingController,
+		resolvingStackID:       s.resolvingStackID,
 		resolvingColorSourceID: s.resolvingColorSourceID,
 		resolvingCastZone:      s.resolvingCastZone,
 		resolvingCastContext:   s.resolvingCastContext,

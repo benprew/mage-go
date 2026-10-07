@@ -6289,3 +6289,49 @@ untap, and clone isolation. Existing typed declaration, attached subject,
 activation, hand-size, and clone-allocation contracts remain in force.
 RON gameplay and pure mana-planning evidence is in `TestRONActivationHistory*`.
 Rules: CR 400.7, 500.7, 500.11, 602.1b, 602.2 and 602.5.
+
+## Spell damage-source identity prerequisite
+
+`Game.CaptureSpellDamageSource(stackID)` reads a live spell by its stack object
+ID. It rejects abilities, card IDs and absent objects. It saves the card ID,
+stack ID, current controller, owner, effective colors and card types in a
+`DamageSource`. Permanent spells also qualify; damage capability is not a
+condition for this information read. The query makes no player choices and
+changes no game state.
+
+`DamageSourceOfSpell(StackObjectRef)` uses the shared typed spell reference and
+live stack query. `SnapshotDamageSource(DamageSourceRef, *DamageSourceBinding)`
+saves independent information in the existing per-resolution binding map.
+`FromDamageSource` reads it after departure. An unsuccessful snapshot writes an
+empty source, so a previous value cannot survive. Definition validation checks
+nil or ability references, missing declarations, binding names and producer
+dominance. The snapshot uses the damage-source role for `This`, so a resolving spell is
+valid without a battlefield source.
+
+`DamageSource.StackID()` identifies the exact cast or copy. Native resolution
+keeps that ID after popping the spell, and clears it with the resolution context.
+Resolution cloning and source snapshots retain it. `SameObject` requires a
+matching card ID and either the exact permanent incarnation or the exact spell
+stack ID. Unknown identities cannot match. Color and control changes preserve
+identity; saved information remains fixed. A later cast or copied spell has a
+separate identity. The shared damage actions, simultaneous packets, damage-result
+bindings and damage-event source captures carry the source value unchanged.
+
+This establishes a prerequisite for CR 120.7, 609.7a and 615.9 source choices.
+It does not yet establish source enumeration, property rechecks, chosen-source
+shields, or the special continuation from a permanent spell to the permanent it
+becomes. A spell and that permanent remain separate objects under `SameObject`
+(CR 400.7); a future shield must link them explicitly. Permanent phasing keeps
+its incarnation; departure and return change it. Legacy synthetic resolving
+objects without a stack ID keep their information but cannot prove exact spell
+identity. Existing permanent-only damage-history APIs retain their contracts.
+
+Evidence: `TestSpellDamageSourceLiveAndResolving`,
+`TestSpellDamageSourceSnapshotLifecycle`,
+`TestSpellDamageSourceCopiesAndPermanentBoundary`,
+`TestSpellDamageSourceDefinitionContract`, and real RON
+`TestRONSpellDamageIdentityNativeResolution`, `CopyAndRecast`, `EventSnapshot`.
+The RON tests cover Lightning Bolt, Psionic Blast, Earthquake and Hurricane,
+including paid casting, rollback, simultaneous player damage, copies, later
+casts, source departure, pending event captures and clone isolation. Collection
+compilation and whole-card behavior coverage do not increase in this slice.

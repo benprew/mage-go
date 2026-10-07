@@ -31148,3 +31148,165 @@ Ranked next candidates to reassess:
    needs its filtered combat prevention adapter.
 
 No second slice is started. Migration completion criteria remain unmet.
+
+## Run 2026-10-07: SPELL-DAMAGE-SOURCE-IDENTITY
+
+Status: complete engine prerequisite for typed spell damage-source information
+and snapshots. No chosen-source adapter or second slice is started.
+
+### Baseline, candidate comparison and selection
+
+Initial user changes were `.gitignore`, this ledger and
+`mtgish-ron-execution.md`, plus untracked `mtgish-ron-completed.md`. They are
+preserved. The commit stages only this entry from the ledger; it preserves the
+user's existing document rearrangement as a separate working-tree change.
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict loading exited 1 with **1,848 compiled / 597 rejected records** and
+**713 accepted / 273 rejected unique names**. That exit is collection rejection,
+not a build failure. Fresh semantic inspection parsed all 2,445 records and
+walked nested expressions, including descendants of rejected parents.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** eventual full-card unlocks across **31** records. The selected identity prerequisite alone estimates **0** unlocks. | Exact spell identities were absent from damage snapshots. After this prerequisite, complete source enumeration, typed choices, property rechecks, permanent-spell continuation and shield installation remain. Enables all seven shared choice/shield consumers. Full records for Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage were also read; their partial-prevention, extra-damage, redirection and prevented-amount contracts exclude them from the seven-card estimate. | Low for the identity prerequisite: existing resolution bindings, damage values and clone services suffice. High for the whole choice/shield family. |
+| Battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** eventual unlocks across **20** records; **0** adapter-only unlocks. | All-zone characteristic evaluation, CDA/copy integration and named counts remain prerequisites. Complete Gaea's Avenger also has its recorded own-versus-opponent artifact-count defect and is excluded. Enables all-zone characteristic consumers. | High: queries in every applicable zone and shared layer/copy contracts before adapters. |
+| Filtered blocking requirements | Lure and Marble Priest: **2** eventual unlocks across **7** records; **0** adapter-only unlocks. | Shared blocker enforcement in both declaration paths and maximum requirement satisfaction remain prerequisites. Marble Priest also needs its filtered combat-prevention adapter. Enables filtered all-blocker requirements and their combinations. | Medium/high: combat legality, competing requirements and native declaration paths. |
+
+All named candidates' complete RON records and nested forms were inspected.
+Selection favors a small, dependency-ready shared prerequisite with seven
+concrete downstream consumers over the larger missing engine contracts.
+First-error frequency is not an unlock estimate. The contract and acceptance
+cases were stated before edits. The existing `implement-engine` skill was used
+for this engine work; removed card/set skills were not used.
+
+### Exact supported contexts, dependencies and reuse boundary
+
+The supported engine APIs are:
+
+```go
+func (g *Game) CaptureSpellDamageSource(stackID uuid.UUID) DamageSource
+func DamageSourceOfSpell(spell StackObjectRef) DamageSourceRef
+func SnapshotDamageSource(source DamageSourceRef, binding *DamageSourceBinding) ResolvingEffect
+func (s DamageSource) StackID() uuid.UUID
+func (s DamageSource) SameObject(other DamageSource) bool
+```
+
+Live raw capture accepts a spell's stack ID, including a permanent spell, and
+rejects absent IDs, ordinary card IDs and abilities. Typed reads accept a
+`*SpellTargetBinding` or `FromSpell` saved spell reference; ability references
+and nil/missing declarations are invalid definitions. Information uses the
+current controller, owner, effective colors and card types. A snapshot writes
+an independent source value in the existing per-resolution
+`DamageSourceBinding` map. Failed capture writes an empty value. Reads after
+capture retain information through departure, copies and cloning without
+reviving a departed live spell reference.
+
+`ResolutionState.Begin` saves the resolving spell's exact stack ID after the
+stack pop; `Clear` removes it and `Clone` copies it. Resolving source capture
+uses that context and its own color override, rather than a UUID lookup that
+could refer to another object. Shared damage actions, source-result bindings
+and pending damage-event captures retain the value, including simultaneous
+packets, amount changes, prevention and redirection. Definition inspection uses
+the damage-source role for `This` and validates producer dominance and reference
+kind. It does not require a battlefield source for a resolving spell snapshot.
+
+`SameObject` compares card ID plus exact stack ID or permanent incarnation.
+Unknown identities cannot match. A copied spell and a later cast remain
+separate. Phasing retains a permanent incarnation; return changes it. A spell
+and the permanent it becomes remain distinct under CR 400.7. A future chosen
+source shield must add the special CR 609.7a link explicitly. Synthetic legacy
+resolution contexts without stack IDs keep their old information behavior but
+cannot prove exact spell identity.
+
+This is an engine-contract gap, not a missing spelling adapter or data fix.
+RON keeps declaration spelling and scopes; no RON shape is newly accepted.
+`ChooseADamageSource`, its binding and its continuation remain strict errors.
+The reusable APIs use existing spell references, source bindings, definition
+validation, source snapshots, damage/replacement execution and clone services.
+No second state map, global last-action result, card-name branch, factory
+fallback, startup change or partial production registry is added. Permanent-only
+history queries and existing UUID-based prevention callers retain their contracts.
+Rules read: CR 120.7, 400.7, 609.7a-c and 615.2-9; the existing replacement
+contracts cover CR 616.1 and rechecks.
+
+### TDD, affected records and gameplay evidence
+
+The first tests failed because the new APIs were missing. With their initial
+implementations present, runnable tests failed because native resolution lost
+stack identity: all four real RON probes matched zero damage packets. Integration
+fixed those failures. A positive spell snapshot test exposed the permanent role
+for `This`; it now uses existing damage-source inspection. A later negative test
+proved ability references could pass the general stack reference declaration;
+they now fail before gameplay.
+
+Two fixture mistakes were corrected without weakening assertions: an initial
+fixture used nonexistent `Card.Colors`/`SetZone` methods, and a result test read
+bindings after `ApplyEffect` restored its outer environment. The first full
+`make test` failed only on that result fixture. The corrected test inspects the
+results in their resolution scope. Final required checks pass.
+
+| Contract or card | Test mapping |
+| --- | --- |
+| Live/resolving source, controller/owner and color state | `TestSpellDamageSourceLiveAndResolving`: exact stack versus card ID, ability rejection, effective colors/types, source departure, current resolution identity, cleanup and cloning. |
+| Typed target/saved references and source snapshots | `TestSpellDamageSourceSnapshotLifecycle`: typed target and saved spell binding, independent saved characteristics, changed color/control, clone isolation, live departure rejection, same-card recast and failed-capture replacement of the old value. |
+| Damage results and replacements | `TestSpellDamageSourceReplacementResults`: captured identity and actual amount after finite prevention, redirection and recipient prevention. Existing `TestDamageSourceFilterReplacementOrder` and `TestNextPermanentSourcePreventionReplacementOrder` also pass. |
+| Copies and permanent boundary | `TestSpellDamageSourceCopiesAndPermanentBoundary`: independent copy identity/controller and native damage, permanent-spell reads, distinct entry incarnation, phase cycles, departure/return and unknown sources. |
+| Invalid declarations | `TestSpellDamageSourceDefinitionContract`: valid spell target and `This` snapshots; nil source/ref/binding, empty name, undeclared spell target, use before producer, missing producer and declared ability reference rejection. |
+| Lightning Bolt, Psionic Blast, Earthquake, Hurricane | `TestRONSpellDamageIdentityNativeResolution`: complete real RON records, paid casting and rollback, exact identity in all player packets, simultaneous damage, native graveyard movement and pending clone isolation. |
+| Lightning Bolt | `TestRONSpellDamageIdentityCopyAndRecast`: original/copy separation, saved characteristics after recolor, same card's later cast and correct native damage totals. `TestRONSpellDamageIdentityEventSnapshot`: damage to a creature, pending trigger placement, departed spell information, exact source in later event-driven damage and cloned trigger isolation. |
+
+Fresh semantic inventory identified **15 accepted unique spell-damage consumers**.
+Their complete records were read: Ashes to Ashes, Detonate, Earthquake, Eternal
+Flame, Goblin Grenade, Hurricane, Inferno, Inquisition, Jovial Evil, Lightning
+Bolt, Psionic Blast, Sandstorm, Storm Seeker, Typhoon and Winter Blast.
+The four mappings above add identity-specific evidence to existing RON gameplay;
+they do not establish new complete-card behavior coverage for all 15 consumers.
+Collection-wide engine-validated and behavior-verified totals remain unmeasured.
+The seven protection consumers remain rejected. No source defect is corrected;
+all twelve RON hashes match the vocabulary snapshot, so it needs no refresh.
+Local LEA, ATQ, LEG and catalog LEB Oracle records agree with the seven
+protection records inspected for the downstream contract.
+
+### Final measurements, checks and files
+
+Actual compilation gain matches the estimate: **0 unique cards / 0 records**.
+Loader diagnostics are unchanged, including all source-choice errors. Final
+counts remain **1,848 compiled / 597 rejected records**, **713 accepted /
+273 rejected unique names**. Strict loading exits 1 and publishes no partial
+registry. Semantic inspection remains **72,962 occurrences / 8,557 signatures /
+5,226 unknown-role occurrences**; the complete report is unchanged.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestSpellDamageSource\|TestRONSpellDamageIdentity\|TestDamageSourceFilterReplacementOrder\|TestNextPermanentSourcePreventionReplacementOrder\|TestCloneStackHeavyGameAllocationBudget' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after the final declaration refinement. |
+| `make test` | PASS after the fixture correction and final declaration refinement. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; zero issues. |
+| `go test ./... -short -count=1` | PASS after lint; engine skill verification. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,848 compiled / 597 rejected records; diagnostics unchanged. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; complete report unchanged. |
+
+Lint's formatting changes were reviewed. No unrelated source was changed.
+There is no environment or pre-existing validation blocker. The completed slice
+is committed with its hash reported in the final response.
+
+Files: new `pkg/mage/spell_damage_source.go`, `spell_damage_source_test.go` and
+`pkg/mage/dsl/ron/spell_damage_identity_test.go`; engine `damage_source.go`,
+`resolution_state.go`, `composable_actions.go`, `doc.go`; API/rules-contract
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`; this ledger entry.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Chosen damage-source enumeration and typed choice, then explicit permanent
+   spell-to-permanent links and property-rechecked shields for the seven consumers.
+2. All-zone battlefield-count CDA evaluation for the five clean consumers;
+   investigate Gaea's Avenger's source defect separately.
+3. Filtered blocking requirements for Lure and Marble Priest, with both blocker
+   declaration paths and maximum requirement satisfaction.
+
+Removal gates are unmet: complete RON loading, collection-wide gameplay and
+runtime cutover remain unfinished. Go definitions, generators, current callers
+and DSL functions remain in place. No DSL deletion or authoring cutover is part
+of this prerequisite. Stop after this slice. Migration remains incomplete.

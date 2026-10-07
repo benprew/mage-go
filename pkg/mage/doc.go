@@ -165,6 +165,10 @@
 // with a specified card type. The current subject can be [This] or
 // [AttachedPermanent]. Source types use current or retained information for
 // the exact object, including spell sources. This rule has no damage limit.
+// Use [DamageSourceOfSpell] for a live typed spell reference and
+// [SnapshotDamageSource] to save its information before departure.
+// [DamageSource.StackID] keeps separate casts and copies apart.
+// [DamageSource.SameObject] compares a saved source with an exact object.
 //
 // Use [PreventCombatDamageFrom] and [PreventCombatDamageTo] with [Static]
 // for live combat prevention. [AttachedPermanent] follows the current host.

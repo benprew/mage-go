@@ -21,15 +21,30 @@ func cloneDamageSource(s DamageSource) DamageSource {
 // DamageSource records the source state used by one damage instruction.
 type DamageSource struct {
 	id, incarnation, controller, owner uuid.UUID
+	stackID                            uuid.UUID
 	name                               string
 	colors                             []Color
 	keywords                           map[Keyword]bool
 	card                               Card
 }
 
-func (s DamageSource) Valid() bool               { return s.id != uuid.Nil }
-func (s DamageSource) ID() uuid.UUID             { return s.id }
-func (s DamageSource) Incarnation() uuid.UUID    { return s.incarnation }
+func (s DamageSource) Valid() bool            { return s.id != uuid.Nil }
+func (s DamageSource) ID() uuid.UUID          { return s.id }
+func (s DamageSource) Incarnation() uuid.UUID { return s.incarnation }
+
+// StackID keeps separate casts of the same card apart.
+func (s DamageSource) StackID() uuid.UUID { return s.stackID }
+
+// SameObject compares exact source identities. Missing identities cannot match.
+func (s DamageSource) SameObject(other DamageSource) bool {
+	if !s.Valid() || s.id != other.id {
+		return false
+	}
+	if s.incarnation != uuid.Nil {
+		return s.incarnation == other.incarnation && other.stackID == uuid.Nil
+	}
+	return s.stackID != uuid.Nil && s.stackID == other.stackID && other.incarnation == uuid.Nil
+}
 func (s DamageSource) Controller() uuid.UUID     { return s.controller }
 func (s DamageSource) Owner() uuid.UUID          { return s.owner }
 func (s DamageSource) Name() string              { return s.name }
@@ -101,7 +116,11 @@ func (g *Game) CaptureDamageSource(id uuid.UUID) DamageSource {
 		}
 		copied := card.Copy()
 		copied.SetID(id)
-		return DamageSource{id: id, controller: controller, owner: card.Owner(), name: card.Name(), card: copied, colors: slices.Clone(g.EffectiveColors(id))}
+		colors := cardColors(card)
+		if g.resolution.ColorSourceID() == id && g.resolution.ColorOverride() != nil {
+			colors = *g.resolution.ColorOverride()
+		}
+		return DamageSource{id: id, stackID: g.resolution.resolvingStackID, controller: controller, owner: card.Owner(), name: card.Name(), card: copied, colors: slices.Clone(colors)}
 	}
 	return DamageSource{}
 }

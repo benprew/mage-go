@@ -1664,6 +1664,8 @@ func (d damageSourceDefinition) inspectDefinition() definitionNode {
 		return source.inspectDefinition()
 	case permanentDamageSource:
 		return source.inspectDefinition()
+	case spellDamageSource:
+		return source.inspectDefinition()
 	}
 	n := definitionNode{Role: "damage-source-ref", Text: "this"}
 	if nilDefinition(d.source) {
