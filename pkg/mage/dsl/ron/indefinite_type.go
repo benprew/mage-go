@@ -23,6 +23,15 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
+		case "AddAbility":
+			if part.Kind != Tuple || len(part.Args) != 1 || part.Args[0].Kind != List || len(part.Args[0].Args) != 1 || (part.Args[0].Args[0].Name != "Activated" && part.Args[0].Args[0].Name != "ActivatedWithModifiers") {
+				return nil, unsupported(part, "indefinite type modification")
+			}
+			build, err := compileActivatedGrantModification(part, subject)
+			if err != nil {
+				return nil, err
+			}
+			modifications = append(modifications, build)
 		case "SetToughness":
 			build, err := compileIndefiniteToughness(part, ctx, subject)
 			if err != nil {

@@ -6178,3 +6178,29 @@ The count is written only after successful commit and restored after its paid
 branch. Nested payments use distinct bindings. No activation payment contract,
 replacement order or counter-removal batch contract changes.
 Evidence: `TestResolutionCounterPayment*` and `TestRONResolutionCounter*`.
+
+## RON untargeted activation grant adapter
+
+RON static and indefinite activation grants use the existing layer-6 grant
+services. The donor selects recipients. Each recipient supplies the source,
+controller and costs of its granted ability (CR 602.1a, 602.2, 613.1f).
+A pending activation keeps its own actor and source incarnation after donor
+removal, attachment movement or control changes (CR 113.7a, 400.7).
+No retained information can restore an absent recipient for regeneration.
+
+Static membership follows live selection (CR 611.3); phasing or removal of
+the donor's ability suspends its grant. Indefinite resolving grants capture
+recipients at resolution (CR 611.2c), survive donor departure, and expire for
+a departed recipient. Phasing preserves the captured incarnation (CR 702.26).
+Repeated layer passes do not accumulate abilities. Separate grants remain
+separate, including copies of Life Matrix's activation. Shared cost transactions
+remove counters or mana before the granted body resolves; missing resources
+reject activation without changing live state.
+
+`TestRONActivatedGrantZombieMaster`, `LifeMatrix`, `Casting`, `Swampwalk`,
+`NoncreatureZombieAndMembership`, `RecipientScopeAndInstances`,
+`StaticHostAndSource`, and `CopyRetarget` cover the RON integration.
+`Invalid` and `DeclarationsAndStrictLoading` cover lexical isolation, malformed
+and unsupported declarations, complete-record definition validation, reprints,
+nested inventory roles and atomic collection rejection. Engine grant,
+regeneration, payment and layer services are unchanged.

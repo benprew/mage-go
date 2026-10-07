@@ -975,6 +975,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "keyword":
+		if n.Name == "Activated" && len(n.Args) == 2 {
+			return []string{"cost", "actions"}[index]
+		}
+		if n.Name == "ActivatedWithModifiers" && len(n.Args) == 3 {
+			return []string{"cost", "actions", "activation_modifier"}[index]
+		}
 		if n.Name == "Rampage" && len(n.Args) == 1 {
 			return "integer_literal"
 		}

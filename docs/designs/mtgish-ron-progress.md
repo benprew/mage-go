@@ -30546,3 +30546,156 @@ Ranked next candidates to reassess:
 
 No second slice is started. Complete collection loading, collection gameplay,
 application cutover, Go-definition removal and unused DSL cleanup remain open.
+
+## 2026-10-07: untargeted activated ability grants
+
+Status: completed slice `UNTARGETED-ACTIVATED-GRANTS`. Stop after this slice.
+Initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked completed-history document, are preserved. Only this new
+entry is staged from the ledger; its pre-existing reorganization is unstaged.
+
+### Fresh evidence, candidates and selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Fresh strict semantic inspection exited 1 for collection rejection, not build
+failure: **1,834 compiled / 611 rejected records; 705 accepted / 281 rejected
+unique names**, 2,445 records and 986 names total. Inventory contained 72,962
+occurrences, 8,557 signatures and 5,395 unknown-role occurrences. The engine
+reference, design, ledger, syntax snapshot, selected compiler and engine grant
+code, complete candidate records, API/rules contracts and CR 602, 611–613 were
+read. Requirements came from RON and local Oracle data, not Go card definitions.
+
+| Candidate | Distinct affected names and full-card unlock estimate | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Untargeted activated grants, selected | Zombie Master; Life Matrix; Equinox. **2** full unlocks: Zombie Master and Life Matrix. | Equinox requires a targeted grant and spell-outcome prediction. Static selection, fresh recipient scopes and indefinite capture enable other future granted activations. | Low/medium: existing exact engine services; one shared compiler plan, two adapter contexts, two complete gameplay mappings and lifecycle/declaration tests. |
+| Battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods. **5** estimated full unlocks. | All-zone characteristic evaluation, owner/controller counts and CDA/copy/layer contracts remain prerequisites. Gaea's Avenger and Wood Elemental have separate blockers and are excluded. | High: shared zone-aware evaluation plus five full mappings. |
+| Chosen-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation. **7** estimated full unlocks. | Damage-source discovery/choice, spell/permanent continuity and one-event replacement shields remain prerequisites. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere need other operations and are excluded. | High: decision, identity and replacement integration plus seven full mappings. |
+
+The selected slice offers two complete consumers through established exact
+engine services with substantially less work than either larger prerequisite.
+Complete nested records distinguish Zombie Master's creature-only swampwalk
+from its regeneration grant to all other Zombies. Life Matrix's outer upkeep
+restriction, targeted counter placement and payment already compile. Equinox
+is not counted as an adapter-only unlock. Reprints count once. Selection,
+contract, reuse boundary and acceptance cases were stated before implementation.
+No skills or delegation were needed for this compiler-only extension.
+
+### Supported signatures, scope and engine reuse
+
+- `PermanentLayerEffect(subject, [AddAbility([Activated(cost, body)])])`:
+  static source or Aura-host subject (`ThisPermanent` or `HostPermanent`).
+- `EachPermanentLayerEffect(filter, [AddAbility([Activated(cost, body)])])`:
+  existing live static permanent collection, including exclusion/controller
+  predicates in the donor context.
+- `CreatePermanentLayerEffect(reference, [AddAbility([Activated(cost, body)])])`:
+  existing resolving typed permanent reference and indefinite captured duration.
+
+Each requires exactly one modification and one Activated/2 declaration.
+Costs reuse `compileCosts`: existing fixed source costs, including mana, tap,
+sacrifice, discard, life and fixed source-counter removal; X is rejected.
+The body is a nonempty, untargeted ActionList/1 in a fresh
+`scope{permanent:true, activation:true}`. Donor targets, attachments, events,
+choices and payment-result bindings cannot enter it. The recipient supplies
+ThisPermanent; You is the activating player. Modes, Targeted bodies, granted
+ActivatedWithModifiers, activation-history bindings and paid-cost result
+reads remain unsupported. The outer Life Matrix activation retains its own
+modifier and typed target. Malformed arities/lists, missing resources, unbound
+reads and empty bodies remain errors; no game-time declaration panic is added.
+
+The plan builds fresh CostGroup and ResolvingEffect declarations per factory
+or captured modification. `GrantActivatedAbility`, `GrantEachActivatedAbility`
+and `ActivatedAbilityModification` own live selection, layer-6 grants, stable
+ability identities, recipient context and incarnation capture. Existing shared
+transactions, counter placement, replacement pipeline, regeneration, stack
+copying and game cloning own execution. No reusable engine rule is changed.
+Static grants suspend with an inactive donor; indefinite captures survive donor
+departure. Recipient phasing preserves identity; departure ends captures.
+Pending activations keep actor and source incarnation after grant loss.
+RON spelling and lexical isolation stay in ron. Inventory now traverses
+Activated/2 and ActivatedWithModifiers/3 descendants in keyword roles as cost,
+actions and modifier declarations even under rejected parents.
+
+### TDD, gameplay and declaration evidence
+
+Tests first failed on the missing static Activated and indefinite AddAbility
+adapters in real RON records. Two initial test API mistakes (AbilityID and
+RemoveAllAbilities) were corrected before that red run. Broad tests then caught
+an accepted empty body and Cocoon's changed unsupported diagnostic. The empty
+body now fails compilation; Cocoon retains its previous diagnostic and strict
+rejection. Neither old assertion was weakened. Static source tests were
+corrected to activate the granted ability after the source's static ability.
+Swampwalk tests use HasLandwalkEvasion, because CanBlock checks separate pair
+restrictions. The counter-prevention fixture was specialized for matrix
+counters instead of the older fixture's P/T counters. These were test setup
+errors, not environment failures.
+
+All names below refer to tests with the `TestRONActivatedGrant` prefix.
+
+| Card or contract | Mapping |
+| --- | --- |
+| Zombie Master, complete LEA/LEB/2ED/3ED/CED/CEI records | ZombieMaster: source exclusion, matching/nonmatching membership, stable layer identities, black mana payment and rollback, timing, donor departure/phasing, recipient departure/phasing/control, ability removal, pending copies and clone isolation, actual regeneration. Casting: full 1BB cost, 2/3 metadata and entry timing. Swampwalk: defending Swamp, source exclusion and phased land. NoncreatureZombieAndMembership: all-Zombie regeneration versus creature-only swampwalk, phase cycle and donor ability removal. |
+| Life Matrix, complete LEG record | LifeMatrix: 4 plus tap payment, upkeep restriction, invalid-target/unpaid rollback, counter/grant timing, source departure, target departure/phasing/shroud, phase cycle/control, duplicate activation/copy grants, counter payment/failure, regeneration, indefinite cleanup survival, clone isolation and returned-object exclusion. Casting: 4 casting cost and entry timing. CopyRetarget: independent copy/original recipient bindings. CounterReplacement: prevented/doubled matrix counters do not suppress or duplicate the independent grant. |
+| Grant contexts and instances | RecipientScopeAndInstances: two donors and two recipient controllers, recipient-local You/ThisPermanent, simultaneous pending activations, donor departure and independent clones. StaticHostAndSource: both singular static subjects, host movement, donor phase/departure/control and saved activation actor. |
+| Declarations and strict collection loading | Invalid: malformed arities, donor attachment/event/target reads, X, targeted bodies and modifiers in static/captured contexts. DeclarationsAndStrictLoading: all seven complete records validate and load, two unique names, nested semantic roles, and invalid-collection atomic rejection. Existing IndefiniteTypeInvalid also preserves empty-body rejection. |
+| Regressions | Fresh repository inventory counts and accepted-name checks include both consumers. Existing grant, counter-payment, enchant-controller, layer, definition-validation and whole-engine suites pass unchanged. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay totals
+remain separate; collection-wide engine_validated and behavior_verified remain
+null. No new LKI, replacement ordering, simultaneous batch or cost transaction
+contract is claimed. Those services are reused, including retained-original
+identity checks and independent counter-placement/grant instructions.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **2 unique names / 7 records**, exactly
+Zombie Master (six reprints) and Life Matrix (one record). Final loader:
+**1,841 compiled / 604 rejected records; 707 accepted / 279 rejected unique
+names**. No accepted name is lost. Equinox's diagnostic advances to
+`unsupported untargeted granted body (Targeted)`; other rejected names retain
+their baseline diagnostics. Semantic inventory: **72,962 occurrences / 8,557
+signatures / 5,331 unknown-role occurrences**, 64 fewer unknown occurrences.
+The loader and semantic inspection still exit 1 for unsupported collection
+records and publish no partial production registry.
+
+Local data/LEA.json and data/LEG.json agree with the complete selected records.
+No source defect or environment blocker was found. No RON source changed;
+vocabulary syntax and hashes need no refresh. Prior documented source defects
+remain open. API/rules docs describe only the new adapter contexts and reuse.
+No Go definitions, generators, startup callers or DSL functions are removed:
+complete loading, collection gameplay and runtime wiring remain below their
+removal gates. No caller audit authorizes DSL deletion in this slice.
+
+All final required checks pass. No environment or validation blocker remains.
+Automatic lint formatting was reviewed; changes are confined to this slice.
+The final short engine suite and full tests were repeated after the last test
+addition and lint. No test assertion or allocation budget was weakened.
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONActivatedGrant\|TestInventory\|TestRONIndefiniteTypeInvalid\|TestRONEnchantControllerReporting\|TestRONResolutionCounterFullRecords' -count=1` | PASS. The later complete-record definition assertions also pass with `-count=1`. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, final rerun after lint. |
+| `make test` | PASS, final rerun after lint. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS, including documentation and ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for remaining unsupported records: 1,841 compiled / 604 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same record counts, 707 accepted / 279 rejected unique names and semantic counts above. |
+| Accepted-name and diagnostic comparison | Exactly two estimated names gain support; none lost; only Equinox's remaining first diagnostic changes. |
+
+
+Changed files: RON activated_grant.go and activated_grant_test.go,
+indefinite_type.go, layers.go, inventory.go and inventory_test.go;
+dsl-reference.md, engine-rules-contracts.md and this appended ledger entry.
+Initial user edits and unrelated untracked files remain unstaged.
+
+Ranked next candidates to reassess from fresh evidence:
+1. Battlefield-count CDAs, with five clean consumers and shared all-zone rules.
+2. Chosen-source shields, with seven clean consumers and shared source identity.
+3. Filtered blocking requirements for Lure and Marble Priest; verify native
+   requirement maximization before lowering AllCreaturesMustBlockIt.
+4. Targeted activated grants for Equinox only with the shared spell-outcome
+   prediction prerequisite; keep untargeted grant support separate.
+
+No second slice is started. Complete collection loading/gameplay, application
+cutover, Go-definition removal and unused DSL cleanup remain unfinished.

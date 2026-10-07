@@ -5231,3 +5231,28 @@ Tetravus still fail strict compilation at their remaining rule adapters.
 Synthetic mandatory and token-count tests establish the payment prerequisite;
 they do not establish either card's complete gameplay. Evidence:
 `TestRONResolutionCounter*` and `TestResolutionCounterPayment*`.
+
+## RON untargeted activated ability grants
+
+A static `PermanentLayerEffect(subject, [AddAbility([Activated(cost, body)])])`
+can grant to `ThisPermanent` or an Aura's `HostPermanent`.
+`EachPermanentLayerEffect(filter, [AddAbility([Activated(cost, body)])])` uses
+an existing static permanent collection. A resolving
+`CreatePermanentLayerEffect(reference, [AddAbility([Activated(cost, body)])])`
+captures one typed permanent for an indefinite grant.
+
+Each form requires exactly one modification and one `Activated` declaration.
+The cost uses existing fixed source-cost adapters; X costs are rejected.
+The body must be a nonempty, untargeted `ActionList` in a fresh permanent-source
+scope. `ThisPermanent` and `You` refer to the recipient and activating player.
+Donor targets, attachment references, events and payment results cannot enter
+that scope. Targeted bodies, modes and `ActivatedWithModifiers` in the granted
+declaration remain unsupported. The outer Life Matrix activation can still
+have its own target and upkeep restriction.
+
+The adapter uses `GrantActivatedAbility`, `GrantEachActivatedAbility` and
+`ActivatedAbilityModification`. Each factory creates its own costs and body.
+Static grants follow current membership; resolving grants keep captured
+incarnations. Zombie Master and Life Matrix have complete RON test mappings
+in `activated_grant_test.go`. Equinox still needs a targeted grant and a
+spell-outcome condition.

@@ -16,6 +16,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	for _, part := range parts {
 		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
 			for _, ability := range part.Args[0].Args {
+				if ability.Name == "Activated" || ability.Name == "ActivatedWithModifiers" {
+					return compileStaticActivatedGrant(n, parts, ctx)
+				}
 				if ability.Name == "TriggerA" {
 					return compileGrantedUpkeepLayer(n, parts, ctx)
 				}
