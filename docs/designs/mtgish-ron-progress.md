@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **657 accepted / 329 rejected unique card
-names** (986 total), and **1,746 compiled / 699 rejected records** (2,445 total).
+The latest recorded inventory reports **662 accepted / 324 rejected unique card
+names** (986 total), and **1,751 compiled / 694 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`BOUNDED-COUNTER-RESTORATION` slice and its validation evidence are recorded
+`OPTIONAL-HAND-ENTRY` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -24839,3 +24839,153 @@ Changed files: engine `composable_continuous.go`, `composable_target.go`,
 `combat_target_test.go`, `inventory.go`, `inventory_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended
 ledger entry. The descriptive commit hash is in the final response.
+
+## 2026-10-06: optional entry from hand
+
+Status: completed slice `OPTIONAL-HAND-ENTRY`. This run stops here.
+Fresh collection: **662 accepted / 324 rejected names**, **1,751 compiled /
+694 rejected records**, out of 986 names / 2,445 records. Strict loading still
+rejects and publishes no registry. Compilation is separate from gameplay:
+this slice adds complete-record gameplay evidence for **Gaea's Touch only**.
+Collection-wide engine-validated and behavior-verified measurements remain null.
+
+### Baseline and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected compiler/engine code, relevant API/rules contracts and CR 400.4a/400.7,
+608.2d/h and 303.4f/g. Baseline short engine tests and build passed. Both strict
+loader and AST inventory exited 1 for collection rejection: 1,750 compiled /
+695 rejected records, 661 accepted / 325 rejected names. Inventory: 72,954 nodes,
+8,543 signatures, 6,407 unknown-role occurrences. Complete candidate records and
+nested forms were inspected; reprints count once.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Optional entry from hand, selected | Gaea's Touch, Goblin Wizard, Triassic Egg, Eureka: four names / four records; **one immediate unlock**, Gaea's Touch | Wizard needs temporary protection; Egg needs its activation property restriction and a corrected graveyard mode; Eureka needs a repeated starting-player procedure. Shared optional selection and normal entry are a concrete prerequisite for all four. | Small/medium: bounded card-filter adapter and typed engine action; hand visits, optional decisions, normal/Aura entry and real-card timing/identity tests. |
+| Mana conversion with activation history | Farrelite Priest, Initiates of the Ebon Hand: two names / two records; **two potential full unlocks after solver work**, zero adapter-only | Existing history branches and delayed sacrifice are supported, but the compiler explicitly rejects mana/history bodies. Non-tap, repeatable, mana-paid sources need exact solver input/output planning and payment integration. Enables conversion sources with immediate effects and side effects on each activation. | Medium/high: repeated source planning, paying conversions without recursive self-payment, pure affordability, transactional execution, immediate history and delayed sacrifice tests. |
+| Beginning-of-combat triggers | Battering Ram, Goblin Flotilla, Johan: three names / three records; **zero immediate / three eventual unlocks** | Ram needs the beginning-combat adapter and its delayed subject repaired; Flotilla also needs combat-scoped installed triggers and other-creature bindings; Johan needs optional nonmana effect payment and conditional attack tap rules. Shared phase event supports all three. | Medium for the event prerequisite, high for complete dependent bodies and source repair. |
+
+Selection favors a bounded shared prerequisite with one complete consumer and
+four concrete downstream consumers. The two-card conversion candidate requires
+a larger solver contract; the combat candidate leaves each complete body blocked.
+First-error frequency was not an unlock estimate. Contract, reuse boundary and
+acceptance cases were stated before edits. The implement-engine skill supplied
+the engine workflow. No agents, removed card/set skills, Go-card requirements,
+stubs, name branches, production subset registry or fallback were used.
+
+Initial user changes: .gitignore, execution design and ledger reorganization;
+untracked mtgish-ron-completed.md. Preserve them. Stage only this run's ledger
+status update and appended entry, without staging the user's reorganization.
+
+### Established signatures and contexts
+
+Engine: `MayPutFromHandOntoBattlefield(PlayerRef, CardFilter) ResolvingEffect`.
+Typed player references participate in definition validation. Offered candidates,
+hand visits and choices are local to each execution. No binding or last-action
+slot is introduced. Selection occurs during resolution, with no source-presence
+requirement or LKI read. Invalid choices and returned hand visits move nothing.
+Instants/sorceries cannot enter. Empty candidate sets make no decisions. Decline
+makes no card selection. Ownership is unchanged; the selected player controls
+and puts the card onto the battlefield. This does not cast or play a land.
+
+Reuse `Player` hand visits/decision methods and `prepareBattlefieldEntry`,
+`registerBattlefieldEntry`, `completeBattlefieldEntry`; Aura legality uses
+`canAttach`, `auraHostIsLegal` and `Attach`. A land-entry prohibition retains the
+original hand visit. Permanent-host Auras choose a legal host before entry;
+shroud permits this untargeted choice, protection and phasing restrict it.
+No legal host keeps the Aura in hand. A missing or invalid mandatory host response
+uses a legal offered host; its identity and legality are checked again. Attachment
+precedes entry events.
+This does not establish player-enchanting Auras, repeated player entry or a new
+replacement pipeline. Existing Go callers and the legacy hand-entry action are
+preserved. No DSL deletion is attempted before its caller/removal gates.
+
+RON: `MayAction(PutACardFromHandOnBattlefield(filter, [EntersNormally]))` in
+supported resolving action lists (spell/activation/trigger bodies and their
+supported branches). Exactly one bare EntersNormally is required. Filters:
+bare IsPermanent; IsSupertype with Basic/Legendary/Snow/World; validated
+IsLandType/IsCreatureType; existing IsCardtype/IsNonCardtype/IsColor/IsNonColor;
+nonempty recursive And/Or lists. RON owns spelling, filter context and errors.
+PlayerAction/PlayerActions loops, repeated procedures, other entry operations,
+resolution-cost positions and result consumers remain separate unsupported
+contexts. Semantic reporting now labels hand_entry_filter and entry_operation
+children even below rejected parents. Plans contain no selected runtime state.
+
+### TDD and card-to-test mapping
+
+The first tests failed for the missing engine API and unsupported RON optional
+action. Fixture API typos (WithKeywords/OwnerID) were corrected and the missing
+API failure was confirmed alone before implementation. An invalid subtype case
+was changed from an unknown name (allowed by the shared subtype contract) to
+Forest in the creature family. No rules assertion was weakened.
+
+| Contract/card | Evidence |
+| --- | --- |
+| Complete DRK.lines.ron:44 Gaea's Touch | TestRONOptionalHandEntryGaeasTouch: real paid casting, basic Forest acceptance, nonbasic Forest and creature rejection, decline, resolution-only choice, source departure/phasing, copied controller, clone resolution/isolation, once-per-turn limit and immediate sacrifice for two green mana. TestRONOptionalHandEntryTimingAndRollback: unpaid casting rollback, upkeep/opponent/nonempty-stack/phased-source rejection, cleanup reset and returned-source activation identity. |
+| Shared engine | TestOptionalHandEntryChoices: decline/empty/foreign/removed/returned choices, no hidden reveal, prohibited land entry with original hand visit, tapped entry, controller/owner. TestOptionalHandEntryDeclarationAndClone: nil player rejection and independent hand/board state. TestOptionalHandEntryAura: legal host, shroud, protection, phasing, no host, correct attachment/static effect. AuraRequiredHost confirms a required host choice uses a legal fallback after a confirmed failing test. |
+| RON declarations/inventory/loading | TestRONOptionalHandEntryInvalid: malformed entries, wrong subtype family, invalid card filters. ShapesAndStrictLoad: all declared filter shapes; full Wizard/Egg/Eureka records retain their precise gaps. StrictCollection: full Gaea record validation, duplicate canonicalization, semantic roles and atomic rejection with an unsupported record. Existing inventory tests retain strict collection rejection and Lightning Bolt gameplay. Existing sorcery timing test now requires the full Gaea record to compile. |
+
+Clone tests install an accepting decision player on the clone's own copied state;
+SearchPlayer's conservative optional-choice policy is separate from execution.
+The first stronger clone assertion exposed that policy, then the fixture made
+the requested choice explicit. Declaration pointers/selected state are not
+shared. This single-card operation adds no simultaneous batch, replacement
+ordering or APNAP rule. Cost rollback uses existing casting/activation services.
+
+### Actual gains, defects and remaining gates
+
+Actual gain **one unique name / one record**, matching the estimate. Set difference
+against baseline: only Gaea's Touch gained support; **zero newly rejected names
+or records**. Strict loader/inventory exit 1: 1,751 compiled / 694 rejected records,
+662 accepted / 324 rejected names. Inventory still has 72,954 nodes and 8,543
+context signatures; unknown-role occurrences fall from 6,407 to 6,384. Reporting
+and compilation counts do not establish gameplay coverage for blocked cards.
+
+No RON source changed. All 12 source hashes match the vocabulary snapshot;
+no syntax refresh is required. Local data/DRK.json confirms both complete
+Gaea abilities and Goblin Wizard's separate protection requirement. Local
+Oracle data/LEG.json confirms the pre-existing Triassic Egg source defect:
+its second RON mode repeats optional hand entry rather than targeted creature
+return from your graveyard. Local data/ATQ.json confirms Battering Ram should
+destroy the blocking Wall rather than the attacking creature. Neither source
+is repaired or claimed supported in this slice. These are data defects, not
+adapter/environment errors. No environment failure was found.
+
+Loader diagnostics after this slice include Goblin Wizard:
+`unsupported temporary keyword (Protection)` at DRK.lines.ron:52:490;
+Triassic Egg: `unsupported activation timing condition (PermanentPassesFilter)`
+at LEG.lines.ron:274:584; Eureka: `unsupported action (RepeatableActions)` at
+LEG.lines.ron:79:173. Removal/runtime gates remain unmet. No Go definitions,
+generators or DSL functions are deleted. Authoring cutover is not claimed.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Mana conversion planning with per-activation history: Farrelite Priest and
+   Initiates of the Ebon Hand, two complete consumers after the solver prerequisite.
+2. Chosen-source enumeration and next-event prevention: six Circles of Protection
+   and Greater Realm of Preservation, seven concrete consumers.
+3. Aggregate attack-declaration payments: Brainwash and Leviathan, with collective
+   reservations and complete declaration rollback.
+
+### Required validation
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Focused engine/RON optional-entry tests with -count=1 | PASS after confirmed TDD failures and fixture corrections |
+| Initial full RON package check | Expected stale inventory counts and old Gaea rejection assertion failed; exact counts and full-record compilation assertions updated, retaining gameplay checks |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS twice, zero issues; automatic import formatting reviewed |
+| Affected checks after lint | Focused tests and all required checks rerun after the Aura fallback fix: PASS |
+| git diff --check | PASS, including final recording |
+| go run ./cmd/loadcards -json; -inventory -json | Expected exit 1 for remaining unsupported collection; fresh counts above |
+| Vocabulary hash audit | All 12 source hashes unchanged |
+
+Changed files: engine optional_hand_entry.go/test.go and doc.go; RON
+optional_hand_entry.go/test.go, tap_choice.go, inventory.go/test.go and
+sorcery_activation_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger's current status/appended entry. The final response records the
+slice commit. No second slice starts.

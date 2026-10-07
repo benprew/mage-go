@@ -84,12 +84,12 @@ func TestRONSorceryActivationRepositoryPrerequisites(t *testing.T) {
 		set, name, gap string
 		x              int
 	}{
-		{"DRK", "Gaea's Touch", "unsupported optional action (PutACardFromHandOnBattlefield)", 0},
+		{"DRK", "Gaea's Touch", "", 0},
 		{"LEB", "Illusionary Mask", "unsupported optional payment cost (ChooseACardInHand)", 3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			node := hostUntapRecord(t, tc.set, tc.name)
-			if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), tc.gap) {
+			if _, err := Compile(node); (tc.gap == "" && err != nil) || (tc.gap != "" && (err == nil || !strings.Contains(err.Error(), tc.gap))) {
 				t.Fatalf("complete record gap: %v", err)
 			}
 			var rule Node

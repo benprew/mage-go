@@ -5024,3 +5024,30 @@ Evidence: `TestBaseToughness*`, `TestGraveyardCountAndAdditionQueries`, and
 `TestRONIndefiniteToughness*`. Existing incarnation, target, stack-copy, cloning,
 transaction and layer services retain ownership. No replacement ordering or
 simultaneous-operation contract changes.
+
+## Optional hand entry (RON migration slice)
+
+`MayPutFromHandOntoBattlefield(PlayerRef, CardFilter) ResolvingEffect` offers one
+matching permanent card from the selected player's current hand at resolution.
+It makes no announcement choice. A nil player reference fails definition
+validation. No candidates means no decision. Decline means no card selection.
+Selections must be offered cards with the same hand visit and matching current
+characteristics. Each application has local selection state; copies and clones
+cannot share it. No permanent source presence or source LKI is needed.
+
+The shared entry pipeline applies normal tapped entry, entry counters, static
+registration and entry events. The selected player is both controller and actor;
+ownership stays with the card. This is neither casting nor a land play. A land
+prohibition preserves the hand visit. For Auras in the engine's permanent-host
+model, the controller chooses a legal current host before entry. Shroud does
+not restrict that choice; protection and enchant restrictions do. Phased hosts
+are absent. A missing or invalid host response uses a legal offered host; its
+identity and legality are checked again. Attachment precedes entry events.
+No legal host preserves the hand.
+
+Evidence: `TestOptionalHandEntryChoices`, `TestOptionalHandEntryDeclarationAndClone`,
+`TestOptionalHandEntryAura`, `TestOptionalHandEntryAuraRequiredHost`, and the RON `TestRONOptionalHandEntry*` tests.
+Contracts use CR 400.4a/400.7, 608.2d/h and 303.4f/g. This single-card action
+adds no batch, APNAP or replacement-order policy; existing entry services retain
+those responsibilities. It does not establish repeated entry procedures or
+player-enchanting Auras.

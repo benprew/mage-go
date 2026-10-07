@@ -7,6 +7,9 @@ func compileOptionalTapChoice(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	action := n.Args[0]
+	if action.Name == "PutACardFromHandOnBattlefield" {
+		return compileOptionalHandEntry(action)
+	}
 	if action.Name != "TapOrUntapPermanent" {
 		return nil, unsupported(action, "optional action")
 	}

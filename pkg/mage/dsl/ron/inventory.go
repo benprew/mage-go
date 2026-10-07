@@ -437,6 +437,22 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
+	case "hand_entry_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return "hand_entry_filter"
+		}
+		if len(n.Args) == 1 {
+			switch n.Name {
+			case "IsCardtype", "IsNonCardtype":
+				return "card_type"
+			case "IsSupertype":
+				return "supertype"
+			case "IsLandType", "IsCreatureType":
+				return "subtype"
+			case "IsColor", "IsNonColor":
+				return "color"
+			}
+		}
 	case "card_filter":
 		if n.Name == "IsColor" || n.Name == "IsNonColor" {
 			if len(n.Args) == 1 {
@@ -603,6 +619,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "Exile":
 			if len(n.Args) == 2 {
 				return []string{"exile_subject", "exile_modifier"}[index]
+			}
+		case "PutACardFromHandOnBattlefield":
+			if len(n.Args) == 2 {
+				return []string{"hand_entry_filter", "entry_operation"}[index]
 			}
 		case "PutGraveyardCardIntoHand":
 			if len(n.Args) == 1 {

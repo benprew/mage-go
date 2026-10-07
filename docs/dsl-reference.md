@@ -4293,3 +4293,29 @@ Static and temporary RON forms and chosen-number values remain unsupported.
 Sentinel and Wall of Tombstones have complete-record gameplay evidence in
 `TestRONIndefiniteToughness*`; shared engine contracts are documented in
 `engine-rules-contracts.md` under “RON indefinite base toughness.”
+
+### Optional RON entry from hand
+
+`MayAction(PutACardFromHandOnBattlefield(filter, [EntersNormally]))` is a
+resolving action. It uses `mage.MayPutFromHandOntoBattlefield(mage.You, filter)`.
+The controller makes the optional choice during resolution. Copies use their
+own controller. The action has no target and does not cast or play the card.
+
+The card filter accepts bare `IsPermanent`, `IsSupertype(Basic|Legendary|Snow|World)`,
+`IsLandType(subtype)`, `IsCreatureType(subtype)`, existing card-type and color
+filters, and nonempty nested `And`/`Or` lists. Subtype families are validated.
+Only one bare `EntersNormally` entry operation is supported. Explicit player
+loops, repeated processes, other entry operations and action-result reads remain
+separate contracts. The engine excludes instants and sorceries from entry.
+
+The engine keeps each offered hand visit through both choices. Invalid, absent
+or returned choices cannot move a card. Entry uses the existing preparation,
+registration, attachment and entry-event services. A land-entry prohibition
+keeps the card in hand with its original visit. Auras use the existing permanent
+host contract: legal attachment choices ignore shroud, obey protection and
+exclude phased hosts. No legal host leaves the Aura in hand.
+
+Complete Gaea's Touch behavior is covered by `TestRONOptionalHandEntryGaeasTouch`
+and `TestRONOptionalHandEntryTimingAndRollback`. Goblin Wizard's temporary
+protection, Triassic Egg's activation condition and source defect, and Eureka's
+repeated player procedure remain unsupported. Their complete records still reject.

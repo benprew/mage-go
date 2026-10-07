@@ -147,6 +147,10 @@
 // Recipient ability removal does not remove a separate Aura's rule.
 // Use [CantAttack] for the same live subject attack restriction.
 //
+// Use [MayPutFromHandOntoBattlefield] for one optional matching permanent
+// card at resolution. The choice keeps its hand visit. Entry uses the selected
+// player as controller and actor. This action does not cast or play the card.
+//
 // Use [Mill] for a player action and [MillCost] for a full payment.
 // The library owner can order cards that move together to the graveyard.
 // All order choices precede the moves. Payment queries make no choices.
