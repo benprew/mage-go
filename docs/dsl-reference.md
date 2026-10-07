@@ -20,13 +20,35 @@ choices, AI spell choices and the test harness supply this context. Existing
 ability queries retain their source contract.
 
 RON supports `PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`
-with exactly one operation, in the top-level static rule context. `subject` is
+in the top-level static rule context. `subject` is
 bare `ThisPermanent`, or bare `HostPermanent` on an Aura. `filter` reuses the
 spell filter grammar: bare `AnySpell`, `IsEnchantmentType(Aura)`, `IsCardtype`,
 `IsColor`, and nonempty nested `And`/`Or` lists. Wrong arity, constructor-form
-references, unbound references, unsupported spell filters and combined operation
-lists remain declaration errors. Conditional rules, ability targeting and
-restrictions on enchantment attachment are separate capabilities.
+references, unbound references and unsupported spell filters remain declaration
+errors. One spell restriction can share its list with one other-Aura restriction,
+as described below. Other combined lists, conditional rules and ability
+targeting remain separate capabilities.
+
+## Static Aura attachment restrictions
+
+`CantBeEnchantedExceptBy(subject, exception PermanentRef) StaticRule` permits
+only the specified Aura to enchant the subject. Both references must be valid
+and bound. Use `Static` with `AttachedPermanent` and `This` for an Aura that
+forbids other Auras. The rule follows the current attachment and its incarnation.
+It checks Aura spell targets, direct attachment, optional hand entry, and existing
+attachment legality. It does not restrict ability targets or Equipment.
+Illegal attached Auras go to their owners' graveyards in one zone batch;
+indestructibility and regeneration cannot prevent that state-based action.
+
+RON supports `PermanentRuleEffect(subject,
+[CantBeEnchantedByAnEnchantment(And([Other(ThisPermanent),
+IsEnchantmentType(Aura)]))])` at the top level. The two filter operands can be
+reversed. The subject must be bare `ThisPermanent`, or bare `HostPermanent`
+on an Aura. Exactly these two filter operands are supported. A list can combine
+this operation with one `CantBeTheTargetOfSpells(filter)` in either order.
+Unknown operations, duplicates, extra filter conditions, other exceptions,
+conditional contexts and resolving durations remain rejected.
+Anti-Magic Aura and Consecrate Land use these forms with complete-record tests.
 
 ## RON card loading
 

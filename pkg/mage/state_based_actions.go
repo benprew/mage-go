@@ -73,8 +73,12 @@ func (g *Game) checkStateBasedActions() bool {
 				}
 			}
 		}
-		for _, a := range aurasToDrop {
-			g.DestroyPermanent(a)
+		if len(aurasToDrop) > 0 {
+			g.withZoneChangeBatch(func() {
+				for _, a := range aurasToDrop {
+					g.PutPermanentIntoGraveyard(a)
+				}
+			})
 		}
 
 		// Equipment attached to a non-creature or missing host becomes unattached (CR 704.5n).

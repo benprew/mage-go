@@ -860,6 +860,9 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 	if view, ok := source.(targetSourceLKI); ok && view.spell && g != nil && g.restrictedSpellTarget(p, source) {
 		return false
 	}
+	if view, ok := source.(targetSourceLKI); ok && view.spell && g != nil && g.restrictedAuraAttachment(p, source) {
+		return false
+	}
 	if p.HasKeyword(Shroud) {
 		return false
 	}

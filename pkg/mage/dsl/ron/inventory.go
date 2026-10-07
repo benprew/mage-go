@@ -897,6 +897,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantBeEnchantedByAnEnchantment" && len(n.Args) == 1 {
+			return "aura_restriction_filter"
+		}
 		if n.Name == "CantBeTheTargetOfSpells" && len(n.Args) == 1 {
 			return "spell_filter"
 		}
@@ -908,6 +911,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "CanBeBlockedAsThoughItDidntHave" && len(n.Args) == 1 {
 			return "keyword"
+		}
+	case "aura_restriction_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "aura_restriction_filter"
+		}
+		if n.Name == "Other" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+		if n.Name == "IsEnchantmentType" && len(n.Args) == 1 {
+			return "subtype"
 		}
 	case "keyword":
 		if n.Name == "Landwalk" && len(n.Args) == 1 {

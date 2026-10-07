@@ -5051,3 +5051,40 @@ Contracts use CR 400.4a/400.7, 608.2d/h and 303.4f/g. This single-card action
 adds no batch, APNAP or replacement-order policy; existing entry services retain
 those responsibilities. It does not establish repeated entry procedures or
 player-enchanting Auras.
+
+## Live Aura attachment restriction and exception
+
+`CantBeEnchantedExceptBy(PermanentRef, PermanentRef) StaticRule` implements a
+live attachment restriction under CR 303.4, 303.4a/c/f/j and 704.5m. It uses the
+existing active printed-effect lifecycle and typed permanent references. The
+subject and exception use current incarnation identities, without LKI. Source
+ability removal, departure and phasing suspend the rule; a phase cycle preserves
+attachment identity. Control changes do not change its scope. Removing host
+abilities does not erase a rule supplied by its Aura. Moving the granting Aura
+moves the restriction. Returning a host cannot inherit its old attachment.
+Clones read their own effect, source, suppression and attachment state.
+
+Aura spell target queries use the existing spell source view. Ability targets
+remain legal under this restriction. The shared `auraHostIsLegal` query supplies
+direct attachment, entry selection and state-based attachment checks. The
+exception identifies one Aura incarnation, so a separate factory or spell copy
+cannot use the original Aura's exemption. Casting rejects an illegal target
+before payment; resolution rechecks the rule. Shroud and spell-only restrictions
+remain separate from direct attachment legality.
+
+Illegal attached Auras are put into their owners' graveyards, rather than
+destroyed, under CR 303.4c and 704.5m. All selected illegal Auras move through
+one existing zone batch. The batch retains the former battlefield for trigger
+checks and sends events after the moves. Indestructibility and regeneration do
+not prevent these moves. This change establishes no new zone replacement API.
+
+`TestCantBeEnchantedExceptByDefinition/Lifecycle/StateAction` covers invalid
+references, exception identity, ability removal and cleanup, attachment/control/
+phase/return changes, cloning, indestructibility, regeneration, simultaneous
+moves and retained event information. `TestRONAuraRestrictionCards` covers the
+complete Anti-Magic Aura and Consecrate Land records, paid casting, rollback,
+target legality, both controllers, lifecycle, ability targets and indestructible
+land behavior. `CopiesAndResolution` covers permanent spell copies, clones and
+new restrictions at resolution. `ExistingAuras` covers previously attached
+indestructible Auras. `Invalid` and `AtomicLoadAndInventory` cover declaration
+rejection, bounded composition, strict loading and semantic reporting.

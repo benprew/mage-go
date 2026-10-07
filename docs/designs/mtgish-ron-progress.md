@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **662 accepted / 324 rejected unique card
-names** (986 total), and **1,751 compiled / 694 rejected records** (2,445 total).
+The latest recorded inventory reports **664 accepted / 322 rejected unique card
+names** (986 total), and **1,757 compiled / 688 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`OPTIONAL-HAND-ENTRY` slice and its validation evidence are recorded
+`OTHER-AURA-RESTRICTION` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -24988,4 +24988,158 @@ Changed files: engine optional_hand_entry.go/test.go and doc.go; RON
 optional_hand_entry.go/test.go, tap_choice.go, inventory.go/test.go and
 sorcery_activation_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
 and this ledger's current status/appended entry. The final response records the
+slice commit. No second slice starts.
+
+## 2026-10-06: other-Aura attachment restrictions
+
+Status: completed slice `OTHER-AURA-RESTRICTION`. This run stops here.
+Compilation now accepts **664 / 986 unique names**, with **1,757 compiled /
+688 rejected records**. Strict loading still exits 1 and publishes no partial
+registry. This slice adds complete-record gameplay mappings for two unique
+names. Collection-wide engine-validation and behavior totals remain null.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot and ledger;
+selected compiler/engine code, API/rules contracts and CR 303.4a/c/f/g/j, 400.7,
+704.3/4/5m. Baseline RON tests, short engine tests and build passed. Loader and
+AST inventory exited 1 for unsupported records, independently of successful
+build/tests: 1,751 compiled / 694 rejected records, 662 accepted / 324 rejected
+names. Inventory: 72,954 nodes, 8,543 context signatures, 6,384 unknown-role
+occurrences. Complete records and nested forms were inspected for the following
+candidates; identical reprints count once.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Other-Aura restriction, selected | Anti-Magic Aura, Consecrate Land: **two** full unlocks, six records | Requires exact attachment exclusion and illegal-Aura state action, plus bounded composition with the existing spell restriction. All other rules already have adapters. Shared attachment legality serves spell targets, direct attachment, optional entry and existing attachments. | Small/medium: one typed static rule, shared legality hooks, state-action correction, compiler validation and lifecycle/copy/batch/gameplay tests. |
+| Activation property restriction | Rocket Launcher, Triassic Egg, Tourach's Gate: **one** immediate unlock, Rocket Launcher; three concrete consumers | Egg's second mode incorrectly repeats hand entry instead of graveyard return; Gate also needs controller-aware enchant filtering and attached-permanent tap payment. Shared announcement property checks can enable all three after those prerequisites. | Medium: history and counter/live-state conditions at announcement, timing, payment rollback, delayed identity and the separate source repair. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **seven** eventual full unlocks, **zero** adapter-only | Full records need typed source enumeration/choice, per-resolution producer bindings and next-event consumption. Existing unlimited and finite amount prevention do not establish this source-choice contract. Black/red disjunction and artifact/color filters must stay exact. Other ChooseADamageSource consumers retain unrelated blockers. | High: source choice includes relevant nonbattlefield information, original identity, repeated shields, simultaneous source events, competing replacements, choices and copies. |
+
+Selection favors two complete consumers with a smaller exact engine addition
+than the seven-card source-choice subsystem. First-error frequency was not an
+unlock estimate. Contract, reuse boundary and acceptance cases were stated
+before editing. The implement-engine skill supplied the engine prerequisite
+workflow. No agents, removed card/set skills, Go-card requirements, stubs,
+card-name branches, fallback or production subset registry were used.
+
+Initial user work: .gitignore, execution design, ledger reorganization and
+untracked mtgish-ron-completed.md. Preserve it. Only this slice's appended ledger
+entry and current-status update are staged; the user's archival deletions and
+other files remain unstaged.
+
+### Exact shapes, engine contract and reuse
+
+Engine: `CantBeEnchantedExceptBy(subject, exception PermanentRef) StaticRule`.
+Both typed references require valid declaration scope. The rule reads current
+source/subject/exception incarnations without LKI. Source ability removal,
+departure and phasing disable its rule. Phase cycles keep the attachment; control
+changes leave the prohibition intact. Current attachment movement moves the
+restriction. A returned host cannot inherit the old attachment. Removing host
+abilities does not remove the Aura's rule. Separate factory instances and copied
+Aura spells have separate identities and cannot share the original exception.
+Clones copy effect state and read their own source, attachment and suppression.
+
+Reuse the existing printed continuous-effect lifecycle, typed references,
+SpellTargetSource/retained spell views, targeting/payment/copy pipeline,
+auraHostIsLegal, canAttach, optional hand entry and withZoneChangeBatch.
+Aura spell queries reject illegal targets before payment and recheck at
+resolution. Ability targets, non-Aura spells under this rule alone, Equipment
+and shroud during untargeted entry remain separate. Spell-only restrictions
+still do not forbid direct attachment.
+
+Engine prerequisite correction: CR 303.4c/704.5m puts illegal attached Auras
+into their owners' graveyards; the former implementation destroyed them.
+Selected illegal Auras now move through one existing zone batch, bypassing
+indestructibility and regeneration. Trigger checks receive the former
+battlefield and events occur after all selected moves. No new replacement,
+choice, APNAP, damage or cost service is introduced. Existing zone-move APIs
+retain their contracts; this slice does not establish a new zone replacement API.
+
+RON: top-level `PermanentRuleEffect(subject,
+[CantBeEnchantedByAnEnchantment(And([Other(ThisPermanent),
+IsEnchantmentType(Aura)]))])`. Operand order can be reversed. Subjects are bare
+ThisPermanent, or bare HostPermanent on an Aura. Exactly those two filter
+operands are supported. A two-operation list can pair this operation with one
+existing `CantBeTheTargetOfSpells(filter)` in either order. Other exceptions,
+extra conditions, duplicates, malformed references/arity, unknown operations,
+conditional contexts and resolving durations remain explicit compile errors.
+No spelling or scope logic is placed in the engine.
+Semantic inventory labels the restriction filter, exception reference and
+subtype even beneath rejected parents. No selected runtime state is captured
+in compiler plans or shared between factories.
+
+### TDD and card-to-test evidence
+
+Engine tests first failed for undefined CantBeEnchantedExceptBy. RON gameplay
+then failed for unsupported HostPermanent/static operations before lowering.
+The Registry Count/AllNames fixture calls were corrected to the actual
+RegisteredCardNames API before confirming the adapter failure. A Consecrate
+fixture incorrectly tested indestructibility after removing host abilities;
+that removes the granted keyword under the layer rules, so destruction is
+asserted in the other lifecycle cases. An existing-Aura fixture initially used
+NewAura's default creature enchant target on a land; it now explicitly permits
+any permanent. These fixture corrections preserve the rules assertions.
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete LEG:16 Anti-Magic Aura | TestRONAuraRestrictionCards: paid/unpaid casting, spell-target prohibition, ability-target permission, self exception, source departure/control/ability removal, host ability removal, phasing, reattachment and clones. CopiesAndResolution: separate token copy identity and original legality recheck. ExistingAuras: removal of an already attached indestructible Aura. |
+| Complete Consecrate Land: 2ED:41, CED:41, CEI:41, LEA:40, LEB:41 | Same Cards, CopiesAndResolution and ExistingAuras tests, with land enchantment and indestructibility. All five complete records are identical and compile; reprints are one gameplay mapping. |
+| Typed engine rule | TestCantBeEnchantedExceptByDefinition/Lifecycle: nil/unbound references, granting exception, illegal attachment preserving old attachment, ability removal/cleanup, source and host return, phasing, control, movement and independent clones. |
+| Illegal-Aura state action and event information | TestCantBeEnchantedExceptByStateAction: indestructibility and regeneration bypass, two simultaneous moves, owner graveyards, granting Aura retained and former battlefield in zone events. |
+| Untargeted entry and unrelated attachment | TestCantBeEnchantedExceptByEntryAndEquipment: no legal host retains original hand visit, Equipment permitted, removed rule permits Aura entry despite shroud. |
+| RON declarations and strict reporting | TestRONAuraRestrictionInvalid, AtomicLoadAndInventory: exact shape bounds, invalid/foreign/constructor references, unsupported operations, order reversal, atomic rejection and AST roles. Fresh inventory tests retain complete collection rejection and Lightning Bolt gameplay. Existing spell-restriction, attachment and optional-entry tests pass. |
+
+### Actual gain, source defects and removal gates
+
+Actual gain matches the estimate: **two names / six records**, exactly Anti-Magic
+Aura and Consecrate Land. **Zero previously accepted names or records regress**.
+Final loader and inventory: 1,757 compiled / 688 rejected records, 664 accepted /
+322 rejected names. AST node/signature totals remain 72,954 / 8,543;
+unknown-role occurrences fall from 6,384 to 6,348. Compilation is separate from
+behavior validation; this slice maps both full consumers but does not prove
+collection-wide gameplay.
+
+Local Oracle data/LEG.json and data/LEA.json confirm both complete records,
+including the granting-Aura exclusion and Consecrate Land's indestructibility.
+No RON source changed; all 12 hashes match the vocabulary snapshot, so no syntax
+refresh is needed. Triassic Egg's pre-existing source defect remains recorded
+and unresolved. No environment failure was found.
+
+Remaining diagnostics include Artifact Ward's artifact ability-target
+restriction, Brainwash's attack payment, Lure's mandatory blocking rule,
+Rocket Launcher/Triassic Egg's activation property restriction and all seven
+chosen-source prevention consumers. Strict rejection is intentional.
+Complete loading, whole-collection gameplay and runtime wiring remain below
+the removal gate. No Go definitions, generators, startup wiring or DSL functions
+are removed. No caller audit or obsolete-authoring cutover is claimed.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Focused new engine/RON, existing targeting/attachment and inventory tests with -count=1 | PASS after confirmed TDD failures and fixture corrections |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic formatting reviewed |
+| Post-lint focused/short engine, all-repository short tests, make test, build and vet | PASS; final optional-entry interaction test included |
+| git diff --check | PASS after final ledger recording |
+| go run ./cmd/loadcards -json; -inventory -json | Expected exit 1 for unsupported records; fresh counts above |
+| Vocabulary source-hash audit | All 12 unchanged |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source enumeration and next-event prevention: seven complete consumers
+   after shared source selection and consumption contracts.
+2. Mana-conversion planning with per-activation history: Farrelite Priest and
+   Initiates of the Ebon Hand, two consumers after solver support.
+3. Player-relative permanent ownership/control filters: Obelisk of Undoing and
+   Relic Bind, with Cocoon/Tourach's Gate retaining separate blockers.
+
+Changed files: engine aura_restriction.go/test.go, card.go, game.go,
+state_based_actions.go and doc.go; RON aura_restriction.go/test.go,
+filtered_blocking.go, inventory.go/test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. The final response records the
 slice commit. No second slice starts.

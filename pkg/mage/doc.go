@@ -167,6 +167,11 @@
 // Target phasing preserves a valid duration; source phasing ends it.
 // The separate permission to remain tapped stays optional after target departure.
 //
+// Use [CantBeEnchantedExceptBy] with [Static] to permit one Aura on a subject.
+// Use [AttachedPermanent] and [This] to exclude the granting Aura from the rule.
+// The rule checks casting and attachment legality. Illegal attached Auras move
+// to the graveyard as a state-based action; this action does not destroy them.
+//
 // Use [DeclareSpellOrPermanentTarget] with [WithTargets] for one target across
 // the stack and battlefield. Copies can change the target category.
 // [SetObjectColor] uses this declaration to keep the original object identity.

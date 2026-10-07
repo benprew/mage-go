@@ -11,10 +11,12 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	if len(operations) != 1 {
-		return compileStaticUntapRule(n, ctx)
+		return compileCombinedAuraRestrictions(n, operations, ctx)
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "CantBeEnchantedByAnEnchantment":
+		return compileAuraRestriction(n, operation, ctx)
 	case "CantBeTheTargetOfSpells":
 		return compileSpellTargetRestriction(n, operation, ctx)
 	case "CantAttack":

@@ -1600,6 +1600,9 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 // ignoring targeting restrictions (shroud/hexproof don't make an already-attached
 // aura fall off — see CR 702.11b).
 func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+	if g.restrictedAuraAttachment(host, auraCard) {
+		return false
+	}
 	targets := auraCard.CastTargets()
 	if len(targets) == 0 {
 		return true
