@@ -73,6 +73,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		EventSourceID:      original.EventSourceID,
 		targetIncarnations: maps.Clone(original.targetIncarnations),
 		targetSpellSources: maps.Clone(original.targetSpellSources),
+		boundSpellSources:  maps.Clone(original.boundSpellSources),
 	}
 	if copiedCard == nil {
 		cp.TargetSource = original.TargetSource

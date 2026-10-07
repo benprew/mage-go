@@ -14,6 +14,8 @@ type StackObject struct {
 	targetIncarnations map[uuid.UUID]uuid.UUID
 	// Saved spell data uses copy-on-write so stack clones can share it.
 	targetSpellSources map[uuid.UUID]DamageSource
+	// Saved event information must stay separate from current source queries.
+	boundSpellSources  map[uuid.UUID]DamageSource
 	sourceIncarnation  uuid.UUID
 	activatedAbility   bool
 	abilitySourceVisit uuid.UUID
@@ -261,12 +263,12 @@ func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
 }
 
 func (s *Stack) saveSpellInformation(obj *StackObject) {
-	var source DamageSource
+	source := damageSourceFromSpellObject(obj)
 	for _, referrer := range s.objects {
+		if source.Valid() {
+			referrer.saveBoundSpellInformation(source)
+		}
 		if _, referred := referrer.targetSpellSources[obj.ID]; referred {
-			if !source.Valid() {
-				source = damageSourceFromSpellObject(obj)
-			}
 			if !source.Valid() {
 				continue
 			}

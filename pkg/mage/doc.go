@@ -255,6 +255,11 @@
 // referred to by objects still on the stack. Announcement captures also qualify.
 // Immutable event captures supply references without running their effects.
 // [ChooseDamageSourceFromStackBindings] chooses only from these binding contexts.
+// [Game.StackBoundDamageSources] reads permanent and spell source identities
+// saved by event captures on stack objects. Current queries stay separate from
+// the event information used by the trigger body. Spell departure information
+// stays on each referring object and remains separate in cloned games.
+// [ChooseDamageSourceFromStackDamageBindings] chooses only from this category.
 // Saved delayed frames and other binding types need separate source contracts.
 // General source choices also need the other referred and command-zone objects.
 // A general source choice needs all categories before it can use the complete list.

@@ -6452,3 +6452,31 @@ permanent bindings, not the complete CR 609.7a source list. Saved delayed frames
 other binding types, waiting replacement/prevention/delayed references and
 face-up command objects remain separate dependencies. General RON
 `ChooseADamageSource` remains rejected. Existing Go callers stay compatible.
+
+### Damage-source event bindings referred to by stack objects
+
+`mage.Game.StackBoundDamageSources() []mage.DamageSource` reads exact permanent
+and spell identities saved by `eventDamageSourceCapture` within stack objects,
+including nested sequence wrappers. It does not execute captures, evaluate future
+action results, or read the active resolution frame. Results follow stack
+insertion order and capture order, with exact duplicates removed.
+
+Live permanent incarnations and spell stack IDs supply current information.
+Permanent departure and phase information use the existing exact-incarnation
+reader. Spell departure information is saved separately on each referring object,
+with copy-on-write updates for clones. A returned permanent or recast spell cannot
+replace the original object. The trigger body's event-time source binding remains
+unchanged. Query results own separate card snapshots.
+
+`mage.ChooseDamageSourceFromStackDamageBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` uses the shared filtered non-targeted resolution choice
+service. Definition validation, independent results, empty/absent-player clearing,
+invalid-answer fallback and cloned resolution frames retain their existing rules.
+
+Pending triggers and the currently resolving object are outside this category.
+Removing the final referring stack object ends eligibility. This adds one source
+category required by CR 609.7a; saved delayed frames, other typed references,
+waiting effects and face-up command objects remain separate dependencies. General
+RON `ChooseADamageSource` and the seven chosen-source shields remain rejected.
+Existing production declarations and callers do not change.

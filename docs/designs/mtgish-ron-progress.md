@@ -37736,3 +37736,164 @@ Ranked next candidates, to reassess from fresh evidence:
 
 No second slice starts in this run. The descriptive slice commit hash is reported
 in the final response after all required checks pass.
+
+## Run 2026-10-07: STACK-BOUND-DAMAGE-SOURCES
+
+Status: complete dependency slice. This run stops after this slice. Runtime
+cutover, Go-card removal and DSL removal gates remain unmet.
+
+Initial user changes in `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`, are preserved. Only this appended entry is
+included in the commit from the already modified ledger. No delegation was used.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests, short engine tests and `make build` passed. Completed
+strict loading and semantic inspection report **1,962 compiled / 483 rejected
+records; 762 accepted / 224 rejected unique names**, of 2,445 records and 986
+names. There are **72,952 occurrences / 8,556 signatures / 3,988 unknown-role
+occurrences**, including nested forms under unsupported parents. Collection
+engine-validation and behavior totals remain null. An early progress update read
+a stale temporary loader file before the command completed and was corrected;
+the completed baseline is used throughout this entry.
+
+Read: AGENTS.md, `pkg/mage/doc.go`, execution design, progress ledger, vocabulary
+snapshot, selected compiler/engine code, complete candidate RON records and all
+seven shield source variants/reprints, relevant API/rules contracts, local
+Oracle data, and CR 400.7, 608.2h, 609.7a–c, 702.26 and 707.10. Reprints count once.
+The snapshot's 12 source hashes and first-error diagnostics match fresh loading.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Saved damage-source event references on stack objects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**; a prerequisite for **7** complete cards (**31 records**). | Complete records require payment, filtered source choice and next-event prevention. Other typed stack references, saved delayed frames, waiting replacement/prevention/delayed references, face-up command objects, shield installation, spell-to-permanent continuity and property rechecks remain. Enables permanent/spell sources saved by damage and activation events. | Small/medium: reuse immutable event captures, exact source information, native stack departure and source choices; identity, native events, copy/clone and RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** credible unlocks with complete engine and adapters. | Ordinary banding does not establish parameterized formation or both damage assignment directions. Complete records require static/token grants, removal, named/legendary matching and live layer interactions. Enables a reusable combat ability across eight contexts. | High: combat formation, both assignment directions, layers/tokens/removal, combinatorial gameplay. |
+| Static animation and dynamic base values | Animate Artifact, Gaea's Liege: **1** credible unlock, Animate Artifact; Liege remains blocked. | Animate Artifact mixes conditional noncreature membership, type additions and live mana-value base P/T. Liege also requires defending-player controller/count filters and investigation of duplicate `IsntAttacking` branches. Enables reusable conditional animation and dynamic base values. | High: membership/layer dependencies and live values; source investigation remains separate. |
+
+Selection rationale: the seven-card source-list prerequisite completes one
+well-defined category with less effort than the compared combat/layer families.
+Its multi-card downstream benefit is concrete despite zero immediate compilation
+gain. Single-card animation is deferred while shared work remains. First-error
+frequency was not used as an unlock estimate. The contract, reuse boundary and
+acceptance cases were stated before edits. The implement-engine skill supplied
+the engine workflow; no removed card skill, Go-card requirement, card-name branch,
+Go fallback or partial production registry was used.
+
+### Exact signatures, contexts and reuse
+
+Capability: `STACK-BOUND-DAMAGE-SOURCES`.
+
+- `Game.StackBoundDamageSources() []DamageSource`: permanent and spell identities
+  saved in `eventDamageSourceCapture` within effects of stack objects, including
+  nested sequence wrappers. Stack insertion then capture traversal order; exact
+  identity deduplication. No capture execution, future result evaluation, generic
+  dispatch or global resolution-slot reads. Nil captures, missing/unknown
+  permanent identities and incompatible identity kinds are excluded.
+- `ChooseDamageSourceFromStackDamageBindings(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect`: a filtered, non-targeted resolution
+  choice from only this category. Shared validation, producer/consumer ordering,
+  independent outputs, empty/absent-player clearing, invalid-answer fallback,
+  snapshot separation and cloned frames apply.
+- The private typed `stackDamageBindingReferences` interface on immutable event
+  captures and sequences supplies saved references. Current information is read
+  for the exact live object; permanent departure/phase snapshots use the existing
+  incarnation reader. Return and recast cannot substitute for the original.
+  Face-down permanent data stays hidden. Shroud and damage capability do not
+  restrict this source category. Queries make no choices, use no RNG and do not
+  mutate state; returned card snapshots are separate.
+- `StackObject.boundSpellSources` stores query-specific spell departure data.
+  `Stack.saveSpellInformation` updates it before native pop, ID removal, source-ID
+  removal, countering and stack-to-ante removal. Maps use copy-on-write for game
+  clones; stack copies retain them. A source already absent at trigger placement
+  uses the event snapshot. The trigger body's event-time capture is not changed
+  by current queries or departure refresh. Permanent spell entry does not change
+  the saved spell identity; future shield continuity remains a separate contract.
+- Pending triggers qualify only after stack placement. The currently resolving
+  object has left the stack. Countering/removal of the final referer ends this
+  category. Other typed references and saved delayed resolution frames remain
+  outside it. No production RON spelling, compiler context or adapter is added.
+
+Reuses `DamageSource.SameObject`, the exact-incarnation information reader,
+`CaptureSpellDamageSource`, `damageSourceFromSpellObject`, immutable event
+captures, sequences, stack departure services, stack copying/cloning,
+`damageSourceChoice`, filters, definition validation and resolution frames.
+There is no parallel event, zone, damage, replacement or payment subsystem.
+Existing callers and the spell-target snapshot contract remain compatible.
+
+### TDD and card-to-test mappings
+
+Engine and RON tests first failed because the query/choice APIs were absent.
+After implementation, the native batch fixture used an incorrect API; it now
+uses `DealSimultaneousDamage` and typed `PlayerDamageAssignment` values. RON
+fixtures initially assumed manual trigger placement after native resolution,
+credited a copied trigger to its original controller, and omitted the observer
+trigger from a recast Bolt. These fixture expectations were corrected without
+weakening behavior assertions. Lint found one new receiver-name inconsistency;
+the receiver was renamed to the established `obj` spelling, then checks reran.
+
+| Contract/card | Evidence |
+| --- | --- |
+| Exact permanent identity and information | `TestStackBoundDamageSourcesPermanent`: live/departed/returned/phased/cycle, current color/control/shroud, face-down data, color changed after event but before departure/phasing, copies, pure reads, snapshot isolation and clone/final-reference lifetime. |
+| Spell identity and immutable event facts | `TestStackBoundDamageSourcesSpellDeparture`: live/pop/ID/source-ID/counter paths, current color/control, recasts, copies, clones before/after departure, query snapshot mutation and event-body information remaining unchanged. |
+| Permanent spells and copies | `TestStackBoundDamageSourcesPermanentSpellAndCopy`: native cast, distinct spell-copy identities/controllers, native entry, no substitution by the battlefield object, separate query information and cloned departure maps. |
+| Scope/order/invalid declarations and decisions | `TestStackBoundDamageSourcesBoundaries`, `ChoiceAndDeclarations`: capture order and exact deduplication, nil/incompatible/unknown identities, future producer/global frame exclusion, invalid filters/player/output/name and consumer-before-producer rejection, separate choices, fallback, empty/absent clearing, cloned results. |
+| Native simultaneous events and timing | `TestStackBoundDamageSourcesNativeBatch`: native simultaneous damage, two observers with one binding declaration, distinct sources/controllers, APNAP placement, pending exclusion, countering, clones and native bodies. `ActivationAndResolving`: activation captures after sacrifice payment, unpaid rollback, exact departed source, pending exclusion and absence after the final referer begins resolving. |
+| Prodigal Sorcerer, full LEA record | `TestRONStackBoundDamageSourcePrerequisite`: native activation, sickness rollback, tap payment, real damage, event capture, live/departed/returned/phased/cycle/color/control/copy, filtered resolution-only choice, copy controller and clone isolation. Existing accepted-card mappings remain in force; this strengthens evidence without adding a complete-card mapping. |
+| Lightning Bolt, full LEA record | Same RON test: native unpaid/paid casting, exact mana cost and actual damage, departed spell captures, recast separation, copied trigger/controller, native observer bodies and independent clones. |
+| Seven shields, complete records | The RON test consumer uses the real Circle of Protection: Blue/Red filters. All seven full shield declarations remain rejected; no complete shield gameplay claim. |
+
+No new replacement or simultaneous-operation behavior is introduced. Existing
+replacement ordering, prevention and simultaneous damage regression suites
+retain those contracts and pass the engine/full checks.
+
+### Final measurements, validation and remaining gaps
+
+Estimated and actual gain both equal **0 unique cards / 0 records**. Two accepted
+cards gain stronger native source-reference coverage. Final strict loading and
+semantic inventory exactly match baseline: **1,962 compiled / 483 rejected
+records; 762 accepted / 224 rejected names**; **72,952 occurrences / 8,556
+signatures / 3,988 unknown-role occurrences**. No accepted record is lost.
+Compilation and gameplay coverage remain separate; collection validation and
+behavior totals remain null. Loader exit 1 is expected collection rejection,
+not a build or test failure, and no partial registry is installed.
+
+Representative remaining diagnostics: `unsupported action (ChooseADamageSource)`
+for the seven shields, `unsupported static ability grant (BandsWithOthers)` for
+five lands, and `unsupported combined or collective static base values
+(SetPowerAndToughnessBoth)` for Animate Artifact. No source-data or environment
+failure was found in this slice. Liege's previously noted source uncertainty
+remains separate. No RON source changed. All source hashes and snapshot loader
+diagnostics match; no vocabulary refresh is needed.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestStackBoundDamage\|TestRONStackBoundDamage\|TestStackBoundPermanent\|TestStackTargetSpell\|TestDamageSourceChoice\|TestInventory' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `go test ./... -short -count=1` | PASS; additional engine-skill verification |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS after receiver-name correction; automatic formatting reviewed |
+| `git diff --check` | PASS; working tree and staged slice |
+| `go run ./cmd/loadcards -json` | Expected exit 1; final counts and diagnostics unchanged |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; inventory unchanged |
+| Vocabulary audit | All 12 hashes and loader diagnostics match |
+
+Changed files: `pkg/mage/stack_bound_damage_source.go` and tests;
+`pkg/mage/dsl/ron/stack_bound_damage_source_test.go`; `stack.go`, `spell_copy.go`,
+`clone.go`, `damage_source_choice.go`, `doc.go`; API/rules docs and this entry.
+No Go card definitions, startup wiring, generators or DSL exports are removed.
+Complete collection/gameplay/runtime gates remain unmet; no fresh whole-repository
+caller audit is claimed as authorization for deletion. Only slice changes are
+committed; initial user edits and untracked files remain outside the commit.
+
+Ranked next candidates, to reassess with fresh evidence:
+
+1. Other saved stack reference categories and captured delayed frames, including
+   typed spell/cast references. These remain required for the seven shields.
+2. Waiting replacement/prevention/delayed references and face-up command objects,
+   followed by complete chosen-source shield installation/property rechecks.
+3. Parameterized bands with others across the eight compared card contexts.
+
+No second slice starts in this run. The descriptive commit hash is reported in
+the final response after required checks pass.

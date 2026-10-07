@@ -258,6 +258,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
 		targetIncarnations: obj.targetIncarnations,
 		targetSpellSources: obj.targetSpellSources,
+		boundSpellSources:  obj.boundSpellSources,
 		sourceIncarnation:  obj.sourceIncarnation,
 		capturedNumbers:    maps.Clone(obj.capturedNumbers),
 		capturedPlayers:    maps.Clone(obj.capturedPlayers),

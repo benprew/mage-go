@@ -7765,3 +7765,54 @@ Air and Water Elemental records as blockers and a synthetic choice consumer
 with Circle of Protection: Blue's real filter. It verifies retained choices,
 actual damage and native delayed destruction. These strengthen accepted-card
 evidence; they do not establish complete shield gameplay.
+
+## Damage-source event bindings referred to by stack objects
+
+`Game.StackBoundDamageSources() []DamageSource` establishes the CR 609.7a
+category for permanent and spell source references retained in immutable
+`eventDamageSourceCapture` effects on spells and abilities still on the stack.
+The private typed `stackDamageBindingReferences` reader traverses sequence
+wrappers without executing effects. It reads no global resolution slot and does
+not evaluate future producers. Nil captures, missing permanent incarnations and
+incompatible identity kinds are excluded. Other saved binding types and delayed
+resolution frames are outside this contract.
+
+Current information applies to exact live objects; permanent departure/phase
+information comes from the shared incarnation reader (CR 400.7, 608.2h, 702.26).
+Spell reads use exact stack IDs. Native stack pop, ID removal, source-ID removal,
+countering and stack-to-ante movement save the departing spell's information on
+each referring object. `boundSpellSources` uses copy-on-write, and copies retain
+its saved references. These query snapshots do not alter the trigger body's
+immutable event-time binding. A spell that already departed before trigger
+placement uses its event snapshot. Recasts and permanent entry cannot replace
+that spell; spell-to-permanent shield continuity is a separate prerequisite.
+
+Results follow stack insertion and capture traversal order. Exact duplicates
+are removed. No damage ability or targeting permission is required. Face-down
+permanent information remains hidden. Queries make no choices, use no RNG, do
+not change state, and return separate card data. Pending triggers qualify only
+after placement; the currently resolving object is no longer on the stack.
+Removal of the final referer ends this category's eligibility.
+
+`ChooseDamageSourceFromStackDamageBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` reuses the shared source choice service,
+filter/definition validation, binding dominance and per-resolution results.
+Empty/absent-player clearing, invalid-choice fallback, separate outputs and
+cloned frames apply. This service adds no replacement or damage batch operation.
+The existing replacement and simultaneous damage services retain ownership.
+General source-choice and shield adapters remain blocked by other CR 609.7a
+categories and shield installation/property rechecks.
+
+Evidence: `TestStackBoundDamageSourcesPermanent`, `SpellDeparture`, `Boundaries`,
+`ChoiceAndDeclarations`, `NativeBatch`, and `ActivationAndResolving` (all share
+`TestStackBoundDamageSources`). Tests cover exact incarnation and spell identity,
+live versus retained properties, phase cycles, face-down information, deterministic
+ordering, duplicate captures and copies, native simultaneous damage and APNAP,
+activation sacrifice/payment rollback, pending/resolving boundaries, invalid
+declarations, immutable event facts, snapshot isolation and reference lifetime.
+`TestRONStackBoundDamageSourcePrerequisite` executes complete Prodigal Sorcerer
+and Lightning Bolt records through native casting/activation and damage, with
+an engine observer and category-only consumer using real Circle of Protection
+filters. It covers sickness/payment rollback, return/recast, phasing, current
+control/color, copied controllers, resolution-only choice and independent clones.
+These strengthen accepted-card evidence without claiming complete shield gameplay.
