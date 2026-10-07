@@ -1231,6 +1231,24 @@ Werewolf have only the timing prerequisite; their other rules remain unsupported
 
 ## RON activation limits
 
+`ActivatedWithModifiers(cost, actions, ActivateOnlyAsASorcery)` accepts the bare
+symbol as an activation modifier. Nonempty, nested `And` modifier lists can
+combine it with existing timing conditions and limits. The compiler applies
+`mage.WithSorcerySpeed()` after the other options, so an own-turn option cannot
+erase the main-phase or empty-stack restriction. Costs, references and bodies
+retain their existing declaration checks. Tuples such as
+`ActivateOnlyAsASorcery()` and uses in actions or costs reject.
+
+The existing engine permits activation in either main phase of the activating
+player's turn with an empty stack. The priority loop supplies priority; this
+adapter adds no priority permission. The restriction applies at activation,
+before choices and payment, and does not apply again when the ability or a copy
+resolves. Mana planning uses the same timing restriction as explicit activation.
+Evidence: `TestRONSorceryActivation*`. Gaea's Touch and Illusionary Mask have
+only this prerequisite supported; their complete records still reject at their
+action bodies. The repository prerequisite tests use neutral test bodies and
+do not establish complete gameplay for those cards.
+
 Permanent `ActivatedWithModifiers` accepts the symbol `ActivateOnlyOnceEachTurn`
 and `ActivateNoMoreThanNumberTimesEachTurn(Integer(n))` for a positive fixed
 integer. A nonempty `And([modifier, ...])` combines supported limits and timing;

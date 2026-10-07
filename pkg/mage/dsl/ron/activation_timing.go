@@ -111,10 +111,19 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 
 func compileActivationModifiers(n Node) ([]mage.ActionOption, error) {
 	seenMaximum := false
-	return compileActivationModifier(n, &seenMaximum)
+	seenSorcery := false
+	options, err := compileActivationModifier(n, &seenMaximum, &seenSorcery)
+	if err != nil {
+		return nil, err
+	}
+	if seenSorcery {
+		// Own-turn options must not replace the stronger timing restriction.
+		options = append(options, mage.WithSorcerySpeed())
+	}
+	return options, nil
 }
 
-func compileActivationModifier(n Node, seenMaximum *bool) ([]mage.ActionOption, error) {
+func compileActivationModifier(n Node, seenMaximum, seenSorcery *bool) ([]mage.ActionOption, error) {
 	switch n.Name {
 	case "And":
 		if err := arity(n, 1); err != nil {
@@ -129,7 +138,7 @@ func compileActivationModifier(n Node, seenMaximum *bool) ([]mage.ActionOption, 
 		}
 		var options []mage.ActionOption
 		for _, item := range items {
-			next, err := compileActivationModifier(item, seenMaximum)
+			next, err := compileActivationModifier(item, seenMaximum, seenSorcery)
 			if err != nil {
 				return nil, err
 			}
@@ -141,6 +150,12 @@ func compileActivationModifier(n Node, seenMaximum *bool) ([]mage.ActionOption, 
 			return nil, err
 		}
 		return []mage.ActionOption{mage.WithOncePerTurn()}, nil
+	case "ActivateOnlyAsASorcery":
+		if _, err := symbol(n); err != nil {
+			return nil, err
+		}
+		*seenSorcery = true
+		return nil, nil
 	case "ActivateNoMoreThanNumberTimesEachTurn":
 		if err := arity(n, 1); err != nil {
 			return nil, err

@@ -967,6 +967,20 @@ LKI query or simultaneous zone-operation contract is established.
 
 ## RON own-turn and upkeep activation timing
 
+RON also accepts the bare `ActivateOnlyAsASorcery` modifier through the existing
+`WithSorcerySpeed` action option (CR 307.5, 602.5d). It requires either main
+phase, the activating player's turn, and an empty stack. Normal priority
+handling remains in the priority loop. The player need not hold a sorcery card.
+The compiler keeps this timing option after other combined options because
+`WithYourTurnOnly` uses the same timing field. Other activation conditions and
+limits continue to apply. Timing is checked before modes and payment; pending
+abilities and copies can resolve in a later step or turn. The mana solver and
+explicit mana activation keep the same restriction and immediate mana behavior.
+`TestRONSorceryActivationTiming`, `CombinedTiming`, `Modal`, `ManaPlanning` and
+`RepositoryPrerequisites` verify these contracts without changing the engine.
+This does not establish the unsupported bodies of Gaea's Touch or Illusionary
+Mask, or grant priority during another action's payment.
+
 RON `ActivatedWithModifiers/3` with
 `ActivateOnlyIf(PlayerPassesFilter(You, IsTheirTurn|IsTheirUpkeep))` lowers to
 existing action timing and condition services. The engine's activation path

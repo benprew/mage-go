@@ -24540,3 +24540,138 @@ Ranked next candidates to reassess:
    removing the compiler guard alone cannot implement their solver behavior.
 
 No second slice is started.
+
+## Run 2026-10-06: SORCERY-ACTIVATION-MODIFIER
+
+Status: complete shared compiler prerequisite. Stop after this slice. Preserve
+initial user changes to `.gitignore`, the execution design, the reorganized
+progress ledger, and untracked `mtgish-ron-completed.md`. Only this new ledger
+entry is staged against the HEAD ledger; the user's reorganization stays in
+the working tree.
+
+### Evidence, candidate comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot,
+current ledger status and recent entries, selected compiler/engine code,
+complete candidate RON records, API/rules contracts, and CR 307.5, 602.5,
+605.3 and 508.1h-j. Baseline short engine tests with `-count=1` and
+`make build` passed. Fresh strict loader and semantic inventory exited 1:
+**1,748 compiled / 697 rejected records**, **659 accepted / 327 rejected
+unique names**, from 2,445 records and 986 names. Inventory contains 72,954
+nodes, 8,543 signatures and 6,423 unknown-role occurrences. Collection
+rejection is separate from build/test failure. Reprints count once.
+
+| Candidate | Distinct affected names; estimated complete-card gains | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Sorcery activation modifier, selected before editing | Gaea's Touch, Illusionary Mask; **0 immediate / 2 eventual names**, 6 source records. | Touch needs optional Basic Forest hand-to-battlefield entry. Mask needs a hand choice restricted to mana actually paid, face-down casting, spell-result binding and mask replacement lifecycle. Timing supplies a shared prerequisite for both and composes with existing X costs and activation limits. | Small: exact existing engine option, declaration/context, timing, conjunction ordering, X, mana solver, mode, rollback, copy and clone tests. |
+| Static attack costs, initially considered | Brainwash, Leviathan; initial adapter estimate **2 names / 2 records**, revised to **0 until aggregate declaration payment is ready**. | Full nested records otherwise use existing Aura, entry-tapped, untap, optional two-Island sacrifice and trample services. Native `doDeclareAttackers` and search `ExecuteAttackers` call `PayAttackCosts` once per attacker. CR 508.1h-j needs one locked total declaration payment and reservations for all selected attackers. This prerequisite enables both consumers. | Medium/high: source-local costs in a shared declaration transaction, collective reservations, sacrifice/payment ordering, decline/rollback and both native/search paths. No adapter was edited or published. |
+| Filtered required blocks | Lure, Marble Priest; **0 adapter-only / 2 eventual names**, 7 records. | Lure requires all able creatures; Priest requires Walls and already-supported Wall combat prevention. The existing requirement handling does not supply filtered maximum-requirement declaration planning, especially competing requirements and minimum blockers. Enables shared filtered combat requirements. | High: global requirement maximization, restrictions, choices, phasing, simultaneous declaration and combat tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **0 adapter-only / 5 eventual names**, 20 records. | Requires characteristics outside battlefield, owner/controller contexts, named/type counts, copies and Layer 7a. Separate Gaea's Avenger data and Wood Elemental entry-payment gaps remain excluded. | High: cross-zone characteristic service and copy/layer/control tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **0 adapter-only / 7 eventual names**. | Full bodies require source enumeration and choices, spell-to-permanent identity, source color/type reads and next-event shield consumption through batches. Greater Realm uses a color union. | High: source choice and shield prerequisites with identity, replacement ordering and simultaneous damage contracts. |
+
+The attack-cost estimate was revised before implementation after reading its
+engine dependency. Selection then favored the small, exact, dependency-ready
+sorcery prerequisite over the larger engine changes. It has concrete downstream
+benefit to two cards; no complete-card gain was expected. Contract and acceptance
+cases were stated before edits. No removed card/set skill, delegation, generated
+stub, Go-card requirement, production subset registry or fallback was used.
+
+### Exact supported context and reuse
+
+`ActivatedWithModifiers(cost, actions, ActivateOnlyAsASorcery)` on permanent
+abilities accepts the **bare symbol**, including nonempty nested modifier
+`And` lists with existing conditions and limits. Existing supported nonmodal,
+modal, mana and X-cost contexts retain their own restrictions. Tuple syntax,
+arguments, use as a rule, action or cost, and unsupported bodies reject.
+
+RON validates spelling/context and collects the sorcery option after all other
+options. `WithYourTurnOnly` writes the same timing field, so ordinary option
+order would erase sorcery timing in a conjunction. Applying `WithSorcerySpeed`
+last preserves both main-phase and empty-stack restrictions. Independent
+activation conditions and limits remain in effect. No game state or new
+bindings are captured by the plan. Factory abilities and existing cost/target
+bindings remain per instance.
+
+Engine reuse: `mage.WithSorcerySpeed`, `ActionDefinition.CanActivate`,
+`manaSourceActivationAllowed`, normal activation/copy/clone services, modal
+announcement and transactional payment. No engine behavior or API is changed.
+Either main phase of the activating player's turn and an empty stack are
+required. The priority loop owns priority; this adapter grants none. Timing is
+checked before choices/payment and is not repeated during later resolution or
+copy resolution. Mana planning and explicit mana activation agree. LKI,
+replacement ordering and simultaneous-operation rules gain no new contracts.
+
+### TDD and card-to-test mappings
+
+The first test attempt used a nonexistent X-activation convenience API. It was
+corrected to the existing `SetXValue` and `ActivateAbilityByIndex` before
+confirming the intended unsupported-modifier failures. After the adapter,
+`CombinedTiming` failed because own-turn options erased sorcery timing; the
+compiler ordering correction made both conjunction orders pass. A modal
+fixture initially retained the helper's opponent active-player setting; setting
+the controller active corrected the fixture. Touch's expected diagnostic was
+also corrected to the actual `unsupported optional action` category. No engine
+rule or assertion was weakened.
+
+| Card or contract | Test mapping and coverage boundary |
+| --- | --- |
+| Gaea's Touch, full DRK record | `TestRONSorceryActivationRepositoryPrerequisites` checks continued full-record rejection at `PutACardFromHandOnBattlefield`. Executes its exact repository cost and combined sorcery/once-per-turn modifiers with a neutral test body; separate instances, copies and repeated activation. **No complete-card gameplay claim.** |
+| Illusionary Mask, full LEB record and structural collection reprints | Same test checks full-record rejection at `ChooseACardInHand`, then executes the repository X cost and sorcery modifier with a neutral body; X payment, repeatability, copies and instance isolation. **No face-down or complete-card gameplay claim.** |
+| RON execution contract | `Timing`: both main phases, upkeep/combat, opponent turn, stack containing real RON Giant Growth, wrong controller, phased source, unpaid rollback, cost timing and pending clone resolution after turn/step changes. `CombinedTiming`: nested conjunctions, both operand orders, empty stack and own-turn conditions. |
+| Other supported contexts | `Modal`: timing before mode choice/payment and later resolution. `ManaPlanning`: pure affordability queries, both main phases, opponent/upkeep/nonempty-stack rejection, manual execution, immediate mana and rollback. |
+| Declarations and reporting | `Invalid`: tuple/argument and rule/action/cost context rejection. `StrictInventory`: strict load of test-only complete supported declarations, identical reprints counted once, modifier role. Whole-collection inventory tests preserve registry behavior and real RON Lightning Bolt gameplay. |
+
+### Final evidence and remaining gates
+
+Actual complete-card gain **0 names / 0 records**, matching the revised selected
+estimate. Final strict loader and inventory still exit 1 with **1,748 compiled /
+697 rejected records; 659 accepted / 327 rejected unique names**. Inventory
+node/signature/unknown-role counts are unchanged. The five Illusionary Mask
+records now report `unsupported optional payment cost (ChooseACardInHand)`
+(e.g. `LEB.lines.ron:120:211`). Touch now reports
+`DRK.lines.ron:44:214: unsupported optional action (PutACardFromHandOnBattlefield)`.
+No previously accepted record regressed. Engine-validation and complete-card
+behavior-verification collection counts remain null, distinct from compilation.
+
+No source-data defect is changed. All 12 source hashes still match the vocabulary
+snapshot, so no syntax refresh is required. No DSL removal audit/deletion,
+Go-card deletion, generator change or runtime cutover is attempted because their
+removal gates remain unmet. Existing callers are preserved. The API/rules docs
+record only this modifier's established context and reused contracts.
+
+Validation commands and results are recorded below after final checks.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Aggregate attack-declaration cost payment prerequisite for Brainwash and
+   Leviathan: source-local costs, full-declaration rollback and all attacker
+   reservations before its RON adapter.
+2. Chosen-source enumeration and next-event prevention: seven eventual names.
+3. All-zone battlefield-count CDAs: five eventual names, with the separate
+   source-data and entry-payment blockers retained.
+4. Basic Forest hand-to-battlefield action/entry choice for Gaea's Touch;
+   defer single-card work while useful shared prerequisites remain.
+
+No second slice is started. The descriptive commit hash is in the final response.
+
+### Required checks
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS. |
+| Focused `TestRONSorceryActivation*` and affected activation/modal/inventory tests with `-count=1` | PASS after the confirmed TDD failures and fixture corrections above. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Formatting/fix output reviewed; focused tests and short engine tests pass after lint. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1; final counts and remaining diagnostics above. |
+| Source hash audit against vocabulary snapshot | All 12 unchanged. |
+
+No environment or pre-existing validation failure blocked this slice. The
+attack-declaration gap identified in candidate review remains engine work,
+not a build failure. Changed files: `pkg/mage/dsl/ron/activation_timing.go`,
+`sorcery_activation_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. No production registry,
+card definition, engine execution, DSL export, or source RON file changes.
