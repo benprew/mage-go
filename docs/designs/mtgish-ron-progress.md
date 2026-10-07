@@ -9,8 +9,8 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`OTHER-AURA-RESTRICTION` slice and its validation evidence are recorded
-at the end of this ledger, with next candidates and remaining gates.
+`CONTROLLER-AWARE-ENCHANT` prerequisite and its clause-level gameplay evidence
+are recorded at the end of this ledger. It unlocks no complete cards.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -25143,3 +25143,169 @@ state_based_actions.go and doc.go; RON aura_restriction.go/test.go,
 filtered_blocking.go, inventory.go/test.go; docs/dsl-reference.md,
 docs/engine-rules-contracts.md and this ledger. The final response records the
 slice commit. No second slice starts.
+
+
+## 2026-10-06: controller-aware enchant legality
+
+Status: completed prerequisite slice `CONTROLLER-AWARE-ENCHANT`. Stop after this
+slice. Compilation remains **664 / 986 unique names**, with **1,757 compiled /
+688 rejected records**. This slice establishes real-RON enchant-clause gameplay
+for three names, not complete-card gameplay. Collection-wide engine-validation
+and behavior totals remain null. Strict loading exits 1 with no partial registry.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot and
+progress ledger; selected compiler, targeting, attachment, entry, copy and
+state-action code; related API/rules contracts; CR 109.5, 303.4a/c/e/f/g/j,
+400.7, 702.5a, 702.26b/c/d/f and 704.5m. Baseline short engine tests and build
+passed. Fresh loader and semantic inventory rejected the unsupported collection,
+independently of successful build/tests. Baseline: 2,445 records, 986 names,
+1,757 compiled / 688 rejected records, 664 accepted / 322 rejected names;
+72,954 AST nodes, 8,543 context signatures, 6,348 unknown-role occurrences.
+Complete records, including nested bodies, were inspected for these candidates.
+Reprints count once.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream capability | Estimated effort |
+| --- | --- | --- | --- |
+| Controller-aware enchant legality, selected | Cocoon, Relic Bind, Tourach's Gate: **zero immediate**, three concrete downstream consumers | Existing attachment checks discard controller restrictions. Cocoon also needs mandatory counter payment and indefinite flying; Relic Bind needs modal host-tap triggers; Gate needs zero-counter conditions, host tap payment and host property checks. Establishes casting, direct attachment, optional entry and state-action legality for all three before dependent rules can be exposed. | Small/medium: bounded compiler adapter, existing target restrictions and shared attachment check; gameplay, identity, control, copy, clone, entry, rollback and simultaneous-state-action tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **seven** after the complete prerequisite chain, **zero** adapter-only | Every complete consumer needs typed source enumeration and choice, resolution-local producer bindings and next-event shield consumption. Existing unlimited/finite-amount prevention is insufficient. Enables all seven complete cards; other source-choice consumers need different prevention or redirection contracts. | High: public source eligibility including nonbattlefield information, identity, one-event consumption, simultaneous damage, competing replacements and independent choices/copies. |
+| Mana conversion with activation history | Farrelite Priest, Initiates of the Ebon Hand: **two** after solver support, **zero** adapter-only | Both complete bodies already have delayed sacrifice/history syntax, but the compiler explicitly rejects mana/history bodies. Requires repeatable mana conversion planning and payment execution to agree on history, output and delayed consequences. Shared prerequisite supplies two complete consumers. | Medium/high: repeated mana planning, pure queries, transaction rollback, per-ability/per-incarnation history and post-production delayed effects. |
+
+Selection favors a small shared rules prerequisite with three known consumers.
+The current attachment service would silently weaken controller restrictions if
+only the compiler adapter were added. Fix that exact contract before adding
+those consumers' remaining bodies. The seven-card source-choice chain has a
+larger final gain but requires several new execution services; mana conversion
+also needs a solver contract. First-error frequency was not used as an unlock
+estimate. Contract, reuse boundary and acceptance cases were stated before
+editing. The implement-engine skill supplied the engine prerequisite workflow;
+no agents, removed card/set skills, Go-card requirements or Go stubs were used.
+
+Initial user changes: .gitignore, execution design, progress-ledger archival
+changes and untracked mtgish-ron-completed.md. Preserve them. Stage only this
+slice's current-status change and appended entry in the ledger, leaving the
+user's archival changes unstaged. No unrelated files are included in the commit.
+
+### Supported signatures, contexts and reuse
+
+RON: `EnchantPermanent(filter)` on an Aura accepts exactly one
+`ControlledByAPlayer(SinglePlayer(You))` or `ControlledByAPlayer(Opponent)`,
+alone or in a nonempty nested `And` with existing property filters, in either
+operand order. Property-only `Or` retains the existing filter grammar.
+Controller restrictions inside `Or`, duplicate/conflicting restrictions, other
+player references, malformed arity/kinds and non-Aura enchant declarations are
+errors. Cost, static-count and ordinary targeting filters keep their separate
+contexts. The compiler uses a typed controller selector and constructs a fresh
+cast target on every factory call. No runtime choice state enters the plan.
+Existing inventory roles already describe the full selected syntax, including
+beneath rejected parents; no new reporting role is required.
+
+Engine API: `TargetPermanentYouControl(...PermanentFilter) Target`, the raw
+counterpart of the existing typed `TargetYouControl` option. Opponent control
+reuses `TargetPermanentOpponentControls` and `TargetOpponentControls`.
+`auraHostIsLegalForController` keeps the supplied current/prospective controller
+separate from card ownership and unwraps typed declarations before checking
+their property filters and these controller flags. Existing `auraHostIsLegal`
+callers retain their signature; it derives the current controller for live Auras.
+Attachment and state actions pass the known source controller explicitly.
+Optional hand entry supplies its prospective source through `canAttach`.
+
+Casting and resolving targets read the spell controller; copies read their own
+controller. Current attachment legality reads the Aura controller, not a saved
+caster or owner. Changing either host or Aura control can end legality. Direct
+illegal attachment retains the former attachment. Shroud prevents casting but
+permits untargeted entry and existing attachment. Legal phase cycles retain
+attachment identity. Returned or unavailable spell targets cannot receive an
+Aura through an old target reference. This slice adds no LKI information read;
+existing identity and departure services retain their contracts.
+
+Reuse: permanent target flags/query services, casting/payment rollback,
+resolution target checks, spell copies, current attachment lists/incarnations,
+optional hand-entry visits and host choices, clone isolation, state-action
+zone batching and former-battlefield event information. Illegal Auras move to
+their owners' graveyards in the existing simultaneous batch, bypassing
+indestructibility/regeneration. No new replacement-order, APNAP, damage, zone,
+player-binding or global action-result service is introduced.
+
+### TDD and gameplay evidence
+
+Engine attachment and current-control tests first failed because the old helper
+ignored controller restrictions. The RON clause tests first failed at
+ControlledByAPlayer; declaration tests also exposed accepted empty conjunctions.
+The raw own-control API test then failed to compile for the missing function
+before its implementation. A casting fixture initially put another player's
+owned card into A's hand, which the harness forbids; its owner is now A, with
+owner/control separation tested on direct engine entry. The copy fixture was
+corrected to use CopySpellOnStack's card-source ID, not its stack-object ID.
+These fixture corrections preserve the legality assertions.
+
+| Card or contract | Mapping / acceptance cases |
+| --- | --- |
+| Cocoon LEG:48 enchant clause and real metadata/cost | TestRONEnchantControllerClauses: own creature restriction, payment rollback, cast/resolution legality, control changes, source ownership, target return/phasing/shroud, legal phase cycle, separate factory targets, pending clones and spell copies under either controller. Complete record still rejects mandatory RemoveCounters. |
+| Relic Bind LEG:217 enchant clause and real metadata/cost | Same gameplay matrix with opponent artifact restriction. Complete record still rejects Modal_ChooseOne in the host-tap trigger. |
+| Tourach's Gate FEM:97 enchant clause and real metadata/cost | Same gameplay matrix with own land restriction. Complete record still rejects HasNoCountersOfType and retains later host-cost/property blockers. |
+| Raw/typed engine declarations | TestAuraControllerAttachment and CurrentAuraControl: direct illegal/legal attachment, unchanged former attachment, shroud, owner/control separation, both control directions, phase cycles and clone isolation. |
+| Untargeted entry and state action | TestAuraControllerUntargetedEntry: both controller restrictions, prospective control, shroud, no legal host preserves hand visit. SimultaneousStateAction: two illegal Auras, distinct owners, regeneration/indestructibility bypass and former battlefield after both moves. |
+| Declaration, reporting and collection rejection | TestRONEnchantControllerInvalid, NestedFilters and Reporting: exact bounded syntax, reversed/nested conjunctions, property disjunction, unbound/constructor/duplicate/conflicting references, non-Aura context, fresh targets, strict atomic load rejection, semantic roles and precise full-record remaining errors. |
+
+These clause fixtures are test-only; they neither install a production subset
+registry nor claim that the three full records execute all their rules.
+No full-card behavior mapping is added by this prerequisite.
+
+### Actual gain, source evidence and gates
+
+Actual full-card gain matches the **zero-name / zero-record** estimate.
+All previously accepted records remain accepted. The three selected first
+errors advance to:
+
+- Cocoon, LEG.lines.ron:48:651: unsupported mandatory sacrifice cost (RemoveCounters).
+- Relic Bind, LEG.lines.ron:217:297: unsupported action list (Modal_ChooseOne).
+- Tourach's Gate, FEM.lines.ron:97:592: unsupported resolving permanent property filter (HasNoCountersOfType).
+
+Final inventory remains 1,757 compiled / 688 rejected records, 664 accepted /
+322 rejected names, 72,954 AST nodes and 8,543 context signatures. Unknown-role
+occurrences remain 6,348. Compile counts and gameplay coverage remain separate.
+Local Oracle data/LEG.json and data/FEM.json confirm the selected enchant
+clauses. No source defect was found in them. No RON source changed; all 12 hashes
+match the vocabulary snapshot, so no source vocabulary refresh is required.
+No environmental or pre-existing validation failure was found.
+
+The runtime/removal gates remain unmet: complete loading, full-collection
+behavior tests and startup integration are unfinished. No Go card definitions,
+generators, startup wiring or DSL functions are removed. No cleanup caller audit
+or authoring cutover is claimed.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Focused TestAuraController*, attachment/optional-entry/Aura regressions and TestRONEnchantController*, each -count=1 | PASS after expected TDD failures and fixture corrections |
+| go test ./pkg/mage/dsl/ron -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| Post-lint go test ./... -short -count=1 | PASS; all repository checks cover final code |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; formatting reviewed, no production changes |
+| git diff --check | PASS, including final ledger recording |
+| go run ./cmd/loadcards -json; -inventory -json | Expected exit 1, unchanged counts and three advanced diagnostics above |
+| Source hash and accepted-record comparison | All 12 hashes unchanged; zero regressions |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source enumeration and next-event prevention: seven complete consumers
+   after its shared typed-choice and one-event shield services.
+2. Mana conversion with activation history: two complete consumers after solver
+   and payment contracts.
+3. Shared resolving counter conditions/payments, including zero-counter tests:
+   remove the next blockers in Cocoon and Tourach's Gate before their remaining
+   independent effects/costs. Relic Bind's modal host-tap trigger is now a smaller
+   follow-up, but single-card work stays behind useful multi-card capabilities.
+
+Changed files: pkg/mage/game.go, state_based_actions.go, target.go,
+aura_controller_test.go and doc.go; pkg/mage/dsl/ron/compiler.go,
+enchant_controller.go and enchant_controller_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. The final response records the
+slice commit. No second slice begins.

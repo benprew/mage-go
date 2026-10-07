@@ -172,6 +172,11 @@
 // The rule checks casting and attachment legality. Illegal attached Auras move
 // to the graveyard as a state-based action; this action does not destroy them.
 //
+// Use [TargetPermanentYouControl] or [TargetPermanentOpponentControls] with
+// [WithCastTarget] for a controller restriction on an Aura's enchant ability.
+// Attachment and state checks read the Aura's current controller. Shroud does
+// not prevent a direct attachment. A control change can make the Aura illegal.
+//
 // Use [DeclareSpellOrPermanentTarget] with [WithTargets] for one target across
 // the stack and battlefield. Copies can change the target category.
 // [SetObjectColor] uses this declaration to keep the original object identity.

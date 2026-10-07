@@ -5088,3 +5088,41 @@ land behavior. `CopiesAndResolution` covers permanent spell copies, clones and
 new restrictions at resolution. `ExistingAuras` covers previously attached
 indestructible Auras. `Invalid` and `AtomicLoadAndInventory` cover declaration
 rejection, bounded composition, strict loading and semantic reporting.
+
+
+## Controller-aware enchant legality
+
+`TargetPermanentYouControl(...PermanentFilter) Target` provides the raw target
+counterpart to the existing `TargetYouControl` declaration option.
+`TargetPermanentOpponentControls` and `TargetOpponentControls` supply the
+opponent restriction. These permanent-target restrictions also constrain
+an Aura's enchant ability when used with `WithCastTarget`. The shared
+attachment query unwraps typed target declarations before reading their
+filters and these controller restrictions.
+
+Under CR 109.5, 303.4a/c/e/f/g/j and 702.5a, casting checks use the spell
+controller, while attachment and state-based checks use the Aura's current
+controller. Optional entry checks use the prospective controller before
+entry, without substituting the card owner. Ownership can differ from control.
+Changing either the Aura's control or its host's control can make the
+attachment illegal. Direct illegal attachment attempts retain the old
+attachment. Targeting restrictions such as shroud do not affect untargeted
+attachment. Phasing retains valid attachment identity; unavailable spell
+targets remain illegal at resolution. No LKI query can make an absent host
+available for attachment.
+
+Illegal Auras reuse the existing simultaneous state-action move batch and
+former-battlefield event information. The moves go to each Aura owner's
+graveyard and bypass indestructibility and regeneration. This change adds
+no replacement-order, APNAP or zone-movement policy. Existing targeting,
+copying, entry, incarnation and clone services retain their contracts.
+
+Evidence: `TestAuraControllerAttachment`, `CurrentAuraControl`,
+`UntargetedEntry`, `SimultaneousStateAction` and `TestRONEnchantController*`.
+The engine tests cover raw and typed declarations, owner/controller
+separation, live control changes, legal phase cycles, cloning, shroud,
+blocked hand-visit preservation and batch departure information. The RON
+tests also cover spell payment rollback, original and returned targets,
+resolution timing, separate factory state and copies with either controller.
+This slice does not add arbitrary player-binding restrictions to enchant
+abilities, ownership restrictions or player-enchanting Auras.

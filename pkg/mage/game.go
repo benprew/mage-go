@@ -1582,7 +1582,7 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 	if src.HasSubType("Aura") {
 		if src.HasType(TypeCreature) || src.ID() == target.ID() ||
 			target.HasAttr(AttrCantBeEnchanted) || target.HasProtectionFromInGame(src.Card, g) ||
-			!auraHostIsLegal(src.Card, target, g) {
+			!auraHostIsLegalForController(src.Card, target, g, src.ControllerID()) {
 			return false
 		}
 	} else if src.HasSubType("Equipment") {
@@ -1595,11 +1595,17 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 	return true
 }
 
-// auraHostIsLegal reports whether host satisfies the aura's enchant ability
-// (CR 303.4c). It checks the aura's cast-target filter against the host,
-// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
-// aura fall off — see CR 702.11b).
+// auraHostIsLegal checks the Aura's enchant limits for its current controller.
+// Shroud and hexproof do not restrict an existing attachment (CR 303.4c).
 func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+	controller := auraCard.Owner()
+	if aura := g.FindPermanent(auraCard.ID()); aura != nil {
+		controller = aura.ControllerID()
+	}
+	return auraHostIsLegalForController(auraCard, host, g, controller)
+}
+
+func auraHostIsLegalForController(auraCard Card, host *Permanent, g *Game, controller uuid.UUID) bool {
 	if g.restrictedAuraAttachment(host, auraCard) {
 		return false
 	}
@@ -1608,6 +1614,10 @@ func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
 		return true
 	}
 	for _, t := range targets {
+		if binding, ok := t.(TargetBinding); ok {
+			t = binding.targetSpec()
+		}
+		t = UnwrapTarget(t)
 		switch tt := t.(type) {
 		case *CreatureTarget:
 			if !host.HasType(TypeCreature) {
@@ -1617,6 +1627,9 @@ func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
 				return true
 			}
 		case *PermanentTarget:
+			if tt.controllerOnly && host.ControllerID() != controller || tt.opponentOnly && host.ControllerID() == controller {
+				continue
+			}
 			if filtersMatch(tt.Filters, host, g) {
 				return true
 			}

@@ -67,7 +67,7 @@ func (g *Game) checkStateBasedActions() bool {
 				} else if host.HasProtectionFromInGame(p.Card, g) {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
-				} else if !auraHostIsLegal(p.Card, host, g) {
+				} else if !auraHostIsLegalForController(p.Card, host, g, p.ControllerID()) {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				}

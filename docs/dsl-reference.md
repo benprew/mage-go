@@ -4341,3 +4341,30 @@ Complete Gaea's Touch behavior is covered by `TestRONOptionalHandEntryGaeasTouch
 and `TestRONOptionalHandEntryTimingAndRollback`. Goblin Wizard's temporary
 protection, Triassic Egg's activation condition and source defect, and Eureka's
 repeated player procedure remain unsupported. Their complete records still reject.
+
+
+## RON controller restrictions on enchant abilities
+
+On an Aura, `EnchantPermanent(filter)` accepts
+`ControlledByAPlayer(SinglePlayer(You))` or `ControlledByAPlayer(Opponent)`.
+One controller restriction can occur alone or in a nonempty nested `And`
+with existing permanent property filters. Operand order does not matter.
+A property-only `Or` retains the existing filter grammar; a controller
+restriction inside `Or` is rejected. Duplicate or conflicting controller
+restrictions, other player references, malformed constructors and enchant
+rules on non-Auras are compile errors.
+
+RON lowers these restrictions to fresh `TargetPermanentYouControl(filter)`
+or `TargetPermanentOpponentControls(filter)` cast targets. Every factory
+has its own casting target state. Casting and resolution use the spell's
+controller; a copied spell uses its own controller. Direct attachment,
+optional hand entry and state-based actions use the Aura's current or
+prospective controller. Ownership does not determine the restriction.
+Shroud and hexproof affect spell targeting, but do not prevent untargeted
+attachment or invalidate an existing attachment.
+
+Evidence: `TestRONEnchantControllerClauses`, `Invalid`, `NestedFilters` and
+`Reporting`. Gameplay tests execute the real enchant clauses from Cocoon,
+Relic Bind and Tourach's Gate, including casting costs and metadata. They
+are clause evidence: all three complete records remain rejected for later
+unsupported operations. No full-card behavior claim follows from these tests.

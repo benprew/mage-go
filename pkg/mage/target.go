@@ -836,6 +836,15 @@ func TargetXPermanents(filters ...PermanentFilter) Target {
 	return &countBoundTarget{inner: TargetPermanent(filters...), usesX: true}
 }
 
+// TargetPermanentYouControl limits targets to the current ability controller's permanents.
+func TargetPermanentYouControl(filters ...PermanentFilter) Target {
+	return &PermanentTarget{
+		BaseTarget:     BaseTarget{min: 1, max: 1},
+		Filters:        filters,
+		controllerOnly: true,
+	}
+}
+
 // TargetPermanentOpponentControls creates a target that selects a permanent an
 // opponent controls, optionally narrowed by PermanentFilter predicates.
 func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {

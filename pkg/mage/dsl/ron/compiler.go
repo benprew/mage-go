@@ -500,14 +500,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "Activated", "ActivatedWithModifiers":
 		return compileActivatedRule(n, ctx)
 	case "EnchantPermanent":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		filter, err := compileFilter(n.Args[0])
-		if err != nil {
-			return nil, err
-		}
-		return func() mage.CardOption { return mage.WithCastTarget(mage.TargetPermanent(filter)) }, nil
+		return compileEnchantPermanent(n, ctx)
 	case "Protection":
 		if err := arity(n, 1); err != nil {
 			return nil, err
