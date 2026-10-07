@@ -5927,3 +5927,27 @@ No engine event, replacement, cost, LKI or simultaneous-operation service change
 `LegalityAndMatching`, `Declarations`, `StrictLoad`, `BecomesBlocked`,
 `BecomesBlockedIdentity`, `InvalidBlockedDeclarations`, and `SpittingSlugBoundary`
 cover the adapters, complete Dwarven Soldier record and remaining source gap.
+
+## Two-branch optional resolution payment
+
+`PayOrElse(PlayerRef, CostGroup, paid ResolvingEffect, unpaid ResolvingEffect)`
+uses the same affordability checks and atomic total-cost transaction as
+`IfPaid` and `UnlessPaid`. It offers one payment and executes exactly one branch
+in the existing effect context. Decline, lack of resources or transaction
+failure selects the unpaid branch (CR 118.2–3, 118.5, 118.12). A missing payer
+executes neither branch. Zero costs still require acceptance. Branch results
+are local to the invocation; nested payments cannot change the outer result.
+No payment-result slot or separate payment service is added.
+
+Both bodies contribute effect properties. Declaration validation checks the
+payer, explicit cost group and both bodies, and keeps assignments inside their
+own branch. Existing one-branch callers retain their behavior. The RON adapter
+currently permits fixed mana costs for two-branch continuations. This engine
+service accepts the existing supported resolution cost groups.
+
+`TestResolutionPaymentBranches*` covers success, decline, insufficient resources,
+zero payment, nested outcomes, invalid declarations, branch scope, combined
+cost rollback, absent payers and independent clones. RON gameplay and copying
+are covered by `TestRONPaymentBranches*`. Combat collection grants reuse
+`BlockersOf`, `BlockedAttackersOf`, union/intersection, `GrantEachKeyword` and
+`Until`; they add no LKI, replacement-order or simultaneous-operation contract.

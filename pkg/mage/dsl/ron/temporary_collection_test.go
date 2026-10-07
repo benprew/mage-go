@@ -147,7 +147,7 @@ func TestRONTemporaryCollectionInvalid(t *testing.T) {
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [], UntilEndOfTurn)`,
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AdjustPT(Integer(1), 2)], UntilEndOfTurn)`,
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AdjustPT(1)], UntilEndOfTurn)`,
-		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AddAbility([Flying])], UntilEndOfTurn)`,
+		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AddAbility([])], UntilEndOfTurn)`,
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [SetPT(PT(2, 2))], UntilEndOfTurn)`,
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AdjustPT(1, 2)], UntilEndOfCombat)`,
 		`CreateEachPermanentLayerEffectUntil(IsCardtype(Creature), [AdjustPT(1, 2)], UntilEndOfTurn())`,

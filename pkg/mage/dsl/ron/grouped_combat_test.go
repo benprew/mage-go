@@ -372,8 +372,8 @@ func TestRONGroupedCombatBecomesBlockedIdentity(t *testing.T) {
 
 func TestRONGroupedCombatSpittingSlugBoundary(t *testing.T) {
 	n := hostUntapRecord(t, "DRK", "Spitting Slug")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "payment requires an adjacent payment continuation (IfElse)") {
-		t.Fatalf("remaining gap: %v", err)
+	if _, err := Compile(n); err != nil {
+		t.Fatalf("supported payment and collection: %v", err)
 	}
 }
 

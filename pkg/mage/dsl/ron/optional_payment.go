@@ -67,6 +67,9 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if continuation.Name == "IfElse" {
+		return compilePaymentBranches(payment, continuation, ctx)
+	}
 	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "DestroyPermanent" {
 		return compileDestructionPayment(payment, continuation, ctx)
 	}

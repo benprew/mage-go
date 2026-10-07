@@ -741,11 +741,13 @@ func (r permanentOwnerRef) inspectDefinition() definitionNode {
 }
 
 type unlessPaidEffect struct {
-	player   PlayerRef
-	costs    CostGroup
-	effect   ResolvingEffect
-	ifPaid   bool
-	required bool
+	player      PlayerRef
+	costs       CostGroup
+	effect      ResolvingEffect
+	otherwise   ResolvingEffect
+	twoBranches bool
+	ifPaid      bool
+	required    bool
 }
 
 // UnlessPaid offers one player a payment through the total-cost transaction.
@@ -757,6 +759,11 @@ func UnlessPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) Resol
 // IfPaid runs the body only after the player accepts and pays the complete cost.
 func IfPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
 	return &unlessPaidEffect{player: player, costs: costs, effect: effect, ifPaid: true}
+}
+
+// PayOrElse uses one payment result to select one resolution branch.
+func PayOrElse(player PlayerRef, costs CostGroup, paid, unpaid ResolvingEffect) ResolvingEffect {
+	return &unlessPaidEffect{player: player, costs: costs, effect: paid, otherwise: unpaid, ifPaid: true, twoBranches: true}
 }
 
 // IfRequiredPaid runs the body after a mandatory sacrifice payment succeeds.
@@ -771,6 +778,9 @@ func UnlessRequiredPaid(player PlayerRef, costs CostGroup, effect ResolvingEffec
 }
 
 func (e *unlessPaidEffect) Text() string {
+	if e.twoBranches {
+		return "pay, then resolve one branch"
+	}
 	if e.ifPaid {
 		return "if the player pays"
 	}
@@ -780,7 +790,11 @@ func (e *unlessPaidEffect) Properties() EffectProperties {
 	if nilDefinition(e.effect) {
 		return EffectProperties{}
 	}
-	return e.effect.Properties()
+	props := e.effect.Properties()
+	if !nilDefinition(e.otherwise) {
+		mergeEffectProperties(&props, e.otherwise.Properties())
+	}
+	return props
 }
 func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 	id, ok := e.player.resolvePlayer(ctx)
@@ -827,6 +841,9 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 	if paid == e.ifPaid {
 		return e.effect.Apply(ctx)
 	}
+	if !nilDefinition(e.otherwise) {
+		return e.otherwise.Apply(ctx)
+	}
 	return nil
 }
 func (e *unlessPaidEffect) inspectDefinition() definitionNode {
@@ -838,6 +855,9 @@ func (e *unlessPaidEffect) inspectDefinition() definitionNode {
 		role = "required-" + role
 	}
 	n := definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"player", e.player}, {"costs", e.costs}, {branch, e.effect}}}
+	if e.twoBranches {
+		n.children = append(n.children, definitionEdge{"unpaid", e.otherwise})
+	}
 	if e.required {
 		if len(e.costs.costs) == 0 {
 			n.problem = "supply at least one mandatory sacrifice cost"

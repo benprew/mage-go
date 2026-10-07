@@ -4,6 +4,21 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
 	switch n.Name {
+	case "IsBlockingAttacker", "IsBlockedByDefender":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		ref, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			if n.Name == "IsBlockingAttacker" {
+				return mage.BlockersOf(ref.build(bindings))
+			}
+			return mage.BlockedAttackersOf(ref.build(bindings))
+		}, nil
+
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
 			return nil, err

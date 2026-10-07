@@ -5015,3 +5015,32 @@ an opposing-creature reference. Each factory builds fresh actions and abilities.
 Dwarven Soldier has complete RON gameplay coverage in `TestRONGroupedCombat*`.
 Spitting Slug still rejects its unsupported `MayCost`/`IfElse` continuation;
 this event adapter does not establish payment branches or collection grants.
+
+## RON two-branch fixed mana payments
+
+In resolving action sequences, adjacent `MayCost(PayMana([...]))` or
+`PlayerMayCost(player, PayMana([...]))` and
+`IfElse(condition, [true_actions], [false_actions])` form one payment operation.
+The condition is the bare symbol `CostWasPaid` or `CostWasntPaid`. Both lists
+must contain at least one supported action. Each branch can contain another
+payment pair. The result cannot be read outside the pair. Fixed costs include
+an explicit zero cost; X, mandatory payments and nonmana costs in this
+three-argument continuation remain errors. Existing one-branch forms retain
+their contracts. The adapter lowers to `mage.PayOrElse` with typed player and
+body references, built separately for each factory instance.
+
+`CreateEachPermanentLayerEffectUntil(collection, [AddAbility([keywords])],
+UntilEndOfTurn)` supports nonempty lists of supported temporary keywords.
+The collection uses the contextual collection grammar, including nonempty
+`And`/`Or` and typed `IsBlockingAttacker(permanent)` and
+`IsBlockedByDefender(permanent)`. These relations use current combat pairs.
+An absent, phased or returned source cannot restore a pair through LKI.
+Membership is captured when the grant begins. Leaving combat does not end it;
+a recipient's zone change ends it, and cleanup removes it. Mixed keyword/P/T
+modifications and other durations remain errors in this shape.
+
+`TestRONPaymentBranches*` maps complete Spitting Slug RON to casting, both combat
+triggers, multiple blockers, payment, first-strike damage, duration, identity,
+phasing, copies and cloning. Synthetic tests cover nested results, polarity,
+target legality, copy retargeting and invalid declarations. This does not claim
+complete Cyclone, Imprison, Bronze Tablet or Transmute Artifact support.

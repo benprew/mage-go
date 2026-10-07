@@ -29294,3 +29294,168 @@ source_attack.go, triggers.go, combat_characteristic_test.go, inventory_test.go;
 DSL reference, engine rules contracts and this ledger entry. No second slice
 is started. Only these changes are committed; initial user changes remain
 unstaged.
+
+## Run 2026-10-07: OPTIONAL-PAYMENT-BRANCHES
+
+Status: complete implementation slice. This run stops after this slice.
+Collection loading, complete gameplay, runtime cutover and removal gates remain
+incomplete.
+
+### Fresh evidence and candidate comparison
+
+Preserved initial user changes to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. Only this entry is staged from
+the ledger; the user's restructuring and historical entries remain unstaged.
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary, current ledger,
+selected compiler/engine code, API/rules contracts, complete candidate RON
+records and nested forms. Relevant rules: CR 118.2–3, 118.5, 118.12, 400.7,
+506.4, 509.3, 603.5, 611.2c and 514.2. Used implement-engine for the reusable
+payment service. No removed card skill, Go requirement or agent was used.
+
+Baseline compiler tests, short engine tests and make build passed. Fresh strict
+loading and semantic inventory exited 1 for collection rejection, separately
+from native validation: **1,819 compiled / 626 rejected records**, **696 accepted /
+290 rejected unique names**; 2,445 records and 986 names. Inventory: **72,962
+occurrences / 8,557 signatures / 5,483 unknown-role occurrences**. Reprints count
+once. The vocabulary snapshot is syntax evidence, not proof of support.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Scoped two-branch resolution payment, selected | Spitting Slug, Imprison, Cyclone, Bronze Tablet, Transmute Artifact; **1** complete-card unlock with Slug's contextual keyword grant | Slug's two complete trigger bodies need both branches and counterpart keyword grants. Imprison still needs activation-event/ability references and combat removal. Cyclone needs repeated colored mana payment. Tablet needs ante, life-payment adapter, linked exile and ownership exchange. Transmute needs artifact search, found/sacrificed values and a dynamic payment. Typed branch selection is a concrete shared prerequisite for all five; other entry/replacement consumers are excluded. | Small/medium: extend the exact payment transaction, fixed-mana adapter, existing contextual collection and keyword lowering, engine and real Slug tests. |
+| All-zone battlefield-count CDA | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger; **5** clean unlocks after prerequisite | All-zone owner/controller context, characteristic evaluation, named counts and layers/copy contracts are missing. Avenger's recorded controller-filter defect excludes it from the clean estimate. Enables characteristics beyond the battlefield. | High: reusable zone characteristic contract, compiler values and five complete gameplay mappings. |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** unlocks after prerequisites | Discovery must include nonpermanent sources. Typed choice identity and next-event prevention need contracts. Other choice consumers add redirection or dynamic amounts and are excluded. Enables exact chosen-source shields. | High: source discovery, scoped choices, prevention ordering and seven complete mappings. |
+
+The selected shared prerequisite has the smallest credible gain per effort and
+one complete immediate consumer. It is not a Slug-specific executor. The fixed
+adapter does not claim to complete dynamic/life payments in the other consumers.
+First-error counts did not supply unlock estimates. The selection, contract,
+reuse boundary and acceptance cases were stated before edits.
+
+### Exact signatures, contexts and engine reuse
+
+Engine API: `PayOrElse(player PlayerRef, costs CostGroup, paid, unpaid
+ResolvingEffect) ResolvingEffect`. It extends the existing private
+unlessPaidEffect and total-cost transaction, preserving IfPaid, UnlessPaid and
+mandatory callers. One offer and one commit select exactly one branch. Failed
+or declined payment selects unpaid; an absent payer selects neither. Explicit
+zero costs still require acceptance. Both branches contribute effect properties.
+Validation checks both bodies and keeps assignments inside each branch. No
+global outcome, new payment service or legacy selector bridge is used.
+
+RON action-sequence context:
+`MayCost(PayMana([...]))` or `PlayerMayCost(typed-player, PayMana([...]))`, adjacent
+to `IfElse(CostWasPaid|CostWasntPaid, [actions], [actions])`. Exact arities are
+1/2 for payment and 3 for continuation. Both conditions are bare symbols; both
+lists are nonempty. Each branch may contain another supported pair. Fixed
+mana, including zero, is supported. X, mandatory and nonmana payments in this
+three-argument continuation remain errors. Other conditions, detached result
+reads, intervening actions, unbound references and malformed lists reject.
+Factories build private cost/body objects and use existing instanceBindings.
+
+RON temporary keyword collection context:
+`CreateEachPermanentLayerEffectUntil(contextual-collection,
+[AddAbility([temporary-keywords])], UntilEndOfTurn)`. Multiple nonempty keyword
+lists use the existing temporary keyword grammar. Mixed P/T and keyword bodies
+and other durations remain errors. Existing P/T lowering is preserved.
+Contextual collection queries now include `IsBlockingAttacker(typed-permanent)`
+and `IsBlockedByDefender(typed-permanent)` in nonempty recursive And/Or sets.
+They reuse BlockersOf, BlockedAttackersOf, UnionPermanents and
+IntersectPermanents. Grants reuse GrantEachKeyword and Until; membership is
+captured at resolution under CR 611.2c. LKI cannot restore a combat pair.
+Departure, phasing and control changes remove current combat membership
+(CR 506.4). A recipient's later departure ends the grant; phase cycles preserve
+captured identity and cleanup ends the grant. Source departure after installation
+does not end it. No replacement ordering or simultaneous-operation service is
+changed; native first-strike combat damage remains the engine's service.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for undefined PayOrElse. RON tests first failed at
+Spitting Slug's unsupported adjacent IfElse and the same synthetic nested shape.
+Implementation then passed those semantic boundaries. Test fixture corrections:
+ExecuteBlockers resolves native triggers immediately, so native payment resources
+must be ready before declaration; pending timing tests use saved native event
+contexts instead. A control-change expectation was corrected using CR 506.4.
+A shroud test initially called a nonexistent GrantKeyword signature and was
+corrected to the existing base attribute API. These were fixture errors, not
+source defects or environment failures.
+
+Two old rejection boundaries now assert support: full Slug compilation and
+fixed keyword collections. Added positive collection gameplay and kept empty
+keyword-list rejection. The first broad suites failed solely because inventory
+tests expected old totals 1,819/626. They now assert measured 1,820/625 and that
+Slug is not rejected. No behavior assertion was weakened.
+
+| Card / contract | Tests |
+| --- | --- |
+| Spitting Slug, complete DRK RON | TestRONPaymentBranchesSlug: blocking and blocked triggers, pay/decline/unaffordable/mana-source paths, recipient scope, resolution capture and cleanup. SlugMultipleBlockers: one offer for the blocked transition, both current blockers and no repeat for unchanged assignments. |
+| Slug casting and combat | SlugCastingAndDamage: 1GG cost/rollback, stack entry timing, Slug 2/4 metadata, both native first-strike outcomes against a 4/2 creature. |
+| Slug identity and pending contexts | SlugIdentity: original source/recipient returns, phasing, phase cycles, source control, copied trigger payer and source, another Slug instance, pending clone isolation, late blockers, leaving combat and captured-recipient return. |
+| Branch scope and legality | Nested: both condition polarities, nested/adjacent payments. TargetAndCopies: typed target reads in both bodies, shroud/phasing/return rechecks, copied controller and retargeting, pending clone isolation. Invalid: malformed/unbound/detached declarations and unsupported costs. |
+| Keyword collection contract | KeywordDeclarations: references, empty lists, duration, mixed layers and arity. CollectionKeywords: multiple keyword grants to both players' creatures, noncreature/late-entry exclusion and cleanup. Existing temporary collection tests remain. |
+| Engine contract | TestResolutionPaymentBranches: paid/decline/insufficient/zero/nested outcomes. Declaration: nil arguments, explicit cost groups, sibling/escaped assignments. RollbackAndClone: failed combined life costs, absent payer and clone resolution isolation. |
+| Collection regression | TestInventoryRepositoryCollection, TestInventoryLeavesRealRONGameplayAndRegistryUnchanged, TestRONGroupedCombatSpittingSlugBoundary; existing optional payment, grouped combat, contextual collection and broad suites. |
+
+One complete unique-card gameplay mapping is added. Compilation and gameplay
+coverage are separate; collection-wide engine_validated and behavior_verified
+remain null. Synthetic coverage does not establish gameplay for the four other
+consumers or entry/replacement two-branch contexts.
+
+### Final measurements, source defects and removal gates
+
+Actual gain matches the estimate: **1 unique name / 1 record**, Spitting Slug.
+No previously accepted name is lost. Final strict loading exits 1 with **1,820
+compiled / 625 rejected records**, **697 accepted / 289 rejected unique names**.
+Inventory remains **72,962 occurrences / 8,557 signatures / 5,483 unknown-role
+occurrences**. The loader rejects the collection and publishes no partial registry.
+
+Remaining diagnostics include Cyclone:
+`ARN.lines.ron:16:303: unsupported two-branch payment cost (PayManaForEach)`;
+Imprison: `LEG.lines.ron:129:217: supply one artifact source and one non-tap cost
+filter (And)`; Bronze Tablet: `ATQ.lines.ron:15:134: unsupported rule
+(DeckConstruction)`; Transmute Artifact: `ATQ.lines.ron:73:266: unsupported basic
+land search filter (IsCardtype)`. Nested bodies were inspected before selection.
+Takklemaggot, Chains of Mephistopheles and Frankenstein's Monster use different
+mandatory, replacement or entry contracts and were excluded from this slice.
+
+No RON source changed. The vocabulary syntax and hashes remain unchanged, so the
+snapshot is not rewritten. No new source-data defect or environment failure was
+found; recorded defects remain deferred. No Go definitions, obsolete generators
+or DSL functions are removed. Collection support, gameplay and startup remain
+below removal gates; no fresh caller audit authorizes DSL removal. API/rules docs
+describe only the established payment and collection behavior.
+
+### Validation
+
+- Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build`: PASS.
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestResolutionPaymentBranches|TestRONPaymentBranches|TestRONGroupedCombat|TestRONOptionalPayment|TestRONContextualCollection|TestRONTemporaryCollection' -count=1`: PASS.
+- Focused `go test ./pkg/mage/dsl/ron -run 'TestRONPaymentBranches|TestInventory|TestRONGroupedCombat|TestRONTemporaryCollection' -count=1`: PASS after inventory totals were updated.
+- `go test ./pkg/mage/... -short -count=1`: PASS after final lint.
+- `go test ./... -short -count=1`: PASS after final lint; additional implement-engine check.
+- `make test`: PASS after final lint.
+- `make build`: PASS after final lint.
+- `go vet ./...`: PASS after final lint.
+- `make lint`: PASS, zero issues; automatic changes reviewed.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1, final counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1, final counts above.
+- Accepted-name comparison: PASS; only Spitting Slug leaves the rejected-name set.
+
+Only this slice is committed. Initial user changes and the untracked completed
+ledger remain unstaged. Automatic lint formatting changed import layout and
+whitespace in this slice only and was reviewed. No second slice is started.
+
+Ranked next candidates to reassess:
+
+1. All-zone battlefield-count CDA engine prerequisite and five clean consumers.
+2. Damage-source discovery/choice/identity and the seven chosen-source shields.
+3. Dynamic repeated colored resolution mana payment for Cyclone; compare reuse
+   across other dynamic payments before selection. Imprison still needs typed
+   activation-event/ability contracts before its fixed branches can execute.
+
+Slice files: pkg/mage/composable_costs.go, resolution_payment_branches_test.go,
+doc.go; compiler payment_branches.go and payment_branches_test.go,
+optional_payment.go, contextual_collection.go, temporary_collection.go,
+compiler.go, grouped_combat_test.go, temporary_collection_test.go,
+inventory_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
+this ledger entry.

@@ -1428,7 +1428,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return one(build)
 		}
-		build, err := compileTemporaryCollection(n)
+		build, err := compileTemporaryCollection(n, ctx)
 		if err != nil {
 			return nil, err
 		}
