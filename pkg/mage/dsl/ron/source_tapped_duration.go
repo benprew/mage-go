@@ -6,7 +6,7 @@ import (
 )
 
 func compileTemporaryDuration(n Node, ctx scope) (func([]mage.ContinuousModification) mage.Effect, error) {
-	if n.Name == "UntilNextUpkeep" {
+	if n.Name == "UntilNextUpkeep" || n.Name == "UntilEndOfNextUpkeep" {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -14,6 +14,9 @@ func compileTemporaryDuration(n Node, ctx scope) (func([]mage.ContinuousModifica
 			return nil, unsupported(n.Args[0], "next upkeep player")
 		}
 		return func(values []mage.ContinuousModification) mage.Effect {
+			if n.Name == "UntilEndOfNextUpkeep" {
+				return mage.UntilEndOfNextUpkeep(mage.You, values...)
+			}
 			return mage.UntilNextUpkeep(mage.You, values...)
 		}, nil
 	}

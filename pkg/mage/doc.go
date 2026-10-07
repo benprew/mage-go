@@ -343,6 +343,8 @@
 // The effect ends before that player's next upkeep triggers are detected.
 // Source control changes, departure, and phasing do not change this duration.
 // Subject references keep their captured incarnations.
+// Use [UntilEndOfNextUpkeep] when the effect must last through upkeep priority.
+// [ToughnessOfWithLKI] keeps the exact incarnation for a saved toughness read.
 //
 // Use [SourceTappedStateWithLKI] for a source tapped-state check that needs
 // departure information at resolution. Live-only state conditions remain

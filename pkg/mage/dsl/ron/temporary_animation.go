@@ -124,3 +124,20 @@ func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []ma
 	filter, err := compileFilter(n)
 	return filter, nil, err
 }
+
+func compileTemporaryManualPT(pt Node, ctx scope, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
+	if err := arity(pt, 2); err != nil {
+		return nil, err
+	}
+	power, err := compileTemporaryValue(pt.Args[0], ctx, subject)
+	if err != nil {
+		return nil, err
+	}
+	toughness, err := compileTemporaryValue(pt.Args[1], ctx, subject)
+	if err != nil {
+		return nil, err
+	}
+	return func(bindings instanceBindings) mage.ContinuousModification {
+		return mage.SetBasePowerToughness(subject.build(bindings), power(bindings), toughness(bindings))
+	}, nil
+}

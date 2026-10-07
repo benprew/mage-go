@@ -4669,3 +4669,33 @@ membership, copies, factories, atomic loading, simultaneous notifications,
 finite prevention, source LKI and lifelink. `Invalid` covers rejected shapes
 and scope errors. Existing replacement-order tests remain the ordering evidence;
 this slice changes no replacement choice or priority contract.
+
+## Captured characteristic values and end-of-next-upkeep expiry
+
+`ToughnessOfWithLKI(PermanentRef) ResolutionValue` uses the same exact-incarnation
+information service as power. Live reads include layers and counters. Departure
+and phase snapshots use the saved final toughness, without recalculating layers
+on an absent object (CR 400.7, 608.2h, 702.26). A returned object cannot replace
+that value. Unknown incarnations return zero. Definition validation rejects nil,
+unsupported and undeclared references. `TestPermanentInformationLifecycle`,
+`Declaration` and `PhaseSnapshotAndClone` now cover toughness as well as power.
+
+`UntilEndOfNextUpkeep(PlayerRef, ...ContinuousModification)` captures its player,
+subjects and values with the existing layer service. At the next actual upkeep
+of the saved player, installed effects are marked for end-of-step expiry.
+Effects created during that upkeep are not marked. After the priority round,
+marked effects expire before final state-based actions and layer refresh
+(CR 500.5, 611.2a, 613.4). There is no delayed trigger or replacement for expiry.
+Skipped upkeeps cannot mark effects; extra upkeeps can. Source departure,
+control changes and recipient phasing cannot delay or redirect the endpoint.
+Clones copy both the saved player and the marking state. Existing beginning-of-
+upkeep durations and legacy source-controller policies retain their behavior.
+
+`TestUntilEndOfNextUpkeepBoundaries`, `NewEffect`, `Declarations` and
+`SkippedControlAndPhasing` establish these contracts. RON
+`TestRONTemporaryCharacteristicHalfdane` proves complete-record gameplay,
+resolution-time P/T capture, layer/counter order, legality, return/phasing,
+control, copied abilities and clone isolation. `Values` proves simultaneous
+capture of multiple modifiers before installation. Target announcement,
+transactional casting, replacement ordering and action batches use the existing
+services; this slice does not add payment or replacement behavior.

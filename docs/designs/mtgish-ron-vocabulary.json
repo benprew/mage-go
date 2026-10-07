@@ -5,7 +5,7 @@
   "records": 2445,
   "unique_card_names": 986,
   "top_level_rule_names": 51,
-  "constructor_signatures": 600,
+  "constructor_signatures": 601,
   "conflicting_reprints": [],
   "files": [
     {
@@ -61,7 +61,7 @@
     {
       "path": "cards/mtgish/LEG.lines.ron",
       "records": 309,
-      "sha256": "c275df962ed5c371a1ae137e09d72a223af971dce64be94ee1e670dd8957b97b"
+      "sha256": "48e740a09f8bd9097880a9f89ddb4635c5e1830c5a66ca3763c2a038f5415a42"
     },
     {
       "path": "cards/mtgish/PROMOS.lines.ron",
@@ -1143,8 +1143,9 @@
     {"name": "UntapEachPermanent", "kind": "tuple", "arity": 1, "occurrences": 5, "examples": ["Magnetic Mountain (cards/mtgish/3ED.lines.ron:158:572)", "Magnetic Mountain (cards/mtgish/ARN.lines.ron:51:572)", "Candelabra of Tawnos (cards/mtgish/ATQ.lines.ron:16:291)"]},
     {"name": "UntapPermanent", "kind": "tuple", "arity": 1, "occurrences": 49, "examples": ["Basalt Monolith (cards/mtgish/2ED.lines.ron:12:374)", "Instill Energy (cards/mtgish/2ED.lines.ron:121:306)", "Ley Druid (cards/mtgish/2ED.lines.ron:139:250)"]},
     {"name": "UntilEndOfCombat", "kind": "symbol", "arity": 0, "occurrences": 17, "examples": ["Jade Statue (cards/mtgish/2ED.lines.ron:130:334)", "Raging River (cards/mtgish/2ED.lines.ron:197:858)", "Battering Ram (cards/mtgish/ATQ.lines.ron:14:307)"]},
+    {"name": "UntilEndOfNextUpkeep", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Halfdane (cards/mtgish/LEG.lines.ron:113:482)"]},
     {"name": "UntilEndOfTurn", "kind": "symbol", "arity": 0, "occurrences": 329, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:386)", "Blaze of Glory (cards/mtgish/2ED.lines.ron:21:436)", "Blessing (cards/mtgish/2ED.lines.ron:22:289)"]},
-    {"name": "UntilNextUpkeep", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Erhnam Djinn (cards/mtgish/ARN.lines.ron:28:433)", "Xenic Poltergeist (cards/mtgish/ATQ.lines.ron:83:459)", "Gabriel Angelfire (cards/mtgish/LEG.lines.ron:93:416)"]},
+    {"name": "UntilNextUpkeep", "kind": "tuple", "arity": 1, "occurrences": 3, "examples": ["Erhnam Djinn (cards/mtgish/ARN.lines.ron:28:433)", "Xenic Poltergeist (cards/mtgish/ATQ.lines.ron:83:459)", "Gabriel Angelfire (cards/mtgish/LEG.lines.ron:93:416)"]},
     {"name": "UntilPermanentChangesControl", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Aladdin (cards/mtgish/ARN.lines.ron:2:372)", "Seasinger (cards/mtgish/FEM.lines.ron:77:573)", "Thrull Champion (cards/mtgish/FEM.lines.ron:91:404)"]},
     {"name": "UntilPermanentIsTurnedFaceUp", "kind": "tuple", "arity": 1, "occurrences": 5, "examples": ["Illusionary Mask (cards/mtgish/2ED.lines.ron:120:559)", "Illusionary Mask (cards/mtgish/CED.lines.ron:120:559)", "Illusionary Mask (cards/mtgish/CEI.lines.ron:120:559)"]},
     {"name": "UntilPermanentLeavesBattlefield", "kind": "tuple", "arity": 1, "occurrences": 9, "examples": ["Gaea's Liege (cards/mtgish/2ED.lines.ron:95:853)", "Gaea's Liege (cards/mtgish/3ED.lines.ron:101:853)", "Oubliette (cards/mtgish/ARN.lines.ron:60:349)"]},
@@ -1230,13 +1231,13 @@
   ],
   "loader_baseline": {
     "records": 2445,
-    "compiled": 1723,
+    "compiled": 1724,
     "issues": [
       {"card": "Animate Artifact", "source": {"File": "2ED.lines.ron", "Line": 3, "Column": 1}, "message": "2ED.lines.ron:3:299: unsupported conditional static modification (AddCardtype)"},
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Ankh of Mishra", "source": {"File": "2ED.lines.ron", "Line": 6, "Column": 1}, "message": "2ED.lines.ron:6:179: unsupported trigger subject (IsCardtype)"},
       {"card": "Balance", "source": {"File": "2ED.lines.ron", "Line": 11, "Column": 1}, "message": "2ED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
-      {"card": "Berserk", "source": {"File": "2ED.lines.ron", "Line": 15, "Column": 1}, "message": "2ED.lines.ron:15:349: unsupported value (PowerOfPermanent)"},
+      {"card": "Berserk", "source": {"File": "2ED.lines.ron", "Line": 15, "Column": 1}, "message": "2ED.lines.ron:15:513: unsupported resolving permanent property filter (AttackedThisTurn)"},
       {"card": "Black Vise", "source": {"File": "2ED.lines.ron", "Line": 19, "Column": 1}, "message": "2ED.lines.ron:19:165: unsupported entry operation (ChooseAPlayer)"},
       {"card": "Blaze of Glory", "source": {"File": "2ED.lines.ron", "Line": 21, "Column": 1}, "message": "2ED.lines.ron:21:290: unsupported permanent target controller (SpellDefendingPlayer)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1451,7 +1452,7 @@
       {"card": "Animate Dead", "source": {"File": "CED.lines.ron", "Line": 4, "Column": 1}, "message": "CED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Ankh of Mishra", "source": {"File": "CED.lines.ron", "Line": 6, "Column": 1}, "message": "CED.lines.ron:6:179: unsupported trigger subject (IsCardtype)"},
       {"card": "Balance", "source": {"File": "CED.lines.ron", "Line": 11, "Column": 1}, "message": "CED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
-      {"card": "Berserk", "source": {"File": "CED.lines.ron", "Line": 15, "Column": 1}, "message": "CED.lines.ron:15:349: unsupported value (PowerOfPermanent)"},
+      {"card": "Berserk", "source": {"File": "CED.lines.ron", "Line": 15, "Column": 1}, "message": "CED.lines.ron:15:513: unsupported resolving permanent property filter (AttackedThisTurn)"},
       {"card": "Black Vise", "source": {"File": "CED.lines.ron", "Line": 19, "Column": 1}, "message": "CED.lines.ron:19:165: unsupported entry operation (ChooseAPlayer)"},
       {"card": "Blaze of Glory", "source": {"File": "CED.lines.ron", "Line": 21, "Column": 1}, "message": "CED.lines.ron:21:290: unsupported permanent target controller (SpellDefendingPlayer)"},
       {"card": "Camouflage", "source": {"File": "CED.lines.ron", "Line": 28, "Column": 1}, "message": "CED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1528,7 +1529,7 @@
       {"card": "Animate Dead", "source": {"File": "CEI.lines.ron", "Line": 4, "Column": 1}, "message": "CEI.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Ankh of Mishra", "source": {"File": "CEI.lines.ron", "Line": 6, "Column": 1}, "message": "CEI.lines.ron:6:179: unsupported trigger subject (IsCardtype)"},
       {"card": "Balance", "source": {"File": "CEI.lines.ron", "Line": 11, "Column": 1}, "message": "CEI.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
-      {"card": "Berserk", "source": {"File": "CEI.lines.ron", "Line": 15, "Column": 1}, "message": "CEI.lines.ron:15:349: unsupported value (PowerOfPermanent)"},
+      {"card": "Berserk", "source": {"File": "CEI.lines.ron", "Line": 15, "Column": 1}, "message": "CEI.lines.ron:15:513: unsupported resolving permanent property filter (AttackedThisTurn)"},
       {"card": "Black Vise", "source": {"File": "CEI.lines.ron", "Line": 19, "Column": 1}, "message": "CEI.lines.ron:19:165: unsupported entry operation (ChooseAPlayer)"},
       {"card": "Blaze of Glory", "source": {"File": "CEI.lines.ron", "Line": 21, "Column": 1}, "message": "CEI.lines.ron:21:290: unsupported permanent target controller (SpellDefendingPlayer)"},
       {"card": "Camouflage", "source": {"File": "CEI.lines.ron", "Line": 28, "Column": 1}, "message": "CEI.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1687,7 +1688,7 @@
       {"card": "Animate Dead", "source": {"File": "LEA.lines.ron", "Line": 4, "Column": 1}, "message": "LEA.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Ankh of Mishra", "source": {"File": "LEA.lines.ron", "Line": 6, "Column": 1}, "message": "LEA.lines.ron:6:179: unsupported trigger subject (IsCardtype)"},
       {"card": "Balance", "source": {"File": "LEA.lines.ron", "Line": 11, "Column": 1}, "message": "LEA.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
-      {"card": "Berserk", "source": {"File": "LEA.lines.ron", "Line": 15, "Column": 1}, "message": "LEA.lines.ron:15:349: unsupported value (PowerOfPermanent)"},
+      {"card": "Berserk", "source": {"File": "LEA.lines.ron", "Line": 15, "Column": 1}, "message": "LEA.lines.ron:15:513: unsupported resolving permanent property filter (AttackedThisTurn)"},
       {"card": "Black Vise", "source": {"File": "LEA.lines.ron", "Line": 19, "Column": 1}, "message": "LEA.lines.ron:19:165: unsupported entry operation (ChooseAPlayer)"},
       {"card": "Blaze of Glory", "source": {"File": "LEA.lines.ron", "Line": 21, "Column": 1}, "message": "LEA.lines.ron:21:290: unsupported permanent target controller (SpellDefendingPlayer)"},
       {"card": "Camouflage", "source": {"File": "LEA.lines.ron", "Line": 28, "Column": 1}, "message": "LEA.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1763,7 +1764,7 @@
       {"card": "Animate Dead", "source": {"File": "LEB.lines.ron", "Line": 4, "Column": 1}, "message": "LEB.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Ankh of Mishra", "source": {"File": "LEB.lines.ron", "Line": 6, "Column": 1}, "message": "LEB.lines.ron:6:179: unsupported trigger subject (IsCardtype)"},
       {"card": "Balance", "source": {"File": "LEB.lines.ron", "Line": 11, "Column": 1}, "message": "LEB.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
-      {"card": "Berserk", "source": {"File": "LEB.lines.ron", "Line": 15, "Column": 1}, "message": "LEB.lines.ron:15:349: unsupported value (PowerOfPermanent)"},
+      {"card": "Berserk", "source": {"File": "LEB.lines.ron", "Line": 15, "Column": 1}, "message": "LEB.lines.ron:15:513: unsupported resolving permanent property filter (AttackedThisTurn)"},
       {"card": "Black Vise", "source": {"File": "LEB.lines.ron", "Line": 19, "Column": 1}, "message": "LEB.lines.ron:19:165: unsupported entry operation (ChooseAPlayer)"},
       {"card": "Blaze of Glory", "source": {"File": "LEB.lines.ron", "Line": 21, "Column": 1}, "message": "LEB.lines.ron:21:290: unsupported permanent target controller (SpellDefendingPlayer)"},
       {"card": "Camouflage", "source": {"File": "LEB.lines.ron", "Line": 28, "Column": 1}, "message": "LEB.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1880,7 +1881,6 @@
       {"card": "Glyph of Life", "source": {"File": "LEG.lines.ron", "Line": 103, "Column": 1}, "message": "LEG.lines.ron:103:228: unsupported action (CreateTriggerUntil)"},
       {"card": "Glyph of Reincarnation", "source": {"File": "LEG.lines.ron", "Line": 104, "Column": 1}, "message": "LEG.lines.ron:104:161: unsupported casting window condition (IsAfterCombat)"},
       {"card": "Greater Realm of Preservation", "source": {"File": "LEG.lines.ron", "Line": 109, "Column": 1}, "message": "LEG.lines.ron:109:228: unsupported action (ChooseADamageSource)"},
-      {"card": "Halfdane", "source": {"File": "LEG.lines.ron", "Line": 113, "Column": 1}, "message": "LEG.lines.ron:113:388: unsupported temporary base values (ManualPT)"},
       {"card": "Hazezon Tamar", "source": {"File": "LEG.lines.ron", "Line": 115, "Column": 1}, "message": "LEG.lines.ron:115:607: unsupported trigger (WhenAPermanentLeavesTheBattlefield)"},
       {"card": "Hellfire", "source": {"File": "LEG.lines.ron", "Line": 120, "Column": 1}, "message": "LEG.lines.ron:120:284: unsupported value (Plus)"},
       {"card": "Ichneumon Druid", "source": {"File": "LEG.lines.ron", "Line": 127, "Column": 1}, "message": "LEG.lines.ron:127:179: unsupported trigger (WhenAPlayerCastsTheirNthSpellInATurn)"},

@@ -486,6 +486,8 @@ type composedLayerEffect struct {
 	sourceIncarnation uuid.UUID
 	grantID           uuid.UUID
 	upkeepPlayer      uuid.UUID
+	endNextUpkeep     bool
+	upkeepReady       bool
 }
 
 func (e *composedLayerEffect) Text() string { return "continuous modification" }
@@ -589,11 +591,17 @@ type untilEffect struct {
 	sourceBound   bool
 	sourceTapped  bool
 	upkeepPlayer  PlayerRef
+	endNextUpkeep bool
 }
 
 // UntilNextUpkeep saves the player so source changes cannot change the duration.
 func UntilNextUpkeep(player PlayerRef, modifications ...ContinuousModification) ResolvingEffect {
 	return &untilEffect{duration: UntilYourNextTurn, upkeepPlayer: player, modifications: append([]ContinuousModification(nil), modifications...)}
+}
+
+// UntilEndOfNextUpkeep keeps the saved values through the next upkeep's priority.
+func UntilEndOfNextUpkeep(player PlayerRef, modifications ...ContinuousModification) ResolvingEffect {
+	return &untilEffect{duration: UntilYourNextTurn, upkeepPlayer: player, endNextUpkeep: true, modifications: append([]ContinuousModification(nil), modifications...)}
 }
 
 // Until captures subjects and values at resolution and installs all layers together.
@@ -633,6 +641,9 @@ func (e *untilEffect) Text() string {
 	case EndOfCombat:
 		return body + " until end of combat"
 	case UntilYourNextTurn:
+		if e.endNextUpkeep {
+			return body + " until the end of the selected player's next upkeep"
+		}
 		return body + " until the selected player's next upkeep"
 	default:
 		return body + " indefinitely"
@@ -795,6 +806,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 	}
 	for _, entry := range effects {
 		entry.upkeepPlayer = upkeepPlayer
+		entry.endNextUpkeep = e.endNextUpkeep
 		ctx.Game.effects.Add(entry)
 	}
 	ctx.Game.ApplyContinuousEffects()

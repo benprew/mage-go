@@ -87,6 +87,8 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 	case Upkeep:
 		g.doUpkeepActions()
 		g.runPriorityRound(false)
+		g.effects.removeEndOfNextUpkeep(g.ActivePlayerObj().PlayerID())
+		g.ApplyContinuousEffects()
 
 	case Draw:
 		g.doDrawActions()

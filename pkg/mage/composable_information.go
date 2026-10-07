@@ -102,17 +102,26 @@ func PowerOfWithLKI(subject PermanentRef) ResolutionValue {
 	return permanentInformationValue{subject: subject}
 }
 
+// ToughnessOfWithLKI reads current toughness or its value before departure.
+func ToughnessOfWithLKI(subject PermanentRef) ResolutionValue {
+	return permanentInformationValue{subject: subject, toughness: true}
+}
+
 // ManaValueOfWithLKI reads current mana value or its last-known value.
 func ManaValueOfWithLKI(subject PermanentRef) ResolutionValue {
 	return permanentInformationValue{subject: subject, mana: true}
 }
 
 type permanentInformationValue struct {
-	subject PermanentRef
-	mana    bool
+	subject   PermanentRef
+	mana      bool
+	toughness bool
 }
 
 func (v permanentInformationValue) Text() string {
+	if v.toughness {
+		return "toughness with last-known information"
+	}
 	if v.mana {
 		return "mana value with last-known information"
 	}
@@ -121,6 +130,9 @@ func (v permanentInformationValue) Text() string {
 func (v permanentInformationValue) resolveValue(ctx *EffectContext) int {
 	p, lki := readPermanentInformation(v.subject, ctx)
 	if lki != nil {
+		if v.toughness {
+			return lki.Toughness
+		}
 		if !v.mana {
 			return lki.Power
 		}
@@ -131,6 +143,9 @@ func (v permanentInformationValue) resolveValue(ctx *EffectContext) int {
 	}
 	if v.mana {
 		return p.Card.ManaCost().CMC()
+	}
+	if v.toughness {
+		return p.CurrentToughness(ctx.Game)
 	}
 	return p.CurrentPower(ctx.Game)
 }

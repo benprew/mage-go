@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **646 accepted / 340 rejected unique card
-names** (986 total), and **1,723 compiled / 722 rejected records** (2,445 total).
+The latest recorded inventory reports **647 accepted / 339 rejected unique card
+names** (986 total), and **1,724 compiled / 721 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`SPELL-PERMANENT-COLOR` slice and its validation evidence are recorded
+`TEMPORARY-CHARACTERISTIC-VALUES` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -23079,3 +23079,171 @@ Ranked next candidates to reassess:
 4. Live static combat-relation prevention: Wall of Vapor directly; Wall of
    Shadows has additional targeting restrictions. Defer a single-card gain
    while useful multi-card capabilities remain.
+
+## 2026-10-06: captured temporary characteristic values
+
+Status: completed slice `TEMPORARY-CHARACTERISTIC-VALUES`. This run stops here.
+The initial `.gitignore`, execution-design and ledger edits, and the untracked
+completed-history document are preserved. Only this entry and the current-count
+update in the ledger are staged; its user reorganization remains unstaged.
+
+### Fresh evidence, candidates and selection
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict
+loading and inventory exited 1 for collection rejection, not build/test failure:
+2,445 records, 1,723 compiled / 722 rejected; 646 accepted / 340 rejected names.
+Inventory: 72,954 nodes, 8,541 signatures, 6,646 unknown-role occurrences.
+The execution design, vocabulary snapshot, ledger, engine API, selected code,
+complete candidate RON records and nested forms, relevant API/rules contracts,
+and CR 208, 400.7, 500.4–5, 608.2h, 611.2 and 613.4 were inspected.
+
+| Candidate | Distinct names; estimated complete-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Captured temporary characteristic values, selected | Halfdane, Berserk, Blood Lust; **1** immediate complete card, with the required Halfdane lifetime correction | Berserk additionally needs delayed `AttackedThisTurn`; Blood Lust needs resolving `IfElse`. Shared typed power/toughness and nested subtraction remove their temporary-value gaps. ManualPT captures two independent values. | Low/medium for values, plus medium lifetime contract tests required for Halfdane. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** after prerequisites, zero safe adapter-only unlocks | Source enumeration across zones, typed choice and next-instance consumption are missing. Related Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have additional prevention/redirection/result blockers and are excluded. | High: decisions, saved source identities, consumption, replacement and copy/clone contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** after prerequisites, zero safe adapter-only unlocks | Need all-zone characteristics, owner/controller context and CDA/copy/layer services. Gaea's Avenger's controller defect and Wood Elemental's entry sacrifice result are separate. | High: zone queries, count lowering, copy/layers and full gameplay. |
+| Paid selected untap | Magnetic Mountain, Thelon's Curse; **2** after prerequisites | Saved player/set choices, per-object payment and simultaneous untap service are missing. Each complete record also prevents normal untap. | Medium/high: choices, mana transactions, binding identity and batch untap. |
+
+Selection: a complete shared temporary-value shape has the smallest credible
+implementation effort, prepares three different cards, and completes Halfdane.
+This is a shared prerequisite rather than a card-specific executor. The larger
+families have more immediate potential but require multiple new execution
+contracts. No first-error count was treated as a full-card unlock estimate.
+The initial selection estimated one unlock. The pre-existing ledger recorded
+Halfdane's duration defect; the local Oracle recheck required extending this
+same slice with the explicit end-of-next-upkeep lifetime before claiming it.
+The contract, reuse boundary and acceptance cases were stated before edits.
+The `implement-engine` skill was used for engine services. No subagents, removed
+card skills, Go-card requirements or generated stubs were used.
+
+### Exact shapes, contexts and engine reuse
+
+RON support in `CreatePermanentLayerEffectUntil(subject, modifications, duration)`:
+
+- `SetPT(ManualPT(power, toughness))`: exactly two values, each using validated
+  temporary-value syntax. Existing fixed `SetPT(PT(integer, integer))` stays
+  supported. Static, CDA, entry and indefinite ManualPT do not gain support.
+- `PowerOfPermanent(ref)` and `ToughnessOfPermanent(ref)` in ManualPT and
+  `AdjustPTX` amount values. `ref` is a valid lexical permanent reference;
+  `ActionPermanent` is local to the modified subject. Existing singular source,
+  host, target and event declarations retain their scope/instance rules.
+- `Minus(left, right)` recursively composes supported temporary values,
+  including characteristic reads, existing integers and bound X. No new static,
+  cost, announcement or unrelated resolving-value contexts are added.
+- `UntilEndOfNextUpkeep(You)`: one bare controller reference. Other players,
+  malformed arity and constructor-form `You()` fail compilation. It works in
+  the existing resolving spell, activation, supported trigger and delayed-action
+  contexts. Existing beginning-of-next-upkeep and mana-value restrictions remain.
+
+Engine APIs:
+
+- `ToughnessOfWithLKI(PermanentRef) ResolutionValue`: current layered toughness,
+  or the exact incarnation's retained final departure/phase toughness. Unknown
+  identity returns zero. It uses the same validation and information reader as
+  power and cannot make an absent object available for actions.
+- `UntilEndOfNextUpkeep(PlayerRef, ...ContinuousModification) ResolvingEffect`:
+  captures player, subjects and values through the existing layer service. The
+  next actual upkeep marks existing effects; they expire after priority, before
+  final SBAs. New effects created during that upkeep wait for a later one.
+  Skipped upkeeps do not mark effects; extra upkeeps can. The existing composed
+  effect clone copies saved-player and marking state. No new duration enum,
+  delayed trigger, zone, replacement, payment or global result service is added.
+
+RON owns spelling, validation, value composition and inventory roles. The engine
+owns retained information, incarnation checks, captured layer values and expiry.
+Per-factory instanceBindings connect every value to its own target/event object.
+Reuse includes `PowerOfWithLKI`, `readPermanentInformation`, phase/departure
+snapshots, `SubtractValues`, `SetBasePowerToughness`, `ModifyPT`, `Until`, existing
+7b/7c layer order, continuous-effect clone hooks, transactional casting, target
+announcement/resolution checks and source-incarnation capture. Old callers stay.
+
+### Tests, source correction and card mappings
+
+TDD failures: engine tests first failed for undefined `ToughnessOfWithLKI`;
+complete Halfdane tests failed on unsupported `ManualPT`. End-upkeep tests then
+failed for undefined `UntilEndOfNextUpkeep`. One test initially had an extra
+parenthesis; it was fixed before confirming the intended missing API failure.
+No behavior assertion was weakened. An old rejection of the now-supported
+PowerOfPermanent(ActionPermanent) was replaced with malformed ActionPermanent()
+and supplemented with positive capture tests. Inventory assertions were updated
+only for the measured new compilation counts.
+
+Fixture corrections: native upkeep execution resolves fresh triggers, so the
+expiry test removes its target after value-capture checks to prevent a fresh
+Halfdane trigger from hiding expiry. Phasing tests refresh layers after phase-in
+before querying cached keywords, as the existing engine contract requires.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Halfdane, complete corrected LEG record | `TestRONTemporaryCharacteristicHalfdane`: actual casting/mana rollback, upkeep trigger, other-creature target, resolution-time power/toughness, later counters, no recalculation, target return/phasing/shroud/phase-cycle, source return/phasing/control, copied abilities, cloned pending resolution, recipient phase-cycle and saved-player expiry. |
+| Halfdane loading and inventory | `TestRONTemporaryCharacteristicLoadAndInventory`: strict complete-record registry, atomic rejection with an invalid record, nested ManualPT/value roles. |
+| Shared temporary values | `TestRONTemporaryCharacteristicValues`: nested Minus, ActionPermanent, fresh target declarations, multiple modifiers captured before installation, later counters, clone isolation, phasing and cleanup. `SourceInformation`: departed, returned and phased source values from synthetic RON activations. `Invalid` and `InvalidShapes`: unbound/wrong-role refs, malformed constructors, wrong arity and invalid duration players. |
+| Reusable toughness/LKI | Extended `TestPermanentInformationLifecycle`, `Declaration`, `PhaseSnapshotAndClone`: source/host/target/saved refs, current control, departure/return/second departure, phase snapshots, unknown identities, nil/undeclared refs, final layered toughness and clone isolation. |
+| End-of-next-upkeep duration | `TestUntilEndOfNextUpkeepBoundaries`, `NewEffect`, `Declarations`, `SkippedControlAndPhasing`: old effect visible to upkeep conditions and priority, expiry at end, new effect surviving current upkeep, source departure/control, validation, clone isolation, skipped/extra upkeep and recipient phasing. Existing `TestUntilNextUpkeep*` proves unchanged start-of-upkeep behavior. |
+| Existing supported cards/contracts | Full required suites, including prior RON targeting, costs, information, layer, duration, replacement and gameplay tests. |
+
+One complete-card gameplay mapping is added. Berserk and Blood Lust are not
+claimed behavior-verified. Collection-wide engine_validated and behavior_verified
+remain null: compilation acceptance is separate from full gameplay completion.
+
+Source defect: Halfdane, LEG.lines.ron:113, `UntilNextUpkeep(You)` expired at the
+beginning rather than end of the next upkeep. Local `data/LEG.json` explicitly
+requires the end of your next upkeep; CR 500.4/500.5 distinguish the boundaries.
+The record now uses `UntilEndOfNextUpkeep(You)`. There is one record of this
+name, so no identical reprint is left inconsistent. All other metadata, target
+restrictions and actions are unchanged. No other source correction is made.
+The vocabulary snapshot was refreshed with a `ron.Parse` AST walk, all hashes,
+constructor occurrences/examples and fresh loader diagnostics: 601 tuple
+signatures, 51 top-level rule names and 1,105 vocabulary entries. Only LEG's
+source hash changes. RON has 72,954 nodes, 8,543 semantic signatures and 6,641
+unknown-role occurrences after the role refinements.
+
+### Validation and remaining work
+
+Required checks pass after implementation and reviewed lint formatting:
+
+| Command | Result |
+| --- | --- |
+| Focused engine/RON tests with `-count=1` | PASS after intended TDD failures, including final source-information cases. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after the two measured inventory-count updates. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; automatic import formatting reviewed. |
+| Additional skill `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`, inventory JSON | Expected exit 1: remaining unsupported collection, no partial registry. |
+
+Final **1,724 compiled / 721 rejected records; 647 accepted / 339 rejected unique
+names**, from 2,445 records and 986 names. Exactly Halfdane gained; no accepted
+name was lost. Estimated one full-card unlock equals the actual one. Its lifetime
+prerequisite increased effort but prevented a false gameplay claim. Berserk's
+first diagnostic now reaches unsupported resolving property `AttackedThisTurn`
+(LEB.lines.ron:15:513); Blood Lust remains at unsupported `IfElse`
+(LEG.lines.ron:33:216). The snapshot matches the final loader and source hashes.
+No environment or pre-existing check failure blocks this slice.
+
+A fresh whole-repository audit, including hidden/ignored files, dot imports,
+tests, generators, docs and compile-failure fixtures, found 3,112 DSL/shared-service
+caller lines. This additive slice makes no existing DSL function obsolete and
+removes none. Full collection loading, all-card gameplay, native RON startup,
+Go-card deletion, obsolete generator removal and DSL cleanup gates remain unmet.
+
+Changed files: engine `composable_information.go` and tests,
+`composable_continuous.go`, `effect_manager.go`, `turn.go`,
+`end_next_upkeep_test.go`, `doc.go`; RON `compiler.go`, `temporary_animation.go`,
+`temporary_value.go` and tests, `source_tapped_duration.go`, `inventory.go` and
+tests, new `temporary_characteristic_test.go`; LEG RON source, vocabulary
+snapshot, API/rules contracts and this ledger. One descriptive commit contains
+only the slice; the hash is reported in the final response.
+
+Ranked next candidates to reassess from fresh complete records:
+
+1. Chosen-source enumeration and next-instance prevention: seven direct
+   Circle/Realm consumers after shared prerequisites.
+2. All-zone count CDA prerequisite: five direct consumers; separate known
+   Gaea's Avenger and Wood Elemental blockers.
+3. Paid selected-permanent untap choices: two complete potential consumers.
+4. Shared resolving branch/history services: Blood Lust's `IfElse` and
+   Berserk's delayed attack-history condition now have the temporary-value
+   prerequisite, but prefer useful multi-card work over isolated card adapters.

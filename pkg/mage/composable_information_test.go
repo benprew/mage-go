@@ -65,9 +65,9 @@ func TestPermanentInformationLifecycle(t *testing.T) {
 				if scenario == "control" {
 					wantPlayer = a.PlayerID()
 				}
-				wantPower, wantMana := 5, 4
+				wantPower, wantMana, wantToughness := 5, 4, 11
 				if scenario == "unknown" {
-					wantPower, wantMana = 0, 0
+					wantPower, wantMana, wantToughness = 0, 0, 0
 				}
 				for _, game := range []*Game{g, g.Clone()} {
 					local := *ctx
@@ -82,6 +82,9 @@ func TestPermanentInformationLifecycle(t *testing.T) {
 					}
 					if got := PowerOfWithLKI(subject).resolveValue(&local); got != wantPower {
 						t.Fatalf("power=%d want=%d", got, wantPower)
+					}
+					if got := ToughnessOfWithLKI(subject).resolveValue(&local); got != wantToughness {
+						t.Fatalf("toughness=%d want=%d", got, wantToughness)
 					}
 					if got := ManaValueOfWithLKI(subject).resolveValue(&local); got != wantMana {
 						t.Fatalf("mana=%d want=%d", got, wantMana)
@@ -98,14 +101,14 @@ func TestPermanentInformationLifecycle(t *testing.T) {
 }
 
 func TestPermanentInformationDeclaration(t *testing.T) {
-	for _, effect := range []ResolvingEffect{GainLifeFor(ControllerOfWithLKI(nil), Fixed(1)), GainLifeFor(You, PowerOfWithLKI(nil)), GainLifeFor(You, ManaValueOfWithLKI(nil))} {
+	for _, effect := range []ResolvingEffect{GainLifeFor(ControllerOfWithLKI(nil), Fixed(1)), GainLifeFor(You, PowerOfWithLKI(nil)), GainLifeFor(You, ManaValueOfWithLKI(nil)), GainLifeFor(You, ToughnessOfWithLKI(nil))} {
 		card := NewInstant("Invalid", "", Spell(effect))
 		if err := ValidateCardDefinition(card.Name(), card); err == nil {
 			t.Fatal("nil information subject accepted")
 		}
 	}
 	target := DeclarePermanentTarget("target", AnyPermanent)
-	card := NewInstant("Invalid", "", Spell(GainLifeFor(ControllerOfWithLKI(target), PowerOfWithLKI(target))))
+	card := NewInstant("Invalid", "", Spell(Sequence(GainLifeFor(ControllerOfWithLKI(target), PowerOfWithLKI(target)), GainLifeFor(You, ToughnessOfWithLKI(target)))))
 	if err := ValidateCardDefinition(card.Name(), card); err == nil {
 		t.Fatal("undeclared information target accepted")
 	}
@@ -115,7 +118,7 @@ func TestPermanentInformationPhaseSnapshotAndClone(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	p := g.PutOnBattlefield(NewCreature("Host", "{2}{G}", 2, 8), b.PlayerID())
-	aura := g.PutOnBattlefield(NewEnchantment("Aura", "", WithSubTypes("Aura"), WithStaticAbility(BoostAttached(3, 0, AttachAura))), a.PlayerID())
+	aura := g.PutOnBattlefield(NewEnchantment("Aura", "", WithSubTypes("Aura"), WithStaticAbility(BoostAttached(3, 2, AttachAura))), a.PlayerID())
 	g.Attach(aura.ID(), p.ID())
 	g.ApplyContinuousEffects()
 	target := DeclarePermanentTarget("host", AnyPermanent)
@@ -127,6 +130,9 @@ func TestPermanentInformationPhaseSnapshotAndClone(t *testing.T) {
 	clone := g.Clone()
 	g.PhaseIn(phased)
 	g.BouncePermanentToHand(g.FindPermanent(aura.ID()))
+	if ToughnessOfWithLKI(target).resolveValue(ctx) != 8 {
+		t.Fatal("live toughness used inactive layer")
+	}
 	if PowerOfWithLKI(target).resolveValue(ctx) != 2 {
 		t.Fatal("phase-in did not restore current power")
 	}
@@ -134,6 +140,9 @@ func TestPermanentInformationPhaseSnapshotAndClone(t *testing.T) {
 	local.Game = clone
 	if !clone.FindPermanentIncludingPhased(aura.ID()).PhasedOut {
 		t.Fatal("phase-in changed the clone's attachment")
+	}
+	if ToughnessOfWithLKI(target).resolveValue(&local) != 10 {
+		t.Fatal("phase snapshot lost toughness layer")
 	}
 	if PowerOfWithLKI(target).resolveValue(&local) != 5 {
 		t.Fatal("phase snapshot used inactive layers or shared clone state")

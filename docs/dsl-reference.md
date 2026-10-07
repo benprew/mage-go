@@ -1619,8 +1619,7 @@ player adapter supplies the lifetime policy.
 
 Erhnam Djinn uses this duration with its controller-upkeep trigger and opposing
 non-Wall creature target. Xenic Poltergeist still needs `SetCardtypes` and
-`SetPowerAndToughnessBoth` adapters. Halfdane remains rejected for `ManualPT`;
-its source duration also differs from local Oracle text (end of next upkeep).
+`SetPowerAndToughnessBoth` adapters. Halfdane uses the separate end-of-next-upkeep adapter documented below.
 
 ### Tapped-source duration
 
@@ -4044,3 +4043,35 @@ references remain local to each spell, mode, activation or trigger; the existing
 rejection of delayed plural target reads remains in force. These additions do
 not add collection recipients to replacement operations or damage packets.
 Evidence: `TestRONCollectionDamage*` and `TestFilterPermanentSet*`.
+
+## Captured temporary characteristic values
+
+`CreatePermanentLayerEffectUntil(subject, [SetPT(ManualPT(power, toughness))],
+ duration)` accepts two resolution values in spell, activation and supported
+trigger action bodies. `AdjustPTX` accepts the same characteristic operands.
+`PowerOfPermanent(ref)` and `ToughnessOfPermanent(ref)` read typed permanent
+references with exact-incarnation information. `ActionPermanent` refers only to
+the modified subject inside these values. `Minus(left, right)` can nest these
+reads and supported integer/X values. Existing `ManaValueOfPermanent` restrictions
+remain in force. Static, CDA, entry and indefinite `ManualPT` forms remain errors.
+
+The engine captures both coordinates before it installs the modifications.
+Later characteristic changes cannot recalculate those values. Existing layer
+7b/7c ordering, target legality, identity, phasing and copy isolation apply.
+`ToughnessOfWithLKI(PermanentRef) ResolutionValue` provides the reusable toughness
+query; it reads current layered toughness, retained departure/phase toughness,
+or zero for an unknown incarnation. It does not permit actions on absent objects.
+
+`UntilEndOfNextUpkeep(You)` saves the resolving controller and ends after priority
+in that player's next actual upkeep. A duration created during that upkeep waits
+for a later upkeep. Skipped upkeeps do not expire it; extra upkeeps can. Source
+control changes do not redirect expiry. The engine API is
+`UntilEndOfNextUpkeep(PlayerRef, ...ContinuousModification) ResolvingEffect`.
+`UntilNextUpkeep(You)` retains its beginning-of-upkeep endpoint.
+
+Halfdane's complete record uses `ManualPT` and the end-of-upkeep duration.
+`TestRONTemporaryCharacteristicHalfdane` covers its casting, trigger, targets,
+values, identity and duration; `Values`, `Invalid`, `InvalidShapes` and
+`LoadAndInventory` cover shared value forms and strict loading. Berserk still
+needs its `AttackedThisTurn` delayed condition; Blood Lust still needs resolving
+`IfElse`. Their partial compilation progress is not full-card gameplay evidence.

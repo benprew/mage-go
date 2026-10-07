@@ -547,7 +547,12 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 	for _, e := range em.effects {
 		if e.GetDuration() == UntilYourNextTurn {
 			if captured, ok := e.(*composedLayerEffect); ok && captured.upkeepPlayer != uuid.Nil {
-				if captured.upkeepPlayer != controllerID {
+				if captured.endNextUpkeep {
+					if captured.upkeepPlayer == controllerID {
+						captured.upkeepReady = true
+					}
+					filtered = append(filtered, e)
+				} else if captured.upkeepPlayer != controllerID {
 					filtered = append(filtered, e)
 				}
 				continue
@@ -1222,4 +1227,15 @@ func effectDependencyOrder(effects []ContinuousEffect, g *Game) []int {
 	}
 
 	return result
+}
+
+func (em *EffectManager) removeEndOfNextUpkeep(playerID uuid.UUID) {
+	filtered := em.effects[:0]
+	for _, effect := range em.effects {
+		if captured, ok := effect.(*composedLayerEffect); ok && captured.endNextUpkeep && captured.upkeepReady && captured.upkeepPlayer == playerID {
+			continue
+		}
+		filtered = append(filtered, effect)
+	}
+	em.effects = filtered
 }

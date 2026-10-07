@@ -145,7 +145,7 @@ func TestRONTemporaryValueCaptureAndLocalScope(t *testing.T) {
 }
 
 func TestRONTemporaryValueRejectsInvalidDeclarations(t *testing.T) {
-	for _, part := range []string{`AdjustPTX(PlusX, Zero)`, `AdjustPTX(PlusX(), Zero, Integer(2))`, `AdjustPTX(You, Zero, Integer(2))`, `AdjustPTX(PlusX, Zero, ValueX)`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(Ref_TargetPlayer))`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(Ref_TargetPermanent()))`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(ThisPermanent))`, `AdjustPTX(PlusX, Zero, PowerOfPermanent(ActionPermanent))`} {
+	for _, part := range []string{`AdjustPTX(PlusX, Zero)`, `AdjustPTX(PlusX(), Zero, Integer(2))`, `AdjustPTX(You, Zero, Integer(2))`, `AdjustPTX(PlusX, Zero, ValueX)`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(Ref_TargetPlayer))`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(Ref_TargetPermanent()))`, `AdjustPTX(PlusX, Zero, ManaValueOfPermanent(ThisPermanent))`, `AdjustPTX(PlusX, Zero, PowerOfPermanent(ActionPermanent()))`} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [Activated(PayMana([]), Targeted([TargetPermanent(AnyPermanent)], ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPermanent, [%s], UntilEndOfTurn)])))])`, part)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
 		if err != nil {

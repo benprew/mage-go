@@ -769,6 +769,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "player_reference"
 			}
 		case "SetPT":
+			if role == "temporary_modification" && len(n.Args) == 1 && n.Args[0].Name == "ManualPT" {
+				return "resolution_pt"
+			}
 			if len(n.Args) == 1 {
 				return "fixed_pt"
 			}
@@ -816,7 +819,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "duration":
-		if n.Name == "UntilNextUpkeep" && len(n.Args) == 1 {
+		if (n.Name == "UntilNextUpkeep" || n.Name == "UntilEndOfNextUpkeep") && len(n.Args) == 1 {
 			return "player_reference"
 		}
 		if n.Name == "ForAsLongAsPermanentRemainsTapped" && len(n.Args) == 1 {
@@ -887,8 +890,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "NumCreaturesOrPlaneswalkersThatDiedThisTurn" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
-		if (n.Name == "ManaValueOfPermanent" || n.Name == "PowerOfPermanent") && len(n.Args) == 1 {
+		if (n.Name == "ManaValueOfPermanent" || n.Name == "PowerOfPermanent" || n.Name == "ToughnessOfPermanent") && len(n.Args) == 1 {
 			return "permanent_reference"
+		}
+	case "resolution_pt":
+		if n.Name == "ManualPT" && len(n.Args) == 2 {
+			return "value"
 		}
 	case "player_action":
 		if n.Name == "DiscardCards" && len(n.Args) == 1 {

@@ -46,7 +46,23 @@ func compileTemporaryPTX(n Node, ctx scope, subject permanentReferencePlan) (fun
 }
 
 func compileTemporaryValue(n Node, ctx scope, subject permanentReferencePlan) (resolutionValueFactory, error) {
-	if n.Name == "ManaValueOfPermanent" {
+	if n.Name == "Minus" {
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		left, err := compileTemporaryValue(n.Args[0], ctx, subject)
+		if err != nil {
+			return nil, err
+		}
+		right, err := compileTemporaryValue(n.Args[1], ctx, subject)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.SubtractValues(left(bindings), right(bindings))
+		}, nil
+	}
+	if n.Name == "ManaValueOfPermanent" || n.Name == "PowerOfPermanent" || n.Name == "ToughnessOfPermanent" {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -58,10 +74,19 @@ func compileTemporaryValue(n Node, ctx scope, subject permanentReferencePlan) (r
 				return nil, err
 			}
 		}
-		if ref != subject {
+		if n.Name == "ManaValueOfPermanent" && ref != subject {
 			return nil, problem(n.Args[0], "temporary value must read the modified permanent")
 		}
-		return func(bindings instanceBindings) mage.ResolutionValue { return mage.ManaValueOf(ref.build(bindings)) }, nil
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			switch n.Name {
+			case "PowerOfPermanent":
+				return mage.PowerOfWithLKI(ref.build(bindings))
+			case "ToughnessOfPermanent":
+				return mage.ToughnessOfWithLKI(ref.build(bindings))
+			default:
+				return mage.ManaValueOf(ref.build(bindings))
+			}
+		}, nil
 	}
 	value, err := compileValue(n, ctx)
 	if err != nil {

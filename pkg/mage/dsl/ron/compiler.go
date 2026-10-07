@@ -1425,7 +1425,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				continue
 			}
 			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "AddCreatureType" || part.Name == "SetCreatureType" {
-				build, err := compileTemporaryType(part, subject)
+				var build func(instanceBindings) mage.ContinuousModification
+				var err error
+				if part.Name == "SetPT" && part.Kind == Tuple && len(part.Args) == 1 && part.Args[0].Name == "ManualPT" {
+					build, err = compileTemporaryManualPT(part.Args[0], ctx, subject)
+				} else {
+					build, err = compileTemporaryType(part, subject)
+				}
 				if err != nil {
 					return nil, err
 				}
