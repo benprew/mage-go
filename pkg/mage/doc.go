@@ -565,6 +565,11 @@
 // Use [SkipNextUntapEach] to capture the recipients of one-step restrictions.
 // Control changes and phasing preserve counts; departure ends them.
 //
+// Use [WhenDiesThisTurn] or [WhenLeavesThisTurn] for a delayed departure.
+// Each installation keeps the watched incarnation, controller and body bindings.
+// Cleanup removes the subscription. A pending trigger can still resolve.
+// Destruction replaced by exile sends a leave event, but no death event.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

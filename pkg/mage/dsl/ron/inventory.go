@@ -601,6 +601,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "delayed_departure_event":
+		if (n.Name == "WhenAPermanentDies" || n.Name == "WhenAPermanentLeavesTheBattlefield") && len(n.Args) == 1 {
+			return "delayed_departure_subject"
+		}
+	case "delayed_departure_subject":
+		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "delayed_step_event":
 		if n.Name == "AtTheBeginningOfPlayersNextUpkeep" && len(n.Args) == 1 {
 			return "player_reference"
@@ -644,6 +652,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "FlipACoin_OnWinAndLose":
 			if len(n.Args) == 2 {
 				return "action"
+			}
+		case "CreateTriggerUntil":
+			if len(n.Args) == 3 {
+				return []string{"delayed_departure_event", "actions", "duration"}[index]
 			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {

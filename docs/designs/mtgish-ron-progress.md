@@ -30833,3 +30833,162 @@ Ranked next candidates to reassess with fresh evidence:
    requirement satisfaction is an engine prerequisite before adapter lowering.
 
 No second slice is started. Migration completion criteria remain unmet.
+
+## Run 2026-10-07: DELAYED-DEPARTURE-UNTIL-CLEANUP
+
+Status: completed implementation slice; this run stops here. Initial user changes
+in `.gitignore`, execution design and progress ledger, plus the untracked
+`mtgish-ron-completed.md`, are preserved. Only this slice is staged. The ledger
+entry is staged independently of the user's pending ledger reorganization.
+
+### Fresh evidence and selection
+
+Baseline RON tests with `-count=1`, short engine tests and build passed. Strict
+loader and semantic inventory exited 1 for collection rejection, not build or
+test failure: 2,445 records, 1,843 compiled, 602 rejected; 709 accepted / 277
+rejected unique names. Inventory: 72,962 occurrences, 8,557 signatures, 5,322
+unknown-role occurrences. Read AGENTS.md, engine API reference, execution design,
+vocabulary snapshot, current/completed ledger, selected compiler and engine code,
+complete candidate records, API/rules-contract references, and CR 400.7, 603.6,
+603.7, 603.10, 604.3, 609.7a, 614.6, 701.8, 702.14 and 702.26d. Local Oracle data
+confirms both selected cards' complete records.
+
+| Candidate | Distinct names and credible full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Delayed departure through end of turn, selected | War Barge, Sandals of Abdallah: **2**. Reincarnation and Runesword share the selected event shapes but are not counted as full unlocks. | Exact `WhenLeavesThisTurn` / `WhenDiesThisTurn` services already exist. Reincarnation needs graveyard choice/return with event owner/controller; Runesword needs captured collection rules and exile replacements. Enables captured singular departure subscriptions and preserved outer body references. | Low/medium: adapter, declaration/inventory/instance tests, full real-record gameplay. Testing revealed a small required fix to replaced destruction's exile event. |
+| Battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean consumers. Gaea's Avenger is a sixth affected name but is excluded until its source defect is corrected. | Missing all-zone characteristic evaluation and CDA layer contract. Gaea's Avenger counts your artifacts in RON, but local ATQ Oracle says opponents' artifacts. The initial four-card estimate expanded to five after inspecting People of the Woods' complete toughness-only record. Enables all-zone counts and future characteristic consumers. | High: zone-aware context, characteristics/copy/layers and query consumers, then adapters and gameplay. |
+| Chosen-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** credible eventual full unlocks, **0** from an adapter alone. | CR 609.7a source choices include referenced departed objects and permanent spells. Typed per-instance choices, source identity and next-event prevention are prerequisites. Reverse Damage, Dark Sphere and Jade Monolith additionally need prevented-amount/life, rounding or redirection; they are excluded. Enables source choices and repeated shield consumers. | High: choice service, object/stack identity, color/type rechecks, batch consumption and gameplay. |
+| Filtered blocking requirements | Lure, Marble Priest: **2** eventual full unlocks. | Native first-lured-attacker redirection does not maximize all satisfied requirements. Needs shared legal-declaration selection for competing requirements, capacities and restrictions. Marble Priest also needs its filtered combat prevention adapter. | High: combat legality/optimization prerequisite and both declaration paths before lowering. |
+
+Selection: two complete cards use existing exact engine contracts at substantially
+lower effort. First-error frequency is not an unlock estimate. Source restrictions,
+body rules, costs, duration and regeneration were inspected before editing.
+Contract, reuse boundary and acceptance cases were stated before edits. The
+`implement-engine` skill was applied only after the replacement regression
+identified the engine prerequisite. No removed card skill, stub, name branch,
+fallback, partial production registry or global action slot was used.
+
+### Exact supported signatures and ownership
+
+Resolving actions:
+
+- `CreateTriggerUntil(WhenAPermanentLeavesTheBattlefield(SinglePermanent(ref)),
+  ActionList(actions), UntilEndOfTurn)`.
+- `CreateTriggerUntil(WhenAPermanentDies(SinglePermanent(ref)),
+  ActionList(actions), UntilEndOfTurn)`.
+
+`ref` uses the existing bound singular permanent references. The nonempty body
+uses existing delayed-action restrictions and outer instance bindings. Supported
+spell/mode, activation, trigger and nested delayed action contexts inherit their
+existing scope; this event introduces no event bindings, targets or modes.
+Wrong arity, unbound/incompatible reads, other events/durations, tuple duration,
+plural/filter subjects, empty bodies and new body targets remain compile errors.
+RON owns spelling, validation, scope and inventory roles. The adapter lowers to
+`WhenLeavesThisTurn` / `WhenDiesThisTurn` and `Sequence` with fresh bindings.
+
+The engine keeps watched and source incarnations, installing controller, captured
+outer targets and saved permanent/player/number bindings. Control and characteristic
+changes preserve identity. Phasing does not trigger departure. Returned objects
+cannot replace captured subjects. Source ability removal does not cancel an
+installed delay. Cleanup removes subscriptions while pending triggers can resolve.
+War Barge forbids regeneration for its destruction; Sandals permits regeneration.
+Subscriptions install only at resolution, and absent/phased subjects install none.
+
+Engine prerequisite: `exileInsteadOfGraveyardReplacement.Replace` previously
+removed the permanent and called `ExileCard`, which sent no battlefield leave
+event. It now uses the shared battlefield exile operation through private
+`Game.exilePermanent(perm, exiledBy)`. `ExilePermanent` delegates to that helper
+with no exile source. The replacement preserves its exile source. The normal
+zone-change event and simultaneous former-battlefield snapshot now reach leave
+subscriptions; death subscriptions and creature-death counts stay unchanged.
+No public API change, new replacement order, parallel event service or batching
+service is introduced.
+
+### TDD, coverage and source defects
+
+Real-record tests first failed on unsupported `CreateTriggerUntil`. A fixture
+initially used the nonexistent ManaPool.Total method; Count fixed setup before
+the expected adapter failure was confirmed. Return fixtures originally used
+`Card.Copy()` without restoring its physical ID; the corrected fixtures test the
+same card's new incarnation. `PutPermanentIntoGraveyard` is a direct move, so the
+replacement fixture uses destruction to exercise the replacement pipeline.
+Additional synthetic fixtures needed explicit ownership and an Aura subtype;
+these setup corrections did not change their behavior assertions.
+
+The engine regression independently failed with zero departure triggers after
+replaced destruction. It passed only after the shared exile-path fix. The broad
+suite then found a stale Goblin Flotilla diagnostic assertion. It now requires
+`unsupported delayed departure duration (UntilEndOfCombat)` and still requires
+rejection. Inventory count assertions were updated for the two measured gains
+and explicitly guard both accepted cards; no behavior assertion was weakened.
+
+| Card or contract | Tests and established behavior |
+| --- | --- |
+| War Barge, complete DRK record | `TestRONDepartureDelayCards`: casting cost/timing, activation mana and invalid-target rollback, islandwalk and defender Island/phasing queries, captured target, leave destinations, source phasing/control/ability removal, returned/phased body, copies/clones, native expiry, regeneration prohibition, exile replacement and simultaneous departures. `AnnouncementAndResolution`: tapped activation permission, target shroud/return/phasing, phase cycle and source departure before resolution. `InstancesAndPendingExpiry`: concurrent same-source targets, distinct factories/controllers, captured targets, pending cleanup and clone isolation. |
+| Sandals of Abdallah, complete ARN record | Same `Cards`: casting 4, activation 2 plus tap, creature-target restrictions, islandwalk, creature death versus bounce/exile/replaced death, captured artifact/source identity, control/ability removal/phasing, returned/phased body, regeneration allowed, copies/clones and simultaneous departure. `AnnouncementAndResolution`: tap legality/rollback, target legality and source departure before resolution. |
+| Resolving context reuse | `TestRONDepartureDelayResolvingContexts`: spell targets, captured Aura hosts after reattachment, source-entry trigger bodies, nested delayed-step installation, controller capture and pending-game clones. |
+| RON validation and reporting | `TestRONDepartureDelayInvalid`: malformed duration/event/subject/body, wrong arity/type, unbound/event reads and target declaration rejection. `Inventory`: nested roles even below an unsupported body. `StrictLoading`: both complete records validate through an isolated test registry; an added unsupported record rejects atomically and preserves that registry. Existing full inventory and strict-loader regressions remain passing. |
+| Engine replacement prerequisite | `TestDelayedDepartureReplacedDestruction`: single and batch destruction replaced by exile, leave-only triggering, pending timing, exile source, zero deaths, return identity, expiry and cloned games. Existing `TestWhenLeavesThisTurn*`: destination/incarnation, absent installation, declaration validation, simultaneous events and expiry. |
+
+Two full-card gameplay mappings are added. Compilation and gameplay coverage are
+separate; collection-wide engine_validated and behavior_verified totals remain
+null. Other delayed event bodies are not claimed as supported. No source defect
+was found in the selected records; no RON source changed and no vocabulary syntax
+or file-hash refresh is needed. Gaea's Avenger's independently observed defect is
+recorded above, remains unfixed, and is excluded from clean unlock estimates.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly War
+Barge and Sandals of Abdallah. No previously accepted name is lost. Final strict
+loading reports **1,845 compiled / 600 rejected records**, **711 accepted / 275
+rejected unique names**. It exits 1 and installs no partial production registry.
+Inventory remains **72,962 occurrences / 8,557 signatures**, with **5,229
+unknown-role occurrences** (93 fewer). Syntax does not change; semantic roles
+change below the selected action.
+
+Seven rejected names have more precise first diagnostics: Delif's Cone and
+Delif's Cube (unblocked attack event), Glyph of Life (damage event), Goblin
+Flotilla (end-of-combat duration), High Tide (mana-tap event), Reincarnation
+(graveyard choice/return), Runesword (temporary collection rules). The latter two
+now compile past their shared departure instruction but remain rejected for
+independent rules. Other remaining diagnostics are unchanged.
+
+All final required checks passed after reviewing automatic formatting and fixing
+preallocation plus a simplifiable Boolean expression in the new test. An initial
+lint run reported one preallocation issue and conflicting automatic suggestions;
+the final run reports zero issues. The final tests were rerun after lint. No
+pre-existing or environmental blocker remains.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestDelayedDepartureReplacedDestruction\|TestRONDepartureDelay\|TestWhenLeavesThisTurn\|TestInventory\|TestRONBeginCombatConsumerBoundaries' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS; engine skill verification. |
+| `make lint` | PASS; zero issues. Automatic edits reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,845 compiled / 600 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; final semantic and unique-name counts above. |
+
+The slice is committed separately; its hash is reported in the final response.
+
+Files: compiler departure_delay.go and departure_delay_test.go, compiler.go,
+inventory.go, inventory_test.go and begin_combat_test.go; engine exile.go,
+effect_cast_alt.go, delayed_departure_replacement_test.go and doc.go; API/rules
+contracts and this appended ledger entry. Existing callers remain intact.
+Removal gates remain unmet: full loading, collection gameplay and runtime wiring
+are unfinished. No Go card definition, generator, startup caller or DSL function
+is removed. No whole-repository caller audit authorizes DSL deletion in this run.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Battlefield-count CDA prerequisite, then five clean consumers; audit and
+   correct Gaea's Avenger reprints separately with the documented Oracle evidence.
+2. Chosen damage-source identity/choice prerequisite, then the seven shields;
+   include CR 609.7a referenced objects and permanent-spell transition.
+3. Filtered blocking requirements for Lure and Marble Priest, through both
+   declaration paths and maximum requirement satisfaction.
+
+No second slice is started. Migration completion criteria remain unmet.

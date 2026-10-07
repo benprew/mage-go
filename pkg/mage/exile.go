@@ -10,6 +10,10 @@ import (
 // an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
 // triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
 func (g *Game) ExilePermanent(perm *Permanent) {
+	g.exilePermanent(perm, uuid.Nil)
+}
+
+func (g *Game) exilePermanent(perm *Permanent, exiledBy uuid.UUID) {
 	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := perm.Card
@@ -17,7 +21,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
 	if !isToken {
-		g.zones.ExileCard(card, uuid.Nil)
+		g.zones.ExileCard(card, exiledBy)
 	}
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,

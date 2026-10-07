@@ -6237,3 +6237,21 @@ control, return, phase cycles and independent clones.
 an Island and legally pays its attack cost with itself. No LKI read can supply
 a live attacker. The shared payment and sacrifice replacement contracts remain
 unchanged.
+
+### Delayed departure actions and destruction replaced by exile
+
+`WhenLeavesThisTurn` and `WhenDiesThisTurn` keep a watched permanent incarnation
+and capture the installing resolution's controller, source and body bindings
+(CR 400.7, 603.7b–e). Control and characteristic changes preserve that identity.
+Phasing sends no departure event (CR 702.26d). A returned object cannot satisfy
+an old subscription or receive an action intended for the old incarnation.
+Cleanup removes subscriptions; pending stack triggers remain independent.
+
+Destruction replaced by exile uses the same battlefield-to-exile operation as
+explicit exile. It retains the replacement's exile source and sends the normal
+zone-change event. Leave subscriptions observe this event; death subscriptions
+and creature-death counts do not. Simultaneous destruction uses the existing
+zone batch and its former battlefield snapshot. `TestDelayedDepartureReplacedDestruction`
+checks single and simultaneous operations, pending timing, destination, counts,
+returned incarnations, expiry and cloned games. This establishes no new
+replacement ordering or generic delayed-event API.

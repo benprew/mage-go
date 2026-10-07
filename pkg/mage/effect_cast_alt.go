@@ -370,9 +370,7 @@ func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
 	if perm == nil {
 		return nil
 	}
-	card := perm.Card
-	g.RemoveFromBattlefield(perm)
-	g.ExileCard(card, r.sourceID)
+	g.exilePermanent(perm, r.sourceID)
 	return nil
 }
 

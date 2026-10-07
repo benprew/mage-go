@@ -5284,3 +5284,19 @@ Attack payment may sacrifice the attacker when it matches the cost filter.
 Both declaration paths require the paid source's original incarnation and
 current control before they put it in combat. An animated Leviathan that is
 also an Island can pay with itself; it then remains absent from combat.
+
+### RON delayed departure actions through end of turn
+
+`CreateTriggerUntil(WhenAPermanentLeavesTheBattlefield(SinglePermanent(ref)),
+ActionList(actions), UntilEndOfTurn)` and the corresponding
+`WhenAPermanentDies(SinglePermanent(ref))` form lower to `WhenLeavesThisTurn`
+and `WhenDiesThisTurn`. They use resolving spell, activation, trigger and nested
+supported delayed action scopes. `ref` must be a bound singular permanent
+reference. The body uses the existing delayed action restrictions, captures the
+outer bindings, and declares no new targets or departure-event bindings.
+
+The duration is the bare `UntilEndOfTurn` symbol. Other events, durations,
+plural subjects, wrong arities, unbound reads, empty bodies, modes and new body
+target declarations remain compile errors. This shape does not add generic
+`CreateTriggerUntil` event support. War Barge and Sandals of Abdallah use the
+complete records, with their separate regeneration restrictions.
