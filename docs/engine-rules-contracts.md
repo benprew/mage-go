@@ -5819,3 +5819,31 @@ Evidence: `TestAttachedPermanentDiesCaptures`, `VisitAndPhase`, `Invalid`, exist
 compile and pass definition validation. One complete unique-card gameplay mapping
 is added; synthetic event tests do not establish full Puppet Master or
 Takklemaggot gameplay. Rules: CR 400.7e, 603.2, 603.6c, 603.10a, 608.2h and 702.26.
+
+## Fixed matching tap costs that permit the source
+
+`TapNMatchingIncludingSourceCost(count int, filter PermanentFilter, text string) Cost`
+uses the existing exact-count tap cost with source inclusion enabled. It requires
+positive `count` and nonempty text during definition validation. Existing
+`TapNOtherMatchingCost` and its binding constructor keep their old behavior.
+
+Payment queries make no choices. The payment transaction chooses exactly N
+separate, current, untapped, unphased matching permanents controlled by the payer.
+A selected source is permitted. Its summoning sickness does not restrict this
+written tap instruction (CR 302.6); a separate tap-symbol cost does. The same
+permanent cannot pay two tap instructions (CR 118.3, 118.10). All choices save
+incarnations and are checked again before commit. A tap, phasing, return, control
+change or filter change can invalidate a choice. Failure spends no other payment
+resources (CR 602.2). All selected permanents tap before any tap event is sent.
+The shared payment transaction and tap batch own these rules; RON owns no payment
+state. No replacement ordering or APNAP contract changes here.
+
+Evidence: `TestTapNMatchingIncludingSource*` covers source eligibility, pure
+queries, definition rejection, distinct choices, both combined-cost orders,
+stale choices, life rollback, simultaneous event visibility and clone isolation.
+`TestTapNOtherMatching*` retains the old exclusion contract.
+`TestRONTapMatchingHandOfJustice` covers full real RON casting, native costs,
+legality, resolution timing, target identity/phasing, shroud, regeneration,
+indestructibility, source departure/phasing, copies and clones.
+`TestRONTapMatchingWarMachineActivationClauses` covers both real activation
+clauses and expiry, with explicit rejection of the incomplete full record.

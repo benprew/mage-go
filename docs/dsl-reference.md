@@ -4931,3 +4931,25 @@ Creature Bond has complete RON gameplay evidence in `TestRONHostDeath*`.
 Puppet Master and Takklemaggot can use the event bindings but retain unsupported
 payment, choice, return and Aura-change instructions. Their complete records
 still fail strict compilation.
+
+## RON fixed matching tap payments
+
+`TapAPermanent(filter)` and `TapNumberPermanents(Integer(n), filter)` are fixed
+activation costs; `n` must be positive. They use
+`mage.TapNMatchingIncludingSourceCost(n, filter, text) Cost`. This constructor
+uses the existing exact-count payment transaction and permits the source when
+it matches. `TapNOtherMatchingCost` keeps its source exclusion.
+
+The payer chooses distinct untapped matching permanents they control. Each
+choice retains its incarnation. A selected permanent can have summoning sickness;
+a separate `TapPermanent(ThisPermanent)` cost still checks the tap symbol rule.
+All selected permanents tap before their tap events are sent. Failed payments
+leave mana, life and taps unchanged. Queries do not make choices.
+
+Filters can use the existing fixed permanent filters and nonempty conjunctions.
+A conjunction can contain one `ControlledByAPlayer(SinglePlayer(You))`; the engine
+already checks the payer's control. Other players, unbound references, duplicate
+controller clauses, or controller clauses inside disjunctions are rejected.
+These adapters do not provide paid-object history or resolution tap payments.
+Hand of Justice has complete RON gameplay tests. Vodalian War Machine's two
+activation clauses have tests, but its death rule still needs paid-object history.

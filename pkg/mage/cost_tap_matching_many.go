@@ -7,19 +7,25 @@ import (
 )
 
 type tapNOtherMatchingCost struct {
-	count    int
-	filter   PermanentFilter
-	text     string
-	locked   bool
-	selected []capturedPermanent
-	chooser  Player
-	paid     *PermanentBinding
-	capture  bool
+	count         int
+	includeSource bool
+	filter        PermanentFilter
+	text          string
+	locked        bool
+	selected      []capturedPermanent
+	chooser       Player
+	paid          *PermanentBinding
+	capture       bool
 }
 
 // TapNOtherMatchingCost taps exactly count other untapped matching permanents.
 func TapNOtherMatchingCost(count int, filter PermanentFilter, text string) Cost {
 	return &tapNOtherMatchingCost{count: count, filter: filter, text: text}
+}
+
+// TapNMatchingIncludingSourceCost permits the source to pay a matching tap cost.
+func TapNMatchingIncludingSourceCost(count int, filter PermanentFilter, text string) Cost {
+	return &tapNOtherMatchingCost{count: count, filter: filter, text: text, includeSource: true}
 }
 
 // TapNOtherMatchingCostWithPermanent saves the permanent that pays a single tap cost.
@@ -46,7 +52,7 @@ func (c *tapNOtherMatchingCost) inspectDefinition() definitionNode {
 }
 
 func (c *tapNOtherMatchingCost) eligible(p *Permanent, sourceID, controller uuid.UUID, g *Game) bool {
-	return p != nil && !p.PhasedOut && !p.Tapped && p.ID() != sourceID && p.ControllerID() == controller && c.filter.Match(p, g)
+	return p != nil && !p.PhasedOut && !p.Tapped && (c.includeSource || p.ID() != sourceID) && p.ControllerID() == controller && c.filter.Match(p, g)
 }
 
 func (c *tapNOtherMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {

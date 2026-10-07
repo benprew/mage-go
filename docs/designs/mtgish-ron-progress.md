@@ -28724,3 +28724,158 @@ Slice files: engine `composable_events.go`, `attached_permanent_death_test.go`,
 `inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md` and this appended ledger entry.
 No second slice is started.
+
+## Run 2026-10-07: FIXED-MATCHING-TAP-PAYMENTS
+
+Status: complete dependency-ready slice. Stop after this slice. Runtime cutover
+and removal gates remain unmet.
+
+### Baseline and candidate comparison
+
+The initial working tree contained user edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`. These remain
+outside the commit. Only this run's appended ledger entry is staged; the user's
+ledger restructuring remains unstaged.
+
+Fresh `go test ./pkg/mage/dsl/ron -count=1`, short engine tests and `make build`
+passed. Strict loading and semantic inspection exited 1 for collection rejection,
+not build/test failure: **2,445 records; 1,814 compiled / 631 rejected;
+691 accepted / 295 rejected unique names**. Inventory: **72,962 occurrences,
+8,559 signatures, 5,603 unknown-role occurrences**. Read AGENTS.md, engine API,
+execution design, current ledger, vocabulary snapshot, complete candidate records,
+selected compiler/engine code, payment API/rules contracts, and CR 118.3/10,
+302.6 and 602.2. Local `data/FEM.json` agrees with both affected complete records.
+Reprints count once; nested instructions were inspected separately from first errors.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Fixed matching tap payments, selected | Hand of Justice, Vodalian War Machine: **1** immediate unlock; a shared payment prerequisite for **2** cards and three activation clauses. | War Machine needs turn-local paid-Merfolk history and the death rule's `WasTappedToPayForAbilitiesOfPermanent` filter. Exact count selection, payer control, incarnation locks and simultaneous taps already exist. Source inclusion is the missing reusable engine contract. | Medium: one engine option on the existing transactional cost, fixed RON count/filter adapters, declaration and lifecycle tests, one complete real card and both second-card activation clauses. |
+| Chosen damage-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Dark Sphere; Eye for an Eye; Jade Monolith; Reverse Damage: **11** affected names, **7** credible complete consumers after prerequisites. | The six Circles and Greater Realm require typed source choices, source identity across zones/spell entry and future chosen-source prevention. Dark Sphere also needs fractional prevention; Eye for an Eye continuation/context values; Jade Monolith redirection; Reverse Damage actual prevented-damage results. | High: shared discovery/choice services, source lifetimes, replacement scopes and ordering tests. |
+| All-zone count CDAs | Keldon Warlord, Nightmare, Plague Rats, Dakkon Blackblade, Gaea's Avenger: **4** clean unlocks; **5** with a justified source correction. | Battlefield-only CDA helpers do not establish all-zone characteristics. Owner/controller evaluation, all-zone count lowering, copy and layer contracts are prerequisites. Gaea's Avenger's RON counts your artifacts rather than opponents' artifacts. | High: an all-zone characteristic service and compiler lowering, copy/layer contracts, plus source-data repair. |
+
+Selection rationale: a shared payment prerequisite serves two unique cards and
+produces a complete real consumer with a small engine extension. Its credible
+gain for effort is better for one bounded run than the two larger prerequisite
+families. The supported operation is generic; no card-name branch is added.
+Contract, reuse boundary and acceptance cases were stated before edits. The
+second card's death-rule dependency remains explicit rather than being
+counted as another complete unlock.
+
+### Exact supported shapes, dependencies and engine reuse
+
+Engine API:
+`TapNMatchingIncludingSourceCost(count int, filter PermanentFilter, text string) Cost`.
+The existing exact-count cost gains a source-inclusion flag. Existing
+`TapNOtherMatchingCost` and `TapNOtherMatchingCostWithPermanent` keep source
+exclusion. Positive count and nonempty text are validated before gameplay.
+
+RON activation cost shapes, including nested activation-cost `And` lists:
+
+- `TapAPermanent(filter)`: exactly one matching tap payment.
+- `TapNumberPermanents(Integer(n), filter)`: fixed positive literal count.
+- Existing fixed permanent filters; nonempty `And`/`Or` combinations. One
+  `ControlledByAPlayer(SinglePlayer(You))` can occur in a conjunction and lowers
+  to the engine's payer-control restriction. Controller restrictions in `Or`,
+  other players, unbound player references and duplicate controller declarations
+  are rejected. Variable counts, resolution payment adapters and history results
+  remain unsupported.
+
+Factories construct fresh cost objects. The existing payment transaction owns
+choice/validation/commit, retained incarnations, rollback and cloned validation
+state. It selects N distinct untapped, unphased matching permanents controlled by
+the payer. Source inclusion does not grant permission to reuse it for a separate
+tap-symbol cost. Written tap instructions permit summoning-sick creatures; the
+source's separate tap symbol still applies CR 302.6. Selected permanents tap
+through the existing simultaneous batch before any tap event is sent. No LKI can
+restore an absent payment object. Control, filter, tap, phasing and incarnation
+changes invalidate locked choices before other resources are spent.
+
+Dependencies: phase-0 declaration/scoped factory support, fixed filters, native
+total-cost transactions, captured incarnations and simultaneous tap events.
+`ron` owns syntax/diagnostics/lowering; `mage` owns rules and payment state.
+The implement-engine skill supplied the engine workflow. No card definitions,
+Go stubs, removed skills, global last-action slots, declaration panics, skipped
+instructions, Go fallback or partial production registry is introduced.
+Semantic inventory now records both tap forms' nested count/filter roles and
+color arguments in permanent filters; reporting does not claim gameplay support.
+
+### TDD and gameplay mapping
+
+New engine tests first failed for the absent source-inclusive constructor. Core
+constant imports were corrected so that only that intended failure remained.
+Full Hand of Justice tests failed at `TapNumberPermanents`; synthetic source tests
+failed at `TapAPermanent` after adding the required creature P/T fixture. Later
+fixtures used the correct zero-based activation indices for War Machine's
+keyword-plus-activation record. A reporting failure exposed the missing permanent
+filter color role; it was added without changing compilation semantics. No
+assertion or rules requirement was weakened. The first lint run found an unused
+initialization and missing slice preallocation. Both were corrected before the
+final lint run.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Hand of Justice, complete FEM record | `TestRONTapMatchingHandOfJustice`: native casting payment/rollback, tap-symbol summoning sickness, three distinct white creatures, eligible summoning-sick payers, rejection of blue/opponent/tapped payers, no reuse of source, target legality/shroud at activation and resolution, resolution timing, returned/phased targets, regeneration, indestructibility, source departure/phasing, copied abilities and clone isolation. |
+| Vodalian War Machine, both real activation clauses only | `TestRONTapMatchingWarMachineActivationClauses`: untapped controlled Merfolk costs, ineligible/absent/phased payers, payment timing, defender permission without keyword removal, +2/+1 boost, cleanup expiry, copied bonus, source return and cloned resolution. Full-record compilation must still fail on its paid-object history filter. These clause tests are not complete-card coverage. |
+| Declarations, factories and loading | `TestRONTapMatchingInvalid`: malformed arities, nonpositive/X counts, empty filters, incompatible/unbound controllers, duplicate controller restrictions and invalid controller disjunctions. `SourceAndIndependentFactories`: summoning-sick source inclusion, fresh costs, original/copy controllers and cloned stack resolution. `InventoryAndAtomicLoad`: nested semantic roles, two reprints deduplicated to one name, unique factory IDs and atomic rejection of an unsupported collection. |
+| Engine source-inclusive payment | `TestTapNMatchingIncludingSourceCost`, `Stale`, `Simultaneous`, `Definition`, `DistinctAndRollback`, `SeparateSourceTap`: pure affordability, exactly N distinct objects, source eligibility, summoning sickness, returned/phased/tapped/control/filter changes, life rollback, both composite-cost orders, complete tap visibility before events and independent clones. Existing `TestTapNOtherMatching*` remain passing regression evidence for source exclusion and the shared payment service. |
+
+Gameplay coverage increases by **one complete unique card** and two explicitly
+partial activation-clause mappings. Compilation progress is separate. Collection
+engine-validated and behavior-verified totals remain unset. No new replacement
+ordering, APNAP, LKI information-read or damage-batch contract is claimed.
+
+### Measurements, source defects and gates
+
+Actual gain equals estimate: **Hand of Justice, 1 unique card / 1 record**.
+No accepted name is lost. Final strict loader exits 1 with **1,815 compiled /
+630 rejected records; 692 accepted / 294 rejected unique names**. The remaining
+Vodalian War Machine diagnostic is:
+`FEM.lines.ron:101:780: unsupported permanent filter (WasTappedToPayForAbilitiesOfPermanent)`.
+Final semantic inventory: **72,962 occurrences / 8,559 signatures / 5,487
+unknown-role occurrences**. The 116 fewer unknown-role occurrences come from
+nested tap-cost arguments and the color-role reporting correction. All 12 RON
+hashes match the vocabulary snapshot. No source changed, so no snapshot refresh
+is needed. No selected-card source defect or environment failure was found.
+Gaea's Avenger's observed source defect stays deferred with the CDA candidate.
+
+Complete collection loading, gameplay and startup cutover remain below removal
+gates. No Go card definitions, obsolete generators or DSL functions are removed.
+No fresh caller audit authorizes removal in this slice. API/rules documentation
+records only the new payment contract and its compiler context.
+
+### Required validation
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine suite, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'Test(TapNMatchingIncludingSource\|TapNOtherMatching\|RONTapMatching\|Inventory)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| Additional skill check `go test ./... -short -count=1` | PASS |
+| `make lint` | PASS, zero issues after fixes; automatic imports and `maps.Copy` reviewed |
+| After-lint affected tests | PASS: short engine suite with `-count=1`, build and vet |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,815 compiled / 630 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts; 294 rejected names; semantic counts above |
+| Source hash audit | PASS; all 12 RON hashes match the vocabulary snapshot |
+
+Automatic lint changes are reviewed before commit. Only this slice is committed
+after final checks pass. The commit hash is reported in the final response.
+
+Ranked next candidates to reassess using fresh evidence:
+
+1. Typed damage-source discovery/choice and spell-to-permanent identity, then
+   six Circles of Protection and Greater Realm of Preservation.
+2. All-zone count CDAs for the four clean consumers, plus Gaea's Avenger after
+   its evidenced opponent-count correction.
+3. Turn-local paid-object history for Vodalian War Machine. Keep its source
+   incarnation, paid Merfolk identities, cleanup and death-trigger contracts
+   separate from the completed tap-payment prerequisite.
+
+Slice files: `pkg/mage/cost_tap_matching_many.go`,
+`tap_matching_including_source_test.go`, `doc.go`; compiler `compiler.go`,
+`tap_matching_cost.go`, `tap_matching_cost_test.go`, `inventory.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this appended ledger entry. No second slice is started.

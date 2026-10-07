@@ -490,6 +490,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
 			return "counter_removal_instruction"
 		}
+		if role == "cost" && n.Name == "TapNumberPermanents" && len(n.Args) == 2 {
+			return []string{"value", "permanent_filter"}[index]
+		}
+		if role == "cost" && n.Name == "TapAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "SacrificeNumberPermanents" && len(n.Args) == 2 {
 			return []string{"value", "permanent_filter"}[index]
 		}
@@ -1103,6 +1109,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if (n.Name == "IsColor" || n.Name == "IsNonColor") && len(n.Args) == 1 {
+			return "color"
+		}
 		if n.Name == "AttackedDuringLastPlayersTurn" && len(n.Args) == 1 {
 			return "player_reference"
 		}

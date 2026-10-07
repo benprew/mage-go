@@ -92,6 +92,10 @@
 // Jumpstart and Legends source bonuses use this form with explicit mana costs.
 // Osai Vultures uses [RemoveCountersCost] to pay two carrion counters
 // before its temporary source bonus resolves.
+// Use [TapNMatchingIncludingSourceCost] for a fixed matching tap payment.
+// The source can pay when it matches. Each choice keeps its incarnation.
+// A written tap cost permits summoning sickness; a tap symbol does not.
+// The shared payment transaction checks all choices before it spends resources.
 // Use [SacrificeNMatchingIncludingSourceCost] for a fixed count payment that
 // permits the source. All choices precede one simultaneous sacrifice batch.
 // Stale count choices fail before mana and other resources are spent.

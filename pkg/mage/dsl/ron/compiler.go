@@ -606,6 +606,12 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 			return nil, false, err
 		}
 		return []costFactory{cost}, false, nil
+	case "TapAPermanent", "TapNumberPermanents":
+		cost, err := compileMatchingTapCost(n)
+		if err != nil {
+			return nil, false, err
+		}
+		return []costFactory{cost}, false, nil
 	case "SacrificeNumberPermanents":
 		cost, err := compileSacrificeNumberCost(n)
 		if err != nil {
