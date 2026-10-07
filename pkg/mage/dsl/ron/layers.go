@@ -14,6 +14,13 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	for _, part := range parts {
+		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
+			for _, ability := range part.Args[0].Args {
+				if ability.Name == "TriggerA" {
+					return compileGrantedUpkeepLayer(n, parts, ctx)
+				}
+			}
+		}
 		if part.Name == "AdjustPTXY" || part.Name == "AdjustPTForEach" {
 			return compileStaticValueLayer(n, parts, ctx)
 		}

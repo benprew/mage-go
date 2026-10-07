@@ -470,6 +470,12 @@
 // replacements, because this action cannot cause an excess on its subject.
 // Other actions can add counters above this limit.
 //
+// Use [GrantTriggeredAbility] or [GrantEachTriggeredAbility] with [Static]
+// for a live trigger grant. The selection uses the donor's context.
+// The trigger uses each recipient as its source and reads its controller
+// at detection. Bindings belong to the granted ability. A pending trigger
+// keeps its source incarnation after the grant ends.
+//
 // Use [PermanentAttackedDuringLastTurn] for the live source or attachment's
 // attack history during one player's last completed turn. Cleanup saves exact
 // incarnations. Phasing keeps history; returned objects cannot use old history.

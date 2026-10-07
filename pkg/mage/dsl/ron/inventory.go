@@ -933,6 +933,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "keyword":
+		if n.Name == "TriggerA" && len(n.Args) == 2 {
+			return []string{"event", "actions"}[index]
+		}
 		if n.Name == "Landwalk" && len(n.Args) == 1 {
 			return "landwalk_filter"
 		}
@@ -958,6 +961,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 		if n.Name == "TheNumberOfGraveyardCards" && len(n.Args) == 1 {
 			return "card_filter"
 		}

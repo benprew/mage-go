@@ -5389,3 +5389,45 @@ Evidence: `TestBeginCombatPatterns`, `TestBeginCombatDelayedAndAPNAP`,
 `TestBeginCombatSkippedNativeStep`, and the `TestRONBeginCombat` tests.
 The engine delayed patterns are tested independently; the RON adapter does not
 add a new delayed combat-start spelling.
+
+## Live grants of declared triggered abilities
+
+`GrantTriggeredAbility(PermanentRef, *GenericTriggered)` and
+`GrantEachTriggeredAbility(PermanentSet, *GenericTriggered)` are static rules.
+They require a declared event or step pattern and a battlefield trigger.
+Definition validation checks the subject/set and the complete granted ability
+in a fresh binding scope. Nil declarations, unbound reads, undeclared targets,
+nil effects and zone-source triggers are rejected. These declarations follow
+the engine's immutable-definition convention.
+
+The donor context selects current recipients in layer 6 (CR 613.1f). Each
+recipient receives its own ability object, source and controller. Ability UUIDs
+are derived from the grant identity and both incarnations. Repeated layer
+applications do not accumulate abilities or change UUIDs. Separate donors grant
+separate instances; returned donors or recipients produce new identities.
+Phasing preserves identities but suspends application. Attachment movement
+changes a host grant's recipient. Controller restrictions use the donor's current
+controller; a trigger's `You` uses the recipient's controller at detection
+(CR 603.3a). Removal and grant order use the existing layer lifecycle and
+timestamps (CR 613.7); removal after a grant removes the granted trigger.
+
+Patterns, target declarations, event capture, APNAP placement, intervening-if
+checks, source incarnation capture, copied stack objects and resolution frames
+remain in the shared trigger services. Pending triggers survive grant removal
+(CR 113.7a). Their permanent actions cannot affect returned or phased recipients
+(CR 400.7, 702.26b), while independent player instructions can still occur.
+Resolution payments use the existing transaction and saved-controller contracts.
+Energy Flux sacrifices; Tabernacle destroys and therefore permits regeneration
+and indestructibility. A copied sacrifice controlled by another player cannot
+sacrifice a recipient that player does not control. Destruction has no such
+controller restriction. No simultaneous sacrifice batch is created by separate
+upkeep triggers. This service adds no replacement ordering or LKI query.
+
+`TestGrantedTrigger*` covers declaration validation, recipient/event identity,
+stable UUIDs, new incarnations, controller-dependent selection, phasing,
+ability removal, multiple donors, target scopes, intervening-if checks and
+independent cloned pending frames. `TestRONGrantedUpkeep*` adds complete RON
+consumer mappings, casting/payment rollback, native upkeep, attachment/control
+changes, original and copied triggers, destruction/regeneration distinctions
+and collection rejection. Low-level event fixtures apply layers after phase
+changes before detection, as native step execution does.

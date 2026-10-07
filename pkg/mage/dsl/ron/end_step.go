@@ -13,6 +13,14 @@ func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnSt
 }
 
 func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, your mage.TurnStepPattern, label string, condition mage.StateCondition) (optionFactory, error) {
+	build, err := compileBoundStepAbility(event, body, ctx, each, your, label, condition)
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.CardOption { return mage.WithAbility(build()) }, nil
+}
+
+func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnStepPattern, label string, condition mage.StateCondition) (func() *mage.GenericTriggered, error) {
 	if err := arity(event, 1); err != nil {
 		return nil, err
 	}
@@ -53,7 +61,7 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 	if err != nil {
 		return nil, err
 	}
-	return func() mage.CardOption {
+	return func() *mage.GenericTriggered {
 		player := mage.BindPlayer(ctx.stepEvent.playerName)
 		bindings := instanceBindings{steps: map[*stepEventPlan]*mage.PlayerBinding{ctx.stepEvent: player}}
 		var pattern mage.EventPattern = mage.TurnStepBegins(step, player)
@@ -72,6 +80,6 @@ func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, you
 			trigger.AndConditionData(mage.EventIsChosenPlayerUpkeep{})
 		}
 		actions.effects = nil
-		return mage.WithAbility(TriggerA(trigger, actions))
+		return TriggerA(trigger, actions)
 	}, nil
 }

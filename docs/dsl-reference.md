@@ -1056,8 +1056,10 @@ on each layer pass. No target or action-result binding is introduced.
 General sets lower to `MatchingPermanents`, `ControlledPermanents`,
 `WithoutPermanent`, `ModifyEachPT`, `GrantEachKeyword`, `While` and `Static`.
 Existing explicit-creature and Aura adapters retain their services. Static
-numeric P/T, independent base P/T/color/type changes, granted activated/triggered
-abilities remain separate unsupported shapes. Conditional rules have the
+numeric P/T, independent base P/T/color/type changes and granted activated
+abilities remain separate unsupported shapes. Controller-upkeep trigger grants use the
+restricted contract under "RON granted controller-upkeep triggers" below.
+Conditional rules have the
 restricted contract below.
 See [the exact contract and tests](designs/mtgish-ron-static-permanents.md).
 
@@ -4592,3 +4594,38 @@ contract. The Battering Ram test executes its complete combat-start RON clause;
 the rest of that card remains rejected. Goblin Flotilla and Johan tests execute
 their original event declarations with test-only bodies. These mappings do not
 claim complete gameplay coverage for any of the three cards.
+
+## RON granted controller-upkeep triggers
+
+Supported declarations are
+`PermanentLayerEffect(HostPermanent, [AddAbility([TriggerA(event, body)])])`
+for an Aura and
+`EachPermanentLayerEffect(filter, [AddAbility([TriggerA(event, body)])])`.
+Each contains exactly one modification and one granted ability. `event` must be
+`AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))`. Other events, player
+selectors and combined modifications remain rejected.
+
+The collection uses the existing static permanent filter adapter, including
+its controller and source-exclusion forms. A host grant follows the current
+attachment. The grant operates in layer 6. `You` and `ThisPermanent` inside
+`body` refer to the recipient's trigger controller and source, respectively.
+The body receives a fresh permanent scope with the ordinary upkeep event's
+`Trigger_ThatPlayer` binding. It can declare its own targets. It cannot read the
+donor's attachment, entry choices, X, targets or event/payment results.
+Existing action and adjacent-payment restrictions still apply.
+
+The adapter uses `GrantTriggeredAbility(PermanentRef, *GenericTriggered)` or
+`GrantEachTriggeredAbility(PermanentSet, *GenericTriggered)`. Each factory builds
+fresh declarations. The engine keeps ability identity separate for each grant
+and each pair of donor/recipient incarnations. Layer passes and control changes
+do not change that identity. Phasing suspends the grant without changing it.
+Pending triggers keep the recipient incarnation and detection controller even
+if the grant ends before resolution.
+
+Complete record mappings are Energy Flux (artifact sacrifice unless {2} is
+paid), Farmstead (optional {W}{W}, then gain 1 life), and The Tabernacle at
+Pendrell Vale (creature destruction unless {1} is paid).
+`TestRONGrantedUpkeep*` covers their casting or land play, native upkeep,
+payments, recipient identity, attachment, control, phasing, copies, clones,
+ability removal, later members, multiple donors, malformed declarations and
+strict loading. Compilation and collection-wide gameplay coverage stay separate.

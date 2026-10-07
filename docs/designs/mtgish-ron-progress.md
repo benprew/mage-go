@@ -26731,3 +26731,189 @@ Slice files: `pkg/mage/dsl/ron/combat_pair.go`,
 `combat_characteristic_test.go`, `begin_combat_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended ledger
 entry. No second slice is started.
+
+## Run 2026-10-06: GRANTED-CONTROLLER-UPKEEP
+
+Status: complete implementation slice. Stop after this slice. Fresh final
+collection counts are **1,795 compiled / 650 rejected records**, and
+**677 accepted / 309 rejected unique names** (2,445 records / 986 names).
+Compilation and complete-card gameplay evidence remain separate.
+
+### Fresh evidence, comparison and selection
+
+Initial user changes were `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`. They are preserved. Only this appended
+entry is staged from the modified ledger; its existing edits are excluded.
+Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine tests and
+`make build` passed. Both fresh loader commands exited 1 for unsupported records:
+1,786 compiled / 659 rejected; 674 accepted / 312 rejected names. Inventory had
+72,962 nodes / 8,559 signatures / 6,261 unknown-role occurrences. Loader rejection
+was not a build or test failure.
+
+Read: AGENTS.md, engine reference, execution design, progress ledger, vocabulary
+snapshot, complete candidate RON records, selected compiler/engine code,
+relevant API/rules contracts, and CR 113.7a, 400.7, 503.1, 603.2–3,
+613.1f/613.7 and the existing phasing contract. All nine selected reprints were
+inspected. Local Oracle data in `data/ATQ.json`, `data/LEA.json` and
+`data/LEG.json` agrees with all three selected definitions.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Live granted controller-upkeep triggers, selected | Energy Flux, Farmstead, The Tabernacle at Pendrell Vale: **3 full cards** | Existing action/payment bodies compile once a recipient trigger scope and validated engine grant exist. No other record blockers. Enables reusable declared trigger grants with recipient source/controller, per-ability scopes and stable identities. Other granted events and combined modification lists remain separate adapters. | Medium: small engine static grant, reuse step compiler, declaration/scope/lifecycle/payment/copy/clone tests and three complete-card mappings. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4 full cards after the engine prerequisite**, zero adapter-only unlocks | Existing P/T count/modify services operate on battlefield permanents; characteristics in other zones and their owner/controller context need a contract. Named counts and CDA/copy/layer integration also need lowering. Gaea's Avenger remains excluded for its separate defect. Enables all-zone dynamic characteristics. | High: zone-aware characteristic service plus count/CDA adapters and four full-card mappings. |
+| Chosen-source one-shot prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7 full cards after prerequisites**, zero choice-adapter-only unlocks | Complete nested records require both source selection and a next-event shield. Existing UUID selection only covers battlefield/spell sources and is not the complete legal source-domain contract. Typed retained identity, source filters and simultaneous one-shot damage semantics remain prerequisites. Other source-choice consumers have additional bodies and are excluded. | High: source-domain/identity service, scoped choice and shield lowering, replacement/batch tests and seven full-card mappings. |
+
+Selection rationale: three complete consumers can share a small validated layer-6
+service and the exact existing upkeep/payment behavior. This gives a larger
+credible gain per effort than the broader source-choice or all-zone services.
+First-error frequency was not used as an unlock estimate. The selection,
+contract, reuse boundary and acceptance cases were stated before implementation.
+The implement-engine skill supplied the engine workflow. No removed card/set
+skill, delegation, Go-card requirements, card-name executor, fallback, global
+last-action slot or partial production registry was used.
+
+### Exact signatures, contexts and dependencies
+
+Engine APIs:
+
+- `GrantTriggeredAbility(PermanentRef, *GenericTriggered) StaticRule`.
+- `GrantEachTriggeredAbility(PermanentSet, *GenericTriggered) StaticRule`.
+
+The donor context selects live recipients in layer 6. The granted prototype must
+have a declared event or turn-step pattern and function on the battlefield.
+Definition validation checks its entire expression graph in a fresh binding
+scope, including body, event captures and target declarations. Nil subjects,
+sets, triggers or effects; unbound reads; undeclared targets; opaque legacy
+patterns; and zone-source declarations are rejected. Definitions follow the
+existing immutable-declaration convention.
+
+Each recipient gets a separate ability object. Its UUID derives from the grant
+identity and both donor/recipient incarnations. Layer passes and control changes
+keep the UUID; returned objects receive new identities. Phasing suspends the
+grant and preserves its identity. A host grant follows the live attachment.
+Source suppression and recipient ability removal use normal layer order.
+Pending triggers keep the recipient incarnation and controller from detection
+and survive grant removal. Clones retain separate resolution frames and effects.
+
+RON supported shapes:
+
+- `PermanentLayerEffect(HostPermanent,
+  [AddAbility([TriggerA(event, body)])])`, in an Aura declaration.
+- `EachPermanentLayerEffect(filter,
+  [AddAbility([TriggerA(event, body)])])`, using the existing static permanent
+  filter contract, including controller conjunctions and source exclusion.
+- `event` is exactly
+  `AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))`.
+
+There must be one modification and one granted ability. Other events, selectors,
+source/target subjects and combined modifications remain rejected. The body uses
+existing resolving actions and adjacent payments in a fresh recipient permanent
+scope. `You` means the trigger controller; `ThisPermanent` means the recipient.
+`Trigger_ThatPlayer` is produced by its own upkeep event. Targets declared inside
+the body are local. Donor attachment, X, choices, targets and event/payment
+results cannot cross into this scope.
+
+`compileBoundStepAbility` extracts the existing step builder; old callers keep
+`compileBoundStepTriggerWithCondition` and unchanged behavior. Engine reuse:
+`grantRecipientSet`, typed `PermanentSet`/`PermanentRef`, `Static`, printed
+ability lifecycle, `WhenEvent`/`At`, event capture, APNAP placement, target and
+source incarnation capture, `IfPaid`/`UnlessPaid`, payment transactions,
+destruction/regeneration, sacrifice, stack copying and `Game.Clone`.
+No replacement, zone, payment or parallel trigger subsystem is introduced.
+
+Energy Flux uses sacrifice, which ignores regeneration/indestructibility but
+requires its resolving controller to control the subject. Tabernacle uses
+destruction, which permits regeneration and indestructibility. A copied trigger
+with another controller can destroy the original recipient but cannot sacrifice
+it without control. Farmstead's independent life action still occurs after
+recipient departure when its payment succeeds. Separate upkeep triggers are
+separate operations; no simultaneous destruction/sacrifice batch is invented.
+No new LKI information read or replacement ordering is established.
+
+### TDD and card-to-test mappings
+
+Engine tests first exposed missing grant constructors. An incorrect test API
+call was corrected, then the missing-service failure was confirmed alone.
+RON tests were written before adapter implementation; fixture constructor calls
+were corrected and the unsupported `TriggerA` grant failure was confirmed
+against the previous dispatch boundary. Implementation followed that evidence.
+
+Additional failures were test/API setup errors: copied sacrifice control,
+manual event detection without a layer pass after phasing, stale inventory
+counts, and a casting-cost assertion inserted into a noncasting fixture. Each
+was corrected without reducing behavior assertions. Native step execution
+already applies layers before event detection; low-level fixtures now do so.
+No environmental failure or unresolved pre-existing test failure remains.
+
+| Card or contract | Tests and coverage |
+| --- | --- |
+| Energy Flux, complete ATQ record; 3ED identical reprint | `TestRONGrantedUpkeepCards`: optional {2}, decline/unaffordable rollback, source departure, recipient return/control, copies/clones, sacrifice through regeneration/indestructibility. `Lifecycle`: both players' artifacts, phasing, source/recipient suppression, source return/control, multiple donors and later entries. `CastingAndNativeStep`: {2}{U} cast, rollback, pre-resolution timing and native upkeep sacrifice. `SeparatePayments`: two donors, one available payment, independent unpaid second branch and no donor mana use. |
+| Farmstead, complete LEA record; five identical reprints | Same `Cards`: {W}{W} payment, wrong color/short mana/decline, exact gain of 1, recipient versus donor payer, returned recipient, copies/clones. `Lifecycle`: live attachment movement, two Aura instances, source/host phase cycles, control, suppression and pending phasing. `CastingAndNativeStep`: {W}{W}{W}, land-only enchant target, casting rollback, attachment, pre-resolution timing and native unaffordable upkeep. |
+| The Tabernacle at Pendrell Vale, complete LEG record | Same `Cards`: optional {1}, destruction, regeneration consumption/tap, indestructibility, return protection and copied destruction. `Lifecycle`: both players' creatures, multiple donors, later entries, source/recipient control/phasing/removal. `CastingAndNativeStep`: legendary zero-cost land metadata, actual land play and native upkeep destruction. |
+| RON declarations and strict loading | `TestRONGrantedUpkeepInvalid`: arity, incompatible events/selectors, invalid subjects, donor attachment/unbound target/payment reads, combined modifications and multiple abilities. `InventoryAndAtomicLoad`: nested semantic roles, complete synthetic load and unchanged registry after invalid-collection rejection. |
+| Engine definition and identity | `TestGrantedTriggerDefinitions`: valid source/host/set, nil/unbound declarations, nil body, missing targets, legacy/zone event rejection. `IdentityAndMembership`: typed controlled set, stable/new identities, phase cycles, control, suppression, independent donors and clones. |
+| Engine events, binding scopes and pending behavior | `TestGrantedTriggerRecipientContext`: two controllers/sources, captured event player, stable IDs, departed donor and cloned pending frame. `TargetsAndInterveningIf`: local target declarations for two recipients, placement timing, event/resolution condition recheck and independent clone targets. |
+
+Three complete-card gameplay mappings are added. Collection-wide engine-validation
+and behavior counts remain null. This slice does not claim other granted-event
+contexts or complete collection gameplay.
+
+### Final measurements, defects and validation
+
+Actual gain equals the estimate: **3 unique names / 9 records**:
+Energy Flux (2), Farmstead (6), The Tabernacle at Pendrell Vale (1).
+No accepted name or record is lost. Only these rejected records become accepted;
+the remaining diagnostics are unchanged. Loader exits 1 for the remaining
+650 records / 309 unique names and publishes no partial registry.
+Representative remaining errors are unsupported conditional `AddCardtype`
+(Animate Artifact), `EnchantGraveyardCard` (Animate Dead), and
+`SacrificeAllPermanentsExceptForNum` (Balance).
+
+Final semantic inventory: **72,962 nodes / 8,559 signatures / 5,655 unknown-role
+occurrences**. Static `TriggerA` descendants now receive event/action roles;
+`Integer` value children receive integer-literal roles. The 606 fewer unknown
+occurrences are reporting improvements, not additional gameplay unlocks.
+All twelve source hashes and all 2,445 records are unchanged. No selected source
+defect was found; no RON or vocabulary source snapshot refresh is needed.
+Previously recorded unrelated source defects remain unresolved.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, `make build` | PASS |
+| Test-first engine/RON focused checks | Expected missing-service/unsupported-grant failures confirmed |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestGrantedTrigger\|TestRONGrantedUpkeep\|TestInventory' -count=1` | PASS for final code |
+| `go test ./pkg/mage/... -short -count=1` | PASS for final code |
+| `make test` | PASS for final code |
+| `make build` | PASS for final code |
+| `go vet ./...` | PASS for final code |
+| `go test ./... -short -count=1` | PASS; additional implement-engine check |
+| `make lint` | PASS, zero issues; formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,795 compiled / 650 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 677 accepted / 309 rejected names; semantic totals above |
+| Baseline/final diagnostic and hash comparison | Exactly three names / nine records unlock; no regressions; twelve identical hashes |
+
+Required checks pass. The exact updated inventory totals retain existing registry
+and Lightning Bolt regressions. Formatting changes stay within the slice.
+API/rules documentation describes only the established grant contracts.
+Complete collection loading, gameplay and runtime wiring remain below the
+removal gates. No Go definitions, generators or DSL functions are removed;
+no caller audit authorizes deletion in this slice.
+
+Ranked next candidates to reassess from fresh records/inventory:
+
+1. Chosen-source selection and one-shot prevention for the seven Circle/Realm
+   consumers; establish complete source-domain and simultaneous-event contracts.
+2. All-zone battlefield-count CDAs for Dakkon Blackblade, Keldon Warlord,
+   Nightmare and Plague Rats; keep Avenger's defect separate.
+3. Installed temporary triggers (`CreateTriggerUntil`, nine first-error names);
+   inspect complete event-specific bodies and captured identities before
+   estimating full-card gains.
+
+Slice files: `pkg/mage/granted_trigger.go` and its tests; `pkg/mage/doc.go`;
+`pkg/mage/dsl/ron/granted_upkeep.go` and its tests, `end_step.go`, `layers.go`,
+`inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this appended ledger entry.
+One descriptive commit contains only this slice; its hash is reported in the
+final response. Initial user edits and the unrelated untracked history file are
+preserved. No second slice is started.
