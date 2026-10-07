@@ -7374,3 +7374,27 @@ choice, target identity, phasing, prevention, regeneration, indestructibility,
 zero/replaced life, nested choices, source LKI/lifelink/control, definition
 rejection and clone execution. RON `TestRONActionPayment*` supplies real-card
 casting, activation, target legality, combat timing and cleanup evidence.
+
+## RON indefinite fixed characteristic changes
+
+RON fixed `SetColor(SimpleColorList(...))` and nonempty fixed keyword
+`AddAbility([...])` resolving modifications reuse `Until(Indefinite)` with
+`SetColors` and `GrantKeywordModification`. No engine rules changed.
+CR 611.2a/c fixes duration and subject membership at resolution; CR 400.7
+separates returned objects. CR 702.26d/e preserves installed effects across
+phasing but excludes absent subjects when the effect starts. CR 613.1e/f and
+613.7 govern layer and timestamp order. The typed event and attachment services
+retain the intended subject after the ability's source leaves.
+
+`TestRONAislingIndefiniteColor` covers both event directions, non-targeted
+recipients, pending source departure, recipient return, phasing before
+resolution, control, copied triggers, cloned pending effects, cleanup and later
+color timestamps. `TestRONAislingNativeCombat` exercises both native declaration
+paths. `TestRONCocoonCompleteLifecycle` covers legal host casting, illegal-host
+cost rollback, entry tapping and three counters, untap gating, three successful
+upkeep payments, the fourth unpaid branch, Aura sacrifice, retained attachment,
++1/+1 counter and indefinite flying. It also checks upkeep player, clone,
+cleanup, phase cycle and returned host identity.
+`TestRONIndefiniteKeywordIdentity` checks pending copies/clones, target legality,
+control, departure and later ability removal. Declaration tests reject malformed
+keywords, missing references, color choices, repeated colors and empty grants.

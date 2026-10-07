@@ -2,8 +2,8 @@
 
 ## Current status
 
-The latest recorded inventory reports **750 accepted / 236 rejected unique card
-names** (986 total), and **1,940 compiled / 505 rejected records** (2,445 total).
+The latest recorded inventory reports **752 accepted / 234 rejected unique card
+names** (986 total), and **1,942 compiled / 503 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
@@ -36105,3 +36105,133 @@ new `pkg/mage/dsl/ron/action_payment.go` and real-card tests; payment dispatch,
 semantic inventory and affected regression assertions in `ron`; `pkg/mage/doc.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 No second slice starts. One descriptive commit follows passing checks.
+
+## 2026-10-07: indefinite fixed characteristic changes
+
+Status: completed slice `INDEFINITE-FIXED-CHARACTERISTICS`. This run stops here.
+The initial `.gitignore` and execution-design edits, the progress-ledger
+reorganization, and untracked completed-work ledger are preserved. The commit
+contains only this run's ledger additions and current-status update, not the
+user's ledger reorganization.
+
+### Fresh evidence and selection
+
+Fresh compiler tests and whole-repository build passed before implementation.
+Strict loader and AST inventory exited 1 for collection rejection, not build
+failure: **1,940 compiled / 505 rejected records**, **750 accepted / 236 rejected
+unique names**. The inventory walked 72,953 nodes and 8,554 signatures, with
+4,223 unknown-role occurrences. The vocabulary loader baseline was stale at
+1,935 compiled records; fresh loading supplied the 1,940-record baseline.
+The design, vocabulary snapshot, ledger, engine
+reference, selected compiler/engine services, complete candidate RON records,
+API/rules contracts and CR 400.7, 611.2a/c, 613.1e/f, 613.7 and 702.26d/e were
+read. Reprints count once. No Go card definitions supplied requirements.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Indefinite fixed characteristic changes, selected | Aisling Leprechaun, Cocoon: **2** | Missing fixed-color and keyword adapters. Aisling's two `AddColor` expressions contradict local Oracle data. Existing event, attachment, counter payment and layer services supply the other rules. Fixed color lowering also prepares Alchor's Tomb and Dream Coat after their separate choice prerequisites. | Low/medium: reuse two engine modifications; complete-card lifecycle, identity, timestamps, declarations, native combat and clone tests. |
+| Complete damage-source enumeration and next-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after the prerequisite, **0** enumeration-only unlocks | Complete records have fixed payments, property filters and one next-source shield. Existing live-only enumeration excludes referred objects and command-zone sources. Full legal enumeration, lexical choice result and shield adapter are still needed. Also prepares the more complex source-choice damage replacements. | High: legal-source categories, retained identities, choices, shield consumption and replacement ordering. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after engine and adapter work | Five complete lands grant legendary bands; Master creates a named-token band parameter; the other two remove all band variants, with Tolaria's upkeep restriction already supported. Engine parameterized band membership and its attack/block/damage contracts are absent. | High: parameter storage, layer grants/removal, token copying, band legality and both damage-assignment directions. |
+
+The selected two-card gain requires small adapters over exact established
+services. The larger candidates each require substantial shared engine work.
+First-error counts alone did not determine estimates. The contract, reuse
+boundary, source defect and acceptance cases were stated before editing.
+
+### Exact shapes and reuse boundary
+
+`CreatePermanentLayerEffect(permanent_reference, [SetColor(
+SimpleColorList([color_symbols...]))])` accepts a distinct fixed list of the
+five Magic colors, including an empty list for colorless. It lowers to
+`Until(Indefinite, SetColors(subject, colors...))`. Chosen colors, duplicate
+colors, colorless symbols and malformed values are rejected before factory use.
+
+`CreatePermanentLayerEffect(permanent_reference, [AddAbility([
+fixed_keywords...])])` accepts a nonempty list through the existing fixed keyword
+compiler, including fixed landwalk. It lowers each member to
+`GrantKeywordModification` inside `Until(Indefinite)`. The existing single
+activated-ability grant remains unchanged. Mixed activated/keyword bodies,
+unknown or malformed keywords and unbound references remain rejected. Other
+indefinite modification families remain partial.
+
+RON owns spelling and validation. Existing typed source, target, combat-event
+and attachment references provide each factory's independent bindings. The
+engine's continuous capture service owns live subject identity, durations,
+phasing, timestamps, cloning and ability layers. It captures no absent object
+through LKI. Aisling's pending event survives source departure; Cocoon's saved
+attachment can receive the grant after the Aura sacrifices itself. No new
+engine state, global last-action slot or card-name executor was added.
+
+No production subset registry, fallback or runtime cutover occurred. Go-card
+and DSL removal gates remain unsatisfied; no functions or definitions were
+removed. No engine skill was required for these compiler-only adapters.
+
+### Source defect and card-to-test mappings
+
+Local `data/LEG.json` says Aisling's other creature becomes green and that the
+effect lasts indefinitely. Both expressions in its complete LEG record used
+`AddColor`, which would retain other colors. Both now use `SetColor`; no other
+reprints exist in the AST inventory. CR 613.1e and the layer setter establish
+the exact behavior. The native and event tests start with red or red/blue
+creatures and require green alone. No global predicate or `AddColor` meaning
+was changed. The vocabulary was refreshed from all positioned source ASTs:
+2,445 records, 986 names, 601 tuple signatures, 503 symbols, 51 top-level rule
+names, fresh source hashes and loader diagnostics. The removed tuple signature
+is `AddColor/1`; both occurrences moved to existing `SetColor/1`.
+
+| Card / contract | Tests and evidence |
+| --- | --- |
+| Aisling Leprechaun, all rules | `TestRONAislingNativeCombat`: both native attack/block declaration paths. `TestRONAislingIndefiniteColor`: both event directions, timing, source departure, returned/absent recipient, phase cycle, changed controller, copied trigger and cloned pending effects; cleanup and later color timestamps. |
+| Cocoon, all rules | `TestRONCocoonCompleteLifecycle`: native casting, illegal opponent host and cost rollback, entry tap and three pupa counters, untap gating, three paid upkeep branches, fourth unpaid branch, opponent upkeep, sacrifice, saved host, +1/+1 counter and flying; pending clone, cleanup, phasing and returned-host isolation. |
+| Fixed declarations | `TestRONIndefiniteCharacteristicDeclarations` and `Invalid`: fresh factories and definition validation, unbound references, unknown/malformed keywords, empty grants, chosen colors, duplicate colors and invalid color symbols. `TestRONIndefiniteFixedColorLists`: colorless and all five fixed colors execute and survive cleanup. |
+| Shared keyword capture | `TestRONIndefiniteKeywordIdentity`: both granted keywords, target legality, returned/phased recipient, phase cycle, source departure, control, copied activation, cloned pending effects, later ability removal and restoration after cleanup. |
+
+Tests were written first. After correcting test API spellings, the red run
+failed for the expected missing `SetColor`, Aisling `AddColor`, and Cocoon
+`AddAbility` adapters. Focused tests then passed after implementation.
+Obsolete Cocoon rejection assertions now assert successful full-record
+compilation. The atomic rejection test uses still-unsupported Relic Bind.
+It still requires a nil registry on collection failure. Exact collection
+regressions now require 1,942/503.
+
+### Validation and actual gain
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS, including a repeat after automatic lint formatting. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONIndefinite\|TestRONAisling\|TestRONCocoonComplete' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: **1,942 compiled / 503 rejected records**. |
+| `go run ./cmd/loadcards -inventory` | Expected exit 1; all nodes walked, strict collection rejection preserved. |
+
+Final inventory: 72,953 nodes, 8,554 signatures, 4,217 unknown-role occurrences.
+Actual gain: **2 records and 2 unique cards**, exactly the estimate.
+**752 accepted / 234 rejected unique cards** remain separate from complete
+collection behavior verification. This run adds complete gameplay mappings for
+two unique cards; it does not certify all previously compiled records.
+
+Representative remaining diagnostics: Circle of Protection: Red,
+`LEB.lines.ron:36:213`, unsupported `ChooseADamageSource`; Adventurers'
+Guildhouse, `LEG.lines.ron:5:255`, unsupported `BandsWithOthers`; Brine Hag,
+`LEG.lines.ron:37:228`, unsupported `CreateEachPermanentLayerEffect`.
+No environment or pre-existing test failure blocked this slice.
+
+Changed files: `indefinite_type.go`, new `indefinite_characteristic_test.go`,
+five affected regression files under `pkg/mage/dsl/ron`, `LEG.lines.ron`,
+vocabulary snapshot, API/rules-contract documentation and this ledger.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration, then the seven basic shields.
+2. Parameterized bands with others for the eight complete consumers above.
+3. Shared resolving object/player choices for Forcefield, Juxtapose, Backdraft
+   and Rainbow Vale; inspect remaining nested prerequisites before estimating
+   full-card gains.
+
+Complete RON loading/gameplay, runtime wiring, Go-card deletion and DSL cleanup
+remain unfinished. No second slice starts in this run.

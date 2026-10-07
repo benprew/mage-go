@@ -1,6 +1,8 @@
 package ron
 
 import (
+	"slices"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -23,15 +25,47 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
-		case "AddAbility":
-			if part.Kind != Tuple || len(part.Args) != 1 || part.Args[0].Kind != List || len(part.Args[0].Args) != 1 || (part.Args[0].Args[0].Name != "Activated" && part.Args[0].Args[0].Name != "ActivatedWithModifiers") {
-				return nil, unsupported(part, "indefinite type modification")
-			}
-			build, err := compileActivatedGrantModification(part, subject)
+		case "SetColor":
+			colors, err := compileColorList(part)
 			if err != nil {
 				return nil, err
 			}
-			modifications = append(modifications, build)
+			for i, color := range colors {
+				if slices.Contains(colors[:i], color) {
+					return nil, problem(part, "colors must be distinct")
+				}
+			}
+			modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+				return mage.SetColors(subject.build(bindings), colors...)
+			})
+		case "AddAbility":
+			if err := arity(part, 1); err != nil {
+				return nil, err
+			}
+			abilities, err := list(part.Args[0])
+			if err != nil {
+				return nil, err
+			}
+			if len(abilities) == 0 {
+				return nil, problem(part, "supply at least one ability")
+			}
+			if len(abilities) == 1 && (abilities[0].Name == "Activated" || abilities[0].Name == "ActivatedWithModifiers") {
+				build, err := compileActivatedGrantModification(part, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
+			for _, ability := range abilities {
+				keyword, err := compileTemporaryKeyword(ability)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+					return mage.GrantKeywordModification(subject.build(bindings), keyword)
+				})
+			}
 		case "SetToughness":
 			build, err := compileIndefiniteToughness(part, ctx, subject)
 			if err != nil {

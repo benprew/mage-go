@@ -5,7 +5,7 @@
   "records": 2445,
   "unique_card_names": 986,
   "top_level_rule_names": 51,
-  "constructor_signatures": 602,
+  "constructor_signatures": 601,
   "conflicting_reprints": [],
   "files": [
     {
@@ -61,7 +61,7 @@
     {
       "path": "cards/mtgish/LEG.lines.ron",
       "records": 309,
-      "sha256": "943623789dd6a624fec235422b86c10fc17e6758d9924753d5160356288b3269"
+      "sha256": "3c8a81fd5f00b25bf00c6d63e26780a4a53653702672d40d049d62c65876342a"
     },
     {
       "path": "cards/mtgish/PROMOS.lines.ron",
@@ -164,7 +164,6 @@
     {"name": "AddAbilityVariable", "kind": "tuple", "arity": 1, "occurrences": 8, "examples": ["Vesuvan Doppelganger (cards/mtgish/2ED.lines.ron:263:543)", "Vesuvan Doppelganger (cards/mtgish/3ED.lines.ron:269:543)", "Urza's Avenger (cards/mtgish/ATQ.lines.ron:75:334)"]},
     {"name": "AddCardtype", "kind": "tuple", "arity": 1, "occurrences": 43, "examples": ["Animate Artifact (cards/mtgish/2ED.lines.ron:3:299)", "Animate Artifact (cards/mtgish/2ED.lines.ron:3:322)", "Jade Statue (cards/mtgish/2ED.lines.ron:130:287)"]},
     {"name": "AddCardtypes", "kind": "tuple", "arity": 1, "occurrences": 6, "examples": ["Copy Artifact (cards/mtgish/2ED.lines.ron:47:254)", "Copy Artifact (cards/mtgish/3ED.lines.ron:46:254)", "Copy Artifact (cards/mtgish/CED.lines.ron:47:254)"]},
-    {"name": "AddColor", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Aisling Leprechaun (cards/mtgish/LEG.lines.ron:7:296)", "Aisling Leprechaun (cards/mtgish/LEG.lines.ron:7:509)"]},
     {"name": "AddCopiableAbility", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Primal Clay (cards/mtgish/3ED.lines.ron:197:396)", "Primal Clay (cards/mtgish/3ED.lines.ron:197:546)", "Primal Clay (cards/mtgish/ATQ.lines.ron:55:396)"]},
     {"name": "AddCopiableCardtype", "kind": "tuple", "arity": 1, "occurrences": 12, "examples": ["Primal Clay (cards/mtgish/3ED.lines.ron:197:245)", "Primal Clay (cards/mtgish/3ED.lines.ron:197:276)", "Primal Clay (cards/mtgish/3ED.lines.ron:197:334)"]},
     {"name": "AddCopiableCreatureType", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Primal Clay (cards/mtgish/3ED.lines.ron:197:453)", "Primal Clay (cards/mtgish/ATQ.lines.ron:55:453)"]},
@@ -946,7 +945,7 @@
     {"name": "SeparatePermanentsIntoNamedPiles", "kind": "tuple", "arity": 2, "occurrences": 5, "examples": ["Raging River (cards/mtgish/2ED.lines.ron:197:308)", "Raging River (cards/mtgish/CED.lines.ron:197:308)", "Raging River (cards/mtgish/CEI.lines.ron:197:308)"]},
     {"name": "Serpent", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Sea Serpent (cards/mtgish/2ED.lines.ron:218:88)", "Sea Serpent (cards/mtgish/3ED.lines.ron:224:88)", "Sea Serpent (cards/mtgish/CED.lines.ron:218:88)"]},
     {"name": "SetCardtypes", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Xenic Poltergeist (cards/mtgish/ATQ.lines.ron:83:353)"]},
-    {"name": "SetColor", "kind": "tuple", "arity": 1, "occurrences": 79, "examples": ["Chaoslace (cards/mtgish/2ED.lines.ron:32:231)", "Chaoslace (cards/mtgish/2ED.lines.ron:32:373)", "Deathlace (cards/mtgish/2ED.lines.ron:59:231)"]},
+    {"name": "SetColor", "kind": "tuple", "arity": 1, "occurrences": 81, "examples": ["Chaoslace (cards/mtgish/2ED.lines.ron:32:231)", "Chaoslace (cards/mtgish/2ED.lines.ron:32:373)", "Deathlace (cards/mtgish/2ED.lines.ron:59:231)"]},
     {"name": "SetController", "kind": "tuple", "arity": 1, "occurrences": 13, "examples": ["Control Magic (cards/mtgish/2ED.lines.ron:44:240)", "Steal Artifact (cards/mtgish/2ED.lines.ron:234:241)", "Control Magic (cards/mtgish/3ED.lines.ron:44:240)"]},
     {"name": "SetCopiablePT", "kind": "tuple", "arity": 1, "occurrences": 6, "examples": ["Primal Clay (cards/mtgish/3ED.lines.ron:197:220)", "Primal Clay (cards/mtgish/3ED.lines.ron:197:309)", "Primal Clay (cards/mtgish/3ED.lines.ron:197:428)"]},
     {"name": "SetCreatureType", "kind": "tuple", "arity": 1, "occurrences": 6, "examples": ["Jade Statue (cards/mtgish/2ED.lines.ron:130:263)", "Mishra's Factory (cards/mtgish/ATQ.lines.ron:44:296)", "Jade Statue (cards/mtgish/CED.lines.ron:130:263)"]},
@@ -1230,7 +1229,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 1936,
+    "compiled": 1942,
     "issues": [
       {"card": "Animate Artifact", "message": "2ED.lines.ron:3:299: unsupported conditional static modification (AddCardtype)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 3}},
       {"card": "Animate Dead", "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 4}},
@@ -1522,12 +1521,9 @@
       {"card": "Whippoorwill", "message": "DRK.lines.ron:115:341: unsupported temporary rule operation (DamageDealtToItCantBePreventedOrRedirected)", "source": {"Column": 1, "File": "DRK.lines.ron", "Line": 115}},
       {"card": "Worms of the Earth", "message": "DRK.lines.ron:118:204: unsupported all-player rule operation (CantPlayLands)", "source": {"Column": 1, "File": "DRK.lines.ron", "Line": 118}},
       {"card": "Conch Horn", "message": "FEM.lines.ron:9:284: unsupported action (PutACardFromHandOnTopOfLibrary)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 9}},
-      {"card": "Delif's Cone", "message": "FEM.lines.ron:11:436: unsupported optional payment cost (GainLife)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 11}},
-      {"card": "Delif's Cube", "message": "FEM.lines.ron:12:477: unsupported temporary blocking operation (AssignsNoCombatDamage)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 12}},
       {"card": "Dwarven Catapult", "message": "FEM.lines.ron:16:198: unsupported action (SpellDealsDamageDividedAmongRecipientsRoundedDown)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 16}},
       {"card": "Ebon Praetor", "message": "FEM.lines.ron:21:505: unsupported activation history condition (APermanentWasSacrificedThisWay)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 21}},
       {"card": "Farrel's Mantle", "message": "FEM.lines.ron:28:254: unsupported source combat reference (HostPermanent)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 28}},
-      {"card": "Farrel's Zealot", "message": "FEM.lines.ron:29:310: unsupported optional payment cost (HavePermanentDealDamage)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 29}},
       {"card": "Goblin Flotilla", "message": "FEM.lines.ron:34:631: unsupported delayed departure duration (UntilEndOfCombat)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 34}},
       {"card": "Heroism", "message": "FEM.lines.ron:41:291: unsupported combat prevention collection union (And)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 41}},
       {"card": "High Tide", "message": "FEM.lines.ron:42:164: unsupported delayed departure event (WhenAPlayerTapsAPermanentForMana)", "source": {"Column": 1, "File": "FEM.lines.ron", "Line": 42}},
@@ -1653,7 +1649,6 @@
       {"card": "Veteran Bodyguard", "message": "LEB.lines.ron:264:219: unsupported conditional static body (ReplaceWouldDealDamage)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 264}},
       {"card": "Word of Command", "message": "LEB.lines.ron:289:197: unsupported action (LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 289}},
       {"card": "Adventurers' Guildhouse", "message": "LEG.lines.ron:5:255: unsupported static ability grant (BandsWithOthers)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 5}},
-      {"card": "Aisling Leprechaun", "message": "LEG.lines.ron:7:296: unsupported indefinite type modification (AddColor)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 7}},
       {"card": "Alchor's Tomb", "message": "LEG.lines.ron:11:291: unsupported action (ChooseAColor)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 11}},
       {"card": "All Hallow's Eve", "message": "LEG.lines.ron:12:190: unsupported exile subject (Spell)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 12}},
       {"card": "Arboria", "message": "LEG.lines.ron:17:205: unsupported global landwalk blocking operation (CantAttackAPlayer)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 17}},
@@ -1667,7 +1662,6 @@
       {"card": "Chain Lightning", "message": "LEG.lines.ron:43:243: unbound or incompatible player reference (PlayerOrControllerOfPermanent)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 43}},
       {"card": "Chains of Mephistopheles", "message": "LEG.lines.ron:44:159: unsupported rule (ReplaceWouldDraw)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 44}},
       {"card": "Clergy of the Holy Nimbus", "message": "LEG.lines.ron:47:150: unsupported rule (ReplaceWouldDestroy)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 47}},
-      {"card": "Cocoon", "message": "LEG.lines.ron:48:902: unsupported indefinite type modification (AddAbility)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 48}},
       {"card": "Disharmony", "message": "LEG.lines.ron:63:399: source control duration requires a permanent source (GainControlOfPermanentUntil)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 63}},
       {"card": "Divine Intervention", "message": "LEG.lines.ron:64:427: unsupported trigger (WhenAPlayerRemovesTheLastCounterOfTypeFromAPermanent)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 64}},
       {"card": "Dream Coat", "message": "LEG.lines.ron:67:235: unsupported action (ChooseColors)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 67}},
@@ -1676,7 +1670,6 @@
       {"card": "Equinox", "message": "LEG.lines.ron:77:250: unsupported untargeted granted body (Targeted)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 77}},
       {"card": "Eureka", "message": "LEG.lines.ron:79:173: unsupported action (RepeatableActions)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 79}},
       {"card": "Firestorm Phoenix", "message": "LEG.lines.ron:85:175: unsupported rule (ReplaceWouldPutIntoGraveyard)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 85}},
-      {"card": "Floral Spuzzem", "message": "LEG.lines.ron:88:361: unsupported optional payment cost (DestroyPermanent)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 88}},
       {"card": "Forethought Amulet", "message": "LEG.lines.ron:90:312: unsupported rule (ReplaceWouldDealDamage)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 90}},
       {"card": "Gauntlets of Chaos", "message": "LEG.lines.ron:95:416: expected 1 positional arguments (SharesACardtypeWithPermanentFromAmongCardtypes)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 95}},
       {"card": "Giant Slug", "message": "LEG.lines.ron:97:271: unsupported action (ChooseABasicLandType)", "source": {"Column": 1, "File": "LEG.lines.ron", "Line": 97}},

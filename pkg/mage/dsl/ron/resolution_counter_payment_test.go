@@ -164,13 +164,16 @@ func TestRONResolutionCounterTokenCount(t *testing.T) {
 }
 
 func TestRONResolutionCounterFullRecords(t *testing.T) {
+	if _, err := Compile(hostUntapRecord(t, "LEG", "Cocoon")); err != nil {
+		t.Fatal(err)
+	}
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		card := repositoryCard(t, set, "Living Artifact")
 		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
 			t.Fatal(err)
 		}
 	}
-	for _, tc := range []struct{ set, name, blocker string }{{"ATQ", "Tetravus", "unsupported token keyword (PermanentRuleEffect)"}, {"LEG", "Cocoon", "unsupported indefinite type modification (AddAbility)"}} {
+	for _, tc := range []struct{ set, name, blocker string }{{"ATQ", "Tetravus", "unsupported token keyword (PermanentRuleEffect)"}} {
 		n := hostUntapRecord(t, tc.set, tc.name)
 		if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.blocker) {
 			t.Fatalf("%s: %v", tc.name, err)

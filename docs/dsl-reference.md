@@ -6167,3 +6167,22 @@ these forms do not add composite or announcement costs.
 `TestRONActionPaymentRealCards`, `NativeCombat`, `Invalid`, `StrictLoad`, and
 `BranchesAndChooser` cover Delif's Cone, Farrel's Zealot, and Floral Spuzzem.
 Farrel's Mantle still needs its host event binding and a source-data review.
+
+## RON indefinite fixed color and keyword changes
+
+`CreatePermanentLayerEffect(reference, [SetColor(SimpleColorList([colors...]))])`
+accepts distinct Magic colors. An empty list sets colorless. It replaces the
+subject's colors in layer 5. Choices and unbound references are rejected.
+
+`CreatePermanentLayerEffect(reference, [AddAbility([keywords...])])` accepts a
+nonempty list of the existing fixed keyword declarations, including fixed
+landwalk. The separate activated-ability grant form remains supported.
+These resolving forms use `Until(Indefinite)`, `SetColors`, and
+`GrantKeywordModification`. They capture the exact live subject at resolution.
+Source departure does not end them. Returned subjects do not inherit them;
+phasing preserves an installed effect. Later layer timestamps still apply.
+
+Full-card evidence: `TestRONAislingIndefiniteColor`,
+`TestRONAislingNativeCombat`, and `TestRONCocoonCompleteLifecycle`.
+Declaration and recipient contracts are in `TestRONIndefiniteCharacteristic*`
+and `TestRONIndefiniteKeywordIdentity`. This slice adds no engine service.

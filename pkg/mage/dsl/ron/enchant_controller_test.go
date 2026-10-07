@@ -155,8 +155,10 @@ func TestRONEnchantControllerClauses(t *testing.T) {
 }
 
 func TestRONEnchantControllerReporting(t *testing.T) {
+	if _, err := Compile(hostUntapRecord(t, "LEG", "Cocoon")); err != nil {
+		t.Fatal(err)
+	}
 	for _, tc := range []struct{ set, name, blocker string }{
-		{"LEG", "Cocoon", "unsupported indefinite type modification (AddAbility)"},
 		{"LEG", "Relic Bind", "unsupported action list (Modal_ChooseOne)"},
 		{"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"},
 	} {
