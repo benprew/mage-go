@@ -2477,7 +2477,7 @@ func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard Car
 	if len(chosen) < minTargets || len(chosen) > maxTargets {
 		return fmt.Errorf("%s requires exactly %d targets", sourceCard.Name(), minTargets)
 	}
-	possible := g.possibleTargetsWithX(spec, controller, sourceCard, x)
+	possible := g.possibleTargetsWithX(spec, controller, SpellTargetSource(sourceCard), x)
 	seen := make(map[uuid.UUID]bool, len(chosen))
 	for _, id := range chosen {
 		if seen[id] || !slices.Contains(possible, id) {
@@ -2634,9 +2634,9 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if selection != nil {
 		targets = selection.targets
 	} else if !grouped {
-		targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
-		targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
-		if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+		targets = g.acquireRandomTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets, xValue)
+		targets = g.acquireOpponentChosenTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets)
+		if err := g.validateActionTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets, xValue, "spell"); err != nil {
 			return err
 		}
 		if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
@@ -2894,7 +2894,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		if ct := card.CastTargets(); len(ct) > 0 {
 			hasLegalTarget := false
 			for _, t := range ct {
-				if len(t.Possible(playerID, card, g)) > 0 {
+				if len(t.Possible(playerID, SpellTargetSource(card), g)) > 0 {
 					hasLegalTarget = true
 					break
 				}

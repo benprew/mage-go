@@ -555,7 +555,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		// creatures", "target player and target creature") are fully populated
 		// rather than only filling the first requirement.
 		for _, t := range sa.Targets() {
-			possible := t.Possible(playerID, card, g)
+			possible := t.Possible(playerID, mage.SpellTargetSource(card), g)
 			minTargets, maxTargets := mage.TargetBounds(t, xValue)
 			if len(possible) == 0 {
 				if minTargets > 0 {
@@ -578,7 +578,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 
 	// Check CastTargets for auras and other cards with cast-time targeting
 	for _, t := range card.CastTargets() {
-		possible := t.Possible(playerID, card, g)
+		possible := t.Possible(playerID, mage.SpellTargetSource(card), g)
 		if len(possible) == 0 {
 			return nil
 		}

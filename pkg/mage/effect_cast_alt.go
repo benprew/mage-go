@@ -187,9 +187,9 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	if selection != nil {
 		targets = selection.targets
 	} else {
-		targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
-		targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
-		if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+		targets = g.acquireRandomTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets, xValue)
+		targets = g.acquireOpponentChosenTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets)
+		if err := g.validateActionTargets(playerID, SpellTargetSource(card), card.CastTargets(), targets, xValue, "spell"); err != nil {
 			return err
 		}
 		if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {

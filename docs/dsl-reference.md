@@ -4,6 +4,30 @@ This checkout has the legacy facade in `pkg/mage/dsl/dsl.go`. It does not have
 `pkg/mage/dsl/composable.go`. Proposed signatures in the migration plan are
 not implemented APIs.
 
+## Static spell targeting restrictions
+
+`CantBeTargetedBySpells(PermanentRef, CardFilter) StaticRule` supplies a live
+restriction on matching spells. Use it with `Static`. Supply `This` or
+`AttachedPermanent` for source and Aura-host rules. Definition validation rejects
+nil or unbound references and a zero filter. Spell filters use the spell's current
+information view, including color changes. Ability sources remain separate.
+
+For a direct pre-stack target query, pass `SpellTargetSource(card)` to
+`Target.Possible` or `Permanent.CanBeTargetedBy`. The returned card view is
+immutable and keeps the physical card identity. Engine casting, grouped/modal
+choices, alternate-zone casting, copy retargeting, resolution, interactive spell
+choices, AI spell choices and the test harness supply this context. Existing
+ability queries retain their source contract.
+
+RON supports `PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`
+with exactly one operation, in the top-level static rule context. `subject` is
+bare `ThisPermanent`, or bare `HostPermanent` on an Aura. `filter` reuses the
+spell filter grammar: bare `AnySpell`, `IsEnchantmentType(Aura)`, `IsCardtype`,
+`IsColor`, and nonempty nested `And`/`Or` lists. Wrong arity, constructor-form
+references, unbound references, unsupported spell filters and combined operation
+lists remain declaration errors. Conditional rules, ability targeting and
+restrictions on enchantment attachment are separate capabilities.
+
 ## RON card loading
 
 `pkg/mage/dsl/ron` parses the card records in `cards/mtgish/*.ron` and compiles

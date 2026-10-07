@@ -599,7 +599,7 @@ func isLegalSpellTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, target
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
 			for _, t := range sa.Targets() {
-				if slices.Contains(t.Possible(playerID, card, g), targetID) {
+				if slices.Contains(t.Possible(playerID, mage.SpellTargetSource(card), g), targetID) {
 					return true
 				}
 			}
@@ -781,7 +781,7 @@ func (s *Strategy) regenerationSpellAction(p mage.Player, g *mage.Game, target *
 			if len(targets) == 0 {
 				continue
 			}
-			if !slices.Contains(targets[0].Possible(playerID, card, g), target.ID()) {
+			if !slices.Contains(targets[0].Possible(playerID, mage.SpellTargetSource(card), g), target.ID()) {
 				continue
 			}
 			return &interactive.PriorityAction{

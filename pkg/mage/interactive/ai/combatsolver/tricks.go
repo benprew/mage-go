@@ -127,7 +127,7 @@ func applyPumpToFlip(g *mage.Game, playerID uuid.UUID, ours, enemy *mage.Permane
 	}
 	spellChoices := []int{-1}
 	for i, spell := range *handPumps {
-		if slices.Contains(spell.target.Possible(playerID, spell.source, g), ours.ID()) {
+		if slices.Contains(spell.target.Possible(playerID, mage.SpellTargetSource(spell.source), g), ours.ID()) {
 			spellChoices = append(spellChoices, i)
 		}
 	}

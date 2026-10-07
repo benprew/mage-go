@@ -37,13 +37,13 @@ func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 			continue
 		}
 		for _, t := range sa.Targets() {
-			if len(t.Possible(playerID, card, g)) == 0 {
+			if len(t.Possible(playerID, mage.SpellTargetSource(card), g)) == 0 {
 				return true
 			}
 		}
 	}
 	for _, t := range card.CastTargets() {
-		if len(t.Possible(playerID, card, g)) == 0 {
+		if len(t.Possible(playerID, mage.SpellTargetSource(card), g)) == 0 {
 			return true
 		}
 	}

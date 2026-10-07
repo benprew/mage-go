@@ -327,7 +327,7 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		if ct := card.CastTargets(); len(ct) > 0 {
 			needsTarget = true
 			targetType = ct[0]
-			validTargets = targetType.Possible(playerID, card, g)
+			validTargets = targetType.Possible(playerID, mage.SpellTargetSource(card), g)
 			if len(validTargets) == 0 {
 				// MTG 601.2c: can't begin to cast a spell with no legal targets.
 				continue

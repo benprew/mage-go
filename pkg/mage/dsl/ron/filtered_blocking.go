@@ -15,6 +15,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "CantBeTheTargetOfSpells":
+		return compileSpellTargetRestriction(n, operation, ctx)
 	case "CantAttack":
 		if _, err := symbol(operation); err != nil {
 			return nil, err

@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **647 accepted / 339 rejected unique card
-names** (986 total), and **1,724 compiled / 721 rejected records** (2,445 total).
+The latest recorded inventory reports **649 accepted / 337 rejected unique card
+names** (986 total), and **1,726 compiled / 719 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`TEMPORARY-CHARACTERISTIC-VALUES` slice and its validation evidence are recorded
+`STATIC-SPELL-TARGET-RESTRICTION` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -23247,3 +23247,176 @@ Ranked next candidates to reassess from fresh complete records:
 4. Shared resolving branch/history services: Blood Lust's `IfElse` and
    Berserk's delayed attack-history condition now have the temporary-value
    prerequisite, but prefer useful multi-card work over isolated card adapters.
+
+## 2026-10-06: live spell targeting restrictions
+
+Status: completed slice `STATIC-SPELL-TARGET-RESTRICTION`. This run stops here.
+Initial user changes to `.gitignore`, the execution design and this ledger, and
+the untracked completed-history document are preserved. The commit stages only
+this new entry and current-status counts in the ledger; its user reorganization
+stays unstaged.
+
+### Fresh evidence, candidate comparison and selection
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading and semantic inventory exited 1 for collection rejection, not
+build/test failure: 2,445 records, 1,724 compiled / 721 rejected; 647 accepted /
+339 rejected unique names. Inventory: 72,954 AST nodes, 8,543 semantic signatures,
+6,641 unknown-role occurrences. Instructions, engine API, current design/ledger,
+vocabulary snapshot, selected code, complete candidate RON records and nested
+forms, API/rules contracts and CR 115.1b–d, 400.7, 601.2c, 608.2b/608.3b,
+702.20 and 707.2/707.10 were inspected. Local `data/LEG.json` confirms both
+selected records' full Oracle requirements. No Go card definition was used as
+requirements. No removed skill, Go stub, fallback or subagent was used.
+
+| Candidate | Distinct consumers and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Static spell targeting, selected | Bartel Runeaxe, Tetsuo Umezawa: **2** complete cards | Explicit spell-versus-ability query identity and a reusable static restriction were missing. Also prepares Anti-Magic Aura (combined operations and attachment restriction), Raiding Party (ability restriction, choices/results), Lurker (conditional attack/block history) and Wall of Shadows (combat prevention, target-only filters and ability restriction); none of those four count as unlocks. | Medium: one engine rule and immutable query view, casting/choice/copy/UI/AI integration, declaration, identity, color, host, rollback and gameplay tests. |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** after prerequisites, **0** adapter-only gains | All complete records need source enumeration, typed saved choices and next-event consumption. Enables a larger prevention family, whose other consumers have more blockers. | High: new decisions, source identities, replacement consumption/ordering and gameplay contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites, **0** adapter-only gains | Zone-aware characteristics, controller/owner context, CDA/copy/layer evaluation are missing. Gaea's Avenger's source defect and Wood Elemental's entry result remain separate. | High: cross-zone characteristics and copy/layer services, then count adapters and gameplay. |
+
+Selection: two complete consumers can use a small shared engine service. This
+has a smaller credible effort than the seven-card prevention and five-card CDA
+families, each of which requires several new execution contracts. First-error
+frequency was not an unlock estimate. The contract, reuse boundary, acceptance
+cases and two-card estimate were stated before editing. The `implement-engine`
+skill was used for the engine service; its missing card-skill reference was not
+needed for this direct engine task.
+
+### Exact shapes, contexts and engine reuse
+
+RON top-level static shape:
+`PermanentRuleEffect(subject, [CantBeTheTargetOfSpells(filter)])`, with exactly
+one operation. `subject` is bare `ThisPermanent`, or bare `HostPermanent` on an
+Aura. `filter` reuses the spell-filter compiler: bare `AnySpell`,
+`IsEnchantmentType(Aura)`, `IsCardtype(type)`, `IsColor(color)`, and nonempty
+nested `And([...])`/`Or([...])`. Malformed arity/constructors, non-Aura host reads,
+unbound or wrong-role references, unsupported filters, empty logical lists and
+combined operation lists fail compilation. No conditional, resolving, entry,
+cost, ability-targeting or enchantment-attachment rule context gains support.
+The semantic inventory assigns the nested operand `spell_filter`.
+
+Engine APIs:
+
+- `CantBeTargetedBySpells(PermanentRef, CardFilter) StaticRule`: live subject and
+  filter checks through the current source, attachment incarnation and existing
+  continuous-effect active/printed-suppression lifecycle. Nil/unbound references
+  and zero filters fail definition validation. A source must be present and
+  retain its ability. Both players' matching spells are prohibited. Source
+  control changes do not remove the rule. Source departure, phasing and ability
+  removal deactivate it; returned sources supply their new rule. A moving Aura
+  follows its current host; returned hosts do not retain the old attachment.
+  Host ability removal does not remove its separate Aura's restriction.
+- `SpellTargetSource(Card) Card`: immutable pre-stack information view with
+  explicit spell identity and the same card UUID. The existing `targetSourceLKI`
+  also records spell identity for popped and copied spells. Ability views remain
+  separate after source departure. `cardColors` reads the retained view so
+  `CardFilter` color checks use current spell colors after stack removal.
+
+RON owns grammar and reference validation; mage owns rules, current information
+and targeting identity. Existing caller signatures stay. Spell-only casting,
+grouped/modal choice, alternate-zone casting, castability queries, prompting,
+interactive/AI choices and gametest validation now pass the explicit spell view.
+Copies already query `resolutionTargetSource`, which supplies their own identity,
+controller and colors. Existing ability queries keep their original source view.
+
+Reuse: `StaticRule`, `FuncContinuousEffect`, printed-ability suppression,
+`PermanentRef` and attachment/incarnation resolution, active effect removal and
+clone hooks, `compilePermanentRef`, `compileSpellFilter`, instanceBindings,
+transactional costs, target declarations/bounds, original-incarnation target
+checks, resolution legality and copy retargeting. No new zone, targeting registry,
+resolution slot, event, payment-result or replacement system is introduced.
+Nontargeted Aura attachment stays legal. This service introduces no replacement
+ordering, APNAP trigger or simultaneous-operation changes; those existing tests
+remain in the full suites.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing `CantBeTargetedBySpells` and
+`SpellTargetSource`. Fixture syntax/API mistakes were corrected before confirming
+that missing-API failure alone. Complete-record RON tests then failed on the
+unsupported static operation in Bartel Runeaxe and Tetsuo Umezawa. Implementation
+made both pass. No assertion was weakened. The Tetsuo fixture was corrected to
+use activation index 1 after its static rule. Engine Aura casting fixtures use
+main-phase timing. A color-copy fixture was corrected from expecting an ordinary
+color effect to be copiable: CR 707.2 requires testing each spell's independent
+color change. The final test changes both original and copy to blue explicitly.
+Inventory assertions changed only to the measured new collection counts.
+
+| Card/contract | Tests and evidence |
+| --- | --- |
+| Bartel Runeaxe, complete LEG record | `TestRONSpellTargetRestrictionCards/Bartel_Runeaxe`: actual cast and unpaid rollback, Aura casting rejection/payment rollback, legal Giant Growth, P/T, native attack and vigilance. Shared source lifecycle tests cover return, phasing, control, source ability removal/restoration and cloned state. |
+| Tetsuo Umezawa, complete LEG record | `TestRONSpellTargetRestrictionCards/Tetsuo_Umezawa`: actual cast and unpaid rollback, Aura spell prohibition, legal non-Aura spell, invalid untapped/nonblocking target without payment, tapped target activation/destruction and pending clone. Existing typed target, destruction, combat-filter and cost suites supply blocking, regeneration and resolution-legality contracts. |
+| Source/host rule and identity | `TestCantBeTargetedBySpellsDefinition`, `LiveAndCopies`, `AbilitySourceDeparture`, `DoesNotPreventAttachment`: nil/unbound/zero-filter declarations, current/returned/phased source, control, removal/restoration, original/copy rejection at resolution, source LKI for copied Aura abilities, direct attachment and clone isolation. |
+| Spell properties, partial legality and retargeting | `TestCantBeTargetedBySpellsColorAndPartialLegality`, `RetargetCopy`: current color after stack removal, independent copied-spell colors, all/partly illegal target groups and legal copy candidate enumeration. Existing `TestTargetLegalityPoppedSpell*` retains color/protection behavior. |
+| RON grammar, attachment and strict loading | `TestRONSpellTargetRestrictionInvalid`, `Host`, `Filters`, `LoadAndInventory`: malformed and wrong-context declarations, moving/source-removed/source-returned/phased Aura, returned/phased host, host ability removal, control/clone state, supported nested filters, complete-record test registry, atomic invalid collection rejection and semantic roles. |
+| Existing accepted RON and native callers | Required engine/repository suites, including target, layer, cost, source-LKI, damage, replacement, UI, AI, copy and gametest regression tests. |
+
+Two complete-card gameplay mappings are added. Collection-wide engine_validated
+and behavior_verified measurements remain null. Compiler acceptance is not
+collection-wide gameplay completion. No RON defect was found or corrected.
+All RON source files and hashes are unchanged, so the syntax vocabulary snapshot
+needs no source refresh in this slice. Fresh loader diagnostics are below.
+
+### Validation, actual gains and remaining work
+
+Required checks pass. The first lint run rejected two test variables named
+`copy`; both were renamed to `copiedSpell`, and lint and affected tests were
+rerun successfully. Lint's automatic import formatting was reviewed; it changed
+only this slice's new test imports. Post-lint focused tests and the skill's extra
+short repository suite pass. No environmental or pre-existing blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestCantBeTargetedBySpells\|TestRONSpellTargetRestriction\|TestTargetLegalityPoppedSpell\|TestInventory' -count=1` | PASS after the expected TDD failures; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including final copy-retarget tests. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; automatic changes reviewed. |
+| Additional skill `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; inventory JSON | Expected exit 1 for remaining unsupported records; repeated after lint. |
+
+Final **1,726 compiled / 719 rejected records; 649 accepted / 337 rejected unique
+names**, from 2,445 records and 986 names. Exactly Bartel Runeaxe and Tetsuo
+Umezawa gained; no accepted name was lost. Actual gain matches the estimate:
+**2 unique names / 2 records**. Inventory: 72,954 nodes, 8,543 signatures and
+6,636 unknown-role occurrences. The strict loader rejects the whole collection
+and publishes no partial production registry.
+
+Fresh diagnostics: Circle of Protection: Black, `2ED.lines.ron:33:215`, still
+needs `ChooseADamageSource`; Dakkon Blackblade, `LEG.lines.ron:58:205`, needs
+`CDA_Power`; Magnetic Mountain, `3ED.lines.ron:158:366`, and Thelon's Curse,
+`FEM.lines.ron:87:343`, need the paid selected-permanent untap choice. Anti-Magic
+Aura (`LEG:16:214`) and Raiding Party (`FEM:71:183`) still reject combined rule
+lists. Lurker (`DRK:63:143`) rejects its conditional rule; Wall of Shadows
+(`LEG:297:255`) rejects its combat-relation prevention filter. None is claimed
+supported by this slice.
+
+A fresh whole-repository caller audit includes hidden/ignored files, dot imports,
+tests, generators, docs and compile-failure fixtures. It found 3,482 DSL/new-service
+caller lines before the final documentation update. No existing DSL function
+became obsolete; no caller or engine service was removed. Complete collection
+loading, all-card gameplay, native RON startup, Go-card deletion, obsolete
+Go-set-generator removal and DSL cleanup gates remain unmet.
+
+Changed files: new engine and RON `spell_target_restriction.go` and tests;
+engine `card.go`, `target_source_lki.go`, `object_color.go`, casting/targeting
+callers in `game.go`, `spell_cast_stack.go`, `effect_cast_alt.go`, gametest and
+interactive/AI spell queries; compiler `filtered_blocking.go`, inventory and its
+count tests; engine/API docs and this ledger. One descriptive commit contains
+only this slice; its hash is reported in the final response. No next slice is
+started.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration and next-instance prevention: seven direct complete
+   consumers after its shared engine prerequisites.
+2. All-zone battlefield-count CDAs: five direct complete consumers; separate
+   the known Gaea's Avenger and Wood Elemental blockers.
+3. Paid selected-permanent untap choices: Magnetic Mountain and Thelon's Curse,
+   two potential complete consumers after shared payment/selection contracts.
+4. Ability-targeting and enchantment-attachment restrictions plus composable
+   static rule lists: the spell restriction prerequisite now exists for
+   Anti-Magic Aura/Raiding Party, but their remaining gaps still need assessment.

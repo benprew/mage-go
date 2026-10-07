@@ -148,7 +148,7 @@ func removalValueFromTarget(g *mage.Game, owner mage.Player, c mage.Card, t mage
 		return wSpellInHand
 	}
 	bestKill := 0.0
-	for _, id := range t.Possible(owner.PlayerID(), c, g) {
+	for _, id := range t.Possible(owner.PlayerID(), mage.SpellTargetSource(c), g) {
 		perm := g.FindPermanent(id)
 		if perm == nil {
 			continue

@@ -1,5 +1,47 @@
 # Engine rules contracts
 
+## Live restrictions on spell targeting
+
+`CantBeTargetedBySpells(PermanentRef, CardFilter)` is a static rule evaluated
+against the current subject at each target query. It uses the existing active
+continuous-effect lifecycle and printed-ability suppression. A source must be
+present, unphased and retain its ability. A returned source supplies only its new
+rule. An Aura host is resolved through the current attachment incarnation;
+moving the Aura moves the restriction, and a returned host cannot inherit the
+old attachment. Removing the host's abilities does not remove the Aura's rule.
+Control changes do not limit either player's spell targeting prohibition.
+Clones copy the effect source and read their own source, host and suppression
+state without a layer pass being required for the query itself.
+
+`SpellTargetSource(Card) Card` creates an immutable spell view for pre-stack
+queries. The existing retained source view records spell identity at resolution,
+even when the object has been popped or is a copy. Ability views remain abilities
+after departure, return or phasing of their Aura source. No inference from source
+card types or zones replaces this distinction (CR 115.1b–d, 707.10). Existing
+shroud, hexproof, protection, target bounds and incarnation checks still apply.
+Spell targeting restrictions do not prevent nontargeted attachment (CR 115.1b).
+
+Casting and target selection reject matching spells before payment (CR 601.2c).
+Resolution checks the current restriction and current spell information again
+(CR 608.2b, 608.3b). A color filter uses the retained spell color override, even
+after stack removal. Copies use their own characteristics and controller;
+ordinary color changes are not copiable values (CR 707.2). All-illegal targets
+prevent resolution; other legal targets remain independent. Copy retargeting
+offers only legal new candidates (CR 707.10c). The service creates no events,
+replacement rules, payment results or simultaneous-operation ordering.
+
+`TestCantBeTargetedBySpells*` covers declaration rejection, source phasing and
+return, source ability removal/restoration, both controllers, payment rollback,
+original and copied spells, copy retargeting, partial legality, color changes,
+ability-source departure/LKI, nontargeted attachment and clone isolation.
+`TestRONSpellTargetRestriction*` covers complete Bartel Runeaxe and Tetsuo
+Umezawa casting and gameplay, shared host lifecycle and filter syntax, invalid
+RON, strict complete-record test loading and atomic invalid-collection rejection.
+Bartel's native attack verifies vigilance. Tetsuo's tapped target destruction uses
+the existing transactional activation and destruction pipeline. Existing engine
+and RON destruction/target tests retain the broader regeneration, blocking,
+source-departure and target-legality contracts.
+
 ## Captured next-upkeep continuous duration
 
 `UntilNextUpkeep(PlayerRef, ...ContinuousModification)` establishes an explicit

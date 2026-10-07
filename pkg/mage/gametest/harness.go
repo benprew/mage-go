@@ -1018,7 +1018,7 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 		for _, c := range p.Hand() {
 			if c.Name() == r.spell {
 				cardID = c.ID()
-				tg.resolveResponseStackTargets(c, c.Abilities(), respPlayerID, targets)
+				tg.resolveResponseStackTargets(mage.SpellTargetSource(c), c.Abilities(), respPlayerID, targets)
 				break
 			}
 		}
@@ -1264,6 +1264,7 @@ func (tg *TestGame) resolveTargets(names []string, controllerID uuid.UUID) []uui
 }
 
 func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, controllerID uuid.UUID) []uuid.UUID {
+	sourceCard = mage.SpellTargetSource(sourceCard)
 	cts := sourceCard.CastTargets()
 	var valid []uuid.UUID
 	for i, tid := range targets {

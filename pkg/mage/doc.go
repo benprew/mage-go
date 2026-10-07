@@ -413,6 +413,11 @@
 // Use [PermanentDamageRecipients] with [DealDamageEach] for one simultaneous
 // damage batch to permanents. Players are excluded from this recipient set.
 //
+// Use [CantBeTargetedBySpells] with [Static] for a live spell restriction.
+// [SpellTargetSource] identifies spells during target queries before stack entry.
+// Ability sources use their separate source information. An Aura spell targets;
+// a direct attachment does not. Source ability removal ends its own rule.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

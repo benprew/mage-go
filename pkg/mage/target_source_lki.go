@@ -13,6 +13,7 @@ type targetSourceLKI struct {
 	colors      []core.Color
 	power       int
 	powerKnown  bool
+	spell       bool
 }
 
 func (g *Game) resolutionTargetSource(obj *StackObject) Card {
@@ -26,7 +27,7 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 		if obj.ColorOverride != nil {
 			colors = append([]core.Color(nil), (*obj.ColorOverride)...)
 		}
-		return targetSourceLKI{Card: card, colors: colors}
+		return targetSourceLKI{Card: card, colors: colors, spell: true}
 	}
 	if card == nil || card.ID() != obj.SourceID || obj.sourceIncarnation == uuid.Nil {
 		return card
@@ -45,4 +46,17 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors(), power: lki.Power, powerKnown: true, incarnation: obj.sourceIncarnation}
 	}
 	return targetSourceLKI{Card: card, colors: cardColors(card), incarnation: obj.sourceIncarnation}
+}
+
+// SpellTargetSource identifies a spell during target queries before stack entry.
+// Ability sources keep their existing information view.
+func SpellTargetSource(card Card) Card {
+	if card == nil {
+		return nil
+	}
+	if view, ok := card.(targetSourceLKI); ok {
+		view.spell = true
+		return view
+	}
+	return targetSourceLKI{Card: card, colors: cardColors(card), spell: true}
 }

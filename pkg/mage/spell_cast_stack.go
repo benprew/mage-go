@@ -33,7 +33,7 @@ type castStackObjectOptions struct {
 }
 
 func (g *Game) prepareSpellTargetGroups(controller uuid.UUID, card Card, groups [][]uuid.UUID, x int) ([]uuid.UUID, []Target, error) {
-	return g.prepareTargetGroups(controller, card, card.CastTargets(), groups, x, "spell target group")
+	return g.prepareTargetGroups(controller, SpellTargetSource(card), card.CastTargets(), groups, x, "spell target group")
 }
 
 func (g *Game) prepareTargetGroups(controller uuid.UUID, card Card, specs []Target, groups [][]uuid.UUID, x int, label string) ([]uuid.UUID, []Target, error) {
@@ -90,7 +90,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	} else {
 		effects, targets = g.prepareSpellStackPayload(controller, card, opts.Targets, false)
 		if opts.PromptTargets {
-			targets = append(targets, g.promptTargetsForListWithX(opts.Controller, card, card.CastTargets(), opts.XValue)...)
+			targets = append(targets, g.promptTargetsForListWithX(opts.Controller, SpellTargetSource(card), card.CastTargets(), opts.XValue)...)
 		}
 	}
 	if !opts.DamageDivisionPrepared {
@@ -102,7 +102,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 			if len(specs) == 0 && len(targets) != 0 {
 				return nil, fmt.Errorf("too many targets for spell")
 			}
-			if err := g.validateActionTargets(opts.Controller, card, specs, targets, opts.XValue, "spell"); err != nil {
+			if err := g.validateActionTargets(opts.Controller, SpellTargetSource(card), specs, targets, opts.XValue, "spell"); err != nil {
 				return nil, err
 			}
 		}
@@ -190,15 +190,15 @@ func (g *Game) prepareModalSpellSelection(caster Player, card Card, targets []uu
 	}
 	mode := ms.modes[choice]
 	if len(targets) == 0 {
-		targets = g.promptTargetsForListWithX(caster.PlayerID(), card, mode.Targets, x)
+		targets = g.promptTargetsForListWithX(caster.PlayerID(), SpellTargetSource(card), mode.Targets, x)
 	} else {
-		targets = g.acquireRandomTargets(caster.PlayerID(), card, mode.Targets, targets, x)
-		targets = g.acquireOpponentChosenTargets(caster.PlayerID(), card, mode.Targets, targets)
+		targets = g.acquireRandomTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets, x)
+		targets = g.acquireOpponentChosenTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets)
 	}
 	if len(mode.Targets) == 0 && len(targets) != 0 {
 		return nil, fmt.Errorf("too many targets for spell mode")
 	}
-	if err := g.validateActionTargets(caster.PlayerID(), card, mode.Targets, targets, x, "spell mode"); err != nil {
+	if err := g.validateActionTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets, x, "spell mode"); err != nil {
 		return nil, err
 	}
 	targets = append([]uuid.UUID(nil), targets...)
@@ -222,7 +222,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 		}
 		effects = append(effects, sa.Effects()...)
 		if promptTargets && len(sa.Targets()) > 0 {
-			targets = append(targets, g.promptTargetsForList(caster.PlayerID(), card, sa.Targets())...)
+			targets = append(targets, g.promptTargetsForList(caster.PlayerID(), SpellTargetSource(card), sa.Targets())...)
 		}
 	}
 	return effects, targets

@@ -834,6 +834,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantBeTheTargetOfSpells" && len(n.Args) == 1 {
+			return "spell_filter"
+		}
 		if n.Name == "CantAttackUnlessDefendingPlayer" && len(n.Args) == 1 {
 			return "defending_player_condition"
 		}

@@ -10,6 +10,9 @@ func cardColors(card Card) []Color {
 	if card == nil {
 		return nil
 	}
+	if view, ok := card.(targetSourceLKI); ok {
+		return append([]Color(nil), view.colors...)
+	}
 	if base, ok := card.(*BaseCard); ok && len(base.colorOverride) > 0 {
 		return append([]Color(nil), base.colorOverride...)
 	}

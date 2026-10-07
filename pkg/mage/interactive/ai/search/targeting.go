@@ -49,7 +49,7 @@ func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, r
 	if len(xValues) > 0 {
 		x = xValues[0]
 	}
-	return topTargetCombinationsFiltered(g, playerID, source, reqs, purpose, damage, x, nil)
+	return topTargetCombinationsFiltered(g, playerID, mage.SpellTargetSource(source), reqs, purpose, damage, x, nil)
 }
 
 func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
