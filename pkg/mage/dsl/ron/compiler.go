@@ -1134,6 +1134,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		if n.Args[2].Name == "EachPermanent" {
+			subjects, err := compilePermanentDamageCollection(n.Args[2], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageEach(mage.This, mage.PermanentDamageRecipients(subjects(bindings)), amount(bindings))
+			})
+		}
 		if n.Args[2].Name == "MultipleRecipients" {
 			recipients, err := compileMixedDamageRecipients(n.Args[2])
 			if err != nil {

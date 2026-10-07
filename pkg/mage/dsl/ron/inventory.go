@@ -162,6 +162,13 @@ func inventoryShape(n Node) string {
 }
 
 func walkInventory(n Node, card, path, role, context string, compiled bool, entries map[string]*InventorySignature) {
+	if role == "damage_permanent_collection" && n.Kind != List {
+		if n.Name == "Ref_TargetPermanents" {
+			role = "permanent_collection_reference"
+		} else if n.Name != "And" {
+			role = "permanent_filter"
+		}
+	}
 	entry := InventorySignature{Role: role, Name: n.Name, Kind: inventoryKind(n), Arity: len(n.Args), Shape: inventoryShape(n), Context: context, Support: "unverified"}
 	keyBytes, _ := json.Marshal(entry)
 	key := string(keyBytes)
@@ -897,7 +904,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DamageToRecipients" && len(n.Args) == 2 {
 			return []string{"value", "recipient"}[index]
 		}
+	case "damage_permanent_collection":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return role
+		}
 	case "recipient":
+		if n.Name == "EachPermanent" && len(n.Args) == 1 {
+			return "damage_permanent_collection"
+		}
 		if n.Name == "EachPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}

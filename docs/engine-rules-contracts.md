@@ -4637,3 +4637,35 @@ Evidence: `TestCombatCollectionPreventionTurnDuration`, `TurnIdentity`,
 `TestDamageSourceFilterReplacementOrder` and native combat regression tests retain
 the collection, source, ordering and batch contracts. Payment queries and cost
 transactions are unchanged; RON illegal/unpaid casts check resource rollback.
+
+## Filtered permanent sets and permanent-only damage batches
+
+`FilterPermanentSet(subjects PermanentSet, filter PermanentFilter) PermanentSet`
+reads the set once per operation and keeps its current matching, unphased members
+(CR 608.2h, 702.26b). It preserves the source set's order and identity checks.
+It does not declare targets, broaden a target filter, capture absent objects,
+or use LKI to select recipients. With plural target bindings, only surviving
+legal target incarnations are available (CR 400.7, 608.2b). A later control
+change does not exclude an otherwise legal target. The zero filter keeps all
+members. Nil subjects and undeclared target reads fail definition validation.
+The wrapper has no mutable state, so cloned games use their own current members.
+
+`PermanentDamageRecipients(subjects PermanentSet) DamageRecipientSet` supplies
+an empty player set to the existing mixed recipient service. It preserves strict
+validation of the existing two-set `DamageRecipients` constructor. Damage uses
+`DealDamageEach` and the existing simultaneous batch, source LKI, lifelink,
+prevention, replacement ordering and notification contracts (CR 120.4, 120.8,
+608.2h, 615, 616). No separate damage executor is added.
+
+The RON collection adapter reads live filters at resolution. The restored
+Winter Blast record filters its legal target set by flying after the tap
+instruction. Flying is a damage condition, not a target restriction.
+`TestFilterPermanentSetDeclaration` and `Targets` cover declaration checks,
+current flying, target return/phasing/shroud/control, and pending clones.
+`TestRONCollectionDamageRealCards`, `WinterIdentity`, `WinterAnnouncement`,
+`SandstormMembership`, `InstancesCopyAndInventory`, `SimultaneousAndPrevention`
+and `SourceIdentity` cover complete real records, X, rollback, live combat
+membership, copies, factories, atomic loading, simultaneous notifications,
+finite prevention, source LKI and lifelink. `Invalid` covers rejected shapes
+and scope errors. Existing replacement-order tests remain the ordering evidence;
+this slice changes no replacement choice or priority contract.

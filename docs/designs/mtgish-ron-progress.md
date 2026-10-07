@@ -2,8 +2,8 @@
 
 ## Current status
 
-The latest recorded inventory reports **644 accepted / 342 rejected unique card
-names** (986 total), and **1,721 compiled / 724 rejected records** (2,445 total).
+The latest recorded inventory reports **646 accepted / 340 rejected unique card
+names** (986 total), and **1,723 compiled / 722 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
@@ -22892,3 +22892,190 @@ Ranked next candidates to reassess:
 3. Live static combat-relation prevention: Wall of Vapor directly; Wall of Shadows
    also needs target-only restrictions. Estimate one immediate full-card unlock,
    so defer it while useful larger shared capabilities remain.
+
+## Run 2026-10-06: PERMANENT-COLLECTION-DAMAGE
+
+Status: complete implementation slice. This run stops after this slice.
+Initial user changes to `.gitignore`, the execution design, and the progress
+ledger reorganization, including untracked `mtgish-ron-completed.md`, are
+preserved. Only this entry and the current inventory correction are staged in
+the ledger; its historical reorganization remains unstaged.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Both loader commands exited 1 for collection rejection, not build/test failure:
+2,445 parsed records, 1,721 compiled / 724 rejected records; 644 accepted /
+342 rejected unique names. Semantic inventory: 72,950 nodes, 8,537 signatures,
+6,658 unknown-role occurrences. The design, vocabulary, current ledger, engine
+reference, selected code, complete candidate records and nested forms, API/rules
+contracts and relevant CR sections were read. Reprints count once. The snapshot's
+older loader baseline was not used to estimate unlocks.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Permanent collection damage, selected | Sandstorm, Winter Blast; **2** full cards after one source correction. Each has one collection record. | Simultaneous damage and plural target services exist. Missing permanent-only recipient and filtered-set adapters. Winter Blast omits the flying condition. Enables live collection damage and damage to a current subset of a legal target collection, without declaring new targets. | Low/medium: two small engine set services, one RON adapter, source/snapshot correction, declaration and full-record lifecycle/batch/copy tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** after prerequisites, zero adapter-only gains. Related Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage are excluded from this estimate. | Missing source enumeration/choice, typed saved-source identities across zones, and next-instance consumption. Related records need partial prevention, redirection or actual prevented-damage values. Enables repeated chosen-source shields and subsequent damage replacement consumers. | High: choices, stack/battlefield identity, zone changes, consumption, source-property rechecks, copies/clones and replacement tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** after prerequisites, zero safe adapter-only gains. Gaea's Avenger and Wood Elemental are excluded. | Existing CDA helpers are battlefield-only. Need all-zone characteristics, owner/controller context, named counts and copy/layer contracts. Gaea's Avenger has the recorded controller-source defect; Wood Elemental also needs entry sacrifice-result capture. Enables characteristic reads in every zone and more CDA consumers. | High: characteristic service, count lowering, zone/layer/copy tests and complete card gameplay. |
+
+Selection rationale: two complete consumers can reuse exact established damage,
+target, cost and stack behavior with much less prerequisite work than the larger
+families. Full records exposed the Winter Blast defect before implementation.
+No first-error frequency was treated as an unlock count. The contract, reuse
+boundary and acceptance cases were stated before edits. The `implement-engine`
+skill guided the engine prerequisites. No Go card definitions were used as
+requirements; no removed card/set skill or generated stubs were used.
+
+### Exact signatures, contexts and reuse
+
+Engine additions:
+
+- `FilterPermanentSet(subjects PermanentSet, filter PermanentFilter)
+  PermanentSet`: reads one typed set per operation, retaining its order and
+  current matching, unphased members. It preserves the original set's legality
+  and incarnation checks. It declares no targets and captures no absent object.
+  A zero engine filter keeps all members. Definition inspection traverses the
+  original set, so nil sets and undeclared target reads fail before gameplay.
+  The wrapper has no mutable state.
+- `PermanentDamageRecipients(subjects PermanentSet) DamageRecipientSet`: uses
+  a private empty player set with the existing `DamageRecipients` service.
+  Existing mixed-set nil validation is unchanged. `DealDamageEach` executes
+  the same simultaneous damage batch, replacements and notifications.
+
+RON resolving action support for `SpellDealsDamage(source, amount, recipient)`
+and `PermanentDealsDamage(source, amount, recipient)`:
+
+- `EachPermanent(filter)` uses live battlefield membership with the existing
+  supported permanent filters. Nested `And`/`Or` must be nonempty. Attacking and
+  blocking status are current, not departure information.
+- `EachPermanent(Ref_TargetPermanents)` reads the local plural target binding.
+- `EachPermanent(And([Ref_TargetPermanents, property-filter]))` requires exactly
+  one plural reference and one supported resolving property filter, in either
+  order. Nested property logic is supported; nested/duplicate references,
+  singular/player references, extra operands and unsupported properties fail.
+
+Existing spell, mode, activation and trigger action scopes and source/amount
+validation remain in force. Live collections need no target declaration.
+Plural reads require their local declaration and retain the existing rejection
+of delayed plural target collections. Damage packet and replacement-operation
+contexts do not gain collection support. Per-factory `instanceBindings` supply
+plural targets; no game-time declaration, card-name executor or global result
+slot is added. Inventory classifies the filter and collection reference roles,
+including descendants, without claiming gameplay support for other contexts.
+
+Reuse: `MatchingPermanents`, `PermanentTargetsBinding`, target announcement and
+resolution validation, incarnation checks, current characteristic filters,
+`TapEach`, `DamageRecipients`, `DealDamageEach`, simultaneous damage outcomes,
+source LKI, lifelink, prevention/replacement rechecks, cost transactions, stack
+copies, clone isolation and state-based actions. No separate damage, targeting,
+cost, zone or replacement system is introduced. Rules read: CR 120.4/120.8,
+400.7, 608.2b/c/h, 702.26b/d; existing damage/replacement contracts supply
+CR 615 and 616 ordering.
+
+### TDD, source evidence and gameplay mappings
+
+First engine tests failed for the missing `FilterPermanentSet` and
+`PermanentDamageRecipients` APIs; first real-record tests failed on unsupported
+`EachPermanent` recipients. An initial fixture called `DamageRecipients` with
+one argument; it was corrected, then only the intended missing APIs failed.
+After adapter lowering, the unchanged Winter Blast record failed the assertion
+that a ground creature must take no damage. Declaration/inventory tests then
+failed on accepted empty logical filters and missing nested role classification;
+both were fixed. No behavior assertion was removed or weakened.
+
+Additional fixture corrections: `Registry.CreateCard` returns a card and error;
+imports were completed before test execution. Two sorceries cannot be cast in
+succession while the stack is nonempty, so the independent instances now cast
+at legal times. A copied object resolved through `ResolveStackObject` remained
+on the stack and ran twice; the test now uses `ResolveTopOfStack`, preserving
+exact damage totals. These were fixture errors, not environment or rules gaps.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Sandstorm, complete ARN record | `TestRONCollectionDamageRealCards`: green casting payment/rollback, pre-resolution timing, both controller recipient scopes, idle creature exclusion and pending clones. `SandstormMembership`: native attacks/blocks, exit from combat, phasing, later attacking entry, shroud and defending-player casting. `SimultaneousAndPrevention`: full damage state before notifications and finite prevention. |
+| Winter Blast, complete LEG record | `RealCards`: X plus green cost, legal ground targets tap without damage, selected flying targets take exactly 2 and unselected flyers are excluded. `WinterIdentity`: current flying changes, return/phasing/control/shroud and all/partly illegal targets. `WinterAnnouncement`: wrong counts, duplicates, noncreatures, phased/shrouded targets and rollback; X=0/1/3. `InstancesCopyAndInventory`: fresh factory declarations, legal independent casts, copies with another controller and retargeted X=2, divergent pending clones, complete-record strict loading and atomic rejection. `SimultaneousAndPrevention`: simultaneous notifications and shield consumption. |
+| RON collection contexts | `SupportedShapes`: bare plural reads, reversed intersection operands, nested logical filters, live collections, fixed negative/zero/positive amounts. `Invalid`: malformed arity, empty logical filters, incompatible/unbound refs, duplicate/extra/nested refs, invalid keyword and delayed plural read rejection. `InstancesCopyAndInventory`: nested semantic roles. |
+| Reusable filtered set | `TestFilterPermanentSetDeclaration`, `Targets`: nil/undeclared reads, valid typed declaration, current flying, saved target incarnations, return/phase/control/shroud and pending clone isolation. |
+| Existing source and damage contracts | `TestRONCollectionDamageSourceIdentity`: RON permanent-source activation, source departure/return/phasing/control, copied abilities, current/LKI lifelink beneficiary, prevented damage and clones. Existing `TestDamageSourceFilter*`, `TestRONMixedDamage*`, `TestRONNumberedTargets*` and replacement-order regressions pass. Replacement choices and ordering are unchanged. |
+
+Two complete-card gameplay mappings are added. Collection-wide
+`engine_validated` and `behavior_verified` measurements remain null; compiler
+acceptance is not gameplay completion.
+
+Source defect: `LEG.lines.ron:305`, Winter Blast's damage recipient omitted
+“with flying.” Local authoritative `data/LEG.json` says: “Tap X target creatures.
+Winter Blast deals 2 damage to each of those creatures with flying.” The damage
+recipient is now `EachPermanent(And([Ref_TargetPermanents, HasAbility(Flying)]))`.
+The original creature target declaration and tap instruction are preserved.
+There is exactly one record of this name, so no identical reprint was left
+uncorrected. `data/ARN.json` agrees with Sandstorm's original complete record.
+The correction does not invert any predicate globally. No other source defect
+is changed in this slice.
+
+The vocabulary snapshot was rebuilt by walking `ron.Parse` ASTs. It retains its
+schema and compact rows, with all file hashes, counts/examples, top-level rules
+and fresh loader diagnostics. Only the LEG hash changes. There are still 600
+tuple signatures, 51 top-level rule names and 1,104 named vocabulary entries.
+
+### Validation, actual gains and remaining work
+
+All required checks pass; no environmental or pre-existing check blocker remains.
+Lint's automatic formatting was reviewed. The final declaration/shape tests and
+all required checks pass after the final test changes; the post-lint focused
+and loader checks also pass with the expected collection rejection.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine suite and `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestFilterPermanentSet\|TestRONCollectionDamage\|TestInventory\|TestRONMixedDamage\|TestRONNumberedTargets\|TestDamageSourceFilter' -count=1` | PASS after the expected TDD failures; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including final shape tests. |
+| `make test` | PASS, repeated after final shape tests. |
+| `make build` | PASS, repeated after final tests. |
+| `go vet ./...` | PASS, repeated after final tests. |
+| `make lint` | PASS; automatic formatting reviewed. |
+| Additional skill `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `go run ./cmd/loadcards -inventory -json` | Expected exit 1 for remaining unsupported records; repeated after lint. |
+| Accepted-name and source/snapshot audit | Exactly Sandstorm and Winter Blast gained; no losses; all 12 hashes and final loader diagnostics match. |
+
+Final counts: **1,723 compiled / 722 rejected records; 646 accepted / 340
+rejected unique names**, out of 2,445 records and 986 names. The gain matches
+the estimate: **2 unique names / 2 records**. Inventory: 72,954 nodes, 8,541
+signatures and 6,646 unknown-role occurrences. The four new AST nodes restore
+the flying restriction. Strict loading still rejects the collection and
+publishes no partial registry.
+
+Fresh remaining examples:
+
+- Greater Realm of Preservation, `LEG.lines.ron:109:228`: unsupported action `ChooseADamageSource`.
+- Dakkon Blackblade, `LEG.lines.ron:58:205`: unsupported rule `CDA_Power`.
+- Wall of Vapor, `LEG.lines.ron:299:242`: unsupported permanent filter `IsBlockedByDefender` in static prevention.
+- Wood Elemental, `LEG.lines.ron:307:189`: unsupported entry operation `SacrificeAnyNumberOfPermanents`.
+- Magnetic Mountain, `3ED.lines.ron:158:366`, and Thelon's Curse, `FEM.lines.ron:87:343`: unsupported paid untap-choice shape.
+
+A fresh whole-repository caller audit includes hidden/ignored files, dot imports,
+tests, generators, docs and compile fixtures (5,504 matching lines for DSL
+imports/uses and the selected shared services). This additive slice removes no
+caller and makes no existing DSL function obsolete. Complete collection loading,
+all-card gameplay, startup wiring, Go-card deletion, generator removal and DSL
+cleanup gates remain unmet. Existing definitions and authoring instructions stay
+until those gates pass.
+
+Changed files: `pkg/mage/filtered_permanent_set.go` and tests, `pkg/mage/doc.go`;
+RON `collection_damage.go` and tests, `compiler.go`, `inventory.go`,
+`inventory_test.go`; LEG RON source, vocabulary snapshot, API/rules contracts
+and this ledger entry. One descriptive commit contains only this slice; its
+hash is reported in the final response. No second slice is started.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration, typed saved identity and next-instance prevention:
+   seven direct Circle/Realm consumers after the shared prerequisites.
+2. All-zone battlefield-count CDAs: five direct consumers; keep Gaea's Avenger's
+   source defect and Wood Elemental's entry result separate.
+3. Paid selected-permanent untap choices for Magnetic Mountain and Thelon's
+   Curse: two potential full-card unlocks, with saved player/set references,
+   per-object payment, legality, rollback and simultaneous untap prerequisites.
+4. Live static combat-relation prevention: Wall of Vapor directly; Wall of
+   Shadows has additional targeting restrictions. Defer a single-card gain
+   while useful multi-card capabilities remain.

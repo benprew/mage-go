@@ -406,6 +406,11 @@
 // [CopySpellOnStack] can retarget Aura casting declarations. Permanent spell
 // copies enter as tokens with separate ability and static effect state.
 //
+// Use [FilterPermanentSet] to keep current matching members of a typed set.
+// The original set keeps its target and incarnation checks.
+// Use [PermanentDamageRecipients] with [DealDamageEach] for one simultaneous
+// damage batch to permanents. Players are excluded from this recipient set.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

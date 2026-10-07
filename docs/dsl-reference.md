@@ -4019,3 +4019,28 @@ are selected once, and duplicate incarnations install one rule per instruction.
 
 Complete RON gameplay evidence: `TestRONCombatCollectionCards`,
 `SewersAttacking`, `AnnouncementLegality`, `Invalid`, and `StrictInventory`.
+
+## RON permanent collection damage
+
+In resolving action lists, `SpellDealsDamage/3` and `PermanentDealsDamage/3`
+accept `EachPermanent(filter)`, `EachPermanent(Ref_TargetPermanents)`, and
+`EachPermanent(And([Ref_TargetPermanents, property-filter]))`. The intersection
+requires exactly one plural reference and one property filter, in either order.
+The property filter uses the supported resolving property grammar. A live
+battlefield collection uses the supported permanent filters, including attacking
+and blocking status and nonempty nested `And`/`Or`. This action declares no targets.
+
+`FilterPermanentSet(PermanentSet, PermanentFilter)` keeps current matching
+members from a typed set. `PermanentDamageRecipients(PermanentSet)` places that
+set in the existing damage batch without player recipients. Both services retain
+definition validation and the original set's identity and target checks. A zero
+engine filter keeps all members. RON empty logical filters are errors.
+
+Sandstorm selects attacking creatures when it resolves. Winter Blast first taps
+its legal X creature targets, then reads flying on those same legal targets.
+A ground creature remains a legal target and is tapped. Later flying changes
+change damage eligibility without changing the target declaration. Plural target
+references remain local to each spell, mode, activation or trigger; the existing
+rejection of delayed plural target reads remains in force. These additions do
+not add collection recipients to replacement operations or damage packets.
+Evidence: `TestRONCollectionDamage*` and `TestFilterPermanentSet*`.
