@@ -4175,3 +4175,29 @@ may list the upkeep consumer before its entry declaration. Duplicate and unbound
 declarations are errors. Combined entry choices, other player filters, resolving
 choices, chosen-player action reads and chosen-player end-step triggers remain
 unsupported. The legacy opponent ETB helpers retain their current behavior.
+
+## RON end-of-combat triggers
+
+`TriggerA(AtTheEndOfCombat, body)` accepts the bare event symbol and a supported
+action list, including its standard target declaration. It lowers to
+`mage.At(mage.EachEndOfCombat, ...)`. Both players' combats match. This event
+supplies no `Trigger_ThatPlayer` or `Trigger_ThatPermanent` binding.
+
+The supported intervening shape is
+`TriggerI(AtTheEndOfCombat, ACombatPermanentPassesFilter(ThisPermanent,
+Or([AttackedThisCombat, BlockedThisCombat])), body)`. The two history symbols can
+occur in either order, once each. Other subjects, predicates, combinations and
+event tuple forms remain errors. It lowers to
+`mage.WithInterveningIf(mage.SourceAttackedOrBlockedThisCombatCondition())`.
+The original incarnation must have attacked or blocked in the current combat
+at detection and resolution. Entering attacking does not count as attacking
+(CR 508.4). Leaving combat does not erase a declaration. Phasing prevents the
+condition from matching; a phase cycle preserves history. A new incarnation
+has no history from the old one. Each factory builds separate abilities and
+target declarations through the existing action-plan service.
+
+Evidence: `TestRONEndCombat*` tests the entry and combat rules extracted from
+complete Clockwork Avian and Clockwork Beast records, plus synthetic plain-event,
+identity and invalid-declaration contracts. Their restoration rules remain
+unsupported. Neither clockwork nor The Wretched has complete gameplay coverage
+from this adapter, and their complete records still fail strict loading.

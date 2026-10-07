@@ -74,6 +74,9 @@ func compileTappedUpkeep(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "AtTheEndOfCombat" {
+		return compileEndCombatIntervening(n, ctx)
+	}
 	if event.Name == "AtTheBeginningOfAPlayersEndStep" {
 		return compileEndStepIntervening(n, ctx)
 	}

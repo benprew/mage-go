@@ -23938,3 +23938,135 @@ Ranked next candidates to reassess with fresh evidence:
 Cursed Rack's static maximum-hand-size rule is now exposed by loading but is a
 single-card consumer; defer it while useful shared multi-card work remains.
 No second slice is started.
+
+## Run 2026-10-06: END-COMBAT-HISTORY-ADAPTER
+
+Status: complete dependency-ready compiler prerequisite slice. Stop after this
+slice. User edits to `.gitignore`, the execution design and this ledger, and the
+untracked completed-history file, remain outside the commit. The commit adds
+only this entry to the HEAD ledger; the user's history reorganization remains
+in the working tree.
+
+### Fresh evidence and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+progress ledger, selected compiler and engine code, complete candidate RON
+records, API/rules contracts, and CR 508.4, 511.1-2, 603.4 and 608.2a.
+Baseline compiler tests, short engine suite and build passed. Strict loader and
+semantic inspection exited 1 for collection rejection, not a build failure:
+**1,739 compiled / 706 rejected records; 655 accepted / 331 rejected names**.
+Inventory: 72,954 nodes, 8,543 signatures, 6,557 unknown-role occurrences.
+There are 2,445 records and 986 unique names. Reprints count once.
+
+| Candidate | Affected unique names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| End-combat event/history adapter, selected | Clockwork Avian, Clockwork Beast, The Wretched: **0 immediate** complete unlocks. | Both clockworks need `PutCountersWithRestriction`; The Wretched needs blocking-collection control with a source-control duration. This complete prerequisite supplies both clockworks' exact combat history checks and the event for all three. Other entry, counter-removal, X activation and upkeep services already exist. | Low: existing exact native event, history, condition and action-plan services; compiler shape validation, gameplay, identity and inventory evidence. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7 eventual** complete unlocks, **0 adapter-only**. | Source enumeration/choice including nonbattlefield sources, source identity through spell entry, next-event consumption and property rechecks need complete contracts. Enables shared source-choice and future replacement consumers. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have separate blockers and are excluded from the estimate. | High: choice/source/replacement prerequisites, ordering and damage-batch tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 eventual** complete unlocks, **0 adapter-only**. | Zone-aware characteristics, controller/owner context and CDA/copy integration remain prerequisites. Gaea's Avenger's source defect and Wood Elemental's entry payment remain separate. Enables characteristic definitions in all zones. | High: engine characteristic services and zone/copy/layer tests. |
+| Static attack requirement | Juggernaut, Primordial Ooze: **1 immediate** full unlock, Juggernaut. | Ooze also needs `CreateValueX` and its counter-total result. Nested MustAttack in Nettling Imp and Siren's Call has separate timing, delayed and collection blockers. | Low for the source rule; defer the single-card gain while shared work remains. |
+
+Selection rationale: a small missing adapter can reuse an already established
+engine contract and remove a prerequisite shared by two clockworks, while also
+supplying The Wretched's event. The larger families require new engine services.
+This is deliberately a prerequisite with zero immediate unlocks, not a claim
+that first-error counts measure full-card support. Contract, reuse boundary,
+acceptance cases and candidate comparison were stated before editing. No second
+slice is started.
+
+### Exact supported signatures and reuse boundary
+
+- `TriggerA(AtTheEndOfCombat, body)` with the bare event symbol and an existing
+  supported action list/target context.
+- `TriggerI(AtTheEndOfCombat,
+  ACombatPermanentPassesFilter(ThisPermanent,
+  Or([AttackedThisCombat, BlockedThisCombat])), body)`. The two distinct symbols
+  may appear in either order, once each. No other history predicate or subject
+  is accepted by this slice.
+
+RON owns shape, arity, source and scope validation. The event supplies no player
+or permanent event binding; unbound reads remain errors. Each factory builds
+fresh abilities and action declarations. Engine reuse: `At`, `EachEndOfCombat`,
+`WithInterveningIf`, `SourceAttackedOrBlockedThisCombatCondition`, the existing
+incarnation-aware tracker, entry counters, removal actions and stack frames.
+No engine change or new engine API was needed. No new state lives in RON.
+
+The event fires at the beginning of each end-of-combat step, on either player's
+turn. The intervening condition checks at detection and resolution. Declared
+attacking/blocking history remains after removal from combat and control change,
+but cannot follow a returned incarnation. Phasing blocks a check; a phase cycle
+preserves history. Native resolution precedes the history reset; a later combat
+starts fresh. Entering attacking never counts as having attacked (CR 508.4).
+A plain pending trigger survives departure. Copies retain source identity and
+use their own controller; clones keep independent history and counters.
+
+### TDD, source data and card-to-test mapping
+
+Initial test code had a counter-type mismatch, corrected before confirming the
+expected unsupported `AtTheEndOfCombat` failures. After implementation, the
+entering-attacking test exposed an incorrect expectation in the fixture. CR
+508.4 supports the unchanged engine behavior; the assertion now requires no
+history trigger. Inventory-role tests separately failed on unknown descendants
+before adding `combat_history_filter` traversal. A final registry fixture used
+a nonexistent getter; it was corrected to use `Registry.CreateCard`. No rules
+assertion was weakened and no engine behavior was changed.
+
+Local Oracle data in `data/ATQ.json`, `data/LEA.json` and `data/LEG.json` agrees
+with the affected RON. No source defect was found or corrected. All 12 source
+hashes match the fresh baseline; the vocabulary source snapshot needs no refresh.
+
+| Card or contract | Test evidence |
+| --- | --- |
+| Clockwork Avian and Clockwork Beast entry/combat rules | `TestRONEndCombatClockwork` compiles test-only fixtures from complete RON records, omitting only the still-unsupported restoration ability. Entry counters, P/T and flying; native attack/block and end-combat execution; no history for idle/other/entering-attacking cases; history after removal from combat; one removal when both history flags apply; extra-combat reset and clone isolation. These are rule mappings, not complete-card mappings. |
+| Intervening checks and identity | `TestRONEndCombatInterveningIdentity`: inactive sources before the event; no early removal; resolution phasing, phase cycles, return, control, ability removal, copied triggers, second instances and clone resolution. |
+| Plain event | `TestRONEndCombatPlain`: end step does not match, opponent combat does match, pending trigger survives source departure and copies use their controller. The Wretched's body remains unverified. |
+| Declaration, loading and inventory | `TestRONEndCombatInvalid`: malformed tuple event, wrong subject, tuple source, duplicate predicates, unsupported And/turn history, unbound event reads and wrong trigger arity. `Inventory`: typed descendants. `StrictLoading`: reversed predicate order, separate instances, accepted synthetic registry and atomic invalid-collection rejection. `FullRecordsRemainRejected`: all six Beast reprints, Avian and The Wretched reject at their later blockers. |
+| Existing engine contract and accepted collection | `TestSourceAttackedOrBlockedThisCombat*`, inventory tests and all required repository suites. |
+
+### Final validation and measurements
+
+Estimated and actual compilation gains both equal **0 names / 0 records**.
+No previously accepted name was lost. Final strict loader remains at
+**1,739 compiled / 706 rejected records; 655 accepted / 331 rejected names**,
+exits 1 and publishes no partial registry. Inventory remains 72,954 nodes and
+8,543 signatures; unknown-role occurrences fall from 6,557 to **6,522**.
+Collection-wide engine-validation and behavior-verification totals remain null.
+This slice adds rule-level gameplay evidence for two cards, zero complete-card
+mappings and no gameplay claim for The Wretched's control body.
+
+Fresh diagnostics: Clockwork Beast at LEA.lines.ron:37:559 and Clockwork Avian
+at ATQ.lines.ron:20:566 report `unsupported action (PutCountersWithRestriction)`.
+The Wretched at LEG.lines.ron:265:199 reports
+`unsupported action (GainControlOfEachPermanentUntil)`.
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestRONEndCombat\|TestSourceAttackedOrBlockedThisCombat\|TestInventory' -count=1` | PASS after confirmed TDD failures and corrected fixtures. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, final run after lint and final fixtures. |
+| `make test` | PASS, final run after lint and final fixtures. |
+| `make build` | PASS, final run after lint and final fixtures. |
+| `go vet ./...` | PASS, final run after lint and final fixtures. |
+| `make lint` | PASS, zero issues; automatic import spacing reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1 with the counts above; build and test checks pass independently. |
+
+No environment or pre-existing validation blocker remains. No new LKI read,
+payment, replacement ordering or simultaneous-operation contract is claimed.
+No Go definitions, generators, runtime callers or DSL functions are removed:
+the complete-loading, gameplay and startup removal gates remain unmet. No
+whole-repository dead-function audit or DSL removal is claimed.
+
+Changed files: `ron/end_combat.go` and tests; `triggers.go`, `storage_land.go`
+and inventory role traversal; API/rules-contract docs and this ledger entry.
+The commit hash is reported in the final response.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Bounded optional counter restoration: both clockworks now have a single
+   exposed action gap. Establish exact up-to choice, cap, original incarnation,
+   X payment and replacement behavior before accepting either full card.
+2. Chosen-source enumeration and next-event prevention: seven direct consumers
+   after source-choice and replacement prerequisites.
+3. All-zone count CDAs: five direct consumers after characteristic services;
+   retain Gaea's Avenger's source defect and Wood Elemental's entry-payment gap.
+
+No second slice is started.

@@ -337,7 +337,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
 			return []string{"player_reference", "static_player_filter"}[index]
 		}
+	case "combat_history_filter":
+		if n.Name == "Or" && len(n.Args) == 1 {
+			return "combat_history_filter"
+		}
 	case "trigger_condition":
+		if n.Name == "ACombatPermanentPassesFilter" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "combat_history_filter"}[index]
+		}
 		if n.Name == "NoPermanentsPassFilter" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "zone"}[index]
 		}

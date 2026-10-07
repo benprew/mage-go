@@ -4849,3 +4849,27 @@ Evidence: `TestChooseOpponentAsEntersTiming`, `Identity`, `Declaration` and
 `NativeAndCopy`, `DeclarationScopeAndInventory`, `Invalid`. The RON tests use the
 complete Black Vise and The Rack records. Cursed Rack's maximum-hand-size effect
 and Jihad's combined choices remain separate prerequisites.
+
+## RON end-of-combat event and history reuse
+
+The RON adapter uses `EachEndOfCombat` for the beginning of the end-of-combat
+step (CR 511.2). Clockwork history conditions use
+`SourceAttackedOrBlockedThisCombatCondition` through `WithInterveningIf`, so
+CR 603.4 and 608.2a apply at detection and resolution. Native step execution
+resolves these triggers before combat history resets. History follows the
+original incarnation, survives removal from combat and control changes, and
+resets for the next combat. A phased or returned source cannot satisfy an old
+trigger's condition. Ability removal after detection does not remove the
+pending trigger. Copies retain the source identity; clones retain independent
+history and counters. Plain triggers do not add a source-presence condition.
+
+`TestRONEndCombatClockwork` covers source entry counters, flying, attack and
+block declarations, idle sources, other instances, entering attacking,
+removal from combat, native end steps, extra combats and clones.
+`TestRONEndCombatInterveningIdentity` covers both condition checks, phasing,
+return, control, ability removal and stack copies. `TestRONEndCombatPlain`
+covers event selection, departure and copied controllers. Existing
+`TestSourceAttackedOrBlockedThisCombat*` tests guard the reused engine service.
+No engine execution, replacement ordering, cost or simultaneous-operation
+contract changes in this slice. Full-card loading remains blocked by bounded
+counter restoration and blocking-collection control effects.
