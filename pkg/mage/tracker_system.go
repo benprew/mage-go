@@ -12,6 +12,7 @@ import (
 // Turn trackers reset after the final cleanup step. They remain available during
 // cleanup priority. The reset preserves selected history, such as attackedLastTurn.
 type TurnTrackers struct {
+	blockHistory                 map[blockHistoryPair]uuid.UUID
 	abilityActivations           map[activationHistoryKey]int
 	grantedActivations           map[uuid.UUID]int
 	discardCount                 map[uuid.UUID]int
@@ -329,6 +330,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.attackedIncarnation = nil
 	t.attackedIncarnations = nil
 	t.blocked = make(map[uuid.UUID][]uuid.UUID)
+	t.blockHistory = nil
 	t.instantsCast = make(map[uuid.UUID]int)
 	t.sorceriesCast = make(map[uuid.UUID]int)
 	t.timesTargeted = make(map[uuid.UUID]int)
@@ -470,6 +472,7 @@ func (t *TurnTrackers) CleanupPriorityRounds() int {
 // Clone creates an independent deep copy of TurnTrackers.
 func (t *TurnTrackers) Clone() TurnTrackers {
 	c := TurnTrackers{
+		blockHistory:                 maps.Clone(t.blockHistory),
 		abilityActivations:           maps.Clone(t.abilityActivations),
 		grantedActivations:           cloneUUIDMap(t.grantedActivations),
 		cardsPutIntoExile:            t.cardsPutIntoExile,

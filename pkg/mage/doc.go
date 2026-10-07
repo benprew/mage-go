@@ -96,6 +96,12 @@
 // Use [TargetBlocksSource], [TargetBlockedBySource], or [TargetInCombatWithSource]
 // for a target in a current blocking pair with the original source. Both
 // incarnations must remain in combat. LKI cannot restore the pair.
+// Use [BlockedByThisTurn] for live members of an exact blocker's turn history.
+// Saved blocker references keep their identity after departure and phasing.
+// [ControllerWhenLastBlockedThisTurn] reads the attacker controller at the last
+// matching block. Returned objects cannot use an earlier object's history.
+// Both services use turn history that remains until final cleanup.
+//
 // Use [BlockersOf] or [BlockedAttackersOf] for a collection at resolution.
 // [PreventCombatDamageByEach] captures that collection for this combat.
 // [PreventCombatDamageByEachThisTurn] captures it until cleanup.

@@ -6040,3 +6040,26 @@ Evidence: `TestRestrictedResolutionMana`, `Declarations`, and `Planning` in
 `TestRONSacrificeManaPriest`, `PriestLegality`, `Metamorphosis`,
 `MetamorphosisRollback`, `ActualSpending`, `PendingValues`, `Invalid`, and
 `RegistryAndInventory` in `pkg/mage/dsl/ron/sacrifice_mana_test.go`.
+
+### RON resolving blocking-history collections
+
+`WasBlockedByDefenderThisTurn(permanentRef)` accepts one bound singular
+permanent reference in a resolving collection. It lowers to
+`mage.BlockedByThisTurn` and composes through the existing collection `And/Or`
+adapters. For example, both Glyph destruction clauses use
+`And([IsCardtype(Creature), WasBlockedByDefenderThisTurn(Ref_TargetPermanent)])`.
+The existing `DestroyEach` and `DestroyEachWithoutRegeneration` actions retain
+batch destruction, regeneration and replacement behavior.
+
+The reference belongs to its rule instance and keeps its original incarnation.
+Saved blockers can supply history after departure or phasing. Collection members
+must still be live and phased in. Invalid arity, unbound references, player
+references and cross-rule reads are declaration errors. Inventory gives the
+operand a permanent-reference role even below unsupported delayed actions.
+
+Target-filter use, including Glyph of Delusion's dependent second target, is
+still unsupported. `AtNextEndOfCombatThisTurn`, after-combat casting, death-result
+loops and the RON last-block controller expression remain separate gaps. The
+engine's typed `ControllerWhenLastBlockedThisTurn` supplies the controller
+history prerequisite. The three complete Glyph records still reject. Tests
+of extracted clauses do not claim complete gameplay coverage for those cards.

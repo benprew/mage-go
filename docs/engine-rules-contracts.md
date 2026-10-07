@@ -7214,3 +7214,39 @@ Evidence: `TestRestrictedResolutionMana`, `Declarations`, and `Planning` in
 `TestRONSacrificeManaPriest`, `PriestLegality`, `Metamorphosis`,
 `MetamorphosisRollback`, `ActualSpending`, `PendingValues`, `Invalid`, and
 `RegistryAndInventory` in `pkg/mage/dsl/ron/sacrifice_mana_test.go`.
+
+### Blocking history for an exact permanent
+
+`BlockedByThisTurn(blocker PermanentRef) PermanentSet` selects live, phased-in
+permanents whose exact battlefield incarnations were blocked by that exact
+blocker this turn. It does not require a current combat relation or a current
+creature type; callers can intersect it with `MatchingPermanents(IsCreature)`.
+`ControllerWhenLastBlockedThisTurn(attacker, blocker PermanentRef) PlayerRef`
+reads the attacker's controller when the last matching block pair formed.
+It does not read the current controller. An absent pair supplies no player.
+
+The shared legal block commit records all new pairs before it emits events.
+Both normal declaration and `ExecuteBlockers` use it. A block of an attacking
+band records every band member (CR 702.22h). Pure proposal checks, rejected
+blocks and duplicate existing pairs do not record or change history. A creature
+that enters blocking has not blocked for effects (CR 509.4), so that entry does
+not record this history. Direct edits to the low-level `Combat` fixture do not
+commit a game action and do not record history.
+
+The turn tracker stores both object IDs and incarnations, plus the attacker
+controller at that event. Control changes, combat removal and later combats
+cannot erase earlier pairs. A later matching block updates only its pair's
+controller. Source, attachment, saved permanent and singular target references
+use the existing information identity service. Saved identities remain readable
+after departure or phasing, even if LKI has been cleared; they do not make an
+absent permanent available for an action. A returned attacker or blocker is a
+new object (CR 400.7). Phased attackers cannot join the selected action set;
+phasing in restores the original object's eligibility. Clones have separate
+history maps. Final cleanup resets the history; cleanup priority retains it
+with other turn history (CR 514.3a).
+
+Evidence: `TestBlockHistoryLifecycle`, `LegalPairsAndLastController`,
+`BandsAndNormalDeclaration`, `CleanupPriority`, `SeparateObjects` and
+`Declarations`. RON evidence uses the exact destruction clauses from Glyph of
+Doom and Glyph of Reincarnation in named contract fixtures, not full-card
+support claims. No new replacement, payment or destruction service is added.

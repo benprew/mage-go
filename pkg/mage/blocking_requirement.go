@@ -392,10 +392,24 @@ func (g *Game) CompleteBlockAssignments(defender uuid.UUID, proposed []BlockAssi
 }
 
 func (g *Game) commitBlockAssignments(defender uuid.UUID, proposed []BlockAssignment) {
+	before := g.blockerPairsBeforeDeclaration()
 	assignments := g.CompleteBlockAssignments(defender, proposed)
 	for _, assignment := range assignments {
 		blocker := g.FindPermanent(assignment.BlockerID)
 		g.combat.AddBlockerIncarnation(blocker.ID(), blocker.incarnationID, assignment.AttackerID)
 		g.trackers.Turn.RecordBlocked(blocker.ID(), assignment.AttackerID)
+	}
+	for _, group := range g.combat.Groups {
+		attacker := g.liveCombatAttacker(group)
+		for i, id := range group.BlockerIDs {
+			if i >= len(group.BlockerIncarnations) {
+				continue
+			}
+			pair := combatBlockPair{group.AttackerID, id, group.BlockerIncarnations[i]}
+			blocker := g.FindPermanent(id)
+			if !before[pair] && blocker != nil && blocker.incarnationID == pair.object {
+				g.recordBlockHistory(blocker, attacker)
+			}
+		}
 	}
 }

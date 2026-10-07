@@ -9,9 +9,9 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`SACRIFICE-MANA-PRODUCTION` slice and its gameplay evidence are recorded
-at the end of this ledger. It adds complete Priest of Yawgmoth and Metamorphosis
-gameplay mappings.
+`BLOCK-HISTORY-COLLECTION` prerequisite and its contract evidence are recorded
+at the end of this ledger. It adds blocking-history services and two Glyph
+clause mappings, with no new complete-card gameplay mappings.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35387,3 +35387,139 @@ Slice files: `pkg/mage/composable_costs.go`, `costed_mana.go`, `effect_spells.go
 `restricted_mana.go`, `inventory.go`, `inventory_test.go`,
 `numeric_consumers_test.go`, `sacrifice_mana_test.go`; API/rules-contract docs
 and this progress entry.
+
+## 2026-10-07: exact blocking history for resolving collections
+
+Status: complete prerequisite slice `BLOCK-HISTORY-COLLECTION`; this run stops
+here. Initial edits to `.gitignore`, the execution design and progress ledger,
+and the untracked completion document are preserved. Only this entry and its
+current-status update are staged from the ledger.
+
+### Evidence and candidate comparison
+
+Fresh pre-edit `make build` and `go test ./pkg/mage/... -short -count=1` passed.
+Strict loader and inventory exited 1 for collection rejection, not build failure:
+2,445 records / 986 names, 1,935 compiled / 510 rejected records, 745 accepted /
+241 rejected names. Inventory walked 72,954 nodes and 8,553 signatures. The
+instructions, engine API, design, vocabulary and ledger were read, along with
+selected compiler/engine code and all complete candidate records. Reprints count
+once. Local `data/LEG.json` supplies the selected Oracle requirements. Relevant
+rules: CR 400.7, 509.1/3/4, 514.3a, 608.2h, 611.2a and 702.22h.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers; downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Exact blocking history, selected | Glyph of Doom, Glyph of Delusion, Glyph of Reincarnation; **0 immediate full-card unlocks**. | Doom needs this-turn end-combat scheduling. Delusion needs dependent history targets, power-derived counter placement and conditional/triggered ability grants. Reincarnation needs after-combat casting, death-result iteration and graveyard choices. One shared pair history supports all three; last-block controller history also prepares Reincarnation. | Medium: legal pair commit, incarnation/controller storage, cloning/cleanup, typed collection and information APIs, one RON collection adapter and contract tests. |
+| General damage-source enumeration and basic next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** after enumeration and shield contracts. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage share the choice but gain **0** full unlocks from basic shields. | Live enumeration/property filters exist; referred stack objects and face-up command-zone objects need complete enumeration. Remaining consumers need partial prevention, redirection, retained damage amounts or life results. Enables eleven choices. | High: multiple source categories, saved identities, replacement ordering and next-event operation scopes. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **8** after engine and adapters. | Ordinary banding is insufficient. Parameterized formation/damage rules, layers, tokens, copies and removal must share exact behavior. All eight complete records were inspected. | High: combat legality/assignment, parameterized ability storage and copy/layer/token/removal contracts. |
+
+The selected prerequisite offers a smaller but concrete three-card downstream
+benefit with a substantially smaller dependency and test surface. It does not
+claim a full unlock from a first-error count. No isolated single-card capability
+was selected. The contract, reuse boundary and acceptance cases were stated
+before edits. The implement-engine skill supplied the engine workflow; no card
+or set implementation skill was invoked or recreated.
+
+### Supported signatures, ownership and dependencies
+
+- `mage.BlockedByThisTurn(blocker PermanentRef) PermanentSet`: current, live,
+  phased-in permanent incarnations historically blocked by that exact blocker.
+  Current creature type is a separate filter. A saved blocker identity can read
+  history after departure, phasing or LKI cleanup.
+- `mage.ControllerWhenLastBlockedThisTurn(attacker, blocker PermanentRef)
+  PlayerRef`: controller at the last matching block pair, not the current
+  controller. Both references use exact information identities. No pair means
+  no player. This slice does not lower the RON loop-local controller expression.
+- `WasBlockedByDefenderThisTurn(ref)` in resolving permanent collections;
+  exactly one bound singular permanent reference. Existing collection `And/Or`
+  composition and collection actions can consume it. Target-filter use remains
+  unsupported. Inventory reports the permanent operand below rejected parents.
+
+RON owns syntax, scope, arity and per-factory references. `TurnTrackers` owns the
+pair map and clone/reset behavior. The shared legal block commit records all new
+pairs before events, including every attacker in a band. Both normal declaration
+and explicit `ExecuteBlockers` use it. Pure proposals, rejected blocks, duplicate
+existing pairs and entry while blocking do not update this history. Low-level
+`Combat` fixture edits do not constitute a committed game action.
+
+Reuse: `permanentInformationReference.informationIdentity`, typed target and
+saved bindings, `compilePermanentRef`, `compileContextualCollection`,
+`IntersectPermanents`/`UnionPermanents`, `DestroyEach` and
+`DestroyEachWithoutRegeneration`, legal block planning, final-cleanup reset and
+clone services. No new zone, cost, destruction or replacement implementation.
+No global last-action slot, card-name executor, fallback or partial production
+registry. No existing caller or DSL export is removed.
+
+### Tests, gameplay mappings and source data
+
+Initial engine tests failed for the two missing APIs after fixture API errors
+were corrected. RON gameplay tests failed on the missing history collection
+adapter and inventory operand role. The source-duration regression failed on
+the old Glyph of Delusion record. Implementation/correction followed the
+expected failures. Subsequent contract cases cover bands and final cleanup.
+
+| Contract / card | Evidence |
+| --- | --- |
+| Shared engine history | `TestBlockHistoryLifecycle`: combat removal, later combat, control changes, blocker departure/return/phasing, attacker phasing/return, saved event controller and clone reset. `LegalPairsAndLastController`: pure planning, multi-blocks, rejected minimum-blocker proposals, later-controller capture and entry while blocking. |
+| Banding, normal path and cleanup | `TestBlockHistoryBandsAndNormalDeclaration`: all band members, both declaration paths, later combat and clone map isolation. `CleanupPriority`: pending-stack cleanup retains history; final cleanup clears it. `SeparateObjects`: distinct blockers, returned blocker exclusion and history without current LKI. `Declarations`: typed metadata and invalid/unbound references. |
+| Glyph of Doom destruction clause | `TestRONBlockHistoryRealActions`: extract the exact target and `DestroyEachPermanent` clause from the complete RON record into a named test-only contract fixture. Test normal destruction, regeneration, control changes, unrelated creatures, returned/phased attackers and Walls, copies and pending-stack clones. Scheduling is not claimed. |
+| Glyph of Reincarnation destruction clause | Same test using its exact target and `DestroyEachPermanentNoRegen` clause. Regeneration cannot save the selected creatures. Casting restriction and death-result/reanimation loop are not claimed. |
+| All three Glyph records | `TestRONBlockHistoryInvalid`: complete records still reject; malformed, unbound, wrong-type and out-of-scope collection declarations reject. `Inventory`: saved target operand is classified below unsupported scheduling. |
+| Glyph of Delusion source defect | `TestRONBlockHistoryDelusionSourceDuration`: the grant has no temporary duration. Oracle in `data/LEG.json` states no end-of-turn limit; CR 611.2a requires an indefinite grant. Change the sole record at `LEG.lines.ron:100` from `CreatePermanentLayerEffectUntil(..., UntilEndOfTurn)` to `CreatePermanentLayerEffect(...)`. No reprint exists. Full gameplay remains unsupported. |
+
+Coverage gain: two exact real-record destruction clauses and the shared history
+contracts; **zero new complete-card gameplay mappings**. Compilation and gameplay
+coverage remain separate. The Delusion source repair does not establish ability
+grant execution. The vocabulary snapshot was refreshed with the AST parser,
+current hashes/signatures/occurrences and strict loader diagnostics; its stale
+Priest/Metamorphosis diagnostics were also removed by the fresh measurement.
+
+### Validation, actual gains and remaining work
+
+Estimated immediate full-card unlocks: **0**. Actual: **0** names / **0** records.
+Fresh strict loader and inventory remain at **1,935 compiled / 510 rejected
+records**, **745 accepted / 241 rejected names**, 2,445 records / 986 names.
+Inventory now walks **72,953 nodes / 8,554 signatures**: the source correction
+removes one duration symbol, and role reporting changes signature contexts.
+Engine-validated and behavior-verified collection totals remain null.
+
+Remaining first diagnostics for the three names:
+
+- Glyph of Delusion: `LEG.lines.ron:100:233: unsupported permanent filter (WasBlockedByDefenderThisTurn)` in its dependent target filter.
+- Glyph of Doom: `LEG.lines.ron:102:248: unsupported delayed step event (AtNextEndOfCombatThisTurn)`.
+- Glyph of Reincarnation: `LEG.lines.ron:104:161: unsupported casting window condition (IsAfterCombat)`.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage -run TestBlockHistory -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -run TestRONBlockHistory -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including after lint. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS, additional skill check. |
+| `make lint` | PASS, zero issues. Import formatting reviewed; affected tests rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: collection rejection, 510 records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same rejection counts. |
+
+No environment or pre-existing build/test failure remains. API/rules-contract
+updates cover only established history behavior. Runtime cutover, complete RON
+gameplay, Go-card deletion, generator retirement and DSL cleanup remain behind
+the design's removal gate. No deletion caller audit is claimed.
+
+Ranked next candidates to reassess:
+
+1. General legal damage-source enumeration and saved choices, then seven basic
+   source-specific shields.
+2. Parameterized bands with others for the eight grant/token/removal consumers.
+3. The remaining Glyph consumers of this history: dependent target predicates,
+   this-turn scheduling and death-result loops. Compare their remaining nested
+   blockers before estimating full-card unlocks.
+
+Slice files: `pkg/mage/block_history.go`, `block_history_test.go`,
+`blocking_requirement.go`, `tracker_system.go`, `doc.go`;
+`pkg/mage/dsl/ron/contextual_collection.go`, `inventory.go`,
+`block_history_test.go`; `cards/mtgish/LEG.lines.ron`; API/rules contracts,
+vocabulary snapshot and this ledger entry. This slice is committed only after
+required validation passes. No second slice begins.

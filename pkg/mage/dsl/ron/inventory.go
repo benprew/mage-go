@@ -165,7 +165,7 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 	if role == "permanent_collection" && n.Kind != List {
 		if n.Name == "Ref_TargetPermanents" {
 			role = "permanent_collection_reference"
-		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "SinglePermanent" {
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" {
 			role = "permanent_filter"
 		}
 	}
@@ -830,7 +830,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
-		case "TapEachPermanent", "UntapEachPermanent":
+		case "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 			if len(n.Args) == 1 {
 				return "permanent_collection"
 			}
@@ -1204,7 +1204,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
 			return role
 		}
-		if (n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender") && len(n.Args) == 1 {
+		if (n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasBlockedByDefenderThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "damage_permanent_collection":
@@ -1329,7 +1329,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DealtDamageToAnyPlayerThisTurn" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-		if n.Name == "WasDealtDamageByPermanentThisTurn" && len(n.Args) == 1 {
+		if (n.Name == "WasDealtDamageByPermanentThisTurn" || n.Name == "WasBlockedByDefenderThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if (n.Name == "IsSupertype" || n.Name == "IsNonSupertype") && len(n.Args) == 1 {
