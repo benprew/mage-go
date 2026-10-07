@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if isDestructionCount(n) {
+		return compileDestructionCountValue(n, ctx)
+	}
 	if n.Name == "TheTotalNumberOfCountersOfTypeAmongPermanents" {
 		return compileCounterInformation(n, ctx)
 	}
@@ -98,7 +101,7 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 			return mage.HandSizeOf(player.build(bindings))
 		}, nil
 	}
-	if n.Name == "Minus" {
+	if n.Name == "Minus" || n.Name == "Plus" {
 		if err := arity(n, 2); err != nil {
 			return nil, err
 		}
@@ -111,6 +114,9 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.ResolutionValue {
+			if n.Name == "Plus" {
+				return mage.AddValues(left(bindings), right(bindings))
+			}
 			return mage.SubtractValues(left(bindings), right(bindings))
 		}, nil
 	}

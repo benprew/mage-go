@@ -7,7 +7,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type permanentTargetsPlan struct{ name string }
+type permanentTargetsPlan struct {
+	name   string
+	filter Node
+}
 
 func compilePluralPermanentTarget(n Node, ctx scope) (targetFactory, string, error) {
 	filter, options, err := compilePermanentTargetFilter(n.Args[0], ctx)

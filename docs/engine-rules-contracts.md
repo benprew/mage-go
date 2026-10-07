@@ -6545,3 +6545,24 @@ respectively. This prerequisite verifies neither complete card.
 
 Rules: CR 113.7a, 400.7, 608.2b/h and 702.26b-d. Existing target bindings,
 attachment relations, delayed captures and collection batches supply these rules.
+
+### RON destruction count adapters
+
+RON destruction-and-continuation pairs use existing typed result services.
+They do not change engine destruction behavior. CR 608.2b preserves partial
+and all-illegal target checks; CR 608.2c preserves instruction order. CR 608.2h–i
+and 700.4 supply the pre-destruction creature information and actual deaths.
+CR 701.8 and 702.12b exclude regenerated and indestructible permanents.
+The shared replacement pipeline applies affected-player choices under CR 616.1.
+Exile replacements contribute zero to both graveyard moves and creature deaths.
+Tokens contribute to the appropriate count even though they do not remain in
+the graveyard. Phased objects and returned target incarnations are excluded.
+
+`TestRONDestructionCount*` covers full Hellfire and Volcanic Eruption records,
+X payment rollback, illegal targets, partial and all-illegal resolution, phasing,
+returned targets, shroud, regeneration, indestructibility, token moves, competing
+regeneration/exile choices, adjacent-result scope, separate instructions and
+instances, retargeted copies, pending clones, simultaneous damage callbacks,
+no-regeneration destruction and declared filter guarantees. Existing engine
+`TestDestroyEachGraveyardResult*` and `TestDestroyEachCreatureDeathsResult*`
+remain the reusable destruction-result contract tests.

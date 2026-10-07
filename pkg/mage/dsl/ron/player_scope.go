@@ -34,6 +34,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	destructionCounts    map[*destructionCountPlan]*mage.NumberBinding
 	abilities            map[*abilityTargetPlan]*mage.AbilityTargetBinding
 	hostDeaths           map[*hostDeathPlan]hostDeathBindings
 	entryActors          map[*landEntryEventPlan]*mage.PlayerBinding

@@ -32322,3 +32322,136 @@ singleton_permanent_set_test.go; RON compiler.go, contextual_collection.go,
 inventory.go and new reference_collection_test.go; four existing RON regression
 files; API/rules documentation and this entry. This is one completed supported
 shape/context prerequisite. Migration remains incomplete.
+
+## Run 2026-10-07: DESTRUCTION-RESULT-COUNTS
+
+Status: complete compiler adapter slice. This run stops after this slice.
+
+### Baseline, candidate comparison and selection
+
+Initial tree changes were `.gitignore`, this progress file and
+`mtgish-ron-execution.md`, plus untracked `mtgish-ron-completed.md`. They are
+preserved. Only this appended entry is staged from the progress file; the
+pre-existing ledger reorganization stays unstaged.
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict loader and inventory commands exited 1 for collection rejection:
+1,863 compiled / 582 rejected records, 719 accepted / 267 rejected unique names,
+2,445 records and 986 names total. All AST descendants were inventoried:
+72,962 occurrences, 8,557 signatures, 5,186 unknown-role occurrences.
+The latest ledger, execution design, vocabulary snapshot, engine API and relevant
+rules contracts were read. Complete candidate records were inspected, including
+all six Volcanic Eruption reprints. Reprints count once in the comparison.
+
+| Candidate | Distinct names; estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** clean consumers. Eye for an Eye, Jade Monolith, Reverse Damage and Dark Sphere also consume the choice but need separate replacement/redirection/life/fraction operations. | Requires source enumeration, typed saved identities and next-event shields. Concrete downstream benefit for eleven names; existing permanent-only shields cannot supply the full choice contract. | High: engine source choice and event contracts plus adapters, spell/permanent/LKI and simultaneous packet tests. |
+| Destruction counts, selected | Volcanic Eruption, Hellfire: **2** complete cards, seven records. | Exact engine group results already exist. Hellfire also needs resolution `Plus/2`; Volcanic Eruption already has X targets and mixed recipients. Enables scoped actual outcomes without global last-action state. | Low/medium: adapters and declaration scope proof; broad RON gameplay and existing engine regressions. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** clean consumers. Gaea's Avenger and Wood Elemental bring the affected set to six. | Needs characteristics outside the battlefield and CDA/copy layers. Avenger has the recorded opponent-count source defect; Wood Elemental needs entry sacrifices and their result. | High: reusable engine characteristics contract, zone/controller/count and copy tests before lowering. |
+
+Selected destruction counts for the largest credible gain per effort. The seven
+clean source-choice consumers require substantially more prerequisite work.
+An early commentary said five clean CDA consumers; inspection corrected that to
+four before implementation completed. The contract, reuse boundary and acceptance
+cases were stated before editing. No removed skill or Go card requirements were
+used. No card-name execution, fallback or partial production registry is added.
+
+### Exact support and reuse boundary
+
+- `DestroyEachPermanent(selection)/1` and
+  `DestroyEachPermanentNoRegen(selection)/1` can produce a result for the next
+  resolving action in the same sequence.
+- `TheNumberOfPermanentsThatDiedThisWay(IsCardtype(Creature))/1` uses the engine
+  pre-destruction creature count. Other death filters remain errors.
+- `TheNumberOfPermanentsPutIntoAPlayersGraveyardThisWay(filter, AnyPlayer)/2`
+  requires a guaranteed selection filter: a position-free identical declaration
+  or an operand of the selection's `And` tree. `Ref_TargetPermanents` retains its
+  declared target filter for that proof. No arbitrary result filtering or
+  restricted graveyard-player context is claimed.
+- The result lives only in the adjacent continuation. Missing/late producers,
+  later reads, mixed result kinds, malformed declarations and delayed reads are
+  rejected. Each pair allocates a fresh `NumberBinding` per factory instance.
+  Compiler scope identifies the producer; copied instance-binding maps retain
+  separate declaration identities. Resolution values stay in existing frames.
+- `Plus(left, right)/2` accepts recursively supported resolution values and uses
+  `AddValues`. Static and announcement value contexts are unchanged.
+- Reuses `DestroyEach`, `DestroyEachWithoutRegeneration`,
+  `CreaturesDiedThisWayInto`, `PermanentsPutIntoGraveyardThisWayInto`, `FromNumber`,
+  target plans and services, simultaneous zone batches, affected-player
+  replacement/recheck services, damage packets, transactions, copying and cloning.
+  No engine implementation changes or parallel execution service are required.
+
+RON owns spelling, scope and the conservative filter proof. Engine behavior owns
+actual outcomes. CR 608.2b/c/h/i, 700.4, 701.8, 702.12b and 616.1 were read.
+Local `data/LEG.json` and `data/LEA.json` Oracle records confirm both full RON
+requirements. No source defects were corrected. Existing unrelated data defects
+remain deferred. All source hashes remain unchanged, so no vocabulary syntax
+refresh is required; fresh diagnostics are recorded below.
+
+### TDD, gameplay mappings and actual gain
+
+New real-record gameplay tests first failed at unsupported `Plus` and the
+Volcanic Eruption graveyard count. Invalid cases retained their rejection.
+The initial rollback fixture let an untapped Mountain pay missing generic mana;
+tapping that land corrected the fixture without changing the payment requirement.
+A later inventory test used the wrong exported field name; it was corrected to
+`CompiledOccurrences`. Full checks initially failed two exact inventory total
+assertions; they now assert the fresh totals and explicitly protect both cards.
+The old Volcanic Eruption downstream-rejection probe was removed because complete
+real-record gameplay now replaces that expected gap. Arena still rejects at Fight.
+
+| Card or contract | Tests |
+| --- | --- |
+| Hellfire, LEG complete record | `TestRONDestructionCountHellfire`: exact nonblack selection, 3 plus actual deaths, zero deaths, regeneration, indestructibility, phasing, announcement timing, casting rollback, copy-controller recipient and pending clone isolation. |
+| Volcanic Eruption, all six reprints | `TestRONDestructionCountEruption`: X casting/payment, Mountain targets, invalid target rollback, destruction before damage and complete simultaneous damage callbacks to both players and creatures, including shroud. `EruptionLegality`: partial and all-illegal targets, regeneration, indestructibility, phasing, returned incarnation, shroud, copies, zero X and clones. `EruptionRetargetedCopy`: independent copied and original targets/results. |
+| Both cards, actual results | `TestRONDestructionCountExileAndToken`: token counts and exile exclusion. `ReplacementOrder`: affected-player regeneration/exile choices and zero actual deaths. |
+| Scoped compiler contracts | `TestRONDestructionCountInvalid`: missing/late producer, malformed count/Plus, incompatible filters/player, delayed read, mixed result kinds and later-action escape. `IndependentInstructions`: two separate result kinds and two factory instances, pending activations and empty-result reset. `NoRegenerationAndFilterGuarantee`: conjunction proof and no-regeneration producer. `Inventory`: compiled value roles. |
+| Reused engine contracts | Existing `TestDestroyEachGraveyardResult*`, `TestDestroyEachCreatureDeathsResult*`, and `TestRONMixedDamageReplacementOrder` passed with focused `-count=1`. |
+
+Estimated gain **2 unique cards / 7 records** matches actual gain exactly.
+Final strict loading: **1,870 compiled / 575 rejected records**;
+**721 accepted / 265 rejected unique names**. Only Hellfire and Volcanic Eruption
+leave the rejection set; no previously accepted name is lost. Compilation and
+gameplay coverage remain separate: two complete gameplay mappings are added;
+collection-wide engine-validated and behavior-verified totals remain null.
+Semantic inventory: 72,962 occurrences, 8,557 signatures, 5,166 unknown-role
+occurrences. Added child roles account for the reduction of 20 unknowns.
+
+### Validation and remaining work
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron ./pkg/mage -run 'TestRONDestructionCount\|TestInventory\|TestDestroyEachGraveyardResult\|TestDestroyEachCreatureDeathsResult\|TestRONMixedDamageReplacementOrder' -count=1` | PASS, repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting was reviewed; only slice files changed. One preallocation finding was corrected before the successful runs. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,870 compiled / 575 rejected. Post-lint diagnostics exactly match the earlier final report. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 721 accepted / 265 rejected names; unchanged post-lint semantic report. |
+
+No failed required check remains and no environmental blocker exists. Remaining
+representative diagnostics include unsupported `ChooseADamageSource` on Circle
+of Protection: Black, unsupported `CDA_Power` on Dakkon Blackblade and Gaea's
+Avenger, and unsupported `Fight` on Arena. Neither newly supported card has a
+loader diagnostic. Strict loading still publishes no partial registry.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Chosen damage-source enumeration/bindings and exact next-event shields:
+   seven clean consumers and four consumers with separate operation blockers.
+2. All-zone count CDA contract: four clean consumers; Gaea's Avenger requires
+   its source correction and Wood Elemental requires its entry-payment result.
+
+The removal gate is closed: complete collection loading and gameplay, runtime
+startup wiring, Go-card/test migration and DSL caller cleanup are unfinished.
+No Go definitions, generators, startup callers or DSL functions were removed.
+No engine service was deleted. API and rules docs describe only this established
+adapter contract. No second slice is started.
+
+Changed files: new RON `destruction_count.go` and `destruction_count_test.go`;
+compiler scope, target filter plan, instance bindings, action sequence,
+resolution values and inventory roles; inventory regression totals and the old
+collection dependency probe; `dsl-reference.md`, `engine-rules-contracts.md` and
+this entry. The descriptive commit hash is reported in the final response.

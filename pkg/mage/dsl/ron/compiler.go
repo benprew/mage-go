@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	destructionCount    *destructionCountPlan
 	chosenAbility       *temporaryAbilityPlan
 	sourceTapped        bool
 	sourceLeaves        bool
@@ -726,7 +727,8 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 			ctx.permanentTarget = &permanentTargetPlan{name: binding}
 		}
 		if binding == "Ref_TargetPermanents" {
-			ctx.permanentTargets = &permanentTargetsPlan{name: binding}
+			filter := targets[0].Args[len(targets[0].Args)-1]
+			ctx.permanentTargets = &permanentTargetsPlan{name: binding, filter: filter}
 		}
 		if binding == "Ref_TargetPlayer" {
 			ctx.playerTarget = &playerTargetPlan{name: binding}

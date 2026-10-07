@@ -5546,3 +5546,28 @@ do not add support in costs, entry operations, static filters or damage sets.
 Evidence: `TestSingletonPermanentSet*`, `TestRONReferenceCollection*`, and the
 existing full RON tap/untap and contextual collection gameplay tests. Arena still
 needs Fight; Volcanic Eruption still needs its actual destruction-result count.
+
+### RON destruction counts
+
+A resolving action sequence can pair `DestroyEachPermanent(selection)/1` or
+`DestroyEachPermanentNoRegen(selection)/1` with its next action. That action can
+read `TheNumberOfPermanentsThatDiedThisWay(IsCardtype(Creature))/1` or
+`TheNumberOfPermanentsPutIntoAPlayersGraveyardThisWay(filter, AnyPlayer)/2`.
+The creature count uses the characteristics before destruction. The graveyard
+count requires the selection to guarantee the requested filter: the same
+position-free declaration, or an operand of its nonempty `And` tree. A bound
+`Ref_TargetPermanents` uses its declared target filter for this check. It retains
+all target legality and incarnation checks. This proof permits the existing
+engine count of all selected graveyard moves without ignoring a filter.
+
+Each pair creates a fresh `NumberBinding`. Only the adjacent continuation can
+read it. Reads before the producer, later actions, delayed bodies, mixed result
+kinds, other death filters and restricted graveyard players are rejected. Each
+factory instance has separate bindings. `Plus(left, right)/2` now composes two
+supported resolution values with `AddValues`; announcement and static value
+contexts do not gain this adapter.
+
+Volcanic Eruption and Hellfire execute their complete collection records through
+`DestroyEach`, `PermanentsPutIntoGraveyardThisWayInto`,
+`CreaturesDiedThisWayInto`, `FromNumber` and the existing damage services.
+No engine action or global result slot is added.
