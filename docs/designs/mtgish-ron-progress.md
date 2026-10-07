@@ -37416,3 +37416,167 @@ Ranked next candidates to reassess with fresh evidence:
    keep Liege's source investigation separate.
 
 No second slice starts in this run.
+
+## Run 2026-10-07: STACK-TARGET-SPELL-SOURCES
+
+Status: completed engine prerequisite slice. Stop after this slice.
+Initial user edits to `.gitignore`, the execution design and reorganized progress
+ledger, and untracked `mtgish-ron-completed.md` are preserved. Only this appended
+entry is staged from this ledger; its initial contents remain untouched.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, all of `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current progress, selected compiler/engine code, API/rules contracts, complete
+candidate records and local Oracle data. CR 400.7, 608.2b, 609.7a-c and 707.10
+supply identity, target, source-choice and copy requirements. Existing semantic
+inventory and per-instance scope prerequisites are already established.
+Baseline compiler tests and short engine tests with `-count=1`, and `make build`,
+passed. Loader and parser-backed inventory exited 1 for unsupported collection
+records: **1,962 compiled / 483 rejected records; 762 accepted / 224 rejected
+unique names**, from 2,445 records and 986 names. Inventory: 72,952 occurrences,
+8,556 signatures, 3,988 unknown-role occurrences. Strict loading installs no
+partial registry. Counts include neither collection engine validation nor proof
+of complete gameplay.
+
+Compared complete records and nested forms, counting identical reprints once:
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Spell-target source enumeration, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: seven names / 31 records. **0** immediate unlocks; complete enumeration and shield integration have **7** credible unlocks. | Other saved stack bindings, waiting replacement/prevention/delayed references, face-up command objects, shield property rechecks and spell-to-permanent identity remain. Completes an exact referred-object category that all seven source-choice consumers need. | Low/medium: existing spell snapshots, stack IDs, copy/retarget and shared decisions can be reused. Full shield integration remains higher effort. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** credible complete unlocks after all contracts and adapters; **0** for an adapter without engine work. | Full records require static grants, named token abilities, temporary removal and upkeep timing. Parameterized band formation and offensive/defensive damage assignment are prerequisites. | High: combat and ability metadata contracts, layers, tokens, removal, copying and eight gameplay mappings. |
+| Static membership and dynamic base counts | Animate Artifact, Gaea's Liege: **0** prerequisite-only gains; **1** credible full unlock after animation lowering. | Noncreature membership must survive type addition across layers; base P/T must read live mana value. Liege also needs defending-player counts, controller filters and investigation of the duplicate IsntAttacking branches. | High: membership/dependency contracts and dynamic values; Liege's source defect stays separate. |
+
+Selection rationale: exact spell-target identity is a mandatory shared prerequisite
+for seven shields, and existing services make this category smaller than the two
+other multi-card engine families. First-error frequency was not treated as an
+unlock count. The selection, zero immediate estimate, contract, reuse boundary
+and acceptance cases were stated before production edits. Later inspection of
+Backdraft/Rainbow Vale and Forcefield/Juxtapose confirmed that their first choice
+errors also hide resolved-spell history/damage, delayed control, partial prevention
+or exchange prerequisites; no simple two-card adapter was inferred from frequency.
+The implement-engine skill supplied the engine workflow. No delegation, removed
+card/set skill, Go-card requirements, fallback or card-name executor was used.
+
+### Exact contract and reuse boundary
+
+Capability ID: `STACK-TARGET-SPELL-SOURCES`.
+
+- `Game.StackTargetSpellSources() []DamageSource`: reads exact spell targets of
+  spells/abilities still on the stack. Stack insertion then target-list order;
+  exact deduplication; no legality or damage-capability requirement. Permanent
+  spells and spell copies qualify. Source-card, ability, player, permanent and
+  unknown IDs do not. Only target-list entries with saved spell identities qualify.
+- `ChooseDamageSourceFromStackSpellTargets(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect`: non-targeted filtered resolution choice
+  from only that category. Shared validation, typed producer/consumer dominance,
+  independent bindings, empty/absent-player clearing, fallback choices and cloned
+  resolution frames apply. It does not expose a complete general source list.
+- `StackObject.targetSpellSources` is private per-object saved information keyed
+  by exact stack ID. `pushStack` captures spell targets. Live queries read current
+  color, controller and other spell characteristics; `Stack.saveSpellInformation`
+  refreshes departure data before pop, ID removal, source-ID removal and stack
+  movement to ante. No global last-action slot or new unbounded history map.
+- Recasts and battlefield entries cannot replace the old spell. Copying a
+  referring object keeps its saved target; native retargeting captures changed
+  targets. Stale map entries cannot add sources. The final referring object's
+  departure ends the reference. Resolving objects have already left the stack.
+- Queries return separate card snapshots, make no choices and mutate no state.
+  Game clones share immutable maps; updates copy the map first. Clones can retain
+  different departure characteristics. Spell objects have no phasing operation;
+  permanent-target phasing retains its existing separate contract.
+
+Reuses `CaptureSpellDamageSource` through its extracted private
+`damageSourceFromSpellObject` helper, `DamageSource.SameObject`, native stack
+insertion/removal/resolution, copies and retargeting, filtered decisions, binding
+validation, snapshots and resolution frames. The private departure hook was
+renamed from `saveSpellManaValue` to `saveSpellInformation`; a fresh caller audit
+found its three Stack paths and the separate ante path, all updated. No alternate
+zone, damage, payment or replacement pipeline is introduced. This is a missing
+engine contract, not a compiler spelling adapter. No production RON context is
+added. Other stack bindings and complete chosen-source shields remain rejected.
+
+### TDD and card-to-test mapping
+
+Engine and real-RON gameplay tests first failed for absent APIs. An initial engine
+fixture used a nonexistent copy-player type; it was corrected before the
+missing-API failure was confirmed again. After implementation, native retargeting
+needed the synthetic object's ability flag, and countering needed `CounterStackObject`
+for a stack ID rather than the source-card API. The ante fixture needed ante enabled.
+These fixture corrections preserve all behavior assertions; no test was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Exact source category and lifetimes | `TestStackTargetSpellSources`: live/current properties, pop/ID/source-ID departure, recast identity, copy deduplication, independent snapshots, pure queries and final-reference/clone lifetime. |
+| Departure, copy and retarget | `TestStackTargetSpellSourceDepartureAndCopy`: different departure colors in clones, copied reference retargeting, permanent spells, target order and stale copied-map exclusion. |
+| Category boundaries and resolving lifetime | `TestStackTargetSpellSourceBoundaries`: ability/player/permanent/card/unknown exclusions and removal of the resolving referer. |
+| Shared choice and invalid declarations | `TestStackTargetSpellSourceChoice`, `Declarations`: typed identity, source-property filtering, separate outputs, empty clearing, absent player, cloned frames, nil/unnamed bindings, invalid color and consumer-before-producer rejection. Existing damage-source-choice tests retain invalid-answer fallback coverage. |
+| Native copies and every removal path | `TestStackTargetSpellSourceCopiesAndRemoval`: distinct spell copies, native copy resolution, countering a copy, stack-to-ante movement, current departure color, clone/final-reference lifetimes. |
+| Counterspell, Spell Blast, Chaoslace and Lightning Bolt, complete LEA records | `TestRONStackTargetSpellSourcePrerequisite`: native casting, unpaid rollback, Spell Blast X, live/departed/recast/recolored/copied target references, resolution-only choice, pending clones, actual counter/color/damage outcomes. Chaoslace's spell branch is exercised; existing tests retain its permanent branch. |
+| Seven future shield consumers | The synthetic choice consumer uses the complete Circle of Protection: Red record's real filter. Complete shield records remain rejected by the strict loader. No shield gameplay claim is made. |
+
+Four already accepted cards receive stronger gameplay evidence. **0 new
+complete-card mappings** and **0 additional compiled names/records** are claimed.
+This pure enumeration adds no simultaneous operation or replacement; existing
+batch/prevention ordering tests remain unchanged. Native payments retain their
+transaction contract. Bindings, identity, retained information, timing, legality,
+copying, cloning and rollback are tested in applicable contexts.
+
+### Validation and actual gain
+
+All required checks passed. The first lint run found one unused fixture local
+(SA4006); it was removed. The second lint run passed with zero issues. Automatic
+import-spacing edits were reviewed. Focused tests, short engine tests, full tests,
+build and vet passed again after the fixture cleanup. No environmental or
+pre-existing validation blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestStackTargetSpell\|TestRONStackTargetSpell\|TestStackTargetPermanent\|TestSpellDamageSource\|TestDamageSourceChoice\|TestRONChosenSourceFilter\|TestInventory' -count=1` | PASS; rerun after lint cleanup |
+| `go test ./pkg/mage/... -short -count=1` | PASS; rerun after lint cleanup |
+| `go test ./... -short -count=1` | PASS; additional engine-skill check |
+| `make test` | PASS; rerun after lint cleanup |
+| `make build` | PASS; rerun after lint cleanup |
+| `go vet ./...` | PASS; rerun after lint cleanup |
+| `make lint` | Final PASS, 0 issues; initial fixture lint error fixed |
+| `git diff --check` | PASS; worktree and staged slice checked before commit |
+| `go run ./cmd/loadcards -json` | Expected exit 1; repeated after lint; identical diagnostics |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; identical inventory and diagnostics |
+| Vocabulary audit | All 12 current RON hashes match snapshot; no RON changes |
+
+Remaining diagnostics include `unsupported action (ChooseADamageSource)` for
+all seven shields, `unsupported static ability grant (BandsWithOthers)` for five
+lands, and `unsupported combined or collective static base values
+(SetPowerAndToughnessBoth)` for Animate Artifact.
+
+Actual gain matches the estimate: **0 unique names / 0 records**. Final totals:
+**1,962 compiled / 483 rejected records; 762 accepted / 224 rejected names**.
+Loader diagnostics and semantic inventory are identical to baseline. Inventory
+remains **72,952 occurrences / 8,556 signatures / 3,988 unknown-role occurrences**.
+Collection-wide engine validation and behavior totals remain null. The strict
+loader keeps rejecting remaining unsupported records atomically.
+
+No new source defect was found, and no RON source changed. Liege's documented
+source defect remains unresolved. No vocabulary refresh is needed: source hashes,
+signatures and diagnostics are unchanged. API/rules documentation describes only
+this category. No Go definitions, startup callers, generators or DSL exports are
+removed; the collection loading/gameplay/runtime removal gates remain unmet.
+No DSL deletion audit is claimed.
+
+Changed files: engine `stack_target_spell_source.go` and its tests,
+`stack.go`, `stack_resolver.go`, `clone.go`, `spell_copy.go`,
+`spell_damage_source.go`, `damage_source_choice.go`, `ante.go`, `doc.go`;
+RON `stack_target_spell_source_test.go`; API/rules contracts and this ledger entry.
+Only the validated slice is committed; the final response reports its hash.
+
+Ranked next candidates to reassess:
+
+1. Other saved typed stack references, then waiting replacement/prevention/delayed
+   references and face-up command objects. Finish CR 609.7a source enumeration
+   before integrating the seven shields and property/identity rechecks.
+2. Parameterized bands with others across the eight compared contexts.
+3. Static membership and dynamic values for Animate Artifact and Liege, keeping
+   Liege's source investigation separate.
+
+No second slice starts in this run.

@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"maps"
 	"slices"
 
 	"github.com/google/uuid"
@@ -91,6 +92,22 @@ func (g *Game) graveyardVisit(id uuid.UUID) uuid.UUID {
 // Used to track game-specific state before pushing object onto stack
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
+	spellSourcesCopied := false
+	for _, id := range obj.Targets {
+		if _, saved := obj.targetSpellSources[id]; saved {
+			continue
+		}
+		if source := g.CaptureSpellDamageSource(id); source.Valid() {
+			if !spellSourcesCopied {
+				obj.targetSpellSources = maps.Clone(obj.targetSpellSources)
+				spellSourcesCopied = true
+			}
+			if obj.targetSpellSources == nil {
+				obj.targetSpellSources = make(map[uuid.UUID]DamageSource)
+			}
+			obj.targetSpellSources[id] = source
+		}
+	}
 	// Track target zone when targeted, needed for CR 608.2b
 	for _, id := range obj.Targets {
 		if _, captured := obj.targetIncarnations[id]; captured {

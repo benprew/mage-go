@@ -7675,3 +7675,45 @@ clones, retained identity and actual RON bonus/damage resolution. These tests
 strengthen accepted-card coverage; they do not establish shield gameplay.
 Existing damage/prevention tests retain simultaneous and replacement ordering
 contracts; enumeration adds no operation to those pipelines.
+
+## Spell targets referred to by stack objects
+
+`Game.StackTargetSpellSources() []DamageSource` supplies the spell-target
+context of CR 609.7a. `pushStack` captures exact spell stack IDs and information
+on each referring object. Queries use only its current `Targets` list and saved
+spell references. Current target legality does not erase a reference. Missing
+identities, source-card IDs and non-spell categories are excluded. Permanent
+spells and spell copies qualify without a damage ability.
+
+Live reads use `CaptureSpellDamageSource`. `Stack.saveSpellInformation` refreshes
+saved references with the departing spell's current characteristics, color override,
+owner and controller before pop, ID removal, source-ID removal or stack-to-ante
+movement. Departure snapshots are scoped to referring stack objects, not a global
+last-action slot or an unbounded spell history. Recasts and battlefield entries
+cannot substitute for the departed spell (CR 400.7). The future shield contract
+for spell-to-permanent identity remains separate (CR 400.7c and 609.7a).
+
+Results follow stack insertion then target-list order, deduplicated by exact
+identity. Stack copies keep original references; changed targets capture their
+own spell IDs (CR 707.10). Stale map entries cannot add sources. Removal of the
+last referring stack object ends the reference; a resolving object has already
+left the stack. The query is pure and returns separate card snapshots. Clones
+share immutable saved maps and copy them before updates. Spell targets have no
+phasing operation; permanent targets retain their separate established contract.
+
+`ChooseDamageSourceFromStackSpellTargets(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` reuses filtered non-targeted decisions,
+definition validation, binding dominance, empty/absent-player clearing, result
+snapshots and resolution-frame cloning. It grants no general source choice or
+production RON shield support. Other saved stack bindings, waiting replacement,
+prevention and delayed references and face-up command objects remain gaps.
+
+Evidence: `TestStackTargetSpellSources`, `TestStackTargetSpellSourceDepartureAndCopy`,
+`Boundaries`, `Choice`, `Declarations` and `CopiesAndRemoval` (the latter tests share
+`TestStackTargetSpellSource`). `TestRONStackTargetSpellSourcePrerequisite` executes
+complete Counterspell, Spell Blast, Chaoslace and Lightning Bolt records through
+native casting and resolution. It covers unpaid rollback, live/departed/recast
+identity, current recoloring, copies, resolution timing and pending clones. A
+synthetic engine consumer uses the real Circle of Protection: Red source filter;
+complete shields remain rejected. This query adds no replacement or simultaneous
+operation; existing damage and prevention tests retain those contracts.

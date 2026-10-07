@@ -179,7 +179,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, 
 	case ZoneStack:
 		for i, obj := range g.stack.objects {
 			if obj.Card != nil && obj.Card.ID() == cardID {
-				g.stack.saveSpellManaValue(obj)
+				g.stack.saveSpellInformation(obj)
 				g.stack.objects = append(append([]*StackObject(nil), g.stack.objects[:i]...), g.stack.objects[i+1:]...)
 				return obj.Card, obj.Controller, nil, nil
 			}

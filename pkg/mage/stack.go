@@ -12,6 +12,8 @@ import (
 type StackObject struct {
 	// Target incarnations are immutable after stack insertion and shared by clones.
 	targetIncarnations map[uuid.UUID]uuid.UUID
+	// Saved spell data uses copy-on-write so stack clones can share it.
+	targetSpellSources map[uuid.UUID]DamageSource
 	sourceIncarnation  uuid.UUID
 	activatedAbility   bool
 	abilitySourceVisit uuid.UUID
@@ -212,7 +214,7 @@ func (s *Stack) Pop() *StackObject {
 		return nil
 	}
 	top := s.objects[len(s.objects)-1]
-	s.saveSpellManaValue(top)
+	s.saveSpellInformation(top)
 	s.objects = s.objects[:len(s.objects)-1]
 	return top
 }
@@ -237,7 +239,7 @@ func (s *Stack) Peek() *StackObject {
 func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 	for i, obj := range s.objects {
 		if obj.SourceID == sourceID {
-			s.saveSpellManaValue(obj)
+			s.saveSpellInformation(obj)
 			s.objects = append(s.objects[:i], s.objects[i+1:]...)
 			return obj
 		}
@@ -250,7 +252,7 @@ func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
 	for i, obj := range s.objects {
 		if obj.ID == id {
-			s.saveSpellManaValue(obj)
+			s.saveSpellInformation(obj)
 			s.objects = append(s.objects[:i], s.objects[i+1:]...)
 			return obj
 		}
@@ -258,7 +260,21 @@ func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
 	return nil
 }
 
-func (s *Stack) saveSpellManaValue(obj *StackObject) {
+func (s *Stack) saveSpellInformation(obj *StackObject) {
+	var source DamageSource
+	for _, referrer := range s.objects {
+		if _, referred := referrer.targetSpellSources[obj.ID]; referred {
+			if !source.Valid() {
+				source = damageSourceFromSpellObject(obj)
+			}
+			if !source.Valid() {
+				continue
+			}
+			// A clone must keep its own departure information.
+			referrer.targetSpellSources = maps.Clone(referrer.targetSpellSources)
+			referrer.targetSpellSources[obj.ID] = source
+		}
+	}
 	if obj.IsAbility || obj.Card == nil {
 		return
 	}

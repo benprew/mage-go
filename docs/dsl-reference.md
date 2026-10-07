@@ -6398,3 +6398,28 @@ This establishes one CR 609.7a category. Other saved stack references, waiting
 replacement/prevention and delayed-trigger references, and face-up command
 objects remain dependencies. General RON `ChooseADamageSource` stays rejected.
 No existing caller changes and no new production RON shape is added.
+
+### Spell targets referred to by stack objects
+
+`mage.Game.StackTargetSpellSources() []mage.DamageSource` reads spell targets
+of spells and abilities still on the stack. Results follow stack insertion and
+target-list order, with exact duplicates removed. A spell need not be capable
+of damage. Permanent spells qualify. Ability, player, permanent and source-card
+IDs cannot substitute for spell stack IDs.
+
+Live spells supply current characteristics and controller. Each referring stack
+object saves the target spell's information. Every native departure path refreshes
+that information before removal. A later cast or battlefield entry cannot replace
+the old spell. Copies keep the saved reference; retargeted copies use their own
+selected targets. Removing the final referring object ends this category's
+reference. Queries return separate card data and make no choices or state changes.
+Stack clones share immutable maps and copy them before departure updates.
+
+`mage.ChooseDamageSourceFromStackSpellTargets(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` uses the shared filtered resolution choice service.
+Declaration validation, producer-before-consumer checks, separate bindings,
+empty/absent-player clearing and clone behavior remain the same. This service
+covers only spell targets, not the complete CR 609.7a source list. Other saved
+bindings, waiting effects, command objects and chosen-source shields remain
+separate dependencies. No additional production RON shape is accepted.

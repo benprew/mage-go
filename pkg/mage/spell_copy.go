@@ -72,6 +72,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		capturedPermanents: maps.Clone(original.capturedPermanents),
 		EventSourceID:      original.EventSourceID,
 		targetIncarnations: maps.Clone(original.targetIncarnations),
+		targetSpellSources: maps.Clone(original.targetSpellSources),
 	}
 	if copiedCard == nil {
 		cp.TargetSource = original.TargetSource
@@ -122,6 +123,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		for i, id := range cp.Targets {
 			if i >= len(original.Targets) || original.Targets[i] != id {
 				delete(cp.targetIncarnations, id)
+				delete(cp.targetSpellSources, id)
 				if p := g.FindPermanent(id); p != nil {
 					cp.targetIncarnations[id] = p.incarnationID
 				} else if visit := g.graveyardVisit(id); visit != uuid.Nil {

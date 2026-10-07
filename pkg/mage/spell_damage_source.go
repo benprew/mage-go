@@ -13,6 +13,13 @@ func (g *Game) CaptureSpellDamageSource(stackID uuid.UUID) DamageSource {
 	if obj == nil || obj.IsAbility || obj.Card == nil || stackID == uuid.Nil {
 		return DamageSource{}
 	}
+	return damageSourceFromSpellObject(obj)
+}
+
+func damageSourceFromSpellObject(obj *StackObject) DamageSource {
+	if obj == nil || obj.IsAbility || obj.Card == nil || obj.ID == uuid.Nil {
+		return DamageSource{}
+	}
 	card := obj.Card.Copy()
 	card.SetID(obj.Card.ID())
 	colors := cardColors(obj.Card)
