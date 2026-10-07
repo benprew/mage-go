@@ -22,7 +22,7 @@ type TurnSystem struct {
 	activePlayer         int // index into players
 	extraTurns           []uuid.UUID
 	schedule             *TurnSchedule
-	skipNextUntap        map[uuid.UUID]bool
+	skipNextUntap        map[uuid.UUID]int
 	capturedUntap        map[capturedUntapKey]bool
 }
 
@@ -35,7 +35,7 @@ func NewTurnSystem() TurnSystem {
 	return TurnSystem{
 		turn:          1,
 		schedule:      newTurnSchedule(),
-		skipNextUntap: make(map[uuid.UUID]bool),
+		skipNextUntap: make(map[uuid.UUID]int),
 	}
 }
 
@@ -224,10 +224,17 @@ func (ts *TurnSystem) PopNextStep() (PhaseStep, bool) {
 
 // SkipNextUntap prevents untapping during the next untap step of the controller.
 func (ts *TurnSystem) SkipNextUntap(permanentID uuid.UUID) {
-	if ts.skipNextUntap == nil {
-		ts.skipNextUntap = make(map[uuid.UUID]bool)
+	ts.skipNextUntaps(permanentID, 1)
+}
+
+func (ts *TurnSystem) skipNextUntaps(permanentID uuid.UUID, count int) {
+	if count <= 0 {
+		return
 	}
-	ts.skipNextUntap[permanentID] = true
+	if ts.skipNextUntap == nil {
+		ts.skipNextUntap = make(map[uuid.UUID]int)
+	}
+	ts.skipNextUntap[permanentID] = max(ts.skipNextUntap[permanentID], count)
 }
 
 // RemoveSkipNextUntap removes any pending untap skips for a permanent that leaves the battlefield.
@@ -240,16 +247,20 @@ func (ts *TurnSystem) RemoveSkipNextUntap(permanentID uuid.UUID) {
 	}
 }
 
-// ConsumeSkipNextUntap clears all restrictions for the same next untap step.
+// ConsumeSkipNextUntap consumes one step from each active restriction.
 func (ts *TurnSystem) ConsumeSkipNextUntap(permanentID uuid.UUID) bool {
 	pending := ts.skipNextUntap[permanentID]
-	delete(ts.skipNextUntap, permanentID)
-	return pending
+	if pending <= 1 {
+		delete(ts.skipNextUntap, permanentID)
+	} else {
+		ts.skipNextUntap[permanentID] = pending - 1
+	}
+	return pending > 0
 }
 
 // HasSkipNextUntap reports whether the permanent has an active untap skip.
 func (ts *TurnSystem) HasSkipNextUntap(permanentID uuid.UUID) bool {
-	return ts.skipNextUntap[permanentID]
+	return ts.skipNextUntap[permanentID] > 0
 }
 
 func (ts *TurnSystem) skipNextUntapOf(permanentID, playerID uuid.UUID) {

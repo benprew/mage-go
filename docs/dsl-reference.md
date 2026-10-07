@@ -5181,3 +5181,21 @@ Merseine and Personal Incarnation, with explicitly synthetic costs and bodies.
 Neither complete card is supported: Merseine still needs
 `PayManaCostOfPermanent(HostPermanent)` and Personal Incarnation still needs
 `CreateFutureReplaceWouldDealDamage` and its independent death body.
+
+### Counted and collection next-untap actions
+
+Use `mage.SkipNextUntaps(subject, count)` for a fixed nonnegative number of
+future untap steps of the subject's current controller. Use
+`mage.SkipNextUntapEach(subjects)` to capture a typed collection at resolution
+and suppress each member's next controller untap. Neither action taps subjects
+or prevents untaps from other effects. Repeated restrictions overlap; they do
+not add steps. Control changes and phasing preserve remaining steps. Departure
+ends the restriction, and clones keep separate counts.
+
+RON supports resolving
+`PermanentDoesntUntapDuringControllersNextNumberUntaps(ref, Integer(n))` and
+`EachPermanentDoesntUntapDuringControllersNextUntap(filter)`. Counts must be
+nonnegative literals. References use the existing instance scope; filters use
+contextual collection queries. These are actions, not costs or static rules.
+Complete gameplay mappings cover Telekinesis and Spore Cloud. See the counted
+untap contract in `engine-rules-contracts.md` for timing and identity evidence.

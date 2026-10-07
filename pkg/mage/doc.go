@@ -549,6 +549,11 @@
 // The card binding keeps the first graveyard visit. A later visit cannot replace it.
 // RON Creature Bond uses these facts with [DealDamageFrom] and the Aura as source.
 //
+// Use [SkipNextUntaps] for a fixed count of future controller untap steps.
+// Overlapping restrictions count the same steps. Other untaps remain legal.
+// Use [SkipNextUntapEach] to capture the recipients of one-step restrictions.
+// Control changes and phasing preserve counts; departure ends them.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

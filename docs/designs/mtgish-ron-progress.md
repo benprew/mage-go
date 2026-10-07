@@ -30231,3 +30231,162 @@ Slice files: pkg/mage/activation_player_condition.go and tests;
 ron only_player_activation.go and tests, activation_timing.go, inventory.go;
 pkg/mage/doc.go, docs/dsl-reference.md, docs/engine-rules-contracts.md and this
 ledger entry. Stop after this slice.
+
+## Run 2026-10-07: COUNTED-COLLECTION-NEXT-UNTAP
+
+Status: complete supported slice. Stop after this slice. The collection loading,
+gameplay, runtime, Go-card deletion and unused-DSL removal gates remain closed.
+
+### Baseline, candidate comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, current
+ledger, compiler and engine services, relevant API/rules contracts, complete
+candidate RON records and nested forms. Requirements came from RON, with local
+LEG/FEM Oracle text checks. Applied implement-engine for the reusable turn-service
+extension. No agents, removed skills, Go card requirements or stubs were used.
+Initial user changes to .gitignore, execution design and progress ledger, and
+untracked mtgish-ron-completed.md are preserved. Only this appended entry is
+staged against HEAD; the user's ledger consolidation remains in the worktree.
+
+Fresh baseline compiler tests, short engine tests and make build passed. Strict
+loader and semantic inspection exited 1 because the collection is incomplete,
+not because of a build failure: 2,445 records / 986 unique names; 1,826 compiled /
+619 rejected records; 702 accepted / 284 rejected names. AST inventory: 72,962
+occurrences, 8,557 signatures, 5,410 unknown-role occurrences. The syntax snapshot
+was read as historical inventory, not evidence of current support.
+
+| Candidate | Distinct affected names / estimated complete-card unlocks | Other blockers and downstream reuse | Estimated effort |
+| --- | --- | --- | --- |
+| Counted and collection next-untap restrictions, selected | Telekinesis; Spore Cloud. **2 unique names / 2 records**. | No other blockers in either complete record. Both need shared extensions to the existing next-untap service. Enables fixed multi-step restrictions and resolution-captured collections in ordinary resolving contexts. Existing target, collection, tap, combat prevention and payment services are exact. | Medium: one turn-state extension, two typed actions, adapters and lifecycle/timing/clone/copy/legality tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods. **5 clean full-card unlocks**. | Missing all-zone characteristic evaluation, owner/controller context and CDA/copy/layer contract. Gaea's Avenger and Wood Elemental have separate data/entry-result blockers and are not included in the estimate. | High: shared zone-characteristic service plus five complete gameplay mappings. |
+| Chosen damage-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **7 clean full-card unlocks**. | Missing source discovery/choice, typed source identity, spell-to-permanent continuity, property rechecks and one-event shield contracts. Enables later source-choice prevention/redirection consumers. | High: decision, identity and replacement integration plus seven complete mappings. |
+
+Selection rationale: two complete consumers have exact existing behavior for
+all other instructions. The new contracts extend one established subsystem and
+have a smaller credible implementation and verification cost than the two larger
+candidates. This is shared multi-card work. First-error counts alone were not
+used as unlock estimates. Contract, boundary, acceptance cases and candidate
+comparison were stated before edits. Reprints count once; both selected names
+have one collection record.
+
+### Supported shapes, contexts and engine boundary
+
+Engine APIs:
+- `SkipNextUntaps(subject PermanentRef, count int) ResolvingEffect` accepts a
+  nonnegative fixed count. Zero has no effect. Installation requires a live,
+  phased-in original incarnation. Saved information cannot restore an absent
+  subject. Control changes alter the applicable player; phasing preserves the
+  count; departure clears it. Each actual controller untap consumes one step,
+  even for an untapped object or overlapping prohibition. Skipped steps do not
+  consume it. Other untaps remain legal and do not consume it.
+- `SkipNextUntapEach(subjects PermanentSet) ResolvingEffect` resolves membership
+  once, verifies live incarnations and installs one-step restrictions. Later
+  membership changes cannot add recipients. It has mass/detriment metadata.
+
+TurnSystem stores the maximum remaining count because all overlapping
+restrictions count the same future steps. Repeated applications do not add
+steps, and a one-step restriction cannot shorten a two-step one. Existing
+SkipNextUntap callers and player-captured SkipNextUntapOf retain their behavior.
+The original allocation-aware map clone helper preserves clone cost and
+isolation. Departure removal, current-controller untap consumption, native
+phase-in, restriction decision snapshots and simultaneous untap are reused.
+No new zone, LKI, cost, damage, event or replacement system is introduced.
+
+RON actions:
+- `PermanentDoesntUntapDuringControllersNextNumberUntaps(ref, Integer(n))/2`:
+  n is a nonnegative integer literal; ref uses compilePermanentRef and fresh
+  instanceBindings. Dynamic values and new binding producers remain rejected.
+- `EachPermanentDoesntUntapDuringControllersNextUntap(filter)/1`: contextual
+  collection queries, supported property/player/relation/attachment filters and
+  nonempty nested And/Or. Unsupported collection references remain rejected.
+
+These are resolving actions, including ordinary spell/activation/trigger bodies
+and existing scoped action sequences. They are not top-level static rules,
+costs or entry operations. This slice directly verifies source, target and
+saved-reference engine contexts; RON spell targets, source activations and
+entry/upkeep trigger bodies. Existing compiler reference scopes remain in
+force. Declaration validation rejects nil/unbound subjects and negative counts;
+RON rejects wrong arity/kind, unbound/out-of-context/incompatible references,
+empty filters and dynamic counts before gameplay. No declaration panic, global
+result slot, shared mutable target choice, card-name branch, skipped rule,
+fallback or partial production registry is introduced.
+
+CR 502.3, 400.7, 608.2b/c/f and 702.26b/d govern timing, identity, legality,
+ordered actions and phasing. No replacement-ordering or payment contract is
+changed. Existing combat prevention and transactional casting tests remain in
+use. The collection installation has no decisions or events between members.
+
+### TDD and card-to-test mappings
+
+New engine tests first failed to build for missing SkipNextUntaps and
+SkipNextUntapEach. Real-RON tests first failed on the two unsupported action
+names. After implementation, test setup fixes used the actual turn schedule for
+skipped steps, and phased-in the illegal pre-resolution target before using a
+helper that requires a present combat source. Initial compiler integration used
+the wrong factory return shape and a nonexistent integer helper; both were
+corrected without changing the contract.
+
+The first repository runs found TestCloneStackHeavyGameAllocationBudget at 139
+allocations versus its unchanged 138 budget. This was caused by replacing the
+existing empty-map-aware clone helper with maps.Clone. Restoring the generic
+cloneUUIDMap fixed the regression. No test or budget was weakened.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Telekinesis, complete LEG:257 | TestRONNextUntapsTelekinesis: UU payment, unpaid and noncreature-target rollback, announcement/resolution timing, tap, combat-only prevention, cleanup, two native controller untaps and expiry, return, pre/post-resolution phasing, control changes, shroud, retargeted copies and pending clone isolation. |
+| Spore Cloud, complete FEM:80 | TestRONNextUntapsSporeCloud: 1GG casting, all blocking-creature tap, global combat prevention including a noncombat member, noncombat damage unaffected, cleanup, attacking/blocking collection capture, both controllers' native one-step restrictions, later-member exclusion, expiry and clone isolation. |
+| Count and overlap engine contract | TestNextUntapsCountAndOverlap: 0/negative direct-action no-op, 1/2/repeated overlapping counts, native steps, independent cloned counts. IdentityAndTiming: control, leave/return, phasing, other untaps, already-untapped consumption, scheduled skipped steps and overlap with captured-player restriction. |
+| Engine sets and information | CollectionAndDeclarations: captured membership, both controllers, later members, expiry, nil/unbound subjects and negative declaration rejection. SavedInformationCannotRestoreObject: live/absent/returned/phased/cycled/control-changed original saved incarnation. |
+| RON declarations, scopes and instances | TestRONNextUntapsInvalidAndInventory: malformed arities/kinds/counts, incompatible or out-of-scope references, empty logical collections, dynamic counts, semantic reference/value/filter roles. SharedContextsAndInstances: source activation, entry/upkeep resolving triggers, independent source instances and controllers. |
+| Accepted behavior and allocation regression | Existing TestRONSkipUntap*, TestComposableSkipNextUntap*, TestTurnSystem_SkipNextUntap, TestInventory* and TestCloneStackHeavyGameAllocationBudget retain their assertions. Repository inventory tests now require both newly supported names and fresh counts. |
+
+Two complete-card gameplay mappings are added, separately from the compilation
+gain. Collection-wide engine_validated and behavior_verified totals remain
+null. Tests do not establish collection-wide gameplay or other count/value roles.
+
+### Measurements, source data and validation
+
+Actual gain matches the estimate: **2 unique names / 2 records**, precisely
+Telekinesis and Spore Cloud. Final strict loader: **1,828 compiled / 617 rejected
+records; 704 accepted / 282 rejected unique names**. No accepted name is lost.
+All remaining first diagnostics are unchanged. Semantic inventory: **72,962
+occurrences / 8,557 signatures / 5,395 unknown-role occurrences**, 15 fewer
+unknown-role occurrences. Strict loading exits 1 and publishes no partial
+registry. Representative remaining diagnostics are CDA_Power (Dakkon
+Blackblade), ChooseADamageSource (the Circles), PayManaCostOfPermanent (Merseine)
+and CreateFutureReplaceWouldDealDamage (Personal Incarnation).
+
+Local LEG/FEM Oracle text agrees with both selected complete RON records.
+No new source defect or environment failure was found. No RON source changed;
+vocabulary syntax and hashes need no refresh. Existing recorded source defects
+remain independent blockers. API/rules docs describe only the contracts added
+here. No Go card definitions, generators or DSL functions were removed: the
+loading/test/startup removal gates remain unmet, and no unrelated caller audit
+or deletion is claimed.
+
+All required final checks pass. No validation blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Focused engine/RON tests with `-count=1` | PASS; repeated after final lint. Includes existing one-step and inventory regressions, plus clone allocation budget. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after restoring the clone helper. |
+| `make test` | PASS after restoring the clone helper. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS; additional skill verification. |
+| `make lint` | PASS, zero issues in the final run. Initial lint flagged the test variable `copy`; it was renamed. Automatic range-loop and import formatting changes were reviewed and remain confined to new tests. |
+| `git diff --check` | PASS, including final documentation and ledger updates. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for collection rejection, 1,828 compiled / 617 rejected records; final run matches inventory. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; fresh semantic counts above. |
+| Accepted-name and diagnostic comparison | Exactly the two estimated names gain support; no loss and no other diagnostic changes. |
+
+Ranked next candidates to reassess from fresh evidence:
+1. All-zone battlefield-count CDA service and its five clean consumers.
+2. Chosen damage-source choice/identity/shields and seven clean consumers.
+3. Resolution snapshot/value scopes and dynamic payments for Cyclone,
+   Primordial Ooze and City of Shadows, with their separate timing/solver roles.
+
+Changed files: engine next_untaps.go and tests, turn_system.go and doc.go;
+RON next_untaps.go and tests, compiler.go, inventory.go and inventory_test.go;
+dsl-reference.md, engine-rules-contracts.md and this appended ledger entry.
+No second slice is started.

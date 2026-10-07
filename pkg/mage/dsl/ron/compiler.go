@@ -1262,6 +1262,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(func(bindings instanceBindings) mage.Effect {
 			return mage.DealDamageFrom(mage.This, bindings.permanents[ctx.permanentTarget], amount(bindings))
 		})
+	case "PermanentDoesntUntapDuringControllersNextNumberUntaps", "EachPermanentDoesntUntapDuringControllersNextUntap":
+		build, err := compileNextUntaps(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 		if err := arity(n, 1); err != nil {
 			return nil, err

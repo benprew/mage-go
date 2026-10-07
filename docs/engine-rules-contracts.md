@@ -6108,3 +6108,45 @@ sorcery timing, activation limits, independent factories and target legality;
 `Inventory` and `InvalidAndBoundaries` cover nested semantic reporting,
 declaration rejection, independent complete-card gaps and strict atomic loading.
 Complete-card coverage for Merseine and Personal Incarnation remains open.
+
+## Counted and collection next-untap restrictions
+
+`SkipNextUntaps(subject PermanentRef, count int) ResolvingEffect` extends the
+existing next-untap service. A nonnegative fixed count applies to the subject's
+current controller's next actual untap steps (CR 502.3). Zero has no effect.
+Overlapping restrictions count the same future steps; their maximum remaining
+count is sufficient. A later one-step restriction cannot shorten a longer one.
+The count decreases even if the subject is already untapped or another rule
+also prohibits its untap. Skipped steps do not decrease the count. Untapping
+through another effect remains legal and does not decrease the count.
+
+Installation requires the original live, phased-in incarnation. Saved
+information cannot restore an absent subject. Control changes preserve the
+count and change the applicable player. Phasing preserves it; native phase-in
+precedes the untap decision. Departure clears it before a returned card can
+use it (CR 400.7, 702.26b/d). Clones retain independent remaining counts.
+`SkipNextUntap` and player-captured `SkipNextUntapOf` retain their contracts.
+The existing decision snapshot and simultaneous untap service remain in use.
+
+`SkipNextUntapEach(subjects PermanentSet) ResolvingEffect` resolves membership
+once and installs one-step restrictions for those live incarnations. Later
+membership changes do not change the recipients. It has no choices, zone moves
+or events during installation. Definition validation rejects nil subjects,
+unbound references and negative counts before gameplay.
+
+RON resolving actions add
+`PermanentDoesntUntapDuringControllersNextNumberUntaps(ref, Integer(n))` and
+`EachPermanentDoesntUntapDuringControllersNextUntap(filter)`. The first uses
+existing typed permanent bindings; the second uses contextual collection
+queries, including nested nonempty And/Or and supported player restrictions.
+Dynamic counts, static/entry-operation/cost declarations and new reference
+producers are not established. Targets retain announcement and resolution
+legality (CR 608.2b); collection membership is read in instruction order
+(CR 608.2c/f). No damage replacement or cost transaction contract changes.
+
+Evidence: `TestNextUntapsCountAndOverlap`, `IdentityAndTiming`,
+`CollectionAndDeclarations`, `SavedInformationCannotRestoreObject`;
+`TestRONNextUntapsTelekinesis`, `SporeCloud`, `InvalidAndInventory`,
+`SharedContextsAndInstances`. Real-card tests execute unchanged complete LEG
+Telekinesis and FEM Spore Cloud records through casting, prevention, cleanup
+and native untap steps. Existing single-step regression tests remain in use.

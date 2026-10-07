@@ -756,7 +756,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_filter", "metadata"}[index]
 			}
-		case "TapEachPermanent", "UntapEachPermanent":
+		case "TapEachPermanent", "UntapEachPermanent", "EachPermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				if n.Args[0].Name == "Ref_TargetPermanents" || n.Args[0].Name == "TheChosenPermanents" {
 					return "permanent_collection_reference"
@@ -766,6 +766,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "RemoveCreatureFromCombat", "RemoveCreatureFromCombatAndUnblockBlockers", "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "TapOrUntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				return "permanent_reference"
+			}
+		case "PermanentDoesntUntapDuringControllersNextNumberUntaps":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "value"}[index]
 			}
 		case "CounterAbility":
 			if len(n.Args) == 1 {
