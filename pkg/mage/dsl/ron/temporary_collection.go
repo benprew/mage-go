@@ -26,8 +26,8 @@ func compileTemporaryCollection(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if subjects.excludeSource {
-		return nil, unsupported(n.Args[0], "temporary collection source exclusion")
+	if subjects.excludeSource && !ctx.permanent {
+		return nil, problem(n.Args[0], "temporary collection source exclusion requires a permanent source")
 	}
 	parts, err := list(n.Args[1])
 	if err != nil {

@@ -148,6 +148,13 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 			return mage.ExileMatchingCardFromGraveyardCostInto(plan.filter, "Exile a matching card from your graveyard", bindings.exiles[ctx.exilePayment])
 		}}, false, nil
 	}
+	if n.Name == "SacrificeAPermanent" && ctx.sacrificeValue == nil {
+		cost, err := compileRequiredSacrificeCost(n, ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		return []boundCostFactory{func(instanceBindings) mage.Cost { return cost() }}, false, nil
+	}
 	return compileActivationCosts(n, ctx.sacrificeValue, ctx.counterPayment)
 }
 

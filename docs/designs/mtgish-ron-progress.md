@@ -34652,3 +34652,139 @@ Changed files: RON `compiler.go`, `counter_placement.go`, `player_actions.go`,
 `counter_placement_test.go`, `counter_information_test.go`, `inventory_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended
 ledger entry. No second slice is started.
+
+## 2026-10-07: source exclusion in payments and captured P/T collections
+
+Status: completed slice `RESOLVING-SOURCE-EXCLUSION`. Stop after this slice.
+User edits to `.gitignore`, the execution design, and this ledger's earlier
+contents, plus the untracked completed ledger, remain outside the commit.
+Only this entry is staged from this ledger.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Strict loader and semantic inventory exited 1 for unsupported declarations:
+**1,928 compiled / 517 rejected records**, **739 accepted / 247 rejected
+unique names**. The collection has 2,445 records and 986 names. Inventory:
+72,962 occurrences, 8,557 signatures, 4,594 unknown-role occurrences.
+The design, existing ledger, vocabulary snapshot, engine API, selected compiler
+and engine services, full candidate records, API/rules contracts, and CR 400.7,
+602.2b, 608.2 and 611.2c were inspected. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers; downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Source exclusion in payments and captured P/T collections, selected | Orc General; **1 immediate unlock**. Bronze Horse is a second source-exclusion consumer, with **0 additional unlocks in this slice**. | Orc General needs both adapters; its complete record has no further blockers. Bronze Horse needs a typed static existence condition and targeted-spell prevention. Reusing the existing source-excluding collection and payment plans establishes the resolving contexts without a parallel rules service. | Small: two adapters, full RON gameplay, identity/copy/clone/phasing/rollback tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **up to 8 unlocks after prerequisites**, **0 from a spelling adapter alone**. | Engine lacks parameterized ability representation, band legality and damage-assignment contracts. Nested records also need token keyword support and removal of all parameterized instances. Enables filtered band formation and parameterized ability grant/removal. | High: engine representation, combat integration, layer/removal and token contracts before compiler adapters. |
+| Damage-source choices and consuming shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7 unlocks after prerequisites**, **0 from a live-object-only choice adapter**. | Complete source enumeration must include referred and command-zone objects; choices need saved source identity and a next-event consuming shield. Existing live-only choices cannot fulfill the full contract. Enables further prevention and redirection consumers. | High: enumeration, source lifetime, shield consumption, competing replacements, copies and gameplay tests. |
+
+Selection rationale: the two missing adapters are dependency-ready and reuse
+exact existing engine contracts. The larger multi-card candidates require
+substantial engine prerequisites before any complete card can be accepted.
+This is a shared source-exclusion context extension, with the best credible
+immediate gain for its small effort; it does not claim to solve Bronze Horse.
+The source-exclusion plans remain reusable for its later condition prerequisite.
+The contract, reuse boundary and acceptance cases were stated before editing.
+No single-card executor or new engine rules implementation was introduced.
+
+### Supported shapes, scope and reuse
+
+- Permanent `Activated` and `ActivatedWithModifiers` costs:
+  `SacrificeAPermanent(Other(ThisPermanent))`, or that predicate in nested
+  nonempty `And` filters. Ordinary nonempty `Or` filters can select types.
+  Source exclusion below `Or` remains rejected. This path applies when there
+  is no sacrifice characteristic result binding. Granted abilities and other
+  cost contexts retain their prior support.
+- Resolving action:
+  `CreateEachPermanentLayerEffectUntil(filter,
+  [AdjustPT(power, toughness), ...], UntilEndOfTurn)` with the same exclusion
+  conjunction for a permanent source. Existing controller restrictions apply.
+  `ThisPermanent` in an instant or sorcery remains a declaration error.
+- The activation-cost adapter reuses `compileRequiredSacrificeCost` and its
+  typed source validation. It lowers to `mage.SacrificeMatchingCost` for source
+  exclusion and preserves `mage.SacrificeMatchingIncludingSourceCost` otherwise.
+  Shared payment validation rejects bad choices before tap payment commits.
+- Temporary P/T effects reuse `staticPermanentFilterPlan.build`,
+  `mage.WithoutPermanent(subjects, mage.This)`, `mage.ModifyEachPT` and
+  `mage.Until(core.EndOfTurn, ...)`. The resolving source incarnation determines
+  exclusion. A returned source is eligible. Recipients are captured at
+  resolution; later entries and returned recipients cannot join the set.
+  Control changes, ability removal and phasing do not end a captured bonus.
+- Factories build separate costs and effects; stack copies preserve their source
+  without payment, and game clones keep separate captured state.
+
+### Card-to-test mapping and TDD evidence
+
+The complete DRK Orc General record maps to `TestRONOrcGeneral` and
+`TestRONOrcGeneralRollback`. The first failing run rejected it at
+`DRK.ron:79:224: unsupported permanent filter (Other)`, as expected.
+No Go definition was read as a requirement.
+
+Gameplay covers both Orc and Goblin payments, tap payment before resolution,
+all other Orc creatures on both sides, no Goblin bonus, creatures entering
+before versus after resolution, source departure/return/phasing, recipient
+return/phasing/control change/ability removal, clone isolation, and cleanup.
+Rollback cases cover source-only payment, opposing control, wrong subtype,
+phasing, summoning sickness, and a stale chosen incarnation.
+`TestRONSourceExclusionInstancesAndCopy` covers two instances from one factory
+and copied abilities with a different controller and no repeated cost.
+`TestRONSourceExclusionInvalid` covers malformed, unbound, incompatible and
+unsupported disjunctive declarations. Existing temporary-collection rejection
+of a spell's source reference remains intact.
+
+The previous invalid-cost test treated the newly supported exact form as an
+error. It now checks `Other(ThisPermanent())`; positive gameplay and the new
+rejection tests cover the distinction. Exact inventory assertions were updated
+from 1,928/517 to 1,929/516, with an explicit Orc General acceptance check.
+No assertion was removed to hide a rules or environment failure.
+
+### Measurements, source defects and validation
+
+Actual gain matches the estimate: **1 unique name / 1 record**, Orc General.
+Final strict and semantic loading: **1,929 compiled / 516 rejected records**,
+**740 accepted / 246 rejected unique names**. The removed diagnostic is the
+DRK Orc General `Other` rejection; there are zero newly rejected records.
+Inventory signatures, occurrences and unknown-role totals are unchanged.
+Compilation and gameplay coverage remain separate: one new complete-card
+mapping is established; collection-wide engine-validation and behavior totals
+remain null. Strict loading still exits 1 and installs no partial registry.
+
+Local `data/DRK.json` Oracle text agrees with the entire Orc General record.
+No source correction is needed. All 12 RON file hashes match the vocabulary
+snapshot, so it needs no source refresh. The fresh counts here supersede its
+old loader errors. Existing unrelated source defects remain unresolved.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, `make build` | PASS. |
+| Focused source-exclusion, sacrifice, required-payment, temporary-collection and inventory tests, `-count=1` | PASS after the expected initial adapter failure. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after updating exact inventory totals. |
+| `make test` | PASS after updating exact inventory totals. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic formatting reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,929/516; collection rejection. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts, 740/246 names. |
+
+Initial broad checks failed only on three assertions of the previous inventory
+totals. They passed after the measured totals were updated. No environmental or
+pre-existing blocker remains. API/rules documentation records only these
+established adapters and reused engine behavior. Collection loading, full
+RON gameplay, native startup and test migration remain below the removal gate.
+No Go card definitions, generators or DSL services are removed; no caller
+removal audit is claimed. This run starts no second slice.
+
+Ranked next candidates to reassess:
+
+1. Complete damage-source enumeration and saved references, then consuming
+   shields for the six Circles and Greater Realm of Preservation.
+2. Parameterized bands with others, starting with its engine ability and combat
+   contracts, for the eight consumers above.
+3. Source-excluding static existence conditions and targeted-spell prevention
+   for Bronze Horse, reusing the source-exclusion plans established here.
+
+Changed files: `exile_payment.go`, `temporary_collection.go`, new
+`source_exclusion_test.go`, `sacrifice_cost_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go` under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry.

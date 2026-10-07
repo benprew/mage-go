@@ -7049,3 +7049,31 @@ Evidence: `TestRONNumericConsumerLivingArmor`, `LivingArmorRetarget`,
 `ReplacementOrder`, `Contexts`, `BoundedPlacement`, `Nonpositive`, `Invalid` and
 `Inventory` in `pkg/mage/dsl/ron/numeric_consumers_test.go`. These tests keep
 compilation counts separate from complete-card gameplay evidence.
+
+
+## RON source exclusion in activation payments and temporary P/T collections
+
+RON activation costs reuse the required matching-sacrifice adapter for costs
+without a sacrifice characteristic result. `Other(ThisPermanent)` in a
+conjunction selects `SacrificeMatchingCost`; other matching costs retain
+`SacrificeMatchingIncludingSourceCost`. The shared payment transaction validates
+choices before spending the tap cost. Wrong types, opposing control, phasing,
+summoning sickness and stale incarnations fail without payment (CR 602.2b).
+
+Temporary fixed P/T collection modifications reuse the static collection plan's
+`WithoutPermanent(subjects, This)` through `ModifyEachPT` and `Until`.
+`This` retains the resolving ability's original source incarnation. A returned
+source is eligible; an absent or phased source does not stop resolution.
+Recipients are captured at resolution under CR 611.2c. Control changes, ability
+removal and a phasing cycle preserve the captured bonus. A returned recipient
+and a later entry do not receive it (CR 400.7). Cleanup ends the bonus
+(CR 514.2). Copies keep their original source without paying again; factories
+and game clones keep separate state. No engine execution contract is changed.
+
+Card mapping: the complete DRK Orc General record is exercised by
+`TestRONOrcGeneral` and `TestRONOrcGeneralRollback`. Synthetic source instances
+and copied abilities use `TestRONSourceExclusionInstancesAndCopy`.
+`TestRONSourceExclusionInvalid` covers malformed, unbound, incompatible and
+unsupported disjunctive declarations. Bronze Horse still needs a typed static
+existence condition and targeted-spell prevention; this slice does not claim
+its gameplay coverage.

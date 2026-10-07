@@ -1007,7 +1007,7 @@ In an `EachPermanentLayerEffect` conjunction, use
 keyword grants. It can be combined with `ControlledByAPlayer(SinglePlayer(You))`
 and nested nonempty `And` filters. Each source excludes only itself; other
 instances can affect it. Source-dependent predicates below `Or`, other reference
-operands and target/cost/action contexts remain rejected.
+operands remain rejected in this static context.
 See [the contract and card tests](designs/mtgish-ron-static-other.md).
 
 ### RON captured temporary P/T values
@@ -5915,3 +5915,26 @@ resolution-time values, supported contexts, invalid declarations, LKI, timing,
 target legality, copy retargeting, independent instances and clones, and
 replacement ordering. These adapters add no engine service or new simultaneous
 operation contract.
+
+
+### RON resolving source exclusion
+
+`SacrificeAPermanent(filter)` in a permanent's `Activated` or
+`ActivatedWithModifiers` cost accepts `Other(ThisPermanent)` alone or in nested
+nonempty `And` filters. Ordinary nonempty `Or` filters can select payment types;
+source exclusion below `Or` remains rejected. Payment uses
+`SacrificeMatchingCost`, so the source cannot pay. Existing costs without the
+exclusion still permit the source. Sacrifice characteristic result bindings and
+granted abilities retain their prior supported contexts.
+
+`CreateEachPermanentLayerEffectUntil(filter, [AdjustPT(power, toughness), ...],
+UntilEndOfTurn)` accepts the same source exclusion for a permanent source.
+The engine captures matching recipients when the effect starts. Both players'
+matching permanents qualify unless a controller filter restricts them. A
+returned source is a new object and can receive the bonus. Later entries and
+returned recipients cannot join the captured set. Phasing preserves a captured
+recipient's identity. Other references, source-dependent disjunctions and a
+spell's `ThisPermanent` remain declaration errors.
+
+Evidence: `TestRONOrcGeneral`, `TestRONOrcGeneralRollback`,
+`TestRONSourceExclusionInstancesAndCopy`, `TestRONSourceExclusionInvalid`.

@@ -215,7 +215,7 @@ func TestRONSacrificeCostSourceAndTargets(t *testing.T) {
 }
 
 func TestRONSacrificeCostInvalid(t *testing.T) {
-	for _, cost := range []string{"SacrificeAPermanent", "SacrificeAPermanent()", "SacrificeAPermanent(AnyPermanent, AnyPermanent)", "SacrificeAPermanent(ThisPermanent)", "SacrificeAPermanent(Ref_TargetPermanent)", "SacrificeAPermanent(And([]))", "SacrificeAPermanent(Or([]))", "SacrificeAPermanent(And([IsCardtype(Creature), Or([])]))", "SacrificeAPermanent(Other(ThisPermanent))"} {
+	for _, cost := range []string{"SacrificeAPermanent", "SacrificeAPermanent()", "SacrificeAPermanent(AnyPermanent, AnyPermanent)", "SacrificeAPermanent(ThisPermanent)", "SacrificeAPermanent(Ref_TargetPermanent)", "SacrificeAPermanent(And([]))", "SacrificeAPermanent(Or([]))", "SacrificeAPermanent(And([IsCardtype(Creature), Or([])]))", "SacrificeAPermanent(Other(ThisPermanent()))"} {
 		t.Run(cost, func(t *testing.T) {
 			text := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [Activated(%s, ActionList([GainLife(Integer(1))]))])`, cost)
 			nodes, err := Parse(strings.NewReader(text), "invalid.ron")
