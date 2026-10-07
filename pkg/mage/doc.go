@@ -73,6 +73,10 @@
 // [SetBasePower] changes only base power. Bonuses and counters still apply. [TargetOtherThanSource] excludes the
 // source from a typed permanent target.
 //
+// Use [WithActivationStateCondition] with [PermanentMatchesFilter] for a
+// live source or attachment restriction before activation payment. Mana planning
+// uses the same pure check. Copies and resolution do not repeat it.
+//
 // Use [BindActivationHistory] and [WithActivationHistory] to keep activation
 // counts separate for each ability and source incarnation. [IfActivationsAtLeast]
 // reads the count at resolution. Countered activations count; copies do not add

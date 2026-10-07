@@ -204,7 +204,6 @@ func TestRONOptionalHandEntryShapesAndStrictLoad(t *testing.T) {
 	}
 	for _, tc := range []struct{ set, name, gap string }{
 		{"DRK", "Goblin Wizard", "unsupported temporary keyword (Protection)"},
-		{"LEG", "Triassic Egg", "unsupported activation timing condition (PermanentPassesFilter)"},
 		{"LEG", "Eureka", "unsupported action (RepeatableActions)"},
 	} {
 		node := hostUntapRecord(t, tc.set, tc.name)
@@ -212,6 +211,11 @@ func TestRONOptionalHandEntryShapesAndStrictLoad(t *testing.T) {
 			t.Fatalf("%s gap: %v", tc.name, err)
 		}
 	}
+	egg := repositoryCard(t, "LEG", "Triassic Egg")
+	if err := mage.ValidateCardDefinition(egg.Name(), egg); err != nil {
+		t.Fatal(err)
+	}
+
 }
 
 func TestRONOptionalHandEntryStrictCollection(t *testing.T) {

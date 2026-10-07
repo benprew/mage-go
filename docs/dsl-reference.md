@@ -4339,8 +4339,9 @@ exclude phased hosts. No legal host leaves the Aura in hand.
 
 Complete Gaea's Touch behavior is covered by `TestRONOptionalHandEntryGaeasTouch`
 and `TestRONOptionalHandEntryTimingAndRollback`. Goblin Wizard's temporary
-protection, Triassic Egg's activation condition and source defect, and Eureka's
-repeated player procedure remain unsupported. Their complete records still reject.
+protection and Eureka's repeated player procedure remain unsupported. Their
+complete records still reject. Triassic Egg now has a corrected graveyard mode
+and live activation-condition support; see the activation-property section below.
 
 
 ## RON controller restrictions on enchant abilities
@@ -4398,4 +4399,34 @@ reuse `HasCounter` and `CounterCountEquals`. Execution reuses
 Evidence: `TestCounterCountAtLeast` and `TestRONResolvingCounter*`. The actual
 Fasting upkeep and Tourach's Gate counter-decay clauses have gameplay coverage.
 Fasting still rejects its draw-step replacement, and Gate still rejects its
-host activation restriction. These tests do not establish complete-card support.
+host tap cost. These tests do not establish complete-card support.
+
+### RON live activation property restrictions
+
+`ActivatedWithModifiers(cost, body, ActivateOnlyIf(PermanentPassesFilter(subject,
+filter)))` checks the current source or Aura host before activation payment.
+`subject` is bare `ThisPermanent`, or bare `HostPermanent` on an Aura. Targets,
+event bindings and other subjects are not available in this declaration scope.
+Ordinary and modal bodies use the same restriction. Nested modifier `And` lists
+combine property, turn, step and usage restrictions without replacing them.
+
+Filters use the existing resolving property filter grammar: current types,
+subtypes, colors, supertypes, tapped state, keywords and supported P/T comparisons;
+nonempty nested `And`/`Or`; counter presence/absence; and counter counts with
+`EqualTo(Integer(n))` or `GreaterThanOrEqualTo(Integer(n))`. Counter thresholds
+must be nonnegative literals, and counter kinds must be known. This filter
+reads live information, without departure LKI. Static and resolving condition
+contexts retain their separate reference and evaluation contracts.
+
+Lowering uses `mage.WithActivationStateCondition(mage.PermanentMatchesFilter(...))`.
+The engine validates the typed declaration and uses the same pure activation
+check for mana planning and actual payment. Restrictions do not repeat at
+resolution or when a stack ability is copied. Changing counters or tapping the
+host after activation does not stop the ability. Phased, absent and stale hosts
+cannot qualify; changing the attachment changes the live subject.
+
+`TestRONActivationProperty*` covers these contracts and both complete Triassic
+Egg modes. Its corrected graveyard mode targets a creature card in your
+graveyard at announcement; the hand mode makes an optional choice at resolution.
+Tourach's Gate has activation-condition clause evidence only; its complete record
+still rejects the separate host tap cost.

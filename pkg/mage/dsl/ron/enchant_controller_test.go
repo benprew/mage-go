@@ -158,7 +158,7 @@ func TestRONEnchantControllerReporting(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
 		{"LEG", "Cocoon", "unsupported mandatory sacrifice cost (RemoveCounters)"},
 		{"LEG", "Relic Bind", "unsupported action list (Modal_ChooseOne)"},
-		{"FEM", "Tourach's Gate", "unsupported activation timing condition (PermanentPassesFilter)"},
+		{"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"},
 	} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.blocker) {
 			t.Fatalf("%s: full-record blocker changed: %v", tc.name, err)

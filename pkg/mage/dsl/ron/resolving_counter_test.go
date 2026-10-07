@@ -165,7 +165,6 @@ func TestRONResolvingCounterContextBoundaries(t *testing.T) {
 	for _, rule := range []string{
 		`Activated(PayMana([]),ActionList([If(PermanentPassesFilter(Ref_TargetPermanent,HasNoCountersOfType(TimeCounter)),[GainLife(Integer(1))])]))`,
 		`Activated(PayMana([]),ActionList([If(PermanentPassesFilter(HostPermanent,HasNoCountersOfType(TimeCounter)),[GainLife(Integer(1))])]))`,
-		`ActivatedWithModifiers(PayMana([]),ActionList([GainLife(Integer(1))]),ActivateOnlyIf(PermanentPassesFilter(ThisPermanent,HasNoCountersOfType(TimeCounter))))`,
 		`If(PermanentPassesFilter(ThisPermanent,HasNumberCountersOfType(GreaterThanOrEqualTo(Integer(2)),TimeCounter)),[PermanentLayerEffect(ThisPermanent,[AdjustPT(1,1)])])`,
 		`Activated(PayMana([]),ActionList([If(PermanentPassesFilter(ThisPermanent,HasNoCountersOfType(TimeCounter)),[AddMana(ManaProduceB)])]))`,
 	} {
@@ -178,6 +177,11 @@ func TestRONResolvingCounterContextBoundaries(t *testing.T) {
 			t.Fatal("accepted unsupported counter context", rule)
 		}
 	}
+	factory := permanentScopeFactory(t, "Artifact", `ActivatedWithModifiers(PayMana([]),ActionList([GainLife(Integer(1))]),ActivateOnlyIf(PermanentPassesFilter(ThisPermanent,HasNoCountersOfType(TimeCounter))))`)
+	if err := mage.ValidateCardDefinition("Supported counter restriction", factory()); err != nil {
+		t.Fatal(err)
+	}
+
 }
 
 func TestRONResolvingCounterInvalid(t *testing.T) {
@@ -328,7 +332,7 @@ func TestRONResolvingCounterStrictInventory(t *testing.T) {
 	if registry, err := LoadFS(fs, "*.ron"); err == nil || registry != nil {
 		t.Fatal("published partial registry")
 	}
-	for _, tc := range []struct{ set, name, next string }{{"DRK", "Fasting", "ReplaceWouldBeginDrawStep"}, {"FEM", "Tourach's Gate", "unsupported activation timing condition (PermanentPassesFilter)"}} {
+	for _, tc := range []struct{ set, name, next string }{{"DRK", "Fasting", "ReplaceWouldBeginDrawStep"}, {"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"}} {
 		_, err := Compile(hostUntapRecord(t, tc.set, tc.name))
 		if err == nil || !strings.Contains(err.Error(), tc.next) {
 			t.Fatal("wrong full-record blocker", tc.name, err)

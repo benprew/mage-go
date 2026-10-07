@@ -2,15 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **664 accepted / 322 rejected unique card
-names** (986 total), and **1,757 compiled / 688 rejected records** (2,445 total).
+The latest recorded inventory reports **665 accepted / 321 rejected unique card
+names** (986 total), and **1,758 compiled / 687 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`RESOLVING-COUNTER-CONDITIONS` prerequisite and its clause-level gameplay evidence
-are recorded at the end of this ledger. It unlocks no complete cards.
+`LIVE-ACTIVATION-PROPERTY` slice and its gameplay evidence are recorded at the
+end of this ledger. It adds complete Triassic Egg gameplay and activation-clause
+evidence for Tourach's Gate.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -25468,3 +25469,174 @@ pkg/mage/dsl/ron/resolving_counter.go/test.go, resolving_condition.go,
 inventory.go and enchant_controller_test.go; docs/dsl-reference.md,
 docs/engine-rules-contracts.md and this ledger. The final response records the
 commit. No second slice begins.
+
+## 2026-10-06: live activation property restrictions
+
+Status: completed slice `LIVE-ACTIVATION-PROPERTY`. This run stops after this
+slice. Final compilation: **665 accepted / 321 rejected unique names** and
+**1,758 compiled / 687 rejected records**. Strict loading still exits 1 and
+publishes no registry. Complete Triassic Egg gameplay mapping is added;
+Tourach's Gate gains activation-condition clause evidence only. Collection-wide
+engine-validation and behavior-verification totals remain null.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot,
+current ledger, relevant API/rules contracts, selected compiler/engine code and
+complete records for each candidate below. Rules evidence: CR 400.7, 602.1b,
+602.2/5, 608.2c/h, 700.2a/c and 702.26b/c/d. Baseline compiler tests, short
+engine tests and make build passed. Fresh loader and semantic inspection exited
+1 for collection rejection, not a build/test failure: 986 names, 2,445 records,
+664 accepted / 322 rejected names, 1,757 compiled / 688 rejected records;
+72,954 nodes, 8,543 signatures and 6,345 unknown-role occurrences. Reprints
+count once. Inventory walks nested forms; first errors were not unlock estimates.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Live activation properties, selected | Tourach's Gate; Triassic Egg; Rocket Launcher (unsupported history filter, no unlock counted). Initially zero clean unlocks; **one credible unlock** after inspection of Egg's source defect and existing graveyard/modal services | Gate still needs a host tap cost. Egg's second mode repeats its first, contrary to local Oracle data; targeted graveyard entry already has an exact engine/compiler service. Shared current-source/host checks support both ordinary and modal abilities and future property restrictions. | Small/medium: typed ActionOption bridge, lexical scope and pure filter lowering, source correction, threshold/identity/payment/solver/copy/clone and full Egg gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation. **Seven** after the whole prerequisite chain; zero adapter-only | All complete records need eligible damage-source selection, local producer binding, exact identity and next-event consumption. Existing unlimited/finite prevention alone does not supply them. Enables seven complete consumers. | High: source eligibility beyond battlefield, decisions, binding lifetime, one-event shields, simultaneous damage and competing replacement contracts. |
+| Mana conversion with activation history | Farrelite Priest; Initiates of the Ebon Hand. **Two** after solver support; zero adapter-only | Complete bodies produce mana, inspect this ability's fourth activation, then schedule sacrifice. The compiler explicitly rejects this combination. Repeatable conversion planning must agree with execution, per-ability/per-incarnation history and delayed consequences. | Medium/high: pure repeated planning, transactional payments, output/history agreement, native delayed effects and clones. |
+
+Selection: a bounded shared prerequisite with two real consumers, one full-card
+gain through existing zone/modal services, and substantially less new engine
+state than the other candidates. Contract, reuse boundary and acceptance cases
+were stated before edits. No partial production registry or unsupported-rule
+bypass is introduced. The implement-engine skill was used for the typed engine
+adapter; no sub-agents, removed card/set skills, generated stubs or Go-card
+requirements were used.
+
+Initial user changes: .gitignore, execution design, ledger archival changes and
+untracked mtgish-ron-completed.md. Preserve them. Stage only this slice's status
+update and appended entry in the ledger; preserve the archival edits unstaged.
+
+### Exact supported shapes and execution boundary
+
+RON activation modifiers now accept:
+
+`ActivateOnlyIf(PermanentPassesFilter(subject, filter))`
+
+within `ActivatedWithModifiers`, including ordinary and Modal_ChooseOne bodies
+and nonempty nested modifier And lists. Subject is a bare ThisPermanent on a
+permanent or HostPermanent on an Aura. Targets, event results, players, malformed
+references and non-Aura host reads reject at compilation. Conditions are
+compiled in the declaration scope before the body introduces targets or modes.
+
+Filter grammar reuses compileResolvingPropertyFilter: supported current types,
+subtypes, supertypes, colors, tapped state, keywords and P/T comparisons;
+nonempty nested And/Or; HasACounterOfType, HasNoCountersOfType and
+HasNumberCountersOfType(EqualTo(Integer(n))|GreaterThanOrEqualTo(Integer(n)),
+counter). Counter thresholds are nonnegative literals. Unknown counters,
+dynamic/negative thresholds, unsupported comparisons and malformed declarations
+remain errors. Static conditions retain their distinct grammar; resolving
+branches retain their separate current-or-LKI behavior. Conditional mana bodies
+with modifiers remain explicitly rejected by their existing compiler context.
+
+Engine API: WithActivationStateCondition(StateCondition) ActionOption. It lowers
+through the existing activationRestriction condition path and records definition
+children. Nil conditions fail definition validation and check false without a
+game-time panic. Valid ActivationIf callers retain their behavior. No new query,
+zone, cost, target, replacement, event or simultaneous-action system is added.
+
+PermanentMatchesFilter with This/AttachedPermanent reads live source/attachment
+identity, with no LKI fallback. Absent, phased and stale hosts cannot qualify;
+new attachment changes the live subject. Existing CounterCountAtLeast avoids
+threshold narrowing. Per-factory action instances retain independent state;
+shared conditions are immutable and have no chosen or saved result slots.
+
+The activation and mana-solver paths use the same pure check before payment.
+False conditions leave resources and stack unchanged. Timing and usage limits
+continue to combine. Once activated, condition changes or source departure do
+not stop resolution. Copies do not make new activation checks or payments.
+Existing transactions, mana classification, graveyard visits, optional hand
+entry, target groups, stack copies and game cloning are reused unchanged.
+
+### Source defect and tests
+
+Triassic Egg, LEG.lines.ron:274, second Modal_ChooseOne branch formerly repeated
+MayAction(PutACardFromHandOnBattlefield(...)). Local data/LEG.json oracle_text
+specifies: "Return target creature card from your graveyard to the battlefield."
+CR 700.2a/c places its mode and target choices at activation, and CR 400.7 gives
+zone-visit identity. Corrected the one existing record to a Targeted body with
+TargetGraveyardCard(And([IsCardtype(Creature),
+InAPlayersGraveyard(SinglePlayer(You))])) and
+PutGraveyardCardOntoBattlefield(Ref_TargetGraveyardCard,[EntersNormally]).
+There are no identical reprints of this card to correct. The first mode and
+both costs/conditions are unchanged. Refreshed the vocabulary snapshot by an
+AST walk, with all source hashes, occurrences, examples, structural reprint
+checks and fresh strict loader diagnostics. Syntax remains 601 tuple signatures,
+504 symbol signatures, 51 top-level names and zero conflicting reprints.
+
+TDD: engine tests failed for missing WithActivationStateCondition; RON tests
+failed for unsupported PermanentPassesFilter activation conditions. A test-only
+clause parser fixture needed correction for comma-separated records. After the
+adapter, complete Egg gameplay still failed for missing graveyard-mode target
+identity and acceptance of an invalid target, exposing the repeated source mode.
+Correcting the source made these assertions pass. Older unsupported-context
+assertions were converted to positive validation of newly supported declarations;
+remaining exact blockers and atomic loading assertions were retained.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Triassic Egg, complete LEG record | TestRONActivationPropertyTriassicEgg: casting, two paid/tapped counter activations, threshold, both modes, optional decline, target declaration/legality, wrong controller, phasing, invalid-activation sacrifice rollback, source return, graveyard leave/return, copies and pending clone resolution. Shared TestRONOptionalHandEntry* and TestRONGraveyardReturn* cover entry decisions, zone ownership, target visits, departure, phasing and copy retargeting. |
+| Tourach's Gate, activation-condition clause | TestRONActivationPropertyClauses extracts the actual final modifier and enchant rule, with a test-only mana/life body to isolate the prerequisite. Live tapped/untapped host, new attachment, absent/returned host, source/host phasing, current controller, unpaid costs, post-activation state changes, source departure, copies and clones. Complete Gate remains rejected at its unsupported host tap cost. |
+| Typed engine bridge | TestActivationStateCondition: definition validation including nil/invalid subjects, prepayment rejection, count changes after activation, clone state and resolution timing. |
+| Filter/solver/invalid declarations | TestRONActivationPropertyThresholdsAndModifiers: counts 0/1/2/3/255, threshold 256, exact/presence/absence, unrelated counters, nested And/Or and combined turn/upkeep/sorcery restrictions. ManaPlanning covers pure affordability and immediate mana execution. Invalid covers lexical scope, arity, unknown counters and threshold grammar. |
+| Semantic inventory and atomic load | TestRONActivationPropertyInventoryAndStrictLoad: corrected full Egg record, activation/reference/filter/counter roles, engine validation and atomic rejection with an independent unsupported record. Existing collection tests retain exact refreshed totals and verify production registry isolation. |
+
+### Actual gain, validation and remaining work
+
+Actual gain: **one name / one record**, matching the revised pre-edit estimate.
+No previously accepted name or record regresses. Final semantic inventory:
+72,962 nodes, 8,559 signatures, 6,333 unknown-role occurrences. Compiled/accepted
+counts are 1,758 records / 665 names; remaining 687 records / 321 names reject.
+Only Egg leaves the rejected-record set. Fresh diagnostic comparison also found
+Rocket Launcher (complete identical 3ED:213 / ATQ:59 records inspected): its
+outer property declaration now reaches ControlledSinceBeginningOfMostRecentTurn,
+which remains an unsupported property-history filter. No Rocket gameplay or
+unlock is claimed; it needs a separate history-condition adapter. Gate's exact next diagnostic:
+FEM.lines.ron:97:704: unsupported cost reference (HostPermanent).
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Focused TestActivationStateCondition and TestRONActivationProperty*, -count=1 | PASS after expected missing-API / unsupported-condition / wrong-mode failures |
+| Final go test ./pkg/mage/... -short -count=1 | PASS |
+| Final make test | PASS |
+| Final make build | PASS |
+| Final go vet ./... | PASS |
+| Final make lint | PASS, zero issues |
+| Post-lint focused tests, broad engine tests, make test/build and vet | PASS on final code |
+| git diff --check; staged diff check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1 for unsupported collection; totals above; no accepted-record regressions |
+| Snapshot and source comparison | Final loader matches refreshed snapshot; only LEG hash changes; no conflicting reprints |
+
+An earlier lint autofix overlapped a test-file edit and corrupted one test
+expression. Its first invocation emitted parse warnings, and the next invocation
+failed. Restored the affected lines, reran focused tests, then ran clean lint
+with no concurrent edits and repeated all required test/build/vet checks. These
+failed intermediate checks were not used as final validation. Clean lint changed
+only test import spacing; the final code and diff were reviewed. No environmental
+or pre-existing blocker remains, and no checks are waived.
+
+No cutover or removal gate is met. Go definitions, startup callers and DSL
+functions remain: no deletion is attempted without the required caller/removal
+audit. Complete registry loading, collection gameplay, runtime cutover, Go-card
+removal and unused-DSL cleanup remain unfinished.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source prevention prerequisites for the seven circles/Greater Realm
+   consumers; separate source eligibility/bindings from next-event consumption.
+2. Mana conversion planning with per-activation history for Farrelite Priest
+   and Initiates of the Ebon Hand.
+3. Host tap payment: Gate now has live activation and upkeep counter conditions;
+   inspect its remaining attacking-collection filter before estimating a full
+   unlock. Broaden to other host-cost consumers if inventory supplies them;
+   defer a single-card adapter while the useful multi-card work remains.
+
+Changed files: composable_costs.go, activation_state_condition_test.go and doc.go;
+ron activation_timing.go, activation_property_test.go and inventory.go; evolved
+expectations in inventory_test.go, enchant_controller_test.go,
+resolving_counter_test.go and optional_hand_entry_test.go; LEG.lines.ron;
+dsl-reference.md, engine-rules-contracts.md, vocabulary snapshot and this ledger.
+The final response records the slice commit. No second slice begins.

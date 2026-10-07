@@ -5154,3 +5154,39 @@ upkeep progression, semantic roles and strict collection rejection. The
 existing `TestIfPermanentMatches*` contracts remain applicable. Real-card
 tests establish clauses of Fasting and Tourach's Gate; both full records still
 reject their later unsupported rules.
+
+## Typed activation state conditions for RON
+
+`WithActivationStateCondition(StateCondition) ActionOption` supplies the same
+restriction used by `ActivationIf`, for existing ordinary and modal action
+builders. It records the typed condition as a definition child, so invalid
+references and nil conditions fail definition validation. A nil condition is
+also false during a check; it does not cause a game-time declaration panic.
+Valid existing `ActivationIf` callers keep their behavior.
+
+The shared activation path checks the condition before payment (CR 602.1b,
+602.2, 602.5). Failed checks preserve mana, permanents, counters and stack state.
+The mana solver uses the same pure check. No choices, random values, new payment
+results or history state are introduced. The condition does not become an
+additional resolution check (CR 608.2c); copies resolve without new activation
+payment. Existing payment transactions and stack cloning retain their isolation.
+
+`PermanentMatchesFilter(This|AttachedPermanent, filter)` supplies live property
+checks. The current source must be present; host lookup checks attachment
+incarnation. Phased or departed subjects do not match, and departure LKI cannot
+make them match (CR 400.7, 702.26b). A new attachment supplies a new live subject.
+Counter counts use the existing exact and minimum filters without narrowing the
+threshold. No replacement ordering or simultaneous-operation service changes.
+
+Evidence: `TestActivationStateCondition` covers definition validation, failed
+payment, resolution timing and clones. `TestRONActivationPropertyClauses` uses
+both actual source/host declarations and covers identity, attachment changes,
+phasing, current controller, copies and pending clones. `ThresholdsAndModifiers`
+covers boundary counts, independent counter kinds, logical filters and combined
+timing. `ManaPlanning`, `Invalid` and `InventoryAndStrictLoad` cover pure solver
+queries, declaration errors, nested reporting and atomic collection rejection.
+`TriassicEgg` covers casting, both activated abilities and both modes, counter
+production, optional hand entry, targeted graveyard entry, failed activation
+rollback, graveyard visit identity, source return, copies and clones. Existing
+`TestRONGraveyardReturn*` and `TestRONOptionalHandEntry*` supply the shared zone,
+entry and choice contracts.

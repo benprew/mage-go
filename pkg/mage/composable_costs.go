@@ -58,10 +58,10 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 		}
 		a.limits.MaxActivationsPerTurn = o.limit
 	case "condition":
-		if nilDefinition(o.condition) {
-			panic("activation: supply a condition")
-		}
 		a.activationConds = append(a.activationConds, func(g *Game, source *Permanent, controller uuid.UUID) bool {
+			if nilDefinition(o.condition) {
+				return false
+			}
 			var id uuid.UUID
 			if source != nil {
 				id = source.ID()
@@ -164,6 +164,13 @@ func (o activationStateCondition) applyGrantedActivation(a *ActionDefinition) {
 // ActivationIf checks a pure condition before payment through the activation path.
 func ActivationIf(condition StateCondition) ActivationConditionOption {
 	return activationStateCondition{activationRestriction{kind: "condition", condition: condition}}
+}
+
+// WithActivationStateCondition checks a typed condition before activation payment.
+func WithActivationStateCondition(condition StateCondition) ActionOption {
+	return func(a *ActionDefinition) {
+		activationRestriction{kind: "condition", condition: condition}.applyActivation(a)
+	}
 }
 
 func (o activationRestriction) inspectDefinition() definitionNode {
