@@ -2,8 +2,8 @@
 
 ## Current status
 
-The latest recorded inventory reports **752 accepted / 234 rejected unique card
-names** (986 total), and **1,942 compiled / 503 rejected records** (2,445 total).
+The latest recorded inventory reports **754 accepted / 232 rejected unique card
+names** (986 total), and **1,944 compiled / 501 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
@@ -36235,3 +36235,142 @@ Ranked next candidates to reassess:
 
 Complete RON loading/gameplay, runtime wiring, Go-card deletion and DSL cleanup
 remain unfinished. No second slice starts in this run.
+
+## 2026-10-07: scoped resolution color choices
+
+Status: complete slice `SCOPED-COLOR-SETTING-CHOICE`. Stop after this slice.
+Initial user changes to `.gitignore`, the execution design, the progress-ledger
+reorganization and the untracked completed-work ledger are preserved. Only this
+entry and its current-count update are staged from this ledger.
+
+### Fresh evidence and candidate comparison
+
+Baseline short engine tests and whole-repository build passed. Fresh AST
+inventory before edits reported **1,942 compiled / 503 rejected records**,
+**752 accepted / 234 rejected unique names**, 72,953 nodes, 8,554 signatures and
+4,217 unknown-role occurrences. Strict baseline loading was also reproduced
+with a Go source overlay of the pre-slice action dispatcher: same 1,942/503,
+exit 1 for unsupported records, not a build or test failure. No source records
+changed. The design, ledger, vocabulary, engine reference, selected compiler and
+engine services, API/rules contracts, complete candidate records and CR 105.3–4,
+400.7, 608.2b–d/h, 611.2a, 613.1e and phasing contracts were inspected. Reprints
+count once; first-error frequency was not treated as a full-card unlock count.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Scoped resolution color setting, selected | Alchor's Tomb, Dream Coat: **2** | Complete records require single/subset choices, controlled targets or Aura host, fixed payment and activation limit. All engine behavior already exists. Also establishes fixed-branch choice lowering for later declaration shapes; Psychic Allergy and Jihad use entry choices and live chosen-color filters and are excluded. | Low/medium: adjacent result adapter, five single colors and 32 subsets, declaration/identity/copy/clone/timing/rollback/turn tests. |
+| Complete legal damage-source enumeration and next-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after prerequisites, **0** enumeration-only | Complete nested forms need legal referred and command-zone sources, scoped chosen-source results and next-source shield consumption. Existing live-only enumeration is insufficient. Enables further source-choice replacements. | High: engine enumeration/identity categories, compiler scope, shield and replacement-order contracts. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** after engine/adapter work | Complete records use legendary membership, named-token membership and removal of all variants. Parameter storage and attack/block/damage band contracts are absent. | High: new parameterized combat rules, layers, token copies and both assignment directions. |
+
+Two complete cards use a small adapter over exact existing services. The other
+candidates have larger shared engine prerequisites. The selected contract,
+reuse boundary and acceptance cases were stated before editing. An initial
+engine-gap hypothesis prompted reading the `implement-engine` skill; the service
+audit found exact existing behavior, so no engine implementation was required.
+No removed card skill, Go card requirement or card-specific branch was used.
+
+### Exact signatures, scope and reuse
+
+Resolving action sequences accept these adjacent pairs:
+
+- `ChooseAColor(AnyColor)/1`, then `CreatePermanentLayerEffect(ref,
+  [SetColor(TheChosenColor)])/2`.
+- Bare `ChooseColors`, then `CreatePermanentLayerEffect(ref,
+  [SetColor(TheChosenColors)])/2`.
+
+The continuation must contain exactly one `SetColor/1` operation and the matching
+bare result symbol. The result exists only for that continuation. Missing,
+nonadjacent, preceding, escaped and wrong-kind reads remain compile errors.
+Malformed tuples, restricted/invalid choice filters, wrong subjects and other
+operations remain rejected. Entry choices, chosen-color filters and other
+durations are not added. No target is created by either action.
+
+RON owns declaration validation and the finite option list. Single choices offer
+exactly White, Blue, Black, Red and Green. Plural choices offer all 32 subsets,
+including the empty set. Each branch lowers directly to a fixed color layer.
+`compilePermanentRef`, per-factory `instanceBindings`, `buildResolutionChoice`,
+`ChooseAtResolution`, `Until(Indefinite)` and `SetColors` supply typed references,
+resolution timing, choices and captured layer execution. The adjacent pair works
+in existing resolving action-sequence contexts with their supported permanent
+references. It introduces no new entry, cost, static or player-scoped context.
+Only the two complete activated-card consumers gain gameplay mappings here.
+
+Choices belong to the resolving spell/ability's controller. They are neither
+announced modes nor values stored on a source permanent. Immutable fixed options
+and the engine's local resolution choice preserve instance and copy isolation.
+Layer capture keeps the original live incarnation; LKI does not make an absent
+permanent available for an action. Existing target rechecks, saved Aura host,
+source departure, phase cycles, timestamps and cloned effect state are reused.
+No new engine API, parallel state store or global last-action slot is added.
+Simultaneous-operation and replacement contracts are unchanged by this slice.
+
+### TDD and card-to-test mappings
+
+The tests were written first. After replacing a nonexistent attachment helper
+with the existing `Game.Attach`, focused tests failed for unsupported
+`ChooseAColor` and `ChooseColors`. Adapter implementation made those tests pass.
+Additional clone tests initially expected interactive player choices in search
+clones. They now assert the existing `SearchPlayer` defaults and independent
+resolved colors; the original game retains its own chosen layers. A misplaced
+copy-controller assertion was moved after activation resolution. These were
+fixture errors; no gameplay requirement was weakened.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Alchor's Tomb, complete LEG record | `TestRONColorChoiceRealCards`: native casting, costs, controlled target legality/rollback, tap limit, resolution timing, source departure, changed control, shroud, return, phasing and phase cycle, copies, pending clones and cleanup. `TestRONColorChoiceSingleColors`: all five colors, noncreature/self target, per-factory target declarations. |
+| Dream Coat, complete LEG record | `TestRONColorChoiceRealCards`: native Aura casting/attachment, zero-cost activation, turn limit, host capture after source departure, host identity/phase/control, copies asking their controller, cloning and cleanup. `TestRONColorChoiceAllSubsets`: every one of the 32 color sets, including none. `TestRONColorChoiceInstancesAndTurns`: independent factories/controllers/pending choices, search clone isolation, later timestamps, cleanup restoration and next-turn activation. |
+| Declaration and reporting contracts | `TestRONColorChoiceInvalid`: malformed producers and reads, unsupported colorless single choice, missing/wrong subjects, wrong result kind and escaped result. `TestRONColorChoiceInventory`: both records accepted, action/filter/result roles represented. Every real-card factory also passes engine definition validation. |
+
+This adds two complete-card gameplay mappings. Compilation progress remains
+separate from collection-wide gameplay validation, which is still unmeasured.
+Local `data/LEG.json` Oracle text agrees with both complete RON records. No source
+defect is corrected, and no RON hash or vocabulary syntax changes. The vocabulary
+source snapshot is unchanged; fresh loader measurements supersede its old loader
+support counts.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly
+Alchor's Tomb and Dream Coat. No previously accepted name is lost. Final strict
+loader and semantic inventory report **1,944 compiled / 501 rejected records**,
+**754 accepted / 232 rejected unique names**, 2,445 records and 986 names.
+Inventory: **72,953 nodes / 8,554 signatures / 4,216 unknown-role occurrences**.
+Collection engine-validation and behavior-verification totals remain null.
+
+| Command | Result |
+| --- | --- |
+| Fresh baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Strict baseline `go run -overlay /tmp/ron-color-baseline-overlay.json ./cmd/loadcards -json` | Expected exit 1, 1,942/503, pre-slice dispatcher. |
+| Focused `go test ./pkg/mage/dsl/ron -run TestRONColorChoice -count=1` | PASS after expected unsupported-adapter failures; final inventory and gameplay checks pass. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,944/501; no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same membership and the counts above. |
+
+No environment or pre-existing failure blocks this slice. Remaining examples:
+Circle of Protection: Red `LEB.lines.ron:36:213`, unsupported `ChooseADamageSource`;
+Adventurers' Guildhouse `LEG.lines.ron:5:255`, unsupported `BandsWithOthers`;
+Brine Hag `LEG.lines.ron:37:228`, unsupported `CreateEachPermanentLayerEffect`.
+The source overlay is measurement-only; production loading uses the normal
+strict loader and no fallback, skipped rule or subset registry.
+
+Go definitions, startup callers, generators and DSL exports remain unchanged.
+Complete collection loading/gameplay and runtime wiring remain below removal
+gates. No caller audit authorizes DSL deletion in this slice.
+
+Changed files: new `color_choice.go` and `color_choice_test.go`; action-sequence
+dispatch, semantic inventory and two collection count regressions in `ron`;
+API/rules-contract documentation and this ledger. One descriptive commit follows
+passing checks. User changes remain unstaged. No second slice starts.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration, then the seven next-source shields.
+2. Parameterized bands with others for the eight consumers above.
+3. Entry color-choice bindings and live color reads for Psychic Allergy and Jihad;
+   the latter also needs combined choices and its state-trigger contract.

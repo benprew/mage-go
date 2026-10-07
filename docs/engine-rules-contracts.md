@@ -7398,3 +7398,17 @@ cleanup, phase cycle and returned host identity.
 `TestRONIndefiniteKeywordIdentity` checks pending copies/clones, target legality,
 control, departure and later ability removal. Declaration tests reject malformed
 keywords, missing references, color choices, repeated colors and empty grants.
+
+## RON color-choice adapter evidence
+
+`TestRONColorChoice*` establishes RON use of the existing resolution-choice and
+color-layer services (CR 105.3–4, 608.2b–d, 611.2a and 613.1e). Single-color
+choices exclude colorless. Plural choices include every subset of the five
+colors, including the empty set. Choices occur after target legality checks.
+Each fixed branch sets all colors and keeps its original permanent incarnation.
+Indefinite effects survive source departure, cleanup and a subject's phase cycle;
+a returned subject receives no old effect. Later color timestamps take priority.
+Copied activations ask their own controller. Pending choices and resolved layers
+remain separate in game clones; search clones use their existing choice defaults.
+Alchor's Tomb retains its controlled-target and payment rules. Dream Coat retains
+its Aura subject and once-per-turn activation rule. No engine API changes.

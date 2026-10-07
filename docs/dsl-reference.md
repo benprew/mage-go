@@ -6186,3 +6186,31 @@ Full-card evidence: `TestRONAislingIndefiniteColor`,
 `TestRONAislingNativeCombat`, and `TestRONCocoonCompleteLifecycle`.
 Declaration and recipient contracts are in `TestRONIndefiniteCharacteristic*`
 and `TestRONIndefiniteKeywordIdentity`. This slice adds no engine service.
+
+## RON scoped color choices
+
+Resolving action lists support these adjacent pairs:
+
+```ron
+ChooseAColor(AnyColor),
+CreatePermanentLayerEffect(permanent_reference, [SetColor(TheChosenColor)])
+
+ChooseColors,
+CreatePermanentLayerEffect(permanent_reference, [SetColor(TheChosenColors)])
+```
+
+The first pair offers exactly the five Magic colors. The second offers all 32
+subsets, including no colors. Each choice is made at resolution by the resolving
+ability or spell's controller. These are resolution choices, not announced modes.
+The result belongs only to the adjacent color-setting continuation. Unbound,
+wrong-kind, nonadjacent and escaped result reads are rejected. Entry choices,
+chosen-color filters, other modifications and other durations remain unsupported
+by this adapter. The existing typed permanent reference compiler supplies the
+subject; the choice introduces no target declaration.
+
+The compiler lowers each legal option to a fixed `SetColors` modification with
+`Until(Indefinite)`, through `ChooseAtResolution`. No choice is stored on a source
+permanent or in shared mutable declaration state. The existing layer capture
+service owns incarnation identity, phase cycles, timestamps and game cloning.
+Accepted Alchor's Tomb and Dream Coat records have gameplay mappings in
+`color_choice_test.go`; this does not certify all accepted collection records.

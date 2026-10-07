@@ -9,6 +9,18 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "ChooseAColor" || part.Name == "ChooseColors" {
+			if i+1 == len(parts) {
+				return nil, problem(part, "color choice requires an adjacent color-setting continuation")
+			}
+			effect, err := compileColorChoice(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if (part.Name == "DestroyEachPermanent" || part.Name == "DestroyEachPermanentNoRegen") && i+1 < len(parts) && hasDestructionCount(parts[i+1]) {
 			effect, err := compileDestructionCount(part, parts[i+1], ctx)
 			if err != nil {
