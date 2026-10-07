@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	spellTargets        bool
 	destructionCount    *destructionCountPlan
 	chosenAbility       *temporaryAbilityPlan
 	sourceTapped        bool
@@ -477,6 +478,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":
 		return compileStaticLayer(n, ctx)
 	case "SpellActions":
+		ctx.spellTargets = true
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}

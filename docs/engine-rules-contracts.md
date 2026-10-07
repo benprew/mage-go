@@ -6639,3 +6639,50 @@ checks nested roles. `Gameplay` executes complete Prodigal Sorcerer RON events
 with the Circle of Protection: Blue filter in a synthetic consumer, covering
 queued resolution, recoloring, source departure/return/phasing, copies and
 pending clones. This is prerequisite evidence and adds no complete card coverage.
+
+
+## Combat defending player target prerequisite
+
+`CombatDefendingPlayer() PlayerRef` selects the nonactive player during the
+combat phase of a two-player game (CR 506.2). It reads the current turn, not the
+spell or ability controller. It is available in every combat step, including
+beginning of combat before attackers exist and first-strike damage. Outside
+combat, without an active player, or without exactly two players it supplies no
+player. Queries do not change game state. Clones use their own turn state.
+
+`TargetControlledBy` also accepts this reference. Existing target enumeration
+and resolution checks compare the permanent's current controller with this
+player (CR 601.2c, 608.2b). Ownership does not satisfy the restriction. The normal
+incarnation, phasing, shroud and hexproof checks still apply. LKI cannot make an
+absent or returned target legal. Retargeting a copy uses its own controller for
+ordinary target protection, but still uses the nonactive player for this control
+restriction. No target, combat, cost or event subsystem is replaced.
+
+RON singular permanent target filters support
+`ControlledByAPlayer(SpellDefendingPlayer)` and
+`ControlledByAPlayer(SinglePlayer(SpellDefendingPlayer))` in instant/sorcery
+`SpellActions` target scopes, including mode and numbered singular target scopes.
+The symbol is rejected in activation and trigger targets, static filters,
+resolving player references and collections. Nested nonempty `And` uses the
+existing target-filter composition. Tuple spell-defender reads and malformed
+player wrappers are rejected before factory construction.
+
+Attack and unblocked-attack trigger target filters also support
+`ControlledByAPlayer(DefendingPlayer)` and
+`ControlledByAPlayer(SinglePlayer(DefendingPlayer))`. These lower to the existing
+saved `WithDefendingPlayer` event binding, not the live combat reference
+(CR 508.5, 603.3d, 608.2b). Each pending event, factory, stack copy and clone keeps
+its own captured player. Later turn and source changes cannot replace it.
+No additional reference becomes available outside that event scope.
+
+Engine evidence: `TestCombatDefendingPlayerQuery`, `Missing`, and the existing
+`TestTargetPlayerReference*`. RON evidence: `TestRONCombatDefenderSpellTargets`,
+`CapturedTarget`, `IndependentTargets`, `ModeAndGroups`, `CopyRetarget`,
+`Declarations` and `Records`.
+The gameplay probes use all three consumers' exact target declarations and
+casting windows with a test-only resolving body. They establish the prerequisite,
+not full gameplay for Blaze of Glory, False Orders or Floral Spuzzem. All eleven
+complete consumer records still reject other operations. Existing complete RON
+Mindstab Thrull and Necrite gameplay remains covered by
+`TestRONDefendingPlayer*`. Replacement ordering and simultaneous operations are
+unchanged and are not new contracts of this slice.

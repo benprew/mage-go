@@ -32748,3 +32748,174 @@ existing `damage_source_choice.go` and engine API overview; new RON
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this entry.
 The descriptive commit hash is reported in the final response. No second slice
 is started.
+
+## Run 2026-10-07: COMBAT-DEFENDER-TARGETS
+
+Status: complete shared prerequisite slice. Stop after this slice. Complete
+collection loading, gameplay, runtime cutover and removal gates remain unmet.
+
+### Fresh evidence and candidate selection
+
+Initial working changes were `.gitignore`, the execution design and this ledger;
+`mtgish-ron-completed.md` was already untracked. All are preserved. Only the new
+entry in this ledger is staged; the user's ledger reorganization is not staged.
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading and semantic inspection exited 1 for collection rejection, not
+build failure: **1,870 compiled / 575 rejected records**, **721 accepted / 265
+rejected unique names**, 2,445 records and 986 names. The inventory has 72,962
+occurrences, 8,557 signatures and 5,085 unknown-role occurrences. These fresh
+measurements supersede the older status summary above and the vocabulary's
+historical first-error list.
+
+The engine reference, design, ledger, vocabulary, compiler, target services,
+relevant API/rules contracts, complete candidate RON records and selected reprints
+were read. CR 506.2, 508.5, 509.1h/509.3g, 603.3d and 608.2b establish the player,
+event timing and target checks. Local `data/LEA.json` and `data/LEG.json` confirm
+all three selected cards' defending-player restrictions. No Go card definitions
+were used as requirements. Reprints count once.
+
+| Candidate | Distinct names; estimated complete-card unlocks | Remaining blockers and downstream use | Effort |
+| --- | --- | --- | --- |
+| Combat defending-player targets, selected | Blaze of Glory, False Orders, Floral Spuzzem: **0 immediate unlocks**, a prerequisite for **3** complete consumers, **11** records. | Blaze needs unlimited blocking plus each-attacker requirements; False Orders needs optional block reassignment; Spuzzem needs optional destruction and combat-damage assignment suppression. Establishes caster-independent spell target control and captured attack-event target control. | Small/medium: one pure engine reference, target validation reuse, scoped adapters, declaration/identity/copy and RON gameplay probes. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean potential unlocks after the complete prerequisite. Gaea's Avenger and Wood Elemental are **2** additional blocked names. | Needs characteristics in all zones, owner/controller context, count lowering, copy/CDA/layer integration and all characteristic readers. Avenger's controller filter is a previously recorded source defect; Elemental needs entry-sacrifice results. | High: engine integration across zone queries, copies, layers and information reads, then compiler adapters and full gameplay. |
+| Bands-with-other grants | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel: **5** potential land unlocks. Master of the Hunt, Shelkin Brownie and Tolaria: **3** further consumers. | Needs parameterized band formation, damage assignment and ability layer/removal contracts. Master needs token metadata; Brownie/Tolaria need parameterized ability removal. Ordinary banding cannot substitute. | High: combat formation/damage integration, layer changes, token/removal adapters and broad interaction tests. |
+
+Selection: this shared prerequisite removes a concrete dependency from three
+consumers with a small, isolated addition to existing target services. Both
+five-card alternatives require substantially broader engine contracts. The
+zero immediate gain was stated before edits; first-error counts were not treated
+as unlock counts. This run does not claim that target support makes a complete
+card executable. The selected scope, reuse boundary and acceptance cases were
+stated before implementation. The `implement-engine` skill guided the reusable
+engine work; no removed card/set skill or subagent was used.
+
+### Signatures, contexts, dependencies and reuse
+
+Engine API: `CombatDefendingPlayer() PlayerRef`. In combat between two players,
+it resolves the current nonactive player, independent of effect controller and
+whether attackers exist. Every combat step, including first-strike damage,
+qualifies. Outside combat, without an active player, or without exactly two
+players, it supplies no player. It has no mutable or captured state. Game clones
+query their own current turn. The reference can supply a damage recipient through
+the existing PlayerRef contract; no damage execution behavior changes.
+
+`TargetControlledBy(PlayerRef) PermanentTargetOption` now accepts this reference
+in addition to `You` and saved event players. Existing target enumeration and
+resolution perform current control and normal protection/incarnation checks.
+No new target selection, legality, combat or payment subsystem is added.
+
+RON target-filter signatures:
+
+- `ControlledByAPlayer(SpellDefendingPlayer)` and
+  `ControlledByAPlayer(SinglePlayer(SpellDefendingPlayer))`, in instant/sorcery
+  `SpellActions` singular permanent targets, including modal and numbered
+  singular target groups. These build `TargetControlledBy(CombatDefendingPlayer())`.
+- `ControlledByAPlayer(DefendingPlayer)` and
+  `ControlledByAPlayer(SinglePlayer(DefendingPlayer))`, in source attack and
+  unblocked-attack trigger target scopes. These use the existing per-factory
+  `sourceCombatPlayerPlan`, `instanceBindings.defenders`, `WithDefendingPlayer`
+  and saved event player. Each pending event has its own captured player.
+- Nested `And` filters reuse the existing target-filter composition. Existing
+  `ControlledByPlayer(Trigger_DefendingPlayer)`, `You`, and opponent target
+  declarations are unchanged. Unsupported static, collection, resolving-player,
+  activation, wrong-event and tuple-symbol contexts still reject.
+
+The spell-target flag is lexical compiler state, not game state. Event targets
+retain their saved defender after current-turn changes, source control changes,
+source departure and copies. Live spell targets use the combat's nonactive
+player. Ownership cannot replace control. LKI does not restore illegal or absent
+targets; returned objects have a new incarnation. A phase cycle preserves the
+original target identity. Copies retain their own targets/controllers and use
+current ordinary targeting protection when retargeting. Costs remain in the
+shared transaction; illegal targets and unpaid casting cannot spend mana.
+
+No RON source, source hash, vocabulary syntax or card definition changes. No new
+source defect was found. Avenger and the other previously recorded defects remain
+separate. The vocabulary snapshot does not need a source refresh. Semantic
+inventory now assigns a bare defending-player symbol beneath `ControlledByAPlayer`
+the `player_reference` role. No support claim is inferred from that role.
+
+### TDD and evidence mapping
+
+Engine tests first failed for the missing `CombatDefendingPlayer` API. RON probe
+and complete-record tests then failed for unsupported `SpellDefendingPlayer` and
+`DefendingPlayer` target controllers. Both expected failures were confirmed before
+their implementation. Added mode/group/copy cases passed. An additional missing
+active-player fixture called the public turn setter with -1 and failed in that
+setter before the query. It was corrected to use the internal turn-state setter;
+no behavior assertion was removed or weakened. Lint also found a new test
+variable named `copy`; it was renamed to `copied` without changing assertions.
+
+| Contract / card mapping | Tests and limits |
+| --- | --- |
+| Two-player defender, all steps, both active players and casters, no attackers, unavailable-player states, pure queries, clone turns | `TestCombatDefendingPlayerQuery`, `Missing`; typed target definition validation and recipient equivalence. |
+| Blaze of Glory and False Orders exact targets and casting windows | `TestRONCombatDefenderSpellTargets`: both casters, ownership/control distinction, timing, illegal-target and mana rollback, shroud, target departure/return, phasing/phase-cycle, different-controller copies and pending clones. Test-only tap/life bodies replace unsupported operations; these are prerequisite mappings only. |
+| Floral Spuzzem exact artifact target and saved unblocked event | `TestRONCombatDefenderCapturedTarget`: target choice at trigger placement, control recheck, returned source, copied controller and later turn/step changes. The resolving body is a test-only probe; no complete-card gameplay claim. |
+| Per-instance target state, wrapper shape, mode/group scope, partial legality and retarget isolation | `TestRONCombatDefenderIndependentTargets`, `ModeAndGroups`, `CopyRetarget`. Two pending factories have separate targets; copied spells retarget to a second defending creature without changing the original or clone. |
+| Invalid spell/event scopes, tuples, malformed wrappers and unsupported contexts | `TestRONCombatDefenderDeclarations`; existing `TestTargetPlayerReferenceDefinition`, `TestRONDefendingPlayerDeclarations` and target-group regressions. |
+| Every complete selected record, reprint count, strict rejection and semantic roles | `TestRONCombatDefenderRecords`: all **11** records reject later unsupported operations and publish no registry. |
+| Previously accepted complete RON cards and existing engine behavior | Existing `TestRONDefendingPlayer*` (Mindstab Thrull and Necrite), `TestRONOpponentTargets*`, `TestRONSingular*`, `TestTargetPlayerReference*`, and semantic inventory regressions pass. These keep their existing complete-card mappings. |
+
+No new simultaneous operation, damage replacement ordering, LKI action permission
+or combat assignment contract is introduced. Those services and their existing
+regressions remain intact. Source events use the shared trigger placement and
+capture services. No global action slot, game-time declaration panic, fallback
+factory, card-name executor or partial production registry is introduced.
+
+Estimated compilation gain **0**, actual **0** unique names and **0** records.
+New complete-card gameplay mappings **0**. Added gameplay probes and reusable
+engine target contracts are separate prerequisite evidence. All previously
+accepted names remain accepted. Aggregate engine-validation and behavior counts
+remain null; collection-wide gameplay is not established.
+
+### Final validation and next candidates
+
+Final strict loading reports **1,870 compiled / 575 rejected records**, **721
+accepted / 265 rejected names**. Semantic inventory remains **72,962 occurrences /
+8,557 signatures / 5,085 unknown-role occurrences**. Exactly eleven diagnostics
+advance: Blaze of Glory's five reprints now reject `temporary blocking operations`,
+False Orders' five reject `ChooseAnAttackingCreatureForBlockerToBlock`, and Floral
+Spuzzem rejects the optional `DestroyPermanent` payment. All other diagnostics
+are unchanged. Collection rejection still exits 1 and installs no registry.
+
+All required checks pass on the final state. No environmental or pre-existing
+validation blocker remains. Automatic lint formatting was reviewed; no unrelated
+file was changed. The initial lint shadowing failure and fixture failure above
+were corrected before the final runs.
+
+| Command | Final result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestCombatDefendingPlayer\|TestTargetPlayerReference\|TestRONCombatDefender\|TestRONDefendingPlayer\|TestRONOpponentTargets\|TestRONSingular\|TestInventory' -count=1` | PASS, including the final wrapper, mode/group and copy-retarget tests. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint and fixture correction. |
+| `make test` | PASS after final lint and fixture correction. |
+| `make build` | PASS after final lint; includes `go build ./...`. |
+| `go vet ./...` | PASS after final lint. |
+| `go test ./... -short -count=1` (engine skill) | PASS after final lint. |
+| `make lint` | PASS, zero issues in the final run. |
+| `git diff --check` | PASS after ledger completion, including the staged slice. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,870 compiled / 575 rejected records. All other diagnostics and the complete rejection set match baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: unchanged totals, 721 accepted / 265 rejected names, 72,962 occurrences / 8,557 signatures / 5,085 unknown-role occurrences. |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete legal damage-source enumeration for the eleven existing source-choice
+   consumers, including referred stack/effect/delayed sources and face-up command
+   objects under CR 609.7a. Reuse the completed choice and property services;
+   do not substitute an incomplete battlefield/stack list.
+2. All-zone count CDA integration for the five clean consumers listed above.
+3. Parameterized bands-with-other formation and damage-assignment contracts for
+   the five land grants and three additional consumers.
+
+Go definitions, startup wiring, generators and DSL functions remain unchanged.
+The removal gate is closed: complete loading, full RON gameplay and runtime
+integration are not established. No caller audit authorizes DSL deletion here.
+Only this slice is committed; the hash is reported in the final response. The
+initial user edits and untracked completed-history document remain unstaged.
+No second slice is started.
+
+Slice files: `pkg/mage/combat_defender.go`, `combat_defender_test.go`,
+`target_player_reference.go`, `doc.go`; `pkg/mage/dsl/ron/combat_defender_test.go`,
+`compiler.go`, `player_relative_target.go`, `inventory.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry.

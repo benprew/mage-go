@@ -5620,3 +5620,34 @@ and card-type roles even inside rejected records. The choice action still
 rejects after filter validation: complete CR 609.7a enumeration, per-action
 bindings and complete consuming shields remain prerequisites. Filter validation
 alone cannot produce a partial production registry.
+
+
+### RON combat defending player targets
+
+For singular permanent targets in instant/sorcery `SpellActions`,
+`ControlledByAPlayer(SpellDefendingPlayer)` selects current permanents controlled
+by the nonactive player during combat. The `SinglePlayer(SpellDefendingPlayer)`
+wrapper is also supported. Either player can cast the spell. The target control
+restriction does not follow the caster. Nested `And` filters, modal spell targets
+and numbered singular target groups reuse their existing target declarations.
+Outside combat the engine supplies no defending player, so no target qualifies.
+Use the card's independent `CastEffect` to establish its exact casting window.
+
+For source attack or unblocked-attack trigger targets,
+`ControlledByAPlayer(SinglePlayer(DefendingPlayer))` uses the event's saved
+player. The bare `DefendingPlayer` form is also supported in this target context.
+The existing `ControlledByPlayer(Trigger_DefendingPlayer)` form is unchanged.
+The player is available before target selection and stays fixed through copies,
+source departure and later turn changes. Control, incarnation, phasing and target
+protection are checked again at resolution.
+
+RON spell-defender symbols are accepted only in these spell target filters;
+event-defender symbols require the matching event scope. Other references,
+malformed wrappers and tuple symbols remain declaration errors.
+`CombatDefendingPlayer() mage.PlayerRef` and `mage.TargetControlledBy` supply
+the reusable engine contract. RON keeps the syntax and scope checks.
+
+Blaze of Glory, False Orders and Floral Spuzzem have other unsupported operations.
+The target prerequisite does not make their complete records executable.
+`TestRONCombatDefender*` maps the supported target contracts; the existing
+`TestRONDefendingPlayer*` covers accepted full-card regressions.

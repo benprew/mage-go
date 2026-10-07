@@ -326,6 +326,9 @@
 // the destination without changing successful payment.
 //
 // Use [TargetControlledBy] with [You] or [FromPlayer] of an event binding.
+// [CombatDefendingPlayer] selects the nonactive player during two-player combat.
+// Target control checks use this player even when the defending player casts
+// the spell. An attack event can keep its separate saved defending player.
 // Target selection and later checks read the saved event player. Source
 // control changes and copies do not change that player. [AttacksUnblocked]
 // with WithDefendingPlayer saves the player before target selection.

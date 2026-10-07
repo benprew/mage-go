@@ -1293,6 +1293,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 		if (n.Name == "ControlledByAPlayer" || n.Name == "OwnedByAPlayer") && len(n.Args) == 1 {
+			if n.Name == "ControlledByAPlayer" && n.Args[0].Kind == Symbol && (n.Args[0].Name == "SpellDefendingPlayer" || n.Args[0].Name == "DefendingPlayer") {
+				return "player_reference"
+			}
 			return "player_filter"
 		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
