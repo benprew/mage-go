@@ -55,6 +55,9 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "DestroyPermanent" {
+		return compileDestructionPayment(payment, continuation, ctx)
+	}
 	var player playerReferencePlan
 	payer := Node{Kind: Symbol, Name: "You"}
 	var cost Node

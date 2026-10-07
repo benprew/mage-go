@@ -129,7 +129,7 @@ func TestRONCombatCharacteristicConsumers(t *testing.T) {
 	}{
 		{"ATQ", "Battering Ram", "Trigger_TheAttackingCreature", 1},
 		{"FEM", "Dwarven Soldier", "combat pair union", 0},
-		{"LEG", "Infinite Authority", "mandatory sacrifice cost", 1},
+		{"LEG", "Infinite Authority", "Trigger_ThatCreature", 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := hostUntapRecord(t, tc.set, tc.name)

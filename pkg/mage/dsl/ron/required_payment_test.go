@@ -155,7 +155,7 @@ func TestRONRequiredPaymentInvalid(t *testing.T) {
 		`MustCost(SacrificeAPermanent(Other(ThisPermanent()))),If(CostWasPaid,[GainLife(Integer(1))])`,
 		`MustCost(SacrificeAPermanent(Or([Other(ThisPermanent),IsCardtype(Creature)]))),If(CostWasPaid,[GainLife(Integer(1))])`,
 		`MustCost(PayMana([])),If(CostWasPaid,[GainLife(Integer(1))])`,
-		`MustCost(DestroyPermanent(ThisPermanent)),If(CostWasPaid,[GainLife(Integer(1))])`,
+		`MustCost(DestroyPermanent(Ref_TargetPermanent)),If(CostWasPaid,[GainLife(Integer(1))])`,
 		`MustCost(SacrificeAPermanent(And([]))),If(CostWasPaid,[GainLife(Integer(1))])`,
 		`MustCost(SacrificeAPermanent(IsCardtype(Creature))),If(CostWasPaid,[])`,
 		`MustCost(SacrificeAPermanent(IsCardtype(Creature))),GainLife(Integer(1)),If(CostWasPaid,[GainLife(Integer(1))])`,

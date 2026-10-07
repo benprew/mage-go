@@ -3800,7 +3800,7 @@ own result, including nested pairs. The current resolving controller pays.
 The filter uses the existing sacrifice filter grammar, with
 `Other(ThisPermanent)` also permitted at the root or in nested `And` filters
 when the source is a permanent. Source exclusions inside `Or` remain rejected.
-Mandatory tap, destroy, mana, plural sacrifice, saved sacrifice values, and
+Mandatory tap, mana, plural sacrifice, saved sacrifice values, and
 `IfElse` continuations remain unsupported RON shapes.
 
 `SacrificePermanentAction` sends sacrifice through the shared replacement
@@ -4675,3 +4675,23 @@ Evidence: `TestRONReferencedDamage*` covers the complete City of Brass and
 Tracker records, typed host/event/target sources, invalid declarations,
 incarnation and clone isolation, announcement costs, prevention and sequential
 resolution. These adapters add no source-choice or damage-result operation.
+
+## RON destruction result branches
+
+In supported resolving action sequences, `MustCost(DestroyPermanent(ref))`
+followed immediately by `If(condition, [actions])` or
+`Unless(condition, [actions])` attempts destruction and branches on its result.
+`condition` is the symbol `CostWasPaid` or `CostWasntPaid`. Bodies are nonempty.
+The reference must be a bound permanent reference in that context. This includes
+source, host, target, and supported event references; it does not introduce new
+bindings. `MayCost`, activation costs and `IfElse` do not accept this shape.
+
+This RON spelling denotes the actual destruction result, as Cosmic Horror's
+"destroyed this way" clause requires. It uses `DestroyWithResult`,
+`DestroyedThisWayInto`, `FromNumber` and `IfPositive`, rather than a mandatory
+cost transaction. Regeneration, indestructibility, absence and phasing produce
+zero. Each declaration builds its own typed result binding with a position-based
+name. Nested pairs and copied or cloned resolution frames retain separate state.
+Existing delayed effects retain the original references. Cosmic Horror executes
+its complete record; Infinite Authority still requires a captured combat subject
+for `Trigger_ThatCreature` and remains rejected.

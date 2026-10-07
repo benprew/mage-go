@@ -5494,3 +5494,20 @@ trigger waits for normal trigger placement and resolution.
 `CastingAndLandPlay`, `Invalid` and `InventoryAndAtomicLoad` supply RON evidence.
 Existing `TestDamageSourceOf*` and `TestSourceBecomesTapped*` supply engine
 contracts. This slice changes no engine service or replacement ordering.
+
+## RON adapter for singular destruction outcomes
+
+RON `MustCost(DestroyPermanent(ref))` with an adjacent paid-result branch uses
+existing `DestroyWithResult(ref, DestroyedThisWayInto(binding))`. It does not
+change the mandatory sacrifice payment contract. Actual destruction writes one;
+regeneration, indestructibility and an unavailable original incarnation write
+zero (CR 701.8, 701.19). This distinction implements Cosmic Horror's "destroyed
+this way" clause. Damage after destruction uses the shared saved source
+information and prevention pipeline. A pending upkeep retains its controller;
+a copied ability uses its own controller and result frame.
+
+The adapter creates a fresh typed binding for each declaration and factory build.
+Nested branches cannot replace an outer result. Illegal targets prevent the
+spell from resolving before either branch runs (CR 608.2b). Delayed contexts
+continue to use the engine's saved-reference rules (CR 603.7c). This slice adds
+no combat participant capture, destruction cost type, or replacement rule.

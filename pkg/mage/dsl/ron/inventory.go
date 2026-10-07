@@ -499,7 +499,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "cost"
 		}
-		if (n.Name == "TapPermanent" || n.Name == "SacrificePermanent") && len(n.Args) == 1 {
+		if (n.Name == "TapPermanent" || n.Name == "SacrificePermanent" || role == "resolution_cost" && n.Name == "DestroyPermanent") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if n.Name == "PayMana" && len(n.Args) == 1 {

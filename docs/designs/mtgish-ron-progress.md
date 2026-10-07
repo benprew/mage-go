@@ -27232,3 +27232,145 @@ Changed files: compiler `permanent_damage_source.go` and its tests,
 `dsl-reference.md`, `engine-rules-contracts.md` and this appended ledger entry.
 One descriptive commit contains only the slice; its hash is reported in the
 final response. No second slice is started.
+
+## Run 2026-10-06: DESTRUCTION-RESULT-BRANCH
+
+Status: completed compiler-adapter slice. This run stops here. Baseline user
+changes to `.gitignore`, the execution design, the progress ledger reorganization,
+and untracked `mtgish-ron-completed.md` are preserved. Only this entry is staged
+from the progress file; the user's earlier edits remain in the working tree.
+
+### Fresh baseline and candidate comparison
+
+Baseline compiler tests, `go test ./pkg/mage/... -short -count=1` and `make build`
+passed. Strict loading exited 1 with **1,799 compiled / 646 rejected records**,
+**681 accepted / 305 rejected names**. This is collection rejection, not a build
+failure. The AST inventory walks every nested form: 72,962 nodes, 8,559 signatures,
+5,655 unknown-role occurrences. Every complete affected record below was read;
+reprints count once. First errors alone do not determine these estimates.
+
+| Candidate | Distinct affected names and estimated complete unlocks | Other blockers, downstream capabilities, effort |
+| --- | --- | --- |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: 7 names, estimated 7 unlocks after the prerequisite engine work | All seven have supported fixed mana activations and share the same chosen-source future shield. Existing `ChooseDamageSource` has no typed filtered capture and covers only battlefield/stack sources; the full source domain and simultaneous-event prevention selection need contracts. Enables later Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere procedures, which have additional blockers. Large engine and adapter effort, several focused runs. |
+| All-zone battlefield-count CDAs | Nightmare, Keldon Warlord, Plague Rats, People of the Woods, Dakkon Blackblade: 5 names, estimated 5 unlocks after exact CDA service | Full records use controller counts, named-creature counts and toughness-only values; Flying is already supported. Engine battlefield continuous CDAs do not establish all-zone characteristics, owner/controller semantics or retained information. Enables later conditional Gaea's Liege and Wood Elemental CDAs. Gaea's Avenger is a sixth affected name but has a recorded source-data concern and nested Plus; it is excluded from clean unlock estimates. Large engine contract and adapter effort. |
+| Singular destruction outcome branch (selected) | Cosmic Horror and Infinite Authority: 2 names, estimated 1 full unlock | Cosmic Horror has supported upkeep, mana payment and damage. Infinite Authority has nested delayed combat/end-step actions and needs an event-time `Trigger_ThatCreature` subject capture; the engine's filtered pair adapter saves only the opponent. This slice removes their common destruction-result blocker. Existing destruction and typed result services cover the complete selected shape. Small adapter and focused gameplay effort; no engine change. |
+
+The selected shape is a shared prerequisite for two complete records, with one
+immediate unlock. It reuses established engine contracts at low implementation
+cost. The higher-count alternatives need broader engine prerequisites before
+any honest full-card unlock. An early informal estimate of two destruction
+unlocks was reduced to one before edits after reading Infinite Authority's nested
+counter subject. The CDA audit also expands the earlier informal four-card
+estimate to five clean names. No other slice is started.
+
+### Contract, exact signatures, and reuse
+
+`MustCost(DestroyPermanent(ref))/1` followed immediately by `If/2` or `Unless/2`
+with symbol `CostWasPaid` or `CostWasntPaid` and a nonempty action list is
+supported in existing resolving spell, activation, trigger and delayed action
+sequences. `ref` must already bind a permanent in that lexical context. All four
+branch polarities are supported. Invalid arity, unbound or incompatible refs,
+unbound results, separated producers/continuations, optional destruction costs,
+activation destruction costs and `IfElse` remain rejected.
+
+The RON spelling here means "destroyed this way", as the actual Oracle records
+require; it does not add a destruction cost to the mandatory-sacrifice engine
+contract. `ron` owns grammar, lexical validation and lowering. The engine owns
+incarnation-aware destruction, replacement application, LKI, damage, targets,
+delayed reference capture, copies, clones and definition validation.
+
+Reuse: `DestroyWithResult`, `DestroyedThisWayInto`, `BindNumber`, `FromNumber`,
+`IfPositive`, `SubtractValues`, `Sequence`, and the existing typed permanent
+reference plans. Each build creates a fresh result binding; its source-position
+name distinguishes nested declarations. A zero result reverses branch polarity
+through `1 - result`. Each pair is closed over its own producer and consumer;
+there is no global result slot. The existing engine writes zero when destruction
+fails and one when it destroys the original object. Regeneration,
+indestructibility, phasing, departure and return cannot produce stale success.
+
+Local `data/LEG.json` and `data/4ED.json` confirm Cosmic Horror's actual
+"destroyed this way" text. LEG data confirms Infinite Authority's two delays and
+original enchanted creature counter recipient. Relevant rules read: CR 118.12,
+603.7a/c/e, 608.2b/c, 701.8a-c and 701.19a-c. No source defect is corrected;
+existing unrelated source concerns remain. All twelve RON hashes are unchanged,
+so no vocabulary source snapshot refresh is needed.
+
+### Test-first evidence and card-to-test mapping
+
+Before implementation, `go test ./pkg/mage/dsl/ron -run TestRONDestructionPayment
+-count=1` failed at `unsupported mandatory sacrifice cost (DestroyPermanent)`
+for Cosmic Horror and the nested-result contract. Declaration tests preceded
+the adapter. Subsequent checks found duplicate nested binding names, fixed with
+position-based names. The clone payment test accounts for the existing clone
+player's default decline policy; it checks independent game state and outcomes.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Cosmic Horror, full LEG record | `TestRONDestructionPaymentCosmicHorror`: 7/7 and first strike; controller upkeep; choice at resolution; exact paid/declined/unaffordable mana; regeneration and indestructibility; absent/returned/phased source and phase cycle; control change; copied trigger controller and separate outcomes; prevention; cloned pending frame. `TestRONDestructionPaymentCosmicNative`: exact 3BBB casting, insufficient-payment rollback, entry on resolution, native upkeep destruction, seven damage and graveyard. |
+| Independent typed results | `TestRONDestructionPaymentNestedResults`: a failed nested destroy cannot replace the successful outer result; indestructibility suppresses both. |
+| Target legality and polarity | `TestRONDestructionPaymentTargetPolarity`: all four If/Unless paid/unpaid forms; successful destruction, regeneration, indestructibility, returned/phased targets and shroud; all-illegal targets run neither branch. |
+| Activation and delayed contexts | `TestRONDestructionPaymentDelayedActivation`: actual tap payment, no early destruction, next-end-step result, clone isolation and no effect on returned source. |
+| Validation, instances and loading | `TestRONDestructionPaymentInvalid` and `InventoryAndStrictLoad`: declaration errors, fresh cards/abilities per factory, complete real-record strict load and reprint deduplication, permanent-reference semantic role, atomic rejection leaves accepted registry unchanged. |
+| Infinite Authority | Complete record still rejects `Trigger_ThatCreature`; explicit boundary assertion in `InventoryAndStrictLoad` and `TestRONCombatCharacteristicConsumers`. No complete gameplay claim. |
+| Shared engine regression | `TestDestroySingularResult*`, mandatory sacrifice and inventory tests rerun unchanged except expected newly supported shape/count diagnostics. |
+
+The prior invalid source-destruction test now uses an unbound target, because
+source destruction is supported and covered positively by Cosmic Horror. The
+whole-collection assertions change to the exact measured counts; no checks are
+removed. One complete-card gameplay mapping is added. Compilation and gameplay
+coverage remain separate; collection-wide gameplay/engine-validation totals
+remain unmeasured.
+
+### Final measurements and validation
+
+Actual gain matches the revised estimate: **1 name / 1 record**, Cosmic Horror.
+Strict loading: **1,800 compiled / 645 rejected records**;
+**682 accepted / 304 rejected unique names**. No accepted record is lost.
+Infinite Authority's first diagnostic advances to
+`LEG.lines.ron:133:754: unbound or incompatible permanent reference
+(Trigger_ThatCreature)`. Every other remaining diagnostic is unchanged.
+Inventory retains 72,962 nodes / 8,559 signatures, with unknown-role occurrences
+reduced from 5,655 to 5,652 by the destruction subject role adapter.
+
+The first intermediate short/full checks caught stale collection counts and a
+new test expecting one compiled record for two reprints. These test setup
+failures were corrected to the measured record counts. Final required checks
+run after lint, including the final delayed-activation test. Automatic lint
+changes were reviewed; no unrelated file was changed by lint.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestRONDestructionPayment\|TestDestroySingularResult\|TestRONRequiredPayment\|TestRONCombatCharacteristicConsumers\|TestInventory' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,800 compiled / 645 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 682 accepted / 304 rejected names |
+
+No environment failure or pre-existing build/test blocker remains. One
+slice-only commit is created; its hash is reported in the final response.
+Changes: new `destruction_payment.go` and its tests; `optional_payment.go`;
+semantic roles and counts in `inventory.go`/`inventory_test.go`; updated boundary
+assertions in `required_payment_test.go`/`combat_characteristic_test.go`;
+`dsl-reference.md`, `engine-rules-contracts.md` and this appended ledger entry.
+
+### Ranked next candidates and removal gates
+
+1. Filtered typed damage-source selection and next-event prevention: seven
+   Circle/Realm names; establish complete source domain and simultaneous-event
+   selection first.
+2. All-zone battlefield-count CDAs: five clean names above; retain Avenger's
+   separate source-data concern.
+3. Chosen discard costs across Dwarven Armorer, Mishra's War Machine and Land's
+   Edge: engine transaction services exist, but nested action choices, damage
+   results and shared activation permissions still prevent full-card unlocks.
+
+Infinite Authority's subject capture remains a lower-priority single-card
+follow-up while broader multi-card prerequisites remain. The complete registry,
+runtime cutover, test migration, Go-definition deletion and DSL removal gates
+are not met. No Go definition, generator, runtime caller or DSL function is
+removed. No whole-repository caller audit authorizes deletion in this adapter
+slice. Migration remains incomplete.
