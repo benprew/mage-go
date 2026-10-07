@@ -17,10 +17,17 @@ type DamageSourceChooser interface {
 // This operation does not enumerate all sources permitted by CR 609.7a.
 // Missing sources or an absent player clear the result without a choice.
 func ChooseDamageSourceFrom(player PlayerRef, sources []DamageSourceRef, binding *DamageSourceBinding) ResolvingEffect {
-	return &damageSourceChoice{player: player, sources: slices.Clone(sources), binding: binding}
+	return ChooseDamageSourceMatchingFrom(player, sources, DamageSourceFilter{}, binding)
+}
+
+// ChooseDamageSourceMatchingFrom saves a choice from matching explicit references.
+// The caller must supply the complete legal source list for the operation.
+func ChooseDamageSourceMatchingFrom(player PlayerRef, sources []DamageSourceRef, filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect {
+	return &damageSourceChoice{player: player, sources: slices.Clone(sources), filter: filter, binding: binding}
 }
 
 type damageSourceChoice struct {
+	filter  DamageSourceFilter
 	player  PlayerRef
 	sources []DamageSourceRef
 	binding *DamageSourceBinding
@@ -30,7 +37,7 @@ func (*damageSourceChoice) Text() string                 { return "choose a dama
 func (*damageSourceChoice) Properties() EffectProperties { return EffectProperties{} }
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
-		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}}}
+		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
 	if len(e.sources) == 0 {
 		n.problem = "supply at least one source reference"
 	}
@@ -53,7 +60,7 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	sources := make([]DamageSource, 0, len(e.sources))
 	for _, ref := range e.sources {
 		source := ref.resolveDamageSource(ctx)
-		if !source.Valid() || slices.ContainsFunc(sources, source.SameObject) {
+		if !e.filter.Match(source) || slices.ContainsFunc(sources, source.SameObject) {
 			continue
 		}
 		sources = append(sources, cloneDamageSource(source))

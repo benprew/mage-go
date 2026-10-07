@@ -32596,3 +32596,155 @@ Changed files: new `pkg/mage/damage_source_choice.go`, engine contract tests and
 `pkg/mage/dsl/ron/damage_source_choice_test.go`; `pkg/mage/doc.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended entry.
 The commit hash is reported in the final response. No second slice is started.
+
+## Run 2026-10-07: TYPED-DAMAGE-SOURCE-PROPERTIES
+
+Status: complete explicit-reference source-filter prerequisite. This run stops
+here; it does not enable incomplete chosen-source cards.
+
+### Fresh evidence and candidate comparison
+
+The initial tree had user changes in `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. These remain intact. Only this
+entry is staged from the ledger; the prior user reorganization remains unstaged.
+Read AGENTS.md, engine API, execution design, vocabulary snapshot, current
+ledger, relevant compiler/choice/source/definition/clone services, API and rules
+contracts, and CR 400.7, 608.2h, 609.7a-c, 615.8-9 and 702.26b/d. Complete records
+and nested forms for the compared families were inspected. Local Oracle data
+in LEA/ARN/ATQ/DRK/LEG confirms the source properties and continuation contracts.
+No Go card definition supplied requirements. The implement-engine skill was
+used; no removed card skill or sub-agent was used.
+
+Fresh baseline engine short tests and whole-repository build passed. The loader
+exited 1 for collection rejection: **1,870 compiled / 575 rejected records**,
+**721 accepted / 265 rejected unique names**, 2,445 records and 986 names total.
+Semantic inventory walked all twelve files: 72,962 occurrences, 8,557 signatures,
+5,166 unknown-role occurrences. Accepted records were not removed or skipped.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Chosen-source filtering prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith, Reverse Damage, Eye for an Eye, Dark Sphere: **11** names. Selected filter slice: **0** immediate unlocks. Full common prevention continuation: **7** potential unlocks. | Typed choice already exists. Color/type/boolean source-property predicates are a bounded missing service. Complete legal enumeration, lexical result bindings, shield property rechecks, permanent-spell entry continuity and simultaneous next-event prevention still block the seven clean consumers. The four others also need redirection, prevented-amount life gain, reflection or fractional prevention. | Low/medium for complete explicit-reference filtering; high for the complete family. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean potential unlocks. Gaea's Avenger and Wood Elemental: **2** additional blocked names. | Needs all-zone characteristics, CDA/copy/layer integration and characteristic readers. Avenger's own-controller artifact count conflicts with local Oracle's opponents count. Wood Elemental needs entry sacrifice results. | High engine integration and zone/copy/layer tests. |
+| Bands-with-other grants | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel: **5** potential land unlocks. Master of the Hunt, Shelkin Brownie, Tolaria: **3** additional names. | Needs parameterized formation and damage-assignment contracts, layer grants/removals; Master also needs token metadata. Ordinary banding cannot substitute for this ability. | High combat prerequisite and broad integration tests. |
+
+Selected source-property filtering as the smallest complete shared prerequisite
+with concrete eleven-card consumers. It removes a distinct dependency from the
+existing typed source-choice service at substantially lower effort than either
+five-card family. Complete enumeration remains higher-priority follow-up work,
+not a battlefield/stack-only shortcut. Rationale, contract, reuse boundary and
+acceptance cases were stated before implementation. Reprints count once.
+
+### Contract, signatures and ownership
+
+Engine API:
+
+- `DamageSourceFilter` (zero value permits any valid source), with
+  `Match(DamageSource) bool`.
+- `DamageSourceHasColor(core.Color) DamageSourceFilter` and
+  `DamageSourceHasType(core.CardType) DamageSourceFilter`.
+- `AllDamageSources(...DamageSourceFilter) DamageSourceFilter` and
+  `AnyOfDamageSources(...DamageSourceFilter) DamageSourceFilter`.
+- `ChooseDamageSourceMatchingFrom(PlayerRef, []DamageSourceRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`.
+
+Context: a resolving choice from an explicit complete legal list supplied by
+the caller. The filter reads each reference's supplied information before the
+existing required choice. Missing sources never match. Current references read
+current properties, including stack color overrides and effective permanent
+types. Saved/event references read saved information. No game lookup by card ID
+can replace a retained source with a returned incarnation. Phasing and departure
+retain the existing reference contract. Filters are pure and hold no game state.
+Boolean declarations require nonempty operands and copy the caller's slice.
+Definition validation rejects invalid colors/types and nested invalid filters.
+
+The existing `ChooseDamageSourceFrom` delegates with the zero filter and keeps
+its signature. Choice, exact deduplication, resolution frames, per-instance
+bindings, clone snapshots, missing-player/result clearing, invalid-answer
+fallback and legacy decisions reuse the existing service. No cost, damage,
+replacement, zone, event or identity subsystem is duplicated or changed.
+
+RON owns `compileChosenDamageSourceFilter` and declaration diagnostics.
+`ChooseADamageSource/1` validates `AnyDamageSource` as a symbol, `IsColor/1`
+(five colors), `IsCardtype/1` (existing six-type RON vocabulary), and recursive
+nonempty `And([filters])/1` or `Or([filters])/1`. After filter validation, the
+choice action still returns `unsupported action (ChooseADamageSource)`.
+This is explicit prerequisite validation, not production execution support.
+Inventory assigns nested filter/color/type roles below the unsupported action.
+No partial card factory or registry is published.
+
+No source data changed. The known Gaea's Avenger source defect remains separate
+and deferred; local ATQ Oracle confirms the discrepancy. Other recorded source
+defects remain unchanged. RON hashes and vocabulary syntax are unchanged, so no
+source-snapshot refresh is needed. No DSL function, Go card, generator or startup
+caller is removed; the removal gate remains closed.
+
+### TDD and evidence mapping
+
+Initial engine tests failed on the missing APIs. An incorrect fixture helper
+was corrected before confirming that expected failure. RON tests then failed
+on the missing filter compiler before its implementation. A missing Alpha Black
+Circle fixture was corrected to Beta; the inventory fixture was changed to avoid
+mixing a metadata Artifact occurrence with a filter occurrence. Assertions were
+not weakened. All eleven source-record filters are checked against every color
+and a colorless artifact, and each complete card still rejects.
+
+| Contract/card evidence | Tests |
+| --- | --- |
+| Colors, types, boolean composition, missing sources, pure matching, stack overrides and copied declaration input | `TestDamageSourcePropertyMatching` |
+| Filter before choice, duplicate removal, separate spell/copy stack identities, result clearing and clone map isolation | `TestDamageSourcePropertyChoice` |
+| Invalid colors/types, empty/nested compositions, nil/empty choice declarations and unbound binding reads | `TestDamageSourcePropertyDeclarations` |
+| Live recoloring, saved versus current information, shroud, phased information, departure LKI, returned incarnations and input/output overlap | `TestDamageSourcePropertyLiveAndRetained` |
+| All eleven complete chosen-source consumer records and every color/artifact outcome | `TestRONChosenSourceFilterRecords` (property prerequisite mapping only) |
+| Invalid RON shapes/arguments and nested diagnostic roles | `TestRONChosenSourceFilterDeclarations`, `Inventory` |
+| Complete Prodigal Sorcerer RON damage/activation with the Blue Circle filter in a synthetic event consumer; queued timing, recoloring, departed/returned/phased sources, copies and pending clones | `TestRONChosenSourceFilterGameplay` |
+| Existing choice compatibility, independent snapshots, absence, fallback, legacy players and declaration scope | Existing `TestDamageSourceChoice*` and `TestRONDamageSourceChoicePrerequisite` |
+
+Compilation gain: estimated **0**, actual **0**. New complete-card behavior
+coverage: **0**. Added source-filter contracts and accepted-card integration
+scenarios are prerequisite evidence. Aggregate engine-validation and
+behavior-verification counts remain null. The actual gain matches the estimate;
+all eleven consumer records still have their original first diagnostic.
+
+### Validation and next slice
+
+Focused tests use `-count=1`. Required check results and final loader evidence
+are recorded below after final validation.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestDamageSourceProperty\|TestDamageSourceChoice\|TestRONChosenSourceFilter\|TestRONDamageSourceChoicePrerequisite\|TestInventory' -count=1` | PASS, repeated after lint and the final fixture correction. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final state. |
+| `make test` | PASS on final state. |
+| `go test ./... -short -count=1` (engine skill) | PASS. |
+| `make build` | PASS, repeated on final state. |
+| `go vet ./...` | PASS, repeated on final state. |
+| `make lint` | PASS, zero issues. The first run identified a test variable that shadowed `copy`; it was renamed. Automatic changes were reviewed and stayed within this slice. |
+| `git diff --check` | PASS after final ledger update. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,870 compiled / 575 rejected records. Final JSON exactly equals fresh baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 721 accepted / 265 rejected names. Final inventory stable after lint; 72,962 occurrences and 8,557 signatures. Unknown-role occurrences decrease from 5,166 to 5,085. |
+
+No failed required check or environmental blocker remains. Remaining diagnostics
+include `ChooseADamageSource`, `CDA_Power` and `BandsWithOthers`. Accepted records
+retain identical diagnostics and counts. Reporting progress is separate from
+compilation and gameplay progress.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration under CR 609.7a, including referred
+   objects in stack, waiting replacement/prevention and delayed effects, and
+   face-up command objects. Reuse the typed choice and filter services. Then
+   establish source-property shield rechecks and exact simultaneous next-event
+   consumption for the seven common prevention consumers.
+2. All-zone count CDA contracts for the five clean consumers.
+3. Parameterized bands-with-other combat contracts for the five land grants.
+
+The runtime/removal gate remains closed. Complete collection gameplay, full
+loading, native startup wiring, Go-card/test migration and DSL cleanup remain
+unfinished. No caller audit is used to authorize deletion in this slice.
+
+Changed files: new `pkg/mage/damage_source_property.go` and its engine tests;
+existing `damage_source_choice.go` and engine API overview; new RON
+`chosen_source_filter.go` and tests; compiler and semantic inventory;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this entry.
+The descriptive commit hash is reported in the final response. No second slice
+is started.

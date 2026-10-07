@@ -177,6 +177,10 @@
 // source references. [DamageSourceChooser] permits typed player decisions.
 // The result uses [DamageSourceBinding] in the current resolution frame.
 // The caller must supply the complete legal source list.
+// Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.
+// [DamageSourceHasColor] and [DamageSourceHasType] read the supplied information.
+// [AllDamageSources] and [AnyOfDamageSources] combine those filters.
+// Live references read current properties. Saved references read saved properties.
 //
 // Use [PreventDamageFromCardType] with [Static] for damage from sources
 // with a specified card type. The current subject can be [This] or

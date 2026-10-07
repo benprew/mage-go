@@ -6604,3 +6604,38 @@ RON record with a synthetic event consumer. It covers queued choice timing,
 source departure/return/phasing, copied triggers, source-attributed damage, and
 pending clone isolation. This adds prerequisite evidence, not complete gameplay
 coverage for the eleven still-rejected chosen-source consumers.
+
+## Typed property filtering before damage-source choice
+
+`DamageSourceFilter` and `ChooseDamageSourceMatchingFrom` establish property
+filtering over explicit legal source references at resolution. CR 609.7a permits
+sources that cannot deal damage and makes this a choice rather than a target.
+The caller remains responsible for complete legal enumeration. Color reads use
+`DamageSource.HasColor`, including stack color overrides; type reads use its
+captured card information, including effective permanent types. The filter
+itself makes no game query and does not change state or make decisions.
+
+Current and saved reference contracts remain distinct. A current reference
+reads current source properties. An event/snapshot reference reads the supplied
+saved information. Departure, return and phasing retain the reference's exact
+identity and LKI semantics (CR 400.7, 608.2h and 702.26). Filtering never resolves
+a saved card ID to a later incarnation. This establishes choice-time property
+reads; it does not establish shield rechecks under CR 609.7b/615.9 or
+permanent-spell shield continuity under CR 400.7c.
+
+Engine validation checks color/type operands and nonempty recursive boolean
+compositions. Missing sources never match. A list with no matching sources
+clears its result without a player decision. Matching references retain input
+order; exact duplicates are removed. The existing choice service preserves
+separate stack objects, copies, per-frame bindings, input/output overlap,
+legacy players and independent clone snapshots.
+
+Evidence: `TestDamageSourcePropertyMatching`, `Choice`, `Declarations` and
+`LiveAndRetained`, plus existing `TestDamageSourceChoice*` contracts.
+`TestRONChosenSourceFilterRecords` checks complete source records for all eleven
+consumers while confirming they remain rejected. `Declarations` checks malformed
+RON shapes, unbound operands and invalid color/type arguments. `Inventory`
+checks nested roles. `Gameplay` executes complete Prodigal Sorcerer RON events
+with the Circle of Protection: Blue filter in a synthetic consumer, covering
+queued resolution, recoloring, source departure/return/phasing, copies and
+pending clones. This is prerequisite evidence and adds no complete card coverage.

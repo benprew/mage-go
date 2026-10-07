@@ -5591,3 +5591,32 @@ RON `ChooseADamageSource` remains unsupported. Its adapter needs complete
 CR 609.7a enumeration, property filters, lexical bindings and the consuming
 shield/replacement operations. This prerequisite does not change the production
 loader, accepted records, or existing UUID-based callers.
+
+## Typed damage-source property filters
+
+`ChooseDamageSourceMatchingFrom(player PlayerRef, sources []DamageSourceRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+filters an explicit legal list before the existing required choice. The caller
+must supply the complete legal list. The zero filter permits any valid source.
+`DamageSourceHasColor(Color)` accepts one of the five Magic colors;
+`DamageSourceHasType(CardType)` accepts a valid engine card type.
+`AllDamageSources(...DamageSourceFilter)` and
+`AnyOfDamageSources(...DamageSourceFilter)` require nonempty operands and copy
+the supplied slice. Invalid colors, types and nested declarations fail engine
+validation. `Match(DamageSource) bool` is a pure information query; a missing
+source never matches. The original unfiltered API remains available.
+
+Choice evaluates each reference at resolution. Live references supply current
+properties; saved/event references supply their retained information. The filter
+does not make a fresh battlefield lookup by card ID. Exact duplicate removal,
+source snapshots, local results, no-choice clearing, player compatibility and
+cloning use the existing choice service. The source need not deal damage.
+
+RON now validates the filter argument of `ChooseADamageSource/1`:
+`AnyDamageSource` as a symbol, `IsColor/1`, `IsCardtype/1`, and recursive nonempty
+`And([filters])/1` or `Or([filters])/1`. The RON card types use the current
+compiler vocabulary. Nested semantic inventory assigns source-filter, color
+and card-type roles even inside rejected records. The choice action still
+rejects after filter validation: complete CR 609.7a enumeration, per-action
+bindings and complete consuming shields remain prerequisites. Filter validation
+alone cannot produce a partial production registry.

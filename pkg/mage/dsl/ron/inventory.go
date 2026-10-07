@@ -467,6 +467,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "damage_source_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsColor" && len(n.Args) == 1 {
+			return "color"
+		}
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
@@ -782,6 +788,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "TapEachPermanent", "UntapEachPermanent":
 			if len(n.Args) == 1 {
 				return "permanent_collection"
+			}
+		case "ChooseADamageSource":
+			if len(n.Args) == 1 {
+				return "damage_source_filter"
 			}
 		case "ChooseAnyNumberPermanentsAndPayManaForEach":
 			if len(n.Args) == 2 {
