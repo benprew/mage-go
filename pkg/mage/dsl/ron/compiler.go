@@ -1323,14 +1323,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
-		filter, err := compileFilter(n.Args[0])
+		set, err := compileContextualCollection(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
 		if n.Name == "DestroyEachPermanent" {
-			return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanent(filter) })
+			return one(func(bindings instanceBindings) mage.Effect { return mage.DestroyEach(set(bindings)) })
 		}
-		return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanentNoRegen(filter) })
+		return one(func(bindings instanceBindings) mage.Effect { return mage.DestroyEachWithoutRegeneration(set(bindings)) })
 	case "EachPlayerAction":
 		return compileEachPlayerAction(n)
 	case "PlayerActions":

@@ -69,6 +69,22 @@ func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []ma
 	if n.Name == "AttachedToAPermanent" {
 		return compileAttachmentTargetFilter(n)
 	}
+	if n.Name == "OwnedByAPlayer" {
+		if err := arity(n, 1); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		player := n.Args[0]
+		if player.Name != "SinglePlayer" {
+			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target owner")
+		}
+		if err := arity(player, 1); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
+			return mage.PermanentFilter{}, nil, unsupported(player.Args[0], "permanent target owner")
+		}
+		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetYouOwn()}, nil
+	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err

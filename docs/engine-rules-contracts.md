@@ -5574,3 +5574,47 @@ Evidence: `TestResolutionChoiceDispatch`, `AvailableOptions`, `Declarations`;
 `TestRONResolutionChoiceArmorer`, `Avenger`, `PendingInstances`, `Contexts`,
 `Invalid`, `InventoryAndAtomicLoad`; existing chosen-discard transaction,
 counter replacement-order, temporary keyword and next-upkeep tests.
+
+## Contextual battlefield collection composition
+
+`UnionPermanents` and `IntersectPermanents` combine typed `PermanentSet` operands.
+Their copied operand slices contain declarations, not selected objects. Queries
+read each operand in the supplied EffectContext, then emit each live incarnation
+once in battlefield order. They exclude phased and stale members. Empty operand
+lists and nil/unbound nested declarations reject in `ValidateCardDefinition`.
+`AttachmentsOn` selects current attachments whose saved host incarnation matches
+a current host-set member. It does not infer host control from attachment control.
+`PermanentsControlledByPlayers` combines a typed PlayerSet with a characteristic
+filter; `OpponentsOf(You)` reads the current resolving controller. These queries
+make no choices, pay no costs and keep no selected state in declarations.
+
+`TestPermanentSetComposition` verifies ownership/control separation, duplicate
+elimination, input-slice isolation, live control changes, phasing and clone
+isolation. `TestPermanentSetAttachments` verifies independent host and attachment
+control, live reattachment, clone isolation, host phasing and stale attachment
+incarnation rejection. `TestPermanentSetPlayerControllers` verifies pure repeated
+queries, controller-local opponents, departure without LKI membership, new-object
+membership and nil nested player declarations. `Declarations` verifies all new
+set nodes reject empty/nil operands and unbound player targets.
+
+RON lowers contextual predicates only in resolving return/destruction collections;
+its permanent target owner adapter uses the existing `TargetYouOwn` service.
+`TestRONContextualCollectionObelisk`, `ObeliskLegality` and
+`CastingAndInventory` cover the full ATQ Obelisk of Undoing record: casting,
+metadata, six-mana/tap payment, illegal ownership and unpaid rollback, self target,
+source departure, changed control, shroud, phasing, returned incarnations, copied
+controller legality, pending clones and resolution timing.
+`RemoveEnchantments` and `RemoveLiveMembership` cover the full LEG record:
+owned return before destruction, independently controlled Auras, owned and foreign
+Auras on controlled/attacking hosts, removal from combat, reattachment, control,
+phasing, indestructibility, copied controllers and clone-local resolution.
+`Batches` verifies overlapping union branches do not expose intermediate return
+or destruction states to state-trigger observers. `Declarations`, `StrictLoad`
+and `CastingAndInventory` verify syntax rejection, newly valid Boolean ownership,
+factory isolation, engine validation, atomic rejected loads and nested syntax roles.
+
+Rules: CR 108.3, 110.2, 303.4b/e, 400.7, 608.2b/c/f/h and 702.26b-d.
+Existing ReturnEachToHand, DestroyEach, DestroyEachWithoutRegeneration and
+battlefield/target services perform all actions. This slice changes no replacement
+ordering, optional choice, target identity or LKI policy. It does not establish
+static, entry, replacement-operation or cost contexts for contextual collections.

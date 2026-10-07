@@ -198,6 +198,12 @@
 // All choices precede payment. Failed payment cannot untap part of the selection.
 // The operation keeps each selected incarnation through mana abilities.
 //
+// Use [UnionPermanents] and [IntersectPermanents] for contextual collections.
+// Each live incarnation appears once, in battlefield order. [AttachmentsOn]
+// selects attachments on current host-set members with the same incarnation.
+// [PermanentsControlledByPlayers] permits a [PlayerSet] controller restriction.
+// Queries use the resolving context and cannot restore absent members with LKI.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

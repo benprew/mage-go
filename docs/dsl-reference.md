@@ -3137,21 +3137,42 @@ Gravity Sphere and Elder Land Wurm records have native RON gameplay tests.
 
 ## RON batch return to hand
 
-`PutEachPermanentIntoItsOwnersHand(filter)` is a resolving action. Existing
-permanent filters select current battlefield membership. A nonempty `And`
-can contain one `OwnedByAPlayer(SinglePlayer(player-reference))` restriction,
-including nested conjunctions. Player references use the current action scope;
-unbound, malformed, repeated owner restrictions and ownership inside `Or`
-are rejected. Pure disjunctions retain the existing permanent-filter grammar.
+`PutEachPermanentIntoItsOwnersHand(filter)`, `DestroyEachPermanent(filter)` and
+`DestroyEachPermanentNoRegen(filter)` accept contextual battlefield collection
+predicates. Nonempty `And([filters])` and `Or([filters])` nest freely and keep
+player restrictions local to each operand. Repeated or overlapping predicates
+select each incarnation once. Characteristic leaves use existing permanent
+filters. `OwnedByAPlayer(SinglePlayer(player-reference))` and
+`ControlledByAPlayer(SinglePlayer(player-reference))` use typed player references
+from the current resolving scope. `ControlledByAPlayer(Opponent)` selects the
+resolving controller's opponents. `AttachedToAPermanent(host-filter)` uses the
+same collection grammar for hosts, including nested ownership/control predicates.
+It checks the current attachment and the exact host incarnation.
 
-The adapter uses `ReturnEachToHand` with `MatchingPermanents` or
-`PermanentsOwnedBy`. Each factory constructs its own typed player bindings.
-Selection occurs at resolution and excludes phased permanents. Ownership,
-rather than control, selects the owner-scoped collection. All selected objects
-return through one engine batch. The action does not target those permanents.
-`TestRONReturnCollection*` covers Hurkyl's Recall, declaration rejection,
-instance/copy/clone isolation and simultaneous returns. Attachment and dynamic
-controller predicates in Remove Enchantments remain unsupported.
+Collections read current membership at each instruction. Absent or phased
+objects do not qualify; an untargeted returned card can qualify as a new object.
+LKI does not restore collection membership. Selection does not target members:
+shroud does not protect them. Return and destruction use the existing simultaneous
+batches, replacement pipeline, indestructibility and regeneration contracts.
+Remove Enchantments returns its owned collection before selecting the destruction
+collection. No collection or chosen state is saved in the compiled factory.
+
+For permanent targets, `OwnedByAPlayer(SinglePlayer(You))` lowers to
+`TargetYouOwn()` and can be combined with existing conjunction restrictions.
+Target ownership and control are checked at announcement and resolution against
+the stack object's controller. Other target owner references and contextual
+ownership in target disjunctions remain unsupported. Existing attachment target
+syntax retains its separate contract.
+
+Engine primitives are `UnionPermanents(sets ...PermanentSet) PermanentSet`,
+`IntersectPermanents(sets ...PermanentSet) PermanentSet`,
+`AttachmentsOn(hosts PermanentSet) PermanentSet`, and
+`PermanentsControlledByPlayers(players PlayerSet, filter PermanentFilter)
+PermanentSet`. Union/intersection copy their input slices and emit live members
+once in battlefield order. Empty compositions, nil children and unbound nested
+references fail definition validation. Existing RON scopes construct bindings
+separately for each factory. `TestPermanentSet*`, `TestRONContextualCollection*`
+and `TestRONReturnCollection*` supply contract and gameplay evidence.
 
 ## RON combat removal and temporary blocking prohibition
 

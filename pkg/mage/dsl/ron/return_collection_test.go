@@ -169,8 +169,6 @@ func TestRONReturnCollectionInvalid(t *testing.T) {
 		`PutEachPermanentIntoItsOwnersHand(OwnedByAPlayer(You))`,
 		`PutEachPermanentIntoItsOwnersHand(OwnedByAPlayer(SinglePlayer(You())))`,
 		`PutEachPermanentIntoItsOwnersHand(And([]))`,
-		`PutEachPermanentIntoItsOwnersHand(And([OwnedByAPlayer(SinglePlayer(You)),OwnedByAPlayer(SinglePlayer(You))]))`,
-		`PutEachPermanentIntoItsOwnersHand(Or([OwnedByAPlayer(SinglePlayer(You)),IsCardtype(Artifact)]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(ActionList([`+body+`]))])`), "invalid.ron")
 		if err != nil {

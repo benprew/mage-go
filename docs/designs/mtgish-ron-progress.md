@@ -27670,3 +27670,157 @@ Slice files: `pkg/mage/resolution_choice.go`, `resolution_choice_test.go`,
 `docs/engine-rules-contracts.md`, this appended progress entry.
 The descriptive commit hash is reported in the final response. Existing user
 changes remain unstaged. Migration remains incomplete; no second slice starts.
+
+## 2026-10-06: contextual battlefield collection composition
+
+Status: completed slice `CONTEXTUAL-BATTLEFIELD-COLLECTIONS`. This run stops here.
+The initial user edits to `.gitignore`, the execution design and this ledger,
+and the untracked completed-entry archive, are preserved outside this commit.
+The fresh counts below supersede the older summary at the top of the working ledger.
+
+### Evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design and removal gates,
+vocabulary snapshot, existing progress, selected compiler/engine code, API/rules
+contracts, and complete RON records. Requirements came from RON and local ATQ/LEG
+Oracle JSON, not Go definitions. CR 108.3, 110.2, 303.4b/e, 400.7, 608.2b/c/f/h
+and 702.26b-d supply the ownership, attachment, order, identity and phasing rules.
+The implement-engine skill supplied the shared engine workflow. No delegation,
+removed card skill, Go stubs, card-name branch or production subset registry.
+
+Fresh baseline: compiler tests, short engine suite and build PASS. Strict loader
+and semantic inventory exit 1 for collection rejection, not build/test failure:
+2,445 records, 1,802 compiled / 643 rejected; 684 accepted / 302 rejected names.
+Inventory: 72,962 occurrences, 8,559 signatures, 5,623 unknown-role occurrences.
+Reprints count once. Full records and nested operands determine the estimates.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Contextual battlefield selection, selected | Obelisk of Undoing and Remove Enchantments: **2** full cards | Target ownership adapter; typed Boolean collection composition, controller sets and attachment-host selection. Existing return/destruction batch services provide the actions. Enables player restrictions inside separate branches and host queries for later collection consumers. | Low/medium: four small shared set primitives, bounded RON contexts, ownership/control/identity/copy/clone/batch tests. |
+| Filtered damage-source choice plus next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** full cards after prerequisites | Typed selection of all eligible damage sources and exact source identity; one next event consumed correctly with simultaneous sources and competing replacements. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere additionally need redirection, actual prevented values, reflected damage or partial prevention. | High: decision and replacement lifecycle contracts, batch ordering, adapters and seven gameplay mappings. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** full cards after prerequisites | All-zone characteristic reads, owner/controller context, named/type counts, CDA layer/copy integration. Gaea's Avenger additionally has its known opponent/controller source defect and arithmetic; Wood Elemental needs entry sacrifice results. | High: characteristic queries, count lowering, all-zone/layer/copy tests and five gameplay mappings. |
+
+Two complete consumers at smaller effort win this run. The prior ledger's proposed
+source-prevention slice was reassessed. The selection, reuse boundary and acceptance
+cases were stated before editing. No second slice begins.
+
+### Exact contracts, scope and reuse
+
+Engine signatures:
+
+- `UnionPermanents(sets ...PermanentSet) PermanentSet`
+- `IntersectPermanents(sets ...PermanentSet) PermanentSet`
+- `AttachmentsOn(hosts PermanentSet) PermanentSet`
+- `PermanentsControlledByPlayers(players PlayerSet, filter PermanentFilter) PermanentSet`
+
+Union/intersection copy the operand slice, resolve typed children in the current
+EffectContext and select each live incarnation once in battlefield order.
+Attachments use current host membership and the attachment's saved host
+incarnation. Host control is independent of attachment control. Player-set
+controllers use existing `OpponentsOf(You)`. No selected state is stored in any
+declaration. Empty compositions, nil operands and unbound nested player reads
+fail definition validation. Queries make no choices or resource changes.
+
+RON `PutEachPermanentIntoItsOwnersHand/1`, `DestroyEachPermanent/1` and
+`DestroyEachPermanentNoRegen/1` now share recursive contextual collection lowering:
+nonempty `And([filters])/1`, `Or([filters])/1`, characteristic leaves from the
+existing permanent-filter grammar, `OwnedByAPlayer(SinglePlayer(ref))/1`,
+`ControlledByAPlayer(SinglePlayer(ref))/1`, `ControlledByAPlayer(Opponent)/1`,
+and `AttachedToAPermanent(host-filter)/1`. Player references must be bound in
+the current resolving scope. Ownership and control stay local to Boolean operands;
+repeated operands are valid and cannot repeat members. Each instruction reads its
+own current membership. New incarnations can enter untargeted collections; LKI
+cannot restore absent members. Targets retain existing identity/legality rules.
+This establishes resolving spell and activation gameplay; existing return tests
+retain typed player target reads. It adds no static, entry, cost or replacement
+operation context. Other action families retain their existing filter adapters.
+
+Permanent target `OwnedByAPlayer(SinglePlayer(You))/1` uses `TargetYouOwn` and
+existing conjunction options, including `TargetYouControl`. Other target owner
+references and contextual owner disjunctions reject. Copies use their own stack
+controller. No new target service or retargeting policy is introduced.
+
+Reused: per-factory instanceBindings and typed player/target references;
+PermanentsOwnedBy, PermanentsControlledBy, MatchingPermanents, OpponentsOf;
+ReturnEachToHand, DestroyEach, DestroyEachWithoutRegeneration; shared zone and
+batch pipelines, target legality, payment transactions, attachment incarnation,
+phasing, combat state, stack copies and Game.Clone. There are no RON executors
+for reusable rules. Replacement ordering and regeneration policy are unchanged.
+
+### Test-first evidence and mappings
+
+Engine tests failed for absent composition APIs. An initial fixture incorrectly
+used a nonexistent NewEffectContext helper; it was corrected to EffectContext
+before the expected missing-API failure was reconfirmed. Both full RON gameplay
+tests failed at OwnedByAPlayer before adapter edits. Later fixture repairs used
+the existing battlefield reader and OpponentsOf service, set explicit owners,
+and fixed a malformed inventory string. These were test fixture issues, not
+collection/environment failures. Repeated-owner and ownership-disjunction forms
+were moved from old negative tests into positive declaration tests because their
+new semantics are supported; overlapping batch tests verify execution. No test
+assertion was weakened. Exact inventory counts were refreshed to 1,804/641.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Obelisk of Undoing, full ATQ record | `TestRONContextualCollectionObelisk`, `ObeliskLegality`, `CastingAndInventory`: permanent casting/entry and one-mana cost, six-mana/tap activation, owner/control target distinction, illegal/unpaid rollback, resolution timing, self target, departed source, changed control, shroud, phase cycle, returned incarnation, copied controller legality, pending clones. |
+| Remove Enchantments, full LEG record | `TestRONContextualCollectionRemoveEnchantments`, `RemoveLiveMembership`: owned enchantments and independently controlled Auras return first, remaining foreign enchantments/Auras destroy, controlled/attacking host clauses, current control/reattachment/combat removal, phasing, indestructibility, copied controller selection, clone isolation and unaffected permanents. |
+| Shared selection | `TestPermanentSetComposition`, `Attachments`, `PlayerControllers`, `CompositionDeclarations`: owner/controller distinction, union uniqueness, intersection, defensive slice copy, phase/control changes, attachment identity, pure queries, opponent contexts, no LKI membership, new live incarnations, nil/empty/unbound rejection and clones. |
+| Batch/declaration/loading contracts | `TestRONContextualCollectionBatches`, `Declarations`, `StrictLoad`, `CastingAndInventory`: simultaneous return/destruction observers, overlapping branch deduplication, invalid references/shapes, independently built factories, engine validation, strict fixture loading, atomic rejected load, nested semantic roles. Existing `TestRONReturnCollection*` remains passing for Hurkyl's Recall and player bindings. |
+
+Two new full-card gameplay mappings are added. Compilation and collection-wide
+engine validation/behavior totals remain separate; accepted names are not all
+claimed behavior-verified. Local ATQ/LEG Oracle data agree with both selected
+records. No source defect or environment blocker was found in these consumers.
+No RON source changed; all twelve source hashes remain identical. The vocabulary
+source snapshot therefore needs no regeneration. Nested semantic roles already
+cover these forms; no inventory role widening was needed.
+
+### Actual gain, removal gates and validation
+
+Actual gain matches estimate: **2 unique names / 2 records**, exactly Obelisk of
+Undoing and Remove Enchantments. No accepted name is lost. Fresh loader and
+inventory: **1,804 compiled / 641 rejected records; 686 accepted / 300 rejected
+names**. Diagnostics for all remaining rejected records are unchanged. Inventory
+remains 72,962 occurrences / 8,559 signatures / 5,623 unknown-role occurrences.
+Strict loading still exits 1 and publishes no partial registry.
+
+The private `compileOwnedCollectionFilter` helper was replaced by the shared
+contextual compiler. A repository search found only its declaration and recursive
+self-call before deletion; no external caller, test, generator, fixture or document
+uses that private name. No exported DSL function or Go card definition was removed.
+Collection gameplay, startup cutover and complete loading remain below removal
+gates. Existing exported wrappers and engine services remain available.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Test-first engine and RON checks | Expected missing-API and unsupported ownership failures confirmed |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestPermanentSet\|TestRONContextualCollection\|TestRONReturnCollection\|TestInventoryRepositoryCollection' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS: zero issues; automatic import formatting reviewed |
+| Post-lint `go test ./... -short -count=1` | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,804 compiled / 641 rejected records |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 686 accepted / 300 rejected names; unchanged source hashes and remaining diagnostics |
+
+All required native checks pass. No pre-existing or environmental validation
+failure remains. The descriptive commit hash is reported in the final response.
+
+Ranked next candidates, subject to fresh evidence:
+
+1. Typed damage-source selection and next-event prevention: seven complete Circle/
+   Realm consumers after source and replacement lifecycle prerequisites.
+2. All-zone count CDA service: five clean consumers; keep Avenger's source defect
+   and Wood Elemental's entry requirements separate.
+3. Mana conversion with activation history: Farrelite Priest and Initiates of the
+   Ebon Hand, requiring reusable mana-cost activation solver planning plus exact
+   synchronous history/delayed sacrifice execution.
+
+Slice files: engine `permanent_set_composition.go` and its tests, `doc.go`; RON
+`contextual_collection.go` and its tests, `compiler.go`, `temporary_animation.go`,
+`return_collection.go`, `return_collection_test.go`, `inventory_test.go`; API/rules
+contract documents; this appended progress entry. Only this entry is staged from
+this ledger, preserving the user's pre-existing archive/compaction changes.
