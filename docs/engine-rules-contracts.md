@@ -7077,3 +7077,25 @@ and copied abilities use `TestRONSourceExclusionInstancesAndCopy`.
 unsupported disjunctive declarations. Bronze Horse still needs a typed static
 existence condition and targeted-spell prevention; this slice does not claim
 its gameplay coverage.
+
+## RON live nonattacking filter contract
+
+RON bare `IsntAttacking` uses the existing `Not(IsAttacking)` permanent query.
+It reads current combat membership, including creatures put onto the battlefield
+attacking (CR 508.4). Untapping an attacker does not remove it from combat
+(CR 506.4b). Removal from combat or the end of combat changes membership
+(CR 508.1k). Past attack declarations do not control this query.
+
+Static layer membership and source/attachment conditions remain live and use
+no LKI (CR 604.2, 611.3a–c). Source ability removal and phasing suspend the
+bonus; return creates a new source. A phased recipient returns outside combat
+and can qualify again. Arcades Sabboth's bonus applies in layer 7c, separately
+from its captured end-of-turn activation bonus and counters (CR 613.4c).
+Targets retain the existing incarnation and legality checks at announcement
+and resolution (CR 601.2c, 608.2b). The RON adapter adds no engine state or
+combat, layer, cost, target or replacement service.
+
+`TestRONNonattackingArcadesCombat`, `Identity`, `Activation`,
+`ConditionsAndDeclarations` and `TargetLegality` establish these contracts.
+The existing `TestRONUpkeepPayment*` scenarios cover the complete card's
+upkeep payer, timing, color payment, sacrifice, copy and identity contracts.

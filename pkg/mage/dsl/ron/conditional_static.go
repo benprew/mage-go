@@ -263,7 +263,7 @@ func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
-	case "AnyPermanent", "IsTapped", "IsUntapped", "IsAttacking", "IsBlocking",
+	case "AnyPermanent", "IsTapped", "IsUntapped", "IsAttacking", "IsntAttacking", "IsBlocking",
 		"IsCardtype", "IsNonCardtype", "IsCreatureType", "IsNonCreatureType",
 		"IsLandType", "IsNonLandType", "IsEnchantmentType", "IsColor", "IsNonColor",
 		"IsSupertype", "IsNonSupertype":

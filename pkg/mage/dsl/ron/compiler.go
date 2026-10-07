@@ -847,6 +847,8 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.IsUntapped, nil
 		case "IsAttacking":
 			return mage.IsAttacking, nil
+		case "IsntAttacking":
+			return mage.Not(mage.IsAttacking), nil
 		case "IsBlocking":
 			return mage.IsBlocking, nil
 		case "AttackedThisTurn":

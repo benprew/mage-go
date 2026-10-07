@@ -5938,3 +5938,22 @@ spell's `ThisPermanent` remain declaration errors.
 
 Evidence: `TestRONOrcGeneral`, `TestRONOrcGeneralRollback`,
 `TestRONSourceExclusionInstancesAndCopy`, `TestRONSourceExclusionInvalid`.
+
+## RON live nonattacking filters
+
+Bare `IsntAttacking` is a permanent filter and lowers to
+`mage.Not(mage.IsAttacking)`. It can appear in existing permanent target,
+collection and static filter contexts, including nested `And`/`Or`.
+Static `PermanentPassesFilter` conditions accept it on `ThisPermanent` or an
+Aura's `HostPermanent`. Tuple forms are invalid. Existing reference and
+source-dependent filter restrictions still apply. Card-zone and chosen damage
+source filters do not gain this predicate.
+
+Static membership reads current combat status at each layer pass. Untapping an
+attacker does not make it nonattacking; removal from combat does. This predicate
+is separate from attack history. Target filters check announcement and resolution.
+`TestRONNonattacking*` covers the complete Arcades Sabboth record, live source
+and attachment conditions, target legality, identity and clone isolation.
+`TestRONUpkeepPayment*` includes its upkeep payment and sacrifice behavior.
+Gaea's Liege still lacks conditional base-value and defending-player adapters;
+this filter does not establish its gameplay support.

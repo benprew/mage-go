@@ -34788,3 +34788,145 @@ Changed files: `exile_payment.go`, `temporary_collection.go`, new
 `source_exclusion_test.go`, `sacrifice_cost_test.go`, `inventory_test.go`,
 `numeric_consumers_test.go` under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry.
+
+## Run 2026-10-07: LIVE-NONATTACKING-FILTER
+
+Status: completed adapter slice. This entry supersedes older collection totals.
+This run stops after this slice. Initial user changes to `.gitignore`,
+`mtgish-ron-execution.md` and this progress ledger, and the untracked
+`mtgish-ron-completed.md`, are preserved. Only this entry is staged from the
+ledger; its existing user edits are excluded from the commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading and semantic inventory exited 1 for collection rejection:
+**1,929 compiled / 516 rejected records**, **740 accepted / 246 rejected unique
+names**, from 2,445 records and 986 names. This is not a build/test failure.
+Inventory: 72,962 nodes, 8,557 role/shape/context signatures and 4,594 unknown-role
+occurrences. Nested forms and complete consumer records were inspected;
+reprints count once. The execution design, vocabulary snapshot, current ledger,
+engine reference, compiler/filter/layer/payment APIs and rules contracts were
+read. Relevant local CR contracts: 506.4, 508.1k, 508.4, 601.2c, 604.2,
+604.3a, 608.2b, 611.3 and 613.4c.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers; downstream capability | Effort |
+| --- | --- | --- | --- |
+| Complete damage-source enumeration | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0** immediate unlocks for the prerequisite; seven concrete consuming-shield consumers. | Complete legal source enumeration must include referred objects and command-zone objects, beyond existing live permanent/spell choices. Compiler choice bindings and next-source prevention adapters follow. Other first-error consumers have additional replacement/history operations and are excluded from this estimate. | High: source enumeration and saved information, stack/event references, legal choices, identity and consuming replacement tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0** engine-prerequisite-only unlocks; up to **8** after static/token/removal adapters. | Existing ordinary banding does not establish parameterized band construction or damage assignment. Named Wolf and legendary-creature predicates, ability grants/removal and combat contracts are required. Complete records include colored membership, token construction, tap payments and upkeep-only activation. | High: reusable ability representation, legal band construction, evasion and both damage assignment directions, followed by three adapter contexts. |
+| Live nonattacking permanent filters, selected | Arcades Sabboth and Gaea's Liege. **1** credible immediate full-card unlock, Arcades; no Liege unlock claimed. | Liege also needs conditional base P/T, defending-player counts and an incorrect attacking-branch source correction across six reprints. This shared query is a prerequisite for that future two-branch implementation. Arcades's other complete rules already have exact engine adapters. | Low/medium: two adapter changes; real casting, combat, upkeep, activation, target, lifecycle and declaration tests. |
+
+Selection rationale: the selected shared prerequisite serves two distinct card
+records and gives the largest credible immediate gain for its small implementation
+cost. It is not a card-specific executor. Source enumeration and parameterized
+banding remain valuable multi-card work, but both require substantial new engine
+contracts before adapters can unlock cards. Nonattacking membership reuses exact
+engine behavior. The contract, reuse boundary and acceptance cases were stated
+before edits. No removed card/set skill or Go card definition supplied requirements.
+
+### Exact shape, contexts and reuse boundary
+
+Bare symbol `IsntAttacking` in existing permanent-filter contexts lowers to
+`mage.Not(mage.IsAttacking)`. This includes target and collection filters,
+static membership and nested supported `And`/`Or` filters. Static condition
+filters admit the same symbol in `PermanentPassesFilter` for a typed source or
+Aura host. Existing player-control, source-exclusion and disjunction constraints
+are retained. Tuple forms, including `IsntAttacking()`, are invalid. Unbound
+or incompatible static references and empty static conditions remain errors.
+Card-zone and chosen damage-source predicates gain no support.
+
+No new engine API or state is introduced. The adapter reuses permanent queries,
+`Not`, typed references, `PermanentMatchesFilter`, static sets, `While`, layer
+7c bonuses, instance factories, targets, payment transactions, stack copying,
+phasing, combat removal, cleanup and game cloning. Static conditions use current
+objects and no LKI. Untapping while attacking leaves the bonus off. Removal
+from combat restores eligibility; past attack history does not prevent it.
+Static membership stays live, unlike captured temporary collection membership.
+Target filters use announcement and resolution legality checks. Existing
+resolution information readers keep their separate retained-information contract;
+this slice does not add a damage-source LKI predicate.
+
+The complete LEG Arcades Sabboth record agrees with local `data/LEG.json`:
+legendary Elder Dragon, 7/7, exact 2GGWWUU cost, flying, controller upkeep GWU
+payment or sacrifice, untapped controlled nonattacking creature toughness bonus,
+and W temporary self toughness activation. No source change is required.
+
+### TDD and card-to-test mappings
+
+The new gameplay tests were written first. After correcting initial fixture API
+names, the expected failure was confirmed: Arcades failed at bare `IsntAttacking`
+in its nested permanent filter; source/host condition fixtures failed at the
+static condition filter. After lowering, the activation fixture's ability index
+was corrected from 3 to 2. No rules assertion was weakened. Focused tests passed
+with `-count=1`.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Arcades Sabboth, complete LEG record | `TestRONNonattackingArcadesCombat`: paid casting, unpaid rollback, entry timing, metadata/flying, source and allied toughness, opponent/noncreature exclusion, native attack declaration, untapping an attacker, removal from combat, clone isolation and native cleanup. |
+| Arcades source and recipient identity | `TestRONNonattackingArcadesIdentity`: source and recipient phasing, source absence/return, returned attacking recipient, source control change, source ability removal, two independent bonuses and cloned combat state. |
+| Arcades activated rule | `TestRONNonattackingArcadesActivation`: W payment, unpaid rollback, delayed resolution, copy without repeated cost, source departure/return, phasing at resolution, control change, pending-stack clone and end-of-turn expiration. |
+| Arcades upkeep rule and keyword | Added to `upkeepPaymentCards`; `TestRONUpkeepPaymentRealCards/Arcades Sabboth` covers pay/decline/unaffordable/wrong-color/mana sources, controller upkeep only, resolution timing, source departure/return/phasing/control. `TestRONUpkeepPaymentOtherRules` checks flying. Existing shared payment tests retain independent payer and copy/clone evidence. |
+| Static predicate declarations and scope | `TestRONNonattackingConditionsAndDeclarations`: source and Aura-host conditions, nonempty nested And/Or, current attacking/removal changes, tuple and bad-arity rejection, unbound/incompatible subjects, empty conditions, strict registry rejection and permanent-filter inventory role. |
+| Target legality and incarnation | `TestRONNonattackingTargetLegality`: one shared synthetic RON registry, legal opposing creature, attacking target rejected before payment, target starts attacking before resolution, returned target, phased target and no cost refund. |
+| Collection regression | `TestInventoryRepositoryCollection` and the two existing measured-total assertions updated to fresh counts; explicit Arcades acceptance check added. |
+
+One complete-card gameplay mapping is added. Gaea's Liege gains only a filter
+prerequisite and remains rejected. Collection-wide engine-validation and behavior
+counts remain null; compilation is not collection gameplay proof. Replacement
+ordering, damage allocation, simultaneous costs and new LKI behavior are not
+introduced by this pure predicate adapter.
+
+### Source defects, final measurements and validation
+
+Local `data/LEA.json` confirms Gaea's Liege's second condition must be attacking,
+not nonattacking (also consistent with CR 604.3a's conditional-characteristic
+exclusion). The complete records in LEA, LEB, 2ED, 3ED, CED and CEI contain the
+same error (six records). This defect remains recorded for the dependent Liege
+slice; no record is accepted with incorrect behavior. Its other blockers remain
+explicit. This run changes no RON source, so no vocabulary source refresh is
+needed. Fresh loader evidence here supersedes the snapshot's older loader errors.
+All 12 source hashes still match the snapshot.
+
+Actual gain matches the estimate: **1 unique name / 1 record**, Arcades Sabboth.
+Final strict and semantic loading reports **1,930 compiled / 515 rejected
+records**, **741 accepted / 245 rejected names**. There are no newly rejected
+names or records. Liege's diagnostic now reaches
+`unsupported conditional static modification (SetPowerAndToughnessBoth)`.
+Inventory nodes/signatures/unknown-role counts are unchanged. Strict loading
+still exits 1 and installs no partial registry.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine suite and `make build` | PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONNonattacking\|TestRONUpkeepPayment\|TestRONConditionalStatic\|TestInventory\|TestRONNumericConsumer' -count=1` | PASS after expected adapter failures and fixture corrections. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting reviewed; only import spacing changed in the new test. |
+| `git diff --check` | PASS after lint and ledger completion. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,930 compiled / 515 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same records; 741 accepted / 245 rejected names. |
+
+No Go card definition, generator, runtime caller or DSL function is removed.
+Complete loading, gameplay mapping, native runtime integration and test migration
+remain below the removal gates. No whole-repository removal audit is claimed.
+API/rules documentation describes only this adapter and its reused contracts.
+
+Ranked next candidates to reassess from fresh measurements:
+
+1. Complete damage-source enumeration and saved references, then the seven
+   consuming shield cards named above.
+2. Parameterized bands with others engine contracts for the eight consumers.
+3. Conditional base P/T and defending-player counts for Gaea's Liege; correct
+   all six identical attacking-branch records with the recorded Oracle evidence.
+
+Slice files: `compiler.go`, `conditional_static.go`, new
+`nonattacking_filter_test.go`, `upkeep_payment_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go` under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and only this progress entry.
+
+Post-lint focused tests passed with `-count=1`; final strict loading reproduced
+the same diagnostics and counts. No environment or pre-existing check blocker
+remains. The commit contains only the slice files listed above. User work is
+preserved unstaged. No second slice is started.

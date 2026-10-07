@@ -25,6 +25,7 @@ var upkeepPaymentCards = []struct {
 	{"LEG", "Chromium", []core.Color{core.White, core.Blue, core.Black}},
 	{"LEG", "Palladia-Mors", []core.Color{core.Red, core.Green, core.White}},
 	{"LEG", "Vaevictis Asmadi", []core.Color{core.Black, core.Red, core.Green}},
+	{"LEG", "Arcades Sabboth", []core.Color{core.Green, core.White, core.Blue}},
 }
 
 func queueRONUpkeep(g *mage.Game, p mage.Player) {
