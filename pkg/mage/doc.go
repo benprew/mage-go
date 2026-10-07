@@ -159,6 +159,11 @@
 // [SetObjectColor] uses this declaration to keep the original object identity.
 // A permanent spell keeps its changed color on entry. Later zone changes end it.
 //
+// Use [UntapWithManaPayment] for an optional selection of controlled, tapped
+// permanents followed by one total mana payment and one untap batch.
+// All choices precede payment. Failed payment cannot untap part of the selection.
+// The operation keeps each selected incarnation through mana abilities.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

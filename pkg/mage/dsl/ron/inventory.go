@@ -667,9 +667,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
+		case "ChooseAnyNumberPermanentsAndPayManaForEach":
+			if len(n.Args) == 2 {
+				return []string{"permanent_filter", "metadata"}[index]
+			}
 		case "TapEachPermanent", "UntapEachPermanent":
 			if len(n.Args) == 1 {
-				if n.Args[0].Name == "Ref_TargetPermanents" {
+				if n.Args[0].Name == "Ref_TargetPermanents" || n.Args[0].Name == "TheChosenPermanents" {
 					return "permanent_collection_reference"
 				}
 				return "permanent_filter"
@@ -901,6 +905,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "ChooseAnyNumberPermanentsAndPayManaForEach" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "metadata"}[index]
+		}
+		if n.Name == "UntapEachPermanent" && len(n.Args) == 1 && n.Args[0].Name == "TheChosenPermanents" {
+			return "permanent_collection_reference"
+		}
 		if n.Name == "DiscardCards" && len(n.Args) == 1 {
 			return "card_filter"
 		}

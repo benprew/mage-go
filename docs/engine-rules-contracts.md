@@ -4741,3 +4741,36 @@ control, copied abilities and clone isolation. `Values` proves simultaneous
 capture of multiple modifiers before installation. Target announcement,
 transactional casting, replacement ordering and action batches use the existing
 services; this slice does not add payment or replacement behavior.
+
+## Paid permanent selection followed by simultaneous untap
+
+`UntapWithManaPayment(player PlayerRef, filter PermanentFilter, cost ManaCost)
+ResolvingEffect` selects any number of tapped, unphased matching permanents
+controlled by the resolved player. The player may decline each additional
+selection and may select zero. Selection is not targeting and ignores shroud.
+Every selection is distinct. The operation captures ID and incarnation, checks
+selection legality before payment, multiplies the fixed cost by the chosen count,
+and pays the total through one existing action-payment transaction. A declined,
+invalid or stale selection, absent player, or failed payment spends no resources
+and untaps nothing. Integer overflow also fails before payment.
+
+All choices precede payment; all payment precedes the untap batch. Thus an untap
+result cannot fund its own payment. Mana abilities can fund the total and may
+move a chosen object. After successful payment, only surviving, unphased captured
+incarnations are acted on. Characteristics and control are not reselected after
+payment. No LKI makes a departed object available for untapping. Untapping uses
+`untapPermanentsTogether`: stun counters replace individual untaps, and all
+changes finish before the first untap event. Untap-step restrictions do not
+block this resolving untap. Payment is independent of activation cost reductions.
+The API copies the mana template's hybrid list. Definition validation requires
+a nonnil typed player, a nonzero filter and a nonnegative fixed cost without X.
+No mutable chosen state is retained in the declaration or in a global result.
+
+Evidence: `TestPaidUntapSelectionAndTotalPayment`, `InvalidAndStaleChoice`,
+`Definition`, `ManaSourcesAndBatch`, `CannotFundPaymentWithResult`, and
+`PaymentDeparture`; `TestRONPaidUntapCards`, `PlayerAndProcedureIsolation`,
+`Invalid`, and `InventoryAndStrictLoading`. These cover subset/zero selection,
+shroud, one total rollback, mana sources, source departure, event player,
+control, returned/phased objects, copies, clones, batch events, stun replacement,
+declaration rejection and atomic collection rejection. Rules: CR 118.3,
+118.12, 400.7, 502.3, 608.2d/g/h, 701.26b and 702.26b.

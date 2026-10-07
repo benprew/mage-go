@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **649 accepted / 337 rejected unique card
-names** (986 total), and **1,726 compiled / 719 rejected records** (2,445 total).
+The latest recorded inventory reports **651 accepted / 335 rejected unique card
+names** (986 total), and **1,729 compiled / 716 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`STATIC-SPELL-TARGET-RESTRICTION` slice and its validation evidence are recorded
+`PAID-SELECTION-UNTAP` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -23420,3 +23420,172 @@ Ranked next candidates to reassess:
 4. Ability-targeting and enchantment-attachment restrictions plus composable
    static rule lists: the spell restriction prerequisite now exists for
    Anti-Magic Aura/Raiding Party, but their remaining gaps still need assessment.
+
+## 2026-10-06: paid permanent selection and simultaneous untap
+
+Status: completed slice `PAID-SELECTION-UNTAP`. This run stops after this slice.
+Initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked `mtgish-ron-completed.md`, are preserved outside the commit.
+Only this entry and the current-status update are staged from this ledger.
+
+### Fresh evidence, candidate comparison and selection
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict loading and AST inspection exited 1 for collection rejection, not an
+environment or build failure: **1,726 compiled / 719 rejected records;
+649 accepted / 337 rejected unique names**. There are 2,445 records and 986 names.
+Full records and their nested forms were inspected for every candidate below.
+The vocabulary snapshot has three occurrences of the selected choice constructor,
+not three distinct cards. The design's next-slice order was reassessed.
+
+| Candidate | Distinct affected names and estimated complete-card unlocks | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- |
+| Paid selection and untap, selected | Magnetic Mountain; Thelon's Curse: **2 names / 3 records** | Missing shared selection/total-payment procedure and adjacent result adapter. Their static restrictions and event-player capture already work. Enables optional controlled-permanent selection, one total payment, incarnation capture and simultaneous untap. No other rule gap appears in either full record. | Medium: one shared engine procedure, one adapter and contract/gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names**, zero adapter-only gains | All complete records need source enumeration over the CR 609.7a domains, typed saved-source choices and next-event consumption. Dark Sphere, Jade Monolith and Reverse Damage also need fractional prevention, redirection or prevented-damage results. | High: multiple source/decision/replacement prerequisites plus identity, ordering, consumption and gameplay tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods: **5 names**, zero adapter-only gains | All-zone characteristic evaluation, controller/owner context and CDA/copy/layer evaluation remain missing. Gaea's Avenger's known source defect and Wood Elemental's entry-result gap are separate. | High: cross-zone engine contracts, count adapters and gameplay/copy/layer tests. |
+
+The selected procedure has the largest credible immediate gain for its bounded
+implementation effort. Both complete consumers reuse existing static restrictions,
+upkeep capture, live filters, payment transactions and untap batches. The other
+candidates have more potential consumers but require multiple engine contracts
+before any adapter can safely unlock them. The contract and acceptance cases were
+stated before editing. No single-card capability was selected.
+
+### Exact shape, contexts and reuse boundary
+
+Engine API: `UntapWithManaPayment(player PlayerRef, filter PermanentFilter,
+cost core.ManaCost) ResolvingEffect`. It selects distinct controlled, tapped,
+unphased matching permanents at resolution. The player can choose a subset or
+zero. All selection precedes one total mana transaction. Failed total payment
+spends nothing and untaps nothing. The operation saves `capturedPermanent`
+identities locally; no global result, last-action slot or mutable declaration
+state is used. Incarnations are checked before payment and again for the action.
+A chosen object can leave during a mana ability; LKI does not restore it.
+The total is fixed before payment; integer overflow fails before resources change.
+Stun replacements and all untap events use the existing simultaneous batch.
+
+RON shape in `compileActionSequence`:
+
+```text
+PlayerAction(player, ChooseAnyNumberPermanentsAndPayManaForEach(
+  And([filter, ControlledByPlayer(PlayerAction_ThatPlayer)]), mana)),
+PlayerAction(player, UntapEachPermanent(TheChosenPermanents))
+```
+
+The pair must be adjacent in one resolving `ActionList`; both player expressions
+must be structurally identical and valid in that typed scope. Spell, activation,
+trigger and conditional branch action lists use the same compiler path.
+`filter` must require bare `IsTapped` through an `And` conjunction and otherwise
+uses supported permanent filters. The outer `And` has exactly one filter and
+one action-player controller clause, in either order. `mana` uses the existing
+nonnegative fixed symbol list; X is rejected. The result is a bare symbol and
+only its adjacent untap consumer is supported. This establishes a complete
+choice/payment/result context, not arbitrary saved collections. Malformed,
+unbound, wrong-player, wrong-controller, non-tapped and separated declarations
+remain compile errors. RON owns spelling, scope, validation and lowering.
+
+Reuse: `compilePlayerRef`, per-factory `instanceBindings`, saved upkeep players,
+`PermanentsControlledBy`, existing permanent filters, `capturedPermanent`,
+`prepareActionPaymentTransaction`, `ManaCostPayment`, mana solver and
+`untapPermanentsTogether`. Source departure/control changes do not change a saved
+upkeep player. Copies and cloned pending triggers use their own resolving choices
+and payments. Choices are not targets and shroud does not exclude them.
+Activation reductions do not change these resolution payments. No alternate
+payment, zone, event or untap subsystem is introduced.
+
+Local Oracle evidence: `data/ARN.json` for Magnetic Mountain and `data/FEM.json`
+for Thelon's Curse explicitly require choosing tapped blue creatures controlled
+by the upkeep player, paying for each chosen creature, then untapping them.
+CR 118.3/118.12, 400.7, 502.3, 608.2d/g/h, 701.26b and 702.26b supply the
+payment, identity, timing, legality and phasing contracts. No source defect was
+found or corrected. All RON files/hashes are unchanged; no vocabulary source
+refresh is needed. The semantic inventory now assigns roles to the choice's
+filter/mana and the chosen collection reference.
+
+### TDD and card-to-test mapping
+
+The engine tests first failed for the missing constructor after fixture errors
+were corrected. Complete-card RON tests failed at the unsupported choice form.
+Implementation made both pass. A later test for repeated
+`ControllerOfPermanent(ThisPermanent)` references failed because separately
+compiled immutable plans had different pointers. The compiler now compares the
+validated position-free RON expressions; that regression passes.
+
+Fixtures were corrected to use braced Go mana costs, the caster's main phase,
+ARN for Magnetic Mountain's second reprint, and an accepting scripted opponent.
+A payment-departure fixture initially used sacrifice mana outside the existing
+solver's supported automatic-source contracts. It now uses an existing declared
+mana ability with a zone-changing follow-up to exercise departure during payment.
+No rules assertion was weakened. Cloned gameplay explicitly replaces the search
+player with a scripted player over the clone's own state and checks successful
+resolution and isolation. Lint's first run rejected the optional-payment failure
+return with `nilerr`; the procedure now uses the existing engine's boolean paid
+result pattern. Automatic import formatting and `slices.ContainsFunc` changes
+were reviewed and remain within this slice.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Magnetic Mountain, full ARN and 3ED records | `TestRONPaidUntapCards/Magnetic_Mountain`: native casting and unpaid rejection, both rules, untap-step restriction, nonblue exclusion, upkeep timing, paid/declined/unaffordable outcomes, source departure/control, target control/phasing/return, copied pending trigger and successful independent clone. |
+| Thelon's Curse, full FEM record | `TestRONPaidUntapCards/Thelon's_Curse`: same complete-rule matrix with its blue payment and green casting cost. |
+| Each player's upkeep; independent rules | `TestRONPaidUntapPlayerAndProcedureIsolation`: both enchantments trigger for the opponent; one failed payment cannot replace the other procedure's outcome or untap the controller's creatures. |
+| Selection and one total payment | `TestPaidUntapSelectionAndTotalPayment`: all/subset/zero, shroud, controller scope, no resources spent before choices, total rollback. `CannotFundPaymentWithResult`: tapped selected mana creatures cannot fund their own untap; failed total payment does not tap an available Island. |
+| Legality, incarnation, batch and replacement | `TestPaidUntapInvalidAndStaleChoice`: foreign, returned, phased and control-changed choices fail before payment. `ManaSourcesAndBatch`: native mana production, all state changes before events, stun replacement. `PaymentDeparture`: successful payment can move a chosen incarnation, which is not restored for untap. |
+| Declarations, factories and collection loading | `TestPaidUntapDefinition`, `TestRONPaidUntapInvalid`, `ControllerReference`, `InventoryAndStrictLoading`: nil/unbound/negative/X operands, producer/consumer order and scope, typed references, fresh factory declarations, inventory roles and atomic rejection. |
+| Current callers and accepted RON | Required engine and repository suites retain targeting, payment, source LKI, replacements, cloning, phasing, AI, gametest and card regressions. |
+
+Two complete-card gameplay mappings are added; collection-wide engine-validation
+and behavior-verification counts remain null. Compiler acceptance does not prove
+collection-wide gameplay completion.
+
+### Validation, actual gains and remaining gates
+
+Final required checks pass; failed development runs above were corrected and
+repeated. The focused command is:
+`go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestPaidUntap|TestRONPaidUntap|TestInventory' -count=1`.
+
+| Command | Result |
+| --- | --- |
+| Focused tests, including post-lint repeat | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after the paid-result correction; automatic edits reviewed. |
+| Additional skill `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; inventory | Expected exit 1 for remaining unsupported records; no partial registry. |
+
+Final **1,729 compiled / 716 rejected records; 651 accepted / 335 rejected unique
+names**. Exactly Magnetic Mountain and Thelon's Curse gained; no accepted name
+was lost. Actual gain **2 unique names / 3 records** matches the estimate.
+Inventory: 72,954 nodes, 8,543 signatures, 6,595 unknown-role occurrences.
+Remaining first diagnostics include Circle of Protection: Black at
+`2ED.lines.ron:33:215` (`ChooseADamageSource`), Dakkon Blackblade at
+`LEG.lines.ron:58:205` (`CDA_Power`), Anti-Magic Aura at `LEG:16:214`
+(unsupported combined host rules), and Raiding Party at `FEM:71:183`
+(unsupported combined source rules).
+
+A fresh whole-repository caller audit used hidden/ignored files and included dot
+imports, tests, generators, docs and compile-failure fixtures (7,236 matched lines
+before this ledger entry). This slice removes no caller or old card definition,
+so no DSL function becomes unused because of it. RON's engine services are kept.
+Complete loading, all-card gameplay, native RON startup, Go-definition deletion,
+obsolete generator removal and unused DSL removal gates remain unmet. Existing
+production registries and callers are preserved.
+
+Changed files: engine `paid_untap.go`, its tests and `doc.go`; RON
+`paid_untap.go`, its tests, `optional_payment.go`, `inventory.go` and count tests;
+API/rules-contract docs; this ledger's new entry and current status. One
+validated descriptive commit contains only this slice. Its hash is reported in
+the final response; unrelated user changes remain unstaged.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Chosen-source enumeration and next-instance prevention: seven concrete direct
+   consumers after the shared source/choice/replacement prerequisites.
+2. All-zone battlefield-count CDAs: five direct consumers after characteristic
+   services; keep Gaea's Avenger and Wood Elemental's other gaps separate.
+3. Composable static rule lists and attachment/ability-target restrictions:
+   reassess complete records for Anti-Magic Aura and Raiding Party.
+
+No next slice is started in this run.

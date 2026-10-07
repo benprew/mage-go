@@ -9,6 +9,18 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if isPaidUntapChoice(part) {
+			if i+1 == len(parts) {
+				return nil, problem(part, "paid choice requires an adjacent untap of its result")
+			}
+			effect, err := compilePaidUntap(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if part.Name == "EachPlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "ShuffleHandIntoLibrary" {
 			if i+1 == len(parts) {
 				return nil, problem(part, "hand shuffle requires an adjacent all-player draw of its result")

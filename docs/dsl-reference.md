@@ -4099,3 +4099,32 @@ values, identity and duration; `Values`, `Invalid`, `InvalidShapes` and
 `LoadAndInventory` cover shared value forms and strict loading. Berserk still
 needs its `AttackedThisTurn` delayed condition; Blood Lust still needs resolving
 `IfElse`. Their partial compilation progress is not full-card gameplay evidence.
+
+## RON paid selection and simultaneous untap
+
+The compiler accepts this adjacent pair in an `ActionList`:
+
+```text
+PlayerAction(player, ChooseAnyNumberPermanentsAndPayManaForEach(
+  And([filter, ControlledByPlayer(PlayerAction_ThatPlayer)]), mana)),
+PlayerAction(player, UntapEachPermanent(TheChosenPermanents))
+```
+
+Both player references must identify the same typed plan. The controller token
+is local to the choice. `filter` must require `IsTapped` through a bare predicate
+or an `And` conjunction and otherwise uses the supported permanent filters.
+The outer `And` contains exactly one such filter and one controller clause,
+in either order. `mana` is the existing nonnegative fixed mana-symbol list;
+X is rejected. The result must be a bare `TheChosenPermanents` in the adjacent
+untap. Other consumers, intervening actions, unbound reads and different player
+references remain errors. This is a complete choice/payment/untap procedure,
+not general support for saved permanent collections.
+
+The pair lowers to `mage.UntapWithManaPayment(player, filter, cost)` in resolving
+spell, activation, trigger and branch action lists. The engine owns the local
+selection, incarnation capture, total mana transaction and untap batch. Choices
+are made at resolution, not announcement. They are not targets; shroud does not
+exclude them. An upkeep trigger retains its event player through source control
+changes, departure, stack copying and game cloning. Each resolution has its own
+choice and payment result. Magnetic Mountain (ARN and 3ED) and Thelon's Curse
+(FEM) have complete-record gameplay tests in `TestRONPaidUntapCards`.
