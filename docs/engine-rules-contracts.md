@@ -5467,3 +5467,30 @@ Revelation records. They cover casting payment rollback, pre-resolution timing,
 both players, current contents, empty libraries, phase cycles, control changes,
 ability suppression and cleanup, departure/return, independent clones, World
 state checks, semantic roles and atomic rejection of invalid collections.
+
+## RON referenced damage sources and source tap events
+
+The RON singular `PermanentDealsDamage` adapter reuses `DamageSourceOf` and
+`DealDamageFrom` (CR 120.2b, 120.3f, 608.2h). Its specified permanent supplies
+source characteristics and lifelink controller. The action controller does not
+replace the damage source. Source, host, bound target and captured event reads
+retain their existing incarnation contracts. Information reads use
+`PowerOfWithLKI`; an absent recipient cannot receive damage. A target that is
+illegal at resolution still follows the normal target legality rules.
+
+Tracker's two actions execute in order. Each power is read when its action runs.
+State-based actions occur after the ability resolves, so lethal damage from the
+first action does not remove the target before the second action. These actions
+are not a simultaneous damage batch. Existing prevention and replacement
+services process each damage event.
+
+The source tap adapter reuses `BecomesTapped(This)` (CR 701.26a). A repeated tap
+of a tapped object and entry in a tapped state do not produce this transition.
+The trigger uses its detection controller and source incarnation after departure,
+return, control change or phasing. A mana ability resolves immediately; its tap
+trigger waits for normal trigger placement and resolution.
+
+`TestRONReferencedDamageTracker`, `City`, `BindingsAndLKI`,
+`CastingAndLandPlay`, `Invalid` and `InventoryAndAtomicLoad` supply RON evidence.
+Existing `TestDamageSourceOf*` and `TestSourceBecomesTapped*` supply engine
+contracts. This slice changes no engine service or replacement ordering.

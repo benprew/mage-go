@@ -4654,3 +4654,24 @@ Complete-card mappings: Field of Dreams and Revelation use
 `TestRONPublicVisibilityInvalid` and `InventoryAndAtomicLoad` cover declaration
 validation, nested semantic roles and strict loading. See the continuous public
 visibility contract for engine and snapshot evidence.
+
+## RON referenced permanent damage and source tap events
+
+`PermanentDealsDamage(source, amount, recipient)` accepts typed permanent
+references for `source` with singular `Permanent(ref)`, `Player(ref)`, or bound
+`Ref_AnyTarget` / `Ref_TargetPlayerOrPermanent` recipients. Source and recipient
+references use their own source, Aura host, target or event scope. The compiler
+uses `DealDamageFrom(DamageSourceOf(source), recipient, amount)` and existing
+resolution values. Explicit player recipients also provide the existing
+recipient-value scope. Collection damage retains its existing supported forms.
+
+`WhenAPermanentBecomesTapped(SinglePermanent(ThisPermanent))` uses
+`BecomesTapped(This)`. Its body may read `Trigger_ThatPermanent` as the exact
+trigger source. That name is unavailable outside the event's body. The existing
+host-tap form keeps its captured host binding. Factories build separate target
+and event declarations; pending copies and clones use the engine's stack frames.
+
+Evidence: `TestRONReferencedDamage*` covers the complete City of Brass and
+Tracker records, typed host/event/target sources, invalid declarations,
+incarnation and clone isolation, announcement costs, prevention and sequential
+resolution. These adapters add no source-choice or damage-result operation.

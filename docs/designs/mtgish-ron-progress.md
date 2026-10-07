@@ -27078,3 +27078,157 @@ Changed files: engine `public_visibility.go` and its tests, `game_rules.go`,
 `public_visibility_test.go`; `dsl-reference.md`, `engine-rules-contracts.md`,
 and this ledger entry. One descriptive commit contains only this slice; its hash
 is reported in the final response. No second slice is started.
+
+## Run 2026-10-06: REFERENCED-PERMANENT-DAMAGE
+
+Status: complete compiler adapter slice. Stop after this slice. Initial user
+changes to `.gitignore`, the execution design and progress ledger, plus the
+untracked `mtgish-ron-completed.md`, are preserved. Only this appended entry is
+included from the ledger in the slice commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline short engine tests with `-count=1` and `make build` passed. Strict
+loading and semantic inspection exited 1 because the collection is unsupported:
+2,445 records, 1,797 compiled / 648 rejected; 986 unique names, 679 accepted /
+307 rejected. This is collection rejection, not a build/test failure. Inventory
+reported 72,962 nodes, 8,559 signatures and 5,655 unknown-role occurrences.
+The current design, ledger, vocabulary snapshot, engine reference, selected
+compiler/engine code, API/rules contracts, complete candidate records and CR
+120, 400.7, 608.2h, 701.26 and 702.26b were inspected. Reprints count once.
+
+| Candidate | Distinct affected names; estimated complete unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Referenced permanent damage, selected | Tracker; City of Brass: **2 names / 2 records**, including City's source-tap prerequisite. | Exact typed damage and source-tap services already exist. Tracker also needs an untargeted source recipient; City needs event-local source identity. Enables target, host and event damage sources through shared bindings/LKI. Sorrow's Path shares source tapping but has target-group/combat-swap blockers and is excluded. | Low/medium: compiler lowering, source-tap scope, complete casting/activation/event tests, legality, ordering, LKI, prevention and copy/clone isolation. |
+| Chosen-source next-event prevention | Circle of Protection: White, Blue, Black, Red, Green, Artifacts; Greater Realm of Preservation: **7** credible names after prerequisites, zero adapter-only gain. | Complete records need filtered source choice across the rules' source domain, saved source identity, and one-shot simultaneous-event semantics. Eye for an Eye, Jade Monolith, Reverse Damage and Dark Sphere need different replacement bodies/results and are excluded. Enables shared prevention/redirection consumers. | High: choice service, source domain, scoped result binding, batch consumption and replacement ordering. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible names after prerequisites, zero battlefield-only complete gain. | Complete nested counts require zone characteristics, controller/owner context and layer 7a. Warlord excludes Walls; Nightmare counts Swamps; Rats counts named creatures for both players. Gaea's Avenger's recorded source defect remains separate. | High: zone characteristic queries, CDA/copy/ability-removal contracts and four complete gameplay mappings. |
+
+Selection: two complete consumers can use exact existing services with much
+less implementation and validation work than either larger prerequisite. The
+comparison uses complete records and nested forms, not first-error frequency.
+The scope, reuse boundary and acceptance cases were stated before editing.
+No removed skill, Go card requirement, fallback or card-name executor was used.
+No engine addition or agent delegation was needed.
+
+Other affected reference forms were inspected in complete Time Elemental,
+Hasran Ogress, Goblin Shrine and Sorrow's Path records. Time Elemental and Hasran
+Ogress already use source-combat aliases; their existing adapters are retained.
+Goblin Shrine's leave event and Sorrow's Path's target groups remain unsupported.
+No full-card gain is attributed to them.
+
+### Exact supported shapes, scope and reuse
+
+`PermanentDealsDamage(source, amount, recipient)` now lowers singular typed
+recipients through `compileReferencedPermanentDamage`:
+
+- `source`: a bound `compilePermanentRef` source, Aura host, singular target or
+  event reference. Each reference retains its existing declaration scope.
+- `recipient`: `Permanent(typed-ref)`, `Player(typed-ref)`, or a bound bare
+  `Ref_AnyTarget` / `Ref_TargetPlayerOrPermanent`.
+- `amount`: existing `compileInstanceValue` forms. Explicit player recipients
+  retain the existing damage-recipient value scope.
+
+Lowering is `DealDamageFrom(DamageSourceOf(source), recipient, amount)`.
+The existing collection and legacy bare target contexts retain their adapters;
+this slice does not broaden plural or multiple-packet damage sources. Spells,
+modes, activations and event bodies use existing local reference validation;
+source reads require the corresponding permanent context. Invalid arity,
+malformed declarations and unbound/incompatible references remain errors.
+
+`WhenAPermanentBecomesTapped(SinglePermanent(ThisPermanent))` lowers to
+`BecomesTapped(This)`. A body-local `sourceTapped` scope makes
+`Trigger_ThatPermanent` read that source. It uses the engine's captured source
+incarnation instead of introducing another mutable binding. The existing
+`SinglePermanent(HostPermanent)` path retains its own captured host binding.
+Factories create separate action targets and event declarations. Engine stack
+frames preserve copied/retargeted targets and cloned pending effects.
+
+The engine owns damage-source characteristics/controller, source LKI, recipient
+legality, power reads, prevention/replacement processing, mana production,
+transactional costs, trigger placement and state-based actions. Tracker's two
+actions are sequential; each reads power when it runs, and state-based actions
+wait until resolution completes. They are not a simultaneous batch. The target
+is the second damage source, so its lifelink uses its current controller. Source
+departure/return and phasing use existing exact source information; absent
+recipients receive no damage. Collection replacement ordering is unchanged.
+
+City's tap transition can come from its mana ability or another tap action.
+Mana is immediate; damage waits for trigger resolution. Repeated tapping of an
+already tapped object and land entry do not create a transition. Pending triggers
+retain their detection controller and original source after control changes,
+phasing or return. Copies use their copy controller as usual. No global
+last-action slot, parallel damage system or runtime declaration panic is added.
+
+### TDD, defects and card-to-test mappings
+
+Real RON gameplay first failed for unsupported Tracker target damage sources and
+City source-tap references. Test setup initially used a nonexistent copy method;
+the existing `CopyStackObjectDirect` was substituted and expected compiler
+failures were confirmed. Later fixtures used activation index 0 for a card whose
+trigger occupies index 0, omitted the Aura subtype, and used nonexistent
+`IsCreature`/`Names` methods. Those setup errors were corrected without reducing
+behavior assertions. Exact inventory assertions were advanced to the measured
+gain. No tests were weakened and no environment blocker remains.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Tracker, complete DRK record | `TestRONReferencedDamageTracker`: GG plus tap, unpaid/illegal/sick rollback, announcement timing, target legality after return/phasing, phase cycles, source departure/return/phasing, control, source-specific lifelink, prevention, clone/copy and sequential lethal damage before state-based actions. `CastingAndLandPlay`: exact 2G casting payment, rollback, entry timing and 2/2 creature metadata. `CopyRetarget`: original/copy target and source identity, copy controller, separate power reads, original clone frame. |
+| City of Brass, complete ARN record | `TestRONReferencedDamageCity`: tap from an effect and mana activation, immediate one mana, delayed one damage, source departure/return/phasing, pending controller, clone, repeated tap transition, suppression and prevention. `CastingAndLandPlay`: actual land play, no entry tap event. `CityInstancesAndCopy`: two controllers/instances, simultaneous pending events and copied trigger controller. |
+| Typed sources and declarations | `TestRONReferencedDamageBindingsAndLKI`: target, host and captured-host-event sources, departure during resolution, retained power/lifelink controller, illegal phased targets, separate factories and cloned frames. `Invalid`: unbound/incompatible source/recipient/event refs, malformed symbols and event arity. `InventoryAndAtomicLoad`: both complete real records, typed semantic roles and unchanged registry after strict invalid-load rejection. |
+| Engine reuse | Existing `TestDamageSourceOf*`, `TestSourceBecomesTapped*`, RON permanent damage, host tap, damage-recipient value and inventory regressions pass. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay coverage
+remain separate; collection-wide engine validation and behavior totals remain
+null. Local DRK/ARN Oracle data confirms both records. No selected source defect
+was found. RON files and hashes are unchanged, so the vocabulary source snapshot
+requires no refresh. Previously recorded unrelated defects remain unresolved.
+
+### Final measurement and required validation
+
+Actual gain equals the estimate: **2 names / 2 records**, exactly Tracker and
+City of Brass. Strict loading reports **1,799 compiled / 646 rejected records**;
+semantic inspection reports **681 accepted / 305 rejected unique names**.
+No accepted record is lost. Remaining diagnostics are unchanged; representative
+gaps include conditional AddCardtype (Animate Artifact), graveyard Auras
+(Animate Dead) and all-player sacrifice selection (Balance). Strict loading
+still exits 1 and installs no partial registry.
+Semantic totals remain **72,962 nodes / 8,559 signatures / 5,655 unknown roles**.
+
+All required checks pass for final code. Lint formatting was reviewed; the final
+focused, short and full checks ran after lint. No environment or pre-existing
+failure remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS; includes compiler baseline tests. |
+| Test-first `go test ./pkg/mage/dsl/ron -run TestRONReferencedDamage -count=1` | Expected unsupported-source/source-tap failures confirmed after correcting the initial copy-method setup error. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestRONReferencedDamage\|TestInventory\|TestDamageSourceOf\|TestSourceBecomesTapped' -count=1` | PASS after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint. |
+| `make test` | PASS after lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `make lint` | PASS, zero issues; automatic formatting reviewed. |
+| `git diff --check` | PASS, including final ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,799 compiled / 646 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 681 accepted / 305 rejected names; semantic totals above. |
+| Baseline/final diagnostics and source hashes | Exactly two names/records unlock; no changed remaining diagnostic; all twelve hashes unchanged. |
+
+No Go definitions, generators, startup callers or DSL functions are removed.
+Complete collection loading, gameplay and runtime wiring remain below removal
+gates. No whole-repository caller audit authorizes deletion in this slice.
+API/rules documents describe only the established adapter contracts.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source selection and next-event prevention for the seven Circle/Realm
+   names; establish source-domain and simultaneous-event contracts first.
+2. All-zone count CDAs for the four names above; keep Avenger's defect separate.
+3. Mana conversion planning and activation history for Farrelite Priest and
+   Initiates of the Ebon Hand; repeated conversion and delayed sacrifice both
+   need exact solver/event contracts.
+
+Changed files: compiler `permanent_damage_source.go` and its tests,
+`compiler.go`, `host_tap.go`, `permanent_scope.go`, `inventory_test.go`;
+`dsl-reference.md`, `engine-rules-contracts.md` and this appended ledger entry.
+One descriptive commit contains only the slice; its hash is reported in the
+final response. No second slice is started.

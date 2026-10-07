@@ -16,6 +16,19 @@ func compileHostTapTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if ref.kind == permanentSource {
+		ctx.sourceTapped = true
+		plan, err := compileActions(body, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			actions := plan.build()
+			trigger := mage.WhenEvent(mage.BecomesTapped(mage.This), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+			actions.effects = nil
+			return mage.WithAbility(TriggerA(trigger, actions))
+		}, nil
+	}
 	if ref.kind != permanentHost {
 		return nil, unsupported(subject.Args[0], "host tap event reference")
 	}

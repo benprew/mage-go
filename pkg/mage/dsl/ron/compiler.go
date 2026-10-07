@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sourceTapped        bool
 	counterStateSource  bool
 	opponentEntryChoice *opponentEntryChoicePlan
 
@@ -1121,6 +1122,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "SpellDealsDamage", "PermanentDealsDamage":
+		if n.Name == "PermanentDealsDamage" && len(n.Args) == 3 && (n.Args[2].Name == "Permanent" || n.Args[2].Name == "Player" || n.Args[2].Name == "Ref_AnyTarget" || n.Args[2].Name == "Ref_TargetPlayerOrPermanent") {
+			build, err := compileReferencedPermanentDamage(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		if err := arity(n, 3); err != nil {
 			return nil, err
 		}
