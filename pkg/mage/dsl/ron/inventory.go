@@ -162,6 +162,13 @@ func inventoryShape(n Node) string {
 }
 
 func walkInventory(n Node, card, path, role, context string, compiled bool, entries map[string]*InventorySignature) {
+	if role == "permanent_collection" && n.Kind != List {
+		if n.Name == "Ref_TargetPermanents" {
+			role = "permanent_collection_reference"
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" {
+			role = "permanent_filter"
+		}
+	}
 	if role == "damage_permanent_collection" && n.Kind != List {
 		if n.Name == "Ref_TargetPermanents" {
 			role = "permanent_collection_reference"
@@ -586,7 +593,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_reference"
 		}
 		if n.Name == "EachPermanent" && len(n.Args) == 1 {
-			return "permanent_collection_reference"
+			return "permanent_collection"
 		}
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
@@ -1049,6 +1056,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DamageToRecipients" && len(n.Args) == 2 {
 			return []string{"value", "recipient"}[index]
 		}
+	case "permanent_collection":
+		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
+			return role
+		}
+		if (n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender") && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "damage_permanent_collection":
 		if n.Name == "And" && len(n.Args) == 1 {
 			return role
@@ -1258,7 +1272,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
+			case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentLeavesTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
 				return "permanent_filter"
 			case "WhenAPlayerDrawsACard", "WhenAPlayerIsDealtDamage", "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep", "AtTheBeginningOfCombatDuringAPlayersTurn":
 				return "player_filter"

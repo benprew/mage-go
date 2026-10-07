@@ -19,6 +19,7 @@ type costFactory func() mage.Cost
 type scope struct {
 	chosenAbility       *temporaryAbilityPlan
 	sourceTapped        bool
+	sourceLeaves        bool
 	counterStateSource  bool
 	opponentEntryChoice *opponentEntryChoicePlan
 

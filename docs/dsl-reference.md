@@ -5068,3 +5068,30 @@ and `CounterAbility(AbilityRef) ResolvingEffect`. The compiler imports these
 services directly from `mage`; no legacy DSL export is required. Rust and Ayesha
 Tanaka use their complete LEG RON records. Trigger-event ability references,
 including Imprison's `Trigger_ThatActivatedAbility`, remain unsupported.
+
+## RON source departure events and live exile collections
+
+`TriggerA(WhenAPermanentLeavesTheBattlefield(SinglePermanent(ThisPermanent)), body)`
+is supported on permanent definitions. The event and `SinglePermanent` each take
+one argument. The source must be the bare `ThisPermanent` symbol. Other subject
+filters and Aura-host events remain unsupported. The compiler uses
+`WhenEvent(LeavesBattlefield(This), ...)` and creates a fresh ability per factory.
+Within this body, `Trigger_ThatPermanent` is a typed reference to the original
+source. It has the same incarnation and LKI behavior as `ThisPermanent`; it is
+unbound in a separate rule. It supplies no card reference in the destination zone.
+
+`Exile([EachPermanent(collection)], [])` supports the shared contextual collection
+compiler in resolving actions. This includes permanent filters, nonempty `And`
+and `Or`, controller/owner selections, combat-pair collections and attachments.
+A declared `Ref_TargetPermanents` retains its typed target set. Unbound target
+sets, malformed filters and exile modifiers are rejected. `ExileEach` captures
+live collection members at resolution and uses one zone-change batch. This action
+has no target unless the surrounding action declares one.
+
+Complete-card mappings: `TestRONSourceLeaveShrine*` covers Goblin Shrine's
+conditional basic-Mountain bonus and departure damage. `TestRONSourceLeaveHazezon*`
+covers Hazezon Tamar's entry trigger, next-upkeep tokens and departure exile.
+`TestRONSourceLeaveCasting`, `IndependentEvents`, `Invalid`, `Inventory` and
+`StrictLoad` cover payment, declarations, independent pending events, role
+reporting, fresh factories and atomic rejection. Existing `TestExileEach*` tests
+supply the reusable batch, identity, phasing and token contracts.

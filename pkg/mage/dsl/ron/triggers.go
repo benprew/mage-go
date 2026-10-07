@@ -20,6 +20,28 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPermanentLeavesTheBattlefield":
+		if err := arity(trigger, 1); err != nil {
+			return nil, err
+		}
+		subject := trigger.Args[0]
+		if subject.Name != "SinglePermanent" {
+			return nil, unsupported(subject, "source leave event subject")
+		}
+		if err := arity(subject, 1); err != nil {
+			return nil, err
+		}
+		ref, err := compilePermanentRef(subject.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if ref.kind != permanentSource {
+			return nil, unsupported(subject.Args[0], "source leave event reference")
+		}
+		ctx.sourceLeaves = true
+		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered {
+			return mage.WhenEvent(mage.LeavesBattlefield(mage.This), effect).(*mage.GenericTriggered)
+		}
 	case "WhenAPlayerPutsAPermanentOnTheBattlefield":
 		return compileLandEntryTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentIsDealtDamage", "WhenAPlayerIsDealtDamage":

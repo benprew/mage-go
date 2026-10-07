@@ -37,7 +37,7 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		if err := arity(subject, 1); err != nil {
 			return nil, err
 		}
-		collection, err := compilePermanentTargetsRef(subject.Args[0], ctx)
+		collection, err := compileExilePermanentCollection(subject.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +48,7 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		if len(modifiers) != 0 {
 			return nil, unsupported(n.Args[1], "exile modifiers")
 		}
-		return func(bindings instanceBindings) mage.Effect { return mage.ExileEach(bindings.permanentSets[collection]) }, nil
+		return func(bindings instanceBindings) mage.Effect { return mage.ExileEach(collection(bindings)) }, nil
 	}
 	if subject.Name != "Permanent" {
 		return nil, unsupported(subject, "exile subject")
@@ -68,4 +68,15 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(n.Args[1], "exile modifiers")
 	}
 	return func(bindings instanceBindings) mage.Effect { return mage.Exile(ref.build(bindings)) }, nil
+}
+
+func compileExilePermanentCollection(n Node, ctx scope) (permanentSetFactory, error) {
+	if n.Name == "Ref_TargetPermanents" {
+		ref, err := compilePermanentTargetsRef(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet { return bindings.permanentSets[ref] }, nil
+	}
+	return compileContextualCollection(n, ctx)
 }

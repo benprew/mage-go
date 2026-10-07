@@ -29630,3 +29630,154 @@ composable_actions.go, composable_target.go, doc.go; ron compiler.go,
 player_scope.go, inventory.go and inventory_test.go; DSL reference, engine rules
 contracts and this appended entry. Only this slice is committed. Initial user
 changes and unrelated untracked files remain unstaged.
+
+## Run 2026-10-07: SOURCE-DEPARTURE-EVENTS
+
+Status: complete implementation slice. Stop after this slice. Collection gameplay,
+startup cutover and deletion gates remain incomplete.
+
+### Fresh evidence and candidate selection
+
+Preserved initial changes to `.gitignore`, the execution design and this ledger,
+and the unrelated untracked `mtgish-ron-completed.md`. Read AGENTS.md,
+pkg/mage/doc.go, the execution design, vocabulary snapshot, current ledger,
+selected compiler/engine code, API/rules contracts, and complete candidate RON
+records, including nested forms. Requirements did not come from Go card definitions.
+No card skill, Go stub generation or delegation was used. This is a compiler
+adapter slice; no new engine contract was required.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build` passed. Strict loading
+exited 1 for collection rejection, with **1,822 compiled / 623 rejected records**,
+**699 accepted / 287 rejected unique names**, from 2,445 records / 986 names.
+Fresh inventory had **72,962 occurrences / 8,557 signatures / 5,467 unknown-role
+occurrences**. Compilation is separate from behavior coverage and atomic loading.
+
+| Candidate | Distinct affected cards and complete-card estimate | Other blockers and concrete downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Source departure events and live exile collections, selected | Goblin Shrine and Hazezon Tamar: **2 full-card unlocks / 2 records**. Source-event consumers also include Dance of Many and Knowledge Vault; live exile also affects Martyr's Cry. Existing Ashes to Ashes and Dust to Dust target-set exile must remain compatible. | Both clean records need the source-leave adapter; Hazezon also needs live subtype-filtered exile. Existing source incarnation/LKI, batch damage/exile, conditional Aura layers, delayed upkeep and token services supply exact execution. Dance still needs token copying/linked tokens; Vault needs face-down linked exile and zone-return operations; Martyr's Cry needs per-player actual exile results. Stangg, Runesword and War Barge use unsupported delayed/temporary leave contexts, excluded from the estimate. | Medium: small adapters, declaration tests and two full-record gameplay mappings; no engine service implementation. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods and Gaea's Avenger; **5 clean full-card unlocks** after the prerequisite. | Battlefield-only CDA layers cannot establish all-zone characteristics. Requires owner/controller context outside the battlefield, live value evaluation and copy/layer contracts. Avenger's recorded controller-filter defect and nested Plus exclude it from the clean estimate. Enables characteristic queries outside the battlefield. | High: reusable engine contract, value adapters and five complete gameplay mappings. |
+| Chosen damage sources | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7 full-card unlocks**. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage remain additional consumers with blockers. | Needs complete CR 609.7a discovery, typed resolution choice, source identity and property rechecks, permanent-spell continuity, and prevention ordering. Other consumers also need actual amount/result/redirection contracts. | High: engine discovery/identity prerequisite, scoped compiler choices and seven gameplay mappings. |
+
+The selected shared adapter gives two credible full-card gains for moderate
+work. The larger candidates need missing engine prerequisites. Complete records,
+not first-error counts, supplied the estimates. The contract, reuse boundary and
+acceptance cases were stated before editing. Reprints count once. All affected
+source-event/live-exile records and unsupported nested leave contexts were also
+inspected. No second slice is started.
+
+### Exact shapes, contexts, dependencies and reuse
+
+Supported on permanent definitions:
+`TriggerA(WhenAPermanentLeavesTheBattlefield(SinglePermanent(ThisPermanent)), body)`.
+The event and SinglePermanent each take one argument; the source is a bare
+ThisPermanent. Other event subjects, Aura hosts and arbitrary permanent filters
+remain rejected. `Trigger_ThatPermanent` is a singular typed source reference
+only in this rule's body. It lowers to the engine's source reference, which keeps
+its captured incarnation; no new global event/result slot is introduced. It does
+not grant destination-zone card access. Separate rules cannot borrow it.
+
+The event lowers to `WhenEvent(LeavesBattlefield(This), ...)`, with a fresh
+trigger per factory. Shared native leave-zone detection captures pre-movement
+abilities/controller and source incarnation/LKI (CR 603.6c, 603.10a, 400.7,
+608.2h). Departure after control change uses the departing controller. A later
+return cannot replace retained source characteristics. Phasing supplies no
+leave event (CR 702.26d). Pending events and copied triggers remain independent.
+
+`Exile([EachPermanent(collection)], [])` now accepts existing contextual
+collections in resolving actions: filters, nonempty recursive And/Or,
+controller/owner selections, combat pairs and attachments. A root declared
+Ref_TargetPermanents keeps its existing per-instance typed target set. Unbound
+sets, invalid filters and modifiers fail compilation. The exile adapter preserves
+that target-set branch locally; the shared contextual compiler and unrelated
+destroy/return/layer callers are unchanged. Final review removed an initial
+shared-helper extension that had also advanced Volcanic Eruption's destroy
+adapter. Its unrelated gap remains unchanged in the final code.
+
+Engine reuse: `LeavesBattlefield`, `DealDamageEach`, `PermanentDamageRecipients`,
+source incarnation/LKI, `ExileEach`/`ExilePermanents`, contextual `PermanentSet`
+queries, `AtNext(YourUpkeep, ...)`, live battlefield counts and `CreateTokenCopies`.
+Goblin Shrine's damage uses one recipient batch and old-source damage information.
+Hazezon's delayed count reads the saved player's current lands at resolution;
+leaving before the entry trigger resolves does not cancel it (CR 603.7b/e).
+Departure exile selects every live Sand Warrior at resolution; it is neither
+linked to a creator nor limited to tokens. The engine performs one exile batch.
+No new APNAP, replacement ordering, cost or zone service is added.
+
+### TDD and card-to-test mappings
+
+The initial meaningful tests failed for both complete records at unsupported
+WhenAPermanentLeavesTheBattlefield. Source movement, control, return, phasing and
+clone tests also failed at that missing declaration. After the adapters, complete
+records and gameplay passed. Additional fixtures initially used incorrect API
+names (GameEvent, permanent supertype/token access); these were corrected.
+The host-departure fixture initially omitted the land's owner and failed in
+DestroyPermanent; setting the test card owner fixed the fixture. The inventory
+assertion initially expected a generic subtype role instead of creature_subtype;
+it was corrected to the existing role grammar. No production rule or assertion
+was weakened. Lint import formatting was reviewed.
+
+| Card / contract | Test mappings |
+| --- | --- |
+| Goblin Shrine, complete DRK record | TestRONSourceLeaveCasting: full 1RR payment, rollback, invalid creature enchant target, delayed entry and land attachment. Shrine: basic-Mountain global bonus, bounce/destroy/exile, host departure and Aura state checks, source control, return, phasing, ability removal and pending clone. ShrineMembershipAndBonus: both Basic/Mountain requirements, current attachment, both players' creatures, Goblin noncreature exclusion, late recipients, phased recipients and prevention. ShrineSourceInformation: old-source lifelink/controller after return, trigger copy, nontargeted shroud and simultaneous damage callbacks. IndependentEvents: two departures of the same physical card and pending clone isolation. |
+| Hazezon Tamar, complete LEG record | TestRONSourceLeaveCasting: full 4RGW payment, rollback, legendary Human Warrior 2/4 entry. Hazezon: entry and delayed triggers, countering each stage, source departure before/after entry resolution, return under another controller, control change, phasing, opponent/next upkeep, live land count, phased lands, single delayed execution, token P/T/types/colors/owner and clone isolation. HazezonCollection: subtype intersection, creatures of either player, late membership, shroud/indestructible, phased exclusion and pending clone exile. |
+| Compiler / registry | TestRONSourceLeaveCards, Invalid, StrictLoad and Inventory: engine validation, malformed events/collections, unbound/incompatible/cross-rule refs, fresh factory abilities, strict collection rejection and nested semantic roles. TestInventoryRepositoryCollection and LeavesRealRONGameplayAndRegistryUnchanged retain collection and accepted-gameplay regression evidence. |
+| Shared services | TestExileEachUsesOneZoneChangeBatch, IdentityAndRegistration, SkipsPhasedAndReturnedTargets, QueuesSourceLeaveTrigger and TokenDoesNotRemainInExile; existing contextual collection, delayed step, token creation and damage batch tests. These retain engine batch/identity/timing coverage without a parallel RON executor. |
+
+Adds **2 complete unique-card RON gameplay mappings**. Collection-wide
+engine_validated and behavior_verified measurements remain null; accepted
+compilation is not a collection-wide gameplay claim.
+
+### Final measurements and remaining gates
+
+Actual gains match the estimate: **2 unique cards / 2 records**, Goblin Shrine
+and Hazezon Tamar. No accepted name is lost. Strict native loading exits 1 with
+**1,824 compiled / 621 rejected records**, **701 accepted / 285 rejected unique
+names**. Final inventory: **72,962 occurrences / 8,557 signatures / 5,443
+unknown-role occurrences**. The 24 newly classified occurrences describe leave
+event subjects and live exile collection descendants; role classification does
+not prove support. The full collection still publishes no partial registry.
+
+Remaining examples:
+- Dakkon Blackblade: `LEG.lines.ron:58:205: unsupported rule (CDA_Power)`.
+- Circle of Protection: Artifacts: `ATQ.lines.ron:17:219: unsupported action (ChooseADamageSource)`.
+- Dance of Many: `DRK.lines.ron:22:247: unsupported permanent filter (IsNonToken)`; token-copy/link gaps remain nested.
+- Knowledge Vault: `LEG.lines.ron:149:232: unsupported exile subject (TheTopCardOfLibrary)`; face-down/linked operations remain nested.
+- Martyr's Cry now reaches `DRK.lines.ron:69:276: unsupported fixed all-player draw amount (NumPermanentsOfTypeExiledThisWay)` instead of its former collection rejection. It is still unsupported, with no partial factory installed.
+
+No RON source changed; the vocabulary snapshot's syntax and hashes stay unchanged.
+No new source defect, engine gap or environment failure was found. Existing
+reported source defects remain deferred. No Go card definition, generator or
+DSL function was deleted: complete loading, gameplay and startup do not meet the
+removal gate. No fresh caller audit authorizes unrelated DSL deletion. API/rules
+contracts document only this integration's established behavior.
+
+### Validation
+
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestRONSourceLeave|TestInventory|TestRONContextualCollection|TestExileEach' -count=1`: PASS. Existing target-set exile regression coverage also ran in the full suite.
+- `go test ./pkg/mage/... -short -count=1`: PASS on final code.
+- `make test`: PASS on final code.
+- `make build`: PASS on final code.
+- `go vet ./...`: PASS on final code.
+- `make lint`: PASS, zero issues; formatting reviewed. Focused and required checks passed again after the final scoped-adapter review and lint.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection; final native counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1; final inventory counts above.
+- Accepted-name comparison: PASS; only Goblin Shrine and Hazezon Tamar leave the rejected set. Martyr's Cry advances to its independent result blocker; no other remaining first diagnostic changes.
+
+All required checks passed. Only the appended ledger entry is staged from this
+file; initial ledger changes remain unstaged. No environment blocker prevented
+commit.
+
+Ranked next candidates to reassess from fresh complete records:
+1. All-zone battlefield-count CDA prerequisite and five clean consumers.
+2. Complete chosen damage-source discovery/identity and seven source shields.
+3. Actual per-player zone-movement results for Martyr's Cry and Volcanic Eruption;
+   compare the necessary exile/destruction result services before selecting.
+   Typed linked token/card results remain prerequisites for Dance of Many,
+   Knowledge Vault and Stangg.
+
+Slice files: ron compiler.go, triggers.go, permanent_scope.go, permanent_exile.go,
+inventory.go, inventory_test.go and source_leave_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this appended ledger entry. Stage only this
+slice. Keep initial user edits and unrelated files unstaged.

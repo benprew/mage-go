@@ -53,7 +53,7 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			if ctx.hostDeath != nil {
 				return permanentReferencePlan{kind: permanentDeath, death: ctx.hostDeath}, nil
 			}
-			if ctx.counterStateSource || ctx.sourceTapped {
+			if ctx.counterStateSource || ctx.sourceTapped || ctx.sourceLeaves {
 				return permanentReferencePlan{kind: permanentSource}, nil
 			}
 			if ctx.permanentEvent != nil {

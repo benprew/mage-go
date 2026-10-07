@@ -5987,3 +5987,37 @@ validation and rollback. `TestRONAbilityTargetCards`, `AyeshaCasting`,
 `Declarations`, `RustCopy`, `Invalid`, and `BadPlayers` cover complete source
 records and compiler scopes. Ayesha's Banding grant also maps to existing
 `TestBandIncomingDamage*` and `TestBandOutgoingDamage*` engine contracts.
+
+## RON source-leaves event integration
+
+RON source departure declarations use the existing `LeavesBattlefield(This)`
+pattern. The event reads the departing object's abilities and controller before
+movement (CR 603.6c, 603.10a). Bounce, destruction and exile can trigger it.
+Phasing does not trigger it (CR 702.26d). Ability removal before departure
+prevents detection. Removal after detection does not cancel the pending ability.
+The pending source incarnation and retained characteristics remain separate from
+any later incarnation of the same card (CR 400.7, 608.2h).
+
+Goblin Shrine's `Trigger_ThatPermanent` lowers to the typed source reference in
+this one event context. `DealDamageEach` uses source LKI and one simultaneous
+recipient batch. A returned Shrine cannot replace the original source's lifelink
+or controller. The conditional bonus reads the current Aura host, requires both
+Basic and Mountain, and applies only to Goblin creatures of either player.
+
+Hazezon Tamar's entry trigger uses the existing `AtNext(YourUpkeep, ...)` service.
+The delayed ability keeps the entry trigger's resolving controller even if the
+source departs, phases or returns under another controller (CR 603.7b, 603.7e).
+Its token count reads that player's live lands at delayed resolution. Departure
+exile selects every live Sand Warrior at resolution, including another source's
+creatures and creatures that entered after departure. `ExileEach` uses one batch;
+shroud and indestructible do not stop this nontargeted action. Phased members are
+absent. Tokens leave the battlefield and then cease to exist under the existing
+state checks.
+
+Evidence: `TestRONSourceLeaveCards`, `Casting`, `Shrine`,
+`ShrineSourceInformation`, `ShrineMembershipAndBonus`, `IndependentEvents`,
+`Hazezon`, `HazezonCollection`, `Invalid`, `StrictLoad` and `Inventory`.
+`TestExileEachUsesOneZoneChangeBatch`, `IdentityAndRegistration`,
+`SkipsPhasedAndReturnedTargets`, `QueuesSourceLeaveTrigger` and
+`TokenDoesNotRemainInExile` remain the shared engine evidence. This integration
+adds no replacement ordering, APNAP, cost or zone-movement service.
