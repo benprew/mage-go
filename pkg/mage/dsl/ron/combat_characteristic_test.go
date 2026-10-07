@@ -127,13 +127,13 @@ func TestRONCombatCharacteristicConsumers(t *testing.T) {
 		set, name, blocker string
 		rule               int
 	}{
-		{"ATQ", "Battering Ram", "Trigger_TheAttackingCreature", 1},
+		{"ATQ", "Battering Ram", "", 1},
 		{"FEM", "Dwarven Soldier", "combat pair union", 0},
 		{"LEG", "Infinite Authority", "Trigger_ThatCreature", 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := hostUntapRecord(t, tc.set, tc.name)
-			if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.blocker) {
+			if _, err := Compile(n); (tc.blocker == "" && err != nil) || (tc.blocker != "" && (err == nil || !strings.Contains(err.Error(), tc.blocker))) {
 				t.Fatalf("complete record boundary: %v", err)
 			}
 			event := n.Fields["Rules"].Args[tc.rule].Args[0]

@@ -2635,9 +2635,13 @@ once-per-combat group. Arbitrary unions and unequal branch declarations remain
 errors. Inventory walks nested events even in unsupported unions.
 
 The blocking event provides `Trigger_ThatOtherCreature`; the blocked-by event
-provides `Trigger_TheBlockingCreature`; the union provides only
-`Trigger_ThatOtherCreature`. Each is a typed event binding available only in its
-body, including supported delayed step actions. Each factory builds a fresh
+provides `Trigger_TheBlockingCreature`; the union provides
+`Trigger_ThatOtherCreature`. All three pair-event forms also provide
+`Trigger_ThatOtherPermanent` as an alias for the same opposing incarnation.
+The alias is available in resolving action bodies and supported delayed step
+actions. It does not grant support to action contexts that reject event
+references, such as temporary combat rules. Each is a typed event binding
+available only in its body, including supported delayed step actions. Each factory builds a fresh
 binding. The matching engine patterns save the opposing incarnation at detection.
 Aura events read the current attachment at detection. Later attachment, color,
 subtype, toughness or controller changes do not recheck filters or redirect

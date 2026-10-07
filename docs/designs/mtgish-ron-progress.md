@@ -29008,3 +29008,151 @@ Slice files: compiler `activation_timing.go`, `inventory.go`; tests
 `activation_permission_test.go`, `chosen_discard_cost_test.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
 and this ledger entry. A descriptive commit contains only this slice.
+
+## Run 2026-10-07: COMBAT-PAIR-PERMANENT-REFERENCE
+
+Status: complete implementation slice. This run stops here; collection loading,
+gameplay, startup cutover and removal gates remain incomplete.
+
+### Baseline and candidate comparison
+
+Initial user changes: `.gitignore`, execution design and progress ledger;
+`mtgish-ron-completed.md` was untracked. All are preserved. This entry alone is
+staged from the progress ledger; the user's ledger reorganization is excluded.
+Read AGENTS.md, engine reference, execution design, current progress, vocabulary,
+selected compiler and engine code, complete candidate records, API/rules contracts,
+and CR 509, 511 and 603.7. No Go card definition supplied requirements.
+Baseline short engine tests and make build passed. Strict loader and inventory
+exited 1 because of unsupported records: 1,816 compiled / 629 rejected records,
+693 accepted / 293 rejected unique names. There were 72,962 AST occurrences,
+8,559 semantic signatures and 5,483 unknown-role occurrences.
+
+| Candidate | Unique affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Combat-pair permanent reference, selected | Battering Ram, Infernal Medusa, Wall of Dust; **2** full-card unlocks | Ram and Medusa each have a wrong attacker reference in their source. Wall of Dust also needs a temporary combat rule for an event-bound subject and a controller's next-turn duration. Shared alias supplies exact opposing incarnations to supported resolving actions and delays. | Small: existing typed capture and delay services, two evidence-backed record corrections, direction/identity/declaration/gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** clean consumers after prerequisite | Battlefield-only layers cannot establish all-zone characteristics. Requires owner/controller context outside the battlefield, CDA/copy/layer contracts and count adapters. Gaea's Avenger has a separate observed source restriction defect and is excluded from the estimate. | High: engine characteristic contract, scoped counts, layers/copy and five complete gameplay mappings. |
+| Chosen damage source | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** consumers after prerequisites, zero adapter-only unlocks | Source discovery and identity must include legal nonpermanent sources, chosen references and one-event prevention. Other source-choice consumers add redirection or other operations and are excluded. Enables exact source-choice shields for multiple cards. | High: discovery/choice/binding prerequisite, source identity, prevention ordering and seven complete gameplay mappings. |
+
+The selected slice gives two full cards for a small change through existing
+exact behavior. Phase order and old next-slice suggestions did not determine
+selection. Complete nested records, rather than first-error frequency, establish
+the estimates. Contract, reuse boundary and acceptance cases were stated before
+editing. No engine prerequisite, removed skill, Go stub, fallback, card-name
+executor or partial production registry was added.
+
+### Supported contexts and engine reuse
+
+`Trigger_ThatOtherPermanent` is a bare symbol alias for the event's existing
+typed opposing-permanent binding in these forms:
+
+- `WhenACreatureBlocksACreature(SinglePermanent(subject), filter)`.
+- `WhenACreatureBecomesBlockedByACreature(SinglePermanent(subject), filter)`.
+- Existing exact `Or([blockingEvent, blockedByEvent])` pair union.
+
+Existing source/host and filter restrictions remain in place. The alias uses
+`compilePermanentRef` and the same per-instance `permanentEventPlan`; it has no
+new mutable storage. In supported resolving actions and delayed step bodies it
+reads the opponent, independent of direction. Existing direction-specific names
+keep their contracts. Tuple forms, unbound/out-of-event reads and the incorrect
+`Trigger_TheAttackingCreature` remain errors. This does not extend action-specific
+reference restrictions: Wall of Dust still rejects at
+`LEG.lines.ron:291:294: unsupported temporary combat rule reference (Trigger_ThatOtherPermanent)`.
+Its CantAttack operation and DuringPlayersNextTurn duration are also unsupported
+in that action path. No complete Wall of Dust gameplay is claimed.
+
+Reuses `BlocksCreatureMatching`, `BecomesBlockedByCreatureMatching`,
+`BlocksOrBecomesBlockedByCreatureMatching`, `WithOpponent`, `PermanentBinding`,
+instance bindings, `From`, `AtNext`, native combat events and ordinary destruction.
+Event detection checks filters once and captures incarnation identity before
+stack placement. Source departure, control and later subtype changes do not
+redirect a pending or delayed effect. Return invalidates identity; phase cycles
+keep identity, while phased-out recipients cannot be destroyed. Ordinary
+regeneration and indestructibility remain effective. Copies, pending events and
+clones retain independent frames. No reusable engine API or rules service changes.
+
+### Source defects and vocabulary
+
+Local authoritative Oracle fields in `data/ATQ.json` and `data/LEG.json` require
+Battering Ram to destroy the blocking Wall and Infernal Medusa to destroy the
+blocking non-Wall creature. `ATQ.lines.ron:14` and `LEG.lines.ron:132` instead used
+`Trigger_TheAttackingCreature` in their blocked-by delay. Both now use the
+already-supported `Trigger_TheBlockingCreature`. Each name occurs once in the
+collection; the whole-source search found no identical reprints to correct.
+CR 509.3d/f and 603.7c require the triggering blocker to remain the delayed
+recipient. No global predicate/reference inversion was used.
+
+Vocabulary refreshed by a complete `ron.Parse` AST walk: all occurrence counts,
+examples, top-level counts, file hashes and fresh loader diagnostics. There are
+still 601 tuple constructors and 51 top-level rule names. Vocabulary rows change
+from 1,105 to 1,104: the erroneous attacker symbol disappears and the blocker
+symbol increases from 14 to 16 occurrences. Only ATQ and LEG source hashes change.
+The snapshot's previous loader baseline was stale (1,758 compiled); it now records
+the actual final 1,818 count. Other previously observed source defects are deferred.
+
+### TDD and complete-card gameplay mapping
+
+Before production edits, new gameplay tests failed at the missing permanent
+alias and attacker references. After alias implementation, Medusa advanced to
+its second rule's attacker-reference defect; both cards still rejected until
+source corrections. Gameplay then passed. Two added fixture errors were corrected:
+CreateCard returns a card and an error; the synthetic union creature needs CardPT.
+The new Wall of Dust boundary assertion initially expected the duration error;
+the actual earlier action-specific event-reference rejection is now asserted
+exactly. Lint requested two test-slice preallocations; these were added. Broad
+suites were rerun after these corrections. No behavior assertion
+was weakened, and no environment or pre-existing failure was found.
+
+| Card / contract | Tests (prefix TestRONCombatPairReference) |
+| --- | --- |
+| Battering Ram, complete ATQ record | Cards: native attacks/blocks with Wall and non-Wall opponents, combat banding, end-of-combat destruction, banding expiry; Casting: 2 cost, rollback, artifact creature 1/1 Construct metadata and entry timing. Existing TestRONBeginCombatBatteringRamClause/ControlChange retains source timing and control cases. |
+| Infernal Medusa, complete LEG record | Cards: both native combat directions, Wall exclusions only when attacking, combat damage and delayed opposing-creature destruction; Casting: 3BB, rollback, 2/4 Gorgon metadata and entry timing. |
+| Both complete cards | Identity: source departure, opponent return/phasing/phase cycles, control/subtype changes, regeneration, indestructibility, copied triggers and pending game clones. IndependentEvents: two factories, two opponents each, shroud, four pending captures and clone isolation. |
+| Alias and loading contracts | Declarations: both directions, exact opponent read, malformed tuple, attacker spelling and out-of-event scopes. Union: shared alias in exact supported event union and delayed body. StrictLoad: complete records/reprints, fresh factory abilities, definition validation, atomic rejected collection preserves existing registry. RemainingGap: exact Wall of Dust rejection. |
+
+Existing combat-pair/characteristic, begin-combat and inventory tests pass.
+Previous Battering Ram boundary tests now assert successful complete compilation;
+other consumer rejection assertions remain. Exact inventory counts are updated.
+Two complete unique-card gameplay mappings are added; collection-wide behavior
+and engine-validation totals remain unset. Compilation is not complete gameplay.
+
+### Final validation and measurements
+
+Actual gain matches estimate: **2 unique names / 2 records**, Battering Ram and
+Infernal Medusa. No previously accepted name is lost. Strict loader exits 1 with
+**1,818 compiled / 627 rejected records**, **695 accepted / 291 rejected names**.
+Inventory reports **72,962 occurrences / 8,557 signatures / 5,483 unknown-role
+occurrences**. The signature reduction comes from the two corrected references;
+semantic roles and AST node count are unchanged. Strict collection loading still
+rejects and installs no partial production registry.
+
+Required checks after final fixtures and lint:
+
+- Focused RON combat-pair/reference/characteristic/begin-combat/inventory tests
+  with `-count=1`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues; automatic formatting reviewed.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1, counts above.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1, counts above.
+- Vocabulary/hash and accepted-name regression audits: PASS.
+
+Only this slice is committed. No Go definitions, obsolete generators or DSL
+functions are removed: complete loading, collection gameplay and native startup
+remain below removal gates. No caller audit authorizes DSL deletion in this run.
+API/rules documentation records only the established adapter and engine reuse.
+Initial user changes and the untracked completed ledger remain unstaged.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. All-zone battlefield-count CDA prerequisite, then the five clean consumers.
+2. Typed source discovery/choice identity, then six Circles and Greater Realm.
+3. Grouped combat-pair event prerequisite: compare Dwarven Soldier and Spitting
+   Slug's once-per-group events against their full nested bodies and blockers.
+
+Slice files: compiler permanent_scope.go; new combat_pair_reference_test.go;
+begin_combat_test.go, combat_characteristic_test.go, inventory_test.go;
+ATQ/LEG RON records; vocabulary; DSL reference, rules contracts and this entry.
+No second slice is started.

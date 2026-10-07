@@ -211,13 +211,13 @@ func TestRONBeginCombatConsumerBoundaries(t *testing.T) {
 		set, name, remaining string
 		any                  bool
 	}{
-		{"ATQ", "Battering Ram", "unbound or incompatible permanent reference (Trigger_TheAttackingCreature)", false},
+		{"ATQ", "Battering Ram", "", false},
 		{"FEM", "Goblin Flotilla", "CreateTriggerUntil", true},
 		{"LEG", "Johan", "optional payment cost", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := hostUntapRecord(t, tc.set, tc.name)
-			if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.remaining) {
+			if _, err := Compile(n); (tc.remaining == "" && err != nil) || (tc.remaining != "" && (err == nil || !strings.Contains(err.Error(), tc.remaining))) {
 				t.Fatalf("remaining gap: %v", err)
 			}
 			var event Node

@@ -5876,3 +5876,26 @@ cloned pending resolution, target-control rechecks, simultaneous damage,
 protection/prevention, independent factories and strict atomic collection
 rejection. Existing mixed-damage tests retain replacement and batch evidence.
 This slice adds no new replacement ordering or mana-solver contract.
+
+## RON combat-pair permanent reference alias
+
+RON `Trigger_ThatOtherPermanent` reads the same typed opponent binding as
+`Trigger_ThatOtherCreature` (blocking and pair unions) or
+`Trigger_TheBlockingCreature` (blocked-by events). The existing engine patterns
+and `WithOpponent` capture remain unchanged. Each factory and pending event
+keeps its own binding; `AtNext` retains that event frame for end-of-combat
+destruction (CR 509.3b/d/f, 603.7c/e, 400.7). There is no attacker alias or
+permission to read these references outside the matching event body.
+
+`TestRONCombatPairReferenceCards` uses complete Battering Ram and Infernal
+Medusa records with native combat, both directions, Wall inclusion/exclusion,
+combat damage, end-of-combat destruction and Ram's banding duration.
+`Identity` covers departure, return, phasing, control/subtype changes,
+regeneration, indestructibility, copied triggers and pending clones.
+`IndependentEvents` checks two factories and two pending opponents each, shroud
+and clone isolation. `Casting` covers costs, rollback, entry and metadata.
+`Declarations`, `Union` and `StrictLoad` cover alias direction, supported union
+capture, invalid scope/shape, fresh factories, reprints and atomic rejection.
+`RemainingGap` keeps Wall of Dust rejected for its separate temporary combat
+rule context; its next-turn duration also remains unsupported. These tests have
+the prefix `TestRONCombatPairReference`. No new engine API is established.

@@ -25,7 +25,7 @@ type permanentReferencePlan struct {
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 	if n.Kind == Symbol {
-		if ctx.combatOpponent != nil && n.Name == ctx.combatOpponent.name {
+		if ctx.combatOpponent != nil && (n.Name == ctx.combatOpponent.name || n.Name == "Trigger_ThatOtherPermanent") {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.combatOpponent}, nil
 		}
 		switch n.Name {
