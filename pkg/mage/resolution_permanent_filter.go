@@ -17,16 +17,27 @@ func UnlessPermanentMatches(subject PermanentRef, filter PermanentFilter, body R
 	return &permanentInformationBranch{subject: subject, filter: filter, body: body, negate: true}
 }
 
+// UnlessPermanentCameUnderControlThisTurn uses the original object's control history.
+// Missing object or player information cannot satisfy the negative condition.
+func UnlessPermanentCameUnderControlThisTurn(subject PermanentRef, player PlayerRef, body ResolvingEffect) ResolvingEffect {
+	return &permanentInformationBranch{subject: subject, controlPlayer: player, controlHistory: true, body: body, negate: true}
+}
+
 type permanentInformationBranch struct {
-	subject   PermanentRef
-	filter    PermanentFilter
-	body      ResolvingEffect
-	otherwise ResolvingEffect
-	hasElse   bool
-	negate    bool
+	subject        PermanentRef
+	filter         PermanentFilter
+	body           ResolvingEffect
+	otherwise      ResolvingEffect
+	hasElse        bool
+	negate         bool
+	controlPlayer  PlayerRef
+	controlHistory bool
 }
 
 func (e *permanentInformationBranch) Text() string {
+	if e.controlHistory {
+		return "unless permanent came under player control this turn"
+	}
 	if e.negate {
 		return "unless permanent matches " + e.filter.Text()
 	}
@@ -50,7 +61,18 @@ func (e *permanentInformationBranch) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return nil
 	}
-	if e.filter.Match(p, ctx.Game) != e.negate {
+	var matches bool
+	if e.controlHistory {
+		player, ok := e.controlPlayer.resolvePlayer(ctx)
+		if !ok || ctx.Game.GetPlayer(player) == nil {
+			return nil
+		}
+		turn, recorded := p.controlGainedTurns[player]
+		matches = recorded && turn == ctx.Game.CurrentTurn()
+	} else {
+		matches = e.filter.Match(p, ctx.Game)
+	}
+	if matches != e.negate {
 		return e.body.Apply(ctx)
 	}
 	if e.hasElse {
@@ -60,6 +82,9 @@ func (e *permanentInformationBranch) Apply(ctx *EffectContext) error {
 }
 func (e *permanentInformationBranch) inspectDefinition() definitionNode {
 	n := permanentInformationNode(e.subject, "resolution-branch", e.Text())
+	if e.controlHistory {
+		n.children = append(n.children, definitionEdge{"player", e.controlPlayer})
+	}
 	n.children = append(n.children, definitionEdge{"then", e.body})
 	if e.hasElse {
 		n.children = append(n.children, definitionEdge{"else", e.otherwise})

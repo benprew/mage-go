@@ -7127,9 +7127,50 @@ Both alternative bodies are inspected. A producer in one branch cannot supply
 a read in another branch or after the branch. A branch-local sequence can use
 its own producer. No conditional result is promoted to an outer scope.
 No costs, replacement ordering, simultaneous batches or events are changed.
-RON `IfElse` and `Unless` adapters are not established by this engine slice.
+RON resolving property `IfElse` and `Unless` now use this contract. Static
+and combat-membership alternatives remain separate contracts.
 
 Evidence: `TestPermanentPropertyBranchSelection`, `Information`, `Definitions`,
 `ErrorAndSequence`, `ReadsOnce`, `Stack` and `BindingScope`; existing
 `TestIfPermanentMatches*` and `TestRONResolvingCondition*` retain the one-body
 contract and real Lesser Werewolf / Eater of the Dead gameplay evidence.
+
+
+### Player control acquisition at resolution
+
+`UnlessPermanentCameUnderControlThisTurn(subject PermanentRef, player PlayerRef,
+body ResolvingEffect) ResolvingEffect` reads the exact object's information and
+one selected player's acquisition history at its instruction position. Entry
+and actual control changes retain the latest acquisition turn for every player
+on that incarnation. Later control changes do not erase another player's
+acquisition in the same turn. Haste does not grant or erase history. Phasing
+preserves it (CR 702.26d); a new zone incarnation starts fresh (CR 400.7).
+Permanent cloning and LKI snapshots copy the history independently.
+
+The body runs only on a known nonmatch. Missing object or player information
+runs no body. The effect uses the shared permanent information branch, its
+source/attachment/saved/target identity checks, and definition visitor. Nil
+subjects, players or bodies, unsupported references and unbound players are
+definition errors. Information does not permit actions on absent objects.
+
+RON owns `CameUnderControlOfPlayerThisTurn(playerRef)` spelling and scope in a
+resolving `Unless(PermanentPassesFilter(...), [actions])`. It does not implement
+a separate history service. Both Erg Raiders reprints replace their former
+current-control conjunction with this historical exception. Local ARN Oracle
+text says “unless it came under your control this turn”; losing control after
+that acquisition cannot restore the damage. The end-step intervening-if still
+checks attack history at event and resolution (CR 603.4); the exception reads
+at resolution (CR 603.5, 608.2c/h/i). The trigger's saved controller remains
+its “you” after source control changes (CR 603.3a).
+
+Evidence: `TestUnlessPermanentCameUnderControl*` covers entry, earlier turns,
+haste, changed and regained control, departure, return, phasing, unknown
+information, clone divergence and invalid declarations.
+`TestRONPropertyAlternativesErgRaiders` and `PaymentAndRetarget` cover complete
+RON casting, attack history, controller end steps, changed control, control
+acquisition followed by loss, LKI damage, returned sources, phasing, independent
+clones, copied trigger controllers and actual damage prevention. Blood Lust's
+complete record uses the existing alternatives and temporary P/T services;
+`TestRONPropertyAlternativesBloodLust`, `NestedAndInventory`, `Invalid` and
+`PaymentAndRetarget` cover both toughness branches, resolution changes,
+cleanup, legality, retargeting copies, binding isolation and payment rollback.

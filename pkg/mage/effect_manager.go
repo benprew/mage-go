@@ -794,6 +794,10 @@ func (em *EffectManager) Apply(g *Game) {
 					continue
 				}
 				p.turnControlGained = g.turns.Turn()
+				if p.controlGainedTurns == nil {
+					p.controlGainedTurns = make(map[uuid.UUID]int)
+				}
+				p.controlGainedTurns[p.ControllerID()] = g.turns.Turn()
 				if !p.HasAttr(AttrSummonSick) {
 					p.GrantBaseAttr(AttrSummonSick)
 				}

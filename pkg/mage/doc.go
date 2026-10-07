@@ -154,6 +154,9 @@
 // Use [IfPermanentMatches] for a resolving property condition. It uses the
 // current object or information saved for its exact incarnation. An information
 // read does not make an absent object available for an action.
+// Use [UnlessPermanentCameUnderControlThisTurn] for a resolving player control history
+// exception. Each incarnation retains acquisition turns for all players. Later
+// control changes cannot erase an earlier acquisition in the same turn.
 // Use [IfPermanentMatchesElse] to select one of two resolution bodies.
 // Use [UnlessPermanentMatches] for a body on a known nonmatching object.
 // Both read the condition once. Missing information runs neither body.

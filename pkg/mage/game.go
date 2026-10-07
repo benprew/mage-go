@@ -416,6 +416,7 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 	}
 	g.zones.addOwnedPermanent(perm)
 	perm.turnControlGained = g.turns.Turn()
+	perm.controlGainedTurns = map[uuid.UUID]int{controller: g.turns.Turn()}
 
 	g.syncAbilityContext(perm)
 

@@ -1282,6 +1282,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "CameUnderControlOfPlayerThisTurn" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if (n.Name == "IsColor" || n.Name == "IsNonColor") && len(n.Args) == 1 {
 			return "color"
 		}

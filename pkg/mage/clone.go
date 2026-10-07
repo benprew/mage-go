@@ -175,6 +175,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		ChosenSubtype:              src.ChosenSubtype,
 		ControlledPermanent:        src.ControlledPermanent,
 		turnControlGained:          src.turnControlGained,
+		controlGainedTurns:         maps.Clone(src.controlGainedTurns),
 		StoredValue:                src.StoredValue,
 		CreatedBy:                  src.CreatedBy,
 		printedAbilitiesSuppressed: src.printedAbilitiesSuppressed,

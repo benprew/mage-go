@@ -4113,7 +4113,8 @@ snapshot for the same incarnation. It evaluates at its position in the resolving
 sequence, rather than at announcement. LKI permits information reads, not actions
 on absent objects. Invalid/unbound references, malformed filters and empty bodies
 are declaration errors. Static `If`, intervening-if, activation restrictions,
-`Unless`, `IfElse` and unsupported historical conditions do not gain support.
+unsupported historical conditions do not gain support here. Resolving property
+`Unless` and `IfElse` use the alternatives described below.
 Conditional mana production in activation branches is rejected until mana
 classification and solver planning support the same condition.
 
@@ -5969,10 +5970,33 @@ for the exact object. Missing information runs neither body. Both branch bodies
 are required and validated; branch-local producers do not escape their paths.
 Both new services execute their conditions in AI simulations.
 
-This establishes an engine prerequisite for resolving
-`IfElse(PermanentPassesFilter(...), [...], [...])` and
-`Unless(PermanentPassesFilter(...), [...])`. The RON compiler still rejects these
-forms. Static alternatives, combat-membership alternatives and controller/turn
-history filters require separate contracts. Existing resolving RON `If` keeps
-its implementation and caller behavior. See `TestPermanentPropertyBranch*`
-and `TestRONResolvingCondition*` for engine and RON regression evidence.
+RON resolving action lists now accept
+`IfElse(PermanentPassesFilter(subject, propertyFilter), [matchingActions],
+[nonmatchingActions])` and
+`Unless(PermanentPassesFilter(subject, propertyFilter), [nonmatchingActions])`.
+They use the existing resolving property and counter filters, including nested
+nonempty `And`/`Or`. Both bodies must be nonempty. Each branch compiles in its
+own action sequence with fresh factory bindings. Payment results remain local
+to their adjacent continuation; they cannot escape into another branch.
+Static and combat-membership alternatives remain unsupported. Conditional mana
+production in activation branches remains a declaration error.
+
+The exact historical exception shape is
+`Unless(PermanentPassesFilter(subject, CameUnderControlOfPlayerThisTurn(playerRef)),
+[actions])`. It uses
+`mage.UnlessPermanentCameUnderControlThisTurn(PermanentRef, PlayerRef,
+ResolvingEffect) ResolvingEffect`. Each original incarnation retains the latest
+acquisition turn for every player. Entry and actual control changes record it;
+phasing and ability removal do not erase it. A later controller does not erase
+another player's acquisition earlier in the same turn. Haste and summoning
+sickness do not supply this history. Current, phased and departed information
+use the same identity service; returned objects cannot replace it. Missing
+object or player information runs no body. Other history shapes remain errors.
+
+Evidence: `TestRONPropertyAlternatives*` covers the complete Blood Lust and
+corrected Erg Raiders records, both property branches, nested conditions,
+current reads, target legality, casting payments and rollback, retargeted copies,
+factory and clone isolation, source LKI, phasing, control changes, damage
+prevention and cleanup. `TestUnlessPermanentCameUnderControl*` supplies the
+engine history and declaration contracts. Existing `TestPermanentPropertyBranch*`
+and `TestRONResolvingCondition*` retain their behavior.

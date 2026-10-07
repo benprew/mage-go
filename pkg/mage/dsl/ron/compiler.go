@@ -1072,6 +1072,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(func(instanceBindings) mage.Effect { return mage.ShuffleGraveyardFor(mage.You) })
+	case "IfElse", "Unless":
+		if len(n.Args) == 0 || n.Args[0].Name != "PermanentPassesFilter" {
+			return nil, unsupported(n, "resolving alternative condition")
+		}
+		build, err := compileResolvingPermanentBranch(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "If":
 		if len(n.Args) > 0 && n.Args[0].Name == "PermanentPassesFilter" {
 			build, err := compileResolvingPermanentBranch(n, ctx)

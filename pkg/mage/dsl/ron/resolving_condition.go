@@ -3,7 +3,11 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
-	if err := arity(n, 2); err != nil {
+	count := 2
+	if n.Name == "IfElse" {
+		count = 3
+	}
+	if err := arity(n, count); err != nil {
 		return nil, err
 	}
 	if ctx.activation && containsManaAction(n) {
@@ -19,8 +23,18 @@ func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
 	}
 	filterNode := condition.Args[1]
 	combat := filterNode.Kind == Symbol && (filterNode.Name == "IsAttacking" || filterNode.Name == "IsBlocking")
+	if combat && n.Name != "If" {
+		return nil, unsupported(filterNode, "combat alternative condition")
+	}
+	controlPlayer, controlHistory, err := compileResolvingControlHistory(filterNode, ctx)
+	if err != nil {
+		return nil, err
+	}
+	if controlHistory && n.Name != "Unless" {
+		return nil, unsupported(n, "control history branch")
+	}
 	var filter mage.PermanentFilter
-	if !combat {
+	if !combat && !controlHistory {
 		filter, err = compileResolvingPropertyFilter(filterNode)
 		if err != nil {
 			return nil, err
@@ -37,6 +51,20 @@ func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	var alternatives []effectFactory
+	if n.Name == "IfElse" {
+		parts, err := list(n.Args[2])
+		if err != nil {
+			return nil, err
+		}
+		if len(parts) == 0 {
+			return nil, problem(n.Args[2], "condition requires actions")
+		}
+		alternatives, err = compileActionSequence(parts, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return func(bindings instanceBindings) mage.Effect {
 		body := make([]mage.Effect, len(effects))
 		for i, build := range effects {
@@ -49,6 +77,19 @@ func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
 				return mage.IfPermanentAttacking(ref, sequence)
 			}
 			return mage.IfPermanentBlocking(ref, sequence)
+		}
+		if controlHistory {
+			return mage.UnlessPermanentCameUnderControlThisTurn(ref, controlPlayer.build(bindings), sequence)
+		}
+		if n.Name == "Unless" {
+			return mage.UnlessPermanentMatches(ref, filter, sequence)
+		}
+		if n.Name == "IfElse" {
+			other := make([]mage.Effect, len(alternatives))
+			for i, build := range alternatives {
+				other[i] = build(bindings)
+			}
+			return mage.IfPermanentMatchesElse(ref, filter, sequence, mage.Sequence(other...))
 		}
 		return mage.IfPermanentMatches(ref, filter, sequence)
 	}, nil
@@ -85,4 +126,15 @@ func compileResolvingPropertyFilter(n Node) (mage.PermanentFilter, error) {
 	default:
 		return mage.PermanentFilter{}, unsupported(n, "resolving permanent property filter")
 	}
+}
+
+func compileResolvingControlHistory(n Node, ctx scope) (playerReferencePlan, bool, error) {
+	if n.Name != "CameUnderControlOfPlayerThisTurn" {
+		return playerReferencePlan{}, false, nil
+	}
+	if err := arity(n, 1); err != nil {
+		return playerReferencePlan{}, false, err
+	}
+	ref, err := compilePlayerRef(n.Args[0], ctx)
+	return ref, true, err
 }

@@ -330,7 +330,7 @@ func TestRONEndStepStateRecords(t *testing.T) {
 			}
 			counts[name]++
 			factory, err := Compile(n)
-			if name == "Osai Vultures" {
+			if name == "Osai Vultures" || name == "Erg Raiders" {
 				if err != nil {
 					t.Fatal(err)
 				}

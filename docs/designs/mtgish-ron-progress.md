@@ -35075,3 +35075,184 @@ Slice files: `pkg/mage/resolution_permanent_filter.go`, new
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and only this appended
 progress entry. All required checks pass. One descriptive slice commit is made;
 initial user changes remain unstaged. No second slice is started.
+
+## 2026-10-07: resolving property alternatives and player control history
+
+Status: completed slice `RON-RESOLVING-PROPERTY-ALTERNATIVES`.
+This run stops after one compiler/engine slice. Initial user edits to
+`.gitignore`, the execution and progress documents, and the untracked completed
+ledger remain outside the commit. Only this appended entry is staged from the
+progress document.
+
+### Fresh evidence and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+progress ledger, relevant compiler/engine code, API/rules contracts, and complete
+candidate records. Requirements came from RON and local Oracle data, not Go
+card definitions. No removed card/set skill, stub or sub-agent was used.
+The `implement-engine` skill supplied the engine prerequisite workflow.
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `go build ./...` passed.
+Strict loading built successfully and exited 1 for collection rejection:
+2,445 records, 1,930 compiled / 515 rejected; 741 accepted / 245 rejected
+unique names. Semantic inspection found 72,962 occurrences, 8,557 signatures
+and 4,594 unknown-role occurrences. Collection-wide engine-validated and
+behavior-verified counters remain null; these are not compilation counts.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Resolving permanent-property alternatives, selected | Blood Lust; Erg Raiders. **2** unique cards / **3** records after adapters and exact control-history support. | Existing positive/negative branch engine APIs, permanent information references, temporary P/T values, source damage and end-step intervening-if contracts are available. Erg Raiders needs a player-specific resolving control-history exception. Shared branch validation and execution support later condition and payment compositions. Static Angry Mob and Lurker use different contexts and are not counted. | Small to medium: compiler branches, control-history query, invalid declarations, real spell/trigger gameplay and lifecycle tests. |
+| Complete damage-source selection and basic shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0** immediate unlocks for enumeration alone; **7** credible complete consumers with saved-choice and next-event shield adapters. | Existing live-only enumeration omits referred and command-zone sources. Complete legal choices and retained references are prerequisites. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere share enumeration but also need redirection, actual prevented amounts, reflection or fractional prevention; those four are not counted as basic-shield unlocks. | Large: source enumeration, binding, next-event replacement and competing-prevention tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0** immediate engine-only unlocks; **8** potential complete consumers after grant/token/removal contexts. | Existing ordinary banding does not define parameterized band membership and assignment. Shared combat membership, damage decisions, multiple ability instances, layer removal, token metadata and copying contracts remain necessary. | Large: combat engine and layer/token adapters with assignment, identity and copy tests. |
+
+Reprints count once. Complete records and nested forms informed estimates;
+first-error frequency was not an unlock estimate. The alternatives slice wins
+because it uses established engine execution to complete two consumers with a
+smaller complete boundary. The contract, reuse boundary, estimate and acceptance
+cases were stated before edits. A deeper control-change case exposed a source
+and engine gap within the selected contract; both were repaired in this slice.
+
+### Exact signatures, contexts, dependencies and reuse
+
+- Resolving action lists accept
+  `IfElse(PermanentPassesFilter(subject, propertyFilter), [matchingActions],
+  [nonmatchingActions])` and
+  `Unless(PermanentPassesFilter(subject, propertyFilter), [nonmatchingActions])`.
+- Filters reuse `compileResolvingPropertyFilter`: existing fixed characteristic,
+  keyword, counter, tapped and attack-history properties, with nonempty nested
+  `And`/`Or`. Both branch bodies must be nonempty. Existing singular permanent
+  references retain their source, attachment, target and event scope.
+- The exact historical shape is
+  `Unless(PermanentPassesFilter(subject,
+  CameUnderControlOfPlayerThisTurn(playerRef)), [actions])`.
+  `compilePlayerRef` supplies the typed, bound player. Other history shapes,
+  static alternatives and combat-membership alternatives remain rejected.
+- New engine API:
+  `UnlessPermanentCameUnderControlThisTurn(subject PermanentRef,
+  player PlayerRef, body ResolvingEffect) ResolvingEffect`.
+
+RON owns names, declaration checks and lowering. Reusable rules stay in mage.
+Property alternatives use `IfPermanentMatchesElse` and `UnlessPermanentMatches`.
+The history API uses the same `permanentInformationBranch`, information service
+and definition visitor. It reads the original incarnation and selected player
+once. Known nonmatches run the body; missing object or player information runs
+no body. Each incarnation retains each player's latest control-acquisition turn.
+Entry and actual final layer control changes record history. Haste, ability
+removal and phasing do not supply or erase it. Losing control cannot erase an
+earlier acquisition in the same turn. COW clones and departure/phase information
+snapshots copy the history independently. A returned object starts fresh.
+Existing most-recent-controller-turn permission checks retain their own field
+and behavior; this query does not infer history from summoning sickness.
+
+Each factory builds independent targets and effects. Both branches compile
+through the existing action sequence service; payment continuations and their
+results stay local. Nil/unbound engine references and malformed RON declarations
+fail validation, before gameplay. Conditional mana activation remains rejected
+until classification and solver planning support it. No game-time declaration
+panic, shared last-action slot, card-name execution branch, fallback or partial
+production registry was introduced.
+
+Costs, legality, copies, targets, damage/prevention, end-step events, attack
+history, cleanup and temporary layers reuse their existing engine services.
+No new replacement ordering, simultaneous batch, or APNAP contract is introduced.
+CR 400.7, 603.3a, 603.4–5, 608.2b/c/h/i, 611.2c and 702.26 supply identity,
+controller, intervening-if, resolution information and phasing requirements.
+
+### Source defect and correction
+
+Both Erg Raiders records (ARN:27 and 3ED:82) formerly used
+`And([ControlledByAPlayer(SinglePlayer(You)),
+NotControlledSinceBeginningOfTurn])` in the resolving exception. That conjunction
+requires current control. Local `data/ARN.json` Oracle text instead states:
+“At the beginning of your end step, if this creature didn't attack this turn,
+it deals 2 damage to you unless it came under your control this turn.”
+The historical exception must survive loss of control after the trigger queues
+(CR 603.3a, 603.5, 608.2i). A new acquisition followed by loss first failed the
+new gameplay test. Both identical reprints now use the explicit
+`CameUnderControlOfPlayerThisTurn(You)` predicate. Existing uses of
+`NotControlledSinceBeginningOfTurn`, including Siren's Call, were not redefined.
+No other source defect was corrected.
+
+The vocabulary snapshot was refreshed from the positioned AST semantic report:
+updated source hashes, occurrence counts, examples and fresh loader diagnostics.
+It now has 602 tuple constructor signatures and 1,105 tuple/symbol entries.
+This snapshot remains an inventory, not gameplay evidence.
+
+### TDD and card-to-test mapping
+
+New engine tests first failed for the missing API. The initial RON fixture used
+`Game.Turn` instead of the existing setter; after fixing that test-only API use,
+real-card tests failed for unsupported `IfElse` and `Unless`. The implementation
+then passed. The acquisition-followed-by-loss case separately failed against
+the first current-controller implementation, then passed with retained history
+and both RON corrections. No test was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Blood Lust, complete LEG record | `TestRONPropertyAlternativesBloodLust`: toughness 1/2/4/5/8, both branches, toughness changes after casting, no announcement-time effect, shroud, returned/phased targets, phase cycles, cloned games, repeated copied resolutions and cleanup. |
+| Erg Raiders, complete ARN record and identical 3ED reprint | `TestRONPropertyAlternativesErgRaiders`: old/new control, haste, attacks before and after trigger placement, controller/opponent end steps, control loss/regain, new acquisition followed by loss, departure/return LKI damage, phasing, cloned history, copied trigger controller and actual prevention. `TestRONEndStepStateRecords` now requires successful compilation and fresh validated factories for both reprints. |
+| Casting, payment and binding isolation for both cards | `TestRONPropertyAlternativesPaymentAndRetarget`: successful casting, exact payment, unpaid rollback, Erg Raiders entry, independent Blood Lust target declarations and retargeted spell copies selecting separate branches. |
+| Sequential branch semantics and semantic roles | `TestRONPropertyAlternativesNestedAndInventory`: a branch changes the checked property; exactly one body runs. A nested negated condition reads at its own position. Strict synthetic loading validates the factory; semantic roles remain distinct. |
+| Invalid declarations and branch/payment scope | `TestRONPropertyAlternativesInvalid`: arity, empty bodies, unbound references, errors in the alternative body, unsupported combat/history contexts, conditional mana in either branch, and cross-branch/unfinished payment continuation reads. |
+| Reusable player control history | `TestUnlessPermanentCameUnderControlThisTurn`: old/new entry, haste, control loss/regain, departure/return, phased information, unknown incarnation and divergent clones. `TestUnlessPermanentCameUnderControlDefinitions`: nil subject/player/body and unbound player rejection. |
+| Previously accepted RON and engine behavior | Existing `TestRONResolvingCondition*`, `TestPermanentPropertyBranch*`, `TestContinuousControl*`, `TestClone*` and the full required suites pass. Lesser Werewolf and Eater of the Dead retain their real RON gameplay. |
+
+Two unique cards gain complete-record gameplay mappings. This does not establish
+collection-wide gameplay completion. Inventory regression tests now require
+1,933 compiled / 512 rejected records and reject any regression of either card.
+Their former count/blocker assertions failed after the expected unlocks and were
+updated to require the new support, not to skip verification.
+
+### Final measurements and validation
+
+Actual gains match the estimate: **2 unique cards / 3 records**. Final strict
+loading reports **1,933 compiled / 512 rejected records**, **743 accepted /
+243 rejected unique names**. Blood Lust and both Erg Raiders diagnostics are
+removed; no previously accepted card becomes rejected. Remaining diagnostic
+messages are unchanged. The loader exits 1 for remaining unsupported records
+and installs no partial registry.
+
+Semantic inspection now finds 72,954 occurrences, 8,553 signatures and 4,594
+unknown-role occurrences. The occurrence decrease comes from replacing the
+nested erroneous conjunction in two records. Parsed collection counts remain
+2,445 records / 986 names. Engine-validated and behavior-verified collection
+counters remain null, distinct from the new test mappings.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage -run 'TestUnlessPermanentCameUnderControl\|TestPermanentPropertyBranch\|TestContinuousControl\|TestClone' -count=1` | PASS after expected TDD failures. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONPropertyAlternatives\|TestRONResolvingCondition' -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS, including refreshed inventory and former-blocker assertions. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS, additional skill verification. |
+| `make lint` | PASS; automatic changes reviewed and affected checks rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, collection rejection: 512 remaining records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same remaining unique names and diagnostics. |
+
+No environment or pre-existing build/test blocker remains. The source defect
+was corrected with local Oracle and rules evidence. API/rules-contract docs
+cover only the behavior established here.
+
+No Go card definition, generator, runtime caller or DSL function is removed:
+complete collection loading, test migration and startup wiring have not reached
+the design's removal gate. No unused-function deletion or whole-repository
+caller audit is claimed. Native complete-registry startup remains unfinished.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Complete legal damage-source enumeration and retained choice references,
+   then the seven basic source-specific shield consumers.
+2. Parameterized bands with others engine contracts for the eight named
+   grant/token/removal consumers.
+3. Shared dynamic `XIs` activation modifiers for Reflecting Mirror and Voodoo
+   Doll, after complete-value and transactional-payment contracts are checked.
+
+Slice files: compiler/resolving condition/inventory code and RON tests; shared
+permanent information branch, entry/control/clone history and engine tests;
+both Erg Raiders RON records; `pkg/mage/doc.go`, API/rules contracts, vocabulary
+snapshot and only this progress entry. One descriptive commit contains this
+validated slice. Initial user changes remain unstaged. No second slice begins.
