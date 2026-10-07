@@ -27,6 +27,10 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.combatOpponent}, nil
 		}
 		switch n.Name {
+		case "Trigger_ThatCreatureOrPlaneswalker":
+			if ctx.receivedSource {
+				return permanentReferencePlan{kind: permanentSource}, nil
+			}
 		case "Trigger_ThatCreature":
 			if ctx.sourceAttack || ctx.sourceBlock {
 				return permanentReferencePlan{kind: permanentSource}, nil

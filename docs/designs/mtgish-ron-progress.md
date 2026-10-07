@@ -25952,3 +25952,156 @@ Slice files: source_combat_attribute.go/test.go, filtered_blocking.go,
 inventory_test.go, dsl-reference.md, engine-rules-contracts.md and this ledger.
 One descriptive commit follows validation; the final response records its hash.
 Unrelated user changes remain unstaged. No second slice starts.
+
+## 2026-10-06: damage-received event adapters
+
+Status: completed slice `DAMAGE-RECEIVED-EVENTS`. Stop after this slice.
+Complete collection execution, runtime cutover and removal gates remain open.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, current
+ledger, selected compiler and engine event/binding/counter services, relevant API
+and rules-contract docs, and complete affected RON records. CR 120.4b, 120.5–8,
+603.2–3, 400.7, 608.2h and 702.26 give the damage, trigger and identity contracts.
+Requirements come from RON and local Oracle data, never Go card definitions.
+No removed card skills, stubs or sub-agents are used.
+
+Initial user changes: .gitignore, execution design, ledger archival edits and
+untracked mtgish-ron-completed.md. Preserve them. Stage only this appended ledger
+entry, not the user's archival diff. Baseline RON tests, short engine tests and
+make build passed. Fresh strict loader and semantic inventory exited 1 for
+collection rejection, not build failure: 1,772 compiled / 673 rejected records;
+670 accepted / 316 rejected unique names; 2,445 records / 986 unique names.
+
+| Candidate | Distinct affected names and estimated complete unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Damage-received event adapters, selected | Fungusaur, Living Artifact, Lich; **1** complete name / **6** records | Living Artifact also needs optional source-counter payment with saved incarnation. Lich has entry life loss, loss-rule, life-gain replacement, dynamic mandatory sacrifice and graveyard-event gaps. Enables source/controller recipient events and saved actual damage in counter placement for all three consumers. | Low implementation, moderate gameplay/lifecycle tests; existing engine events supply the exact behavior. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** after prerequisites, **0** adapter-only | Complete records need eligible source discovery, local choice/result binding, saved source identity and next-event shield consumption. Shared source choice and prevention services have further consumers. | High engine/compiler effort; source-zone, simultaneous packet, replacement order, copy and clone tests. |
+| Battlefield-count P/T characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Wood Elemental; **5** credible complete names after all-zone prerequisite | Engine characteristic queries need all-zone owner/controller and CDA layering contracts. Avenger has the previously recorded opponent/controller source defect. Wood Elemental additionally needs entry sacrifices and retained counts. Enables CDA_Power/CDA_Toughness and shared count values. | High engine prerequisite effort, then small adapters; zone/copy/layer tests. |
+
+Complete nested records were inspected for estimates. Reprints count once.
+Select received-damage adapters for the largest credible immediate gain per
+unit effort. This is a shared three-consumer prerequisite, with one complete
+card unlocked; the larger alternatives require new engine contracts. First-error
+frequency alone does not estimate unlocks. The contract, reuse boundary and
+acceptance cases were stated before edits. No second slice is started.
+
+### Exact signatures, contexts and dependencies
+
+Top-level permanent `TriggerA(event, actions)` supports these exact events:
+
+- `WhenAPermanentIsDealtDamage(SinglePermanent(ThisPermanent))`.
+- `WhenAPlayerIsDealtDamage(SinglePlayer(You))`.
+
+Event and filter envelopes must be tuples with one argument. References must
+be bare symbols. Other subjects, Aura hosts, collections, target/event refs,
+additional arguments and malformed declarations remain rejected. These events
+observe all damage, including combat damage; they are not combat-only.
+
+Private adapter: `compileDamageReceivedTrigger(event, body Node, ctx scope)
+(optionFactory, error)`. RON owns spelling, lexical scope, validation and lowering.
+The permanent event gives a typed source reference for bare
+`Trigger_ThatCreatureOrPlaneswalker` only in its body. It resolves through `This`
+and the engine's saved source incarnation, with no target or global result slot.
+The player event matches the source controller at detection and does not declare
+`Trigger_ThatPlayer` or a permanent recipient. Sibling abilities do not inherit
+these bindings. Both events give an immutable per-event `damageAmountPlan` and a fresh
+per-factory `NumberBinding` for bare `Trigger_AmountOfDamageDealt`.
+
+`compileInstanceCounterAmount` now permits that saved event number in the existing
+`NumberCountersOfTypeOnPermanent(amount, counter, subject)` resolving action.
+Unbound or tuple-spelled damage numbers fail compilation. Other existing amount
+forms retain their previous grammar. No general value or cost support is implied.
+
+Engine reuse: `ReceivesDamage(This, amount)`, `ControllerIsDealtDamage(amount)`,
+`BindNumber`, `FromNumber`, `WhenEvent`, `Sequence`, `This`, `AddCountersTo`, native
+trigger snapshots/APNAP/stack placement, source incarnations, state-based actions,
+shared damage batches, replacement/prevention pipeline, transactional casting,
+phasing, trigger copies and game cloning. No new engine contract or public API.
+Amounts are the final positive damage for each packet. Life loss and prevented
+or zero damage do not trigger. An absent, phased or returned source cannot receive
+an old action; a phase cycle retains identity. Damage amounts stay saved after
+control changes, source departure and copies. LKI cannot make an absent subject
+available for counter placement. No new replacement-order, simultaneous-damage
+or cost-payment mechanism is added.
+
+### TDD, source evidence and gameplay mappings
+
+Tests preceded implementation. One fixture first used scalar PhaseIn instead of
+its slice argument; after that correction, real gameplay tests failed with the
+expected unsupported received-damage events. After lowering, selected-record
+loading exposed a test serializer that omits named fields. The fixture now reads
+the original full RON line selected by the parsed AST position. A synthetic
+creature amount fixture also needed CardPT. Both fixtures were fixed without
+weakening assertions. Focused tests pass with -count=1.
+
+| Card or contract | Test mapping and evidence |
+| --- | --- |
+| Fungusaur, complete records LEA/LEB/2ED/3ED/CED/CEI | `TestRONDamageReceivedFungusaur`: timing, one counter per damage event, zero/full/partial prevention, other recipient exclusion, independent repeated events, lethal damage and state-based death before resolution, source departure/return, phasing before/after/cycle, control, ability removal, copied trigger and clone isolation. `CastAndCombat`: unpaid casting rollback, delayed entry, paid casting and native attack/block/combat damage with P/T counter changes. `ReprintsAndInventory`: strict loading/validation of all six complete records with one canonical name and atomic rejection when an unsupported record is added. All share the TestRONDamageReceived prefix. |
+| Living Artifact, exact damage clause only | `TestRONDamageReceivedControllerClause`: extracts EnchantPermanent and the exact damage trigger from the complete AST; tests actual amount, zero/prevented/partial damage, damage versus life loss, recipient/control matching before and after detection, repeated events, source departure/return/phasing/removal, copies and clones. Asserts the complete record still rejects optional RemoveCounters payment. No complete-card gameplay claim. |
+| Shared amount, instance and damage contracts | `TestRONDamageReceivedBatch`: two Living Artifact damage-clause instances with different controllers, simultaneous packets and a prevention shield, clone while events are pending. `FinalRecipient`: creature-to-player redirection followed by prevention; only final recipient damage triggers and counters use actual damage. `PermanentAmountsAndInstances`: simultaneous sources/recipients, separate factory declarations and saved event numbers in permanent counter placement, pending-event clone. |
+| Invalid declaration and reporting contracts | `TestRONDamageReceivedInvalid`: malformed event/filter/source/player/number declarations, unbound targets/hosts/players/recipients, source-only recipient read from a player event, sibling event and activation scope errors. `ReprintsAndInventory`: semantic subject/recipient roles. Existing whole-collection inventory tests assert the fresh counts and unchanged production registry. |
+| Lich | Complete RON record inspected. Its controller-damage event prerequisite is supplied; independent full-record blockers remain. No new gameplay coverage claim. |
+
+Local data/LEA.json Oracle text agrees with Fungusaur's complete rule and all
+Living Artifact clauses. No source defect is corrected. All twelve RON file
+hashes still match the vocabulary snapshot; no source refresh is needed.
+Previously recorded Gaea's Avenger and Battering Ram defects remain deferred.
+Missing adapters, missing engine prerequisites and source defects are tracked
+separately. No environment failure blocks this slice.
+
+### Final measurements, validation and next work
+
+Actual gain matches estimate: **1 unique name / 6 records**, Fungusaur. One new
+complete-card gameplay mapping; Living Artifact has partial clause evidence.
+Strict and semantic loaders report **1,778 compiled / 667 rejected records**,
+**671 accepted / 315 rejected names**. Exactly the six Fungusaur records leave
+rejection. No accepted record regresses. The only remaining diagnostic changes
+are Living Artifact's six records, now rejected for optional payment cost
+`RemoveCounters` (LEB.lines.ron:146:432). Lich's first diagnostic remains unchanged.
+Both loaders exit 1 and strict loading returns no partial production registry.
+
+Semantic inventory: 72,962 nodes / 8,559 signatures; unknown-role occurrences
+fall from 6,330 to 6,296 as the event subject roles become known. Expression
+support remains unverified in the report; aggregate engine-validation and
+behavior-verification totals remain null. Compilation and gameplay stay separate.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Test-first `go test ./pkg/mage/dsl/ron -run TestRONDamageReceived -count=1` | Expected missing-adapter failures after fixture compilation correction |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONDamageReceived\|TestRONDamageAmount\|TestInventory' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic formatting reviewed, focused checks repeated |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,778 compiled / 667 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same collection counts and semantic totals above |
+| Record diagnostic comparison and source hashes | Exactly six new accepted records, no regression; only Living Artifact diagnostics advance; all source hashes unchanged |
+
+Runtime and removal gates remain unmet. No Go definitions, generators or DSL
+functions are deleted. No caller audit is used to authorize removal. Existing
+callers and authoring paths remain intact. API/rules documentation describes
+only the established event lowering. No native startup or migration completion
+claim. Stage only this slice, preserve user changes, and make one descriptive
+commit after required checks pass; its hash is in the final response.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source next-event prevention prerequisite for the seven circles/Realm
+   consumers, with source eligibility, binding, shield consumption and ordering.
+2. All-zone count characteristic prerequisite for the five complete consumers,
+   with Avenger data correction and Wood Elemental entry work tracked separately.
+3. Optional fixed source-counter resolution payment with exact incarnation
+   capture: Living Artifact is the direct dependent consumer. Keep return and
+   choice-time object changes safe; inspect other counter-payment consumers
+   before selecting a single-card adapter. This is the newly exposed dependency,
+   not automatic priority over useful multi-card work.
+No further slice starts in this run.
+
+Slice files: pkg/mage/dsl/ron/damage_received.go/test.go, compiler.go,
+permanent_scope.go, triggers.go, counter_placement.go, inventory.go/test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this appended entry.

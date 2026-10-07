@@ -4482,3 +4482,24 @@ Complete-record evidence: Juggernaut and Two-Headed Giant of Foriys map to
 Primordial Ooze remains rejected for its unresolved `CreateValueX` action.
 This slice does not establish additive multiple extra-block grants, all-zone
 CDA values, arbitrary combat requirements or new combat decision services.
+
+## RON damage-received triggers
+
+Permanent rules support `TriggerA` with either
+`WhenAPermanentIsDealtDamage(SinglePermanent(ThisPermanent))` or
+`WhenAPlayerIsDealtDamage(SinglePlayer(You))`. The first form uses
+`ReceivesDamage(This, amount)`; the second uses
+`ControllerIsDealtDamage(amount)`. Both save `Trigger_AmountOfDamageDealt`
+through a fresh `NumberBinding` for each factory instance. Counter placement
+can use this saved number in `NumberCountersOfTypeOnPermanent`.
+
+Only the permanent event supplies `Trigger_ThatCreatureOrPlaneswalker`. It
+resolves through `This` and keeps the original source incarnation. It is not a
+target. The player event checks the source controller when damage occurs; it
+does not supply `Trigger_ThatPlayer`. Other subjects, malformed references and
+reads outside the matching event body remain declaration errors.
+
+Fungusaur's complete RON record is supported. Living Artifact's damage clause
+is supported, but its complete record still rejects optional counter payment.
+Lich retains its other unsupported contracts. This adapter does not grant
+support for general damage-recipient filters or optional counter payments.

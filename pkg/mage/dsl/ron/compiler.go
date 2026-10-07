@@ -29,6 +29,7 @@ type scope struct {
 	castingCost       *Node
 	damagePlayer      *damagePlayerPlan
 	damageAmount      *damageAmountPlan
+	receivedSource    bool
 	delayedStep       bool
 	sourceAttack      bool
 	sourceBlock       bool

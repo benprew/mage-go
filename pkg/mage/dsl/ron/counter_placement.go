@@ -154,6 +154,9 @@ func compileCounterAmount(n Node, ctx scope) (mage.ResolutionValue, error) {
 }
 
 func compileInstanceCounterAmount(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "Trigger_AmountOfDamageDealt" {
+		return compileInstanceValue(n, ctx)
+	}
 	if n.Name == "ManaValueOfExiled" {
 		return compileExilePaymentValue(n, ctx)
 	}

@@ -1194,9 +1194,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
+			case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
 				return "permanent_filter"
-			case "WhenAPlayerDrawsACard", "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep":
+			case "WhenAPlayerDrawsACard", "WhenAPlayerIsDealtDamage", "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep":
 				return "player_filter"
 			}
 		}

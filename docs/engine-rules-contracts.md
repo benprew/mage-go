@@ -5256,3 +5256,26 @@ Evidence: `TestRONSourceCombatAttributeRequiredAttack`,
 `TestRONSourceCombatAttributeReprints`. This evidence covers the two source
 forms; it does not establish additive extra-block grants or a general solver
 for interacting combat requirements.
+
+## RON damage-received event lowering
+
+RON source-permanent and controller-player damage events reuse `ReceivesDamage`
+and `ControllerIsDealtDamage`. They observe positive damage after prevention
+and redirection (CR 120.4b, 120.8). Life loss is not a damage event. Each pending
+packet retains its actual amount; simultaneous sources do not overwrite one
+another. Native trigger detection, APNAP placement, source incarnation and
+resolution use the existing engine contracts (CR 603.2–3, 400.7, 608.2h).
+
+The permanent event's recipient alias uses `This`, so a returned source cannot
+receive counters from an old trigger. Phased or absent subjects cannot receive
+an action; a phase cycle preserves the incarnation. Controller-player matching
+uses control at detection. Later control changes do not change saved damage.
+A copied trigger keeps its source identity and amount. Each factory builds its
+own number binding, and cloned games keep independent pending and stack state.
+
+Evidence: `TestRONDamageReceivedFungusaur`, `CastAndCombat`,
+`ControllerClause`, `Batch`, `FinalRecipient`, `PermanentAmountsAndInstances`,
+`ReprintsAndInventory` and `Invalid` (all with the `TestRONDamageReceived`
+prefix). Fungusaur tests use its complete record and all six reprints. Living
+Artifact tests isolate its exact damage clause from the complete AST and assert
+that the full record remains rejected. No complete-card claim applies to it.
