@@ -3236,7 +3236,11 @@ func (o interveningIfOption) applyTrigger(t *GenericTriggered) {
 	t.interveningDefinition = o.condition
 	before := t.Condition
 	t.Condition = func(evt *GameEvent, g GameReader, source, controller uuid.UUID) bool {
-		return (before == nil || before(evt, g, source, controller)) && o.condition.checkState(g, StateContext{SourceID: source, ControllerID: controller})
+		if before != nil && !before(evt, g, source, controller) {
+			return false
+		}
+		players := capturedTriggerTargetPlayers(&pendingTrigger{ability: t, event: evt, sourceID: source, controller: controller})
+		return o.condition.checkState(g, StateContext{SourceID: source, ControllerID: controller, players: players})
 	}
 	t.effects = []Effect{IfState(o.condition, Sequence(t.effects...))}
 }

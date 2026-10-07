@@ -86,6 +86,9 @@ func compileTappedUpkeep(n Node, ctx scope) (optionFactory, error) {
 	if event.Name != "AtTheBeginningOfAPlayersUpkeep" {
 		return nil, unsupported(event, "intervening-if event")
 	}
+	if n.Args[1].Name == "PlayerPassesFilter" || n.Args[1].Name == "APlayerPassesFilter" {
+		return compileUpkeepPlayerCondition(n, ctx)
+	}
 	if err := arity(event, 1); err != nil {
 		return nil, err
 	}

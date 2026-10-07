@@ -6686,3 +6686,29 @@ complete consumer records still reject other operations. Existing complete RON
 Mindstab Thrull and Necrite gameplay remains covered by
 `TestRONDefendingPlayer*`. Replacement ordering and simultaneous operations are
 unchanged and are not new contracts of this slice.
+
+## Saved player conditions and opposing permanent counts
+
+`PlayerControls(PlayerRef, PermanentFilter)` now accepts `FromPlayer(binding)`
+as well as `You` and `ActivePlayer`. Definition validation requires a producer
+for the saved binding. Trigger detection reads the event pattern's player
+captures without running effects, making choices or changing the resolution
+frame. Resolution reads the current frame populated by the existing capture
+service. Each pending event, copied stack object and game clone retains its own
+player identity. Neither current turn nor source control can replace that player.
+An absent player or missing binding returns false. Current matching battlefield
+permanents supply the control check; departed and phased objects supply no LKI.
+
+`OpponentControlsMoreThanYou(PermanentFilter) StateCondition` compares the
+current matching permanent counts for the condition's controller and opponent.
+Equal counts return false. Missing controller or opponent returns false. The
+query makes no choices and stores no mutable state. It works in the existing
+state-condition contexts, including `WithInterveningIf` and `IfState`.
+
+CR 603.4 and 608.2a require checks at detection and resolution. CR 603.3a keeps
+the triggering controller after source departure or control change. No cost,
+replacement, simultaneous-operation, targeting or zone-movement behavior changes.
+Evidence: `TestPlayerControlsSavedIntervening`, `TestPlayerControlsSavedDeclarations`,
+`TestOpponentControlsMoreThanYou`, and the RON upkeep-player tests. Existing
+`PlayerControls`, opposing-control, storage-upkeep and event-capture tests remain
+regressions. Land Tax and Ghazbán Ogre's unresolved bodies remain compile errors.

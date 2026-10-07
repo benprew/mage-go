@@ -334,6 +334,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "static_player_filter":
+		if n.Name == "ControlsMorePermanentThanPlayer" && len(n.Args) == 2 {
+			return []string{"player_reference", "permanent_filter"}[index]
+		}
+		if n.Name == "SinglePlayer" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "static_player_filter"
 		}
@@ -349,6 +355,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "combat_history_filter"
 		}
 	case "trigger_condition":
+		if n.Name == "APlayerPassesFilter" && len(n.Args) == 2 {
+			return []string{"player_filter", "static_player_filter"}[index]
+		}
+		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
+			return []string{"player_reference", "static_player_filter"}[index]
+		}
 		if n.Name == "ACombatPermanentPassesFilter" && len(n.Args) == 2 {
 			return []string{"permanent_reference", "combat_history_filter"}[index]
 		}

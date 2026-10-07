@@ -32919,3 +32919,164 @@ Slice files: `pkg/mage/combat_defender.go`, `combat_defender_test.go`,
 `target_player_reference.go`, `doc.go`; `pkg/mage/dsl/ron/combat_defender_test.go`,
 `compiler.go`, `player_relative_target.go`, `inventory.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry.
+
+## Run 2026-10-07: UPKEEP-PLAYER-CONDITIONS
+
+Status: complete shared condition slice. Stop after this slice. Collection
+loading, collection gameplay, runtime cutover and removal gates remain unmet.
+
+### Fresh evidence and candidate comparison
+
+Initial user changes: `.gitignore`, the execution design and this ledger;
+`mtgish-ron-completed.md` was already untracked. All are preserved. Only this
+new entry is staged for the ledger; its initial reorganization is not staged.
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict
+loading and semantic inspection exited 1 for unsupported collection records:
+**1,870 compiled / 575 rejected records**, **721 accepted / 265 rejected names**,
+2,445 records and 986 names. Inventory: 72,962 occurrences, 8,557 signatures,
+5,085 unknown-role occurrences. These measurements supersede the historical
+summary and vocabulary diagnostic snapshot.
+
+The engine reference, design, ledger, vocabulary, selected compiler/engine code,
+complete candidate records, API/rules contracts and CR 603.2b, 603.3a, 603.4,
+603.5, 608.2a and 608.2h were read. Local `data/ARN.json` and `data/LEG.json`
+confirm the three selected conditions. No Go card definitions supplied requirements.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- |
+| Upkeep player conditions, selected | Spiritual Sanctuary, Land Tax, Ghazbán Ogre: **1** immediate complete-card unlock, plus shared prerequisites for **2** names. Each has one record. | Land Tax needs optional multi-card basic-land search with reveal/shuffle; Ghazbán Ogre needs indefinite resolving control transfer to the unique highest-life player. Enables event-player pure state reads, strict opposing permanent-count comparison and highest-life intervening conditions. | Moderate: reuse event snapshots, state conditions and upkeep patterns; add saved-player state access, one pure count service, adapters and boundary/identity tests. |
+| Complete damage-source enumeration and choice integration | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential unlocks after enumeration and adapters. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage: **4** additional blocked names. | Complete legal source enumeration includes referred stack/effect/delayed sources and face-up command objects. Enumeration alone unlocks zero. Other consumers need partial prevention, continued damage/reflection, redirection or actual prevented-amount results. | High: source universe and retained-information integration, then choice/prevention adapters and ordering/gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean potential unlocks. Gaea's Avenger and Wood Elemental are **2** blocked names. | All-zone characteristic reads, owner/controller context, count lowering, copy/CDA/layer integration and all readers. Avenger has a recorded controller-filter defect; Elemental requires entry-sacrifice results. | High: cross-zone engine contract and characteristic readers, then adapters and broad gameplay tests. |
+
+Selection rationale: three complete records expose a small shared condition gap.
+One full consumer and two concrete dependent bodies can use the same completed
+condition service, while the seven/five-card alternatives need much broader
+engine integration. First-error frequency was not used as an unlock estimate.
+The contract, reuse boundary and acceptance cases were stated before edits.
+The `implement-engine` skill guided engine work. No removed card/set skill,
+subagent, fallback, card-name executor or partial production registry was used.
+
+### Exact signatures, contexts and reuse
+
+RON supports `TriggerI(AtTheBeginningOfAPlayersUpkeep(AnyPlayer), condition,
+actions)` and the same event with `SinglePlayer(You)`. Condition signatures:
+
+- `PlayerPassesFilter(You, ControlsA(permanent_filter))` or the same with
+  `Trigger_ThatPlayer`. The event player has one fresh `stepEventPlan` and
+  `PlayerBinding` shared by condition and actions for each factory instance.
+- `APlayerPassesFilter(Opponent,
+  ControlsMorePermanentThanPlayer(You, permanent_filter))`.
+- `APlayerPassesFilter(AnyPlayer, SinglePlayer(ThePlayerWithTheMostLife))`.
+
+Filters reuse `compileStaticConditionFilter`, including its exact supported
+nested conjunction/disjunction, counter and type/subtype/property forms.
+The adapters add no static, resolving-action, activation, cost, entry or other
+step condition context. Wrong arity, tuple symbols, empty logical filters,
+unsupported player selectors and unbound/cross-rule reads remain compile errors.
+Existing tapped-source upkeep conditions remain on their previous path.
+
+Engine `PlayerControls(PlayerRef, PermanentFilter)` now accepts
+`FromPlayer(binding)`, in addition to `You` and `ActivePlayer`. The private
+`StateContext` player map supplies binding identity. `WithInterveningIf` reuses
+`capturedTriggerTargetPlayers` to read event-pattern snapshots without executing
+captures or changing the resolution frame. `IfState` reads the existing frame
+populated by normal event captures. Missing bindings/players return false;
+definition validation rejects missing producers. No generic game-state slot is
+added. Distinct pending events, copied objects and clones retain separate frames.
+
+New engine API: `OpponentControlsMoreThanYou(PermanentFilter) StateCondition`.
+It compares current matching battlefield counts for the saved effect controller
+and current opponent. Equal counts, missing controller or missing opponent return
+false. It stores no state and makes no choices. Phased and departed permanents
+supply no current control; ownership and LKI do not replace it.
+
+`HasUniqueHighestLife`, `TurnStepBegins`, `EachUpkeep`/`YourUpkeep`,
+`WithInterveningIf`, `PlayerControls`, existing capture/stack/copy/clone services,
+and transactional casting are reused. Both condition boundaries read current
+state; source departure, ability removal, control change or return cannot erase
+an already pending trigger or replace its event player/controller. A tie fails
+the highest-life condition. No new replacement, simultaneous-operation, cost,
+targeting or zone-movement contract is introduced.
+
+### TDD and card-to-test mappings
+
+The initial RON tests failed for the unsupported `AnyPlayer` intervening upkeep
+shape. Engine tests initially also had missing core imports; those were corrected,
+then the missing `OpponentControlsMoreThanYou` failure was confirmed alone before
+implementation. Saved-player tests and comparator tests passed after engine work.
+RON gameplay and condition probes passed after lowering. Added tests caught two
+fixture assumptions: a clone still controlled its second Plains after the first
+was phased out, and unordered same-controller pending triggers did not guarantee
+which trigger was on top for copying. Expectations were corrected for the second
+Plains; sequential placement fixes the intended copied event. No behavior assertion
+was removed. A missing test UUID import and a case-sensitive diagnostic assertion
+were also corrected. Existing fixed inventory totals were updated for the one
+newly compiled record, with an explicit Sanctuary rejection regression assertion.
+
+| Card / contract | Tests and coverage |
+| --- | --- |
+| Spiritual Sanctuary, complete LEG record | `TestRONSpiritualSanctuary`: 2WW casting, unpaid rollback, no early gain, correct event player, failed resolution recheck and clone isolation. `Lifecycle`: distinct player events, separate factories/controllers, source departure/control/phasing/return/ability removal, land control/departure/phase cycle/return, copied trigger and cloned frames. `NativeUpkeep`: native step/priority/resolution, untargeted behavior with shroud, phased Plains and phased-source exclusion. |
+| Land Tax condition prerequisite | `TestRONUpkeepPlayerConditionsRecords` and `Rechecks`: complete-record condition with a test-only life-gain body, controller-only upkeep, opposing land counts, false detection, gained condition after detection, lost condition before resolution and source departure. `StrictRecords` preserves complete-card rejection at `unsupported optional action (SearchLibrary)`. No complete gameplay mapping is claimed. |
+| Ghazbán Ogre condition prerequisite | Same `Records`/`Rechecks`: complete-record condition with a test-only body, ties, unique highest life, both condition boundaries and source departure. `StrictRecords` preserves rejection at `unsupported indefinite type modification (SetController)`. No complete gameplay mapping is claimed. |
+| Engine saved-player condition | `TestPlayerControlsSavedIntervening`: event captures override a deliberately stale resolution binding, correct player at detection/resolution, source departure, active-player changes, failed recheck and cloned frames. `SavedDeclarations`: unbound saved player is rejected. |
+| Engine opposing count | `TestOpponentControlsMoreThanYou`: empty/equal/greater counts, both controllers, ownership versus control, irrelevant types, missing controller, phasing, clone isolation and changed control. `TestOpponentControlsMoreIntervening`: detection, resolution, source departure and clone rechecks. |
+| RON declarations, full records and semantic inventory | `TestRONUpkeepPlayerConditionsInvalid`, `InventoryAndScope`, `StrictRecords`: malformed/filter/player/event declarations, cross-rule isolation, roles beneath nested conditions, fresh factory validation, all selected records/reprints, complete selected loading and atomic invalid-collection rejection. Existing `TestInventory*`, player-control and event/step regressions pass. |
+
+Exactly one complete-card gameplay mapping is added. Condition probes are
+prerequisite evidence only. Aggregate engine-validation and behavior totals remain
+null; compilation and gameplay coverage are separate.
+
+### Final measurements, source status and validation
+
+Estimated gain **1 unique name / 1 record**; actual gain **1 / 1**, exactly
+Spiritual Sanctuary. All formerly accepted names remain accepted. Strict loader:
+**1,871 compiled / 574 rejected records**, **722 accepted / 264 rejected names**.
+It still exits 1 and publishes no partial registry. Exactly two other diagnostics
+advance: Ghazbán Ogre to `SetController`, Land Tax to optional `SearchLibrary`.
+Every other diagnostic is unchanged.
+
+Inventory: **72,962 occurrences / 8,557 signatures / 5,073 unknown-role
+occurrences**. The 12 fewer unknown-role occurrences are condition descendants
+now classified semantically; this does not prove support for other contexts.
+All 12 source hashes are unchanged. No selected source defect was found or
+corrected; the vocabulary snapshot requires no RON source refresh. Previously
+recorded unrelated defects remain unresolved.
+
+All required checks passed on the final state. There is no environment or
+pre-existing validation blocker. Automatic lint changes were import spacing in
+the new tests; they were reviewed. After lint, focused tests, short engine tests,
+full tests, build and vet passed again. No unrelated source file changed.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestPlayerControlsSaved\|TestOpponentControlsMore\|TestRONUpkeepPlayer\|TestRONSpiritualSanctuary\|TestInventory' -count=1` | PASS after final lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint. |
+| `make test` | PASS after final lint. |
+| `make build` | PASS after final lint. |
+| `go vet ./...` | PASS after final lint. |
+| `go test ./... -short -count=1` (engine skill) | PASS after final lint. |
+| `make lint` | PASS, zero issues; import formatting reviewed. |
+| `git diff --check` | PASS for working and staged changes after ledger completion. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,871 compiled / 574 rejected records. Final diagnostics exactly match the post-implementation report. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 722 accepted / 264 rejected names; 72,962 occurrences / 8,557 signatures / 5,073 unknown-role occurrences. Final report exactly matches the post-implementation report. |
+
+API and rules-contract docs describe only established behavior. No Go card,
+generator, startup caller or DSL function is removed. Complete loading, complete
+RON gameplay and runtime wiring remain below the removal gate. No caller audit
+authorizes DSL deletion. Only this slice is committed, with its hash reported in
+the final response. Initial user edits and the untracked history remain unstaged.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Complete legal damage-source enumeration and the seven clean source-choice
+   prevention consumers; keep the four additional replacement blockers explicit.
+2. All-zone count CDA integration for the five clean consumers above.
+3. Optional multi-card search with reveal/shuffle for Land Tax and nested search
+   consumers; preserve up-to choices and failure-to-find rules.
+
+Changed files: engine `player_count_condition.go`, `upkeep_player_condition_test.go`,
+`composable_conditions.go`, `composable_events.go`, `doc.go`; RON
+`upkeep_player_condition.go`, its tests, `storage_land.go`, `inventory.go`,
+`inventory_test.go`; API/rules docs and this ledger entry. No second slice started.

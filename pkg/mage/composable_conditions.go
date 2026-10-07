@@ -554,13 +554,15 @@ func (playerControlsCondition) stateCondition() {}
 
 func (c playerControlsCondition) checkState(g GameReader, ctx StateContext) bool {
 	var playerID uuid.UUID
-	switch c.player.(type) {
+	switch ref := c.player.(type) {
 	case controllerRef:
 		playerID = ctx.ControllerID
 	case activePlayerRef:
 		if active := g.ActivePlayerObj(); active != nil {
 			playerID = active.PlayerID()
 		}
+	case savedPlayerRef:
+		playerID = ctx.players[ref.binding]
 	default:
 		return false
 	}
@@ -578,10 +580,10 @@ func (c playerControlsCondition) checkState(g GameReader, ctx StateContext) bool
 func (c playerControlsCondition) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "state-condition", Text: "player controls matching permanent"}
 	switch c.player.(type) {
-	case controllerRef, activePlayerRef:
+	case controllerRef, activePlayerRef, savedPlayerRef:
 		n.children = []definitionEdge{{"player", c.player}}
 	default:
-		n.problem = "state condition requires You or ActivePlayer"
+		n.problem = "state condition requires You, ActivePlayer, or a saved player"
 	}
 	return n
 }
@@ -727,6 +729,7 @@ type StateCondition interface {
 
 // StateContext identifies the source and controller for a condition check.
 type StateContext struct {
+	players           map[*PlayerBinding]uuid.UUID
 	SourceID          uuid.UUID
 	ControllerID      uuid.UUID
 	SourceIncarnation uuid.UUID
@@ -1220,7 +1223,7 @@ func (e *stateBranch) Text() string {
 }
 func (e *stateBranch) Properties() EffectProperties { return e.effect.Properties() }
 func (e *stateBranch) Apply(ctx *EffectContext) error {
-	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller, SourceIncarnation: ctx.sourceIncarnation}) {
+	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller, SourceIncarnation: ctx.sourceIncarnation, players: ctx.Game.resolution.playerBindings}) {
 		return e.effect.Apply(ctx)
 	}
 	return nil

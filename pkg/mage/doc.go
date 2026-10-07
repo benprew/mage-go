@@ -325,6 +325,11 @@
 // Returned and phased permanents cannot pay. Zone replacements can change
 // the destination without changing successful payment.
 //
+// Use [PlayerControls] with [FromPlayer] for a saved event player condition.
+// Detection and resolution keep separate player bindings for each event.
+// [OpponentControlsMoreThanYou] compares current matching permanent counts.
+// Phased permanents and equal counts cannot satisfy that comparison.
+//
 // Use [TargetControlledBy] with [You] or [FromPlayer] of an event binding.
 // [CombatDefendingPlayer] selects the nonactive player during two-player combat.
 // Target control checks use this player even when the defending player casts

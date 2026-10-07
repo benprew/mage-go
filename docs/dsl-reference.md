@@ -5651,3 +5651,24 @@ Blaze of Glory, False Orders and Floral Spuzzem have other unsupported operation
 The target prerequisite does not make their complete records executable.
 `TestRONCombatDefender*` maps the supported target contracts; the existing
 `TestRONDefendingPlayer*` covers accepted full-card regressions.
+
+## RON upkeep player conditions
+
+`TriggerI(AtTheBeginningOfAPlayersUpkeep(AnyPlayer | SinglePlayer(You)),
+condition, actions)` supports these player conditions:
+
+- `PlayerPassesFilter(You | Trigger_ThatPlayer, ControlsA(permanent_filter))`.
+- `APlayerPassesFilter(Opponent, ControlsMorePermanentThanPlayer(You, permanent_filter))`.
+- `APlayerPassesFilter(AnyPlayer, SinglePlayer(ThePlayerWithTheMostLife))`.
+
+Filters use the existing static-condition filter compiler. Empty conjunctions,
+unbound players, tuple symbols and other selectors are rejected. The event
+player and action body share one fresh binding per factory. The engine checks
+current conditions at detection and resolution. A tie does not satisfy the
+highest-life condition. An opponent count must be strictly greater; ownership,
+LKI and phased permanents cannot supply current control.
+
+Spiritual Sanctuary has a complete RON gameplay mapping in
+`TestRONSpiritualSanctuary` and `TestRONSpiritualSanctuaryLifecycle`. Land Tax
+still needs its multi-card search; Ghazbán Ogre still needs its indefinite
+control action. Their condition probes do not establish complete gameplay.
