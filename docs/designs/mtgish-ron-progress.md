@@ -30699,3 +30699,137 @@ Ranked next candidates to reassess from fresh evidence:
 
 No second slice is started. Complete collection loading/gameplay, application
 cutover, Go-definition removal and unused DSL cleanup remain unfinished.
+
+## 2026-10-07: static attack payments
+
+Status: completed slice `STATIC-ATTACK-PAYMENTS`. Stop after this slice.
+Initial edits to `.gitignore`, the execution design and this ledger, plus the
+untracked completed-history document, are preserved. Only this appended entry
+is staged from the ledger; its prior reorganization remains unstaged.
+
+### Fresh evidence and candidate selection
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict
+loading and semantic inspection exited 1 for unsupported records: **1,841
+compiled / 604 rejected records; 707 accepted / 279 rejected unique names**.
+There are 2,445 records and 986 names. Inventory: 72,962 occurrences, 8,557
+signatures, 5,331 unknown-role occurrences. Requirements came from complete RON
+records and local `data/DRK.json` Oracle text. The design, ledger, vocabulary
+snapshot, engine reference, selected compiler/engine code and API/rules contracts
+were read, with CR 508.1a–k, 611.3 and 613.1. Reprints count once.
+
+| Candidate | Distinct affected names; credible full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Static attack payments, selected | Brainwash and Leviathan: **2** full unlocks. Each has one DRK record. | Existing casting, enchant, entry-tapped, untap restriction, optional upkeep sacrifice and trample adapters cover the remaining nested rules. Shared static attack costs enable source and current-host taxes. Review found the post-payment live-attacker prerequisite; this slice includes it. | Low/medium: two exact engine rules and the shared transaction already exist; compiler validation, inventory roles, lifecycle/native gameplay and a small engine identity fix. |
+| Battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** estimated full unlocks. | All-zone characteristics, owner/controller contexts, named counts and CDA/copy/layer contracts are prerequisites. Gaea's Avenger and Wood Elemental have further blockers and are excluded. Enables count characteristics throughout applicable zones. | High: shared zone-aware engine evaluation and five complete gameplay mappings. |
+| Chosen-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** estimated full unlocks. | Resolution source choices, spell/permanent continuity and one-event replacement shields remain prerequisites. Other choice consumers have additional blockers. Enables typed chosen sources for later redirection and prevention consumers. | High: source discovery and decisions, retained identity, replacement integration and seven complete mappings. |
+
+Selection: two clean consumers use exact existing services for substantially
+less effort than either larger prerequisite. Complete nested records, rather
+than first-error frequency, determined the estimate. The contract, reuse boundary
+and acceptance cases were stated before edits. The engine identity prerequisite
+was found during review and tested before its fix. The implement-engine skill
+was used for that engine work; no card/set skill, delegation, Go-card requirement,
+source change, name branch or fallback was used.
+
+### Signatures, contexts, dependencies and reuse
+
+`PermanentRuleEffect(subject, [CantAttackUnlessCost(cost)])` accepts a live
+`ThisPermanent` on a permanent or `HostPermanent` on an Aura. Exactly one
+operation is required. The cost is `PayMana(list)` with fixed mana symbols or
+`SacrificeNumberPermanents(Integer(n), filter)` with positive fixed n and an
+existing validated sacrifice filter. The latter permits the attacker itself to
+pay when it matches. X, other costs, combined costs, malformed arities, extra
+operations, unbound references and target subjects remain compile errors.
+Resolving, entry, temporary and conditional attack-payment contexts are not
+added. Each factory builds a fresh cost. Inventory reads its operand as `cost`,
+including nested descendants under rejected parents.
+
+RON owns spelling, scope and validation. `SourceCantAttackUnlessPays` and
+`AttachedCantAttackUnlessPays` register live attack costs. `PayAttackCosts`
+aggregates current costs, reserves the attacker from mana activation, prepares
+choices and commits one shared payment transaction. The attacker controller
+pays, independently of the Aura controller. Current attachment, ability removal,
+phasing and source departure govern the tax. Casting pays only the casting cost;
+Leviathan's optional upkeep payment is separate from its attack payment.
+
+Engine prerequisite: native `doDeclareAttackers` and search `ExecuteAttackers`
+now use the private `attackerAfterPayment` query after payment. Presence, original
+incarnation and current declaring-player control are required by CR 508.1k.
+The current pointer replaces the old pointer. A sacrificed or phased source,
+a returned card, or a control-changed source cannot become an attacker or produce
+attack events/history through stale information. Successful payment remains
+paid if its source leaves. No new cost, zone, damage, replacement or LKI service
+is introduced. This does not claim general multi-attacker declaration rollback.
+
+### TDD and gameplay mapping
+
+Real gameplay tests first failed on the unsupported attack-cost operations.
+The later animated-Leviathan tests and independent synthetic engine tests failed
+because a sacrificed source was still declared in both native and search paths.
+The engine identity query test failed for the missing query before implementation.
+
+Test setup corrections: use `Game.Attach`, `Registry.CreateCard`, `TypeLand`
+and `HasAttackedThisTurn`; set the Aura caster's main phase and active player;
+remove fresh control-change sickness when testing payment; supply synthetic
+creature CardPT. These were fixture/API errors, not weakened assertions or
+pre-existing failures. The first broad run caught the missing synthetic CardPT;
+final suites were rerun after correction. Lint requested preallocation of the
+fixed-size victim list; that correction and automatic formatting were reviewed.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Brainwash, complete DRK record | `TestRONAttackCostBrainwash`: W casting, creature enchant legality and unpaid/illegal rollback, resolution timing, host/donor control, departure, phase cycles, host return, donor/host ability removal, reattachment, copied Aura spell and independent clones. `NativeDeclaration`: accept/decline and attack timing. |
+| Leviathan, complete DRK record | `TestRONAttackCostLeviathan`: 5UUUU casting/rollback, 10/10 trample, tapped entry, own untap restriction, attack sickness/tap/phasing, insufficient/wrong/opposing/phased Islands, owner graveyards, control, ability removal and clones. `LeviathanUpkeep`: controller-only upkeep, stack timing, optional decline/payment, independent attack payment. `NativeDeclaration`: native choice, sacrifices and actual trample damage. `SacrificedAttacker`: animation adds Island; the source can pay but does not attack, in both paths. |
+| Supported declarations and transactions | `TestRONAttackCostInvalidAndInventory`: malformed and unbound declarations, context restrictions, fixed-count/X checks and cost roles. `StrictLoading`: both complete records, fresh instances and atomic invalid-collection rejection. `AtomicChoices`: separate mana and sacrifice rules, aggregate payment, short mana, invalid/stale selections, no partial sacrifices and clone isolation. |
+| Engine identity prerequisite | `TestAttackPaymentSourceSacrifice`: synthetic source sacrifice through both paths, no attack/history. `TestAttackPaymentCurrentIdentity`: presence, control, return, phase cycle and clones. Existing `TestPayAttackCosts*` verifies atomic aggregation and reserved mana sources. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay coverage
+remain separate; collection-wide engine_validated and behavior_verified totals
+remain null. Simultaneous sacrifice and replacement execution reuse the established
+shared services; this slice adds no replacement ordering or batch contract.
+
+### Measurements and validation
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly
+Brainwash and Leviathan. Final strict loading: **1,843 compiled / 602 rejected
+records; 709 accepted / 277 rejected unique names**. No accepted name is lost;
+all remaining first diagnostics are unchanged. Inventory: **72,962 occurrences /
+8,557 signatures / 5,322 unknown-role occurrences**, nine fewer unknown roles.
+Strict loading still exits 1 and installs no partial production registry.
+
+No source defect was found for the selected records; both agree with local
+Oracle data. No RON source changed, so vocabulary syntax and file hashes need
+no refresh. Prior documented defects remain open. Complete collection loading,
+gameplay, runtime cutover, Go-definition removal and unused DSL cleanup remain
+unfinished. No definition, generator, startup caller or DSL function is removed;
+the removal gate is unmet and no caller audit authorizes deletion.
+
+Final required checks pass after the engine prerequisite and lint review:
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestAttackPayment\|TestPayAttackCosts\|TestRONAttackCost\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS; engine skill verification. |
+| `make lint` | PASS, zero issues; final automatic formatting reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,843 compiled / 602 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts and semantic measurements above. |
+
+Changed files: RON attack_cost.go and attack_cost_test.go, filtered_blocking.go,
+inventory.go and inventory_test.go; engine combat_restrictions.go,
+turn_execution.go, game_mutator.go, attack_payment_identity_test.go and doc.go;
+dsl-reference.md, engine-rules-contracts.md and this appended ledger entry.
+Only this slice is committed; the final response reports the commit hash.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Battlefield-count CDAs: five clean consumers and shared all-zone rules.
+2. Chosen-source shields: seven clean consumers and shared source identity.
+3. Filtered blocking requirements for Lure and Marble Priest; native maximum
+   requirement satisfaction is an engine prerequisite before adapter lowering.
+
+No second slice is started. Migration completion criteria remain unmet.

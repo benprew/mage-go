@@ -33,6 +33,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption {
 			return mage.WithAbility(mage.Static(mage.CantAttack(subject.build(instanceBindings{}))))
 		}, nil
+	case "CantAttackUnlessCost":
+		return compileAttackCost(n, operation, ctx)
 	case "CantAttackUnlessDefendingPlayer":
 		return compileDefendingLandRule(n, operation, ctx)
 	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":

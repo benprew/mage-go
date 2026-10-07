@@ -232,6 +232,12 @@
 // [ControllerOfAbility] reads the selected ability's controller, including copies.
 // [CounterAbility] uses the shared counter operation and does not refund costs.
 //
+// Attack costs use [SourceCantAttackUnlessPays] or [AttachedCantAttackUnlessPays].
+// Both attack declaration paths read the current source after payment. The
+// original incarnation must remain present and under the declaring player's
+// control. Payment can sacrifice the attacker when it matches the cost filter.
+// An absent source cannot become an attacker or produce an attack event.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

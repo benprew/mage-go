@@ -5256,3 +5256,31 @@ Static grants follow current membership; resolving grants keep captured
 incarnations. Zombie Master and Life Matrix have complete RON test mappings
 in `activated_grant_test.go`. Equinox still needs a targeted grant and a
 spell-outcome condition.
+
+## RON static attack payments
+
+`PermanentRuleEffect(subject, [CantAttackUnlessCost(cost)])` supports
+`ThisPermanent` on a permanent and `HostPermanent` on an Aura. The operation
+requires exactly one `PayMana(list)` with fixed mana symbols or
+`SacrificeNumberPermanents(Integer(n), filter)` with positive fixed `n` and an
+existing sacrifice filter. X, combined costs, target references, other cost
+forms and multiple operations remain compile errors in this context.
+
+Each factory creates a fresh cost. The adapter uses `SourceCantAttackUnlessPays`
+or `AttachedCantAttackUnlessPays`; payment uses `Game.PayAttackCosts` during
+attack declaration. The attacker controller pays, even when an Aura has another
+controller. Multiple live rules contribute separate costs to one transaction.
+The rule follows current attachment, source abilities and phasing. It does not
+use retained information to tax a former host. Casting and resolving the card
+do not pay the attack cost. Leviathan's optional upkeep payment is separate.
+
+Complete Brainwash and Leviathan records are mapped by `TestRONAttackCost*`:
+casting and rollback, entry and upkeep, native attack choices, trample damage,
+control, attachment changes, phase cycles, returned objects, copies, independent
+clones, aggregate payment and invalid or stale sacrifice choices. Inventory
+visits the operation's operand as a cost, including rejected descendants.
+
+Attack payment may sacrifice the attacker when it matches the cost filter.
+Both declaration paths require the paid source's original incarnation and
+current control before they put it in combat. An animated Leviathan that is
+also an Island can pay with itself; it then remains absent from combat.

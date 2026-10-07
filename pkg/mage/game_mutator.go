@@ -1048,6 +1048,10 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		if !g.PayAttackCosts(atk, playerID, false) {
 			continue
 		}
+		atk = g.attackerAfterPayment(atk, playerID)
+		if atk == nil {
+			continue
+		}
 		if !atk.HasKeyword(Vigilance) {
 			g.TapPermanent(atk)
 		}

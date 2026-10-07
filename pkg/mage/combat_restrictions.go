@@ -395,3 +395,12 @@ func itoa(n int) string {
 	}
 	return string(buf[i:])
 }
+
+// Payment can remove the attacker or change its controller.
+func (g *Game) attackerAfterPayment(original *Permanent, controller uuid.UUID) *Permanent {
+	current := g.FindPermanent(original.ID())
+	if current == nil || current.incarnationID != original.incarnationID || current.ControllerID() != controller {
+		return nil
+	}
+	return current
+}

@@ -6204,3 +6204,36 @@ reject activation without changing live state.
 and unsupported declarations, complete-record definition validation, reprints,
 nested inventory roles and atomic collection rejection. Engine grant,
 regeneration, payment and layer services are unchanged.
+
+## RON static attack payment adapter
+
+The RON `CantAttackUnlessCost` adapter uses the existing source and attachment
+attack-cost rules. Fixed mana
+and fixed-count matching sacrifices use `PayAttackCosts`, including its reserved
+attacker, aggregate transaction and optional native declaration decision.
+Source or Aura ability removal suspends its rule. Removing abilities from the
+host does not remove the Aura's separate rule. Current host and control determine
+which creature is taxed and which player pays. Source departure and phasing
+suspend the rule; a returned host does not inherit its former attachment.
+
+`TestRONAttackCostBrainwash`, `Leviathan`, `LeviathanUpkeep`,
+`NativeDeclaration`, `AtomicChoices`, `InvalidAndInventory` and `StrictLoading`
+cover both complete records and the supported adapter contexts. Native decline
+leaves the creature out of combat; no partial sacrifice or mana payment is
+committed. Upkeep payment does not pay Leviathan's later attack cost. Existing
+simultaneous sacrifice, replacement, incarnation and transaction services remain
+responsible for payment execution. These tests do not claim a new general
+multi-attacker declaration rollback contract.
+
+Both native and search attack declaration now read the current attacker after
+payment. The original incarnation must still be on the battlefield and under
+the declaring player's control (CR 508.1k). A sacrificed, phased, returned or
+control-changed source cannot become an attacker through its old pointer. A
+successful payment remains paid when its source leaves; no attack event or
+attack history is recorded for that source. `TestAttackPaymentSourceSacrifice`
+covers both declaration paths. `TestAttackPaymentCurrentIdentity` covers current
+control, return, phase cycles and independent clones.
+`TestRONAttackCostSacrificedAttacker` covers an animated Leviathan that is also
+an Island and legally pays its attack cost with itself. No LKI read can supply
+a live attacker. The shared payment and sacrifice replacement contracts remain
+unchanged.

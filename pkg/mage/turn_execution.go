@@ -242,6 +242,10 @@ func (g *Game) doDeclareAttackers() {
 		if !g.PayAttackCosts(atk, active.PlayerID(), true) {
 			continue
 		}
+		atk = g.attackerAfterPayment(atk, active.PlayerID())
+		if atk == nil {
+			continue
+		}
 
 		// Tap attacker (unless vigilance)
 		if !atk.HasKeyword(Vigilance) {

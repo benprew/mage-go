@@ -949,6 +949,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantAttackUnlessCost" && len(n.Args) == 1 {
+			return "cost"
+		}
 		if n.Name == "CantBeEnchantedByAnEnchantment" && len(n.Args) == 1 {
 			return "aura_restriction_filter"
 		}
