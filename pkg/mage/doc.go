@@ -238,8 +238,13 @@
 // The caller must supply the complete legal source list.
 // [Game.LiveDamageSources] reads current unphased permanents and live spells.
 // [ChooseDamageSourceFromLiveObjects] makes a filtered choice from those objects.
-// These services exclude referred objects and command-zone objects. A general
-// source choice needs those categories before it can use the complete legal list.
+// These live-object services exclude referred and command-zone objects.
+// [Game.StackAbilityPermanentSources] reads original permanent sources of
+// abilities still on the stack. It uses current or retained information for
+// each exact incarnation, including information saved before phasing.
+// [ChooseDamageSourceFromStackAbilities] chooses only from this category.
+// General source choices also need the other referred and command-zone objects.
+// A general source choice needs all categories before it can use the complete list.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.
 // [DamageSourceHasColor] and [DamageSourceHasType] read the supplied information.
 // [AllDamageSources] and [AnyOfDamageSources] combine those filters.

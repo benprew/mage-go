@@ -7583,3 +7583,50 @@ Evidence: `TestStaticDamageRedirectLifecycle`, `Invalid`, `SourceInformation`,
 `Inventory`, and `TestInventoryRepositoryCollection`. These establish complete
 Martyrs of Korlis and Veteran Bodyguard mappings. They do not establish general
 source choices, temporary redirection or collection-wide gameplay validation.
+
+
+## Permanent sources referred to by stack abilities
+
+`Game.StackAbilityPermanentSources() []DamageSource` reads the original
+permanent sources of activated or triggered abilities still on the stack.
+This establishes one referred-object context of CR 609.7a, not its complete
+legal source list. Spells, pending triggers, targets, saved action/event objects,
+waiting replacements/prevention, delayed triggers and command-zone objects
+are outside this query. A caller cannot use this list alone for unrestricted
+RON `ChooseADamageSource`.
+
+Stack objects already save `SourceID` and `sourceIncarnation`. The query reads
+those identities in insertion order, removes exact duplicates, and ignores
+missing or unknown incarnations. Copies refer to the same source; two visits
+of one card remain distinct. Removing the last stack reference removes that
+source from this category. A source need not have a damage ability.
+
+The shared permanent-information reader supplies current characteristics and
+controller for a live incarnation, information saved before phasing for a
+phased source, and departure LKI for a departed source. A returned card cannot
+replace the old source. Phasing preserves identity; phase-in resumes current
+reads. Face-down sources use the existing hidden-information snapshot helper.
+The query does not run layers, make choices, pay costs, or change game state.
+Each result has separate card data. Existing stack cloning and copying preserve
+the references without new state. CR 400.7, 609.7a, 702.26 and 708.2 apply.
+
+`ChooseDamageSourceFromStackAbilities(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` makes a non-targeted choice from this
+category at resolution. It reuses the existing choice service, property filters,
+validation, independent output bindings, empty-list/absent-player clearing,
+choice fallback, snapshots and cloned resolution frames. It grants no new
+production RON support. General source enumeration and property rechecks by
+chosen-source shields remain separate dependencies.
+
+Evidence: `TestStackAbilityPermanentSources`, `SourceMissingIdentity`,
+`SourceIncarnations`, `SourceDeathTrigger`, `SourceChoice` and
+`SourceDeclarations` in `stack_ability_source_test.go` (all have the common
+`TestStackAbilityPermanent` prefix). `TestRONStackAbilitySourcePrerequisite`
+executes the complete Prodigal Sorcerer and Rod of Ruin RON records through
+native casting, activation and damage resolution. Synthetic consumers use the
+real Circle of Protection: Blue and Circle of Protection: Artifacts filters;
+those complete shield records remain rejected. Tests cover unpaid casting,
+sick/unpaid activation rollback, departure/return, phasing, current recoloring,
+ability copies, pending clones and original damage attribution. Existing
+prevention and damage-choice tests retain replacement-order, simultaneous
+packet and invalid-answer coverage; this query changes none of those services.

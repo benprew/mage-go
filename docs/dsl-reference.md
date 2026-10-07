@@ -6345,3 +6345,27 @@ Player(You)),[DealToCreatureOrPlaneswalkerInstead(ThisPermanent)])`.
 color predicates. `DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),
 Player(You))` includes captured spell sources. This does not add resolving
 replacement operations or target declarations.
+
+
+### Original permanent sources of stack abilities
+
+`mage.Game.StackAbilityPermanentSources() []mage.DamageSource` reads original
+permanent sources of abilities still on the stack, in insertion order with
+exact duplicates removed. It keeps saved incarnation identities through
+source departure, return and phasing. Live sources use current information;
+absent sources use the shared phase/departure information reader. Returned
+cards cannot replace the original source. Missing identities are excluded.
+The query is pure and returns separate snapshot data.
+
+`mage.ChooseDamageSourceFromStackAbilities(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` makes a filtered non-targeted choice from that category
+at resolution. The shared choice service owns validation, decisions and
+per-resolution output bindings. Empty lists and absent players clear the
+result. Clones retain independent results.
+
+This source-only API covers one CR 609.7a context. Other stack references,
+waiting replacement/prevention and delayed-trigger references, and face-up
+command-zone objects remain dependencies. General RON `ChooseADamageSource`
+remains rejected; do not combine this and the live-object list and treat them
+as the complete legal list. Existing Go callers remain compatible.

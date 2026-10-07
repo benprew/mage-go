@@ -27,11 +27,12 @@ func ChooseDamageSourceMatchingFrom(player PlayerRef, sources []DamageSourceRef,
 }
 
 type damageSourceChoice struct {
-	filter      DamageSourceFilter
-	player      PlayerRef
-	liveObjects bool
-	sources     []DamageSourceRef
-	binding     *DamageSourceBinding
+	filter         DamageSourceFilter
+	player         PlayerRef
+	liveObjects    bool
+	stackAbilities bool
+	sources        []DamageSourceRef
+	binding        *DamageSourceBinding
 }
 
 func (*damageSourceChoice) Text() string                 { return "choose a damage source" }
@@ -39,7 +40,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 && !e.liveObjects {
+	if len(e.sources) == 0 && !e.liveObjects && !e.stackAbilities {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -61,6 +62,9 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	candidates := make([]DamageSource, 0, len(e.sources))
 	if e.liveObjects {
 		candidates = ctx.Game.LiveDamageSources()
+	}
+	if e.stackAbilities {
+		candidates = append(candidates, ctx.Game.StackAbilityPermanentSources()...)
 	}
 	for _, ref := range e.sources {
 		candidates = append(candidates, ref.resolveDamageSource(ctx))

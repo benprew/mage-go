@@ -49,13 +49,17 @@ func readPermanentInformation(subject PermanentRef, ctx *EffectContext) (*Perman
 	if !ok {
 		return nil, nil
 	}
-	if p := ctx.Game.FindPermanentIncludingPhased(identity.id); p != nil && p.incarnationID == identity.incarnation {
+	return ctx.Game.readPermanentIncarnationInformation(identity)
+}
+
+func (g *Game) readPermanentIncarnationInformation(identity capturedPermanent) (*Permanent, *PermanentLKI) {
+	if p := g.FindPermanentIncludingPhased(identity.id); p != nil && p.incarnationID == identity.incarnation {
 		if !p.PhasedOut {
 			return p, nil
 		}
-		return nil, ctx.Game.zones.phaseInformation[identity.incarnation]
+		return nil, g.zones.phaseInformation[identity.incarnation]
 	}
-	lki := ctx.Game.zones.LKIByIncarnation(identity.incarnation)
+	lki := g.zones.LKIByIncarnation(identity.incarnation)
 	if lki == nil || lki.ID != identity.id || lki.Snapshot == nil {
 		return nil, nil
 	}
