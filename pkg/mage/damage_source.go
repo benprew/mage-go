@@ -55,6 +55,9 @@ func (s DamageSource) HasSubType(st string) bool { return s.card != nil && s.car
 
 func damageSourceFromPermanent(p *Permanent) DamageSource {
 	s := DamageSource{id: p.ID(), incarnation: p.incarnationID, controller: p.ControllerID(), owner: p.Card.Owner(), name: p.Name(), card: damageSourceCardFromPermanent(p), colors: slices.Clone(p.Colors()), keywords: make(map[Keyword]bool)}
+	if p.FaceDown {
+		s.name = ""
+	}
 	for k := range Keyword(NumAttrs) {
 		if p.HasKeyword(k) {
 			s.keywords[k] = true
@@ -69,6 +72,9 @@ func damageSourceFromLKI(l *PermanentLKI) DamageSource {
 	}
 	p := l.Snapshot
 	s := DamageSource{id: l.ID, incarnation: p.incarnationID, controller: p.ControllerID(), owner: l.Owner, name: l.Name, card: damageSourceCardFromPermanent(p), colors: slices.Clone(p.Colors()), keywords: make(map[Keyword]bool)}
+	if p.FaceDown {
+		s.name = ""
+	}
 	for k := range Keyword(NumAttrs) {
 		if l.ViewHasKeyword(k) {
 			s.keywords[k] = true
@@ -78,6 +84,13 @@ func damageSourceFromLKI(l *PermanentLKI) DamageSource {
 }
 
 func damageSourceCardFromPermanent(p *Permanent) Card {
+	if p.FaceDown {
+		// Choices must not expose the card's hidden characteristics.
+		card := NewCreature("", "", 2, 2)
+		card.SetID(p.ID())
+		card.SetOwner(p.Card.Owner())
+		return card
+	}
 	card := p.Card.Copy()
 	card.SetID(p.ID())
 	if base, ok := card.(*BaseCard); ok {

@@ -34019,3 +34019,158 @@ Slice files: new RON `characteristic_count.go` and `characteristic_count_test.go
 `compiler.go`, `inventory.go`, `inventory_test.go`,
 `characteristic_prerequisite_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and only this appended ledger entry.
+
+## Run 2026-10-07: P10-LIVE-SOURCE-ENUMERATION
+
+Status: complete engine prerequisite for the two live-object source categories.
+`ChooseADamageSource/1` remains unsupported. This run stops after this slice.
+
+### Baseline, candidate comparison and selection
+
+The working tree began with user changes to `.gitignore`, the execution design
+and this ledger, and an untracked `mtgish-ron-completed.md`. All are preserved.
+The user ledger restructuring is not part of this commit. Only this appended
+entry is staged for the ledger.
+
+Fresh compiler tests (`go test ./pkg/mage/dsl/ron -count=1`) and `make build`
+passed before edits. One initial strict CLI sample reported 1,888 compiled
+records. Repeated strict and semantic CLI runs before edits agreed on
+**1,908 compiled / 537 rejected records, 733 accepted / 253 rejected unique
+names**. The repeatable 1,908 baseline is used for gains. No cause is asserted
+for the earlier sample. All loader runs rejected the collection with exit 1;
+this is collection rejection, not build or test failure.
+
+Fresh semantic inventory walked nested forms. Complete records were inspected
+for the following candidates; reprints count once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks for the prerequisite / complete consumers | Other blockers and downstream benefit | Estimated implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Damage-source enumeration | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Dark Sphere; Eye for an Eye; Jade Monolith; Reverse Damage (11) | 0 / 7 clean Circle/Greater Realm consumers | Complete legal enumeration needs referred objects and face-up command-zone objects. Consumers need lexical bindings, consuming shields, property rechecks and permanent-spell continuity. The other four also need finite damage arithmetic, prevented-damage results, redirection or additional replacement operations. Shared enumeration supplies all 11 choices. | Small live-object prerequisite: one query, reuse of one choice service, five engine tests and two RON integration tests. Complete enumeration and shields: large, several subsystem integrations. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria (8) | 0 / estimated 8 after engine and adapters | No parameterized ability contract exists. Requires matching band formation and incoming/outgoing combat assignment, layer grants, token abilities, removal of every variant, and clone/ability-removal behavior. | Large: combat and continuous-effect state plus engine, static, token and temporary adapter tests. |
+| Delayed unblocked-attack rules | Delif's Cone, Delif's Cube (2) | 0 for event adapter alone / estimated 2 after all prerequisites and source correction | Existing unblocked-event behavior can be reused, but delayed bindings and combat-damage assignment suppression are missing. Cone also requires optional life-gain execution and a source correction. Cube has the independent counter-cost regeneration ability. | Medium: delayed event/binding integration, damage suppression, optional action semantics, two full gameplay mappings and a source-data audit. |
+
+Selected the live-object prerequisite because its runtime query is absent, its
+identity/filter/decision dependencies already exist, and it supplies a concrete
+shared input for 11 consumers with the smallest implementation and test effort.
+It does not justify accepting a RON choice with an incomplete legal list.
+The complete enumeration/shield family remains partial. The other candidates
+are deferred, not counted as gains or started in this run.
+
+### Exact contract and reuse boundary
+
+New reusable engine signatures:
+
+- `(*Game).LiveDamageSources() []DamageSource`.
+- `ChooseDamageSourceFromLiveObjects(player PlayerRef, filter DamageSourceFilter,
+  binding *DamageSourceBinding) ResolvingEffect`.
+
+The query returns current unphased battlefield permanents in battlefield order,
+then live spells in stack insertion order. Lands and objects without damage
+abilities qualify. Permanent spells and copies qualify; abilities do not qualify
+as spells. Separate stack identities do not merge even if card IDs match.
+Current layer results, controller/owner and color overrides are retained.
+Shroud is irrelevant to a non-targeted choice. Each snapshot has separate card
+data. Querying does not apply layers, change zones, spend resources or make a
+player decision. It does not use a resolving source's LKI in place of a live
+object. A returned permanent is a new selectable object.
+
+The dynamic operation enumerates and filters at resolution. It reuses
+`damageSourceChoice`, `DamageSourceFilter`, `DamageSourceChooser`, legacy
+bounded numbered choices, `DamageSourceBinding`, `FromDamageSource` and the
+existing resolution-frame clone service. Empty lists and absent players clear
+only their output and make no choice. Invalid answers use the existing first
+legal option fallback. Binding validation rejects invalid players/filters,
+nil or unnamed outputs and reads before their producer. Independent bindings,
+repeated choices, pending stack copies and game clones have separate results.
+No compiler spelling or mutable chosen state is put in the engine declaration.
+
+Acceptance cases were stated before implementation. Engine and RON tests first
+failed because these APIs did not exist. A further face-down test failed because
+the existing source snapshot exposed the underlying card name. The shared live
+and LKI snapshot helper now supplies the face-down creature's visible card
+characteristics, with no hidden name, color, subtype or printed keyword.
+Rules: CR 120.7, 400.7, 609.7a, 702.26b, 708.2/708.2a. This does not add shield
+property rechecks, replacement ordering, simultaneous-operation or payment rules.
+
+Referred objects in stack objects, waiting replacement/prevention effects and
+waiting delayed triggers, plus face-up command-zone objects, are deliberately
+outside this API's declared source categories. They are missing engine
+contracts, not missing RON spelling adapters. The eventual complete legal-list
+service must combine those categories before the compiler accepts general
+`ChooseADamageSource/1`. The RON filter adapter already exists and remains
+validated in rejected records. No Go factory fallback or partial registry is
+introduced. No RON sources change, so the vocabulary snapshot is not refreshed.
+
+### Gameplay and declaration evidence
+
+| Mapping | Evidence and limit |
+| --- | --- |
+| Engine live objects | `TestLiveDamageSourcesObjects`: lands, shroud, phased exclusion, permanent spells, copied spells with shared card IDs, abilities excluded, order, color changes, departure, snapshots and clone isolation. |
+| Engine face-down objects | `TestLiveDamageSourcesFaceDown`: visible live and LKI information, exact identity, no hidden characteristics. |
+| Engine decisions and bindings | `TestLiveDamageSourceChoiceResolution`, `Declarations`, `IndependentBindings`: resolution-time inventory, empty clearing, absent players, invalid declarations, producer order, independent outputs, repeated choice and clone isolation. |
+| Prodigal Sorcerer (complete LEA record), Circle of Protection: Blue filter | `TestRONLiveDamageSourcePrerequisite`: native RON activation/damage followed by a synthetic engine consumer. Queued timing, recoloring, departure/return, shroud, phase cycle, copied triggers and pending clone resolution. This adds prerequisite coverage; it does not verify the complete Circle card. |
+| Lightning Bolt (complete LEA record), Circle of Protection: Red filter | `TestRONLiveDamageSourceSpell`: native paid RON casting; a synthetic ability chooses the live spell at resolution, then the source-attributed continuation and original Bolt execute. Pending clone retains both behaviors. This does not install a Circle shield. |
+| All 11 future source-choice consumers | Existing `TestRONChosenSourceFilterRecords` and declaration tests still inspect complete records, validate filters and assert compilation rejection. No new full-card coverage is claimed. |
+
+Focused checks include existing explicit-reference `TestDamageSourceChoice*`,
+`TestDamageSourceProperty*` and `TestDamageSourceIdentity*` regression contracts.
+Compilation progress and full-card gameplay verification remain separate.
+Estimated immediate unlocks **0**; actual gain **0 records / 0 unique names**.
+No previously accepted record is lost. The aggregate engine-validated and
+behavior-verified inventory totals remain null.
+
+### Source defects and removal gates
+
+The selected source-choice records were not changed. Delif's Cone's complete
+FEM record uses `Unless(CostWasPaid, ...)` for damage suppression. Local
+`data/FEM.json` Oracle text says suppression follows the optional life gain
+when performed. This candidate's branch inversion is a source defect, not an
+engine event failure; no correction or behavior claim is made in this slice.
+The known Gaea's Liege/Fastbond and other prior source defects remain unchanged.
+No environment failure was found.
+
+Complete RON loading, gameplay and runtime startup do not meet the cutover gate.
+Go definitions, startup wiring and generators remain. No DSL removal is made;
+there is no new whole-repository caller audit authorizing deletion. Engine
+services needed by RON are retained. API/rules documentation describes only
+the new scoped query/decision contract and face-down snapshot correction.
+
+### Validation and fresh measurements
+
+Required commands and results:
+
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run
+  'TestLiveDamageSource|TestRONLiveDamageSource|TestDamageSourceChoice|TestDamageSourceProperty|TestDamageSourceIdentity'
+  -count=1`: pass after the expected initial failures.
+- `go test ./pkg/mage/... -short -count=1`: pass; repeated after lint and the
+  final face-down LKI assertion, also pass.
+- Additional `implement-engine` skill check: `go test ./... -short -count=1`: pass.
+- `make test`: pass.
+- `make build`: pass.
+- `go vet ./...`: pass.
+- `make lint`: pass, `0 issues.` Automatic formatting was reviewed; no unrelated
+  source changes were introduced.
+- `git diff --check`: pass after completing this ledger entry.
+- `go run ./cmd/loadcards -json`: exit 1 as expected for remaining unsupported
+  records; **1,908 compiled / 537 rejected records**, no registry published.
+- `go run ./cmd/loadcards -inventory -json`: exit 1 as expected;
+  **733 accepted / 253 rejected unique names**, **72,962 occurrences / 8,557
+  signatures / 4,600 unknown-role occurrences**. Counts and all diagnostics
+  equal the repeatable pre-edit baseline.
+
+Ranked next candidates to reassess with fresh full-record and loader evidence:
+
+1. Retained object-reference enumeration for stack objects and waiting effects,
+   then face-up command-zone enumeration. Combine with the live-object service
+   before lowering source choice and consuming shields for the seven clean
+   Circle/Greater Realm consumers.
+2. Parameterized bands-with-other engine contract, followed by the eight
+   static/token/removal consumers.
+3. Delayed unblocked-attack bindings and combat-damage suppression for Delif's
+   Cone/Cube, including the evidence-backed Cone source correction.
+
+Slice files: `pkg/mage/live_damage_source.go`, `live_damage_source_test.go`,
+`damage_source_choice.go`, `damage_source.go`, `doc.go`;
+`pkg/mage/dsl/ron/live_damage_source_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`; only this appended ledger entry. The completed
+slice is committed after all required checks pass. User changes remain unstaged.

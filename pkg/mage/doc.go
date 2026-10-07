@@ -200,6 +200,10 @@
 // source references. [DamageSourceChooser] permits typed player decisions.
 // The result uses [DamageSourceBinding] in the current resolution frame.
 // The caller must supply the complete legal source list.
+// [Game.LiveDamageSources] reads current unphased permanents and live spells.
+// [ChooseDamageSourceFromLiveObjects] makes a filtered choice from those objects.
+// These services exclude referred objects and command-zone objects. A general
+// source choice needs those categories before it can use the complete legal list.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.
 // [DamageSourceHasColor] and [DamageSourceHasType] read the supplied information.
 // [AllDamageSources] and [AnyOfDamageSources] combine those filters.

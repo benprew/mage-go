@@ -6901,3 +6901,53 @@ incompatible and unsupported declaration contexts. Inventory tests retain strict
 collection rejection. This adapter adds no new engine execution or payment rule;
 existing layer-set/switch and incarnation contracts remain covered by the engine
 tests above. RON arithmetic and entry-result CDAs remain unfinished.
+
+
+## Live-object damage-source enumeration prerequisite
+
+`Game.LiveDamageSources() []DamageSource` establishes the permanent and live
+spell categories in CR 120.7 and 609.7a. It returns unphased permanents in
+battlefield order, then spells in stack insertion order. It includes lands,
+objects without damage abilities, and permanent spells. Abilities are not
+spells. Spell copies and separate stack visits retain separate stack identities,
+even with the same card ID. The query reads current layer results without
+changing state, paying costs, making choices or running a layer pass.
+
+Source information reuses `damageSourceFromPermanent` and
+`CaptureSpellDamageSource`. Colors include current overrides and permanent
+types/subtypes use current characteristics. Snapshots have independent card
+data. Face-down permanents have no name, color, printed keyword or subtype;
+the shared permanent and LKI snapshot helper now hides the underlying card
+characteristics (CR 708.2a). Ownership and incarnation identity remain available.
+Phased permanents are excluded (CR 702.26b). Departed objects are excluded from
+this live list even when the engine retains their LKI. A returned permanent is
+a new selectable object (CR 400.7).
+
+`ChooseDamageSourceFromLiveObjects(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` enumerates at resolution, then reuses
+`damageSourceChoice` for property filtering, exact duplicate removal, typed or
+legacy player decisions, invalid-answer fallback, snapshots, and local results.
+An empty matching list or absent player clears only its result and makes no
+choice. Validation checks the player, filter, named output binding and producer
+order. Separate declarations and cloned resolution frames keep separate results.
+No stored query result or global last-choice state is added.
+
+Evidence: `TestLiveDamageSourcesObjects`, `TestLiveDamageSourcesFaceDown`,
+`TestLiveDamageSourceChoiceResolution`, `Declarations`, and
+`IndependentBindings`; existing `TestDamageSourceChoice*` and
+`TestDamageSourceProperty*` retain explicit-reference coverage.
+`TestRONLiveDamageSourcePrerequisite` executes the complete Prodigal Sorcerer
+record and the real Circle of Protection: Blue filter with a synthetic consumer.
+It checks queued resolution, recoloring, shroud, phase cycles, source departure
+and return, copied triggers, source-attributed damage and independent pending
+clones. `TestRONLiveDamageSourceSpell` executes the complete Lightning Bolt
+record with the Circle of Protection: Red filter while the spell is still on
+the stack. The original spell and synthetic continuation both resolve normally.
+
+This service is a prerequisite, not the complete CR 609.7a legal list. Referred
+objects and face-up command-zone objects remain missing engine contracts.
+RON source-choice bindings, consuming shields, property rechecks (CR 609.7b,
+615.9), permanent-spell continuity, finite prevention results and redirection
+remain unsupported. These tests do not add complete Circle/Greater Realm card
+coverage or establish new payment, replacement-order or simultaneous-operation
+contracts. Source data, startup wiring and Go-card/DSL removal are unchanged.

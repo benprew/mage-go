@@ -27,10 +27,11 @@ func ChooseDamageSourceMatchingFrom(player PlayerRef, sources []DamageSourceRef,
 }
 
 type damageSourceChoice struct {
-	filter  DamageSourceFilter
-	player  PlayerRef
-	sources []DamageSourceRef
-	binding *DamageSourceBinding
+	filter      DamageSourceFilter
+	player      PlayerRef
+	liveObjects bool
+	sources     []DamageSourceRef
+	binding     *DamageSourceBinding
 }
 
 func (*damageSourceChoice) Text() string                 { return "choose a damage source" }
@@ -38,7 +39,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 {
+	if len(e.sources) == 0 && !e.liveObjects {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -57,9 +58,15 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 		delete(ctx.Game.resolution.damageSourceBindings, e.binding)
 		return nil
 	}
-	sources := make([]DamageSource, 0, len(e.sources))
+	candidates := make([]DamageSource, 0, len(e.sources))
+	if e.liveObjects {
+		candidates = ctx.Game.LiveDamageSources()
+	}
 	for _, ref := range e.sources {
-		source := ref.resolveDamageSource(ctx)
+		candidates = append(candidates, ref.resolveDamageSource(ctx))
+	}
+	sources := make([]DamageSource, 0, len(candidates))
+	for _, source := range candidates {
 		if !e.filter.Match(source) || slices.ContainsFunc(sources, source.SameObject) {
 			continue
 		}

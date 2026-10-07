@@ -5814,3 +5814,27 @@ Evidence: `TestRONCharacteristicCount*` executes the complete Dakkon Blackblade,
 Keldon Warlord, Nightmare, Plague Rats and People of the Woods records and checks
 all twenty records, including reprints. The strict full collection still rejects
 remaining gaps. Compilation counts do not establish full collection gameplay.
+
+
+## Live-object damage-source enumeration prerequisite
+
+`mage.Game.LiveDamageSources() []mage.DamageSource` reads current unphased
+battlefield permanents, followed by live spells in stack insertion order.
+Permanent spells and spell copies qualify. An ability on the stack does not
+qualify as a spell. Objects need not have a damage ability. Shroud does not
+restrict this non-targeted source choice. The query uses the current layer
+results and does not run a layer pass, make decisions, or change game state.
+Each returned source has independent snapshot data.
+
+`mage.ChooseDamageSourceFromLiveObjects(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` enumerates those objects at resolution and uses the
+existing filtered choice service. The result uses the current resolution frame.
+The explicit-reference choice APIs retain their existing behavior.
+
+This is a complete contract for the two live-object categories, not complete
+CR 609.7a enumeration. Objects referred to by stack objects, waiting replacement
+or prevention effects, or waiting delayed triggers, and face-up command-zone
+objects require further engine contracts. RON `ChooseADamageSource/1` remains
+rejected. Its consumer cannot use this restricted list as its whole legal list.
+No source files or production registry change in this slice.
