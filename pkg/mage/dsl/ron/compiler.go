@@ -1169,6 +1169,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateEachPermanentRuleEffectUntil":
+		build, err := compileCollectionAttackTurn(n)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreatePermanentRuleEffectUntil":
 		build, err := compileTemporaryCombatRule(n, ctx)
 		if err != nil {

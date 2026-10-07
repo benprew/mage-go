@@ -206,19 +206,8 @@ func (g *Game) doDeclareAttackers() {
 	attackerIDs := active.DeclareAttackers(g)
 	defender := g.NonActivePlayerObj()
 
-	// Auto-add creatures with MustAttack keyword (from Nettling Imp, etc.)
-	declared := make(map[uuid.UUID]bool)
+	attackerIDs = g.completeRequiredAttackers(active.PlayerID(), attackerIDs, true)
 	declaredCount := 0
-	for _, id := range attackerIDs {
-		declared[id] = true
-	}
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
-			if p.CanDeclareAsAttacker(g) {
-				attackerIDs = append(attackerIDs, p.ID())
-			}
-		}
-	}
 
 	for _, id := range attackerIDs {
 		if g.combat.IsAttacking(id) {

@@ -1080,6 +1080,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 	// Fresh search clones haven't run an Apply() cycle yet, so the per-cycle
 	// attack-cost registry may be empty; rebuild it before consulting it.
 	g.effects.Apply(g)
+	attackerIDs = g.completeRequiredAttackers(playerID, attackerIDs, false)
 	declaredCount := 0
 	for _, id := range attackerIDs {
 		if g.combat.IsAttacking(id) {

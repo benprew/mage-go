@@ -7250,3 +7250,33 @@ Evidence: `TestBlockHistoryLifecycle`, `LegalPairsAndLastController`,
 `Declarations`. RON evidence uses the exact destruction clauses from Glyph of
 Doom and Glyph of Reincarnation in named contract fixtures, not full-card
 support claims. No new replacement, payment or destruction service is added.
+
+## Resolving live attack rules for this turn
+
+`CantAttackMatchingThisTurn(PermanentFilter) ResolvingEffect` prohibits attack
+declarations by current matching permanents. `MustAttackControlledThisTurn(
+PlayerRef, PermanentFilter) ResolvingEffect` saves the player at resolution and
+requires that player's current matching creatures to attack if able. These
+rules change attack legality, not creature abilities (CR 508.1c/d, 611.2c).
+Entry, return, control and characteristic changes can change membership.
+Phased-out creatures cannot attack. Ability removal does not remove either rule.
+Neither rule removes a creature already in combat.
+
+The effect manager owns the independent end-of-turn entries and clones them.
+Source departure, source control changes and source phasing do not end them.
+Native cleanup removes them, including while a recipient is phased out
+(CR 514.2). Attack restrictions use the shared final-characteristic query.
+Normal declaration and `ExecuteAttackers` complete live attack requirements
+before the existing legality and payment checks. An omitted creature with an
+attack cost is not added solely by this resolving requirement; a proposed
+attacker still uses the shared payment transaction. Existing printed
+`AttrMustAttack` behavior in normal declaration is retained.
+
+`TestAttackRulesThisTurnMembership`, `Requirements`, `Definitions`,
+`PlayerIdentityAndCosts` and `AlreadyInCombat` cover late and returned objects,
+current properties/control, phasing, source independence, ability removal,
+clone isolation, cleanup, both declaration paths, cost choice and legality.
+This adds no LKI, replacement-order, damage-batch or cost-payment implementation.
+RON Festival has complete behavior evidence in
+`TestRONCollectionAttackTurnFestival`. `TestRONCollectionAttackTurnSirenClause`
+covers only the exact attack requirement extracted from Siren's Call.

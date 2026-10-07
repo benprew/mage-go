@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **745 accepted / 241 rejected unique card
-names** (986 total), and **1,935 compiled / 510 rejected records** (2,445 total).
+The latest recorded inventory reports **746 accepted / 240 rejected unique card
+names** (986 total), and **1,936 compiled / 509 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`BLOCK-HISTORY-COLLECTION` prerequisite and its contract evidence are recorded
-at the end of this ledger. It adds blocking-history services and two Glyph
-clause mappings, with no new complete-card gameplay mappings.
+`TURN-COLLECTION-ATTACK-RULES` slice and its contract evidence are recorded
+at the end of this ledger. It adds live resolving attack rules, one complete
+Festival mapping and one Siren's Call attack-clause mapping.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35523,3 +35523,143 @@ Slice files: `pkg/mage/block_history.go`, `block_history_test.go`,
 `block_history_test.go`; `cards/mtgish/LEG.lines.ron`; API/rules contracts,
 vocabulary snapshot and this ledger entry. This slice is committed only after
 required validation passes. No second slice begins.
+
+## 2026-10-07: resolving live collection attack rules
+
+Status: complete slice `TURN-COLLECTION-ATTACK-RULES`; stop after this slice.
+Initial user changes to `.gitignore`, the execution design, the ledger split,
+and untracked `mtgish-ron-completed.md` are preserved. Only this new entry and the current-status update are
+staged from the ledger, independently of the user's existing ledger changes.
+
+### Fresh evidence, comparison and selection
+
+Pre-edit compiler tests, `make build` and short engine tests passed. Strict
+loading and semantic inventory exited 1 for collection rejection, not build
+failure: 2,445 records / 986 names; 1,935 compiled / 510 rejected records;
+745 accepted / 241 rejected names; 72,953 nodes / 8,554 signatures. Read the
+instructions, engine reference, execution design, vocabulary and current ledger,
+selected compiler/engine code, complete candidate records and their nested forms.
+Local `data/DRK.json` and `data/LEA.json` supply Festival and Siren's Call Oracle
+text. Rules inspected: CR 400.7, 508.1c/d, 514.2 and 611.2a/c.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Live resolving collection attack rules, selected | Festival, Siren's Call; **1** full-card unlock (Festival). | Siren's Call still needs the delayed destruction collection's active-player selector and continuous control-history exception. A shared live query/lifetime establishes both the prohibition and requirement clauses without turning them into creature abilities or freezing membership. Runesword shares the parent constructor but its regeneration, damage history and exile operations are outside this slice. | Low/medium: two resolving constructors, effect-manager entries and two declaration integrations; reuse filters, payment, casting, cleanup and clone services. |
+| General damage-source choices and next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** after prerequisites. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage share choice with **0** further full unlocks from basic shields. | Complete legal enumeration needs referred objects and command-zone sources. Other consumers need partial prevention, redirection, saved damage amount or prevention results. Concrete choice/shield benefit for eleven names. | High: source categories, retained identities, per-choice bindings and replacement rechecks/order. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **8** after prerequisites. | Parameterized band formation/damage assignment, layer grants, tokens and removal need exact contracts; ordinary banding is insufficient. | High: combat legality/assignment plus copy, token, layer and removal tests. |
+
+Reprints count once. The selected two-card capability has a smaller dependency
+surface and credible one-card gain plus a tested prerequisite for a second card.
+The larger candidates offer more absolute unlocks but require several coupled
+engine contracts. The selection, reuse boundary and acceptance cases were stated
+before edits. This is shared work, not an isolated Festival executor. The
+implement-engine skill was used for the engine workflow; no removed card/set
+skill was invoked or recreated.
+
+### Exact contracts, contexts and dependencies
+
+Engine APIs:
+
+- `CantAttackMatchingThisTurn(filter PermanentFilter) ResolvingEffect`.
+  Current matching permanents cannot be declared as attackers until cleanup.
+- `MustAttackControlledThisTurn(player PlayerRef, filter PermanentFilter)
+  ResolvingEffect`. Resolve and save the player once; that player's current
+  matching creatures attack if able until cleanup. Validate the typed player
+  producer; nil and unbound target player declarations reject.
+
+`turnAttackRule` uses the existing effect manager's independent source-exit,
+end-of-turn and cloning services. It stores a player ID, filter and rule kind,
+not current members or a global action result. Current properties and control
+change membership. New and returned creatures can join. Phased-out objects
+cannot attack. Source departure/control/phasing and recipient ability removal
+do not remove the rule. A rule does not remove an existing attacker. Normal
+and explicit declarations complete new live requirements before shared legality
+and payment checks. Existing printed requirement behavior is preserved in each
+path. An omitted creature with an attack cost is not added solely by this
+resolving requirement; a proposed attacker uses the existing payment service.
+
+RON supported forms in resolving action lists:
+
+- `CreateEachPermanentRuleEffectUntil(filter, [CantAttack], UntilEndOfTurn)`;
+  supported source-independent static filters, including nonempty logical
+  composition. Controller and source-exclusion selectors reject in this form.
+- `CreateEachPermanentRuleEffectUntil(And([filter, ...,
+  ControlledByPlayer(TheActivePlayer)]), [MustAttack], UntilEndOfTurn)`;
+  exactly one active-player selector and at least one supported permanent filter,
+  in either order. The player is saved at resolution.
+
+RON owns spelling, arity, context, diagnostics and factory lowering. Engine owns
+execution. Other operation lists, durations, controller forms and unbound or
+incompatible references still reject. Inventory classifies the collection,
+operation list and duration below unsupported parents. There is no new cost,
+zone, LKI, damage batch or replacement-order behavior. No Go fallback, skipped
+record, name branch or partial production registry. No DSL deletion is attempted;
+its caller audit and runtime removal gates remain unmet.
+
+### TDD, gameplay coverage and source data
+
+Engine tests first failed on missing APIs. Fixture names for combat access and
+player target declaration were corrected and the missing-API failure confirmed.
+The source-departure test then exposed the need for the existing independent
+source-exit contract. A control-change fixture required clearing new summoning
+sickness before testing membership. RON tests failed on the missing action
+adapter before implementation. Repository suites later failed only on old exact
+loader-count expectations; those expectations now assert 1,936/509, with an
+additional guard against rejecting Festival. No test was weakened.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Festival, complete record | `TestRONCollectionAttackTurnFestival`: actual cast during opponent upkeep, own-upkeep/main-phase rejection before payment, countered spell, spell copy, late/returned/phased creatures, explicit attack rejection, native cleanup and clone isolation. Engine definition validation runs on the real factory. |
+| Siren's Call, attack clause only | `TestRONCollectionAttackTurnSirenClause`: parse the full record, assert full rejection, extract its exact attack clause into a named test-only record, cast it and verify a later creature of the active player attacks. No delayed destruction coverage is claimed. |
+| Shared engine | `TestAttackRulesThisTurnMembership`: current flying, ability removal, source exit, late/returned/phased creatures and cleanup cloning. `Requirements`: normal/explicit declarations, tapped/opposing creatures and prohibition precedence. `Definitions`: valid, nil and unbound player declarations. `PlayerIdentityAndCosts`: saved player despite source control/phasing, current recipient control, clone isolation, voluntary attack payment and no forced payment. `AlreadyInCombat`: no retroactive combat removal. |
+| RON declaration/inventory | `TestRONCollectionAttackTurnInvalid`: malformed duration, operation, empty logical collection, unsupported player, missing/duplicate active-player selectors, unbound/wrong-context references and combined operations reject. `Inventory`: operand roles below the action. |
+
+No selected source defect was found and no RON source was changed. Vocabulary
+snapshot source hashes remain current; fresh loader and semantic counts are
+recorded here rather than treating the old first diagnostics as support proof.
+API/rules-contract docs describe only the established behavior.
+
+### Validation and actual gain
+
+Estimated full-card unlocks: **1**. Actual: **1 name / 1 record**, Festival.
+Fresh strict loader and inventory: **1,936 compiled / 509 rejected records**,
+**746 accepted / 240 rejected names**, 2,445 records / 986 names.
+Semantic inventory remains **72,953 nodes / 8,554 signatures**. Collection-wide
+engine-validated and behavior-verified totals remain null. Gameplay gain is
+**one complete-card mapping and one exact real-record clause mapping**.
+Siren's Call still rejects at `2ED.lines.ron:227:507` on the destruction
+collection's `ControlledByPlayer`. Runesword still rejects at
+`DRK.lines.ron:87:630` on `CantBeRegenerated`; its operation is not an attack rule.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(RONCollectionAttackTurn\|AttackRulesThisTurn)' -count=1` | PASS, including after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, final run after lint. |
+| `make test` | PASS, final run after lint. |
+| `make build` | PASS, including final run. |
+| `go vet ./...` | PASS, including final run. |
+| `go test ./... -short -count=1` | PASS, additional engine-skill check. |
+| `make lint` | PASS, zero issues; automatic changes were import formatting and were reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: strict rejection of 509 records, no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same collection rejection; semantic inventory complete. |
+
+No native environment blocker remains. Runtime cutover, complete gameplay,
+Go-card deletion, generator retirement and DSL cleanup remain unfinished.
+
+Ranked next candidates to reassess with fresh complete-record evidence:
+
+1. General legal damage-source enumeration and saved choices, then the seven
+   basic source-specific shields.
+2. Parameterized bands with others for eight grant/token/removal consumers.
+3. Siren's Call's active-player destruction collection and continuous
+   control-history exception, if a shared consumer inventory justifies selecting
+   it ahead of the remaining multi-card work.
+
+Changed files: `pkg/mage/attack_rule_turn.go`, `attack_rule_turn_test.go`,
+`attack_matching.go`, `game_mutator.go`, `turn_execution.go`, `doc.go`;
+`pkg/mage/dsl/ron/collection_attack_turn.go`, `collection_attack_turn_test.go`,
+`compiler.go`, `inventory.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
+One descriptive commit is made only after required validation passes. No next
+slice begins in this run.

@@ -6063,3 +6063,25 @@ loops and the RON last-block controller expression remain separate gaps. The
 engine's typed `ControllerWhenLastBlockedThisTurn` supplies the controller
 history prerequisite. The three complete Glyph records still reject. Tests
 of extracted clauses do not claim complete gameplay coverage for those cards.
+
+## RON resolving collection attack rules
+
+`CreateEachPermanentRuleEffectUntil(filter, [CantAttack], UntilEndOfTurn)`
+accepts the supported source-independent static permanent filters, including
+nonempty logical combinations. Controller and source-exclusion selectors are
+not supported in this restriction shape.
+
+`CreateEachPermanentRuleEffectUntil(And([filter, ...,
+ControlledByPlayer(TheActivePlayer)]), [MustAttack], UntilEndOfTurn)` accepts
+exactly one active-player selector and one or more supported permanent filters.
+It saves the active player at resolution and checks current creature membership
+at attack declaration. Filter order does not matter. Other player selectors,
+operation lists, durations and unbound references remain compile errors.
+Both forms work in resolving action lists. They lower to
+`CantAttackMatchingThisTurn` and `MustAttackControlledThisTurn`; they do not use
+captured layer membership or give creatures an ability (CR 611.2c).
+
+Festival's complete RON record is tested. Siren's Call's exact attack clause is
+tested in a test-only extracted record; its full record still rejects on the
+delayed destruction collection. Runesword's regeneration and exile clauses
+remain unsupported. These forms do not establish other collection rule support.

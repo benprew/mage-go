@@ -67,6 +67,9 @@ func (e *matchingAttackRestriction) cloneEffect() ContinuousEffect {
 }
 
 func (g *Game) restrictedFromAttacking(p *Permanent) bool {
+	if g.hasTurnAttackRule(p, false) {
+		return true
+	}
 	for _, effect := range g.effects.effects {
 		if !effect.IsActive(g) {
 			continue

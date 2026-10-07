@@ -810,6 +810,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				}
 				return []string{"permanent_filter", "temporary_modification", "duration"}[index]
 			}
+		case "CreateEachPermanentRuleEffectUntil":
+			if len(n.Args) == 3 {
+				return []string{"permanent_filter", "permanent_rule_operation", "duration"}[index]
+			}
 		case "CreatePermanentRuleEffectUntil":
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "permanent_rule_operation", "duration"}[index]

@@ -87,6 +87,12 @@
 // blocking permission and requirements. These rules survive ability removal.
 // The shared blocker planner still checks evasion and minimum blocker counts.
 //
+// Use [CantAttackMatchingThisTurn] for a live attack restriction until cleanup.
+// Use [MustAttackControlledThisTurn] for a saved player's live attack requirement.
+// These rules remain separate from creature abilities. Later entries and control
+// changes can change membership. Source departure does not end the rules.
+// Attack requirements do not force a player to pay an attack cost.
+//
 // Use [AllCreaturesMustBlock] with [While] for a live filtered blocking rule.
 // [AttachedPermanent] follows the current host. Separate requirements share
 // block capacity and cannot bypass evasion or minimum blocker counts.
