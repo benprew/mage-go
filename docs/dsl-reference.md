@@ -4456,3 +4456,29 @@ Turn cleanup archives incarnation history per player; cloning copies all maps.
 The existing ID-only history API remains available to its callers.
 Evidence: `TestLastTurnAttack*` and `TestRONLastTurnAttack*`, including complete
 Giant Turtle, Goblin Rock Sled and Tangle Kelp records.
+
+## RON static source combat attributes
+
+`PermanentRuleEffect(ThisPermanent, [MustAttack])` and
+`PermanentRuleEffect(ThisPermanent, [CanBlockAnAdditionalCreature])` accept one
+bare operation on the live permanent source. These declarations lower to
+`Static(While(condition, GrantKeywordModification(This, attribute)))` with
+`AttrMustAttack` or `CanBlockAdditional`. Each factory builds a fresh ability.
+Tuple operations, tuple references, target references, Aura hosts, collections,
+conditional bodies and combined operation lists remain unsupported here.
+
+Native attacker declaration includes a source with `MustAttack` when it can
+attack. Tapping, summoning sickness, phasing, attack restrictions and unpaid
+attack costs still prevent declaration. The requirement applies in each combat
+and reads the controller, rather than the owner. Additional blocking permits
+this source to block two distinct attackers; it does not permit blocking a
+flying attacker without flying or reach. It does not require a block. Ability
+removal changes later declarations and leaves existing combat pairs intact.
+
+Complete-record evidence: Juggernaut and Two-Headed Giant of Foriys map to
+`TestRONSourceCombatAttributeCast`, `RequiredAttack`, `AdditionalBlock`,
+`AttackControlAndFinality`, `DeclaredBlockFinality`, `GiantTrample`, `Lifecycle`,
+`Invalid` and `Reprints` (all have the `TestRONSourceCombatAttribute` prefix).
+Primordial Ooze remains rejected for its unresolved `CreateValueX` action.
+This slice does not establish additive multiple extra-block grants, all-zone
+CDA values, arbitrary combat requirements or new combat decision services.

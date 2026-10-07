@@ -5225,3 +5225,34 @@ Evidence: `TestLastTurnAttackIdentity`, `ConditionalRule`, `Declaration` and
 Goblin Rock Sled's trample, Mountain requirement and history untap rule, and
 Tangle Kelp's creature enchant, entry tap and current-host history untap rule.
 No new payment, replacement, simultaneous move or damage contract is introduced.
+
+## RON static source combat attributes
+
+The RON source declarations for `MustAttack` and
+`CanBlockAnAdditionalCreature` reuse `GrantKeywordModification`, `While` and
+`Static`. Printed effects follow the source incarnation and the existing
+layer-6 ability-removal lifecycle. Source departure ends the old rule; a returned
+source has a fresh printed rule. Phasing preserves identity and prevents a
+phased source from participating in combat. Factories and game clones keep
+separate source state.
+
+`Game.RunStepWithPriority(DeclareAttackers)` uses the existing `AttrMustAttack`
+check. It reads current control and attack legality, and it applies in each
+combat (CR 508.1a/c/d). An attack requirement does not require payment of an
+attack cost. `PayAttackCosts` retains its transactional contract; native step
+completion separately empties unspent mana (CR 500.5).
+`Game.RunStepWithPriority(DeclareBlockers)` uses `CanBlockAdditional` to permit
+two attackers, subject to ordinary blocking restrictions (CR 509.1a/b).
+Removing the ability after declaration leaves the declared combat pairs intact.
+These adapters add no replacement, LKI, cost, damage or simultaneous-operation
+service. Existing native combat damage and trample execute the complete records.
+
+Evidence: `TestRONSourceCombatAttributeRequiredAttack`,
+`TestRONSourceCombatAttributeAdditionalBlock`,
+`TestRONSourceCombatAttributeAttackControlAndFinality`,
+`TestRONSourceCombatAttributeDeclaredBlockFinality`,
+`TestRONSourceCombatAttributeGiantTrample`,
+`TestRONSourceCombatAttributeLifecycle` and
+`TestRONSourceCombatAttributeReprints`. This evidence covers the two source
+forms; it does not establish additive extra-block grants or a general solver
+for interacting combat requirements.

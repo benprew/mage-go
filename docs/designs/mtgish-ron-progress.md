@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **668 accepted / 318 rejected unique card
-names** (986 total), and **1,761 compiled / 684 rejected records** (2,445 total).
+The latest recorded inventory reports **670 accepted / 316 rejected unique card
+names** (986 total), and **1,772 compiled / 673 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`LAST-TURN-ATTACK-CONDITION` slice and its gameplay evidence are recorded at the
-end of this ledger. It adds complete Giant Turtle, Goblin Rock Sled and Tangle
-Kelp gameplay mappings.
+`STATIC-SOURCE-COMBAT-ATTRIBUTES` slice and its gameplay evidence are recorded
+at the end of this ledger. It adds complete Juggernaut and Two-Headed Giant of
+Foriys gameplay mappings.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -25819,3 +25819,136 @@ inventory_test.go and host_static_untap_test.go; dsl-reference.md,
 engine-rules-contracts.md and this ledger. One descriptive commit is made after
 validation; the final response records its hash. User edits remain unstaged.
 No second slice starts.
+
+## 2026-10-06: static source combat attributes
+
+Status: completed slice `STATIC-SOURCE-COMBAT-ATTRIBUTES`. Stop after this slice.
+Complete RON collection loading, gameplay, startup cutover and removal gates
+remain unfinished.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot and
+ledger, selected compiler/engine code, API/rules contracts and complete selected
+RON records, including every reprint. Baseline short engine tests and make build
+passed. Fresh strict loader and semantic inventory exited 1 for collection
+rejection: 2,445 records, 1,761 compiled / 684 rejected; 668 accepted / 318 rejected
+unique names. Inventory: 72,962 nodes / 8,559 signatures / 6,330 unknown-role
+occurrences. No baseline build, test or environment failure.
+
+Initial unrelated changes: .gitignore, execution design, ledger archival changes
+and untracked mtgish-ron-completed.md. These remain unstaged. Stage only the new
+status and appended slice entry in the ledger; preserve the user's archival edit.
+No sub-agents, removed skills, Go-card requirements or stubs are used.
+
+| Candidate | Distinct affected names and estimated complete unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Static source combat attributes, selected | Juggernaut, Two-Headed Giant of Foriys, Primordial Ooze; **2** complete names / **11** records | Ooze still needs a local CreateValueX counter snapshot, dynamic optional payment and subsequent damage. The other two complete records need only the source adapter; Wall blocking and trample already work. Shared lowering of source combat rules to native declaration attributes. | Low implementation, moderate gameplay/lifecycle testing; no missing engine prerequisite. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** after prerequisites, **0** adapter-only | Complete seven records also need source eligibility/choice, local producer binding, saved source identity and one-event shield consumption. Enables shared choice and shield contracts for further prevention consumers. | High engine and compiler work; simultaneous packets, choice, ordering, copy/clone and replacement tests. |
+| Characteristic battlefield-count P/T | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Wood Elemental; **5** credible complete unlocks after all-zone contracts | Existing CDA continuous effects only operate on the battlefield. All-zone values need an engine query contract, owner/controller semantics and layering evidence. Gaea's Avenger has an opponent/controller data defect; Wood Elemental additionally needs entry sacrifice and its saved count. Enables reusable CDA_Power/CDA_Toughness and arithmetic/count values. | High prerequisite effort; low adapter effort after the engine contract. |
+| Beginning-of-combat triggers | Battering Ram, Goblin Flotilla, Johan; **0** adapter-only | Ram needs duration/pair-filter work and a wrong delayed-reference correction; Flotilla needs temporary pair triggers; Johan needs an optional rule grant and player attack/tap rule. Enables recurring combat-step bodies for three consumers. | Low event prerequisite, medium/high complete-consumer effort. |
+
+Selected the shared source adapter for the largest credible immediate gain per
+unit effort. CDA and prevention have larger eventual gains but missing engine
+contracts. First-error frequency is not an unlock estimate. Reprints count once.
+Selection, supported contract, reuse boundary and acceptance cases were stated
+before edits. Local data/LEA.json and data/LEG.json agree with selected combat
+rules. Relevant CR: 400.7, 500.5, 508.1a/c/d, 509.1a/b, 611.3a/b and 702.26b.
+
+### Exact supported shapes and reuse boundary
+
+Top-level permanent rule only:
+
+- `PermanentRuleEffect(ThisPermanent, [MustAttack])`.
+- `PermanentRuleEffect(ThisPermanent, [CanBlockAnAdditionalCreature])`.
+
+Both source and operation must be bare symbols. Exactly one operation is allowed.
+Typed source resolution requires permanentSource. Tuple references/operations,
+target references, Aura hosts, collection rules, conditional bodies and combined
+lists remain rejected in this context. Existing untap/blocking adapters keep
+their grammar. Unsupported source use on an instant/sorcery remains rejected.
+
+Private compiler function:
+`compileSourceCombatAttribute(Node, Node, scope) (optionFactory, error)`.
+Each factory builds a fresh `Static(While(condition,
+GrantKeywordModification(source, attribute)))` with AttrMustAttack or
+CanBlockAdditional. RON spelling, scope and declaration checks stay in ron.
+No new public API or engine subsystem.
+
+Engine reuse: typed This reference; printed static lifecycle/incarnation wrapper;
+layer-6 grants and ability removal; native attack/block declarations;
+CanDeclareAsAttacker/Blocker and CanBlock; transactional PayAttackCosts;
+combat pairs and damage batches; trample; cloning, phasing and continuous layers.
+Queries make no choices. Source return installs a fresh printed rule. Current
+control drives requirements. Removed abilities stop later declarations, without
+removing existing combat pairs. No Go fallback, card-name executor, global result
+slot, partial registry, new replacement or LKI contract. Multiple extra-block
+grants and arbitrary interacting combat requirements are outside this shape.
+
+### TDD and gameplay mapping
+
+Test-first gameplay/reprint tests compiled after correcting fixture API names,
+then failed for the expected missing MustAttack and CanBlockAnAdditionalCreature
+adapters. Invalid declaration tests retained strict rejection. After lowering,
+focused gameplay passed. An attack-cost fixture first registered a transient
+cost that the next layer pass correctly reset; changed it to a printed source
+cost. A later rollback assertion read mana after native step completion; CR 500.5
+empties that mana. Assert transactional rollback before the native step, and
+separately assert no attack/tap after that step. No requirement or test is waived.
+
+All mappings use complete source records, not Go card definitions.
+
+| Card/contract | Tests and evidence |
+| --- | --- |
+| Juggernaut, LEB:132 and all six records | TestRONSourceCombatAttributeCast: unpaid casting rollback, timing, metadata and definition validation. RequiredAttack: automatic native attack, sick/tapped/phased/restricted/disabled/unpaid rejection, payment rollback and later combat; Wall and ordinary blocker legality. AttackControlAndFinality: opponent controller vs owner, attack survives ability removal, combat damage to correct defender. Lifecycle and Reprints: independent factory/clone state and all source records. |
+| Two-Headed Giant of Foriys, LEB:257 and all five records | Cast: rollback, resolution timing, 4/4 and trample. AdditionalBlock: three proposed distinct pairs accept exactly two, one after ability removal, zero when tapped/phased; flying restrictions remain. DeclaredBlockFinality: two declared blocks survive removal, native simultaneous incoming damage and clone isolation. GiantTrample: real attack/block and excess damage to player. Lifecycle and Reprints cover all source records. |
+| Shared declaration/identity contracts | TestRONSourceCombatAttributeInvalid: wrong operation/source forms, unbound/host/target references, mixed lists and collections. Lifecycle: source phase cycle, fresh incarnation after return, control, departure, ability removal/expiry, separate source instances and cloned games. Reprints: every selected record builds two independent validated factories; strict collection loading succeeds for the complete selected test fixture and rejects an added unsupported record atomically. |
+
+Two complete-card mappings added. Inventory-wide engine_validated and
+behavior_verified remain null. Primordial Ooze gains only a compiled rule; no
+complete-card gameplay mapping is claimed for it.
+
+### Final measurements, defects and gates
+
+Actual gain matches the estimate: **2 unique names / 11 records**. Final loader:
+**1,772 compiled / 673 rejected records**, **670 accepted / 316 rejected names**.
+No accepted record regresses. Exactly the eleven selected reprints leave
+rejection. The only other diagnostic change is Primordial Ooze:
+`LEG.lines.ron:196:329: unsupported action (CreateValueX)` replaces its
+MustAttack diagnostic. Strict loader still exits 1 and returns no registry.
+Inventory node/signature/unknown-role totals stay 72,962 / 8,559 / 6,330.
+RON sources/hashes are unchanged, so the vocabulary snapshot is not refreshed.
+
+No selected source-data defect. Deferred CDA inspection confirms a separate
+defect at ATQ:32: Gaea's Avenger counts ControlledByAPlayer(SinglePlayer(You))
+in both CDA branches. Local data/ATQ.json Oracle text specifies artifacts your
+opponents control. Its sole record needs correction with future CDA work; it
+remains unsupported here. Battering Ram's previously recorded ATQ:14 delayed
+attacker/Wall reference defect remains deferred. These defects are distinct from
+missing compiler adapters and engine contracts.
+
+Runtime/removal gates are not met. No Go card definitions, generators or DSL
+functions are deleted. Existing callers remain. No authoring cutover is claimed.
+
+### Required checks and ranked next work
+
+Final code passes focused TestRONSourceCombatAttribute tests with -count=1,
+whole RON tests with -count=1, go test ./pkg/mage/... -short -count=1, make test,
+make build, go vet ./..., make lint and git diff --check. Automatic lint edits
+are reviewed and affected checks repeated. Strict loader and semantic inventory
+both exit 1 for the expected collection rejection, with counts above. Earlier
+fixture/check failures are development evidence, not final validation.
+
+Ranked next candidates, to reassess from fresh inventory:
+
+1. Chosen-source prevention prerequisites: seven concrete circle/Greater Realm
+   consumers, plus further source-choice prevention forms.
+2. All-zone characteristic P/T query prerequisite: five complete count consumers,
+   with explicit Gaea's Avenger defect and Wood Elemental entry blockers.
+3. Beginning-of-combat event prerequisite: three consumers with the nested
+   duration, temporary-trigger, optional-rule and source-data blockers above.
+
+Slice files: source_combat_attribute.go/test.go, filtered_blocking.go,
+inventory_test.go, dsl-reference.md, engine-rules-contracts.md and this ledger.
+One descriptive commit follows validation; the final response records its hash.
+Unrelated user changes remain unstaged. No second slice starts.

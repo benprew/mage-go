@@ -37,6 +37,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		return compileDefendingLandRule(n, operation, ctx)
 	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":
 		return compileStaticAttackPermission(n, operation, ctx)
+	case "MustAttack", "CanBlockAnAdditionalCreature":
+		return compileSourceCombatAttribute(n, operation, ctx)
 	case "CantBeBlockedExceptByDefenders", "CantBeBlockedByDefenders", "CantBlockAttackers":
 	default:
 		return compileStaticUntapRule(n, ctx)
