@@ -7280,3 +7280,32 @@ This adds no LKI, replacement-order, damage-batch or cost-payment implementation
 RON Festival has complete behavior evidence in
 `TestRONCollectionAttackTurnFestival`. `TestRONCollectionAttackTurnSirenClause`
 covers only the exact attack requirement extracted from Siren's Call.
+
+### Turn-scoped unblocked attacker subscription
+
+`WhenAttacksUnblockedThisTurn` uses the shared delayed permanent-event service,
+`capturedDelayedBody`, `TriggerSystem`, and `EvtAttacksUnblocked`. The watched
+permanent must be live and phased in at installation. Matching requires the
+saved incarnation and a live creature; an explicit stale event incarnation,
+LKI-only object, phased object or noncreature cannot restore a match.
+
+The event occurs after legal blockers are committed (CR 509.1h, 509.3g).
+A blocked attacker does not become unblocked when its blockers depart.
+Installation cannot match an earlier event (CR 603.7a). The stated turn duration
+permits repeated triggers in later combats (CR 603.7b). Control and phase cycles
+keep identity; zone return creates a new object (CR 400.7, 603.7c).
+
+The source and controller are saved when the creating action resolves
+(CR 603.7d/e). Removal of the source's abilities does not remove this independent
+subscription. Existing APNAP placement applies. Copies keep saved references
+and use the copy controller for `You`. The shared body capture retains targets,
+permanent/player/number/token bindings and X, and restores the outer resolution
+frame after each body. Current or retained information reads use existing typed
+reference services; this does not permit actions on absent objects.
+
+Native cleanup ends the subscription (CR 514.2). It does not remove pending
+triggers. Clones keep independent subscription lists, pending triggers and saved
+frames. No replacement or cost service is added. Evidence:
+`TestUnblockedDelay*` and `TestRONUnblockedDelay*`, including native RON combat,
+rollback and resolution target legality, repeated installations, absent/stale
+identity, LKI, APNAP, phasing, pending cleanup, copies and clones.

@@ -25,6 +25,9 @@ type permanentReferencePlan struct {
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 	if n.Kind == Symbol {
+		if ctx.unblockedCreature != nil && n.Name == ctx.unblockedCreature.name {
+			return permanentReferencePlan{kind: permanentEvent, event: ctx.unblockedCreature}, nil
+		}
 		if target := ctx.permanentGroups[n.Name]; target != nil {
 			return permanentReferencePlan{kind: permanentTarget, target: target}, nil
 		}

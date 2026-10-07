@@ -6085,3 +6085,28 @@ Festival's complete RON record is tested. Siren's Call's exact attack clause is
 tested in a test-only extracted record; its full record still rejects on the
 delayed destruction collection. Runesword's regeneration and exile clauses
 remain unsupported. These forms do not establish other collection rule support.
+
+### Turn-scoped unblocked attacker subscription
+
+`WhenAttacksUnblockedThisTurn(subject PermanentRef, body ResolvingEffect)
+ResolvingEffect` saves the watched incarnation and resolving controller. It uses
+legal blocker-declaration events in each combat until cleanup. A phase cycle
+keeps identity; a returned object cannot use the subscription. Source departure,
+phasing, control changes and ability removal do not end the subscription.
+Pending triggers retain the body after cleanup. Use `Snapshot` and `From` when
+the body must read the watched object independently of the creator.
+
+RON supports `CreateTriggerUntil(WhenACreatureAttacksAndIsntBlocked(
+SinglePermanent(ref)), ActionList([actions...]), UntilEndOfTurn)` in resolving
+contexts. The subject must be a bound singular permanent reference. The nonempty
+body can use existing supported actions and the local `Trigger_ThatCreature`
+reference. This reference names the watched incarnation; it does not name the
+artifact that created the subscription. Parent references retain their bindings.
+Each installation saves its own frame, including original targets and X.
+Other delayed combat events, durations, target declarations inside this body,
+and unsupported body operations still reject.
+
+Delif's Cone and Delif's Cube use this event. Their complete records remain
+unsupported. Real-record clause tests establish Cone's power/life expression
+and Cube's counter instruction with their actual activation costs and target
+restrictions; they do not establish optional life or combat-damage assignment.

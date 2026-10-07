@@ -9,9 +9,9 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`TURN-COLLECTION-ATTACK-RULES` slice and its contract evidence are recorded
-at the end of this ledger. It adds live resolving attack rules, one complete
-Festival mapping and one Siren's Call attack-clause mapping.
+`TURN-UNBLOCKED-SUBSCRIPTION` slice and its contract evidence are recorded
+at the end of this ledger. It adds a shared delayed combat prerequisite and
+two real-record clause mappings. It adds no complete-card unlocks.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35663,3 +35663,151 @@ Changed files: `pkg/mage/attack_rule_turn.go`, `attack_rule_turn_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
 One descriptive commit is made only after required validation passes. No next
 slice begins in this run.
+
+## 2026-10-07: turn-scoped unblocked attacker subscriptions
+
+Status: complete prerequisite slice `TURN-UNBLOCKED-SUBSCRIPTION`; stop after
+this slice. Initial changes to `.gitignore`, the execution design and ledger
+split, plus untracked `mtgish-ron-completed.md`, are preserved. Only the new
+entry and current-status text are staged from the ledger.
+
+### Fresh evidence and candidate selection
+
+Pre-edit compiler tests, short engine tests and `make build` passed. Strict
+loader and semantic inventory exited 1 for collection rejection: 2,445 records /
+986 names, 1,936 compiled / 509 rejected records, 746 accepted / 240 rejected
+names, 72,953 nodes / 8,554 signatures. Read instructions, the engine reference,
+execution design, current ledger and vocabulary, selected engine/compiler code,
+complete candidate records and nested forms. Reprints count once. Local
+`data/FEM.json` provides Oracle text. Rules used: CR 400.7, 509.1h, 509.3g,
+514.2 and 603.7a-e. Existing API/rules contracts and complete War Barge and
+Sandals of Abdallah records were also read to preserve departure consumers.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Turn-scoped unblocked attacker subscription, selected | Delif's Cone, Delif's Cube; **0** immediate full unlocks. | Both require combat-damage assignment suppression. Cone also requires optional life gain and a confirmed conditional source correction. Establishes repeated delayed combat events and independent watched-object bindings for two complete consumers. Farrel's Mantle and Farrel's Zealot share the eventual assignment rule but do not use this delayed event. | Low/medium: reuse legal combat events, permanent snapshots, delayed frame capture, APNAP, clones and cleanup; add one engine constructor and RON adapter plus identity/timing/scope tests. |
+| General damage-source choice and next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** full unlocks after prerequisites. Dark Sphere, Eye for an Eye, Jade Monolith, Reverse Damage also share the choice. | Complete legal enumeration needs referred and command-zone objects. The other four consumers need partial prevention, reflection, redirection or retained prevention results. Concrete benefit for **11** distinct names. | High: several source categories, saved identities, per-choice bindings, next-event operations, competing replacement ordering/rechecks. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **8** after prerequisites. | Formation and damage assignment must use parameterized bands. Five static grants, token abilities and two removal consumers need layers/copies/token/removal contracts. Ordinary banding is insufficient. | High: coupled combat, layer, token and ability storage contracts. |
+
+The selected slice is a small shared prerequisite with a concrete two-card
+benefit and existing exact runtime services. It has a smaller implementation
+and validation surface than either larger candidate. The zero immediate unlock
+estimate includes nested blockers; first-error counts were not treated as full
+unlocks. Selection, contract, reuse boundary and acceptance cases were stated
+before edits. The implement-engine skill supplied the engine workflow. No
+removed card/set skill or Go card definition supplied requirements.
+
+### Exact contracts and reuse boundary
+
+Engine API: `WhenAttacksUnblockedThisTurn(subject PermanentRef,
+body ResolvingEffect) ResolvingEffect`. Install only for a live, phased-in
+subject. Save its incarnation, creator source and resolving controller. Match
+legal unblocked-attacker events in each combat until cleanup. Subject control
+changes and phase cycles retain identity; returned objects do not match. Source
+phasing, departure, control and ability removal do not remove the subscription.
+Pending bodies survive cleanup. Their typed information reads can use exact
+LKI, while actions still require live objects. Copies use the copy controller.
+
+`delayedPermanentEventEffect` shares the existing departure installation service;
+`WhenDiesThisTurn` and `WhenLeavesThisTurn` retain their public signatures and
+behavior. Matching an unblocked event requires a live creature and saved
+incarnation. Explicit stale event incarnations cannot match. Unblocked events
+now carry the attacker incarnation. Departure matching still uses existing LKI.
+
+RON resolving form:
+`CreateTriggerUntil(WhenACreatureAttacksAndIsntBlocked(SinglePermanent(ref)),
+ActionList([actions...]), UntilEndOfTurn)`. Exactly three arguments, a bound
+singular permanent subject, a nonempty action body, and the symbol duration.
+Only existing supported body operations compile. No body target declaration is
+created. `Trigger_ThatCreature` is body-local and resolves to the saved watched
+incarnation, rather than the creator. `scope.unblockedCreature` remains separate
+from the parent event, including `Trigger_ThatPermanent`. Instance construction
+adds its own `PermanentBinding` while preserving parent bindings. Snapshot
+and delayed frame capture retain each installation's references and X.
+
+Reuse: `Snapshot`/`From`, `instanceBindings`, `compilePermanentRef`,
+`compileActionSequence`, `capturedDelayedBody`, `TriggerSystem`,
+`EvtAttacksUnblocked`, existing legal blocker commitment and event dispatch,
+APNAP stack placement, stack copying, LKI, cost transactions and cleanup.
+RON owns spelling, declaration checks, scopes and lowering. Engine owns event
+matching and lifetime. Inventory walks delayed combat subjects and permanent
+operands below unsupported bodies. No game-time declaration panic, global
+last-action slot, card-name branch, Go fallback or partial production registry.
+No DSL function or Go card definition is removed; runtime/removal gates remain
+unmet and no deletion caller audit is claimed.
+
+### TDD, gameplay mapping and source correction
+
+Engine tests first failed for the missing constructor. RON tests first had a
+counter API fixture error, then failed on the missing delayed-event adapter.
+The engine target fixture needed the declaration as well as a target ID; this
+was corrected without changing assertions. Additional tests failed on absent,
+stale-incarnation and noncreature event matches before engine checks were added.
+A nested parent-event test failed on the lost `Trigger_ThatPermanent` binding
+before the scopes were separated. The source regression failed on Cone's
+reversed paid branch before the RON record was corrected.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Delif's Cone event and power/life expression | `TestRONUnblockedDelayRealClauses`: read its complete record, retain exact target and activation costs, and extract its event plus exact nested `GainLife(PowerOfPermanent(Trigger_ThatCreature))` into a named test-only clause fixture. Actual native attack/block steps test timing and source sacrifice. Optional life choice and damage assignment are not claimed. |
+| Delif's Cube event and counter clause | Same test: exact activation target/cost/event and `PutCounters` instruction; normal blocked and unblocked combat. `LegalityAndRollback`: insufficient mana, wrong controller, shroud, returned/phased and phase-cycle targets. The no-damage rule and full card remain unsupported. |
+| RON identity and scopes | `Bindings`: two factories/controllers, two pending activations from the same ability on different creatures, a third pending activation, source departure, simultaneous unblocked events and clones. `ParentEventBinding`: separately retain the parent entry land and delayed watched creature. `Invalid`: wrong arity/subject/reference/duration, empty body, wrong event and out-of-scope/wrong event aliases reject. `Inventory`: nested event, subject and operand roles. |
+| Engine lifetime and information | `TestUnblockedDelayLifecycle`: repeated combats, source control/return/phasing/ability removal, watched control/phasing/return and cleanup cloning. `PendingAndLegality`: departed blockers do not restore unblocked status, original LKI power after return, copied pending trigger controller and pending cleanup. `Declarations`: nil/unbound declarations reject. `InstallationAndStaleEvents`: absent/phased installation, absent/phased/noncreature events and stale incarnation reject. `TimingAndAPNAP`: no retrospective trigger, APNAP placement, pending cleanup and clone lists. |
+| Existing consumers | Focused `TestWhenDiesThisTurn*`, `TestWhenLeavesThisTurn*`, `TestUnblockedAttack*`, short engine and full repository suites preserve departure and printed unblocked triggers. |
+| Cone source defect | `TestRONUnblockedDelayConePaidBranch`: the no-damage rule follows accepted life gain. Oracle in `data/FEM.json` says "If you do"; the sole complete RON record at `FEM.lines.ron:11` used `Unless(CostWasPaid, ...)`. Correct to `If(CostWasPaid, ...)`. No reprint exists. CR 603.7 requires preserving the delayed body's condition; no optional payment behavior is added. |
+
+Coverage gain: **two real-record clause mappings** and reusable event, scope,
+identity and timing contracts; **zero new complete-card mappings**. Full Cone
+and Cube records still reject. The vocabulary snapshot was refreshed from a
+positioned AST walk and fresh loader output; hashes, occurrence counts, examples
+and diagnostics are current. Tuple signature count remains **602**; If gains
+one occurrence and Unless loses one. No other RON record changes.
+
+### Validation, actual gains and remaining gaps
+
+Estimated immediate full-card unlocks **0**; actual **0 names / 0 records**.
+Fresh loader/inventory: **1,936 compiled / 509 rejected records**, **746 accepted /
+240 rejected names**, 2,445 records / 986 names, **72,953 nodes / 8,554
+signatures**. Engine-validated and behavior-verified collection totals remain
+null. No previously compiled record is lost.
+
+Remaining diagnostics:
+
+- Delif's Cone: `FEM.lines.ron:11:436: unsupported optional payment cost (GainLife)`.
+- Delif's Cube: `FEM.lines.ron:12:477: unsupported temporary blocking operation (AssignsNoCombatDamage)`.
+
+| Command | Result |
+| --- | --- |
+| Focused `Test(RONUnblockedDelay\|UnblockedDelay\|WhenDiesThisTurn\|WhenLeavesThisTurn\|UnblockedAttack)`, `-count=1` | PASS after final edits and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final edits and lint. |
+| `go test ./... -short -count=1` | PASS, additional engine-skill check. |
+| `make test` | PASS after final edits and lint. |
+| `make build` | PASS after final edits and lint. |
+| `go vet ./...` | PASS after final edits and lint. |
+| `make lint` | PASS, zero issues on final run. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for 509 unsupported records; no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1 with the same rejection membership and fresh semantic counts. |
+
+The first lint run reported two `prealloc` issues in the new test fixture.
+Fixed those allocations; automatic maps-copy modernization and import formatting
+were reviewed, then affected and required checks were rerun. No pre-existing or
+native environment failure was found. Runtime cutover, collection gameplay,
+Go-card deletion, generator retirement and DSL cleanup remain unfinished.
+One descriptive commit is made after these checks pass; unrelated user work
+remains unstaged.
+
+Ranked next candidates to reassess:
+
+1. Shared `AssignsNoCombatDamage` assignment rule for Delif's Cone, Delif's Cube,
+   Farrel's Mantle and Farrel's Zealot. Cube has no other known nested blocker;
+   the other consumers need optional choices/damage or host event contracts.
+2. Complete legal damage-source enumeration and choices, then the seven basic
+   source-specific shields.
+3. Parameterized bands with others for the eight grant/token/removal consumers.
+
+Changed files: `pkg/mage/composable_conditions.go`, `game.go`, `doc.go`,
+`unblocked_delay_test.go`; `pkg/mage/dsl/ron/compiler.go`, `departure_delay.go`,
+`permanent_scope.go`, `inventory.go`, `unblocked_delay.go`,
+`unblocked_delay_test.go`; `cards/mtgish/FEM.lines.ron`; API/rules contracts,
+vocabulary snapshot and this ledger. No second slice starts.

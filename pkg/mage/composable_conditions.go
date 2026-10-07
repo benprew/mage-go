@@ -406,46 +406,55 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 }
 
 // --- from composable_delayed_death.go ---
-type delayedDepartureEffect struct {
-	subject PermanentRef
-	body    ResolvingEffect
-	leaves  bool
+type delayedPermanentEventEffect struct {
+	subject   PermanentRef
+	body      ResolvingEffect
+	leaves    bool
+	unblocked bool
 }
 
 // WhenDiesThisTurn watches one battlefield object until this turn ends.
 func WhenDiesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
-	return &delayedDepartureEffect{subject: subject, body: body}
+	return &delayedPermanentEventEffect{subject: subject, body: body}
 }
 
 // WhenLeavesThisTurn watches one battlefield object until this turn ends.
 func WhenLeavesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
-	return &delayedDepartureEffect{subject: subject, body: body, leaves: true}
+	return &delayedPermanentEventEffect{subject: subject, body: body, leaves: true}
 }
 
-func (e *delayedDepartureEffect) Text() string {
+// WhenAttacksUnblockedThisTurn watches the original object in each combat this turn.
+func WhenAttacksUnblockedThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &delayedPermanentEventEffect{subject: subject, body: body, unblocked: true}
+}
+
+func (e *delayedPermanentEventEffect) Text() string {
+	if e.unblocked {
+		return "when that creature attacks unblocked this turn"
+	}
 	if e.leaves {
 		return "when that permanent leaves the battlefield this turn"
 	}
 	return "when that permanent dies this turn"
 }
 
-func (e *delayedDepartureEffect) Properties() EffectProperties {
+func (e *delayedPermanentEventEffect) Properties() EffectProperties {
 	if nilDefinition(e.body) {
 		return EffectProperties{}
 	}
 	return e.body.Properties()
 }
 
-func (e *delayedDepartureEffect) inspectDefinition() definitionNode {
+func (e *delayedPermanentEventEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "delayed-event", Text: e.Text(), isolatedBindings: true,
 		children: []definitionEdge{{"subject", e.subject}, {"body", e.body}}}
 	if nilDefinition(e.subject) || nilDefinition(e.body) {
-		n.problem = "delayed departure: supply a subject and body"
+		n.problem = "delayed permanent event: supply a subject and body"
 	}
 	return n
 }
 
-func (e *delayedDepartureEffect) Apply(ctx *EffectContext) error {
+func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 	permanent, ok := e.subject.resolvePermanent(ctx)
 	if !ok || permanent.PhasedOut {
 		return nil
@@ -477,7 +486,10 @@ func (e *delayedDepartureEffect) Apply(ctx *EffectContext) error {
 		matchIncarnation:  permanent.incarnationID,
 		Persistent:        true,
 	}
-	if !e.leaves {
+	if e.unblocked {
+		dt.EventType = EvtAttacksUnblocked
+		dt.MatchFromZone = ZoneAny
+	} else if !e.leaves {
 		dt.MatchToZone = ZoneGraveyard
 	}
 	ctx.Game.RegisterDelayedTrigger(dt)

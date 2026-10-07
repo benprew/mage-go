@@ -663,11 +663,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "delayed_combat_event":
+		if n.Name == "WhenACreatureAttacksAndIsntBlocked" && len(n.Args) == 1 {
+			return "delayed_combat_subject"
+		}
 	case "delayed_departure_event":
 		if (n.Name == "WhenAPermanentDies" || n.Name == "WhenAPermanentLeavesTheBattlefield") && len(n.Args) == 1 {
 			return "delayed_departure_subject"
 		}
-	case "delayed_departure_subject":
+	case "delayed_departure_subject", "delayed_combat_subject":
 		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
@@ -717,6 +721,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "CreateTriggerUntil":
 			if len(n.Args) == 3 {
+				if index == 0 && n.Args[0].Name == "WhenACreatureAttacksAndIsntBlocked" {
+					return "delayed_combat_event"
+				}
 				return []string{"delayed_departure_event", "actions", "duration"}[index]
 			}
 		case "CreateFutureTrigger":

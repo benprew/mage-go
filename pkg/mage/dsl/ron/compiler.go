@@ -64,6 +64,7 @@ type scope struct {
 	drawEvent         *drawEventPlan
 	stepEvent         *stepEventPlan
 	permanentEvent    *permanentEventPlan
+	unblockedCreature *permanentEventPlan
 	landManaEvent     *landManaEventPlan
 	graveyardEvent    *graveyardEventPlan
 	landEntryEvent    *landEntryEventPlan

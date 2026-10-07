@@ -661,6 +661,11 @@
 // Use [SkipNextUntapEach] to capture the recipients of one-step restrictions.
 // Control changes and phasing preserve counts; departure ends them.
 //
+// Use [WhenAttacksUnblockedThisTurn] to watch one incarnation this turn.
+// Each legal blocker declaration can trigger it. Source departure and control
+// changes do not change the saved controller. Cleanup ends the subscription;
+// pending triggers retain their saved body and references.
+//
 // Use [WhenDiesThisTurn] or [WhenLeavesThisTurn] for a delayed departure.
 // Each installation keeps the watched incarnation, controller and body bindings.
 // Cleanup removes the subscription. A pending trigger can still resolve.

@@ -14,6 +14,9 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(n.Args[2], "delayed departure duration")
 	}
 	event := n.Args[0]
+	if event.Name == "WhenACreatureAttacksAndIsntBlocked" {
+		return compileUnblockedDelay(n, ctx)
+	}
 	if event.Name != "WhenAPermanentDies" && event.Name != "WhenAPermanentLeavesTheBattlefield" {
 		return nil, unsupported(event, "delayed departure event")
 	}

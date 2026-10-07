@@ -638,7 +638,7 @@ func (g *Game) fireUnblockedAttackers() {
 		if attacker == nil {
 			continue
 		}
-		g.FireEvent(GameEvent{Type: EvtAttacksUnblocked, SourceID: attacker.ID(), PlayerID: attacker.ControllerID(), TargetID: group.DefenderID})
+		g.FireEvent(GameEvent{Type: EvtAttacksUnblocked, SourceID: attacker.ID(), SourceIncarnation: attacker.incarnationID, PlayerID: attacker.ControllerID(), TargetID: group.DefenderID})
 	}
 }
 
@@ -1853,6 +1853,10 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 		if dt.EventType == evt.Type {
 			if dt.matchIncarnation != uuid.Nil {
 				matched := observer.FindPermanent(evt.SourceID)
+				if dt.EventType == EvtAttacksUnblocked && (matched == nil || !matched.HasType(TypeCreature) || evt.SourceIncarnation != uuid.Nil && evt.SourceIncarnation != dt.matchIncarnation) {
+					remaining = append(remaining, dt)
+					continue
+				}
 				if matched == nil {
 					if lki := observer.zones.LKI(evt.SourceID); lki != nil {
 						matched = lki.Snapshot
