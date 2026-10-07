@@ -4368,3 +4368,34 @@ Evidence: `TestRONEnchantControllerClauses`, `Invalid`, `NestedFilters` and
 Relic Bind and Tourach's Gate, including casting costs and metadata. They
 are clause evidence: all three complete records remain rejected for later
 unsupported operations. No full-card behavior claim follows from these tests.
+
+## RON resolving counter conditions
+
+Inside a resolving `If(PermanentPassesFilter(subject, filter), [actions...])`,
+counter filters accept `HasACounterOfType(counter)`,
+`HasNoCountersOfType(counter)`, and
+`HasNumberCountersOfType(comparison(Integer(n)), counter)`. The comparison is
+`EqualTo` or `GreaterThanOrEqualTo`; `n` must be a nonnegative integer literal.
+The counter uses the existing permanent counter grammar, including supported
+`PTCounter` coordinates. Nonempty `And` and `Or` combine these with the existing
+resolving property filters. Other comparisons, dynamic thresholds, malformed
+constructors and unbound subjects are declaration errors.
+
+The condition reads the count when its action runs, after earlier instructions.
+It uses current information or LKI for the exact subject incarnation. Retained
+information permits a condition read, but cannot permit an action on an absent,
+returned or phased-out object. Each factory constructs its own typed targets;
+copies and clones retain their own bindings and state. Conditional mana
+activations remain rejected until solver planning supports their complete body.
+Static conditions, activation restrictions and exiled-card conditions retain
+their separate grammars.
+
+`mage.CounterCountAtLeast(counter, minimum)` compares the stored count as an
+`int`; a threshold above 255 cannot wrap to a smaller count. Presence and absence
+reuse `HasCounter` and `CounterCountEquals`. Execution reuses
+`IfPermanentMatches`, counter actions and the existing reference service.
+
+Evidence: `TestCounterCountAtLeast` and `TestRONResolvingCounter*`. The actual
+Fasting upkeep and Tourach's Gate counter-decay clauses have gameplay coverage.
+Fasting still rejects its draw-step replacement, and Gate still rejects its
+host activation restriction. These tests do not establish complete-card support.

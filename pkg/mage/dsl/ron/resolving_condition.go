@@ -56,6 +56,8 @@ func compileResolvingPermanentBranch(n Node, ctx scope) (effectFactory, error) {
 
 func compileResolvingPropertyFilter(n Node) (mage.PermanentFilter, error) {
 	switch n.Name {
+	case "HasACounterOfType", "HasNoCountersOfType", "HasNumberCountersOfType":
+		return compileResolvingCounterFilter(n)
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, err

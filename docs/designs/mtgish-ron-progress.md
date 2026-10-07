@@ -9,7 +9,7 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`CONTROLLER-AWARE-ENCHANT` prerequisite and its clause-level gameplay evidence
+`RESOLVING-COUNTER-CONDITIONS` prerequisite and its clause-level gameplay evidence
 are recorded at the end of this ledger. It unlocks no complete cards.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -25309,3 +25309,162 @@ aura_controller_test.go and doc.go; pkg/mage/dsl/ron/compiler.go,
 enchant_controller.go and enchant_controller_test.go; docs/dsl-reference.md,
 docs/engine-rules-contracts.md and this ledger. The final response records the
 slice commit. No second slice begins.
+
+
+## 2026-10-06: resolving permanent counter conditions
+
+Status: completed prerequisite slice `RESOLVING-COUNTER-CONDITIONS`. Stop after
+this slice. Compilation remains **664 accepted / 322 rejected unique names**,
+with **1,757 compiled / 688 rejected records** out of 2,445. This slice adds
+clause gameplay evidence for two names and no complete-card gameplay mapping.
+Collection-wide engine-validation and behavior totals remain null. Strict
+loading exits 1 and publishes no registry.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, current
+ledger, selected compiler/engine code, relevant API/rules contracts, and CR
+122.1/2, 400.7, 608.2b/c/h and 702.26b/c/d. Inspected complete records and nested
+forms for all names in this table. Baseline compiler tests, short engine tests
+and build passed. Loader rejection is independent of those successful checks.
+Fresh baseline inventory: 986 names, 2,445 records, 72,954 AST nodes, 8,543
+context signatures and 6,348 unknown-role occurrences. Reprints count once.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Resolving counter conditions, selected | Fasting, Tourach's Gate: **zero immediate**; supplies necessary counter clauses for two complete consumers | Fasting still needs a RON draw-step replacement adapter (engine behavior exists); Gate still needs host activation property restrictions and host tap cost lowering. Shared counter presence/absence and minimum/exact comparisons remove both current resolving-condition blockers. | Small: one reusable pure engine query, compiler lowering, existing typed identity/LKI services, declaration and real-clause gameplay tests. |
+| Beginning-of-combat triggers | Battering Ram, Goblin Flotilla, Johan: **zero** for event adapter alone | Ram needs end-of-combat duration; Flotilla needs a temporary combat-pair trigger; Johan needs an optional rule-effect payment and conditional player attack/tap effect. Enables combat-boundary events for three names before these separate contracts. | Medium/high: event/controller context, combat durations, pending copies/clones and event-versus-resolution timing. |
+| Payment IfElse | Spitting Slug, Imprison, Cyclone, Transmute Artifact: **zero** for payment-continuation adapter alone | Slug needs captured combat-pair keyword collections; Imprison needs activation-event/ability references and host combat events; Cyclone needs per-counter mana payment and dynamic multi-recipient damage; Transmute needs artifact search/result bindings and found-card mana differences. A bounded continuation can serve all four after their prerequisites. Other IfElse contexts (property, mana, replacement, entry, reveal) are distinct. | Medium/high: both paths must consume one local payment result, transactional costs, scoped results and branch validation; complete consumers need further slices. |
+
+Selection favors the small shared prerequisite with two concrete downstream
+consumers. The other compared adapters also unlock no full cards and require
+larger execution contracts for their consumers. The existing seven-card chosen
+source prevention chain remains valuable but has a larger prerequisite scope;
+this run does not implement it. First-error frequency was not treated as a
+full-card unlock count. Initially estimated one full unlock for Fasting, then
+corrected the estimate to zero before editing: complete compiler inspection
+showed its draw-step replacement has an engine service but no RON adapter.
+Gate's exact next diagnostic was measured after lowering: compilation checks
+activation modifiers before costs, so its host property restriction is first.
+No unsupported remainder was bypassed in production.
+
+User changes present at start: .gitignore, execution design, ledger archival
+changes and untracked mtgish-ron-completed.md. Preserve all. Stage only this
+slice's current-status wording and appended entry in the ledger, leaving the
+user's archival edits unstaged. No sub-agents, removed card/set skills, Go-card
+requirements or generated stubs were used. The implement-engine skill supplied
+the reusable engine prerequisite workflow.
+
+### Exact signatures, context and reuse
+
+Resolving actions support:
+
+- `If(PermanentPassesFilter(subject, filter), [actions...])` with
+  `HasACounterOfType(counter)` or `HasNoCountersOfType(counter)`.
+- `HasNumberCountersOfType(EqualTo(Integer(n)), counter)` and
+  `HasNumberCountersOfType(GreaterThanOrEqualTo(Integer(n)), counter)`.
+- Nonempty nested `And([filters...])` / `Or([filters...])` in the existing
+  resolving property filter grammar. Each filter reads one counter kind.
+
+`n` is a nonnegative integer literal. Counter names and supported PTCounter
+coordinates use compilePermanentCounterType. Subjects use compilePermanentRef
+and the existing typed, lexical scope. Malformed kinds/arity, unknown counters,
+negative/dynamic thresholds, other comparisons and unbound references reject
+at compilation. Static conditions retain their prior equality-only grammar;
+activation and exiled-card conditions remain separate contexts. Conditional
+mana activation remains an error until solver planning supports its body.
+
+Engine API: `CounterCountAtLeast(counter core.CounterType, minimum int)
+PermanentFilter`. Pure comparison promotes the stored count to int. Nil does
+not match; zero, negative and above-255 engine thresholds use ordinary integer
+comparison. No new game-time declaration panic or mutable query state.
+Presence and exact/zero count reuse HasCounter and CounterCountEquals.
+
+Execution reuses IfPermanentMatches and its current-or-LKI information service,
+per-instance target factories, incarnation captures, counter add/remove actions,
+existing destruction/sacrifice, control/phasing, stack copies, clones and casting
+transactions. Preceding instructions complete before condition evaluation.
+Old LKI may supply a count, but cannot permit an action on a departed, returned
+or phased-out subject. No new binding producer, replacement ordering, batch,
+APNAP, cost payment or simultaneous-operation contract is introduced.
+Inventory now classifies HasNoCountersOfType's child as permanent_counter_type
+and follows GreaterThanOrEqualTo's literal through the existing counter
+comparison/value roles; expression context still distinguishes resolving use
+from static use. Inventory support remains unverified, not a gameplay claim.
+
+### Tests and card-to-test mapping
+
+Engine test first failed to compile for the missing CounterCountAtLeast.
+RON real-clause tests then failed for unsupported HasNumberCountersOfType and
+HasNoCountersOfType. A test helper's pointer-to-interface return and a fixture
+without creature P/T were corrected before evaluating gameplay. Reporting tests
+were restricted to the selected counter roles: unrelated metadata list roles
+and GainLife's ordinary Integer value are not counter roles.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Fasting DRK:35 upkeep clause | TestRONResolvingCounterRealClauses: counts 0 through 6, own/opponent upkeep, post-add threshold and other counter kinds. TimingAndIdentity: changed count before resolution, departure/return, phasing/cycle, control, copied trigger and pending clone. ClauseCasting: unpaid rollback, payment/entry timing, five native upkeeps. Existing TestRONDrawEventFastingClause covers its draw-trigger clause separately; replacement remains unsupported. |
+| Tourach's Gate FEM:97 counter-decay clause | RealClauses executes actual first three rules (enchant, counter activation declaration, upkeep), with a legal land host; count removal precedes zero-count sacrifice, including removal from zero and unrelated counters. Complete host activation remains rejected. No full-card coverage claim. |
+| Pure count query | TestCounterCountAtLeast: counts 0, 1, 4, 5, 6, 255; thresholds -1, 0, 1, 5, 255, 256; nil, distinct counter kinds and clone isolation. |
+| Resolving filters and references | Filters: presence/absence/exact/minimum, zero and 256 thresholds, And/Or and separate kinds. Information: current versus retained count, source return and phasing, action identity. TargetInstances: fresh factory declarations, retargeted copies, independent controllers and clone counts. Existing TestIfPermanentMatches* retains the broader reference contract. |
+| Declaration and strict reporting | Invalid and ContextBoundaries: constructor shape, counter kind, thresholds, comparison, empty conjunction, unbound target/host, separate static/activation contexts and conditional mana rejection. StrictInventory: nested semantic roles, atomic rejection and exact remaining full-record diagnostics. |
+
+These clause fixtures are test-only and do not publish a production subset
+registry. Compilation totals and full-card behavior coverage do not increase.
+No source-data defect was found in the selected clauses. Local data/DRK.json
+and data/FEM.json Oracle text confirms the threshold and decay semantics.
+No RON source changed; all 12 hashes match the vocabulary snapshot, so no source
+vocabulary refresh is required. No DSL functions, Go card definitions,
+generators or startup wiring are removed: their removal gates remain unmet.
+
+### Final measurements and validation
+
+Actual full-card gain is **zero names / zero records**, matching the corrected
+pre-edit estimate. Every previously accepted record remains accepted. Final
+inventory: 72,954 nodes, 8,543 signatures, **6,345 unknown-role occurrences**
+(down three), 1,757 compiled / 688 rejected records and 664 accepted / 322
+rejected names. Only two loader diagnostics change:
+
+- Fasting, DRK.lines.ron:35:420: unsupported rule (ReplaceWouldBeginDrawStep).
+- Tourach's Gate, FEM.lines.ron:97:904: unsupported activation timing condition (PermanentPassesFilter).
+
+The first broad engine run found the older enchant reporting test expected
+Gate's former HasNoCountersOfType diagnostic. Updated it to assert the exact
+new unsupported activation diagnostic, preserving strict rejection. All
+behavior and invalid-declaration assertions remain intact.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Focused CounterCountAtLeast and IfPermanentMatches engine tests, -count=1 | PASS after expected missing-API failure |
+| Focused go test ./pkg/mage/dsl/ron -run '^TestRONResolvingCounter' -count=1 | PASS after expected unsupported-filter failures and fixture/report corrections |
+| go test ./pkg/mage/... -short -count=1 | PASS after updating the evolved exact loader diagnostic |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; only test import spacing changed |
+| Post-lint go test ./... -short -count=1 | PASS on final formatted code |
+| git diff --check; git diff --cached --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1; exact totals and diagnostics above |
+| Source and accepted-record comparison | All 12 hashes unchanged; rejected-record sets identical; zero accepted-record regressions |
+
+No environmental or pre-existing validation blocker remains. No checks were
+waived and no commit gate is blocked.
+
+Ranked next candidates to reassess with fresh complete-record evidence:
+
+1. Shared source selection and next-event prevention: the seven complete circle
+   and Greater Realm consumers after their existing documented prerequisite chain.
+2. Mana conversion planning with per-activation history: Farrelite Priest and
+   Initiates of the Ebon Hand, two complete consumers after solver support.
+3. Live permanent property activation restrictions and host costs: Tourach's
+   Gate, Triassic Egg and other source/host property consumers; distinguish the
+   separate numeric/host restrictions and inspect later blockers before estimating.
+   Fasting's replacement adapter is now a bounded follow-up, but single-card
+   work remains behind useful multi-card capabilities.
+
+Changed files: pkg/mage/counter_filter.go/test.go and doc.go;
+pkg/mage/dsl/ron/resolving_counter.go/test.go, resolving_condition.go,
+inventory.go and enchant_controller_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. The final response records the
+commit. No second slice begins.

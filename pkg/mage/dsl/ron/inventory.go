@@ -1047,7 +1047,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "static_counter_comparison":
-		if n.Name == "EqualTo" && len(n.Args) == 1 {
+		if (n.Name == "EqualTo" || n.Name == "GreaterThanOrEqualTo") && len(n.Args) == 1 {
 			return "static_counter_value"
 		}
 	case "static_counter_value":
@@ -1074,7 +1074,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ControlledByPlayer" && len(n.Args) == 1 {
 			return "player_reference"
 		}
-		if n.Name == "HasACounterOfType" && len(n.Args) == 1 {
+		if (n.Name == "HasACounterOfType" || n.Name == "HasNoCountersOfType") && len(n.Args) == 1 {
 			return "permanent_counter_type"
 		}
 		if n.Name == "HasNumberCountersOfType" && len(n.Args) == 2 {

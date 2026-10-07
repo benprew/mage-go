@@ -32,6 +32,30 @@ func TestCounterFilters(t *testing.T) {
 	}
 }
 
+func TestCounterCountAtLeast(t *testing.T) {
+	a := NewBasePlayer("A")
+	g := NewGame(a, NewBasePlayer("B"))
+	p := g.PutOnBattlefield(NewCreature("Subject", "", 2, 2), a.PlayerID())
+	for _, count := range []int{0, 1, 4, 5, 6, 255} {
+		g.MutablePermanent(p.ID()).Counters[core.Hunger] = uint8(count)
+		g.MutablePermanent(p.ID()).Counters[core.Time] = 9
+		for _, minimum := range []int{-1, 0, 1, 5, 255, 256} {
+			filter := CounterCountAtLeast(core.Hunger, minimum)
+			if got := filter.Match(g.FindPermanent(p.ID()), g); got != (count >= minimum) {
+				t.Fatalf("count %d, minimum %d: %v", count, minimum, got)
+			}
+			if filter.Match(nil, g) {
+				t.Fatal("nil permanent matched")
+			}
+		}
+	}
+	clone := g.Clone()
+	g.MutablePermanent(p.ID()).Counters[core.Hunger] = 0
+	if CounterCountAtLeast(core.Hunger, 5).Match(g.FindPermanent(p.ID()), g) || !CounterCountAtLeast(core.Hunger, 5).Match(clone.FindPermanent(p.ID()), clone) {
+		t.Fatal("counter query changed the clone")
+	}
+}
+
 func TestCounterFilterConditionIdentity(t *testing.T) {
 	for _, attached := range []bool{false, true} {
 		a, b := NewBasePlayer("A"), NewBasePlayer("B")

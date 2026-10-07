@@ -101,6 +101,9 @@
 // live static condition. A returned permanent cannot satisfy an old reference.
 // Use [HasCounter] or [CounterCountEquals] for a live counter condition.
 // These filters read one counter kind. Exact counts do not use a narrow cast.
+// Use [CounterCountAtLeast] for a minimum count of one counter kind.
+// Resolving RON counter conditions use current or retained information for
+// the original permanent. An absent permanent cannot receive an action.
 // Use a typed target with [WithTargets] for a targeted bonus.
 // Dwarven Lieutenant combines [IsCreature] with [HasSubType] for its Dwarf target.
 // Either player's Dwarf creature can be the target, including the source.

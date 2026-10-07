@@ -5126,3 +5126,31 @@ tests also cover spell payment rollback, original and returned targets,
 resolution timing, separate factory state and copies with either controller.
 This slice does not add arbitrary player-binding restrictions to enchant
 abilities, ownership restrictions or player-enchanting Auras.
+
+## Resolving counter information
+
+`CounterCountAtLeast(counter core.CounterType, minimum int) PermanentFilter`
+compares one counter kind. It is a pure query, returns false for a nil permanent,
+and promotes the stored count to `int` before comparison. Zero, negative and
+above-storage-range thresholds keep ordinary integer comparison semantics.
+RON declarations accept only nonnegative literal thresholds. Exact and absent
+counts reuse `CounterCountEquals`; presence reuses `HasCounter`.
+
+The RON resolving `PermanentPassesFilter` adapter accepts presence, absence,
+`EqualTo(Integer(n))` and `GreaterThanOrEqualTo(Integer(n))` counter tests,
+including nonempty nested `And` and `Or`. It uses `IfPermanentMatches` and its
+existing current/LKI reference contract (CR 608.2c/h). Earlier counter actions
+complete before the condition reads its count. LKI keeps the original counter
+information after departure or phasing; CR 400.7 and 122.2 prevent a returned
+object from supplying the old object's information or receiving its actions.
+No state trigger, intervening-if, replacement, cost or batch contract changes.
+
+Evidence: `TestCounterCountAtLeast` covers independent kinds, nil, zero,
+negative and 256 thresholds, and clone isolation. `TestRONResolvingCounter*`
+covers real upkeep sequencing, threshold boundaries, counter-kind isolation,
+source departure/return/phasing/control, copies, retargeted spell copies,
+per-factory bindings, clones, invalid declarations, casting rollback, native
+upkeep progression, semantic roles and strict collection rejection. The
+existing `TestIfPermanentMatches*` contracts remain applicable. Real-card
+tests establish clauses of Fasting and Tourach's Gate; both full records still
+reject their later unsupported rules.

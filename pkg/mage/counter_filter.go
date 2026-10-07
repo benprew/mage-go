@@ -19,3 +19,10 @@ func CounterCountEquals(counter core.CounterType, count int) PermanentFilter {
 		return p != nil && int(p.Counters[counter]) == count
 	})
 }
+
+// CounterCountAtLeast compares the count without a narrow integer cast.
+func CounterCountAtLeast(counter core.CounterType, minimum int) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("has at least %d %s counters", minimum, counter), func(p *Permanent, _ *Game) bool {
+		return p != nil && int(p.Counters[counter]) >= minimum
+	})
+}
