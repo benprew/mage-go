@@ -92,9 +92,18 @@ type PlayerTargetOption interface {
 type targetOpponentOnlyOption struct{}
 
 // TargetOpponentOnly restricts the target to an opponent of the ability controller.
-func TargetOpponentOnly() PlayerTargetOption                     { return targetOpponentOnlyOption{} }
-func (targetOpponentOnlyOption) playerTargetOption()             {}
-func (targetOpponentOnlyOption) applyPlayerTarget(Target) Target { return TargetOpponent() }
+func TargetOpponentOnly() PlayerTargetOption         { return targetOpponentOnlyOption{} }
+func (targetOpponentOnlyOption) playerTargetOption() {}
+func (targetOpponentOnlyOption) applyPlayerTarget(target Target) Target {
+	result := TargetOpponent().(*OpponentTarget)
+	switch target := target.(type) {
+	case *PlayerTarget:
+		result.attackedThisTurn = target.attackedThisTurn
+	case *OpponentTarget:
+		result.attackedThisTurn = target.attackedThisTurn
+	}
+	return result
+}
 func (targetOpponentOnlyOption) inspectDefinition() definitionNode {
 	return definitionNode{Role: "target-player", Text: "opponent"}
 }
@@ -214,6 +223,16 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	}
 	if _, ok := b.spec.(*OpponentTarget); ok {
 		n.children = append(n.children, definitionEdge{"player", targetOpponentOnlyOption{}})
+	}
+	switch spec := b.spec.(type) {
+	case *PlayerTarget:
+		if spec.attackedThisTurn {
+			n.children = append(n.children, definitionEdge{"history", targetPlayerAttackedThisTurnOption{}})
+		}
+	case *OpponentTarget:
+		if spec.attackedThisTurn {
+			n.children = append(n.children, definitionEdge{"history", targetPlayerAttackedThisTurnOption{}})
+		}
 	}
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOnly {
 		n.children = append(n.children, definitionEdge{"controller", targetYouControlOption{}})

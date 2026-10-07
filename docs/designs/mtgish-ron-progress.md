@@ -31310,3 +31310,159 @@ Removal gates are unmet: complete RON loading, collection-wide gameplay and
 runtime cutover remain unfinished. Go definitions, generators, current callers
 and DSL functions remain in place. No DSL deletion or authoring cutover is part
 of this prerequisite. Stop after this slice. Migration remains incomplete.
+
+
+## 2026-10-07: exact attack-history filters and player targets
+
+Status: completed implementation slice `ATTACK-HISTORY-REFERENCES`.
+This run stops after this slice.
+
+### Baseline and candidate comparison
+
+Initial changes to `.gitignore`, this ledger and the execution design, and the
+untracked `mtgish-ron-completed.md`, are preserved. Only this appended ledger
+entry is staged; the user's existing document rearrangement remains unstaged.
+The required design, engine reference, vocabulary, ledger, selected compiler,
+engine and contract sections were read. Fresh AST inspection parsed all 2,445
+records, including nested expressions under unsupported parents. Baseline
+`go test ./pkg/mage/... -short -count=1` and `make build` passed. Strict loading
+exited 1 with 1,848 compiled / 597 rejected records and 713 accepted / 273 rejected
+unique names. That exit is collection rejection, not a build/test failure.
+
+| Candidate | Distinct names and credible full-card gain | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Attack-history references, selected | Berserk and Fire and Brimstone: **2 immediate unlocks / 6 records**. Erg Raiders, Season of the Witch, Nettling Imp, Siren's Call and Lurker are downstream consumers, not extra unlocks. | Reuse declaration history, typed references, delayed capture and simultaneous damage. Missing permanent predicates, player-target restriction and retention of older attacking incarnations. Erg Raiders needs source intervening-if and continuous-control conditions; Season needs exclusion and inability-to-attack history; Nettling Imp needs opponent-turn timing, active-player/control history targets and MustAttack; Siren's Call needs plural MustAttack, control history and exclusion; Lurker needs static Unless and blocked history. | Low/medium: two predicates, one target option, a tracker retention fix, identity/legality/delayed/batch tests. |
+| Chosen-source prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 eventual unlocks / 31 records**, **0 enumeration-only unlocks**. | Spell source identity is ready. Full source enumeration, typed choices, property rechecks, spell-to-permanent continuation and shields remain. Enables seven shared protection consumers. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have other replacement/result blockers and are excluded. | High for complete shape; medium/high for a zero-unlock enumeration prerequisite. |
+| Battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 eventual unlocks / 20 records**, **0 adapter-only unlocks**. | All-zone characteristic evaluation, controller/owner context, named counts and CDA/copy integration remain. Gaea's Avenger has its recorded own-versus-opponent artifact-count defect; Wood Elemental needs entry sacrifice results. Both are excluded. | High: zone queries, layer/copy contracts and all-zone gameplay. |
+| Filtered blocking requirements | Lure and Marble Priest: **2 eventual unlocks / 7 records**, **0 adapter-only unlocks**. | Both blocker paths need maximum requirement satisfaction. Marble Priest also needs its filtered combat prevention adapter. Enables filtered mandatory blocking combinations. | Medium/high: shared combat enforcement and competing requirements. |
+
+Complete records and their nested forms distinguish immediate gains from later
+blockers. Reprints count once. Selection favors two complete cards with small
+shared additions over larger prerequisite-only changes. First-error counts do
+not determine the estimate. The contract, reuse boundary and acceptance cases
+were stated before implementation. The `implement-engine` skill guided engine
+work; no removed card/set skill or Go card definition supplied requirements.
+
+### Exact signatures, contexts and reuse boundary
+
+Engine APIs:
+
+- `AttackedThisTurn PermanentFilter` and `DidntAttackThisTurn PermanentFilter`.
+  They read successful declaration history for the exact permanent incarnation.
+  They do not infer history from current combat status, tapped state or control.
+- `TargetPlayerAttackedThisTurn() PlayerTargetOption`. It restricts the existing
+  typed player target at announcement and resolution. It composes with
+  `TargetOpponentOnly()` in either order and appears in definition metadata.
+- Existing `HasAttackedThisTurnIncarnation(id, incarnation)` now retains every
+  attacking incarnation during the turn. A later attack by a returned card
+  cannot erase an earlier incarnation. Existing ID-only history and the latest
+  incarnation archive for last-turn callers remain in place. Clone copies the
+  additional map; final cleanup clears it with other turn history.
+
+RON supports bare `AttackedThisTurn` and `DidntAttackThisTurn` in existing
+permanent-filter contexts (including targets and battlefield collections) and
+resolving `If(PermanentPassesFilter(reference, filter), [actions])`, including
+nonempty `And`/`Or` and delayed bodies. References reuse `compilePermanentRef`
+and `IfPermanentMatches`; current or retained information stays tied to the
+original incarnation. Information cannot restore an absent/phased action target.
+
+`TargetPlayer(AttackedThisTurn)` permits either player who declared an attack.
+It keeps `Ref_TargetPlayer` in the existing per-instance environment. Bare
+symbols are required; tuple/argument forms, negative player-target predicates,
+unbound/incompatible references and unsupported contexts remain errors.
+No new source intervening-if or static-condition context is introduced. Erg
+Raiders remains rejected; accepting its first condition alone would not execute
+its full record. Season of the Witch now reaches its exclusion-filter error.
+
+The slice reuses both native attacker declaration paths, `TurnTrackers`, player
+target legality, transactional casting payment, exact permanent information,
+`AtNext` delayed capture, native destruction/regeneration/indestructible rules,
+continuous bonuses and cleanup, spell/trigger copying, cloning and simultaneous
+damage/prevention. No alternate rules service, card-name branch, global result
+slot, Go fallback or partial production registry is introduced.
+
+Local `data/LEA.json` Berserk and `data/DRK.json` Fire and Brimstone Oracle text
+agree with their complete RON records. CR 400.7, 508.1, 508.4, 603.4, 608.2b,
+608.2h–i and 514.2 establish the identity, declaration, timing, legality and
+cleanup boundaries. No selected source defect or environment failure remains.
+RON source is unchanged; all twelve hashes still match the vocabulary snapshot,
+so the source vocabulary snapshot needs no refresh.
+
+### TDD and gameplay mappings
+
+Initial tests failed for missing engine predicates/target option, unsupported
+Berserk resolving history and Fire and Brimstone player-target history. The
+tracker regression was isolated with the old incarnation query and failed:
+`later attack erased the old incarnation`. The final query passes that test.
+
+One fixture assumed native cleanup would reset history before resolving a
+pending spell. Native cleanup correctly resolves the stack first. The corrected
+fixture asserts the actual damage and final history reset; an independent engine
+test resets history before resolution and proves the pending player target is
+then illegal. No assertion was removed to hide a rule failure. Inventory tests
+were updated to the exact fresh counts and strengthened to require both newly
+accepted cards.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Berserk, complete LEA record | `TestRONAttackHistoryBerserk`: paid casting/rollback, resolving +power/trample, attacked versus idle/attacking-only, combat exit, control, shroud, departure/return, phasing and phase cycle, delayed trigger copies and clone isolation. `BerserkTimingAndLegality`: casting window, illegal target, changed power at resolution, attack after trigger placement, indestructible and regeneration. `BerserkCopyAndExpiry`: retargeted spell copy, separate bonuses/delays, one-shot trigger lifetime and native cleanup. |
+| Fire and Brimstone, complete DRK record | `TestRONAttackHistoryFireAndBrimstone`: illegal history target rollback, either player, attacker departure, pending clone, copied controller and native cleanup/reset. `FireAndBrimstoneBatch`: simultaneous packets, self-overlap, finite prevention, callback atomicity, casting payment and graveyard movement. |
+| Typed references and contexts | `TestRONAttackHistoryInvalidAndInventory`: malformed symbols, incompatible and unbound references, exact player-filter role. `FilterContextsAndInstances`: positive/negative permanent target and collection filters, nested resolving condition and independent factory declarations. |
+| Exact engine identity and LKI | `TestAttackHistoryReferenceIdentity`: earlier and returned incarnations both attack, saved-reference LKI, absent-object rejection and clone/reset isolation. `ReferencePhasingAndCombat`: undeclared combat entry, combat exit, phase cycle and native cleanup. |
+| Player-target and native declaration contracts | `TestAttackHistoryPlayerTarget`: both opponent-option orders, missing declaration rejection, valid definition and illegal target after history reset. `BothDeclarationPaths`: summoning sickness rejects an attack without history changes; both declaration paths record successful attacks. Existing source-history, last-turn, delayed-step, inventory and damage-packet regressions pass. |
+
+Two complete-card gameplay mappings are added. Compilation progress and gameplay
+coverage remain separate. Collection-wide engine-validated and behavior-verified
+totals remain unmeasured; no claim is made for the five blocked history consumers.
+
+### Final measurements, validation and files
+
+Actual gain matches the estimate: **2 unique cards / 6 records** (Berserk's five
+reprints and Fire and Brimstone). No accepted name is lost. Final strict loader:
+**1,854 compiled / 591 rejected records**, **715 accepted / 271 rejected unique
+names**. It exits 1 and publishes no partial registry. The semantic inventory
+remains **72,962 occurrences / 8,557 signatures / 5,226 unknown-role occurrences**.
+Source syntax is unchanged. Remaining selected diagnostics include
+`unsupported end-step history filter (DidntAttackThisTurn)` for Erg Raiders and
+`unsupported permanent filter (ExceptFor)` for Season of the Witch.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestAttackHistory\|TestRONAttackHistory\|TestSourceAttackedThisTurn\|TestLastTurnAttack\|TestInventory\|TestRONDamagePackets\|TestRONDelayedStep' -count=1` | PASS after the exact inventory expectation update. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS before and after lint. |
+| `make build` | PASS before and after lint. |
+| `go vet ./...` | PASS before and after lint. |
+| `make lint` | PASS, zero issues after renaming a test variable that shadowed Go's `copy` built-in. |
+| `go test ./... -short -count=1` | PASS after lint; includes all focused and engine tests without cached results. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,854 compiled / 591 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 715 accepted / 271 rejected names, semantic counts above. |
+| Source snapshot audit | All 12 RON hashes match the vocabulary snapshot. |
+
+Automatic lint changes were reviewed: formatting and import spacing in the new
+tests, plus a blank line in `composable_target.go`. No unrelated file changed.
+The final loader diagnostics match the first post-implementation measurement.
+There is no environmental or pre-existing validation blocker. The validated
+slice is committed separately; its hash is reported in the final response.
+
+Files: new engine `attack_history_reference.go`, `attack_history_reference_test.go`
+and RON `attack_history_test.go`; engine `tracker_system.go`, `target.go`,
+`composable_target.go`, `doc.go`; RON `compiler.go`, `resolving_condition.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
+this appended ledger entry.
+
+Ranked next candidates to reassess:
+1. Chosen damage-source enumeration and typed choice; then full property-rechecked
+   shields and permanent-spell continuation for the seven protection consumers.
+2. All-zone battlefield-count CDA prerequisite for the five clean consumers;
+   investigate Gaea's Avenger's data defect separately.
+3. Filtered blocking requirements for Lure and Marble Priest, with both blocker
+   paths and maximum requirement satisfaction.
+4. Continuous-control history and source conditions for Erg Raiders, Nettling Imp
+   and Siren's Call; inability-to-attack history remains a distinct Season blocker.
+
+Complete RON loading, collection gameplay and runtime startup remain below the
+removal gate. No Go definitions, generation tools, existing callers or DSL
+functions are deleted. No caller audit authorizes a DSL deletion in this slice.
+Stop after this completed slice. Migration remains incomplete.

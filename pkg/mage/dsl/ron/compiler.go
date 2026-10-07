@@ -790,13 +790,16 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":
 		players := n.Args[0]
-		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent") {
+		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent" && players.Name != "AttackedThisTurn") {
 			return nil, "", unsupported(players, "player target filter")
 		}
 		return func(instanceBindings) mage.Target {
 			var options []mage.PlayerTargetOption
 			if players.Name == "Opponent" {
 				options = append(options, mage.TargetOpponentOnly())
+			}
+			if players.Name == "AttackedThisTurn" {
+				options = append(options, mage.TargetPlayerAttackedThisTurn())
 			}
 			return mage.DeclarePlayerTarget(ctx.targetNamespace+"Ref_TargetPlayer", options...)
 		}, "Ref_TargetPlayer", nil
@@ -828,6 +831,10 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.IsAttacking, nil
 		case "IsBlocking":
 			return mage.IsBlocking, nil
+		case "AttackedThisTurn":
+			return mage.AttackedThisTurn, nil
+		case "DidntAttackThisTurn":
+			return mage.DidntAttackThisTurn, nil
 		default:
 			return mage.PermanentFilter{}, unsupported(n, "permanent filter")
 		}

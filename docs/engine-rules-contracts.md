@@ -6335,3 +6335,43 @@ The RON tests cover Lightning Bolt, Psionic Blast, Earthquake and Hurricane,
 including paid casting, rollback, simultaneous player damage, copies, later
 casts, source departure, pending event captures and clone isolation. Collection
 compilation and whole-card behavior coverage do not increase in this slice.
+
+
+## Attack history for exact objects and player targets
+
+`AttackedThisTurn` and `DidntAttackThisTurn` use the existing attack-declaration
+tracker for each permanent incarnation. Both native declaration paths record
+only successful attacks (CR 508.1). Entering combat without declaration does not
+count as an attack (CR 508.4). History remains after combat exit, control changes
+and phasing. A new zone visit has a new incarnation (CR 400.7).
+
+The turn tracker now retains every attacking incarnation, including two attacks
+by different incarnations of the same card. Its existing latest-incarnation
+archive and ID-only callers remain in place. Current-turn information reads
+cannot lose an earlier attack when a returned card attacks. Clones copy the
+additional history; final native cleanup resets it with the other turn history.
+History remains available during cleanup priority under the existing lifecycle.
+
+`IfPermanentMatches` reads current or retained information for the original
+object (CR 608.2h–i). History does not restore a departed or phased permanent as
+an action recipient. Berserk's delayed body checks attack history at resolution;
+it is not an intervening-if trigger (CR 603.4). The original target can gain
+shroud or change controller without preventing its delayed destruction. Native
+regeneration and indestructible rules still apply. Its power bonus is captured
+at spell resolution and its trample and bonus end at cleanup.
+
+`TargetPlayerAttackedThisTurn()` restricts the existing typed player target at
+announcement and resolution (CR 608.2b). Creature departure, return and control
+changes do not change the player who declared the attack. A history reset makes
+a pending target illegal. `TargetOpponentOnly()` retains the history restriction
+in either option order. Failed target checks occur before casting payment.
+Fire and Brimstone retains simultaneous damage, prevention and native spell
+movement; overlapping player packets combine through the shared damage service.
+
+Evidence: `TestAttackHistoryReferenceIdentity` (two incarnations, saved-reference
+LKI, clone/reset); `TestAttackHistoryReferencePhasingAndCombat` (combat entry,
+phase cycle, native cleanup); `TestAttackHistoryPlayerTarget` (option order,
+declaration validation, resolution recheck); `TestAttackHistoryBothDeclarationPaths`
+(illegal and successful declarations); the complete-record
+`TestRONAttackHistoryBerserk*` and `TestRONAttackHistoryFireAndBrimstone*` tests.
+No new cost, replacement, combat declaration or intervening-if service is added.

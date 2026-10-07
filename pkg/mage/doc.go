@@ -119,6 +119,10 @@
 // Use [IfPermanentMatches] for a resolving property condition. It uses the
 // current object or information saved for its exact incarnation. An information
 // read does not make an absent object available for an action.
+// [AttackedThisTurn] and [DidntAttackThisTurn] keep each incarnation separate.
+// Entering combat without an attack declaration does not satisfy attack history.
+// [TargetPlayerAttackedThisTurn] checks the player's history at target selection
+// and resolution. Creature departure and control changes do not erase that history.
 //
 // Use [PermanentMatchesFilter] with [This] or [AttachedPermanent] for a
 // live static condition. A returned permanent cannot satisfy an old reference.

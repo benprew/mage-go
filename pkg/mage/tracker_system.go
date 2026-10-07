@@ -36,6 +36,7 @@ type TurnTrackers struct {
 
 	attacked                    map[uuid.UUID]bool
 	attackedIncarnation         map[uuid.UUID]uuid.UUID
+	attackedIncarnations        map[uuid.UUID]uuid.UUID
 	attackedLastTurn            map[uuid.UUID]map[uuid.UUID]bool
 	attackedLastTurnIncarnation map[uuid.UUID]map[uuid.UUID]uuid.UUID
 	blocked                     map[uuid.UUID][]uuid.UUID
@@ -189,10 +190,14 @@ func (t *TurnTrackers) RecordAttackedIncarnation(permID, incarnation uuid.UUID) 
 		t.attackedIncarnation = make(map[uuid.UUID]uuid.UUID)
 	}
 	t.attackedIncarnation[permID] = incarnation
+	if t.attackedIncarnations == nil {
+		t.attackedIncarnations = make(map[uuid.UUID]uuid.UUID)
+	}
+	t.attackedIncarnations[incarnation] = permID
 }
 
 func (t *TurnTrackers) AttackedIncarnation(permID, incarnation uuid.UUID) bool {
-	return incarnation != uuid.Nil && t.attackedIncarnation[permID] == incarnation
+	return incarnation != uuid.Nil && permID != uuid.Nil && t.attackedIncarnations[incarnation] == permID
 }
 
 func (t *TurnTrackers) RecordBlocked(blockerID, attackerID uuid.UUID) {
@@ -322,6 +327,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 
 	t.attacked = make(map[uuid.UUID]bool)
 	t.attackedIncarnation = nil
+	t.attackedIncarnations = nil
 	t.blocked = make(map[uuid.UUID][]uuid.UUID)
 	t.instantsCast = make(map[uuid.UUID]int)
 	t.sorceriesCast = make(map[uuid.UUID]int)
@@ -487,6 +493,7 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 		artifactDamageTaken:          cloneUUIDIntMap(t.artifactDamageTaken),
 		attacked:                     cloneUUIDBoolMap(t.attacked),
 		attackedIncarnation:          maps.Clone(t.attackedIncarnation),
+		attackedIncarnations:         maps.Clone(t.attackedIncarnations),
 		blocked:                      cloneBlockedThisTurn(t.blocked),
 		instantsCast:                 cloneUUIDIntMap(t.instantsCast),
 		sorceriesCast:                cloneUUIDIntMap(t.sorceriesCast),

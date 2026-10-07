@@ -635,6 +635,7 @@ func (t *CreatureTarget) Filter() PermanentFilter {
 // PlayerTarget targets a player.
 type PlayerTarget struct {
 	BaseTarget
+	attackedThisTurn bool
 }
 
 // TargetPlayer creates a target that selects any player in the game.
@@ -647,6 +648,9 @@ func TargetPlayer() Target {
 func (t *PlayerTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	result := make([]uuid.UUID, 0, len(g.players))
 	for _, p := range g.players {
+		if t.attackedThisTurn && !g.PlayerAttackedThisTurn(p.PlayerID()) {
+			continue
+		}
 		result = append(result, p.PlayerID())
 	}
 	return result
@@ -1346,6 +1350,7 @@ func (t *ControlledPermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game
 // OpponentTarget targets an opponent.
 type OpponentTarget struct {
 	BaseTarget
+	attackedThisTurn bool
 }
 
 // TargetOpponent creates a target that selects an opponent (any player other than the controller).
@@ -1358,7 +1363,7 @@ func TargetOpponent() Target {
 func (t *OpponentTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.players {
-		if p.PlayerID() != controller {
+		if p.PlayerID() != controller && (!t.attackedThisTurn || g.PlayerAttackedThisTurn(p.PlayerID())) {
 			result = append(result, p.PlayerID())
 		}
 	}

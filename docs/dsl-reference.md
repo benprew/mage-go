@@ -5355,3 +5355,45 @@ These APIs are engine services. No new RON shape is accepted. In particular,
 `ChooseADamageSource` remains rejected until enumeration, source bindings,
 property rechecks and shield installation are complete. Existing callers and
 the permanent-source prevention API remain available.
+
+
+## RON attack history references
+
+`AttackedThisTurn` and `DidntAttackThisTurn` are bare permanent-filter symbols.
+They are supported in existing permanent-filter contexts, including target
+filters and battlefield collections, and in resolving
+`If(PermanentPassesFilter(reference, filter), [actions])` branches. Nonempty
+`And`/`Or` branches retain the existing scope rules. A delayed branch keeps its
+original permanent reference through `AtNext`; it reads history when the delayed
+body resolves. No new intervening-if, static-condition or player-collection
+filter context is added.
+
+`TargetPlayer(AttackedThisTurn)` declares one player target. It lowers to
+`DeclarePlayerTarget(name, TargetPlayerAttackedThisTurn())`; either player can
+qualify. The engine checks the restriction at announcement and resolution.
+Tuple forms, arguments, `TargetPlayer(DidntAttackThisTurn)` and unbound or
+incompatible permanent references remain declaration errors.
+
+The engine filters `AttackedThisTurn` and `DidntAttackThisTurn` read declaration
+history for an exact permanent incarnation. `IfPermanentMatches` can read that
+history through current or retained information. Absence does not permit an
+action on that object. A returned card has separate history, even when both
+incarnations attack in the same turn. Phasing and combat exit do not erase
+history. A creature put into combat without declaration did not attack.
+
+`TargetPlayerAttackedThisTurn()` composes with `TargetOpponentOnly()` in either
+order. It uses the existing player target and turn tracker, without a separate
+choice service. Targets and delayed bindings remain private to each factory;
+copies and cloned games retain their existing identity contracts.
+
+Evidence: `TestAttackHistoryReferenceIdentity`,
+`TestAttackHistoryReferencePhasingAndCombat`, `TestAttackHistoryPlayerTarget`,
+`TestAttackHistoryBothDeclarationPaths`, `TestRONAttackHistoryBerserk`,
+`TestRONAttackHistoryFireAndBrimstone`, `TestRONAttackHistoryInvalidAndInventory`,
+`TestRONAttackHistoryBerserkTimingAndLegality`,
+`TestRONAttackHistoryBerserkCopyAndExpiry`,
+`TestRONAttackHistoryFireAndBrimstoneBatch`, and
+`TestRONAttackHistoryFilterContextsAndInstances`.
+Erg Raiders still needs its source intervening-if and continuous-control
+conditions. Season of the Witch still needs its inability-to-attack history
+and exclusion filter. Their full records remain rejected.
