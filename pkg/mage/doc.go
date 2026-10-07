@@ -64,6 +64,11 @@
 // and the source types at the time of damage. Later type changes do not change it.
 // Use [PayOrElse] for one optional payment with two resolution branches.
 // The payment result stays local to the operation.
+// Use [PayActionOrElse] with [GainLifePayment], [DamagePayment], or
+// [DestroyPayment] for one optional action paid during resolution.
+// The accepted payment selects the branch even if prevention or replacement
+// changes its outcome. An absent subject or an indestructible destruction
+// subject cannot pay. Each payment keeps its own references and amount.
 // Resolution counter payments use PayCountersOrElse for a fixed count and
 // PayChosenCountersOrElse for an optional chosen count. Each payment requires
 // the original live permanent. The chosen count is available only in its paid

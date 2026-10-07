@@ -76,6 +76,9 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if isResolutionActionPayment(payment) {
+		return compileResolutionActionPayment(payment, continuation, ctx)
+	}
 	if len(payment.Args) > 0 && payment.Args[len(payment.Args)-1].Name == "RemoveCounters" {
 		return compileResolutionCounterPayment(payment, continuation, ctx)
 	}

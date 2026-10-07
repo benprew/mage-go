@@ -149,7 +149,7 @@ func TestRONDestructionPaymentInvalid(t *testing.T) {
 		`MustCost(DestroyPermanent(Ref_TargetPermanent)),If(CostWasPaid,[])`,
 		`MustCost(DestroyPermanent(Ref_TargetPermanent)),GainLife(Integer(1)),If(CostWasPaid,[GainLife(Integer(1))])`,
 		`MustCost(DestroyPermanent(Ref_TargetPermanent)),IfElse(CostWasPaid,[GainLife(Integer(1))],[])`,
-		`MayCost(DestroyPermanent(Ref_TargetPermanent)),If(CostWasPaid,[GainLife(Integer(1))])`,
+		`MayCost(DestroyPermanent(Ref_TargetPermanent())),If(CostWasPaid,[GainLife(Integer(1))])`,
 	} {
 		source := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([TargetPermanent(IsCardtype(Creature))],ActionList([` + actions + `])))])`
 		nodes, err := Parse(strings.NewReader(source), "invalid-destruction.ron")

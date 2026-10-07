@@ -7337,6 +7337,40 @@ abilities, casting/payment rollback, target rechecks, source departure,
 control/ability changes, phase/return identity, copied activations, pending
 clones, event and factory isolation, and source/host bindings. Existing
 `TestRONUnblockedDelay*` retains delayed event and clause evidence. The other
-four real consumers still reject; this change does not establish their optional
-actions or host-event contracts. No replacement ordering or payment service is
-changed.
+three consumers now use the optional payment contract below. Farrel's Mantle
+still needs its host-event contract. The assignment rule does not change
+replacement ordering.
+
+## Optional action payments during resolution
+
+`ResolutionActionPayment` is a sealed declaration for one gain-life, damage,
+or destruction instruction. Constructors are `GainLifePayment(PlayerRef,
+ResolutionValue)`, `DamagePayment(DamageSourceRef, DamageRecipientRef,
+ResolutionValue)`, and `DestroyPayment(PermanentRef)`.
+`PayActionOrElse(PlayerRef, ResolutionActionPayment, ResolvingEffect,
+ResolvingEffect)` offers the payment to one player and runs the paid or unpaid
+branch. Either branch may be nil; both absent is invalid. Nil payment inputs
+and unbound references fail definition validation.
+
+CR 118.11–12 makes the branch depend on accepted payment, not actual life,
+damage, or destruction. Regeneration and damage prevention do not cancel
+payment. CR 702.12b and 614.17b prevent an indestructible subject from paying
+a destruction cost. Missing and phased recipients are unavailable. A phase
+cycle preserves identity; leaving and returning does not. Negative calculated
+amounts use zero (CR 107.1b); zero amounts cause no life or damage event.
+
+Preparation reads the amount once and saves the recipient's incarnation and
+source information. The choice is followed by an identity and availability
+recheck. Execution reuses the life, damage, and destruction services, including
+replacement processing, source LKI, lifelink and event generation. No state-based
+action or trigger priority boundary is inserted within resolution. Single-action
+payment has no earlier resources to roll back. Existing casting and activation
+transactions remain responsible for announcement costs.
+
+Prepared values and branch selection belong to one invocation. They are not
+stored on the reusable declaration or in a global result slot. Copies and
+clones resolve their own frames. `TestResolutionActionPayment*` covers branch
+choice, target identity, phasing, prevention, regeneration, indestructibility,
+zero/replaced life, nested choices, source LKI/lifelink/control, definition
+rejection and clone execution. RON `TestRONActionPayment*` supplies real-card
+casting, activation, target legality, combat timing and cleanup evidence.

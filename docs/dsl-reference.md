@@ -4713,7 +4713,8 @@ followed immediately by `If(condition, [actions])` or
 `condition` is the symbol `CostWasPaid` or `CostWasntPaid`. Bodies are nonempty.
 The reference must be a bound permanent reference in that context. This includes
 source, host, target, and supported event references; it does not introduce new
-bindings. `MayCost`, activation costs and `IfElse` do not accept this shape.
+bindings. Activation costs and `IfElse` do not accept this mandatory shape.
+The optional `MayCost` shape uses the choice contract below.
 
 This RON spelling denotes the actual destruction result, as Cosmic Horror's
 "destroyed this way" clause requires. It uses `DestroyWithResult`,
@@ -6132,5 +6133,37 @@ mixed operation lists are not added by this adapter.
 including casting, its delayed combat trigger, cube counter payment and
 regeneration. `RollbackAndIdentity`, `EventAndInstances`, `SourceAndHost` and
 `Invalid` establish the supported scopes, legality, copies and declaration
-rejections. Optional action payments and host unblocked events remain separate
-gaps for the other assignment-suppression consumers.
+rejections. The optional payment contract below adds three consumers.
+Farrel's Mantle still needs its host unblocked event contract.
+
+## RON optional resolution action payments
+
+`MayCost(action)` and `PlayerMayCost(player, action)` accept these complete
+singular action shapes in resolving sequences:
+
+- `GainLife(value)` uses the current action player and a resolution value.
+- `HavePermanentDealDamage(permanent, value, recipient)` uses a typed permanent
+  source and one existing `Permanent(ref)`, `Player(ref)`, or singular union
+  recipient. Source information follows `DamageSourceOf`, including LKI.
+- `DestroyPermanent(permanent)` requires the original live, unphased object
+  without indestructible. Regeneration can replace the paid instruction.
+
+The payment must immediately precede `If(condition, [actions])`,
+`Unless(condition, [actions])`, or `IfElse(condition, [actions], [actions])`.
+The condition is the symbol `CostWasPaid` or `CostWasntPaid`; each listed
+branch is nonempty. References and values must already be bound in the current
+context. The adapter creates no new event, choice, or target binding.
+`MayCost` asks the resolving controller. `PlayerMayCost` asks its explicit
+player; it does not change the action's player or damage source.
+
+Lowering uses `PayActionOrElse` with a typed `ResolutionActionPayment`.
+The choice determines the branch (CR 118.11–12). Prevented damage, replaced
+life gain, and regeneration still count as payment. Indestructible and absent
+subjects cannot pay destruction. The payment captures its amount and object
+identity before the choice, then rechecks the recipient before execution.
+Nested payments cannot replace an outer result. Each payment is one action;
+these forms do not add composite or announcement costs.
+
+`TestRONActionPaymentRealCards`, `NativeCombat`, `Invalid`, `StrictLoad`, and
+`BranchesAndChooser` cover Delif's Cone, Farrel's Zealot, and Floral Spuzzem.
+Farrel's Mantle still needs its host event binding and a source-data review.

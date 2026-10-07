@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **747 accepted / 239 rejected unique card
-names** (986 total), and **1,937 compiled / 508 rejected records** (2,445 total).
+The latest recorded inventory reports **750 accepted / 236 rejected unique card
+names** (986 total), and **1,940 compiled / 505 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`COMBAT-ASSIGNMENT-SUPPRESSION` slice and its contract evidence are recorded
-at the end of this ledger. It adds a shared combat rule and one complete RON
-card mapping, Delif's Cube.
+`OPTIONAL-RESOLUTION-ACTION-PAYMENT` slice and its contract evidence are recorded
+at the end of this ledger. It adds a shared payment service and complete RON
+card mappings for Delif's Cone, Farrel's Zealot and Floral Spuzzem.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35959,3 +35959,149 @@ Changed files: `pkg/mage/composable_continuous.go`, `effect_manager.go`,
 `combat_assignment_rule_test.go`, `unblocked_delay_test.go`, `inventory_test.go`,
 `numeric_consumers_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md` and this ledger.
+
+## 2026-10-07: optional resolution action payments
+
+Status: completed slice `OPTIONAL-RESOLUTION-ACTION-PAYMENT`. Stop after this
+slice. Preserve the initial edits to `.gitignore`, the execution design and this
+ledger, and the untracked `mtgish-ron-completed.md`. Stage only this run's ledger
+changes; leave the user's history reorganization unstaged.
+
+### Fresh evidence and selection
+
+Fresh baseline short engine tests and `make build` passed. Strict loader and
+semantic inventory exited 1 for collection rejection: **1,937 compiled / 508
+rejected records**, **747 accepted / 239 rejected unique names**. The inventory
+walked **72,953 nodes / 8,554 signatures**. No baseline build or environment
+failure was found. First errors were checked against nested expressions and
+complete records, with reprints counted once.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers, downstream benefit and effort |
+| --- | --- | --- |
+| Optional resolving action payments (selected) | Delif's Cone, Farrel's Zealot, Floral Spuzzem, Farrel's Mantle; **3** full-card unlocks | Cone, Zealot and Spuzzem need the optional action contract and adapter. Mantle also needs host-unblocked event capture, `Other(Trigger_ThatCreature)` and review of its `Trigger_ThatPermanent` continuation. Existing target, delayed-unblocked and assignment-suppression services are ready. One typed engine service and three adapter shapes; medium implementation/test effort. |
+| Complete source choice and next-source shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** unlocks after complete source enumeration | Live-object choice alone omits legal referred and command-zone sources. Shared complete enumeration is a prerequisite with **0** immediate unlocks. Dark Sphere also needs fractional finite prevention; Eye for an Eye needs damage-event choice and actual-damage reflection; Jade Monolith needs redirection; Reverse Damage needs prevented-damage results. Enables 11 unique choice consumers. Larger engine/adapter and replacement-test effort. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria; **8** unlocks for the full grant/token/removal capability | Nested legendary/name filters, token grants, temporary removal and upkeep activation must retain their contracts. Ordinary banding is not sufficient. Needs combat grouping and both damage-assignment directions, plus layer and ability-removal integration. High implementation/test effort. |
+
+Selected the three-card slice because its existing dependencies are ready and
+its gain is credible for less work than either larger shared capability. No
+single-card capability was selected. Before editing, specified acceptance for
+accept/decline, prevention, regeneration, indestructibility, target legality,
+source LKI, phasing, clone isolation, native combat and cleanup. The reusable
+engine work follows the `implement-engine` skill; RON owns spelling and scope.
+
+Local Oracle evidence in `data/FEM.json` and `data/LEG.json` confirms the three
+cards' optional gain-life, damage and destruction instructions and their
+"if you do" clauses. CR 118.11–12 distinguishes payment choice from actual
+outcome; CR 614.17b and 702.12b disallow destruction of indestructible objects.
+CR 107.1b, 119.9 and 701.8 govern calculated amounts, life events and destruction.
+These are missing engine and compiler contracts, not source defects.
+
+### Exact supported shapes, contexts and reuse
+
+Engine declarations:
+
+- `ResolutionActionPayment` is sealed and immutable.
+- `GainLifePayment(PlayerRef, ResolutionValue) ResolutionActionPayment`.
+- `DamagePayment(DamageSourceRef, DamageRecipientRef, ResolutionValue) ResolutionActionPayment`.
+- `DestroyPayment(PermanentRef) ResolutionActionPayment`.
+- `PayActionOrElse(PlayerRef, ResolutionActionPayment, ResolvingEffect, ResolvingEffect) ResolvingEffect`.
+
+RON resolving sequences accept `MayCost(action)/1` and
+`PlayerMayCost(player, action)/2`, with `GainLife(value)/1`,
+`HavePermanentDealDamage(permanent, value, recipient)/3`, or
+`DestroyPermanent(permanent)/1`. Recipients use the existing typed singular
+permanent, player or union shapes. The adjacent continuation is `If/2`,
+`Unless/2`, or `IfElse/3` with symbol `CostWasPaid` or `CostWasntPaid` and
+nonempty listed bodies. Contexts use existing spell, activation, trigger,
+delayed-trigger and nested branch action compilation. The adapter does not
+create new bindings. The actual records use source-unblocked triggers and a
+target-bound delayed-unblocked trigger. Mantle's host context remains rejected.
+
+Preparation reads the amount once and captures the recipient's incarnation and
+damage source. Recheck the recipient after choice. The paid branch uses the
+accepted payment, even when prevention, life replacement or regeneration changes
+the event. Absent/phased subjects and indestructible destruction cannot pay.
+Zero calculated amounts still permit choice but create no damage/life event.
+Each invocation stores its own preparation and result, with no global last-action
+slot. The explicit payer does not replace the action player or damage source.
+
+Reuse: typed permanent/player/recipient plans, `compileInstanceValue`,
+`DamageSourceOf`, LKI, the engine's life-gain, damage-outcome and destruction
+services, normal replacement ordering, existing target legality, spell/activation
+transactions, delayed unblocked events and assignment suppression. Single-action
+payment has no earlier resources to roll back and introduces no composite cost,
+simultaneous batch, SBA or priority boundary. Collection loading stays atomic.
+No Go fallback, source change, runtime cutover or DSL removal was added.
+
+### Tests and behavior mapping
+
+Meaningful red tests first: `TestResolutionActionPayment*` failed because the
+new typed API did not exist. After implementation, real RON tests failed with
+expected unsupported `GainLife`, `HavePermanentDealDamage` and
+`DestroyPermanent` payment diagnostics before their adapter was added.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Delif's Cone | `TestRONActionPaymentRealCards`, `NativeCombat`: complete record; cast/entry, invalid activation rollback, tap and self-sacrifice, target-bound delayed unblocked event, optional power-based life gain, saved attacker identity/LKI, controller changes, blocking, decline, assignment suppression and cleanup. |
+| Farrel's Zealot | Same real/native tests: complete record; native casting, source-unblocked timing, target announcement and recheck, optional three damage, prevention, source departure, assignment suppression and cleanup. |
+| Floral Spuzzem | Same real/native tests: complete record; native casting, defending-player artifact target, optional destruction, regeneration, indestructibility, illegal/returned/phased target, assignment suppression and cleanup. |
+| Shared engine | `TestResolutionActionPayment`, `Invalid`, `ReplacedLifeAndNestedChoice`, `SourceLKI`: target identity and phasing, replaced/zero/negative life, nested independent results, damage prevention, regeneration, impossible destruction, source LKI/control/lifelink, definition validation and clone execution. |
+| RON declarations/instances | `TestRONActionPaymentInvalid`, `StrictLoad`, `BranchesAndChooser`: invalid arity/reference/type/continuation, polarity and two branches, explicit payer versus recipient, per-factory identities, deduplicated reprints, semantic source roles and atomic load rejection. |
+
+Old assertions that optional destruction and complete Cone/Spuzzem were
+unsupported were updated for the new contract. Invalid-reference tests remain;
+new gameplay and definition tests establish the accepted cases. Three measured
+collection assertions now require 1,940/505. Existing clause/target probes remain
+useful and are not presented as complete-card coverage.
+
+### Final validation and gains
+
+Estimated **3** full-card unlocks; actual **3 unique names / 3 records**: Delif's
+Cone, Farrel's Zealot and Floral Spuzzem. No formerly accepted name was lost.
+Final loader/inventory: **1,940 compiled / 505 rejected records**, **750 accepted /
+236 rejected unique names**, 2,445 records / 986 names, **72,953 nodes / 8,554
+signatures**. Collection engine-validation and behavior-verification totals
+remain null. Added complete RON gameplay mappings for these three names; no
+collection-wide gameplay total is inferred.
+
+| Command | Result |
+| --- | --- |
+| Fresh baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused engine `TestResolutionActionPayment*`, `-count=1` | PASS, after expected missing-API failure. |
+| Focused RON `TestRONActionPayment*`, `-count=1` | PASS, after expected unsupported-payment failures. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues after fixing one new single-case type-switch warning. |
+| Post-lint `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 505 rejected records; no partial registry. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same membership and counts. |
+
+Lint formatting was reviewed. The one reported `gocritic` warning was corrected;
+focused checks, required engine tests, `make test`, build and vet passed again.
+No confirmed source defect was corrected. Mantle's differing trigger reference
+names still need review with its host event work. RON hashes and syntax are
+unchanged, so the vocabulary source snapshot is not refreshed. The fresh loader
+measurements above replace the old snapshot's support implications.
+
+Representative remaining diagnostics: Mantle `FEM.lines.ron:28:254`, unsupported
+host source-combat reference; Circle of Protection: Red
+`LEB.lines.ron:36:213`, unsupported `ChooseADamageSource`; Adventurers' Guildhouse
+`LEG.lines.ron:5:255`, unsupported `BandsWithOthers`. Runtime loading, complete
+collection gameplay, Go-card deletion and DSL cleanup remain behind their gates.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration, then seven basic next-source shields.
+2. Parameterized bands with others across five lands, the token source and two removals.
+3. Shared resolving object/player choices for Forcefield, Juxtapose, Backdraft
+   and Rainbow Vale; inspect their nested operations before estimating unlocks.
+
+Changed files: new `pkg/mage/resolution_action_payment.go` and contract tests;
+new `pkg/mage/dsl/ron/action_payment.go` and real-card tests; payment dispatch,
+semantic inventory and affected regression assertions in `ron`; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+No second slice starts. One descriptive commit follows passing checks.

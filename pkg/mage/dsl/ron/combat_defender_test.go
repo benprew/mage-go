@@ -17,7 +17,7 @@ import (
 
 func combatDefenderProbe(t *testing.T, name string) mage.CardFactory {
 	t.Helper()
-	// A probe is needed because the complete card has other unsupported actions.
+	// Keep the target checks separate from the action checks.
 	set := "LEB"
 	if name == "Floral Spuzzem" {
 		set = "LEG"
@@ -345,11 +345,11 @@ func TestRONCombatDefenderRecords(t *testing.T) {
 					t.Fatal(err)
 				}
 				factory, err := Compile(nodes[0])
-				if nodes[0].Fields["Name"].String == "Blaze of Glory" {
+				if nodes[0].Fields["Name"].String == "Blaze of Glory" || nodes[0].Fields["Name"].String == "Floral Spuzzem" {
 					if err != nil {
 						t.Fatal(err)
 					}
-					if err := mage.ValidateCardDefinition("Blaze of Glory", factory()); err != nil {
+					if err := mage.ValidateCardDefinition(nodes[0].Fields["Name"].String, factory()); err != nil {
 						t.Fatal(err)
 					}
 				} else if err == nil || strings.Contains(err.Error(), "permanent target controller") {

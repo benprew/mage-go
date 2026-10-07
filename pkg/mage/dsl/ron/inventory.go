@@ -549,6 +549,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost", "resolution_cost":
+		if role == "resolution_cost" && n.Name == "GainLife" && len(n.Args) == 1 {
+			return "value"
+		}
+		if role == "resolution_cost" && n.Name == "HavePermanentDealDamage" && len(n.Args) == 3 {
+			return []string{"permanent_reference", "value", "recipient"}[index]
+		}
 		if role == "cost" && n.Name == "Exile" && len(n.Args) == 2 {
 			return []string{"exile_payment_object", "replacement_operation"}[index]
 		}
