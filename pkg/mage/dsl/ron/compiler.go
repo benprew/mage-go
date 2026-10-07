@@ -1408,6 +1408,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n.Args[1], ctx)
 	case "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
+	case "AddManaRepeatedWithModifiers":
+		return compileRestrictedRepeatedMana(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
 			return compilePlayerMana(n, ctx)
@@ -1426,8 +1428,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return compileBoundRepeatedMana(n, ctx)
 			}
 			if value.Name == "ManaValueOfTheSacrificedPermanent" {
-				if ctx.castingCost == nil {
-					return nil, unsupported(value, "mana amount outside an additional sacrifice spell")
+				if ctx.sacrificeValue == nil {
+					return nil, problem(value, "unbound sacrifice mana value")
 				}
 				production := n.Args[0]
 				if production.Kind != Symbol || production.Name == "AnyManaColor" {

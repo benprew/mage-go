@@ -6000,3 +6000,43 @@ factory and clone isolation, source LKI, phasing, control changes, damage
 prevention and cleanup. `TestUnlessPermanentCameUnderControl*` supplies the
 engine history and declaration contracts. Existing `TestPermanentPropertyBranch*`
 and `TestRONResolvingCondition*` retain their behavior.
+
+## Sacrifice-derived mana and restricted resolution production
+
+`mage.AddRestrictedManaOfAnyOneColor(amount ResolutionValue, restriction
+ManaRestriction) ResolvingEffect` reads the amount once at resolution. A positive
+amount uses one controller color choice for all units. Zero or negative amounts
+produce no mana and make no choice. Definition validation rejects a missing
+amount or restriction. Production uses the existing mana-pool service and
+production tracking. Fixed production metadata retains the restriction, so the
+shared payment planner cannot use it for an incompatible spell or activation.
+`CreatureSpellsOnly` uses the existing spell payment context (CR 106.6).
+
+RON accepts `AddManaRepeatedWithModifiers(AnyManaColor, value,
+CanOnlySpendOnSpells(IsCardtype(Creature)))` in resolving action lists, with the
+existing supported resolution-value shapes. Other production and restriction
+forms remain compile errors. The inventory reports the restriction role and its
+nested spell filter independently of compiler success.
+
+`AddManaRepeated(fixedProduction, ManaValueOfTheSacrificedPermanent)` now
+accepts the existing unique matching sacrifice activation binding as well as an
+additional casting cost binding. An absent, ambiguous, malformed or unrelated
+binding remains an error. Each factory instance has its own typed number binding.
+The shared payment transaction saves mana value before sacrifice. Copies retain
+the paid value without another payment and use their own resolving controller.
+Game clones keep separate pools and payment frames. Returned payment objects
+cannot change the number (CR 400.7, 202.3, 707.10).
+
+Priest of Yawgmoth remains an untargeted mana ability, including zero production:
+payment and production finish immediately without the stack (CR 605.1a, 605.2,
+605.3b). A tap symbol still checks summoning sickness. The matching sacrifice
+permits its source if it is an artifact. Metamorphosis pays its additional cost
+at casting and produces mana only when the spell resolves (CR 605.5b).
+Automatic planning does not select arbitrary sacrifice payments; the existing
+choice-cost exclusion remains in effect.
+
+Evidence: `TestRestrictedResolutionMana`, `Declarations`, and `Planning` in
+`pkg/mage/restricted_resolution_mana_test.go`; complete RON gameplay in
+`TestRONSacrificeManaPriest`, `PriestLegality`, `Metamorphosis`,
+`MetamorphosisRollback`, `ActualSpending`, `PendingValues`, `Invalid`, and
+`RegistryAndInventory` in `pkg/mage/dsl/ron/sacrifice_mana_test.go`.

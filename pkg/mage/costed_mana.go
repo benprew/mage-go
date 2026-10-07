@@ -134,14 +134,14 @@ func sequentialManaProductions(effects []Effect) ([]ManaProduction, bool) {
 			}
 		case *manaAnyOneColorEffect:
 			if amount, ok := add.amount.(fixedValue); ok && amount.n > 0 {
-				productions = append(productions, ManaProduction{Color: AnyColor, Amount: amount.n})
+				productions = append(productions, ManaProduction{Color: AnyColor, Amount: amount.n, Restriction: add.restriction})
 			} else {
 				onlyMana = false
 			}
 		case *addManaEffect:
 			productions = append(productions, ManaProduction{Color: add.color, Amount: add.amount})
 		case *addAnyManaEffect:
-			productions = append(productions, ManaProduction{Color: AnyColor, Amount: add.amount})
+			productions = append(productions, ManaProduction{Color: AnyColor, Amount: add.amount, Restriction: add.restriction})
 		case *sequenceEffect:
 			nested, pure := sequentialManaProductions(add.effects)
 			productions = append(productions, nested...)

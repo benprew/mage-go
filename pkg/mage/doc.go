@@ -430,6 +430,11 @@
 // transaction substitutes X before an activation cost reduction. The stack
 // keeps the announced value for target counts and resolution.
 //
+// Use [AddRestrictedManaOfAnyOneColor] for a resolution amount with one
+// spending rule. The controller chooses one color for the full amount.
+// The mana pool and payment planner keep the rule on each mana unit.
+// A nonpositive amount adds no mana and requires no color choice.
+//
 // Use [GrantLandPlays] to add to a player's land allowance for this turn.
 // Grants accumulate and remain separate in cloned games. The action does not
 // play a land or change land timing. Explore grants the allowance before drawing.

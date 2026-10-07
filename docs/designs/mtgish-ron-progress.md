@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **670 accepted / 316 rejected unique card
-names** (986 total), and **1,772 compiled / 673 rejected records** (2,445 total).
+The latest recorded inventory reports **745 accepted / 241 rejected unique card
+names** (986 total), and **1,935 compiled / 510 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`STATIC-SOURCE-COMBAT-ATTRIBUTES` slice and its gameplay evidence are recorded
-at the end of this ledger. It adds complete Juggernaut and Two-Headed Giant of
-Foriys gameplay mappings.
+`SACRIFICE-MANA-PRODUCTION` slice and its gameplay evidence are recorded
+at the end of this ledger. It adds complete Priest of Yawgmoth and Metamorphosis
+gameplay mappings.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -35256,3 +35256,134 @@ permanent information branch, entry/control/clone history and engine tests;
 both Erg Raiders RON records; `pkg/mage/doc.go`, API/rules contracts, vocabulary
 snapshot and only this progress entry. One descriptive commit contains this
 validated slice. Initial user changes remain unstaged. No second slice begins.
+
+## 2026-10-07: sacrifice-derived mana and restricted production
+
+Status: complete slice `SACRIFICE-MANA-PRODUCTION`; this run stops here.
+The initial user changes in `.gitignore`, the execution design and progress
+ledger, and the untracked completion document are preserved. Only this entry and the current-status update
+are staged from the progress ledger.
+
+### Fresh evidence, candidate comparison and selection
+
+Before edits, `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Strict loading and semantic inventory each exited 1 for collection rejection:
+2,445 records, 986 names, 1,933 compiled / 512 rejected records, and 743
+accepted / 243 rejected names. Inventory walked 72,954 nodes and 8,553
+signatures, including nested forms. Reprints count once.
+
+The execution design, vocabulary snapshot, current ledger, engine API,
+selected compiler/payment/mana code, relevant API and rules contracts, and
+complete candidate RON records were read. Local Oracle data in `data/ATQ.json`
+and `data/ARN.json` confirms the selected records. Relevant rules: CR 106.6,
+118.3, 202.3, 400.7, 601.2, 602.2, 605.1a/2/3b/5b and 707.10.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Sacrifice-derived mana, selected | Priest of Yawgmoth; Metamorphosis: **2** full cards. | Activation sacrifice bindings already exist. The fixed-color adapter has an obsolete casting-only guard. Restricted resolution production needs an engine action; pool restrictions and spell payment contexts already exist. Enables shared dynamic mana with spending restrictions and paid-object values. | Low/medium: one shared engine action, planner metadata, two adapters and identity/payment/spending tests. |
+| General damage-source choices and basic next-event shields | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** full cards after the prerequisite. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage share the choice: **0** further full unlocks in the basic shield shape. | Live permanent/spell enumeration and property filters exist. Complete legal enumeration still needs referred objects and face-up command-zone objects. Four additional consumers need partial prevention, redirection, retained damage amounts or life results. Enables all 11 choice consumers. | High: enumeration across source categories, retained identity, choice scopes and next-event replacement contracts. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8** estimated full cards after shared engine and grant/token/removal adapters. | Ordinary banding is insufficient. Parameterized formation and damage assignment must share exact matching rules, and layers/copies must retain and remove the parameterized abilities. Enables the five static grants, named tokens and both removals. | High: combat legality and assignment, layer representation, token/copy/removal and RON gameplay contracts. |
+
+Two complete mana consumers give a smaller absolute gain but the largest
+credible gain for this slice's effort. The seven- and eight-card alternatives
+need broader missing engine contracts. No single-card capability was selected.
+The contract, reuse boundary and acceptance cases were stated before editing.
+The implement-engine skill was used for the reusable engine action; no removed
+card/set skill was invoked or recreated.
+
+### Exact signatures, contexts, dependencies and reuse
+
+- Engine: `AddRestrictedManaOfAnyOneColor(ResolutionValue, ManaRestriction)
+  ResolvingEffect`. It reads a resolution amount once, adds all positive units in
+  one chosen color, and makes no choice for a nonpositive amount. Definition
+  validation rejects nil amount/restriction. The shared any-color production
+  action, mana tracking and `addManaProductionToPool` execute it. Fixed mana
+  production metadata carries the restriction to the shared solver.
+- RON: `AddManaRepeatedWithModifiers(AnyManaColor, value,
+  CanOnlySpendOnSpells(IsCardtype(Creature)))` in resolving action lists. `value`
+  uses the existing instance-value compiler, including nested `Plus/2` and the
+  bound sacrifice mana value. Other production and restriction shapes reject.
+  Inventory roles are `mana_production`, `value`, `mana_spending_restriction`
+  and nested `spell_filter`.
+- RON: `AddManaRepeated(fixedProduction,
+  ManaValueOfTheSacrificedPermanent)` now accepts the existing unique matching
+  sacrifice activation binding as well as additional casting costs. Unbound,
+  malformed or ambiguous result declarations still reject.
+
+`compileSacrificeValuePlan`, `compileBoundCosts`,
+`SacrificeMatchingIncludingSourceCostWithManaValue`, per-instance `NumberBinding`,
+`FromNumber`, payment transactions, stack capture/copy, game cloning,
+`CreatureSpellsOnly`, `ManaPool` and `SpellPaymentContext` supply exact behavior.
+No new sacrifice, zone, replacement or simultaneous-operation contract is added.
+The existing planner does not select arbitrary sacrifice costs or make payment
+choices during pure queries. Manual Priest activation uses the existing mana
+ability service and resolves immediately, even for zero output.
+
+### TDD, gameplay and coverage mapping
+
+After correcting test fixtures to use the existing `ManaPool.CanPay` API,
+engine tests failed only for the missing restricted-mana constructor. RON
+real-record tests failed for the casting-only sacrifice-mana guard and missing
+`AddManaRepeatedWithModifiers`. Implementation followed these failures.
+The two-pending-sorcery fixture required a synthetic shared flash permission;
+normal Metamorphosis sorcery timing remains tested and enforced.
+
+| Card / contract | Tests and established behavior |
+| --- | --- |
+| Priest of Yawgmoth, all rules | `TestRONSacrificeManaPriest`: tap plus artifact sacrifice, saved battlefield mana value (X is zero), immediate black production and no stack. `PriestLegality`: summoning sickness, phased source/payment, opponent/wrong-type/invalid choice rejection with rollback, zero output, source self-sacrifice when it is an artifact, and clone isolation. |
+| Metamorphosis, all rules | `TestRONSacrificeManaMetamorphosis`: additional sacrifice at cast, payment object's owner, no production before resolution, returned payment object, copy controller and clone isolation. `MetamorphosisRollback`: mana/type/phasing/controller/choice/timing failures preserve resources. `ActualSpending`: each of the five colors is chosen once at resolution; real creature casts spend the mana; artifact casts and activated abilities cannot. `PendingValues`: two calls to one compiled factory retain different paid values and copies retain the corresponding payment. |
+| Engine production | `TestRestrictedResolutionMana`, `Declarations`, `Planning`: positive/zero/negative amount, one choice, correct controller pool, production tracking, invalid definitions, clone isolation, pure solver queries, restricted production metadata and execution. |
+| Declaration and strict loading | `TestRONSacrificeManaInvalid`, `RegistryAndInventory`: invalid restriction/type/arity/unbound result rejection, real-record factory validation, semantic roles and atomic collection rejection that preserves an accepted test registry. |
+
+Two unique cards gain complete gameplay mappings; compilation is tracked
+separately. The test registries are local integration fixtures. No partial
+production registry, fallback, card-name executor or global result slot exists.
+
+### Final measurements, validation and remaining work
+
+The estimate was **2** full-card unlocks; the actual gain is **2** names and
+**2** records. Fresh strict loader and inventory: 2,445 records / 986 names,
+**1,935 compiled / 510 rejected records**, **745 accepted / 241 rejected names**.
+The former Priest and Metamorphosis diagnostics are gone. The most frequent
+remaining first error is `unsupported action (ChooseADamageSource)` (11 unique
+names); parameterized bands still reject in static grants, token keywords and
+removal. Source defects: none found or corrected in this slice. RON sources
+and hashes did not change, so no vocabulary source snapshot refresh is needed.
+Collection engine-validated and behavior-verified totals remain null; successful
+compilation is not a claim of full collection gameplay coverage.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage -run TestRestrictedResolutionMana -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -run TestRONSacrificeMana -count=1` | PASS after the expected TDD failures and fixture corrections. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, rerun on final code. |
+| `make test` | PASS, rerun on final code. |
+| `make build` | PASS, rerun on final code. |
+| `go vet ./...` | PASS, rerun on final code. |
+| `go test ./... -short -count=1` | PASS, additional implement-engine skill check. |
+| `make lint` | PASS, zero issues after renaming a test variable that shadowed `copy`. Automatic changes reviewed; focused and required checks rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: unsupported collection, 510 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same collection rejection and counts. |
+
+No environment or pre-existing validation blocker remains. The final lint
+issue was in this slice and was corrected without weakening a test.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration, retained choices and basic shields
+   for the seven named basic consumers.
+2. Parameterized bands with others for the eight grant/token/removal consumers.
+3. Shared dynamic activation `XIs` values for Voodoo Doll and Reflecting Mirror,
+   with target-dependent announcement and complete-record/source-data audit.
+
+Runtime loading, Go-card deletion and unused DSL removal have not reached the
+removal gate. No Go definitions or DSL functions are deleted. No deletion caller
+audit is claimed. Native full-registry startup and remaining collection gameplay
+are unfinished. No second slice begins.
+
+Slice files: `pkg/mage/composable_costs.go`, `costed_mana.go`, `effect_spells.go`,
+`doc.go`, `restricted_resolution_mana_test.go`; `pkg/mage/dsl/ron/compiler.go`,
+`restricted_mana.go`, `inventory.go`, `inventory_test.go`,
+`numeric_consumers_test.go`, `sacrifice_mana_test.go`; API/rules-contract docs
+and this progress entry.

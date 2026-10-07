@@ -479,7 +479,11 @@ type manaAmountEffect struct {
 	amount ResolutionValue
 }
 
-type manaAnyOneColorEffect struct{ amount ResolutionValue }
+type manaAnyOneColorEffect struct {
+	amount      ResolutionValue
+	restriction ManaRestriction
+	restricted  bool
+}
 
 type manaToPlayerEffect struct {
 	player PlayerRef
@@ -520,6 +524,12 @@ func AddManaOfAnyOneColor(amount ResolutionValue) ResolvingEffect {
 	return &manaAnyOneColorEffect{amount: amount}
 }
 
+// AddRestrictedManaOfAnyOneColor applies one spending rule to the full amount.
+// The controller chooses one color when the effect resolves.
+func AddRestrictedManaOfAnyOneColor(amount ResolutionValue, restriction ManaRestriction) ResolvingEffect {
+	return &manaAnyOneColorEffect{amount: amount, restriction: restriction, restricted: true}
+}
+
 func (e *manaAnyOneColorEffect) Text() string {
 	if nilDefinition(e.amount) {
 		return "add mana of any one color"
@@ -528,7 +538,11 @@ func (e *manaAnyOneColorEffect) Text() string {
 }
 func (e *manaAnyOneColorEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *manaAnyOneColorEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
+	if e.restricted && nilDefinition(e.restriction) {
+		n.problem = "supply a mana spending restriction"
+	}
+	return n
 }
 func (e *manaAnyOneColorEffect) Apply(ctx *EffectContext) error {
 	if ctx.Game.GetPlayer(ctx.Controller) == nil {
@@ -538,7 +552,7 @@ func (e *manaAnyOneColorEffect) Apply(ctx *EffectContext) error {
 	if amount <= 0 {
 		return nil
 	}
-	return AddAnyMana(amount, AnyColor).Apply(ctx)
+	return (&addAnyManaEffect{amount: amount, restriction: e.restriction}).Apply(ctx)
 }
 
 // AddManaAmount adds mana to the resolving controller's pool.

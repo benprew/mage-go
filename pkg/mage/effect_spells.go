@@ -91,7 +91,8 @@ func (e *addManaEffect) Properties() EffectProperties { return EffectProperties{
 
 // addAnyManaEffect adds mana of any one color to the controller's pool.
 type addAnyManaEffect struct {
-	amount int
+	amount      int
+	restriction ManaRestriction
 }
 
 // AddAnyMana creates an effect that adds mana of any one color (player chooses) to the controller's pool.
@@ -478,7 +479,7 @@ func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	color := p.ChooseManaColor("add mana")
-	p.ManaPool().Add(color, e.amount)
+	addManaProductionToPool(p.ManaPool(), color, e.amount, e.restriction)
 	if ctx.Game.resolution.manaTracking {
 		ctx.Game.resolution.manaProduced += max(e.amount, 0)
 		if e.amount > 0 {

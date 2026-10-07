@@ -755,6 +755,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "mana_production"
 			}
+		case "AddManaRepeatedWithModifiers":
+			if len(n.Args) == 3 {
+				return []string{"mana_production", "value", "mana_spending_restriction"}[index]
+			}
 		case "AddManaRepeated":
 			if len(n.Args) == 2 {
 				return []string{"mana_production", "value"}[index]
@@ -925,6 +929,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "NumberCountersOfTypeFromPermanent" && len(n.Args) == 3 {
 			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
+		}
+	case "mana_spending_restriction":
+		if n.Name == "CanOnlySpendOnSpells" && len(n.Args) == 1 {
+			return "spell_filter"
 		}
 	case "mana_production":
 		if n.Name == "And" && len(n.Args) == 1 {
