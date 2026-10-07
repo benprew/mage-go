@@ -108,7 +108,7 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		var build costFactory
 		build, err = compileFixedResolutionAlternative(cost)
 		costs = []costFactory{build}
-	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" && cost.Name != "SacrificeNumberPermanents" {
+	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" && cost.Name != "SacrificeNumberPermanents" && cost.Name != "DiscardACard" {
 		return nil, unsupported(cost, "optional payment cost")
 	} else {
 		costs, _, err = compileCosts(cost)

@@ -5511,3 +5511,26 @@ Nested branches cannot replace an outer result. Illegal targets prevent the
 spell from resolving before either branch runs (CR 608.2b). Delayed contexts
 continue to use the engine's saved-reference rules (CR 603.7c). This slice adds
 no combat participant capture, destruction cost type, or replacement rule.
+
+## RON selected discard payment reuse
+
+RON bare `DiscardACard` costs use the existing `DiscardCost(1)` transaction.
+The payer selects a hand card once; the transaction saves its hand visit,
+checks the full payment on an isolated game, and commits the locked selection.
+Failed mana, tap, target, hand choice or discard prevention leaves live payment
+resources unchanged. Effect-only discard replacements do not apply to costs.
+Copies do not repeat activation payments. No new engine execution service is
+introduced.
+
+Optional resolution payments use `IfPaid` or `UnlessPaid` with the bound payer.
+They require acceptance and full payment. Decline, an empty hand, an invalid
+selection or prevented discard takes the unpaid path. Each nested invocation
+keeps its own outcome; a nested payment cannot replace an outer result. The
+resolving frame supplies the original ability controller through departure,
+control changes and phasing. Copies use their own controller; player targets
+use their declared identity. These adapters add no saved discarded-card result.
+
+Rules: CR 118.3, 118.10–12, 601.2h, 602.2b, 608.2c/g, 701.9 and 732.1.
+Evidence: `TestRONChosenDiscardCost*`, existing selected-discard transaction,
+visit, replacement and batch tests. Real RON clauses are tested separately
+from the still-rejected full Armorer, War Machine and Land's Edge records.

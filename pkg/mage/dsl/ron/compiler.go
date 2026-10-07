@@ -588,6 +588,11 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "DiscardACard":
+		if _, err := symbol(n); err != nil {
+			return nil, false, err
+		}
+		return []costFactory{func() mage.Cost { return mage.DiscardCost(1) }}, false, nil
 	case "DiscardACardAtRandom":
 		if _, err := symbol(n); err != nil {
 			return nil, false, err

@@ -1160,8 +1160,9 @@ of a bare discard action.
 The affected player selects cards at resolution, after preceding draws. Short
 hands discard as many cards as possible; zero does not ask for a choice. Selected
 cards move through the shared discard replacement batch before discard events
-are sent. Dynamic amounts, saved discard results, discard costs, and undeclared
-event players remain unsupported RON forms. Evidence:
+are sent. Dynamic amounts, saved discard results, and undeclared
+event players remain unsupported RON action forms. The selected discard cost
+contract is documented below. Evidence:
 `TestRONFixedDiscardRealCards`, `TestRONFixedDiscardContexts`,
 `TestRONFixedDiscardReplacementAndEvents`,
 `TestRONFixedDiscardZeroEmptyAndContinuation`,
@@ -4695,3 +4696,31 @@ name. Nested pairs and copied or cloned resolution frames retain separate state.
 Existing delayed effects retain the original references. Cosmic Horror executes
 its complete record; Infinite Authority still requires a captured combat subject
 for `Trigger_ThatCreature` and remains rejected.
+
+### RON selected single-card discard costs
+
+Bare `DiscardACard` in `Activated/2` or `ActivatedWithModifiers/3`, including
+nested cost `And([costs])`, lowers to a fresh `mage.DiscardCost(1)`. The
+activation controller chooses one card during payment. The whole mana, tap and
+discard payment must succeed before the ability enters the stack. Copies do
+not pay an activation cost again.
+
+Resolving action sequences accept `MayCost(DiscardACard)` and
+`PlayerMayCost(player, DiscardACard)` immediately followed by `If/2` or
+`Unless/2` with bare `CostWasPaid` or `CostWasntPaid` and a nonempty action list.
+The explicit payer must be a bound typed player reference. These forms reuse
+`IfPaid`/`UnlessPaid` and the same total-cost transaction. Payment and choice
+occur at resolution; each adjacent pair has its own outcome. Changing or
+returning the source does not replace the saved ability controller. A copied
+ability offers its own payment to its own controller.
+
+Tuple discard declarations, plural costs, filtered costs, saved discarded-card
+reads, mandatory resolving discards, optional cost conjunctions and discard
+alternatives are not added. Unsupported complete records still reject.
+Dwarven Armorer's cost/target/first counter-choice clause and Mishra's War
+Machine's upkeep/payment/damage clause have engine tests in
+`TestRONChosenDiscardCostArmorerClause` and `TestRONChosenDiscardCostWarMachineClause`.
+Their action-choice and actual-damage-result rules remain gaps. Land's Edge
+still needs shared activation permission and a typed discarded-card result.
+Other evidence: `TestRONChosenDiscardCostOptional`, `IndependentPayers`,
+`ReplacementsAndInstances`, `Invalid` and `StrictBoundaries`.

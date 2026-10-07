@@ -27374,3 +27374,140 @@ runtime cutover, test migration, Go-definition deletion and DSL removal gates
 are not met. No Go definition, generator, runtime caller or DSL function is
 removed. No whole-repository caller audit authorizes deletion in this adapter
 slice. Migration remains incomplete.
+
+## 2026-10-06: selected single-card discard payment prerequisite
+
+Status: completed implementation slice `CHOSEN-DISCARD-COST`.
+This run implements only this prerequisite and stops. Initial user changes to
+`.gitignore`, `mtgish-ron-execution.md`, the progress ledger and the untracked
+`mtgish-ron-completed.md` are preserved. Only this ledger addition is staged;
+the user's ledger reorganization is not included in the slice commit.
+
+### Fresh evidence and candidate selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+Strict loading and semantic inspection exited 1 for collection rejection:
+2,445 records, 1,800 compiled, 645 rejected; 682 accepted and 304 rejected
+unique names. Inventory: 72,962 expression occurrences, 8,559 signatures and
+5,652 unknown-role occurrences. The prior ledger's top summary is stale;
+these fresh measurements supersede it without changing user-authored history.
+Complete canonical records and nested forms were inspected before selection.
+Reprints count once.
+
+| Candidate | Distinct affected names; estimated full unlocks | Other blockers and downstream use | Estimated effort |
+| --- | --- | --- | --- |
+| Filtered source choice and next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: 7 names, 7 after engine prerequisites, 0 adapter-only | Full source domain and selection among simultaneous damage events need contracts. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage additionally need partial prevention, redirection or actual prevention results. | Large: engine prerequisite plus adapters and replacement/batch gameplay tests; several runs. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: 5 clean names, 5 after engine prerequisite | Characteristics in every zone, owner/controller count context, retained information and CDA layers need a shared engine service. Gaea's Avenger has a separately recorded source concern and nested Plus; Wood Elemental needs entry sacrifice results. | Large: all-zone evaluation, layer/copy/identity contracts and gameplay. |
+| Selected discard costs, selected | Dwarven Armorer, Mishra's War Machine, Land's Edge: 3 names, 0 full unlocks | Armorer needs ChooseAnAction; War Machine needs actual damage outcomes; Land's Edge needs shared activation permissions and a discarded-card result. Supplies full chosen payment for all three, through existing transactional engine behavior. | Small: compiler adapters, declaration errors, real-record clause gameplay and transaction regression tests. |
+
+Selection rationale: this is a dependency-ready shared prerequisite for three
+specific consumers. It adds both activation and optional resolution payment
+contexts at low cost without inventing an engine contract. The higher-count
+alternatives have substantial missing engine prerequisites before any credible
+unlock. The zero immediate gain was stated before edits and is not reported as
+full-card support. Fixed optional counter removal would primarily unlock Living
+Artifact; it is deferred while this three-consumer prerequisite remains useful.
+
+### Contract and reuse boundary
+
+RON bare symbol `DiscardACard` is supported as a cost in `Activated/2` and
+`ActivatedWithModifiers/3`, including recursive `And([costs])`. Each build
+creates a fresh `mage.DiscardCost(1)`. Payer, hand visit, selection, transaction,
+replacement pipeline, event batches and rollback remain engine-owned.
+
+Existing resolving action sequences accept `MayCost(DiscardACard)/1` and
+`PlayerMayCost(bound-player, DiscardACard)/2` with an adjacent nonempty
+`If/2` or `Unless/2` continuation using bare `CostWasPaid` or `CostWasntPaid`.
+All four polarities work. Typed player references and existing scopes are reused.
+Each adjacent pair lowers to its own `IfPaid` or `UnlessPaid` invocation. No
+result slot, card-name branch, fallback, runtime declaration panic or production
+subset registry is introduced. Nested bodies use the same lexical scope.
+
+Tuple discard declarations, plural/filtered discard costs, saved discarded-card
+results, mandatory resolving discards, optional cost conjunctions and discard
+alternatives are outside this slice and still reject. The existing resolving
+`DiscardACard` action retains its as-much-as-possible behavior; a discard cost
+requires its full payment. No engine API is added and no engine implementation
+is changed. Comments use Simplified Technical English.
+
+Dependencies and reuse: `compileCosts`, `compileResolutionPayment`,
+`compilePlayerRef`, per-factory cost creation, `DiscardCost(1)`, `Costs`,
+`IfPaid`, `UnlessPaid`, shared payment transactions, hand-visit identity,
+source/target incarnation checks and stack-copy/clone services. Rules inspected:
+CR 118.3/10/11/12, 601.2h, 602.2b, 608.2c/g/h, 701.9 and 732.1.
+No source-data defect was found or corrected for this slice. Existing unrelated
+source concerns remain separate. All twelve RON source hashes are unchanged;
+the vocabulary source snapshot does not need regeneration.
+
+### Test-first evidence and coverage mappings
+
+Before implementation, focused tests failed at `unsupported cost (DiscardACard)`
+for the real Armorer clause and `unsupported optional payment cost
+(DiscardACard)` for optional payments. Invalid declaration tests were written
+before the adapter. Later boundary testing exposed War Machine's existing
+generic If diagnostic; its expected boundary was corrected to the actual
+loader message, without implementing or bypassing its damage-outcome condition.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Dwarven Armorer, FEM full AST with selected supported choice body | `TestRONChosenDiscardCostArmorerClause`: real mana/tap/discard cost, creature target and +0/+1 counter body; selected hand card, payment timing, insufficient mana, empty hand, foreign choice, illegal target, departed/phased/returned target, source departure, copies and pending clone resolution. Choice menu remains unimplemented; no full-card gameplay claim. |
+| Mishra's War Machine, ATQ full AST with supported upkeep/payment/damage clause | `TestRONChosenDiscardCostWarMachineClause`: 5/5 and banding metadata, controller versus opponent upkeep, no early payment, accept/decline/empty hand, actual three-damage unpaid action and prevention. The nested actual-damage tap condition is excluded explicitly and remains a full-record blocker. Its identical 3ED reprint has the same unresolved condition. |
+| Land's Edge | `TestRONChosenDiscardCostStrictBoundaries` reads its complete LEG record and proves shared activation permission still rejects. No gameplay claim; the shared discard cost is available for its later adapter. |
+| Optional identity and payment outcomes | `TestRONChosenDiscardCostOptional`: four If/Unless polarities; success, decline, empty hand and invalid selection; source control change, return and phasing; copied frame pays from its own controller, clone isolation. |
+| Bound payer and independent results | `TestRONChosenDiscardCostIndependentPayers`: target player pays separately from controller; nested and sequential payments cannot overwrite the outer outcome or reuse one card. |
+| Replacements, modifiers, instances | `TestRONChosenDiscardCostReplacementsAndInstances`: separate factories/payments; effect-only replacement excludes cost discards; prevention rejects the whole mana/tap/discard payment; optional prevention takes unpaid branch; activation limit prevents repeated spending. |
+| Invalid declarations, strict load, inventory | `TestRONChosenDiscardCostInvalid` and `StrictBoundaries`: tuple/plural declarations, unbound players/results, separated or missing continuation, mandatory context; definition validation, fresh factories, existing cost role and atomic rejection of invalid fixture collections. |
+
+Compilation and gameplay remain separate. **Zero new complete-card gameplay
+mappings** are claimed; two real-record clause mappings and shared synthetic
+contracts are added. Collection-wide engine-validation and behavior totals
+remain unmeasured. Existing accepted cards continue to pass.
+
+### Actual measurements and required validation
+
+Actual full-card gain matches the estimate: **0 names / 0 records**.
+Final strict loader: **1,800 compiled / 645 rejected records**;
+**682 accepted / 304 rejected unique names**. No accepted name or record is lost.
+Inventory retains 72,962 occurrences, 8,559 signatures and 5,652 unknown roles.
+Only two distinct-name diagnostics change:
+
+- Dwarven Armorer: `FEM.lines.ron:15:198: unsupported cost (DiscardACard)`
+  becomes `FEM.lines.ron:15:276: unsupported action (ChooseAnAction)`.
+- Mishra's War Machine: `ATQ.lines.ron:45:250: unsupported optional payment
+  cost (DiscardACard)` becomes `ATQ.lines.ron:45:348: activation history
+  requires the resolving activated ability (If)`; the same reprint condition
+  advances in 3ED. This generic diagnostic comes from the current If fallback;
+  the actual unresolved form is `PermanentDealtDamageToPlayerThisWay`.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONChosenDiscardCost -count=1` | PASS after confirmed expected test-first failure |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic formatting reviewed |
+| Post-lint focused tests and `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,800 compiled, 645 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts above, no unknown-role change |
+
+No environment or pre-existing check failure blocks the slice. Changed files:
+`compiler.go`, `optional_payment.go`, new `chosen_discard_cost_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger entry.
+The commit hash is reported in the final response.
+
+### Ranked next candidates and removal gates
+
+1. Shared resolving action choice (`ChooseAnAction`) and choice-local bodies:
+   reassess the full inventory; Dwarven Armorer now has its payment prerequisite.
+2. Filtered typed damage-source choice and next-event prevention: seven clean
+   Circle/Realm consumers; establish complete engine source/batch contracts.
+3. All-zone battlefield-count CDAs: five clean consumers; keep Avenger's source
+   concern separate.
+
+War Machine's typed actual-damage outcome and Land's Edge's shared permissions
+and paid-card results remain concrete downstream consumers. No second slice is
+started. Complete RON gameplay/loading, runtime cutover, Go-card deletion,
+generator retirement and unused DSL removal gates are unmet. No card definition,
+generator or DSL function is removed; no caller audit authorizes removal here.
+Migration remains incomplete.
