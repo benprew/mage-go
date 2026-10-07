@@ -488,6 +488,11 @@
 // at detection. Bindings belong to the granted ability. A pending trigger
 // keeps its source incarnation after the grant ends.
 //
+// Use [TriggeredAbilityModification] with a duration for a captured trigger grant.
+// The recipient has its own source and binding context. A returned permanent
+// cannot receive the old grant. [HasRampage] reads current rampage abilities.
+// RON Gabriel Angelfire and Rapid Fire use the shared rampage effect and event.
+//
 // Use [PermanentAttackedDuringLastTurn] for the live source or attachment's
 // attack history during one player's last completed turn. Cleanup saves exact
 // incarnations. Phasing keeps history; returned objects cannot use old history.

@@ -29,22 +29,24 @@ func (r *grantedTriggerRule) staticEffects() []ContinuousEffect {
 }
 func (r *grantedTriggerRule) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "static-trigger-grant", battlefieldSource: true, children: []definitionEdge{{"subjects", r.subjects}}}
-	if r.ability == nil {
-		n.problem = "grant requires a triggered ability"
-	} else if r.ability.eventDefinition == nil && r.ability.stepDefinition == nil {
-		n.problem = "grant requires a declared event or step pattern"
-	} else if r.ability.sourceZone != core.ZoneBattlefield || len(r.ability.zones) != 0 {
-		n.problem = "grant requires a battlefield trigger"
-	} else {
-		n.children = append(n.children, definitionEdge{"ability", grantedTriggerDefinition{r.ability}})
-	}
+	n.children = append(n.children, definitionEdge{"ability", grantedTriggerDefinition{r.ability}})
 	return n
 }
 
 type grantedTriggerDefinition struct{ ability *GenericTriggered }
 
 func (d grantedTriggerDefinition) inspectDefinition() definitionNode {
-	return definitionNode{Role: "granted-trigger", bindingScope: true, children: []definitionEdge{{"definition", d.ability}}}
+	n := definitionNode{Role: "granted-trigger", bindingScope: true}
+	if d.ability == nil {
+		n.problem = "grant requires a triggered ability"
+	} else if d.ability.eventDefinition == nil && d.ability.stepDefinition == nil {
+		n.problem = "grant requires a declared event or step pattern"
+	} else if d.ability.sourceZone != core.ZoneBattlefield || len(d.ability.zones) != 0 {
+		n.problem = "grant requires a battlefield trigger"
+	} else {
+		n.children = append(n.children, definitionEdge{"definition", d.ability})
+	}
+	return n
 }
 
 type grantedTriggerEffect struct {
@@ -77,14 +79,18 @@ func (e *grantedTriggerEffect) ApplyContinuous(ctx *EffectContext) error {
 		var identity [32]byte
 		copy(identity[:16], source.incarnationID[:])
 		copy(identity[16:], p.incarnationID[:])
-		ability := *e.rule.ability
-		ability.id = uuid.NewSHA1(e.grantID, identity[:])
-		ability.source, ability.controller = p.ID(), p.ControllerID()
-		p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(&ability))
+		installGrantedTrigger(p, e.rule.ability, uuid.NewSHA1(e.grantID, identity[:]))
 	}
 	return nil
 }
 func (e *grantedTriggerEffect) cloneEffect() ContinuousEffect { clone := *e; return &clone }
 func (e *grantedTriggerEffect) inspectDefinition() definitionNode {
 	return e.rule.inspectDefinition()
+}
+
+func installGrantedTrigger(p *Permanent, prototype *GenericTriggered, id uuid.UUID) {
+	ability := *prototype
+	ability.id = id
+	ability.source, ability.controller = p.ID(), p.ControllerID()
+	p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(&ability))
 }

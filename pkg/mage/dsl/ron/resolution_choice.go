@@ -1,9 +1,6 @@
 package ron
 
-import (
-	"github.com/benprew/mage-go/pkg/mage"
-	"github.com/benprew/mage-go/pkg/mage/core"
-)
+import "github.com/benprew/mage-go/pkg/mage"
 
 func compileCounterChoice(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
@@ -83,19 +80,19 @@ func compileAbilityChoice(n, continuation Node, ctx scope) (effectFactory, error
 	}
 	plans := make([]effectFactory, len(options))
 	labels := make([]string, len(options))
-	seen := map[core.Attr]bool{}
+	seen := map[temporaryAbilityPlan]bool{}
 	for i, option := range options {
-		keyword, err := compileTemporaryKeyword(option)
+		ability, err := compileTemporaryAbility(option)
 		if err != nil {
 			return nil, err
 		}
-		if seen[keyword] {
+		if seen[ability] {
 			return nil, problem(option, "duplicate ability choice")
 		}
-		seen[keyword] = true
+		seen[ability] = true
 		local := ctx
 		// A fixed branch keeps the choice out of mutable game state.
-		local.chosenAbility = &keyword
+		local.chosenAbility = &ability
 		body, err := compileEffect(continuation, local)
 		if err != nil {
 			return nil, err
@@ -107,7 +104,7 @@ func compileAbilityChoice(n, continuation Node, ctx scope) (effectFactory, error
 			}
 			return mage.Sequence(effects...)
 		}
-		labels[i] = keyword.String()
+		labels[i] = ability.label()
 	}
 	return buildResolutionChoice(plans, labels), nil
 }

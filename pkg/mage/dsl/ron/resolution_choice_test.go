@@ -212,7 +212,7 @@ func TestRONResolutionChoiceInvalid(t *testing.T) {
 		`ChooseAnAction`, `ChooseAnAction()`, `ChooseAnAction([])`, `ChooseAnAction([[]])`,
 		`ChooseAnAction([[DrawACard]])`, `ChooseAnAction([[Targeted([],ActionList([]))],[DrawACard]])`,
 		`ChooseAnAbility`, `ChooseAnAbility([])`, `ChooseAnAbility([Flying])`, `ChooseAnAbility([Flying(),Trample])`,
-		`ChooseAnAbility([Flying,Rampage(3)]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbilityVariable(TheChosenAbility)],UntilEndOfTurn)`,
+		`ChooseAnAbility([Flying,Rampage(-1)]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbilityVariable(TheChosenAbility)],UntilEndOfTurn)`,
 		`ChooseAnAbility([Flying,Trample]),GainLife(Integer(1))`,
 		`ChooseAnAbility([Flying,Flying]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbilityVariable(TheChosenAbility)],UntilEndOfTurn)`,
 		`ChooseAnAbility([Flying,Trample]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Flying])],UntilEndOfTurn)`,
@@ -360,11 +360,11 @@ func TestRONResolutionChoiceInventoryAndAtomicLoad(t *testing.T) {
 			t.Fatal("missing inventory role", name, role)
 		}
 	}
-	files["bad.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),ActionList([ChooseAnAbility([Flying,Rampage(3)]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbilityVariable(TheChosenAbility)],UntilEndOfTurn)]))])`)}
+	files["bad.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),ActionList([ChooseAnAbility([Flying,Rampage(-1)]),CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbilityVariable(TheChosenAbility)],UntilEndOfTurn)]))])`)}
 	if err := LoadInto(registry, files, "*.ron"); err == nil || !registry.CardRegistered("Dwarven Armorer") || !registry.CardRegistered("Urza's Avenger") || registry.CardRegistered("Bad") {
 		t.Fatal("invalid collection replaced registry")
 	}
-	if _, err := Compile(chosenDiscardRecord(t, "LEG", "Gabriel Angelfire")); err == nil || !strings.Contains(err.Error(), "Rampage") {
-		t.Fatal("temporary rampage gap hidden", err)
+	if _, err := Compile(chosenDiscardRecord(t, "LEG", "Gabriel Angelfire")); err != nil {
+		t.Fatal("complete rampage choice rejected", err)
 	}
 }

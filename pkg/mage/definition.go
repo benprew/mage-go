@@ -307,6 +307,9 @@ func ValidateCardDefinition(name string, card Card) error {
 	var visit func(any, string, bool, map[any]bool, bool)
 	visit = func(value any, path string, spell bool, active map[any]bool, allocationAllowed bool) {
 		previousCastBody := castBody
+		if _, granted := value.(grantedTriggerDefinition); granted {
+			spell, castBody = false, false
+		}
 		if action, ok := value.(*ActionDefinition); ok {
 			castBody = action.kind == ActionSpell
 		}

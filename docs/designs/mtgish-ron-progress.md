@@ -27978,3 +27978,158 @@ Ranked next candidates, subject to fresh evidence:
 Slice files: new engine payment service and tests; `mana_solver.go`,
 `mana_system.go`, `game.go`, `doc.go`; RON payment regression tests; API and rules
 contract docs; this appended entry. No second slice was started.
+
+## 2026-10-06: temporary rampage grants
+
+Status: completed slice `TEMPORARY-RAMPAGE`. This run stops after this slice.
+The initial edits to `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, are preserved. Only this new entry is staged
+from the ledger. Fresh counts below supersede older status measurements.
+
+### Fresh evidence, comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, ledger, vocabulary snapshot,
+fresh loader/inventory reports, selected compiler and engine code, complete
+candidate RON records, local LEG Oracle data, relevant API/rules contracts and
+CR 113.7a, 400.7, 509, 613.1f/613.7, 702.23 and 702.26b. Reprints count once.
+Baseline compiler tests, short engine tests and `make build` passed. Loader and
+inventory exited 1 for collection rejection: **1,804 compiled / 641 rejected
+records; 686 accepted / 300 rejected names**, from 2,445 records and 986 names.
+Semantic inventory had 72,962 occurrences, 8,559 signatures and 5,623 unknown-role
+occurrences. This was neither a build failure nor an environment failure.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Temporary rampage, selected | Gabriel Angelfire, Rapid Fire: **2**. | Typed temporary trigger installation and current rampage detection are missing. Existing choice, duration, casting window and rampage execution contracts are ready. Enables parameterized resolution choices and temporary declared trigger grants beyond keywords. | Low/medium: extend the existing layer capture/install service, preserve grant identity and scope, add full RON and engine contract tests. |
+| Repeatable mana conversion | Farrelite Priest, Initiates of the Ebon Hand: **2** after planner prerequisites. | Exact activation color payments now exist, but repeatable non-tap planning, solver termination and synchronous activation-history bodies remain missing. Standing Stones also needs life-cost planning and is excluded. Enables automatic mana conversion with deferred sacrifice. | Medium/high: solver repeated-use state, execution history and delayed sacrifice contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after the characteristic prerequisite. | Needs zone-aware characteristic evaluation, controller/owner context, named/subtype counts and CDA/copy/layer behavior. Gaea's Avenger has a source defect; Wood Elemental needs entry sacrifice results. Both are excluded. | High: all-zone characteristic service, pure counts and five full-card gameplay mappings. |
+
+Complete records and nested bodies support the two-card rampage estimate;
+first-error frequency was not the unlock estimate. This shared slice gives two
+complete consumers with less work than either alternative. The contract,
+selection rationale, reuse boundary and acceptance cases were stated before
+edits. The implement-engine skill supplied the reusable engine workflow. No
+removed card skill, Go card requirement, card-name executor, fallback, skipped
+rule or partial production registry was used.
+
+### Exact signatures, contexts and ownership
+
+Engine API: `TriggeredAbilityModification(PermanentRef, *GenericTriggered)
+ContinuousModification`; `HasRampage PermanentFilter`. Trigger grants reuse
+`layerModification`, `capturedModification`, `composedLayerEffect`, the existing
+static-grant installation service and `grantedTriggerDefinition` validation.
+The outer subject keeps its resolving/static scope. The granted trigger uses an
+independent permanent-source and binding scope, including when a spell supplies
+the grant. Outer targets and casting facts cannot enter that body. Nil, legacy,
+zone-source and unbound declarations reject before gameplay.
+
+Each duration installation captures recipient incarnation and a separate grant
+UUID. Every layer pass builds a fresh ability object with the same UUID and the
+recipient's current controller. Prototypes remain immutable. Separate grants
+remain separate; phasing preserves identity and suspends application; returned
+objects do not receive old grants. Static use derives stable UUIDs through the
+existing donor/recipient/modification identity service. Grant/removal timestamps,
+pending-trigger survival, copied stack objects, target frames, APNAP and cloned
+state remain owned by their shared engine services. No LKI restores an absent
+recipient. No replacement or simultaneous-operation policy changes.
+
+RON: `Rampage(n)/1`, with a bare nonnegative integer, inside
+`CreatePermanentLayerEffectUntil(subject, [AddAbility([abilities...])], duration)`
+and inside `ChooseAnAbility([abilities...])/1` followed immediately by
+`CreatePermanentLayerEffectUntil(subject, [AddAbilityVariable(TheChosenAbility)],
+duration)`. Existing subjects and durations retain their typed contracts.
+Supported resolving contexts include spells, activations and ordinary triggers.
+The choice remains lexical to its adjacent continuation. Different rampage
+amounts are distinct choices; identical options reject. Other keyword grants keep
+the existing Attr service. `HasAbility(AnyRampage)/1` and
+`DoesntHaveAbility(AnyRampage)/1` use a bare ability-class symbol in permanent
+filters. Rapid Fire checks current abilities after its first-strike instruction.
+Static RON rampage grants, rampage removal and other parameterized abilities are
+not added. Existing printed rampage declarations remain unchanged.
+
+RON constructs the declared becomes-blocked pattern and shared RampageEffect;
+the engine owns blocking detection, source identity, pending triggers, bonus
+calculation, layer execution and duration expiry. This reuses exact rampage
+behavior rather than adding a second executor. All selected records agree with
+local Oracle text. No source defect was corrected. Gaea's Avenger's previously
+recorded opponent-artifact count defect remains outside this slice.
+
+### Test-first evidence and card mappings
+
+Engine tests first failed for the absent typed grant and rampage filter APIs.
+After engine implementation, both complete RON records failed at their expected
+adapters: Gabriel's `Rampage(3)` and Rapid Fire's `AnyRampage`. Fixtures were
+corrected to use the existing source field, CreateCard registry API, upkeep event
+API and duration method signature. These were fixture errors. Old negative tests
+for now-supported rampage choices were replaced with invalid negative amounts;
+new positive gameplay and invalid-binding tests retain the underlying checks.
+Inventory assertions were refreshed to the measured gain. No test was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Gabriel Angelfire, complete LEG record | `TestRONTemporaryRampageCompleteRecords`, `GabrielChoices`: full casting/payment and metadata validation, native upkeep, all four choices, rampage 3 bonus, cleanup versus next-upkeep duration, saved controller, copied choices, returned source, phasing/cycle and no announcement-time choice. `StrictLoad` checks complete factories. |
+| Rapid Fire, complete LEG record | `CompleteRecords`, `RapidFireLifecycle`, `TimingAndShapes`: full mana cost and casting window, creature legality, rollback, first strike and rampage 2, existing/gained/lost rampage at resolution, separate copied targets, shroud, returned/phased targets, phase cycles, captured post-resolution grants and pending clone isolation. Existing rampage is not duplicated. `StrictLoad` checks complete factories. |
+| Engine trigger grants | `TestTemporaryTriggerLifecycle`, `Declarations`, `SpellScope`, `RecipientController`, `StaticLayerOrder`: stable/per-installation UUIDs, immutable prototypes, current recipient controller, original incarnation, phase cycle, independent clones, simultaneous grant instances, pending survival after expiry, layer timestamps, static reapplication, nil/legacy/zone/unbound declarations, spell-source rejection and outer binding/cast isolation. Existing `TestGrantedTrigger*` and `TestRampage*` remain regression contracts. |
+| Declarations, inventory and strict loading | `TestRONTemporaryRampageInvalid`, `StrictLoad`, `TimingAndShapes`, updated `TestRONResolutionChoice*` and inventory tests: malformed/negative/dynamic rampage, unbound/escaped choices and references, duplicate versus distinct amounts, zero rampage and separate instances, nested integer roles, per-factory definitions, atomic invalid collection rejection. |
+
+Two full-card gameplay mappings are added. Compilation and gameplay coverage are
+reported separately; collection-wide engine-validated and behavior-verified totals
+remain unset. Applicable identity, timing, legality, cloning, phasing, rollback,
+layer ordering and blocking-group contracts have evidence. No new replacement,
+LKI action or simultaneous zone operation is introduced.
+
+### Actual gain, diagnostics and removal gates
+
+Actual gain matches estimate: **2 names / 2 records**, exactly Gabriel Angelfire
+and Rapid Fire. No accepted name is lost. Fresh loader: **1,806 compiled / 639
+rejected records; 688 accepted / 298 rejected names**. Every remaining diagnostic
+is unchanged. Strict loading still exits 1 and publishes no partial registry.
+Inventory remains 72,962 occurrences / 8,559 signatures; unknown-role occurrences
+fall from 5,623 to 5,621 after nested rampage integer classification. AnyRampage is
+reported as an ability class. All twelve source hashes remain unchanged; no RON
+source or vocabulary source snapshot was changed.
+
+Caller searches cover the selected grant, rampage and compiler services across
+the repository. Existing GrantAbility, TargetHasRampageCond, temporary keyword
+adapters and exported DSL wrappers still have callers. No DSL function was
+removed. Shared engine services remain available. Complete loading, collection
+behavior, test migration and startup wiring remain below the Go-card and DSL
+removal gates, so no definition, generator or authoring instruction was removed.
+API and rules-contract documents describe only the grant and rampage-read contract.
+
+### Validation and next candidates
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine suite and make build | PASS |
+| Test-first engine and RON checks | Expected missing APIs and unsupported Rampage/AnyRampage confirmed |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestTemporaryTrigger\|TestGrantedTrigger\|TestRampage\|TestRONTemporaryRampage\|TestRONResolutionChoice\|TestInventory' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS: zero issues; initial builtin-shadowing test variable fixed; automatic import formatting reviewed |
+| Post-lint `go test ./pkg/mage/... -short -count=1` | PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,806 compiled / 639 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 688 accepted / 298 rejected names; unchanged hashes |
+
+No environmental or pre-existing check failure was found. Required final results
+are recorded before commit. The commit hash is reported in the final response.
+
+Ranked next candidates, subject to fresh evidence:
+
+1. Repeatable non-tap conversion planning and synchronous activation-history
+   execution for Farrelite Priest and Initiates of the Ebon Hand.
+2. All-zone count CDA prerequisite for the five clean consumers; keep Avenger's
+   defect and Wood Elemental's entry requirements separate.
+3. Typed source selection and next-event prevention for the six Circles and
+   Greater Realm of Preservation, after source/replacement lifecycle contracts.
+
+Slice files: `pkg/mage/composable_continuous.go`, `definition.go`,
+`granted_trigger.go`, `temporary_trigger.go`, `temporary_trigger_test.go`,
+`doc.go`; `pkg/mage/dsl/ron/compiler.go`, `temporary_keyword.go`,
+`resolution_choice.go`, `resolution_choice_test.go`, `inventory.go`,
+`inventory_test.go`, `temporary_rampage_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this appended progress entry.
+No second slice was started.

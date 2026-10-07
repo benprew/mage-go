@@ -5646,3 +5646,37 @@ alternative payments, duplicate allocations, restrictions, stale costs and
 incarnations, ability removal, phasing, control, clones, compatibility, immediate
 production and casting rollback. CR 400.7, 601.2f-h, 602.2 and 605.3 apply.
 No replacement order or simultaneous-operation contract changes.
+
+## Temporary triggered grants and rampage reads
+
+`TriggeredAbilityModification(PermanentRef, *GenericTriggered)` extends the
+shared continuous-modification service with a declared battlefield trigger.
+The outer reference remains in the resolving or static context; the granted
+ability has a fresh binding and permanent-source scope. Definition validation
+rejects nil, legacy or zone-source triggers, outer target reads and cast-context
+reads. A spell can grant a trigger to its declared permanent target without
+turning the spell's own source into a permanent (CR 113.3, 603).
+
+Resolution captures the recipient incarnation (CR 400.7). Layer 6 installs a
+fresh ability object with a stable per-installation UUID and current recipient
+controller (CR 613.1f). Static installation derives its UUID from the donor,
+recipient and modification identities. Prototypes remain immutable. Separate
+installations remain separate; repeated layer passes do not accumulate grants.
+Ability removal and later grants follow timestamps (CR 613.7). Phasing suspends
+application without changing identity (CR 702.26b). Pending triggers retain their
+source/event frame after grant expiry or removal (CR 113.7a); clones retain
+independent pending and continuous state.
+
+`HasRampage PermanentFilter` reads current triggered abilities, including base
+and granted rampage effects. RON `AnyRampage` is a bare ability-class symbol in
+`HasAbility/1` and `DoesntHaveAbility/1`. RON temporary `Rampage/1` grants use a
+nonnegative integer and the existing becomes-blocked and rampage services.
+Rampage amounts are read once; bonuses count blockers at trigger resolution
+and each instance triggers separately (CR 702.23a-c). No replacement policy,
+LKI fallback for actions, or new damage batch is introduced.
+
+Evidence: `TestTemporaryTriggerLifecycle`, `Declarations`, `SpellScope`,
+`RecipientController`, `StaticLayerOrder`; `TestRONTemporaryRampageCompleteRecords`,
+`RapidFireLifecycle`, `GabrielChoices`, `Invalid`, `StrictLoad`, `TimingAndShapes`;
+existing `TestGrantedTrigger*`, `TestRampage*` and RON rampage tests. The full
+Gabriel Angelfire and Rapid Fire records have separate behavior mappings.

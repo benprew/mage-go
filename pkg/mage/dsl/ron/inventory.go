@@ -942,6 +942,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "keyword":
+		if n.Name == "Rampage" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 		if n.Name == "TriggerA" && len(n.Args) == 2 {
 			return []string{"event", "actions"}[index]
 		}
@@ -1151,7 +1154,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "power_comparison"
 		}
 		if (n.Name == "HasAbility" || n.Name == "DoesntHaveAbility") && len(n.Args) == 1 {
-			if n.Args[0].Kind == Symbol && n.Args[0].Name == "ManaAbility" {
+			if n.Args[0].Kind == Symbol && (n.Args[0].Name == "ManaAbility" || n.Args[0].Name == "AnyRampage") {
 				return "ability_class"
 			}
 			return "keyword"

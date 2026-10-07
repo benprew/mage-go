@@ -4763,11 +4763,16 @@ existing temporary keyword adapter. It must be followed immediately by
 `AddAbilityVariable(TheChosenAbility)`. The reference is a bare symbol and is
 bound only in that adjacent continuation. Other supported modifications, such
 as `AdjustPT`, may share the list. Subjects and durations retain their existing
-typed contracts. Fixed branches lower the selected keyword without a mutable
-result slot. Parameterized rampage, saved choices outside the continuation,
-wrong references, duplicate options and missing continuations remain errors.
-This shape executes Urza's Avenger's complete record. Gabriel Angelfire still
-rejects its temporary `Rampage(3)` option.
+typed contracts. Fixed branches lower the selected ability without a mutable
+result slot. Temporary grants and choices also accept `Rampage(n)` with a bare
+nonnegative integer. Different amounts are distinct alternatives. Saved choices
+outside the continuation, wrong references, duplicate options and missing
+continuations remain errors. This shape executes Urza's Avenger and Gabriel
+Angelfire. `HasAbility(AnyRampage)` and `DoesntHaveAbility(AnyRampage)` read current
+triggered abilities through `mage.HasRampage`; Rapid Fire checks at resolution
+after its first-strike grant. Rampage is not an Attr: its temporary grant uses
+`mage.TriggeredAbilityModification` with the shared becomes-blocked pattern and
+rampage effect. Static RON rampage grants and rampage removal remain unsupported.
 
 Both forms use `mage.ChooseAtResolution(PlayerRef, ...ResolutionOption)`.
 `ResolutionOption` has `Label string`, `Body ResolvingEffect` and optional
@@ -4812,3 +4817,27 @@ Apprentice Wizard and Fire Sprites reuse their existing full-record compilation
 and the shared solver. This service is a prerequisite for repeatable non-tap
 conversion abilities. Those abilities, mana bodies with activation history, and
 Standing Stones' additional life cost still need planner support.
+
+## Temporary declared triggered abilities
+
+`TriggeredAbilityModification(PermanentRef, *GenericTriggered)
+ContinuousModification` installs a declared battlefield trigger in layer 6.
+Use it with `Until`, source-bound durations, saved-player upkeep durations, or
+`While`. The subject uses the outer context; the trigger has an independent
+permanent-source and binding scope. Spell grants cannot read the spell's source
+as a permanent. Granted bodies cannot read outer targets or casting facts.
+Nil declarations, unbound references, legacy event declarations and triggers
+from other zones fail definition validation.
+
+Each installation captures recipient incarnation and supplies a separate ability
+object and stable ability UUID. Layer reapplication does not accumulate triggers.
+The recipient's controller at detection controls the trigger. Copies of the
+source effect install separate grants. Phasing suspends the grant and preserves
+identity; leaving and returning ends its application. Pending triggers survive
+expiry and ability removal, with their original event frame. Existing layer
+ordering, durations, APNAP, target legality and cloning services apply.
+
+Evidence: `TestTemporaryTrigger*`, `TestRONTemporaryRampage*`, existing
+`TestGrantedTrigger*` and `TestRampage*`. Gabriel Angelfire's four choices and
+saved-player next-upkeep duration, and Rapid Fire's casting restriction,
+resolution-time rampage condition and end-of-turn grants have complete RON tests.

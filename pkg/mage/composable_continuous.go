@@ -39,6 +39,8 @@ type layerModification struct {
 	addType          Attr
 	typeAddition     bool
 	ability          *ActionDefinition
+	trigger          *GenericTriggered
+	triggerGrant     bool
 }
 
 func (*layerModification) continuousModification()            {}
@@ -144,6 +146,12 @@ func ActivatedAbilityModification(subject PermanentRef, costs CostGroup, body Re
 	return &layerModification{subject: subject, ability: rule.ability, layer: LayerAbility}
 }
 
+// TriggeredAbilityModification gives the recipient its own trigger context.
+// Install it with a duration to retain the recipient's original identity.
+func TriggeredAbilityModification(subject PermanentRef, ability *GenericTriggered) ContinuousModification {
+	return &layerModification{subject: subject, trigger: ability, triggerGrant: true, layer: LayerAbility}
+}
+
 // ActivatedModesModification gives a permanent a modal activated ability in layer 6.
 // Install it with Until, UntilSourceLeaves, or While. Each mode declares its targets.
 func ActivatedModesModification(subject PermanentRef, costs CostGroup, options ...ModalActivationOption) ContinuousModification {
@@ -210,6 +218,9 @@ func (m *layerModification) inspectDefinition() definitionNode {
 	if m.typeAddition && m.addType == 0 {
 		n.problem = "supply a supported permanent card type"
 	}
+	if m.triggerGrant {
+		n.children = append(n.children, definitionEdge{"trigger", grantedTriggerDefinition{m.trigger}})
+	}
 	if m.ability != nil {
 		n.children = append(n.children, definitionEdge{"ability", grantedActivationDefinition{m.ability}})
 	}
@@ -244,6 +255,9 @@ func (m *layerModification) description() string {
 		}
 		if m.cantBeBlocked {
 			return "can’t be blocked"
+		}
+		if m.trigger != nil {
+			return "grant triggered ability"
 		}
 		if m.ability != nil {
 			return "grant activated ability"
@@ -303,6 +317,7 @@ type capturedModification struct {
 	addSubtypes      bool
 	addType          Attr
 	ability          *ActionDefinition
+	trigger          *GenericTriggered
 	grantID          uuid.UUID
 }
 
@@ -318,8 +333,8 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 			}
 			v.controller = controller
 		}
-		if m.ability != nil {
-			v.ability, v.grantID = m.ability, uuid.New()
+		if m.ability != nil || m.trigger != nil {
+			v.ability, v.trigger, v.grantID = m.ability, m.trigger, uuid.New()
 		}
 		if m.layer == LayerPT {
 			if !m.isSwitch {
@@ -375,6 +390,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), *v.blockerFilter)
 		} else if v.cantBeBlocked {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), Not(AnyPermanent))
+		} else if v.trigger != nil {
+			installGrantedTrigger(p, v.trigger, v.grantID)
 		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)
 		} else if v.removeLandwalk {
@@ -586,7 +603,7 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	if e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller, SourceIncarnation: source.incarnationID}) {
 		for i, m := range e.modifications {
 			for _, v := range m.capture(&child) {
-				if v.ability != nil {
+				if v.ability != nil || v.trigger != nil {
 					identity := fmt.Sprintf("%s/%s/%d", source.incarnationID, v.permanent.incarnation, i)
 					v.grantID = uuid.NewSHA1(e.grantID, []byte(identity))
 				}

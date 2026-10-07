@@ -17,7 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
-	chosenAbility       *core.Attr
+	chosenAbility       *temporaryAbilityPlan
 	sourceTapped        bool
 	counterStateSource  bool
 	opponentEntryChoice *opponentEntryChoicePlan
@@ -888,8 +888,11 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 		}
 		return filter, nil
 	case "HasAbility", "DoesntHaveAbility":
-		if n.Args[0].Kind == Symbol && n.Args[0].Name == "ManaAbility" {
+		if n.Args[0].Kind == Symbol && (n.Args[0].Name == "ManaAbility" || n.Args[0].Name == "AnyRampage") {
 			filter := mage.HasManaAbility
+			if n.Args[0].Name == "AnyRampage" {
+				filter = mage.HasRampage
+			}
 			if n.Name == "DoesntHaveAbility" {
 				filter = mage.Not(filter)
 			}
@@ -1448,9 +1451,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				if part.Args[0].Kind != Symbol || part.Args[0].Name != "TheChosenAbility" || ctx.chosenAbility == nil {
 					return nil, problem(part.Args[0], "unbound or incompatible chosen ability")
 				}
-				keyword := *ctx.chosenAbility
+				ability := *ctx.chosenAbility
 				modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
-					return mage.GrantKeywordModification(subject.build(bindings), keyword)
+					return ability.modification(subject.build(bindings))
 				})
 				continue
 			}
@@ -1492,13 +1495,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				if err != nil {
 					return nil, err
 				}
-				for _, ability := range abilities {
-					keyword, err := compileTemporaryKeyword(ability)
+				for _, node := range abilities {
+					ability, err := compileTemporaryAbility(node)
 					if err != nil {
 						return nil, err
 					}
 					modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
-						return mage.GrantKeywordModification(subject.build(bindings), keyword)
+						return ability.modification(subject.build(bindings))
 					})
 				}
 				continue
