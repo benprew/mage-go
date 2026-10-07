@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "ManaValueOfExiled" {
+		return compileExilePaymentValue(n, ctx)
+	}
 	if n.Name == "HalfRoundedDown" || n.Name == "HalfRoundedUp" {
 		if err := arity(n, 1); err != nil {
 			return nil, err

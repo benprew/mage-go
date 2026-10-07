@@ -21,7 +21,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 		return compilePlayerCounterPlacement(instruction, ctx)
 	}
 	var counterNode, subjectNode Node
-	var amount mage.ResolutionValue = mage.Fixed(1)
+	amount := valueFactory(func(instanceBindings) mage.ResolutionValue { return mage.Fixed(1) })
 	switch instruction.Name {
 	case "ACounterOfTypeOnPermanent":
 		if err := arity(instruction, 2); err != nil {
@@ -32,7 +32,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 		if err := arity(instruction, 3); err != nil {
 			return nil, err
 		}
-		amount, err = compileCounterAmount(instruction.Args[0], ctx)
+		amount, err = compileInstanceCounterAmount(instruction.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.AddCountersTo(subject.build(bindings), counter, amount)
+		return mage.AddCountersTo(subject.build(bindings), counter, amount(bindings))
 	}, nil
 }
 
@@ -151,4 +151,12 @@ func compileCounterAmount(n Node, ctx scope) (mage.ResolutionValue, error) {
 		return nil, err
 	}
 	return mage.ValueAtResolution(value), nil
+}
+
+func compileInstanceCounterAmount(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "ManaValueOfExiled" {
+		return compileExilePaymentValue(n, ctx)
+	}
+	value, err := compileCounterAmount(n, ctx)
+	return func(instanceBindings) mage.ResolutionValue { return value }, err
 }

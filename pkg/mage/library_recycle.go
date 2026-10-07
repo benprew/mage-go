@@ -11,6 +11,7 @@ import (
 type libraryRecycleEffect struct {
 	subjects  PlayerSet
 	graveyard bool
+	skipHand  bool
 	drawMoved bool
 }
 
@@ -41,11 +42,13 @@ func (e *libraryRecycleEffect) Apply(ctx *EffectContext) error {
 		if player == nil {
 			continue
 		}
-		for _, card := range slices.Clone(player.Hand()) {
-			if moved, ok := player.RemoveFromHand(card.ID()); ok {
-				player.AddToLibrary(moved)
-				counts[id]++
-				events = append(events, core.GameEvent{Type: core.EvtZoneChange, SourceID: card.ID(), PlayerID: id, FromZone: core.ZoneHand, ToZone: core.ZoneLibrary})
+		if !e.skipHand {
+			for _, card := range slices.Clone(player.Hand()) {
+				if moved, ok := player.RemoveFromHand(card.ID()); ok {
+					player.AddToLibrary(moved)
+					counts[id]++
+					events = append(events, core.GameEvent{Type: core.EvtZoneChange, SourceID: card.ID(), PlayerID: id, FromZone: core.ZoneHand, ToZone: core.ZoneLibrary})
+				}
 			}
 		}
 		if e.graveyard {
@@ -81,4 +84,23 @@ func (e *libraryRecycleEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	return nil
+}
+
+// ShuffleGraveyardFor uses one zone batch so events cannot see partial moves.
+func ShuffleGraveyardFor(subject PlayerRef) ResolvingEffect {
+	return &libraryRecycleEffect{subjects: libraryRecyclePlayer{subject}, graveyard: true, skipHand: true}
+}
+
+type libraryRecyclePlayer struct{ player PlayerRef }
+
+func (libraryRecyclePlayer) playerSet() {}
+func (s libraryRecyclePlayer) resolvePlayers(ctx *EffectContext) []uuid.UUID {
+	id, ok := s.player.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	return []uuid.UUID{id}
+}
+func (s libraryRecyclePlayer) inspectDefinition() definitionNode {
+	return definitionNode{Role: "player-set", children: []definitionEdge{{"player", s.player}}}
 }

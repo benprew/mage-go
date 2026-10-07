@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **651 accepted / 335 rejected unique card
-names** (986 total), and **1,729 compiled / 716 rejected records** (2,445 total).
+The latest recorded inventory reports **653 accepted / 333 rejected unique card
+names** (986 total), and **1,731 compiled / 714 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`PAID-SELECTION-UNTAP` slice and its validation evidence are recorded
+`EXILE-ACTIVATION-PAYMENTS` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -23589,3 +23589,175 @@ Ranked next candidates to reassess from fresh evidence:
    reassess complete records for Anti-Magic Aura and Raiding Party.
 
 No next slice is started in this run.
+
+## Run 2026-10-06: EXILE-ACTIVATION-PAYMENTS
+
+Status: complete dependency-ready slice. Stop after this slice. RON production
+cutover and removal gates remain unmet.
+
+### Fresh evidence and selection
+
+Initial user changes were `.gitignore`, the execution design, a shortened progress
+ledger, and the untracked completed-history document. They are preserved and
+excluded from this slice's commit. Only this entry and the current counts are
+staged from the ledger; its user restructuring remains unstaged.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed. Strict loading
+exited 1 for unsupported collection records, not a build failure: **1,729 compiled
+/ 716 rejected records; 651 accepted / 335 rejected unique names**, from 2,445
+records and 986 names. Fresh semantic inventory was also collected. The execution
+design, ledger, vocabulary snapshot, engine reference, selected compiler and
+engine files, complete candidate RON records, local Oracle data, and relevant
+API/rules contracts were inspected. Reprints count once.
+
+| Candidate | Distinct affected names; estimated complete-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Exile activation payments, selected | Feldon's Cane, Necropolis: **2 names / 2 records**. City of Shadows, Night Soil, Ring of Ma'rûf are additional downstream consumers, not unlocks. | Existing source-exile and matching-graveyard payment services cover the two selected records. Necropolis needs a typed saved mana-value adapter and instance-aware counter amount. Cane needs a graveyard shuffle adapter; its legacy engine effect omits zone events. City needs controlled permanent choice/exile; Night Soil needs two creature cards from one arbitrary graveyard; Ring needs future draw replacement and outside-game choices. | Medium: reuse payment snapshots, costs and counters; add graveyard-only mode to the existing recycler; compiler, declaration, batch, rollback and full-card gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names**, zero adapter-only gains. | Full records require CR 609.7a source enumeration, a typed chosen-source result, and next-event consumption. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have fractional prevention, proposed-packet amount/controller and reflected damage, redirection, or prevented-damage result blockers. | High: several source, choice and replacement contracts before adapters; source identity, competing replacements, simultaneous events and gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5 names**, zero adapter-only gains. | Cross-zone P/T evaluation, controller/owner context and CDA/copy/layer integration are prerequisites. Gaea's Avenger has its separately recorded source defect; Wood Elemental requires entry payment results. | High: cross-zone engine services and count adapters, then gameplay, copy, controller and layer tests. |
+
+The two exile consumers have the best credible immediate gain for bounded effort.
+The other candidates offer more eventual cards but require multiple new engine
+contracts. Full records and nested instructions, rather than first-error counts,
+justify the estimates. The selection, contract, reuse boundary and acceptance
+cases were stated before implementation. No card-name branch, old Go-card
+requirement, fallback, partial production registry or removed card skill was used.
+The implement-engine skill was used only for the shared shuffle prerequisite.
+
+### Exact shapes, contexts, dependencies and engine reuse
+
+In `Activated` and `ActivatedWithModifiers`, including modal bodies:
+
+- `Exile([Permanent(ThisPermanent)], [])`: source exile during activation payment.
+- `Exile([ACardInGraveyards(And([cardFilter,
+  InAPlayersGraveyard(SinglePlayer(You))]))], [])`: one selected matching card
+  in the activator's graveyard. Exactly one graveyard exile payment is permitted
+  per activation. The owner clause occurs once at the outer conjunction;
+  other operands reuse nonempty intrinsic card type/color logical filters.
+- `ManaValueOfExiled(TheCardExiledThisWay)`: a saved numeric payment result in
+  that activation's body, including its existing mode and branch scopes.
+  `NumberCountersOfTypeOnPermanent(value, counter, subject)` accepts this value;
+  other counter-amount contexts retain their previous support.
+
+Object lists must contain one entry, and operation lists must be empty. Wrong
+arity, tuple symbols, absent/duplicate/foreign graveyard controller clauses,
+unbound results, source-exile result reads, cross-activation reads, multiple
+matching graveyard payments, plural payments and controlled-permanent choices
+remain compile errors. Exile payment forms are not resolving actions, casting
+cost adapters, optional resolution costs, static operations or entry operations.
+
+RON owns spelling, scope and diagnostics. `exilePaymentPlan` and each factory's
+`instanceBindings.exiles` associate the cost and numeric consumer. Each activation
+factory allocates its own `NumberBinding`; pending resolutions, copies and clones
+use the existing saved-number frame. No new global last-action result is read.
+Engine reuse: `ExileSourceCost`, `ExileMatchingCardFromGraveyardCostInto`, the
+shared payment transaction and locked graveyard visits, `FromNumber`, existing
+modal activation/copy services, `AddCountersTo`, typed permanent references and
+incarnation validation. Payment consumes cards at announcement and never places
+counters then. Failed total payment spends no live life, tap state or exile
+objects. Card selection is not targeting. Paid-card departure does not erase the
+saved value. A returned or phased-out source cannot receive counters via LKI;
+a phase cycle preserves the original incarnation. Source control changes do not
+change the saved payment.
+
+Bare resolving action `ShuffleGraveyardIntoLibrary` lowers to the new reusable
+`ShuffleGraveyardFor(PlayerRef) ResolvingEffect`, with `You`. The shared library
+recycler gains a graveyard-only mode. It moves the complete graveyard before zone
+and aggregate graveyard-departure events, then shuffles once, including when empty.
+The hand and other players' zones remain intact. The legacy effect delegates to
+the same service, retaining current callers. Nil/unbound player declarations are
+invalid, and an absent player has no effect. Copies resolve for their own
+controllers. No separate zone, shuffle, counter or payment subsystem is added.
+
+Local Oracle data in `data/ATQ.json` and `data/DRK.json` confirms the complete
+selected RON records. No source defect was found or corrected. CR 118.3/118.10,
+122.1a, 400.3/400.7j, 602.2, 608.2h, 701.24d and 702.26b support payment,
+information, counters, identity, timing, owner-zone and phasing behavior.
+All RON hashes are unchanged; the vocabulary source snapshot needs no refresh.
+Semantic inventory adds roles for exile payment objects and saved payment reads.
+
+### TDD and card-to-test mappings
+
+Initial RON tests failed at unsupported `Exile` costs for both complete records.
+Initial engine tests failed for the missing graveyard shuffle constructor.
+Test fixture compile errors (counter integer type and a nonexistent player-set
+constructor) were corrected before the expected failures were confirmed.
+The implementation passed the original and expanded acceptance tests.
+
+An early broad counter-value adaptation also accepted Living Armor. It was
+narrowed to the selected exile value to preserve the intended scope; the final
+loader gain is exactly the estimated two cards. No test assertion was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Necropolis, complete DRK record | `TestRONExilePaymentNecropolis`: native casting/unpaid rollback, metadata and defender legality, no matching payment, noncreature/opponent exclusion, two pending payments, counter timing, saved values, copied activation, source control/departure/return/phasing/phase cycle, paid-card departure, and independent cloned resolution. |
+| Feldon's Cane, complete ATQ record | `TestRONExilePaymentCane`: native casting/payment, tap and controller rejection, exile at announcement, shuffle at resolution, controller-only zones and clone resolution. `CaneCopyController`: phased-source rejection, exiled-source identity, and copied controller's own graveyard/library. |
+| Chosen payment, instances and rollback | `TestRONExilePaymentChoiceAndRollback`: one locked chosen card, invalid choice, matching-graveyard total rollback, two factory instances, independent numeric results, copied controller and clones. `ModesAndSourceRollback`: both activated modes use the payment value; failed source-exile plus tap/life total leaves all live resources intact. |
+| Declaration, scope and loader | `TestRONExilePaymentInvalid`, `ScopeAndInventory`: malformed operands, unsupported objects/lists/operations/controllers, duplicate costs, unbound/cross-activation results, source-result mismatch, typed AST roles, strict loading of complete records, and atomic rejection of an invalid collection. |
+| Shuffle engine contract | `TestGraveyardOnlyShuffleBatch`: native and legacy paths, complete moves before events, per-card and aggregate event counts, preserved hand/opponent zones, empty shuffle, invalid nil declaration and clone isolation. Existing `TestLibraryRecycle*` guards hand/graveyard combined modes. |
+| Reused payment contracts | Existing `TestExiledGraveyardCostManaValue*`, `TestPaidExile*` cover stale visits, failed costs, captured results, saved exile references, declaration validation, stack copies and clones. Required repository suites guard current callers and accepted RON. |
+
+Two complete-card gameplay mappings are added. Collection-wide engine-validation
+and behavior-verification counts remain null. Compilation progress does not
+establish complete collection gameplay. No new replacement-ordering or plural
+payment contract is claimed; those services and restrictions remain unchanged.
+
+### Final validation and measurements
+
+Actual gain: **2 unique names / 2 records**, exactly Feldon's Cane and Necropolis.
+No formerly accepted name was lost. Final **1,731 compiled / 714 rejected records;
+653 accepted / 333 rejected unique names**. The strict loader exits 1 and publishes
+no partial registry. Semantic inventory: **72,954 nodes / 8,543 signatures / 6,567
+unknown-role occurrences**, with all descendants of rejected records retained.
+Remaining exile diagnostics now distinguish City of Shadows' `APermanent`, Night
+Soil's `NumberCardsInASingleGraveyard`, and Ring's unsupported future draw rule.
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestRONExilePayment\|TestGraveyardOnlyShuffle\|TestLibraryRecycle\|TestExiledGraveyardCostManaValue\|TestPaidExile\|TestInventory' -count=1` | PASS, including the final corrected fixtures. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after the final fixture changes. |
+| `make test` | PASS, repeated after the final fixture changes. |
+| `make build` | PASS, repeated for the final files. |
+| `go vet ./...` | PASS, repeated for the final files. |
+| `make lint` | PASS after the explicit-type fixture correction. Automatic import spacing was reviewed; no unrelated files were changed. |
+| Skill check `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1: 1,731 compiled / 714 rejected; 653 accepted / 333 rejected names. No partial registry. |
+
+The first lint run reported one redundant explicit interface-type declaration;
+that test declaration was corrected. A later test expansion inserted malformed
+RON strings into a mana-cost fixture instead of its invalid-declaration table.
+The resulting counter/copy assertions failed; those inputs were moved into the
+intended table and the unchanged rules assertions passed again. Both failures
+were corrected development issues, not environment blockers. Required final
+checks were repeated after the corrections. No environment or pre-existing
+validation blocker remains.
+
+No Go definition, generator, runtime caller, or DSL export is removed. Complete
+collection loading, per-card gameplay, native RON startup, Go-definition deletion,
+obsolete generator removal and unused DSL cleanup remain below the removal gate.
+A fresh related caller search (including hidden/ignored files, dot imports,
+tests, generators and docs) retained current source-exile, graveyard-payment and
+legacy-shuffle services. No whole-repository dead-function audit or removal is
+claimed for this slice.
+
+Changed files: `ron/exile_payment.go` and tests; activation timing, compiler scope
+and shuffle action, instance bindings, saved values, counter placement, semantic
+inventory and repository count tests; engine library recycler, legacy shuffle
+adapter, shuffle tests and `doc.go`; API/rules-contract docs; this ledger entry
+and current status. The commit contains only this slice. User edits and the
+untracked completed-history file remain outside the commit.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source enumeration and next-event prevention: seven direct complete
+   consumers after the source-choice and replacement prerequisites.
+2. All-zone battlefield-count CDAs: five direct consumers after characteristic
+   services; keep Gaea's Avenger's source defect and Wood Elemental separate.
+3. Extend exile payment contracts: controlled creature payment for City of
+   Shadows and plural filtered payment from one chosen graveyard for Night Soil.
+   Both need their own exact choice/identity/transaction contracts; the source
+   and numeric result adapters added here do not establish those behaviors.
+
+No second slice is started.

@@ -34,6 +34,7 @@ type scope struct {
 	defendingPlayer   *sourceCombatPlayerPlan
 	combatOpponent    *permanentEventPlan
 	targetNamespace   string
+	exilePayment      *exilePaymentPlan
 	counterPayment    *counterPaymentPlan
 	sacrificeValue    *sacrificeValuePlan
 	target            string
@@ -983,6 +984,11 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "ShuffleGraveyardIntoLibrary":
+		if _, err := symbol(n); err != nil {
+			return nil, err
+		}
+		return one(func(instanceBindings) mage.Effect { return mage.ShuffleGraveyardFor(mage.You) })
 	case "If":
 		if len(n.Args) > 0 && n.Args[0].Name == "PermanentPassesFilter" {
 			build, err := compileResolvingPermanentBranch(n, ctx)

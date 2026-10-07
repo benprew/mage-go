@@ -4774,3 +4774,37 @@ shroud, one total rollback, mana sources, source departure, event player,
 control, returned/phased objects, copies, clones, batch events, stun replacement,
 declaration rejection and atomic collection rejection. Rules: CR 118.3,
 118.12, 400.7, 502.3, 608.2d/g/h, 701.26b and 702.26b.
+
+## Graveyard-only shuffle and RON exile payment reuse
+
+`ShuffleGraveyardFor(PlayerRef) ResolvingEffect` uses the shared library recycler
+with hand movement disabled. It resolves the player at execution, moves that
+player's whole current graveyard to their library, then reports each zone change
+and one `EvtCardsLeftGraveyard` event with the moved count. All moves precede
+all events. It shuffles once after the events, including for an empty graveyard
+(CR 701.24d). Hand cards and other players' zones are preserved. Nil or unbound
+player declarations fail definition validation. An absent player has no effect.
+The legacy `ShuffleGraveyardIntoLibrary` effect delegates to this service for
+`You`; current callers remain intact. `TestGraveyardOnlyShuffleBatch` covers
+native and legacy paths, complete-batch event observations, empty shuffles,
+controller scope, hand preservation, nil declarations, and clone isolation.
+
+RON source exile and matching-card graveyard exile use `ExileSourceCost` and
+`ExileMatchingCardFromGraveyardCostInto`. The existing action payment transaction
+locks a selected card and its graveyard visit, validates the total cost, and
+commits atomically (CR 118.3, 602.2). The saved mana value belongs to that pending
+activation, not the game's last exiled card. It survives source departure and
+later departure of the paid card. Copies retain the saved payment value without
+paying again. A different copy controller does not change that value.
+Counter placement still requires the original live source incarnation; phasing
+or leaving and returning cannot restore that action through LKI (CR 400.7,
+608.2h, 702.26b). A phase cycle before resolution preserves the incarnation.
+This adapter adds no new payment, counter, zone-replacement, or ordering service.
+
+`TestRONExilePayment*` covers complete Necropolis and Feldon's Cane records,
+native casting, costs, defender, announcement timing, wrong-zone/type/payment
+rejection, source and graveyard total rollback, locked choices, independent
+instances and pending activations, modes, copied controllers, cloned resolution,
+source control/departure/return/phasing, paid-card departure, and strict loading.
+Existing `TestExiledGraveyardCostManaValue*` and `TestPaidExile*` supply the reused
+payment's stale-visit, result-declaration, and transaction regression evidence.

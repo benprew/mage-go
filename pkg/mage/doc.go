@@ -423,6 +423,11 @@
 // Ability sources use their separate source information. An Aura spell targets;
 // a direct attachment does not. Source ability removal ends its own rule.
 //
+// Use [ShuffleGraveyardFor] so graveyard moves finish before zone events.
+// The library is shuffled even when that graveyard is empty.
+// RON exile payments use [ExileMatchingCardFromGraveyardCostInto] to keep
+// a separate paid mana value for each pending activation.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

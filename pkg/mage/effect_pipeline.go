@@ -530,15 +530,5 @@ func (e *ShuffleGraveyardIntoLibraryData) Properties() EffectProperties {
 }
 
 func (*ShuffleGraveyardIntoLibraryData) Apply(ctx *EffectContext) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return nil
-	}
-	gy := p.Graveyard()
-	lib := p.Library()
-	lib = append(lib, gy...)
-	p.SetLibrary(lib)
-	p.ClearGraveyard()
-	p.ShuffleLibrary()
-	return nil
+	return ShuffleGraveyardFor(You).Apply(ctx)
 }

@@ -4128,3 +4128,31 @@ exclude them. An upkeep trigger retains its event player through source control
 changes, departure, stack copying and game cloning. Each resolution has its own
 choice and payment result. Magnetic Mountain (ARN and 3ED) and Thelon's Curse
 (FEM) have complete-record gameplay tests in `TestRONPaidUntapCards`.
+
+### RON exile activation payments
+
+`Exile([Permanent(ThisPermanent)], [])` is an activation cost. It uses
+`ExileSourceCost` and can be combined with mana, tap, life, and other supported
+costs in `And`. Exile happens during payment; the body runs at resolution.
+
+`Exile([ACardInGraveyards(And([cardFilter,
+InAPlayersGraveyard(SinglePlayer(You))]))], [])` chooses one matching card from
+the activator's graveyard. Exactly one graveyard exile cost is supported in an
+activation. The controller clause must occur once in the outer conjunction.
+Other conjuncts use the existing intrinsic card type/color filters and nonempty
+logical combinations. Plural, foreign-graveyard, and permanent-choice payments
+remain unsupported. The object list has one element and the operation list is
+empty. These forms are not resolving actions or resolution costs.
+
+`ManaValueOfExiled(TheCardExiledThisWay)` reads a typed number saved by that
+activation's graveyard payment. Each factory creates a fresh number binding;
+pending activations, modes, copies, and clones retain their own paid values.
+Source exile cannot produce this result. Undeclared, malformed, duplicate, and
+cross-activation results are compile errors. `NumberCountersOfTypeOnPermanent`
+accepts this value without extending other counter-amount contexts.
+
+Bare `ShuffleGraveyardIntoLibrary` in a resolving action list lowers to
+`ShuffleGraveyardFor(You)`. It moves only the resolving controller's graveyard,
+then shuffles that library even when the graveyard is empty. A changed-controller
+copy uses its own controller. This action makes no target declaration.
+Evidence: `TestRONExilePayment*` and `TestGraveyardOnlyShuffleBatch`.

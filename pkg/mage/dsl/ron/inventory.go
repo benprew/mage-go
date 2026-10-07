@@ -442,6 +442,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost", "resolution_cost":
+		if role == "cost" && n.Name == "Exile" && len(n.Args) == 2 {
+			return []string{"exile_payment_object", "replacement_operation"}[index]
+		}
 		if role == "resolution_cost" && n.Name == "Or" && len(n.Args) == 1 {
 			return "resolution_cost"
 		}
@@ -471,6 +474,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if (n.Name == "PayLife" || n.Name == "MillNumberCards") && len(n.Args) == 1 {
 			return "value"
+		}
+	case "exile_payment_object":
+		if n.Name == "Permanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+		if n.Name == "ACardInGraveyards" && len(n.Args) == 1 {
+			return "card_filter"
 		}
 	case "token_instruction", "token_definition":
 		if n.Name == "NumberTokens" && len(n.Args) == 2 {
@@ -876,6 +886,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "ManaValueOfExiled" && len(n.Args) == 1 {
+			return "exile_payment_reference"
+		}
 		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}

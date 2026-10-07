@@ -30,6 +30,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	exiles               map[*exilePaymentPlan]*mage.NumberBinding
 	defenders            map[*sourceCombatPlayerPlan]*mage.PlayerBinding
 	activationHistory    *mage.ActivationHistoryBinding
 	deathCards           map[*deathCardPlan]*mage.CardBinding
