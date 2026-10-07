@@ -999,6 +999,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "value":
+		if n.Name == "TheTotalNumberOfCountersOfTypeAmongPermanents" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_filter"}[index]
+		}
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}

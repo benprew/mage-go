@@ -6040,3 +6040,35 @@ detection does not cancel an independent triggered ability (CR 113.7a).
 The lifecycle test uses the unchanged Armageddon Clock event with a test body;
 it does not establish Clock's missing counter-value or activation contracts.
 No new engine rule, damage batch, replacement ordering or payment service is added.
+
+## Counter information values
+
+`CountersOnWithLKI(subject PermanentRef, counter core.CounterType) ResolutionValue`
+reads one counter kind for the exact permanent incarnation (CR 608.2h).
+It uses the existing permanent information reference and snapshot service.
+Supported subjects are `This`, `AttachedPermanent`, a saved permanent binding,
+and a singular permanent target. Nil, unsupported and unbound subjects and
+invalid counter kinds fail definition validation. Missing information supplies
+zero. This declaration does not panic for an invalid counter kind.
+
+A live object supplies its current count when the value executes. Departure
+and phase information supplies the saved count when the original object is
+absent. Counters cease to exist on zone change (CR 122.2); the retained count
+is information and does not put counters on the card or its new incarnation.
+A later return and second departure cannot replace the old count. Phase-in
+restores current reads. The query cannot make a departed or phased object
+available for an action. Existing `CountersOn` keeps its live-only contract.
+
+Counts from zero through 255 remain integers without a narrow conversion.
+Queries make no choices and change no state. Factories, stack copies and clones
+keep their reference identities and independent game state. Counter placement
+and damage continue through shared replacement and simultaneous batch services.
+This slice changes no replacement, payment or event scheduling contract.
+
+Evidence: `TestCounterInformationLifecycle`, `Declaration`, and
+`BoundsAndPurity` in `pkg/mage/composable_counter_information_test.go`;
+`TestRONCounterInformationSource`, `Targets`, `HostAndEvent`,
+`ReplacementOrder`, `InventoryAndBoundaries`, `Invalid`, and the Clock tests
+in `pkg/mage/dsl/ron/counter_information_test.go`. Target legality is checked
+before resolution (CR 608.2b); information reads after an earlier instruction
+moves a legal target use the retained count (CR 608.2c/h).

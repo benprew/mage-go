@@ -247,8 +247,14 @@ func TestRONOrdinaryDrawStepInventoryAndBoundaries(t *testing.T) {
 			t.Fatal("missing inventory role", name)
 		}
 	}
+	clock, err := Compile(hostUntapRecord(t, "ATQ", "Armageddon Clock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Armageddon Clock", clock()); err != nil {
+		t.Fatal(err)
+	}
 	for _, tc := range []struct{ set, name, gap string }{
-		{"ATQ", "Armageddon Clock", "TheTotalNumberOfCountersOfTypeAmongPermanents"},
 		{"LEG", "Sylvan Library", "DrawNumberCards"},
 	} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {

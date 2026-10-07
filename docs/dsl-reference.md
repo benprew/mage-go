@@ -5123,3 +5123,26 @@ value. Sylvan Library still rejects optional drawing payment and has a separate
 source-data defect in its drawn-card disposition. Neither has a complete-card
 mapping from this prerequisite. Existing `TestRONDrawStep*` mappings for Howling
 Mine and Mana Vault remain valid.
+
+## RON counter information values
+
+`TheTotalNumberOfCountersOfTypeAmongPermanents(counter, SinglePermanent(ref))`
+is supported by the resolving value compiler. `counter` uses the validated
+permanent counter vocabulary. `ref` is a typed source, Aura host, singular target,
+or permanent supplied by the current event. A reference must be bound in that
+rule and context. Collections and static, entry, cost and announced-X contexts
+are not established by this adapter.
+
+The adapter uses `mage.CountersOnWithLKI` with each factory's own bindings.
+It reads current counters at execution or retained information for the exact
+incarnation after departure or phasing. It cannot restore an absent target's
+legality. A prior instruction can move a legal target and a later information
+read can still use its retained counters. A sacrifice cost uses departure
+information. No mutable count is stored in the compiled plan.
+
+Complete-card evidence: Armageddon Clock, in ATQ and 3ED. Tests with prefix
+`TestRONCounterInformation` cover its casting, upkeep placement, any-player
+upkeep activation, payment rollback, countered payment, removal, draw timing,
+simultaneous damage, prevention, copies, clones and incarnation changes.
+Other consumers remain rejected at independent gaps. See
+[the counter information contract](engine-rules-contracts.md#counter-information-values).

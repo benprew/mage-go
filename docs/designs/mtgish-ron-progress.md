@@ -29934,3 +29934,153 @@ Ranked next candidates to reassess:
 Slice files: ron draw_step.go, triggers.go, ordinary_draw_step_test.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
 Stop after this prerequisite slice. Preserve all initial user changes.
+
+## Run 2026-10-07: SINGULAR-COUNTER-INFORMATION
+
+Status: complete dependency slice; stop after this slice. Runtime cutover,
+Go-card removal and unused-DSL removal gates remain closed.
+
+### Evidence, candidates and selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot and ledger;
+read selected compiler, engine, API and rules contracts and complete RON records
+for all three candidates, including nested forms. Requirements came from RON,
+not Go card definitions. Applied implement-engine for the shared information
+query. No delegation, removed card skills, Go stubs or source changes.
+Preserve the initial edits to .gitignore, execution design and ledger, and the
+untracked mtgish-ron-completed.md. Stage only this new ledger entry over HEAD;
+the user's ledger consolidation stays in the working tree.
+
+Fresh baseline: engine short tests and native build PASS; strict loader exits 1
+for collection rejection: 2,445 records, 986 names, **1,824 compiled / 621
+rejected records; 701 accepted / 285 rejected names**. Semantic inventory:
+72,962 occurrences, 8,557 signatures, 5,443 unknown-role occurrences.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Singular counter information, selected | Armageddon Clock, Cyclone, Icatian Moneychanger, City of Shadows, Primordial Ooze, Voodoo Doll. **1 clean unique unlock**, Clock (two records). | Cyclone needs PayManaForEach; Moneychanger needs GainLifeForEach; City needs matching exile payment and dynamic mana/solver metadata; Ooze needs CreateValueX and local snapshot scope; Doll needs end-step IsUntapped and announced XIs. Shared resolving information is needed by all six, including sacrifice and destruction followed by counter reads. | Low: extend exact-incarnation information query, typed value adapter, scope/identity/lifecycle tests and full Clock mapping. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; Gaea's Avenger is an additional blocked consumer. **5 clean unlocks** after prerequisite. | Requires all-zone characteristic evaluation and owner/controller context, live layer and copying contracts. Avenger has the previously recorded controller-filter defect plus nested Plus. Enables P/T reads in hand, library, graveyard, exile and stack. | High: engine service and five complete gameplay mappings; battlefield-only lowering is insufficient. |
+| Chosen damage-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **7 clean unlocks** after prerequisite. | Requires CR 609.7a discovery/choice, typed source identity, resolution/property rechecks, spell-to-permanent continuity and shield ordering. Other choice consumers (Jade Monolith, Reverse Damage, Dark Sphere, Eye for an Eye) have independent redirection/result/amount gaps. | High: reusable engine discovery and source-choice/shield services plus seven complete mappings. |
+
+Selection favors a small complete shared prerequisite with concrete use by six
+cards and one immediate unlock. The larger gains need substantially broader
+contracts and tests. Nested complete records show why first-error frequency
+would overestimate counter-value unlocks. Reprints count once. The previous
+ledger's suggestion that Clock still needs any-player/upkeep permission is stale:
+fresh code and tests show both modifiers are already supported. The selected
+contract and acceptance cases were stated before editing.
+
+### Supported shape, dependencies and reuse
+
+RON resolving values:
+`TheTotalNumberOfCountersOfTypeAmongPermanents(counter, SinglePermanent(ref))`.
+Exactly two outer arguments and one subject argument. Counter types use the
+existing validated permanent-counter vocabulary, including supported PTCounter
+pairs. References use compilePermanentRef: source, Aura host, singular local
+target and currently supplied event permanent. Scope and per-instance declaration
+identity stay in ron. Unknown, malformed, incompatible and unbound references
+are rejected before factories run. Collections, static/entry/cost values and
+announced X are not added. Existing recursive resolving arithmetic can wrap the
+value. No new global result slot, mutable compiled state, fallback, card-name
+branch or partial production registry.
+
+Engine API: `CountersOnWithLKI(PermanentRef, core.CounterType) ResolutionValue`.
+Reuse readPermanentInformation, capturedPermanent identities, target bindings,
+saved bindings, incarnation-indexed departure/phase snapshots and ZoneSystem
+clone isolation. Read current counters when live and retained counters when
+absent. A returned card and its second departure cannot overwrite the old count.
+Phase-in restores current reads. Missing information yields zero; reads cannot
+restore a mutation reference or target legality. Definition validation rejects
+nil/unbound/unsupported subjects and invalid counter kinds without declaration
+panics. Existing CountersOn remains live-only. CR 608.2b/c/h, 122.2, 400.7 and
+702.26b/d govern legality, sequencing, retained information and phasing.
+
+Clock reuses existing entry/casting, upkeep/draw event, typed source damage,
+any-player activation, upkeep restriction, mana transaction, counter removal,
+replacement/prevention, simultaneous damage batch and stack copy services.
+No payment, replacement ordering, layer, event or simultaneous-operation rule
+changes. Semantic inventory now assigns the value's children their permanent
+counter and subject roles even beneath unsupported parent expressions.
+
+### Tests and card mappings
+
+TDD: initial engine tests failed to build because CountersOnWithLKI was absent;
+RON gameplay failed at unsupported TheTotalNumberOfCountersOfTypeAmongPermanents.
+After implementation, focused tests passed. New test setup corrections: Clock's
+activated ability is definition index 2 (two preceding triggers); the first turn
+skips its draw step, so native timing uses turn 2; the existing general tap event
+supports Artifact, not Creature. None changed production semantics or weakened
+a rule requirement. Initial full runs found an old unsupported-Clock assertion
+in counter_removal_test.go; it now requires complete support. Inventory totals
+and the draw-step boundary test now require the gained support too.
+
+| Contract / card | Mapping |
+| --- | --- |
+| Engine information contract | TestCounterInformationLifecycle: source, target, saved binding, attachment; current changes, leave/return/second departure, phase/cycle, unknown identity, mutation-reference exclusion, unchanged live-only callers and clones. Declaration: nil/unbound targets/bindings and invalid counter kinds. BoundsAndPurity: 0/1/255 and seven counter kinds with repeated pure reads. |
+| Resolving source and copied frames | TestRONCounterInformationSource: live changes, source absence/return/phasing, copied controller, clone isolation and source sacrifice payment before information reads. |
+| Typed target and event scopes | Targets: legal target moved by earlier instruction retains counters; returned/phased/shrouded targets fail legality. HostAndEvent: Aura host and saved event references retain departure counts. Invalid: malformed counters, arities, subject constructors and unbound/out-of-context references. |
+| Replacement integration | ReplacementOrder: resolving count reads the final actual count after both affected-player placement orders. |
+| Armageddon Clock (ATQ:6, 3ED:9), all rules | Clock: controller-upkeep counter placement and draw damage. ClockPayment: casting cost, any-player upkeep activation, wrong timing and unpaid rollback, delayed removal, correct counter kind and countered cost retention. ClockLifecycle: current/zero/retained counts, source return/second departure, phase/cycle, control, ability removal, copy, clone, prevention, independent instances and ineligible events. ClockNativeTiming: native normal draw before priority and damage resolution, opponent draw exclusion. ClockBatch: both player damage packets applied before callbacks. |
+| Loading and coverage boundaries | InventoryAndBoundaries: real Clock strictly loads/validates; semantic roles; unchanged five independent consumer gaps; invalid replacement collection leaves registry intact. Existing draw-step, counter-removal and inventory tests retain their previous contracts and now require complete Clock support. |
+
+All new RON tests have prefix TestRONCounterInformation in counter_information_test.go.
+Engine tests are in composable_counter_information_test.go. Complete Clock
+support is also asserted by ordinary_draw_step_test.go, counter_removal_test.go
+and inventory_test.go. Existing event-probe tests remain explicit prerequisite
+probes; complete-card evidence comes from the new unchanged-record gameplay.
+
+### Results and remaining boundaries
+
+Actual gain matches estimate: **one complete unique-card mapping**, **two compiled
+records** (ATQ and 3ED Clock). Final loader: **1,826 compiled / 619 rejected
+records; 702 accepted / 284 rejected unique names**. No accepted name is lost.
+Final inventory: 72,962 occurrences, 8,557 signatures, **5,425 unknown-role
+occurrences**. Engine-validated and behavior-verified aggregate fields remain
+null; no collection-wide gameplay claim follows from compilation counts.
+
+Other exact first diagnostics remain:
+- Cyclone: ARN.lines.ron:16:303, unsupported two-branch payment cost (PayManaForEach).
+- City of Shadows: DRK.lines.ron:18:151, unsupported exile payment object (APermanent).
+- Icatian Moneychanger: FEM.lines.ron:52:605, unsupported action (GainLifeForEach).
+- Primordial Ooze: LEG.lines.ron:196:329, unsupported action (CreateValueX).
+- Voodoo Doll: LEG.lines.ron:288:374, unsupported end-step history filter (IsUntapped).
+
+No new source defect was found. Local data/ATQ.json agrees with Clock's complete
+RON rules. Existing Avenger/Library and other ledger source defects remain
+separate blockers. No RON source changed, so vocabulary syntax/hashes need no
+refresh; fresh strict and semantic measurements are recorded here.
+
+### Required validation and stopping point
+
+- Baseline `go test ./pkg/mage/... -short -count=1` and native build: PASS.
+- Initial new tests: expected missing engine API / unsupported RON value failures.
+- Focused engine and RON tests with `-count=1`: PASS, including after lint.
+- `go test ./pkg/mage/... -short -count=1`: PASS after updating the obsolete unsupported-Clock assertion.
+- `make test`: PASS after that same assertion update.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues. First lint found an unused initial test variable; it was removed. Automatic import formatting was reviewed; no unrelated file changed.
+- `git diff --check`: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1 for strict collection rejection, 1,826 compiled / 619 rejected records. No build or environment failure.
+- `go run ./cmd/loadcards -inventory -json`: expected exit 1; fresh semantic measurements above.
+- Accepted-name comparison: only Armageddon Clock gained support; no name lost support.
+
+No DSL function or Go card definition is deleted. Complete collection support,
+RON-backed test migration and startup wiring do not yet satisfy removal gates.
+Existing callers remain unchanged; no unrelated caller audit or deletion is
+claimed. API/rules documentation covers only the established information query
+and resolving adapter. No second slice begins.
+
+Ranked next candidates to reassess:
+1. All-zone battlefield-count CDA prerequisite and five clean consumers.
+2. Chosen damage-source discovery/identity and seven shields.
+3. Resolution snapshot/value scope and dynamic mana payments: Cyclone,
+   Primordial Ooze, Voodoo Doll and City of Shadows can reuse this counter query,
+   but their distinct payment/announcement/solver contexts must be implemented
+   independently. Moneychanger's GainLifeForEach adapter is a smaller single-card
+   unlock; defer it while useful shared multi-card work remains.
+
+Slice files: pkg/mage/composable_counter_information.go and tests;
+ron counter_information.go and tests, sacrifice_value.go, inventory.go,
+inventory_test.go, ordinary_draw_step_test.go and counter_removal_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
