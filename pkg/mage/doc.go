@@ -56,6 +56,10 @@
 // Use [TargetBlocksSource], [TargetBlockedBySource], or [TargetInCombatWithSource]
 // for a target in a current blocking pair with the original source. Both
 // incarnations must remain in combat. LKI cannot restore the pair.
+// Use [BlockersOf] or [BlockedAttackersOf] for a collection at resolution.
+// [PreventCombatDamageByEach] captures that collection for this combat.
+// [PreventCombatDamageByEachThisTurn] captures it until cleanup.
+// Later combat changes cannot add sources to the captured collection.
 //
 // Use [TargetToughnessLessThanSourcePower] on typed permanent targets for
 // a strict current toughness comparison. Source departure uses retained power;

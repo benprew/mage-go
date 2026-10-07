@@ -2,8 +2,8 @@
 
 ## Current status
 
-The latest recorded inventory reports **625 accepted / 361 rejected unique card
-names** (986 total), and **1,682 compiled / 763 rejected records** (2,445 total).
+The latest recorded inventory reports **644 accepted / 342 rejected unique card
+names** (986 total), and **1,721 compiled / 724 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
@@ -22730,3 +22730,165 @@ Ranked next candidates to reassess from fresh full-record evidence:
 
 One descriptive commit contains only this validated slice; its hash is reported
 in the final response. No second slice is started.
+
+## Run 2026-10-06: COMBAT-RELATION-COLLECTION-PREVENTION
+
+Status: complete implementation slice. This run stops after this slice.
+The user edits to `.gitignore`, the execution design and the progress/history
+reorganization are preserved. The new completed-history file is not staged.
+Only this run's status correction and appended entry are staged in this ledger.
+
+### Fresh evidence and candidate comparison
+
+Baseline focused RON tests, short engine tests, `make test` and `make build`
+passed. Strict loading and semantic inspection exited 1 for collection rejection:
+2,445 parsed records, 1,719 compiled / 726 rejected records; 642 accepted /
+344 rejected unique names. Inventory: 72,950 nodes, 8,537 signatures, 6,684
+unknown-role occurrences. Full candidate records and nested forms were read;
+reprints count once. The vocabulary snapshot's first errors are historical.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Combat relation collections and captured prevention, selected | Feint, Sewers of Estark; **2** unlocks. Related static consumers Wall of Vapor and Wall of Shadows remain blocked. | Native `BlockersOf`, `BlockedAttackersOf`, source prevention and conditional actions already exist. Missing collection adapters and a turn-duration set constructor. Wall of Vapor needs a live relation-aware static prevention service; Wall of Shadows also needs target-only restrictions. Enables current-pair collection actions and captured combat-duration/turn-duration prevention. | Low/medium: one constructor using existing execution, two adapters, declaration and gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7** credible unlocks after prerequisites, zero adapter-only unlocks. Other affected names: Dark Sphere, Jade Monolith, Reverse Damage, Eye for an Eye. | Missing source enumeration/choice, typed chosen-source binding and next-instance consumption. The four additional names need partial prevention amounts, redirection, prevented-damage results or replacement-context reads. Enables source choices across battlefield/stack and persistent damage identities. | High: choices, identity/zone context, clone/copy/consumption and property rechecks. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** credible unlocks after prerequisites, zero safe adapter-only unlocks. Also Gaea's Avenger and Wood Elemental. | Existing CDA helpers apply only on the battlefield. Need characteristics in other zones, owner/controller query context, named counts and layer/copy contracts. Gaea's Avenger has the recorded source-controller defect; Wood Elemental needs entry sacrifice-result capture. Enables characteristic queries in every zone and further CDA consumers. | High: engine characteristic service, count plans, layers/copy/zone tests and card gameplay. |
+
+Selection rationale: two complete consumers reuse tested engine contracts, with
+less prerequisite work than the larger candidates. Static Walls are not counted
+as unlocks merely because they share relation spelling. Contract and acceptance
+cases were stated before edits. No single-card-only capability was selected.
+The `implement-engine` skill guided the reusable constructor's tests and docs.
+
+### Exact support, dependencies and reuse boundary
+
+Engine addition:
+`PreventCombatDamageByEachThisTurn(subjects PermanentSet) ResolvingEffect`.
+It uses `combatSourcePreventionInstallation` with `EndOfTurn`. Definition
+validation checks its collection/ref declarations. Selection happens once at
+resolution; duplicates within a set install one rule. Existing replacement
+instances save each source incarnation, survive combat exit/control/phasing,
+match captured departure damage, exclude returned incarnations and noncombat
+damage, and expire in native cleanup. No new ordering or simultaneous-damage
+service is introduced.
+
+RON resolving collection:
+`And([IsCardtype(Creature), IsBlockingAttacker(permanent-ref)])` lowers to
+`BlockersOf`; `IsBlockedByDefender(permanent-ref)` lowers to `BlockedAttackersOf`.
+Exactly two operands are required; either order is accepted. `TapEachPermanent`
+uses this shape through the shared `TapEach` executor. Arbitrary extra filters,
+controller constraints, bare relation filters and generic unions remain errors
+in this new collection context.
+
+RON resolving prevention:
+`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(Or([
+SinglePermanent(permanent-ref), relation-collection])), [PreventThatDamage],
+UntilEndOfCombat|UntilEndOfTurn)`.
+Exactly one singular reference and one relation collection are required, in
+either order. Existing typed permanent references and scopes apply to each
+reference independently. Factories build refs/targets from `instanceBindings`;
+no chosen state is shared. Combat duration uses `PreventCombatDamageBy` and
+`PreventCombatDamageByEach`; turn duration uses the corresponding turn
+constructors. Each sequence captures its selected identities during resolution.
+The constructor only installs rules, so the two selections have no intervening
+battlefield mutation. Conditional bodies retain their resolution-time checks.
+No static prevention, entry operation, cost, target declaration or arbitrary
+permanent-filter context gains support.
+
+Reuse: `BlockersOf`, `BlockedAttackersOf`, `TapEach`, typed targets/references,
+`IfPermanentAttacking`/`IfPermanentBlocking`, `CantBeBlocked`, declaration
+validation, source LKI/incarnations, stack copy/clone services, cost transactions,
+combat packets, replacement ordering and native combat/cleanup boundaries.
+RON spelling/shape/scope stays in `ron`; the constructor stays in `mage`.
+Inventory classifies the nested collection as a permanent filter, including
+under rejected parents, without claiming those contexts execute.
+Rules read: CR 506.4, 509.1b/g/h, 615 and 616; existing identity/source contracts
+supply CR 400.7 and 609.7 behavior. Local `data/LEG.json` agrees with Feint.
+Sewers' complete source agrees with the Scryfall named-card API:
+https://api.scryfall.com/cards/named?exact=Sewers%20of%20Estark . No source defect
+was found in the selected records and no RON source was changed.
+
+### TDD and gameplay mapping
+
+First engine tests failed for the missing turn-duration collection constructor.
+First RON gameplay tests failed on Feint's `IsBlockingAttacker` collection and
+Sewers' `CombatDamageWouldBeDealtByACreature` event. A test initially used a
+nonexistent public incarnation method; that fixture was corrected before the
+RON missing-adapter failure was confirmed. Fixture corrections also replaced
+legacy UUID-only combat setup with native declarations and used native cleanup
+for replacement expiry. An inventory helper typo and nonexistent copy-target
+setter were corrected; copied targets now use the native player's retarget
+choice. These were test/compiler build mistakes, not source or environment gaps.
+No rule assertion was weakened. Lint's automatic formatting was reviewed.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Feint, complete LEG record | `TestRONCombatCollectionCards`: paid/unpaid casting, native attack/block setup, live tap/prevention timing, two blockers, relation exit/departure/return/phasing before resolution, illegal target return/phasing/shroud, copied spells, divergent pending clones, later blockers excluded, simultaneous native combat, captured membership after combat exit, combat boundary and cleanup duration. `AnnouncementLegality`: nonattacker/type/shroud/phased targets and cost rollback. |
+| Sewers of Estark, complete PROMOS record | `TestRONCombatCollectionCards`: blocking branch, both source and blocked attacker captured, relation/identity/legality changes and copies/clones, no tapping, native combat and combat-duration expiry. `SewersAttacking`: attacking branch, exit before resolution, copied spell with changed controller and retarget, no combat prevention, existing block retained and cleanup expiry. `AnnouncementLegality`: idle creature is legal but neither branch applies; noncreature/shroud/phased targets rejected with rollback. |
+| RON definitions, instances and inventory | `TestRONCombatCollectionInvalid`: malformed/wrong-role references, wrong creature type, extra operands, empty union, unsupported duration and operation tuple rejection. `StrictInventory`: strict load of both complete records, fresh target declarations from separate factories, nested relation role and atomic rejection after an invalid record is added. |
+| Reusable turn-duration constructor | `TestCombatCollectionPreventionTurnDuration`, `TurnIdentity`, `TurnDeduplicates`, `TurnDeclaration`: combat boundary versus native cleanup, clone isolation, noncombat exclusion, current/captured departure identity, returned sources, phase/control/combat exit, duplicate selections and nil/unbound declaration rejection. |
+| Reused rules | Existing `TestBlockersOf*`, `TestBlockedAttackersOf*`, `TestCombatSourcePrevention*`, `TestRONResolvingCondition*`, `TestDamageSourceFilterReplacementOrder` and repository combat/target/cost regressions. No replacement order, payment transaction or simultaneous batch contract changed. |
+
+Two full-card gameplay mappings are added; no gameplay completion is claimed for
+other consumers. Collection-wide engine-validation and behavior-verification
+counts remain null and are separate from compiler acceptance.
+
+### Validation, fresh counts and remaining gates
+
+All required checks pass; no source or environment blocker remains for this slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON package tests, short engine suite, `make test`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestCombatCollectionPrevention\|TestRONCombatCollection\|TestBlockersOf\|TestBlockedAttackersOf\|TestCombatSourcePrevention\|TestRONResolvingCondition\|TestInventory' -count=1` | PASS, including after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS, repeated after final test additions and lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues; automatic formatting reviewed. |
+| Skill check `go test ./... -short -count=1` | PASS after lint. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for unsupported collection; final counts below, repeated after lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; nested roles and final measurements below. |
+| Accepted-name/source-hash audit | Exactly two gains, no losses; all 12 source hashes unchanged. |
+
+Changed files: `pkg/mage/composable_actions.go`, new
+`pkg/mage/combat_collection_prevention_test.go`, `pkg/mage/doc.go`;
+RON `combat_collection.go` and `combat_collection_test.go`, `compiler.go`,
+`combat_prevention.go`, `inventory.go`, `inventory_test.go`; API/rules contracts
+and this ledger entry. One descriptive commit contains only this slice, with
+its hash reported in the final response.
+
+Final loader: **1,721 compiled / 724 rejected records; 644 accepted / 342
+rejected unique names**. All 2,445 records parse. Exactly Feint and Sewers of
+Estark are gained; no accepted name is lost. Actual gains match the estimate:
+**2 unique names / 2 records**. Inventory: 72,950 nodes, 8,537 signatures,
+6,658 unknown-role occurrences; 26 descendants gained role classification.
+All 12 source hashes match the vocabulary snapshot, so no refresh is required.
+Strict rejection still returns no partial production registry.
+
+Fresh diagnostics include:
+
+- Wall of Vapor, `LEG.lines.ron:299:242`: unsupported permanent filter `IsBlockedByDefender` in static prevention.
+- Wall of Shadows, `LEG.lines.ron:297:255`: same static filter gap; later target restrictions also remain unsupported.
+- Greater Realm of Preservation, `LEG.lines.ron:109:228`: unsupported action `ChooseADamageSource`.
+- Dakkon Blackblade, `LEG.lines.ron:58:205`: unsupported rule `CDA_Power`.
+- Wood Elemental, `LEG.lines.ron:307:189`: unsupported entry operation `SacrificeAnyNumberOfPermanents`.
+- Blood Lust, `LEG.lines.ron:33:216`: unsupported action `IfElse`.
+
+A fresh whole-repository caller audit covered code, dot imports, tests,
+generators, docs, hidden files and fixtures (521 matching lines for DSL imports
+and reused combat services). This additive slice removes no callers and makes
+no DSL function obsolete. Engine services used by RON remain. Complete loading,
+all-card gameplay, application startup, Go-card deletion and DSL-removal gates
+remain unmet. Existing Go definitions/generators and authoring instructions are
+retained until cutover. No second slice is started.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration/typed choice identity and next-instance prevention:
+   seven direct Circle/Realm unlocks after the shared prerequisites.
+2. All-zone battlefield-count CDA characteristic service: five direct consumers;
+   keep Gaea's Avenger's source defect and Wood Elemental's entry gap separate.
+3. Live static combat-relation prevention: Wall of Vapor directly; Wall of Shadows
+   also needs target-only restrictions. Estimate one immediate full-card unlock,
+   so defer it while useful larger shared capabilities remain.

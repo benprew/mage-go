@@ -3989,3 +3989,33 @@ classification and solver planning support the same condition.
 
 Evidence: `TestIfPermanentMatches*`, `TestRONResolvingCondition*` and the existing
 permanent-information, target, combat-state and payment regression tests.
+
+## RON combat relation collections and captured prevention
+
+Resolving `TapEachPermanent(And([IsCardtype(Creature),
+IsBlockingAttacker(permanent-ref)]))` selects current blockers with `BlockersOf`.
+`IsBlockedByDefender(permanent-ref)` selects current blocked attackers with
+`BlockedAttackersOf`. The conjunction requires exactly the creature type and
+one relation; either order is accepted. Additional filters and generic unions
+remain unsupported in this collection context. Existing typed source, host,
+target and event references retain their scope checks and per-instance bindings.
+
+`CreatePreventDamageUntil(CombatDamageWouldBeDealtByACreature(Or([
+SinglePermanent(permanent-ref), relation-collection])), [PreventThatDamage],
+duration)` accepts exactly one singular reference and one collection in either
+order. Duration is `UntilEndOfCombat` or `UntilEndOfTurn`. Each instruction
+captures its selected objects at resolution. The prevention sequence uses
+`PreventCombatDamageBy` / `PreventCombatDamageByEach` for combat duration, or
+`PreventCombatDamageByThisTurn` / `PreventCombatDamageByEachThisTurn` for turn
+duration. This adapter applies in existing resolving action scopes, including
+conditional bodies; it does not add static prevention, costs or entry operations.
+
+`PreventCombatDamageByEachThisTurn(subjects PermanentSet) ResolvingEffect` uses
+the existing installation and replacement services. Definition validation checks
+its collection and bound references. Each source keeps its original incarnation;
+departure LKI, phasing and control changes do not substitute a returned object.
+The effect excludes noncombat damage and expires in native cleanup. Collections
+are selected once, and duplicate incarnations install one rule per instruction.
+
+Complete RON gameplay evidence: `TestRONCombatCollectionCards`,
+`SewersAttacking`, `AnnouncementLegality`, `Invalid`, and `StrictInventory`.

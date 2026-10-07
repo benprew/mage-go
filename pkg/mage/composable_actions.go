@@ -3258,6 +3258,12 @@ func PreventCombatDamageByThisTurn(subject PermanentRef) ResolvingEffect {
 	return &combatSourcePreventionInstallation{subject: subject, duration: EndOfTurn}
 }
 
+// PreventCombatDamageByEachThisTurn prevents combat damage from the set until cleanup.
+// Selection occurs once, so later combat changes cannot add sources.
+func PreventCombatDamageByEachThisTurn(subjects PermanentSet) ResolvingEffect {
+	return &combatSourcePreventionInstallation{subjects: subjects, duration: EndOfTurn}
+}
+
 func (e *combatSourcePreventionInstallation) Text() string {
 	if e.duration == EndOfTurn {
 		return "prevent combat damage by selected source this turn"

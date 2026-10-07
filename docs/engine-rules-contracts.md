@@ -4605,3 +4605,35 @@ effective power retained after cleanup and return, and action identity.
 `RollbackAndCasting`, `InstancesAndRetarget`, `CombatAndInventory`, `Inventory`
 and `Invalid` establish the RON adapter and complete Lesser Werewolf and Eater of
 the Dead gameplay mappings. Sewers of Estark has condition-clause evidence only.
+
+## RON captured combat relation collection prevention
+
+`PreventCombatDamageByEachThisTurn(PermanentSet)` adds a turn-duration constructor
+for the existing `combatSourcePreventionInstallation`. It adds no replacement
+ordering, source lookup or collection state. `BlockersOf` and `BlockedAttackersOf`
+read current blocking pairs and exact incarnations at resolution (CR 506.4,
+509.1g/h); LKI cannot restore an absent pair. The installation then saves each
+selected incarnation in `combatSourcePreventionReplacement`. Later departure,
+control changes, phasing and combat exit preserve installed prevention, while
+returning the physical card creates a different source. Captured departure
+damage retains the old prevention (CR 400.7, 609.7, 615.2–4). Combat duration
+expires at the combat boundary; turn duration expires in native cleanup.
+Noncombat damage remains unaffected. Competing replacements and simultaneous
+damage still use the shared pipeline (CR 615.6, 616.1).
+
+The RON compiler lowers the exact creature/relation conjunction and singular plus
+relation union documented in `dsl-reference.md`. Feint selects current blockers
+for tapping, then captures its target and current blockers for turn-long combat
+prevention. Sewers of Estark checks attacking/blocking status at resolution; its
+attacking restriction does not erase a block already declared (CR 509.1b), and
+its blocking branch captures the blocker and current attackers for this combat.
+No live static combat-relation prevention is established here.
+
+Evidence: `TestCombatCollectionPreventionTurnDuration`, `TurnIdentity`,
+`TurnDeduplicates`, `TurnDeclaration`; complete-record
+`TestRONCombatCollectionCards`, `SewersAttacking`, `AnnouncementLegality`,
+`Invalid`, `StrictInventory`. Existing `TestBlockersOf*`,
+`TestBlockedAttackersOf*`, `TestCombatSourcePrevention*`,
+`TestDamageSourceFilterReplacementOrder` and native combat regression tests retain
+the collection, source, ordering and batch contracts. Payment queries and cost
+transactions are unchanged; RON illegal/unpaid casts check resource rollback.

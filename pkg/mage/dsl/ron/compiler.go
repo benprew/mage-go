@@ -1252,6 +1252,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
+		if containsCombatTarget(n.Args[0]) {
+			set, err := compileCombatCollection(n.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect { return mage.TapEach(set(bindings)) })
+		}
 		if n.Args[0].Name == "Ref_TargetPermanents" {
 			collection, err := compilePermanentTargetsRef(n.Args[0], ctx)
 			if err != nil {
