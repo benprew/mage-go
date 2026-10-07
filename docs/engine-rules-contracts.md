@@ -7630,3 +7630,48 @@ sick/unpaid activation rollback, departure/return, phasing, current recoloring,
 ability copies, pending clones and original damage attribution. Existing
 prevention and damage-choice tests retain replacement-order, simultaneous
 packet and invalid-answer coverage; this query changes none of those services.
+
+## Permanent targets referred to by stack objects
+
+`Game.StackTargetPermanentSources() []DamageSource` establishes the permanent
+target context of CR 609.7a. Each spell or ability still on the stack refers
+to its saved target incarnations even if those targets are now illegal. The
+query uses `Targets` and `targetIncarnations`, without a target-legality check.
+It does not treat current objects with the same card ID as the original object
+(CR 400.7). Missing or unknown identities and nonpermanent target categories
+are excluded. Objects need no damage ability to qualify.
+
+Results follow stack insertion and target-list order, deduplicated by exact
+identity. A copy with unchanged targets retains the original incarnations,
+including after departure; a retargeted copy adds only its selected targets.
+Unused identity-map entries cannot add candidates. Removing the last referring
+object removes a target from this category. The object currently resolving has
+already left the stack. Pending triggers and other saved event/action bindings
+are outside this query.
+
+The existing exact-incarnation information reader supplies current information,
+phase snapshots or departure LKI. Control and color changes affect live reads;
+return cannot replace retained information. Phase-in resumes live reads
+(CR 702.26). Face-down snapshots hide printed characteristics (CR 708.2).
+The query does not mutate game state or run layers. Each result owns separate
+card data; game clones retain independent stack and information state.
+
+`ChooseDamageSourceFromStackTargets(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` uses the shared filtered choice service,
+definition validation and resolution frame. Empty lists and absent players
+clear only the named output. Separate bindings and cloned frames stay separate.
+This is not a complete source list: other referred stack objects, waiting
+replacement/prevention/delayed references and face-up command objects remain.
+RON shield adapters and property rechecks remain separate blockers.
+
+Evidence: `TestStackTargetPermanentSources`, `SourceIdentity`, `SourceChoice`,
+`SourceDeclarations` and `SourceRetarget` in `stack_target_source_test.go`
+(common prefix `TestStackTargetPermanent`). `TestRONStackTargetSourcePrerequisite`
+executes complete Giant Growth, Lightning Bolt and Prodigal Sorcerer records
+through native casting/activation, using a synthetic engine choice consumer
+with the real Circle of Protection: Blue filter. Tests cover unpaid/sick rollback,
+live/departed/returned/phased targets, phase cycles, recoloring, shroud, copies,
+clones, retained identity and actual RON bonus/damage resolution. These tests
+strengthen accepted-card coverage; they do not establish shield gameplay.
+Existing damage/prevention tests retain simultaneous and replacement ordering
+contracts; enumeration adds no operation to those pipelines.

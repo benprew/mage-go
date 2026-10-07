@@ -243,6 +243,10 @@
 // abilities still on the stack. It uses current or retained information for
 // each exact incarnation, including information saved before phasing.
 // [ChooseDamageSourceFromStackAbilities] chooses only from this category.
+// [Game.StackTargetPermanentSources] reads exact permanent target incarnations
+// referred to by spells and abilities still on the stack. Target legality
+// does not remove the saved reference. Copies keep their own target list.
+// [ChooseDamageSourceFromStackTargets] chooses only from this category.
 // General source choices also need the other referred and command-zone objects.
 // A general source choice needs all categories before it can use the complete list.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.

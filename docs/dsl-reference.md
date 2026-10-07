@@ -6369,3 +6369,32 @@ waiting replacement/prevention and delayed-trigger references, and face-up
 command-zone objects remain dependencies. General RON `ChooseADamageSource`
 remains rejected; do not combine this and the live-object list and treat them
 as the complete legal list. Existing Go callers remain compatible.
+
+### Permanent targets referred to by stack objects
+
+`mage.Game.StackTargetPermanentSources() []mage.DamageSource` reads exact
+permanent target incarnations referred to by spells and abilities still on the
+stack. Results follow stack insertion order, then target-list order, with exact
+duplicates removed. Target legality does not remove this reference: shroud,
+phasing or departure can make a target illegal while the object still refers
+to it. Current information applies to live incarnations; phase information or
+departure LKI applies to absent incarnations. Returned cards cannot replace them.
+
+`mage.ChooseDamageSourceFromStackTargets(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` makes a filtered non-targeted choice from this category
+at resolution. It uses the shared decision and per-resolution binding services.
+Empty lists and absent players clear only this output. Definition validation
+checks players, filters, bindings and producer-before-consumer ordering.
+
+Copies retain original target incarnations unless retargeted. Only current
+`Targets` entries qualify; old map entries cannot add candidates. Players,
+spell targets, graveyard card visits and missing/unknown identities do not
+qualify as permanent targets. Removing the final referring stack object ends
+eligibility. The resolving object has already left the stack. Queries are pure,
+return separate snapshot data and preserve independent clones.
+
+This establishes one CR 609.7a category. Other saved stack references, waiting
+replacement/prevention and delayed-trigger references, and face-up command
+objects remain dependencies. General RON `ChooseADamageSource` stays rejected.
+No existing caller changes and no new production RON shape is added.
