@@ -192,3 +192,65 @@ func TestTypedAuraAttachedToCreatureYouControl(t *testing.T) {
 		t.Fatalf("expected possible targets not to contain auraOnOpp, got %v", possible)
 	}
 }
+
+func TestModalActivationOpponentChoosesOnce(t *testing.T) {
+	for _, change := range []string{"none", "unpaid", "control", "phase", "return"} {
+		t.Run(change, func(t *testing.T) {
+			g, a, b := newTriggerTargetGame()
+			chosen := DeclarePermanentTarget("choice", IsCreature, TargetOpponentControls(), TargetChosenByOpponent())
+			declared := Spell(TapSubject(chosen), WithTargets(chosen)).Targets()
+			sourceCard := NewArtifact("Modal source", "", WithAbility(NewModalActivated(GenericCost(1), []Mode{
+				{Label: "tap", Targets: declared, Effects: []Effect{TapSubject(chosen)}},
+				{Label: "life", Effects: []Effect{GainLifeFor(You, Fixed(1))}},
+			})))
+			source := g.PutOnBattlefield(sourceCard, a.PlayerID())
+			firstCard := NewCreature("First", "", 2, 3)
+			first := g.PutOnBattlefield(firstCard, b.PlayerID())
+			second := g.PutOnBattlefield(NewCreature("Second", "", 2, 3), b.PlayerID())
+			b.chooseQueue = [][]uuid.UUID{{first.ID()}, {second.ID()}}
+			if change != "unpaid" {
+				a.ManaPool().Add(Colorless, 1)
+			}
+			err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 0, nil)
+			if change == "unpaid" {
+				if len(b.calls) != 0 {
+					t.Fatal("unaffordable mode asked for targets")
+				}
+				if err == nil || g.StackSize() != 0 || a.ManaPool().TotalMana() != 0 {
+					t.Fatal("unpaid mode committed")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(b.calls) != 1 {
+				t.Fatalf("opponent prompts=%d, want one", len(b.calls))
+			}
+			obj := g.StackPeek()
+			if !slices.Equal(obj.Targets, []uuid.UUID{first.ID()}) || !slices.Equal(obj.ModalTargets[0], obj.Targets) {
+				t.Fatal("announced mode choice replaced")
+			}
+			switch change {
+			case "control":
+				g.AddControlEffect(ControlEffectSpec{SourceID: source.ID(), TargetID: first.ID(), ControllerID: a.PlayerID(), Duration: Indefinite})
+			case "phase":
+				g.PhaseOut(first.ID())
+			case "return":
+				g.RemoveFromBattlefield(g.FindPermanent(first.ID()))
+				g.PutOnBattlefield(firstCard, b.PlayerID())
+			}
+			clone := g.Clone()
+			g.ResolveStack()
+			if clone.FindPermanentIncludingPhased(first.ID()).Tapped {
+				t.Fatal("mode resolution changed clone")
+			}
+			clone.ResolveStack()
+			for _, game := range []*Game{g, clone} {
+				if game.FindPermanentIncludingPhased(first.ID()).Tapped != (change == "none") || game.FindPermanent(second.ID()).Tapped {
+					t.Fatal("mode target identity or legality")
+				}
+			}
+		})
+	}
+}

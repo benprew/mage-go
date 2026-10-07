@@ -6481,3 +6481,26 @@ No new replacement ordering or simultaneous operation is established.
 
 Evidence: `TestRONSingularGroups*`. Complete collection coverage remains separate
 from this compiler prerequisite's synthetic RON gameplay evidence.
+
+## Opponent choice during modal activation
+
+A modal activated ability selects its mode and targets before payment. The
+opponent selects a declaration marked with `TargetChosenByOpponent` at that
+point (CR 602.2b, 602.3). The later announcement path preserves that choice and
+validates it without asking the opponent again. The flat stack targets and the
+selected `ModalTargets` entry retain the same choice. Affordability checks can
+reject an activation before any choice. Failed payment publishes no ability.
+
+Target candidates and resolution legality still use the ability controller and
+source. An opponent's choice does not change control restrictions or hexproof.
+Returned incarnations, phased targets and control changes can invalidate the
+chosen target (CR 400.7, 608.2b, 702.26b/d). Game cloning retains separate pending
+target state. Copies use the existing CR 707.10c permission for the copy's
+controller to choose new targets; they do not repeat activation payment.
+
+`TestModalActivationOpponentChoosesOnce` covers one prompt, committed mode
+identity, affordability, control changes, return, phasing and clone isolation.
+`TestRONOpponentTargets*` covers the RON adapters, singular and numbered groups,
+partial and all-illegal resolution, malformed choices, source departure, copies,
+factory isolation and trigger/mode contexts. Replacement ordering, simultaneous
+operations and information reads retain their existing engine contracts.

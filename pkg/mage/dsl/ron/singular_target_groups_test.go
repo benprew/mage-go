@@ -203,7 +203,7 @@ func TestRONSingularGroupsStrictLoadAndConsumers(t *testing.T) {
 	for _, tc := range []struct{ set, name, want string }{
 		{"LEG", "Gauntlets of Chaos", "SharesACardtypeWithPermanentFromAmongCardtypes"},
 		{"LEG", "Glyph of Delusion", "WasBlockedByDefenderThisTurn"},
-		{"PROMOS", "Arena", "TargetPermanentOfAPlayersChoiceTheyControl"},
+		{"PROMOS", "Arena", "SinglePermanent"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			record := chosenDiscardRecord(t, tc.set, tc.name)

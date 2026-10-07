@@ -3198,7 +3198,10 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	if !grouped {
 		targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
-		targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+		if modalTargets == nil {
+			// The mode choice already includes the opponent's target choice.
+			targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+		}
 	}
 
 	if !grouped {

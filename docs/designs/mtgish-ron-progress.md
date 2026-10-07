@@ -31990,3 +31990,179 @@ Final check evidence after lint review:
 | Source hash audit | All twelve hashes match the vocabulary snapshot. |
 
 The completed slice is committed separately; the final response supplies its hash.
+
+## 2026-10-07: opponent-chosen singular permanent targets
+
+Status: completed prerequisite slice `OPPONENT-SINGULAR-PERMANENT-TARGETS`.
+This run stops after this slice.
+
+### Baseline and candidate selection
+
+The initial working tree contained user changes to `.gitignore`, the execution
+design, and this ledger, plus untracked `mtgish-ron-completed.md`. They are
+preserved. Only this entry is staged against the committed ledger; the user's
+ledger rearrangement remains unstaged. No Go card definition was used as a
+requirement. Instructions, `pkg/mage/doc.go`, the execution design, vocabulary,
+current ledger, selected target/compiler/payment/copy services, API and rules
+contracts, and relevant CR sections were read.
+
+Fresh `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed. Strict loading
+and semantic inspection exited 1 for unsupported records: **1,863 compiled /
+582 rejected records; 719 accepted / 267 rejected unique names**, out of 2,445
+records / 986 names. Semantic inventory: **72,962 occurrences / 8,557 signatures /
+5,207 unknown-role occurrences**. An early status update read an old temporary
+file before the loader command completed and reported 1,861; the completed
+baseline files establish 1,863. This was a measurement-read error, not a compiler
+regression or environment failure.
+
+Complete records, including nested forms, were inspected for all named candidates.
+Reprints count once. Comparison:
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream reuse | Effort |
+| --- | --- | --- | --- |
+| Opponent-chosen singular permanent targets, selected | Preacher, Arena, Nova Pentacle. **0 immediate complete cards / 0 records**. | Preacher needs tapped-source control duration; Arena needs referenced collection tapping and fight; Nova Pentacle needs a chosen damage source and redirection replacement. Extends the existing numbered permanent prerequisite for all three. The Abyss is a further player/event-chooser consumer, but its different spelling and chooser contract remain unsupported. | Low to medium: two adapters to exact existing engine services, target lifecycle tests, and one modal announcement prerequisite fix discovered by tests. |
+| Combat-history-dependent targets/collections | Glyph of Delusion and Glyph of Doom. **0 history-only unlocks; 2 eventual complete cards**. | Existing blocked-turn storage uses physical IDs; a reusable history relation must retain both incarnations. Doom also needs next-end-of-combat delay and history collections. Delusion needs dynamic counters, conditional rule grants and upkeep counter removal. Enables historical target and collection relations. | Medium to high: engine history recording, cleanup/cloning, reference-aware target queries and collection adapters. |
+| Chosen damage sources and exact shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 enumeration-only unlocks; 7 eventual complete cards / 31 records**. | All seven need source enumeration and local choice bindings followed by exact next-damage shields. Sources need spell/permanent identity, property rechecks and permanent-spell continuation. Further redirection and partial-prevention consumers need separate contracts. | High: reusable enumeration, choice lifetime and replacement contracts before adapters. |
+
+Selection favors the bounded shared adapter with exact existing target behavior
+and three concrete downstream consumers. It does not take credit for full-card
+unlocks merely because their first diagnostics change. The alternatives need
+larger engine lifecycle contracts. Contract, reuse boundary, zero-unlock estimate
+and acceptance cases were stated before editing. No single-card endpoint or
+second slice was implemented.
+
+### Supported signatures, contexts and engine reuse
+
+Both forms require two positional arguments:
+
+- `TargetPermanentOfAPlayersChoice(permanentFilter, Opponent)`.
+- `TargetPermanentOfAPlayersChoiceTheyControl(permanentFilter, Opponent)`.
+
+The chooser is the bare `Opponent` symbol. The second form adds an opponent
+control restriction; the first does not. Existing permanent target filters and
+options are reused. Both work alone or with ordinary/opponent-chosen declarations
+in numbered singular permanent groups. Single declarations bind
+`Ref_TargetPermanent`; multiple declarations bind one-based numbered references.
+Existing spell, activation, trigger and mode-local contexts remain available.
+Factories create separate typed bindings per declaration and per card instance.
+
+RON owns spelling, arity, scope, chooser validation, controller-conflict rejection
+and lowering. Reuse: `DeclarePermanentTarget`, `TargetChosenByOpponent`,
+`TargetOpponentControls`, `WithTargets`, declaration offsets, shared choice,
+announcement/payment, resolution legality, incarnation and copy services.
+Malformed arity, tuple chooser, unsupported player/event chooser, conflicting
+controller filters, unbound references and incompatible scopes reject before
+factory construction. `TargetPermanentOfPlayersChoice`, mixed target kinds and
+plural target groups remain unsupported. Inventory classifies filter and chooser
+operands below unsupported parents, including the unsupported player-choice
+spelling; role reporting does not assert executable support.
+
+Targets are chosen at announcement/trigger placement, before resolution. Their
+legality uses the action controller and source, including hexproof; the chooser
+does not change that context. Changed control is a resolution legality check for
+`TheyControl`. A partly illegal action resolves its other legal targets; an
+all-illegal action does not resolve independent life gain. Return invalidates the
+saved incarnation; phasing makes it unavailable; a phase cycle preserves identity.
+Separate word targets can name the same legal permanent. Copies use their own
+controller's permission to change targets under CR 707.10c, without payment.
+
+The modal activation tests exposed an existing engine gap: mode target gathering
+already asks the opponent, then the ordinary announcement path asked again.
+`activateAbilityByIndex` now skips the second opponent acquisition when the mode
+has supplied targets. Validation and payment still run. Flat stack targets and
+`ModalTargets` keep the first choice. The `implement-engine` skill was used for
+this prerequisite fix; no card definition was changed. Engine API signatures are
+unchanged. Rules evidence: CR 400.7, 601.2c/e/h, 602.2b, 602.3, 608.2b,
+702.26b/d and 707.10c.
+
+No LKI information query, replacement, simultaneous operation, or new cost rule
+is added. Those services retain their existing contracts. No fallback, card-name
+branch, global choice slot, game-time declaration panic or partial production
+registry is introduced. Cutover/removal gates remain unmet; Go definitions,
+generators and DSL callers are retained.
+
+### TDD and coverage mappings
+
+The first RON gameplay and strict-load tests failed with expected arity or
+unsupported-group diagnostics for the new declarations. They passed after the
+adapter implementation. A direct modal engine regression then failed because
+paid modes prompted the opponent twice. It passes after the shared fix.
+
+Fixture corrections: the trigger-placement method is `PutTriggersOnStack`;
+`TapSubject` accepts the typed target directly; engine modal target declarations
+must be installed through `WithTargets` before use. The unpaid engine fixture
+was corrected to expect the existing affordability rejection before any prompt.
+A copy test initially expected the opponent to retarget the copy; CR 707.10c and
+the existing engine contract establish that the copy controller chooses instead.
+The corrected test supplies two separate copy-controller responses and asserts
+both groups, changed controller restrictions and original/copy isolation.
+No production assertion was weakened.
+
+| Complete source record or contract | Tests and scope |
+| --- | --- |
+| Source-record target fragments: Preacher (DRK), Arena (PROMOS), Nova Pentacle (LEG) | `TestRONOpponentTargetsRecordFragments` compiles their exact original target declaration ASTs, metadata and activation costs with test-only tap actions replacing unsupported bodies. It exercises choice ownership, control restrictions, payment and group identity. Each complete unchanged record must still reject at its exact next blocker. These are fragment tests, **not complete-card gameplay mappings**. |
+| Singular and numbered target gameplay | `TestRONOpponentTargetsGameplay`: both declarations in spell/activation contexts, paid/unpaid actions, supplied-target replacement, candidate types/phasing/shroud/hexproof, control and source departure, return/phasing/cycle, partial/all-illegal actions and clone isolation. |
+| Independent choice groups | `IndependentGroups`: two opponent prompts, separate saved identities, same object across word targets, duplicate control filters and sequential tap/untap order. |
+| Copies and instances | `CopyAndInstances`: two factory instances, changed-controller spell/ability copies, separate group retargeting and copy/original/clone effects. |
+| Triggers and modes | `TriggerAndModes`: entry placement, source departure, mode-local spell and activation bindings, one opponent prompt. |
+| Empty and malformed choices | `NoCandidatesAndMalformedChoice`: no candidates rejects without payment/stack mutation, illegal/duplicate chooser output stays in the engine's legal target service. |
+| Invalid declarations and atomic loading | `Invalid`: wrong arity, chooser shape/reference, controller conflicts; `InventoryAndStrictLoad`: factory validation, rejected collection preserves existing registry, nested semantic roles despite unsupported actions. Existing group/scope tests remain in the focused suite. |
+| Modal engine contract | `TestModalActivationOpponentChoosesOnce`: one prompt, unchanged committed mode targets, no unaffordable prompt, control/return/phasing rechecks and pending clone isolation. |
+
+Coverage gain: **zero compiled records / zero accepted unique names / zero
+complete-card gameplay mappings**, matching the estimate. Shared target behavior
+and three source-record fragments are added. Collection-wide engine-validated and
+behavior-verified totals remain unmeasured; compiler acceptance is separate.
+
+### Validation and remaining work
+
+Required focused tests with `-count=1`, short engine tests, `make test`, build,
+vet, lint and diff checks passed. Lint changed only import grouping in the new
+RON test file. Those automatic changes were reviewed, and focused/short/full
+tests, build and vet were run again. No environment or pre-existing check failure
+blocks this slice.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestModalActivationOpponentChoosesOnce\|TestRONOpponentTargets\|TestRONSingularGroups\|TestRONNumberedTargets\|TestRONModal\|TestRONControlledTarget\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,863 compiled / 582 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; 719 accepted / 267 rejected unique names. |
+| Source hash audit | All twelve hashes match the vocabulary snapshot. |
+
+Final semantic inventory: **72,962 occurrences / 8,557 signatures / 5,186
+unknown-role occurrences** (21 fewer). Accepted and rejected name sets are
+unchanged. No RON source defect was corrected; source files and vocabulary
+snapshot are unchanged. Previously recorded defects remain outside this slice.
+
+Fresh downstream diagnostics:
+
+- Preacher: `DRK.lines.ron:82:421: unsupported source control duration
+  (ForAsLongAsPermanentRemainsTapped)`.
+- Arena: `PROMOS.lines.ron:1:373: unsupported permanent filter
+  (SinglePermanent)`.
+- Nova Pentacle: `LEG.lines.ron:184:299: unsupported action
+  (CreateFutureReplaceWouldDealDamage)`.
+
+Changed files: RON `compiler.go`, `singular_target_groups.go`, `inventory.go`,
+`singular_target_groups_test.go`, new `opponent_target_test.go`; engine `game.go`,
+`action_target_choice_test.go`, `doc.go`; API/rules docs and this ledger entry.
+Only this slice is committed; the final response supplies its hash.
+
+Ranked next candidates to reassess:
+
+1. Typed singular-reference collections for existing union/intersection and
+   action consumers; Arena needs these before collection tap and fight.
+2. Chosen damage-source enumeration/bindings and exact shields for seven clean
+   prevention consumers; Nova Pentacle remains a redirection consumer.
+3. Incarnation-safe block-history relations for both Glyphs, then delayed combat
+   and counter/ability adapters. All-zone battlefield-count CDAs remain a larger
+   shared prerequisite.
+
+Complete collection loading/gameplay, runtime cutover, Go-card deletion and DSL
+cleanup remain unfinished. No second slice is started. Migration is incomplete.

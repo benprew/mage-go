@@ -5493,3 +5493,33 @@ Evidence: `TestRONSingularGroupsGameplay`, `InstancesAndRepeatedObject`,
 `CopyRetarget`, `DelayedLKI`, `TriggeredAndModal`, `Invalid`, and
 `StrictLoadAndConsumers`. Execution reuses `DeclarePermanentTarget`, `WithTargets`,
 existing target legality, payment transactions, saved references and stack copies.
+
+## RON opponent-chosen permanent targets
+
+`TargetPermanentOfAPlayersChoice(filter, Opponent)` and
+`TargetPermanentOfAPlayersChoiceTheyControl(filter, Opponent)` declare one
+permanent target in `Targeted`. The second form requires the opponent to control
+that permanent. The first form permits any matching permanent. The chooser
+argument must be the bare `Opponent` symbol. Other chooser references and
+`TargetPermanentOfPlayersChoice` remain unsupported.
+
+These forms can occur alone or in numbered singular permanent groups with
+ordinary `TargetPermanent` declarations. They use the existing target filters,
+scopes, spell, activation, trigger and mode contexts. A single declaration uses
+`Ref_TargetPermanent`; multiple declarations use one-based numbered references.
+Conflicting controller restrictions fail compilation before factory construction.
+Factories create separate typed target bindings for each declaration.
+
+Lowering uses `DeclarePermanentTarget`, `TargetChosenByOpponent` and, for
+`TheyControl`, `TargetOpponentControls`. The opponent chooses at announcement
+or trigger placement. Target legality reads the action's controller and source;
+the chooser does not bypass hexproof or other targeting restrictions. Targets
+are checked again at resolution. Modal activation preserves the initial target
+choice. Copy permissions use the existing copy service: the copy's controller
+can choose new legal targets under CR 707.10c.
+
+Evidence: `TestRONOpponentTargets*` and
+`TestModalActivationOpponentChoosesOnce`. Preacher, Arena and Nova Pentacle have
+source-record target-fragment tests and explicit next-blocker checks. Those
+fragments establish targeting and original activation-cost behavior. They do
+not establish complete-card gameplay or permit partial production loading.

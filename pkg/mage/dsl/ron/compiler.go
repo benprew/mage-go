@@ -783,15 +783,16 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 			return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget")
 		}, "Ref_AnyTarget", nil
 	}
+	if isSingularPermanentTarget(n) {
+		build, err := compileSingularPermanentTarget(n, ctx, "Ref_TargetPermanent")
+		return build, "Ref_TargetPermanent", err
+	}
 	if err := arity(n, 1); err != nil {
 		return nil, "", err
 	}
 	switch n.Name {
 	case "OneOrMoreTargetPermanents":
 		return compilePluralPermanentTarget(n, ctx)
-	case "TargetPermanent":
-		build, err := compileSingularPermanentTarget(n, ctx, "Ref_TargetPermanent")
-		return build, "Ref_TargetPermanent", err
 	case "TargetPlayer":
 		players := n.Args[0]
 		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent" && players.Name != "AttackedThisTurn") {

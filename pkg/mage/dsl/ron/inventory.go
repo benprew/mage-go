@@ -422,6 +422,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "action"
 		}
 	case "target":
+		if (n.Name == "TargetPermanentOfAPlayersChoice" || n.Name == "TargetPermanentOfAPlayersChoiceTheyControl" || n.Name == "TargetPermanentOfPlayersChoice") && len(n.Args) == 2 {
+			return []string{"permanent_filter", "player_reference"}[index]
+		}
 		if n.Name == "TargetPlayerOrPermanent" && len(n.Args) == 2 {
 			return []string{"player_filter", "permanent_filter"}[index]
 		}

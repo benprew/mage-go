@@ -586,6 +586,11 @@
 // Cleanup removes the subscription. A pending trigger can still resolve.
 // Destruction replaced by exile sends a leave event, but no death event.
 //
+// Use [TargetChosenByOpponent] for an opponent choice at announcement or
+// trigger placement. [TargetOpponentControls] adds a separate control condition.
+// Target legality uses the action controller and source. Modal activation keeps
+// the first target choice. A copy uses its controller's permission to retarget.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
