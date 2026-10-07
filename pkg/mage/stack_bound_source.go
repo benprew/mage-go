@@ -68,3 +68,23 @@ func (e *sequenceEffect) stackPermanentBindings() []capturedPermanent {
 	}
 	return identities
 }
+
+func (e *capturedDelayedBody) stackPermanentBindings() []capturedPermanent {
+	var identities []capturedPermanent
+	for binding, identity := range e.permanents {
+		if binding != nil {
+			identities = append(identities, identity)
+		}
+	}
+	for binding, values := range e.targets {
+		if binding != nil {
+			identities = append(identities, values...)
+		}
+	}
+	for binding, values := range e.createdTokens {
+		if binding != nil {
+			identities = append(identities, values...)
+		}
+	}
+	return identities
+}

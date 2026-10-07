@@ -6427,10 +6427,10 @@ separate dependencies. No additional production RON shape is accepted.
 ### Permanent bindings referred to by stack objects
 
 `mage.Game.StackBoundPermanentSources() []mage.DamageSource` reads exact
-permanent incarnations saved by event, announcement and payment bindings on
-spells and abilities still on the stack. It reads both `capturedPermanents` and
-immutable event-capture effects in their sequence wrappers. It does not execute
-an effect or evaluate an unproduced binding. Results follow stack insertion
+permanent incarnations saved by event, announcement, payment and delayed-frame
+bindings on spells and abilities still on the stack. It reads `capturedPermanents`,
+immutable event captures and captured delayed bodies in their sequence wrappers.
+It does not execute an effect or evaluate an unproduced binding. Results follow stack insertion
 order, then permanent ID and incarnation byte order within each object, with
 exact duplicates removed. Queries return separate card snapshots.
 
@@ -6447,10 +6447,10 @@ Definition validation checks the player, filter, output and binding dominance.
 Empty categories and absent players clear only that output. Choices and cloned
 resolution frames stay separate.
 
-This is a complete category contract for event, announcement and payment
-permanent bindings, not the complete CR 609.7a source list. Saved delayed frames,
-other binding types, waiting replacement/prevention/delayed references and
-face-up command objects remain separate dependencies. General RON
+This category includes saved permanent bindings, target groups and created-token
+sets in delayed bodies after stack placement. It is not the complete CR 609.7a
+source list. Other binding types, waiting replacement/prevention/delayed references
+and face-up command objects remain separate dependencies. General RON
 `ChooseADamageSource` remains rejected. Existing Go callers stay compatible.
 
 ### Damage-source event bindings referred to by stack objects
@@ -6501,7 +6501,28 @@ mage.ResolvingEffect` performs a filtered, non-targeted choice at resolution.
 It uses shared definition validation, producer order, independent output bindings,
 empty/absent-player clearing, invalid-answer fallback and cloned result frames.
 
-This establishes the typed spell-event context of CR 609.7a. Saved delayed frames,
+This establishes the typed spell-event context of CR 609.7a. Other delayed bindings,
 other reference types, waiting effects, face-up command objects and consuming
 shields remain separate dependencies. General RON `ChooseADamageSource` remains
 rejected; no new RON spelling or compiler adapter is established here.
+
+## Delayed permanent frames referred to by stack objects
+
+`StackBoundPermanentSources` and `ChooseDamageSourceFromStackBindings` also
+read immutable `capturedDelayedBody` frames after delayed trigger placement.
+Saved permanent bindings, singular/plural target groups and created-token sets
+supply exact permanent incarnations. The shared reader sorts and deduplicates
+them with other references in each stack object. Nil declarations and invalid
+identities are excluded. Reading does not execute the body or a future producer.
+
+Current objects supply current characteristics and control; absent and phased
+objects use exact retained information. Copies preserve captures; game clones
+keep independent state. Query and choice snapshots cannot mutate saved cards.
+A saved target does not become a new target. Waiting triggers, pending triggers
+and the currently resolving object stay outside this stack category.
+
+No RON syntax or context is added. Stone Giant, Goblin Kites and War Barge use
+existing delayed adapters; `TestRONStackDelayedPermanentSources` and
+`TestRONStackDelayedPermanentSourceInstances` verify their native gameplay and
+source choice through a synthetic category consumer. General `ChooseADamageSource`
+and the complete shields still need other source categories and shield contracts.

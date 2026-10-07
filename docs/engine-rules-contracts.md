@@ -7748,9 +7748,8 @@ choices, use no RNG and do not change state.
 *DamageSourceBinding) ResolvingEffect` reuses the existing non-targeted choice,
 filter, definition validation, producer/consumer, fallback, snapshot and cloned
 resolution-frame contracts. Empty categories and absent players clear only the
-named result. This adds no damage batch or replacement operation. Saved delayed
-frames, other binding types, waiting effects and command objects remain outside
-this category; unrestricted RON source choices and shields stay rejected.
+named result. This adds no damage batch or replacement operation. Other binding
+types, waiting effects and command objects remain outside this category; unrestricted RON source choices and shields stay rejected.
 
 Evidence: `TestStackBoundPermanentSources`, `SourceOrderAndBoundaries`,
 `SourceChoice`, `SourceDeclarations`, `SourceNativeCaptures`,
@@ -7862,3 +7861,41 @@ captures, APNAP placement, deduplication, native counters and clones. Existing
 `TestRONSpellCastReference*` covers invalid scopes, legality, optional payment,
 current versus event controller and copied counters. Complete shield gameplay
 and the full CR 609.7a source list remain unfinished.
+
+## Saved delayed permanent frames referred to by stack objects
+
+`Game.StackBoundPermanentSources` now includes the immutable permanent, target
+and created-token maps in `capturedDelayedBody` effects on stack objects. This
+extends the existing `stackPermanentBindingReferences` service and its sequence
+traversal. It does not run delayed bodies, read global resolution slots, or
+evaluate future producers. `AtNext` and delayed permanent-event operations
+retain their existing capture, controller, timing and execution contracts.
+
+Within each stack object, saved ID/incarnation pairs share deterministic sorting
+and exact deduplication with announcement, payment and event captures. Nil
+binding declarations and missing, unknown or incompatible identities produce
+no candidate. Live reads use current color, types and controller. Departed and
+phased reads use the exact retained information, including face-down information
+hiding. Returned objects cannot replace saved objects (CR 400.7, 603.7c, 608.2h).
+
+Waiting and pending delayed triggers are excluded until stack placement. Copies
+retain their captures; game clones preserve independent query and body state.
+The currently resolving object has left the stack. A second referring object
+can keep the source eligible; removing the final reference ends eligibility.
+The existing `ChooseDamageSourceFromStackBindings` service supplies filtered,
+non-targeted choices with declaration validation, producer order, empty-result
+clearing and separate choice snapshots. No replacement, payment or damage batch
+contract changes. General source enumeration remains incomplete under CR 609.7a.
+
+Evidence: `TestStackDelayedPermanentSourcesEventFrame`, `Tokens`, `Boundaries`,
+`ChoiceLifetimeAndDeclarations` and `PluralTargets` cover native event/target/token
+captures, live and retained identity, source departure, phasing, current color
+and control, hidden information, copies/clones, ordering, duplicate references,
+future/global exclusion, invalid declarations and resolving lifetime.
+`TestRONStackDelayedPermanentSources` executes complete Stone Giant, Goblin Kites
+and War Barge records with Prodigal Sorcerer targets, unpaid activation checks,
+native delay placement, source choices using Circle of Protection: Blue's real
+filter, actual damage and delayed destruction/sacrifice.
+`TestRONStackDelayedPermanentSourceInstances` checks separate Goblin Kites factory
+bindings, APNAP placement, countering and independent cloned sacrifice bodies.
+These strengthen accepted-card evidence; they do not verify complete shields.

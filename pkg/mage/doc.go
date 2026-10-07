@@ -254,6 +254,8 @@
 // [Game.StackBoundPermanentSources] reads saved event and payment incarnations
 // referred to by objects still on the stack. Announcement captures also qualify.
 // Immutable event captures supply references without running their effects.
+// Delayed bodies on the stack also supply saved permanent, target and token
+// identities. Waiting and pending delayed triggers do not enter this category.
 // [ChooseDamageSourceFromStackBindings] chooses only from these binding contexts.
 // [Game.StackBoundDamageSources] reads permanent and spell source identities
 // saved by event captures on stack objects. Current queries stay separate from
@@ -264,7 +266,7 @@
 // Detection saves information before a pending trigger reaches the stack.
 // Current queries and departure snapshots keep the exact spell identity.
 // [ChooseDamageSourceFromStackSpellBindings] chooses only from this category.
-// Saved delayed frames and other binding types need separate source contracts.
+// Other saved binding types need separate source contracts.
 // General source choices also need the other referred and command-zone objects.
 // A general source choice needs all categories before it can use the complete list.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.
