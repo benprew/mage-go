@@ -4939,3 +4939,36 @@ Evidence: `TestStaticSourceTypePrevention`, `Declarations`, `LiveHost` and
 The RON Treefolk tests use its entire repository record. Host tests use a
 synthetic RON Aura fixture; they do not claim complete Artifact Ward support.
 Rules: CR 400.7, 609.7c, 611.3a–b, 615.1–6, 615.12, 616.1/616.1f and 702.26b–i.
+
+## Live prevention from blocked creatures
+
+`PreventDamageFromBlockedCreatures(subject PermanentRef) StaticRule` prevents
+all combat and noncombat damage to the current subject from creatures it
+currently blocks (CR 509.1g, 611.3a–b, 615.1). Compose it with `Static`.
+`This` protects the source; `AttachedPermanent` follows an Aura's current host.
+Nil and undeclared subjects fail definition validation.
+
+The rule reuses the static prevention lifecycle and shared damage replacement
+pipeline. It checks the source incarnation, current subject, current creature
+type and `Combat.BlocksIncarnations` on each proposed event. Damage-source
+identity uses the existing current/LKI matcher, but a saved source must still
+be the live original incarnation in the current pair. LKI alone cannot restore
+combat. Departure, return, phasing and removal from combat end that pair
+(CR 400.7, 506.4). A phase cycle can restore the static ability, but it does not
+restore a combat pair. Removing the rule source's abilities ends prevention;
+removing a separate Aura host's abilities does not remove the Aura rule.
+
+There is no shield consumption. Repeated damage and simultaneous packets use
+the same check. Unrelated recipients, players, reverse pairs and noncreature
+sources do not match. Replacement choices and rechecks after pair changes or
+redirection remain in the shared pipeline (CR 616.1). Unpreventable damage uses
+that pipeline's existing bypass (CR 615.12).
+
+Evidence: `TestBlockedDamagePrevention`, `Declarations`, `Recheck` and `Host`;
+`TestRONBlockedDamagePreventionWall`, `Invalid`, `ShapeAndContext`,
+`StrictInventory`, `ShadowsGap` and `Ordering`. These cover native combat,
+real RON casting/payment rollback, noncombat activations and copies, separate
+factory instances, clones, live attachments, ability removal, source return,
+phasing, current type changes, batches, both affected-player replacement orders
+and strict collection rejection. No timing, cost, LKI storage or damage batch
+service changes in this slice.

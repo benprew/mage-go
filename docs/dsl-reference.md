@@ -4247,3 +4247,19 @@ or a declared Aura's `HostPermanent`. Other filter shapes and resolving
 contexts remain unsupported. Argothian Treefolk uses the complete shape.
 Artifact Ward uses its host context, but its separate ability-target restriction
 still prevents complete loading.
+
+## RON prevention from blocked creatures
+
+A permanent static rule accepts
+`PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(And([IsCardtype(Creature), IsBlockedByDefender(ThisPermanent)]), Permanent(ThisPermanent)), [PreventThatDamage])`.
+The two filter operands can occur in either order. Both references must name the
+permanent source. Other types, references, recipients, operations, filter shapes
+and resolving/cost contexts fail compilation. This shape does not extend the
+ordinary permanent filter or target compiler.
+
+Each factory builds `Static(PreventDamageFromBlockedCreatures(This))` with its
+own ability. The engine checks the current blocking pair for each proposed
+combat or noncombat damage event. Former pairs cannot match through LKI.
+Wall of Vapor has complete RON gameplay coverage in
+`TestRONBlockedDamagePreventionWall`, `StrictInventory` and `Ordering`.
+Wall of Shadows shares this rule but still fails its separate targeting rule.

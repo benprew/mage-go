@@ -30,6 +30,9 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(event, 2); err != nil {
 		return nil, err
 	}
+	if containsCombatTarget(event.Args[0]) {
+		return compileBlockedDamagePrevention(n, ctx)
+	}
 	from, err := compileFilter(event.Args[0])
 	if err != nil {
 		return nil, err

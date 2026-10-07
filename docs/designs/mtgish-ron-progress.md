@@ -24397,3 +24397,146 @@ Ranked next candidates to reassess:
    solver/execution prerequisites. Do not remove the compiler guard alone.
 
 No second slice is started.
+
+## Run 2026-10-06: BLOCKED-CREATURE-DAMAGE-PREVENTION
+
+Status: complete implementation slice. Stop after this slice. Initial user work:
+`.gitignore`, the execution design, the progress-ledger reorganization, and
+untracked `mtgish-ron-completed.md`. Preserve all four. The commit appends this
+entry to the HEAD ledger; the user's existing reorganization remains in the
+working tree.
+
+### Fresh evidence, candidates and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, selected compiler/engine code, complete candidate RON records,
+API/rules contracts, local `data/LEG.json` Oracle text, and CR 400.7, 506.4,
+509.1g–h, 611.3a–b, 615, 616.1 and 702.26b–i. Fresh baseline short engine tests
+with `-count=1` and `make build` passed. Strict loading exited 1 with **1,747
+compiled / 698 rejected records**, **658 accepted / 328 rejected unique names**.
+Inventory: 72,954 nodes / 8,543 signatures / 6,423 unknown-role occurrences.
+Loader rejection was a collection gap, not a build or test failure.
+
+| Candidate | Affected distinct names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Live prevention from blocked creatures, selected | Wall of Vapor, Wall of Shadows; **1 complete name / 1 record** immediately. | Vapor has only defender and prevention. Shadows also needs spell/ability restrictions for objects that can target only Walls. Establishes current combat-pair prevention for both damage categories, with exact identity and replacement rechecks. | Small: reuse static prevention, combat incarnation queries and damage matching; add one engine rule and one exact adapter with lifecycle, batch and declaration tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **7 eventual names**, zero from an adapter alone. | Complete bodies need resolution-time source enumeration/choice, spell-to-permanent source identity, color/type property rechecks, and next-event consumption through damage batches. Greater Realm uses a color union. Supplies future source-choice/redirection consumers. | Large: shared source choice and shield prerequisites plus copies, identity, allocation and replacement-order contracts. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5 eventual names / 20 records**, zero from a battlefield-only adapter. | Complete records require characteristics outside the battlefield, owner/controller context, named/type counts, and copy/layer integration. Separate Gaea's Avenger data and Wood Elemental entry-payment blockers remain. | Large: shared characteristic evaluation across zones and full copy/control/layer contracts. |
+
+Selection uses complete records and nested forms, not first-error frequency.
+The chosen rule has two direct consumers, one credible complete-card gain, and
+substantially less prerequisite work than the larger alternatives. It is a
+shared engine capability, not a card-name branch. The contract, reuse boundary
+and acceptance cases were stated before editing. The `implement-engine` skill
+was used only for the engine prerequisite. No delegation, removed skill,
+Go-card requirement, generated stub or production allowlist was used.
+
+### Exact supported signatures and reuse boundary
+
+Engine: `PreventDamageFromBlockedCreatures(subject PermanentRef) StaticRule`,
+composed with `Static`. `This` and `AttachedPermanent` use the existing live
+subject service. Nil and undeclared references fail definition validation.
+The rule extends the private static prevention implementation; existing public
+combat-only and source-card-type services keep their contracts.
+
+RON permanent static rule:
+`PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(And([IsCardtype(Creature), IsBlockedByDefender(ThisPermanent)]), Permanent(ThisPermanent)), [PreventThatDamage])`.
+The two filter operands may occur in either order. Both permanent references
+must resolve to the permanent source. Exactly one symbol operation is required.
+Other source types, filter shapes, references, recipients, operations, malformed
+arities, and resolving/cost contexts reject. Existing target and collection
+uses of `IsBlockedByDefender` retain their independent contexts. Inventory already
+assigns the nested filter and reference roles; no reporting adapter is needed.
+
+RON owns spelling, declaration/scope checks and lowering. The engine owns
+`Combat.BlocksIncarnations`, current damage-source identity/type matching,
+static source/host lifecycle and the shared replacement pipeline. Factories
+build separate abilities without mutable choice state. No new timing, target,
+cost, LKI storage, damage batch or global result slot is added.
+
+Prevention applies repeatedly to both combat and noncombat damage from a live
+creature that the current subject blocks, only to that subject. A captured
+source must still have the original incarnation. LKI cannot restore a departed,
+returned, phased or removed combat pair. Phasing preserves permanent identity
+but removes it from combat, including across a phase cycle. Control changes
+also remove the pair. Tapping does not remove it. Current creature-type loss
+stops matching. A returned attacker that enters a new pair cannot supply the
+old captured source. Source ability removal ends the rule; a separate Aura's
+rule survives host ability removal and follows its current attachment.
+Replacement rechecks see pair changes and redirected recipients. The existing
+pipeline retains affected-player ordering, simultaneous packets, unpreventable
+damage and clone isolation. There is no shield consumption.
+
+### TDD and card-to-test mapping
+
+Initial test fixtures referred to nonexistent repository/combat helpers and a
+redirection convenience method. Those fixtures were corrected before confirming
+the expected failures: missing engine API and rejection of `IsBlockedByDefender`
+in both complete records. Initial gameplay fixtures then used legacy UUID-only
+combat helpers, which cannot satisfy incarnation contracts; engine tests now
+use incarnation-aware pairs and RON gameplay uses native declarations.
+The replacement-order fixture initially expected a reusable redirection shield;
+the existing shield is consumed once. Its expected life/prompt counts now verify
+that exact contract alongside repeated prevention. The initial broad tests failed
+only at that fixture, then passed after correction. No rule or test was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Wall of Vapor, complete repository RON | `TestRONBlockedDamagePreventionWall`: exact mana payment, failed-cast rollback, entry timing, 0/1 and defender, native block/combat, repeated noncombat prevention, unrelated damage, clone execution and pair removal. `Ordering`: real RON Prodigal Sorcerer activation and copy, both affected-player replacement orders, recipient recheck and one-use redirection. |
+| Factories, loader and reporting | `TestRONBlockedDamagePreventionStrictInventory`: complete Vapor record, structural reprints, separate ability instances and recipients, simultaneous packets, strict rejection with complete Shadows record, atomic registry preservation, nested filter roles. |
+| Wall of Shadows, shared clause only | `TestRONBlockedDamagePreventionShadowsGap` and `StrictInventory`: complete record reaches its separate targeting restriction. No complete-card gameplay claim and no partial factory publication. |
+| Reusable engine | `TestBlockedDamagePrevention`: current/reverse/unrelated pairs, repeated combat/noncombat batches, player/recipient scope, departure, return, phasing/phase cycles, control/type changes, tapping, ability removal, unpreventable damage and clones. `Declarations`: invalid refs. `Recheck`: pair loss/gain and redirection during replacements. `Host`: current attachments, source phase cycles/departure and source/host ability removal. |
+| Invalid RON shapes and contexts | `TestRONBlockedDamagePreventionInvalid`, `ShapeAndContext`: malformed/unbound/incompatible references, invalid types, recipients, operations and resolving contexts; reversed valid operand order validates. |
+
+This adds one complete-card behavior mapping. Compilation and gameplay remain
+separate; collection-wide engine-validation and behavior counts remain null.
+
+### Results, defects, removal gates and validation
+
+Actual gain equals estimate: **Wall of Vapor, 1 name / 1 record**. No previously
+accepted name regressed. Final loader and inventory exit 1 with **1,748 compiled
+/ 697 rejected records; 659 accepted / 327 rejected unique names**. Inventory
+remains 72,954 nodes / 8,543 signatures / 6,423 unknown-role occurrences.
+Wall of Shadows now reports
+`LEG.lines.ron:297:377: unsupported self untap operations ()` in its separate
+`PermanentRuleEffect` targeting restrictions. This is an existing dispatch
+diagnostic, not an untap requirement.
+
+Local Oracle data confirms the prevention clauses on both Walls. No source
+defect was found or changed. All 12 RON source hashes match the vocabulary
+snapshot, so no source-syntax refresh is needed. No Go definitions, generators,
+startup callers or DSL functions are removed: complete collection loading,
+gameplay coverage and runtime cutover have not met the removal gates.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS. |
+| Focused engine/RON/CLI prevention and inventory tests with `-count=1` | PASS after expected failures and fixture corrections. |
+| Final `go test ./pkg/mage/... -short -count=1` | PASS. |
+| Final `make test` | PASS. |
+| Final `make build`; `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; final repeat passed and formatting changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1; final counts and exact remaining Wall diagnostic above. |
+| Source hash audit | All 12 unchanged. |
+
+Changed files: engine `static_combat_prevention.go`,
+`blocked_damage_prevention_test.go`, `doc.go`; RON
+`blocked_damage_prevention.go`, `blocked_damage_prevention_test.go`,
+`static_prevention.go`, inventory count expectations in `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
+No environment or pre-existing validation blocker was found. The descriptive
+commit hash is reported in the final response.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration and next-event prevention for the six Circles of
+   Protection and Greater Realm of Preservation: seven eventual names. Preserve
+   spell-entry identity, property rechecks and shared damage batches.
+2. All-zone battlefield-count CDAs for the five direct consumers above; retain
+   separate source-data and entry-payment blockers.
+3. Repeatable non-tap mana conversion and activation-history planning for
+   Farrelite Priest and Initiates of the Ebon Hand: two eventual complete names;
+   removing the compiler guard alone cannot implement their solver behavior.
+
+No second slice is started.

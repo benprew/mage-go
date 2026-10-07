@@ -7,11 +7,12 @@ import (
 )
 
 type staticDamagePreventionRule struct {
-	subject    PermanentRef
-	from       PermanentFilter
-	outgoing   bool
-	allDamage  bool
-	sourceType core.CardType
+	subject          PermanentRef
+	from             PermanentFilter
+	outgoing         bool
+	allDamage        bool
+	blockedCreatures bool
+	sourceType       core.CardType
 }
 
 // PreventCombatDamageFrom prevents combat damage from the current subject.
@@ -31,10 +32,18 @@ func PreventDamageFromCardType(subject PermanentRef, kind core.CardType) StaticR
 	return staticDamagePreventionRule{subject: subject, allDamage: true, sourceType: kind}
 }
 
+// PreventDamageFromBlockedCreatures prevents damage from current blocked creatures.
+// A former combat pair cannot supply this prevention through retained information.
+func PreventDamageFromBlockedCreatures(subject PermanentRef) StaticRule {
+	return staticDamagePreventionRule{subject: subject, allDamage: true, blockedCreatures: true}
+}
+
 func (staticDamagePreventionRule) staticRule() {}
 func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "static-rule", Text: "prevent combat damage", battlefieldSource: true, children: []definitionEdge{{"subject", r.subject}}}
-	if r.allDamage {
+	if r.blockedCreatures {
+		node.Text = "prevent damage from blocked creatures"
+	} else if r.allDamage {
 		node.Text = "prevent damage from a card type"
 		if r.sourceType < core.TypeCreature || r.sourceType > core.TypePlaneswalker {
 			node.problem = "supply a valid damage source card type"
@@ -102,13 +111,20 @@ func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameRe
 	id, incarnation := subject.ID(), subject.incarnationID
 	identity := NewPermanentFilter("current prevention subject", func(p *Permanent, _ *Game) bool { return p.ID() == id && p.incarnationID == incarnation })
 	match := &damagePreventionRuleReplacement{combatOnly: !r.rule.allDamage}
-	if r.rule.allDamage && !damageSourceHasCardType(action, g, r.rule.sourceType) {
+	if r.rule.allDamage && !r.rule.blockedCreatures && !damageSourceHasCardType(action, g, r.rule.sourceType) {
 		return false
 	}
 	if r.rule.outgoing {
 		match.from = identity
 	} else {
 		match.from = r.rule.from
+		if r.rule.blockedCreatures {
+			match.from = NewPermanentFilter("creature blocked by current subject", func(p *Permanent, game *Game) bool {
+				current := game.FindPermanent(p.ID())
+				return current != nil && current.incarnationID == p.incarnationID && current.HasType(core.TypeCreature) &&
+					game.combat.BlocksIncarnations(id, incarnation, current.ID(), current.incarnationID)
+			})
+		}
 		match.to = identity
 	}
 	return match.Matches(action, reader)

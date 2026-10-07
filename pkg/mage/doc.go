@@ -131,6 +131,10 @@
 // Absent, returned and phased-out targets do not qualify. Copies use their own
 // stack identity and controller. Combine card filters to restrict the spell type.
 //
+// Use [PreventDamageFromBlockedCreatures] with [Static] for damage from
+// creatures that the current subject blocks. Combat and noncombat damage
+// use the current pair. Retained information cannot restore a former pair.
+//
 // Use [PreventDamageFromCardType] with [Static] for damage from sources
 // with a specified card type. The current subject can be [This] or
 // [AttachedPermanent]. Source types use current or retained information for
