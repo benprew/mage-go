@@ -173,6 +173,11 @@
 // creatures that the current subject blocks. Combat and noncombat damage
 // use the current pair. Retained information cannot restore a former pair.
 //
+// Use [ChooseDamageSourceFrom] for a non-targeted choice from explicit legal
+// source references. [DamageSourceChooser] permits typed player decisions.
+// The result uses [DamageSourceBinding] in the current resolution frame.
+// The caller must supply the complete legal source list.
+//
 // Use [PreventDamageFromCardType] with [Static] for damage from sources
 // with a specified card type. The current subject can be [This] or
 // [AttachedPermanent]. Source types use current or retained information for

@@ -5571,3 +5571,23 @@ Volcanic Eruption and Hellfire execute their complete collection records through
 `DestroyEach`, `PermanentsPutIntoGraveyardThisWayInto`,
 `CreaturesDiedThisWayInto`, `FromNumber` and the existing damage services.
 No engine action or global result slot is added.
+
+## Damage-source choice prerequisite
+
+`mage.ChooseDamageSourceFrom(player, []mage.DamageSourceRef{...}, binding)`
+saves a required non-targeted choice in `mage.BindDamageSource`. Use
+`mage.FromDamageSource(binding)` in the subsequent resolving instructions.
+Each reference supplies its own identity and information contract. The declared
+list must be nonempty and contain only sources permitted by the calling rule.
+An empty runtime list clears the binding. The operation copies its input slice,
+keeps distinct spell stack objects, and removes exact duplicate sources.
+
+Players can implement `mage.DamageSourceChooser` to choose among typed source
+snapshots. Existing players use numbered options. Choice values remain in the
+existing resolution frame and survive game cloning without sharing mutable
+snapshot data.
+
+RON `ChooseADamageSource` remains unsupported. Its adapter needs complete
+CR 609.7a enumeration, property filters, lexical bindings and the consuming
+shield/replacement operations. This prerequisite does not change the production
+loader, accepted records, or existing UUID-based callers.

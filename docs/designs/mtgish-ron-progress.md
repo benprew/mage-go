@@ -32455,3 +32455,144 @@ compiler scope, target filter plan, instance bindings, action sequence,
 resolution values and inventory roles; inventory regression totals and the old
 collection dependency probe; `dsl-reference.md`, `engine-rules-contracts.md` and
 this entry. The descriptive commit hash is reported in the final response.
+
+## Run 2026-10-07: TYPED-DAMAGE-SOURCE-CHOICE
+
+Status: complete engine prerequisite slice. This run stops after this slice.
+
+### Baseline and candidate selection
+
+The initial tree contained edits to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. Those changes remain intact.
+Only this appended entry is staged from the ledger; its existing reorganization
+is preserved as an unstaged change.
+
+Read AGENTS.md, the engine API, execution design, vocabulary snapshot, recent
+ledger entries, relevant engine/API contracts, source/binding/definition/clone
+code, and CR 400.7, 608.2h, 609.7a/b and 615.8/9. Complete RON records and nested
+forms were inspected for each compared family. All twelve files were walked by
+the semantic inventory. Local Oracle records in data/LEA.json, data/ARN.json,
+data/ATQ.json, data/LEG.json and data/DRK.json confirm the eleven chosen-source
+consumers. No Go card definition supplied requirements. The implement-engine
+skill was applied; no removed card/set skill or sub-agent was invoked.
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict loading exited 1 for collection rejection, not a build failure:
+**1,870 compiled / 575 rejected records**, **721 accepted / 265 rejected unique
+names**, 2,445 records and 986 names total. Semantic inventory has 72,962
+occurrences, 8,557 signatures and 5,166 unknown-role occurrences.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Chosen damage-source choice and shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** potential complete unlocks. Eye for an Eye, Jade Monolith, Reverse Damage, Dark Sphere bring the affected set to **11**. Selected prerequisite alone: **0** complete unlocks. | UUID-only choice cannot distinguish exact spell/permanent objects or produce a typed per-resolution binding. Full CR 609.7a enumeration, source-property filters/rechecks, permanent-spell entry continuity, simultaneous shields and the consuming replacement operations remain necessary. All eleven records need the choice; seven share the same full-prevention continuation. | Full family high. Explicit typed choice prerequisite low/medium: existing references, snapshots, bindings, definition checks and player decisions provide most behavior. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** clean consumers; Gaea's Avenger and Wood Elemental bring the affected set to **7**. | Needs characteristics outside the battlefield and CDA/copy/layer integration. Avenger has the previously recorded controller-count source defect. Wood Elemental also needs entry sacrifice results. Fresh inspection includes People of the Woods, which the previous comparison omitted. | High engine integration and zone/copy/layer evidence before lowering. |
+| Bands-with-other grants | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel: **5** potential complete unlocks. Master of the Hunt, Shelkin Brownie, Tolaria bring the affected set to **8**. | The engine has ordinary banding, but no parameterized bands-with-other rules. Needs formation and damage-assignment contracts, layer grants and removals; Master also needs token metadata. | High: combat prerequisite plus typed keyword/layer/token adapters and broad combat regressions. |
+
+Selected the complete explicit-reference choice operation as a dependency-ready
+shared engine prerequisite. Its small, testable boundary removes one concrete
+blocker from the highest-benefit eleven-card family. Implementing a partial
+battlefield/stack chooser as RON support would omit legally selectable referred
+objects. No production RON adapter is enabled until enumeration and consumers
+are complete. This is a deliberate zero-unlock prerequisite, not a claim that
+any of the eleven cards now works. The boundary, estimate and acceptance cases
+were stated before implementation.
+
+### Exact supported contract and reuse boundary
+
+New API:
+
+- `ChooseDamageSourceFrom(player PlayerRef, sources []DamageSourceRef,
+  binding *DamageSourceBinding) ResolvingEffect`.
+- Optional player interface
+  `DamageSourceChooser.ChooseDamageSource(sources []DamageSource, g *Game) int`,
+  which returns a zero-based option index.
+
+Context: resolving actions over an explicit finite list of legal source
+references. The service resolves the references at execution, removes missing
+sources and exact duplicates in input order, then saves one source snapshot.
+The calling rule owns legal-list enumeration and property filtering. Existing
+current/LKI/saved reference semantics stay intact. Explicit referred sources can
+retain departed/phased information. Separate permanent incarnations and spell
+stack identities cannot be merged by card ID. Choice does not target objects.
+
+Declarations reject empty source lists, nil references/player/binding, unnamed
+bindings, undeclared target references, and reads before production. Runtime
+absence clears the result without a choice. Invalid player answers choose the
+first legal option, consistent with the existing required permanent choice.
+Existing players use bounded numbered options with source names; typed players
+receive independent snapshots. Input references are read before the output is
+cleared, so valid input/output overlap works. The constructor copies the source
+slice and stores no choice state. Chosen values use the existing resolution frame.
+
+Reuses DamageSourceRef, DamageSource/SameObject, cloneDamageSource,
+DamageSourceBinding/FromDamageSource, typed spell/permanent and saved references,
+LKI, event capture, sequence execution, definition dominance/target validation,
+player decisions, resolution frame restoration, stack copying and Game.Clone.
+No alternate zone, identity, damage, replacement or cost subsystem is added.
+Existing `Game.ChooseDamageSource` and its callers remain unchanged.
+
+No RON spelling, scope adapter, complete enumeration, shield, filter, source-entry
+link or replacement ordering is established by this slice. No source data is
+changed. The previously recorded data defects remain separate blockers. No
+source hashes changed; vocabulary syntax does not need a refresh.
+
+### TDD and evidence mapping
+
+The initial engine tests failed because `ChooseDamageSourceFrom` was undefined.
+One PhaseIn fixture initially used permanent pointers instead of UUIDs; that was
+corrected and the expected missing-API failure was confirmed before code was
+added. Tests then passed without weakening assertions. Additional regressions
+cover old Player implementations and input/output overlap.
+
+| Contract or card | Test mapping |
+| --- | --- |
+| Exact spell identities and copies | `TestDamageSourceChoiceIdentity`: two stack objects with the same card ID, exact duplicate removal, copied input slice, selected type/color, departed stack objects, cloned binding maps and private card snapshots. |
+| Permanent choice and explicit LKI | `TestDamageSourceChoicePermanentAndAbsence`: shroud, exact incarnation, phasing, source departure and return, original LKI versus returned object, missing references, absent chooser and stale-output clearing. |
+| Declaration and binding scope | `TestDamageSourceChoiceDeclaration`: valid sequence plus nine invalid declarations. `InputOutputOverlap`: produced input can also be the result without clearing its source before the read. |
+| Decision compatibility and repeat execution | `TestDamageSourceChoiceInvalidAnswersAndRepeatedUse`: bounded fallback for invalid typed answers, independent successive answers and empty-list reset. `LegacyPlayer`: numbered options preserve source names and select the correct object. |
+| Real RON gameplay through the prerequisite | `TestRONDamageSourceChoicePrerequisite`: complete LEA Prodigal Sorcerer record supplies native activation/damage to a synthetic engine event consumer. Choice runs only when the queued consumer resolves. Live/departed/returned/phased sources, copied triggers, actual follow-up damage and pending clones retain the event source. The RON record is neither edited nor stripped of rules. |
+| Existing source services and accepted collection | Focused `TestSpellDamageSource*` and the required complete engine/repository suites pass. Loader diagnostics remain identical. |
+
+Compilation gain: estimated **0**, actual **0**. Complete-card coverage gain:
+**0** new cards; prerequisite contract evidence and an additional accepted-card
+integration scenario are added. Aggregate collection engine-validation and
+behavior-verification counts remain null. All eleven chosen-source cards remain
+rejected at `unsupported action (ChooseADamageSource)`.
+
+### Validation and next work
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestDamageSourceChoice\|TestRONDamageSourceChoicePrerequisite\|TestSpellDamageSource\|TestSnapshotDamageSource' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `go test ./... -short -count=1` (engine skill) | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Formatting changes reviewed; only slice files changed. |
+| `git diff --check` | PASS after the final ledger update. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,870 compiled / 575 rejected; full final report exactly equals baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 721 accepted / 265 rejected unique names; full final report exactly equals the fresh semantic baseline. |
+
+Focused tests were repeated after lint and the final snapshot-isolation assertion.
+Both required test suites, build and vet were also repeated on the final state.
+No failed check or environment blocker remains.
+
+Ranked next candidates to reassess:
+
+1. Complete legal damage-source enumeration under CR 609.7a, including referred
+   objects in pending stack/replacement/delayed effects and command-zone objects.
+   Feed typed references to this service, then establish source-property rechecks
+   and exact next-event shields for the seven clean consumers.
+2. All-zone battlefield-count CDA contracts for the five clean consumers.
+3. Parameterized bands-with-other combat contracts for the five land grants.
+
+The removal gate remains closed. Full collection gameplay, complete loading,
+runtime startup wiring, Go-card/test migration and DSL caller cleanup are still
+unfinished. No Go definitions, generators or DSL functions are removed. No
+whole-repository caller audit is used to authorize deletion in this run.
+
+Changed files: new `pkg/mage/damage_source_choice.go`, engine contract tests and
+`pkg/mage/dsl/ron/damage_source_choice_test.go`; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this appended entry.
+The commit hash is reported in the final response. No second slice is started.

@@ -6566,3 +6566,41 @@ instances, retargeted copies, pending clones, simultaneous damage callbacks,
 no-regeneration destruction and declared filter guarantees. Existing engine
 `TestDestroyEachGraveyardResult*` and `TestDestroyEachCreatureDeathsResult*`
 remain the reusable destruction-result contract tests.
+
+## Explicit typed damage-source choice
+
+`ChooseDamageSourceFrom(player PlayerRef, sources []DamageSourceRef,
+binding *DamageSourceBinding) ResolvingEffect` makes a required choice at
+resolution from explicit legal source references. The caller supplies the legal
+list. This service is a prerequisite for CR 609.7a enumeration; it does not
+establish complete source enumeration or a prevention shield.
+
+References retain their existing current-state, saved-information and LKI
+contracts. Missing references are omitted. Exact duplicate objects appear once,
+in input order. Spell copies and separate stack visits remain separate even
+when their card IDs match. Shroud does not restrict this choice. An explicit
+reference to a departed or phased object can still supply information; this
+service does not grant permission to include that object in a legal list.
+
+The optional `DamageSourceChooser.ChooseDamageSource([]DamageSource, *Game) int`
+player interface returns a zero-based index. Each option has a separate copy of
+its card data. Existing players use a bounded numbered choice with source names.
+An invalid answer selects the first legal option, as with the existing required
+permanent choice. Empty runtime lists and absent players clear the output and
+make no choice. Declaration validation rejects an empty declared list, nil
+references, nil players or bindings, unnamed bindings, undeclared targets, and
+reads before their producer.
+
+The output uses the existing resolution frame and `DamageSourceBinding` map.
+Input references are read before the output is cleared, so a previously produced
+binding can also be the output. Repeated choices replace the local result.
+Clones keep independent maps and card snapshots. The constructor copies the
+reference slice; it does not store chosen state in a declaration.
+
+Evidence: `TestDamageSourceChoiceIdentity`, `PermanentAndAbsence`, `Declaration`,
+`InvalidAnswersAndRepeatedUse`, `LegacyPlayer`, and `InputOutputOverlap`.
+`TestRONDamageSourceChoicePrerequisite` executes the complete Prodigal Sorcerer
+RON record with a synthetic event consumer. It covers queued choice timing,
+source departure/return/phasing, copied triggers, source-attributed damage, and
+pending clone isolation. This adds prerequisite evidence, not complete gameplay
+coverage for the eleven still-rejected chosen-source consumers.
