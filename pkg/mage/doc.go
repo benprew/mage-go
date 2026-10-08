@@ -506,6 +506,9 @@
 // [IfPermanentAttacking] and [IfPermanentBlocking] also declare self references
 // in the subject and body. Queries do not check combat or execute the body.
 // Resolution checks current combat membership for the saved incarnation.
+// [IfPaid], [UnlessPaid] and [PayOrElse] declare self reads in their bodies.
+// Both payment branches qualify before payment. Queries do not read the payer,
+// test costs or execute actions. Cost and payer references need separate contracts.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.

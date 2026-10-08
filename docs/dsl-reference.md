@@ -7778,3 +7778,32 @@ rejection. Native `TestWaitingDelayedCombatReferences`, `Boundaries` and
 `QueryPurity` cover declaration traversal, exact identity and pure queries.
 Complete general source selection and complete protection-card coverage remain
 unfinished. No new RON spelling or scope permission is introduced.
+
+## Self references in waiting delayed payment branches
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes the saved source
+when the body of `IfPaid` or `UnlessPaid`, or either body of `PayOrElse`, has an
+explicit typed self read. Nested sequences, payment branches and saved modes
+preserve the declaration. Enumeration does not resolve the payer, test a cost,
+read an amount, execute a body or make a payment choice. It includes both bodies
+before the payment result exists. A payer or cost reference alone does not declare
+this body category. Future delayed producers keep their own lifetime boundary.
+
+Existing RON lowering stays in `compileResolutionPayment` and
+`compilePaymentBranches`. Supported adjacent `MayCost` / `PlayerMayCost` and
+`If` / `Unless` payment continuations use their existing typed scopes. The fixed
+mana `IfElse(CostWasPaid, [paid], [unpaid])` and inverse `CostWasntPaid` forms
+lower to `PayOrElse`. This contract adds declaration traversal to their native
+node; it adds no syntax or cost support. Dynamic mana, exact sacrifice, action
+payment, payer and cost references need separate declaration contracts.
+
+Current and departure information, phasing, return identity, deduplication,
+query snapshot isolation, one-shot detection and clone lifetimes use the existing
+waiting-reference services. Payment legality, rollback and body execution keep
+the existing transaction. General `ChooseADamageSource` remains rejected.
+
+Evidence: native `TestWaitingDelayedPaymentReferences`, `Boundaries` and
+`QueryPurity`; RON `TestRONWaitingDelayedPaymentProtection`, `Invalid` and
+`Instances`. Protection evidence uses complete records for six Circles of
+Protection and Greater Realm of Preservation with the isolated waiting category.
+It establishes subrule coverage, not complete card coverage.

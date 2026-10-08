@@ -10046,3 +10046,29 @@ resolution-only choice, exact identity, copies/clones, prevention and consumptio
 self reads, separate factory targets/controllers and differing clone combat state.
 `TestRONWaitingDelayedCombatInvalid` keeps invalid scopes and unsupported
 alternative combat branches rejected. General source aggregation remains open.
+
+## Waiting delayed optional-payment body declarations
+
+CR 609.7a permits the exact source referred to by a waiting delayed ability even
+when a future payment will select another branch. `unlessPaidEffect` implements
+`refersToSourcePermanent() bool` by reading its typed body declaration and, for
+`PayOrElse`, its other body declaration. The reader does not resolve players,
+check affordability, execute amounts or bodies, make decisions, or consume RNG.
+Existing required-payment constructors use this same node and body traversal.
+This contract does not infer references from players, costs or callbacks.
+
+`IfPaid`, `UnlessPaid` and `PayOrElse` retain their signatures and transaction
+semantics. Captured sequences and modes preserve the saved source incarnation.
+Live characteristics use current information; departed and phased references use
+the existing exact-object reader. Return creates another object (CR 400.7).
+One-shot detection ends waiting enumeration before pending placement, and clones
+retain independent lifetimes (CR 603.7a–e). A new future producer does not expose
+its future body through the current waiting category. No changes are made to
+replacement ordering, simultaneous damage, legality or payment rollback.
+
+Native tests cover 70 shape/state cases, declaration boundaries, mutable result
+isolation and pure queries that count payer, affordability and amount reads.
+RON tests cover 196 protection subrule scenarios, invalid declarations, factory
+isolation, nested and adjacent results, separate controllers, copies and clones.
+They reuse real-record filters, activation costs and consuming prevention rules.
+The full protection records still reject general source aggregation.
