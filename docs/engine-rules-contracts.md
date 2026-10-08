@@ -10104,3 +10104,33 @@ independent clone execution. Existing `TestRONActionPaymentRealCards` and
 `TestRONActionPaymentNativeCombat` retain full-record payment evidence for
 Delif's Cone, Farrel's Zealot and Floral Spuzzem. General source aggregation is
 still unsupported; no new complete-card coverage is claimed.
+
+## Waiting delayed counter-payment references
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes direct `This`
+subjects of `PayCountersOrElse` and `PayChosenCountersOrElse`, and typed source
+reads in either result branch. Fixed, mandatory, optional, zero and chosen counts
+share this declaration. Sequences, nested audited payments and modes propagate
+it. A branch qualifies before its result is known. An attached subject does not
+implicitly declare the source. Player reads and a nested future producer remain
+outside this contract.
+
+Queries do not resolve the payer or subject, inspect counters, offer payment or
+choose a number. The existing capture and exact-information services retain
+incarnation identity, current or departure facts, separate query snapshots and
+clone lifetime. Departure and phasing keep the saved reference; a returned
+permanent cannot replace it. Eligibility ends when the delayed trigger fires,
+before pending placement. Counter removal still requires the original present,
+phased-in subject and uses the existing transaction and paid-result scope.
+CR 400.7, 603.7a–e, 609.7a–b and 702.26b establish these boundaries.
+
+Evidence: `TestWaitingDelayedCounterPaymentReferences` has 105 shape, nesting,
+mode and lifecycle cases. `TestWaitingDelayedCounterPaymentBoundaries` covers
+query purity, impossible payment, excluded references and invalid declarations.
+`TestRONWaitingDelayedCounterPaymentProtection` has 196 scenarios for six
+Circles of Protection and Greater Realm of Preservation, using their real
+filters, activation costs and consuming shields. `Invalid` rejects eleven
+invalid delayed declarations; `Instances` checks separate chosen results,
+counters and cloned execution. These are subrule tests; the seven complete
+records still reject general source aggregation. Existing resolution counter
+payment tests retain rollback, stale-choice and nested-result evidence.

@@ -7835,3 +7835,26 @@ Evidence: `TestWaitingDelayedActionPaymentReferences` and
 `TestRONWaitingDelayedActionPaymentProtection`, `Invalid` and `Instances`.
 The protection tests use real-record filters, costs and shields for six Circles
 of Protection and Greater Realm of Preservation. They establish subrule coverage.
+
+## Self references in waiting delayed counter payments
+
+Existing `compileResolutionCounterPayment` lowering and `CreateFutureTrigger`
+step bodies retain their supported syntax and scope. `RemoveCounters` accepts
+one `ACounterOfTypeFromPermanent`, fixed nonnegative
+`NumberCountersOfTypeFromPermanent(Integer(n), ...)`, or optional
+`AnyNumberOfCountersOfTypeFromPermanent` instruction on `ThisPermanent`.
+An adjacent `If` or `Unless` with `CostWasPaid` or `CostWasntPaid` selects a
+nonempty continuation. Chosen results remain local to the paid continuation.
+
+The lowered native `PayCountersOrElse` and `PayChosenCountersOrElse` now declare
+the direct source subject and source reads in both native result branches to
+`Game.WaitingDelayedPermanentSources`. The compiler does not add a separate
+runtime. Queries do not make payment decisions, even for zero or impossible
+payments. Saved source identity survives departure and phasing; counter payment
+cannot follow a returned object. Future delayed producers and unaudited
+player/value reads need separate contracts.
+
+Evidence: `TestRONWaitingDelayedCounterPaymentProtection`, `Invalid` and
+`Instances`, plus native `TestWaitingDelayedCounterPaymentReferences` and
+`Boundaries`. The seven protection names gain subrule coverage; their complete
+records still reject general damage-source aggregation.

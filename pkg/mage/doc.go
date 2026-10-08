@@ -194,6 +194,13 @@
 // replace it. Bound and attached recipients do not declare a source reference.
 // Saved sequences and modes keep the declaration until the delay triggers.
 //
+// [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]
+// payment subject and source reads in both result branches to
+// [Game.WaitingDelayedPermanentSources]. Queries do not resolve players or
+// make payment choices. Zero and impossible payments keep the reference.
+// A saved incarnation survives departure and phasing until the delay triggers.
+// Counter removal still requires the original subject to be present.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.

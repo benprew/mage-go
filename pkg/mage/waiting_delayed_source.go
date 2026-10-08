@@ -118,6 +118,11 @@ func (e *unlessPaidEffect) refersToSourcePermanent() bool {
 	return effectReadsSourcePermanent(e.effect) || (e.twoBranches && effectReadsSourcePermanent(e.otherwise))
 }
 
+func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
+}
+
 func (e *resolutionActionPaymentEffect) refersToSourcePermanent() bool {
 	return actionPaymentReadsSourcePermanent(e.payment) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }
