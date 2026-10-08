@@ -503,6 +503,9 @@
 // [IfPermanentMatches], [UnlessPermanentMatches] and [IfPermanentMatchesElse]
 // declare self references in the condition and both bodies without checking
 // the condition. A false condition does not remove a declared reference.
+// [IfPermanentAttacking] and [IfPermanentBlocking] also declare self references
+// in the subject and body. Queries do not check combat or execute the body.
+// Resolution checks current combat membership for the saved incarnation.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.

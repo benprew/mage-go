@@ -109,6 +109,11 @@ func (e *permanentInformationBranch) refersToSourcePermanent() bool {
 	return self || effectReadsSourcePermanent(e.body) || (e.hasElse && effectReadsSourcePermanent(e.otherwise))
 }
 
+func (e *combatStateBranch) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || effectReadsSourcePermanent(e.body)
+}
+
 func effectReadsSourcePermanent(effect Effect) bool {
 	reference, ok := effect.(delayedSourcePermanentReference)
 	return ok && reference.refersToSourcePermanent()

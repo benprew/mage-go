@@ -7710,8 +7710,8 @@ to their declared objects. Saved sequences and modes keep the exact source
 incarnation. The current or retained information and one-shot waiting lifetime
 use the existing delayed services. Nested future producers do not expose their
 future bodies through the outer branch. No new syntax or general source-choice
-adapter is added. Combat branches and other conditional implementations still
-need their own reference contracts.
+adapter is added. Other conditional implementations still need their own
+reference contracts. Combat branches have the explicit contract below.
 
 Evidence: `TestRONWaitingDelayedConditionalProtection`,
 `TestRONWaitingDelayedConditionalInstances`, and
@@ -7749,3 +7749,32 @@ subrule scenarios for six Circles of Protection and Greater Realm of Preservatio
 `TestRONWaitingDelayedRecipientInvalid` covers declaration rejection. Native
 `TestWaitingDelayedRecipientReferences`, `Boundaries` and `PacketGameplay` prove
 recipient-only declarations, identity, pure queries and simultaneous execution.
+
+
+### RON waiting delayed combat-branch references
+
+Within a supported `CreateFutureTrigger(event, ActionList([...]))` body,
+`If(PermanentPassesFilter(permanent, IsAttacking), [actions])` and the
+`IsBlocking` form retain explicit self references from the subject and body.
+`compileResolvingPermanentBranch(Node, scope) (effectFactory, error)` reuses
+`compilePermanentRef` and fresh instance bindings to lower these forms to
+`mage.IfPermanentAttacking` and `mage.IfPermanentBlocking`. Existing target,
+attachment and event scope restrictions apply. `Unless`, `IfElse`, tuple combat
+filters, empty bodies and unbound subjects remain rejected in this context.
+
+`Game.WaitingDelayedPermanentSources` reads declarations without checking combat
+or running actions. Nested supported branches and sequences propagate body-only
+reads; modes retain them without a selection. Nested future producers keep their
+own boundary. Queries retain exact current/departure information after phasing or
+departure; a return cannot replace the saved incarnation. The body checks current
+combat membership at resolution. A false branch keeps its waiting reference but
+does not consume a damage shield. Copies and clones use existing saved frames.
+
+Evidence: `TestRONWaitingDelayedCombatProtection` supplies 98 real-record filter,
+payment and shield interactions across seven protection names.
+`TestRONWaitingDelayedCombatBodyInstances` proves body-only reads and instance/
+clone independence. `TestRONWaitingDelayedCombatInvalid` covers declaration
+rejection. Native `TestWaitingDelayedCombatReferences`, `Boundaries` and
+`QueryPurity` cover declaration traversal, exact identity and pure queries.
+Complete general source selection and complete protection-card coverage remain
+unfinished. No new RON spelling or scope permission is introduced.

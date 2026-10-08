@@ -9944,8 +9944,8 @@ and exact source-capture requirement. Saved sequences, modes and nested property
 branches propagate the declaration. A bound or attached condition does not imply
 self; explicit source reads in its bodies can still qualify. An instruction
 that will create another delayed ability does not expose its future body's
-references. Opaque callbacks, combat branches and other conditional effect
-implementations gain no inferred reference contract.
+references. Opaque callbacks and other conditional effect implementations gain
+no inferred reference contract. Combat branches have the explicit contract below.
 
 The existing deterministic deduplication, incarnation information, delayed
 capture, pending transfer and game cloning services supply identity and lifetime.
@@ -10011,3 +10011,38 @@ shield interactions, including 49 recipient-only declaration regressions,
 returned/phased recipients, copied delays, clone execution and shield consumption.
 `TestRONWaitingDelayedRecipientInvalid` covers malformed and out-of-scope reads.
 Complete CR 609.7a aggregation and complete protection-card coverage remain open.
+
+
+## Waiting delayed combat-branch permanent references
+
+`combatStateBranch.refersToSourcePermanent() bool` declares a self read when
+its typed subject is `This` or its body declares a self read. This covers
+`IfPermanentAttacking(PermanentRef, ResolvingEffect) ResolvingEffect` and
+`IfPermanentBlocking(PermanentRef, ResolvingEffect) ResolvingEffect`.
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains its signature.
+Queries do not resolve subjects, check combat membership or execute bodies.
+A false or unknown condition still refers to its declared objects (CR 609.7a).
+Sequences, captured delayed bodies, nested supported branches and modes keep
+these declarations. Attached and bound subjects do not imply self. A nested
+future producer retains its separate waiting boundary.
+
+Existing delayed capture, deduplication, snapshots and clone services retain
+exact incarnations and independent lifetimes. Current color/control and departure
+facts remain available; a returned source cannot replace its former incarnation
+(CR 400.7). One-shot detection ends waiting availability before stack placement
+(CR 603.7a–b). Resolution checks current combat membership, excludes absent or
+phased subjects, and retains the saved ability controller (CR 603.7c/e,
+702.26b). A phase cycle removes combat membership without replacing identity.
+Payment, damage batching and replacement ordering use the existing services.
+
+Evidence: `TestWaitingDelayedCombatReferences` covers 56 subject/body/nesting/
+mode and lifecycle cases. `TestWaitingDelayedCombatBoundaries` covers nonself,
+nested future and invalid declarations. `TestWaitingDelayedCombatQueryPurity`
+covers two true-condition queries and combat removal after trigger placement.
+`TestRONWaitingDelayedCombatProtection` covers 98 real-record subrule scenarios
+for six Circles of Protection and Greater Realm of Preservation: payment failure,
+resolution-only choice, exact identity, copies/clones, prevention and consumption.
+`TestRONWaitingDelayedCombatBodyInstances` covers both combat forms with body-only
+self reads, separate factory targets/controllers and differing clone combat state.
+`TestRONWaitingDelayedCombatInvalid` keeps invalid scopes and unsupported
+alternative combat branches rejected. General source aggregation remains open.
