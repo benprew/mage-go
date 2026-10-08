@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-COLLECTION-COUNT-OPERANDS` retains explicit source reads in
-counted singleton, attachment, combat/history and player-scoped collections.
-Seven protection names gain 294 subrule cases; native lifecycle gains 60 cases.
-Compilation and complete-card coverage remain unchanged. Collection action and
-conditional declarations, token quality grants and sticky layers remain gaps.
+`WAITING-DELAYED-COLLECTION-ACTION-OPERANDS` retains explicit source reads in
+collection tap/untap, return, destruction and permanent damage recipients.
+Seven protection names gain 336 subrule cases; native declarations gain 72 cases.
+Compilation and full-card coverage are unchanged. Counter collections, conditions,
+source aggregation, token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47064,3 +47064,170 @@ Ranked next candidates:
    unlock with token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-COLLECTION-COUNT-OPERANDS`.
+
+
+## 2026-10-08: waiting delayed collection action operand declarations
+
+Status: completed slice `WAITING-DELAYED-COLLECTION-ACTION-OPERANDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary update and appended entry are staged from this ledger.
+
+### Candidate comparison and selection
+
+The latest entry ranked typed collection actions first. The complete RON records
+and nested source/prevention expressions were inspected for Circle of Protection:
+Black, Blue, Green, Red, White, Artifacts, and Greater Realm of Preservation.
+Complete Master of the Hunt, Jade Monolith and Reverse Damage records were also
+inspected. Targeted vocabulary queries covered EachPermanent, TapEachPermanent,
+DestroyEachPermanent and BandsWithOthers. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Typed collection action operand declarations (selected, latest candidate #1) | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | Counter collection and remaining conditional/action declarations, then complete CR 609.7a aggregation. Supplies explicit collection references needed by all seven source-choice filters. | Small shared native traversal/adapters; moderate identity, binding, purity and gameplay matrix. |
+| Cast/state/coin and remaining conditional declarations | The same seven protection names; later reuse by Jade Monolith and Reverse Damage | 0 now; seven after all source aggregation prerequisites | Collection declarations and aggregation remain. Jade Monolith also needs its selected-source redirection adapter; Reverse Damage needs actual prevented-damage life gain. | Larger declaration audit with timing, state and coin contracts. |
+| Named-token quality grants | Master of the Hunt | 1 plausible | No other blocker found in the full record: named token metadata, fixed costs and native bands-with-other combat already exist. Enables token quality grants. | Moderate fresh token factory, combat and clone tests; one immediate name. |
+
+Candidate #1 is dependency-ready and a concrete seven-card prerequisite. This
+slice completes direct tap/untap, return, destruction and permanent damage-recipient
+collection declarations. Counter collection instructions/values and other
+collection actions are separate contexts. No source defect or environmental
+failure was found. Compiler adaptation and engine declaration traversal were
+separate gaps; action execution already existed.
+
+### Exact signatures, shapes, contexts and reuse
+
+- `compilePermanentDamageCollection(Node, scope) (func(instanceBindings) mage.PermanentSet, error)`
+  now routes contextual resolving `EachPermanent(collection)` damage recipients
+  through `compileContextualCollection(Node, scope) (permanentSetFactory, error)`.
+  Supported operands are SinglePermanent, AttachedToAPermanent, IsBlockingAttacker,
+  IsBlockedByDefender, WasBlockedByDefenderThisTurn, controller/owner collections,
+  supported property filters, bound Ref_TargetPermanents and nonempty nested
+  And/Or sets. Each factory retains fresh instance bindings. Existing bound
+  target/property-filter lowering remains available, including its counter filters.
+- RON resolving `TapEachPermanent/1`, `UntapEachPermanent/1`,
+  `PutEachPermanentIntoItsOwnersHand/1`, `DestroyEachPermanent/1` and
+  `DestroyEachPermanentNoRegen/1` retain their contextual adapters.
+  The same forms work in a supported CreateFutureTrigger action list.
+  Plural delayed target collections still reject; this slice does not add their
+  missing capture contract. Saved singular targets retain existing capture.
+- `TapEach(PermanentSet)`, `UntapEach(PermanentSet)` and
+  `ReturnEachToHand(PermanentSet)` return ResolvingEffect.
+  `DestroyEach(PermanentSet, ...DestroyEachResultOption)` and
+  `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption)`
+  return ResolvingEffect and share the declaration.
+  `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`
+  traverses the permanent operand of native DamageRecipients and
+  PermanentDamageRecipients. These public signatures did not change.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` traverses these actions
+  through shared `permanentSetReadsSourcePermanent(PermanentSet) bool`, renamed
+  from the count-only private helper. It also remains the count-value traversal.
+  Singleton, Aura/attachment, combat/history, controller/owner/opponent,
+  exclusion, lowest-power, filtered, union/intersection and value-limit sets
+  retain explicit This reads. Queries do not resolve references, select members,
+  run filters, read amounts, change zones/tapped state, emit events or choose.
+  Empty sets and zero damage retain the declaration. Implicit matching members,
+  opaque callbacks and attached/bound operands do not infer direct source reads.
+  Bound references retain the separate saved-frame contract.
+- Shared delayed capture, saved sequences/modes, source incarnations, current or
+  departure facts, snapshot copying, deduplication and cloning preserve identities.
+  A nested delay producer does not expose its future body before creation.
+  One-shot detection ends waiting availability before stack placement.
+  Return cannot replace a source. Phasing retains the reference but excludes
+  absent subjects from execution. A phase cycle and control change keep identity.
+  Current collection membership is selected at resolution, including late
+  attachments. Later shroud does not retarget saved singular delayed subjects.
+  CR 400.7, 603.7a–e, 608.2h, 609.7a–b and 702.26b–d set these boundaries.
+
+RON owns spelling, scope and typed lowering. Mage owns reusable rules and exact
+references. Existing simultaneous tap/untap, destruction, return and damage
+batches, replacement ordering and payment transactions remain unchanged.
+No Go-card fallback, card-name branch, partial registry, skipped rule, game-time
+declaration panic or global last-action slot was added. Broad DSL and Go-card
+removal gates remain closed.
+
+A fresh whole-repository caller audit, including hidden files and docs, found
+compileLiveDamageCollectionFilter only in its old definition, recursive call and
+single caller; contextual lowering replaced that caller and the private helper
+was removed. The old count helper was renamed with all callers updated. No broad
+DSL export or engine service was removed. RON sources did not change, and all
+12 hashes match the vocabulary snapshot; no vocabulary refresh is needed.
+
+### Failing-first tests and card mappings
+
+Before production edits, native tests failed with `collection action lost exact
+source declaration` and `query evaluated collection or body`. RON tests failed
+with `query lost source or executed tap action` and per-instance declaration
+counts. The damage adapter test failed with `unsupported permanent filter
+(SinglePermanent)`. All expected checks exited 1. Initial native damage-source
+fixture names were corrected to the existing typed attached-source reference;
+a RON fixture incorrectly used a target as PermanentDealsDamage's source and
+was corrected to ThisPermanent before confirming the missing recipient adapter.
+The native recipient test uses an attached damage source to prove that recipient
+reads alone supply the source declaration. Its zero amount cannot hide the read.
+
+During implementation, fixtures exposed two existing boundaries: ordinary
+artifacts do not take creature damage, and plural delayed targets are unsupported.
+Damage fixtures now use complete synthetic RON artifact-creature records with
+CardPT; composition cases use the existing resolving target context. Delayed
+plural rejection is retained. Four former composition rejection fixtures moved
+to positive gameplay cases; malformed Flying() and unbound references still reject.
+
+| Test | Card mapping and established behavior |
+| --- | --- |
+| TestWaitingDelayedCollectionActionOperands | 72 native declaration cases: six action forms × 12 typed set forms, including independently declared zero-damage recipients. Exact departure/return facts, copied snapshots and clone lifetime. |
+| TestWaitingDelayedCollectionActionPurity | Nested set/filter query purity; implicit/opaque/attached/future exclusions; saved modes; six invalid native definitions. |
+| TestRONWaitingDelayedCollectionActionProtection | 336 real-record subrule cases: all seven protection names × six collection actions × eight live/departure/return/phase/cycle/control/copy/clone states. Real costs, failed-payment rollback, resolution choice, saved source prevention, consumption and actual action outcomes. Full records still reject general source aggregation. |
+| TestRONWaitingDelayedCollectionActionInvalid | 60 malformed, incompatible, unbound or empty collection declarations reject before execution, across all six action forms. |
+| TestRONWaitingDelayedCollectionActionInstances | Two tap/untap scenarios with independent factories and saved singular targets, returned-target exclusion, later shroud and clone isolation. |
+| TestRONWaitingDelayedCollectionActionDamageComposition | Five resolving target/collection forms with duplicate intersection and union deduplication, current type/keyword filters and independent clone resolution. |
+| TestRONWaitingDelayedCollectionActionLateAttachment | Empty waiting attachment relation retains its source; a later legal Aura is selected and tapped at resolution in original and clone. |
+| Existing collection damage/count/action tests and complete repository suite | Accepted RON records, source information, target legality, damage batching, replacement contracts and native collection action behavior retain regression coverage. |
+
+### Verification and measured outcome
+
+- Fresh baseline `make build`: PASS. `go test ./pkg/mage/dsl/ron -count=1`:
+  PASS. Baseline loader exited 1 for strict collection rejection, not a build
+  or test failure.
+- Failing-first native/RON checks: expected exit 1 with the diagnostics above,
+  before production edits.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedCollectionAction -count=1`:
+  PASS. Native `go test ./pkg/mage -run TestWaitingDelayedCollectionAction -count=1`:
+  PASS. Existing RON collection damage tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes were reviewed, and focused
+  native/RON checks passed again after formatting.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; strict atomic rejection.
+  Baseline and final JSON match byte-for-byte: **1,978 compiled / 467 rejected
+  records; 773 accepted / 213 rejected unique names**, out of 2,445 records /
+  986 names. First rejection remains Animate Dead: unsupported EnchantGraveyardCard.
+
+Estimated and actual gains are **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 336 subrule scenarios; native declaration coverage
+gains 72 action/set cases plus purity, mode and rejection checks. Compilation and
+complete-card gameplay coverage remain unchanged. This matches the estimate:
+collection/conditional declarations and complete source aggregation still block
+all seven complete protection records. No native validation or environment
+blocker was found. Complete gameplay, runtime loading, Go-card deletion and unused
+DSL cleanup remain unfinished.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_collection_action_test.go,
+pkg/mage/dsl/ron/collection_damage.go, collection_damage_test.go and
+waiting_delayed_collection_action_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+
+Ranked next candidates:
+
+1. Typed counter collection action/value declarations, then audit remaining
+   supported collection actions: shared set traversal, seven protection names,
+   0 immediate unlocks; needed before complete source aggregation.
+2. Cast/state/coin and remaining conditional declarations, then complete
+   CR 609.7a aggregation: seven potential unlocks after prerequisites. Jade
+   Monolith and Reverse Damage retain separate replacement adapters.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   with named token identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-COLLECTION-ACTION-OPERANDS`.

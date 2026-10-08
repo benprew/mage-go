@@ -10534,3 +10534,64 @@ semantics, late attachments, scope rejection, returned source/target exclusion,
 later shroud and independent clone resolution. Complete protection records
 still reject general source aggregation; these tests do not claim full-card
 coverage.
+
+
+## Waiting delayed collection action operand references
+
+`TapEach(PermanentSet) ResolvingEffect`, `UntapEach(PermanentSet) ResolvingEffect`,
+`ReturnEachToHand(PermanentSet) ResolvingEffect`,
+`DestroyEach(PermanentSet, ...DestroyEachResultOption) ResolvingEffect` and
+`DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption) ResolvingEffect`
+declare explicit source reads in their typed subject collections to
+`Game.WaitingDelayedPermanentSources() []DamageSource`.
+`DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`
+also traverses the permanent operand of native `DamageRecipients` and
+`PermanentDamageRecipients`. Its source and amount retain their prior contracts.
+The shared traversal supports singleton, Aura/attachment, combat/history,
+controller/owner/opponent, exclusion, lowest-power, filter, union/intersection
+and mana-value-limit operands. Only explicit `This` reads qualify. General
+matching membership, attachment references and opaque callbacks do not infer
+source reads. Bound references keep the existing saved-frame service.
+
+Enumeration does not resolve references, select members, run filters, read
+amounts, change zones or tapped state, emit events or consume choices. Empty
+sets and zero damage retain declarations. Saved sequences and modes propagate
+the declarations; an instruction that creates another delay does not expose
+that future body's references before creation. Snapshot queries and game clones
+keep separate facts. Departure and phasing preserve the saved source, and a
+return cannot replace its incarnation (CR 400.7, 609.7a). One-shot detection ends
+waiting availability before stack placement (CR 603.7a–e).
+
+Resolution still selects current members with the native set service and uses
+existing simultaneous tap/untap, destruction, return and damage batches. LKI
+does not restore absent members; general collections may select new objects.
+Phasing excludes absent subjects but a phase cycle keeps identity (CR 702.26b–d).
+Saved singular delayed targets are not targeted again after gaining shroud.
+Payment rollback and replacement ordering retain their existing contracts.
+Counter collections, collection choices/loops, other collection actions and
+player damage-recipient operands remain separate declaration work.
+
+RON `compilePermanentDamageCollection(Node, scope)` now accepts the shared
+contextual collection plans in resolving `EachPermanent(collection)` damage
+recipients. This includes singleton, attachment, combat/history, controller/owner
+and nested nonempty union/intersection operands with fresh instance bindings.
+The existing target-collection/property-filter adapter remains available for
+counter-property filters. Plural delayed target references still reject; this
+slice does not extend their capture lifetime. Resolving duplicate intersections
+and unions use native set deduplication. Malformed and unbound declarations
+reject during compilation. The private live-filter helper was removed after a
+whole-repository caller audit found no remaining caller.
+
+Evidence: `TestWaitingDelayedCollectionActionOperands` covers six actions across
+12 native set forms, saved departure/return facts, query snapshot isolation and
+clone lifetime. `TestWaitingDelayedCollectionActionPurity` covers nested sets,
+filter purity, implicit/opaque/future exclusions, saved modes and six invalid
+native definitions. `TestRONWaitingDelayedCollectionActionProtection` covers
+336 real-record subrule scenarios: seven protection names, six action forms,
+eight identity/copy states, real costs, payment failure, resolution choice,
+exact prevention and shield consumption. The invalid, instance, damage
+composition and late-attachment tests cover 60 rejected declarations, two
+independent factories, saved singular targets, later shroud, five resolving
+composition forms and live attachment selection. Complete protection records
+still reject general source aggregation; these are subrule mappings, not
+complete-card gameplay validation.

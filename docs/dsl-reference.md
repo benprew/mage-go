@@ -8193,3 +8193,21 @@ and singular counter-information reads keep their separate contexts.
 This is one prerequisite for full CR 609.7a source aggregation. The compiler
 still rejects general `ChooseADamageSource` declarations until all source
 categories have contracts.
+
+
+### Waiting delayed collection action source declarations
+
+Waiting source enumeration traverses explicit source operands in `TapEach`,
+`UntapEach`, `ReturnEachToHand`, `DestroyEach`, `DestroyEachWithoutRegeneration`
+and permanent recipients of `DealDamageEach`. Nested typed sets use the same
+pure declaration traversal as `CountPermanents`; no selection or action occurs.
+Empty sets retain source declarations. Existing capture, incarnation, LKI,
+phasing and clone services keep waiting references until trigger detection.
+Resolution uses current members and the existing simultaneous batches.
+
+RON resolving `EachPermanent(collection)` damage recipients now use contextual
+collections: singleton, attachments, combat/history, controller/owner, filters,
+and nonempty unions/intersections. Existing bound target/property filters remain
+supported. Plural delayed target references retain their rejection boundary.
+Counter collections and other collection action declarations remain separate.
+See the collection action contract in `docs/engine-rules-contracts.md` for tests.

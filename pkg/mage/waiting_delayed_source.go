@@ -76,7 +76,8 @@ func (e *damageFromEffect) refersToSourcePermanent() bool {
 }
 
 func (e *damageEachEffect) refersToSourcePermanent() bool {
-	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount)
+	recipients, mixed := e.recipients.(mixedDamageRecipients)
+	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount) || (mixed && permanentSetReadsSourcePermanent(recipients.permanents))
 }
 
 func (e *playerDamageEachEffect) refersToSourcePermanent() bool {
@@ -163,7 +164,7 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 	case graveyardCardCountValue:
 		return playerRefReadsSourcePermanent(v.player)
 	case permanentCountValue:
-		return countSetReadsSourcePermanent(v.subjects)
+		return permanentSetReadsSourcePermanent(v.subjects)
 	case arithmeticValue:
 		return resolutionValueReadsSourcePermanent(v.left) || resolutionValueReadsSourcePermanent(v.right)
 	default:
@@ -173,14 +174,14 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 	return self
 }
 
-func countSetReadsSourcePermanent(subjects PermanentSet) bool {
+func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 	switch s := subjects.(type) {
 	case grantRecipientSet:
 		return permanentRefReadsSourcePermanent(s.subject)
 	case attachedAurasSet:
 		return permanentRefReadsSourcePermanent(s.host)
 	case attachmentHostSet:
-		return countSetReadsSourcePermanent(s.hosts)
+		return permanentSetReadsSourcePermanent(s.hosts)
 	case blockersOfSet:
 		return permanentRefReadsSourcePermanent(s.attacker)
 	case blockedAttackersOfSet:
@@ -190,9 +191,9 @@ func countSetReadsSourcePermanent(subjects PermanentSet) bool {
 	case blockedThisTurnSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case excludedPermanentSet:
-		return countSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
+		return permanentSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
 	case lowestPowerSet:
-		return countSetReadsSourcePermanent(s.subjects)
+		return permanentSetReadsSourcePermanent(s.subjects)
 	case playerSetPermanents:
 		opponents, ok := s.players.(*opponentsRef)
 		return ok && opponents != nil && playerRefReadsSourcePermanent(opponents.player)
@@ -201,14 +202,30 @@ func countSetReadsSourcePermanent(subjects PermanentSet) bool {
 	case ownedPermanentSet:
 		return playerRefReadsSourcePermanent(s.owner)
 	case filteredPermanentSet:
-		return countSetReadsSourcePermanent(s.subjects)
+		return permanentSetReadsSourcePermanent(s.subjects)
 	case composedPermanentSet:
-		return slices.ContainsFunc(s.members, countSetReadsSourcePermanent)
+		return slices.ContainsFunc(s.members, permanentSetReadsSourcePermanent)
 	case manaValueAtMostSet:
-		return countSetReadsSourcePermanent(s.subjects) || resolutionValueReadsSourcePermanent(s.limit)
+		return permanentSetReadsSourcePermanent(s.subjects) || resolutionValueReadsSourcePermanent(s.limit)
 	default:
 		return false
 	}
+}
+
+func (e *tapEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *untapEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *returnEachToHandEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *destroyEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
 }
 
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {

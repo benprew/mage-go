@@ -26,14 +26,14 @@ func compilePermanentDamageCollection(n Node, ctx scope) (func(instanceBindings)
 		for i, part := range parts {
 			if part.Name == "Ref_TargetPermanents" {
 				if refIndex >= 0 {
-					return nil, problem(part, "supply one permanent collection reference")
+					return compileContextualCollection(subject, ctx)
 				}
 				refIndex = i
 			}
 		}
 		if refIndex >= 0 {
 			if len(parts) != 2 {
-				return nil, problem(subject, "supply one collection reference and one filter")
+				return compileContextualCollection(subject, ctx)
 			}
 			ref, err := compilePermanentTargetsRef(parts[refIndex], ctx)
 			if err != nil {
@@ -41,43 +41,12 @@ func compilePermanentDamageCollection(n Node, ctx scope) (func(instanceBindings)
 			}
 			filter, err := compileResolvingPropertyFilter(parts[1-refIndex])
 			if err != nil {
-				return nil, err
+				return compileContextualCollection(subject, ctx)
 			}
 			return func(bindings instanceBindings) mage.PermanentSet {
 				return mage.FilterPermanentSet(bindings.permanentSets[ref], filter)
 			}, nil
 		}
 	}
-	filter, err := compileLiveDamageCollectionFilter(subject)
-	if err != nil {
-		return nil, err
-	}
-	return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(filter) }, nil
-}
-
-func compileLiveDamageCollectionFilter(n Node) (mage.PermanentFilter, error) {
-	if n.Name != "And" && n.Name != "Or" {
-		return compileFilter(n)
-	}
-	if err := arity(n, 1); err != nil {
-		return mage.PermanentFilter{}, err
-	}
-	parts, err := list(n.Args[0])
-	if err != nil {
-		return mage.PermanentFilter{}, err
-	}
-	if len(parts) == 0 {
-		return mage.PermanentFilter{}, problem(n, "damage collection requires a nonempty filter")
-	}
-	filters := make([]mage.PermanentFilter, len(parts))
-	for i, part := range parts {
-		filters[i], err = compileLiveDamageCollectionFilter(part)
-		if err != nil {
-			return mage.PermanentFilter{}, err
-		}
-	}
-	if n.Name == "And" {
-		return mage.And(filters...), nil
-	}
-	return mage.Or(filters...), nil
+	return compileContextualCollection(subject, ctx)
 }

@@ -194,6 +194,15 @@
 // replace it. Bound and attached recipients do not declare a source reference.
 // Saved sequences and modes keep the declaration until the delay triggers.
 //
+// [TapEach], [UntapEach], [ReturnEachToHand] and [DestroyEach] declare
+// explicit source reads in their typed collections to the same waiting query.
+// [DestroyEachWithoutRegeneration] uses the same declaration.
+// [DealDamageEach] declares these reads in [PermanentDamageRecipients].
+// Nested set operands use the same declaration rules as [CountPermanents].
+// Queries do not select members or run filters. Empty collections keep reads.
+// Resolution selects current members through the existing batch services.
+// Counter collections and other collection actions need separate contracts.
+//
 // [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]
 // payment subject and source reads in both result branches to
 // [Game.WaitingDelayedPermanentSources]. Queries do not resolve players or

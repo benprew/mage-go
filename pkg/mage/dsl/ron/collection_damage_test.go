@@ -266,11 +266,7 @@ func TestRONCollectionDamageInvalid(t *testing.T) {
 		`EachPermanent`, `EachPermanent()`, `EachPermanent(AnyPermanent,AnyPermanent)`,
 		`EachPermanent(And([]))`, `EachPermanent(Or([]))`, `EachPermanent(Ref_TargetPermanent)`,
 		`EachPermanent(Ref_TargetPlayer)`, `EachPermanent(Ref_TargetPermanents())`,
-		`EachPermanent(And([Ref_TargetPermanents,Ref_TargetPermanents]))`,
-		`EachPermanent(And([Ref_TargetPermanents,HasAbility(Flying),IsCardtype(Creature)]))`,
 		`EachPermanent(And([Ref_TargetPermanents,HasAbility(Flying())]))`,
-		`EachPermanent(Or([Ref_TargetPermanents,HasAbility(Flying)]))`,
-		`EachPermanent(And([And([Ref_TargetPermanents]),HasAbility(Flying)]))`,
 	} {
 		t.Run(recipient, func(t *testing.T) {
 			src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([NumberTargetPermanents(Integer(2),IsCardtype(Creature))],ActionList([SpellDealsDamage(ThisSpell,Integer(2),` + recipient + `)])))])`
