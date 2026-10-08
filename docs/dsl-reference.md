@@ -6883,3 +6883,31 @@ records, chooses a departed Living Wall retained by its regeneration shield,
 and checks independent prevention consumption in original and cloned games.
 `TestRONWaitingRegenerationInvalid` checks invalid choice syntax. These are
 additional interaction and subrule tests, not new full-card compilation coverage.
+
+## RON optional draw-step skip for life
+
+Permanent rules support the exact operation sequence
+`ReplaceWouldBeginDrawStep(PlayerWouldBeginTheirDrawStep(You),
+[MayCost(SkipThisDrawStep), If(CostWasPaid, [GainLife(Integer(n))])])`,
+where `n` is a nonnegative integer literal. Each factory constructs
+`Static(SkipDrawStepForLife(n))`. Other players, operations and dynamic amounts
+remain declaration errors. The optional replacement skips the whole step;
+the gain occurs first in the next step that actually occurs (CR 614.10b).
+`CostWasPaid` is local to the replacement and supplies no action-list result.
+
+`Game.WaitingDrawStepLifePermanentSources` and
+`ChooseDamageSourceFromWaitingDrawStepLifeReferences` supply one damage-source
+category from active draw-step life replacements. Execution and enumeration
+share source incarnation, phasing and ability-lifecycle checks. Inactive rules
+and pending life gains cannot supply former source objects. Queries use current
+characteristics and control, copy their data and merge duplicates. The choice
+uses typed player/filter/binding declarations and independent resolution results.
+RON `chosenDamageSourcePlan.waitingDrawStepLifeChoice` lowers the validated
+filter with `You` and the factory-local binding. Production general
+`ChooseADamageSource` still rejects until all legal categories exist.
+
+Tests: `TestRONDrawStepLifeFasting`, `TestRONDrawStepLifeFastingUpkeep`,
+`TestRONDrawStepLifeInstances`, `TestRONDrawStepLifeProtection`,
+`TestRONDrawStepLifeInvalid`, `TestRONDrawStepLifeFixedAmounts`,
+`TestWaitingDrawStepLifeReferences` and `TestWaitingDrawStepLifeChoices`.
+Full Fasting gameplay and protection subrule evidence are separate claims.

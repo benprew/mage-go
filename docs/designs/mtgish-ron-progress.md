@@ -2,20 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **763 accepted / 223 rejected unique card
-names** (986 total), and **1,963 compiled / 482 rejected records** (2,445 total).
+The latest recorded inventory reports **764 accepted / 222 rejected unique card
+names** (986 total), and **1,964 compiled / 481 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-REGENERATION-REFERENCES` prerequisite is recorded at the end of this
-ledger. Active regeneration shields now supply exact current or retained
-permanent subjects, including after departure and phasing. Seven rejected
-protection names (31 records) gain subrule evidence; three accepted source names
-(18 records) gain interaction evidence. Compilation is unchanged. Remaining
-replacement references, face-up command objects and complete source enumeration
-remain gaps.
+`DRAW-STEP-LIFE-REPLACEMENT` slice now executes the full Fasting RON record,
+including optional draw-step skipping, deferred life gain and both destruction
+rules. Exact active replacement sources supply a shared prerequisite for seven
+protection names; their complete source enumeration remains unsupported.
+Other replacement references and face-up command objects remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40134,6 +40132,152 @@ Ranked next candidates:
    Establish their eligibility boundaries before face-up command objects and
    complete enumeration for the seven protection names. UUID-only legacy
    replacement fields still need separate treatment; they are not exact sources.
+2. Parameterized bands with others: a bounded shared combat prerequisite for the
+   eight complete records above, then grants and selective removal.
+3. Conditional host animation across type/base P/T layers; reassess its one
+   immediate unlock against remaining shared prerequisites.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: optional draw-step skip for a fixed life gain
+
+Status: completed implementation slice `DRAW-STEP-LIFE-REPLACEMENT`.
+This run stops after one slice. Initial changes to `.gitignore`, the execution
+design and the ledger, and untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+The latest candidate #1 includes draw-step-life replacement references. Native
+execution already has exact source incarnations and per-static-rule IDs, but RON
+had no adapter for its complete operation sequence and source choices had no
+category query. These are adapter and enumeration gaps, not missing step-skip
+execution. Complete canonical RON records and nested forms were read for every
+compared name; reprints count once. Baseline `make build` and uncached RON
+package tests passed. The loader exited 1 for strict collection rejection:
+1,963 compiled / 482 rejected records; 763 accepted / 223 rejected unique names.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected: optional draw-step skip for life, with its waiting source references | Fasting; Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **8 names / 32 records; 1 immediate unlock**, Fasting | Seven protection names still need other waiting replacement categories and face-up command objects before complete source enumeration. Their source-choice subrules gain this category. | Small/medium: exact syntax validation, engine query and choice reuse, lifecycle and full-record tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 estimated family unlocks** | Complete attack-band legality, both assignment directions, legendary/named filters, token grants, selective removal and upkeep restrictions remain necessary. A bounded shared combat prerequisite must precede the family. | Large for the full family. |
+| Conditional animation and mixed layers | Animate Artifact, Titania's Song, Xenic Poltergeist, Gaea's Liege, Angry Mob, Nameless Race: **1 immediate unlock**, Animate Artifact | Host membership across type/base P/T layers; sticky lifecycle; attacked-player counts and Liege predicate audit; entry-life results. Xenic Poltergeist and Angry Mob already compile. | Medium for the host; large for the family. |
+
+The initial source-query-only estimate was zero immediate unlocks. Before edits,
+the audit found the missing Fasting adapter and bounded the slice to the complete
+draw-step-life replacement shape plus its exact source contract. The revised
+estimate was one name/record. This combines that immediate gain with a concrete
+seven-card shared prerequisite and fits one complete run. The selection,
+contract, reuse boundary and acceptance cases were stated before editing.
+The `implement-engine` skill supplied the native contract workflow. No delegation,
+Go-card requirements, generated stubs or card-specific production branch was used.
+
+### Established signatures and boundaries
+
+- Permanent rule context: `ReplaceWouldBeginDrawStep/2` with the exact shape
+  `ReplaceWouldBeginDrawStep(PlayerWouldBeginTheirDrawStep(You),
+  [MayCost(SkipThisDrawStep), If(CostWasPaid, [GainLife(Integer(n))])])`.
+  `n` is a nonnegative integer literal, including zero. Other event players,
+  operations, amounts, result references, extra actions and nonpermanent contexts
+  fail compilation. The complete sequence is checked before factory construction.
+- `compileDrawStepLifeReplacement(Node) (optionFactory, error)` lowers each
+  factory to a fresh `mage.Static(mage.SkipDrawStepForLife(n))`. `CostWasPaid`
+  belongs only to this replacement shape; it creates no resolving payment binding.
+- Existing engine mechanics skip the whole proposed draw step before event
+  detection, normal drawing and priority. Declining keeps the step. The gain is
+  first in the next step that actually occurs (CR 614.10b). Saved player/amount
+  survive source departure and remain independent in clones. The live rule
+  follows the current controller and stops on departure, phasing or ability
+  removal. The shared replacement pipeline retains its choices and ordering.
+- `Game.WaitingDrawStepLifePermanentSources() []DamageSource` reads exact source
+  references from active `drawStepLifeReplacement` entries in ordinary and cycle
+  lists. Execution's `IsActive` checks saved incarnation and static rule identity.
+  Stale entries cannot follow a returned source or a removed ability. A new
+  registration can expose the returned incarnation. Pending gains hold only a
+  player and amount, so cannot retain a departed permanent reference.
+- The existing `waitingReplacementPermanentSources` collector and
+  `damageReferenceInformation` provide current characteristics/control, copied
+  query data, duplicate merging in list order and invalid-identity exclusion.
+  This category has no absent-subject LKI eligibility; retained information
+  cannot make an inactive replacement wait again.
+- `ChooseDamageSourceFromWaitingDrawStepLifeReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses shared pure
+  filtering, player decisions, independent binding writes and no-candidate
+  clearing. Definition validation checks player/filter/binding and producer order.
+- RON `chosenDamageSourcePlan.waitingDrawStepLifeChoice(instanceBindings)` lowers
+  validated `ChooseADamageSource(filter)` with `You` and its factory-local binding.
+  The existing exact source prevention adapter consumes that result. Production
+  general choices remain rejected until enumeration includes every legal category.
+- Mage owns step execution, replacement lifetime, exact identity, choices and
+  clone state. RON owns spelling, declaration checks and per-instance lowering.
+  No new targeting, mana-payment, simultaneous-operation or APNAP behavior is
+  introduced. Existing casting payment and replacement-order contracts remain.
+- Rules read: CR 609.7a/b, 614.10a/b and 616. API/rules-contract docs describe only
+  the established behavior. Local `data/DRK.json` confirms Fasting's complete Oracle text.
+  No source defect or environment failure was found.
+  All 12 source hashes match the vocabulary snapshot; no RON source changed,
+  so no snapshot refresh is needed.
+
+### Failing-first and card-to-test evidence
+
+Before implementation, `TestRONDrawStepLifeFasting` failed at the unsupported
+`ReplaceWouldBeginDrawStep` in the complete Fasting record. Native tests failed
+compilation on the missing query and choice APIs. Both expected failures preceded
+implementation. New interaction tests initially used two nonexistent test API
+names; those calls were corrected to existing APIs without changing assertions.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingDrawStepLifeReferences` | Live and stale-cycle queries; departure with ordinary LKI cleared; returned incarnation; phase/cycle; current control; ability removal/restoration; copied query data and independent clone lifetime. |
+| `TestWaitingDrawStepLifeChoices` | Both lists, duplicate/invalid/unknown identities, unrelated source exclusion, independent binding clearing, persistent replacement after skipping, no departed-source reference from pending gains, saved gain execution and clone state, invalid definitions and producer order. |
+| `TestRONDrawStepLifeFasting` — Fasting (1 record) | Complete RON casting and unpaid rejection; accept/decline; phase/departure/ability removal; current controller; deferred life gain after departure; draw-trigger destruction; clone isolation. |
+| `TestRONDrawStepLifeFastingUpkeep` — Fasting | Complete record accumulates counters on successive upkeeps, skips and gains on the first four, then destroys itself on the fifth before a replacement can apply. |
+| `TestRONDrawStepLifeInstances` — Fasting; Howling Mine (6 records) | Fresh factories supply separate exact sources for both players; skipped steps send no Howling Mine draw trigger; rules remain active after use; source departure and cloned pending gains keep separate lifetimes. |
+| `TestRONDrawStepLifeProtection` — all seven protection names (31 records); Fasting | Full protection records supply the choice/prevention subrules. A live Fasting with changed color/type supplies each matching category choice. Prevention consumes once in original and cloned games; missing bindings reject. Full protection records stay rejected. |
+| `TestRONDrawStepLifeInvalid`, `TestRONDrawStepLifeFixedAmounts` | Invalid names/kinds/arities, player/cost/result scopes, action lists and amounts reject; zero and positive fixed amounts execute; instant replacement declarations reject. |
+
+Earlier draw and resolving-counter clause tests now assert complete Fasting
+compilation. Tourach's Gate still checks its unchanged unsupported host-cost
+boundary. Exact collection-count regression assertions advance by one record;
+all gameplay and strict-loading assertions remain. Compilation progress and
+full-card/subrule gameplay evidence are separate.
+
+### Validation and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONDrawStepLife -count=1`.
+- Native `go test ./pkg/mage -run TestWaitingDrawStepLife -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, 0 issues. Automatic formatting was reviewed; affected
+  focused native/RON tests passed again.
+- Skill verification `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,964 compiled / 481
+  rejected records; 764 accepted / 222 rejected unique names**. Compared with
+  the fresh baseline, only Fasting's diagnostic is removed; all other diagnostics
+  are unchanged. Strict collection loading still rejects with no partial registry.
+
+Revised estimated and actual gains match: **1 name / 1 record**, Fasting.
+Seven rejected protection names gain draw-step-life source-choice subrule evidence;
+Fasting gains complete-record gameplay evidence and Howling Mine gains interaction
+evidence. This does not claim complete collection gameplay validation.
+
+Changed files: native `waiting_draw_step_life.go` and tests;
+RON `draw_step_life.go` and tests; `compiler.go`, `chosen_source_filter.go`,
+`damage_source_choice.go`; draw/counter/inventory regression tests; `doc.go`,
+API/rules-contract docs and this ledger. The runtime/removal gate remains unmet.
+Go definitions, generators and existing DSL callers remain. No DSL function was
+removed and no cleanup claim is made.
+
+Ranked next candidates:
+
+1. Audit remaining waiting replacement subjects and their exact source identity,
+   including counter/damage rules. UUID-only legacy fields need an explicit
+   incarnation/lifetime contract before they can supply exact sources. Then
+   establish face-up command objects and complete enumeration for the seven
+   protection names. Do not repeat completed draw-step-life or shield categories.
 2. Parameterized bands with others: a bounded shared combat prerequisite for the
    eight complete records above, then grants and selective removal.
 3. Conditional host animation across type/base P/T layers; reassess its one

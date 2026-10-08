@@ -8486,3 +8486,61 @@ records, chooses a departed Living Wall retained by its regeneration shield,
 and checks independent prevention consumption in original and cloned games.
 `TestRONWaitingRegenerationInvalid` checks invalid choice syntax. These are
 additional interaction and subrule tests, not new full-card compilation coverage.
+
+### Optional draw-step skip with a fixed life gain in RON
+
+RON permanent rules support this complete replacement shape:
+
+```ron
+ReplaceWouldBeginDrawStep(PlayerWouldBeginTheirDrawStep(You), [
+    MayCost(SkipThisDrawStep),
+    If(CostWasPaid, [GainLife(Integer(n))]),
+])
+```
+
+`n` must be a nonnegative integer literal. The compiler checks the complete
+operation sequence before it returns a factory. Each factory builds a fresh
+`Static(SkipDrawStepForLife(n))`. Other event players, costs, branches, values,
+extra operations and instant/sorcery contexts fail compilation. `CostWasPaid`
+belongs only to this replacement; it creates no resolving payment binding.
+
+The shared engine replaces the whole proposed draw step before detection,
+normal drawing or priority. Declining leaves the step intact. CR 614.10b puts
+the gain first in the next step that actually occurs. The saved player and
+amount survive source departure and stay separate in cloned games. The rule
+follows its current controller; departure, phasing or ability removal stops it.
+The existing replacement pipeline owns choices, competing replacements and
+rechecks. This adapter does not change their order.
+
+`Game.WaitingDrawStepLifePermanentSources() []DamageSource` reads exact source
+references of active `drawStepLifeReplacement` entries in both replacement
+lists. It uses the same `IsActive` contract as execution, including saved
+incarnation and static rule identity. Stale registrations cannot follow a
+returned permanent or an absent ability. A new registration can refer to the
+returned incarnation. Current control and characteristics supply source data.
+Inactive rules supply no retained source, and pending gains hold only a player
+and amount. CR 609.7a permits objects referred to by waiting replacements;
+it does not restore an inactive replacement. The shared collector excludes
+invalid identities, merges duplicates in list order and copies query data.
+
+`ChooseDamageSourceFromWaitingDrawStepLifeReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared pure
+filter and choice services. Independent bindings keep independent results;
+absence clears only the selected binding. Definition validation checks player,
+filter, binding and producer order. RON
+`chosenDamageSourcePlan.waitingDrawStepLifeChoice(instanceBindings)` lowers a
+validated `ChooseADamageSource(filter)` plan with `You` and its own instance
+binding. Full general source choices remain rejected pending all categories.
+
+Evidence: `TestWaitingDrawStepLifeReferences` and
+`TestWaitingDrawStepLifeChoices` cover stale registrations, live information,
+control, phase cycles, departure, return, ability removal/restoration, duplicate
+and invalid references, pending gains, independent bindings and clones.
+`TestRONDrawStepLifeFasting`, `TestRONDrawStepLifeFastingUpkeep` and
+`TestRONDrawStepLifeInstances` execute the complete Fasting record through
+casting, optional skipping, deferred life gain, all five upkeep counters,
+destruction on drawing, control and clone changes, and Howling Mine interaction.
+`TestRONDrawStepLifeProtection` lowers choice/prevention subrules of all seven
+protection names using a live Fasting source with changed color/type; those
+records remain unsupported in full. `TestRONDrawStepLifeInvalid` and
+`TestRONDrawStepLifeFixedAmounts` cover invalid declarations and fixed amounts.

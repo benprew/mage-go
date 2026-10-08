@@ -197,8 +197,8 @@ func TestRONDrawEventFastingClause(t *testing.T) {
 		if n.Fields["Name"].String != "Fasting" {
 			continue
 		}
-		if _, err := Compile(n); err == nil {
-			t.Fatal("full Fasting unexpectedly accepted")
+		if _, err := Compile(n); err != nil {
+			t.Fatal("full Fasting failed", err)
 		}
 		for _, rule := range n.Fields["Rules"].Args {
 			if rule.Name != "TriggerA" || rule.Args[0].Name != "WhenAPlayerDrawsACard" {

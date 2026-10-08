@@ -17,6 +17,10 @@
 // [ChooseDamageSourceFromWaitingPreventionSpellReferences] uses this category only.
 // Consumption and cleanup end its availability. A continued permanent keeps
 // its separate incarnation reference.
+// [Game.WaitingDrawStepLifePermanentSources] reads exact sources of active
+// draw-step life replacements. Departure, phasing and ability removal exclude
+// the source. A pending life gain does not keep a permanent reference.
+// [ChooseDamageSourceFromWaitingDrawStepLifeReferences] uses this category only.
 // [Game.WaitingRegenerationPermanentSources] reads exact subjects of active
 // regeneration shields. Departure and phasing keep their saved references.
 // [ChooseDamageSourceFromWaitingRegenerationReferences] uses this category only.

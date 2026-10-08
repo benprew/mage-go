@@ -332,7 +332,10 @@ func TestRONResolvingCounterStrictInventory(t *testing.T) {
 	if registry, err := LoadFS(fs, "*.ron"); err == nil || registry != nil {
 		t.Fatal("published partial registry")
 	}
-	for _, tc := range []struct{ set, name, next string }{{"DRK", "Fasting", "ReplaceWouldBeginDrawStep"}, {"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"}} {
+	if _, err := Compile(hostUntapRecord(t, "DRK", "Fasting")); err != nil {
+		t.Fatal("Fasting counter rules failed", err)
+	}
+	for _, tc := range []struct{ set, name, next string }{{"FEM", "Tourach's Gate", "unsupported cost reference (HostPermanent)"}} {
 		_, err := Compile(hostUntapRecord(t, tc.set, tc.name))
 		if err == nil || !strings.Contains(err.Error(), tc.next) {
 			t.Fatal("wrong full-record blocker", tc.name, err)
