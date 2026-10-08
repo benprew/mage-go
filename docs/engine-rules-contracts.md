@@ -9300,3 +9300,67 @@ banding removal. The argument must be a symbol. Grants and static collection
 removal remain rejected. Native evidence: `TestBandsWithOtherRemoval`. Complete
 Shelkin Brownie and Tolaria evidence: `TestRONBandsWithOtherRemovalRecords`,
 `Combat`, `Invalid` and `StrictLoad`.
+
+## Exact precast exile source visits
+
+`Game.CaptureExiledDamageSource(visit uuid.UUID) DamageSource` reads a live exile
+visit; a physical card ID cannot select it. `DamageSource.ExileVisit() uuid.UUID`
+is a fourth exact identity category, separate from permanent incarnations,
+stack spell identities and command visits. `SameObject` requires exactly one
+identity category and the same physical card and visit. An exiled card has an
+owner and no controller. Face-up cards supply copied public characteristics;
+face-down cards supply no characteristics even to a player with inspection
+permission (CR 406.3a). Queries do not make choices or change game state.
+
+The zone service retains departure information by visit for both single-card
+and source-group removal. Re-exiling a card replaces its previous exile entry,
+retains that visit's departure information and creates a new visit (CR 400.7,
+400.8, 406.7). Return to exile cannot replace a saved reference. Game clones keep
+independent exile card data and departure snapshots with preserved card IDs.
+Departure information alone does not make an object a legal source choice.
+
+`Game.StackBoundExileSources() []DamageSource` reads exact exile visits from
+non-nil `CardBinding` and `CardsBinding` payment captures and nested event-card
+capture sequences on stack objects. It excludes wrong zones, missing visits,
+wrong physical IDs and unreferenced exile cards. It reads current information
+or the matching visit's departure information, sorts map-derived references,
+and removes duplicates across copies. A final referring stack departure ends
+this category's availability. `StackBoundDamageSources` and typed delayed
+source bindings also support the new identity through their existing shared
+information query; delayed card bindings need a separate contract.
+
+`ChooseDamageSourceFromStackExileBindings(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+the shared non-targeted choice service at resolution. Invalid player/filter/
+binding declarations and premature binding reads remain errors. An empty
+category clears the result. Source filters, property rechecks, replacement
+ordering, simultaneous packets, shield consumption and cleanup reuse the
+existing engine services.
+
+RON `chosenDamageSourcePlan.stackExileChoice(instanceBindings)
+mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+and its per-instance result binding in this category context. The existing
+`CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(You)), [PreventThatDamage])` lowering consumes it.
+General production source choices remain rejected until all legal categories
+and opaque references are supported; this adapter installs no partial registry.
+
+`CastableFromExilePermission.Visit uuid.UUID` binds existing casting permission
+to the current exile object. Granting permission for an absent card has no effect.
+Single removal, grouped removal and re-exile end the old permission. Existing
+permission signatures, timing, foreign ownership, mana spending and payment
+transactions remain in use. Failed payment keeps the visit and permission.
+Casting creates a new spell identity; resolution creates a new permanent
+identity. A separate prevention effect that chose the exile object cannot
+follow those zone changes. CR 400.7h permits other parts of the casting-permission
+effect to find the new object; it does not give this exception to an independent
+source-choice shield. Permanent-spell choices still use CR 609.7a continuity.
+
+Evidence: native `TestExileDamageSourceVisits`, `StackBindings`,
+`HiddenAndDeclarations`, `CastBoundary`, `PermissionVisit`, `RechecksAndBatch`
+and `InvalidReferences`; RON `TestRONExileDamageSourceProtection` and `Invalid`.
+The RON tests execute complete source-choice/prevention/cost subrules from all
+six Circles of Protection and Greater Realm of Preservation with live,
+departed, returned, copied and cloned references. These are subrule behavior
+mappings, not complete-card gameplay acceptance. Phasing does not apply to
+exile objects; existing permanent-spell and phase contracts remain unchanged.

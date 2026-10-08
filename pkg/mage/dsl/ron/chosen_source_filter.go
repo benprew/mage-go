@@ -104,6 +104,10 @@ func (p *chosenDamageSourcePlan) commandChoice(bindings instanceBindings) mage.R
 	return mage.ChooseDamageSourceFromCommandObjects(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
 
+func (p *chosenDamageSourcePlan) stackExileChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromStackExileBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
+}
+
 func (p *chosenDamageSourcePlan) waitingCommandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingCommandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }

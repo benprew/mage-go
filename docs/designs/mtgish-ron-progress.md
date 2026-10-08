@@ -8,12 +8,13 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `SELECTIVE-BANDS-WITH-OTHER-REMOVAL` adds exact layer 6 removal
-and complete RON gameplay for Shelkin Brownie and Tolaria. The five Legends
-lands retain their typed quality formation and assignment support. Token grants
-remain unsupported. Precast zone visits and
-opaque references remain before complete damage-source enumeration. Titania's
-Song still needs per-member base values and sticky duration.
+unfinished. `EXACT-PRECAST-EXILE-SOURCE-VISITS` adds exact exile source identity,
+stack card-binding enumeration, departure information, clone isolation and
+visit-bound casting permission. Seven protection names have new RON subrule
+behavior evidence; no complete-card compilation gain is claimed. Precast
+hand/graveyard references, waiting exile references and opaque references remain
+before complete damage-source enumeration. Token quality grants remain
+unsupported. Titania's Song still needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -42939,3 +42940,167 @@ Ranked next candidates:
    Defer while useful multi-card prerequisites remain.
 
 Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-08: exact precast exile source visits
+
+Status: completed implementation slice `EXACT-PRECAST-EXILE-SOURCE-VISITS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+The commit stages only this slice's status update and appended entry; the user's
+history relocation remains a separate working-tree change.
+
+### Candidate comparison and selection
+
+Latest ranked candidate #1 was evaluated first. Its bounded, dependency-ready
+context is exile visits retained by stack card/card-set bindings, with exact
+casting-permission lifetime and the boundary between exile and a later cast.
+Complete records and nested expressions for the seven protection names and
+Master of the Hunt were inspected. Reprints count once.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected: exact precast exile visits and permitted-cast identity boundary | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | Adds the exact identity and information service needed to include exiled card references in general source choice. Existing payment/card bindings, source filters and prevention suffice for this context. Other precast zones, waiting references and opaque reference discovery still block general enumeration. | Medium, bounded: one identity category, departure snapshots, stack binding collector, private RON lowering, visit-bound permissions and native/RON lifecycle tests. |
+| Opaque-reference audit and complete CR 609.7a enumeration | The same **7 names / 31 records; up to 7 full-card unlocks** | Exact precast references must precede full enumeration. A complete reference audit must include saved card targets/bindings and waiting rules; a live-object list alone is insufficient. All other nested protection operations have established adapters. | Larger and not dependency-ready as one bounded run: audit, remaining identity contracts and complete aggregation. |
+| Named-token quality lowering | Master of the Hunt: **1 name / 1 record; 1 estimated unlock** | Complete record has supported fixed mana payment and token metadata, but token-local `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))` is absent. Enables token quality consumers with separate bindings. | Small to medium: token ability lowering, repeated creation, copy/clone isolation and combat tests. |
+
+Selection: candidate #1 supplies a concrete shared prerequisite for seven names.
+It has no expected immediate compilation gain, but prevents physical-card-ID
+matching and stale permissions from corrupting subsequent source enumeration.
+The one-card token adapter remains deferred while useful shared work remains.
+The broad previous candidate is completed here for its exact exile binding
+context, not for all nonbattlefield zones or opaque reference forms.
+
+### Contract, dependencies and reuse
+
+- RON: validated `ChooseADamageSource(filter)` plans have the private category
+  lowering `chosenDamageSourcePlan.stackExileChoice(instanceBindings)
+  mage.ResolvingEffect`. Supported filters retain their existing symbol/tuple
+  validation: `AnyDamageSource`, `IsColor(color)`, `IsCardtype(type)`, and nested
+  nonempty `And`/`Or` lists. It uses `You` and the instance's own source binding.
+  Existing `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource, Player(You)), [PreventThatDamage])`
+  lowering consumes the result. No general source list is accepted prematurely.
+- Engine: `Game.CaptureExiledDamageSource(visit uuid.UUID) DamageSource` reads a
+  live visit. `DamageSource.ExileVisit() uuid.UUID` is separate from permanent,
+  stack and command identity. `SameObject` requires the same card and exactly one
+  matching identity category. Exile cards have owners, but no controllers.
+- `Game.StackBoundExileSources() []DamageSource` reads non-nil singular/plural
+  payment captures and nested event-card captures from stack objects. It excludes
+  other zones, wrong card IDs, absent visits and unreferenced exile objects.
+  Map-derived references are sorted and duplicate visits are removed. Copies
+  retain the reference; final referring departure ends category availability.
+- `ChooseDamageSourceFromStackExileBindings(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect` uses shared choices and clears an empty
+  result. Invalid filters, missing player/binding and premature reads reject
+  during definition validation. No effect runs during source enumeration.
+- Single and grouped removal retain exact departure information. Re-exile
+  replaces the old entry with a fresh visit (CR 400.7, 400.8, 406.7). Returned
+  objects cannot replace saved subjects. Queries and game clones own separate
+  exile card and departure data with preserved physical card IDs.
+- Face-down exile sources expose no characteristics, including to a player who
+  may inspect the card (CR 406.3a). A hidden referred object can keep its exact
+  identity, but cannot satisfy a color/type filter from private information.
+- `CastableFromExilePermission.Visit uuid.UUID` binds the existing permission
+  service to the current exile visit. An absent object gets no permission.
+  Departure, grouped removal and re-exile end permission. A failed casting
+  payment keeps the card, visit and permission. Existing signatures and legal
+  callers remain; the old zone-unit fixture now installs its card before grant.
+- A cast is a new spell; its battlefield entry is another object. Choosing the
+  exile object for a separate shield does not grant continuation to either.
+  CR 400.7h lets other parts of the casting-permission effect find the spell;
+  it does not transfer an independent prevention shield. Existing CR 609.7a
+  permanent-spell continuity remains intact. Permission-effect result bindings
+  for additional same-effect instructions need their own future contract.
+
+Reuse boundary: existing typed card/card-set payment captures, stack cloning,
+source snapshots, resolution bindings, filters, non-targeted decisions, casting
+payment transactions, replacement choices, damage batches and cleanup. The
+shared information query now also reads exile visits for stack damage bindings
+and typed delayed damage frames. Delayed card/card-set frames and waiting exile
+reference enumeration are outside this stack-card-binding context. Phasing
+cannot apply to exile objects; existing permanent phasing rules are retained.
+
+Missing engine identity/lifetime contracts were separated from the new compiler
+category adapter. No source-data correction or environment failure was needed.
+RON source files are unchanged; parser inventory confirms all 12 hashes match
+the vocabulary snapshot. No snapshot refresh or Go-card/DSL deletion is due.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production changes, native and RON tests failed to compile on missing
+`CaptureExiledDamageSource`, `StackBoundExileSources`, `ExileVisit`, the choice
+service and category adapter. A test's cost-factory conversion was corrected,
+and RON failure was confirmed again on the missing signatures alone. The later
+permission test failed specifically because an absent card received permission,
+before the permission implementation changed.
+
+A clone test detected that `Card.Copy` creates a new physical ID; clone storage
+was corrected to preserve the original card ID. The batch assertion was corrected
+to use the engine's established outcome contract: fully prevented packets are
+omitted, while life totals and the surviving returned-source packet prove both
+old-source packets were prevented. No production behavior or test was weakened.
+
+| Tests | Card mapping / evidence |
+| --- | --- |
+| `TestExileDamageSourceVisits` | Synthetic native contract: exact visit/public facts, single/group departure, re-exile without duplicates, current and departure information, immutable queries and exile card clone isolation. |
+| `TestExileDamageSourceStackBindings` | Singular and plural real payment captures, copied stack objects, deterministic deduplication, departure reads and final-reference/clone lifetime. |
+| `TestExileDamageSourceHiddenAndDeclarations` | Nested event-card capture, face-down identity, private inspection without source characteristic disclosure, absent filter result, invalid declarations and premature binding reads. |
+| `TestExileDamageSourceCastBoundary` | Failed payment rollback; permitted exile-to-spell-to-permanent transitions preserve separate sources. The saved exile shield remains independent and consumption is isolated across clones. |
+| `TestExileDamageSourcePermissionVisit` | Absent grants, single/group/re-exile/face-down new visits, permission clone isolation, fresh grants, foreign ownership and correct caster on resolution. |
+| `TestExileDamageSourceRechecksAndBatch` | Live color mismatch preserves shield; restored color, nonpositive damage, affected-player replacement choice, saved departure color, simultaneous old/returned sources and cleanup. Uses existing stack damage-source capture queries with the new identity. |
+| `TestExileDamageSourceInvalidReferences` | Unreferenced exile cards, nil producers, wrong physical IDs/zones, missing/absent visits and mixed identity categories are excluded. |
+| `TestRONExileDamageSourceProtection` | Circle of Protection: Black, Blue, Green, Red, White, Artifacts and Greater Realm of Preservation: exact RON cost/choice/prevention subrules, payment/timing, live/departed/returned refs, separate choices in copies, pending clone isolation, retained shield after reference departure, consumption and empty result reset. Complete records still reject general source choice. |
+| `TestRONExileDamageSourceInvalid` | Invalid arity, call-shaped symbol, colorless color, empty filter list, incompatible reference and missing instance binding. |
+| Existing paid-exile, stack-bound damage and selected-source prevention suites | Existing payment captures, successful callers, source identity and permanent-spell continuation remain passing. |
+
+Estimate and actual compilation gain match: **+0 accepted names / +0 compiled
+records**. Seven names gain subrule gameplay evidence in a new source context;
+this is not seven new complete-card behavior mappings.
+
+### Validation and loader evidence
+
+- Baseline `make build`; `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline `go run ./cmd/loadcards -json`: expected exit 1;
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected names**.
+  This is strict collection rejection, not a build/test failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONExileDamageSource -count=1`: PASS.
+  Native `go test ./pkg/mage -run TestExileDamageSource -count=1`: PASS.
+  Focused existing payment, stack-source and selected-source suites: PASS.
+- `make build`; `go vet ./...`: PASS after focused tests.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` found one test variable that shadowed built-in `copy`.
+  The variable was renamed; focused native/RON tests and `make build` passed
+  again. Final `make lint`: PASS, 0 issues. No unrelated automatic lint change
+  was made. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1;
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**. The report is exactly equal to baseline, including every diagnostic.
+  First issue remains Animate Dead: `2ED.lines.ron:4:151: unsupported rule
+  (EnchantGraveyardCard)`. The collection remains rejected atomically.
+- Fresh `go run ./cmd/loadcards -inventory`: expected exit 1; parser reports
+  **2,445 records / 986 unique names**. All RON file hashes match the snapshot.
+  No environmental blocker remains.
+
+Changed files: new engine `exile_damage_source.go` and native tests;
+`damage_source.go`, `damage_source_choice.go`, `waiting_delayed_damage.go`,
+`zone_system.go`, `effect_cast_alt.go` and the existing zone-system fixture;
+RON `chosen_source_filter.go` and new RON exile-source tests; `pkg/mage/doc.go`,
+engine rules contracts, DSL reference and this ledger status/entry.
+
+No runtime consumer, Go definition, generator or DSL function meets its removal
+gate. Complete collection gameplay/loading, runtime cutover, Go-card deletion
+and unused DSL removal remain unfinished.
+
+Ranked next candidates:
+
+1. Exact precast graveyard visits in stack card targets and saved card bindings:
+   bounded shared prerequisite for the same seven protection names, zero
+   immediate unlocks. Preserve current/departure information and returned visits.
+2. Waiting exile references in prevention/redirection and delayed card contexts:
+   reuse this visit identity for the same seven names, zero immediate unlocks;
+   cover consumption, departure, capture lifetime and clone isolation.
+3. Opaque-reference audit and complete CR 609.7a aggregation after precast
+   contracts: seven estimated protection-card unlocks, subject to audit. Include
+   every legal referred category before enabling general RON source choices.
+
+Named-token quality lowering for Master of the Hunt remains a one-card candidate
+behind useful shared prerequisites. Migration completion gates remain unmet.

@@ -184,8 +184,10 @@ func TestZoneSystem_CopyOnWriteCloning(t *testing.T) {
 func TestZoneSystem_CastFromExileAndExileInstead(t *testing.T) {
 	zs := NewZoneSystem()
 	pA := uuid.New()
-	cardID := uuid.New()
+	card := NewLand("Exiled card")
+	cardID := card.ID()
 	sourceID := uuid.New()
+	zs.ExileCard(card, sourceID)
 
 	zs.GrantCastFromExile(pA, cardID, true)
 	perm := zs.CastFromExilePermissionFor(pA, cardID)

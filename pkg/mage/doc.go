@@ -115,6 +115,17 @@
 // characteristics. Queries and game clones keep separate object snapshots.
 // This service does not grant casting permission or install command abilities.
 //
+// [Game.CaptureExiledDamageSource] reads one live exile visit.
+// [DamageSource.ExileVisit] keeps each visit separate from later objects.
+// Face-down cards supply no characteristics, even with inspection permission.
+// [Game.StackBoundExileSources] reads card and card-set payment bindings
+// and event card captures on stack objects. Departure keeps exact information.
+// [ChooseDamageSourceFromStackExileBindings] uses only this category.
+// A selected exile source cannot follow a later cast or battlefield entry.
+// [Game.GrantCastFromExile] saves the current exile visit. Departure ends
+// its permission. A failed payment keeps the visit and its permission.
+// Re-exile creates a new visit. Clones keep separate exile card information.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.

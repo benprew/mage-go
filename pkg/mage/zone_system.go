@@ -18,6 +18,7 @@ type ZoneSystem struct {
 	ownedPermanents        map[uuid.UUID]struct{}
 	commandObjects         []commandObject
 	departedCommandSources map[uuid.UUID]DamageSource
+	departedExileSources   map[uuid.UUID]DamageSource
 	exile                  []ExiledCard
 	enteringPermanent      *Permanent
 	lki                    map[uuid.UUID]*PermanentLKI
@@ -61,6 +62,12 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 			clone.departedCommandSources[visit] = cloneDamageSource(source)
 		}
 	}
+	if zs.departedExileSources != nil {
+		clone.departedExileSources = make(map[uuid.UUID]DamageSource, len(zs.departedExileSources))
+		for visit, source := range zs.departedExileSources {
+			clone.departedExileSources[visit] = cloneDamageSource(source)
+		}
+	}
 
 	clone.commandObjects = make([]commandObject, len(zs.commandObjects))
 	for i, object := range zs.commandObjects {
@@ -73,8 +80,10 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	if len(zs.exile) > 0 {
 		clone.exile = make([]ExiledCard, len(zs.exile))
 		for i, ec := range zs.exile {
+			card := ec.Card.Copy()
+			card.SetID(ec.Card.ID())
 			clone.exile[i] = ExiledCard{
-				Card:       ec.Card, // shared Card ref
+				Card:       card,
 				ExiledBy:   ec.ExiledBy,
 				Visit:      ec.Visit,
 				FaceDown:   ec.FaceDown,
@@ -397,11 +406,13 @@ func (zs *ZoneSystem) Exile() []ExiledCard {
 
 // ExileCard moves a card to the exile zone face up.
 func (zs *ZoneSystem) ExileCard(card Card, exiledBy uuid.UUID) {
+	zs.RemoveFromExile(card.ID())
 	zs.exile = append(zs.exile, ExiledCard{Card: card, ExiledBy: exiledBy, Visit: uuid.New()})
 }
 
 // ExileCardFaceDown moves a card to the exile zone face down.
 func (zs *ZoneSystem) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
+	zs.RemoveFromExile(card.ID())
 	rev := append([]uuid.UUID(nil), revealedTo...)
 	zs.exile = append(zs.exile, ExiledCard{
 		Card:       card,
@@ -444,6 +455,8 @@ func (zs *ZoneSystem) FindExiledCard(cardID uuid.UUID) *ExiledCard {
 func (zs *ZoneSystem) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
 	for i, ec := range zs.exile {
 		if ec.Card.ID() == cardID {
+			zs.saveExileDeparture(ec)
+			zs.ClearCastFromExilePermission(cardID)
 			zs.exile = append(zs.exile[:i], zs.exile[i+1:]...)
 			return ec.Card, true
 		}
@@ -457,6 +470,8 @@ func (zs *ZoneSystem) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard 
 	remaining := zs.exile[:0]
 	for _, ec := range zs.exile {
 		if ec.ExiledBy == exiledBy {
+			zs.saveExileDeparture(ec)
+			zs.ClearCastFromExilePermission(ec.Card.ID())
 			found = append(found, ec)
 		} else {
 			remaining = append(remaining, ec)
@@ -480,8 +495,13 @@ func (zs *ZoneSystem) ReplaceExiledCard(cardID uuid.UUID, replacement Card) bool
 
 // GrantCastFromExile records permission for the given player to cast the given exiled card.
 func (zs *ZoneSystem) GrantCastFromExile(playerID, cardID uuid.UUID, anyColorMana bool) {
+	object := zs.FindExiledCard(cardID)
+	if object == nil {
+		return
+	}
 	zs.castFromExilePermissions = append(zs.castFromExilePermissions, CastableFromExilePermission{
 		CardID:       cardID,
+		Visit:        object.Visit,
 		PlayerID:     playerID,
 		AnyColorMana: anyColorMana,
 	})
@@ -489,9 +509,13 @@ func (zs *ZoneSystem) GrantCastFromExile(playerID, cardID uuid.UUID, anyColorMan
 
 // CastFromExilePermissionFor returns the permission record for the player and card.
 func (zs *ZoneSystem) CastFromExilePermissionFor(playerID, cardID uuid.UUID) *CastableFromExilePermission {
+	object := zs.FindExiledCard(cardID)
+	if object == nil {
+		return nil
+	}
 	for i := range zs.castFromExilePermissions {
 		perm := &zs.castFromExilePermissions[i]
-		if perm.PlayerID == playerID && perm.CardID == cardID {
+		if perm.PlayerID == playerID && perm.CardID == cardID && perm.Visit == object.Visit {
 			return perm
 		}
 	}

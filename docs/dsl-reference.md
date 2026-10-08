@@ -7300,3 +7300,21 @@ banding, and uses the saved subject incarnation until cleanup. A later layer
 grant can restore the ability. A formed band persists, while damage assignment
 checks the abilities that remain. Shelkin Brownie uses selective removal;
 Tolaria combines it with ordinary banding removal and an upkeep restriction.
+
+### Precast exile references in damage-source choices
+
+`mage.Game.CaptureExiledDamageSource(visit)` and
+`mage.Game.StackBoundExileSources()` expose exact exile visits and references
+saved by stack card/card-set payment bindings or nested event-card captures.
+Use `mage.ChooseDamageSourceFromStackExileBindings(player, filter, binding)`
+only for that category. A face-down card supplies no public characteristics.
+Departure preserves the old visit's information; a return creates a new object.
+A choice of the exile object does not follow a later spell or permanent.
+`GrantCastFromExile` keeps its existing signature and grants permission only for
+the present exile visit; departure or re-exile ends that permission.
+
+RON's private `chosenDamageSourcePlan.stackExileChoice(instanceBindings)`
+adapter consumes validated `ChooseADamageSource(filter)` plans with separate
+instance bindings. It shares the existing exact-source prevention lowering.
+General source choice remains unsupported in complete RON records until the
+full CR 609.7a source list and remaining reference contracts are established.

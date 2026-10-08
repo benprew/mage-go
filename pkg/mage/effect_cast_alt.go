@@ -276,6 +276,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 // though it were mana of any color to cast that card (CR 609.4b).
 type CastableFromExilePermission struct {
 	CardID       uuid.UUID
+	Visit        uuid.UUID
 	PlayerID     uuid.UUID
 	AnyColorMana bool
 }

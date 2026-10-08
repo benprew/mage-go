@@ -23,6 +23,7 @@ type DamageSource struct {
 	id, incarnation, controller, owner uuid.UUID
 	stackID                            uuid.UUID
 	commandVisit                       uuid.UUID
+	exileVisit                         uuid.UUID
 	name                               string
 	colors                             []Color
 	keywords                           map[Keyword]bool
@@ -39,9 +40,12 @@ func (s DamageSource) StackID() uuid.UUID { return s.stackID }
 // CommandVisit keeps separate command-zone entries of one object apart.
 func (s DamageSource) CommandVisit() uuid.UUID { return s.commandVisit }
 
+// ExileVisit keeps separate exile entries of one card apart.
+func (s DamageSource) ExileVisit() uuid.UUID { return s.exileVisit }
+
 func (s DamageSource) hasExactIdentity() bool {
 	count := 0
-	for _, id := range []uuid.UUID{s.incarnation, s.stackID, s.commandVisit} {
+	for _, id := range []uuid.UUID{s.incarnation, s.stackID, s.commandVisit, s.exileVisit} {
 		if id != uuid.Nil {
 			count++
 		}
@@ -52,7 +56,7 @@ func (s DamageSource) hasExactIdentity() bool {
 // SameObject compares exact source identities. Missing identities cannot match.
 func (s DamageSource) SameObject(other DamageSource) bool {
 	return s.hasExactIdentity() && other.hasExactIdentity() && s.id == other.id &&
-		s.incarnation == other.incarnation && s.stackID == other.stackID && s.commandVisit == other.commandVisit
+		s.incarnation == other.incarnation && s.stackID == other.stackID && s.commandVisit == other.commandVisit && s.exileVisit == other.exileVisit
 }
 func (s DamageSource) Controller() uuid.UUID     { return s.controller }
 func (s DamageSource) Owner() uuid.UUID          { return s.owner }

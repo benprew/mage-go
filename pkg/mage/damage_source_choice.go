@@ -35,6 +35,7 @@ type damageSourceChoice struct {
 	stackTargets                  bool
 	stackSpellTargets             bool
 	stackBindings                 bool
+	stackExileBindings            bool
 	stackDamageBindings           bool
 	stackSpellBindings            bool
 	waitingDelayedBindings        bool
@@ -62,7 +63,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.waitingPersistentReplacements && !e.waitingUntapSkip && !e.waitingDiscard && !e.waitingExile && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
+	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.waitingPersistentReplacements && !e.waitingUntapSkip && !e.waitingDiscard && !e.waitingExile && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackExileBindings && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -99,6 +100,9 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	}
 	if e.stackBindings {
 		candidates = append(candidates, ctx.Game.StackBoundPermanentSources()...)
+	}
+	if e.stackExileBindings {
+		candidates = append(candidates, ctx.Game.StackBoundExileSources()...)
 	}
 	if e.stackDamageBindings {
 		candidates = append(candidates, ctx.Game.StackBoundDamageSources()...)
