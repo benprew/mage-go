@@ -750,7 +750,8 @@ func (r *attackerDamageRedirectReplacement) Clone() ReplacementEffect {
 
 type lichLifeGainReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	incarnation uuid.UUID
+	playerID    uuid.UUID
 }
 
 func (r *lichLifeGainReplacement) Matches(a Action, _ GameReader) bool {
@@ -773,8 +774,8 @@ func (r *lichLifeGainReplacement) Replace(a Action, g *Game) Action {
 }
 
 func (r *lichLifeGainReplacement) IsActive(g GameReader) bool {
-	// Active while source (the Lich permanent) is on the battlefield
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	return source != nil && !source.PhasedOut && r.incarnation != uuid.Nil && source.incarnationID == r.incarnation
 }
 
 func (r *lichLifeGainReplacement) Clone() ReplacementEffect {
@@ -862,7 +863,8 @@ func (r *skipDrawReplacement) Clone() ReplacementEffect {
 
 type islandSanctuaryReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	incarnation uuid.UUID
+	playerID    uuid.UUID
 }
 
 func (r *islandSanctuaryReplacement) Matches(a Action, _ GameReader) bool {
@@ -888,7 +890,8 @@ func (r *islandSanctuaryReplacement) Replace(a Action, g *Game) Action {
 }
 
 func (r *islandSanctuaryReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	return source != nil && !source.PhasedOut && r.incarnation != uuid.Nil && source.incarnationID == r.incarnation
 }
 
 func (r *islandSanctuaryReplacement) Clone() ReplacementEffect {
@@ -1224,6 +1227,7 @@ func (*damagePreventionRuleReplacement) IsPreventionEffect() bool       { return
 
 type counterDoublerReplacement struct {
 	replacementBase
+	incarnation uuid.UUID
 	counterType CounterType
 	filter      PermanentFilter
 }
@@ -1256,7 +1260,8 @@ func (r *counterDoublerReplacement) Replace(a Action, _ *Game) Action {
 }
 
 func (r *counterDoublerReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	return source != nil && !source.PhasedOut && r.incarnation != uuid.Nil && source.incarnationID == r.incarnation
 }
 
 func (r *counterDoublerReplacement) Clone() ReplacementEffect {

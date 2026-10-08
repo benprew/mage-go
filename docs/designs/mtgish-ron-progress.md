@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-EMPTY-LIBRARY-SOURCE-REFERENCES` completes exact registered
-empty-library replacement sources, shared execution/query lifecycle and RON
+unfinished. `WAITING-PERSISTENT-REPLACEMENT-SOURCES` completes exact registered
+life/draw/counter replacement sources, shared execution/query lifecycle and RON
 category lowering. Additional subrule evidence covers seven protection names,
-with zero full-card unlocks. Complete source enumeration and the remaining
-explicit-reference audit remain gaps.
+with zero full-card unlocks. Typed/cycle/zone and opaque references remain in the
+audit before complete source enumeration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -41980,6 +41980,143 @@ Ranked next candidates:
    for eight names, followed by grants, named-token abilities and selective removal.
 3. Reverse Damage's actual prevented-amount life operation after full enumeration;
    prove Jade Monolith's full RON gameplay with its existing redirection adapter.
+   Conditional host animation remains lower priority.
+
+The migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-07: exact sources of persistent legacy replacements
+
+Status: completed implementation slice `WAITING-PERSISTENT-REPLACEMENT-SOURCES`.
+This run stops after this slice. Pre-existing `.gitignore`, execution-design and
+ledger reorganization changes, plus untracked `mtgish-ron-completed.md`, remain
+in the working tree. Only this run's summary update and appended entry are staged.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected; reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- |
+| Persistent legacy replacement sources, bounded part of ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**. Source registrations also include Lich and Island Sanctuary. Downstream Jade Monolith and Reverse Damage. | Remaining explicit-reference audit and hidden callback references precede complete enumeration. Jade Monolith has a redirection adapter; Reverse Damage also needs actual prevented-amount life gain. Lich's entry, loss and sacrifice rules and Island Sanctuary's general draw-choice/duration rule remain outside this slice. | One bounded run: three registrations share exact source lifecycle, query, typed choice and RON lowering; native/RON interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0 bounded prerequisite unlocks; up to 8 after dependents**. | Needs formation and both damage assignment directions, then live grants, named-token abilities and selective removal. Tolaria's complete record also has an upkeep activation modifier. | Several combat slices with larger interaction matrices. |
+| Conditional host animation | Animate Artifact. **1 estimated full-card unlock**. | Host noncreature selection must persist through type and base-P/T layers under dependency rules. Nested base values read host mana value. | One larger layer/dependency slice; single-card benefit. |
+
+Ranked #1 is dependency-ready at this bounded boundary. Existing persistent
+life/draw/counter registrations checked only card UUID; a saved rule could follow
+a returned object. Capturing identity and sharing execution/query lifecycle closes
+that gap without executing callbacks. This shared prerequisite supports seven
+protection names and wins over the larger combat prerequisite and single-card
+animation. The contract, reuse boundary and acceptance cases were stated before
+editing. RON spelling and per-instance bindings stay in `ron`; source lifecycle,
+queries and decisions stay in `mage`.
+
+### Exact signatures, contexts and dependencies
+
+- `Game.WaitingPersistentReplacementPermanentSources() []DamageSource` reads
+  explicit source references from active `lichLifeGainReplacement`,
+  `islandSanctuaryReplacement` and `counterDoublerReplacement` entries in the
+  shared persistent/cycle lists. Duplicate references supply one copied snapshot.
+  General filters do not refer to all objects that can match them.
+- Existing `Game.SetLichActive(playerID, sourceID uuid.UUID)`,
+  `Game.AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID)` and
+  `Game.AddCounterDoubler(sourceID uuid.UUID, ct CounterType,
+  filter PermanentFilter)` signatures remain unchanged. Each saves the live
+  source incarnation using the existing capture service. Execution and queries
+  require that live, unphased incarnation. Phase-in restores it; departure and
+  return cannot restore a saved registration. A fresh registration captures the
+  returned incarnation. Registration before entry cannot follow entry.
+- Registered player/filter semantics remain unchanged. Control changes update
+  queried properties, not the explicit registered player. These separate
+  registrations survive source ability removal. Lich's separate loss-prevention
+  state is outside this replacement contract.
+- `ChooseDamageSourceFromWaitingPersistentReplacementReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+  shared source choice/filter/binding validation. Missing players and empty or
+  nonmatching lists clear only that result. Queries do not make choices, execute
+  replacements, mutate registrations or expose mutable saved card data.
+- `chosenDamageSourcePlan.waitingPersistentReplacementChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and the plan's per-instance binding. This completes one category context.
+  Full production declarations remain rejected until enumeration is complete.
+
+Dependencies/reuse: exact permanent incarnations and current property snapshots,
+shared replacement lists, clone services, typed source filters, resolution frames,
+transactional costs, selected-source prevention and simultaneous damage. CR 400.7
+separates returns; CR 702.26b suspends phased sources; CR 609.7a permits referred
+sources. CR 609.7b source-property rechecks and CR 616 affected-player ordering
+continue through existing engine services. No parallel RON rules subsystem exists.
+
+Remaining audit findings: `untapStepSkipReplacement` already has typed incarnation
+and ability checks but lacks source-category query evidence; legacy cycle
+`discardToLibraryReplacement` retains a source UUID without its own incarnation;
+`exileInsteadOfGraveyardReplacement` holds a physical card reference needing a
+zone-visit/continuity contract. Action-local protection replacements and arbitrary
+callback/filter-held references still need classification before unrestricted
+composition. This run does not declare the audit complete.
+
+### Failing-first tests and card mapping
+
+RON and native tests first failed for missing query/choice/adapter signatures.
+Native setup was corrected to existing counter, library, draw and life APIs;
+the missing-signature failure was confirmed again. Adding the surface with empty
+incarnations then produced native assertion failures for missing live references
+and stale execution following returns. Registration capture and execution checks
+were connected afterward.
+
+| Test / card mapping | Evidence |
+| --- | --- |
+| `TestWaitingPersistentReplacementSourcesLifecycle` | All three families: live, phased, phase cycle, departure with cleared LKI, return/new registration, current control, separate registration after ability removal; exact saved identity and isolated snapshots/clones. |
+| `TestWaitingPersistentReplacementSourcesExecution` | Life gain becomes draw, optional normal draw is replaced, counters double; queries execute none of these actions; phasing suspends all three. |
+| `TestWaitingPersistentReplacementSourcesChoices` | Duplicate/nonlive/pre-entry registrations; source filters; independent binding writes; absent-player clearing; invalid player/binding/empty name/producer order. |
+| `TestWaitingPersistentReplacementSourcesOrderAndClones` | Counter doubling and entry addition use affected-player ordering; clone choice/state and source phasing stay independent. |
+| `TestRONWaitingPersistentReplacementSourceProtection` — six Circles and Greater Realm | Complete-record cost and choice/prevention ASTs in a test-only category context, across all three registration kinds: failed payment, copied activations, cloned independent shields, consumption, phased empty choices; full declarations still reject. |
+| `TestRONWaitingPersistentReplacementSourceTimingAndRechecks` — Circle of Protection: Red | Registration after announcement is chosen at resolution; property mismatch does not consume a shield; simultaneous matching packets share one shield; clone consumption stays separate. |
+| `TestRONWaitingPersistentReplacementSourceInvalid` | Invalid arity, color, filter, reference kind, missing binding and producer order. |
+
+The seven protection names have 31 complete identical reprint records. Lich has
+5 identical records and Island Sanctuary 6. No RON source changed. Native fixtures
+establish their registration service, not full-card gameplay for those two names.
+Estimated/actual compilation gains: **0 unique names / 0 records**, as expected.
+New category evidence covers **7 unique protection names**; full-card gameplay
+coverage and full-card compilation coverage do not change.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader exited 1 for unsupported collection records, not a build failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingPersistentReplacementSource -count=1`
+  and `go test ./pkg/mage -run TestWaitingPersistentReplacementSources -count=1`:
+  PASS after the expected failures above.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import grouping in the new native test
+  was reviewed; both focused commands passed again after formatting.
+- `git diff --check`: PASS, including final ledger and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  JSON diagnostics match baseline exactly. The strict collection remains rejected.
+
+No environmental failure or new source-data defect was found. All 12 RON hashes
+match the vocabulary snapshot, so no refresh is needed. Runtime cutover, Go-card
+deletion and DSL removal gates remain unmet; existing callers remain intact.
+
+Changed files: `pkg/mage/waiting_persistent_replacement.go` and native tests;
+`damage_source_choice.go`, `replacement.go`, `game_mutator.go`, `doc.go`;
+`dsl/ron/chosen_source_filter.go` and RON tests; DSL/API and rules-contract docs;
+ledger summary and this entry.
+
+Ranked next candidates:
+
+1. Finish the explicit-reference audit: typed untap-skip sources, legacy cycle
+   discard sources, zone-scoped exile references and opaque callback references;
+   then compose complete CR 609.7a enumeration for seven protection names.
+   Do not repeat the persistent life/draw/counter, modifier or empty-library sources.
+2. Parameterized bands with others as a bounded formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount life operation after full enumeration;
+   prove Jade Monolith's full RON gameplay with existing redirection lowering.
    Conditional host animation remains lower priority.
 
 The migration completion gates remain unmet. The commit hash is in the final reply.

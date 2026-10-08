@@ -67,6 +67,11 @@
 // [Game.AddEmptyLibraryDrawReplacement] saves the live source incarnation.
 // Phasing suspends the rule. Departure ends it; a return needs a new registration.
 // [ChooseDamageSourceFromWaitingEmptyLibraryReferences] uses this category only.
+// [Game.WaitingPersistentReplacementPermanentSources] reads exact sources of
+// registered life-gain, sanctuary draw and counter-doubling replacements.
+// Their registrations save the live incarnation. Phasing suspends them;
+// departure ends them. A return needs a new registration.
+// [ChooseDamageSourceFromWaitingPersistentReplacementReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.

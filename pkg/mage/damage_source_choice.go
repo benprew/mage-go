@@ -27,30 +27,31 @@ func ChooseDamageSourceMatchingFrom(player PlayerRef, sources []DamageSourceRef,
 }
 
 type damageSourceChoice struct {
-	filter                  DamageSourceFilter
-	player                  PlayerRef
-	liveObjects             bool
-	commandObjects          bool
-	stackAbilities          bool
-	stackTargets            bool
-	stackSpellTargets       bool
-	stackBindings           bool
-	stackDamageBindings     bool
-	stackSpellBindings      bool
-	waitingDelayedBindings  bool
-	waitingDelayedSpells    bool
-	waitingDelayedDamage    bool
-	waitingCommands         bool
-	waitingModifiers        bool
-	waitingEmptyLibrary     bool
-	waitingPrevention       bool
-	waitingPreventionSpells bool
-	waitingRedirection      bool
-	waitingRegeneration     bool
-	waitingDrawStepLife     bool
-	waitingCounterPlacement bool
-	sources                 []DamageSourceRef
-	binding                 *DamageSourceBinding
+	filter                        DamageSourceFilter
+	player                        PlayerRef
+	liveObjects                   bool
+	commandObjects                bool
+	stackAbilities                bool
+	stackTargets                  bool
+	stackSpellTargets             bool
+	stackBindings                 bool
+	stackDamageBindings           bool
+	stackSpellBindings            bool
+	waitingDelayedBindings        bool
+	waitingDelayedSpells          bool
+	waitingDelayedDamage          bool
+	waitingCommands               bool
+	waitingModifiers              bool
+	waitingEmptyLibrary           bool
+	waitingPersistentReplacements bool
+	waitingPrevention             bool
+	waitingPreventionSpells       bool
+	waitingRedirection            bool
+	waitingRegeneration           bool
+	waitingDrawStepLife           bool
+	waitingCounterPlacement       bool
+	sources                       []DamageSourceRef
+	binding                       *DamageSourceBinding
 }
 
 func (*damageSourceChoice) Text() string                 { return "choose a damage source" }
@@ -58,7 +59,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
+	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.waitingPersistentReplacements && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -114,6 +115,9 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	if e.waitingRedirection {
 		candidates = append(candidates, ctx.Game.WaitingRedirectionPermanentSources()...)
 		candidates = append(candidates, ctx.Game.WaitingRedirectionSpellSources()...)
+	}
+	if e.waitingPersistentReplacements {
+		candidates = append(candidates, ctx.Game.WaitingPersistentReplacementPermanentSources()...)
 	}
 	if e.waitingEmptyLibrary {
 		candidates = append(candidates, ctx.Game.WaitingEmptyLibraryPermanentSources()...)

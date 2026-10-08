@@ -7152,3 +7152,29 @@ The RON `chosenDamageSourcePlan.waitingEmptyLibraryChoice(instanceBindings)`
 adapter lowers validated `ChooseADamageSource(filter)` with `You` and its own
 binding. It completes this category only. Full production source choices remain
 rejected until the legal source list is complete.
+
+### Persistent legacy replacement source references
+
+`mage.ChooseDamageSourceFromWaitingPersistentReplacementReferences(player,
+filter, binding)` supplies one CR 609.7a source category.
+`Game.WaitingPersistentReplacementPermanentSources()` reads the exact explicit
+sources of registered life-gain-to-draw, sanctuary normal-draw and counter-doubling
+replacements. General filters supply no matching-object references. Queries do
+not execute replacements, make choices or modify registrations.
+
+`SetLichActive(playerID, sourceID)`,
+`AddIslandSanctuaryReplacement(playerID, sourceID)` and
+`AddCounterDoubler(sourceID, counterType, filter)` save the live incarnation at
+registration. Execution and enumeration require that incarnation to remain live
+and unphased. Phasing suspends the registration; phase-in restores it. Departure
+ends it, and a return needs a new registration. Registration before entry cannot
+follow a later entry. These separate registrations keep their existing explicit
+player and filter contracts; source ability removal does not remove them.
+
+RON `ChooseADamageSource(filter)` has a validated per-instance
+`waitingPersistentReplacementChoice` lowering for this category. Full production
+source choices remain rejected until the complete legal list is established.
+Evidence: native `TestWaitingPersistentReplacementSources*` and RON
+`TestRONWaitingPersistentReplacementSource*`. The latter use full-record costs
+and choice/prevention ASTs for six Circles and Greater Realm of Preservation in
+a test-only category context. They do not establish full-card loading.

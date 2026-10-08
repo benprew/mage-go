@@ -9052,3 +9052,41 @@ Realm of Preservation to their actual RON payment and choice/prevention bodies.
 `TimingAndRechecks` adds resolution timing, property rechecks and simultaneous
 packets; `Invalid` checks syntax and producer order. These are category/subrule
 tests, not complete source enumeration or full-card gameplay evidence.
+
+### Exact sources of persistent legacy replacements
+
+`Game.WaitingPersistentReplacementPermanentSources() []DamageSource` reads the
+explicit source incarnations of active `lichLifeGainReplacement`,
+`islandSanctuaryReplacement` and `counterDoublerReplacement` registrations.
+Both persistent and cycle replacement lists use the shared read service.
+Duplicate references supply one isolated snapshot. Current control and properties
+come from the live original object; departed information cannot revive a rule.
+General filters do not refer to every matching object.
+
+The existing registration signatures remain unchanged. `SetLichActive`,
+`AddIslandSanctuaryReplacement` and `AddCounterDoubler` now save the live
+incarnation. Execution and queries share the live, unphased, exact-incarnation
+check. Registration before entry is inactive. Departure ends the registration;
+return requires a new one (CR 400.7). Phasing suspends it without changing identity
+(CR 702.26b). The explicit registered player remains fixed through control
+changes. A separate registration survives removal of source abilities; this
+contract does not turn these legacy registrations into typed static abilities.
+Lich's separate loss-prevention rule state is outside this source-query contract.
+
+`ChooseDamageSourceFromWaitingPersistentReplacementReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses this category
+under CR 609.7a. Shared choice validation checks the player, filter, binding and
+producer order. Absent players and empty/nonmatching lists clear only that choice.
+Queries do not execute actions or mutate shared data. Replacement execution still
+uses the existing affected-player ordering (CR 616), draw, life, counter and clone
+services. This service does not enumerate hidden callback references or publish
+an unrestricted legal source list.
+
+Evidence: `TestWaitingPersistentReplacementSourcesLifecycle`, `Execution`,
+`Choices`, and `OrderAndClones` cover exact identity, LKI removal, source control,
+phasing, return, new registration, query purity, isolated snapshots/bindings,
+declaration rejection and replacement ordering. RON
+`TestRONWaitingPersistentReplacementSourceProtection`, `Invalid`, and
+`TimingAndRechecks` cover the bounded lowering, seven protection records across
+all three registration kinds, failed payment, copied activations, resolution
+choices, current-property rechecks, simultaneous damage and cloned shields.

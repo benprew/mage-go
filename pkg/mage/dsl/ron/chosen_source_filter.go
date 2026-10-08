@@ -115,3 +115,7 @@ func (p *chosenDamageSourcePlan) waitingModifierChoice(bindings instanceBindings
 func (p *chosenDamageSourcePlan) waitingEmptyLibraryChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingEmptyLibraryReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingPersistentReplacementChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingPersistentReplacementReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

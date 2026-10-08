@@ -459,6 +459,7 @@ func (g *Game) SetLichActive(playerID, sourceID uuid.UUID) {
 	// Register the life-gain replacement (Lich: draw cards instead of gaining life)
 	g.effects.AddReplacement(&lichLifeGainReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 		playerID:        playerID,
 	})
 }
@@ -592,6 +593,7 @@ func (g *Game) SetSanctuaryActive(playerID uuid.UUID) {
 func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&islandSanctuaryReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 		playerID:        playerID,
 	})
 }
@@ -795,6 +797,7 @@ func (g *Game) AddCountersTogether(perms []*Permanent, ct CounterType, n int, so
 func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter PermanentFilter) {
 	g.effects.AddReplacement(&counterDoublerReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 		counterType:     ct,
 		filter:          filter,
 	})
