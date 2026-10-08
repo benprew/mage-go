@@ -316,14 +316,15 @@ func TestStackBoundPermanentSourceResolvingLifetime(t *testing.T) {
 	card := NewCreature("Dead", "", 1, 1)
 	card.SetOwner(b.PlayerID())
 	p := g.PutOnBattlefield(card, b.PlayerID())
+	saved := g.CaptureDamageSource(p.ID())
 	g.DestroyPermanent(p)
 	g.PutTriggersOnStack()
 	if len(g.StackBoundPermanentSources()) != 1 {
 		t.Fatal("capture missing")
 	}
 	g.ResolveStack()
-	if chooser.calls != 0 || a.Life() != 20 {
-		t.Fatal("resolving object's own event reference remained on stack")
+	if chooser.calls != 1 || a.Life() != 17 || len(g.StackBoundPermanentSources()) != 0 || !chooser.seen[0].SameObject(saved) {
+		t.Fatal("resolving event reference or final frame lifetime failed")
 	}
 }
 

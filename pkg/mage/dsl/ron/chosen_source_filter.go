@@ -167,3 +167,8 @@ func (p *chosenDamageSourcePlan) waitingDelayedCardChoice(bindings instanceBindi
 func (p *chosenDamageSourcePlan) waitingDelayedGraveyardChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingDelayedGraveyardBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+// The engine keeps the original ability source through body completion.
+func (p *chosenDamageSourcePlan) stackAbilityChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromStackAbilities(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

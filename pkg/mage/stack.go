@@ -279,7 +279,7 @@ func (s *Stack) saveSpellInformation(obj *StackObject) {
 		}
 		s.spellSources[obj.ID] = source
 	}
-	for _, referrer := range s.objects {
+	for _, referrer := range s.referenceObjects() {
 		if source.Valid() {
 			referrer.saveBoundSpellInformation(source)
 		}

@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// StackBoundDamageSources reads source references saved by stack event captures.
+// StackBoundDamageSources reads source references saved by stack and resolving event captures.
 // This category alone cannot supply the complete CR 609.7a source list.
 func (g *Game) StackBoundDamageSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		for _, saved := range stackBoundDamageSources(object) {
 			source := g.damageReferenceInformation(saved)
 			if source.SameObject(saved) && !slices.ContainsFunc(sources, source.SameObject) {

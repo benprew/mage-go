@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`RESOLVING-GRAVEYARD-REFERENCES` retains exact target, payment and event card
-visits through resolving frames, nested resolution and clones. Seven protection
-names gain 49 real-record subrule scenarios; compilation and complete-card
-coverage are unchanged. Other permanent/spell frames and opaque references
-remain to audit before full source aggregation. Token quality grants remain
+`RESOLVING-OBJECT-REFERENCES` retains exact permanent and spell references
+through body completion, nested resolution and clones across six source queries.
+Seven protection names gain 49 real-record subrule scenarios; compilation and
+complete-card coverage are unchanged. Opaque and remaining typed references
+still need audit before full source aggregation. Token quality grants remain
 unsupported. Titania's Song needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -44529,3 +44529,131 @@ Ranked next candidates:
    real RON activation evidence remain required.
 3. Named-token quality grants for Master of the Hunt: one plausible unlock;
    reuse the native quality/band service with token instance/clone tests.
+
+## 2026-10-08: resolving permanent and spell reference lifetime
+
+Status: completed implementation slice `RESOLVING-OBJECT-REFERENCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for this ledger;
+its existing relocation of completed entries remains a user change.
+
+### Candidate comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, the ledger's status and
+latest entry, targeted vocabulary signatures, relevant source-reference API and
+rules contracts, and complete canonical RON records. Reprints count once.
+The shared affected names are Circle of Protection: Artifacts, Black, Blue,
+Green, Red and White, and Greater Realm of Preservation.
+
+| Candidate | Distinct names / estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, resolving permanent/spell consistency (selected bounded prerequisite) | Seven protection names above; **0** unlocks | Six native source queries read queue-only objects. Existing exact references and resolving-frame service make this dependency-ready. Enables their own resolving ability/event/payment/target sources before shared aggregation. Opaque-reference audit remains separate. | Small to medium: six query adapters, spell departure capture, native nested/clone tests and real-record subrule tests. |
+| Ranked #2, complete CR 609.7a aggregation | Same seven names; **7** estimated unlocks | Not ready: resolving reference inconsistency plus opaque callback/reference audit. Jade Monolith and Reverse Damage benefit downstream, without full-card estimates. | Larger: audited categories, deterministic cross-category deduplication and complete activation gameplay. |
+| Ranked #3, named-token quality grants | Master of the Hunt; **1** plausible unlock | Full nested record requires NamedTokenWithPT with a named creature BandsWithOthers quality. Existing combat service can be reused; token ability lowering and identity/clone proof remain. No other nested blocker identified. | Small to medium: token adapter and combat/clone scenarios. |
+
+The shared prerequisite wins over single-card work. The selected complete context
+is native permanent/spell reference enumeration through resolving frames. This
+is not a claim that the entire ranked #1 opaque-reference audit is complete.
+Estimated and actual compilation gains are both **0 names / 0 records**.
+Seven names gain **49** real-record subrule scenarios. Complete-card gameplay
+coverage remains unchanged, and no accepted record is lost.
+
+### Exact signatures, dependencies and reuse boundary
+
+- `chosenDamageSourcePlan.stackAbilityChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` to
+  `mage.ChooseDamageSourceFromStackAbilities(mage.You, filter, binding)` with
+  the instance's `*mage.DamageSourceBinding`.
+- `Game.StackAbilityPermanentSources() []DamageSource`,
+  `StackTargetPermanentSources() []DamageSource`,
+  `StackBoundPermanentSources() []DamageSource`,
+  `StackTargetSpellSources() []DamageSource`,
+  `StackBoundSpellSources() []DamageSource` and
+  `StackBoundDamageSources() []DamageSource` now read
+  `Stack.referenceObjects()`, including retained resolving frames.
+- `Stack.saveSpellInformation(*StackObject)` saves spell departure facts into
+  target/bound references in resolving frames as well as queued objects.
+
+RON owns spelling, filter/arity validation and per-instance lowering. Mage owns
+reference enumeration, identity, current/departure facts, deduplication and
+lifetime. Reused services: stack resolving-frame retention and cloning, exact
+permanent readers, spell readers, event/payment/target collectors, transactional
+payments, filtered non-targeted choice and selected-source prevention. No new
+history store, callback introspection or global last-action slot is introduced.
+
+Final body completion ends eligibility; nested resolution retains outer frames,
+and clones retain separate frame/fact data. Phasing uses saved information and
+preserves incarnation identity. Returned permanents and later casts cannot
+replace saved objects. Invalid identities, nil declarations and unreferenced
+history produce no candidates. Spell departure during resolution updates saved
+facts. Queries neither mutate snapshots nor call opaque effect callbacks.
+
+Rules evidence: local CR 400.7, 608.2n and 609.7a–b. Existing target legality,
+selected spell-to-permanent continuation, replacement ordering and simultaneous
+shield contracts remain in shared engine services. This slice changes reference
+availability, not their execution. No source defect was found. RON source and
+vocabulary are unchanged. Runtime/removal gates remain unmet; Go definitions
+and DSL services are retained.
+
+### Failing-first tests and card mapping
+
+All six native frame forms first failed with an empty resolving query. The new
+RON lowering signature first failed compilation; after adding its adapter,
+real-record cases failed assertions against the unchanged queue-only engine.
+The native fixture initially used the wrong private incarnation field; it was
+corrected before confirming all six expected assertion failures. RON fixtures
+were corrected to use PhaseOut/PhaseIn and ChangeObjectColor rather than direct
+snapshot mutation. No acceptance assertion was weakened.
+
+| Test | Mapping / acceptance evidence |
+| --- | --- |
+| `TestResolvingObjectSourcesFrames` | Six categories: ability source, permanent target, nested permanent event, spell target, nested spell event, nested damage event. Exact identity, duplicate exclusion, departure during resolution, returned permanent exclusion, phasing, query isolation, clones, nested frames and final lifetime. |
+| `TestResolvingObjectSourcesInvalidReferences` | Invalid incarnation, absent/nil event declarations and unreferenced objects excluded during resolution. |
+| `TestRONResolvingObjectSourcesProtection` | All six Circles and Greater Realm: 49 live/departed/returned/copied/cloned/phased/phase-cycle scenarios. Full record filters, costs and future shields are lowered into a synthetic artifact whose source matches that record's filter. Tests own resolving ability source, payment failure, choice timing, incarnation identity, independent copies/clones and shield consumption. Full records still reject pending complete aggregation. |
+| `TestRONResolvingObjectSourcesInvalid`, `MissingBinding`; existing chosen filter/declaration tests | Read-before-choice, absent/empty instance bindings, invalid filter/arity and scope remain rejected. |
+| Updated `TestStackBoundPermanentSourceResolvingLifetime`, `TestStackBoundDamageSourcesActivationAndResolving`, `TestStackDelayedPermanentSourcesChoiceLifetimeAndDeclarations` | Replace obsolete queue-only expectations with own resolving death/activation/delayed source choice and damage. Retain final frame removal, exact chosen identity, payment rollback and clone lifetime assertions. |
+| Existing stack target/binding tests and repository suite | Existing legality, copies/retargeting, plural payments, delayed captures, spell continuation, replacement ordering and damage batches retain their contracts. |
+
+### Verification
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected collection exit 1; 1,978 compiled / 467 rejected
+  records; 773 accepted / 213 rejected unique names.
+- Failing-first native: all six query contexts failed with empty references.
+  Failing-first RON: missing lowering signature, then all 49 scenario assertions
+  failed against queue-only mechanics.
+- `go test ./pkg/mage/dsl/ron -run 'TestRON(ResolvingObjectSources|ChosenSourceFilter)' -count=1`: PASS.
+- `go test ./pkg/mage -run 'Test(ResolvingObjectSources|Stack.*Source)' -count=1`: PASS.
+- Broader focused RON resolving-graveyard/stack source tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make lint`: PASS, **0 issues**. Automatic fixes were reviewed; no additional
+  source change resulted. Test imports already follow repository formatting.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected collection exit 1;
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**. Entire JSON equals fresh baseline (`cmp` exit 0). First diagnostic
+  remains Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection rejection still installs no partial registry.
+
+Complete gameplay/loading, runtime integration, Go-card deletion and unused DSL
+cleanup remain unfinished. No native validation blocker prevents this commit.
+
+Changed files: six engine reference queries, spell departure capture, new native
+and RON tests, three updated native regression tests, RON choice lowering,
+pkg/mage/doc.go, API/rules contracts and this ledger. No environment blocker or
+source-data correction was needed. This run stops after this slice.
+
+Ranked next candidates:
+
+1. Bounded opaque-reference and remaining typed-reference audit before general
+   source aggregation. Seven protection names benefit; zero immediate unlocks.
+   All six queries now include resolving frames, but this does not prove every
+   reference held in effects/choices/closures is declared and enumerable.
+2. Complete CR 609.7a aggregation after that audit: seven estimated full-card
+   unlocks. Cross-category ordering/deduplication and complete real activations
+   remain required; Jade Monolith and Reverse Damage benefit downstream.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock;
+   reuse native quality/band services with token instance/clone gameplay.

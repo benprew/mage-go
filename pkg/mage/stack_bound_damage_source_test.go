@@ -304,8 +304,8 @@ func TestStackBoundDamageSourcesActivationAndResolving(t *testing.T) {
 		t.Fatal("activation capture after sacrifice")
 	}
 	g.ResolveTopOfStack()
-	if b.Life() != 20 || len(g.StackBoundDamageSources()) != 0 {
-		t.Fatal("resolving referer remained eligible")
+	if b.Life() != 18 || len(g.StackBoundDamageSources()) != 0 {
+		t.Fatal("resolving reference or final frame lifetime failed")
 	}
 	g.ResolveStack()
 	if a.Life() != 21 {

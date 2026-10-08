@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// StackAbilityPermanentSources reads original permanent sources of stack abilities.
+// StackAbilityPermanentSources reads original permanent sources of stack and resolving abilities.
 // A returned card cannot replace the source saved by an ability. Other references
 // and command-zone objects need separate contracts for a general source choice.
 func (g *Game) StackAbilityPermanentSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		if !object.IsAbility || object.sourceIncarnation == uuid.Nil {
 			continue
 		}

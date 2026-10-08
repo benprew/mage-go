@@ -6391,7 +6391,7 @@ Copies retain original target incarnations unless retargeted. Only current
 `Targets` entries qualify; old map entries cannot add candidates. Players,
 spell targets, graveyard card visits and missing/unknown identities do not
 qualify as permanent targets. Removing the final referring stack object ends
-eligibility. The resolving object has already left the stack. Queries are pure,
+eligibility after the final resolving body completes. Queries are pure,
 return separate snapshot data and preserve independent clones.
 
 This establishes one CR 609.7a category. Other saved stack references, waiting
@@ -6438,7 +6438,7 @@ Live incarnations use current information; phased and departed incarnations
 use their separate retained information. Returned objects cannot replace them.
 Shroud and damage capability do not restrict this non-targeted source category.
 Copies keep saved references. Removal of the last referring stack object ends
-eligibility. Pending triggers and the currently resolving object are excluded.
+eligibility after body completion. Pending triggers are excluded.
 
 `mage.ChooseDamageSourceFromStackBindings(player mage.PlayerRef,
 filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
@@ -6474,7 +6474,7 @@ mage.ResolvingEffect` uses the shared filtered non-targeted resolution choice
 service. Definition validation, independent results, empty/absent-player clearing,
 invalid-answer fallback and cloned resolution frames retain their existing rules.
 
-Pending triggers and the currently resolving object are outside this category.
+Pending triggers are outside this category. Resolving frames retain references.
 Removing the final referring stack object ends eligibility. This adds one source
 category required by CR 609.7a; saved delayed frames, other typed references,
 waiting effects and face-up command objects remain separate dependencies. General
@@ -6492,8 +6492,8 @@ detection snapshot. Recasts and permanent entry retain separate identities.
 
 The query returns copied card data in stack insertion/capture traversal order,
 with exact duplicates removed. Nil, invalid and incompatible captures are
-excluded. Pending triggers and the currently resolving object are outside the
-category. Copies retain references; clones keep independent departure information.
+excluded. Pending triggers are outside the category; resolving frames retain
+references through body completion. Copies retain references; clones keep independent departure information.
 
 `mage.ChooseDamageSourceFromStackSpellBindings(player mage.PlayerRef,
 filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
@@ -6518,8 +6518,8 @@ identities are excluded. Reading does not execute the body or a future producer.
 Current objects supply current characteristics and control; absent and phased
 objects use exact retained information. Copies preserve captures; game clones
 keep independent state. Query and choice snapshots cannot mutate saved cards.
-A saved target does not become a new target. Waiting triggers, pending triggers
-and the currently resolving object stay outside this stack category.
+A saved target does not become a new target. Waiting and pending triggers
+stay outside this category; resolving frames retain their references.
 
 No RON syntax or context is added. Stone Giant, Goblin Kites and War Barge use
 existing delayed adapters; `TestRONStackDelayedPermanentSources` and
@@ -7584,3 +7584,43 @@ through nested resolution and cloning; completing the body ends availability.
 per-instance `DamageSourceBinding`. General RON `ChooseADamageSource` still
 requires complete source enumeration. See the resolving graveyard source
 contract and `TestRONResolvingGraveyardSourcesProtection` for this context.
+
+## Resolving permanent and spell source references
+
+`Game.StackAbilityPermanentSources`, `StackTargetPermanentSources`,
+`StackBoundPermanentSources`, `StackTargetSpellSources`, `StackBoundSpellSources`
+and `StackBoundDamageSources` include stack objects and retained resolving
+frames. Their signatures remain `() []DamageSource`. The queue removes an
+object before its body runs; this does not end its reference lifetime.
+`Stack.referenceObjects()` supplies both contexts. Nested resolution restores
+outer frames, and clones copy each retained frame with the existing stack clone
+service. Final body completion ends this category's availability.
+
+The queries retain exact incarnations and spell identities, remove duplicates,
+and return separate card facts. Current information, phasing snapshots and
+departure information use the existing readers. A returned permanent cannot
+replace a saved incarnation. Spell departure also updates target snapshots on
+resolving referrers through `Stack.saveSpellInformation`; later casts cannot
+replace the saved spell. Invalid identities and nil bindings supply no choices.
+No query invokes an effect callback or invents a reference from its closure.
+Opaque callback references still need an explicit audit before general source
+aggregation. CR 400.7, 608.2n and 609.7a–b define these lifetimes and identities.
+
+RON's private `chosenDamageSourcePlan.stackAbilityChoice(instanceBindings)
+mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+`mage.You` and the instance's `*mage.DamageSourceBinding` to
+`ChooseDamageSourceFromStackAbilities(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect`. General source choice remains rejected.
+
+Evidence: `TestResolvingObjectSourcesFrames` covers all six queries, duplicate
+references, query isolation, departure during resolution, returned permanents,
+phasing, nested resolution and clones. `TestResolvingObjectSourcesInvalidReferences`
+excludes invalid and unbound references. `TestRONResolvingObjectSourcesProtection`
+adds 49 subrule scenarios from the six Circles of Protection and Greater Realm
+of Preservation: real filter, payment and future prevention lowering, own
+resolving ability source, failed payment, return, departure, phase cycles,
+copies, clones and shield consumption. Metadata is synthetic to make the
+ability source match each real record's filter. This is category evidence,
+not complete-card gameplay evidence. Invalid order and absent instance bindings
+remain errors. Existing event/death/delayed tests now require the resolving
+object's own reference and still require its removal after body completion.

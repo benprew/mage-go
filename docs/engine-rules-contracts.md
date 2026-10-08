@@ -7589,7 +7589,7 @@ source choices, temporary redirection or collection-wide gameplay validation.
 ## Permanent sources referred to by stack abilities
 
 `Game.StackAbilityPermanentSources() []DamageSource` reads the original
-permanent sources of activated or triggered abilities still on the stack.
+permanent sources of activated or triggered abilities on the stack or resolving.
 This establishes one referred-object context of CR 609.7a, not its complete
 legal source list. Spells, pending triggers, targets, saved action/event objects,
 waiting replacements/prevention, delayed triggers and command-zone objects
@@ -7646,8 +7646,8 @@ Results follow stack insertion and target-list order, deduplicated by exact
 identity. A copy with unchanged targets retains the original incarnations,
 including after departure; a retargeted copy adds only its selected targets.
 Unused identity-map entries cannot add candidates. Removing the last referring
-object removes a target from this category. The object currently resolving has
-already left the stack. Pending triggers and other saved event/action bindings
+object removes a target from this category. The resolving frame retains these
+references through body completion. Pending triggers and other saved event/action bindings
 are outside this query.
 
 The existing exact-incarnation information reader supplies current information,
@@ -7697,8 +7697,8 @@ for spell-to-permanent identity remains separate (CR 400.7c and 609.7a).
 Results follow stack insertion then target-list order, deduplicated by exact
 identity. Stack copies keep original references; changed targets capture their
 own spell IDs (CR 707.10). Stale map entries cannot add sources. Removal of the
-last referring stack object ends the reference; a resolving object has already
-left the stack. The query is pure and returns separate card snapshots. Clones
+last referring stack or resolving object ends the reference. The query is pure
+and returns separate card snapshots. Clones
 share immutable saved maps and copy them before updates. Spell targets have no
 phasing operation; permanent targets retain their separate established contract.
 
@@ -7733,8 +7733,8 @@ cannot create candidates before their producers run.
 Results follow stack insertion order and sorted permanent ID/incarnation bytes
 within each object. Exact identities are deduplicated. Nil declarations and
 missing, unknown or incompatible identities cannot produce sources. Pending
-triggers are excluded until placement. The object currently resolving has
-already left the stack. Removal or countering of the final referring object
+triggers are excluded until placement. The resolving frame retains its references
+through body completion. Removal or countering of the final referring object
 ends eligibility. Copies retain the saved identities; existing stack copying
 and cloning already preserve the maps and immutable event effects.
 
@@ -7791,7 +7791,7 @@ Results follow stack insertion and capture traversal order. Exact duplicates
 are removed. No damage ability or targeting permission is required. Face-down
 permanent information remains hidden. Queries make no choices, use no RNG, do
 not change state, and return separate card data. Pending triggers qualify only
-after placement; the currently resolving object is no longer on the stack.
+after placement; resolving frames retain references through body completion.
 Removal of the final referer ends this category's eligibility.
 
 `ChooseDamageSourceFromStackDamageBindings(PlayerRef, DamageSourceFilter,
@@ -7839,8 +7839,9 @@ Results follow stack insertion and capture traversal order, with exact identity
 deduplication. Nil declarations, invalid sources, mismatched stack IDs and
 permanent identities are excluded. No damage ability or targeting permission is
 required. Queries make no choices, use no RNG, change no state and return copied
-card data. Pending triggers qualify only after placement; the resolving object
-has left the stack. Removal of the final referrer ends eligibility. Stack copies
+card data. Pending triggers qualify only after placement; the resolving frame
+retains references through body completion. Removal of the final referrer ends
+eligibility. Stack copies
 and game clones preserve references and separate departure information.
 
 `ChooseDamageSourceFromStackSpellBindings(PlayerRef, DamageSourceFilter,
@@ -7881,8 +7882,8 @@ hiding. Returned objects cannot replace saved objects (CR 400.7, 603.7c, 608.2h)
 
 Waiting and pending delayed triggers are excluded until stack placement. Copies
 retain their captures; game clones preserve independent query and body state.
-The currently resolving object has left the stack. A second referring object
-can keep the source eligible; removing the final reference ends eligibility.
+The resolving frame retains its references through body completion. Other
+referring objects can extend eligibility until their final reference ends.
 The existing `ChooseDamageSourceFromStackBindings` service supplies filtered,
 non-targeted choices with declaration validation, producer order, empty-result
 clearing and separate choice snapshots. No replacement, payment or damage batch
@@ -9823,3 +9824,43 @@ Invalid declarations and read-before-choice remain rejected. CR 400.7,
 608.2 and 609.7a–b supply the identity, resolution and selected-source contracts.
 Other stack source categories and opaque callbacks still need audit before
 complete source aggregation. This context does not enable general source choice.
+
+## Resolving permanent and spell source references
+
+`Game.StackAbilityPermanentSources`, `StackTargetPermanentSources`,
+`StackBoundPermanentSources`, `StackTargetSpellSources`, `StackBoundSpellSources`
+and `StackBoundDamageSources` include stack objects and retained resolving
+frames. Their signatures remain `() []DamageSource`. The queue removes an
+object before its body runs; this does not end its reference lifetime.
+`Stack.referenceObjects()` supplies both contexts. Nested resolution restores
+outer frames, and clones copy each retained frame with the existing stack clone
+service. Final body completion ends this category's availability.
+
+The queries retain exact incarnations and spell identities, remove duplicates,
+and return separate card facts. Current information, phasing snapshots and
+departure information use the existing readers. A returned permanent cannot
+replace a saved incarnation. Spell departure also updates target snapshots on
+resolving referrers through `Stack.saveSpellInformation`; later casts cannot
+replace the saved spell. Invalid identities and nil bindings supply no choices.
+No query invokes an effect callback or invents a reference from its closure.
+Opaque callback references still need an explicit audit before general source
+aggregation. CR 400.7, 608.2n and 609.7a–b define these lifetimes and identities.
+
+RON's private `chosenDamageSourcePlan.stackAbilityChoice(instanceBindings)
+mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+`mage.You` and the instance's `*mage.DamageSourceBinding` to
+`ChooseDamageSourceFromStackAbilities(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect`. General source choice remains rejected.
+
+Evidence: `TestResolvingObjectSourcesFrames` covers all six queries, duplicate
+references, query isolation, departure during resolution, returned permanents,
+phasing, nested resolution and clones. `TestResolvingObjectSourcesInvalidReferences`
+excludes invalid and unbound references. `TestRONResolvingObjectSourcesProtection`
+adds 49 subrule scenarios from the six Circles of Protection and Greater Realm
+of Preservation: real filter, payment and future prevention lowering, own
+resolving ability source, failed payment, return, departure, phase cycles,
+copies, clones and shield consumption. Metadata is synthetic to make the
+ability source match each real record's filter. This is category evidence,
+not complete-card gameplay evidence. Invalid order and absent instance bindings
+remain errors. Existing event/death/delayed tests now require the resolving
+object's own reference and still require its removal after body completion.

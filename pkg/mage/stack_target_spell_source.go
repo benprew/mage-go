@@ -2,12 +2,12 @@ package mage
 
 import "slices"
 
-// StackTargetSpellSources reads spell targets referred to by objects on the stack.
+// StackTargetSpellSources reads spell targets referred to by stack and resolving objects.
 // Departure information stays available until the last referring object leaves.
 // This category alone cannot supply the complete CR 609.7a source list.
 func (g *Game) StackTargetSpellSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		for _, id := range object.Targets {
 			saved, ok := object.targetSpellSources[id]
 			if !ok || !saved.Valid() || saved.StackID() != id {

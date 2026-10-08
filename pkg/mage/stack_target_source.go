@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// StackTargetPermanentSources reads permanent targets of objects still on the stack.
+// StackTargetPermanentSources reads permanent targets of stack and resolving objects.
 // Target legality cannot remove a saved reference before its stack object leaves.
 // Other reference categories need separate contracts for a general source choice.
 func (g *Game) StackTargetPermanentSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		for _, id := range object.Targets {
 			incarnation := object.targetIncarnations[id]
 			if incarnation == uuid.Nil {

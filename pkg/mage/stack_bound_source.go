@@ -2,12 +2,12 @@ package mage
 
 import "slices"
 
-// StackBoundPermanentSources reads event and payment bindings on stack objects.
+// StackBoundPermanentSources reads event and payment bindings on stack and resolving objects.
 // A saved incarnation prevents a returned card from replacing the referred object.
 // This category alone cannot supply the complete CR 609.7a source list.
 func (g *Game) StackBoundPermanentSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		identities := make([]capturedPermanent, 0, len(object.capturedPermanents))
 		for binding, identity := range object.capturedPermanents {
 			if binding != nil {

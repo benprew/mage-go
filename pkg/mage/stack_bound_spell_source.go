@@ -8,11 +8,11 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// StackBoundSpellSources reads spell identities saved by stack event captures.
+// StackBoundSpellSources reads spell identities saved by stack and resolving event captures.
 // This category alone cannot supply the complete CR 609.7a source list.
 func (g *Game) StackBoundSpellSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		for _, saved := range stackBoundSpellSources(object) {
 			source := g.spellReferenceInformation(saved)
 			if !slices.ContainsFunc(sources, source.SameObject) {

@@ -171,8 +171,8 @@ func TestStackDelayedPermanentSourcesChoiceLifetimeAndDeclarations(t *testing.T)
 		t.Fatal("remaining stack reference was not chosen")
 	}
 	g.ResolveTopOfStack()
-	if chooser.calls != 1 || a.Life() != 18 || len(g.StackBoundPermanentSources()) != 0 || len(clone.StackBoundPermanentSources()) != 1 {
-		t.Fatal("resolving object's frame remained in the stack category")
+	if chooser.calls != 2 || a.Life() != 16 || len(g.StackBoundPermanentSources()) != 0 || len(clone.StackBoundPermanentSources()) != 1 {
+		t.Fatal("resolving delayed reference or final frame lifetime failed")
 	}
 	for _, invalid := range []ResolvingEffect{
 		AtNext(EachEndStep, ChooseDamageSourceFromStackBindings(nil, DamageSourceFilter{}, chosen)),

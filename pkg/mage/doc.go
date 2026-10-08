@@ -179,6 +179,14 @@
 // bindings share the existing delayed capture, stack transfer and clone services.
 // [ChooseDamageSourceFromWaitingDelayedGraveyardBindings] uses this category only.
 //
+// [Game.StackAbilityPermanentSources], [Game.StackTargetPermanentSources],
+// [Game.StackBoundPermanentSources], [Game.StackTargetSpellSources],
+// [Game.StackBoundSpellSources] and [Game.StackBoundDamageSources] include
+// resolving frames until body completion. Nested resolution and clones keep
+// each frame. Spell departure updates retained target information. Saved
+// incarnations and spell identities cannot follow returned objects.
+// These categories do not enumerate references hidden in effect callbacks.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.
