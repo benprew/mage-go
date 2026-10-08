@@ -11025,3 +11025,52 @@ shield body. These records still reject general `ChooseADamageSource`; this is
 subrule evidence, not full-card gameplay coverage. Existing finite-prevention,
 recipient-prevention and allocation tests retain real-card payment, targeting,
 replacement and simultaneous-damage evidence.
+
+## Source operands of waiting delayed redirection
+
+Both typed redirection installations implement the existing
+`delayedSourcePermanentReference` declaration contract. Selected-source
+redirection checks its damage source, permanent subject and player. Permanent
+redirection checks its source, destination and player. The existing typed source
+traversals recognize `This`, `DamageSourceOf(This)`, controller and owner reads.
+Sequences preserve these declarations. Queries do not resolve operands, apply
+filters, select sources or install rules. Implicit attachment references, opaque
+references and future delayed bodies do not infer the current source.
+
+`Game.WaitingDelayedPermanentSources` uses the saved delayed source incarnation,
+current or exact retained information, isolated card snapshots and deterministic
+deduplication. Departure, short LKI clearing and phasing retain eligibility;
+return cannot replace the original object (CR 400.7, 702.26b). Detection ends
+one-shot eligibility before pending placement (CR 603.7a–e). CR 609.7a permits
+choice of the saved object without a damage ability. Queries and cloned games
+retain separate mutable information and lifetimes.
+
+Installation keeps the existing exact-identity contracts. A phased destination
+can be saved at installation; damage cannot reach it until it phases in. A
+returned destination cannot inherit the rule. A source-derived player is read
+at installation, including exact departure information, then saved. Selected
+source properties recheck at damage time (CR 609.7b). One-shot consumption,
+simultaneous damage, replacement ordering, permanent-spell continuity, target
+legality, cost rollback and cleanup retain their existing services.
+
+`TestWaitingDelayedRedirectOperands` covers eight operand forms over six lifecycle
+states, current control, cleared LKI, query snapshots and clone lifetime.
+`TestWaitingDelayedRedirectScopeAndPurity` proves no query-time player resolution
+and excludes implicit and future references. `TestRONWaitingDelayedRedirectOperands`
+covers three fully lowered permanent redirection contexts over eight states,
+including resolution timing, failed payment, stack copies and cleanup.
+`TestRONWaitingDelayedSelectedRedirect` covers lowered selected-source subjects
+and source-derived players with an explicit producer inside each delayed body;
+copies retain separate controllers and independent one-shot rules.
+`TestRONWaitingDelayedRedirectInvalid` rejects malformed or out-of-scope delayed
+contexts. Existing native and RON selected/temporary redirection tests retain
+invalid-definition, target, simultaneous, ordering and continuity coverage.
+
+`TestRONWaitingDelayedRedirectProtection` reads the complete records of all six
+Circles of Protection and Greater Realm of Preservation. Their actual costs,
+filters and prevention bodies choose a departed source retained only by a waiting
+redirection body. Payment failure makes no choice; paid resolution prevents one
+event, then consumes the shield. These are subrule mappings, not full-card
+acceptance. Jade Monolith's existing real target/redirection mappings and Shimian
+Night Stalker's complete RON gameplay mappings remain in the regression suite.
+No source spelling, registry or runtime cutover behavior changes.

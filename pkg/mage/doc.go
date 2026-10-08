@@ -194,6 +194,13 @@
 // replace it. Bound and attached recipients do not declare a source reference.
 // Saved sequences and modes keep the declaration until the delay triggers.
 //
+// [RedirectNextDamageFromSelectedSource] declares explicit source reads in its
+// source, subject and player to [Game.WaitingDelayedPermanentSources].
+// [RedirectDamageFromPermanentThisTurn] declares reads in its source,
+// destination and player. Queries do not resolve operands or install rules.
+// Implicit attachments and future delayed bodies keep separate boundaries.
+// Saved incarnations survive departure and phasing until trigger detection.
+//
 // [ChooseAtResolution] declares explicit source reads in its player, all
 // option conditions and all option bodies to the same waiting query.
 // Queries do not evaluate conditions or choose an option. Unavailable and

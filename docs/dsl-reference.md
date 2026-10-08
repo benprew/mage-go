@@ -8441,3 +8441,31 @@ shield. The amount is read when the shield is installed. Subsequent changes
 cannot change that installed amount. The existing recipient compiler keeps
 permanent, player and any-target references separate. General damage-source
 choice remains unsupported.
+
+### Source operands of waiting redirection installations
+
+`RedirectNextDamageFromSelectedSource(DamageSourceRef, PermanentRef, PlayerRef,
+DamageSourceFilter) ResolvingEffect` and
+`RedirectDamageFromPermanentThisTurn(PermanentRef, PlayerRef, PermanentRef)
+ResolvingEffect` declare their explicit source reads to
+`Game.WaitingDelayedPermanentSources() []DamageSource`. The source, subject or
+destination, and typed source-derived player all participate. `This` and
+`DamageSourceOf(This)` retain the delayed source's exact incarnation. Implicit
+attachments and opaque references do not declare it.
+
+Existing RON lowering through `compileSelectedSourceRedirect` and
+`compileTemporaryDamageRedirect` uses these declarations in a waiting body.
+`CreateReplaceWouldDealDamageUntil` retains its permanent-to-player event, one
+`DealToCreatureOrPlaneswalkerInstead` operation and `UntilEndOfTurn` duration.
+`CreateFutureReplaceWouldDealDamage` retains its bound chosen-source event,
+permanent recipient and one `DealToPlayerInstead` operation. Typed targets,
+source-derived players and per-instance source bindings keep their existing
+scope checks. A source-choice producer in a delayed body must precede the read
+in that body; this slice adds no cross-body binding permission.
+
+Queries do not resolve operands, select damage sources or install redirection.
+Departure and phasing keep the saved reference; returned objects cannot replace
+it. Detection ends one-shot waiting availability before stack placement. Native
+and RON tests cover lifecycle, copying, cloning, payment and declaration errors.
+The seven protection records gain waiting-redirection subrule coverage. General
+`ChooseADamageSource` still requires the remaining category audit and aggregation.

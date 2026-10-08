@@ -8,9 +8,9 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-PREVENTION-OPERANDS` declares explicit source reads in waiting
-shield bodies and lowers finite amounts through typed resolution values. Seven
-protection names gain waiting-shield subrule evidence; no new record compiles.
+`WAITING-DELAYED-REDIRECTION-OPERANDS` declares explicit source reads in waiting
+selected-source and permanent redirection installers. Native and RON lifecycle,
+copy/clone and seven protection subrule tests pass; no new record compiles.
 General source aggregation still needs the remaining typed-operand audit.
 Named-token grants and sticky layers remain gaps.
 
@@ -48787,3 +48787,154 @@ Ranked next candidates:
    Reassess multi-card alternatives before selecting either single-card feature.
 
 This run stops after `WAITING-DELAYED-PREVENTION-OPERANDS`.
+
+## 2026-10-08: source operands of waiting redirection installations
+
+Status: completed implementation slice `WAITING-DELAYED-REDIRECTION-OPERANDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's status replacement and appended entry are staged for this ledger.
+
+### Fresh baseline and candidate comparison
+
+Initial `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The fresh
+loader exited 1 for collection rejection, not a build/test failure: **1,979
+compiled / 466 rejected records; 774 accepted / 212 rejected unique names**, out
+of 2,445 records / 986 names. The first diagnostic was Animate Dead,
+`2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+
+The latest ranked candidate #1 was dependency-ready. Complete records and all
+identical reprints were inspected, including nested actions, costs, target scopes,
+token grants and sticky modifications. Targeted vocabulary entries confirmed the
+existing signatures. The comparison counted reprints once:
+
+| Candidate | Distinct affected names; estimated complete unlocks | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- |
+| Waiting redirection installer operands | Circle of Protection: Black, Blue, Green, Red, White and Artifacts; Greater Realm of Preservation; Jade Monolith: 8 rejected names / 37 records, 0 immediate unlocks. Shimian Night Stalker adds 1 accepted consumer. | General ChooseADamageSource still needs the remaining operand/category audit and aggregation. Exact source reads in these installers complete a shared prerequisite for all eight rejected consumers. | Small: two declaration implementations, native lifecycle/purity tests and RON lowering/gameplay tests. |
+| Named-token quality grants | Master of the Hunt: 1 name / record; 1 plausible unlock. | Named BandsWithOthers must be installed independently on each token, with combat, copying and clone evidence. The complete record has no other apparent blocker. | Medium: token-grant adapter and per-token rules evidence. |
+| Sticky layer lifecycle | Titania's Song: 1 name / 2 records; 1 plausible unlock. | Must retain the layer group after departure, keep shared membership after ability loss and read each member's mana value. The complete record has no other apparent blocker. | Medium to large: lifecycle, dependencies and layer membership tests. |
+
+Selection rationale: candidate #1 has concrete shared downstream value across
+multiple unique cards and fits one run. The single-card features remain deferred.
+The missing piece was an engine reference declaration, not parser syntax, source
+data or environment repair. Contract, reuse boundary and acceptance cases were
+stated before editing. No removed skill, delegation or Go-card fallback was used.
+
+### Exact signatures, contexts and dependencies
+
+Existing public signatures remain unchanged:
+
+- `RedirectNextDamageFromSelectedSource(DamageSourceRef, PermanentRef, PlayerRef,
+  DamageSourceFilter) ResolvingEffect` declares explicit source reads in the
+  damage source, permanent subject and player.
+- `RedirectDamageFromPermanentThisTurn(PermanentRef, PlayerRef, PermanentRef)
+  ResolvingEffect` declares reads in the source, player and destination.
+- Both implementations use `refersToSourcePermanent() bool`, through the existing
+  `delayedSourcePermanentReference` and typed reference traversals. Direct This,
+  DamageSourceOf(This), controller and owner reads participate.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` reuses exact saved
+  incarnations, current/departure information, deduplication, snapshot isolation
+  and cloned waiting lifetimes. Sequence traversal already exists.
+
+RON lowering is reused exactly through `compileTemporaryDamageRedirect(Node,
+scope) (effectFactory, error)` and `compileSelectedSourceRedirect(Node, scope)
+(effectFactory, error)`. There is no missing adapter to recreate. The first
+supports `CreateReplaceWouldDealDamageUntil(DamageWouldBeDealtByPermanentToRecipient(
+source, Player(player)), [DealToCreatureOrPlaneswalkerInstead(destination)],
+UntilEndOfTurn)`. The second supports `CreateFutureReplaceWouldDealDamage(
+NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource,
+Permanent(subject)), [DealToPlayerInstead(player)])` with a bound choice plan.
+Existing typed permanent/player targets and per-instance bindings are retained.
+
+The engine owns source declarations and exact waiting information. RON owns
+spelling, validation, lexical scopes and lowering. Queries do not resolve operands,
+select sources, evaluate filters or install rules. Departure, cleared short LKI
+and phasing retain the exact original reference. A return cannot replace it.
+Trigger detection ends one-shot availability before stack placement. Implicit
+attachments, opaque references and future delayed bodies do not infer the source.
+Selected-source tests place their explicit producer inside the delayed body;
+no cross-body binding permission or general source aggregation is added.
+
+A phased destination may be saved during installation and becomes usable when
+that incarnation phases in. Returned destinations cannot inherit a rule. Typed
+source-derived players read exact information at installation, then remain saved.
+Target legality, payment transactions, simultaneous damage, replacement ordering,
+source-property rechecks, selected permanent-spell continuity, one-shot consumption
+and cleanup reuse existing engine services. CR 400.7, 603.7a–e, 609.7a–b and
+702.26b supply the relevant rules contracts.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, 48 native operand/lifecycle cases failed missing-source
+assertions; native query-purity and 24 RON operand cases failed the same contract.
+Seven protection cases failed because their departed source was omitted. An
+initial creature fixture without CardPT was corrected before recording the RON
+semantic failures. The added selected-source RON cases were also run with the new
+implementation temporarily absent: all 12 failed missing-source assertions.
+The implementation was then restored and the same tests passed.
+
+Test setup exposed existing isolated binding validation: an outer choice producer
+cannot authorize a read inside the delayed body. The selected fixture now supplies
+its producer inside that body. Expected phased behavior was corrected after
+inspection of the exact-identity installer contract. Clone assertions re-read
+mutable permanents after damage; copied one-shot rules each consume separately.
+No acceptance case or behavior assertion was dropped to obtain a pass.
+
+| Test / card mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedRedirectOperands | Eight typed operand contexts over live, phased, phase-cycle, departed, returned and changed-control states; original incarnation, short LKI clearing, mutable query snapshots, no installation during queries and independent cloned waiting lifetimes. |
+| TestWaitingDelayedRedirectScopeAndPurity | Queries never resolve an observing player reference; installation resolves it once. Implicit attachments and future delayed bodies do not infer a source. |
+| TestRONWaitingDelayedRedirectOperands | Fully parsed/compiled RON delayed bodies for permanent source, destination and source-derived player; eight lifecycle/copy/clone states, failed payment, announcement/resolution timing, current/retained player reads, copied controllers and cleanup. |
+| TestRONWaitingDelayedSelectedRedirect | Lowered selected-source subject and controller-derived player contexts; six lifecycle/copy/clone states, explicit body-local producers, separate per-instance bindings/controllers, one-shot consumption and independent clones. Reads Jade Monolith's complete source-choice plan; synthetic delayed context is subrule evidence. |
+| TestRONWaitingDelayedRedirectInvalid | Rejects invalid duration, out-of-scope event player, unbound target and unbound chosen source in delayed bodies. Existing selected/temporary invalid-declaration families rerun. |
+| TestRONWaitingDelayedRedirectProtection | Complete records for all six Circles and Greater Realm supply actual costs, filters and shield bodies. A departed source referred to only by a waiting redirection body remains selectable; failed payment makes no choice; prevention consumes after one event. Subrule coverage for 7 names / 31 records, not full-card acceptance. |
+| Existing TestRONSelectedSourceRedirect families | Jade Monolith's complete-record target/redirection subrules: costs, legality, source/destination identity, copies, instances and cleanup. Still rejected at general ChooseADamageSource. |
+| Existing TestRONTemporaryRedirect families | Shimian Night Stalker's complete RON record: target restrictions, tap/mana payment, timing, exact source/destination/player, copies and cleanup. It remains accepted. |
+| Existing TestSelectedSourceRedirect and TestTemporaryRedirect families | Native invalid definitions, property rechecks, replacement ordering, simultaneous batches, exact identities, spell continuity/copies and planeswalker destinations. |
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run
+  'TestRONWaitingDelayed.*Redirect|TestRONSelectedSourceRedirect|TestRONTemporaryRedirect'
+  -count=1`: PASS.
+- Native `go test ./pkg/mage -run
+  'TestWaitingDelayedRedirect|TestSelectedSourceRedirect|TestTemporaryRedirect'
+  -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting was reviewed; no
+  semantic production changes. A one-shot damage assertion was strengthened to
+  require the exact result. Combined focused native/RON tests reran after lint:
+  PASS.
+- `git diff --check`: PASS; rerun for the completed ledger and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. JSON exactly equals
+  baseline, including all diagnostics: **1,979 compiled / 466 rejected records;
+  774 accepted / 212 rejected unique names**. First diagnostic remains Animate
+  Dead's unsupported EnchantGraveyardCard. No accepted record was lost.
+
+
+Estimated and actual gains agree: **0 complete-card unlocks / 0 compiled records**.
+Seven protection names gain new waiting-redirection subrule evidence. Typed
+installer source reads now have native and RON gameplay evidence. Compilation and
+full-card gameplay remain separate. No source defect or environment failure was
+found. No RON source changed, so the vocabulary snapshot needs no refresh.
+Runtime integration, complete collection gameplay, Go-card deletion and unused
+DSL removal remain unfinished. Their removal gates are not met.
+
+Changed files: new `pkg/mage/waiting_delayed_redirect.go` and its native test;
+new `pkg/mage/dsl/ron/waiting_delayed_redirect_test.go`; `pkg/mage/doc.go`;
+`docs/dsl-reference.md`; `docs/engine-rules-contracts.md`; and this ledger.
+
+Ranked next candidates:
+
+1. Continue the typed operand/category audit with explicit source and player
+   operands of `damageSourceChoice` (its fixed typed-source list has no source-read
+   declaration), then complete general damage-source aggregation. Seven protection
+   names / 31 records and Jade Monolith / 6 records have concrete downstream value.
+   Preserve implicit/opaque reference boundaries and declaration scopes.
+2. Named-token quality grants for Master of the Hunt: 1 plausible unlock;
+   independent named BandsWithOthers grants, combat, copying and clones.
+3. Sticky layer lifecycle for Titania's Song: 1 plausible unlock;
+   departure retention, shared membership and per-member mana values.
+
+This run stops after `WAITING-DELAYED-REDIRECTION-OPERANDS`.
