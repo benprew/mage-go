@@ -757,6 +757,19 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	return p
 }
 
+func (p *Permanent) replaceEntryDefinition(card Card) {
+	copied := NewPermanent(card, p.ControllerID())
+	copied.incarnationID = p.incarnationID
+	copied.baseController = p.baseController
+	copied.computedController = p.computedController
+	copied.turnControlGained = p.turnControlGained
+	copied.controlGainedTurns = p.controlGainedTurns
+	copied.ColorOverride = p.ColorOverride
+	copied.Tapped = p.Tapped
+	copied.CreatedBy = p.CreatedBy
+	*p = *copied
+}
+
 // ControllerID returns the permanent's controller after continuous effects.
 func (p *Permanent) ControllerID() uuid.UUID { return p.computedController }
 

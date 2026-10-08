@@ -155,7 +155,7 @@ func TestRONCopiableValuesProvenanceAndInvalid(t *testing.T) {
 	}
 	for _, rule := range []string{
 		`Activated(PayMana([]),ActionList([PlayerAction(TheChosenPlayer,GainLife(Integer(1)))]))`,
-		`AsPermanentEnters(ThisPermanent,[MayActions([EnterAsACopyOfAPermanent(IsCardtype(Creature),NoCopyEffects)])])`,
+		`AsPermanentEnters(ThisPermanent,[MayActions([EnterAsACopyOfAPermanent(IsCardtype(Creature),CopyEffects([]))])])`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid snapshot source",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),CardPT:(Power:1,Toughness:1),Rules:[`+rule+`])`), "invalid.ron")
 		if err != nil {

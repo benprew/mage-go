@@ -12,6 +12,11 @@ func compileOptionalEntry(n Node) (entryAbilityFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	for _, operation := range operations {
+		if operation.Name == "EnterAsACopyOfAPermanent" {
+			return nil, unsupported(operation, "copy inside an ordinary entry sequence")
+		}
+	}
 	if len(operations) == 0 {
 		return nil, problem(n, "optional entry requires at least one entry operation")
 	}

@@ -9005,3 +9005,30 @@ This prerequisite does not accept Clone or add entry-copy scheduling.
 Evidence: `TestTokenDefinitionPlan*`, `TestRONTokenCopiableValuesGameplay`,
 `TestRONTokenCopiableValuesDeclarations`, and existing token creation/banding,
 copy snapshot and entry-copy identity suites.
+
+## Optional early entry copy
+
+Use `mage.MayCopyAsEnters(filter mage.PermanentFilter) mage.Ability` with
+`WithAbility` on a permanent whose physical definition has a validated plan.
+The entry controller can choose a present matching permanent without targeting.
+The copy uses `CaptureCopiableValues` and `BuildEntryCopy`, so the selected
+source must have supported copy provenance or standard face-down values.
+
+RON supports this complete entry shape:
+
+```ron
+AsPermanentEnters(ThisPermanent, [MayActions([
+    EnterAsACopyOfAPermanent(IsCardtype(Creature), NoCopyEffects)
+])])
+```
+
+The filter uses the existing context-free permanent-filter compiler. The copy
+operation must be the sole child of the outer `MayActions`. Copy exceptions,
+required copying, nested optional copying and mixed copy/ordinary entry sequences
+remain declaration errors. Ordinary optional entry sequences keep their existing
+support. No resolving action or target binding is introduced.
+
+The copy precedes tapped entry, counters and entry choices. Those operations and
+ETB observers read the new definition. Chosen values, counters and ordinary layer
+changes on the source do not transfer. A physical card keeps its ID and owner,
+and uses its printed rules after departure. Phasing keeps the copy.

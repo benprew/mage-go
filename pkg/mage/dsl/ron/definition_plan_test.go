@@ -186,12 +186,12 @@ func TestRONDefinitionPlanAcceptedCollection(t *testing.T) {
 			}
 		}
 	}
-	if accepted != 2019 || rejected != 426 {
+	if accepted != 2025 || rejected != 420 {
 		t.Fatalf("accepted=%d rejected=%d", accepted, rejected)
 	}
 }
 
-func TestRONDefinitionPlanCopyConsumersRemainRejected(t *testing.T) {
+func TestRONDefinitionPlanCopyConsumerBoundaries(t *testing.T) {
 	data, err := os.ReadFile("../../../../cards/mtgish/LEB.lines.ron")
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +205,12 @@ func TestRONDefinitionPlanCopyConsumersRemainRejected(t *testing.T) {
 		switch node.Fields["Name"].String {
 		case "Clone", "Copy Artifact", "Vesuvan Doppelganger":
 			found++
-			if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "EnterAsACopyOfAPermanent") {
+			_, err := Compile(node)
+			if node.Fields["Name"].String == "Clone" {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), "CopyEffects") {
 				t.Fatalf("copy consumer: %v", err)
 			}
 		}

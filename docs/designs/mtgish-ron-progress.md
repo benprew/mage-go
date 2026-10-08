@@ -2,18 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **785 accepted / 201 rejected unique card
-names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total).
+The latest recorded inventory reports **786 accepted / 200 rejected unique card
+names** (986 total), and **2,025 compiled / 420 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TOKEN-COPIABLE-DEFINITION-PROVENANCE` gives supported RON-created tokens
-validated copy plans and independent snapshot rules. Four real creator scenarios
-and fifteen token declarations gain copy-source evidence. Compilation and
-complete-card gameplay counts are unchanged; copy scheduling remains a gap.
+`OPTIONAL-EARLY-ENTRY-COPY` adds copy-priority entry scheduling and the complete
+NoCopyEffects optional entry shape. Clone gains six compiled records and real
+RON gameplay evidence for copied counters, choices, abilities and source identity.
+Token and physical-copy provenance remain shared prerequisites.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Entry copying, player-keyed permanent choices, exchanges and replacements remain gaps.
+Copy exceptions, live copy layers, player-keyed choices and replacements remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -51882,3 +51882,148 @@ Ranked next candidates:
    records. Reuse exact chosen sources and shared prevention batches.
 
 This run stops after TOKEN-COPIABLE-DEFINITION-PROVENANCE.
+
+## 2026-10-08: optional early entry-copy scheduling
+
+Status: completed slice `OPTIONAL-EARLY-ENTRY-COPY`. This run stops after this
+slice. Existing `.gitignore`, execution-design and progress-ledger changes and
+untracked `mtgish-ron-completed.md` are preserved. Only this slice's ledger edits
+are staged; the user's history reorganization remains outside the commit.
+
+### Candidate comparison and selection
+
+Read the current status and latest ledger entry, then inspected complete records
+for all four candidate names and their 23 reprints. Counts below use unique names.
+The targeted vocabulary confirms EnterAsACopyOfAPermanent/2 in 18 records,
+CopyEffects/1 in 18 nested expressions, and PreventAllButSomeOfThatDamage/1 in
+five records. Local `data/LEA.json` supplies Clone's matching Oracle text. Rules
+read: CR 614.5, 614.12, 616.1c/f, 616.2 and 707.2–7.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| #1 Early entry-copy scheduling, selected | Clone; Copy Artifact; Vesuvan Doppelganger (18 records) | Clone: one name / six records | Physical copy identity and token provenance are ready. Copy Artifact still needs AddCardtypes copy exceptions; Vesuvan Doppelganger needs KeepColor, added linked abilities and live copy-layer installation. Scheduler is shared by all three. | Medium: early proposed entry action, replacement identity/rechecks, lowering, native/RON gameplay and regressions. |
+| #2 CopyExceptions/AddCardtypes | Copy Artifact (six records) | Zero before scheduler; one name / six records afterward | Requires #1. Modified types must become copiable and participate in later layers. Provides a copy-modification foundation also needed by Vesuvan Doppelganger. | Medium after #1; larger if combined with its prerequisite. |
+| #3 Next combat damage event with one point remaining | Forcefield (five records) | One name / five records | Typed chosen permanent and future prevention services exist. Needs an exact next-combat-event shield, residual damage and simultaneous-packet semantics. No other rules in its record block compilation once that form exists. | Small to medium; independent, but one consumer. |
+
+Candidate #1 is dependency-ready, unlocks Clone and supplies the common scheduler
+for three copy consumers. It has greater concrete downstream value than #3;
+#2 depends on it. This is an engine scheduling contract and compiler adapter,
+not a source-data defect or environment repair. No source spelling is changed.
+
+### Exact contract, dependencies and reuse boundary
+
+- Engine API: `mage.MayCopyAsEnters(filter mage.PermanentFilter) mage.Ability`,
+  installed by WithAbility on a permanent with a validated physical plan.
+- RON shape: `AsPermanentEnters(ThisPermanent,
+  [MayActions([EnterAsACopyOfAPermanent(filter, NoCopyEffects)])])`.
+  The outer optional body has exactly one copy operation. Filter lowering uses
+  the existing context-free permanent filter compiler. No lexical target,
+  resolution, entry-choice or action-result binding is introduced.
+- NoCopyEffects must be a symbol. Wrong arities, copy modifications, required
+  copy operations, mixed or nested copy sequences, and wrong source contexts
+  reject during compilation. Instant/sorcery declarations reject through native
+  battlefield-source validation. Existing ordinary optional sequences remain.
+- Battlefield preparation exposes the entering permanent and supplies an
+  event-local battlefieldEntryAction to EffectManager before tapped entry,
+  counters and ordinary entry operations. Its copy candidates join registered
+  replacement candidates, using existing priority tiers and affected-player
+  choices. Applicability is recomputed after each replacement.
+- Each retained definition plan and ability position identifies one declaration
+  within the event. Reconstructed rules retain that replacement object, so fresh
+  ability UUIDs cannot repeat a used effect. Removed rules disappear; an acquired
+  declaration from a different plan gets its own opportunity. Later entries
+  create new event-local state. No global last-action slot or persistent cache.
+- The entry controller chooses from present matching permanents without targeting.
+  Phased donors are excluded. Invalid/null required-choice output uses the first
+  offered candidate. A chosen incarnation is rechecked for presence, identity
+  and its current filter. Empty sets and decline preserve ordinary entry.
+- CaptureCopiableValues and BuildEntryCopy supply accurate values and fresh rules
+  for supported validated sources, including RON tokens, copied entries and
+  standard face-down creatures. Untracked legacy copy provenance remains rejected;
+  there is no approximation. Builder/capture failure rejects the entry through
+  the existing failed-entry path rather than running an incomplete copy.
+- Physical identity, owner, token status, incarnation, entry controller and
+  supplied entry state remain. Source counters, ordinary layers and saved choices
+  do not transfer. Construction stays in card.go; copy scheduling owns no Layer 2
+  controller writes. Fresh copied entry counters/choices precede ETB observers.
+- Reuses the existing replacement loop and applied set, native choice interfaces,
+  immutable definition plans, token provenance, physical copy/departure services,
+  counter replacement pipeline, simultaneous entry batch, costs, LKI, phasing,
+  triggers and game cloning. No card-name branches, registry fallback or panics.
+- Does not migrate all legacy entry replacements to the proposed entry action.
+  External copy grants, exceptions, live copy layers, back faces and nonstandard
+  face-down shapes remain separate contracts. Current Go callers are retained.
+
+### Failing-first evidence and card-to-test mapping
+
+The initial RON gameplay test failed at Clone's unsupported
+EnterAsACopyOfAPermanent operation. Native declaration/acquired-entry tests first
+failed compilation because MayCopyAsEnters did not exist. The completed tests
+retain those gameplay assertions. Expanded tests exposed and fixed phased donor
+selection. The first engine-short run exposed a controller-construction boundary
+violation; construction moved to card.go and the guard was retained unchanged.
+
+| Test | Card and behavior mapping |
+| --- | --- |
+| TestRONEntryCopyGameplay | Complete LEB Clone plus FEM Icatian Javelineers: failed and successful casting payment, no announcement choice, copy a shrouded donor without targeting, acquired entry counter, activation legality/rollback, separate source counters, phase cycle, physical hand destination, copied LKI, pending acquired ability after departure, and cloned pending spell declining the copy. Declined 0/0 Clone dies through the existing state check. |
+| TestRONEntryCopySources | Complete Clone with Air Elemental, another copied Clone, The Hive's actual RON-created Wasp token and a standard face-down donor; physical nontoken/face-up status, saved copy provenance, phased/absent donors and empty-choice behavior. |
+| TestRONEntryCopyAcquiredChoiceAndObserver | Complete Clone with a RON creature fixture: acquire a fresh opponent entry choice and ETB ability, then verify a native outside observer sees the copied creature. Source choices do not transfer. |
+| TestRONEntryCopyInvalid | Wrong arity, malformed NoCopyEffects, unsupported CopyEffects, mixed entry operations, required copy and attachment source contexts reject before gameplay. |
+| TestEntryCopyDeclaration / TestEntryCopyAcquiredRules | Native permanent-context validation; replace physical entry rules with copied tapped entry and counters, exclude donor counters, preserve copy provenance. |
+| TestEntryCopyRecheck | Native phased/returned/nonmatching donor incarnation, invalid choice output and null choice fallback. |
+| TestEntryCopyPriorityAndRepetition | Native copy priority before default replacements, affected controller's same-tier order, removed rule recheck, new acquired declaration, same-plan reconstruction used once, and fresh state on a later entry. |
+| TestEntryCopyBatch | Shared simultaneous-entry preparation, two independent copy choices/counter arrays and acquired counters through the existing doubler pipeline. |
+| TestRONOptionalEntryCopyDependencies / TestRONDefinitionPlanCopyConsumerBoundaries | Complete records for LEA/LEB/2ED/3ED/CED/CEI: six Clone records accept; twelve Copy Artifact / Vesuvan Doppelganger records still reject CopyEffects. |
+| Existing TestRONEntryCopyIdentity*, TestRONCopiableValues*, token provenance, definition-plan and entry-counter suites | Retain copied death/link rules, all physical departure destinations, source layers/choices, snapshot isolation, independent copied rules, counter ordering and accepted-record reconstruction. |
+
+Four new RON test functions and five native functions add entry-copy evidence.
+Clone gains complete-card gameplay scenarios within the established snapshot
+source context. This does not establish the remaining copy-exception or live-layer
+contexts, or complete collection gameplay. Other named real cards are donor or
+regression mappings, not newly complete-card claims.
+
+### Verification and measured result
+
+- Fresh baseline: make build and go test ./pkg/mage/dsl/ron -count=1 PASS.
+  Baseline loadcards exited 1: 2,019 compiled / 426 rejected records; 785 accepted
+  / 201 rejected unique names. This was collection rejection, not build failure.
+- Focused go test ./pkg/mage/dsl/ron -run TestRONEntryCopy -count=1: PASS.
+  Native TestEntryCopy and the unchanged controller architecture guard: PASS.
+- make build and go vet ./...: PASS.
+- Initial engine-short run failed the controller construction guard. Corrected
+  construction ownership; final go test ./pkg/mage/... -short -count=1: PASS.
+- make test: PASS.
+- Initial make lint flagged a missing two-card capacity in the new batch test.
+  Added capacity; final make lint: PASS, zero issues. Automatic formatting
+  changes reviewed; affected focused tests rerun. git diff --check: PASS.
+- Final go run ./cmd/loadcards -json: expected exit 1; **2,025 compiled / 420
+  rejected records; 786 accepted / 200 rejected unique names**. Six Clone
+  diagnostics disappear; twelve copy-consumer diagnostics advance to CopyEffects.
+  The other 408 diagnostics are unchanged. No partial registry is published.
+- No remaining environment or pre-existing validation blocker.
+
+Estimated and actual gain: **one unique name / six records**. Compilation gains
+and the new Clone gameplay scenarios are recorded separately. No source defects
+or RON edits; vocabulary hashes are unchanged. Runtime loading, Go-card removal
+and unused DSL removal remain gated. No DSL function was deleted, so no deletion
+caller audit is claimed.
+
+Changed files: pkg/mage/entry_copy.go/test, card.go, game.go, effect_manager.go,
+doc.go; pkg/mage/dsl/ron/entry_copy.go/test, entry_tapped.go, optional_entry.go,
+optional_entry_test.go, definition_plan_test.go, copiable_values_test.go,
+inventory_test.go and numeric_consumers_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. Copiable copy modifications, starting with CopyEffects([AddCardtypes(...)])
+   for Copy Artifact: one immediate name / six records. Preserve modified types
+   in subsequent copies and Layer 4; establish a shared exception representation
+   for both Copy Artifact and Vesuvan Doppelganger.
+2. KeepColor and fresh linked added-ability provenance, then live copy-layer
+   installation for Vesuvan Doppelganger: one name / six records after those
+   prerequisites. Entry scheduling is ready; do not omit its upkeep recopy rule.
+3. Forcefield next-combat-source event leaving one damage point: one name / five
+   records, using the shared exact-source and simultaneous-prevention contracts.
+
+This run stops after OPTIONAL-EARLY-ENTRY-COPY.

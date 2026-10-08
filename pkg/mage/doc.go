@@ -31,6 +31,15 @@
 // Their prototypes are not tokens; [BuildEntryCopy] keeps physical token status.
 // Legacy [DefineToken] callers keep their existing construction behavior.
 //
+// Use [MayCopyAsEnters] for an optional copy before other entry operations.
+// The entry controller chooses a present matching permanent without targeting.
+// The shared replacement pipeline applies the copy priority and checks new rules.
+// Stable definition positions prevent a rebuilt rule from repeating in one event.
+// Copying uses validated provenance, fresh rules and the physical entry builder.
+// Acquired entry counters, choices and triggers use the copied definition.
+// Departure restores printed rules; phasing does not repeat the copy choice.
+// Copy exceptions and live copy layers need separate services.
+//
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
 // belongs to its resolution frame. An empty set or absent chooser clears it.

@@ -11828,3 +11828,59 @@ Stangg and Tetravus retain unsupported token forms). Existing creation and token
 banding suites retain payment, combat, clone and simultaneous-entry contracts.
 Clone, Copy Artifact and Vesuvan Doppelganger remain rejected pending scheduling
 and copy exceptions. No complete copy-card gameplay is claimed.
+
+## Optional early entry-copy scheduling
+
+`MayCopyAsEnters(PermanentFilter) Ability` declares an optional copy replacement
+on a permanent with a retained physical definition plan. The supported source
+contract is the existing immutable copiable snapshot service, including supported
+RON-created tokens, copied entries and standard face-down permanents. Legacy
+untracked definitions and copy layers remain outside that snapshot contract.
+No approximate copy or Go-card fallback is used.
+
+Battlefield preparation creates an event-local `battlefieldEntryAction` before
+entry counters, tapped status and ordinary entry operations. `EffectManager`
+combines its current copy declarations with registered replacement candidates.
+Existing priority selection and affected-player ordering apply (CR 616.1c,
+616.1f). Each recheck reads the current effective definition. Rules removed by
+copying cannot run; acquired copy rules can become applicable (CR 707.5).
+A `(CardDefinitionPlan, ability position)` key retains one replacement object
+through reconstruction. The shared applied set therefore prevents repeated use
+of that declaration in one entry event (CR 614.5). Each subsequent entry has a
+new applied set. Independent declarations remain separate choices.
+
+The entry controller chooses at entry, after casting payments and resolution,
+without targeting. Phased permanents are excluded. The chosen member is checked
+against the original candidate incarnation and the current filter before capture
+(CR 400.7, 702.26b). Invalid or absent chooser output uses the first legal offered
+member, consistent with required native choices. An offered member that departed,
+returned, phased or stopped matching cannot supply the copy. Empty sets and a
+declined optional choice permit ordinary entry. Snapshot or physical builder
+failure rejects entry through the existing failed-entry path; it cannot install
+an approximate copy or execute the remaining entry operations.
+
+The new effective permanent keeps the physical ID, owner, token status, entry
+incarnation, controller and previously supplied entry state. Fresh attributes and
+abilities come from the snapshot. It receives acquired entry counters and fresh
+choices, not the source's counters or saved choices (CR 707.2, 707.5–7).
+The existing entry-counter replacement pipeline and simultaneous token-entry
+batch are retained. ETB abilities and outside observers see the copied permanent.
+The existing physical departure and LKI services keep printed destination rules
+and copied event information respectively. Phasing does not repeat entry.
+Cloned pending spells use separate choices and declarations.
+
+RON accepts only a sole optional `EnterAsACopyOfAPermanent(filter, NoCopyEffects)`
+under `AsPermanentEnters(ThisPermanent, ...)`. Copy modifications, required or
+mixed entry-copy sequences, external copy grants, live copy layers, back faces
+and other face-down shapes remain separate contracts. This does not establish a
+general migration of all legacy entry replacements to proposed entry events.
+
+Tests: native `TestEntryCopyDeclaration`, `TestEntryCopyAcquiredRules`,
+`TestEntryCopyRecheck`, `TestEntryCopyPriorityAndRepetition` and
+`TestEntryCopyBatch`; RON `TestRONEntryCopyGameplay`, `TestRONEntryCopyInvalid`,
+`TestRONEntryCopySources` and `TestRONEntryCopyAcquiredChoiceAndObserver`.
+Real Clone scenarios cover payments, timing, decline, copied activation rollback,
+phasing, departure/LKI, clone isolation, token and copied donors, face-down values
+and acquired entry choices. Existing entry-copy identity tests retain copied death
+abilities and all departure destinations. All six Clone reprints compile; Copy
+Artifact and Vesuvan Doppelganger still reject their copy modifications.

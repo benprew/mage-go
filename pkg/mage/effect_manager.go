@@ -1042,6 +1042,13 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 			}
 		}
 	}
+	if entry, ok := action.(*battlefieldEntryAction); ok {
+		for _, replacement := range entry.replacementCandidates() {
+			if !applied[replacement] {
+				candidates = append(candidates, replacement)
+			}
+		}
+	}
 	// A replacement can change the recipient before protection applies.
 	if damage, ok := action.(*DamageToCreatureAction); ok {
 		source := damage.DamageSource()

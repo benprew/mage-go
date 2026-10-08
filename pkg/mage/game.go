@@ -428,18 +428,28 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 	perm.controlGainedTurns = map[uuid.UUID]int{controller: g.turns.Turn()}
 
 	g.syncAbilityContext(perm)
+	g.zones.SetEnteringPermanent(perm)
+	defer g.zones.ClearEnteringPermanent()
+	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement)}
+	if g.effects.ApplyReplacements(entry, g) == nil {
+		owner := perm.Card.Owner()
+		if owner == uuid.Nil {
+			owner = perm.ControllerID()
+		}
+		if player := g.GetPlayer(owner); player != nil {
+			player.AddToGraveyard(cardForBattlefieldDeparture(perm.Card))
+		}
+		return nil
+	}
+	if perm.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
+		return nil
+	}
 
 	// Set tapped status before entry effects and triggers inspect this permanent.
 	if tapped || perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
 		perm.Tapped = true
 		perm.RevokeBaseAttr(EntersTapped)
 	}
-
-	// Expose the entering permanent to FindPermanent for the duration of ETB
-	// resolution so counter-placement replacements (ETB additional counters,
-	// doublers) can match it before it joins g.battlefield.
-	g.zones.SetEnteringPermanent(perm)
-	defer g.zones.ClearEnteringPermanent()
 
 	// Add X counters if configured (replacement effect, not a trigger).
 	// Routed through AddCountersWithReplacement so ETB-additional counter

@@ -24,6 +24,9 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 	}
 	operation := operations[0]
 	if operation.Name == "MayActions" {
+		if operation.Kind == Tuple && len(operation.Args) == 1 && operation.Args[0].Kind == List && len(operation.Args[0].Args) == 1 && operation.Args[0].Args[0].Name == "EnterAsACopyOfAPermanent" {
+			return compileEntryCopy(operation.Args[0].Args[0])
+		}
 		factory, err := compileOptionalEntry(operation)
 		if err != nil {
 			return nil, err
