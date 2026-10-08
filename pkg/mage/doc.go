@@ -53,6 +53,12 @@
 // [ChooseDamageSourceFromWaitingRedirectionReferences] reads both categories.
 // Other waiting replacement references need separate contracts.
 //
+// [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.
+// [Game.SetAttackerDamageRedirect] saves live source and destination identities
+// until cleanup. Both supply exact waiting redirection references after departure
+// or phasing. Damage still requires the original live destination. A returned
+// source cannot inherit the attacker redirect. An absent installation adds no rule.
+//
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.
 // A shield on a permanent spell continues to the exact permanent it becomes.
 // Entry effects run after the link. Separate copies and returned objects cannot

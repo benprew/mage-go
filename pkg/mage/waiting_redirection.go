@@ -13,6 +13,10 @@ func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 			return []capturedPermanent{rule.from, rule.to}
 		}
 		switch rule := replacement.(type) {
+		case *creatureDamageRedirectReplacement:
+			return []capturedPermanent{{rule.creatureID, rule.incarnation}}
+		case *attackerDamageRedirectReplacement:
+			return []capturedPermanent{{rule.attackerID, rule.attackerIncarnation}, {rule.absorberPermID, rule.absorberIncarnation}}
 		case *bodyguardReplacement:
 			return []capturedPermanent{{rule.bodyguardPermID, rule.incarnation}}
 		case *playerDamageRedirectReplacement:

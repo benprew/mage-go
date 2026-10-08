@@ -673,19 +673,24 @@ func (r *artifactDamageRedirectReplacement) Clone() ReplacementEffect {
 type creatureDamageRedirectReplacement struct {
 	replacementBase
 	creatureID     uuid.UUID
+	incarnation    uuid.UUID
 	targetPlayerID uuid.UUID
 	consumed       bool
 }
 
-func (r *creatureDamageRedirectReplacement) Matches(a Action, _ GameReader) bool {
+func (r *creatureDamageRedirectReplacement) Matches(a Action, g GameReader) bool {
 	act, ok := a.(*DamageToCreatureAction)
-	if !ok {
+	if !ok || act.Amount() <= 0 || !r.IsActive(g) || act.PermanentID() != r.creatureID || g.GetPlayer(r.targetPlayerID) == nil {
 		return false
 	}
-	return act.PermanentID() == r.creatureID
+	subject := legacyRedirectionDestination(g, r.creatureID, r.incarnation)
+	return subject != nil && damageRedirectDestination(subject)
 }
 
 func (r *creatureDamageRedirectReplacement) Replace(a Action, g *Game) Action {
+	if !r.Matches(a, g) {
+		return a
+	}
 	act := a.(*DamageToCreatureAction)
 	r.consumed = true
 	return NewDamageToPlayerAction(act.ActionSource(), r.targetPlayerID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
@@ -706,26 +711,33 @@ func (r *creatureDamageRedirectReplacement) Clone() ReplacementEffect {
 
 type attackerDamageRedirectReplacement struct {
 	replacementBase
-	attackerID     uuid.UUID
-	absorberPermID uuid.UUID
+	attackerID          uuid.UUID
+	attackerIncarnation uuid.UUID
+	absorberPermID      uuid.UUID
+	absorberIncarnation uuid.UUID
 }
 
 func (r *attackerDamageRedirectReplacement) Matches(a Action, g GameReader) bool {
 	act, ok := a.(*DamageToPlayerAction)
-	if !ok {
+	if !ok || act.Amount() <= 0 || act.ActionSource() != r.attackerID || g.GetPlayer(act.PlayerID()) == nil {
 		return false
 	}
-	return act.ActionSource() == r.attackerID
+	if r.attackerIncarnation != uuid.Nil && (act.DamageSource().ID() != r.attackerID || act.DamageSource().Incarnation() != r.attackerIncarnation) {
+		return false
+	}
+	destination := legacyRedirectionDestination(g, r.absorberPermID, r.absorberIncarnation)
+	return destination != nil && damageRedirectDestination(destination)
 }
 
 func (r *attackerDamageRedirectReplacement) Replace(a Action, g *Game) Action {
+	if !r.Matches(a, g) {
+		return a
+	}
 	act := a.(*DamageToPlayerAction)
 	return NewDamageToCreatureAction(act.ActionSource(), r.absorberPermID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
-func (r *attackerDamageRedirectReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.absorberPermID) != nil
-}
+func (*attackerDamageRedirectReplacement) IsActive(GameReader) bool { return true }
 
 func (r *attackerDamageRedirectReplacement) Clone() ReplacementEffect {
 	c := *r

@@ -8686,8 +8686,8 @@ covers per-instance targets/destinations and a copy with a different controller.
 choice/prevention subrules to this producer category; complete source enumeration
 and complete protection-card gameplay remain unimplemented.
 
-Creature-recipient-to-player redirection, legacy temporary/static replacement
-references, spell-source redirection, optional redirection and face-up command
+Creature-recipient-to-player redirection, other legacy replacement references,
+spell-source redirection, optional redirection and face-up command
 objects remain separate capabilities. No RON source change or new general source
 choice is established here.
 
@@ -8819,3 +8819,54 @@ Evidence: native `TestWaitingLegacyRedirectionReferences`, `Choices`,
 `TestRONWaitingLegacyRedirectionProtection` and `Invalid`. The seven protection
 names supply their complete real choice/shield ASTs for this source category.
 These are subrule tests, not full-card gameplay claims.
+
+### Waiting references in resolved legacy temporary redirection
+
+`Game.SetCreatureDamageRedirect(creatureID, playerID uuid.UUID)` captures the
+live subject incarnation for its existing one-use redirect. The subject remains
+an exact waiting reference until the rule is consumed or cleanup removes it.
+`Game.SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID)` captures both
+live incarnations. Its source and destination remain waiting references until
+cleanup, including after departure or phasing. Neither installer registers an
+absent permanent. The creature installer also requires a present player.
+
+`Game.WaitingRedirectionPermanentSources() []DamageSource` includes these
+references through the shared collector. Queries use current, phase or retained
+incarnation information and deduplicate exact objects. Clearing ordinary LKI
+cannot erase retained damage-source information. A returned permanent cannot
+replace that information. Query snapshots and cloned games stay independent.
+These resolved registrations differ from live static registrations: an absent
+destination stops damage redirection, but does not erase the resolved reference
+(CR 400.7, 609.7a, 702.26b).
+
+Both `Matches` and direct `Replace` check action kind, positive damage, a present
+player and the original live damageable destination (CR 614.9). The creature
+redirect also checks consumption. The attacker redirect checks the packet's
+exact source identity, including departure damage, and does not require the
+source to remain attacking. Its legacy scope continues to permit damage to
+either player. Amount, source and combat status remain unchanged. Existing
+replacement ordering, prevention and batch execution stay in the shared damage
+services (CR 614.5, 616.1). The creature service retains its existing single-packet
+consumption contract; this is not a new RON next-time redirection operation.
+Internal ID-only replacement fixtures retain legacy matching and supply no exact
+waiting references.
+
+RON `chosenDamageSourcePlan.waitingRedirectionChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` through the existing typed
+`ChooseDamageSourceFromWaitingRedirectionReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` service. The existing
+exact-source prevention lowering consumes that choice. No additional spelling
+adapter or complete source enumeration is introduced. Invalid declarations and
+missing or premature bindings remain errors; empty choices clear their binding.
+
+Evidence: native `TestWaitingTemporaryLegacyRedirectReferences`, `Rechecks`,
+`SourceIdentity`, `ConsumptionAndBatch`, `MissingAndDuplicate`, `ReplacementOrder`
+and `AbsentInstallation`; RON `TestRONWaitingTemporaryLegacyRedirectProtection`
+and `Invalid`. The RON tests execute the real choice/prevention subrules of the
+six Circles of Protection and Greater Realm of Preservation, with live, departed,
+returned and phased references in original and cloned games. The attacker fixture
+phases its destination after choice so redirection cannot intercept the damage
+used to check prevention. Complete protection declarations still fail compilation.
+Jade Monolith and Reverse Damage remain downstream consumers with separate
+operation gaps. Other explicit legacy replacement references and face-up command
+objects still need contracts before general source choice can be installed.

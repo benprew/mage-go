@@ -90,7 +90,8 @@ func (p *chosenDamageSourcePlan) waitingPreventionChoice(bindings instanceBindin
 	return mage.ChooseDamageSourceFromWaitingPreventionReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
 
-// The engine checks typed and legacy registration lifetimes before source choice.
+// The engine keeps resolved legacy references until consumption or cleanup.
+// Static registrations require their live subjects.
 func (p *chosenDamageSourcePlan) waitingRedirectionChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingRedirectionReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }

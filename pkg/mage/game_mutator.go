@@ -545,22 +545,34 @@ func (g *Game) PlayerCantCastSpells(playerID uuid.UUID) bool {
 	return g.effects.Rules.PlayerCantCastSpells(playerID)
 }
 
-// SetCreatureDamageRedirect redirects damage dealt to a creature to a player.
+// SetCreatureDamageRedirect saves a live creature for one damage redirect.
+// An absent object cannot supply a later permanent.
 func (g *Game) SetCreatureDamageRedirect(creatureID, playerID uuid.UUID) {
+	subject := g.FindPermanent(creatureID)
+	if subject == nil || g.GetPlayer(playerID) == nil {
+		return
+	}
 	g.effects.AddReplacement(&creatureDamageRedirectReplacement{
 		replacementBase: replacementBase{duration: EndOfTurn},
 		creatureID:      creatureID,
+		incarnation:     subject.incarnationID,
 		targetPlayerID:  playerID,
 	})
 }
 
-// SetAttackerDamageRedirect sets a redirect: damage from a specific attacking creature
-// to a player is dealt to the absorber permanent instead (Shimian Night Stalker).
+// SetAttackerDamageRedirect saves live source and destination identities.
+// The resolved rule keeps its references until cleanup.
 func (g *Game) SetAttackerDamageRedirect(attackerID, absorberID uuid.UUID) {
+	source, destination := g.FindPermanent(attackerID), g.FindPermanent(absorberID)
+	if source == nil || destination == nil {
+		return
+	}
 	g.effects.AddReplacement(&attackerDamageRedirectReplacement{
-		replacementBase: replacementBase{duration: EndOfTurn},
-		attackerID:      attackerID,
-		absorberPermID:  absorberID,
+		replacementBase:     replacementBase{duration: EndOfTurn},
+		attackerID:          attackerID,
+		attackerIncarnation: source.incarnationID,
+		absorberPermID:      absorberID,
+		absorberIncarnation: destination.incarnationID,
 	})
 }
 
