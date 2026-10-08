@@ -258,9 +258,13 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if spec, ok := b.spec.(*typedSpellTarget); ok && spec.manaValueEqualX {
 		n.children = append(n.children, definitionEdge{"mana value", targetManaValueEqualXOption{}})
 	}
+	emptyPermanentGroup := false
+	if spec, ok := b.spec.(*PermanentTarget); ok {
+		emptyPermanentGroup = spec.Min() == 0 && spec.Max() == 0
+	}
 	if b.name == "" {
 		n.problem = "supply a target binding name"
-	} else if b.spec == nil || b.spec.Min() < 0 || b.spec.Max() < 1 || b.spec.Min() > b.spec.Max() {
+	} else if b.spec == nil || b.spec.Min() < 0 || (b.spec.Max() < 1 && !emptyPermanentGroup) || b.spec.Min() > b.spec.Max() {
 		n.problem = "supply valid target group bounds"
 	}
 	return n

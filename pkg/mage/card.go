@@ -61,6 +61,7 @@ type BaseCard struct {
 	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
 	isToken         bool            // true for token cards (created by NewToken)
 	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
+	definitionPlan  *CardDefinitionPlan
 }
 
 // AuraAIProfile tells the AI how an aura affects the creature it enchants so
@@ -169,6 +170,7 @@ func (c *BaseCard) AddAbility(a Ability) {
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
+	c.definitionPlan = nil
 	c.name = other.Name()
 	c.manaCost = other.ManaCost()
 	c.power = other.Power()

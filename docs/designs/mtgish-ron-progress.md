@@ -7,9 +7,9 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`RESOLUTION-PLAYER-CHOICES` adds scoped required player choices and current-turn
-sorcery-caster selection. Compilation and complete-card gameplay counts are
-unchanged; Backdraft and Rainbow Vale advance to their independent blockers.
+`FRESH-DEFINITION-PLANS` retains validated printed-definition builders. All
+accepted records rebuild independently. Compilation and complete-card gameplay
+counts are unchanged; the three entry-copy consumers retain their other blockers.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Entry copying, player-keyed permanent choices, exchanges and replacements remain gaps.
@@ -51279,3 +51279,157 @@ Ranked next candidates:
    is a separate larger contract and must not use a global last-spell slot.
 
 This run stops after RESOLUTION-PLAYER-CHOICES.
+
+
+## 2026-10-08: retained fresh printed-definition plans
+
+Status: completed implementation slice `FRESH-DEFINITION-PLANS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended ledger entry are staged for this
+ledger; its existing archive move is not included in the commit.
+
+### Candidate comparison and selection
+
+Started with the latest entry's ranked candidates. Read the complete records
+and nested forms for Clone, Copy Artifact, Vesuvan Doppelganger, Forcefield and
+Rainbow Vale, including all identical reprints. Targeted vocabulary evidence:
+EnterAsACopyOfAPermanent/2: 18 occurrences; NoCopyEffects: six; CopyEffects/1:
+18 nested occurrences; PreventAllButSomeOfThatDamage/1: five;
+GainControlOfPermanent/1: one. Reprints count once for gameplay estimates.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers | Downstream capability / effort |
+| --- | --- | --- | --- | --- |
+| Retained fresh definition builders | Clone, Copy Artifact, Vesuvan Doppelganger (18 records) | 0 | Current copiable snapshots, early entry-copy scheduling; Copy Artifact's added type; Vesuvan's retained color and granted recursive upkeep ability | Independent abilities, targets and bindings for all three; bounded engine/compiler work and reconstruction/gameplay tests. |
+| Next combat damage leaving one point | Forcefield (five records) | 1 | Exact chosen-source continuity, simultaneous shield consumption and prevention ordering/bypass | Completes one chosen-source prevention form; medium replacement work. |
+| Explicit-player indefinite control | Rainbow Vale (one record) | 1 | Indefinite control adapter and delayed source lifecycle; player choice is ready | Completes one delayed control transfer; smaller adapter/lifecycle work. |
+
+Selected dependency-ready candidate #1. A shared declaration-construction
+contract must precede the three copy consumers. Zero immediate unlocks were
+expected; its concrete multi-card benefit takes priority over the single-card
+alternatives. No loader first-error frequency was used as an unlock estimate.
+Before editing, stated reconstruction, invalid builders, declaration identity,
+independent payments and delayed bindings, real RON gameplay and clone behavior
+as acceptance cases. This slice supplies the complete printed-definition builder
+context, not a partial entry-copy implementation.
+
+### Exact contracts, contexts and engine reuse
+
+- `mage.NewCardDefinitionPlan(CardFactory) (*CardDefinitionPlan, error)` accepts
+  pure, instance-independent builders returning `*BaseCard`. Two builds pass
+  `ValidateCardDefinition` and independence checks before publication.
+- `(*mage.CardDefinitionPlan).Build() (mage.Card, error)` validates a new build
+  against both private seed identity sets. The immutable plan retains the builder
+  and declaration identities, not a game or saved resolution state. Factory
+  sampling detects sharing; callers must still supply a pure builder that creates
+  fresh declarations on every call. No claim of proving arbitrary Go purity.
+- `mage.WithCardDefinitionPlan(*CardDefinitionPlan) mage.CardOption` retains the
+  construction plan. `mage.RebuildCardDefinition(mage.Card) (mage.Card, error)`
+  reconstructs a fresh printed definition without registry lookup or source
+  mutation. A missing plan or unsupported card implementation returns an error.
+- The supported source is a retained `*BaseCard`, including its ordinary Copy.
+  Copy retains the immutable plan; legacy CloneFrom clears it before replacing
+  rules. Current copiable characteristics and copy exceptions need their own
+  snapshot/composition services. No stack-choice transfer or entry scheduling is
+  inferred. Existing Copy/CloneFrom gameplay otherwise stays unchanged.
+- RON `Compile(Node) (mage.CardFactory, error)` retains its already lowered option
+  factories and per-instance binding construction through a validated engine
+  plan. Every supported Card type/context follows this path. Declaration errors
+  become positioned compiler errors. No new syntax or lexical scope is added.
+- Engine identity checks include card UUIDs, ability UUIDs, cast and activation
+  targets, underlying typed target specifications, counted target operands,
+  nonempty pointer costs and typed saved bindings. Preselected targets, captured
+  owners/source/controllers, nil declarations, reused identities, invalid producer
+  dominance and factory panics return errors. Immutable values can be shared.
+  Zero-size costs contain no instance state; Go can reuse their addresses.
+- Reuse the existing typed definition tree, action/target/cost builders, instance
+  binding maps, entry operations, static layers, resolution frames, LKI, payments,
+  delayed captures, registry atomicity and game cloning. Reflection is used only
+  for structural identity/comparability checks, never to dispatch game actions.
+  There is no Go-card fallback, global action result, or partial registry.
+- Local CR 707.2a, 707.5-7 and 707.9 were read. Fresh printed declarations are
+  required for acquired abilities and independent choices. This slice does not
+  establish current copiable values, copied entry replacements, recursive copy
+  exceptions or linked-object copying. API/rules docs state these exact limits.
+
+### Failing-first tests and card mappings
+
+Native tests first failed at the absent plan/reconstruction APIs. After fixing
+fixture API names, RON tests failed because compiled factories retained no plan.
+Additional tests failed when fresh typed wrappers hid a shared underlying target
+specification or retained selected activation targets; the structural audit now
+checks both. No gameplay assertion was removed to hide a failure.
+
+| Tests | Evidence / affected card mapping |
+| --- | --- |
+| TestCardDefinitionPlanFreshDeclarations | Fresh card/ability/target/player-binding identities; owner/source reset; ordinary Copy provenance; legacy CloneFrom invalidation. Shared prerequisite for the three copy consumers. |
+| TestCardDefinitionPlanInvalid, BuildErrors | Nil factory/card/plan, factory panic, reused card/ability/target/binding/specification, saved activation targets, unbound reads, absent provenance and invalid later builds return errors. |
+| TestRONDefinitionPlanGameplay | Full Icatian Javelineers record: new entry counters, independent source payments and opposing targets, two pending activations, spent costs, original/clone isolation. |
+| TestRONDefinitionPlanTargetsAndLKI | Full Swords to Plowshares record with real Air Elemental/Hill Giant fixtures: failed mana payment retains hand/stack, independent target groups and controller/power information after exile. |
+| TestRONDefinitionPlanDelayedBindings | Synthetic RON player-choice/delay sequence: separate producers/controllers, resolution timing, saved end-step frames and pending clone isolation. |
+| TestRONDefinitionPlanAuraAndMetadata | Full Holy Strength records on Wall of Wood and Hill Giant: separate cast targets, attachments and layer results. Birds of Paradise and Wall of Wood: printed metadata and keyword seeds. |
+| TestRONDefinitionPlanAcceptedCollection | Every currently accepted record rebuilds and passes engine validation: 2,019 records / 785 unique names. This is declaration coverage, not new full-card gameplay coverage. |
+| TestRONDefinitionPlanCopyConsumersRemainRejected | Complete Clone, Copy Artifact and Vesuvan Doppelganger records still reject at EnterAsACopyOfAPermanent. Their full gameplay remains blocked. |
+| Existing TestRONNumberedTargetsFixedZero and TestRONEndStepInterveningInventory | Fixed zero-target collection gameplay and role inventory remain valid under eager definition validation. |
+
+Eager validation exposed two fixture/contracts mismatches in the first engine
+short-test run. The inventory-only fixture used an empty Sequence, already invalid
+under engine validation; it now uses GainLife(0) and retains every inventory role
+assertion. The numbered-target constructor and RON gameplay permit a fixed 0/0
+permanent collection, but its definition inspector rejected it. The inspector
+now accepts that existing contract; zero-sized damage groups still reject.
+The original zero-target gameplay test remains unchanged. These repairs are part
+of establishing validated builders, not a second capability slice. Phasing,
+replacement ordering and simultaneous operations retain their existing engine
+contracts and regressions; reconstruction adds no new rule execution path.
+
+### Verification and measured outcome
+
+- Fresh baseline `make build` and uncached ron package tests: PASS. Baseline
+  loader: expected exit 1, 2,019 compiled / 426 rejected records and 785 accepted /
+  201 rejected names, out of 2,445 records / 986 names.
+- Failing-first native and RON evidence described above; final focused
+  `go test ./pkg/mage/dsl/ron -run TestRONDefinitionPlan -count=1`: PASS.
+  Repeated with TestRONNumberedTargetsFixedZero and
+  TestRONEndStepInterveningInventory after the validation repairs: PASS.
+  Native `go test ./pkg/mage -run TestCardDefinitionPlan -count=1`: PASS;
+  repeated with the declaration validation regressions after the repairs.
+- Final `make build`; `go vet ./...`: PASS.
+- Final `go test ./pkg/mage/... -short -count=1`; `make test`: PASS. The first
+  short-test run's two validation mismatches were resolved as recorded above.
+- `make lint`: PASS, zero issues. Reviewed modernize/format/fix output and final
+  source changes; no automatic source edits required another test run.
+  `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. Final JSON is byte-identical to the fresh baseline. Counts remain
+  **2,019 compiled / 426 rejected records; 785 accepted / 201 rejected names**.
+  All 426 diagnostics are unchanged. No accepted record regresses; registry
+  publication remains atomic. No build, test or environment blocker remains.
+- No RON source defect was corrected and no source changed. No vocabulary hash
+  refresh is needed. No Go card definitions, obsolete authoring tools or DSL
+  functions are removed before the runtime/gameplay removal gates.
+
+Estimated and actual complete-card unlock gain: **0 names / 0 records**.
+Reconstruction contract coverage now includes every accepted definition; new
+real-record tests cover separate instances and existing gameplay rules. The
+three copy consumers gain their declaration prerequisite, not complete-card
+execution. Compilation and complete-card gameplay counts remain unchanged.
+Changed files: mage card_definition_plan.go/test, card.go, composable_target.go
+and doc.go; ron compiler.go, definition_plan_test.go and
+end_step_intervening_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. User changes and the untracked archive remain unstaged.
+
+Ranked next candidates:
+
+1. Immutable current copiable-characteristic snapshots backed by the retained
+   definition plan. Concrete consumers: Clone, Copy Artifact and Vesuvan
+   Doppelganger (three names / 18 records). Establish copied/face-down provenance
+   and snapshot independence before early entry-copy scheduling and exceptions.
+2. Next combat damage from the chosen permanent, leaving one point: Forcefield
+   (one plausible unlock / five records). Test simultaneous shield consumption,
+   exact continuity, prevention ordering/bypass and cleanup.
+3. Explicit-player indefinite control transfer: Rainbow Vale (one plausible
+   unlock / one record). Choice is ready; use existing control layers and exact
+   delayed-source identity. Resolved-spell history for Backdraft remains separate.
+
+This run stops after FRESH-DEFINITION-PLANS.

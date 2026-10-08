@@ -8900,3 +8900,32 @@ Evidence: native `TestPlayerChoice*` and RON `TestRONPlayerChoice*`. Tests execu
 the exact choice nodes from Backdraft and Rainbow Vale with an observation body;
 they do not claim complete gameplay for either card. Their full records still
 reject at resolved-spell history and explicit-player control transfer.
+
+## Retained printed-definition builders
+
+Every successful RON `Compile(Node) (mage.CardFactory, error)` now retains a
+`mage.CardDefinitionPlan` with the lowered immutable construction plan. Compilation
+validates two independent builds before publishing the factory. The same option
+and instance-binding factories build reconstructed abilities, costs, target
+groups, entry declarations, static rules and delayed bodies. No new RON spelling
+or binding scope is introduced. Invalid engine declarations return positioned
+compiler errors. Unsupported copy expressions still reject.
+
+`mage.RebuildCardDefinition(card mage.Card) (mage.Card, error)` creates a fresh
+printed definition without name lookup or a Go registry. `BaseCard.Copy` retains
+that plan; legacy `CloneFrom` clears it when it replaces rules. Reconstruction
+returns a fresh card identity and declarations with no owner, ability source,
+controller, target choices or saved resolution state. Printed metadata, keyword
+seeds, additional casting costs and Aura target declarations come from the plan.
+The caller must supply the new instance's owner and lifecycle context.
+
+This is a prerequisite for copiable declarations. It does not capture current
+copiable values, install a copy layer, transfer announcement choices, or schedule
+entry replacements. Clone, Copy Artifact and Vesuvan Doppelganger remain
+unsupported until those contracts are implemented.
+
+Evidence: `TestCardDefinitionPlan*` and `TestRONDefinitionPlan*`. The RON tests
+rebuild every currently accepted record and execute reconstructed Icatian
+Javelineers, Swords to Plowshares and Holy Strength. Birds of Paradise and Wall
+of Wood cover printed metadata and keyword seeds. Synthetic player choices
+cover independent delayed bindings and clones.

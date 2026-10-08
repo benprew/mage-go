@@ -371,7 +371,8 @@ func Compile(n Node) (mage.CardFactory, error) {
 	if types[0] == core.TypePlaneswalker {
 		return nil, unsupported(n, "planeswalker metadata")
 	}
-	return func() mage.Card {
+	var definition *mage.CardDefinitionPlan
+	factory := func() mage.Card {
 		opts := make([]mage.CardOption, 0, 1+len(types)+len(options))
 		opts = append(opts, mage.WithSubTypes(subtypes...), mage.WithSuperTypes(supers...))
 		for _, kind := range types[1:] {
@@ -407,8 +408,14 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if len(indicator) > 0 {
 			card.SetColorOverride(indicator)
 		}
+		mage.WithCardDefinitionPlan(definition)(card)
 		return card
-	}, nil
+	}
+	definition, err = mage.NewCardDefinitionPlan(factory)
+	if err != nil {
+		return nil, problem(n, "invalid card definition plan: "+err.Error())
+	}
+	return factory, nil
 }
 
 func cardType(n Node) (core.CardType, error) {

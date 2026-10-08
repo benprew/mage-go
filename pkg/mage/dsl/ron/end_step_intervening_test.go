@@ -424,7 +424,7 @@ func TestRONEndStepInterveningAPNAPAndAbilityRemoval(t *testing.T) {
 }
 
 func TestRONEndStepInterveningInventory(t *testing.T) {
-	source := `Card(Name:"Inventory",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),Rules:[TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),NoPermanentsPassFilter(IsCardtype(Creature),OnTheBattlefield),ActionList([])),TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),PermanentPassesFilter(ThisPermanent,DealtDamageToAnyPlayerThisTurn(Opponent)),ActionList([]))],CardPT:(Power:1,Toughness:1))`
+	source := `Card(Name:"Inventory",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),Rules:[TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),NoPermanentsPassFilter(IsCardtype(Creature),OnTheBattlefield),ActionList([GainLife(Integer(0))])),TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),PermanentPassesFilter(ThisPermanent,DealtDamageToAnyPlayerThisTurn(Opponent)),ActionList([GainLife(Integer(0))]))],CardPT:(Power:1,Toughness:1))`
 	report, err := InspectFS(fstest.MapFS{"inventory.ron": {Data: []byte(source)}}, "*.ron")
 	if err != nil {
 		t.Fatal(err)

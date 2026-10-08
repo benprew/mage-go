@@ -11644,3 +11644,47 @@ Evidence: `TestPlayerChoiceResolution`, `AbsenceAndClone`, `Declaration` and
 `RecordPrerequisites`. Exact Backdraft and Rainbow Vale choice nodes receive
 prerequisite execution evidence. Complete-card gameplay remains blocked by
 resolved-spell history and explicit-player control transfer, respectively.
+
+## Fresh printed-definition construction plans
+
+`NewCardDefinitionPlan(CardFactory) (*CardDefinitionPlan, error)` accepts pure,
+instance-independent builders that return `*BaseCard`. It validates two builds
+with `ValidateCardDefinition` and compares card identities, ability UUIDs,
+cast/ability targets, nonempty pointer costs, and typed target and saved-binding
+identities through the existing structural definition tree. Immutable values
+can be shared. Zero-size costs have no instance state and are excluded from
+pointer comparisons because Go can give them the same address. The builder
+contract requires fresh declarations on every call; sampling is a declaration
+check, not a proof that an arbitrary Go callback is pure.
+
+`(*CardDefinitionPlan).Build() (Card, error)` validates a new build, checks it
+against both private validation builds, and retains the plan on the new card.
+The plan contains an immutable identity set and a construction callback; it
+contains no game, owner, target selections or resolution frame. Nil builders,
+nil results, unsupported card implementations, captured owners/source/controller,
+preselected targets, shared declarations, invalid binding dominance and
+builder panics produce errors. No game-time declaration panic is required.
+`WithCardDefinitionPlan(*CardDefinitionPlan) CardOption` retains a construction
+plan; `RebuildCardDefinition(Card) (Card, error)` uses it without a registry.
+A legacy card without a plan returns an error. `BaseCard.Copy` preserves the
+immutable plan; `CloneFrom` clears it before legacy rule replacement. Existing
+copy, cast, zone, layer and replacement execution remains unchanged.
+Definition validation now accepts the existing fixed 0/0 permanent collection
+target contract. The collection remains empty and later instructions still run.
+Zero-sized damage groups and other invalid target bounds remain rejected.
+
+CR 707.2a requires the copied rules to supply the acquired abilities, and
+707.6–7 requires independent entry choices and correctly linked copied
+abilities. This slice supplies fresh printed declarations for later copy
+services. It does not establish the current copiable snapshot required by
+707.2–3, early entry copying under 707.5, copy exceptions under 707.9, or stack
+choice transfer under 707.10. Those remain explicit dependencies.
+
+Evidence: `TestCardDefinitionPlanFreshDeclarations`, `Invalid`, `BuildErrors`;
+`TestRONDefinitionPlanGameplay`, `TargetsAndLKI`, `DelayedBindings`,
+`AuraAndMetadata`, `AcceptedCollection`, `CopyConsumersRemainRejected`. Tests
+cover new card/ability/target/binding identities, fresh owner and source context,
+independent counter costs, failed mana payment, target departure information,
+separate Aura attachments, saved delayed frames and game clones. All accepted
+collection records are reconstructed and validated. The three copy consumers
+remain rejected and receive no complete-card gameplay claim from this slice.

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
+// It checks separate builds for shared abilities, targets, costs and bindings.
+// [RebuildCardDefinition] creates new declarations without a registry lookup.
+// The retained plan supplies printed metadata, not current copiable values.
+// Saved owners, targets, source identities and resolution choices do not transfer.
+// [BaseCard.Copy] retains the plan. [BaseCard.CloneFrom] clears it because
+// legacy rule replacement cannot establish the new definition's construction plan.
+// RON factories retain their validated plans. Entry copying and copy exceptions
+// need separate services before they can use these declarations.
+//
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
 // belongs to its resolution frame. An empty set or absent chooser clears it.
