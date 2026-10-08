@@ -12,7 +12,13 @@ func compileCounterInformation(n Node, ctx scope) (valueFactory, error) {
 	}
 	subject := n.Args[1]
 	if subject.Name != "SinglePermanent" {
-		return nil, unsupported(subject, "counter information subject")
+		subjects, err := compileContextualCollection(subject, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.CountCountersAmong(subjects(bindings), counter)
+		}, nil
 	}
 	if err := arity(subject, 1); err != nil {
 		return nil, err

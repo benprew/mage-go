@@ -8211,3 +8211,46 @@ and nonempty unions/intersections. Existing bound target/property filters remain
 supported. Plural delayed target references retain their rejection boundary.
 Counter collections and other collection action declarations remain separate.
 See the collection action contract in `docs/engine-rules-contracts.md` for tests.
+
+
+## Counter collection totals and waiting declarations
+
+`CountCountersAmong(PermanentSet, core.CounterType) ResolutionValue` sums the
+specified counters on distinct current, present collection members when used.
+Stale incarnations, departed objects, duplicates and phased objects supply no
+counters. Counters are converted to int before summation. This is a collection
+query, not saved singleton information. `CountersOnWithLKI` retains its existing
+singleton contract (CR 122.2, 400.7, 608.2h, 702.26b).
+
+RON `TheTotalNumberOfCountersOfTypeAmongPermanents(counter, collection)` lowers
+non-singleton operands through `compileContextualCollection(Node, scope)` with
+fresh instance bindings. Supported resolving contexts include typed attachment,
+combat/history, controller/owner and nonempty union/intersection collections.
+`SinglePermanent(ref)` retains its prior LKI lowering. A singleton inside a
+union/intersection is instead a current collection member. Invalid counter
+types, shapes, unbound references and empty compositions reject before execution.
+Plural delayed targets still reject under their existing capture boundary.
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` traverses explicit source
+reads in `CountCountersAmong` collections and native `AddCountersEach` subjects
+and amounts. The query does not select members, run filters, read counters,
+execute placements or make choices. Empty sets, zero arithmetic and saved modes
+retain declarations. Opaque callbacks, implicit matching members and future
+bodies not yet installed do not infer references. Existing exact source capture,
+departure facts, snapshot isolation, copy/clone lifetime and one-shot detection
+remain in use (CR 603.7a–e, 609.7a–b). Counter placement continues through the
+existing simultaneous preparation and replacement pipeline.
+
+Evidence: `TestWaitingDelayedCounterCollectionOperands` covers 24 native
+subject/amount declarations and exact departure/return identity.
+`TestWaitingDelayedCounterCollectionTotal`, `Purity` and
+`TestCounterCollectionCurrentMembers` cover pure queries, zero/mode declarations,
+duplicate/stale/phased members, clone isolation and invalid native definitions.
+`TestRONCounterCollectionProtection` covers 294 real-record subrule cases: seven
+protection names, six collection forms and seven lifecycle/copy states, real
+payment failure, resolution choice and prevention consumption. RON composition,
+invalid and instance tests cover late attachments, totals, saved targets, later
+shroud, returned-object exclusion and independent factories/clones. Existing
+`TestRONCounterInformation` tests retain real singleton card regressions.
+Full protection records still reject general source aggregation. These tests
+increase subrule coverage, not complete-card coverage.

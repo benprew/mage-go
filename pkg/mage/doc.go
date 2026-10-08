@@ -201,7 +201,12 @@
 // Nested set operands use the same declaration rules as [CountPermanents].
 // Queries do not select members or run filters. Empty collections keep reads.
 // Resolution selects current members through the existing batch services.
-// Counter collections and other collection actions need separate contracts.
+// [AddCountersEach] declares source reads in its subjects and amount.
+// [CountCountersAmong] declares source reads in its typed collection.
+// Queries do not select members or read counters. Zero amounts keep the reads.
+// Totals select current, distinct, present incarnations at resolution.
+// RON singleton counter information retains [CountersOnWithLKI].
+// Other collection actions need separate contracts.
 //
 // [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]
 // payment subject and source reads in both result branches to

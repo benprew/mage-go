@@ -163,6 +163,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		return playerRefReadsSourcePermanent(v.player)
 	case graveyardCardCountValue:
 		return playerRefReadsSourcePermanent(v.player)
+	case permanentCounterTotal:
+		return permanentSetReadsSourcePermanent(v.subjects)
 	case permanentCountValue:
 		return permanentSetReadsSourcePermanent(v.subjects)
 	case arithmeticValue:
@@ -329,4 +331,8 @@ func (e *removeAllCountersEffect) refersToSourcePermanent() bool {
 func permanentRefReadsSourcePermanent(ref PermanentRef) bool {
 	_, self := ref.(sourceRef)
 	return self
+}
+
+func (e *counterEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
 }

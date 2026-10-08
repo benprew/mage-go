@@ -8,11 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-COLLECTION-ACTION-OPERANDS` retains explicit source reads in
-collection tap/untap, return, destruction and permanent damage recipients.
-Seven protection names gain 336 subrule cases; native declarations gain 72 cases.
-Compilation and full-card coverage are unchanged. Counter collections, conditions,
-source aggregation, token grants and sticky layers remain gaps.
+`WAITING-DELAYED-COUNTER-COLLECTIONS` adds typed counter collection totals and
+source declarations in native counter collection subjects and amounts.
+Seven protection names gain 294 subrule cases; native declarations gain 24 cases.
+Compilation and full-card coverage are unchanged. Exile/player collection and
+conditional declarations, source aggregation, token grants and sticky layers
+remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47231,3 +47232,153 @@ Ranked next candidates:
    with named token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-COLLECTION-ACTION-OPERANDS`.
+
+
+## 2026-10-08: counter collection totals and waiting declarations
+
+Status: completed slice `WAITING-DELAYED-COUNTER-COLLECTIONS`. This run stops
+here. Initial changes to `.gitignore`, the execution design and ledger, plus
+untracked `mtgish-ron-completed.md`, are preserved. Only this run's summary
+replacement and appended entry are staged from the ledger.
+
+### Candidate comparison and selection
+
+Fresh baseline build and compiler tests passed. Strict loading rejected the
+collection. The latest ranked candidate #1, typed counter collection declarations,
+was evaluated first and selected as a dependency-ready shared prerequisite.
+Complete RON records were inspected for Circle of Protection: Black, Blue,
+Green, Red, White, Artifacts; Greater Realm of Preservation; Master of the Hunt;
+Jade Monolith; Reverse Damage; and the six existing counter-total names listed
+below. Nested forms and targeted vocabulary entries were inspected. Reprints
+count once. No Go card definition supplied requirements.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Counter collection declarations and typed totals, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | Remaining collection and conditional declarations, then general CR 609.7a source aggregation. Supplies typed counter collection references for all seven choices. | Small adapter/service; moderate purity, identity, LKI, clone and real-record subrule matrix. |
+| Cast/state/coin and remaining conditional declarations | The same seven protection names; later Jade Monolith and Reverse Damage | 0 now; seven after prerequisites | Collection declarations and aggregation remain. Jade Monolith needs selected-source redirection; Reverse Damage needs prevented-damage result/life gain. | Larger declaration audit with event/state and coin timing tests. |
+| Named-token quality grants | Master of the Hunt | 1 plausible | Full record has fixed costs, named token metadata and BandsWithOthers quality; native band combat exists. No other blocker identified. | Moderate token identity, fresh factories, combat and clone tests. |
+
+Candidate #1 supplies concrete seven-card downstream value. The precise slice
+is counter collection totals plus native counter collection action declarations.
+The RON inventory has no plural counter-placement spelling to adapt; none was
+invented. Its counter-total spelling currently uses singleton operands, which
+already execute. Collection operands now have a complete reusable typed context.
+Six existing total users remain regression mappings: Armageddon Clock, Cyclone,
+City of Shadows, Icatian Moneychanger, Primordial Ooze and Voodoo Doll. This
+slice makes no new complete-card claim for those names.
+
+### Signatures, supported contexts and contracts
+
+- `compileCounterInformation(Node, scope) (valueFactory, error)` accepts
+  `TheTotalNumberOfCountersOfTypeAmongPermanents(counter, collection)` in resolving
+  value contexts. Non-singleton operands use
+  `compileContextualCollection(Node, scope) (permanentSetFactory, error)` with
+  fresh instance bindings. Typed attachment, combat/history, controller/owner,
+  property-filter and nonempty nested union/intersection operands reuse that
+  service. Existing resolving bound collection contexts remain available;
+  plural delayed targets still reject under the capture boundary.
+- `CountCountersAmong(PermanentSet, core.CounterType) ResolutionValue` is the new
+  reusable engine service. It sums the specified counter kind on distinct,
+  current, present incarnations when used. Stale, departed, duplicate and phased
+  members do not contribute. Conversion to int precedes addition. Native
+  definition validation rejects nil/incompatible operands and invalid counters.
+- RON `SinglePermanent(ref)` retains `CountersOnWithLKI` and its exact original
+  object information after departure, return or phasing. A singleton nested in
+  a collection composition instead selects a current member. This preserves
+  existing payment/departure behavior without using LKI to restore collections.
+- `AddCountersEach(PermanentSet, CounterType, ResolutionValue) ResolvingEffect`
+  keeps its public signature and execution. It now declares explicit source
+  reads through both the typed collection and amount. Counter totals likewise
+  traverse their collection through the shared source-read service.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` retains exact source
+  incarnations for these declarations. Queries do not resolve sets/references,
+  run filters, read counters, execute actions or make choices. Empty sets, zero
+  arithmetic and saved modes keep declarations. Implicit matching members,
+  attached references and opaque callbacks do not infer source reads. A nested
+  delay producer does not expose future references before installation.
+
+CR 122.2, 400.7, 603.7a–e, 608.2h, 609.7a–b and 702.26b set the boundaries.
+Shared capture, source/departure facts, per-instance bindings, saved targets,
+snapshot isolation, copy/clone services and one-shot trigger detection remain
+in use. Native AddCountersTogether still prepares simultaneous placements and
+uses existing counter replacements. Payment rollback and source prevention
+ordering reuse their established services. RON owns syntax/scope; mage owns
+execution. No fallback, card-name branch, partial registry, global result slot
+or game-time declaration panic was added.
+
+A targeted remaining collection-action audit found RON permanent_exile.go uses
+native ExileEach, whose explicit source declaration remains absent. RON
+EachPlayer adapters also use DrawEach and DiscardEach; typed player collections
+and damage-recipient player operands need their own declaration audit before
+aggregation. This finding ranks the next slice; no second slice was started.
+No broad DSL function or engine service was removed, so removal gates stay
+closed. RON sources did not change; all 12 vocabulary hashes still match.
+No source-data defect or environment failure was found.
+
+### Failing-first tests and card mappings
+
+Before production edits, native tests failed with `collection action lost exact
+source declaration`; RON tests failed with `unsupported counter information
+subject (AttachedToAPermanent)` and other collection forms. The new typed total
+service tests then failed compilation with `undefined: CountCountersAmong`.
+All expected failing commands exited 1. Production edits followed those failures.
+
+| Test | Card mapping and behavior evidence |
+| --- | --- |
+| TestWaitingDelayedCounterCollectionOperands | 24 native cases: subject and amount declarations across 12 typed sets; exact departed/returned source facts, snapshot isolation and clone lifetime. |
+| TestWaitingDelayedCounterCollectionTotal | Pure counter-total declaration query, duplicate composition, resolution-time counters, clone isolation and invalid native definitions. |
+| TestCounterCollectionCurrentMembers | Stale, duplicate, nil and phased members excluded; phase cycle retains current counters. |
+| TestWaitingDelayedCounterCollectionPurity | Empty/zero/mode declarations, implicit/opaque exclusions, no filter execution and no future-body inference. |
+| TestRONCounterCollectionProtection | 294 subrule cases across seven real protection records, six forms and seven lifecycle/copy states. Real costs, failed-payment rollback, resolution choice, exact source shield and consumption. Complete records still reject general aggregation. |
+| TestRONCounterCollectionComposition | Five totals: intersection, union, duplicates, empty membership and late attachment; independent clone resolution. |
+| TestRONCounterCollectionInvalid | Twelve malformed, unbound, incompatible or empty collection declarations reject before execution. Existing counter-information invalid tests cover type/arity rejection. |
+| TestRONCounterCollectionInstances | Two factories and saved singular targets; returned-object exclusion, later shroud and independent clone resolution. |
+| Existing TestRONCounterInformation and TestAddCountersEach tests; full repository suite | Singleton real-record behavior, original LKI, counter payment and simultaneous replacement contracts retain regression coverage. |
+
+### Verification and measured outcome
+
+- Fresh baseline `make build`: PASS; `go test ./pkg/mage/dsl/ron -count=1`:
+  PASS. Baseline loader exit 1 is collection rejection, not compilation failure.
+- Failing-first checks: expected exit 1, diagnostics above.
+- `go test ./pkg/mage/dsl/ron -run 'TestRONCounterCollection|TestRONCounterInformation' -count=1`:
+  PASS. Native `go test ./pkg/mage -run 'TestWaitingDelayedCounterCollection|TestCounterCollection|TestAddCountersEach' -count=1`:
+  PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import grouping was reviewed; focused
+  RON/native tests passed again after formatting. No unrelated file was changed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict atomic collection
+  rejection. Baseline/final JSON match byte-for-byte: **1,978 compiled / 467
+  rejected records; 773 accepted / 213 rejected unique names**, out of 2,445
+  records / 986 names. First rejection remains Animate Dead:
+  unsupported EnchantGraveyardCard.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 294 counter-total subrule scenarios; native action
+reference coverage gains 24 subject/amount cases, plus total, purity and identity
+contracts. The collection total context is new; current inventory total operands
+are singletons and already compiled. General aggregation and other declarations
+still block all seven protection records. Compilation and complete-card gameplay
+coverage are unchanged. Full RON gameplay, runtime cutover, Go-card deletion and
+unused DSL removal remain unfinished. No required validation was blocked.
+
+Changed files: pkg/mage/composable_counter_information.go,
+pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_counter_collection_test.go,
+pkg/mage/dsl/ron/counter_information.go,
+pkg/mage/dsl/ron/counter_collection_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+
+Ranked next candidates:
+
+1. Waiting delayed exile action source declarations, including ExileEach's typed
+   operands; audit the remaining supported collection actions. Seven protection
+   names, 0 immediate unlocks, prerequisite for complete source aggregation.
+2. Typed player collection operands and cast/state/coin/remaining conditional
+   declarations, then complete CR 609.7a aggregation. Seven potential unlocks
+   after prerequisites; Jade Monolith and Reverse Damage retain their adapters.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock with
+   named identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-COUNTER-COLLECTIONS`.
