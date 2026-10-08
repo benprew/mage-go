@@ -9165,3 +9165,46 @@ rejects wrong source, incarnation and ability identities. RON
 seven protection names, failed payment, copied activations, cloned shields,
 resolution-time choice, property rechecks and simultaneous damage. This is
 bounded category evidence; full protection records still reject.
+
+## Exact subjects of waiting exile replacements
+
+`Game.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID)` retains
+its caller form. Registration on a live permanent saves its incarnation;
+registration on a live or resolving spell saves its stack identity. A permanent
+spell continues only to the permanent it becomes before immediate entry effects.
+Exact registrations do not use the legacy card marker to execute stack movement.
+Returns, recasts and unselected copies cannot inherit the rule (CR 400.7).
+Registrations before casting keep their legacy marker and behavior; their zone
+visit is not established by this slice, so they supply no exact waiting reference.
+
+Destruction and sacrifice reuse the existing proposed-action replacement service.
+Resolution and countering use the exact spell check before cleanup. A resolved
+turn rule survives departure of its origin (CR 611.2a); explicit
+`EffectManager.RemoveReplacements` still removes it. Cleanup ends the rule.
+`IsCardMarkedExileInsteadOfGraveyard` remains a card-level registration query,
+not the identity check used for spell movement. No new priority or payment
+transaction is introduced.
+
+`Game.WaitingExileSources() []DamageSource` reads persistent and cycle lists.
+The query uses shared exact current/departure information, preserves saved
+references after phasing or departure, removes duplicate identities and returns
+separate snapshots. It does not consume a rule, make choices or rebuild layers.
+The original spell and its continued permanent have distinct identities.
+CR 609.7a permits the referenced departed objects; CR 702.26b still prevents
+execution on a phased permanent. RON `waitingExileChoice(instanceBindings)` uses
+`ChooseDamageSourceFromWaitingExileReferences(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` with shared binding/filter validation,
+decisions and frames. Reads before producers and missing bindings reject.
+
+Evidence: `TestWaitingExileSourcesPermanent`, `Spell`, `StackExit`,
+`OriginDeparture`, `EntryTiming`, `Choices`, `LegacyAndInvalid`,
+`RetainedDepartureInformation` and `LegacyMarkerQuery`;
+`TestRONWaitingExileSourceProtection`, `Invalid`, `TimingAndRechecks` and
+`SpellProtection`. RON evidence covers full-record costs and prevention ASTs for
+six Circles and Greater Realm in a test-only category context, failed payment,
+copied activations, cloned games, resolution-time choices, property rechecks,
+simultaneous damage and shield consumption. Complete production source choices,
+precast zone visits and opaque callback references remain separate contracts.
+Immediate entry probes use the native sacrifice service directly. Typed `This`
+in an immediate entry effect can retain the enclosing spell's empty permanent
+incarnation; that existing binding gap is not covered by this slice.

@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-DISCARD-SOURCES` completes exact typed discard replacement
-sources, shared query/execution lifecycle and RON category lowering. Additional
-subrule evidence covers seven protection names, with zero full-card unlocks.
-Zone-scoped and opaque references remain in the audit before complete source
-enumeration. Library of Leng still needs its RON replacement adapter.
+unfinished. `WAITING-EXILE-SUBJECTS` completes exact live spell/permanent exile
+subjects, continuation, lifecycle and RON category lowering. Additional subrule
+evidence covers seven protection names, with zero full-card unlocks. Precast zone
+visits and opaque references remain before complete source enumeration. Library
+of Leng still needs its RON replacement adapter.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -42352,6 +42352,154 @@ Ranked next candidates:
    source composition. Do not repeat the completed typed discard category.
 2. Parameterized bands with others as the formation/assignment prerequisite
    for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount operation after full enumeration;
+   prove Jade Monolith's full RON gameplay with existing redirection lowering.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-07: exact subjects of waiting exile replacements
+
+Status: completed implementation slice `WAITING-EXILE-SUBJECTS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected for all distinct names below;
+identical reprints count once. Targeted vocabulary queries covered
+`ChooseADamageSource`, `BandsWithOthers` and `TheAmountOfDamagePreventedThisWay`.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Exact waiting exile subjects, selected from ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0; complete source choices still need precast zone visits and opaque-reference audit/composition. | A shared seven-name source category. Moderate native identity, spell continuation, movement, lifecycle, query, lowering and gameplay tests. The engine had a card-ID rule but no exact query contract. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria | 0 for a bounded formation prerequisite; five grants, named-token abilities and two removals need further adapters. | Eight eventual names, but formation and damage assignment require a larger rules/test contract than this slice. |
+| Reverse Damage result / Jade Monolith gameplay | Reverse Damage; Jade Monolith | 0 until source enumeration is complete; Reverse Damage also needs actual prevented-amount life gain. | Two eventual names. Jade Monolith already has redirection lowering; result/ordering plus complete enumeration exceeds this bounded slice. |
+
+The first-ranked prerequisite is dependency-ready for live permanent and spell
+registrations, and supplies concrete seven-name downstream value. It wins over
+a larger eight-name combat contract and dependent result work. The contract,
+reuse boundary and acceptance cases were stated before editing. RON owns syntax,
+validation and per-instance lowering; the engine owns identity, lifecycle,
+source collection, choices and movement. Production declarations are not relaxed.
+
+### Exact signatures, contexts and dependencies
+
+- `Game.AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID)` keeps
+  its signature. A live permanent registration saves a `DamageSource` with its
+  incarnation; a live or resolving spell saves its stack identity. Typed saved
+  `subject` and `continued` fields belong to each replacement instance.
+  Clone copies their mutable snapshot data.
+- `continueSpellExileReplacement(DamageSource, *Permanent)` saves only the
+  permanent that the selected spell becomes, before immediate entry effects.
+  Matching uses the exact incarnation and ID, not the original card ID.
+  Separate copies, returns and recasts cannot inherit the rule.
+- `Game.WaitingExileSources() []DamageSource` reads exact subject references
+  from active persistent and cycle replacements. It uses shared current and
+  retained information, saved snapshot fallback, exact deduplication and fresh
+  copies. The spell and its continued permanent remain distinct references.
+  Phasing and departure retain references until cleanup; phased subjects cannot
+  execute the replacement. Queries do not make choices or rebuild layers.
+- `ChooseDamageSourceFromWaitingExileReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  uses shared decisions, filtering, definition validation and resolution frames.
+- `chosenDamageSourcePlan.waitingExileChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` using
+  `You` and its instance binding in this bounded category context. Missing or
+  nonmatching candidates and absent players clear only their result. Missing
+  bindings and reads before producers reject.
+- `spellMarkedExileInstead(*StackObject) bool` is the exact check used by
+  resolution and countering. `IsCardMarkedExileInsteadOfGraveyard` remains the
+  public card-level registration query. Registrations before casting keep the
+  legacy card marker/caller behavior and supply no exact waiting reference.
+  This slice does not establish their zone visits or enable them in RON.
+
+Engine reuse: `DamageSource`, exact incarnation and stack identities, shared
+current/LKI/departure information, stack retention, normal permanent-spell entry,
+replacement ordering/rechecks, sacrifice/destruction services, payment
+transactions, definition/binding validation, resolution frames and selected-source
+prevention with simultaneous damage. The replacement's turn duration now survives
+origin departure through the existing source-exit marker pattern. Explicit
+`EffectManager.RemoveReplacements` still removes it. Exile cleanup removes only
+its turn rules and card markers; normal cleanup still removes all turn rules.
+CR 400.7 separates new objects, 609.7a permits waiting references, 611.2a gives
+resolved effect duration, and 702.26b excludes phased objects from execution.
+No card-name branches, Go-card fallback, declaration panic or partial production
+registry was added. No Go definitions or DSL APIs meet their removal gate yet.
+
+### Failing-first tests and card mappings
+
+Native and RON tests first failed for missing query and lowering signatures.
+Further failing assertions exposed countered marked spells going to the graveyard,
+resolved rules ending on origin departure, and card-level query compatibility.
+These failures were fixed before the final checks.
+
+| Test / mapping | Contract evidence |
+| --- | --- |
+| `TestWaitingExileSourcesPermanent` | Exact query/execution identities, duplicate registrations, live/current controller, phase cycle, departure with generic LKI cleared, return exclusion, cleanup, isolated snapshots and game clones. |
+| `TestWaitingExileSourcesSpell` | Current spell color/controller, counter/departure retention, recast/copy exclusion, exact permanent continuation and return exclusion; clones retain separate registrations. |
+| `TestWaitingExileSourcesStackExit` | Exact instant resolution and countering both exile; a later cast of the same card goes to its owner's graveyard. |
+| `TestWaitingExileSourcesOriginDeparture`, `EntryTiming` | Resolved rules survive origin departure; continuation is installed before an immediate entry probe uses the native sacrifice service, including when the subject is also the origin. |
+| `TestWaitingExileSourcesChoices`, `LegacyAndInvalid` | Filtered exact choices, unrelated-object exclusion, independent bindings, absent players, empty/nonmatching result clearing, invalid player/binding/name/producer order, invalid or unbound identities, deduplication and explicit removal. |
+| `TestWaitingExileSourcesRetainedDepartureInformation`, `LegacyMarkerQuery` | Current departure color uses retained incarnation information after generic LKI clearing; the legacy card query reports registration until cleanup. |
+| `TestRONWaitingExileSourceProtection` — all six Circles and Greater Realm | Complete-record cost/choice/prevention ASTs in a test-only category context; failed payment, copied activations, cloned shields, consumption and empty choices after cleanup. Full records still reject. |
+| `TestRONWaitingExileSourceInvalid` | Invalid arity, color, filter and reference shape; missing binding and producer order. |
+| `TestRONWaitingExileSourceTimingAndRechecks` — Circle of Protection: Blue | Replacement enters after activation announcement; resolution-time choice, property rechecks, nonmatching damage, simultaneous matching packets and independent clone consumption. |
+| `TestRONWaitingExileSourceSpellProtection` — Circle of Protection: Red | Actual normal spell casting and entry, waiting spell selection, selected-source prevention continuation, simultaneous packets and clone isolation. |
+
+Existing shared-service regressions in the required full suite include
+`TestRequiredPaymentReplacementEventsAndOrdering`,
+`TestRequiredPaymentReplacementPreventsMove`,
+`TestRequiredPaymentSimultaneousSacrifices`,
+`TestPaidSacrificeCardVisitAndValidation` and
+`TestOptionalPaymentResultPendingAndRollback`. No payment or ordering service
+was replaced. New RON tests use synthetic native exile subjects and complete
+protection record ASTs; they are category evidence, not complete-card execution.
+The seven protection names have 31 reprint records. Estimated and actual
+compilation gains are **0 unique names / 0 records**. Seven names gain this
+category's gameplay evidence; complete-card gameplay totals do not change.
+
+### Validation and measured result
+
+Required final checks passed:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader exited 1 for unsupported collection records, not build failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingExileSource -count=1` and
+  `go test ./pkg/mage -run TestWaitingExileSources -count=1`: PASS after the
+  expected failing signatures and assertions.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the new native
+  tests was reviewed. Both focused commands passed again afterward.
+- `git diff --check`: PASS; checked again after the ledger update and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Its full JSON
+  diagnostics equal the baseline. Strict collection loading still rejects.
+
+No environment failure or RON source defect was found. All 12 source hashes
+match the vocabulary snapshot, so no vocabulary refresh is needed. A separate
+existing engine gap appeared in an exploratory entry fixture: typed `This` in an
+immediate entry effect retains the enclosing spell's empty permanent incarnation,
+so `Sacrifice(This)` does not resolve the new permanent there. The entry timing
+test uses an explicit native probe and does not claim that binding contract.
+This gap is recorded for later entry-binding work; it does not block this exact
+replacement/choice contract. Precast zone visits and opaque references still
+block full enumeration. Runtime cutover and deletion gates remain unmet.
+
+Changed files: new `waiting_exile.go` and native tests; `effect_cast_alt.go`,
+`effect_manager.go`, `game.go`, `stack_resolver.go`,
+`selected_source_prevention.go`, `damage_source_choice.go`, `doc.go`;
+`dsl/ron/chosen_source_filter.go` and new RON tests; DSL reference, rules contracts
+and this ledger's summary/entry.
+
+Ranked next candidates:
+
+1. Exact precast zone visits for legacy exile markers: bind the saved card visit
+   only to its permitted cast/continuation, then audit opaque callbacks before
+   complete CR 609.7a composition. Do not repeat live spell/permanent exile subjects.
+2. Parameterized bands with others as the formation/assignment prerequisite for
+   eight names, followed by grants, named-token abilities and selective removal.
 3. Reverse Damage's actual prevented-amount operation after full enumeration;
    prove Jade Monolith's full RON gameplay with existing redirection lowering.
 

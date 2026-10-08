@@ -28,6 +28,7 @@ func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, color
 	}
 	g.registerBattlefieldEntry(permanent, obj.ColorOverride, obj.SourceID)
 	g.continueSpellDamageReplacements(damageSourceFromSpellObject(obj), permanent)
+	g.continueSpellExileReplacement(damageSourceFromSpellObject(obj), permanent)
 	g.completeBattlefieldEntry(permanent, obj.Controller, obj.Controller, colorsSpent)
 	return permanent
 }

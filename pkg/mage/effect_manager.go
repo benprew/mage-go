@@ -512,7 +512,7 @@ func (em *EffectManager) Remove(sourceID uuid.UUID) {
 		}
 	}
 	em.effects = filtered
-	em.RemoveReplacements(sourceID)
+	em.removeReplacements(sourceID, true)
 }
 
 // RemoveEndOfTurn removes all effects with EndOfTurn duration.
@@ -960,9 +960,17 @@ func (em *EffectManager) AddCycleReplacement(r ReplacementEffect) {
 
 // RemoveReplacements removes all replacement effects with the given sourceID.
 func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
+	em.removeReplacements(sourceID, false)
+}
+
+func (em *EffectManager) removeReplacements(sourceID uuid.UUID, sourceExit bool) {
+	keep := func(r ReplacementEffect) bool {
+		independent, ok := r.(interface{ survivesSourceExit() bool })
+		return r.SourceID() != sourceID || (sourceExit && ok && independent.survivesSourceExit())
+	}
 	filtered := em.replacements[:0]
 	for _, r := range em.replacements {
-		if r.SourceID() != sourceID {
+		if keep(r) {
 			filtered = append(filtered, r)
 		}
 	}
@@ -970,7 +978,7 @@ func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
 
 	filtered2 := em.cycleReplacements[:0]
 	for _, r := range em.cycleReplacements {
-		if r.SourceID() != sourceID {
+		if keep(r) {
 			filtered2 = append(filtered2, r)
 		}
 	}

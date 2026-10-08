@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -324,18 +325,12 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 	return nil
 }
 
-// --- "If would be put into a graveyard this turn, exile it instead" ---
-// Scholar of the Lost Trove and similar cards: when they grant a free cast
-// from graveyard, the spell goes to exile instead of the graveyard if it
-// would die this turn. This is a one-shot, card-scoped replacement effect.
-
-// exileInsteadOfGraveyardReplacement is a turn-scoped replacement effect that
-// causes a specific card (by ID) to be exiled instead of going to the
-// graveyard. Used by Scholar of the Lost Trove. Tracks the affected card by
-// the underlying card ID, which is stable across resolution.
+// A saved identity keeps a returned card separate from the original subject.
 type exileInsteadOfGraveyardReplacement struct {
 	replacementBase
-	cardID uuid.UUID
+	cardID    uuid.UUID
+	subject   DamageSource
+	continued DamageSource
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) bool {
@@ -355,7 +350,17 @@ func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) boo
 	if perm == nil {
 		return false
 	}
-	return perm.Card != nil && perm.Card.ID() == r.cardID
+	if perm.PhasedOut || perm.Card == nil {
+		return false
+	}
+	if r.subject.hasExactIdentity() {
+		subject := r.subject
+		if r.continued.hasExactIdentity() {
+			subject = r.continued
+		}
+		return subject.ID() == perm.ID() && subject.Incarnation() == perm.incarnationID
+	}
+	return perm.Card.ID() == r.cardID
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
@@ -375,39 +380,57 @@ func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
 }
 
 func (r *exileInsteadOfGraveyardReplacement) IsActive(_ GameReader) bool { return true }
+func (r *exileInsteadOfGraveyardReplacement) survivesSourceExit() bool {
+	return r.duration == EndOfTurn
+}
 func (r *exileInsteadOfGraveyardReplacement) Clone() ReplacementEffect {
-	return &exileInsteadOfGraveyardReplacement{
-		replacementBase: replacementBase{sourceID: r.sourceID, duration: r.duration},
-		cardID:          r.cardID,
-	}
+	clone := *r
+	clone.subject = cloneDamageSource(r.subject)
+	clone.continued = cloneDamageSource(r.continued)
+	return &clone
 }
 
-// AddExileIfWouldGoToGraveyardThisTurn registers a turn-scoped replacement so
-// that if the card with the given ID would be put into a graveyard from the
-// battlefield this turn, it is exiled instead. Used by Scholar of the Lost
-// Trove for the spell it grants a free cast of.
-//
-// This rule also applies to sacrifice, so payment can change the destination.
-// Instants and sorceries put into the graveyard after resolving are handled
-// directly by the resolver (see ResolveStackObject).
+// AddExileIfWouldGoToGraveyardThisTurn saves a live permanent or spell this turn.
+// A permanent spell keeps the rule on the permanent it becomes.
+// Calls before casting retain the legacy card marker without an exact reference.
 func (g *Game) AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID) {
+	subject := g.CaptureDamageSource(cardID)
+	if !subject.hasExactIdentity() {
+		if obj := g.stack.FindBySourceID(cardID); obj != nil && !obj.IsAbility {
+			subject = damageSourceFromSpellObject(obj)
+		}
+	}
 	g.effects.AddReplacement(&exileInsteadOfGraveyardReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: EndOfTurn},
 		cardID:          cardID,
+		subject:         subject,
 	})
-	g.zones.AddExileInstead(cardID, sourceID)
+	if !subject.hasExactIdentity() {
+		g.zones.AddExileInstead(cardID, sourceID)
+	}
 }
 
-// IsCardMarkedExileInsteadOfGraveyard returns true when the card with the
-// given ID has been tagged for the "if would be put into a graveyard, exile
-// it instead" replacement this turn. ResolveStackObject reads this for
-// instants and sorceries that resolve and would normally go to the graveyard.
+// IsCardMarkedExileInsteadOfGraveyard reports a card's active registration.
+// Stack movement uses the exact spell identity instead of this card-level query.
 func (g *Game) IsCardMarkedExileInsteadOfGraveyard(cardID uuid.UUID) bool {
-	return g.zones.IsExileInstead(cardID)
+	if g.zones.IsExileInstead(cardID) {
+		return true
+	}
+	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
+		for _, replacement := range list {
+			if rule, ok := replacement.(*exileInsteadOfGraveyardReplacement); ok && rule.cardID == cardID && rule.IsActive(g) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
-// ClearExileInsteadOfGraveyardForTurn clears the per-turn map. Called from
-// the cleanup phase together with replacement EOT cleanup.
+// ClearExileInsteadOfGraveyardForTurn ends card markers and exact exile rules.
 func (g *Game) ClearExileInsteadOfGraveyardForTurn() {
 	g.zones.ClearExileInstead()
+	g.effects.replacements = slices.DeleteFunc(g.effects.replacements, func(replacement ReplacementEffect) bool {
+		_, ok := replacement.(*exileInsteadOfGraveyardReplacement)
+		return ok && replacement.GetDuration() == EndOfTurn
+	})
 }

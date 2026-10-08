@@ -7221,3 +7221,27 @@ Evidence: `TestWaitingDiscardSourcesLifecycle`, `Choices`, `Execution` and
 `TimingAndRechecks`. Seven protection records supply their complete cost,
 choice and prevention ASTs in a test-only category context. This establishes
 category gameplay evidence, not complete production card loading.
+
+### Exact subjects of waiting exile replacements
+
+`Game.WaitingExileSources() []DamageSource` reads exact spell and permanent
+subjects of active `AddExileIfWouldGoToGraveyardThisTurn` rules. A live or
+resolving spell registration saves its stack identity. Its continuation saves
+only the permanent that spell becomes, before entry effects run. Departure and
+phasing retain both references until cleanup. Queries use current or retained
+information, deduplicate exact identities and return separate snapshots.
+Legacy registrations before casting retain their calling form and card marker;
+they supply no exact waiting reference.
+
+`mage.ChooseDamageSourceFromWaitingExileReferences(player, filter, binding)`
+uses shared source filters, decisions, declaration validation and resolution
+frames. RON `chosenDamageSourcePlan.waitingExileChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` with `You` and its instance binding.
+Missing or nonmatching subjects and absent players clear only that result.
+Full production source choices still reject until the remaining audit is complete.
+
+Evidence: `TestWaitingExileSources*` and `TestRONWaitingExileSource*`.
+The seven protection names supply their complete activation cost, choice and
+prevention ASTs in a test-only category context. The spell test also proves
+selected-source prevention continuation through the normal engine entry path.
+This is category gameplay evidence; it does not establish full-card loading.

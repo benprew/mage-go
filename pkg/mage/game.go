@@ -1369,6 +1369,10 @@ func (g *Game) counterStackObject(obj *StackObject) {
 		return
 	}
 	g.stack.RemoveByID(obj.ID)
+	if obj.ExileOnLeaveStack || g.spellMarkedExileInstead(obj) {
+		g.cleanupSpell(obj)
+		return
+	}
 	if obj.Card != nil && !obj.IsCopy {
 		if owner := g.GetPlayer(obj.Card.Owner()); owner != nil {
 			owner.AddToGraveyard(obj.Card)

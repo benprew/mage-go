@@ -127,3 +127,7 @@ func (p *chosenDamageSourcePlan) waitingUntapSkipChoice(bindings instanceBinding
 func (p *chosenDamageSourcePlan) waitingDiscardChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingDiscardReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingExileChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingExileReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

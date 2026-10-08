@@ -81,6 +81,12 @@
 // control execution and enumeration. Phasing and ability removal stop the rule.
 // Each discard reads the current controller. A return needs a new registration.
 // [ChooseDamageSourceFromWaitingDiscardReferences] uses this category only.
+// [Game.WaitingExileSources] reads exact spell and permanent subjects of active
+// exile-instead rules. A permanent spell keeps its exact continuation before
+// entry effects run. Phasing and departure keep the saved references until
+// cleanup. Returned permanents and later casts cannot inherit a saved rule.
+// [ChooseDamageSourceFromWaitingExileReferences] uses this category only.
+// Legacy registrations before casting supply no exact waiting reference.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.
