@@ -8,13 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-FILTERED-COUNT-REFERENCES` retains direct typed player reads
-in waiting hand, graveyard and battlefield count values without running filters.
-Seven protection names gain 147 subrule scenarios; native identity coverage gains
-54 cases. Compilation and complete-card coverage remain unchanged. Other action
-families and cast/state/coin conditions still need audit before aggregation.
-Token quality grants remain unsupported. Titania's Song needs per-member base
-values and sticky duration.
+`WAITING-DELAYED-HAND-ACTION-REFERENCES` retains typed source reads in waiting
+reveal/discard players and amounts; queries do not run actions or consume RNG.
+Seven protection names gain 294 subrule scenarios; native identity gains 108 cases.
+Compilation and complete-card coverage remain unchanged. Other action/collection
+and conditional declarations, token quality grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -46469,3 +46467,156 @@ Ranked next candidates:
    unlock with token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-FILTERED-COUNT-REFERENCES`.
+
+## 2026-10-08: waiting delayed hand-action operands
+
+Status: completed implementation slice `WAITING-DELAYED-HAND-ACTION-REFERENCES`.
+This run stops after this slice. Existing `.gitignore`, execution-design and
+progress-history archival edits, plus the untracked completed ledger, were
+preserved. Only this slice's summary and appended entry are staged in the ledger.
+
+### Fresh baseline and candidate selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The strict loader exited 1 for collection rejection, not a build/test failure:
+**1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+names**, out of 2,445 records / 986 names. It installed no partial registry.
+The first diagnostic was Animate Dead at `2ED.lines.ron:4:151`, unsupported
+`EnchantGraveyardCard`.
+
+Complete source records and nested expressions were inspected for the six
+Circles, Greater Realm, Jade Monolith, Reverse Damage and Master of the Hunt.
+The hand-operation vocabulary and complete records using those forms were also
+checked; payment and replacement occurrences remain separate contexts.
+Reprints count once. The latest ledger's first candidate is dependency-ready.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Rank 1, waiting hand-action operands | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | Shared CR 609.7a aggregation prerequisite for all seven; other action/collection and conditional declarations remain | Small: typed engine traversal, dynamic random-discard value lowering, native identity and real-record gameplay |
+| Rank 2, cast/state/coin declarations | The same seven protection names; Jade Monolith and Reverse Damage also need general source choice | 0 for declarations alone; seven potential after aggregation prerequisites | Broader condition audit; Jade retains redirection scope blockers, Reverse Damage retains combined prevention/life-result execution | Medium: condition families, captured facts, purity and gameplay |
+| Rank 3, named-token quality grants | Master of the Hunt | 1 plausible | Token-local BandsWithOthers construction and exact named quality; token metadata and native band combat exist | Medium: token lowering, band legality/damage and clone tests |
+
+Rank 1 supplies a bounded shared prerequisite for seven cards and is preferred
+over the single-card token grant. Contract, reuse boundary and acceptance cases
+were stated before edits. Existing hand actions already lower through typed
+player references; the engine lacked their waiting-reference traversal. Random
+discard execution accepts resolution values, but its compiler adapter only
+accepted literals/X. This slice closes those adapter and engine contract gaps.
+No source-data defect or environment failure was found. No RON source changed.
+
+### Exact supported contract and reuse boundary
+
+Public signatures remain unchanged:
+
+- `Game.WaitingDelayedPermanentSources() []DamageSource`.
+- `RevealHandFor(PlayerRef) ResolvingEffect`.
+- `DiscardMatchingHand(PlayerRef, CardFilter) ResolvingEffect`.
+- `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption) ResolvingEffect`.
+- `DiscardAtRandom(PlayerRef, ResolutionValue) ResolvingEffect`.
+
+All four actions declare direct `This` reads through typed controller, owner and
+LKI-controller players. Both discard amount operands retain existing typed
+permanent/player/count/arithmetic declarations. Source reference enumeration
+never resolves players or values, calls filters, reveals hands, requests card
+choices, moves cards, invokes replacements or consumes randomness. Empty hands,
+zero arithmetic and nonpositive amounts keep explicit declarations. Opaque,
+attached, bound and not-yet-created future bodies retain separate contracts.
+Sequences and captured delayed bodies propagate the declarations.
+
+RON `compileRandomDiscard(Node, scope) ([]effectFactory, error)` now accepts
+`DiscardNumberCardsAtRandom(value)` through `compileInstanceValue`. Supported
+contexts are existing resolving player actions, including delayed bodies under
+`CreateFutureTrigger`. Tested values include source power, source mana value,
+hand counts, target power, addition and subtraction. Existing literals and
+announced X retain their adapters. Negative literals remain invalid; scoped
+dynamic nonpositive results move no cards and consume no randomness.
+`DiscardACardAtRandom` remains a symbol. Fixed `DiscardNumberCards` keeps its
+literal-only restriction. Existing `compileHandPlayerAction` lowers `RevealHand`,
+`DiscardHand` and `DiscardCards(filter)`; `compileFixedDiscard` lowers the fixed
+chosen instructions. `PlayerAction(ControllerOfPermanent(ThisPermanent), action)`
+uses `compilePlayerRef` and exact departure controller information.
+Factories build fresh values and bindings; invalid or unbound reads reject at
+compilation. No card-name dispatch, fallback or game-time declaration panic was
+introduced.
+
+Mage retains exact saved incarnations, LKI/phasing information, copied source
+snapshots, deduplication, delayed capture, stack transfer and independent clone
+lifetime. Waiting availability ends at one-shot detection. Each instruction
+reads current hand membership and its amount when the body resolves. Copies
+read separately. Random selection precedes movement, and discard events see the
+complete batch. The existing discard/replacement pipeline and cost transactions
+remain authoritative. Cloned simulation players can decline optional discard
+replacement while an original player accepts. CR 400.7, 603.7a–e, 608.2h,
+609.7a–b, 701.9a–c and 702.26b establish these boundaries.
+
+Runtime integration, Go-card removal and obsolete DSL removal gates remain
+closed. No DSL function or Go card definition was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, native identity cases failed with `hand action lost
+saved source`; real protection cases failed with `query lost source or ran hand
+action`. Dynamic random-discard values failed at `unsupported random discard
+amount (TheNumberOfCardsOfTypeInPlayersHand)`. Invalid declarations still reject.
+
+During test refinement, a copied count expectation was corrected: the second
+instruction rereads the hand after the first discard. A destroyed donor fixture
+needed an owner. Optional discard-replacement fixtures now distinguish an
+accepting original player from a declining cloned simulation player. Assertions
+and production contracts were not weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestWaitingDelayedHandActionReferences` | 108 cases: three typed players × six hand/player-or-amount shapes × six identity states. Departure, return, phasing/phase cycle, current control, copied snapshots, pure repeated queries and independent clone lifetime. |
+| `TestWaitingDelayedHandActionPurityAndBoundaries` | Nonempty hand/filter probes, zero arithmetic, scripted RNG preservation, opaque/attached/future exclusions and invalid native definitions. |
+| `TestRONWaitingDelayedHandActionProtection` | All six Circles and Greater Realm: 294 real-record subrule scenarios, six actions × seven states. Real filters/costs, failed-payment rollback, resolution source choice, exact retained source, LKI controller, late hand membership, activation copies/clones, actual prevention and shield consumption. Full records still reject unfinished aggregation. |
+| `TestRONWaitingDelayedHandActionInvalid` | 10 malformed, incompatible or unbound delayed declarations reject at compilation. |
+| `TestRONWaitingDelayedHandActionValues` | Five dynamic value families, old power despite changed returned P/T, source departure/return, current hand counts, zero/negative RNG preservation and cloned gameplay. |
+| `TestRONWaitingDelayedHandActionInstancesAndReplacement` | Separate factories/controllers and distinct target values, exact target LKI, independent clone gameplay, accepting versus declining replacement choices, complete batch events, destinations and random consumption. |
+| Existing `TestRONHandOperations*`, `TestRONFixedDiscard*`, `TestRONRandomDiscard*`, `TestRONDamagePlayer*`, `TestRONActivationTiming*` | Complete Amnesia, Inquisition, Bazaar of Baghdad, Jalum Tome, Mind Twist, Hymn to Tourach, Hypnotic Specter, Nicol Bolas, Ring of Renewal, Gwendlyn Di Corci and Disrupting Scepter scenarios retain their prior behavior. These are regression mappings, not new full-card coverage. |
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedHandAction
+  -count=1`: PASS after expected failing-first evidence.
+- Native `go test ./pkg/mage -run TestWaitingDelayedHandAction -count=1`: PASS.
+- RON hand-operation/fixed-discard/random-discard regressions and native
+  random/selected discard-batch regressions with `-count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` found one test-slice preallocation issue. The donor
+  slice now has capacity two. Final `make lint`: PASS, 0 issues.
+  Automatic formatting changes were reviewed; no unrelated files changed.
+- Post-lint focused RON/native hand-action and related discard regressions: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. JSON matches baseline byte-for-byte: **1,978 compiled / 467 rejected
+  records; 773 accepted / 213 rejected unique names**, out of 2,445 / 986.
+  First diagnostic remains Animate Dead, unsupported `EnchantGraveyardCard`.
+- All 12 RON source hashes match the vocabulary snapshot; no refresh required.
+- No environment, pre-existing validation or source-data blocker remains.
+
+Estimated and actual gains: **0 unique names / 0 compiled records**. Seven
+protection names gain 294 subrule scenarios; native identity coverage gains 108
+cases. Complete-card gameplay coverage remains unchanged. The expected zero
+unlock reflects unfinished general source aggregation, not an adapter failure.
+Complete collection gameplay, runtime integration, Go-card deletion and obsolete
+DSL cleanup remain unfinished.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, native and RON
+`waiting_delayed_hand_action_test.go`, RON `random_discard.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. Existing unrelated edits and untracked files were preserved.
+
+Ranked next candidates:
+
+1. Remaining direct permanent action and typed collection operand declarations:
+   seven protection names benefit; 0 immediate unlocks. Audit tap/untap, counters
+   and collection subjects without resolving them or running filters.
+2. Cast/state/coin and remaining conditional declarations, then complete
+   CR 609.7a aggregation: seven potential full-card unlocks after prerequisites;
+   Jade Monolith and Reverse Damage retain separate blockers.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock with token identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-HAND-ACTION-REFERENCES`.

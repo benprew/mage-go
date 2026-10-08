@@ -239,3 +239,19 @@ func (e *lifeAction) refersToSourcePermanent() bool {
 func (e *drawSubjectEffect) refersToSourcePermanent() bool {
 	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
 }
+
+func (e *revealHandForEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player)
+}
+
+func (e *discardMatchingHandEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player)
+}
+
+func (e *discardSubjectEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *randomDiscardSubjectEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
+}

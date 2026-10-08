@@ -10338,3 +10338,52 @@ families, independent factories, departure reads, late membership and clones),
 operand order). Existing Inquisition, Wall of Tombstones and battlefield-count
 regressions preserve complete-record behavior. Full protection-card source
 aggregation remains unfinished; this contract supplies one prerequisite.
+
+### Waiting delayed hand-action declarations
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains the original
+source when `RevealHandFor(PlayerRef)`, `DiscardMatchingHand(PlayerRef,
+CardFilter)`, `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption)`
+or `DiscardAtRandom(PlayerRef, ResolutionValue)` declares a direct `This` read
+in its typed player. Controller, owner and LKI-controller references qualify.
+The two amount operands also use `resolutionValueReadsSourcePermanent`.
+Typed permanent values, player values, counts and arithmetic keep their existing
+traversal. Zero arithmetic, dynamic negative amounts and empty hands retain
+explicit declarations.
+
+The query never resolves players, calculates amounts, calls filters, reveals
+cards, requests discard choices, moves cards, runs replacements or consumes RNG.
+It does not infer references from opaque wrappers, attachments or future bodies
+that have not yet produced their own delayed ability. Sequences and captured
+bodies retain declarations. Exact incarnation capture, current/departure facts,
+phasing facts, copied snapshots, deduplication and clone lifetime remain shared
+services. Departure and phasing keep the saved source; a return cannot replace
+it. One-shot detection ends waiting availability before pending placement.
+CR 400.7, 603.7a–e, 608.2h, 609.7a–b and 702.26b govern these boundaries.
+
+RON `compileRandomDiscard(Node, scope) ([]effectFactory, error)` now lowers
+`DiscardNumberCardsAtRandom(value)` through `compileInstanceValue` without a
+literal/X-only gate. Scope, binding dominance and value validation remain in
+that compiler. A negative literal remains invalid. Each factory builds its own
+references. Existing `compileHandPlayerAction`, `compileFixedDiscard`,
+`compilePlayerRef` and `compileDelayedStep` supply the other tested shapes.
+No spelling, public signature or source record changes.
+
+At body resolution, hand operations read current membership and each random
+discard reads its amount once. Nonpositive results consume no RNG. Copies read
+amounts separately, including changes caused by an earlier copy. Random selection
+precedes movement; each discard event sees the complete batch. Optional
+replacement choices still belong to the affected player. The cloned simulation
+player can decline an optional replacement while the original player accepts.
+CR 701.9a–c and the existing discard/replacement pipeline remain authoritative.
+
+Evidence: native `TestWaitingDelayedHandActionReferences` (108 cases) and
+`TestWaitingDelayedHandActionPurityAndBoundaries`; RON
+`TestRONWaitingDelayedHandActionProtection` (294 scenarios from the six Circles
+and Greater Realm), `Invalid` (10 declaration rejections), `Values` (five dynamic
+value families, departure/return, zero/negative RNG and cloned gameplay), and
+`InstancesAndReplacement` (distinct factory sources and target values, LKI,
+clone choices, batch events and replacement destinations). Existing Amnesia,
+Inquisition, fixed-discard and random-discard complete-record regressions remain
+required. General aggregation and complete protection-card coverage remain
+unfinished; no full-card unlock is claimed.

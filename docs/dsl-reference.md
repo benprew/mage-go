@@ -8027,3 +8027,41 @@ filter and one single-player graveyard declaration. Player scope is validated at
 compile time. The adapter builds fresh references for each factory instance.
 Existing hand and battlefield count syntax is unchanged. This is a prerequisite
 for complete source aggregation, with no complete protection-card unlocks.
+
+### Waiting delayed hand actions
+
+`RevealHandFor(player)`, `DiscardMatchingHand(player, filter)`,
+`Discard(player, amount)` and `DiscardAtRandom(player, amount)` retain direct
+`This` reads through typed controller, owner and LKI-controller players in
+`Game.WaitingDelayedPermanentSources`. Both discard amounts retain the existing
+typed value declarations. Queries do not resolve players, evaluate amounts or
+filters, reveal hands, choose cards, move cards or consume random results.
+Empty hands and nonpositive amounts keep the saved source reference.
+
+RON player actions keep their existing scope:
+
+```ron
+PlayerAction(ControllerOfPermanent(ThisPermanent), RevealHand)
+PlayerAction(ControllerOfPermanent(ThisPermanent), DiscardCards(IsCardtype(Creature)))
+PlayerAction(ControllerOfPermanent(ThisPermanent), DiscardHand)
+PlayerAction(ControllerOfPermanent(ThisPermanent), DiscardACard)
+PlayerAction(ControllerOfPermanent(ThisPermanent), DiscardACardAtRandom)
+DiscardNumberCardsAtRandom(TheNumberOfCardsOfTypeInPlayersHand(
+    IsCardtype(Creature), ControllerOfPermanent(ThisPermanent)
+))
+```
+
+`DiscardNumberCardsAtRandom(value)` now accepts scoped resolution values through
+`compileInstanceValue`. Fixed nonnegative literals and announced X keep their
+behavior. Negative literals remain declaration errors. A dynamic nonpositive
+result moves no cards and consumes no randomness. Each instruction reads its
+amount once when it resolves; copies read separately. The engine selects random
+cards before movement and sends discard events after the complete batch.
+Discard replacements use the shared pipeline. `DiscardNumberCards` retains its
+fixed-literal restriction.
+
+Exact source identity, departure information, phasing, copied snapshots and clone
+lifetime use the existing delayed services. RON controller reads retain LKI.
+Opaque, attached, bound and nested future declarations keep their separate
+contracts. This supplies a prerequisite for complete damage-source aggregation;
+the seven protection records still reject incomplete general source choices.

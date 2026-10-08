@@ -20,8 +20,6 @@ func compileRandomDiscard(n Node, ctx scope) ([]effectFactory, error) {
 			if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
 				return nil, problem(value, "discard amount must be a nonnegative integer")
 			}
-		} else if value.Kind != Symbol || value.Name != "ValueX" {
-			return nil, unsupported(value, "random discard amount")
 		}
 		var err error
 		amount, err = compileInstanceValue(value, ctx)

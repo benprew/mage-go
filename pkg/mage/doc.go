@@ -543,6 +543,11 @@
 // controller and owner sets. Filters, unions, intersections and mana-value
 // limits retain the declarations. Queries do not run filters or select members.
 // Counts still read current membership when the delayed body resolves.
+// [RevealHandFor], [DiscardMatchingHand], [Discard] and [DiscardAtRandom]
+// declare direct source reads in their typed player. Both discard amounts
+// retain typed source reads. Queries do not reveal, choose or move cards,
+// run filters or use random results. Each body reads the current hand when
+// it resolves. Zero amounts and empty hands keep the saved reference.
 // Attached, bound and opaque player references need separate contracts.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
