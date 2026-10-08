@@ -11869,8 +11869,9 @@ The existing physical departure and LKI services keep printed destination rules
 and copied event information respectively. Phasing does not repeat entry.
 Cloned pending spells use separate choices and declarations.
 
-RON accepts only a sole optional `EnterAsACopyOfAPermanent(filter, NoCopyEffects)`
-under `AsPermanentEnters(ThisPermanent, ...)`. Copy modifications, required or
+RON accepts a sole optional `EnterAsACopyOfAPermanent(filter, NoCopyEffects)`
+under `AsPermanentEnters(ThisPermanent, ...)`, and the type additions below.
+Other copy modifications, required or
 mixed entry-copy sequences, external copy grants, live copy layers, back faces
 and other face-down shapes remain separate contracts. This does not establish a
 general migration of all legacy entry replacements to proposed entry events.
@@ -11883,4 +11884,48 @@ Real Clone scenarios cover payments, timing, decline, copied activation rollback
 phasing, departure/LKI, clone isolation, token and copied donors, face-down values
 and acquired entry choices. Existing entry-copy identity tests retain copied death
 abilities and all departure destinations. All six Clone reprints compile; Copy
-Artifact and Vesuvan Doppelganger still reject their copy modifications.
+Artifact now uses the copiable type-addition contract below. Vesuvan Doppelganger
+still rejects its color and ability exceptions.
+
+## Copiable type additions in entry copies
+
+`CopyAddCardTypes(...core.CardType) CopyModification` adds permanent types as
+part of copying (CR 707.9b). `CopiableValues.WithModifications` creates a new
+validated definition plan and snapshot without changing the source snapshot.
+Each build reconstructs independent rules through the retained source plan.
+Duplicate additions do not duplicate types. Existing abilities, including any
+characteristic-defining abilities, remain (CR 707.9d). There is no Layer 4 effect
+that reasserts the exception after later type changes: modified copiable values
+supply the starting characteristics before ordinary layers (CR 613.1a/d, 613.2c).
+Later copies inherit those values (CR 707.3). Ordinary layers remain excluded.
+
+`MayCopyAsEntersWithModifications(PermanentFilter, ...CopyModification) Ability`
+uses this snapshot before `BuildEntryCopy` and the existing copy-priority entry
+pipeline. Type-only derived plans retain their original declaration provenance.
+The event key still identifies each existing ability position, so reconstruction
+cannot repeat an already used replacement (CR 614.5). Type additions cannot
+create a new rule or remove the existing abilities. Later entries use fresh
+applied sets. Future ability-changing exceptions need their own provenance.
+
+Nil modifications, empty type additions, invalid types and Instant/Sorcery type
+additions reject during definition validation. Missing snapshots and failed
+builders return errors. Entry failure keeps the existing failed-entry path.
+Supported RON spelling is the sole optional entry-copy context with nonempty
+`CopyEffects([AddCardtypes([...]), ...])`. Other modifications remain rejected;
+there is no approximate color, added-ability or live-layer implementation.
+
+Physical identity, ownership, departure rules, LKI, choice timing, phasing,
+replacement priority and simultaneous preparation retain the existing contracts.
+Native `TestCopyTypeModificationSnapshots`, `TestCopyTypeModificationInvalid`,
+`TestCopyTypeModificationRepetition` and `TestCopyTypeModificationBatchAndPriority`
+cover immutable inputs, fresh rules, entry counters, ordinary-layer exclusion,
+invalid declarations, one-use identity, fresh later entries, copy priority and
+independent simultaneous entries. RON `TestRONCopyTypeModificationGameplay`,
+`TestRONCopyTypeModificationManaAndLegality`, `TestRONCopyTypeModificationLayers`,
+`TestRONCopyTypeModificationComposedTypes` and `TestRONCopyTypeModificationInvalid`
+cover real Copy Artifact with Juggernaut/Sol Ring donors, copied combat/mana rules,
+payment rollback, entry timing, nontarget choice, subsequent Clone copying,
+phasing, cloned pending-spell choices, departure/LKI, Disenchant legality,
+ordinary type/color/P/T layers, cleanup, composed additions and rejection.
+All six Copy Artifact reprints compile; compilation and gameplay evidence remain
+separate from complete collection validation.

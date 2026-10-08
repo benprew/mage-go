@@ -9023,7 +9023,7 @@ AsPermanentEnters(ThisPermanent, [MayActions([
 ```
 
 The filter uses the existing context-free permanent-filter compiler. The copy
-operation must be the sole child of the outer `MayActions`. Copy exceptions,
+operation must be the sole child of the outer `MayActions`. Other copy exceptions,
 required copying, nested optional copying and mixed copy/ordinary entry sequences
 remain declaration errors. Ordinary optional entry sequences keep their existing
 support. No resolving action or target binding is introduced.
@@ -9032,3 +9032,36 @@ The copy precedes tapped entry, counters and entry choices. Those operations and
 ETB observers read the new definition. Chosen values, counters and ordinary layer
 changes on the source do not transfer. A physical card keeps its ID and owner,
 and uses its printed rules after departure. Phasing keeps the copy.
+
+## Copiable type additions
+
+`mage.CopyAddCardTypes(types ...core.CardType) mage.CopyModification` adds
+permanent types within the copy process. It keeps existing types and abilities.
+`(*mage.CopiableValues).WithModifications(...mage.CopyModification)
+(*mage.CopiableValues, error)` creates an immutable, validated snapshot.
+`mage.MayCopyAsEntersWithModifications(mage.PermanentFilter,
+...mage.CopyModification) mage.Ability` uses these modifications before later
+entry replacements, counters and choices. `MayCopyAsEnters` remains compatible.
+
+RON accepts a sole optional entry-copy operation with this modification shape:
+
+```ron
+AsPermanentEnters(ThisPermanent, [MayActions([
+    EnterAsACopyOfAPermanent(IsCardtype(Artifact),
+        CopyEffects([AddCardtypes([Enchantment])]))
+])])
+```
+
+`CopyEffects` and each `AddCardtypes` list must be nonempty. Multiple additive
+operations run in order; duplicate types are retained only once. The RON type
+vocabulary supports Creature, Artifact, Enchantment and Land in this context.
+The native API also supports Planeswalker. Instant, Sorcery, unknown types,
+malformed declarations and other modification operations reject before gameplay.
+`NoCopyEffects` retains its existing symbol shape. Target, resolving, attachment,
+required-copy and mixed entry-operation contexts do not acquire support.
+
+Modified snapshots build independent abilities, targets and costs. Subsequent
+copies inherit the added types; ordinary layers and counters do not transfer.
+Type additions keep the original declaration identities for replacement ordering.
+Physical departure rules and phasing use the existing entry-copy services.
+KeepColor, added abilities and live copying remain separate capabilities.

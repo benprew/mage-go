@@ -2,18 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **786 accepted / 200 rejected unique card
-names** (986 total), and **2,025 compiled / 420 rejected records** (2,445 total).
+The latest recorded inventory reports **787 accepted / 199 rejected unique card
+names** (986 total), and **2,031 compiled / 414 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`OPTIONAL-EARLY-ENTRY-COPY` adds copy-priority entry scheduling and the complete
-NoCopyEffects optional entry shape. Clone gains six compiled records and real
-RON gameplay evidence for copied counters, choices, abilities and source identity.
-Token and physical-copy provenance remain shared prerequisites.
+`COPIABLE-TYPE-ADDITIONS` adds immutable copy type exceptions and entry lowering
+for CopyEffects([AddCardtypes(...)]) with stable replacement identities. Copy
+Artifact gains six compiled records and real RON gameplay evidence, including
+subsequent copying, ordinary layers, copied abilities and physical departure.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Copy exceptions, live copy layers, player-keyed choices and replacements remain gaps.
+Color/ability copy exceptions, live copy layers and other rejected forms remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -52027,3 +52027,148 @@ Ranked next candidates:
    records, using the shared exact-source and simultaneous-prevention contracts.
 
 This run stops after OPTIONAL-EARLY-ENTRY-COPY.
+
+## 2026-10-08: copiable type additions
+
+Status: completed implementation slice `COPIABLE-TYPE-ADDITIONS`. Stop after
+this slice. Initial user changes to `.gitignore`, the execution design and the
+ledger reorganization, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary and appended ledger entry are included in the commit.
+No card definitions or RON records are changed.
+
+### Fresh evidence and candidate selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Baseline strict loader exited 1: 2,025 compiled / 420 rejected records and
+786 accepted / 200 rejected unique names. This is collection rejection, not
+build failure. Complete records for all compared names and reprints were read,
+including both nested CopyEffects bodies of Vesuvan Doppelganger. Local
+Oracle text for Copy Artifact in data/LEA.json agrees with its RON record. Targeted
+vocabulary entries were inspected. Reprints count once.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: copiable type additions, selected | Copy Artifact: 1 name / 6 records | No remaining nested compiler blocker. Establishes immutable copy modifications and type-only declaration provenance for later exception work, including Vesuvan Doppelganger. | Small: snapshot transformation, entry adapter and validation; four native and five RON test functions. |
+| Ranked #2: color preservation and added abilities | Vesuvan Doppelganger: 0 immediate unlocks for a prerequisite-only slice; 1 name / 6 records after the whole capability | KeepColor, fresh AddAbility rules, AddAbilityVariable(ThisAbility), targeted optional upkeep recopy and live copy layers all remain. Entry scheduling is ready. | Large for the full card; medium for color-only prerequisite. Fresh ability provenance cannot use type-only identity rules. |
+| Ranked #3: leave one point of next combat damage | Forcefield: 1 name / 5 records | ChooseAPermanent/IsUnblocked already lower; the exact chosen-source combat event and PreventAllButSomeOfThatDamage require a shared one-event prevention contract. | Medium: simultaneous packet handling, nonpreventable damage, replacement competition, consumption and cleanup tests. |
+
+Candidate #1 is dependency-ready, has the largest immediate record gain of the
+bounded candidates and supplies a shared exception boundary. The other full
+copy card is too large for this slice. Selection, contract, reuse and acceptance
+cases were stated before editing. The implement-engine skill supplied the native
+workflow; no removed card skill or agent delegation was used.
+
+### Supported contract and ownership
+
+- Native `CopyAddCardTypes(types ...core.CardType) CopyModification` is an
+  immutable type addition. Creature, Artifact, Enchantment, Land and Planeswalker
+  are supported. Empty lists, nil modifications, invalid types, Instant and
+  Sorcery additions reject during definition validation.
+- `(*CopiableValues).WithModifications(...CopyModification)
+  (*CopiableValues, error)` builds a new validated definition plan and snapshot.
+  Each build creates independent abilities, targets and costs. Existing types
+  and abilities remain; duplicates are removed. The source snapshot and input
+  slices cannot change the resulting declaration. Missing snapshots return errors.
+- `MayCopyAsEntersWithModifications(PermanentFilter, ...CopyModification) Ability`
+  integrates those values before BuildEntryCopy in the existing copy-priority
+  replacement pipeline. MayCopyAsEnters remains compatible.
+- RON accepts `AsPermanentEnters(ThisPermanent,
+  [MayActions([EnterAsACopyOfAPermanent(filter,
+  CopyEffects([AddCardtypes([type, ...]), ...]))])])`. The copy must be the sole
+  optional operation. Both lists are nonempty. Multiple additions run in order.
+  RON reuses its existing type vocabulary: Creature, Artifact, Enchantment, Land.
+  NoCopyEffects remains a symbol. Malformed lists/arities, unknown types, mixed
+  unsupported modifications, KeepColor and AddAbility remain compilation errors.
+- RON owns syntax validation and context. Mage owns snapshot construction,
+  immutable modifications and replacement identity. Type-only derived plans
+  retain declarationOrigin, because adding types does not create a new ability.
+  The event key uses the original plan and ability position. Rebuilt rules cannot
+  repeat within one entry; later entries use new applied sets (CR 614.5).
+- Types become copiable values (CR 707.9b), including in subsequent copies
+  (CR 707.3). Existing characteristic-defining abilities remain (CR 707.9d).
+  Ordinary Layer 4/5/7 changes do not enter the snapshot. There is no later layer
+  that reasserts added types; modified base values precede ordinary layers
+  (CR 613.1a/d, 613.2c).
+- Reuses CardDefinitionPlan, CaptureCopiableValues, BuildEntryCopy, entry
+  preparation/replacement ordering, simultaneous batches, counters, source
+  choice, cost transactions, phasing, LKI, departure and game-clone services.
+  No parallel lifecycle, global last-action slot, card-name branch, fallback,
+  game-time declaration panic or partial production registry is introduced.
+- Required copying, mixed entry sequences, external grants, color exceptions,
+  added abilities and live copy layers remain separate contracts. Future
+  ability-changing exceptions need distinct rule provenance. Current callers stay.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON gameplay tests failed at Copy Artifact's unsupported CopyEffects.
+After fixture API corrections, native tests failed compilation on the new APIs.
+The same assertions pass after implementation. No behavior assertion was weakened.
+The engine-short run then exposed four old inventory-count assertions; they were
+updated to the precise six-record gain while retaining reconstruction and registry
+checks. No engine behavior regression was found.
+
+| Test | Card / observable evidence |
+| --- | --- |
+| TestRONCopyTypeModificationGameplay | Complete LEB Copy Artifact with Juggernaut: failed payment, entry-only nontarget choice of a shrouded donor, name/cost/P/T/type values, copied mandatory-attack and Wall blocking rules, excluded donor shroud, phase cycle, subsequent Clone inheriting Enchantment, physical hand rules, copied LKI, return and decline, cloned pending spell with an independent decline. |
+| TestRONCopyTypeModificationManaAndLegality | Complete Copy Artifact with Sol Ring: noncreature artifact/enchantment types, fresh mana-ability source and tap payment, independent donor, real Disenchant target legality and printed graveyard rules. |
+| TestRONCopyTypeModificationLayers | Complete Copy Artifact and Clone with Sol Ring: later ordinary type/color/P/T modifications apply to the copy; a further copy inherits Enchantment but excludes those ordinary modifications; cleanup retains the copy exception. |
+| TestRONCopyTypeModificationComposedTypes | RON fixture: multiple ordered additions, repeated and already-present types, no donor mutation. |
+| TestRONCopyTypeModificationInvalid | Invalid symbols, arities, lists, empty lists, tuple types, spell/unknown types and unsupported/mixed exceptions reject before gameplay. Existing TestRONEntryCopyInvalid and native instant validation retain context restrictions. |
+| TestCopyTypeModificationSnapshots / Invalid | Native immutable inputs, deduplication, independent builds, fresh rules, acquired entry counters, ordinary type exclusion, original snapshot preservation and declaration errors. |
+| TestCopyTypeModificationRepetition | Native copied self-copy declaration retains one-use identity despite modified reconstruction; new physical entry makes a fresh choice. |
+| TestCopyTypeModificationBatchAndPriority | Native two-entry batch keeps independent counters/choices; default replacements observe modified types before acquired entry counters. |
+| TestRONOptionalEntryCopyDependencies / TestRONDefinitionPlanCopyConsumerBoundaries | All six Copy Artifact and Clone records accept. Six Vesuvan Doppelganger records still reject at KeepColor. |
+| Accepted-collection, inventory and numeric-consumer tests | All 2,031 accepted records retain independent validated reconstruction; inspection does not install a partial production registry. |
+
+Copy Artifact gains full-record gameplay scenarios. Juggernaut, Sol Ring, Clone,
+Disenchant and Wall of Wood are donor/interaction mappings, not new acceptance
+claims. These tests do not establish full collection gameplay or live copying.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONCopyTypeModification
+  -count=1` and native TestCopyTypeModification: PASS.
+- Entry-copy, copy-consumer and inventory regression tests: PASS.
+- `make build` and `go vet ./...`: PASS.
+- Initial engine-short run failed four expected old count assertions (2,031/414).
+  Updated only their exact counts; final `go test ./pkg/mage/... -short
+  -count=1`: PASS.
+- `make test`: PASS.
+- Additional skill check `go test ./... -short -count=1`: PASS.
+- `make lint`: PASS, 0 issues. The new native test's import formatting was the
+  only automatic change; reviewed it and reran combined native/RON copy and
+  existing entry-copy tests after formatting: PASS.
+- `git diff --check`: PASS, including final ledger changes and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **2,031 compiled /
+  414 rejected records; 787 accepted / 199 rejected names**. Strict collection
+  rejection remains, and no partial registry is published.
+- No remaining validation, environment or pre-existing blocker.
+
+Estimated and actual compilation gains: **1 unique name / 6 records**. The six
+Copy Artifact diagnostics disappear. The six Vesuvan Doppelganger diagnostics
+advance from CopyEffects to KeepColor; its later added-ability and live-copy gaps
+remain. The other 408 diagnostics are unchanged. Compilation and gameplay gains
+are recorded separately. No source defect or environment failure was found.
+All 12 RON source hashes still match the vocabulary snapshot; no source or
+vocabulary refresh is needed. Runtime cutover, complete gameplay, Go-card removal
+and unused DSL cleanup remain gated. No DSL function was removed, so no removal
+caller audit is claimed.
+
+Changed files: new pkg/mage/copy_modification.go/test and
+pkg/mage/dsl/ron/copy_modification_test.go; native entry_copy.go,
+card_definition_plan.go and doc.go; RON entry_copy.go, definition_plan_test.go,
+optional_entry_test.go, inventory_test.go and numeric_consumers_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. KeepColor copiable exception for Vesuvan Doppelganger: a bounded prerequisite
+   with zero immediate unlocks, needed by both its entry and live-copy bodies.
+   Preserve original colors and handle color-defining abilities under CR 707.9d.
+2. Forcefield's chosen exact source and next combat-damage event leaving one point:
+   one potential name / five records, with simultaneous and replacement tests.
+3. Fresh copied added-ability provenance, then live copy-layer installation for
+   Vesuvan Doppelganger: one name / six records after prerequisite exceptions.
+   Do not omit its optional targeted upkeep recopy rule.
+
+This run stops after COPIABLE-TYPE-ADDITIONS.

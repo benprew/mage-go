@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -9,16 +11,27 @@ import (
 // MayCopyAsEnters offers a copy choice before other entry operations.
 // The copy keeps the physical card's identity and printed departure rules.
 func MayCopyAsEnters(filter PermanentFilter) Ability {
-	return &entryCopyAbility{BaseAbility: BaseAbility{id: uuid.New(), abilityType: core.AbilityStatic}, filter: filter}
+	return MayCopyAsEntersWithModifications(filter)
+}
+
+// MayCopyAsEntersWithModifications offers an entry copy with copiable exceptions.
+// The physical card keeps its identity and printed departure rules.
+func MayCopyAsEntersWithModifications(filter PermanentFilter, modifications ...CopyModification) Ability {
+	return &entryCopyAbility{BaseAbility: BaseAbility{id: uuid.New(), abilityType: core.AbilityStatic}, filter: filter, modifications: slices.Clone(modifications)}
 }
 
 type entryCopyAbility struct {
 	BaseAbility
-	filter PermanentFilter
+	filter        PermanentFilter
+	modifications []CopyModification
 }
 
-func (*entryCopyAbility) inspectDefinition() definitionNode {
-	return definitionNode{Role: "entry-copy", Text: "optional entry copy", battlefieldSource: true}
+func (a *entryCopyAbility) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "entry-copy", Text: "optional entry copy", battlefieldSource: true}
+	if err := validateCopyModifications(a.modifications); err != nil {
+		n.problem = err.Error()
+	}
+	return n
 }
 
 type entryCopyKey struct {
@@ -45,7 +58,11 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 		if !ok {
 			continue
 		}
-		key := entryCopyKey{base.definitionPlan, i}
+		plan := base.definitionPlan
+		if plan != nil && plan.declarationOrigin != nil {
+			plan = plan.declarationOrigin
+		}
+		key := entryCopyKey{plan, i}
 		replacement := a.copies[key]
 		if replacement == nil {
 			replacement = &entryCopyReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityCopy}, ability: copyAbility}
@@ -99,6 +116,10 @@ func (r *entryCopyReplacement) Replace(action Action, g *Game) Action {
 		return action
 	}
 	values, err := g.CaptureCopiableValues(live)
+	if err != nil {
+		return nil
+	}
+	values, err = values.WithModifications(r.ability.modifications...)
 	if err != nil {
 		return nil
 	}

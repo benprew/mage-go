@@ -186,7 +186,7 @@ func TestRONDefinitionPlanAcceptedCollection(t *testing.T) {
 			}
 		}
 	}
-	if accepted != 2025 || rejected != 420 {
+	if accepted != 2031 || rejected != 414 {
 		t.Fatalf("accepted=%d rejected=%d", accepted, rejected)
 	}
 }
@@ -206,11 +206,11 @@ func TestRONDefinitionPlanCopyConsumerBoundaries(t *testing.T) {
 		case "Clone", "Copy Artifact", "Vesuvan Doppelganger":
 			found++
 			_, err := Compile(node)
-			if node.Fields["Name"].String == "Clone" {
+			if node.Fields["Name"].String != "Vesuvan Doppelganger" {
 				if err != nil {
 					t.Fatal(err)
 				}
-			} else if err == nil || !strings.Contains(err.Error(), "CopyEffects") {
+			} else if err == nil || !strings.Contains(err.Error(), "KeepColor") {
 				t.Fatalf("copy consumer: %v", err)
 			}
 		}

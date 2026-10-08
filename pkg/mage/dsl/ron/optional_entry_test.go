@@ -208,11 +208,11 @@ func TestRONOptionalEntryCopyDependencies(t *testing.T) {
 			}
 			count++
 			_, err := Compile(n)
-			if name == "Clone" {
+			if name == "Clone" || name == "Copy Artifact" {
 				if err != nil {
 					t.Fatal(err)
 				}
-			} else if err == nil || !strings.Contains(err.Error(), "CopyEffects") {
+			} else if err == nil || !strings.Contains(err.Error(), "KeepColor") {
 				t.Fatalf("%s/%s: expected copy modification rejection, got %v", set, name, err)
 			}
 		}

@@ -10,10 +10,11 @@ import (
 // CardDefinitionPlan retains a builder for a printed card definition.
 // The builder must be pure and must create independent declarations each time.
 type CardDefinitionPlan struct {
-	build          func() (Card, error)
-	seed           map[any]bool
-	name           string
-	copiableValues *CopiableValues
+	declarationOrigin *CardDefinitionPlan
+	build             func() (Card, error)
+	seed              map[any]bool
+	name              string
+	copiableValues    *CopiableValues
 }
 
 // NewCardDefinitionPlan checks a builder before the plan can be used.

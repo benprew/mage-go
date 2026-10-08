@@ -15,8 +15,8 @@
 // [CopiableValues.HasManaCost] keeps an absent cost separate from a zero cost.
 // Returned and phased subjects cannot supply a new capture. Saved values remain.
 // Legacy copy layers and untracked characteristic changes return errors.
-// Entry copying, copy exceptions and live copy-layer installation need separate
-// services. The snapshot does not supply casting or battlefield entry permission.
+// The snapshot does not supply casting or battlefield entry permission.
+// Live copy layers and other copy exceptions need separate services.
 // [BuildEntryCopy] builds fresh battlefield rules for a physical card's next
 // entry. It keeps that card's ID, owner, token status and printed origin.
 // Departure uses fresh printed rules; LKI and pending abilities keep copy rules.
@@ -38,7 +38,12 @@
 // Copying uses validated provenance, fresh rules and the physical entry builder.
 // Acquired entry counters, choices and triggers use the copied definition.
 // Departure restores printed rules; phasing does not repeat the copy choice.
-// Copy exceptions and live copy layers need separate services.
+// Use [MayCopyAsEntersWithModifications] with [CopyAddCardTypes] to add permanent
+// types within the copy process. [CopiableValues.WithModifications] keeps the
+// modified types in a validated snapshot with fresh rules for each build.
+// Later copies keep these types; ordinary type layers do not enter the snapshot.
+// Type additions keep abilities and the entry rules' original identities.
+// Color exceptions, added abilities and live copy layers need separate services.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
