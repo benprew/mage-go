@@ -102,6 +102,7 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	}
 	if e.waitingRedirection {
 		candidates = append(candidates, ctx.Game.WaitingRedirectionPermanentSources()...)
+		candidates = append(candidates, ctx.Game.WaitingRedirectionSpellSources()...)
 	}
 	if e.waitingPreventionSpells {
 		candidates = append(candidates, ctx.Game.WaitingPreventionSpellSources()...)

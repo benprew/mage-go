@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `TEMPORARY-PERMANENT-REDIRECTION` adds exact permanent-source/player/
-absorber redirection until cleanup, complete Shimian Night Stalker RON gameplay,
-and waiting-source subrule evidence for seven protection names. Other temporary
-and legacy replacement references, face-up command objects and complete source
-enumeration remain gaps.
+unfinished. `SELECTED-SOURCE-PERMANENT-REDIRECTION` adds exact chosen-source damage
+redirection from a permanent to a saved player, permanent-spell continuity and
+waiting permanent/spell references. New subrule evidence covers Jade Monolith
+and seven protection names, with zero full-card unlocks. Remaining replacement
+references, face-up command objects and complete source enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40826,5 +40826,173 @@ Ranked next candidates:
 2. Parameterized bands with others: the eight-name combat prerequisite, followed
    by live/token grants and selective removal.
 3. Conditional host animation across type and base P/T layers for Animate Artifact.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: selected-source permanent-recipient redirection
+
+Status: completed implementation slice `SELECTED-SOURCE-PERMANENT-REDIRECTION`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and the condensed progress ledger, plus untracked
+`mtgish-ron-completed.md`, are preserved. Only this run's summary replacement
+and appended entry are staged from the ledger.
+
+### Fresh evidence, comparison and selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Strict `go run ./cmd/loadcards -json` exited 1 with **1,965 compiled / 480 rejected
+records; 765 accepted / 221 rejected unique names**. This was collection rejection,
+not a build or test failure. The design, engine reference, top status/latest ledger
+entry, targeted vocabulary signatures, relevant API/rules contracts, compiler/
+engine code and complete candidate records were read. Identical Jade Monolith
+reprints and all seven protection names remain rejected in explicit tests.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected-source permanent-recipient redirection, selected | Jade Monolith, Circle of Protection: Black, Blue, Green, Red, White, Artifacts, Greater Realm of Preservation: **0 immediate unlocks**. The direct action occurs in six Jade records; seven shields occur in 31 records. | Complete source enumeration is still missing. This adds Jade's full resolving replacement action, its waiting permanent/spell references and source-choice subrule evidence for seven shields. Legacy static/counter references and command objects remain separate. Nova Pentacle needs a source-choice declaration and the opposite player-to-permanent operation; Personal Incarnation needs finite-amount redirection. | Medium and bounded: typed installation/replacement, existing spell-continuity hook, simultaneous batch adapter, compiler lowering and native/RON interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible full-family unlocks**. | Complete nested records need legendary/named bands, combat formation and damage assignment in both directions, live/token grants and selective temporary removal. Concrete eight-name combat prerequisite. | Large: representation, combat and layers/token/removal adapters with interaction tests. |
+| Conditional host animation | Animate Artifact: **1 plausible unlock**, across six reprints. | Needs one conditional effect across type and base P/T layers, consistent host mana-value reads and dependency/self-condition behavior. Enables shared conditional animation, but no other immediate name was established. | Medium: shared layer contract, adapter and Aura lifecycle/dependency tests. |
+
+Ranked candidate #1 is dependency-ready and has concrete downstream multi-card
+value. Its selected-source creature-recipient context is a complete bounded
+capability. The larger bands family exceeds this run's slice size; the one-card
+animation adapter has less established shared value. The contract, reuse boundary
+and acceptance cases were stated before edits. The `implement-engine` skill was
+used for engine contracts; no delegation, removed card/set skills, Go stubs or
+Go-card requirements were used.
+
+### Exact signatures, contexts and engine reuse
+
+- Resolving RON shape: `CreateFutureReplaceWouldDealDamage(
+  NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource,
+  Permanent(<permanent reference>)), [DealToPlayerInstead(<player reference>)])`.
+  `compileSelectedSourceRedirect(Node, scope) (effectFactory, error)` checks both
+  tuple arities, a lexically bound source plan, typed recipient and player refs,
+  and exactly one supported operation. `compileEffect` installs the adapter.
+  The source plan's filter is retained. Wrong arities, unbound/wrong-kind refs,
+  other events/recipients/operations remain declaration errors.
+- `RedirectNextDamageFromSelectedSource(source DamageSourceRef,
+  subject PermanentRef, player PlayerRef, filter DamageSourceFilter)
+  ResolvingEffect` saves exact source/subject identities and a resolved player.
+  Definition inspection preserves child binding/dominance checks and rejects
+  missing or incompatible references. Absent/unbound installation does nothing.
+  Existing `permanentInformationReference` and exact source information services
+  supply identities and current/retained properties; no RON state enters mage.
+- `selectedSourceRedirectReplacement` is an ordinary `core.EndOfTurn` replacement.
+  Positive damage to the exact live creature/planeswalker from the selected
+  source is redirected to the saved player. A filter mismatch, phased/absent/
+  returned or mistyped subject, other source/recipient or redirection prohibition
+  cannot consume the rule. A phase cycle preserves identity. Source departure
+  and phasing can still supply captured damage. Control changes do not change
+  the saved player. Replace rechecks applicability.
+- The existing damage batch pipeline adds a branch that applies one selected
+  redirection to all matching simultaneous packets before ending its use. Later
+  damage passes normally. Source, amount, combat status, affected-player ordering,
+  subsequent prevention, actual outcomes and lifelink remain shared services.
+  Cleanup ends unused rules; clones copy captured source information/state.
+- The existing permanent-spell entry link is extended and renamed privately to
+  `continueSpellDamageReplacements`. Its only callers were audited. A selected
+  permanent spell links to its exact permanent before entry effects run. Separate
+  copies and returned objects cannot inherit the link; consumed rules cannot link.
+  Existing prevention callers and their contracts remain intact.
+- `Game.WaitingRedirectionPermanentSources() []DamageSource` includes exact subject,
+  selected permanent and continued permanent references until consumption/cleanup.
+  `Game.WaitingRedirectionSpellSources() []DamageSource` supplies the selected
+  exact spell, including after departure. A shared private
+  `waitingReplacementSpellSources(func(ReplacementEffect) []DamageSource)` retains
+  the existing prevention collector's current/retained information, exact
+  deduplication and isolated snapshots. Existing category choice now reads both
+  redirection queries. Other legal categories still require separate services.
+- `ChooseADamageSource` remains rejected in production. Tests supply a complete
+  explicit source list for their fixture, never a partial production registry.
+  No Go fallback, card-name branch, global result slot, game-time declaration panic,
+  RON source edit, DSL removal or runtime cutover is introduced.
+
+CR 400.7, 609.7a–c, 614.3–9, 616, 120.4 and 702.26b supply identity, source choice,
+continuation, replacement, simultaneous damage and phasing contracts. Local
+`data/LEA.json` confirms Jade's selected-source/target-creature/saved-player Oracle
+text. All 12 RON source hashes match the vocabulary snapshot; no refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+The first RON test failed with unsupported action `CreateFutureReplaceWouldDealDamage`;
+the first native test failed compilation because the public redirection service
+was missing. Additional source-filter and waiting-spell tests failed compilation
+before those signature/query contracts were added. The property-mismatch assertion
+also caught a missing saved filter. Fixture-only errors were corrected: effect
+factory lists, phasing arguments, constructors and sequencing a binding producer
+with its consumer. The replacement-order expected result was corrected to match
+the actual registration order; both order cases remain asserted.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestRONSelectedSourceRedirectAction` — Jade Monolith | Unchanged real target and replacement AST; explicit source-list fixture; failed mana payment rollback, activation timing, target legality at resolution, source departure, subject return/phase cycle, cleanup, saved player under control changes, one-use behavior and cloned games. All six complete reprints still reject general source enumeration. |
+| `TestRONSelectedSourceRedirectInstances` — Jade Monolith subrules | Two factory instances under different controllers retain independent targets, source choices and saved players. Wrong cross-instance damage cannot consume either rule; cloned games retain independent rules. |
+| `TestRONSelectedSourceRedirectInvalid` | Wrong arities, missing source-choice scope, wrong source/recipient/reference kinds, unbound target/player, empty/unsupported operations and unsupported finite-amount event remain errors. |
+| `TestSelectedSourceRedirectIdentity` | Native exact source return/phasing, subject return/phasing, phase cycle, control, cleared transient LKI, cleanup, retained waiting refs, simultaneous packets, consumption and clone isolation. |
+| `TestSelectedSourceRedirectSpellContinuity`; `SpellCopy`; `WaitingSpell` | Exact permanent-spell continuation, prior spell-damage consumption, exclusion of separate copies, retained departed spell refs, reference lifetime and cloned consumption. |
+| `TestSelectedSourceRedirectRechecks`; `DamageContract`; `Invalid` | Source property recheck without consumption, missing installation, affected-player order, prevention after redirect, redirection prohibition, nonpositive damage, wrong source/recipient, source/amount/combat preservation, actual simultaneous outcomes, lifelink, invalid definitions and dominance. |
+| `TestRONSelectedSourceRedirectProtection` — six Circles and Greater Realm | Actual complete-record choice/prevention ASTs with this waiting producer; exact live/departed/returned/phased subject filtering, cloned choices, chosen shield consumption, cleanup clearing and declaration validation. Full cards remain rejected. |
+| Existing inventory, gameplay and registry tests | Accepted records, counts and strict atomic loading stay unchanged. Two independent-gap assertions now check the adapter's more precise diagnostics. Existing selected-source prevention and waiting-spell regressions pass. |
+
+### Source defect and remaining boundaries
+
+Nova Pentacle (`LEG.lines.ron:184`) uses `TheChosenDamageSource` in its next-source
+replacement without a preceding `ChooseADamageSource`. Local `data/LEG.json` says
+“a source of your choice”; CR 609.7a requires a choice when the effect is created.
+The compiler now reports the unbound source. This is a source-data defect, separate
+from its unsupported opposite recipient/operation context. There is only one
+record of this name. It is not corrected in this slice. Personal Incarnation's
+finite-amount event and Eye for an Eye's damage-reflection context remain separate
+capabilities, without any simplified execution. No environment failure was found.
+
+### Validation and measured result
+
+All required checks passed after the final test additions, in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONSelectedSourceRedirect -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestSelectedSourceRedirect -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Additional skill check `go test ./... -short -count=1`: PASS.
+- `make lint`: PASS, 0 issues. First-pass automatic changes normalized import
+  groups in new files; reviewed. The final pass made no semantic changes.
+- Post-lint focused native/RON, selected-source prevention, waiting-spell and
+  changed diagnostic expectation tests: PASS.
+- `git diff --check`: PASS, repeated after the ledger update and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled / 480
+  rejected records; 765 accepted / 221 rejected unique names**. Accepted/rejected
+  record identity sets exactly match baseline. No partial registry is installed.
+  Seven diagnostic messages change: six Personal Incarnation reprints now report
+  unsupported selected-source redirection event
+  `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`; Nova Pentacle reports
+  an unbound `TheChosenDamageSource`. All other diagnostics match baseline.
+
+No required check failed. No tests were weakened or accepted records removed.
+
+Estimated and actual full-card compilation gains are **0 unique names / 0 records**.
+New subrule gameplay evidence covers **8 distinct names**: Jade Monolith's resolving
+replacement and seven shields' use of its waiting references. There is no new
+complete-card gameplay claim. Complete collection loading/gameplay, runtime
+integration, Go-card deletion and unused DSL cleanup remain unfinished.
+
+Changed files: new native selected-source redirection and tests; new RON adapter,
+action/declaration/instance and waiting-protection tests; compiler dispatch;
+simultaneous replacement handling, permanent-spell continuity, waiting-reference
+queries and source choice; two diagnostic expectation tests; engine API/rules
+contract docs and this ledger. No unrelated file is staged.
+
+Ranked next candidates:
+
+1. Remaining referring replacements: exact legacy static lifetimes and
+   counter-placement replacement references, then face-up command objects and
+   complete enumeration for the seven protection names and Jade Monolith. Do not
+   repeat this completed selected-source creature-recipient redirection context.
+2. Parameterized bands with others, the eight-name combat prerequisite, followed
+   by live/token grants and selective removal.
+3. Finite-amount creature-recipient redirection if it can share the remaining
+   replacement-reference work; otherwise conditional host animation for Animate
+   Artifact. Nova Pentacle's missing source choice needs correction with its
+   opposite redirection adapter, including all declaration/target contracts.
 
 The commit hash is reported in the final response. No second slice starts.

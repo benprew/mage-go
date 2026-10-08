@@ -7,9 +7,12 @@ func PreventNextDamageFromSelectedSource(source DamageSourceRef, recipient Playe
 	return &exactSourcePreventionInstallation{source: source, recipient: recipient, filter: filter, continuePermanentSpell: true}
 }
 
-func (g *Game) continueSpellPrevention(spell DamageSource, permanent *Permanent) {
+func (g *Game) continueSpellDamageReplacements(spell DamageSource, permanent *Permanent) {
 	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
+			if redirect, ok := replacement.(*selectedSourceRedirectReplacement); ok && redirect.IsActive(g) && redirect.source.SameObject(spell) {
+				redirect.continued = damageSourceFromPermanent(permanent)
+			}
 			shield, ok := replacement.(*sourcePreventionReplacement)
 			if ok && shield.continuePermanentSpell && shield.IsActive(g) && shield.exactSource.SameObject(spell) {
 				shield.continuedSource = damageSourceFromPermanent(permanent)
@@ -24,7 +27,7 @@ func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, color
 		return nil
 	}
 	g.registerBattlefieldEntry(permanent, obj.ColorOverride, obj.SourceID)
-	g.continueSpellPrevention(damageSourceFromSpellObject(obj), permanent)
+	g.continueSpellDamageReplacements(damageSourceFromSpellObject(obj), permanent)
 	g.completeBattlefieldEntry(permanent, obj.Controller, obj.Controller, colorsSpent)
 	return permanent
 }

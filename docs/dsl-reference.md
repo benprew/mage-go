@@ -7028,3 +7028,34 @@ deduplicates identities and returns isolated snapshots.
 this category to the existing RON choice/prevention plans. It is category-only;
 general `ChooseADamageSource` stays rejected pending complete enumeration.
 Legacy ID-only redirection installers retain their behavior and are not enumerated.
+
+### Selected-source permanent-recipient redirection
+
+The resolving RON shape is:
+
+```text
+CreateFutureReplaceWouldDealDamage(
+  NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+    TheChosenDamageSource, Permanent(<permanent reference>)),
+  [DealToPlayerInstead(<player reference>)])
+```
+
+`compileSelectedSourceRedirect(Node, scope) (effectFactory, error)` requires a
+lexically bound source-choice plan, one typed permanent recipient and exactly
+one player-redirection operation. Each factory uses its own source binding and
+existing target/player bindings. It lowers to
+`mage.RedirectNextDamageFromSelectedSource(DamageSourceRef, PermanentRef,
+PlayerRef, DamageSourceFilter) ResolvingEffect`. The choice plan supplies the
+source filter for installation and damage-time rechecks.
+
+The engine keeps exact identities, saves the destination player, redirects one
+positive damage event until cleanup and continues selected permanent spells
+before entry effects. All matching simultaneous packets use the rule together.
+Other events, recipients, operations, unbound references and wrong arities remain
+errors. `ChooseADamageSource` remains rejected in production until all its source
+categories exist; the adapter does not provide a partial source list.
+
+`Game.WaitingRedirectionSpellSources` supplies exact selected spells to the shared
+waiting-reference choice service alongside existing permanent redirection refs.
+Native and RON tests are mapped in `docs/engine-rules-contracts.md`. No RON source
+record or vocabulary hash changed.

@@ -1172,6 +1172,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateFutureReplaceWouldDealDamage":
+		build, err := compileSelectedSourceRedirect(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateReplaceWouldDealDamageUntil":
 		build, err := compileTemporaryDamageRedirect(n, ctx)
 		if err != nil {

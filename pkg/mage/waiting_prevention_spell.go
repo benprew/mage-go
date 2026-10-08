@@ -21,17 +21,23 @@ func (r *sourcePreventionReplacement) waitingPreventionSpells() []DamageSource {
 // WaitingPreventionSpellSources reads exact spell references in active shields.
 // A later cast cannot replace the saved spell's information.
 func (g *Game) WaitingPreventionSpellSources() []DamageSource {
+	return g.waitingReplacementSpellSources(func(replacement ReplacementEffect) []DamageSource {
+		refs, ok := replacement.(waitingPreventionSpellReferences)
+		if !ok {
+			return nil
+		}
+		return refs.waitingPreventionSpells()
+	})
+}
+
+func (g *Game) waitingReplacementSpellSources(references func(ReplacementEffect) []DamageSource) []DamageSource {
 	var sources []DamageSource
 	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
 			if !replacement.IsActive(g) {
 				continue
 			}
-			refs, ok := replacement.(waitingPreventionSpellReferences)
-			if !ok {
-				continue
-			}
-			for _, saved := range refs.waitingPreventionSpells() {
+			for _, saved := range references(replacement) {
 				source := g.spellReferenceInformation(saved)
 				if source.SameObject(saved) && !slices.ContainsFunc(sources, source.SameObject) {
 					sources = append(sources, cloneDamageSource(source))

@@ -8690,3 +8690,43 @@ Creature-recipient-to-player redirection, legacy temporary/static replacement
 references, spell-source redirection, optional redirection and face-up command
 objects remain separate capabilities. No RON source change or new general source
 choice is established here.
+
+### Selected-source permanent-recipient redirection
+
+`RedirectNextDamageFromSelectedSource(source DamageSourceRef, subject PermanentRef,
+player PlayerRef, filter DamageSourceFilter) ResolvingEffect` saves an exact source,
+permanent incarnation and destination player at resolution. A zero filter permits
+all sources. The filter checks current or retained exact-source information at
+installation and damage time. A mismatch does not consume the rule (CR 609.7b).
+
+Positive damage from the selected source to the original live creature or
+planeswalker becomes damage to the saved player (CR 614.7a, 614.9). Subject phasing,
+departure or loss of both types stops applicability; a returned object cannot
+restore it. A phase cycle preserves it. Source departure or phasing can still
+supply captured damage. Source and subject control changes cannot change the
+saved player. The shared pipeline preserves source attribution, amount and combat
+status, affected-player ordering, recipient prevention and actual damage results.
+A prohibition on redirection keeps the rule unused.
+
+One matching simultaneous damage event consumes the rule after all its matching
+packets are redirected (CR 614.3–5). Later damage passes normally. Cleanup ends
+unused rules. Clones retain independent state and copied source information.
+A selected permanent spell continues to the exact permanent it becomes before
+entry effects run (CR 609.7a). Separate spell copies and later returns do not
+inherit that continuation. A rule consumed by spell damage cannot continue.
+
+`WaitingRedirectionPermanentSources` includes the subject, selected permanent
+source and continued permanent source until consumption or cleanup.
+`WaitingRedirectionSpellSources() []DamageSource` includes the selected spell,
+using the same exact-stack information and snapshot collector as waiting
+prevention. `ChooseDamageSourceFromWaitingRedirectionReferences` now reads both
+redirection categories. It does not enumerate other legal source categories.
+Legacy ID-only replacements retain their existing behavior.
+
+Evidence: `TestSelectedSourceRedirectIdentity`, `SpellContinuity`, `SpellCopy`,
+`WaitingSpell`, `Rechecks`, `DamageContract` and `Invalid`; RON
+`TestRONSelectedSourceRedirectAction`, `Invalid` and `Protection`. The RON action
+fixture executes Jade Monolith's unchanged target and replacement AST with an
+explicit source list. Seven protection records supply actual choice/prevention
+ASTs for this producer. These are subrule evidence; all eight complete names
+remain rejected pending complete source enumeration. No full-card claim is added.

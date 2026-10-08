@@ -294,7 +294,7 @@ func TestRONOnlyPlayerActivationInvalidAndBoundaries(t *testing.T) {
 			t.Fatal("permission accepted outside supported context", rule)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{{"FEM", "Merseine", "PayManaCostOfPermanent"}, {"LEA", "Personal Incarnation", "CreateFutureReplaceWouldDealDamage"}} {
+	for _, tc := range []struct{ set, name, gap string }{{"FEM", "Merseine", "PayManaCostOfPermanent"}, {"LEA", "Personal Incarnation", "unsupported selected-source redirection event"}} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
 			t.Fatalf("%s lost independent gap: %v", tc.name, err)
 		}

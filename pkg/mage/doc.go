@@ -40,6 +40,14 @@
 // destination until cleanup. Its exact source and destination supply waiting
 // redirection references, even after departure or phasing. Damage requires the
 // original destination to be present as a creature or planeswalker.
+// [RedirectNextDamageFromSelectedSource] saves an exact source, subject and player.
+// It redirects one damage event to the saved player until cleanup. All matching
+// simultaneous packets use it together. A selected permanent spell continues
+// to the exact permanent it becomes before entry effects run.
+// Its source filter checks current or retained information before damage.
+// [Game.WaitingRedirectionPermanentSources] includes its permanent references.
+// [Game.WaitingRedirectionSpellSources] includes its exact selected spell.
+// [ChooseDamageSourceFromWaitingRedirectionReferences] reads both categories.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.
