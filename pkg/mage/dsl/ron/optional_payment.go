@@ -9,6 +9,13 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "ChooseAPlayer" {
+			effect, err := compilePlayerChoice(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return append(effects, effect), nil
+		}
 		if part.Name == "ChooseAPermanent" {
 			effect, err := compilePermanentChoice(part, parts[i+1:], ctx)
 			if err != nil {

@@ -714,6 +714,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "action":
+		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -1253,6 +1256,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -1514,6 +1520,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_filter":
+		if n.Name == "CastASpellThisTurn" && len(n.Args) == 1 {
+			return "spell_filter"
+		}
 		if n.Name == "SinglePlayer" && len(n.Args) == 1 {
 			return "player_reference"
 		}

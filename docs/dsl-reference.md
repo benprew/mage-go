@@ -8871,3 +8871,32 @@ one-use consumption, cleanup, and permanent-spell continuation.
 Replacement bodies for Reverse Damage, Dark Sphere and Eye for an Eye still
 reject. Earlier bounded-source prerequisite sections describe their original
 scope; this section establishes the general aggregation contract.
+
+## Player choice at resolution
+
+`mage.ChoosePlayer(player PlayerRef, subjects PlayerSet, binding *PlayerBinding)
+ResolvingEffect` records one required choice in the current resolution frame.
+It uses the existing player decision interface with bounds of one. A sole
+candidate needs no decision; an empty set or absent chooser clears the result.
+An invalid, empty or multiple-member answer uses the first candidate. The
+candidate list passed to the decision is separate from the validated list.
+`mage.PlayersWhoCastSorceryThisTurn() PlayerSet` reads the existing turn tracker
+in active-player-first order. Countered and unresolved casts qualify. Failed
+casting payments and spell copies do not count. Final cleanup clears history.
+
+RON `ChooseAPlayer/1` in a resolution `ActionList` supports bare `AnyPlayer`,
+bare `Opponent`, and `CastASpellThisTurn(IsCardtype(Sorcery))`. The chooser is the
+current explicit player scope. Opponent is relative to that same player.
+Bare `TheChosenPlayer` is available only in the choice's continuation. Each
+producer has a separate typed binding, and a later producer shadows the earlier
+one in its continuation. Factories allocate fresh declarations. Delayed bodies
+capture existing bindings or perform their own choices at delayed resolution.
+Spell and activation sequences use the same lowering. A terminal
+`PlayerAction(player, ChooseAPlayer(filter))` makes that player's choice without
+exporting its result. Entry choices retain their separate permanent lifetime.
+Other spell-history filters and player-choice contexts remain unsupported.
+
+Evidence: native `TestPlayerChoice*` and RON `TestRONPlayerChoice*`. Tests execute
+the exact choice nodes from Backdraft and Rainbow Vale with an observation body;
+they do not claim complete gameplay for either card. Their full records still
+reject at resolved-spell history and explicit-player control transfer.

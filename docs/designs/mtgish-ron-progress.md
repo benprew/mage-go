@@ -7,12 +7,12 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`PERMANENT-CHOICES` adds scoped non-targeting choices and maximum-mana-value
-selection. Compilation and complete-card gameplay counts are unchanged; six
-Forcefield/Juxtapose diagnostics advance. Juxtapose now includes its artifact exchange.
+`RESOLUTION-PLAYER-CHOICES` adds scoped required player choices and current-turn
+sorcery-caster selection. Compilation and complete-card gameplay counts are
+unchanged; Backdraft and Rainbow Vale advance to their independent blockers.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Entry copying, player-keyed choices, exchanges and further replacements remain gaps.
+Entry copying, player-keyed permanent choices, exchanges and replacements remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -51136,3 +51136,146 @@ Ranked next candidates:
    multi-card prerequisites can be completed.
 
 This run stops after PERMANENT-CHOICES.
+
+## 2026-10-08: scoped player choices at resolution
+
+Status: completed implementation slice `RESOLUTION-PLAYER-CHOICES`. This run
+stops after this slice. Initial changes to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's summary update and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+Evaluated the latest ranked candidate #1 first. Read every complete Clone,
+Copy Artifact and Vesuvan Doppelganger record and their nested copy exceptions.
+The legacy `cloneTokenAbility` uses a shallow reflected copy; `BaseCard.Copy`
+also shares non-token declarations. A fresh typed graph contract needs builders
+for nested abilities, targets, bindings, static effects and entry operations.
+Those reconstruction declarations are not present. Copy scheduling depends on
+that contract, and the full graph prerequisite exceeds a bounded single slice.
+
+| Candidate | Distinct affected names / records | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Fresh copiable declaration graphs | Clone, Copy Artifact, Vesuvan Doppelganger / 18 | 0 for prerequisite | Requires typed reconstruction declarations throughout nested graphs. Then enables three entry-copy consumers; snapshots, early scheduling, retained color and added abilities remain separate. | Large; cannot complete the full graph contract in this bounded slice. |
+| Resolution player choices | Backdraft, Rainbow Vale / 2 | 0 | Backdraft still needs resolved-spell selection and damage history. Rainbow Vale still needs explicit-player control transfer. Existing typed player frames, choices and turn history make the shared prerequisite ready. | Small; scoped lowering, one engine chooser and one existing-history selector, declaration and lifecycle tests. |
+| Next combat damage from a chosen permanent, leaving one point | Forcefield / 5 | 1 name / 5 records | Permanent choice is ready. Needs selected-source continuity, finite prevention consumption, simultaneous packets, bypass, ordering and cleanup. | Medium; one collection consumer. |
+
+Selected the shared player-choice prerequisite. It advances two unique consumers
+with concrete downstream behavior and uses exact existing engine services.
+First-error frequency did not determine unlock estimates. Before editing, stated
+resolution timing, explicit chooser, invalid/empty decisions, lexical dominance,
+independent bindings, failed payment, delayed capture and clone isolation as
+acceptance cases. No copy, control-transfer or resolved-damage rule is inferred.
+
+### Exact contracts, contexts and dependencies
+
+- Engine: `ChoosePlayer(PlayerRef, PlayerSet, *PlayerBinding) ResolvingEffect`.
+  A required non-targeting choice writes the current resolution frame. A sole
+  candidate needs no decision. No chooser or no candidates clears the result.
+  Multiple candidates use `Player.ChooseTargets` with bounds 1/1 and a separate
+  candidate slice. Empty, invalid or multiple answers use the first candidate.
+- Engine: `PlayersWhoCastSorceryThisTurn() PlayerSet` uses
+  `Game.GetSorceriesCastThisTurn` and `EachPlayer` order. Membership is read at
+  execution. Successful unresolved or countered casts count; instants, failed
+  payments and spell copies do not. Existing final cleanup clears history.
+- RON: `compileResolutionPlayerSet(Node, scope) (playerSetFactory, error)` and
+  `compilePlayerChoice(Node, []Node, scope) (effectFactory, error)` lower
+  `ChooseAPlayer/1` in resolution ActionList sequences for spells, activations
+  and delayed bodies. Filters are bare AnyPlayer, bare Opponent, or exactly
+  `CastASpellThisTurn(IsCardtype(Sorcery))`. Opponent uses the current explicit
+  chooser's player scope. Other spell-history filters remain rejected.
+- Bare TheChosenPlayer is a player reference dominated by its producer. Each
+  factory allocates fresh `BindPlayer` declarations in an instance map. A later
+  choice shadows the earlier one only in its own continuation. Wrong shapes,
+  unbound/non-bare reads, ability escapes and entry/resolution scope mixing
+  reject. A terminal `PlayerAction(player, ChooseAPlayer(filter))` uses that
+  player and exports no result. Other player-choice contexts remain unsupported.
+- Reuse `FromPlayer`, Sequence, OpponentsOf, existing player decisions, typed
+  declaration validation, resolution frames, delayed captures, source/LKI
+  services and clone state. Existing payments remain transactional. Choices do
+  not add announcement targets, replacement rules or simultaneous operations.
+- Explicit source reads in the engine chooser and subjects participate in
+  waiting delayed queries. Queries do not execute operands or choices. Source
+  incarnation, departure/LKI and detection lifetime use the existing services.
+  Returned objects cannot replace saved references; clones keep separate state.
+- Rules read: local CR 115.10, 400.7, 603.7a–e and 608.2c–d/h–i. API and rules
+  docs describe only this established choice/history behavior. No game-time
+  declaration panic, reflection dispatcher, global result slot, Go fallback or
+  partial production registry is added.
+
+### Failing-first tests and card mappings
+
+Native tests first failed at the missing ChoosePlayer and history-selector APIs.
+After correcting fixture method names, RON tests failed at unsupported
+ChooseAPlayer. A later fixture attempted an illegal sorcery cast with a nonempty
+stack; it now tests a legal cast between delay installation and execution.
+Native clones use SearchPlayer decisions, so the LKI test supplies explicit
+clone decisions rather than assuming BasePlayer selection.
+
+| Tests | Evidence / affected card mapping |
+| --- | --- |
+| TestPlayerChoiceResolution, AbsenceAndClone, Declaration | Valid/invalid/nil/multiple decisions, 1/1 bounds, frame lifetime, stale-result clearing, absent chooser, clone isolation, invalid operands and producer dominance. |
+| TestPlayerChoiceWaitingSource | Pure chooser/set source queries, exact departed/returned incarnation, LKI controller, separate clone decisions and detection lifetime. |
+| TestRONPlayerChoiceGameplay | RON casting, no announcement choice or target, invalid decisions, pending clones and fresh factories. Shared player-choice prerequisite. |
+| TestRONPlayerChoiceSequenceAndDelay, LateCastAndIndependentBindings | Empty second choice preserves the earlier delayed capture; history is read after legal later casts; separate saved identities and delayed frame clones. Shared prerequisite for both names. |
+| TestRONPlayerChoiceCastHistory | Unresolved/countered casts qualify; failed payments, instant casts, copies and final cleanup do not add or retain sorcery history. Backdraft prerequisite. |
+| TestRONPlayerChoiceActivationAndExplicitChooser | Failed payment makes no choice; two pending activations choose at resolution; a nested explicit chooser does not overwrite an outer result. Rainbow Vale prerequisite. |
+| TestRONPlayerChoiceSourceLifecycle | Delayed chooser remains the installing controller after source control change, phasing or return under another player. Rainbow Vale prerequisite. |
+| TestRONPlayerChoiceInvalid, InventoryAndAbilityScope | Wrong syntax, unsupported filters, unbound/non-bare reads, ability/entry scope escape; player-filter, spell-filter and reference inventory roles. |
+| TestRONPlayerChoiceCompleteRecords, RecordPrerequisites | Both complete records advance to their independent blockers. Exact real-record choice nodes execute with an observation body; actual RON Hurricane supplies Backdraft's cast-history evidence. Neither is claimed as complete-card gameplay. |
+
+The old opponent-entry test rejected all resolving ChooseAPlayer declarations.
+That restriction is superseded. Its replacement still rejects AsPermanentEnters
+inside resolving actions; existing nonpermanent-entry rejection remains. New
+tests enforce separate entry and resolution binding lifetimes. No gameplay
+assertion is removed to hide a failure.
+
+### Verification, source evidence and outcome
+
+- Fresh baseline make build and uncached ron package tests: PASS. Loader exit 1:
+  2,019 compiled / 426 rejected records; 785 accepted / 201 rejected names.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONPlayerChoice -count=1` and
+  native `go test ./pkg/mage -run TestPlayerChoice -count=1`: PASS. Repeated with
+  the affected opponent-entry regression after the scope test update and lint.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS after updating the superseded
+  resolution-rejection fixture. `make test`: PASS.
+- `make lint`: PASS, zero issues after preallocating a test effect slice. Reviewed
+  automatic formatting; only new-test import grouping changed. Focused checks
+  pass after that change. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json` and `-inventory -json`: expected exit 1.
+  Fresh totals: **2,019 compiled / 426 rejected records; 785 accepted / 201
+  rejected names**, out of 2,445 records / 986 names. Strict collection rejection
+  remains atomic. No environment failure, new rejection or cleared rejection.
+- Exactly two diagnostics advance. Backdraft now rejects at
+  ChooseASpellThatResolvedThisTurn. Rainbow Vale's unsupported player control
+  action reaches the existing generic value diagnostic for ThisPermanent.
+  All other diagnostics match the fresh baseline.
+- Local Oracle data in data/LEG.json and data/FEM.json confirms the selected
+  player-choice requirements. No source defect is found in this supported part.
+  No RON source changes; the vocabulary source snapshot needs no refresh.
+
+Estimated and actual complete-card gain: **0 names / 0 records**. Two unique
+cards gain mapped prerequisite execution evidence; complete-card gameplay
+counts are unchanged. Runtime integration, Go-card deletion and DSL removal
+remain gated on complete collection support. Existing callers are preserved.
+Changed files: mage player_choice.go/test and doc.go; ron player_choice.go/test,
+compiler.go, player_scope.go, optional_payment.go, inventory.go and
+opponent_entry_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md and
+this ledger. No other file is staged.
+
+Ranked next candidates:
+
+1. A bounded fresh typed declaration-builder contract for copiable abilities,
+   targets and bindings. Concrete downstream consumers remain Clone, Copy
+   Artifact and Vesuvan Doppelganger (three names / 18 records). Establish safe
+   reconstruction before copiable snapshots and early entry-copy scheduling.
+2. Next combat damage from the chosen permanent, leaving one point, for
+   Forcefield (one plausible complete unlock / five records). Test continuity,
+   simultaneous consumption, prevention ordering/bypass and cleanup.
+3. Explicit-player indefinite control transfer for Rainbow Vale (one plausible
+   unlock / one record). Player choice is now ready; reuse typed control layers
+   and exact delayed source identity. Backdraft's resolved-spell damage history
+   is a separate larger contract and must not use a global last-spell slot.
+
+This run stops after RESOLUTION-PLAYER-CHOICES.

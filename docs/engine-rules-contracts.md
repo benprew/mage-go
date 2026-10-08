@@ -11611,3 +11611,36 @@ now require the supported full records to compile. The three different
 replacement bodies in Reverse Damage, Dark Sphere and Eye for an Eye still
 reject. This section supersedes earlier claims that general aggregation is
 unavailable; those sections retain their bounded operand contracts.
+
+## Required player choices at resolution
+
+`ChoosePlayer(PlayerRef, PlayerSet, *PlayerBinding) ResolvingEffect` makes a
+non-targeting choice when its instruction resolves (CR 115.10 and 608.2c–d).
+The chosen player is saved in the existing resolution frame. Reads require a
+preceding producer. Empty membership or an absent chooser clears the binding;
+independent later instructions still run. Multiple candidates use the specified
+player's existing decision interface with bounds of one. Invalid responses use
+the first legal candidate. No announcement target or random choice is added.
+
+`PlayersWhoCastSorceryThisTurn() PlayerSet` reads existing cast-time history at
+execution, in active-player-first order (CR 608.2i). Resolution and countering
+do not erase a successful cast. Failed payments and copies do not add casts.
+The turn tracker clears at final cleanup. This API does not track resolved
+spells or their damage totals and does not supply arbitrary spell filtering.
+
+Factory instances use separate typed declarations. Sequential choices do not
+change earlier captures. Existing delayed frames retain saved player identities;
+choices inside a delayed body run at resolution, using its saved controller.
+Source control changes, phasing and returned sources do not replace that player.
+The chooser and player set declare explicit source reads to waiting delayed
+queries. Queries do not resolve those operands or make a decision. Saved source
+incarnations and LKI use existing information services; clones retain separate
+bindings and waiting lifetimes (CR 400.7 and 603.7).
+
+Evidence: `TestPlayerChoiceResolution`, `AbsenceAndClone`, `Declaration` and
+`WaitingSource`; `TestRONPlayerChoiceGameplay`, `SequenceAndDelay`, `CastHistory`,
+`ActivationAndExplicitChooser`, `LateCastAndIndependentBindings`,
+`SourceLifecycle`, `Invalid`, `InventoryAndAbilityScope`, `CompleteRecords` and
+`RecordPrerequisites`. Exact Backdraft and Rainbow Vale choice nodes receive
+prerequisite execution evidence. Complete-card gameplay remains blocked by
+resolved-spell history and explicit-player control transfer, respectively.

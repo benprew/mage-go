@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	choice              *playerChoicePlan
 	ability             *abilityTargetPlan
 	landEntry           *landEntryEventPlan
 	defender            *sourceCombatPlayerPlan
@@ -34,6 +35,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	chosenPlayers        map[*playerChoicePlan]*mage.PlayerBinding
 	chosenPermanents     map[*permanentChoicePlan]*mage.PermanentBinding
 	createdValues        map[*createdValuePlan]*mage.NumberBinding
 	chosenDamageSources  map[*chosenDamageSourcePlan]*mage.DamageSourceBinding
@@ -90,6 +92,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "TheChosenPlayer":
+			if ctx.chosenPlayer != nil {
+				return playerReferencePlan{choice: ctx.chosenPlayer}, nil
+			}
 		case "Trigger_DefendingPlayer":
 			if ctx.defendingPlayer != nil {
 				return playerReferencePlan{defender: ctx.defendingPlayer}, nil
@@ -155,6 +161,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.choice != nil {
+		return mage.FromPlayer(bindings.chosenPlayers[p.choice])
+	}
 	if p.ability != nil {
 		return mage.ControllerOfAbility(bindings.abilities[p.ability])
 	}

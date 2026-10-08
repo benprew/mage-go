@@ -342,7 +342,7 @@ func TestRONOpponentEntryDeclarationScopeAndInventory(t *testing.T) {
 		}
 	}
 	for _, rules := range []string{
-		`SpellActions(ActionList([ChooseAPlayer(Opponent)]))`,
+		`SpellActions(ActionList([AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])]))`,
 		choice + `,SpellActions(ActionList([GainLife(Integer(1))]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[`+rules+`])`), "nonpermanent.ron")

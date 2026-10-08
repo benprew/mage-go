@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	chosenPlayer         *playerChoicePlan
 	chosenPermanent      *permanentChoicePlan
 	createdValue         *createdValuePlan
 	chosenDamageSource   *chosenDamageSourcePlan
@@ -1467,6 +1468,13 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "ChooseAPlayer" {
+		build, err := compilePlayerChoice(n, nil, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "ChooseAPermanent" {
 		build, err := compilePermanentChoice(n, nil, ctx)
 		if err != nil {

@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ChoosePlayer] for a required player choice at resolution.
+// The specified player chooses from a typed set. The saved [PlayerBinding]
+// belongs to its resolution frame. An empty set or absent chooser clears it.
+// [PlayersWhoCastSorceryThisTurn] reads the existing turn history. Countered
+// and unresolved casts qualify; failed payments and spell copies do not.
+// Cleanup clears that history. Delayed bodies retain their saved player bindings.
+// Explicit source reads in the chooser and set supply waiting references.
+// Waiting queries do not select players or make choices.
+//
 // Use [HighestManaValue] to keep all maximum-mana-value members of a set.
 // Selection reads current membership and keeps its order. Face-down permanents
 // have mana value zero. Combine it with [ChoosePermanent] for a required choice
