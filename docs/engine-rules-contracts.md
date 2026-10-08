@@ -11309,3 +11309,34 @@ real costs, source filters and one-use prevention with a departed delayed source
 These are subrule tests; complete records still reject general source choice.
 Existing `TestRONCombatExit*` retains complete Mijae Djinn and Ydwen Efreet evidence,
 and typed target legality, source departure, control and ability removal checks.
+
+## Waiting delayed poison operands
+
+`AddPoisonFor(subject PlayerRef, amount ResolutionValue)` declares explicit
+source reads from both operands to `Game.WaitingDelayedPermanentSources`.
+`ControllerOf(This)`, `OwnerOf(This)` and `ControllerOfWithLKI(This)` qualify.
+Typed source values and their arithmetic retain the declaration. Queries do not
+resolve players, read amounts or add counters. Zero amounts keep the reference.
+Sequences and modes retain it; implicit attachments, opaque operands and future
+delay bodies do not infer a source read.
+
+Departure and phasing keep the exact saved incarnation until trigger detection.
+A returned object cannot replace it. Execution retains the existing player and
+value semantics: live-only references require presence; typed information reads
+can use phase or departure facts. Copies and game clones keep separate frames
+and waiting lifetimes (CR 400.7, 603.7a–e, 609.7a, 702.26b–d, 122.1f).
+
+RON `compilePlayerCounterPlacement(Node, scope) (effectFactory, error)` lowers
+one `ACounterOfTypeOnPlayer(PoisonCounter, player)/2` or
+`NumberCountersOfTypeOnPlayer(Integer(n), PoisonCounter, player)/3` instruction
+in `PutCounters/1`. The count is a nonnegative literal. Typed player declarations
+and their lexical scope are checked before fresh factory construction. This
+includes supported delayed resolving bodies. Dynamic RON poison counts and
+other player-counter types remain unsupported.
+
+Evidence: `TestWaitingDelayedPoisonOperands`, `Boundaries` and `Resolution`;
+`TestRONWaitingDelayedPoisonGameplay`, `Invalid`, `Instances` and `Protection`.
+The seven protection consumers cover this source category only. General
+`ChooseADamageSource` remains rejected until complete source aggregation has
+contract evidence. Existing `TestRONPoison*` retains complete Pit Scorpion,
+Marsh Viper and Serpent Generator coverage.

@@ -27,6 +27,10 @@ func (e *poisonPlayerEffect) Apply(ctx *EffectContext) error {
 	}
 	return nil
 }
+func (e *poisonPlayerEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
 func (e *poisonPlayerEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "poison-player", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
 }

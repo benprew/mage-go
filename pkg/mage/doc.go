@@ -1047,6 +1047,11 @@
 // entry keeps the card in the library. These searches do not reveal hand cards.
 //
 // Use [AddPoisonFor] with a typed player reference to add poison counters.
+// Its typed player and amount declare explicit source reads to
+// [Game.WaitingDelayedPermanentSources]. Queries do not resolve operands
+// or add counters. Zero amounts keep the saved incarnation until detection.
+// Departure and phasing keep the reference; a return cannot replace it.
+// Implicit attachments and future delay bodies keep separate scopes.
 // Nonpositive amounts make no change. The existing state check handles loss
 // at ten poison counters. [TokenAbilities] gives each token its own ability
 // identity; event bindings keep their values in the resolution frame.

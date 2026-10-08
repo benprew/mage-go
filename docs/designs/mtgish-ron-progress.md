@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-COMBAT-EXIT` retains explicit source reads in delayed
-combat-removal subjects through exact identity, combat history and clone lifetimes.
-No new card compiles; seven protection subrules gain combat-exit-reference evidence.
+`WAITING-DELAYED-POISON` retains explicit source reads in delayed poison
+player/value operands through exact identity, departure facts and clone lifetimes.
+No new card compiles; seven protection subrules gain poison-reference evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49856,3 +49856,129 @@ Ranked next candidates:
    general source aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-COMBAT-EXIT`.
+
+## 2026-10-08: waiting delayed poison operands
+
+Status: completed implementation slice `WAITING-DELAYED-POISON`.
+This run stops after this slice. Initial `.gitignore`, execution-design and
+ledger reorganization changes, and untracked completed ledger, are preserved.
+Only this run's summary change and appended entry are staged.
+
+Fresh baseline: `make build` and uncached full RON tests passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection:
+1,981 compiled / 464 rejected records; 776 accepted / 210 rejected unique names.
+First issue: Animate Dead / EnchantGraveyardCard. No build failure was found.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 delayed poison operands | Pit Scorpion, Marsh Viper and Serpent Generator keep accepted poison behavior. Downstream: Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith. 0 immediate unlocks; advances 8 plausible downstream unlocks / 37 records. | Missing native source-read declaration for typed poison player/value operands. Complete aggregation still requires remaining explicit-operand and opaque-boundary evidence. | Small shared engine declaration and isolated existing AST adapter; lifecycle, scope, identity, clone and consumer tests. |
+| Sticky layer lifecycle | Titania's Song: 1 plausible unlock / 2 records. | Needs retained source-departure lifecycle, cross-layer membership and per-member mana values. | Larger lifecycle and layer suite. |
+| Chosen-source partial prevention | Dark Sphere: 0 immediate unlocks; 1 downstream unlock / 1 record. | General source aggregation precedes partial prevention, amount and consumption contracts. | Medium replacement suite after its prerequisite. |
+
+Complete compared records, including nested costs, filters, token abilities,
+modifications and durations, were inspected. Poison occurs in three complete
+records, one per unique card. All 37 downstream protection/redirection records,
+both Titania's Song reprints and Dark Sphere were inspected. Targeted vocabulary
+queries confirmed player-counter instruction arities 2 and 3, sticky layer arity
+3 and partial prevention arity 1. Reprints are counted once for unlock estimates.
+The first candidate is ready and advances concrete shared eight-card work, so it
+takes priority over the two single-card alternatives.
+
+The missing behavior is an engine declaration contract. Existing RON lowering
+already supports typed poison players and literal counts. This slice moves that
+lowering into a dedicated poison adapter and proves its delayed context through
+engine execution. No new syntax spelling or broader count shape is claimed.
+No source defect or data edit was found; vocabulary refresh is unnecessary.
+
+### Exact signatures, contexts and reuse boundary
+
+- `AddPoisonFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect`
+  implements `poisonPlayerEffect.refersToSourcePermanent() bool`, using shared
+  `playerRefReadsSourcePermanent` and `resolutionValueReadsSourcePermanent`.
+  Direct This in ControllerOf, OwnerOf or ControllerOfWithLKI qualifies;
+  typed source values and arithmetic preserve declarations from either operand.
+- `compilePlayerCounterPlacement(Node, scope) (effectFactory, error)` lowers
+  one `ACounterOfTypeOnPlayer(PoisonCounter, player)/2` or
+  `NumberCountersOfTypeOnPlayer(Integer(n), PoisonCounter, player)/3` instruction
+  in `PutCounters/1`. Counts remain nonnegative literals. Typed players retain
+  supported spell, activation, trigger, mode, token and delayed lexical contexts.
+  Each factory builds references with its own instance bindings.
+- Queries do not resolve players, read amounts or place poison counters.
+  Zero amounts still retain explicit source reads. Sequences and modes propagate
+  the current body's declaration. Implicit attachments, opaque operands and
+  future delayed bodies do not infer source reads. Saved targets keep their
+  existing captured-frame references, rather than acquiring a direct This read.
+- Departure, cleared transient LKI and phasing keep the exact saved incarnation.
+  A returned permanent cannot replace it. One-shot detection ends waiting
+  availability before stack placement. Copies and clones keep separate frames
+  and waiting lifetimes. Actual execution keeps existing live-only versus
+  information-reference semantics, current values and exact departure facts.
+- Existing poison state, definition validation, delayed capture, source facts,
+  deduplication, source choices, costs and prevention are reused. No parallel
+  rules system, card-name branch, fallback or partial production registry exists.
+- Local rules evidence: CR 400.7, 603.7a–e, 609.7a, 702.26b–d and 122.1f.
+  API and rules-contract documentation describe only this bounded behavior.
+
+### Failing-first tests and card-to-test mapping
+
+Before implementation, five native operand forms failed for missing waiting
+references. The purity test also failed its required source-reference assertion.
+All 21 RON lifecycle cases failed with empty waiting references; all seven
+protection consumers failed to choose the departed poison operand source.
+Invalid declarations and saved target-frame tests already passed through existing
+validation/capture services. A test fixture initially supplied one mode to the
+native two-mode constructor; it was corrected before the intended red result.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedPoisonOperands | Controller, owner, LKI controller, source counter value and arithmetic; zero amounts, sequences/modes, exact identity, departure, cleared transient LKI, return, phase cycle and independent clone lifetime. |
+| TestWaitingDelayedPoisonBoundaries | Query amount purity; no implicit attachment, opaque or future-body inference; nil player/value and undeclared player/target reads reject definition validation. |
+| TestWaitingDelayedPoisonResolution | Current source value changes, departure information, returned-object exclusion, phasing, controller changes, arithmetic amounts and clone execution isolation. |
+| TestRONWaitingDelayedPoisonGameplay | 21 cases: one-counter and zero/two-counter literal forms with live, departed, returned, phased, phase-cycle, control-change and copied activation states. Creation/detection/resolution timing, saved identity, poison recipient, unchanged life and clones. |
+| TestRONWaitingDelayedPoisonInvalid | 13 malformed, wrong-role, unbound and unsupported delayed declarations reject. |
+| TestRONWaitingDelayedPoisonInstances | Fresh factory target declarations, two independent saved target frames, copied activation and correct per-player poison counts. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedPoisonProtection | Complete records supply real costs, source filters and one-use prevention. Departed poison operand source is chosen at resolution. Failed payment offers no choice; prevention consumes once; delayed poison later resolves to the original controller. Subrule coverage only; general ChooseADamageSource still rejects full records. |
+| Pit Scorpion, Marsh Viper, Serpent Generator / existing TestRONPoison* | Full accepted RON gameplay retains casting/combat, actual damage/prevention, source/recipient/event identity, tokens, payment rollback, copies/clones, phasing, ability removal and poison loss evidence. |
+| Jade Monolith | Shared downstream aggregation beneficiary; no new Jade-specific or full-card gameplay claim. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedPoison -count=1`: PASS.
+- Native `TestWaitingDelayedPoison`, `TestAddPoisonFor` and existing RON
+  `TestRONPoison` focused suites: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Formatting and automatic fixes reviewed.
+  Post-lint native/RON poison focused suites: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict rejection.
+  JSON is byte-identical to baseline, including every diagnostic.
+
+Estimated and actual gains: **0 full-card unlocks / 0 new compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. Seven protection subrules gain poison-reference evidence.
+Compilation and full-card gameplay coverage remain separate. Strict loading
+installs no partial registry. Runtime integration, Go-card deletion and obsolete
+DSL removal gates remain unmet; callers are preserved. No environment blocker.
+
+Changed files: `pkg/mage/poison_player.go`, `waiting_delayed_poison_test.go`,
+`pkg/mage/dsl/ron/counter_placement.go`, `poison_player.go`,
+`waiting_delayed_poison_test.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Bounded delayed mana-production operands: manaAmountEffect,
+   manaAnyOneColorEffect, manaToPlayerEffect and manaFromProducedTypesEffect have
+   typed operands but no waiting source declaration. Existing RON repeated-mana
+   and player-mana lowering supplies shared adapters. 0 immediate unlocks;
+   advances the same eight source-choice cards / 37 records. Inspect complete
+   dependent records and bound/opaque contexts before selecting exact scope.
+   Finish remaining reference audits before general CR 609.7a aggregation.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   complete general source aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-POISON`.
