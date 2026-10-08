@@ -7930,3 +7930,62 @@ payments, separate targets, opposite results, mana spending and clone lifetime.
 Existing `TestResolutionManaPayment*` and `TestRONResolutionMana*` retain amount
 locking, mana solver, rollback, spell identity and complete In the Eye of Chaos
 coverage. General source aggregation still rejects the seven protection cards.
+
+
+## Waiting delayed typed player and value references
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` declares direct `This`
+references inside `ControllerOf`, `OwnerOf` and `ControllerOfWithLKI` player
+operands. This extends the preceding payment contracts: typed payer reads now
+qualify in `IfPaid`, `UnlessPaid`, `PayOrElse`, required payments,
+`IfManaPaid`, `UnlessManaPaid`, both counter-payment forms, both sacrifice-payment
+forms and `PayActionOrElse`. Existing signatures and execution remain unchanged.
+
+`LifeTotalOf`, `HandSizeOf`, `LifeGainedThisTurn`, `DamageTakenThisTurn` and
+`ArtifactDamageTakenThisTurn` propagate their typed player declaration through
+arithmetic. Direct `GainLifeFor`, `LoseLifeFor` and `DrawFor` bodies declare their
+player and amount reads. Action payments declare the life-gain player and amount,
+or damage amount and typed player recipient, as well as their existing source
+and permanent recipient reads. Sequences, captured bodies, modes and existing
+payment branches retain these declarations without evaluating any operand.
+
+The internal helpers are `playerRefReadsSourcePermanent(PlayerRef) bool` and
+`resolutionValueReadsSourcePermanent(ResolutionValue) bool`. They inspect only
+known typed declarations. Attached, bound and opaque player wrappers remain
+outside this direct-source contract. Ordinary damage-body player/amount operands,
+other action families, filtered counts and cast/state/coin conditions still need
+separate audits before general source aggregation. Nested future producers do
+not expose their future body through the current waiting category.
+
+Queries do not resolve players, calculate values, check affordability, call
+callbacks, offer payment or execute a body. Zero values and impossible payments
+retain references. Exact incarnation capture, current/departure information,
+phasing information, snapshot copies, deduplication and clone lifetimes reuse the
+existing delayed and source services. Returned objects cannot replace the saved
+source (CR 400.7); detection ends one-shot waiting availability (CR 603.7a–e).
+CR 609.7a allows the reference as a chosen source even after departure. Actual
+payment, damage and prevention retain their existing transactions and replacement
+ordering. Native live-only player reads remain live-only; RON controller reads
+use `ControllerOfWithLKI` and retain the exact departure controller.
+
+RON reuses `compilePlayerRef(Node, scope) (playerReferencePlan, error)`,
+`compileInstanceValue(Node, scope) (valueFactory, error)`,
+`compileResolutionPayment` and `compileDelayedStep`. Supported controller syntax
+is `ControllerOfPermanent(permanent-ref)` in a resolving player context.
+`PlayerAction(player, action)` and `PlayerMayCost(player, cost)` retain their
+existing scoped lowering. The tested value syntax is
+`TheNumberOfCardsInPlayersHand(player)`, `DamageDealtToPlayerThisTurn(player)` and
+`DamageDealtToPlayerThisTurnByPermanents(player, IsCardtype(Artifact))` in existing
+value contexts. This engine contract adds no RON owner, life-total or life-gain
+value adapter, and does not expand restricted `PayManaX` amount syntax. Plans
+still build fresh references per factory instance and reject invalid scopes.
+
+Evidence: native `TestWaitingDelayedPlayerValueReferences` (324 typed operand /
+identity cases), `Boundaries` and `Purity`; RON
+`TestRONWaitingDelayedPlayerValueProtection` (98 real-record subrule cases),
+`Invalid` (seven rejection cases), and `Instances` (three value families with
+independent factories, departure information and cloned gameplay). The cloned
+simulation player declines optional payments under its existing decision policy.
+The seven protection names gain subrule evidence, with zero full-card unlocks.
+Their complete records still reject `ChooseADamageSource`; strict collection
+loading and runtime/removal gates are unchanged.

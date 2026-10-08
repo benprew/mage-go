@@ -115,11 +115,11 @@ func (e *combatStateBranch) refersToSourcePermanent() bool {
 }
 
 func (e *unlessPaidEffect) refersToSourcePermanent() bool {
-	return effectReadsSourcePermanent(e.effect) || (e.twoBranches && effectReadsSourcePermanent(e.otherwise))
+	return playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.effect) || (e.twoBranches && effectReadsSourcePermanent(e.otherwise))
 }
 
 func (e *resolutionManaPayment) refersToSourcePermanent() bool {
-	return resolutionValueReadsSourcePermanent(e.amount) || effectReadsSourcePermanent(e.effect)
+	return playerRefReadsSourcePermanent(e.player) || resolutionValueReadsSourcePermanent(e.amount) || effectReadsSourcePermanent(e.effect)
 }
 
 func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
@@ -135,6 +135,14 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		subject = v.subject
 	case permanentCounterInformation:
 		subject = v.subject
+	case playerLifeTotalValue:
+		return playerRefReadsSourcePermanent(v.subject)
+	case playerHandSizeValue:
+		return playerRefReadsSourcePermanent(v.subject)
+	case playerLifeGainedThisTurnValue:
+		return playerRefReadsSourcePermanent(v.subject)
+	case playerDamageHistoryValue:
+		return playerRefReadsSourcePermanent(v.subject)
 	case arithmeticValue:
 		return resolutionValueReadsSourcePermanent(v.left) || resolutionValueReadsSourcePermanent(v.right)
 	default:
@@ -146,16 +154,16 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
-	return self || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
+	return self || playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }
 
 func (e *sacrificePaymentEffect) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
-	return self || effectReadsSourcePermanent(e.body)
+	return self || playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.body)
 }
 
 func (e *resolutionActionPaymentEffect) refersToSourcePermanent() bool {
-	return actionPaymentReadsSourcePermanent(e.payment) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
+	return playerRefReadsSourcePermanent(e.player) || actionPaymentReadsSourcePermanent(e.payment) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }
 
 func actionPaymentReadsSourcePermanent(payment ResolutionActionPayment) bool {
@@ -164,8 +172,11 @@ func actionPaymentReadsSourcePermanent(payment ResolutionActionPayment) bool {
 		return false
 	}
 	switch instruction.kind {
+	case resolutionGainLife:
+		return playerRefReadsSourcePermanent(instruction.player) || resolutionValueReadsSourcePermanent(instruction.amount)
 	case resolutionDamage:
-		return damageReadsSourcePermanent(instruction.source) || damageRecipientReadsSourcePermanent(instruction.recipient)
+		player, _ := instruction.recipient.(PlayerRef)
+		return damageReadsSourcePermanent(instruction.source) || damageRecipientReadsSourcePermanent(instruction.recipient) || playerRefReadsSourcePermanent(player) || resolutionValueReadsSourcePermanent(instruction.amount)
 	case resolutionDestroy:
 		_, self := instruction.permanent.(sourceRef)
 		return self
@@ -177,4 +188,28 @@ func actionPaymentReadsSourcePermanent(payment ResolutionActionPayment) bool {
 func effectReadsSourcePermanent(effect Effect) bool {
 	reference, ok := effect.(delayedSourcePermanentReference)
 	return ok && reference.refersToSourcePermanent()
+}
+
+func playerRefReadsSourcePermanent(ref PlayerRef) bool {
+	var subject PermanentRef
+	switch r := ref.(type) {
+	case permanentControllerRef:
+		subject = r.subject
+	case permanentOwnerRef:
+		subject = r.subject
+	case permanentInformationController:
+		subject = r.subject
+	default:
+		return false
+	}
+	_, self := subject.(sourceRef)
+	return self
+}
+
+func (e *lifeAction) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *drawSubjectEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
 }

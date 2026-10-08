@@ -122,7 +122,7 @@ func TestWaitingDelayedCounterPaymentBoundaries(t *testing.T) {
 		t.Fatal("payer was not read at resolution")
 	}
 	for _, effect := range []ResolvingEffect{
-		PayCountersOrElse(ControllerOf(This), AttachedPermanent, core.Charge, 0, true, GainLifeFor(You, Fixed(0)), nil),
+		PayCountersOrElse(ControllerOf(AttachedPermanent), AttachedPermanent, core.Charge, 0, true, GainLifeFor(You, Fixed(0)), nil),
 		PayCountersOrElse(You, AttachedPermanent, core.Charge, 0, true, AtNext(EachEndStep, Destroy(This)), nil),
 	} {
 		g.triggers.SetDelayed(nil)

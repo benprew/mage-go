@@ -114,7 +114,7 @@ func TestWaitingDelayedSacrificePaymentBoundaries(t *testing.T) {
 		t.Fatal("payment did not read its payer at resolution")
 	}
 	for _, effect := range []ResolvingEffect{
-		IfSacrificePaid(ControllerOf(This), AttachedPermanent, GainLifeFor(You, Fixed(0))),
+		IfSacrificePaid(ControllerOf(AttachedPermanent), AttachedPermanent, GainLifeFor(You, Fixed(0))),
 		UnlessSacrificePaid(You, AttachedPermanent, AtNext(EachEndStep, Destroy(This))),
 	} {
 		g.triggers.SetDelayed(nil)

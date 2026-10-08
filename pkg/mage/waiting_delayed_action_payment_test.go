@@ -125,8 +125,8 @@ func TestWaitingDelayedActionPaymentPurityAndBoundaries(t *testing.T) {
 		t.Fatal("payment did not prepare only at resolution")
 	}
 	for _, effect := range []ResolvingEffect{
-		PayActionOrElse(ControllerOf(This), GainLifePayment(You, Fixed(0)), GainLifeFor(You, Fixed(0)), nil),
-		PayActionOrElse(You, GainLifePayment(ControllerOf(This), Fixed(0)), GainLifeFor(You, Fixed(0)), nil),
+		PayActionOrElse(ControllerOf(AttachedPermanent), GainLifePayment(You, Fixed(0)), GainLifeFor(You, Fixed(0)), nil),
+		PayActionOrElse(You, GainLifePayment(ControllerOf(AttachedPermanent), Fixed(0)), GainLifeFor(You, Fixed(0)), nil),
 		PayActionOrElse(You, GainLifePayment(You, Fixed(0)), AtNext(EachEndStep, Destroy(This)), nil),
 		PayActionOrElse(You, waitingOpaqueActionPayment{payment, &paymentReads}, GainLifeFor(You, Fixed(0)), nil),
 	} {

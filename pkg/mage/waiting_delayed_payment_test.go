@@ -104,7 +104,7 @@ func TestWaitingDelayedPaymentBoundaries(t *testing.T) {
 	g := NewGame(a, b)
 	p := g.PutOnBattlefield(NewArtifact("Source", ""), a.PlayerID())
 	for _, body := range []ResolvingEffect{
-		IfPaid(ControllerOf(This), Costs(LifePayCost(1)), GainLifeFor(You, Fixed(0))),
+		IfPaid(ControllerOf(AttachedPermanent), Costs(LifePayCost(1)), GainLifeFor(You, Fixed(0))),
 		UnlessPaid(You, Costs(), AtNext(EachEndStep, Destroy(This))),
 		PayOrElse(You, Costs(), GainLifeFor(You, Fixed(0)), AtNext(EachEndStep, Destroy(This))),
 	} {
@@ -113,7 +113,7 @@ func TestWaitingDelayedPaymentBoundaries(t *testing.T) {
 			t.Fatal(err)
 		}
 		if len(g.WaitingDelayedPermanentSources()) != 0 {
-			t.Fatal("payer or future body implied a branch self read")
+			t.Fatal("attached payer or future body implied a branch self read")
 		}
 	}
 	for _, body := range []ResolvingEffect{

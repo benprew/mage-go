@@ -134,11 +134,11 @@ func TestWaitingDelayedManaPaymentBoundaries(t *testing.T) {
 	for _, amount := range []ResolutionValue{
 		PowerOf(AttachedPermanent), ManaValueOfWithLKI(AttachedPermanent),
 		CountersOnWithLKI(AttachedPermanent, core.Charge),
-		LifeTotalOf(ControllerOf(This)), ValueAtResolution(XValue()),
+		LifeTotalOf(You), ValueAtResolution(XValue()),
 		AddValues(Fixed(0), Fixed(1)), waitingMultiAmount{&amountReads},
 	} {
 		g.triggers.SetDelayed(nil)
-		body := IfManaPaid(ControllerOf(This), core.ParseManaCost("{X}"), amount, AtNext(EachEndStep, Destroy(This)))
+		body := IfManaPaid(You, core.ParseManaCost("{X}"), amount, AtNext(EachEndStep, Destroy(This)))
 		if err := ApplyEffect(g, AtNext(EachEndStep, body), p.ID(), a.PlayerID(), nil); err != nil {
 			t.Fatal(err)
 		}

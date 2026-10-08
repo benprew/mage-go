@@ -208,7 +208,7 @@
 // [IfManaPaid] and [UnlessManaPaid] declare source reads in their amount and body.
 // Typed permanent power, toughness, mana value and counter reads qualify.
 // Arithmetic keeps declarations from both operands, even with a zero multiplier.
-// Queries do not read values or offer payment. Payer reads need a separate audit.
+// Queries do not read values or offer payment. Typed payer reads also qualify.
 // The saved incarnation survives departure and phasing until the delay triggers.
 //
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
@@ -525,10 +525,17 @@
 // Resolution checks current combat membership for the saved incarnation.
 // [IfPaid], [UnlessPaid] and [PayOrElse] declare self reads in their bodies.
 // Both payment branches qualify before payment. Queries do not read the payer,
-// test costs or execute actions. Cost and payer references need separate contracts.
+// test costs or execute actions. Cost references need separate contracts.
 // [PayActionOrElse] declares self reads in either body and direct [This] reads
 // in a [DamagePayment] source or recipient, or a [DestroyPayment] subject.
-// Queries do not prepare the payment. Player and amount reads remain separate.
+// Queries do not prepare the payment. Typed player and amount reads also qualify.
+// [ControllerOf], [OwnerOf] and [ControllerOfWithLKI] of [This] declare the
+// saved source in payment players and direct life or draw subjects.
+// [LifeTotalOf], [HandSizeOf], [LifeGainedThisTurn], [DamageTakenThisTurn] and
+// [ArtifactDamageTakenThisTurn] retain these declarations in typed values.
+// Arithmetic reads both declarations without calculating a value.
+// Queries do not resolve players, read amounts or make payment choices.
+// Attached, bound and opaque player references need separate contracts.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.
