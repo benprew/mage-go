@@ -10982,3 +10982,46 @@ unaffordable payments, source departure/return, phasing, control and stack copie
 `TestRONCreatedValueProtection` covers real cost/filter/shield subrules for the
 six Circles of Protection and Greater Realm of Preservation. Their complete
 records still reject general damage-source aggregation.
+
+
+## Source operands of waiting delayed prevention
+
+Finite, unlimited-recipient, next-permanent-source and exact-source prevention
+installations declare explicit source reads through `refersToSourcePermanent`.
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains the original
+incarnation when a waiting body uses `This`, `DamageSourceOf(This)`, a typed
+source-derived player or a typed finite amount. Arithmetic preserves declarations,
+even for zero values. Queries do not resolve recipients, evaluate amounts, run
+filters or install shields. Sequence traversal uses the existing declaration
+service. Implicit attachments, opaque callbacks and future delayed bodies do
+not infer references.
+
+Departure and phasing retain exact information. A returned object cannot replace
+the reference, and clearing short LKI does not erase exact departure information.
+Queries copy mutable card facts; game clones keep independent waiting lifetimes.
+One-shot detection ends this category before stack placement. Shield execution
+still uses original recipient legality, exact source identity, current or retained
+player information, shared replacement ordering, consumption and cleanup
+(CR 400.7, 603.7a–e, 609.7a–b and 615.4/6/9).
+
+RON finite prevention amounts now use the typed resolution-value adapter, including
+created `ValueX`. Each factory receives its own binding; ordered snapshots and
+copied delayed bodies retain independent resolution values. Amounts are read at
+installation, and the installed finite shield does not track later value changes.
+Literal negative amounts and invalid scope, arity or recipient declarations remain
+errors. Computed nonpositive values create no effective prevention.
+
+`TestWaitingDelayedPreventionOperands` covers all four native installer types,
+source-derived players, zero values, six identity/control states, cleared LKI,
+query snapshot isolation and clone lifetime. `TestWaitingDelayedPreventionPurityAndScope`
+proves no query-time value evaluation and one installation-time evaluation,
+and excludes implicit and future reads. `TestRONWaitingDelayedPreventionOperands`,
+`CreatedAmount` and `Invalid` establish AST lowering, resolution timing, phasing,
+returned recipient exclusion, copies, clone isolation, consumption and declaration
+rejection. `TestRONWaitingDelayedPreventionProtection` uses complete records for
+the six Circles of Protection and Greater Realm of Preservation to test their
+cost/filter/shield subrules against a departed source retained only by a waiting
+shield body. These records still reject general `ChooseADamageSource`; this is
+subrule evidence, not full-card gameplay coverage. Existing finite-prevention,
+recipient-prevention and allocation tests retain real-card payment, targeting,
+replacement and simultaneous-damage evidence.

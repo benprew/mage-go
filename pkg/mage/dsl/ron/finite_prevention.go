@@ -16,7 +16,7 @@ func compileFinitePrevention(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(event, 2); err != nil {
 		return nil, err
 	}
-	amount, err := compileValue(event.Args[0], ctx)
+	amount, err := compileInstanceValue(event.Args[0], ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +38,6 @@ func compileFinitePrevention(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(operations[0], "finite prevention operation")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.PreventNextDamage(recipient(bindings), mage.ValueAtResolution(amount))
+		return mage.PreventNextDamage(recipient(bindings), amount(bindings))
 	}, nil
 }

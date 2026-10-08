@@ -8419,3 +8419,25 @@ A waiting delayed snapshot declares explicit source reads in its operand.
 Queries do not evaluate the value or write the binding. Zero arithmetic keeps
 explicit references. An already-saved number does not infer an object reference.
 Future delays and implicit attachment reads keep their separate source contracts.
+
+
+### Waiting delayed prevention operands
+
+`PreventNextDamage(recipient, amount)` declares explicit source reads in its
+recipient and typed resolution amount to `Game.WaitingDelayedPermanentSources`.
+`PreventDamageThisTurn(recipient, from)` declares recipient reads.
+`PreventNextDamageFromPermanent(subject, player, filter)` declares source and
+player reads. `PreventNextDamageFromExactSource(source, player, filter)` and
+`PreventNextDamageFromSelectedSource(source, player, filter)` declare their typed
+source and player reads. These declarations use the existing source traversal;
+implicit attachments, opaque values and future delays do not infer references.
+
+RON `CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(
+amount, recipient), [PreventThatDamage])` uses `compileInstanceValue` for its
+amount. Fixed integers, announced X, created `ValueX` and existing typed
+resolution values retain their normal scope rules. Literal negative amounts
+remain declaration errors; computed nonpositive amounts install no effective
+shield. The amount is read when the shield is installed. Subsequent changes
+cannot change that installed amount. The existing recipient compiler keeps
+permanent, player and any-target references separate. General damage-source
+choice remains unsupported.

@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`CREATED-RESOLUTION-VALUE` lowers CreateValueX to private number bindings and
-adds waiting source declarations for SnapshotNumber operands. Primordial Ooze
-gains complete-record gameplay coverage and compilation; seven protection names
-gain snapshot subrule evidence. General source aggregation, named-token grants
-and sticky layers remain gaps.
+`WAITING-DELAYED-PREVENTION-OPERANDS` declares explicit source reads in waiting
+shield bodies and lowers finite amounts through typed resolution values. Seven
+protection names gain waiting-shield subrule evidence; no new record compiles.
+General source aggregation still needs the remaining typed-operand audit.
+Named-token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -48631,3 +48631,159 @@ Ranked next candidates:
    Reassess multi-card alternatives before selecting either single-card feature.
 
 This run stops after `CREATED-RESOLUTION-VALUE`.
+
+## 2026-10-08: waiting delayed prevention operands and typed amounts
+
+Status: completed implementation slice `WAITING-DELAYED-PREVENTION-OPERANDS`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and this ledger, plus untracked `mtgish-ron-completed.md`, are
+preserved. Only this slice's summary replacement and appended entry are staged.
+No removed card skill, subagent, Go-card fallback or generated stub is used.
+
+### Baseline, candidate comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict
+`go run ./cmd/loadcards -json` exited 1 for collection rejection: 1,979 compiled /
+466 rejected records; 774 accepted / 212 rejected unique names. This is an
+unsupported collection, not a build or environment failure.
+
+The latest ledger ranked the final typed-operand/source-category audit before
+general damage-source aggregation. Inspection found four prevention installation
+types without explicit waiting source declarations. Finite prevention also used
+legacy `compileValue`, so it rejected a created resolution value and could not
+retain typed amount operands. These are engine declaration and compiler adapter
+gaps, not source-data defects. General aggregation is not dependency-ready.
+Complete RON records and nested forms were inspected for the compared candidates
+and finite-prevention consumers. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 prerequisite: waiting prevention installation operands, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: 0 immediate unlocks, prerequisite for 7 names / 31 records | General aggregation still needs the remaining typed-operand audit, including redirection installations and boundaries of implicit/opaque references. This closes the finite/unlimited/exact-source shield operand category without evaluating future bodies. | Small to medium: four native declarations, one value adapter, identity/purity/lifetime and RON gameplay tests |
+| Ranked #2: named-token quality grant | Master of the Hunt: 1 plausible full-card unlock | Complete record needs a named 1/1 green Wolf token with a per-token BandsWithOthers quality; formation, damage assignment, copied ability and clone isolation need evidence. Existing IsNamed permanent filters alone do not implement token grants. | Medium: token quality lowering, scoped ability representation and combat tests |
+| Ranked #3: sticky layer lifecycle | Titania's Song: 1 plausible full-card unlock | Complete record needs noncreature-artifact membership retained across type and ability layers, per-member mana values and persistence after source departure until cleanup. Shared live layer membership alone does not supply the sticky lifetime. | Medium to large: lifecycle service and cross-layer/departure tests |
+
+The selected bounded prerequisite has concrete seven-card downstream value and
+removes a discovered omission in source enumeration. It takes priority over
+isolated single-card capabilities. Contract, reuse boundary and acceptance cases
+were stated before edits; first-error counts were not used as unlock estimates.
+
+### Signatures, contexts and engine reuse
+
+- Existing `Game.WaitingDelayedPermanentSources() []DamageSource` and public
+  prevention constructors keep their signatures. Four implementations now supply
+  `refersToSourcePermanent() bool`: `preventionInstallation`,
+  `recipientPreventionInstallation`, `nextPermanentSourcePrevention` and
+  `exactSourcePreventionInstallation`. The last covers both exact and selected
+  source constructors, including permanent-spell continuity.
+- Finite prevention declares typed source reads in recipient and amount.
+  Unlimited-recipient prevention declares recipient reads. Next-permanent-source
+  and exact/selected-source prevention declare source and player reads.
+  Direct This, DamageSourceOf(This), typed controller/owner reads and arithmetic
+  use the existing source traversal. Zero operands keep explicit declarations.
+- `compileFinitePrevention(Node, scope) (effectFactory, error)` lowers
+  `CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(
+  amount, recipient), [PreventThatDamage])` with `compileInstanceValue` for amount.
+  It supports existing typed resolution values, fixed integers, announced X and
+  created ValueX in their valid scopes. The amount factory reads the instance's
+  own bindings. No alternate syntax or global result slot is introduced.
+- Literal negative amounts, invalid arity, incompatible/unbound references,
+  operations and recipient scopes remain declaration errors. Computed nonpositive
+  amounts provide no effective shield. Amounts are read at installation, not at
+  announcement or later damage. Created values retain snapshot action order.
+- Existing unlimited recipient RON lowering through CreatePreventDamageUntil and
+  exact-source shield lowering are reused. General ChooseADamageSource stays
+  rejected; category-only test choices do not publish an incomplete registry.
+
+RON owns spelling, validation, lexical scope and per-instance lowering. Mage owns
+source declarations, waiting frames, exact information and execution. Queries do
+not resolve recipients, read values, run filters or install shields. Departure,
+phasing and short LKI clearing keep exact identity; a returned source cannot
+replace it. Query snapshots and clones keep separate data. Detection ends
+one-shot waiting availability before placement. Implicit attachments, opaque
+values and future delayed bodies do not infer references. Existing target
+legality, payment transactions, replacement ordering, simultaneous damage,
+consumption, cleanup and permanent-spell continuity are unchanged. CR 400.7,
+603.7a–e, 609.7a–b and 615.4/6/9 govern the relevant contracts.
+
+### Failing-first tests and card mapping
+
+Before implementation, the combined focused command failed all 66 native operand
+states, native query-purity assertions, RON waiting-source cases, three created
+amount cases and seven protection subrules. Created amounts failed compilation
+with `created ValueX requires a resolution value context`; typed permanent amount
+failed legacy value compilation. Other cases failed missing-source assertions.
+An initial unused-import setup error was corrected before recording these
+semantic failures. A copied controller-derived shield expectation was corrected:
+both copies resolve that player's reference to the same source controller, so
+finite shields accumulate there. Phased controller reads use existing retained
+information. No behavior assertion or acceptance case was dropped.
+
+| Test | Evidence or complete-record mapping |
+| --- | --- |
+| TestWaitingDelayedPreventionOperands | Eleven native operand contexts across live, phased, phase cycle, departed, returned and changed-control states; four installer types, zero arithmetic, exact incarnation, cleared LKI, mutable snapshot isolation and cloned waiting lifetime |
+| TestWaitingDelayedPreventionPurityAndScope | No query-time value evaluation; one installation-time evaluation and finite prevention; excludes fixed/no-source, implicit attachment and future delay declarations |
+| TestRONWaitingDelayedPreventionOperands | Five typed body contexts across five lifecycle/copy/clone states; delay creation timing, source declaration, shield installation, returned/phased recipient exclusion and copy accumulation |
+| TestRONWaitingDelayedPreventionCreatedAmount | Counter snapshot precedes removal; saved amount remains usable; copied delays get separate values and players; clone counters and shields remain independent |
+| TestRONWaitingDelayedPreventionAmountTiming | Current counter amount read at installation and fixed thereafter; zero/computed negative amounts; cleanup removes dynamic shields |
+| TestRONWaitingDelayedPreventionInvalid | Six malformed arity, literal-negative and unbound/incompatible value declarations |
+| TestRONWaitingDelayedPreventionProtection | Complete records for all six Circles and Greater Realm supply their real cost, filter and shield body. A departed source referred to only by a waiting shield body is selectable. Unpaid activation makes no choice; chosen shield prevents one event then consumes; detection ends waiting availability. This is subrule evidence, not full-card acceptance. |
+| Existing TestRONFinitePreventionModes; Activations and other finite tests | Complete Healing Salve, Alabaster Potion, Samite Healer, Conservator, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Kei Takahashi and Rakalite records: amounts, modes, targets, payment rollback, source/recipient lifecycle, copies and cleanup |
+| Existing TestRONRecipientPrevention and TestRONPreventionAllocation families | Complete Indestructible Aura and recipient/global consumers retain targeting, replacement and simultaneous allocation evidence |
+| Existing native TestTypedPrevention, TestSelectedSourcePrevention and TestExactSourcePrevention families | Invalid definitions, saved recipients/amounts, exact objects, source-property rechecks, continuity, consumption and clone isolation |
+
+The finite adapter's complete-record audit also includes Balm of Restoration and
+Guardian Angel. Balm remains accepted with its existing modal sacrifice coverage.
+Guardian Angel remains blocked by CreatePlayerEffectUntil's granted payment
+ability; its supported initial prevention is not a full-card unlock. Personal
+Incarnation shares event vocabulary in redirection, but does not use this adapter.
+
+### Verification and measured outcome
+
+- `go test ./pkg/mage/dsl/ron -run
+  'TestRONWaitingDelayedPrevention|TestRONFinitePrevention|TestRONRecipientPrevention|TestRONPreventionAllocation'
+  -count=1`: PASS.
+- `go test ./pkg/mage -run
+  'TestWaitingDelayedPrevention|TestTypedPrevention|TestSelectedSourcePrevention|TestExactSourcePrevention'
+  -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the new RON test
+  was reviewed; no semantic production changes. Combined focused native/RON,
+  existing finite/recipient/allocation and invalid-definition tests reran: PASS.
+- `git diff --check`: PASS before final ledger staging; rerun for the completed
+  ledger and staged delta before commit.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. JSON exactly equals the
+  fresh baseline: **1,979 compiled / 466 rejected records; 774 accepted / 212
+  rejected unique names**, out of 2,445 records / 986 names. First diagnostic:
+  Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Every remaining diagnostic is unchanged. No accepted record was lost.
+
+Estimated and actual gains agree: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain waiting-shield subrule evidence. This prerequisite
+and the expanded finite amount context have native and RON gameplay coverage;
+compilation and full-card validation remain separate. There is no source defect,
+environment blocker or unresolved test failure. No RON source changed, so no
+vocabulary snapshot refresh is needed. Runtime cutover, complete collection
+coverage, Go-card deletion and unused-DSL removal remain unfinished. Their gates
+are not met; no Go definition or DSL function is removed.
+
+Changed files: new `pkg/mage/waiting_delayed_prevention.go` and its native test;
+`pkg/mage/dsl/ron/finite_prevention.go` and new
+`pkg/mage/dsl/ron/waiting_delayed_prevention_test.go`; `pkg/mage/doc.go`;
+`docs/dsl-reference.md`; `docs/engine-rules-contracts.md`; and this ledger.
+
+Ranked next candidates:
+
+1. Remaining typed-operand/source-category audit, starting with waiting
+   redirection-installation operands (selectedSourceRedirectInstallation has no
+   source-read declaration), then general damage-source aggregation. Seven
+   protection names / 31 records have concrete downstream value; Jade Monolith
+   also needs chosen-source redirection. Preserve explicit boundaries for
+   implicit/opaque references rather than treating callbacks as inspectable.
+2. Named-token quality grants for Master of the Hunt: 1 plausible unlock;
+   per-token BandsWithOthers, combat, copying and clone evidence required.
+3. Sticky layer lifecycle for Titania's Song: 1 plausible unlock; departure
+   retention, shared membership after ability loss and per-member mana values.
+   Reassess multi-card alternatives before selecting either single-card feature.
+
+This run stops after `WAITING-DELAYED-PREVENTION-OPERANDS`.

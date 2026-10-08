@@ -280,6 +280,15 @@
 // Queries do not read values or offer payment. Typed payer reads also qualify.
 // The saved incarnation survives departure and phasing until the delay triggers.
 //
+// [PreventNextDamage] declares explicit source reads in its recipient and amount
+// to [Game.WaitingDelayedPermanentSources]. [PreventDamageThisTurn] declares
+// reads in its recipient. [PreventNextDamageFromPermanent] declares reads in
+// its source and player. [PreventNextDamageFromExactSource] and
+// [PreventNextDamageFromSelectedSource] declare reads in their source and player.
+// Queries do not read amounts or install shields. Zero amounts keep the saved
+// incarnation. Departure and phasing keep the reference until detection.
+// A returned card cannot replace it. Future delays keep a separate lifetime.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.
