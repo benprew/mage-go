@@ -98,9 +98,10 @@ func compileCombatCollectionPrevention(n Node, ctx scope) (effectFactory, error)
 		return nil, unsupported(duration, "combat collection prevention duration")
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		subjects := mage.UnionPermanents(mage.SingletonPermanent(ref.build(bindings)), set(bindings))
 		if duration.Name == "UntilEndOfTurn" {
-			return mage.Sequence(mage.PreventCombatDamageByThisTurn(ref.build(bindings)), mage.PreventCombatDamageByEachThisTurn(set(bindings)))
+			return mage.PreventCombatDamageByEachThisTurn(subjects)
 		}
-		return mage.Sequence(mage.PreventCombatDamageBy(ref.build(bindings)), mage.PreventCombatDamageByEach(set(bindings)))
+		return mage.PreventCombatDamageByEach(subjects)
 	}, nil
 }

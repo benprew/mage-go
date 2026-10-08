@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-UNTAP-DECLARATIONS` adds exact source declarations for singular,
-counted, collection and captured-player next-untap services, with shared RON
-lowering. Seven protection names gain 343 subrule cases; native declarations gain
-18 operand cases. Compilation and full-card coverage are unchanged. Combat
-prevention/temporary layers, player collections, remaining conditionals, source
-aggregation, token grants and sticky layers remain gaps.
+`WAITING-DELAYED-COMBAT-PREVENTION` adds exact source declarations for singular,
+to-and-by and collection combat prevention, with typed union lowering. Seven
+protection names gain 245 subrule cases; native declarations gain ten operand
+cases. Compilation and full-card coverage are unchanged. Temporary layers,
+player collections, remaining conditionals, source aggregation, token grants
+and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47662,3 +47662,135 @@ Ranked next candidates:
    subject to named identity, band-combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-UNTAP-DECLARATIONS`.
+
+## 2026-10-08: waiting delayed combat-prevention operand declarations
+
+Status: completed implementation slice `WAITING-DELAYED-COMBAT-PREVENTION`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+The ledger's archive reorganization is not staged with this implementation.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: waiting delayed combat-prevention operands | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, shared prerequisite for **7 names**. Existing adapter consumers include Telekinesis, Maze of Ith, Ebony Horse, Elvish Scout, Feint and Sewers of Estark; global exclusion consumers include Fog, Darkness, Holy Day, Spore Flower and Spore Cloud. | Exact waiting capture and typed prevention execution exist. Temporary layers, player collections, remaining conditional declarations and general source aggregation still block the seven protection records. Completes a bounded declaration family. | Small: two native declaration methods, one collection lowering consolidation, native purity/identity and RON lifecycle/relation tests. |
+| Ranked #2: waiting delayed temporary-layer operands | The same seven protection names: **0 immediate unlocks**. Adapter consumers include Deep Spawn and Homarid Warrior. | Subject, modification, value and duration operands need a wider audit. Player collections, conditionals and aggregation remain independent blockers. Concrete downstream benefit is the same seven names. | Medium: typed operand traversal and layer/duration lifecycle tests. |
+| Ranked #3: named-token quality grants | Master of the Hunt: **1 plausible unlock**. | The complete record needs fresh named green 1/1 Wolf tokens and parameterized named bands. Named grant lowering, native band combat and token clone isolation are required; source aggregation is independent. | Medium: token quality adapter and combat/clone evidence. |
+
+Candidate #1 is dependency-ready and enables concrete multi-card downstream
+work. It takes priority over single-card token work and the wider layer audit.
+Complete RON records and nested forms were inspected; reprints count once.
+The contract, reuse boundary and acceptance cases were stated before edits.
+No skill, delegation, Go-card requirements or generated stubs were used.
+
+### Exact signatures, contexts and engine reuse
+
+- `combatPreventionInstallation.refersToSourcePermanent() bool` declares a direct
+  `This` operand of `PreventCombatDamageToAndBy(PermanentRef) ResolvingEffect`.
+- `combatSourcePreventionInstallation.refersToSourcePermanent() bool` declares
+  direct `This` subjects and `permanentSetReadsSourcePermanent(PermanentSet)`
+  operands. Constructors remain `PreventCombatDamageBy(PermanentRef)`,
+  `PreventCombatDamageByThisTurn(PermanentRef)`,
+  `PreventCombatDamageByEach(PermanentSet)` and
+  `PreventCombatDamageByEachThisTurn(PermanentSet)`, all returning
+  `ResolvingEffect`. Both fixed durations use the same declaration.
+- `compileCombatCollectionPrevention(Node, scope) (effectFactory, error)` lowers
+  the supported `CreatePreventDamageUntil/3` source-collection union into one
+  `UnionPermanents(SingletonPermanent(ref), related)` and one typed collection
+  prevention effect. Related collections retain the existing creature plus
+  `IsBlockingAttacker(ref)` or `IsBlockedByDefender(ref)` shapes. Operations must
+  be `[PreventThatDamage]`; durations are `UntilEndOfTurn` or `UntilEndOfCombat`.
+  Both operands use fresh typed instance bindings. Singular, to-and-by and
+  global forms keep their existing syntax and duration restrictions.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` uses the shared capture,
+  saved sequence/mode traversal, exact incarnation information, deduplication,
+  separate snapshots and cloned delayed frames. Empty sets retain explicit reads.
+  Queries do not select members, run filters, resolve subjects or install rules.
+  Global prevention, attached subjects without explicit source reads, opaque
+  matches and future bodies not yet installed do not infer source references.
+
+RON owns spelling, scope, validation and lowering. Mage owns reusable declarations
+and prevention execution. Waiting references survive departure and phasing;
+returned objects cannot replace saved incarnations. One-shot detection ends
+waiting eligibility before placement. Prevention still requires current original
+subjects; collections read current members at delayed resolution and save those
+incarnations until the declared expiry. Combat changes after installation cannot
+add members. Existing target legality, cost rollback, LKI, clone isolation,
+replacement ordering, unpreventable damage and simultaneous combat services are
+reused (CR 400.7, 603.7a–e, 609.7a–b, 615.3–4, 702.26b).
+No callback introspection, card-name branch, fallback or partial registry is added.
+No public caller or obsolete DSL function is removed; removal gates remain closed.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production edits, direct focused runs failed as expected:
+`go test ./pkg/mage -run TestWaitingDelayedCombatPrevention -count=1` failed all
+ten operand cases with `combat prevention lost exact source declaration`, plus
+empty/mode purity. `go test ./pkg/mage/dsl/ron -run
+TestRONWaitingDelayedCombatPrevention -count=1` failed all 245 protection cases
+with missing waiting sources, including clone assertions. Both exited 1 for
+assertion failures. Supplemental invalid and relation tests were then added.
+Fixture probes were corrected to execute native combat with captured identities
+and to consume the independent protection shield before checking combat expiry.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedCombatPreventionOperands | Ten native forms; exact departure/return identity, separate query facts and cloned waiting lifetime |
+| TestWaitingDelayedCombatPreventionPurity | Empty filtered union, saved modes, query purity, implicit/opaque/global/future exclusions and six invalid native definitions |
+| TestRONWaitingDelayedCombatPreventionProtection | 245 scenarios: seven protection records above, five prevention forms, seven live/departed/returned/phased/control/copy/clone states; real RON costs/filter/shields, failed-payment rollback, resolution-only choices, exact-source shield consumption, original-subject installation and combat/cleanup expiry |
+| TestRONWaitingDelayedCombatPreventionInvalid | Nine malformed, unbound, incompatible, union/operation and unsupported-duration declarations reject at compilation |
+| TestRONWaitingDelayedCombatPreventionRelationInstances | Both relation directions; separate factory targets/sources, four exact waiting references, empty relation declarations, late current membership, operand versus recipient distinction and independent clone resolution |
+| TestRONCombatCollection* | Complete Feint and Sewers of Estark records retain combat, payment, target legality, copy/clone, current membership, simultaneous damage and duration regressions through consolidated lowering |
+| TestCombatSourcePrevention*; TestCombatCollectionPrevention*; TestCombatPrevention* | Native outgoing/incoming identity, phasing, control, noncombat damage, simultaneous packets, definition validation and duration regressions |
+
+These protection mappings establish subrule evidence, not complete-card gameplay.
+All seven full records still reject unsupported `ChooseADamageSource` aggregation.
+No source defect or environment failure was found. No RON source changed; all
+12 vocabulary source hashes match. Runtime cutover, Go-card deletion and broad
+DSL cleanup gates remain closed.
+
+### Verification and measured outcome
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline strict loader: expected exit 1 for collection rejection.
+- Focused failing-first commands: expected assertion failures, as above.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedCombatPrevention
+  -count=1`: PASS. Focused native declaration and prevention regressions: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` found two preallocation issues in the new relation test;
+  both were corrected. Final `make lint`: PASS, 0 issues. Formatting edits were reviewed;
+  no unrelated file changed. Post-format native focused/prevention and RON
+  focused/collection tests: PASS. Final `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Baseline and final JSON
+  are equal: **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected
+  unique names**, out of 2,445 records / 986 names. First diagnostic remains
+  Animate Dead: `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection rejection remains intact; no partial registry is installed.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 245 subrule scenarios, with ten native operand cases,
+purity/invalid evidence and two RON relation-instance scenarios. Compilation and
+full-card gameplay coverage are unchanged. API and rules documentation describe
+only this declaration and lowering contract.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_combat_prevention_test.go,
+pkg/mage/dsl/ron/combat_collection.go,
+pkg/mage/dsl/ron/waiting_delayed_combat_prevention_test.go, pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md; this ledger's summary and
+appended entry only.
+
+Ranked next candidates:
+
+1. Waiting delayed temporary-layer operand declarations: typed native execution
+   exists; seven protection names, zero immediate unlocks, shared prerequisite
+   for complete general source aggregation.
+2. Waiting delayed player-collection declarations and remaining conditional
+   declarations. Seven protection names share the benefit; aggregation still
+   requires the complete declaration audit.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   subject to named identity, native band combat and token clone evidence.
+
+This run stops after `WAITING-DELAYED-COMBAT-PREVENTION`.

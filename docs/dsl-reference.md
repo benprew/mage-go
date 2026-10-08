@@ -8290,3 +8290,21 @@ restrictions or run filters. Departure and phasing retain the saved reference;
 a returned card cannot replace it. Resolution still requires a present subject
 and reads collection membership then. These declarations do not enable general
 `ChooseADamageSource` aggregation.
+
+## RON waiting delayed combat-prevention references
+
+In a `CreateFutureTrigger` body, supported `CreatePreventDamageUntil/3` forms
+retain explicit `ThisPermanent` subjects as exact waiting damage-source
+references. This includes to-and-by unions and source reads inside blocking
+relation collections. Queries do not select members or install prevention.
+Global `CombatDamageWouldBeDealt` does not infer a source operand.
+
+Collection unions keep one typed set containing the singleton and relation.
+Both operands retain their own instance bindings. At delayed resolution, current
+present members receive prevention for the declared duration. An empty relation
+still declares its source operand while waiting. A returned object cannot replace
+that saved operand. Clones keep separate membership and waiting lifetimes.
+Existing duration, operation, scope and union restrictions still apply; general
+`ChooseADamageSource` remains unsupported until all categories are complete.
+See the waiting delayed combat-prevention contract in
+`docs/engine-rules-contracts.md` for signatures and test mappings.

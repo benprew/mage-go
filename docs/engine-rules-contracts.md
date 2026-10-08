@@ -10724,3 +10724,44 @@ phase exclusion and clone execution. Existing complete Telekinesis, Spore Cloud,
 Barl's Cage, Elvish Hunter, Deep Spawn and Homarid Warrior gameplay tests retain
 accepted-card evidence. Full protection records still reject general source
 aggregation; these tests do not establish complete protection-card gameplay.
+
+## Waiting delayed combat-prevention operand declarations
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` reads explicit source
+operands of `PreventCombatDamageToAndBy(PermanentRef)`,
+`PreventCombatDamageBy(PermanentRef)`, `PreventCombatDamageByThisTurn(PermanentRef)`,
+`PreventCombatDamageByEach(PermanentSet)` and
+`PreventCombatDamageByEachThisTurn(PermanentSet)`. Direct `This` subjects and
+source reads in typed collections qualify. Nested unions, intersections,
+filters, attachment/combat/history relations, exclusions, controller/owner
+operands and numeric limits use the shared declaration reader. An empty set
+keeps its declaration. Global combat prevention and implicit or opaque matches
+supply no source read. A future producer has its own waiting lifetime.
+
+Queries do not resolve subjects, read combat, run filters or install prevention.
+Saved sequences and modes retain the original incarnation. Current or departure
+facts, phasing, return exclusion, snapshot isolation, copies and clones reuse the
+existing exact-reference services (CR 400.7, 603.7a–e, 609.7a, 702.26b).
+Detection ends one-shot waiting availability before stack placement.
+
+RON `CreatePreventDamageUntil/3` retains its supported event, operation and
+duration shapes. Its `CombatDamageWouldBeDealtByACreature` union lowers to one
+`UnionPermanents(SingletonPermanent(ref), related)` set and one typed prevention
+installation. Both operands keep fresh instance bindings. Selection occurs at
+delayed resolution and uses current present incarnations; later combat changes
+cannot add members. Installation and expiry retain CR 615.3–4 and the existing
+end-of-combat or cleanup contracts. Replacement ordering, simultaneous damage,
+unpreventable damage, target legality and payment rollback are unchanged.
+
+Evidence: `TestWaitingDelayedCombatPreventionOperands` covers ten operand forms,
+departure/return identity, independent snapshots and cloned waiting lifetime.
+`TestWaitingDelayedCombatPreventionPurity` covers empty filtered collections,
+modes, excluded implicit/opaque/future reads and invalid native definitions.
+`TestRONWaitingDelayedCombatPreventionProtection` covers 245 real-record
+protection subrule scenarios, costs, resolution-only choice, exact-source shield
+consumption, departure, return, phasing, control, copies, clones and both expiry
+points. `Invalid` rejects nine malformed or unsupported delayed declarations.
+`RelationInstances` covers both relation directions, separate factory captures,
+empty relations, late membership and independent clone resolution. Complete
+Feint and Sewers of Estark tests retain native combat and legality coverage.
+The seven protection records still reject general source aggregation.

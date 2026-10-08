@@ -216,6 +216,12 @@
 // or select members. [SkipNextUntapOf] also declares a source read in its player.
 // Resolution still requires present subjects and reads current collection members.
 // Other collection actions need separate contracts.
+// [PreventCombatDamageToAndBy], [PreventCombatDamageBy] and
+// [PreventCombatDamageByThisTurn] declare direct [This] subjects to the same
+// waiting query. [PreventCombatDamageByEach] and
+// [PreventCombatDamageByEachThisTurn] declare source reads in typed sets.
+// Empty sets keep those reads. Queries do not select members or install rules.
+// Global combat prevention does not declare a source subject.
 //
 // [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]
 // payment subject and source reads in both result branches to

@@ -254,6 +254,14 @@ func (e *capturedUntapEffect) refersToSourcePermanent() bool {
 	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.player)
 }
 
+func (e *combatPreventionInstallation) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
+func (e *combatSourcePreventionInstallation) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject) || permanentSetReadsSourcePermanent(e.subjects)
+}
+
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
 	return self || playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
