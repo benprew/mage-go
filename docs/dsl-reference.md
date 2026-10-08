@@ -6526,3 +6526,31 @@ existing delayed adapters; `TestRONStackDelayedPermanentSources` and
 `TestRONStackDelayedPermanentSourceInstances` verify their native gameplay and
 source choice through a synthetic category consumer. General `ChooseADamageSource`
 and the complete shields still need other source categories and shield contracts.
+
+## Permanent references held by waiting delayed abilities
+
+`mage.Game.WaitingDelayedPermanentSources() []mage.DamageSource` reads saved
+permanent bindings, singular/plural target groups, created-token sets and exact
+permanent event subjects from delayed abilities that still wait to trigger.
+Captured modal bodies and sequence wrappers use the same frame reader. The query
+uses registration order, then sorted ID/incarnation pairs within each ability,
+and removes exact duplicates. It does not run effects or make choices.
+
+Live objects supply current properties. Departed and phased objects use the
+shared exact-incarnation information reader. Returned objects cannot replace
+saved references. Each result owns separate card data. One-shot detection ends
+waiting eligibility before stack placement. A delay with a duration keeps waiting
+until its existing lifecycle expires. Pending and stack objects have separate
+categories; copies on the stack do not create new waiting abilities. Game clones
+retain independent waiting state.
+
+`mage.ChooseDamageSourceFromWaitingDelayedBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` uses the shared filtered resolution-choice service,
+declaration validation and binding dominance. Empty or absent-player choices
+clear only that output. Invalid answers use the existing first-choice fallback.
+
+This is a permanent-frame and exact-event-subject contract. Other typed saved
+references, source reads in future bodies, untyped legacy IDs, waiting replacement
+and prevention effects and command objects still need separate contracts. No RON
+syntax is added. General `ChooseADamageSource` remains rejected.

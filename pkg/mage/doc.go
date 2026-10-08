@@ -257,6 +257,10 @@
 // Delayed bodies on the stack also supply saved permanent, target and token
 // identities. Waiting and pending delayed triggers do not enter this category.
 // [ChooseDamageSourceFromStackBindings] chooses only from these binding contexts.
+// [Game.WaitingDelayedPermanentSources] reads saved permanent, target and token
+// frames and exact event subjects while delayed abilities wait to trigger.
+// One-shot detection ends this category; duration-based delays can keep waiting.
+// [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.
 // [Game.StackBoundDamageSources] reads permanent and spell source identities
 // saved by event captures on stack objects. Current queries stay separate from
 // the event information used by the trigger body. Spell departure information

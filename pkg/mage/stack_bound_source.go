@@ -19,25 +19,7 @@ func (g *Game) StackBoundPermanentSources() []DamageSource {
 				identities = append(identities, references.stackPermanentBindings()...)
 			}
 		}
-		// Map order must not change the options presented to the player.
-		slices.SortFunc(identities, func(a, b capturedPermanent) int {
-			if order := slices.Compare(a.id[:], b.id[:]); order != 0 {
-				return order
-			}
-			return slices.Compare(a.incarnation[:], b.incarnation[:])
-		})
-		for _, identity := range identities {
-			var source DamageSource
-			p, lki := g.readPermanentIncarnationInformation(identity)
-			if p != nil {
-				source = damageSourceFromPermanent(p)
-			} else if lki != nil {
-				source = damageSourceFromLKI(lki)
-			}
-			if source.Valid() && !slices.ContainsFunc(sources, source.SameObject) {
-				sources = append(sources, source)
-			}
-		}
+		sources = g.appendPermanentReferenceSources(sources, identities)
 	}
 	return sources
 }
@@ -87,4 +69,27 @@ func (e *capturedDelayedBody) stackPermanentBindings() []capturedPermanent {
 		}
 	}
 	return identities
+}
+
+func (g *Game) appendPermanentReferenceSources(sources []DamageSource, identities []capturedPermanent) []DamageSource {
+	// Map order must not change the options presented to the player.
+	slices.SortFunc(identities, func(a, b capturedPermanent) int {
+		if order := slices.Compare(a.id[:], b.id[:]); order != 0 {
+			return order
+		}
+		return slices.Compare(a.incarnation[:], b.incarnation[:])
+	})
+	for _, identity := range identities {
+		var source DamageSource
+		p, lki := g.readPermanentIncarnationInformation(identity)
+		if p != nil {
+			source = damageSourceFromPermanent(p)
+		} else if lki != nil {
+			source = damageSourceFromLKI(lki)
+		}
+		if source.Valid() && !slices.ContainsFunc(sources, source.SameObject) {
+			sources = append(sources, source)
+		}
+	}
+	return sources
 }

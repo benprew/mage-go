@@ -38201,3 +38201,161 @@ Ranked next candidates to reassess:
 
 No second slice starts. The descriptive commit hash is reported in the final
 response after required checks pass.
+
+## Run 2026-10-07: WAITING-DELAYED-PERMANENT-FRAMES
+
+Status: completed dependency-ready engine slice. Stop after this slice.
+Initial user changes to `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, are preserved outside the commit. Only this
+appended ledger entry is staged. No delegation was used.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, current ledger and
+vocabulary; selected compiler/engine code; complete candidate and affected RON
+records, including identical reprints; relevant API/rules contracts; CR 400.7,
+603.7, 609.7 and 702.26. Local Oracle data in LEA/FEM/DRK confirms the three
+accepted delayed consumers. Requirements came from RON, not Go definitions.
+The implement-engine skill supplied the reusable-engine workflow. No removed
+card skill or Go stub generator was used.
+
+Fresh baseline compiler tests, short engine tests and `make build` passed.
+Strict loader and AST semantic inventory exited 1 for collection rejection:
+**2,445 records / 986 unique names; 1,962 compiled / 483 rejected records;
+762 accepted / 224 rejected names**. Inventory: **72,952 occurrences / 8,556
+signatures / 3,988 unknown-role occurrences**. Collection-wide engine-validation
+and gameplay counts remain null. The snapshot is inventory, not support proof.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Waiting delayed permanent frames and exact event subjects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate**, prerequisite for **7 names / 31 records**. Accepted consumers tested: Stone Giant, Goblin Kites, War Barge. | Other typed references and source-body references, waiting replacement/prevention references, face-up command objects, complete enumeration, spell-to-permanent shield continuity and property rechecks remain. Reuses established saved frames and source-choice services. | Small/medium: one reader and choice category; native lifecycle, identity, frames, validation and RON gameplay tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: **8 plausible full-card unlocks**. | Full records need legendary/named formation matching, both assignment directions, static/token grants and temporary removal. Ordinary banding does not provide these semantics. | High: combat formations, layers, grants/removal and damage assignment contracts. |
+| Text-word choices and changes | Magical Hack, Sleight of Mind: **2 plausible full-card unlocks**. | Full records need spell/permanent target union, two ordered choices, word-variable substitution, layer 3 changes, spell-to-permanent continuity and copy isolation. Existing color actions do not supply them. | High: shared text-change engine and scoped choice adapters. |
+
+Selection: the seven-card dependency has concrete downstream consumers and a
+much smaller implementation boundary than combat/text families. Zero immediate
+unlocks were stated before editing. Nested records, not first-error frequency,
+supply the estimates. Single-card capabilities remain deferred. No second slice
+starts. This slice establishes missing engine behavior; no missing adapter,
+source-data defect or environment repair is hidden by it.
+
+### Exact contract and reuse boundary
+
+Capability `WAITING-DELAYED-PERMANENT-FRAMES` adds:
+
+- `Game.WaitingDelayedPermanentSources() []DamageSource`: saved
+  `map[*PermanentBinding]capturedPermanent`,
+  `map[*targetDeclaration][]capturedPermanent`,
+  `map[*CreatedTokensBinding][]capturedPermanent` in immutable
+  `capturedDelayedBody` effects, nested sequence wrappers and captured modal
+  bodies, plus `MatchEventID`/`matchIncarnation` event subjects, **only while the
+  delayed ability is registered as waiting**.
+- `ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`: filtered,
+  non-targeted choice at resolution through the existing shared service.
+- Shared private `appendPermanentReferenceSources` retains the existing stack
+  reader's deterministic ID/incarnation sorting, exact deduplication, live versus
+  phased/departed information reads and copied query snapshots. Waiting results
+  follow trigger registration order, with sorted references within each ability.
+- One-shot detection ends waiting eligibility before pending/stack placement.
+  Duration-based delays continue waiting after a match until their existing
+  lifecycle expires. Stack copies do not create waiting abilities. Clones retain
+  independent waiting lists and immutable captured frames. Queries execute no
+  effects, choices or RNG and read no global last-action slot.
+- Source IDs alone, source reads inside future bodies, other typed references,
+  untyped legacy IDs and unproduced future actions are outside this supported
+  context. Nil bindings, invalid or unknown identities produce no candidates.
+  Other CR 609.7a categories remain separate. General RON `ChooseADamageSource`
+  and the complete chosen-source shields continue to reject.
+
+RON keeps its existing spelling, scopes, per-factory targets and delayed adapters
+(`compileDelayedStep`, `compileDepartureDelay`); no new production shape or
+partial registry is added. TriggerSystem owns registration, pending detection,
+expiry and cloning. The incarnation reader owns LKI and phasing. The shared
+choice service owns output validation, producer dominance, fallback, filtering,
+empty/absent-player clearing and resolution results. Existing payments, damage
+batches and replacements retain ownership; no new ordering/rollback/simultaneous
+contract is claimed. Runtime cutover and removal gates remain unmet. No Go card,
+generator or DSL function is removed; no unused-caller audit is claimed.
+
+### TDD, acceptance and card-to-test mappings
+
+Tests were written first. The initial run failed for the absent APIs. Temporary
+empty implementations confirmed behavioral failure at missing waiting targets,
+token frames and event subjects. The category declaration path was then enabled
+while the reader was still empty; real RON tests failed at missing waiting choices.
+Implementation made these pass. Additional native modal/plural and instance tests
+were added. Two fixtures were corrected: clone choices must resolve before their
+trigger events, and mode-local target declarations cannot read an outer target
+as a declaration. Native modal event bindings and separate plural target delays
+now test the valid contracts. No production requirement or test was weakened.
+
+| Contract/card | Tests and coverage |
+| --- | --- |
+| Native target capture, exact information and lifetime | `TestWaitingDelayedPermanentSourcesLifecycle`: before creation, live/departed/returned/phased/phase-cycle, current color/control, face-down/shroud, query snapshot isolation, source departure, pending/stack distinction, clone lifetime and delayed destruction. |
+| Token sets and event subjects | `TestWaitingDelayedPermanentSourcesFramesAndMatchers`: native token production and departure, saved token members/order, native departure matcher, persistent waiting after detection, actual life action and cleanup expiry. |
+| Boundaries and declarations | `TestWaitingDelayedPermanentSourcesChoiceAndBoundaries`: nested sequence/modal maps, duplicate binding categories, nil bindings, wrong/missing incarnation, source-ID-only exclusion, isolated invalid/future/global-frame exclusions, filtered invalid-answer fallback, empty-result clearing, nil player/output and consumer-before-producer rejection. |
+| Native modal event frames and plural targets | `TestWaitingDelayedPermanentSourcesNativeFrames`: actual entry-event binding and captured modes, pending-before-creation exclusion, plural announced groups, pure repeat queries, clone waiting lifetime and native delayed body. |
+| Stone Giant (full LEB), Goblin Kites (full FEM), War Barge (full DRK); Prodigal Sorcerer targets | `TestRONWaitingDelayedPermanentSources`: full record and engine validation, native activation/payment failure, resolution-only filtered choice using real Circle of Protection: Blue filter, leave/return, phase cycle, recoloring, source departure, exact chosen target, clone execution, native delayed destruction/sacrifice. Consumer is a synthetic category fixture; this does not claim complete shield gameplay. |
+| Goblin Kites instances | `TestRONWaitingDelayedPermanentSourceInstances`: distinct factory declarations/controllers, saved targets in registration order, clone lifetime, APNAP placement and independent sacrifices. |
+| Invalid RON and delayed legality | Existing `TestRONDelayedStep*` and `TestRONDepartureDelay*` pass, including invalid declarations, unbound/incompatible reads, legality, captures, timing, cost and clone contracts. |
+
+Compilation and gameplay coverage remain separate. **0 new full-card mappings**;
+**3 accepted unique cards gain waiting-reference contract evidence**. Estimated
+and actual immediate unlocks match: **0 names / 0 records**. All rules of those
+cards retain existing full-card test mappings; these tests add the new shared
+reference context.
+
+### Validation and final measurements
+
+The final review added isolated invalid/future/global-frame exclusions so a
+valid duplicate cannot mask a bad candidate. Focused tests and required checks
+were rerun on the final tests. The initial modal-fixture validation failure is
+explained above; the final native declarations pass. Lint automatic changes
+were reviewed; no unrelated files or production behavior changed.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine tests, `make build` | PASS |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestWaitingDelayedPermanentSources\|TestRONWaitingDelayedPermanentSource\|TestStackDelayedPermanent\|TestStackBoundPermanent\|TestRONDelayedStep\|TestRONDepartureDelay' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `go test ./... -short -count=1` | PASS; engine-skill verification |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS; zero issues |
+| `git diff --check` | PASS for worktree and staged slice |
+| `go run ./cmd/loadcards -json` | Expected exit 1; unchanged collection rejection |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; unchanged inventory |
+| Vocabulary hashes and loader snapshot audit | All 12 hashes and loader snapshot match |
+
+No environment or pre-existing validation blocker remains.
+
+Fresh loader JSON and AST inventory exactly match baseline: **1,962 compiled /
+483 rejected records; 762 accepted / 224 rejected names**, **72,952 occurrences /
+8,556 signatures / 3,988 unknown-role occurrences**. No accepted record is lost.
+Strict collection rejection remains atomic. Representative diagnostics remain
+unsupported `ChooseADamageSource` (11 distinct names; seven shields in this
+comparison), `BandsWithOthers` (five static-grant names), and color-action-list
+rejection for Magical Hack and Sleight of Mind. Complete nested blockers are
+listed above. All 12 source hashes match the vocabulary snapshot; sources did
+not change, so no snapshot refresh is needed. No source defect was found or
+corrected. Previously recorded defects/uncertainties remain separate.
+
+Changed files: new `pkg/mage/waiting_delayed_source.go`, engine and RON
+`waiting_delayed_source_test.go`, `pkg/mage/stack_bound_source.go`,
+`pkg/mage/damage_source_choice.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this appended ledger entry. Only this slice
+is staged; initial user edits remain outside the commit.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Other typed saved/source-body references in waiting delayed abilities and
+   waiting replacement/prevention references, to finish referred-object categories
+   needed by the seven shields.
+2. Complete face-up command-object enumeration, then general source-choice and
+   shield continuity/property rechecks once all categories are complete.
+3. Parameterized bands with others across the eight compared contexts.
+
+Stop after this slice. The descriptive commit hash is reported in the final
+response after all required checks pass.

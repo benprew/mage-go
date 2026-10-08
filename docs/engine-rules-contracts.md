@@ -7899,3 +7899,50 @@ filter, actual damage and delayed destruction/sacrifice.
 `TestRONStackDelayedPermanentSourceInstances` checks separate Goblin Kites factory
 bindings, APNAP placement, countering and independent cloned sacrifice bodies.
 These strengthen accepted-card evidence; they do not verify complete shields.
+
+## Permanent references held by waiting delayed abilities
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` implements the saved
+permanent-frame and exact-event-subject contexts of CR 609.7a for delayed
+abilities still registered as waiting. It reads immutable `capturedDelayedBody`
+permanent, target and created-token maps through sequence wrappers and modal
+bodies, and `MatchEventID` with its saved `matchIncarnation`. It reuses the stack
+reference reader's sorting, exact deduplication and incarnation information
+service. Nil declarations, invalid identities and unknown incarnations cannot
+supply candidates. A source ID alone, a global resolution frame, an unproduced
+future action or an untyped legacy matcher cannot create a candidate.
+
+Queries return separate card snapshots, make no choices, consume no RNG and do
+not change state. Current live information, phased information and departure
+LKI retain their existing rules. Leave-and-return cannot replace a saved object
+(CR 400.7, 603.7c, 702.26). Target legality and ability to deal damage do not
+restrict this non-targeted category.
+
+One-shot detection removes the waiting referer before pending placement.
+Duration-based delays remain registered after a match and stop supplying this
+category when their lifecycle expires (CR 603.7b). Pending and stack references
+are separate categories. Stack copies do not create waiting abilities. Game
+clones keep independent trigger lists and immutable saved frames.
+
+`ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` uses shared definition validation,
+producer-before-consumer checks, independent resolution results, empty and
+absent-player clearing, invalid-answer fallback and cloned frames. This adds
+no payment, damage batch, prevention or replacement operation.
+
+Evidence: `TestWaitingDelayedPermanentSourcesLifecycle`, `FramesAndMatchers`,
+`ChoiceAndBoundaries` and `NativeFrames` cover native target/event/token/modal
+captures, plural groups, exact matchers, current properties, departure/return,
+phasing, hidden data, shroud, deduplication/order, copied snapshots, waiting versus
+pending/stack lifetimes, duration expiry, clone isolation and invalid declarations.
+`TestRONWaitingDelayedPermanentSources` executes complete Stone Giant, Goblin
+Kites and War Barge records, with Prodigal Sorcerer targets and Circle of
+Protection: Blue's real filter in a synthetic category consumer. It covers native
+payment failure, resolution-only choice, delayed actions and clone execution.
+`TestRONWaitingDelayedPermanentSourceInstances` covers separate factory bindings,
+registration order, APNAP placement and independent delayed sacrifices.
+
+Other typed references, source reads in future bodies, untyped legacy IDs,
+waiting replacement/prevention references, command objects and shield continuity
+and property rechecks remain separate gaps. This does not establish the complete
+CR 609.7a source list or accept general RON source choices.
