@@ -7460,3 +7460,32 @@ RON `TestRONWaitingPrecastHandProtection` and `Invalid`. All six Circles of
 Protection and Greater Realm of Preservation map their real payment, choice and
 future-prevention declarations to this waiting-reference context. These mappings
 establish subrule gameplay, not full-card acceptance.
+
+## RON source choices from delayed hand and exile card frames
+
+Validated `ChooseADamageSource(filter)` plans have an internal
+`chosenDamageSourcePlan.waitingDelayedCardChoice(instanceBindings)` lowering.
+It calls `mage.ChooseDamageSourceFromWaitingDelayedCardBindings(mage.You,
+filter, binding)` with a separate binding for the factory instance. Existing
+`CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(You)), [PreventThatDamage])` consumes that binding.
+
+The source category includes singular and plural hand/exile card bindings held
+by waiting delayed bodies. Existing `CreateFutureTrigger/2` lowering reuses
+`AtNext`, which now saves these frames. Trigger placement transfers saved card
+references to stack queries. Each delayed execution restores its card frame
+without changing the outer frame. Hand choices use the choosing player's private
+inspection rights; other hands and face-down exile keep hidden characteristics.
+Departure retains exact visit facts, and a returned card cannot replace them.
+A saved reference cannot extend a cost reveal. Empty choices clear their binding;
+invalid declarations and premature reads reject through shared validation.
+
+`TestRONWaitingDelayedCardProtection` maps these declarations to Circle of
+Protection: Black, Blue, Green, Red, White, Artifacts and Greater Realm of
+Preservation. It executes hand draw-event and exile payment producers, RON
+next-end-step bodies and paid protection activations across live, departed,
+returned, copied and cloned contexts. `TestRONWaitingDelayedCardInvalid` covers
+invalid syntax and binding declarations. General production source choice stays
+rejected until all CR 609.7a categories and the opaque-reference audit are complete.
+Waiting graveyard card frames and remaining precast target contexts are separate
+work; this slice does not claim a complete legal source list.

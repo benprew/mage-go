@@ -320,6 +320,8 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
 		spells:            maps.Clone(ctx.Game.resolution.spellBindings),
 		spellSources:      ctx.Game.captureDelayedSpellSources(),
+		cards:             maps.Clone(ctx.Game.resolution.cardBindings),
+		cardSets:          cloneCardsBindings(ctx.Game.resolution.cardsBindings),
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
@@ -362,6 +364,8 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 
 type capturedDelayedBody struct {
 	body              ResolvingEffect
+	cards             map[*CardBinding]capturedCard
+	cardSets          map[*CardsBinding][]capturedCard
 	spells            map[*SpellBinding]uuid.UUID
 	spellSources      map[*SpellBinding]DamageSource
 	damageSources     map[*DamageSourceBinding]DamageSource
@@ -385,6 +389,10 @@ func (e *capturedDelayedBody) Text() string                 { return e.body.Text
 func (e *capturedDelayedBody) Properties() EffectProperties { return e.body.Properties() }
 func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	state := &ctx.Game.resolution
+	outerCards, outerCardSets := state.cardBindings, state.cardsBindings
+	state.cardBindings = maps.Clone(e.cards)
+	state.cardsBindings = cloneCardsBindings(e.cardSets)
+	defer func() { state.cardBindings = outerCards; state.cardsBindings = outerCardSets }()
 	outerDamageSources := state.damageSourceBindings
 	state.damageSourceBindings = cloneDamageSourceBindings(e.damageSources)
 	defer func() { state.damageSourceBindings = outerDamageSources }()
@@ -476,6 +484,8 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
 		spells:            maps.Clone(ctx.Game.resolution.spellBindings),
 		spellSources:      ctx.Game.captureDelayedSpellSources(),
+		cards:             maps.Clone(ctx.Game.resolution.cardBindings),
+		cardSets:          cloneCardsBindings(ctx.Game.resolution.cardsBindings),
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),

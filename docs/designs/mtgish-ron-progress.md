@@ -8,14 +8,14 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-PRECAST-HAND-SOURCES` adds exact hand references in active
-prevention/redirection rules, with choosing-player inspection, public departure
-visibility, mechanical rechecks, consumption and clone isolation. Seven
-protection names gain RON subrule evidence; no complete-card compilation gain
-is claimed. Delayed card/card-set frames, remaining precast target contexts and
-opaque references remain before complete damage-source enumeration. Token
-quality grants remain unsupported. Titania's Song still needs per-member base
-values and sticky duration.
+unfinished. `WAITING-DELAYED-CARD-FRAMES` adds singular/plural card capture,
+restoration and exact hand/exile source enumeration for waiting delayed bodies.
+Private inspection, hidden departure facts, reveal lifetime and copied/cloned
+execution are covered. Seven protection names gain RON subrule evidence;
+no complete-card compilation gain is claimed. Waiting graveyard card frames,
+remaining precast target contexts and opaque references remain before complete
+damage-source enumeration. Token quality grants remain unsupported.
+Titania's Song still needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -43837,3 +43837,140 @@ Ranked next candidates:
 3. Named-token quality grants for Master of the Hunt: one plausible full-card
    unlock after token lowering and combat/copy quality contracts; remains below
    useful shared prerequisites. Paired word substitution remains larger work.
+
+## 2026-10-08: exact hand and exile visits in delayed card frames
+
+Status: completed implementation slice `WAITING-DELAYED-CARD-FRAMES`.
+One dependency-ready vertical prerequisite was implemented; no second slice
+was started. All 31 complete protection records, all 15 other source-choice
+records, and the complete alternative candidate records were inspected,
+including nested forms and reprints. Reprints count once. Targeted vocabulary
+inspection confirms `ChooseADamageSource/1`, `CreateFutureTrigger/2` and
+`NamedTokenWithPT/7`. All 12 source hashes match; no snapshot refresh is needed.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- |
+| Delayed hand/exile card frames; selected ranked candidate 1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**, shared prerequisite for seven names / 31 records. | Exact visit services and delayed frames already exist. Remaining target contexts, waiting graveyard cards and opaque references block full aggregation. Eye for an Eye, Jade Monolith, Reverse Damage and Dark Sphere are four additional later consumers with separate replacement/reflection, redirection, prevented-amount and half-prevention adapters. | Small: capture/restore two typed maps, existing reference interfaces, queries, choice lowering and lifecycle tests. |
+| Named-token quality grants | Master of the Hunt. **1 plausible unlock**. | Full record creates named 1/1 green Wolf creatures with `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))`. Needs token lowering and combat/copy quality retention. | Medium; lower shared benefit. |
+| Paired text-word substitution | Magical Hack; Sleight of Mind. **2 plausible unlocks**. | Both full modal records have spell and permanent targets, paired word choices and text replacement. Needs shared text representation plus copy/layer isolation. | Large; several contracts exceed this bounded slice. |
+
+Candidate 1 is dependency-ready and removes a concrete shared blocker for seven
+protection names. The contract, boundary and acceptance cases were stated before
+editing. The implement-engine skill supplied the native contract workflow; no
+removed skill, Go-card requirements or delegation was used.
+
+### Signatures, context and engine boundary
+
+- `Game.WaitingDelayedHandSourcesFor(viewer uuid.UUID) []DamageSource` reads
+  exact hand visits held by waiting delayed card frames, with viewer inspection.
+- `Game.WaitingDelayedExileSources() []DamageSource` reads exact exile visits
+  held by those frames, with face-down characteristics hidden.
+- `ChooseDamageSourceFromWaitingDelayedCardBindings(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  combines these two categories and chooses at resolution using the selected
+  player's information. Shared definition validation checks player/filter/binding
+  and dominance; empty or absent-player choices clear the result.
+- `chosenDamageSourcePlan.waitingDelayedCardChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+  `You` and the instance's own binding. Existing exact-source future prevention
+  consumes it. Complete general production enumeration remains rejected.
+- Existing `CreateFutureTrigger/2` lowering still calls `AtNext`. `AtNext`,
+  `AtNextModes` and all three delayed permanent-event constructors now capture
+  singular `CardBinding` and plural `CardsBinding` frames. Each execution copies
+  the frame and restores the outer frame on success or error.
+- `capturedDelayedBody.stackCardBindings() []capturedCard` exposes saved
+  immutable identities through the shared stack card-reference interface.
+  Placed frames thus supply existing hand/exile/graveyard stack queries; this
+  slice does not implement waiting graveyard enumeration.
+
+RON owns spelling, declaration validation, scope and per-instance lowering.
+Mage owns capture, visits, visibility, decisions, timing and mechanics. Reuse:
+`capturedCard`, `cloneCardsBindings`, immutable delayed bodies/modes, sequence
+reference traversal, typed binding and choice validation, native draw-event and
+exile/reveal payment producers, hand/exile visit/departure readers, copy/clone
+services, actual-rules damage reads, prevention and replacement ordering.
+
+No new zone, replacement, payment or clone state was introduced. Hand/private
+facts and public departure visibility remain separate. A delayed reference does
+not extend a cost reveal. Face-down exile retains no characteristics at departure.
+Returned cards cannot inherit the saved visit; queries do not reveal cards or run
+future producers. One-shot detection ends waiting availability, pending placement
+adds no stack reference, and stack placement transfers saved identities to stack
+queries. Persistent delayed-event lifetimes remain unchanged. Source phasing,
+ability removal and departure do not cancel independent delayed abilities.
+Rules evidence: local CR 400.7, 402.3, 406.3a, 603.7a–e, 609.7a–b, 615.9,
+701.20a, and the existing phasing contract.
+
+This was a missing reusable capture/enumeration contract and compiler lowering
+context. No RON source defect or environment failure was found. No fallback,
+card-name branch, global action slot, partial registry or skipped rule was added.
+Removal gates remain unmet; existing Go definitions and DSL callers stay intact.
+
+### Failing-first tests and card mappings
+
+Before production edits, native tests failed on the missing two query APIs and
+choice constructor. RON tests independently failed on the missing lowering
+method and hand query. After correcting test-helper names, these intended
+missing-signature failures were confirmed. All contracts pass after implementation.
+A reveal assertion was corrected to distinguish retained `PublicReveals()` history
+from current visibility; opponent characteristics remain hidden after resolution.
+
+| Test | Mapping / evidence |
+| --- | --- |
+| `TestWaitingDelayedCardFrames` | Singular/plural capture and deduplication in hand/exile; step, modes and permanent-event producers; map/slice snapshot isolation; departure/return; query and game-clone facts; stack transfer; copied/cloned body execution; returned visits cannot resolve saved card actions. |
+| `TestWaitingDelayedCardRestoration` | Repeated execution restores singular/plural outer frames even after a body error; body mutation cannot change saved maps/slices. |
+| `TestWaitingDelayedCardChoicesAndVisibility` | Private/public hand inspection; cross-zone deduplication; malformed/nil producer exclusion; live/departed face-down exile; hidden hand departures; empty choice clearing; invalid player/filter/binding and premature read rejection. |
+| `TestWaitingDelayedCardRevealLifetime` | Real reveal-cost producer and failed payment; active public reveal; saved waiting reference cannot extend reveal; private inspection survives; source phasing and future-producer exclusion. |
+| `TestWaitingDelayedCardPluralPayment` | Real plural exile payment; resolution capture; one-shot detection/pending/stack transfer boundaries; clone lifetime and delayed life execution. |
+| `TestRONWaitingDelayedCardProtection` | All six Circles plus Greater Realm; real complete RON cost/choice/future-prevention declarations and compiled RON next-end-step body; native draw-event or exile-cost producer; 70 hand/exile × live/departed/returned/copied/cloned scenarios; failed payments, resolution timing, shield consumption, empty category and continued full-record rejection. |
+| `TestRONWaitingDelayedCardInvalid` | Invalid arity/color/filter composition/reference, missing instance binding and premature read. |
+| Existing delayed spell/damage, hand/exile source, waiting-hand and full engine tests | Shared frame compatibility, property rechecks, actual hidden mechanics, simultaneous packets, replacement ordering, payment rollback, source identity and clone regression coverage. |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**.
+Seven protection names gain delayed-card subrule gameplay evidence; complete-card
+coverage remains unchanged. Full aggregation and dependent replacement adapters
+still block complete records, as estimated. No accepted record was lost.
+
+### Verification
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected exit 1; strict collection rejection, not build failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedCard -count=1`: PASS.
+- Focused native delayed-card/spell/damage, hand/exile and clone tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only normalize imports in
+  the two new native files. After review, focused RON tests, build, vet and
+  skill check `go test ./... -short -count=1` were rerun: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. Entire
+  JSON equals baseline. First issue: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection loading still publishes no partial registry.
+
+Changed files: `pkg/mage/waiting_delayed_card.go`, native delayed-card tests,
+`composable_conditions.go`, `damage_source_choice.go`, RON chosen-source lowering
+and delayed-card tests, `doc.go`, API/rules-contract docs and this ledger.
+The working tree began with user changes to `.gitignore`, execution design,
+progress-file history relocation and an untracked completed-entry archive.
+These were preserved. Only this slice's status/append edits are staged from the
+progress file; its user history relocation remains uncommitted.
+Complete collection gameplay/loading, startup integration, Go-card deletion and
+unused DSL cleanup remain unfinished. This run stops after this one slice.
+
+Ranked next candidates:
+
+1. Waiting delayed graveyard card frames: reuse this slice's card capture and
+   exact graveyard visit reader; seven protection names benefit downstream,
+   zero immediate unlocks. Include singular/plural frames, departure/return,
+   pending/stack lifetime and cloned information.
+2. Remaining precast target contexts and opaque-reference audit, then complete
+   CR 609.7a aggregation: seven estimated full-card unlocks after prerequisites,
+   subject to full-record evidence. Keep incomplete enumeration rejected.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock; lower priority while useful multi-card prerequisites remain. Paired
+   word substitution remains larger work.

@@ -425,6 +425,14 @@
 // Queries use current or exact departure information. A later cast cannot
 // replace a saved spell. These services supply one source category.
 //
+// Delayed bodies keep singular and plural card bindings for their saved visits.
+// [Game.WaitingDelayedHandSourcesFor] uses the viewer's hand inspection rights.
+// [Game.WaitingDelayedExileSources] keeps face-down characteristics hidden.
+// [ChooseDamageSourceFromWaitingDelayedCardBindings] uses these two categories.
+// Trigger placement transfers the references to the existing stack queries.
+// Each execution restores the outer card frame, including after an error.
+// A saved reference cannot extend a reveal or follow a returned card.
+//
 // Delayed bodies also keep typed damage-source bindings and their saved facts.
 // Use [Game.WaitingDelayedDamageSources] and
 // [ChooseDamageSourceFromWaitingDelayedDamageBindings] for these waiting frames.

@@ -155,3 +155,7 @@ func (p *chosenDamageSourcePlan) waitingPrecastExileChoice(bindings instanceBind
 func (p *chosenDamageSourcePlan) waitingPrecastHandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingPrecastHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingDelayedCardChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingDelayedCardBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

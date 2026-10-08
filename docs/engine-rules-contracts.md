@@ -9621,3 +9621,53 @@ RON `TestRONWaitingPrecastHandProtection` and `Invalid`. All six Circles of
 Protection and Greater Realm of Preservation map their real payment, choice and
 future-prevention declarations to this waiting-reference context. These mappings
 establish subrule gameplay, not full-card acceptance.
+
+## Exact hand and exile visits in delayed card frames
+
+`AtNext`, `AtNextModes`, `WhenDiesThisTurn`, `WhenLeavesThisTurn`, and
+`WhenAttacksUnblockedThisTurn` now save the current `CardBinding` and
+`CardsBinding` maps when they create a delayed ability. Singular identities are
+values; plural slices are copied. Each execution installs separate maps and
+slices and restores the outer card frame on success or error. The saved frames
+remain immutable across modes, stack copies and game clones. `FromCard` and
+`FromCards` still require the original current zone visit for an action.
+
+`Game.WaitingDelayedHandSourcesFor(viewer uuid.UUID) []DamageSource` and
+`Game.WaitingDelayedExileSources() []DamageSource` read exact visits referred to
+by waiting delayed card frames, including nested capture sequences and modes.
+They check the zone, physical ID and visit, exclude nil producers and invalid
+identities, sort map-derived references and deduplicate exact visits. They do
+not run bodies, evaluate future producers or use the current resolution frame.
+A one-shot delay stops supplying waiting references at detection; pending
+placement supplies no stack reference. A duration-based subscription retains
+its existing waiting lifetime. Source departure, ability removal and phasing
+cannot cancel the independent delayed ability.
+
+Queries use current or exact departure facts. Hand owners can inspect private
+facts; other, nil and unknown viewers receive public information. Private
+inspection does not reveal a card. A delayed reference does not extend a cost
+reveal after its paying stack object leaves. Face-down exile has no
+characteristics, including after departure. Returned visits cannot replace
+saved references. Query snapshots and game clones keep separate mutable facts.
+Placed delayed frames implement the existing stack card-reference interface,
+so hand, exile and graveyard stack queries retain their saved references until
+the referring object leaves. This does not add waiting graveyard enumeration.
+
+`ChooseDamageSourceFromWaitingDelayedCardBindings(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` merges
+waiting hand and exile card references with the choosing player's information.
+Shared declaration validation rejects invalid filters, missing players/bindings and
+premature binding reads. Empty or absent-player choices clear the result.
+Existing selected-source prevention uses actual rules information at installation
+and damage time, retains exact visits and consumes matching simultaneous damage
+through the shared replacement service. No replacement ordering is changed.
+
+Rules evidence: CR 400.7, 402.3, 406.3a, 603.7a–e, 609.7a–b, 615.9 and 701.20a.
+Evidence: `TestWaitingDelayedCardFrames`, `Restoration`, `ChoicesAndVisibility`,
+`RevealLifetime`, `PluralPayment`, and RON `TestRONWaitingDelayedCardProtection`
+and `Invalid`. Frames tests cover step, modal and permanent-event producers,
+query isolation, departure/return, copied/cloned execution and saved card actions.
+The RON test covers all seven protection names in hand/exile contexts using real
+native draw/payment producers and compiled RON delayed-step, cost, source-choice
+and prevention declarations. These are subrule tests; complete general source
+enumeration and complete protection-card gameplay remain unsupported.
