@@ -72,7 +72,7 @@ func (g *Game) performSacrifice(result *SacrificePermanentAction) {
 	isToken := perm.IsToken
 	permID := perm.ID()
 	incarnation := perm.incarnationID
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 
 	g.RemoveFromBattlefield(perm)
 	selfTriggers := g.LKIAbilities(permID)

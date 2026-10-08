@@ -17,6 +17,12 @@
 // Legacy copy layers and untracked characteristic changes return errors.
 // Entry copying, copy exceptions and live copy-layer installation need separate
 // services. The snapshot does not supply casting or battlefield entry permission.
+// [BuildEntryCopy] builds fresh battlefield rules for a physical card's next
+// entry. It keeps that card's ID, owner, token status and printed origin.
+// Departure uses fresh printed rules; LKI and pending abilities keep copy rules.
+// RON factories retain this origin with [WithPrintedCardDefinitionPlan].
+// The caller must supply entry permission, copy choice and replacement order.
+// This builder does not schedule entry-copy replacements or install live layers.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]

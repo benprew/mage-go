@@ -11754,3 +11754,40 @@ Icatian Javelineers costs/entry/targets, Air Elemental with Giant Growth,
 Holy Strength on Wall of Wood/Hill Giant, and Birds of Paradise metadata.
 These tests supply prerequisite gameplay evidence, not new complete copy-card
 coverage. The accepted-collection reconstruction regression remains required.
+
+
+## Entry-copy physical identity
+
+`BuildEntryCopy(original Card, values *CopiableValues) (Card, error)` builds
+independent effective declarations for a physical card's next battlefield entry.
+It also builds independent printed declarations for departure. Both retain the
+original ID, owner and token status. The original card and the snapshot stay
+unchanged. `WithPrintedCardDefinitionPlan` retains this separate printed origin
+in RON factories; native `CardDefinitionPlan.Build` supplies it too.
+
+Current copiable provenance must match the input's effective characteristics.
+Missing, changed or mismatched provenance, nil IDs, nonpermanent definitions,
+invalid snapshots and builder drift return errors before entry. Reapplying the
+builder retains the original physical origin. Copying another copy's values
+uses the new physical card's origin. Standard face-down snapshots produce a
+face-up nameless 2/2 without transferring face-down status (CR 707.2–3, 708.2).
+
+Normal entry executes acquired counters, choices and abilities with fresh
+bindings (CR 707.5–7). Printed physical entry rules do not run. Phasing preserves
+the copy. Destroy, sacrifice, direct graveyard placement, bounce, exile, ante,
+legacy gathered bounce, return-to-hand costs and failed entry use the physical
+printed card. LKI and queued abilities retain the battlefield copy's information
+(CR 400.7, 603.6c). Ordinary Card.Copy and identity/owner setters keep departure
+identity separate; game clones retain the origin through their existing card
+sharing and zone cloning contracts.
+
+This is a pure prototype-building prerequisite. The caller must remove the
+physical card from its prior zone and supply entry permission, copy choices and
+replacement ordering. It does not schedule copy replacements, supply copy
+exceptions, attach copied Auras, install live copy layers or grant casting
+permission. Clone, Copy Artifact and Vesuvan Doppelganger remain rejected.
+
+Tests: native `TestEntryCopyIdentityInvalid`, `IndependentAndCopyOfCopy`,
+`FaceDownAndTokens`; RON `TestRONEntryCopyIdentityGameplay`, `Departure`,
+`EntryReplacements`, `DeathAndFreshEntryChoices`. Existing accepted-definition
+and copy-consumer rejection tests retain the collection boundaries.

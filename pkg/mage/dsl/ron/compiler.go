@@ -411,6 +411,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		mage.WithManaCostPresence(costPresent)(card)
 		mage.WithCardDefinitionPlan(definition)(card)
+		mage.WithPrintedCardDefinitionPlan(definition)(card)
 		mage.WithCopiableValues(definition.CopiableValues())(card)
 		return card
 	}

@@ -145,7 +145,7 @@ func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	isToken := perm.IsToken
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 	owner := card.Owner()
 	if owner == uuid.Nil {
 		owner = perm.ControllerID()

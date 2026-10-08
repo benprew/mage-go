@@ -8962,3 +8962,18 @@ complete records remain rejected rather than running approximate copy behavior.
 
 Evidence: `TestCopiableValues*`, `TestRONCopiableValues*`, and the retained
 `TestRONDefinitionPlan*` reconstruction/accepted-collection regressions.
+
+
+### Entry-copy physical identity prerequisite
+
+Every accepted RON factory retains a printed definition plan separately from its
+copiable effective plan. `mage.BuildEntryCopy(card, values)` uses those plans to
+build independent entry rules and printed departure rules with the same physical
+identity. It changes no RON spelling or binding scope. The supplied snapshot can
+come from a different permanent or another copy; the physical origin remains
+that of `card`. Normal entry, LKI, zone moves and cloning use the engine services.
+
+This builder grants no entry permission and does not schedule replacements.
+`EnterAsACopyOfAPermanent` and `CopyEffects` still reject until their complete
+entry-copy and exception contracts are available. No RON copy declaration is
+accepted through a partial adapter.

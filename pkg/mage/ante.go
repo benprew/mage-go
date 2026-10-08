@@ -167,7 +167,7 @@ func (g *Game) removeCardForAnte(cardID uuid.UUID, from Zone) (Card, uuid.UUID, 
 			return nil, uuid.Nil, nil, ErrPermanentNotFound
 		}
 		controller := perm.ControllerID()
-		card := perm.Card
+		card := cardForBattlefieldDeparture(perm.Card)
 		g.RemoveFromBattlefield(perm)
 		return card, controller, g.LKIAbilities(cardID), nil
 	case ZoneExile:

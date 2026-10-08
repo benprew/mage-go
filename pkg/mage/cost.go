@@ -1210,7 +1210,7 @@ func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if !isToken {
 		owner := g.GetPlayer(chosen.Card.Owner())
 		if owner != nil {
-			owner.AddToHand(chosen.Card)
+			owner.AddToHand(cardForBattlefieldDeparture(chosen.Card))
 		}
 	}
 	return nil

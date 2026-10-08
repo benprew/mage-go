@@ -16,7 +16,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 func (g *Game) exilePermanent(perm *Permanent, exiledBy uuid.UUID) {
 	controller := perm.ControllerID()
 	permID := perm.ID()
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 	isToken := perm.IsToken
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)

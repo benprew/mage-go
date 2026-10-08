@@ -42,28 +42,30 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
-	id              uuid.UUID
-	name            string
-	manaCost        ManaCost
-	hasManaCost     bool
-	types           []CardType
-	superTypes      []SuperType
-	subTypes        []string
-	abilities       []Ability
-	owner           uuid.UUID
-	power           int
-	toughness       int
-	colorOverride   []Color
-	modes           []string
-	attrSeeds       map[Attr]int    // keyword/attr seeds; NewPermanent copies these to baseAttrs
-	additionalCosts []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
-	alternateCosts  []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
-	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
-	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
-	isToken         bool            // true for token cards (created by NewToken)
-	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
-	definitionPlan  *CardDefinitionPlan
-	copiableValues  *CopiableValues
+	id                    uuid.UUID
+	name                  string
+	manaCost              ManaCost
+	hasManaCost           bool
+	types                 []CardType
+	superTypes            []SuperType
+	subTypes              []string
+	abilities             []Ability
+	owner                 uuid.UUID
+	power                 int
+	toughness             int
+	colorOverride         []Color
+	modes                 []string
+	attrSeeds             map[Attr]int    // keyword/attr seeds; NewPermanent copies these to baseAttrs
+	additionalCosts       []Cost          // additional costs paid when casting (sacrifice, discard, etc.)
+	alternateCosts        []AlternateCost // card-level alternate casting costs (CR 117.9); see alternate_cost.go
+	castTargets           []Target        // targeting requirements when casting (auras, targeted ETBs)
+	uncounterable         bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
+	isToken               bool            // true for token cards (created by NewToken)
+	auraAIProfile         *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
+	definitionPlan        *CardDefinitionPlan
+	copiableValues        *CopiableValues
+	printedDefinitionPlan *CardDefinitionPlan
+	departureCard         Card
 }
 
 // AuraAIProfile tells the AI how an aura affects the creature it enchants so
@@ -148,8 +150,23 @@ func (c *BaseCard) Modes() []string         { return c.modes }
 func (c *BaseCard) IsToken() bool           { return c.isToken }
 func (c *BaseCard) SetModes(m []string)     { c.modes = m }
 func (c *BaseCard) SetBasePT(p, t int)      { c.power = p; c.toughness = t }
-func (c *BaseCard) SetOwner(id uuid.UUID)   { c.owner = id }
-func (c *BaseCard) SetID(id uuid.UUID)      { c.id = id }
+func (c *BaseCard) SetOwner(id uuid.UUID) {
+	c.owner = id
+	if c.departureCard != nil {
+		physical := c.departureCard.Copy()
+		physical.SetID(c.id)
+		physical.SetOwner(id)
+		c.departureCard = physical
+	}
+}
+func (c *BaseCard) SetID(id uuid.UUID) {
+	c.id = id
+	if c.departureCard != nil {
+		physical := c.departureCard.Copy()
+		physical.SetID(id)
+		c.departureCard = physical
+	}
+}
 
 func (c *BaseCard) HasType(t CardType) bool {
 	return slices.Contains(c.types, t)
@@ -216,6 +233,10 @@ func (c *BaseCard) CloneFrom(other Card) {
 func (c *BaseCard) Copy() Card {
 	cp := *c
 	cp.id = uuid.New()
+	if c.departureCard != nil {
+		cp.departureCard = c.departureCard.Copy()
+		cp.departureCard.SetID(cp.id)
+	}
 	cp.manaCost.Hybrid = slices.Clone(c.manaCost.Hybrid)
 	cp.colorOverride = slices.Clone(c.colorOverride)
 	cp.types = make([]CardType, len(c.types))

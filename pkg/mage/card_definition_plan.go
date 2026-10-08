@@ -66,6 +66,7 @@ func (p *CardDefinitionPlan) Build() (Card, error) {
 	}
 	card.definitionPlan = p
 	card.copiableValues = p.copiableValues
+	card.printedDefinitionPlan = p
 	return card, nil
 }
 

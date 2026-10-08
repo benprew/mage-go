@@ -525,7 +525,7 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 				}
 				p := g.GetPlayer(owner)
 				if p != nil {
-					p.AddToGraveyard(perm.Card)
+					p.AddToGraveyard(cardForBattlefieldDeparture(perm.Card))
 				}
 				return nil
 			}
@@ -919,7 +919,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 
 	isCreature := perm.HasType(TypeCreature)
 	permID := perm.ID()
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 
 	isToken := perm.IsToken
 
@@ -1035,7 +1035,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	isCreature := perm.HasType(TypeCreature)
 	isToken := perm.IsToken
 	permID := perm.ID()
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
@@ -1319,7 +1319,7 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	}
 	controller := perm.ControllerID()
 	permID := perm.ID()
-	card := perm.Card
+	card := cardForBattlefieldDeparture(perm.Card)
 	isToken := perm.IsToken
 	owner := card.Owner()
 	if owner == uuid.Nil {
