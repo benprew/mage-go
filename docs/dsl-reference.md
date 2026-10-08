@@ -7719,3 +7719,33 @@ Evidence: `TestRONWaitingDelayedConditionalProtection`,
 supply real filters, costs and shields; their complete general source selection
 remains rejected. These tests establish subrule interactions, not complete-card
 coverage.
+
+
+### RON waiting delayed self-recipient references
+
+The existing `compileReferencedPermanentDamage(Node, scope)` and
+`compileDamagePackets(Node, scope)` adapters use
+`compileDamagePacketRecipient(Node, scope)` to lower `Permanent(ThisPermanent)`
+to `mage.This`. Within a supported `CreateFutureTrigger` body, that recipient
+now declares the saved source to `Game.WaitingDelayedPermanentSources`, even
+when the damage source is another permanent. Source-tapped aliases retain their
+existing lexical lowering; unbound and incompatible references remain errors.
+
+Supported examples are `PermanentDealsDamage(Ref_TargetPermanent, Integer(2),
+Permanent(ThisPermanent))` with a declared permanent target, and
+`PermanentDealsMultipleDamage(ThisPermanent, [DamageToRecipients(Integer(1),
+Permanent(ThisPermanent)), ...])`. Packet sources retain the existing self-source
+restriction. No new spellings or scope permissions are introduced.
+
+Native declaration reads do not resolve recipients or amounts. Saved sequences,
+property branches and modes propagate the declaration. Zero amounts still refer
+to the recipient. Bound and attached recipients do not imply self, and a nested
+future body does not supply an outer reference. Exact captures, current/LKI facts,
+phasing, copies, clones and one-shot waiting lifetime use the existing services.
+General source selection still rejects incomplete protection records.
+
+Evidence: `TestRONWaitingDelayedRecipientProtection` covers 98 real-record
+subrule scenarios for six Circles of Protection and Greater Realm of Preservation.
+`TestRONWaitingDelayedRecipientInvalid` covers declaration rejection. Native
+`TestWaitingDelayedRecipientReferences`, `Boundaries` and `PacketGameplay` prove
+recipient-only declarations, identity, pure queries and simultaneous execution.

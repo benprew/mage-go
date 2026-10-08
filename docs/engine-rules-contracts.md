@@ -9970,3 +9970,44 @@ proves separate factory identities/controllers and independent resolution-time
 conditions. `TestRONWaitingDelayedConditionalDeclarations` rejects malformed,
 unbound, incompatible and empty delayed declarations. Full source aggregation
 and complete protection-card gameplay remain separate work.
+
+
+## Waiting delayed self-recipient permanent references
+
+`damageFromEffect.refersToSourcePermanent() bool` reads both the typed source and
+recipient declaration. `damagePacketsEffect.refersToSourcePermanent() bool`
+reads the typed source and each packet recipient. The shared private
+`damageRecipientReadsSourcePermanent(DamageRecipientRef) bool` accepts only
+`sourceRef` (`This`). It does not resolve a recipient, inspect an amount or run
+an action. A self recipient qualifies even if the source is bound or attached,
+a packet amount is zero, or an earlier packet has a nonself recipient.
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` and
+`ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` retain their signatures and exact capture
+requirements. Saved sequences, property branches and modes propagate these
+explicit declarations. Duplicate source/recipient reads supply one incarnation.
+Bound, attached, player and opaque recipient implementations do not imply self.
+Nested future producers retain their own lifetime boundary.
+
+CR 609.7a allows these referred objects even when they cannot deal damage.
+Creation and one-shot detection follow CR 603.7a–b; the saved controller follows
+603.7e. Current, departure and phasing information use the existing exact-object
+services. Return creates a new object (400.7); recipient execution excludes it
+(603.7c). A phased recipient remains unavailable for damage (702.26b), but its
+saved waiting reference remains enumerable. Copies and clones preserve independent
+frames. Existing packet merging and simultaneous replacement/prevention ordering
+remain unchanged; notifications follow the complete batch.
+
+Evidence: `TestWaitingDelayedRecipientReferences` covers 42 kind/shape/state
+cases and independent clone lifetime, current/departure facts, snapshot isolation,
+zero amounts and pure enumeration. `TestWaitingDelayedRecipientBoundaries`
+excludes nonself and nested future references and rejects invalid recipients.
+`TestWaitingDelayedRecipientPacketGameplay` covers five lifecycle cases with a
+bound source, departure LKI, exact recipient identity, saved controller,
+duplicate-packet merging, notifications and clone execution.
+`TestRONWaitingDelayedRecipientProtection` covers 98 real-record filter/payment/
+shield interactions, including 49 recipient-only declaration regressions,
+returned/phased recipients, copied delays, clone execution and shield consumption.
+`TestRONWaitingDelayedRecipientInvalid` covers malformed and out-of-scope reads.
+Complete CR 609.7a aggregation and complete protection-card coverage remain open.

@@ -187,6 +187,13 @@
 // incarnations and spell identities cannot follow returned objects.
 // These categories do not enumerate references hidden in effect callbacks.
 //
+// [Game.WaitingDelayedPermanentSources] includes the saved source when
+// [DealDamageFrom] or a packet in [DealDamagePackets] uses [This] as recipient.
+// Queries do not read amounts or resolve recipients. A zero amount keeps the
+// reference. Departure and phasing keep its saved incarnation; a return cannot
+// replace it. Bound and attached recipients do not declare a source reference.
+// Saved sequences and modes keep the declaration until the delay triggers.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.

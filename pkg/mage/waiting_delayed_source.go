@@ -62,7 +62,7 @@ func (e *returnToHandSubjectEffect) refersToSourcePermanent() bool {
 }
 
 func (e *damageFromEffect) refersToSourcePermanent() bool {
-	return damageReadsSourcePermanent(e.source)
+	return damageReadsSourcePermanent(e.source) || damageRecipientReadsSourcePermanent(e.recipient)
 }
 
 func (e *damageEachEffect) refersToSourcePermanent() bool {
@@ -74,7 +74,14 @@ func (e *playerDamageEachEffect) refersToSourcePermanent() bool {
 }
 
 func (e *damagePacketsEffect) refersToSourcePermanent() bool {
-	return damageReadsSourcePermanent(e.source)
+	return damageReadsSourcePermanent(e.source) || slices.ContainsFunc(e.packets, func(packet DamagePacket) bool {
+		return damageRecipientReadsSourcePermanent(packet.recipient)
+	})
+}
+
+func damageRecipientReadsSourcePermanent(ref DamageRecipientRef) bool {
+	_, self := ref.(sourceRef)
+	return self
 }
 
 func damageReadsSourcePermanent(ref DamageSourceRef) bool {
