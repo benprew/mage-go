@@ -2,20 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **764 accepted / 222 rejected unique card
-names** (986 total), and **1,964 compiled / 481 rejected records** (2,445 total).
+The latest recorded inventory reports **765 accepted / 221 rejected unique card
+names** (986 total), and **1,965 compiled / 480 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-Complete collection loading, collection gameplay validation, runtime integration
-and removal of the old definitions remain unfinished. The completed
-`WAITING-REVERSE-DAMAGE-SOURCES` slice captures exact permanent sources in legacy
-reverse-damage shields and exposes them through the shared RON choice query.
-It covers departure, return exclusion, phasing, current/retained information,
-consumption, cleanup and clone isolation. Seven protection names gain subrule
-evidence; no complete card is newly accepted. Temporary redirection, other waiting
-replacement lifetimes, face-up command objects and complete source enumeration
-remain gaps.
+Complete collection loading/gameplay, runtime integration and removal remain
+unfinished. `TEMPORARY-PERMANENT-REDIRECTION` adds exact permanent-source/player/
+absorber redirection until cleanup, complete Shimian Night Stalker RON gameplay,
+and waiting-source subrule evidence for seven protection names. Other temporary
+and legacy replacement references, face-up command objects and complete source
+enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40680,6 +40677,152 @@ Ranked next candidates:
    counter-placement replacement lifetimes. Audit all referring replacements
    before face-up command objects and complete source enumeration for the seven
    protection names. Do not repeat completed reverse, finite/half or typed categories.
+2. Parameterized bands with others: the eight-name combat prerequisite, followed
+   by live/token grants and selective removal.
+3. Conditional host animation across type and base P/T layers for Animate Artifact.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: temporary exact permanent-source redirection
+
+Status: completed implementation slice `TEMPORARY-PERMANENT-REDIRECTION`.
+The existing user changes to `.gitignore`, the execution design, the progress
+ledger reorganization and the untracked completed ledger were preserved. Read
+only the progress status and latest entry; read the architecture, engine API,
+selected contracts, targeted vocabulary and complete candidate records including
+reprints. Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. Loader exit 1 represented strict collection rejection, not build failure:
+1,964 compiled / 481 rejected records; 764 accepted / 222 rejected unique names.
+
+### Candidate comparison and selection
+
+| Candidate | Unique affected names; estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 temporary redirection; selected exact permanent-source/player/absorber context | Shimian Night Stalker; Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **1 full-card unlock / 1 record**, plus a concrete source-choice prerequisite for **7 protection names / 31 records**. | Complete source enumeration still needs creature-recipient redirection, remaining legacy replacement references and face-up command objects. Jade Monolith's six records still need general source choice and its selected-source/creature-recipient redirection; they are not estimated unlocks. | Small/medium: typed installation, exact replacement, shared waiting query, AST adapter and native/full-record/subrule tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible family unlocks**. | Requires parameterized formation, both assignment directions, live/token grants and selective removal; an isolated combat primitive is a prerequisite rather than eight unlocks. | Large family, medium/large combat prerequisite. |
+| Conditional host animation | Animate Artifact: **1 plausible unlock / 6 records**. | Its nested noncreature-host condition must keep membership through added types and mana-value base P/T layers. Enables shared conditional multilayer animation. | Medium layers/attachment/dependency work. |
+
+The bounded attacker/absorber portion of candidate #1 is dependency-ready and
+wins because it advances the seven-card enumeration prerequisite while unlocking
+one complete record. The companion legacy creature-recipient form is deferred;
+this run does not claim the entire temporary-redirection family. The contract,
+reuse boundary and acceptance cases were stated before editing. The
+`implement-engine` skill supplied the native workflow; no agents, removed card
+skills, Go stubs or Go-card requirements were used.
+
+### Exact signature, scope and engine boundary
+
+- Resolving action: `CreateReplaceWouldDealDamageUntil(
+  DamageWouldBeDealtByPermanentToRecipient(<permanent reference>,
+  Player(<player reference>)),
+  [DealToCreatureOrPlaneswalkerInstead(<permanent reference>)], UntilEndOfTurn)`.
+  `compileTemporaryDamageRedirect(Node, scope) (effectFactory, error)` validates
+  tuple arities, the single operation, player wrapper, lexical references and
+  duration. `compileEffect` lowers this action through fresh factory bindings.
+  Unsupported spell/collection events, optional operations, durations and unbound
+  or wrong-kind references remain errors. Blood of the Martyr and Reverberation
+  were inspected in full; their different events/operations remain rejected.
+- `RedirectDamageFromPermanentThisTurn(source PermanentRef, player PlayerRef,
+  destination PermanentRef) ResolvingEffect` saves both exact permanent identities
+  and the resolved player independently. It reuses `permanentInformationReference`
+  to preserve source/attachment/target/binding identity after departure or phasing
+  before resolution. Unbound identities install no rule. Definition inspection
+  preserves child binding validation and rejects missing or incompatible refs.
+- `permanentDamageRedirectReplacement` uses the shared replacement manager with
+  `core.EndOfTurn`. Each positive damage packet to the saved player from the exact
+  permanent source is redirected. The original destination must be live and a
+  creature or planeswalker; replace rechecks this. Return cannot restore either
+  saved object. Control changes cannot redirect the saved player. The source need
+  not still attack; pending damage may use its departed or phased identity.
+- Source identity, amount and combat status pass to the existing damage pipeline.
+  Replacement ordering, prevention rechecks, simultaneous outcomes, planeswalker
+  loyalty and lifelink remain shared services. Repeated damage does not consume
+  the rule. Cleanup ends it; clones copy its captured references separately.
+- `Game.WaitingRedirectionPermanentSources() []DamageSource` includes both exact
+  references of this resolved rule, even when its destination is unavailable.
+  It reuses the active ordinary/cycle collector, identity deduplication, current
+  or exact retained information and isolated query snapshots. Static redirection
+  keeps its live context. ID-only legacy redirection installers are preserved
+  and remain outside this new waiting category.
+- `chosenDamageSourcePlan.waitingRedirectionChoice(instanceBindings)
+  mage.ResolvingEffect` lowers the existing choice plans into the shared category
+  decision service. Actual protection-record choice/prevention ASTs execute with
+  this producer. General production `ChooseADamageSource` remains rejected until
+  all legal categories exist. No partial registry, fallback, card-name branch,
+  global result slot or declaration panic was introduced.
+- Local authoritative `data/LEG.json` confirms Shimian's full Oracle contract:
+  target attacking creature, saved controller's damage, all damage this turn,
+  original creature destination. CR 400.7, 609.7a, 614.3–9, 616, 120.3–8 and
+  702.26b establish identity, lifetime, source enumeration and replacement rules.
+  No source defect or RON edit was needed; all 12 RON hashes match the vocabulary
+  snapshot. The removal gate remains unmet; existing definitions/DSL callers stay.
+
+### Failing-first evidence and card-to-test mapping
+
+The first full-record RON run failed with unsupported action
+`CreateReplaceWouldDealDamageUntil`. The first native run failed compilation
+because the new public service did not exist (a fixture's nonexistent type-removal
+helper was corrected to an existing continuous-effect service). Native fixture
+binding setup was also corrected to use an explicit resolution context. Subsequent
+new pre-resolution departure/return/phasing cases failed with `resolution lost
+original destination reference` before the identity-based installation fix.
+Assertions were retained. A temporary type-removal fixture needed a persistent
+continuous effect because damage execution reapplies layers.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestRONTemporaryRedirectGameplay` — Shimian Night Stalker | Complete RON activation and gameplay; nonattacking target rejection, unpaid activation rollback, mana/tap payment, no pre-resolution replacement, resolution target legality, pre-resolution source departure/return/phasing, repeated damage, saved player under control changes, absorber departure/return/phasing, cleanup and clones. |
+| `TestRONTemporaryRedirectCopyAndInstances` — Shimian Night Stalker | Two factory instances keep independent destinations; a stack ability copy saves its different controller without paying again. A surviving original still redirects after the other destination leaves. |
+| `TestRONTemporaryRedirectInvalid` | Wrong duration/recipient, wrapper arity, empty operations, unbound destination and incompatible source rejection. |
+| `TestTemporaryRedirectIdentity` | Exact source departure/return/phasing, retained information after LKI clear, destination return/phasing/type changes, phase cycle, control, repeated damage, wrong-player exclusion, cleanup and clone isolation. |
+| `TestTemporaryRedirectBoundaries` | Nonpositive damage, absent installation, nil declarations and same-source/destination ordinary/cycle deduplication. |
+| `TestTemporaryRedirectDamageBatch`; `TestTemporaryRedirectPlaneswalker` | Simultaneous packets, prevention after redirection, exact actual outcomes, lifelink, source/combat/amount preservation, destination recheck and planeswalker loyalty damage. |
+| `TestRONTemporaryRedirectProtection`; `TestRONTemporaryRedirectProtectionInvalid` — six Circles and Greater Realm | Complete records supply actual choice/prevention subrules; exact live/departed/returned/phased producer identity, color/type filters, cloned choice, one-use chosen shield, cleanup binding clearing and declaration/dominance rejection. Full records remain rejected. |
+| Inventory tests and full existing suites | Expected counts updated by exactly one compiled record; an explicit supported-name regression prevents Shimian rejection. Accepted records, registry atomicity and independent engine regressions remain tested. |
+
+### Validation and measured result
+
+All required checks passed in fast-fail order after the inventory expectations
+were updated to the measured one-record gain:
+
+- Focused `go test ./pkg/mage/dsl/ron -run 'TestRONTemporaryRedirect|TestInventoryRepositoryCollection|TestInventoryLeavesRealRONGameplayAndRegistryUnchanged|TestRONNumericConsumerInventory' -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestTemporaryRedirect -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only normalized imports in
+  the new slice files; reviewed without additional semantic edits.
+- Post-lint skill check `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS; repeated after the final ledger and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,965 compiled / 480
+  rejected records; 765 accepted / 221 rejected unique names**. Shimian Night
+  Stalker is the only newly accepted name; none become rejected. Two existing
+  diagnostics are more specific: Blood of the Martyr rejects event
+  `DamageWouldBeDealtToARecipient`; Reverberation rejects event
+  `DamageWouldBeDealtBySpell`, both as unsupported temporary redirection events.
+  All other rejected-name diagnostics match baseline. No registry is published.
+- The first engine short run failed only its three stale hard-coded inventory
+  assertions at 1965/480 versus 1964/481. Updating those exact expectations and
+  adding explicit Shimian rejection protection resolved the failures. No tests
+  were weakened. No environment blocker or RON source defect was found.
+
+Estimated and actual compilation gains match: **1 name / 1 record**.
+Complete-card RON gameplay evidence increases by **Shimian Night Stalker**;
+seven rejected protection names gain subrule evidence for this producer context.
+Compilation and complete gameplay remain separate. Collection loading/gameplay,
+runtime integration, Go-card removal and unused DSL cleanup remain unfinished.
+
+Changed files: new native `temporary_redirect.go` and tests; new RON
+`temporary_redirect.go`, gameplay/declaration tests and waiting producer tests;
+RON compiler/choice lowering and inventory count tests; waiting redirection query;
+engine API/rules-contract documentation and this ledger. No unrelated files staged.
+
+Ranked next candidates:
+
+1. Exact creature-recipient temporary-redirection references, then remaining
+   legacy static and counter-placement replacement lifetimes; audit remaining
+   referring replacements before face-up command objects and complete source
+   enumeration for the seven protection names and Jade Monolith. Do not repeat
+   completed exact typed permanent-source or typed static redirection contexts.
 2. Parameterized bands with others: the eight-name combat prerequisite, followed
    by live/token grants and selective removal.
 3. Conditional host animation across type and base P/T layers for Animate Artifact.

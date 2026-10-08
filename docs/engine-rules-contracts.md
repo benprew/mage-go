@@ -8643,3 +8643,50 @@ CR 400.7, 609.7a, 615.4–8 and 702.26 support the lifetime and reference contra
 Complete source enumeration remains unsupported. The seven protection names gain
 subrule evidence only; the full Reverse Damage record, including its prevented
 amount result, is not implemented by this change.
+
+### Temporary exact permanent-source redirection
+
+`RedirectDamageFromPermanentThisTurn(PermanentRef, PlayerRef, PermanentRef)
+ResolvingEffect` installs an ordinary end-of-turn replacement through the shared
+manager. Typed references must supply an exact identity at installation through the
+existing permanent information-reference service. Departure or phasing before
+resolution retains that identity, without permitting damage to an absent object. The rule saves source and destination incarnations
+and the player separately. Declaration inspection rejects nil references and
+uses existing binding dominance validation. No new payment or target service is
+introduced, and existing ID-only installers keep their contracts.
+
+Matches require positive damage to the saved player from the exact source
+identity carried by the packet. Source departure information can still supply
+that identity (CR 400.7, 609.7). The source need not still be attacking after
+resolution. The destination must be the original live, unphased creature or
+planeswalker (CR 614.9, 702.26b); return cannot restore it. Replace checks these
+conditions again. Source, amount and combat status remain unchanged for the
+shared replacement/prevention pipeline (CR 120.4, 614.5, 616). The rule is not
+consumed by damage. Cleanup removes it; clones copy its captured state.
+
+The rule supplies both saved permanent references to
+`WaitingRedirectionPermanentSources`, using the same collector and information
+service as other waiting categories (CR 120.7, 609.7a). Missing destinations,
+phasing and type changes do not erase a resolved rule's referred objects. Queries
+use current or exact retained information without executing replacement actions.
+Cleanup ends eligibility. Static redirection still uses its live context.
+
+Evidence: `TestTemporaryRedirectIdentity` covers departure/return, cleared LKI,
+source and destination phasing, phase cycles, control/type changes, wrong-player
+exclusion, repeated damage, cleanup and clones. `TestTemporaryRedirectBoundaries`
+covers nonpositive packets, absent installation, invalid declarations and
+same-object deduplication. `TestTemporaryRedirectDamageBatch` covers simultaneous
+packets, prevention after redirection, actual outcomes, lifelink, source/combat
+identity and destination rechecks. `TestRONTemporaryRedirectGameplay` executes the
+complete Shimian Night Stalker record with real activation costs and target
+checks at announcement/resolution. `TestRONTemporaryRedirectCopyAndInstances`
+covers per-instance targets/destinations and a copy with a different controller.
+`TestRONTemporaryRedirectInvalid` rejects unsupported and unbound declarations.
+`TestRONTemporaryRedirectProtection*` maps the seven protection records' actual
+choice/prevention subrules to this producer category; complete source enumeration
+and complete protection-card gameplay remain unimplemented.
+
+Creature-recipient-to-player redirection, legacy temporary/static replacement
+references, spell-source redirection, optional redirection and face-up command
+objects remain separate capabilities. No RON source change or new general source
+choice is established here.

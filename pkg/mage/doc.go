@@ -36,6 +36,10 @@
 // [Game.AddReverseDamageShield] retains the same exact permanent source and
 // supplies it to the waiting prevention query until consumption or cleanup.
 // Positive damage from that incarnation consumes the shield before life gain.
+// [RedirectDamageFromPermanentThisTurn] saves a permanent source, player and
+// destination until cleanup. Its exact source and destination supply waiting
+// redirection references, even after departure or phasing. Damage requires the
+// original destination to be present as a creature or planeswalker.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.

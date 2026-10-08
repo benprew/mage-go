@@ -89,3 +89,7 @@ func (p *chosenDamageSourcePlan) waitingDrawStepLifeChoice(bindings instanceBind
 func (p *chosenDamageSourcePlan) waitingPreventionChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingPreventionReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingRedirectionChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingRedirectionReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

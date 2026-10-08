@@ -6996,3 +6996,35 @@ CR 400.7, 609.7a, 615.4–8 and 702.26 support the lifetime and reference contra
 Complete source enumeration remains unsupported. The seven protection names gain
 subrule evidence only; the full Reverse Damage record, including its prevented
 amount result, is not implemented by this change.
+
+### Temporary exact permanent-source redirection
+
+`mage.RedirectDamageFromPermanentThisTurn(source mage.PermanentRef,
+player mage.PlayerRef, destination mage.PermanentRef) mage.ResolvingEffect`
+captures all three references at resolution. It redirects each positive damage
+packet from that exact source to that saved player until cleanup. The original
+destination must be present as a creature or planeswalker when damage occurs.
+Control changes do not change the saved player; a phase cycle keeps identity;
+a returned source or destination cannot inherit the effect. Unbound identities at
+installation produce no rule. Captured identities permit installation after
+departure or phasing, without making those objects available for damage. Source information on a pending damage packet can
+survive source departure. The effect is unlimited and is not consumed by damage.
+
+RON supports the resolving action shape
+`CreateReplaceWouldDealDamageUntil(DamageWouldBeDealtByPermanentToRecipient(
+<permanent reference>, Player(<player reference>)),
+[DealToCreatureOrPlaneswalkerInstead(<permanent reference>)], UntilEndOfTurn)`.
+References use the existing lexical scopes and fresh factory bindings. Other
+events, optional operations, collections and durations remain rejected.
+Complete Shimian Night Stalker gameplay maps to `TestRONTemporaryRedirectGameplay`
+and `TestRONTemporaryRedirectCopyAndInstances`.
+
+`Game.WaitingRedirectionPermanentSources` also reads the saved source and
+destination of this typed rule. Both remain referred objects until cleanup,
+even when the destination cannot currently receive redirected damage. Current
+or exact retained information supplies choice filters. The existing collector
+deduplicates identities and returns isolated snapshots.
+`chosenDamageSourcePlan.waitingRedirectionChoice(instanceBindings)` connects
+this category to the existing RON choice/prevention plans. It is category-only;
+general `ChooseADamageSource` stays rejected pending complete enumeration.
+Legacy ID-only redirection installers retain their behavior and are not enumerated.

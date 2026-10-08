@@ -1,9 +1,12 @@
 package mage
 
-// WaitingRedirectionPermanentSources reads live typed static redirection destinations.
+// WaitingRedirectionPermanentSources reads exact references in typed redirection rules.
 // Other replacement references require separate contracts.
 func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 	return g.waitingReplacementPermanentSources(func(replacement ReplacementEffect) []capturedPermanent {
+		if rule, ok := replacement.(*permanentDamageRedirectReplacement); ok {
+			return []capturedPermanent{rule.from, rule.to}
+		}
 		rule, ok := replacement.(*staticDamageRedirectReplacement)
 		if !ok {
 			return nil
@@ -16,7 +19,7 @@ func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 	})
 }
 
-// ChooseDamageSourceFromWaitingRedirectionReferences uses live redirection destinations.
+// ChooseDamageSourceFromWaitingRedirectionReferences uses exact waiting references.
 // The caller needs separate services for other legal source categories.
 func ChooseDamageSourceFromWaitingRedirectionReferences(player PlayerRef, filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect {
 	return &damageSourceChoice{player: player, filter: filter, binding: binding, waitingRedirection: true}
