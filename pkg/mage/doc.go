@@ -17,6 +17,9 @@
 // [ChooseDamageSourceFromWaitingPreventionSpellReferences] uses this category only.
 // Consumption and cleanup end its availability. A continued permanent keeps
 // its separate incarnation reference.
+// [Game.WaitingRegenerationPermanentSources] reads exact subjects of active
+// regeneration shields. Departure and phasing keep their saved references.
+// [ChooseDamageSourceFromWaitingRegenerationReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.

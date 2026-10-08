@@ -8447,3 +8447,42 @@ complete RON source casts, then checks waiting identity and independent shield
 consumption in original and cloned games. `TestRONWaitingPreventionSpellInvalid`
 checks syntax and missing factory binding rejection. This is subrule evidence;
 the seven protection cards remain rejected pending complete source enumeration.
+
+
+### Exact subjects held by waiting regeneration shields
+
+`Game.WaitingRegenerationPermanentSources() []DamageSource` supplies exact
+permanent subjects of active regeneration shields in both replacement lists.
+CR 609.7a permits these referred objects even after departure; CR 701.19a keeps
+the shield waiting until destruction or cleanup. Phasing and an inability to
+regenerate do not remove the reference. The query reads current characteristics
+or exact retained departure information. Returned incarnations cannot replace
+old subjects. Invalid identities are excluded, duplicates are merged in list
+order, and query results contain copied card data. Clones retain separate shield
+lifetimes. This query uses the shared waiting permanent-reference collector.
+
+`ChooseDamageSourceFromWaitingRegenerationReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` supplies this category
+through the shared choice service. Pure filters read current or retained data.
+Each choice writes only its own binding; no matching candidate clears that
+binding. Definition validation checks the player, filter, binding and producer
+order. It introduces no new targeting, payment, destruction or replacement
+ordering behavior.
+
+RON `chosenDamageSourcePlan.waitingRegenerationChoice(instanceBindings)` lowers
+an already validated `ChooseADamageSource(filter)` plan with `You` and its
+factory-local binding. The existing scoped `CreateFuturePreventDamage` consumes
+that binding. Production general source choices remain rejected until all legal
+categories are implemented. No partial registry is installed.
+
+Evidence: `TestWaitingRegenerationReferences`, `TestWaitingRegenerationChoices`
+and `TestWaitingRegenerationSeparateSubjects` cover lifecycle, retained data,
+phasing, control, duplicate and invalid identities, independent choices, shield
+counts, returned objects and clones. `TestRONWaitingRegeneration` executes full
+Drudge Skeletons, Death Ward and Living Wall records through payment and
+resolution, including illegal targets and retained-source damage. The protection
+subrule test `TestRONWaitingRegenerationProtection` lowers all seven protection
+records, chooses a departed Living Wall retained by its regeneration shield,
+and checks independent prevention consumption in original and cloned games.
+`TestRONWaitingRegenerationInvalid` checks invalid choice syntax. These are
+additional interaction and subrule tests, not new full-card compilation coverage.

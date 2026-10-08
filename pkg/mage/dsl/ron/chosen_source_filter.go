@@ -77,3 +77,7 @@ func compileChosenDamageSourceChoice(n Node) (*chosenDamageSourcePlan, error) {
 func (p *chosenDamageSourcePlan) waitingPreventionSpellChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingPreventionSpellReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingRegenerationChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingRegenerationReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

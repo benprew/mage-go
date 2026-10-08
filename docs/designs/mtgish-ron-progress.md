@@ -9,11 +9,11 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-PREVENTION-SPELL-REFERENCES` prerequisite is recorded at the end of this
-ledger. Active typed shields now supply exact current or retained spell sources,
-including after departure and permanent-spell continuation. Seven rejected
-protection names (31 records) gain subrule evidence; six accepted source names
-(31 records) gain interaction evidence. Compilation is unchanged. Remaining
+`WAITING-REGENERATION-REFERENCES` prerequisite is recorded at the end of this
+ledger. Active regeneration shields now supply exact current or retained
+permanent subjects, including after departure and phasing. Seven rejected
+protection names (31 records) gain subrule evidence; three accepted source names
+(18 records) gain interaction evidence. Compilation is unchanged. Remaining
 replacement references, face-up command objects and complete source enumeration
 remain gaps.
 
@@ -40018,5 +40018,125 @@ Ranked next candidates:
    for the eight complete records above, then grants and selective removal.
 3. Conditional host animation retaining membership across type/base P/T layers;
    reassess its single immediate unlock against shared prerequisites.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: exact subjects held by waiting regeneration shields
+
+Status: completed implementation slice `WAITING-REGENERATION-REFERENCES`.
+This run stops after one slice. Initial changes to `.gitignore`, the execution
+design and the ledger, and untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+The latest candidate #1 was audited for a bounded exact-reference context.
+Regeneration shields already save the subject UUID and incarnation. They remain
+active by shield count after departure or phasing, but no source-query adapter
+exposed them. This is a missing adapter, not missing regeneration execution.
+Complete canonical records and nested forms were read for all compared names;
+reprints count once. Fresh baseline build and RON package tests passed. Loader
+exit 1 was strict collection rejection, not a build or environment failure.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected: waiting regeneration subject references | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | Complete source enumeration still needs other waiting replacement references and face-up command objects. This context permits all seven names to choose exact shield subjects after departure. | Small: shared query/choice adapters, scoped RON lowering, native and real-record interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 estimated family unlocks** | Attack-band legality, both assignment directions, legendary/named filters, token grants, selective removal and upkeep restrictions need complete contracts. | Large; first split a bounded combat prerequisite. |
+| Conditional animation and mixed layers | Animate Artifact, Titania's Song, Xenic Poltergeist, Gaea's Liege, Angry Mob, Nameless Race: **1 immediate unlock**, Animate Artifact | Host membership across type/base P/T layers, sticky lifecycle, attacked-player counts and Liege predicate audit, entry-life result. Xenic Poltergeist and Angry Mob already load. | Medium for the host; large for the family. |
+
+The selected shared prerequisite gives concrete seven-card downstream value and
+fits one complete run. Selection, contract, reuse boundary and acceptance cases
+were stated before editing. The `implement-engine` skill supplied the native
+contract workflow. No delegation, Go-card requirements, generated stubs, source
+corrections or card-specific production branch was used.
+
+### Established signatures and boundaries
+
+- `Game.WaitingRegenerationPermanentSources() []DamageSource` reads exact
+  subjects of active `regenerationReplacement` entries in ordinary and cycle
+  replacement lists. Both UUID and incarnation must be valid. Duplicates are
+  merged in list order; invalid or unknown identities and unrelated replacements
+  are excluded. Shield count controls waiting eligibility. An absent, phased or
+  currently unable-to-regenerate subject retains its reference until consumption
+  or cleanup. Returned objects cannot replace that reference.
+- The existing `waitingReplacementPermanentSources` collector and
+  `damageReferenceInformation` supply current or exact retained departure data.
+  Queries copy card information. Clearing ordinary LKI cannot erase retained
+  information. Separate incarnations retain separate properties and controllers.
+  Clones keep independent replacement lifetimes.
+- `ChooseDamageSourceFromWaitingRegenerationReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses shared pure
+  filters, player decisions, binding writes and no-candidate clearing. Invalid
+  player/filter/binding declarations and use-before-producer fail validation.
+- RON `chosenDamageSourcePlan.waitingRegenerationChoice(instanceBindings)
+  mage.ResolvingEffect` lowers the validated `ChooseADamageSource(filter)` plan
+  with `You` and its factory-local binding. Existing scoped
+  `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(player)), [PreventThatDamage])` consumes it.
+  General production `ChooseADamageSource` stays rejected pending complete
+  enumeration. This category consumer does not publish a partial registry.
+- Mage owns identity, retained information, shield execution, choices and clone
+  state. RON owns spelling, filter declarations and per-instance bindings.
+  No new targeting, payment, simultaneous-operation, APNAP or replacement-order
+  behavior is introduced. Existing execution contracts are preserved.
+- Rules read: CR 609.7a/b, 701.19a/c and 616. API/rules-contract documentation
+  describes only this established category. No source-data defect or environment
+  failure was found. All 12 RON source hashes match the vocabulary snapshot;
+  no refresh is needed.
+
+### Failing-first and card-to-test evidence
+
+RON and native tests first failed compilation on the missing query, choice and
+category-lowering APIs. Those failures preceded implementation. The native test
+fixture was corrected to set its card owner before checking copied query data;
+no engine contract or assertion was weakened.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingRegenerationReferences` | Live, departure with ordinary LKI cleared, return, phase/cycle, current control, consumption, cleanup, inability to regenerate, copied query data and clone lifetime. |
+| `TestWaitingRegenerationChoices` | Both replacement lists, duplicate/invalid/unknown identities, unrelated prevention exclusion, pure current-color filtering, independent binding clearing, two shields and separate consumption, invalid definitions and producer order. |
+| `TestWaitingRegenerationSeparateSubjects` | Two incarnations of one card retain different colors; exact departed source selection; destruction-batch execution consumes only the live subject's shield and preserves cloned state. |
+| `TestRONWaitingRegeneration` — Drudge Skeletons, Death Ward, Living Wall (3 accepted names / 18 records) | Complete RON records pay activation/casting costs and resolve; unpaid attempts reject; announcement has no shield; illegal phased targets/source cannot install one; departure, return, phase/cycle, consumption, cleanup and clone execution; retained source can deal damage. |
+| `TestRONWaitingRegenerationProtection` — all seven protection names (31 records), Living Wall | Complete record subrules lower choice and prevention with separate bindings. A departed Living Wall, retained by its resolved RON regeneration ability, supplies a matching source; prevention applies once then damage succeeds, in original and cloned games. Missing binding rejects. Full protection records remain rejected. |
+| `TestRONWaitingRegenerationInvalid` | Invalid symbol/call arity, empty filters, colorless/called colors and unknown card types reject. |
+
+### Validation and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingRegeneration -count=1`.
+- Native `go test ./pkg/mage -run TestWaitingRegeneration -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, 0 issues. Automatic formatting was reviewed; affected
+  focused RON/native tests and compilation/vet checks passed again.
+- Skill verification `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected unique names**. Final JSON equals
+  the fresh baseline, including every diagnostic.
+
+Estimated and actual compilation gains: **0 names / 0 records**. Seven rejected
+protection names gain regeneration-choice subrule evidence; three accepted names
+(18 records) gain interaction evidence. Compilation and complete-card gameplay
+validation remain separate.
+
+Changed files: `waiting_regeneration.go` and native tests; RON
+`waiting_regeneration_test.go`; `damage_source_choice.go`,
+`chosen_source_filter.go`, `doc.go`, API/rules-contract docs and this ledger.
+The runtime/removal gate is unmet. Go definitions, generators and existing DSL
+callers remain. No DSL function was removed and no cleanup claim is made.
+
+Ranked next candidates:
+
+1. Audit the remaining waiting replacement subjects, including exact live
+   draw-step-life source references and typed counter/damage rule subjects.
+   Establish their eligibility boundaries before face-up command objects and
+   complete enumeration for the seven protection names. UUID-only legacy
+   replacement fields still need separate treatment; they are not exact sources.
+2. Parameterized bands with others: a bounded shared combat prerequisite for the
+   eight complete records above, then grants and selective removal.
+3. Conditional host animation across type/base P/T layers; reassess its one
+   immediate unlock against remaining shared prerequisites.
 
 The commit hash is reported in the final response. No second slice starts.
