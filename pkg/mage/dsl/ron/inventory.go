@@ -714,6 +714,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "action":
+		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "CreateValueX" && len(n.Args) == 1 {
 			return "value"
 		}
@@ -1250,6 +1253,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "GainLifeForEach" && len(n.Args) == 2 {
 			return "value"
 		}
@@ -1366,6 +1372,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "APermanentWithTheHighestManaValue" && len(n.Args) == 1 {
+			return role
+		}
 		if n.Name == "CameUnderControlOfPlayerThisTurn" && len(n.Args) == 1 {
 			return "player_reference"
 		}

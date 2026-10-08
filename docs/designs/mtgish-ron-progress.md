@@ -7,12 +7,12 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`OPTIONAL-ENTRY-OPERATIONS` adds typed optional sequences before battlefield
-entry and scoped RON MayActions lowering. Compilation and full-card gameplay
-counts are unchanged; all 18 copy records advance to the missing copy operation.
+`PERMANENT-CHOICES` adds scoped non-targeting choices and maximum-mana-value
+selection. Compilation and complete-card gameplay counts are unchanged; six
+Forcefield/Juxtapose diagnostics advance. Juxtapose now includes its artifact exchange.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Entry-copy choices, sticky layers and further replacement bodies remain gaps.
+Entry copying, player-keyed choices, exchanges and further replacements remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -50951,3 +50951,188 @@ Ranked next candidates:
    unlock / six records, with exact selected-source continuity and ordering.
 
 This run stops after OPTIONAL-ENTRY-OPERATIONS.
+
+## 2026-10-08: non-targeting permanent choices at resolution
+
+Status: completed implementation slice `PERMANENT-CHOICES`. This run stops here.
+Initial changes to `.gitignore`, the execution design and the ledger, and the
+untracked completed-entry archive, are preserved. Only this slice's summary
+change and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 was evaluated first. Complete Clone, Copy
+Artifact and Vesuvan Doppelganger records require copiable names, mana costs,
+types, colors and rules, with fresh linked ability declarations and copied entry
+abilities before entry counters. The legacy copy service stores P/T and keywords;
+`cloneTokenAbility` makes a shallow reflected ability copy. Neither establishes
+independent nested target/binding graphs. Copiable snapshots and copy scheduling
+therefore depend on a missing fresh declaration-graph contract. Using either
+existing service as the RON adapter would silently omit required behavior.
+
+| Candidate | Distinct names and records | Estimated complete unlocks | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Copiable permanent snapshots and early copy scheduling | Clone, Copy Artifact, Vesuvan Doppelganger; 18 records | 0 for the prerequisite; later plain Clone could unlock 1 name / 6 records | Fresh ability/target/binding graph reconstruction comes first. Type additions, retained color and added/recurrent ability exceptions remain. Enables three entry-copy cards and later copy-of-copy behavior. | Large: a graph reconstruction contract plus all copiable characteristics, entry staging and copy/layer isolation; exceeds this bounded slice. |
+| Non-targeting permanent choice, including maximum mana value | Forcefield (5 records), Juxtapose (1); Takklemaggot (1) has the spelling in a separate payment context | 0 names / 0 records | Forcefield still needs next combat-source prevention that leaves one damage. Juxtapose needs player-keyed saved choices and simultaneous exchange; its missing artifact instruction is a source defect. Takklemaggot needs PlayerMustCost, enchant legality and linked return. Establishes exact choice references and maximum/tie selection shared by two ready consumers. | Small: one pure engine selector, existing choice/frame reuse, scoped lowering and lifecycle/invalid-declaration tests. |
+| Sticky cross-layer lifecycle | Titania's Song; 2 records | 1 name / 2 records | Must retain one pass's members through type and ability changes, then preserve the rule after source departure until cleanup. Enables shared sticky effects, but only one collection consumer is present. | Medium to large: lifecycle, membership, layers, dependency ordering, departure and cleanup tests. |
+
+Selected the shared permanent-choice prerequisite over the single-card sticky
+slice. It can be completed with exact existing choice behavior and a small pure
+selector. Copy lowering is not dependency-ready; its graph prerequisite is
+recorded below. First-error frequency was not used as an unlock estimate.
+The complete records and all nested choice forms were inspected. The original
+vocabulary has eight ChooseAPermanent nodes across seven records; one is inside
+Takklemaggot's unsupported payment. The source correction adds two choice nodes
+without adding a new signature.
+
+Before editing, the stated contract covered resolution timing, maximum ties,
+empty sets, invalid answers, explicit players, exact incarnation identity,
+phasing, cloning, independent sequences and rejected declarations. Engine rules
+stay in mage; RON spelling and lexical dominance stay in ron. No target, payment,
+prevention or exchange contract is inferred from this choice capability.
+
+### Exact signatures, contexts, dependencies and engine reuse
+
+- New engine API: `HighestManaValue(subjects PermanentSet) PermanentSet`.
+  Read the subject collection once per use. Keep all maximum-mana-value members
+  in collection order. Empty stays empty; face-down mana value is zero, and X
+  contributes zero on the battlefield. Counters and P/T do not alter the value.
+  Definition validation traverses its subject, including target/binding reads.
+- Reuse `ChoosePermanent(PlayerRef, PermanentSet, *PermanentBinding)`,
+  `BindPermanent` and `From`. Multiple candidates use the specified player;
+  a sole candidate needs no choice. Invalid/nil answers use the first candidate.
+  No candidates or an absent player clears the result. The exact incarnation
+  survives controller changes and a phase cycle, and cannot follow a returned
+  card. Resolution frames, saved delayed bindings and clones remain separate.
+- RON: `compilePermanentChoice(Node, []Node, scope) (effectFactory, error)`
+  lowers `ChooseAPermanent/1` in resolution ActionList sequences, including
+  spell, activation and delayed bodies. The argument uses the existing typed
+  contextual collection grammar. `APermanentWithTheHighestManaValue/1` wraps
+  that grammar; bare IsUnblocked reuses DamageSourceIsUnblocked.
+- Bare TheChosenPermanent is a permanent reference dominated by its producer.
+  Each producer allocates its own typed declaration per factory call. Remaining
+  instructions use that declaration; a later producer gets a different one.
+  Wrong arity/kind, empty boolean collections, unbound reads, tuple references
+  and reads outside the producing ability/branch/player action reject.
+- `PlayerAction(player, ChooseAPermanent(collection))` makes that player's
+  terminal choice without exporting its binding or changing an outer choice.
+  ThePermanentChosenByPlayerThisWay, PlayerMustCost and exchange remain explicit
+  unsupported contracts. The choice is not an announcement target or a cost.
+- Integration: HighestManaValue preserves explicit source reads in collection
+  operands. ChoosePermanent now declares explicit source reads in its typed
+  player and subjects to waiting delayed queries. Queries do not select members,
+  read mana values, execute filters, resolve players or make choices. Saved
+  source incarnations and delay detection lifetimes use existing services.
+  Implicit attachments and opaque filters infer no explicit source reference.
+- No new global action slot, game-time declaration panic, reflection dispatcher,
+  card-name execution branch, Go factory fallback or partial registry is added.
+  Existing targeting, payments, combat unblocked status, phasing, LKI, registry
+  validation and all-or-nothing loading remain in their existing services.
+- Rules read locally: CR 115.10, 202.3/202.3a/202.3e, 400.7, 608.2c–d and
+  702.26b. API and rules-contract docs describe only the established behavior.
+
+### Failing-first tests and card mappings
+
+After fixture API corrections, native tests failed only at the missing
+HighestManaValue API. RON tests failed at unsupported ChooseAPermanent. A later
+contract test failed for both missing delayed choice-player and choice-subject
+source declarations before the hook was added. The Juxtapose source guard failed
+on the omitted artifact sequence before the source correction. Fixture fixes
+used brace-delimited native mana strings, the existing GameReader choice
+signature and counter/duration/mana-pool names; no engine contract was weakened.
+
+| Test | Evidence / card mapping |
+| --- | --- |
+| TestHighestManaValueSelection and Declaration | Maximum ties and order, X off-stack, face-down zero, counters, empty membership, phasing, game clones and invalid/missing subject declarations. |
+| TestHighestManaValueChoiceIdentity | Saved choices cannot act on phased or returned incarnations; phase-in restores the original reference; control changes do not change it; clones retain separate bindings and empty choices clear old results. |
+| TestHighestManaValueWaitingSource | Pure delayed collection and choice player/subject reference queries; original departure facts, returned objects, detection lifetime and clone isolation. |
+| TestRONPermanentChoiceGameplay | Parsed RON casting with no targets or announcement decision, maximum ties, shroud, invalid/nil decisions, late entries, phase/return before choice, pending clones and fresh factories. Synthetic maximum/tie prerequisite mapping for Juxtapose. |
+| TestRONPermanentChoiceSequence and ExplicitPlayer | Independent successive typed choices, empty-result no-op with independent later life gain, chosen player decisions and nested choice isolation. Synthetic sequence/player prerequisite mapping for Juxtapose's two exchange stages. |
+| TestRONPermanentChoiceActivation and Unblocked | Payment failure makes no choice; paid pending activations choose only at resolution. Unblocked selection starts after blocker declaration; removing a blocker does not make a blocked attacker unblocked. Synthetic choice prerequisite mapping for Forcefield. |
+| TestRONPermanentChoiceDelayedBinding | Saved chosen incarnations pass into delayed bodies; installation does not run the action; clones, phase cycles and returned objects keep the correct identity. |
+| TestRONPermanentChoiceInvalid | Wrong shapes, unbound/non-bare reads, empty filters and choice scope escape reject. |
+| TestRONPermanentChoiceRecordsAndInventory | Every complete Forcefield reprint advances to its unsupported combat-prevention event; complete corrected Juxtapose advances to ExchangeControl and has both creature and artifact choice/exchange stages. Complete Takklemaggot retains PlayerMustCost rejection. Accepted synthetic syntax has correct permanent filter/reference roles. |
+
+These are prerequisite gameplay mappings, not complete gameplay mappings for
+Forcefield, Juxtapose or Takklemaggot. Complete-card gameplay counts are unchanged.
+No new simultaneous exchange, replacement-order or APNAP operation is claimed.
+
+### Source defect and vocabulary refresh
+
+`cards/mtgish/LEG.lines.ron:142` omitted Juxtapose's second, artifact exchange.
+Local authoritative Oracle data in `data/LEG.json` explicitly requires exchanging
+artifacts after creatures, with controller choices for maximum ties. CR 608.2c
+requires the instructions in their written order. Added the artifact choice pair
+and second exchange with the existing RON forms. A repository source search
+found exactly one Juxtapose record; there are no identical reprints to update.
+The source guard checks both categories and both exchange instructions. The card
+still rejects before either exchange can execute, so this correction makes no
+full-card gameplay claim.
+
+Refreshed mtgish-ron-vocabulary.json from a fresh positioned AST inventory and
+strict loader report. It keeps 2,445 records, 986 names and 601 tuple signatures;
+12 occurrence counts and the LEG hash change. Examples remain valid. No syntax
+spelling or schema changes. Loader baseline diagnostics are refreshed as well.
+The committed snapshot still had an older 1,962-compiled loader baseline.
+Its refresh includes prior completed work; this slice adds zero accepted records
+against the fresh 2,019-compiled baseline.
+Takklemaggot's choice payment, linked return and enchant legality are outside
+this supported resolution context and remain explicit blockers.
+
+### Verification and outcome
+
+- Fresh baseline make build and uncached ron package tests: PASS.
+  Strict loader exit 1: 2,019 compiled / 426 rejected records;
+  785 accepted / 201 rejected names. This is collection rejection, not a build
+  failure, and it installs no partial registry.
+- Focused RON TestRONPermanentChoice and native TestHighestManaValue with
+  -count=1: PASS. Repeated after the delayed-reference hook, source correction
+  and final lint review.
+- Final make build; go vet ./...: PASS.
+- Final go test ./pkg/mage/... -short -count=1; make test: PASS.
+- Final make lint: PASS, zero issues. An earlier revive check rejected a redundant
+  ResolvingEffect type annotation in a test; it was removed. Automatic formatting
+  was reviewed, and no unrelated automatic change was found.
+- git diff --check: PASS.
+- Fresh go run ./cmd/loadcards -inventory: expected exit 1; complete AST reporting
+  retains strict collection rejection and reports the unchanged totals.
+- Final go run ./cmd/loadcards -json: expected exit 1; **2,019 compiled / 426
+  rejected records; 785 accepted / 201 rejected unique names**. No new rejection
+  and no cleared rejection. Exactly six diagnostics change: five Forcefield
+  records advance from ChooseAPermanent to unsupported finite prevention event
+  NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient; Juxtapose advances
+  from ChooseAPermanent to unsupported ExchangeControl. All other diagnostics
+  match the fresh baseline.
+
+Estimated and actual complete-card gains: **0 names / 0 records**. The concrete
+execution gain is a tested, reusable choice/tie-selection prerequisite for two
+unique resolution consumers; all six records advance. Takklemaggot is a separate
+payment-context consumer. Its rejection and complete-card coverage are unchanged.
+
+Changed files: pkg/mage/highest_mana_value.go and highest_mana_value_test.go;
+pkg/mage/waiting_delayed_source.go and doc.go; pkg/mage/dsl/ron/permanent_choice.go
+and permanent_choice_test.go; ron compiler.go, contextual_collection.go,
+optional_payment.go, permanent_scope.go, player_scope.go and inventory.go;
+cards/mtgish/LEG.lines.ron; docs/dsl-reference.md; docs/engine-rules-contracts.md;
+mtgish-ron-vocabulary.json; this ledger. Existing callers are preserved. No Go
+card definitions or DSL exports are removed because the runtime/removal gates
+remain unsatisfied.
+
+Ranked next candidates:
+
+1. Fresh typed ability/target/binding graph reconstruction for copiable snapshots.
+   This is the missing prerequisite before the former entry-copy candidate can
+   run safely; downstream Clone, Copy Artifact and Vesuvan Doppelganger total
+   three names / 18 records. It must preserve nested static and entry abilities
+   without shallow mutable declarations or reflected runtime dispatch.
+2. Resolution player-choice bindings for Backdraft and Rainbow Vale. Their full
+   records require player filtering and scoped chosen-player references; Backdraft
+   also needs resolved-spell damage history and Rainbow Vale needs explicit-player
+   control transfer. Keep these blockers separate when estimating full unlocks.
+3. Next combat damage from a chosen permanent, leaving one point, for Forcefield.
+   The choice/incarnation prerequisite now exists. Test selected-source continuity,
+   consumption, simultaneous packets, prevention bypass, ordering and cleanup.
+   One plausible complete unlock / five records; defer while useful shared
+   multi-card prerequisites can be completed.
+
+This run stops after PERMANENT-CHOICES.

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [HighestManaValue] to keep all maximum-mana-value members of a set.
+// Selection reads current membership and keeps its order. Face-down permanents
+// have mana value zero. Combine it with [ChoosePermanent] for a required choice
+// at resolution. The saved binding keeps the chosen incarnation through control
+// changes and phasing. It cannot follow a returned card. Empty choices clear it.
+// Delayed collection bodies retain explicit source reads through this selector.
+// Waiting queries do not select members or read their mana values.
+// [ChoosePermanent] also declares explicit source reads in its player and set.
+// Waiting queries do not resolve the player or make a choice.
+//
 // Use [Game.WaitingPreventionPermanentSources] for exact permanent references
 // retained by finite recipient, unlimited recipient and next-source prevention.
 // Resolved combat prevention supplies its exact source or to-and-by subject.

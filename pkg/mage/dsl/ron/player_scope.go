@@ -34,6 +34,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	chosenPermanents     map[*permanentChoicePlan]*mage.PermanentBinding
 	createdValues        map[*createdValuePlan]*mage.NumberBinding
 	chosenDamageSources  map[*chosenDamageSourcePlan]*mage.DamageSourceBinding
 	destructionCounts    map[*destructionCountPlan]*mage.NumberBinding

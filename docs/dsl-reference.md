@@ -4,6 +4,30 @@ This checkout has the legacy facade in `pkg/mage/dsl/dsl.go`. It does not have
 `pkg/mage/dsl/composable.go`. Proposed signatures in the migration plan are
 not implemented APIs.
 
+## Non-targeting permanent choice at resolution
+
+`mage.HighestManaValue(subjects mage.PermanentSet) mage.PermanentSet` retains
+all maximum-mana-value members, including ties, in collection order. It reads
+current membership. X contributes zero on the battlefield; a face-down
+permanent contributes zero. Use `mage.ChoosePermanent(player, subjects, binding)`
+with `mage.BindPermanent` and `mage.From` to save a non-target choice at resolution.
+No candidates clears the result. The binding keeps the exact incarnation.
+
+RON supports `ChooseAPermanent(collection)` in resolution action sequences.
+The argument uses the existing contextual permanent collection grammar,
+including `APermanentWithTheHighestManaValue(collection)` and bare `IsUnblocked`.
+`TheChosenPermanent` must be a bare reference after its producer in the same
+sequence. Each producer has a distinct binding. A new choice changes the lexical
+reference for its continuation. Neither abilities nor optional branches can
+export their local choice to later outer instructions.
+
+`PlayerAction(player, ChooseAPermanent(collection))` makes the selected player's
+choice without exporting it. It cannot overwrite an outer `TheChosenPermanent`.
+Player-keyed lookup with `ThePermanentChosenByPlayerThisWay` remains unsupported.
+This adapter adds no announcement targets, entry choices, payments, prevention
+body or exchange operation. Forcefield and Juxtapose still reject after their
+supported choice operations.
+
 ## Optional operations before battlefield entry
 
 `mage.MayEntryOperations(operations ...mage.AsEntersBattlefieldAbility)` returns

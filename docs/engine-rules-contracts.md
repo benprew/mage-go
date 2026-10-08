@@ -1,5 +1,45 @@
 # Engine rules contracts
 
+## Non-targeting permanent choices and highest mana value
+
+`HighestManaValue(subjects PermanentSet) PermanentSet` reads its collection once
+per use and keeps every member tied for the greatest mana value, in collection
+order. An empty collection stays empty. It uses the permanent card's mana cost;
+X contributes zero off the stack (CR 202.3e), and face-down permanents have no
+mana cost and contribute zero (CR 202.3a). Counters and P/T changes do not change
+the comparison. Collection services exclude phased objects and supply current
+control and characteristic membership. Definition validation traverses the
+subject declaration, including its target and binding dependencies.
+
+`ChoosePermanent(PlayerRef, PermanentSet, *PermanentBinding)` supplies the
+existing required non-target choice (CR 115.10 and 608.2d). Multiple candidates
+use that player's decision; a sole candidate needs no decision. A nil or invalid
+answer uses the first legal candidate. No candidates or absent player clears the
+binding. Choices occur during resolution, after successful payment. The binding
+keeps incarnation identity, independent of controller changes. Phasing suspends
+actions on the chosen object and phase-in restores them; leave-and-return cannot
+restore the old reference (CR 400.7 and 702.26b). Shroud does not prevent a choice.
+Bindings use existing resolution frames and clone services.
+
+RON `ChooseAPermanent/1` produces a fresh declaration for each factory instance.
+Bare `TheChosenPermanent` is available only to subsequent instructions in the
+same sequence. A subsequent choice has its own binding. Nested player actions
+cannot overwrite the outer choice. Player-keyed choice history and exchange
+operations remain separate unsupported contracts. Complete Forcefield and
+corrected Juxtapose records still reject at their remaining prevention and exchange
+operations; no full-card gameplay coverage is added.
+
+`HighestManaValue` preserves explicit source reads inside delayed collection
+bodies. Waiting queries neither evaluate the selector nor execute its filter.
+`ChoosePermanent` declares source reads in its typed player and collection.
+Queries do not resolve the player or make a choice. Implicit attachments and
+opaque filters do not infer an explicit source read.
+Saved source incarnations and clone lifetimes use the existing delayed service.
+
+Evidence: `TestHighestManaValueSelection`, `Declaration`, `ChoiceIdentity` and
+`WaitingSource`; `TestRONPermanentChoiceGameplay`, `Sequence`, `ExplicitPlayer`,
+`Activation`, `Unblocked`, `DelayedBinding`, `Invalid` and `RecordsAndInventory`.
+
 ## Optional entry-operation sequences
 
 `MayEntryOperations(...AsEntersBattlefieldAbility)` runs through the existing

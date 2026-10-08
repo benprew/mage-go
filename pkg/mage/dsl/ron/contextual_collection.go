@@ -4,6 +4,17 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
 	switch n.Name {
+	case "APermanentWithTheHighestManaValue":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		subjects, err := compileContextualCollection(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.HighestManaValue(subjects(bindings))
+		}, nil
 	case "WasBlockedByDefenderThisTurn":
 		if err := arity(n, 1); err != nil {
 			return nil, err

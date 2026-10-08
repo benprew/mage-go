@@ -74,6 +74,10 @@ func (e *untapPermanentEffect) refersToSourcePermanent() bool {
 	return self
 }
 
+func (e *permanentChoice) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player) || permanentSetReadsSourcePermanent(e.subjects)
+}
+
 func (e *damageFromEffect) refersToSourcePermanent() bool {
 	return damageReadsSourcePermanent(e.source) || damageRecipientReadsSourcePermanent(e.recipient) || resolutionValueReadsSourcePermanent(e.amount)
 }
@@ -198,6 +202,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 	case excludedPermanentSet:
 		return permanentSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
 	case lowestPowerSet:
+		return permanentSetReadsSourcePermanent(s.subjects)
+	case highestManaValueSet:
 		return permanentSetReadsSourcePermanent(s.subjects)
 	case playerSetPermanents:
 		return playerSetReadsSourcePermanent(s.players)
