@@ -23,6 +23,13 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		return nil, problem(n, "entry requires one entry operation")
 	}
 	operation := operations[0]
+	if operation.Name == "MayActions" {
+		factory, err := compileOptionalEntry(operation)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(factory()) }, nil
+	}
 	if operation.Name == "ChooseABasicLandType" {
 		if _, err := symbol(operation); err != nil {
 			return nil, err

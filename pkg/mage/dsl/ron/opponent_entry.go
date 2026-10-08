@@ -17,6 +17,10 @@ func validateOpponentEntryChoice(n Node) error {
 		return problem(n, "opponent entry requires one player choice")
 	}
 	operation := operations[0]
+	return validateOpponentEntryOperation(operation)
+}
+
+func validateOpponentEntryOperation(operation Node) error {
 	if err := arity(operation, 1); err != nil {
 		return err
 	}

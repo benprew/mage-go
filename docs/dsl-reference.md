@@ -4,6 +4,28 @@ This checkout has the legacy facade in `pkg/mage/dsl/dsl.go`. It does not have
 `pkg/mage/dsl/composable.go`. Proposed signatures in the migration plan are
 not implemented APIs.
 
+## Optional operations before battlefield entry
+
+`mage.MayEntryOperations(operations ...mage.AsEntersBattlefieldAbility)` returns
+an entry ability. The entering permanent's controller chooses before battlefield
+registration. Decline permits normal entry. Acceptance runs the children in
+order; a child that rejects entry stops the sequence and uses the existing
+failed-entry destination. Definition validation rejects empty bodies, nil
+children and use on nonpermanent cards. The declaration stores no decision.
+
+`mage.EnterTappedAsEnters()` supplies tapped entry inside this sequence.
+Existing `ChooseBasicLandTypeAsEnters` and `ChooseOpponentAsEnters` abilities
+can also be children. The sequence does not undo other required entry effects.
+
+RON accepts `AsPermanentEnters(ThisPermanent, [MayActions([operations])])`.
+The body must be nonempty. Supported children are bare `EntersTapped`, bare
+`ChooseABasicLandType`, `ChooseAPlayer(Opponent)` and nested `MayActions` bodies
+with these shapes. Each factory call creates fresh child abilities. Optional
+choices do not declare `TheChosenPlayer` or `TheChosenLandType` for other rules.
+Counters, payments, copy operations and replacement-context `MayActions` need
+their own contracts and still reject. This adapter does not implement entry
+copying for Clone, Copy Artifact or Vesuvan Doppelganger.
+
 ## Static spell targeting restrictions
 
 `CantBeTargetedBySpells(PermanentRef, CardFilter) StaticRule` supplies a live

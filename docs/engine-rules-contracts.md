@@ -1,5 +1,36 @@
 # Engine rules contracts
 
+## Optional entry-operation sequences
+
+`MayEntryOperations(...AsEntersBattlefieldAbility)` runs through the existing
+`prepareBattlefieldEntry` callback stage. CR 614.1c and 614.12a require the
+entry controller's choice before battlefield registration and entry observers.
+Acceptance runs the children in declaration order on the entering permanent.
+Decline performs none of them and permits entry. A child that returns false
+stops the body and uses the existing failed-entry handling. This does not add
+a general entry-replacement ordering service.
+
+The declaration copies its child slice and stores no chosen state. Choices
+remain on each permanent. A clone keeps its own permanent state; an unresolved
+spell in a clone makes its own choice when it enters. Phasing does not run entry
+callbacks (CR 702.26d). Leave-and-return creates a new incarnation and makes a
+new decision (CR 400.7). Casting payment and countering do not run entry choices.
+Decline does not undo another rule's required tapped entry.
+
+`EnterTappedAsEnters()` writes the entering permanent's tapped status. Existing
+basic-land and opponent entry-choice services retain their own choice contracts.
+Validation traverses the body and rejects empty sequences, nil children and
+nonpermanent sources. RON lowers only the documented entry shapes. Optional
+choice results cannot supply an unconditional declaration in another rule.
+
+Evidence: `TestOptionalEntryOperations`, `TestOptionalEntryFailure`,
+`TestOptionalEntryDeclarations`, `TestOptionalEntryKeepsRequiredTappedStatus`
+and `TestRONOptionalEntry*`. Synthetic RON gameplay establishes this entry
+context. Clone, Copy Artifact and Vesuvan Doppelganger remain rejected at
+`EnterAsACopyOfAPermanent`. CR 707.2 and 707.9 require full copiable values and
+exceptions; the existing P/T-and-keyword copy service does not meet that contract.
+No full-card copy gameplay claim is made.
+
 ## Live restrictions on spell targeting
 
 `CantBeTargetedBySpellsIf(PermanentRef, CardFilter, StateCondition)` adds a

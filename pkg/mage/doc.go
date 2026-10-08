@@ -1152,6 +1152,11 @@
 // Use [ChooseBasicLandTypeAsEnters] for a land choice before battlefield entry.
 // [Permanent.ChosenBasicLandType] keeps the typed choice separate from color.
 // [BecomesChosenBasicLandTypeAttachedEffect] applies it to the current host.
+// Use [MayEntryOperations] for an optional sequence before battlefield entry.
+// The entry controller makes the choice. Decline permits normal entry.
+// Accepted operations run in order. A rejected child stops the entry.
+// [EnterTappedAsEnters] sets tapped status within such a sequence.
+// Phasing keeps the result; a new entry requires a new choice.
 //
 // Use [AddCountersUpTo] for an optional counter amount with an action limit.
 // The effect controller chooses at resolution. The limit still applies after

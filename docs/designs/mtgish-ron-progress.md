@@ -7,9 +7,9 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`GENERAL-DAMAGE-SOURCE-CHOICE` adds CR 609.7a aggregation and scoped RON
-choice lowering. The six Circles, Greater Realm and Jade Monolith gain complete
-RON gameplay mappings and eight compilation unlocks / 37 records.
+`OPTIONAL-ENTRY-OPERATIONS` adds typed optional sequences before battlefield
+entry and scoped RON MayActions lowering. Compilation and full-card gameplay
+counts are unchanged; all 18 copy records advance to the missing copy operation.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Entry-copy choices, sticky layers and further replacement bodies remain gaps.
@@ -50812,3 +50812,142 @@ Ranked next candidates:
    Damage: one plausible unlock / six records after this aggregation slice.
 
 This run stops after GENERAL-DAMAGE-SOURCE-CHOICE.
+
+## 2026-10-08: optional operations before battlefield entry
+
+Status: completed implementation slice `OPTIONAL-ENTRY-OPERATIONS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's status change and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Complete canonical RON records and all identical reprints were inspected.
+Nested forms, rather than first-error counts, determine the estimates below.
+
+| Candidate | Distinct affected cards / records | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Optional entry-operation prerequisite, ranked #1 | Clone, Copy Artifact, Vesuvan Doppelganger / 18 | 0 for this prerequisite | Shared optional entry execution enables all three. Copying needs complete copiable snapshots, entry-stage scheduling and copied entry abilities. Copy Artifact adds a copiable enchantment type. Vesuvan retains color, adds an upkeep ability and later copies with that ability. | Small, one run: typed entry sequence, lowering, declaration and gameplay tests. |
+| Sticky layer lifecycle, ranked #2 | Titania's Song / 2 | 1 after the whole contract | Preserve noncreature-artifact selection across type, ability and P/T layers, then persist effects after departure until cleanup. Enables sticky cross-layer services. | Medium to large: source lifecycle, membership retention, ability removal and cleanup tests. |
+| Actual prevented-damage life gain, ranked #3 | Reverse Damage / 6 | 1 after the whole contract | The damage-source choice is ready. A future prevention body must bind actual prevented damage, gain life and retain exact chosen-source continuity. Enables prevention-result bodies. | Medium: replacement result production, simultaneous damage and ordering tests. |
+
+Selected the shared prerequisite in candidate #1, ahead of the single-card
+alternatives. The native legacy copy effect stores P/T and keywords only.
+CR 707.2, 707.3 and 707.9 require more: names, mana costs, types, rules and
+copiable exceptions. Reusing that effect for these RON records would skip rules.
+This slice supplies the complete optional entry sequence contract. It does not
+accept a copy operation before the copying prerequisites exist.
+
+Before editing, the stated acceptance boundary was controller-owned pre-entry
+choice, ordered execution, decline, child rejection, nested choices, validation,
+factory/clone isolation, phasing and fresh decisions after leave-and-return.
+It also covers payment and countering timing. Costs, entry copying, general
+entry-replacement ordering and replacement-context MayActions remain separate.
+
+### Exact signatures, supported contexts and reuse
+
+- Engine: `MayEntryOperations(operations ...AsEntersBattlefieldAbility)
+  AsEntersBattlefieldAbility` copies the child declaration slice. It stores no
+  decision. The entry controller uses Player.ChooseMayAbility before the
+  permanent is registered. Decline allows entry. Acceptance invokes children
+  in order; false stops the sequence and preserves existing failed-entry handling.
+- Engine: `EnterTappedAsEnters() AsEntersBattlefieldAbility` writes tapped
+  status for an optional sequence. Decline cannot undo another required tapped
+  entry effect. Existing ChooseBasicLandTypeAsEnters and ChooseOpponentAsEnters
+  services own the corresponding per-permanent choice data.
+- RON: `compileOptionalEntry(Node) (entryAbilityFactory, error)` and
+  `compileOptionalEntryOperation(Node) (entryAbilityFactory, error)` lower
+  `AsPermanentEnters(ThisPermanent, [MayActions([operations])])`.
+  MayActions/1 must take a nonempty list. Children are bare EntersTapped,
+  bare ChooseABasicLandType, ChooseAPlayer/1 with bare Opponent, or a nested
+  MayActions/1 with the same grammar. The outer entry rule still requires one
+  operation and a bare ThisPermanent source on a permanent card.
+- Every factory call constructs fresh wrapper and child abilities. Decisions
+  and results stay on each entering permanent. Nested decisions stay local;
+  an optional choice does not declare TheChosenPlayer or TheChosenLandType
+  for another rule. Empty bodies, wrong kinds/arity, incompatible references,
+  nonpermanent sources, resolution actions and unsupported bodies reject.
+- Definition validation traverses all children, including typed nils and nested
+  empty declarations. No new global result slot, Go-card fallback, partial
+  registry, target declaration, cost mechanism or alternative entry pipeline
+  is introduced. Existing prepareBattlefieldEntry, permanent choice storage,
+  callback failure handling, phasing, zone identity and game cloning are reused.
+- Inventory traversal preserves entry_operation beneath MayActions and retains
+  the existing entry-player-filter role beneath ChooseAPlayer. Unsupported
+  copy descendants remain visible with source positions.
+- Rules read locally: CR 400.7, 614.1c, 614.12a, 702.26d and 707.2–707.9.
+  API and rules-contract documentation records only the established behavior.
+
+### Failing-first tests and card mappings
+
+Native tests first failed to compile because MayEntryOperations and
+EnterTappedAsEnters did not exist. After fixture API corrections, native tests
+failed only for those absent APIs. RON gameplay, nested and full-record blocker
+tests first failed at unsupported MayActions. Implementation resolves those
+failures. Further fixture corrections used the caster's owned hand, Player
+instead of BasePlayer for cloned SearchPlayer instances, and native pending
+trigger placement. None required a change to engine ownership or timing.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestOptionalEntryOperations | Controller differs from owner; copied child slice; ordered pre-registration execution; accept/decline; phasing; clone state isolation; new incarnation and decision after return. |
+| TestOptionalEntryFailure | Child rejection stops subsequent operations and uses the owner's existing failed-entry graveyard destination. |
+| TestOptionalEntryDeclarations | Empty, nil, typed-nil, nested-empty and nonpermanent declarations fail definition validation. |
+| TestOptionalEntryKeepsRequiredTappedStatus | Decline preserves an independent required tapped-entry rule. |
+| TestRONOptionalEntryGameplay | Real parsed RON through casting, payment, entry and ETB trigger execution. Controller decisions, tapped status, opponent/land results, pending-clone decisions, fresh factory instances, phase cycles and re-entry are checked. |
+| TestRONOptionalEntryNested | Outer decline suppresses inner choices; inner decline does not stop the later outer operation. |
+| TestRONOptionalEntryInvalid and ScopeAndInventory | Wrong shape/arity, unsupported counters/actions, invalid source and nonpermanent contexts reject. Optional result declarations cannot escape to other rules. Accepted nested syntax has correct inventory roles. |
+| TestRONOptionalEntryFailedCast | Failed payment retains the hand and makes no entry choice. Successful payment also makes no choice. A countered spell never makes one. |
+| Clone, Copy Artifact, Vesuvan Doppelganger / TestRONOptionalEntryCopyDependencies | All 18 complete unchanged RON records are checked. Their diagnostics advance to EnterAsACopyOfAPermanent. They remain rejected and have no new full-card gameplay mapping. |
+
+Synthetic RON gameplay proves this prerequisite's supported context.
+Collection-card compilation and full-card gameplay coverage are unchanged.
+Blood of the Martyr's complete RON record uses MayActions in a damage-replacement
+body; it remains outside this entry context and its diagnostic is unchanged.
+
+### Verification and outcome
+
+- Fresh baseline: make build and uncached ron package tests PASS.
+  Loader exit 1 is strict collection rejection, not a build failure:
+  2,019 compiled / 426 rejected records; 785 accepted / 201 rejected names.
+- Focused native TestOptionalEntry and RON TestRONOptionalEntry, with -count=1:
+  PASS. Focused checks were repeated after the final prompt and formatting review.
+- make build; go vet ./...: PASS.
+- go test ./pkg/mage/... -short -count=1; make test: PASS.
+- make lint: PASS, zero issues. Formatting was reviewed; no unrelated automatic
+  changes were found. Focused affected checks were repeated after lint.
+- git diff --check: PASS.
+- Final go run ./cmd/loadcards -json: expected exit 1, strict collection rejection;
+  **2,019 compiled / 426 rejected records; 785 accepted / 201 rejected names**.
+  No newly accepted or rejected records. Exactly 18 diagnostics change: six
+  records each for Clone, Copy Artifact and Vesuvan Doppelganger move from
+  unsupported entry MayActions to unsupported optional entry
+  EnterAsACopyOfAPermanent. Every other rejection is unchanged.
+
+Estimated and actual full-card gains: **0 unique cards / 0 records**.
+The concrete gain is the tested optional entry prerequisite for three unique
+copy cards. All 18 copy diagnostics advance by one supported parent while the
+copy body still rejects. No supported record becomes rejected. There is no
+source-data defect correction or RON edit; no vocabulary source refresh is needed.
+
+Changed files: pkg/mage/optional_entry.go and optional_entry_test.go;
+pkg/mage/dsl/ron/optional_entry.go and optional_entry_test.go;
+ron entry_tapped.go, opponent_entry.go and inventory.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+No DSL export or Go card is removed: runtime cutover and removal gates remain
+unsatisfied. Existing callers and the strict all-or-nothing loader are preserved.
+
+Ranked next candidates:
+
+1. Copiable permanent information and early entry-copy scheduling prerequisite
+   for Clone, Copy Artifact and Vesuvan Doppelganger. Current OnEnter callbacks
+   run after entry counters; copied entry abilities must run before entry as well.
+   Establish a complete snapshot/stage contract before lowering copy bodies.
+   Plain Clone can then use NoCopyEffects; type and color/ability exceptions
+   remain explicit dependent slices.
+2. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records,
+   with captured cross-layer membership, source departure and cleanup.
+3. Actual prevented-damage result and life gain for Reverse Damage: one plausible
+   unlock / six records, with exact selected-source continuity and ordering.
+
+This run stops after OPTIONAL-ENTRY-OPERATIONS.
