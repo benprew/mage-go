@@ -14,9 +14,10 @@ func PreventNextDamageFromExactSource(source DamageSourceRef, recipient PlayerRe
 }
 
 type exactSourcePreventionInstallation struct {
-	source    DamageSourceRef
-	recipient PlayerRef
-	filter    DamageSourceFilter
+	source                 DamageSourceRef
+	recipient              PlayerRef
+	filter                 DamageSourceFilter
+	continuePermanentSpell bool
 }
 
 func (*exactSourcePreventionInstallation) Text() string {
@@ -47,12 +48,13 @@ func (e *exactSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 	ctx.Game.effects.AddReplacement(&sourcePreventionReplacement{
 		replacementBase: replacementBase{duration: core.EndOfTurn}, playerID: player, dmgSource: source.ID(),
 		exactSource: cloneDamageSource(information), sourceFilter: e.filter,
+		continuePermanentSpell: e.continuePermanentSpell,
 	})
 	return nil
 }
 
 func (r *sourcePreventionReplacement) matchesExactSource(source DamageSource, g *Game) bool {
-	if !r.exactSource.SameObject(source) {
+	if !r.exactSource.SameObject(source) && !r.continuedSource.SameObject(source) {
 		return false
 	}
 	information := g.damageReferenceInformation(source)

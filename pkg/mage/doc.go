@@ -14,6 +14,12 @@
 // [ChooseDamageSourceFromWaitingRedirectionReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
+// Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.
+// A shield on a permanent spell continues to the exact permanent it becomes.
+// Entry effects run after the link. Separate copies and returned objects cannot
+// inherit it. [PreventNextDamageFromExactSource] keeps exact-object behavior.
+// Both services require a typed source; source enumeration is separate.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than
@@ -448,8 +454,8 @@
 // permanent or spell reference to a player this turn. Property checks use
 // current or retained information for that object. A returned permanent or
 // another cast cannot consume the shield. Bindings can change after installation;
-// each shield keeps its own source. Spell-to-permanent continuity needs a
-// separate service before a general source choice can use this operation.
+// each shield keeps its own source. [PreventNextDamageFromSelectedSource] adds
+// permanent-spell continuity for a source chosen before that spell resolves.
 //
 // Use [PreventNextDamageFromPermanent] for one damage event from a typed
 // permanent source to a player this turn. The filter is checked at installation

@@ -9,11 +9,13 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`EXACT-OBJECT-SOURCE-SHIELDS` prerequisite is recorded at the end of this ledger.
-It adds typed permanent/spell identity and property rechecks with scoped RON
-shield lowering. Three accepted names (18 records) gain interaction coverage;
-compilation counts are unchanged. General source choice, permanent-spell
-continuity and complete enumeration remain gaps.
+`SELECTED-SOURCE-SPELL-CONTINUITY` prerequisite is recorded at the end of this
+ledger. Scoped chosen-source shields now follow the exact permanent a spell
+becomes, with independent copy/clone identities and property rechecks. Six
+accepted names (31 records) gain continuity interaction evidence; seven rejected
+protection names (31 records) gain subrule evidence. Compilation is unchanged.
+Exact waiting spell/shield references, remaining replacement references, face-up
+command objects and complete source enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39758,5 +39760,140 @@ Ranked next candidates:
 2. Parameterized bands with others for the eight complete records above.
 3. Mixed-layer conditional host animation, retaining membership before type
    changes; reassess shared value against remaining multi-card prerequisites.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: selected-source prevention across permanent spell resolution
+
+Status: completed implementation slice `SELECTED-SOURCE-SPELL-CONTINUITY`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and the ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's ledger delta is staged; the user's ledger compaction stays
+unstaged. Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+pass. Baseline loader exits 1 for collection rejection, not a build failure:
+**1,963 compiled / 482 rejected records; 763 accepted / 223 rejected names**.
+
+### Candidate comparison and selection
+
+The latest ranked #1 was evaluated first. Complete canonical RON records and
+nested expressions were inspected; reprints count once. Fresh loader evidence
+corrects a stale animation blocker: Xenic Poltergeist already compiles.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: permanent-spell continuity for selected-source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | These records share a typed source choice followed by one player shield. Exact waiting spell/shield references, remaining replacement references, face-up command objects and complete enumeration still block `ChooseADamageSource`. Continuity enables choosing a permanent spell for all seven without losing its shield at resolution. | Small to medium: one entry-path integration, per-shield continuation, existing replacement services, native/RON interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 estimated family unlocks** | Legendary/named band filters, static/token grants and selective removal must accompany attack-band legality and both combat assignment directions. The complete records include named tokens and removal under upkeep restrictions. | Large; too broad for this bounded run. |
+| Conditional host animation and adjacent mixed-layer forms | Animate Artifact, Titania's Song, Xenic Poltergeist, Gaea's Liege, Angry Mob, Nameless Race: **1 immediate unlock** for bounded conditional-host animation | Animate Artifact needs retained membership across type and base P/T layers. Xenic Poltergeist and Angry Mob already load. Song needs sticky lifecycle; Liege needs attacked-player counts and the recorded predicate audit; Race needs entry-life payment results. | Medium for one host, large for the full family. |
+
+The selected shared prerequisite is dependency-ready and enables concrete
+multi-card work despite zero immediate compilation gain. Contract, reuse boundary
+and acceptance cases were stated before edits. The `implement-engine` skill was
+used for native workflow. No delegation, removed skill, Go-card requirements,
+Go-card fallback or generated stubs were used.
+
+### Established contract and supported context
+
+- New API: `PreventNextDamageFromSelectedSource(source DamageSourceRef,
+  recipient PlayerRef, filter DamageSourceFilter) ResolvingEffect`. The source is
+  supplied by a typed producer. Source enumeration remains separate. The selected
+  spell shield must exist before that spell enters through resolution.
+- RON lowering of `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(player)), [PreventThatDamage])` now uses this
+  selected-source service. The existing lexical `chosenDamageSourcePlan` and
+  factory-local `instanceBindings.chosenDamageSources` keep filter and binding
+  identity. Bare source/operation symbols, typed player references and exactly
+  one operation are required. Production `ChooseADamageSource` remains rejected.
+- `PreventNextDamageFromExactSource` retains exact-object behavior for current
+  callers. Both installation paths share typed definition validation, source
+  snapshotting and property checks. Nil/unbound references and invalid filters
+  fail validation. Absent runtime bindings create no shield.
+- The explicit permanent-spell resolution entry path reuses
+  `prepareBattlefieldEntry`, `registerBattlefieldEntry` and
+  `completeBattlefieldEntry`. After successful registration and before inline
+  entry effects/events, each active selected shield compares the resolving
+  spell's exact stack identity and saves the entered permanent's exact identity.
+  Failed entry, direct entry, countered spells, recasts and separate spell copies
+  cannot create that link. A chosen spell copy can enter as a token with a new
+  card ID. There is no global correspondence table or last-action slot.
+- The original spell and its continued permanent share one next-event shield.
+  Spell damage that consumes it before entry prevents continuation. Matching
+  current or retained properties are checked before damage. Mismatching
+  properties, zero damage and other recipients leave it available. Returned
+  permanents cannot inherit it; phasing retains the original incarnation.
+- `sourcePreventionReplacement` extends its typed matching to the continued
+  identity. UUID/permanent-filter legacy callers retain their matching. Native
+  property reads, exact LKI/phase information, simultaneous replacement batching,
+  affected-player ordering, rechecks and cleanup are reused. When exact permanent
+  information is absent, the exact matching damage packet supplies properties.
+  Both snapshots clone independently; clone consumption remains isolated.
+- The continued permanent joins `WaitingPreventionPermanentSources`. Exact
+  waiting spell references remain a separate enumeration capability. Mage owns
+  entry and replacement behavior; RON owns syntax and scoped lowering.
+- Reverse Damage's extra prevention/life operation, Dark Sphere's fractional
+  prevention, Jade Monolith's permanent-recipient redirection and Eye for an Eye's
+  additional damage operation remain outside this supported shape. Their complete
+  records were inspected; no extra unlock is inferred from `ChooseADamageSource`.
+- Rules read: CR 400.7c, 609.7a/b and existing 615/616 replacement contracts.
+  No source-data defect or environment failure was found. No RON source changed.
+
+### Failing-first and gameplay evidence
+
+The new native tests failed compilation for the missing selected-source API.
+After a test-only token-field correction, the isolated failure was confirmed.
+The RON tests separately failed assertions for all seven shield expressions:
+`lowered shield lost permanent-spell continuity`. Both failures preceded edits.
+
+| Tests / card mapping | Evidence |
+| --- | --- |
+| `TestSelectedSourcePreventionContinuity` | Spell resolution followed by live/departed/returned/phased/phase-cycle damage; cleared LKI; property mismatch and restoration; zero/simultaneous damage; cleanup; pre-entry spell consumption; unchanged exact-object API; post-entry clones. |
+| `TestSelectedSourcePreventionCopyAndClone` | Clone before resolution; a separate copy enters without inheriting the original shield; the original enters with its own shield. |
+| `TestSelectedSourcePreventionChosenCopy` | A shield on the chosen copy follows its new token card ID; waiting prevention exposes the exact token; original/copy shields consume independently. |
+| `TestSelectedSourcePreventionEntryTimingAndCounter` | Inline entry damage sees and consumes the continued shield; countered spell followed by recast cannot transfer the old shield. |
+| `TestSelectedSourcePreventionRejectedEntry` | Failed entry supplies no continuation; later direct entry of the same card ID cannot inherit it. |
+| `TestSelectedSourcePreventionDeclarations` | Nil source/player, unbound source and invalid color filter reject at definition validation. |
+| All seven protection cards | `TestRONSelectedSourcePreventionContinuity` lowers complete canonical records' shield expressions using explicit native source producers; validates binding dominance and executes real RON permanent-spell casting and pending-game clones. These are subrule tests, not full protection-card gameplay. |
+| Prodigal Sorcerer, Orcish Artillery | The same RON test executes real activations after entry, rejects sickness, resolves the saved ability source and verifies Artillery's independent self-damage. |
+| Frozen Shade, Llanowar Elves, Samite Healer, Grapeshot Catapult | The same test casts complete RON records and uses native damage to verify the entered source's identity. This adds continuity interaction evidence without claiming new coverage of their other abilities. |
+| Existing exact-source, next-permanent-source and waiting-prevention callers | Focused native and RON regression tests pass. Existing declaration rejection and replacement-order assertions are retained. |
+
+### Validation and measured outcome
+
+Required checks passed in fast-fail order:
+
+- Focused RON `TestRON(SelectedSourcePrevention|ExactSourcePrevention|NextPermanentSourcePrevention|Waiting.*Prevention)` with `-count=1`.
+- Focused native `Test(SelectedSourcePrevention|ExactSourcePrevention|NextPermanentSourcePrevention|Waiting.*Prevention)` with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, **0 issues**. Automatic formatting was reviewed;
+  both affected focused test groups were rerun and pass.
+- Additional skill verification: `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected unique names**. Final JSON is
+  identical to fresh baseline, including every diagnostic.
+
+Estimated and actual compilation gains: **0 names / 0 records**. Added source
+continuity interaction evidence: **6 already accepted names / 31 records**;
+protection shield subrule evidence: **7 rejected names / 31 records**. This is
+separate from complete-card gameplay. All 12 RON source hashes match the vocabulary
+snapshot, so no refresh is needed. No runtime/removal gate is met. No Go card,
+generator or DSL function is removed. Existing callers are preserved.
+
+Changed files: new `pkg/mage/selected_source_prevention.go` and native tests;
+RON `selected_source_prevention_test.go` and `exact_source_prevention.go`;
+`exact_source_prevention.go`, `replacement.go`, `stack_resolver.go`,
+`waiting_prevention.go`, `doc.go`, API/rules-contract docs and this ledger.
+Complete source enumeration, collection gameplay, runtime loading, Go-card
+removal and unused DSL cleanup remain unfinished.
+
+Ranked next candidates:
+
+1. Exact waiting spell references held by active prevention shields, then the
+   remaining replacement references and face-up command objects before complete
+   source enumeration for the seven protection cards.
+2. Parameterized bands with others for the eight complete records above; split
+   reusable combat prerequisites before grants/removal if needed.
+3. Conditional host animation with membership retained across type/base P/T
+   layers; reassess its single immediate unlock against shared prerequisites.
 
 Stop after this slice. The commit hash is reported in the final response.

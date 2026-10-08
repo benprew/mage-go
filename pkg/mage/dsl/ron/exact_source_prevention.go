@@ -39,6 +39,6 @@ func compileExactSourcePrevention(n Node, ctx scope) (effectFactory, error) {
 	}
 	plan := ctx.chosenDamageSource
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.PreventNextDamageFromExactSource(mage.FromDamageSource(bindings.chosenDamageSources[plan]), player.build(bindings), plan.filter)
+		return mage.PreventNextDamageFromSelectedSource(mage.FromDamageSource(bindings.chosenDamageSources[plan]), player.build(bindings), plan.filter)
 	}, nil
 }

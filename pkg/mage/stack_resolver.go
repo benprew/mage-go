@@ -256,7 +256,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 				card = newPermanentSpellCopyCard(card)
 				colorsSpent = 0
 			}
-			perm := g.putOnBattlefield(card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID, colorsSpent)
+			perm := g.putPermanentSpellOnBattlefield(obj, card, colorsSpent)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(resolvedTargets) > 0 && resolvedTargets[0] != uuid.Nil {

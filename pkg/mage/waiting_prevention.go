@@ -15,6 +15,9 @@ func (r *preventionShieldReplacement) waitingPreventionPermanents(*Game) []captu
 }
 
 func (r *sourcePreventionReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
+	if r.continuedSource.Valid() {
+		return []capturedPermanent{{r.continuedSource.ID(), r.continuedSource.Incarnation()}}
+	}
 	if r.exactSource.Valid() {
 		return []capturedPermanent{{r.exactSource.ID(), r.exactSource.Incarnation()}}
 	}

@@ -8353,9 +8353,10 @@ subjects also join the existing waiting-prevention permanent-reference category.
 The scoped RON adapter validates the exact two-argument future event, typed
 `Player` recipient and single bare `PreventThatDamage` operation. Its source plan
 and factory-local binding carry the choice filter without a global result slot.
-Production `ChooseADamageSource` remains rejected. This primitive does not join a
-permanent spell to the permanent it becomes; CR 609.7a needs that separate
-continuity service before general chosen-source shields are supported.
+Production `ChooseADamageSource` remains rejected. The scoped adapter now uses
+the selected-source continuation service described below. The exact-object API
+retains its original boundary. Complete enumeration remains a prerequisite for
+general chosen-source shields.
 CR 400.7, 609.7b, 615.8–9 and 616.1 apply to the established context.
 
 Evidence: `TestExactSourcePreventionIdentity`, `Spells`, `Declarations`,
@@ -8369,3 +8370,43 @@ Bolt, Prodigal Sorcerer and Orcish Artillery records for real casting/activation
 payment/sickness legality, ability-source departure/return/phasing, copies,
 independent artillery recipients and pending-game clones. These tests do not
 establish complete gameplay for the rejected protection cards.
+
+
+### Selected-source prevention across permanent spell resolution
+
+`PreventNextDamageFromSelectedSource(DamageSourceRef, PlayerRef,
+DamageSourceFilter) ResolvingEffect` adds the CR 400.7c and 609.7a continuation
+to the exact-source installation contract. The caller supplies a typed selected
+source; this API does not enumerate source choices. Existing
+`PreventNextDamageFromExactSource` callers keep their exact-object behavior.
+Both APIs use the same definition validation, property checks and replacement
+planner. Nil references, unbound reads and invalid filters remain errors.
+
+When a permanent spell enters through resolution, successful entry preparation
+and battlefield registration precede the shield link. Entry effects and events
+follow it. Each active selected-source shield compares the resolving spell's
+exact identity and captures the new permanent's exact identity. No global
+last-action result or persistent card-ID correspondence is used. A chosen spell
+copy can become a token with a different card ID. Separate copies, recasts,
+failed entry and direct battlefield entry cannot inherit another spell's shield.
+
+The shield matches its original spell or its continued permanent. Both consume
+the same next-event shield; consumption before entry prevents continuation.
+Current permanent properties override saved packet properties. Nonmatching
+properties, zero damage and other recipients preserve the shield. Departure and
+phasing retain exact-object information; missing information falls back to the
+exact matching damage packet. Returned permanents cannot match. The shared
+simultaneous replacement service, affected-player ordering and cleanup keep
+their existing behavior. Clones copy both saved source snapshots and consumption
+state. Continued subjects join `WaitingPreventionPermanentSources`. Exact
+waiting spell references and complete source enumeration remain separate gaps.
+
+`TestSelectedSourcePreventionContinuity`, `CopyAndClone`, `ChosenCopy`,
+`EntryTimingAndCounter`, `RejectedEntry` and `Declarations` cover the native
+contract. `TestRONSelectedSourcePreventionContinuity` lowers the exact shield
+expressions of all seven protection records and casts complete RON Frozen Shade,
+Prodigal Sorcerer, Llanowar Elves, Orcish Artillery, Samite Healer and Grapeshot
+Catapult. Sorcerer and Artillery use real activation, sickness checks, resolution
+and separate self-damage; the other four supply source-identity interaction
+evidence through native damage. These are subrule tests for the rejected
+protection cards, not full-card gameplay evidence.

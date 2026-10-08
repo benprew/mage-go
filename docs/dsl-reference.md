@@ -6798,7 +6798,8 @@ Nonmatching properties, recipients, returned objects and recasts do not consume
 it. Cleanup expires it; clones keep separate consumption state. The filter uses
 current object information when available and retained information after departure.
 
-The RON lowering prerequisite accepts
+The RON lowering prerequisite now uses `PreventNextDamageFromSelectedSource`
+with the same typed arguments. It accepts
 `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
 TheChosenDamageSource, Player(player)), [PreventThatDamage])` only with an existing
 typed `chosenDamageSourcePlan` in the lexical scope and its factory-local binding.
@@ -6808,8 +6809,16 @@ uses the existing typed player reference grammar.
 
 No production declaration creates that chosen-source scope yet. The seven
 protection records remain rejected at `ChooseADamageSource`. Tests lower their
-exact shield expressions with explicit native producers. This is an exact-object
-primitive: it does not provide the spell-to-permanent continuation required by
-CR 609.7a when a permanent spell is chosen. Complete source enumeration and that
-continuation must precede production source-choice lowering. Other prevention
-operations and recipients require separate contracts.
+shield expressions with explicit native producers. The selected-source service
+continues an active shield from an exact spell stack identity to the exact
+permanent that spell becomes (CR 400.7c, 609.7a). This includes a chosen spell
+copy that becomes a token with a new card ID. It links the shield after successful
+battlefield registration and before entry effects and events. Failed entry, a
+countered spell, a separate copy, direct entry and a later cast cannot create
+that link. The original spell and its continued permanent share one consumption
+state. Current properties are checked before damage; departure and phasing use
+the existing exact information services. Returned objects cannot inherit it.
+The continued permanent joins waiting prevention references. Clones copy both
+identities and keep separate consumption. Complete source enumeration must
+precede production source-choice lowering. Other prevention operations and
+recipients require separate contracts.
