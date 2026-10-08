@@ -115,6 +115,11 @@
 // characteristics. Queries and game clones keep separate object snapshots.
 // This service does not grant casting permission or install command abilities.
 //
+// [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
+// Later layers keep those objects for the same pass, even after ability removal.
+// Each new pass reads current state. Values are read in their applicable layer.
+// Type dependencies compare selections in separate game probes.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

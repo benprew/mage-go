@@ -232,7 +232,6 @@ func TestRONStaticBaseValueArithmeticAndCondition(t *testing.T) {
 
 func TestRONStaticBaseValueCompleteRecordsStayRejected(t *testing.T) {
 	for _, tc := range []struct{ set, name, gap string }{
-		{"LEB", "Animate Artifact", "combined or collective static base values"},
 		{"LEB", "Gaea's Liege", "ControlledByPlayer"},
 	} {
 		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {

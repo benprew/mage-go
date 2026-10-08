@@ -2,18 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **765 accepted / 221 rejected unique card
-names** (986 total), and **1,965 compiled / 480 rejected records** (2,445 total).
+The latest recorded inventory reports **766 accepted / 220 rejected unique card
+names** (986 total), and **1,971 compiled / 474 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-EXILE-SUBJECTS` completes exact live spell/permanent exile
-subjects, continuation, lifecycle and RON category lowering. Additional subrule
-evidence covers seven protection names, with zero full-card unlocks. Precast zone
-visits and opaque references remain before complete source enumeration. Library
-of Leng still needs its RON replacement adapter.
-
+unfinished. `CONDITIONAL-LAYER-MEMBERSHIP` adds exact grouped subjects across
+continuous layers and complete Animate Artifact gameplay (six reprint records).
+Titania's Song still needs collective per-member values and sticky duration.
+Precast zone visits and opaque references remain before complete damage-source
+enumeration. Library of Leng still needs its RON replacement adapter.
 ## Run 2026-10-03: P0-INVENTORY
 
 Status: complete semantic inventory/reporting slice. Scope/instance prerequisites
@@ -42502,5 +42501,159 @@ Ranked next candidates:
    eight names, followed by grants, named-token abilities and selective removal.
 3. Reverse Damage's actual prevented-amount operation after full enumeration;
    prove Jade Monolith's full RON gameplay with existing redirection lowering.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-07: conditional type and equal base values with shared layer membership
+
+Status: completed implementation slice `CONDITIONAL-LAYER-MEMBERSHIP`.
+This run stops after this slice. Existing changes to `.gitignore`, the execution
+design and the ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged from the ledger.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected; reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers / downstream use | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Latest candidate #1: precast exile visits | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation | 0 | Live spell/permanent subjects already work. General card-zone visits and the permitted-cast link are absent; opaque callbacks remain before full source enumeration. This enables another category for seven names, then the full choice capability also serves Jade Monolith and Reverse Damage. | More than one bounded slice for zone identities, cast integration and enumeration. |
+| Parameterized bands | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria | 5 after formation, assignment and grants; 0 for an isolated formation prerequisite | Missing parameterized quality declaration, formation legality and CR 702.22j/k damage assignment. The other three need named-token ability lowering or selective removal. | Several contract/adapter stages; larger than the selected run. |
+| Shared conditional layer membership | Animate Artifact; Titania's Song as a downstream consumer | 1 unique name / 6 records now | Type changes invalidate the noncreature predicate before base values. Titania's Song additionally needs sticky duration, collective per-member mana values and its ability-removal/context adapters. | One bounded run using existing layer and typed-reference services. |
+
+The selected work establishes a reusable CR 613.6 prerequisite with immediate
+full-card evidence and concrete use by the two type/base-value cards. It has the
+largest credible immediate gain for the bounded effort. It does not repeat the
+completed exact live exile category or attempt a partial banding implementation.
+Xenic Poltergeist's resolving animation already has a supported context; it is
+not counted as a new unlock. Other single-card adapters were not selected.
+
+The pre-edit acceptance contract was conditional type additions plus equal base
+P/T for one source or Aura host, with first-layer selection, fresh later passes,
+attachment identity, phasing, clones, ability removal and invalid declarations.
+
+### Contract, signatures and reuse boundary
+
+- `WhileWithSharedSubjects(condition StateCondition,
+  modifications ...ContinuousModification) StaticRule` explicitly groups the
+  condition and subjects for a layer pass. `While` keeps its existing live,
+  separate layer-selection behavior and signature.
+- `continuousRule.sharedSubjects` selects the new mode. Per-game
+  `EffectManager.composedMembers` keys a rule and source, retaining each
+  modification's exact permanent/incarnation subjects. Each pass clears this
+  scratch state. Repeated modification declarations do not duplicate the saved
+  membership. Runtime grants retain their existing per-declaration identities.
+- `composedLayerEffect.continuesAcrossLayers(*Game) bool` uses the existing
+  printed-ability continuation hook. Once the first part starts, later layers
+  and sublayers keep their subjects even if layer 6 removes the source ability.
+  A false first condition remains false for that pass. Phased/absent subjects
+  are excluded, and returned objects cannot replace retained incarnations.
+- Values are read in the layer that uses them through `captureMembers`; they
+  are not captured with the first-layer membership. A layer-7 creature count
+  can therefore include the creature type added by the same rule in layer 4.
+- Type-layer dependency checks compare the condition and selected identities
+  before/after an isolated shared-service probe. The layer scheduler retains
+  timestamp ordering and dependency rechecks.
+- `compileConditionalAnimation([]Node, mage.PermanentRef, scope)` validates
+  one `SetPowerAndToughnessBoth(value)` with one or more
+  `AddCardtype(Artifact | Creature)` operations, including Creature. It lowers
+  through `compileConditionalStaticBody` to the new grouped engine constructor.
+  This context uses `PermanentLayerEffect(ThisPermanent | HostPermanent, [...])`
+  within the existing conditional grammar; HostPermanent requires an Aura.
+  Existing static P/T values and typed source/host references apply. Other
+  mixed rule bodies, collective base values, duplicate bases, invalid arities,
+  unbound references and resolution-only values remain declaration errors.
+
+Reuse: typed permanent and attachment references, current source controllers,
+incarnations, pure state conditions, modification capture, layer 4 and 7b,
+P/T bonuses/counters/switching, printed-ability lifecycle, dependency probes,
+cloning, Aura targeting/entry, casting payment and stack-spell copying. RON
+owns syntax and scope; the engine owns grouping, identity and lifecycle.
+CR 611.3a requires fresh static selection, 613.6 retains it across layers,
+613.8 orders dependencies, 400.7 separates returned objects, and 702.26
+excludes phased objects. No new payment, replacement or simultaneous-operation
+pipeline was added. Static queries do not use LKI to restore absent objects.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial native assertions failed with 0/0 base values and lost set membership.
+The six complete RON records failed at the unsupported combined base-value
+adapter. Additional compile failures established the new public constructor
+before implementation. Invalid declarations were tested before the adapter.
+
+An initial general change to `While` failed
+`TestComposableStaticColorUsesLayerMembership` and
+`TestGrantedModificationStaticIdentity`. Their contracts were preserved by an
+explicit grouped constructor and deduplicated saved declaration membership.
+No existing regression was weakened. The obsolete assertion that Animate
+Artifact must reject was removed because complete gameplay and strict-loading
+acceptance replace it. Inventory tests retain exact fresh counts and now
+explicitly reject any loader issue for Animate Artifact.
+
+| Test | Card mapping / evidence |
+| --- | --- |
+| `TestConditionalLayerMembership` | Synthetic exact source: type/base continuation, source ability removal after type application, repeated passes, phasing, clone isolation. |
+| `TestConditionalLayerMembershipSet` | Synthetic noncreature artifact set: selection retained after type change, independent clone and departure. This is a shared prerequisite, not Titania's Song gameplay. |
+| `TestConditionalLayerMembershipDependency` | Land-type dependency changes membership before selection; expiration causes a fresh pass to remove the animation. |
+| `TestConditionalLayerMembershipFreshConditionAndValue` | First-layer condition refresh and layer-time live count values. |
+| `TestRONConditionalAnimationRecords` | Complete Animate Artifact records in LEA, LEB, 2ED, 3ED, CED and CEI: failed payment rollback, normal cast/resolution, pending and resolved clones, artifact/creature types, current Aura host, source phasing and ability removal, returned host exclusion. |
+| `TestRONConditionalAnimationLegalityAndExistingCreature` | Animate Artifact: illegal nonartifact target consumes no mana; departed and phased targets fail at resolution; an existing artifact creature keeps its base values. |
+| `TestRONConditionalAnimationCopyAndLayers` | Animate Artifact: copied Aura spell becomes an independent source, remaining copy keeps animation after original departure, layer 7c bonuses/counters and 7d switch, cleanup, all-source departure and clone isolation. |
+| `TestRONConditionalAnimationInvalid` | Invalid value, duplicate base declarations, tuple instead of type symbol and unsupported combined ability removal. Existing base-value invalid-reference and context tests also pass. |
+| `TestRONConditionalAnimationStrictLoad` | All six complete records share one canonical registry factory, independent card/ability identities, and invalid collection rejection with no partial registry. |
+
+Estimated and actual gains match: **+1 accepted unique name / +6 compiled
+records**. Animate Artifact gains complete RON behavior coverage. Titania's Song
+remains rejected and receives no full-card coverage claim. Collection compilation
+and collection gameplay completion remain distinct.
+
+### Validation and fresh loader evidence
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader: expected exit 1, 1,965 compiled / 480 rejected records,
+  765 accepted / 221 rejected unique names. This was collection rejection,
+  not a build or environment failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONConditionalAnimation -count=1`:
+  PASS after the expected initial adapter errors. Native
+  `go test ./pkg/mage -run TestConditionalLayerMembership -count=1`: PASS
+  after the expected initial assertions and new-signature compile errors.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS after fixing
+  the two compatibility failures and refreshing exact collection count tests.
+- `make lint`: PASS, 0 issues. An initial wasted-assignment diagnostic was
+  fixed with a boolean declaration. Automatic import formatting was reviewed.
+  Both focused suites and the two caller compatibility regressions passed again
+  afterward; `make build` passed again as well.
+- `git diff --check`: PASS before the final loader, and after ledger staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,971 compiled /
+  474 rejected records; 766 accepted / 220 rejected unique names**.
+  Every remaining diagnostic equals the baseline after removing the six
+  Animate Artifact entries. The first remaining issue is Animate Dead:
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict loading still rejects the unsupported collection.
+
+No environmental blocker or source-data defect was found. Local Oracle records
+in `data/LEA.json` and `data/ATQ.json` support the noncreature predicate and
+combined type/base behavior. All 12 RON source hashes match the vocabulary
+snapshot; no source or vocabulary refresh is needed. No Go card definition,
+registry consumer, generator or DSL API meets its removal gate in this run.
+Runtime cutover and full collection gameplay remain unfinished.
+
+Changed files: new `conditional_layer_membership.go` and native tests;
+`composable_continuous.go`, `effect_manager.go`, `doc.go`; new RON
+`conditional_animation.go` and tests; `conditional_static.go`,
+`static_base_value_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+DSL reference, engine rules contracts and this ledger summary/entry.
+
+Ranked next candidates:
+
+1. Parameterized bands formation and damage assignment as the shared prerequisite
+   for eight names; then grants for the five lands, named-token abilities and
+   selective removal. Keep the quality predicate typed and test CR 702.22c/j/k.
+2. Precast exile zone visits with exact permitted-cast/continuation identity;
+   then audit opaque callback references before complete CR 609.7a enumeration.
+3. Collective per-member live base values and sticky source-exit duration,
+   reusing the new grouped membership contract for Titania's Song. This remains
+   lower priority than useful multi-card work unless selected as its prerequisite.
 
 Migration completion gates remain unmet. The commit hash is in the final reply.

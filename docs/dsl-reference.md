@@ -7245,3 +7245,22 @@ The seven protection names supply their complete activation cost, choice and
 prevention ASTs in a test-only category context. The spell test also proves
 selected-source prevention continuation through the normal engine entry path.
 This is category gameplay evidence; it does not establish full-card loading.
+
+## RON conditional type and equal base values
+
+A conditional static body may contain one
+`PermanentLayerEffect(ThisPermanent | HostPermanent, [modifications])` with
+one `SetPowerAndToughnessBoth(value)` and one or more
+`AddCardtype(Artifact | Creature)` operations, including Creature. HostPermanent
+requires an Aura declaration. The existing live static P/T value grammar
+applies, including `ManaValueOfPermanent(HostPermanent)`. Other modifications,
+duplicate base declarations, unbound references and resolution-only values
+reject before factory publication. Other mixed body rules still reject.
+
+The compiler lowers the complete list to one `Static(WhileWithSharedSubjects(condition, ...))`
+rule. The engine selects the condition and exact subjects before the first
+layer, retains them for the pass, and reads values in their applicable layer.
+Animate Artifact therefore keeps its base P/T after its own type addition
+makes the host a creature. A host that was already a creature is unaffected.
+A fresh pass checks the condition again. This does not add sticky effects or
+collective dynamic base-value lowering.

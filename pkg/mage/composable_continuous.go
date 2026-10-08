@@ -400,7 +400,10 @@ type capturedModification struct {
 }
 
 func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
-	members := m.members(ctx)
+	return m.captureMembers(ctx, m.members(ctx))
+}
+
+func (m *layerModification) captureMembers(ctx *EffectContext, members []*Permanent) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
 		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
@@ -525,15 +528,16 @@ type StaticRule interface {
 	staticEffects() []ContinuousEffect
 }
 type continuousRule struct {
-	condition     StateCondition
-	modifications []ContinuousModification
+	condition      StateCondition
+	modifications  []ContinuousModification
+	sharedSubjects bool
 }
 
 func (*continuousRule) staticRule() {}
 
 // While applies modifications dynamically while the state condition is true.
 func While(condition StateCondition, modifications ...ContinuousModification) StaticRule {
-	return &continuousRule{condition, append([]ContinuousModification(nil), modifications...)}
+	return &continuousRule{condition: condition, modifications: append([]ContinuousModification(nil), modifications...)}
 }
 func (r *continuousRule) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "continuous-rule", children: []definitionEdge{{"condition", r.condition}}}
@@ -639,6 +643,9 @@ func (e *composedLayerEffect) survivesSourceExit() bool {
 	return e.rule == nil && !e.sourceBound
 }
 func (e *composedLayerEffect) IsActive(g *Game) bool {
+	if e.continuesAcrossLayers(g) {
+		return true
+	}
 	if e.sourceTapped {
 		p := g.FindPermanent(e.sourceID)
 		if p == nil || p.incarnationID != e.sourceIncarnation || !p.Tapped {
@@ -697,9 +704,37 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	child.Controller = source.ControllerID()
 	child.sourceCaptured = true
 	child.sourceIncarnation = source.incarnationID
-	if e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller, SourceIncarnation: source.incarnationID}) {
+	var active bool
+	var selection composedCycleSelection
+	if e.rule.sharedSubjects {
+		if ctx.Game.effects.composedMembers == nil {
+			ctx.Game.effects.composedMembers = make(map[composedCycleKey]composedCycleSelection)
+		}
+		var found bool
+		selection, found = ctx.Game.effects.composedMembers[e.cycleKey()]
+		if !found {
+			selection = e.selectMembers(ctx.Game)
+			ctx.Game.effects.composedMembers[e.cycleKey()] = selection
+		}
+		active = selection.active
+	} else {
+		active = e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller, SourceIncarnation: source.incarnationID})
+	}
+	if active {
 		for i, m := range e.modifications {
-			for _, v := range m.capture(&child) {
+			var members []*Permanent
+			if e.rule.sharedSubjects {
+				for _, ref := range selection.members[m] {
+					p := ctx.Game.FindPermanent(ref.id)
+					if p != nil && !p.PhasedOut && p.incarnationID == ref.incarnation {
+						members = append(members, p)
+					}
+				}
+			} else {
+				members = m.members(&child)
+			}
+
+			for _, v := range m.captureMembers(&child, members) {
 				if v.ability != nil || v.trigger != nil {
 					identity := fmt.Sprintf("%s/%s/%d", source.incarnationID, v.permanent.incarnation, i)
 					v.grantID = uuid.NewSHA1(e.grantID, []byte(identity))

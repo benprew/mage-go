@@ -1929,8 +1929,8 @@ Conditional fixed bonuses apply in layer 7c; keyword grants apply in layer 6
 type changes affect controller conditions before bonuses apply. P/T counters
 remain separate from bonuses. Source phasing suspends grants, phase return
 restores them, and a returned host cannot inherit an old attachment's grant.
-The RON adapter rejects mixed layers until a shared membership contract supports
-those bodies. Static layer execution and replacement services are unchanged.
+The RON adapter supports the combined conditional animation shape documented
+below. Other mixed conditional bodies still reject.
 
 `TestRONConditionalStatic*` verifies real casting and target legality, failed
 payment rollback, current controller/membership and tap changes, regeneration,
@@ -9208,3 +9208,30 @@ precast zone visits and opaque callback references remain separate contracts.
 Immediate entry probes use the native sacrifice service directly. Typed `This`
 in an immediate entry effect can retain the enclosing spell's empty permanent
 incarnation; that existing binding gap is not covered by this slice.
+
+## Conditional continuous membership across layers
+
+`WhileWithSharedSubjects(StateCondition, ...ContinuousModification)` selects its condition and
+each modification's exact subjects when its first layer starts. A per-game,
+per-rule, per-source cycle selection keeps those incarnations through later
+layers and P/T sublayers (CR 613.6). Ability removal after the effect starts
+does not stop its later parts. Each fresh pass clears the selection and reads
+current state (CR 611.3a). Values remain live in the layer that uses them; a
+creature count in layer 7 can see the creature type added in layer 4.
+
+Type-layer dependencies compare condition results and selected object sets in
+isolated game probes before execution (CR 613.8). The shared layer scheduler,
+printed-ability lifecycle, incarnation checks, attachment references, P/T
+sublayers and clone service remain in use. Phased and absent objects are
+excluded; LKI does not supply static subjects. Cycle selections contain no
+mutable state in a card definition and are rebuilt independently in clones.
+
+`TestConditionalLayerMembership`, `Set`, `Dependency` and
+`FreshConditionAndValue` establish type/base continuation, ability suppression,
+phasing, independent clones, changing set membership, dependency ordering and
+live layer values. `TestRONConditionalAnimation*` proves the complete six
+Animate Artifact reprints: payment and target legality, copied Aura spells,
+attachment changes and returned hosts, phasing, source ability removal and
+departure, existing artifact creatures, counters, bonuses and P/T switching.
+Existing `While` callers keep their separate live layer selections.
+Titania's Song still needs sticky duration and its RON context.

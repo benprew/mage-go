@@ -93,6 +93,9 @@ func compileConditionalStaticBody(body Node, ctx scope, condition mage.StateCond
 		for i, build := range builds {
 			modifications[i] = build()
 		}
+		if layer == core.LayerType {
+			return mage.WithAbility(mage.Static(mage.WhileWithSharedSubjects(condition, modifications...)))
+		}
 		return mage.WithAbility(mage.Static(mage.While(condition, modifications...)))
 	}, nil
 }
@@ -235,7 +238,10 @@ func compileConditionalModifications(n Node, ctx scope) ([]func() mage.Continuou
 		if part.Name != "SetPowerAndToughnessBoth" {
 			continue
 		}
-		if global || len(parts) != 1 {
+		if !global && len(parts) > 1 {
+			return compileConditionalAnimation(parts, subject, ctx)
+		}
+		if global {
 			return nil, 0, unsupported(part, "combined or collective static base values")
 		}
 		if err := arity(part, 1); err != nil {
