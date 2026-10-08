@@ -200,6 +200,13 @@
 // unselected options keep their reads until the delayed ability triggers.
 // Future delays in option bodies keep their separate creation lifetime.
 //
+// [CreateTokenCopies] and [CreateTokenCopiesInto] declare source reads in their
+// player and count to [Game.WaitingDelayedPermanentSources]. [CreateOneToken]
+// declares reads in its player. Zero counts keep these reads. Queries do not
+// resolve players, read counts or create tokens. Token ability bodies use the
+// created token's scope and do not declare reads of the producer's source.
+// Saved incarnations survive departure and phasing until the delay triggers.
+//
 // [TapEach], [UntapEach], [ReturnEachToHand] and [DestroyEach] declare
 // explicit source reads in their typed collections to the same waiting query.
 // [DestroyEachWithoutRegeneration] uses the same declaration.

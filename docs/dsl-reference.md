@@ -1351,12 +1351,24 @@ removal actions and optional counter payments remain errors. See
 ## RON basic creature-token creation
 
 RON `CreateTokens/2` lowers one creature-token instruction and an empty modifier
-list to `mage.CreateTokenCopies(mage.You, count, definition)`. Instructions accept
+list to `mage.CreateTokenCopies(player, count, definition)`. The player is the
+lexical player, with `You` as the default. Both `PlayerAction(player, CreateTokens(...))`
+and `PlayerActions(player, [CreateTokens(...), ...])` support the same complete
+token shape. `PlayerActions` saves its player once and supplies `ActionPlayer`.
+Nested scopes retain the existing binding rules. Instructions accept
 `TokenWithPT/6`, `NamedTokenWithPT/7`, or `NumberTokens/2`. Printed characteristics
 use `DefineToken` with typed P/T, types, colors, subtypes and keyword options.
-Counts use fixed integers or in-scope announced spell X at resolution. Empty
+Counts use existing in-scope instance values at resolution, including fixed
+integers, announced spell X and typed permanent information. Empty
 optional options are omitted. Each action builds a fresh effect; the engine's
 immutable token definition contains no chosen state.
+
+Waiting delayed token creation declares explicit source reads in its player and
+count, including typed permanent information and nested arithmetic. A zero count
+keeps these declarations. Enumeration does not evaluate either operand or create
+tokens. Token ability bodies use the created token's source scope and do not
+declare the producer's source. Native `CreateOneToken` and `CreateTokenCopiesInto`
+use the same operand contract; this does not add saved token results to RON.
 
 See [the supported shapes and card tests](designs/mtgish-ron-token-creation.md).
 Token source damage-to-player triggers are supported as described below. Other

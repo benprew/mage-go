@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-RESOLUTION-CHOICES` adds typed source declarations through
-resolution-choice players, option conditions and option bodies, plus lexical RON
-choice players and scoped counter choices. Seven protection names gain subrule
-scenarios; native and RON tests cover purity, lifecycle, copying and player scope.
-Compilation and full-card coverage are unchanged. General source aggregation,
-remaining numeric/token operands, token grants and sticky layers remain gaps.
+`WAITING-DELAYED-TOKEN-OPERANDS` adds typed source declarations through token
+creation players/counts and lexical RON token players. Native tests cover all
+three typed constructors; RON tests cover lifecycle, copying, player scopes,
+Rukh Egg and seven protection subrules. Compilation and full-card coverage are
+unchanged. General source aggregation, number snapshots, token grants and sticky
+layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -48347,3 +48347,145 @@ Ranked next candidates:
    Reassess multi-card candidates before either single card.
 
 This run stops after `WAITING-DELAYED-RESOLUTION-CHOICES`.
+
+## 2026-10-08: waiting delayed token-creation operands
+
+Status: completed implementation slice `WAITING-DELAYED-TOKEN-OPERANDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+The commit contains only this slice's ledger summary and appended entry, without
+the user's in-progress archive relocation.
+
+### Fresh baseline and candidate selection
+
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+`go run ./cmd/loadcards -json` returned expected exit 1: 1,978 compiled / 467
+rejected records, 773 accepted / 213 rejected unique names, 2,445 records / 986
+names total. This is strict collection rejection, not a build or test failure.
+No production registry was installed.
+
+The latest ranked candidate was general damage-source aggregation prerequisites.
+Complete records and nested forms were read for all seven protection names,
+Master of the Hunt and Titania's Song. Complete token records were also inspected:
+Boris Devilboon, Bottle of Suleiman, Breeding Pit, Dance of Many, Elvish Farmer,
+Goblin Warrens, Hazezon Tamar, Homarid Spawning Bed, Icatian Town, Night Soil,
+Rukh Egg, Serpent Generator, Stangg, Tetravus, Thallid, Thallid Devourer and The
+Hive. Reprints count once. Targeted vocabulary entries confirmed CreateTokens/2,
+NumberTokens/2, TokenWithPT/6, NamedTokenWithPT/7 and player scopes.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- |
+| Ranked #1: general damage-source aggregation | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: up to 7 | Not ready: token player/count and numberSnapshot declarations remain absent; final source-category audit still required. | Large for the complete audit and aggregation |
+| Selected prerequisite: waiting token operands | The same 7 downstream protection names: 0 immediate unlocks. Accepted token cards retain their existing behavior. | Completes explicit outer player/count declarations for all three typed token constructors; fixes RON lexical token players. Number snapshots remain a separate prerequisite. | Small: typed declarations, player adapters, lifecycle/purity and real-record tests |
+| Ranked #2: named-token quality grants | Master of the Hunt: 1 plausible unlock | Token ability BandsWithOthers contains And(IsCardtype(Creature), IsNamed(NamedCard(...))); requires named identity and parameterized band combat/clone contracts. | Medium |
+| Ranked #3: sticky layer lifecycle | Titania's Song: 1 plausible unlock | EachPermanentStickyLayerEffect requires departure retention, shared membership after ability removal and per-member mana values. | Medium to large |
+
+The bounded, dependency-ready token prerequisite has concrete value for seven
+names and wins over either single-card capability. First-error frequency was not
+used as the unlock estimate. Contract, scope boundary and acceptance cases were
+stated before editing. No skill, delegation, Go-card fallback, generated stub,
+source correction, environmental failure or silent simplification was used.
+
+### Exact signatures, supported contexts and engine reuse
+
+- `(*createTokenCopiesEffect).refersToSourcePermanent() bool` declares explicit
+  source reads in its typed player and count.
+- `(*createTokenCopiesIntoEffect).refersToSourcePermanent() bool` declares the
+  same operands without changing its created-token result binding.
+- `(*createOneTokenEffect).refersToSourcePermanent() bool` declares its player.
+- Public constructors are unchanged:
+  `CreateTokenCopies(PlayerRef, ResolutionValue, TokenDefinition) ResolvingEffect`,
+  `CreateTokenCopiesInto(PlayerRef, ResolutionValue, TokenDefinition,
+  *CreatedTokensBinding) ResolvingEffect`, and
+  `CreateOneToken(PlayerRef, TokenDefinition, *PermanentBinding) ResolvingEffect`.
+- `compileTokenCreation(Node, scope) (effectFactory, error)` uses
+  `ctx.player.build(instanceBindings)` instead of an unconditional `mage.You`.
+  Default actions retain You. `compilePlayerEffect` accepts CreateTokens in
+  PlayerAction; `compilePlayerActions` accepts it in PlayerActions.
+- RON supports exactly its existing single creature-token instruction and empty
+  modifier list, including NumberTokens with existing in-scope typed values.
+  PlayerActions saves its player once and supplies its private ActionPlayer
+  binding. Existing token ability compilation retains the token's own scope.
+  No saved created-token result or new token shape is added to RON.
+
+RON owns spelling, scopes, validation and lowering. Mage owns source declarations
+and execution. Existing typed player/value traversal, arithmetic, delayed source
+capture, incarnation/LKI lookup, deduplication, binding frames, stack copying,
+cloning and token batch services are reused. Queries do not resolve players,
+evaluate counts, create tokens or run token abilities. Zero counts keep explicit
+reads. Token ability bodies, implicit attachments, opaque values and future delays
+do not infer producer-source reads. The saved incarnation survives phasing and
+departure; a return cannot replace it. Trigger detection ends waiting availability.
+Existing token replacement ordering, simultaneous entry, payment rollback and
+target legality are unchanged and retain regression coverage. CR 400.7, 603.7a–e,
+609.7a, 111.2 and 701.7 supply the identity/lifetime/source/token contracts.
+
+### Failing-first tests and card mappings
+
+Before implementation, `go test ./pkg/mage ./pkg/mage/dsl/ron -run
+'Test(WaitingDelayedToken|RONWaitingDelayedToken)' -count=1` failed six native
+source assertions and 20 RON combinations: source assertions for count/zero,
+wrong arity rejection for PlayerAction tokens, and scoped-action rejection for
+PlayerActions tokens. The native token-trigger test setup was corrected to use
+the existing DealsDamageToPlayer signature before the run. The synthetic RON
+source was given mana value 2 before implementation to test positive execution,
+rather than only zero creation. No acceptance assertion was weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedTokenOperands | All three native constructors; player/count and zero arithmetic, exact source, phasing, departure/return, retained color, LKI values/controller, independent clone lifetime and token execution |
+| TestWaitingDelayedTokenPurity | Repeated source queries do not evaluate a count or create tokens; one count read at resolution creates two tokens |
+| TestWaitingDelayedTokenScope | Token ability source scope, implicit attachment and future-delay exclusions |
+| TestRONWaitingDelayedToken | 20 combinations: typed count, zero arithmetic, PlayerAction and PlayerActions across live/control-change, phased, returned, stack copy and clone states; saved identity, lexical player, delayed creation timing and one-shot lifetime |
+| TestRONWaitingDelayedTokenInvalid | Four declaration rejections: unbound ActionPlayer, unbound target count, unsupported modifier and unbound payment count |
+| TestRONWaitingDelayedTokenRukhEgg | Complete ARN Rukh Egg record: constant token creation does not invent a source read; next end-step token P/T/flying/subtype/controller, departed source and clone lifetime |
+| TestRONWaitingDelayedTokenProtection | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Complete records provide actual costs, filters and shield bodies. A departed source retained only by a RON token count is selected at resolution; failed payment has no effects; prevention consumes the shield; fired token delay ends waiting availability |
+| TestRONTokenCreation*; TestRONDelayedStepRukhEgg; native CreateOneToken/CreateTokenCopiesInto tests | Existing real token gameplay, copy/controller, payment rollback, all-illegal target, phasing, simultaneous entry and result-binding regressions remain passing |
+
+Protection tests establish subrules, not complete-card gameplay. Their records
+still reject general ChooseADamageSource. Master of the Hunt and Titania's Song
+are comparison candidates only. The RON sources are unchanged; no vocabulary
+refresh is required. No Go definitions or DSL functions were removed because the
+runtime cutover and caller-removal gates remain closed.
+
+### Verification and outcome
+
+- Focused native and RON waiting-token tests: PASS. Existing token creation,
+  Rukh Egg and token-source poison scenarios also passed.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes reviewed; no unrelated code
+  edits occurred. Affected focused native/RON tests rerun after lint: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,978 compiled / 467
+  rejected records; 773 accepted / 213 rejected unique names**, out of 2,445
+  records / 986 names. Full diagnostics equal the baseline. First: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+- No source-data defect, build/test failure or environment blocker was found.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Gameplay evidence gains six native operand cases plus purity/scope tests,
+20 RON operand/lifecycle cases, four invalid declarations, one complete real-card
+regression and seven protection subrule scenarios. Compilation and complete-card
+coverage are unchanged. Rukh Egg already had complete gameplay coverage.
+
+Changed files: pkg/mage/waiting_delayed_token.go,
+pkg/mage/waiting_delayed_token_test.go,
+pkg/mage/dsl/ron/waiting_delayed_token_test.go,
+pkg/mage/dsl/ron/token_creation.go, pkg/mage/dsl/ron/compiler.go,
+pkg/mage/dsl/ron/player_actions.go, pkg/mage/doc.go, docs/dsl-reference.md,
+docs/engine-rules-contracts.md, and this ledger.
+
+Ranked next candidates:
+
+1. Waiting numberSnapshot value declarations: bounded remaining prerequisite
+   for the same seven protection names; 0 immediate unlocks, up to 7 downstream.
+   Then audit remaining typed operands and all source categories before general
+   damage-source aggregation. Token outer operands no longer block that audit.
+2. Named-token quality grants for Master of the Hunt: 1 plausible unlock;
+   named identity and parameterized BandsWithOthers combat/clone evidence needed.
+3. Sticky layer lifecycle for Titania's Song: 1 plausible unlock; departure
+   retention, membership, ability loss and per-member mana values required.
+   Reassess multi-card candidates before either single card.
+
+This run stops after `WAITING-DELAYED-TOKEN-OPERANDS`.

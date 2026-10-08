@@ -10902,3 +10902,46 @@ return, independent clone lifetimes and execution at resolution.
 establish RON lowering, copies, scoped players, compile-time rejection and seven
 real protection cost/filter/shield subrules. These subrules do not establish
 complete protection-card gameplay or complete general damage-source selection.
+
+## Waiting delayed token-creation operands
+
+`CreateTokenCopies(PlayerRef, ResolutionValue, TokenDefinition) ResolvingEffect`
+and `CreateTokenCopiesInto(PlayerRef, ResolutionValue, TokenDefinition,
+*CreatedTokensBinding) ResolvingEffect` declare explicit permanent source reads
+from their player and count to `Game.WaitingDelayedPermanentSources()`.
+`CreateOneToken(PlayerRef, TokenDefinition, *PermanentBinding) ResolvingEffect`
+declares reads from its player. Existing typed player/value traversal supplies
+nested arithmetic, permanent information and collection operands. Zero counts
+retain declarations. The query does not resolve a player, evaluate a count,
+create tokens, or run token abilities. Token ability bodies use the created
+token's scope and cannot declare the producer's source. Implicit attachments,
+opaque values and future delayed producers do not infer explicit source reads.
+
+Existing delayed capture, LKI, deduplication and clone services keep exact source
+incarnations through phasing and departure. A returned object cannot replace the
+saved reference. One-shot detection ends waiting availability. Execution retains
+existing player/value resolution and token batch/replacement behavior. CR 400.7,
+603.7a–e and 609.7a govern identity, lifetime and waiting source availability;
+CR 111.2 and 701.7 govern token creation. No new replacement ordering is added.
+
+RON `CreateTokens/2` now uses the lexical player and supports the existing full
+single-instruction, empty-modifier shape inside `PlayerAction/2` and
+`PlayerActions/2`. The latter captures its player once; nested `ActionPlayer`
+references retain their lexical binding. Token ability compilation keeps its
+separate permanent source scope. Saved token results remain outside this adapter.
+
+`TestWaitingDelayedTokenOperands` covers all three native constructors, player
+and count reads, zero arithmetic, exact identity, phasing, departure/return, LKI,
+clone isolation and execution. `TestWaitingDelayedTokenPurity` proves enumeration
+does not evaluate a count; resolution evaluates it once. `TestWaitingDelayedTokenScope`
+excludes token ability bodies, implicit attachments and future delays.
+`TestRONWaitingDelayedToken` covers 20 operand/lifecycle combinations, including
+stack copies and lexical player execution. `TestRONWaitingDelayedTokenInvalid`
+rejects four malformed scopes/modifiers. `TestRONWaitingDelayedTokenRukhEgg`
+loads the complete real record and checks constant-token exclusion, delayed
+controller, token characteristics and clone lifetime. The seven protection
+records map to `TestRONWaitingDelayedTokenProtection`: their real costs, filters
+and shield bodies can select a departed source retained only by a RON token count.
+Those scenarios establish subrules; general `ChooseADamageSource` still rejects.
+Existing token-creation tests retain payment, legality and simultaneous-batch
+coverage. No complete-card coverage or loader acceptance gain is claimed.
