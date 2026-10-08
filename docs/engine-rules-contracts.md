@@ -8016,3 +8016,48 @@ casting payment rollback, pre-entry timing, cleanup, choice and source lifetime,
 independent factories, cloning, declaration rejection and atomic loader rejection.
 Library of Leng's hand-size rule is tested from its real record in isolation;
 its full record still rejects its unsupported discard replacement.
+
+## Delayed spell-event frames
+
+`AtNext`, `AtNextModes`, and delayed permanent-event bodies capture the current
+`SpellBinding` frame when the delayed ability is created. Each body restores its
+own frame for execution, then restores the outer frame. `FromSpell` reads the
+original stack identity. An absent spell cannot be countered; a later cast of
+the same card cannot replace it (CR 400.7 and 603.7c). Bindings remain subject to
+normal definition validation and producer scope.
+
+`Game.WaitingDelayedSpellSources() []DamageSource` supplies only spell references
+in saved waiting frames, including nested sequences and modal bodies. It excludes
+nil bindings, mismatched identities, ability objects, future delayed producers,
+and global resolution frames. Registration order and sorted stack identities
+make deduplication deterministic. One-shot detection ends waiting eligibility
+before pending placement. A placed body supplies the existing
+`StackBoundSpellSources` category. Copies do not create waiting abilities.
+
+The stack saves exact spell departure information alongside its existing saved
+mana values and controllers. Queries use current information for a live spell,
+then departure information for that stack identity, then the saved frame.
+Departure information does not change event bindings. Returned query values own
+their characteristic snapshots. Stack clones own separate departure maps;
+delayed frames are immutable and shared safely until execution.
+
+`ChooseDamageSourceFromWaitingDelayedSpellBindings(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared
+non-targeted decision, filtering, validation, and output-clearing service.
+It supplies this category only. The full CR 609.7a source list still needs waiting
+damage-source frames, replacement/prevention references, other referred forms,
+and command-zone objects. No payment or replacement-order contract changes.
+
+RON now lowers a bound `Trigger_ThatSpell` inside supported `CreateFutureTrigger`
+and `CreateTriggerUntil` bodies through the existing typed spell reference.
+An unbound reference or a player/permanent reference in this role remains an
+error. This establishes a shared prerequisite with no collection unlocks.
+
+Evidence: `TestWaitingDelayedSpellFrames`, `ChoicesAndBoundaries`, and
+`IndependentEvents` cover live/departed/recast spells, color/control changes,
+modal and sequence frames, query isolation, choice clearing, invalid declarations,
+frame restoration, APNAP, stack copies and clones. `TestRONWaitingDelayedSpellFrame`
+executes the complete Lightning Bolt record with a synthetic RON delayed-event
+consumer, including unpaid casting rollback, timing, source departure, recasting,
+copying and clone execution. `TestRONWaitingDelayedSpellInvalid` covers invalid
+reference shapes and types. Existing stack spell-binding tests remain required.

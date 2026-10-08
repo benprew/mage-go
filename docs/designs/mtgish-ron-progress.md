@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **754 accepted / 232 rejected unique card
-names** (986 total), and **1,944 compiled / 501 rejected records** (2,445 total).
+The latest recorded inventory reports **763 accepted / 223 rejected unique card
+names** (986 total), and **1,963 compiled / 482 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`OPTIONAL-RESOLUTION-ACTION-PAYMENT` slice and its contract evidence are recorded
-at the end of this ledger. It adds a shared payment service and complete RON
-card mappings for Delif's Cone, Farrel's Zealot and Floral Spuzzem.
+`DELAYED-SPELL-EVENT-FRAMES` slice is recorded at the end of this ledger.
+It adds captured spell-event replay and waiting-source queries as a shared
+prerequisite for seven prevention cards, with no immediate compilation gain.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -38647,3 +38647,156 @@ Ranked next candidates to reassess from fresh evidence:
 Library of Leng's discard replacement remains a single-card follow-up to defer
 while useful multi-card work remains. Stop here. The descriptive commit hash is
 reported in the final response after checks pass.
+
+## 2026-10-07: captured delayed spell-event frames
+
+Status: completed implementation slice `DELAYED-SPELL-EVENT-FRAMES`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design, and the ledger reorganization, plus untracked
+`mtgish-ron-completed.md`, remain outside this commit. The ledger summary and
+this entry alone are staged over the original tracked ledger.
+
+### Fresh baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Strict `go run ./cmd/loadcards -json` exited 1 with 1,963 compiled / 482 rejected
+records and 763 accepted / 223 rejected unique names. This was expected
+collection rejection, not a build or test failure. The top status block was
+stale; the latest entry's 1,963/482 measurement matches the fresh baseline.
+
+Read the current design, engine reference, targeted vocabulary entries,
+spell-reference and delayed-frame code, related API/rules contracts, CR 400.7,
+603.7a–e and 609.7a–c, and the complete RON records listed below. Reprints count
+once. No Go card definition supplied requirements.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: typed waiting delayed references; select its spell-event frame prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 for this bounded prerequisite; 7 after complete source enumeration and next-event shields | Waiting damage-source bindings, further referred-object forms, waiting replacement/prevention references, command-zone objects, chosen-source shield creation and property rechecks remain. Saved spell frames are one concrete CR 609.7a category shared by all seven. | Small/medium: typed frame capture/replay, exact departure information, source reader/choice, compiler scope adapter, lifecycle tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel | 8 after the full parameterized grant/removal/token and combat contract | Current banding mechanics do not provide parameterized band formation and assignment. Nested token ability, live grants and selective removal need a shared ability representation. Enables these eight records, with no other apparent syntax blockers in their complete records. | Large: ability/layer representation plus attack/block band formation and incoming/outgoing assignment tests. |
+| Text-word choice/substitution | Magical Hack, Sleight of Mind | 2 after complete spell/permanent contexts | Both complete records need two word choices, fresh bindings, spell text effects and permanent text-layer substitution. Every affected rule consumer must read changed words. Targeted modal structure exists, but the spell/permanent category adapter currently accepts only a single color action and must also be extended. | Large: persistent word substitutions, choice and copy isolation, text-layer and spell consumers. |
+
+Candidate #1 is dependency-ready as a shared prerequisite. Select one complete
+shape from it: saved spell-event frames, rather than start the entire general
+source-choice/shield family. This is the bounded dependency slice; delayed
+damage-source frames are the next distinct capability. The seven complete RON
+records all combine the choice with a next-event shield, so none is counted as
+an immediate unlock. The eight banding and two text-change records were read in
+full, including nested tokens, removals and both target modes.
+
+### Supported contract, dependencies and reuse boundary
+
+- RON `Trigger_ThatSpell` now lowers to `FromSpell` inside supported
+  `CreateFutureTrigger(event, ActionList([...]))` and
+  `CreateTriggerUntil(event, ActionList([...]), UntilEndOfTurn)` bodies when an
+  enclosing `WhenAPlayerCastsASpell` declares that reference. Existing spell
+  consumers keep their validation and lowering. `CounterSpell(Trigger_ThatSpell)`
+  is the direct acceptance case. Constructor-form, player-typed and unbound
+  references remain errors.
+- `AtNext`, `AtNextModes`, and delayed permanent-event bodies capture typed
+  `SpellBinding` maps at creation and restore them only during body execution.
+  The outer frame is restored afterward. Each factory and detected event retains
+  separate declarations and identities. Countering requires a live original
+  stack object; no LKI read makes a departed spell actionable.
+- `Game.WaitingDelayedSpellSources() []DamageSource` reads saved waiting frames,
+  including sequence and modal bodies, in deterministic registration/identity
+  order with exact deduplication. Invalid bindings/identities, future producers,
+  source IDs alone, and unrelated global frames cannot add candidates.
+- `ChooseDamageSourceFromWaitingDelayedSpellBindings(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` supplies this category
+  to the existing filtered choice service. Empty lists and absent players clear
+  the operation's output, without changing independent outputs.
+- Stack departure information is saved by exact stack identity alongside the
+  existing mana-value/controller history. Source queries use current information,
+  then exact departure information, then the frame snapshot. A later cast cannot
+  supply the former cast's information. Queries return separate snapshots and
+  do not change the saved cast-event information. Clone stacks copy the history
+  map; immutable saved frames may be shared. Placed frames use the existing
+  `StackBoundSpellSources` service; one-shot detection ends waiting eligibility
+  before pending placement. Persistent frames remain eligible until cleanup.
+
+RON owns spelling, binding scope and lowering. mage owns capture/replay,
+identity, departure history, source enumeration and choices. Reuse includes the
+existing cast-event bindings, delayed registration, definition validation,
+APNAP, cloning/copies, counter service, damage-source filters and decision
+outputs. This adds no payment, replacement ordering or simultaneous-operation
+contract. Casting rollback is exercised through the existing transaction.
+General `ChooseADamageSource` stays rejected. There is no production partial
+registry, Go-card fallback, card-name execution branch, global last-action slot
+or game-time declaration panic. Runtime/removal gates remain unmet; no Go card,
+generator or obsolete DSL function is deleted.
+
+### Failing-first evidence and gameplay mapping
+
+The new native tests first failed to compile because the waiting spell-source
+API did not exist. With a minimal nil-result stub, RON tests failed at the
+expected `unsupported delayed spell-event reference (Trigger_ThatSpell)` error.
+The old unsupported-reference test was replaced by positive gameplay and typed
+negative tests after the engine acquired the missing frame contract. No gameplay
+assertion was weakened. A native recast fixture initially allowed its observer
+to see the new cast, creating an additional valid source; the fixture now removes
+that observer before recasting so it tests one old frame explicitly.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestWaitingDelayedSpellFrames` | Native ordinary/modal capture; live/departed/recast identity; current color/control and departure data; immutable query snapshots; clone history; waiting-to-stack transition and copied delayed counter bodies. |
+| `TestWaitingDelayedSpellChoicesAndBoundaries` | Shared filtered choice, independent outputs, empty/absent-player clearing, outer-frame restoration, invalid/unbound declarations, future producer/source-ID exclusion and invalid saved identities. |
+| `TestWaitingDelayedSpellIndependentEvents` | Two factories and two cast events, four independent waiting abilities, deterministic deduplication, APNAP and clone gameplay with both original spells countered. |
+| Lightning Bolt, LEA/LEB (existing accepted record) | `TestRONWaitingDelayedSpellFrame` uses the complete real record against a synthetic RON delayed cast-event consumer: unpaid casting rollback, creation timing, live counter, departure, recast protection, source departure, stack copies and clone execution. This adds interaction coverage, not a new full-card unlock. |
+| Lightning Bolt, LEA | `TestRONWaitingDelayedSpellDepartureFrame` uses the complete record with a synthetic RON persistent departure-event body, counters the original live spell, and verifies expiration at cleanup. |
+| Invalid RON | `TestRONWaitingDelayedSpellInvalid` rejects constructor-form and incompatible/unbound references in delayed cast-event bodies. |
+| Presence of the Master and Nether Void, LEG | Existing `TestRONStackBoundSpellSourcePrerequisite` and independent-event tests rerun against the shared source-query change; complete-record counter/payment behavior remains supported. |
+| Seven source-choice prevention records | Complete records inspected; no full-record acceptance or gameplay claim. Their general choice and shield blockers remain explicit. |
+
+### Final verification and measured coverage
+
+Final checks passed:
+
+- `go test ./pkg/mage -run 'TestWaitingDelayedSpell|TestStackBoundSpellSources' -count=1`
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingDelayedSpell|TestRONDelayedStep|TestRONStackBoundSpellSource' -count=1`
+- `make build`
+- `go vet ./...`
+- `go test ./pkg/mage/... -short -count=1`
+- `make test`
+- `go test ./... -short -count=1` (engine skill final check)
+- `make lint` (final run: 0 issues)
+- `git diff --check`
+
+The first lint run found only two new-test style issues (preallocation and an
+unnecessary explicit variable type). Both were fixed. Automatic formatting
+changed import groups and removed the blank line left by the replaced negative
+test; changes were reviewed. The affected native/RON checks and lint were rerun
+and passed. No environment or pre-existing validation blocker remains.
+
+Final `go run ./cmd/loadcards -json` and `go run ./cmd/loadcards -inventory`
+both exit 1 for expected strict collection rejection. Loader JSON is identical
+to the fresh baseline: 1,963 compiled / 482 rejected records; 763 accepted /
+223 rejected unique names. Estimated and actual compilation gain both equal
+zero. No accepted record is lost. Added gameplay coverage proves a previously
+rejected delayed spell-reference context using a complete accepted Lightning
+Bolt record; it does not prove the seven prevention cards. Representative gaps
+still include `unsupported action (ChooseADamageSource)`,
+`unsupported static ability grant (BandsWithOthers)` and
+`supply one color action for this target category (ActionList)` on Magical Hack.
+
+All 12 RON source hashes match the vocabulary snapshot. No source edit or
+vocabulary syntax refresh is needed. The snapshot's original loader baseline
+remains historical; this entry records fresh results. Complete collection
+loading/gameplay, runtime cutover, Go-card deletion and obsolete DSL cleanup
+remain unfinished.
+
+Changed files: new `pkg/mage/waiting_delayed_spell.go` and its native tests;
+new RON `waiting_delayed_spell_test.go`; native `composable_conditions.go`,
+`stack.go`, `clone.go`, `damage_source_choice.go`, `stack_bound_spell_source.go`,
+`doc.go`; RON `spell_scope.go`, `delayed_step_test.go`; API/rules-contract docs
+and this ledger summary/entry. Source records are unchanged. No new source defect
+was found; prior defects remain separate from this capability.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Typed waiting delayed damage-source frames, the remaining neighboring frame
+   prerequisite for the seven source-choice shields. Then audit waiting
+   prevention/replacement and command-zone categories before general choice.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed text-word choices/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.

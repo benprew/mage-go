@@ -2628,9 +2628,9 @@ original target filter. Source departure and ability removal do not cancel a
 schedule. Actions still require a present, phased-in subject; information reads
 use their existing LKI contracts.
 
-Other events, new target declarations or modes in the delayed body, and event
-spell reads remain compiler errors. The engine does not yet save event spell
-bindings in this frame. Next upkeep accepts only bare `You`; other players need
+Other events and new target declarations or modes in the delayed body remain
+compiler errors. Bound cast-event spell reads use the saved spell frame described
+in "Delayed spell-event references" below. Next upkeep accepts only bare `You`; other players need
 an explicit scheduling contract. `AtNextEndOfCombatThisTurn` is distinct from
 `AtTheNextEndOfCombat` and remains unsupported. This adapter does not add casting
 restrictions, combat events, choices, histories, links, or finite prevention.
@@ -3447,8 +3447,8 @@ with the current factory's target/event declarations. Other values, missing
 continuations and unbound/incompatible references reject compilation.
 
 These resolving forms work in supported spell, activation, trigger and delayed
-lists; delayed cast-event spell reads remain rejected. They do not announce X
-or add a cost to casting/activation. The engine reads the amount once at the
+lists; bound delayed cast-event spell reads use the saved frame. They do not
+announce X or add a cost to casting/activation. The engine reads the amount once at the
 payment action, then uses `IfManaPaid`/`UnlessManaPaid` and the shared cost
 transaction. An unavailable cost offers no choice. A zero cost still requires
 acceptance. Each adjacent pair keeps its own outcome. Activation-cost reductions
@@ -6616,3 +6616,27 @@ a live incarnation; it reads no LKI. Use `WithStaticAbility` for native callers.
 The existing direct hand-size setters remain available to current callers.
 Cursed Rack is covered as a complete RON card. Library of Leng's discard
 replacement remains unsupported; its hand-size rule alone has gameplay evidence.
+
+### Delayed spell-event references
+
+`AtNext`, `AtNextModes` and delayed permanent-event bodies now capture and restore
+`SpellBinding` values. A `FromSpell` read keeps the original stack identity; a
+counter action cannot affect a later cast of the same card. Other typed frames
+retain their existing behavior.
+
+`mage.Game.WaitingDelayedSpellSources() []mage.DamageSource` reads saved spell
+frames only while their abilities wait to trigger. It uses current information
+or exact departure information, returns independent snapshots, and deduplicates
+in deterministic order. Placed delayed bodies use `StackBoundSpellSources`.
+
+`mage.ChooseDamageSourceFromWaitingDelayedSpellBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` chooses from this category through the shared filtered
+choice service. Missing choices and absent players clear only this output.
+General RON `ChooseADamageSource` remains rejected until its complete source list
+and shield contracts are available.
+
+In supported RON delayed bodies, bound `CounterSpell(Trigger_ThatSpell)` and
+other existing spell-reference consumers now use the saved cast-event frame.
+`Trigger_ThatSpell` requires an enclosing cast event. It does not become a target
+and cannot refer to a later cast. This adds no RON spelling or production registry.

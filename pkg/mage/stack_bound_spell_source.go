@@ -14,13 +14,7 @@ func (g *Game) StackBoundSpellSources() []DamageSource {
 	var sources []DamageSource
 	for _, object := range g.stack.objects {
 		for _, saved := range stackBoundSpellSources(object) {
-			source := g.CaptureSpellDamageSource(saved.StackID())
-			if !source.SameObject(saved) {
-				source = object.boundSpellSources[saved.StackID()]
-			}
-			if !source.SameObject(saved) {
-				source = saved
-			}
+			source := g.spellReferenceInformation(saved)
 			if !slices.ContainsFunc(sources, source.SameObject) {
 				sources = append(sources, cloneDamageSource(source))
 			}

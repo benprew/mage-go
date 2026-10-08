@@ -378,17 +378,6 @@ func TestRONDelayedStepInventory(t *testing.T) {
 	}
 }
 
-func TestRONDelayedStepRejectUnsavedSpellEvent(t *testing.T) {
-	src := `Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [TriggerA(WhenAPlayerCastsASpell(AnyPlayer, AnySpell), ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep, ActionList([CounterSpell(Trigger_ThatSpell)]))]))])`
-	nodes, err := Parse(strings.NewReader(src), "delay-spell-event.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := Compile(nodes[0]); err == nil {
-		t.Fatal("unsaved event spell escaped into delayed body")
-	}
-}
-
 func TestRONDelayedStepCapturedEventPlayer(t *testing.T) {
 	g, a, b := ronGame()
 	seedRONDrawLibrary(a)

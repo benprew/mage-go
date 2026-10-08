@@ -232,6 +232,12 @@
 // creatures that the current subject blocks. Combat and noncombat damage
 // use the current pair. Retained information cannot restore a former pair.
 //
+// Delayed bodies keep spell-event bindings for the original stack identity.
+// Use [Game.WaitingDelayedSpellSources] and
+// [ChooseDamageSourceFromWaitingDelayedSpellBindings] for saved waiting spells.
+// Queries use current or exact departure information. A later cast cannot
+// replace a saved spell. These services supply one source category.
+//
 // Use [ChooseDamageSourceFrom] for a non-targeted choice from explicit legal
 // source references. [DamageSourceChooser] permits typed player decisions.
 // The result uses [DamageSourceBinding] in the current resolution frame.

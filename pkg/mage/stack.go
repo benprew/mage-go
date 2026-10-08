@@ -199,6 +199,7 @@ func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
 // Stack represents the game stack.
 type Stack struct {
 	objects          []*StackObject
+	spellSources     map[uuid.UUID]DamageSource
 	spellManaValues  map[uuid.UUID]int
 	spellControllers map[uuid.UUID]uuid.UUID
 }
@@ -264,6 +265,12 @@ func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
 
 func (s *Stack) saveSpellInformation(obj *StackObject) {
 	source := damageSourceFromSpellObject(obj)
+	if source.Valid() {
+		if s.spellSources == nil {
+			s.spellSources = make(map[uuid.UUID]DamageSource)
+		}
+		s.spellSources[obj.ID] = source
+	}
 	for _, referrer := range s.objects {
 		if source.Valid() {
 			referrer.saveBoundSpellInformation(source)

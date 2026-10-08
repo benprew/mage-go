@@ -318,6 +318,8 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 	body := &capturedDelayedBody{
 		body:              e.body,
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
+		spells:            maps.Clone(ctx.Game.resolution.spellBindings),
+		spellSources:      ctx.Game.captureDelayedSpellSources(),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
@@ -359,6 +361,8 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 
 type capturedDelayedBody struct {
 	body              ResolvingEffect
+	spells            map[*SpellBinding]uuid.UUID
+	spellSources      map[*SpellBinding]DamageSource
 	permanents        map[*PermanentBinding]capturedPermanent
 	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
 	players           map[*PlayerBinding]uuid.UUID
@@ -379,6 +383,9 @@ func (e *capturedDelayedBody) Text() string                 { return e.body.Text
 func (e *capturedDelayedBody) Properties() EffectProperties { return e.body.Properties() }
 func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	state := &ctx.Game.resolution
+	outerSpells := state.spellBindings
+	state.spellBindings = maps.Clone(e.spells)
+	defer func() { state.spellBindings = outerSpells }()
 	outerNumbers := state.numberBindings
 	state.numberBindings = maps.Clone(e.numbers)
 	defer func() { state.numberBindings = outerNumbers }()
@@ -462,6 +469,8 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 	body := &capturedDelayedBody{
 		body:              e.body,
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
+		spells:            maps.Clone(ctx.Game.resolution.spellBindings),
+		spellSources:      ctx.Game.captureDelayedSpellSources(),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),

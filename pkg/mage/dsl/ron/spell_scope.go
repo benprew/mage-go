@@ -16,10 +16,6 @@ type spellReferencePlan struct {
 
 func compileSpellRef(n Node, ctx scope) (spellReferencePlan, error) {
 	if n.Kind == Symbol && ctx.castEvent != nil && n.Name == ctx.castEvent.spellName {
-		// The engine does not save event spell bindings for delayed effects.
-		if ctx.delayedStep {
-			return spellReferencePlan{}, unsupported(n, "delayed spell-event reference")
-		}
 		return spellReferencePlan{event: ctx.castEvent}, nil
 	}
 	if n.Kind == Symbol && ctx.spellTarget != nil && n.Name == ctx.spellTarget.name {
