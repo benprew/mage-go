@@ -538,6 +538,11 @@
 // Damage bodies declare these typed player reads in singular recipients and
 // these typed values in single, collection, per-player and packet amounts.
 // Queries do not select recipients, read amounts or execute damage batches.
+// [CountMatchingHand] and [CountGraveyardCards] declare direct [This] reads
+// in their typed player. [CountPermanents] declares these reads in typed
+// controller and owner sets. Filters, unions, intersections and mana-value
+// limits retain the declarations. Queries do not run filters or select members.
+// Counts still read current membership when the delayed body resolves.
 // Attached, bound and opaque player references need separate contracts.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.

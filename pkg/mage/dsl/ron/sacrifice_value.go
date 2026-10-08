@@ -61,6 +61,9 @@ func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
 	if n.Name == "TheNumberOfCardsOfTypeInPlayersHand" {
 		return compileHandCount(n, ctx)
 	}
+	if n.Name == "TheNumberOfGraveyardCards" {
+		return compileGraveyardCount(n, ctx)
+	}
 	if n.Name == "TheNumberOfPermanentsOnTheBattlefield" {
 		return compileBattlefieldCount(n, ctx)
 	}

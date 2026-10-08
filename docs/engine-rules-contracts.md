@@ -10295,3 +10295,46 @@ Native evidence: `TestWaitingDelayedDamageOperandReferences` (108 cases) and
 `TestRONWaitingDelayedDamageOperandInvalid` and
 `TestRONWaitingDelayedDamageOperandInstances`. General damage-source
 aggregation and complete protection-card coverage remain unfinished.
+
+### Waiting delayed filtered count declarations
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains the saved source
+when `CountMatchingHand(PlayerRef, CardFilter)` or
+`CountGraveyardCards(PlayerRef, CardFilter)` uses a typed controller, owner or
+LKI-controller read of direct `This`. `CountPermanents(PermanentSet)` supports
+that declaration in `PermanentsControlledBy` and `PermanentsOwnedBy`, including
+`FilterPermanentSet`, `UnionPermanents`, `IntersectPermanents` and
+`ManaValueAtMost`. The latter also traverses its typed limit value. Arithmetic
+retains either operand's declaration, including zero and empty results.
+
+The query does not evaluate filters, values, collections or player references.
+Implicit membership in a matching set and opaque callbacks do not supply a
+source declaration. Attached, bound, singleton and other collection forms are
+outside this direct typed player-read contract. Existing delayed capture,
+incarnation/LKI, phasing, copied snapshots, deduplication and clone services
+retain identity. A returned card cannot replace the saved source (CR 400.7).
+One-shot detection ends waiting availability (CR 603.7a–e). Counts read current
+zone or battlefield membership when used at resolution (CR 608.2h); the query
+cannot freeze that membership. CR 609.7a–b governs source choice and shield use.
+Damage batches, replacement ordering and cost rollback remain shared services.
+
+RON `compileGraveyardCount(Node, scope) (valueFactory, error)` shares the existing
+single-player graveyard count lowering between indefinite toughness and general
+resolution values. It accepts `TheNumberOfGraveyardCards(And([card-filter,
+InAPlayersGraveyard(SinglePlayer(player-ref))]))`, with either operand order.
+Exactly one supported card filter and one zone declaration are required.
+`compileInstanceValue` retains per-instance player bindings and rejects unbound
+or malformed reads. Hand and battlefield count adapters retain their syntax.
+No RON records or public engine signatures change.
+
+Evidence: `TestWaitingDelayedFilteredCountReferences` (54 identity cases),
+`TestWaitingDelayedFilteredCountPurityAndBoundaries` (eight typed count/set
+shapes, zero arithmetic, callback purity, exclusions and definition rejection),
+`TestRONWaitingDelayedFilteredCountProtection` (147 scenarios from seven real
+protection records), `TestRONWaitingDelayedFilteredCountInstances` (three count
+families, independent factories, departure reads, late membership and clones),
+`TestRONWaitingDelayedFilteredCountInvalid` (nine declaration rejections) and
+`TestRONWaitingDelayedFilteredCountZeroAndOrder` (empty counts, arithmetic and
+operand order). Existing Inquisition, Wall of Tombstones and battlefield-count
+regressions preserve complete-record behavior. Full protection-card source
+aggregation remains unfinished; this contract supplies one prerequisite.

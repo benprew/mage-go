@@ -7998,3 +7998,32 @@ without reading amounts or selecting recipients. Zero damage and empty sets
 keep an explicit declaration. Attached, opaque and filtered-count operands need
 separate contracts. This extends `WaitingDelayedPermanentSources`; it does not
 provide the complete legal source list for a general source choice.
+
+### Waiting delayed filtered counts
+
+`CountMatchingHand(player, filter)` and `CountGraveyardCards(player, filter)`
+retain direct `This` reads through typed controller, owner and LKI-controller
+players in `Game.WaitingDelayedPermanentSources`. `CountPermanents(subjects)`
+retains those reads in typed controller/owner sets and their filter,
+union/intersection and mana-value-limit wrappers. The query does not call
+filters, resolve players, select members or calculate values. Zero arithmetic
+and empty collections keep explicit declarations. Counts read current membership
+at resolution. Saved incarnation, departure information, phasing and clone
+lifetimes use the shared delayed services. Opaque, attached, bound, implicit
+membership and other collection references need separate contracts.
+
+RON resolution values now share the graveyard-count adapter used by indefinite
+toughness:
+
+```ron
+TheNumberOfGraveyardCards(And([
+    IsCardtype(Creature),
+    InAPlayersGraveyard(SinglePlayer(ControllerOfPermanent(ThisPermanent)))
+]))
+```
+
+The two operands can appear in either order. Supply exactly one supported card
+filter and one single-player graveyard declaration. Player scope is validated at
+compile time. The adapter builds fresh references for each factory instance.
+Existing hand and battlefield count syntax is unchanged. This is a prerequisite
+for complete source aggregation, with no complete protection-card unlocks.

@@ -50,7 +50,8 @@ func compileIndefiniteToughnessValue(n Node, ctx scope) (resolutionValueFactory,
 			return mage.ToughnessOfWithLKI(ref.build(bindings))
 		}, nil
 	case "TheNumberOfGraveyardCards":
-		return compileToughnessGraveyardCount(n, ctx)
+		value, err := compileGraveyardCount(n, ctx)
+		return resolutionValueFactory(value), err
 	case "Integer":
 		value, err := compileValue(n, ctx)
 		if err != nil {
@@ -62,7 +63,7 @@ func compileIndefiniteToughnessValue(n Node, ctx scope) (resolutionValueFactory,
 	}
 }
 
-func compileToughnessGraveyardCount(n Node, ctx scope) (resolutionValueFactory, error) {
+func compileGraveyardCount(n Node, ctx scope) (valueFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}

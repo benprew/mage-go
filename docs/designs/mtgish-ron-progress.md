@@ -8,12 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-DAMAGE-OPERAND-REFERENCES` retains direct typed player and
-value reads in waiting delayed damage bodies without evaluating operands.
-Seven protection names gain 98 subrule scenarios; native identity coverage gains
-108 cases. Compilation and complete-card coverage remain unchanged. Other
-action families, filtered counts and cast/state/coin conditions still need audit
-before aggregation.
+`WAITING-DELAYED-FILTERED-COUNT-REFERENCES` retains direct typed player reads
+in waiting hand, graveyard and battlefield count values without running filters.
+Seven protection names gain 147 subrule scenarios; native identity coverage gains
+54 cases. Compilation and complete-card coverage remain unchanged. Other action
+families and cast/state/coin conditions still need audit before aggregation.
 Token quality grants remain unsupported. Titania's Song needs per-member base
 values and sticky duration.
 
@@ -46335,3 +46334,138 @@ Ranked next candidates:
    unlock with token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-DAMAGE-OPERAND-REFERENCES`.
+
+## 2026-10-08: waiting delayed filtered count references
+
+Status: completed implementation slice `WAITING-DELAYED-FILTERED-COUNT-REFERENCES`.
+
+### Candidate comparison and selection
+
+The latest ranked candidate 1 is dependency-ready. Its remaining action/value
+work was narrowed to one cohesive filtered-count declaration contract. Complete
+RON records for the six Circles, Greater Realm of Preservation, Jade Monolith,
+Reverse Damage and Master of the Hunt were inspected, including nested source
+choices, recipients, prevention results and token quality grants. Inquisition,
+Wall of Tombstones and Nameless Race records were also read for count syntax.
+Reprints count once. Nameless Race's entry player-set shape is outside this
+single-player resolving count contract and retains its existing entry blocker.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Rank 1, filtered count declarations | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | Shared CR 609.7a source-aggregation prerequisite for seven cards; other action and condition declarations remain | Small: pure typed traversal, shared graveyard lowering, native identity and real-record subrule tests |
+| Rank 2, cast/state/coin declarations | Same seven protection names; Jade Monolith and Reverse Damage also need general source choice | 0 for declarations alone; seven potential after aggregation prerequisites | Broader condition audit; Jade retains redirection scope blockers, Reverse Damage retains combined prevention/life-result execution | Medium: condition families, captured facts, purity and gameplay |
+| Rank 3, named-token quality grants | Master of the Hunt | 1 plausible | Token-local BandsWithOthers construction and exact named quality; token metadata and native band combat already available | Medium: token lowering, combat legality/damage and clone tests |
+
+Rank 1 supplies concrete multi-card prerequisite value within this run's scope.
+It is preferred over the single-card token grant while shared work remains.
+The contract, reuse boundary and acceptance cases were stated before edits.
+Hand/battlefield lowering already existed; the engine lacked their reference
+traversal. Graveyard count execution and restricted toughness lowering existed;
+general resolving values lacked that adapter. No source defect or missing count
+execution mechanic was found. No RON source changed.
+
+### Exact contract, dependencies and reuse boundary
+
+Public signatures remain unchanged:
+
+- `Game.WaitingDelayedPermanentSources() []DamageSource`.
+- `CountMatchingHand(PlayerRef, CardFilter) ResolutionValue` and
+  `CountGraveyardCards(PlayerRef, CardFilter) ResolutionValue`.
+- `CountPermanents(PermanentSet) ResolutionValue` with
+  `PermanentsControlledBy(PlayerRef, PermanentFilter)` and
+  `PermanentsOwnedBy(PlayerRef, PermanentFilter)`.
+
+`resolutionValueReadsSourcePermanent(ResolutionValue) bool` now reads typed
+player declarations in those card counts and calls
+`countSetReadsSourcePermanent(PermanentSet) bool` for permanent counts.
+Controller/owner sets, filter wrappers, unions/intersections and mana-value
+limits propagate declarations. Limits also traverse their typed value.
+Controller, owner and LKI-controller references to direct `This` qualify.
+Arithmetic retains either declaration, including zero multipliers and empty
+collections. The query never evaluates players, values, filters or collections.
+Implicit matching membership, opaque callbacks, attached/bound references and
+other collection shapes are outside this direct typed player-read contract.
+
+RON `compileGraveyardCount(Node, scope) (valueFactory, error)` replaces the
+restricted helper name and shares its exact lowering between indefinite
+toughness and `compileInstanceValue`. Supported shape:
+`TheNumberOfGraveyardCards(And([card-filter,
+InAPlayersGraveyard(SinglePlayer(player-ref))]))`, with either operand order,
+exactly two operands and one supported card filter. Scope validation and fresh
+factory references use `compilePlayerRef`; no new spelling or mutable shared
+binding is introduced. Existing hand and battlefield count adapters are reused.
+
+Mage owns saved incarnations, LKI/phasing facts, snapshot copies, deduplication,
+delayed capture, stack transfer, clone lifetime and count execution. Counts read
+current zone/battlefield membership when the body resolves, not when sources
+are enumerated. CR 400.7, 603.7a–e, 608.2h and 609.7a–b apply. Existing target
+legality, payment rollback, replacements and simultaneous damage remain shared
+services. Runtime cutover, Go-card removal and DSL removal gates remain closed.
+No public DSL function was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, native tests failed at `filtered count lost saved
+source`; real protection scenarios failed at `query lost source or offered
+payment`, and graveyard values failed at `unsupported value
+(TheNumberOfGraveyardCards)`. Test fixtures were then corrected to use artifact
+sources outside the creature counts and to set an owner before destruction.
+A compiler return-type mismatch was corrected with an explicit factory-type
+conversion. Assertions and production contracts were not weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestWaitingDelayedFilteredCountReferences` | 54 cases: three typed players × three counts × six live/departed/returned/phased/phase-cycle/control states. Exact identity, current/departure facts, copied snapshots, pure repeated queries and independent clone lifetime. |
+| `TestWaitingDelayedFilteredCountPurityAndBoundaries` | Eight count/set shapes; nonempty hand/graveyard and battlefield callback probes, zero arithmetic, opaque/attached/implicit exclusions and invalid engine definitions. |
+| `TestRONWaitingDelayedFilteredCountProtection` | All six Circles and Greater Realm: 147 real-record subrule scenarios, three count families × seven states, including activation copies and clones. Real filters and costs, failed-payment rollback, choice timing, exact source selection, LKI controller, current counts, actual damage and shield consumption. Complete records still reject unfinished aggregation. |
+| `TestRONWaitingDelayedFilteredCountInstances` | Three resolving RON count families, independent factories/controllers, third-party damage source, source departure, membership added after enumeration and original/clone gameplay. |
+| `TestRONWaitingDelayedFilteredCountInvalid` | Nine malformed, unbound or incompatible hand/battlefield/graveyard declarations reject during compilation. |
+| `TestRONWaitingDelayedFilteredCountZeroAndOrder` | Three empty/arithmetic/reordered shapes retain departed identity without changing life; detection ends waiting availability. |
+| Existing `TestRONHandOperationsCards`, `TestRONIndefiniteToughnessWall`, `TestRONBattlefieldCount*` | Complete Inquisition and Wall of Tombstones records and existing battlefield-count cards preserve their gameplay. These are regression mappings, not new full-card coverage. |
+
+### Verification and measured outcome
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected exit 1, strict collection rejection.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedFilteredCount
+  -count=1` and native `go test ./pkg/mage -run TestWaitingDelayedFilteredCount
+  -count=1`: PASS after expected failing-first evidence.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. No automatic changes beyond the intended files.
+  Post-lint filtered-count, indefinite-toughness, hand-operation and
+  battlefield-count RON regressions and native filtered-count/damage-operand
+  suites: PASS. The strengthened nonempty callback probes also pass.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. JSON matches baseline
+  byte-for-byte: **1,978 compiled / 467 rejected records; 773 accepted / 213
+  rejected unique names** out of 2,445 records / 986 names. First diagnostic:
+  Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+- All 12 source hashes match the vocabulary snapshot; no refresh required.
+- No environment, source-data or pre-existing validation blocker remains.
+
+Estimated and actual gains: **0 unique names / 0 compiled records**. Seven
+protection names gain 147 subrule scenarios; native identity coverage gains 54
+cases. Complete-card gameplay coverage remains unchanged. Complete collection
+gameplay, runtime integration, Go-card deletion and obsolete DSL cleanup remain
+unfinished.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, native and RON
+`waiting_delayed_filtered_count_test.go`, RON `sacrifice_value.go` and
+`indefinite_toughness.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Existing user changes to
+`.gitignore`, the execution design, progress-history archival and the untracked
+completed ledger were preserved. Only this slice's ledger delta is staged.
+
+Ranked next candidates:
+
+1. Remaining direct typed player/value declarations in other action families:
+   seven protection names benefit; 0 immediate unlocks. Audit typed collection
+   operands and action subjects without running callbacks or filters.
+2. Cast/state/coin and remaining conditional declarations, then complete
+   CR 609.7a aggregation: seven potential full-card unlocks after prerequisites;
+   Jade Monolith and Reverse Damage retain separate blockers.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock with token identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-FILTERED-COUNT-REFERENCES`.

@@ -146,6 +146,12 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		return playerRefReadsSourcePermanent(v.subject)
 	case playerDamageHistoryValue:
 		return playerRefReadsSourcePermanent(v.subject)
+	case matchingHandCount:
+		return playerRefReadsSourcePermanent(v.player)
+	case graveyardCardCountValue:
+		return playerRefReadsSourcePermanent(v.player)
+	case permanentCountValue:
+		return countSetReadsSourcePermanent(v.subjects)
 	case arithmeticValue:
 		return resolutionValueReadsSourcePermanent(v.left) || resolutionValueReadsSourcePermanent(v.right)
 	default:
@@ -153,6 +159,23 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 	}
 	_, self := subject.(sourceRef)
 	return self
+}
+
+func countSetReadsSourcePermanent(subjects PermanentSet) bool {
+	switch s := subjects.(type) {
+	case controlledByPermanentSet:
+		return playerRefReadsSourcePermanent(s.controller)
+	case ownedPermanentSet:
+		return playerRefReadsSourcePermanent(s.owner)
+	case filteredPermanentSet:
+		return countSetReadsSourcePermanent(s.subjects)
+	case composedPermanentSet:
+		return slices.ContainsFunc(s.members, countSetReadsSourcePermanent)
+	case manaValueAtMostSet:
+		return countSetReadsSourcePermanent(s.subjects) || resolutionValueReadsSourcePermanent(s.limit)
+	default:
+		return false
+	}
 }
 
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
