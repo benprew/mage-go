@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `COMMAND-DAMAGE-SOURCES` adds face-up command-object choice, exact
-visit identity, hidden and departure information, independent clones and RON
-category lowering. Additional subrule evidence covers seven protection names,
-with zero full-card unlocks. Complete source enumeration, explicit-reference
-audits and waiting command references remain gaps.
+unfinished. `WAITING-COMMAND-REFERENCES` adds exact command visits held by active
+prevention and redirection rules, isolated current/departure information and
+RON category lowering. Additional subrule evidence covers seven protection names,
+with zero full-card unlocks. Complete source enumeration and the remaining
+explicit-reference audit remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -41586,4 +41586,135 @@ Ranked next candidates:
    operation. Conditional host animation for Animate Artifact remains lower priority.
 
 Complete collection gameplay/loading, runtime cutover, Go-card removal and unused
+DSL cleanup remain unfinished. The commit hash is reported in the final reply.
+
+## 2026-10-07: waiting command visits in prevention and redirection
+
+Status: completed implementation slice `WAITING-COMMAND-REFERENCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary update and appended entry are staged for this ledger.
+
+### Baseline, candidate comparison and selection
+
+Fresh `make build` and all RON tests passed. The strict loader exited 1 with
+**765 accepted / 221 rejected unique names** and **1,965 compiled / 480 rejected
+records**. This is collection rejection, not a build or environment failure.
+
+Candidate #1 remains dependency-ready when split at its bounded waiting-command
+reference prerequisite. Its broader explicit callback audit and complete source
+composition need separate evidence. The comparison inspected complete canonical
+RON records and their nested forms for every name below. Targeted vocabulary
+signatures were `ChooseADamageSource/1`, `BandsWithOthers/1` and the
+`AnyBandsWithOthers` symbol. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Waiting command references, from ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Downstream Jade Monolith and Reverse Damage. **0 immediate unlocks**. | Explicit callback-reference audit and complete category composition still precede seven protection unlocks. Jade Monolith has a redirection adapter but still needs full enumeration; Reverse Damage also needs prevented-amount life gain. | One bounded run using existing visits, information and replacement services. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0 prerequisite unlocks; up to 8 with dependent adapters**. | Formation and both damage-assignment directions precede grants, named tokens and selective removal; Tolaria also needs its upkeep restriction. | Several combat capability slices and larger interaction-test effort. |
+| Conditional host animation | Animate Artifact. **1 estimated unlock**. | Noncreature-host membership must persist across type and P/T layers under the dependency contract. | One larger layer/dependency run; single-card gain. |
+
+The bounded shared prerequisite takes priority over the larger combat prerequisite
+and single-card animation. Its contract, reuse boundary and acceptance cases were
+stated before edits. There is no partial production registry, Go-card fallback,
+card-name branch, declaration-time runtime panic or source-data correction.
+
+### Exact shapes, dependencies and engine reuse
+
+- `Game.WaitingPreventionCommandSources() []DamageSource` enumerates exact command
+  visits held by active `sourcePreventionReplacement` rules, covering both exact
+  and selected-source prevention installations.
+- `Game.WaitingRedirectionCommandSources() []DamageSource` enumerates exact command
+  sources held by active `selectedSourceRedirectReplacement` rules.
+- Private `waitingReplacementCommandSources(func(ReplacementEffect)
+  []DamageSource) []DamageSource` reads ordinary and cycle storage, checks active
+  rules, excludes other or malformed identity kinds, and deduplicates visits.
+  Current or exact departure information comes from `commandReferenceInformation`.
+  Queries return isolated snapshots. Hidden departures cannot restore former
+  visible characteristics; a return cannot replace the original visit.
+- `ChooseDamageSourceFromWaitingCommandReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+  both categories through `damageSourceChoice`. Shared services supply property
+  filtering, cross-category deduplication, choices, binding validation and result
+  clearing for an absent player or empty/nonmatching list.
+- RON `chosenDamageSourcePlan.waitingCommandChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and its per-instance binding. This is a complete category lowering; unrestricted
+  declarations stay rejected pending the remaining audit and composition.
+
+Dependencies: typed command visits, damage-source filters and bindings, replacement
+storage/lifecycle, exact information, resolution frames and independent clones.
+CR 609.7a permits referred sources after departure. CR 400.7 separates returns.
+CR 609.7b supplies property rechecks. Existing prevention/redirection execution,
+replacement ordering and simultaneous-damage services are unchanged. A phased
+redirection recipient cannot receive damage, but does not erase the source saved
+by the waiting rule. Consumption and cleanup end reference availability.
+
+The typed prevention/redirection structs hold these command identities explicitly.
+Legacy ID-only services cannot supply exact command visits. This slice does not
+claim a complete audit of opaque callbacks or all other replacement families.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, native and RON tests failed to compile for the missing
+query/choice signatures and `waitingCommandChoice` method. Initial test-only API
+names were corrected to existing `SourceID`, player and permanent-damage APIs,
+then the missing-signature failures were confirmed again. A later test inspected
+scratch bindings after `ApplyEffect` cleared the frame; it was corrected to use
+`ResolvingEffect.Apply` within the live frame.
+
+| Test / cards | Evidence |
+| --- | --- |
+| `TestWaitingCommandSources` | Exact and selected prevention and redirection; deduplicated, isolated references; departed versus returned visits; LKI clearing; phased redirection recipient; resolution choice and damage; independent clone consumption; empty-result clearing. |
+| `TestWaitingCommandSourcesVisibilityAndCleanup` | Hidden departure exposes no former properties; cloned visibility and cleanup are independent. |
+| `TestWaitingCommandSourcesDeclarations` | Valid producer/consumer order; absent player/binding, empty binding and consumer-before-producer rejection. |
+| `TestWaitingCommandSourcesExcludeOtherIdentities` | Permanent, spell, malformed and empty identities excluded; ordinary/cycle and prevention/redirection duplicates collapse; nonmatching filters and absent players clear results. |
+| `TestRONWaitingCommandSourceProtection` — six Circles and Greater Realm | Actual complete-record choice/prevention ASTs; live, departed, returned and hidden command sources; choice after departure/return; independent clones, property rechecks, consumption and cleanup. Full declarations remain rejected. |
+| `TestRONWaitingCommandSourceTimingAndCopies` — Circle of Protection: Red | Actual RON activation cost and body in a test-only category context; failed payment, resolution-time choice from a later-created waiting rule after command departure, copied activations and independent clone/shield consumption. |
+| `TestRONWaitingCommandSourceInvalid` | Invalid arity, color, filter and reference kind; missing player/binding and scope-order rejection. |
+
+Estimated and actual compilation gain: **0 unique names / 0 records**.
+Additional subrule evidence covers **7 unique protection names**. Complete-card
+compilation and gameplay counts do not change. There is no estimate discrepancy.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingCommandSource -count=1`
+  and `go test ./pkg/mage -run TestWaitingCommandSources -count=1`: PASS after
+  the expected missing-signature failures and test-frame correction.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS. Existing
+  command-source replacement-order and simultaneous-damage regressions pass.
+- `make lint`: PASS, 0 issues. Automatic import spacing in the native test was
+  reviewed. Both focused test commands rerun after formatting: PASS.
+- `git diff --check`: PASS, including the completed ledger and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  JSON diagnostics are identical to the fresh baseline. The strict loader
+  installs no partial collection.
+
+No source-data defect or environment blocker was found. All 12 RON source hashes
+match the vocabulary snapshot, so no refresh is required. Runtime cutover,
+Go-card removal and unused-DSL cleanup gates remain unmet; callers are preserved.
+
+Changed files: new `pkg/mage/waiting_command_source.go`, native tests and RON
+waiting-command tests; `pkg/mage/damage_source_choice.go`, `doc.go`, RON
+`chosen_source_filter.go`; API and rules-contract documentation; ledger summary
+and this entry.
+
+Ranked next candidates:
+
+1. Audit remaining explicit callback references and compose complete CR 609.7a
+   enumeration for the seven protection names. Face-up command objects and exact
+   waiting command references are now complete; do not repeat those categories.
+2. Parameterized bands with others as a bounded formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount life operation after full enumeration;
+   prove Jade Monolith's complete RON gameplay with its existing redirection adapter.
+   Conditional host animation for Animate Artifact remains lower priority.
+
+Complete collection gameplay/loading, runtime cutover, Go-card deletion and unused
 DSL cleanup remain unfinished. The commit hash is reported in the final reply.

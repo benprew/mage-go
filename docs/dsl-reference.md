@@ -7086,3 +7086,39 @@ accept these identities and use the existing damage and replacement pipeline.
 This is one source category. Complete source enumeration, including explicit
 references held by waiting rules, still precedes unrestricted production RON
 source choices. No full-card unlock or production registry change is claimed.
+
+### Waiting command visits in prevention and redirection
+
+`Game.WaitingPreventionCommandSources() []DamageSource` reads exact command
+visits from active exact-source and selected-source prevention shields.
+`Game.WaitingRedirectionCommandSources() []DamageSource` reads the selected
+command source of active typed redirection rules. The collector examines both
+ordinary and cycle replacement storage, excludes other identity kinds and
+invalid identities, deduplicates visits, and returns isolated snapshots.
+
+CR 609.7a permits these references after departure. CR 400.7 keeps a returned
+object separate. Current or exact departure information supplies properties;
+hidden objects expose no characteristics. A retained reference does not require
+the redirection recipient to remain present or unphased. Consumption and cleanup
+remove availability. Existing replacement ordering and damage batches apply.
+
+`ChooseDamageSourceFromWaitingCommandReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` chooses
+from both query results at resolution through the shared choice service.
+Definition validation checks player, filter, binding and producer order.
+Nonmatching or empty queries and absent players clear only that result binding.
+Game clones retain independent references and consumption.
+
+RON `chosenDamageSourcePlan.waitingCommandChoice(instanceBindings)
+mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+and the plan's per-instance binding. Full source choices stay rejected until the
+remaining explicit-reference audit and category composition are complete.
+No RON record or source hash changes.
+
+Evidence: native `TestWaitingCommandSources`, `VisibilityAndCleanup`,
+`Declarations`, and `ExcludeOtherIdentities` (all use the
+`TestWaitingCommandSources` prefix); RON `TestRONWaitingCommandSourceProtection`,
+`Invalid`, and `TimingAndCopies`. The RON tests use the complete records of six
+Circles and Greater Realm of Preservation for their actual choice/prevention
+bodies, plus the Red Circle's activation cost. These tests establish subrule
+coverage, not full-card acceptance or complete gameplay validation.

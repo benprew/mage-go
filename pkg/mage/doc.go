@@ -51,6 +51,11 @@
 // [Game.WaitingRedirectionPermanentSources] includes its permanent references.
 // [Game.WaitingRedirectionSpellSources] includes its exact selected spell.
 // [ChooseDamageSourceFromWaitingRedirectionReferences] reads both categories.
+// [Game.WaitingPreventionCommandSources] and
+// [Game.WaitingRedirectionCommandSources] keep exact command visits in active rules.
+// [ChooseDamageSourceFromWaitingCommandReferences] uses these two categories.
+// Departure keeps the visit; a return cannot replace it. Hidden information
+// stays hidden. Consumption and cleanup end availability.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.
