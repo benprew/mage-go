@@ -4,7 +4,7 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 type damageRecipientPlayerPlan struct{ name string }
 
-func compilePlayerRecipientDamage(n Node, ctx scope) (effectFactory, error) {
+func compilePlayerRecipientDamage(n Node, ctx scope, source damageSourceFactory) (effectFactory, error) {
 	recipient := n.Args[2]
 	if err := arity(recipient, 1); err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func compilePlayerRecipientDamage(n Node, ctx scope) (effectFactory, error) {
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.DealDamageFrom(mage.This, player.build(bindings), amount(bindings))
+			return mage.DealDamageFrom(source(bindings), player.build(bindings), amount(bindings))
 		}, nil
 	}
 	players := recipient.Args[0]
@@ -41,6 +41,6 @@ func compilePlayerRecipientDamage(n Node, ctx scope) (effectFactory, error) {
 		if players.Name == "Opponent" {
 			subjects = mage.OpponentsOf(mage.You)
 		}
-		return mage.DealDamageEachPlayer(mage.This, subjects, member, amount(bindings))
+		return mage.DealDamageEachPlayer(source(bindings), subjects, member, amount(bindings))
 	}, nil
 }

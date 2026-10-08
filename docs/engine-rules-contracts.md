@@ -9890,3 +9890,37 @@ cases), `TestWaitingDelayedDamageBodyBoundaries`, and
 `TestRONWaitingDelayedDamageBodyInvalid`. The seven protection records still
 reject general source choice. This contract does not complete aggregation or
 the remaining opaque-reference audit.
+
+## Waiting delayed multi-recipient damage sources
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes direct self
+source reads in `DealDamageEach`, `DealDamageEachPlayer` and `DealDamagePackets`.
+Each body implements `refersToSourcePermanent() bool` through the shared
+`damageReadsSourcePermanent(DamageSourceRef) bool` declaration reader. `This`
+and `DamageSourceOf(This)` qualify. Saved sequences, captured bodies and modes
+use the existing traversal. The query does not resolve an amount, recipient,
+filter or callback. Zero damage and empty recipient collections keep references.
+Bound sources and nested future bodies do not imply a self reference.
+
+Creation, exact incarnation capture, current/phasing/departure facts, clone
+isolation, deterministic deduplication and one-shot waiting lifetime reuse the
+existing delayed-frame and permanent-information services. Departure does not
+end the source reference. A returned permanent cannot replace it. Damage uses
+the saved ability controller and the existing simultaneous damage batch; duplicate
+packets for one recipient combine before replacements. A selected-source shield
+applies once to the complete matching batch. Notifications follow all packet
+applications. The source category ends at one-shot detection, before placement.
+
+CR 400.7, 603.7a–e and 609.7a–b supply the identity, waiting lifetime and source
+choice contracts. Native evidence: `TestWaitingDelayedMultiDamageSources`
+(126 source/shape/state scenarios), `Boundaries` (bound/future source exclusion,
+query purity, zero damage, duplicate declaration and invalid definitions), and
+`EmptyRecipients` (no query-time recipient evaluation). RON evidence:
+`TestRONWaitingDelayedMultiDamageProtection` (147 real-record subrule scenarios),
+`Instances` and `Invalid`. The protection tests retain real filters, activation
+payments and shields, and prove copied delays, exact departed/returned/phased
+references, clone isolation, simultaneous damage and shield consumption.
+
+This slice establishes these source declarations only. Recipient self reads,
+conditional wrappers, other damage implementations and opaque references still
+need audit before complete source aggregation.

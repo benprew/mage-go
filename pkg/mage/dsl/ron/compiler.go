@@ -1261,20 +1261,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := arity(n, 3); err != nil {
 			return nil, err
 		}
-		source := "ThisSpell"
-		if n.Name == "PermanentDealsDamage" {
-			source = "ThisPermanent"
-		}
-		if source == "ThisPermanent" {
-			ref, err := compilePermanentRef(n.Args[0], ctx)
-			if err != nil || ref.kind != permanentSource {
-				return nil, unsupported(n.Args[0], "damage source")
-			}
-		} else if n.Args[0].Kind != Symbol || n.Args[0].Name != source || ctx.permanent {
-			return nil, unsupported(n.Args[0], "damage source")
+		source, err := compileSelfDamageSource(n.Args[0], ctx, n.Name == "PermanentDealsDamage")
+		if err != nil {
+			return nil, err
 		}
 		if n.Args[2].Name == "Player" || n.Args[2].Name == "EachPlayer" {
-			build, err := compilePlayerRecipientDamage(n, ctx)
+			build, err := compilePlayerRecipientDamage(n, ctx, source)
 			if err != nil {
 				return nil, err
 			}
@@ -1290,7 +1282,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageEach(mage.This, mage.PermanentDamageRecipients(subjects(bindings)), amount(bindings))
+				return mage.DealDamageEach(source(bindings), mage.PermanentDamageRecipients(subjects(bindings)), amount(bindings))
 			})
 		}
 		if n.Args[2].Name == "MultipleRecipients" {
@@ -1299,7 +1291,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageEach(mage.This, recipients(), amount(bindings))
+				return mage.DealDamageEach(source(bindings), recipients(), amount(bindings))
 			})
 		}
 		if n.Args[2].Name == "Permanent" {

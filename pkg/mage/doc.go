@@ -490,6 +490,9 @@
 // Direct [This] reads in destruction, sacrifice and return bodies also qualify.
 // Single-recipient [DealDamageFrom] bodies qualify with [This] or
 // [DamageSourceOf] of [This], even when the damage amount is zero.
+// [DealDamageEach], [DealDamageEachPlayer] and [DealDamagePackets] bodies
+// also declare these source reads without evaluating recipients or amounts.
+// Empty collections and zero amounts keep the source reference.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.

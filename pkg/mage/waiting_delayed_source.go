@@ -60,7 +60,23 @@ func (e *returnToHandSubjectEffect) refersToSourcePermanent() bool {
 }
 
 func (e *damageFromEffect) refersToSourcePermanent() bool {
-	switch source := e.source.(type) {
+	return damageReadsSourcePermanent(e.source)
+}
+
+func (e *damageEachEffect) refersToSourcePermanent() bool {
+	return damageReadsSourcePermanent(e.source)
+}
+
+func (e *playerDamageEachEffect) refersToSourcePermanent() bool {
+	return damageReadsSourcePermanent(e.source)
+}
+
+func (e *damagePacketsEffect) refersToSourcePermanent() bool {
+	return damageReadsSourcePermanent(e.source)
+}
+
+func damageReadsSourcePermanent(ref DamageSourceRef) bool {
+	switch source := ref.(type) {
 	case sourceRef:
 		return true
 	case permanentDamageSource:

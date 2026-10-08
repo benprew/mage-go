@@ -7658,3 +7658,36 @@ zero amounts and permanent recipients. `TestRONWaitingDelayedDamageBodyProtectio
 maps the real filters, costs and future shields of all six Circles and Greater
 Realm to 49 scenarios with a compiled synthetic RON damage-only delayed source.
 These are subrule scenarios, not complete-card coverage.
+
+## Waiting delayed sources of multi-recipient damage
+
+RON permanent collection, per-player and packet damage lowers its scoped self
+source through `compileSelfDamageSource(Node, scope, bool)` into
+`mage.DamageSourceOf(PermanentRef)`. Spell self sources keep `mage.This`.
+The supported self aliases use the existing permanent scope. In particular,
+`Trigger_ThatPermanent` in a source-tapped trigger keeps that source through a
+nested future step trigger. Other permanent sources retain their separate
+single-recipient adapter; this helper does not admit target or attachment reads.
+
+Inside `CreateFutureTrigger(event, ActionList([...]))`, these existing forms now
+supply the exact permanent source to `Game.WaitingDelayedPermanentSources`:
+
+- `PermanentDealsDamage(ThisPermanent, amount, EachPermanent(filter))`
+- `PermanentDealsDamage(ThisPermanent, amount, EachPlayer(AnyPlayer|Opponent))`
+- `PermanentDealsDamage(ThisPermanent, amount, MultipleRecipients([...]))`
+- `PermanentDealsMultipleDamage(ThisPermanent, [DamageToRecipients(amount,
+  recipient), ...])`
+
+Each form keeps its existing amount, filter, recipient and lexical validation.
+Sequences and saved modes preserve the declaration. Source enumeration evaluates
+neither recipients nor amounts. Empty recipient collections and zero damage do
+not remove the source. A nested future body does not declare an outer self read.
+The existing scoped `chosenDamageSourcePlan.waitingDelayedPermanentChoice`
+adapter can select these sources, with independent bindings per instance.
+General `ChooseADamageSource` remains rejected until every category is complete.
+
+Evidence: `TestRONWaitingDelayedMultiDamageProtection` maps the six Circle of
+Protection names and Greater Realm of Preservation to 147 real-record subrule
+scenarios; `TestRONWaitingDelayedMultiDamageInstances` proves separate factory
+instances and source-tapped aliases; `TestRONWaitingDelayedMultiDamageInvalid`
+proves declaration rejection. This is subrule coverage, not complete-card proof.

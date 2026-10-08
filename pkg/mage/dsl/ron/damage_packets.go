@@ -39,12 +39,9 @@ func compileDamagePackets(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
-	source := "ThisSpell"
-	if n.Name == "PermanentDealsMultipleDamage" {
-		source = "ThisPermanent"
-	}
-	if n.Args[0].Kind != Symbol || n.Args[0].Name != source || (source == "ThisPermanent") != ctx.permanent {
-		return nil, unsupported(n.Args[0], "damage source")
+	source, err := compileSelfDamageSource(n.Args[0], ctx, n.Name == "PermanentDealsMultipleDamage")
+	if err != nil {
+		return nil, err
 	}
 	packets, err := list(n.Args[1])
 	if err != nil {
@@ -80,6 +77,6 @@ func compileDamagePackets(n Node, ctx scope) (effectFactory, error) {
 		for i, plan := range plans {
 			packets[i] = mage.DamagePacketTo(plan.recipient(bindings), plan.amount(bindings))
 		}
-		return mage.DealDamagePackets(mage.This, packets...)
+		return mage.DealDamagePackets(source(bindings), packets...)
 	}, nil
 }
