@@ -91,6 +91,14 @@
 // Returned sources cannot replace them. Implicit hosts and future delayed bodies
 // do not infer source reads. Bound operands use the saved frame.
 //
+// [ScryAtResolution] and [SurveilAtResolution] declare explicit source reads
+// in their typed amounts to [Game.WaitingDelayedPermanentSources]. Queries
+// do not read amounts, inspect cards or make choices. Zero amounts keep reads.
+// Departure and phasing keep the saved incarnation until trigger detection.
+// Returned objects cannot replace it. Implicit attachments, opaque values
+// and future delayed bodies do not infer reads. Each body uses its saved frame
+// and controller with the existing scry or surveil service.
+//
 // [ReturnCardToBattlefield] declares explicit source reads in its controller
 // to [Game.WaitingDelayedPermanentSources]. Queries do not read the controller
 // or move a card. Departure and phasing keep the saved incarnation until

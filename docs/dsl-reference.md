@@ -8769,3 +8769,29 @@ Evidence: `TestRONWaitingDelayedReturnGameplay`, `Instances`, `Host`, `Invalid`,
 `Inventory` and `Protection`; native `TestWaitingDelayedReturnController` and
 `Boundaries`. Protection evidence uses bounded category choices with real-record
 costs, filters and shields. General `ChooseADamageSource` remains rejected.
+
+### Source reads in delayed library-choice amounts
+
+`ScryAtResolution(amount ResolutionValue)` and
+`SurveilAtResolution(amount ResolutionValue)` declare explicit source reads in
+`amount` to `Game.WaitingDelayedPermanentSources`. Nested typed operands retain
+these reads even when the resulting amount is zero. Enumeration does not resolve
+values, inspect libraries, choose placement, move cards or emit action events.
+Sequences and delayed modes retain the declaration. Implicit attachments,
+opaque values and future delayed bodies do not infer a source read.
+
+The waiting frame retains the exact source through departure, cleared transient
+LKI and phasing. A returned object cannot replace it. One-shot trigger detection
+ends waiting availability before body resolution; game clones have separate
+waiting lifetimes. The body reads the amount once in its saved frame and uses
+the delayed ability's controller with the existing scry/surveil services.
+Current source control does not change that player. Nonpositive amounts make
+no placement choice. Card inspection remains private.
+
+Rules: local CR 603.7a–e, 609.7a, 701.22, 701.25 and 702.26b–d.
+Evidence: `TestWaitingDelayedLibraryChoice*` and
+`TestRONWaitingDelayedLibraryChoice*`. The RON tests use existing typed value,
+cost, chosen-source filter and shield lowering with a native delayed library
+body. There is no scry/surveil spelling in the collection, and this contract
+adds none. Seven protection subrules gain bounded source-choice evidence;
+general source aggregation and complete-card coverage remain separate gates.

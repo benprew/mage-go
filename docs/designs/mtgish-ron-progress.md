@@ -7,9 +7,9 @@ names** (986 total), and **1,982 compiled / 463 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-RETURN-CONTROLLER` adds explicit entry controllers and exact
-source reads to waiting delayed queries. Seven protection subrules gain bounded
-return-controller source-choice evidence; full-card compilation is unchanged.
+`WAITING-DELAYED-LIBRARY-CHOICE-AMOUNT` adds exact source reads in typed
+scry/surveil amounts to waiting delayed queries. Seven protection subrules gain
+bounded library-choice source evidence; full-card compilation is unchanged.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -50534,3 +50534,132 @@ Ranked next candidates:
 3. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
 
 This run stops after `WAITING-DELAYED-RETURN-CONTROLLER`.
+
+## 2026-10-08: source reads in delayed library-choice amounts
+
+Status: completed prerequisite slice `WAITING-DELAYED-LIBRARY-CHOICE-AMOUNT`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and the ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended ledger entry are staged.
+
+### Candidate comparison and selection
+
+The latest entry ranked the native library-choice amount audit first. Complete
+canonical RON records for the six Circles, Greater Realm of Preservation, Jade
+Monolith and both Titania's Song reprints were inspected. Nested source filters,
+shield bodies, payments, targets and layer modifications were included.
+
+| Candidate | Distinct cards and estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Delayed library-choice amount source reads, selected | No direct scry/surveil RON demand; zero unlocks. Downstream beneficiaries: Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Jade Monolith, eight names / 37 records. | Missing native declaration on libraryChoiceEffect. Existing typed values, delayed frames and bounded RON source-choice lowering are ready. This closes the recorded operand prerequisite before general aggregation. | Small implementation; native identity, timing, purity and RON consumer tests plus repository checks. |
+| General CR 609.7a source aggregation | The same eight names / 37 records; eight plausible unlocks after complete aggregation. | Depends on the selected audit and a fresh audit of all categories. Jade also needs the general choice in its targeted redirection context. Other source-choice consumers have separate accepted shapes, which must stay correct. | Larger adapter and engine aggregation work; visibility, visits, source property rechecks, continuation and cross-category tests. |
+| Sticky layer lifecycle | Titania's Song, one plausible unlock / two records. | Both full records require ability removal, artifact/creature types, mana-value P/T and retention until cleanup after source departure. Existing live layers do not establish the sticky lifecycle. | Medium engine lifecycle and compiler work with layer, departure and cleanup tests. |
+
+Candidate #1 is dependency-ready. Its concrete eight-card benefit takes priority
+over the single-card lifecycle change; general aggregation depends on this work.
+The collection contains no Scry/Surveil constructors. Text matches for Scryb
+Sprites are card names, not action demand. ChooseADamageSource has 46 occurrences;
+37 are the eight rejected beneficiaries above. Complete Dark Sphere, Eye for an
+Eye and Reverse Damage records were also inspected to distinguish their existing
+contexts from the proposed eight-card gain. No first-error frequency is used as
+a complete-card gameplay claim.
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Baseline loader exit 1 was collection rejection, not build or test failure.
+
+### Contract, signatures, contexts and reuse
+
+- Existing `ScryAtResolution(amount ResolutionValue) ResolvingEffect` and
+  `SurveilAtResolution(amount ResolutionValue) ResolvingEffect` retain their
+  execution and validation signatures. `(*libraryChoiceEffect).
+  refersToSourcePermanent() bool` delegates to the shared
+  `resolutionValueReadsSourcePermanent(amount)` service.
+- Direct source and nested typed value operands declare source reads. Zero
+  results retain explicit reads. Waiting queries do not read values, inspect
+  cards, make placement choices, move cards, consume RNG or emit action events.
+- Saved sequences and delayed modes use the existing declaration traversal.
+  Implicit attachments, opaque values and future delayed bodies do not infer
+  reads. Saved numbers do not invent object references. Existing bound frames
+  and target declarations retain their separate capture services.
+- The exact source survives departure, cleared transient LKI and phasing until
+  detection. A returned source cannot replace it. Detection ends one-shot
+  waiting availability before resolution. Clone waiting lifetimes are separate.
+- Resolution reads the amount once in the saved frame and uses the delayed
+  ability's controller. Current control changes do not change that player.
+  Source information uses the existing exact-incarnation LKI service. Scry and
+  surveil use the existing private placement, short-library and zone services.
+- RON spelling, scopes and per-instance lowering remain in ron. The existing
+  `compileInstanceValue(Node, scope) (valueFactory, error)` lowers source reads
+  such as PowerOfPermanent/1, ManaValueOfPermanent/1, Plus/2 and Minus/2.
+  Existing `compileChosenDamageSourceChoice`, costs, bounded waiting choice and
+  exact-source prevention lowering supply the real RON consumer tests. There is
+  no missing compiler adapter for this native prerequisite, and no new syntax,
+  fabricated RON scry action or partial production registration is added.
+- Cost transactions, replacement ordering and simultaneous operations are not
+  changed. Protection tests retain real RON costs, payment failure and shield
+  consumption. Full aggregation remains rejected. Local rules evidence:
+  CR 603.7a–e, 609.7a, 701.22, 701.25 and 702.26b–d.
+
+### Failing-first evidence and card-to-test mapping
+
+The native operand and purity tests initially failed because waiting queries
+omitted the source. The seven RON consumer cases initially failed because the
+bounded choice could not select the departed source. An initial test fixture
+used the wrong scope field; it was corrected before the semantic red run. A
+modal fixture supplied only one mode; it was corrected to supply two modes.
+A final red run against the original implementation confirmed failures in all
+three native operand cases, purity, all twelve resolution cases, fourteen
+protection cases and six lowered-value instance cases. Invalid declarations
+already rejected and are retained as contract regression tests.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedLibraryChoiceOperands | Scry power, surveil mana value and zero nested amount. Exact identity through phasing/cycle, departure, cleared transient LKI and return; separate clone detection lifetime. |
+| TestWaitingDelayedLibraryChoicePurity | Nested typed and opaque values; query does not evaluate callbacks; resolution reads once. Nil scry/surveil amounts and unbound permanent values fail engine validation. No inferred implicit host, opaque value or future-body source. |
+| TestWaitingDelayedLibraryChoiceResolution | Twelve scry/surveil cases across live, control change, departure, return, phased and cycle states. Modal declarations; source LKI; count clamped to current library; no query/detection choices; one body-time choice; saved player; scry bottom placement and surveil graveyard placement; private cards. |
+| TestRONWaitingDelayedLibraryChoiceValues | Six combinations of scry/surveil and direct/nested/zero RON amounts, two distinct RON factory instances/players and saved departed sources; clone detection does not consume original waits; scry uses the lowered amount. |
+| TestRONWaitingDelayedLibraryChoiceInvalid | Eight malformed, wrong-role, unbound target/event, out-of-scope player and unannounced-X values reject during compilation. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedLibraryChoiceProtection | Complete unchanged RON records supply costs, filters and one-use prevention bodies. Fourteen cases select a departed source referred to by native delayed scry or surveil. Failed payment makes no choice; choice occurs at resolution; two damage events prove one-use shield consumption. These are seven bounded subrule mappings, each tested for both native bodies. |
+| Jade Monolith | Shared downstream aggregation beneficiary; complete record audited, no new Jade-specific gameplay claim. |
+| Titania's Song | Both complete records audited for candidate selection; sticky layers remain unsupported. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedLibraryChoice -count=1`:
+  PASS.
+- Native focused tests with `TestWaitingDelayedLibraryChoice`,
+  `TestComposableLibraryChoice` and `TestLibraryChoice`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS. Automatic formatting changes were reviewed; affected
+  focused tests passed again after formatting.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,982 compiled /
+  463 rejected records; 777 accepted / 209 rejected unique names**. Every
+  diagnostic is unchanged from the fresh baseline. Strict collection rejection
+  remains in effect.
+
+Estimated and actual gains agree: **zero new full-card unlocks**, **zero new
+compiled records**. Coverage adds the native operand contract and seven bounded
+protection subrule mappings for both library-choice bodies. Compilation and
+complete-card gameplay remain separate measures. No source defect was found or
+corrected; RON source and the vocabulary snapshot are unchanged. No DSL function
+or Go card is removed: complete collection gameplay, runtime cutover and removal
+gates remain unfinished. No environment failure blocked validation.
+
+Changed files: `pkg/mage/composable_actions.go`, `pkg/mage/doc.go`,
+`pkg/mage/waiting_delayed_library_choice_test.go`,
+`pkg/mage/dsl/ron/waiting_delayed_library_choice_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. General CR 609.7a source aggregation. The last recorded typed operand audit
+   is complete. Recheck all categories and complete records before committing to
+   eight full-card unlocks / 37 records. Preserve pure enumeration, private
+   information, exact visits, permanent-spell continuation, choice timing and
+   source-property rechecks.
+2. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
+   Keep ability/type/P/T interactions and retained membership through cleanup.
+
+This run stops after `WAITING-DELAYED-LIBRARY-CHOICE-AMOUNT`.

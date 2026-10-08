@@ -2821,6 +2821,9 @@ func (*libraryChoiceEffect) Properties() EffectProperties {
 func (e *libraryChoiceEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: e.verb(), Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
 }
+func (e *libraryChoiceEffect) refersToSourcePermanent() bool {
+	return resolutionValueReadsSourcePermanent(e.amount)
+}
 func (e *libraryChoiceEffect) Apply(ctx *EffectContext) error {
 	amount := Fixed(e.amount.resolveValue(ctx))
 	if e.surveil {
