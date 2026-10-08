@@ -6927,3 +6927,36 @@ validated `ChooseADamageSource(filter)` to the shared waiting-prevention choice
 service with `You` and the instance's typed damage-source binding. This is a
 category-specific prerequisite. General production `ChooseADamageSource` stays
 rejected until complete legal-source enumeration is available.
+
+### Exact permanent sources of legacy finite and half-damage shields
+
+`Game.AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount int)` and
+`Game.AddHalfDamageFromSourcePreventionShield(playerID, sourceID uuid.UUID)`
+retain the incarnation when `sourceID` is a live permanent at registration.
+Their damage match requires that exact incarnation and positive damage to the
+specified player. Return cannot transfer the shield to the new object.
+Departure and phasing do not end a resolved shield (CR 400.7, 609.7a, 615).
+The finite shield retains its remaining amount across damage events and the
+shared simultaneous packet pipeline. The half shield prevents the amount rounded
+down in its next matching packet and then ends. Existing ordering stays in the
+shared replacement service; this change does not establish a new half-shield
+simultaneous-event contract.
+
+Both rules supply their exact permanent source to
+`Game.WaitingPreventionPermanentSources() []DamageSource` in ordinary and cycle
+replacement lists. Current or retained exact information, deduplication, copied
+query snapshots and cloned lifetime use the existing collector. Consumption and
+cleanup end eligibility. Nonpositive finite amounts install no rule. Registrations
+without a live permanent preserve their existing ID-based matching but do not
+supply a waiting permanent or spell reference. Typed spell shields keep their
+separate services; no permanent-spell continuation is added here.
+
+RON uses the existing `chosenDamageSourcePlan.waitingPreventionChoice` lowering
+for validated `ChooseADamageSource(filter)`, its factory-local binding and
+`compileExactSourcePrevention` for the chosen-source shield. No duplicate adapter
+is required. The seven protection records have choice/prevention subrule tests
+against both native shield forms, including departure, return and phasing.
+`TestRONWaitingLegacyPreventionInvalid` checks malformed declarations and binding
+order. Complete source enumeration and complete protection records remain
+unsupported. `TestWaitingLegacyPrevention*` covers native lifetime, information,
+return exclusion, clone isolation, finite simultaneous damage and odd half damage.

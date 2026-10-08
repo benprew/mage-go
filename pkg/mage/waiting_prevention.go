@@ -48,6 +48,21 @@ func (r *staticDamagePreventionReplacement) waitingPreventionPermanents(g *Game)
 	return []capturedPermanent{{subject.ID(), subject.incarnationID}}
 }
 
+func (g *Game) legacyPreventionSourceIncarnation(sourceID uuid.UUID) uuid.UUID {
+	if source := g.FindPermanent(sourceID); source != nil {
+		return source.incarnationID
+	}
+	return uuid.Nil
+}
+
+func (r *sourcePreventionShieldReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
+	return []capturedPermanent{{r.dmgSource, r.incarnation}}
+}
+
+func (r *halfDamagePreventionShieldReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
+	return []capturedPermanent{{r.dmgSource, r.incarnation}}
+}
+
 // WaitingPreventionPermanentSources reads exact references in active prevention effects.
 // A returned object must not replace information for the saved incarnation.
 func (g *Game) WaitingPreventionPermanentSources() []DamageSource {

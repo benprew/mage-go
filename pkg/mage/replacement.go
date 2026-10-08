@@ -116,14 +116,16 @@ func (r *preventionShieldReplacement) Clone() ReplacementEffect {
 
 type sourcePreventionShieldReplacement struct {
 	replacementBase
-	playerID  uuid.UUID
-	dmgSource uuid.UUID
-	remaining int
+	playerID    uuid.UUID
+	dmgSource   uuid.UUID
+	incarnation uuid.UUID
+	remaining   int
 }
 
 func (r *sourcePreventionShieldReplacement) Matches(action Action, _ GameReader) bool {
 	damage, ok := action.(*DamageToPlayerAction)
-	return ok && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource
+	return ok && damage.Amount() > 0 && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource &&
+		(r.incarnation == uuid.Nil || damage.DamageSource().Incarnation() == r.incarnation)
 }
 
 func (r *sourcePreventionShieldReplacement) Replace(action Action, _ *Game) Action {
@@ -144,9 +146,10 @@ func (r *sourcePreventionShieldReplacement) Clone() ReplacementEffect {
 
 type halfDamagePreventionShieldReplacement struct {
 	replacementBase
-	playerID  uuid.UUID
-	dmgSource uuid.UUID
-	consumed  bool
+	playerID    uuid.UUID
+	dmgSource   uuid.UUID
+	incarnation uuid.UUID
+	consumed    bool
 }
 
 func (r *halfDamagePreventionShieldReplacement) Matches(action Action, _ GameReader) bool {
@@ -154,7 +157,8 @@ func (r *halfDamagePreventionShieldReplacement) Matches(action Action, _ GameRea
 		return false
 	}
 	damage, ok := action.(*DamageToPlayerAction)
-	return ok && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource
+	return ok && damage.Amount() > 0 && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource &&
+		(r.incarnation == uuid.Nil || damage.DamageSource().Incarnation() == r.incarnation)
 }
 
 func (r *halfDamagePreventionShieldReplacement) Replace(action Action, _ *Game) Action {

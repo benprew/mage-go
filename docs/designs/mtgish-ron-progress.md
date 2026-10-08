@@ -9,12 +9,12 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-COUNTER-PREVENTION-SUBJECTS` slice adds exact live counter-rule subjects
-to the shared prevention-source query and RON category-specific choice lowering.
-It covers source incarnation, phasing, ability lifetime and clone isolation.
-Seven protection names gain subrule evidence and Lightning Bolt gains a complete
-RON cast interaction. No complete card is newly accepted. Other waiting
-replacement references, face-up command objects and full enumeration remain gaps.
+`WAITING-LEGACY-SOURCE-SHIELDS` slice adds exact permanent source references to
+finite and half-damage legacy shields and the shared RON choice query. It covers
+incarnation, departure, phasing, information, consumption and clone isolation.
+Seven protection names gain subrule evidence; no complete card is newly accepted.
+Other waiting replacement references, face-up command objects and complete source
+enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40415,6 +40415,140 @@ Ranked next candidates:
    draw-step-life, typed prevention, redirection or regeneration categories.
 2. Parameterized bands with others: shared combat prerequisite for eight names,
    followed by grants and selective removal.
+3. Conditional host animation across type and base P/T layers for Animate Artifact.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: exact permanent sources of legacy finite and half shields
+
+Status: completed implementation slice `WAITING-LEGACY-SOURCE-SHIELDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and ledger, and untracked `mtgish-ron-completed.md` are preserved. The commit
+contains only this slice's ledger status and appended entry; the user's existing
+ledger compaction remains a working-tree change.
+
+### Fresh baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection:
+**1,964 compiled / 481 rejected records; 764 accepted / 222 rejected unique names**.
+An early read of the still-running loader's output showed an incomplete count;
+the completed JSON matches the recorded baseline. This was not a regression.
+The architecture, engine reference, API/rules contracts, latest ledger, selected
+compiler/engine code, targeted vocabulary and complete candidate records were
+read. Identical protection reprints were inspected and counted once.
+
+| Candidate | Distinct names; estimated full-card unlocks | Blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, remaining waiting replacement subjects; selected finite/half source-shield prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, a prerequisite for **7 names / 31 records**. | These native shields retain only a card ID. Exact identity must precede enumeration. Existing typed prevention, regeneration, redirection, draw-step-life and counter-prevention categories are already done. Other legacy replacements, command-zone objects and complete source enumeration still block the seven complete records. Counter-placement filters need separate lifecycle contracts; a selector is not a captured subject. | Small: two compatible registration services, identity matches, shared provider, focused native and RON gameplay tests. |
+| Ranked #2, parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible full-family unlocks**. | Complete records need legendary/named parameterized bands, live/token grants, attacking formation, both damage-assignment directions and selective removal. A primitive alone would not unlock all eight. | Large full-family work; medium/large combat prerequisite. |
+| Ranked #3, conditional host animation | Animate Artifact: **1 plausible unlock / 6 records**. | Complete nested branch needs noncreature host selection retained across added artifact/creature types and mana-value base P/T layers. Enables shared conditional multilayer animation. | Medium: layer/attachment/dependency contracts. |
+
+The bounded dependency-ready portion of #1 wins with concrete seven-card downstream
+value. The contract, reuse boundary and acceptance cases were stated before
+editing. The `implement-engine` skill supplied the native workflow. No delegation,
+removed card skills, generated Go stubs or Go-card requirements were used.
+Compatibility searches inspected existing callers only. Reflecting Mirror's full
+RON record was also inspected; its spell-retargeting rule is not a requirement
+for the legacy half-shield primitive and gains no support from this slice.
+
+### Established contexts, signatures and engine reuse
+
+- Existing signatures remain `Game.AddSourcePreventionShield(playerID, sourceID
+  uuid.UUID, amount int)` and `Game.AddHalfDamageFromSourcePreventionShield(playerID,
+  sourceID uuid.UUID)`. When the source is a live permanent at registration,
+  each replacement saves its incarnation. Positive damage must match both the
+  source card ID and that incarnation, as well as the recipient player.
+- `sourcePreventionShieldReplacement` and `halfDamagePreventionShieldReplacement`
+  implement `waitingPreventionPermanents(*Game) []capturedPermanent`. The shared
+  `Game.WaitingPreventionPermanentSources() []DamageSource` collector handles
+  both replacement lists, exact deduplication, invalid-reference exclusion,
+  current/retained information and copied snapshots. No second collector is added.
+- Departure and phasing retain a resolved shield's referred source. Clearing LKI
+  cannot replace the exact departure information. Return creates a new object:
+  damage from that object cannot spend the old shield. Control/color changes read
+  current information. Consumption and cleanup end waiting eligibility. Clones
+  keep separate remaining amounts and consumption state.
+- Unknown or nonpermanent registrations retain existing ID-based matching for
+  compatibility but cannot supply a waiting permanent or spell reference. No
+  spell-identity or permanent-spell continuation contract is added to these APIs.
+- The finite shield retains its amount across events and uses the existing
+  simultaneous replacement pipeline. Half prevention preserves the existing
+  next matching packet behavior and floor rounding. This slice does not claim a
+  new simultaneous-event contract for the half primitive or full Reflecting Mirror
+  gameplay. Nonpositive damage cannot consume either shield.
+- RON reuses `compileChosenDamageSourceChoice(Node)`, validated color/type and
+  nonempty `And`/`Or` filters, the factory-local typed binding and
+  `chosenDamageSourcePlan.waitingPreventionChoice(instanceBindings)`. The consumer
+  uses `compileExactSourcePrevention(Node, scope)`. The tested exact source shape
+  is `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(You)), [PreventThatDamage])`. Existing AST lowering
+  now consumes the two additional producer contexts through the shared engine
+  query; no redundant spelling adapter is added.
+- General production `ChooseADamageSource` remains rejected until complete source
+  enumeration exists. The native producers are explicit fixtures. No Go-card
+  fallback, partial registry, global last-action slot or skipped accepted rule is
+  introduced. Targeting, payments and replacement ordering retain existing services.
+- CR 400.7, 609.7a, 615.4, 615.6–8, 616 and 702.26 establish these boundaries.
+  No RON source defect was found or changed. All 12 source hashes match the
+  vocabulary snapshot. No Go definition or DSL service is removed; removal gates
+  remain unmet. API/rules-contract docs and `pkg/mage/doc.go` describe only the
+  established permanent context and compatibility limits.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, native tests failed with `sources=0 want=1`, boundary
+failures and missing clone references. All seven RON tests failed with
+`missing legacy subject`. These failures preceded changes to registration,
+matching and enumeration. A synthetic test card initially lacked an owner;
+setting its explicit fixture owner fixed the snapshot assertion without changing
+its contract. Assertions were retained.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingLegacyPreventionReferences` | Both producer forms: live/departed/returned/phased/cycled source, cleared LKI, current controller/color, independent query snapshots, exact return exclusion, original-source prevention, consumption, cleanup and independent cloned lifetime. |
+| `TestWaitingLegacyPreventionBoundaries` | Ordinary/cycle deduplication, unknown-ID exclusion, zero amount, nonpositive damage, wrong recipient, finite remaining amount across events. |
+| `TestWaitingLegacyPreventionDamageContracts` | Finite shield shared across simultaneous packets, clone isolation, odd half-damage rounding and one-use consumption. |
+| `TestRONWaitingLegacyPreventionProtection` — Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | Complete records supply choice/prevention AST subrules. Both native producer fixtures, live/departed/returned/phased sources, color/type filtering, cloned choice/prevention, once-only selected-source shield and clearing an old binding when cleanup removes all candidates. Complete protection records still reject. |
+| `TestRONWaitingLegacyPreventionInvalid` | Invalid choice/filter names, kinds and arities, empty logical filter, missing binding and consumer-before-producer rejection. |
+| Existing native/RON/full suites | Accepted records, legacy callers, target legality, transactional rollback, replacement ordering and damage packet regression tests pass. No new payment or targeting contract is claimed. |
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingLegacyPrevention -count=1`.
+- Native `go test ./pkg/mage -run TestWaitingLegacyPrevention -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, 0 issues. Automatic changes were reviewed; no unrelated semantic changes. Focused native/RON
+  checks passed again after formatting and the final color test addition.
+- Additional skill check `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS, including the final ledger and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,964 compiled / 481
+  rejected records; 764 accepted / 222 rejected unique names**. Complete JSON
+  diagnostics equal the fresh baseline. Strict loading still rejects the
+  collection and installs no partial registry. No environmental blocker.
+
+Estimated and actual compilation gains match: **0 names / 0 records**.
+Added subrule evidence covers seven rejected protection names in both legacy
+producer contexts. Complete-card gameplay coverage does not increase, and no
+accepted record is lost. Runtime cutover, complete gameplay, Go-card removal and
+unused DSL cleanup remain unfinished.
+
+Changed files: native `game_mutator.go`, `replacement.go`, `waiting_prevention.go`,
+`doc.go` and new `waiting_legacy_prevention_test.go`; new RON
+`waiting_legacy_prevention_test.go`; API/rules-contract docs and this ledger.
+
+Ranked next candidates:
+
+1. Audit the remaining legacy damage/replacement subjects, including reverse
+   damage and temporary redirection, and counter-placement lifetime where relevant.
+   Capture exact references before enumeration. Then face-up command objects and
+   complete source enumeration for the seven protection names. Do not repeat
+   completed typed or finite/half source-prevention categories.
+2. Parameterized bands with others: combat prerequisite for the eight named
+   records, followed by live/token grants and selective removal.
 3. Conditional host animation across type and base P/T layers for Animate Artifact.
 
 The commit hash is reported in the final response. No second slice starts.

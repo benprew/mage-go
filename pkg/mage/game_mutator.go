@@ -600,7 +600,7 @@ func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
 }
 
 // AddSourcePreventionShield prevents up to amount damage from sourceID to the
-// specified player during the next matching damage event.
+// specified player this turn. A live source keeps its original incarnation.
 func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount int) {
 	if amount <= 0 {
 		return
@@ -610,16 +610,19 @@ func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount in
 		playerID:        playerID,
 		dmgSource:       sourceID,
 		remaining:       amount,
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 	})
 }
 
 // AddHalfDamageFromSourcePreventionShield prevents half the damage (rounded down)
 // from sourceID to playerID the next time sourceID would deal damage to playerID this turn.
+// A live source keeps its original incarnation.
 func (g *Game) AddHalfDamageFromSourcePreventionShield(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&halfDamagePreventionShieldReplacement{
 		replacementBase: replacementBase{duration: EndOfTurn},
 		playerID:        playerID,
 		dmgSource:       sourceID,
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 	})
 }
 

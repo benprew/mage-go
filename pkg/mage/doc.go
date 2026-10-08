@@ -27,6 +27,12 @@
 // [PreventDamageToSourceByRemovingCounters] supplies its exact live subject to
 // [Game.WaitingPreventionPermanentSources], even with no counters. A saved rule
 // cannot follow a returned source or an ability that was removed.
+// [Game.AddSourcePreventionShield] and [Game.AddHalfDamageFromSourcePreventionShield]
+// retain a live permanent source's exact incarnation. Both supply that source
+// to [Game.WaitingPreventionPermanentSources] until consumption or cleanup.
+// Departure and phasing keep the reference. A returned source cannot inherit
+// the shield. Registrations without a live permanent keep their legacy matching
+// behavior and cannot supply an exact waiting reference.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.
