@@ -1396,7 +1396,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(func(bindings instanceBindings) mage.Effect { return mage.DestroyEachWithoutRegeneration(set(bindings)) })
 	case "EachPlayerAction":
-		return compileEachPlayerAction(n)
+		return compileEachPlayerAction(n, ctx)
 	case "PlayerActions":
 		build, err := compilePlayerActions(n, ctx)
 		if err != nil {

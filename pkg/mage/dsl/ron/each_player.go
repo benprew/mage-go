@@ -2,7 +2,7 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileEachPlayerAction(n Node) ([]effectFactory, error) {
+func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
@@ -30,18 +30,15 @@ func compileEachPlayerAction(n Node) ([]effectFactory, error) {
 			return nil, err
 		}
 		amount := action.Args[0]
-		if amount.Name != "Integer" {
-			return nil, unsupported(amount, "fixed all-player draw amount")
-		}
-		if err := arity(amount, 1); err != nil {
-			return nil, err
-		}
-		if amount.Args[0].Kind != IntegerNode || amount.Args[0].Integer < 0 {
+		if amount.Name == "Integer" && amount.Kind == Tuple && len(amount.Args) == 1 && amount.Args[0].Kind == IntegerNode && amount.Args[0].Integer < 0 {
 			return nil, problem(amount, "all-player draw amount must be a nonnegative integer")
 		}
-		count := amount.Args[0].Integer
-		return []effectFactory{func(instanceBindings) mage.Effect {
-			return mage.DrawEach(mage.EachPlayer, mage.Fixed(count))
+		value, err := compileInstanceValue(amount, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DrawEach(mage.EachPlayer, value(bindings))
 		}}, nil
 	default:
 		return nil, unsupported(action, "all-player action")

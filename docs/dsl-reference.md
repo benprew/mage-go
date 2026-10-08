@@ -8318,3 +8318,18 @@ remain available after departure or phasing. Granted ability bodies keep their
 own future recipient scope. Supported syntax and duration restrictions remain
 unchanged; see the temporary-layer declaration contract in
 [engine-rules-contracts.md](engine-rules-contracts.md).
+
+### Waiting delayed player collections
+
+`EachPlayerAction(AnyPlayer, DrawNumberCards(value))` accepts scoped resolution
+values through `compileInstanceValue`, including permanent power, arithmetic and
+bound values. Negative integer literals remain invalid. The draw amount is read
+once at execution, before either player draws. `ActionPlayer` is not introduced
+by this form. The adjacent shuffle-result form keeps its separate result scope.
+
+Typed native player sets declare explicit source reads to
+`Game.WaitingDelayedPermanentSources`. Opponent sets, damage-history sets and
+singular library-recycling sets retain their typed operands. Draw, discard, life,
+library recycling, random choice, damage and player-controlled permanent
+collections use these declarations. Queries do not execute the operation or
+select members. General damage-source aggregation remains unsupported.

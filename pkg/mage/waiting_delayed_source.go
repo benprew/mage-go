@@ -77,11 +77,11 @@ func (e *damageFromEffect) refersToSourcePermanent() bool {
 
 func (e *damageEachEffect) refersToSourcePermanent() bool {
 	recipients, mixed := e.recipients.(mixedDamageRecipients)
-	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount) || (mixed && permanentSetReadsSourcePermanent(recipients.permanents))
+	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount) || (mixed && (playerSetReadsSourcePermanent(recipients.players) || permanentSetReadsSourcePermanent(recipients.permanents)))
 }
 
 func (e *playerDamageEachEffect) refersToSourcePermanent() bool {
-	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount)
+	return damageReadsSourcePermanent(e.source) || playerSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
 }
 
 func (e *damagePacketsEffect) refersToSourcePermanent() bool {
@@ -197,8 +197,7 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 	case lowestPowerSet:
 		return permanentSetReadsSourcePermanent(s.subjects)
 	case playerSetPermanents:
-		opponents, ok := s.players.(*opponentsRef)
-		return ok && opponents != nil && playerRefReadsSourcePermanent(opponents.player)
+		return playerSetReadsSourcePermanent(s.players)
 	case controlledByPermanentSet:
 		return playerRefReadsSourcePermanent(s.controller)
 	case ownedPermanentSet:
@@ -384,4 +383,41 @@ func (e *untilEffect) refersToSourcePermanent() bool {
 			resolutionValueReadsSourcePermanent(m.power) ||
 			resolutionValueReadsSourcePermanent(m.toughness))
 	})
+}
+
+func playerSetReadsSourcePermanent(subjects PlayerSet) bool {
+	switch s := subjects.(type) {
+	case *opponentsRef:
+		return s != nil && playerRefReadsSourcePermanent(s.player)
+	case libraryRecyclePlayer:
+		return playerRefReadsSourcePermanent(s.player)
+	case damageHistoryPlayers:
+		return damageReadsSourcePermanent(s.source) || playerSetReadsSourcePermanent(s.candidates)
+	default:
+		return false
+	}
+}
+
+func (e *drawEachEffect) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *discardEachEffect) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *gainLifeEachEffect) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *loseLifeEachEffect) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *libraryRecycleEffect) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *randomPlayerChoice) refersToSourcePermanent() bool {
+	return playerSetReadsSourcePermanent(e.subjects)
 }

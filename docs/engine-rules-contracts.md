@@ -10798,3 +10798,43 @@ Evidence: `TestWaitingDelayedLayerOperands`, `TestWaitingDelayedLayerPurity`,
 `TestRONWaitingDelayedLayerProtection`, `TestRONWaitingDelayedLayerInvalid` and
 `TestRONWaitingDelayedLayerInstanceValues`. The seven protection records receive
 subrule evidence; their complete declarations remain rejected.
+
+## Waiting delayed player-collection operand declarations
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes the saved source
+for explicit `This` reads in typed player sets and collection amounts. Native
+`OpponentsOf(PlayerRef) PlayerSet`, `PlayersDealtDamageBy(DamageSourceRef,
+PlayerSet) PlayerSet`, and singular library-recycling subjects retain their
+operands recursively. `DrawEach`, `DiscardEach`, `GainLifeEach`, `LoseLifeEach`,
+library recycling and `ChooseRandomPlayer` declare those reads. Mixed damage
+recipients, `DealDamageEachPlayer` and `PermanentsControlledByPlayers` use the
+same player-set traversal. No signatures of these native constructors change.
+
+Queries do not resolve players, inspect history, read amounts, move cards or
+consume randomness. Empty sets and zero values keep explicit declarations.
+Implicit attachment reads, opaque sets and future nested delays do not infer a
+source read. Existing delayed frames retain exact incarnations through departure
+and phasing. Returned objects cannot replace them. Trigger detection ends waiting
+availability; stack frames and effect execution keep their existing contracts.
+This applies CR 400.7, 603.7a–e and 609.7a–b.
+
+RON `compileEachPlayerAction(Node, scope) ([]effectFactory, error)` passes the
+lexical scope to `compileInstanceValue`. All-player draws read their amount once
+at execution and use individual draw replacements in turn order. Factory and
+copied bindings use the existing per-instance services. This change does not
+alter payments, replacement ordering or simultaneous zone operations.
+
+Evidence: `TestWaitingDelayedPlayerOperands` covers fifteen native forms with
+phasing, departure/return identity and clone lifetime. `TestWaitingDelayedPlayerPurity`
+covers empty history sets, saved modes, value purity, implicit/future exclusions
+and invalid native declarations. `TestRONWaitingDelayedPlayerDraw` covers five
+live/LKI/phased/clone gameplay cases; `TestRONWaitingDelayedPlayerInvalid` covers
+six invalid scoped values. `TestRONWaitingDelayedPlayerProtection` maps the seven
+protection names to real RON cost/filter/prevention subrules, resolution choices,
+failed-payment rollback and zero arithmetic draw operands. These are subrule
+mappings; the seven complete records still reject general source aggregation.
+`TestRONWaitingDelayedPlayerInstanceValues` covers two factories, a copied
+ability, exact target values, departure LKI and clone isolation.
+`TestRONWaitingDelayedPlayerAmountOnce` checks a scoped hand count before both
+players draw. Existing Wheel of Fortune and Timetwister gameplay tests retain
+their full-card coverage.

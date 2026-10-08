@@ -221,6 +221,13 @@
 // Source-bound durations declare their source even with another layer subject.
 // Queries do not read values, select members or install layers. Empty sets and
 // zero values keep explicit reads. Granted ability bodies keep their own scope.
+// [DrawEach], [DiscardEach], [GainLifeEach], [LoseLifeEach] and library
+// recycling declare explicit source reads in their player sets and values.
+// [OpponentsOf], [PlayersDealtDamageBy] and singular recycling player sets
+// retain typed operand reads. Damage recipient sets, per-player damage,
+// random player choices and player-controlled permanent sets use this rule.
+// Queries do not select players, read history, draw cards or consume randomness.
+// Empty sets and zero amounts keep the saved source until the delay triggers.
 // Other collection actions need separate contracts.
 // [PreventCombatDamageToAndBy], [PreventCombatDamageBy] and
 // [PreventCombatDamageByThisTurn] declare direct [This] subjects to the same

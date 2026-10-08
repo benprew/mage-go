@@ -8,10 +8,10 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-TEMPORARY-LAYERS` adds exact source declarations for temporary
-layer subjects, collections, values, controllers and durations. Seven protection
-names gain 105 subrule cases; native declarations gain eleven operand cases.
-Compilation and full-card coverage are unchanged. Player collections, remaining
+`WAITING-DELAYED-PLAYER-COLLECTIONS` adds exact source declarations for typed
+player collections and their amounts, plus scoped RON all-player draw values.
+Seven protection names gain seven subrule cases; native declarations gain fifteen
+operand cases. Compilation and full-card coverage are unchanged. Remaining
 conditionals, source aggregation, token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -47934,3 +47934,136 @@ Ranked next candidates:
    subject to named identity, native band combat and token clone evidence.
 
 This run stops after `WAITING-DELAYED-TEMPORARY-LAYERS`.
+
+## 2026-10-08: waiting delayed player-collection operands
+
+Status: completed implementation slice `WAITING-DELAYED-PLAYER-COLLECTIONS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and the ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+The commit includes only this run's summary change and appended ledger entry.
+
+### Candidate comparison and selection
+
+Complete RON records and nested expressions were inspected for all seven
+protection names, Master of the Hunt, Timetwister, Wheel of Fortune and Winds of
+Change. Martyr's Cry was also inspected after its diagnostic changed.
+Reprints count once. Targeted vocabulary keys: EachPlayerAction/2,
+DrawNumberCards/1, PowerOfPermanent/1, DiscardHand/0 and
+ShuffleHandAndGraveyardIntoLibrary/0.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: waiting delayed player-collection operands | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 unlocks**. Timetwister, Wheel of Fortune and Winds of Change reuse existing collection execution. | Remaining conditional declarations and general source aggregation still block the seven protection records. Completes their shared player-collection declaration prerequisite. | Small: typed operand traversal, scoped draw lowering, native identity/purity and RON delayed gameplay tests. |
+| Ranked #2: remaining waiting delayed conditionals | The same seven protection names: **0 unlocks**. | Conditions and branch scope need a broader audit before general aggregation. | Medium: condition operands and branch-purity evidence. |
+| Ranked #3: named-token quality grants | Master of the Hunt: **1 plausible unlock**. | NamedTokenWithPT and named bands need token identity, parameterized grant lowering and native combat/clone evidence. | Medium: token/grant adapters and combat cases. |
+
+Candidate #1 is dependency-ready and bounded. Its concrete seven-card downstream
+benefit takes priority over the broader branch audit and single-card token work.
+The contract, reuse boundary and acceptance cases were stated before production
+edits. No skill, delegation, Go-card requirements or generated stubs were used.
+
+### Exact shapes, boundaries and dependencies
+
+- `compileEachPlayerAction(Node, scope) ([]effectFactory, error)` passes lexical
+  scope to `compileInstanceValue`. Supported draw shape:
+  `EachPlayerAction(AnyPlayer, DrawNumberCards(value))` with already-supported
+  scoped resolution values, including permanent power, arithmetic, player hand
+  counts and bound target values. Negative integer literals remain invalid.
+  This form introduces no ActionPlayer binding. Adjacent hand-shuffle result
+  lowering retains its separate per-player result contract.
+- `playerSetReadsSourcePermanent(PlayerSet) bool` traverses typed native
+  opponents, singular library-recycling player references and damage-history
+  sets. The latter traverses both its source and candidate collection.
+- New `refersToSourcePermanent() bool` declarations cover draw/discard/life
+  collections, library recycling and random player choice. Existing mixed damage,
+  per-player damage and player-controlled permanent sets use the same traversal.
+- Native constructors and `Game.WaitingDelayedPermanentSources() []DamageSource`
+  retain their signatures. Existing sequence/mode traversal, exact delayed source
+  capture, target bindings, LKI snapshots, clone services and stack transfer are
+  reused. RON owns spelling, declaration validation, scope and lowering; mage
+  owns reference declarations and execution.
+
+Queries do not resolve players, read values/history, select members, make random
+choices or execute actions. Empty sets and zero amounts retain explicit reads.
+Implicit attachments, opaque sets and nested future delays do not infer reads.
+Departure and phasing keep the exact incarnation; a returned permanent cannot
+replace it. Trigger detection ends waiting availability. Amounts are read once
+when the all-player draw executes, before individual draws and their replacements.
+Bindings remain separate across factory instances, copied abilities and clones.
+This reuses CR 400.7, 603.7a–e and 609.7a–b. Costs, replacement ordering and
+simultaneous-operation services are unchanged.
+
+No fallback, card-name branch, callback introspection, declaration panic or
+partial registry was added. No caller or obsolete DSL function was removed;
+cutover and cleanup gates remain closed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, `go test ./pkg/mage -run TestWaitingDelayedPlayer
+-count=1` failed all fifteen native operand cases plus purity for missing
+references. `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedPlayer -count=1`
+failed all five initial draw cases with unsupported scoped PowerOfPermanent.
+Both exited 1 as expected. Supplemental real-record protection, copied target
+binding and amount-once tests were added after these assertion/compiler failures.
+
+| Test | Mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedPlayerOperands | Fifteen native operand forms: draw/discard/life amounts and sets, recycling variants, damage history, random choices, mixed/per-player damage and player-controlled permanent sets; phasing, departure/return identity and clone waiting lifetime |
+| TestWaitingDelayedPlayerPurity | Empty history sets, saved modes, value purity, implicit/future exclusions and four invalid native definitions |
+| TestRONWaitingDelayedPlayerDraw | Five live/departed/returned/phased/clone delayed all-player draw scenarios; creation at resolution, exact source identity, LKI power and end-step timing |
+| TestRONWaitingDelayedPlayerInvalid | Six unbound, incompatible and negative scoped values reject at compilation |
+| TestRONWaitingDelayedPlayerProtection | Seven real protection records: RON costs, color/artifact filters and shields; original departed reference, failed-payment rollback, resolution-only choices, prevention execution and zero arithmetic delayed draws |
+| TestRONWaitingDelayedPlayerInstanceValues | Two factories and a copied ability retain distinct target incarnations, values 2 and 3, departure LKI, clone isolation and total eight cards drawn per player |
+| TestRONWaitingDelayedPlayerAmountOnce | Scoped hand count reads once before either player draws; first player's new hand size cannot change the second player's amount |
+| TestRONEachPlayer*; TestRONLibraryRecycle* | Existing Wheel of Fortune, Timetwister and Winds of Change full-card gameplay, replacements, ordering, copies and contexts remain covered |
+
+The seven protection mappings are subrule evidence, not full-card gameplay.
+Their complete records still reject general ChooseADamageSource aggregation.
+Martyr's Cry still requires per-player exile-result bindings; ActionPlayer is not
+fabricated to accept it. No source defect or environment failure was found.
+RON files did not change, so no vocabulary refresh was required. API and rules
+contracts document only the behavior established here.
+
+### Verification and measured outcome
+
+- Fresh baseline `make build`; `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline strict loader: expected exit 1 for unsupported collection rejection.
+- Failing-first commands: expected failures described above.
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingDelayedPlayer|TestRONEachPlayer|TestRONLibraryRecycle' -count=1`: PASS.
+  `go test ./pkg/mage -run TestWaitingDelayedPlayer -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting was reviewed.
+  Post-format focused tests: PASS. No unrelated code changed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Counts remain
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**, out of 2,445 records / 986 names. First diagnostic remains Animate
+  Dead: `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Martyr's Cry's diagnostic changes from unsupported fixed all-player draw
+  amount to unsupported value (NumPermanentsOfTypeExiledThisWay). All other
+  diagnostics are unchanged. Strict collection rejection remains intact.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain seven subrule scenarios; native declarations gain
+fifteen operand cases. Scoped delayed draw gameplay gains five lifecycle cases,
+six rejection cases, one instance/copy/LKI/clone scenario and one amount-once
+scenario. Compilation and full-card coverage remain unchanged.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_player_test.go, pkg/mage/dsl/ron/compiler.go,
+pkg/mage/dsl/ron/each_player.go, pkg/mage/dsl/ron/waiting_delayed_player_test.go,
+pkg/mage/doc.go, docs/dsl-reference.md, docs/engine-rules-contracts.md,
+and this ledger's summary and appended entry.
+
+Ranked next candidates:
+
+1. Remaining waiting delayed conditional operand declarations: seven protection
+   names, zero immediate unlocks; audit each typed condition and branch scope.
+2. General damage-source aggregation: seven protection names and up to seven
+   unlocks, after all remaining reference contracts and legal-source categories
+   are proved complete.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   subject to named identity, native band combat and token clone evidence.
+
+This run stops after `WAITING-DELAYED-PLAYER-COLLECTIONS`.
