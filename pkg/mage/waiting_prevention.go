@@ -41,14 +41,23 @@ func (r *staticDamagePreventionReplacement) waitingPreventionPermanents(g *Game)
 // WaitingPreventionPermanentSources reads exact references in active prevention effects.
 // A returned object must not replace information for the saved incarnation.
 func (g *Game) WaitingPreventionPermanentSources() []DamageSource {
+	return g.waitingReplacementPermanentSources(func(replacement ReplacementEffect) []capturedPermanent {
+		refs, ok := replacement.(waitingPreventionReferences)
+		if !ok {
+			return nil
+		}
+		return refs.waitingPreventionPermanents(g)
+	})
+}
+
+func (g *Game) waitingReplacementPermanentSources(references func(ReplacementEffect) []capturedPermanent) []DamageSource {
 	var sources []DamageSource
 	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
-			refs, ok := replacement.(waitingPreventionReferences)
-			if !ok || !replacement.IsActive(g) {
+			if !replacement.IsActive(g) {
 				continue
 			}
-			for _, ref := range refs.waitingPreventionPermanents(g) {
+			for _, ref := range references(replacement) {
 				if ref.id == uuid.Nil || ref.incarnation == uuid.Nil {
 					continue
 				}

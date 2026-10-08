@@ -8278,3 +8278,49 @@ combat, casting, strict loading, instance isolation and recipient replacement or
 This does not establish general source choice or the seven chosen-source shields.
 Other waiting replacement contexts and legacy filter-factory callers remain gaps.
 No costs, damage batch ordering or existing replacement priorities change.
+
+
+### Exact live destinations of waiting static damage redirection
+
+`Game.WaitingRedirectionPermanentSources() []DamageSource` establishes the typed
+static damage redirection destination part of the referred-object category in
+CR 120.7 and 609.7a. It queries the existing `staticDamageRedirectReplacement`
+context resolver used by actual damage execution. Current source incarnation,
+controller, static condition, attachment and creature/planeswalker type are
+checked once per rule. Phasing and source departure exclude a live rule; a
+returned object cannot satisfy an old cycle entry. Source ability removal uses
+the shared continuous lifecycle. No hypothetical damage, source-filter match,
+player choice, RNG call or replacement execution occurs during the query.
+
+The query and `WaitingPreventionPermanentSources` share one exact-reference
+collector. It visits active persistent then cycle replacements, excludes missing
+identities/information, deduplicates by object identity and returns isolated
+snapshots. The two public categories remain separate. Registration sources,
+players, arbitrary filter members, legacy redirection closures and unrelated
+permanents are not inferred as destinations. Current live information supplies
+properties; departed destination LKI cannot revive a live static rule.
+
+`ChooseDamageSourceFromWaitingRedirectionReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` reuses the existing
+filtered non-targeted decision service, declaration validation, empty-result
+clearing, independent per-output bindings and clone state. It enumerates only
+this category. It cannot implement unrestricted `ChooseADamageSource` alone.
+
+Evidence: `TestWaitingRedirectionReferences` covers both native rule forms,
+condition transitions, control, phase cycles, departure/return, cleared LKI,
+ability removal, repeated damage, cleanup and clones.
+`TestWaitingRedirectionHostAndStaleCycle` covers reattachment, current conditions,
+source/host phasing, departure/return, destination type changes and saved cycle
+identity. `TestWaitingRedirectionChoicesAndBoundaries` covers exact deduplication,
+registration/unrelated/prevention exclusion, isolated query snapshots, filter
+reads, valid/invalid declarations, independent outputs, empty-result clearing
+and clones. `TestRONWaitingRedirectionReferences` executes both complete card
+records through their typed AST lowering and proves that the exact selected
+destination can supply damage. Existing `TestRONStaticRedirect*` and
+`TestStaticDamageRedirect*` retain legality/payment, combat and simultaneous
+packets, pending ability/copy LKI, replacement order and destination rechecks.
+
+This establishes no new damage ordering or payment behavior. Other waiting
+replacement/source/spell contexts, selected-source shields, face-up command
+objects and complete source enumeration remain gaps. No RON record changes or
+full-card compilation gain is claimed.

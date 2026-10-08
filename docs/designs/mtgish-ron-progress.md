@@ -9,10 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`TYPED-STATIC-PERMANENT-FILTER-PREVENTION` slice is recorded at the end of this
-ledger. It lowers self-recipient permanent-filter prevention to a typed native
-rule with an exact live waiting subject, a prerequisite for seven source-choice cards.
-Three accepted cards have new interaction coverage; compilation counts are unchanged.
+`WAITING-STATIC-REDIRECTION-DESTINATIONS` slice is recorded at the end of this
+ledger. It exposes exact live typed redirection destinations for source selection.
+Two accepted names (seven records) have new interaction coverage; compilation
+counts are unchanged. Selected-source shields and complete enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39502,6 +39502,129 @@ Ranked next candidates to reassess from fresh evidence:
    selected-source shields; then face-up command objects and full source selection
    before the seven source-choice prevention cards. Legacy filter-factory rules
    with collective recipients need explicit typed contracts, not closure inference.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: exact live destinations of waiting static damage redirection
+
+Status: completed implementation slice `WAITING-STATIC-REDIRECTION-DESTINATIONS`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary update and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+Complete canonical records and nested forms were inspected, including all seven
+source-choice prevention consumers. Reprints count once. Targeted vocabulary
+queries confirm the two-argument replacement and one-argument destination forms.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, exact references in other waiting replacement contexts; selected bounded context: typed static redirection destinations | Veteran Bodyguard and Martyrs of Korlis are already accepted: **0 immediate unlocks**. Downstream: Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records**. | Complete source enumeration, other waiting replacement/source/spell references, selected-source shields, face-up command objects, permanent-spell continuity and shield property rechecks remain. Adds the exact destination category required by the shared source-selection service. | Small: one narrow query and choice API, shared exact-reference collector, typed destination plan lowering and focused native/RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible unlocks** for the complete family. | Legendary/named band filters, token and live grants, selective temporary removal, band formation and both assignment directions. Enables all eight consumers. | Large: ability representation, combat contracts and layer/token/removal adapters. |
+| Typed word choice/substitution | Magical Hack; Sleight of Mind: **2 plausible unlocks**. | Both complete modal records require spell/permanent contexts, paired choices, text-variable substitution, copy and layer isolation. | Large: stored text representation and two execution contexts. |
+
+The bounded part of ranked #1 is dependency-ready and closes a concrete shared
+contract within this run. The existing static redirection AST adapter and native
+mechanics are reused, rather than duplicating damage execution. The destination
+now remains a validated typed plan until each factory call. No full-card gain
+is inferred from first-error frequency. Contract, reuse boundary and acceptance
+cases were stated before edits. The `implement-engine` skill supplied the native
+workflow. No delegation or removed card/set skill was used.
+
+### Exact signatures, contexts and dependencies
+
+- New native query: `(*Game).WaitingRedirectionPermanentSources() []DamageSource`.
+  It supplies only the exact current creature/planeswalker destination of an
+  active `staticDamageRedirectReplacement`. It is separate from prevention.
+- New native choice: `ChooseDamageSourceFromWaitingRedirectionReferences(player
+  PlayerRef, filter DamageSourceFilter, binding *DamageSourceBinding)
+  ResolvingEffect`. It reuses shared filtering, definition validation, player
+  decisions, empty-result clearing and per-output binding writes.
+- `waitingReplacementPermanentSources(func(ReplacementEffect)
+  []capturedPermanent) []DamageSource` shares exact information, persistent/cycle
+  registration order, missing-identity exclusion, deduplication and isolated
+  snapshots with the unchanged prevention query contract.
+- `staticDamageRedirectReplacement.context` supplies both real damage execution
+  and the query. It reads current controller, condition and attachment, and
+  requires the original source incarnation and a live creature/planeswalker
+  destination. False conditions, phasing, departure, absent hosts and invalid
+  destination types exclude the reference. Reattachment follows the new host;
+  a returned source cannot restore an old cycle entry. Ability removal uses the
+  existing continuous lifecycle. Queries do not execute damage, choose, consume
+  RNG or test a hypothetical matching damage source.
+- RON supported shape stays conditional top-level `ReplaceWouldDealDamage(
+  DamageWouldBeDealtByAPermanentToRecipient(filter,Player(You)),
+  [DealToCreatureOrPlaneswalkerInstead(subject)])`, or the existing
+  `DamageWouldBeDealtByASourceToRecipient(IsCardtype(type),Player(You))` event.
+  `subject` is bare `ThisPermanent`, or `HostPermanent` in an Aura. Existing
+  conditional `If`/`Unless`/`IfElse` scope and source-filter grammar remain.
+- `compileStaticDamageRedirect` validates `permanentReferencePlan` and builds
+  its reference inside each option factory. Target/event/death destinations,
+  unbound hosts, resolving declarations and extra operations remain rejected.
+  No `ChooseADamageSource` lowering or incomplete enumeration is published.
+- RON owns spelling, scope and lowering. Mage owns live rules, exact information,
+  choice bindings, cloning, layers and replacement execution. Relevant contracts:
+  CR 120.7, 400.7, 609.7a/c, 611.3, 614.1/9, 616.1 and 702.26b.
+  No source-data defect or environment failure was found.
+
+### Failing-first evidence and card-to-test mapping
+
+The new native tests first failed at compilation for the missing query and choice
+signatures. The new RON complete-record tests independently failed for those
+same missing APIs. A test fixture's unsupported type-change helper was corrected
+before confirming the native failure; only the intended missing APIs remained.
+All assertions now pass.
+
+| Test/card | Contract evidence |
+| --- | --- |
+| `TestWaitingRedirectionReferences` | Both native source forms; live/tap/untap conditions; current controller; phase/cycle; departure/return with cleared LKI; ability removal; actual damage, cleanup and independent clones. Prevention category stays separate. |
+| `TestWaitingRedirectionHostAndStaleCycle` | Current Aura host, reattachment, source/host phasing and return, source control and destination type changes; saved cycle cannot follow a returned source or host. |
+| `TestWaitingRedirectionChoicesAndBoundaries` | Deduplicated exact hosts; exclusion of registration sources, unrelated objects and a distinct prevention-only subject; isolated snapshots; filtered choices, valid/invalid declarations, independent bindings, empty-result clearing and clone isolation. |
+| Veteran Bodyguard (LEA, LEB, 2ED, 3ED, CED, CEI); Martyrs of Korlis (ATQ) | New `TestRONWaitingRedirectionReferences`: both complete canonical records, exact destination selection then damage, condition/lifecycle/control/cleanup and clone interactions. **2 accepted names / 7 records** gain interaction coverage; existing reprint validation maps all seven records. |
+| Same two names | Existing `TestRONStaticRedirect*` rerun: complete records, payment/sickness rollback and entry timing, metadata, target/scope rejection, atomic loading, factory/instance isolation, real combat and simultaneous packets, pending abilities/copies with source LKI, artifact spells, current attachment/control and damage execution. |
+| Native mechanics | Existing `TestStaticDamageRedirect*` rerun: definition rejection, source identity/LKI, replacement ordering, destination legality/rechecks, lifecycle and original source incarnations. Existing waiting-prevention tests verify shared-collector compatibility. |
+| Seven source-choice prevention consumers | Complete records remain rejected at `ChooseADamageSource`. No full shield gameplay or compilation gain is claimed. |
+
+### Validation and measured outcome
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Baseline loader exit 1 was collection rejection, not build/test failure:
+**1,963 compiled / 482 rejected records; 763 accepted / 223 rejected names**.
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingRedirection|TestRONStaticRedirect' -count=1`.
+- Native focused `TestWaitingRedirection|TestWaiting.*Prevention|TestStaticDamageRedirect` with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- Additional skill check: `go test ./... -short -count=1`.
+- `make lint`: PASS, 0 issues. Automatic formatting changes reviewed.
+- Focused native/RON tests rerun after lint: PASS; `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected names**. Diagnostics equal baseline.
+
+Estimated and actual compilation gain: **0 names / 0 records**, as expected.
+New gameplay interaction coverage: **2 names / 7 records**. Compilation remains
+separate from complete gameplay evidence. All 12 RON hashes match the vocabulary
+snapshot; no source change or refresh is needed. No removal gate is met. No Go
+card, generator, DSL alias or engine service is deleted. A fresh caller search
+confirms legacy redirection is still used by production Go cards and tests.
+
+Changed files: new native `waiting_redirection.go` and `waiting_redirection_test.go`,
+shared `waiting_prevention.go`, `damage_source_choice.go`, RON `static_redirect.go`
+and new `waiting_redirection_test.go`, `doc.go`, API/rules-contract docs and this
+ledger. Runtime loading, complete collection gameplay, Go-card deletion and
+unused DSL cleanup remain unfinished.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Typed selected-source shields, including retained spell references and
+   property rechecks, then remaining exact waiting replacement contexts and
+   face-up command objects before complete source selection for the seven
+   prevention cards. Keep incomplete categories out of production lowering.
 2. Parameterized bands with others for the eight complete records above.
 3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
 

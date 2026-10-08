@@ -9,6 +9,9 @@
 // [PreventDamageFromMatchingPermanents] supplies its current exact subject.
 // Its permanent filter uses current or retained source information.
 // [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
+// [Game.WaitingRedirectionPermanentSources] reads live destinations of typed
+// static damage redirection. It uses the same subject check as damage execution.
+// [ChooseDamageSourceFromWaitingRedirectionReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // # Subsystem Architecture and Ownership

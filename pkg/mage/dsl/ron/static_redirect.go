@@ -34,9 +34,12 @@ func compileStaticDamageRedirect(n Node, ctx scope, condition mage.StateConditio
 	if err := arity(operation, 1); err != nil {
 		return nil, err
 	}
-	subject, err := compileConditionalSubject(operation.Args[0], ctx)
+	subject, err := compilePermanentRef(operation.Args[0], ctx)
 	if err != nil {
 		return nil, err
+	}
+	if subject.kind != permanentSource && subject.kind != permanentHost {
+		return nil, problem(operation.Args[0], "static redirection requires a source or Aura host")
 	}
 	if event.Name == "DamageWouldBeDealtByASourceToRecipient" {
 		filter := event.Args[0]
@@ -51,7 +54,7 @@ func compileStaticDamageRedirect(n Node, ctx scope, condition mage.StateConditio
 			return nil, err
 		}
 		return func() mage.CardOption {
-			return mage.WithAbility(mage.Static(mage.RedirectDamageFromCardTypeToPermanentIf(mage.You, subject, kind, condition)))
+			return mage.WithAbility(mage.Static(mage.RedirectDamageFromCardTypeToPermanentIf(mage.You, subject.build(instanceBindings{}), kind, condition)))
 		}, nil
 	}
 	from, err := compileStaticRedirectSourceFilter(event.Args[0])
@@ -59,7 +62,7 @@ func compileStaticDamageRedirect(n Node, ctx scope, condition mage.StateConditio
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.RedirectDamageToPermanentIf(mage.You, subject, from, condition)))
+		return mage.WithAbility(mage.Static(mage.RedirectDamageToPermanentIf(mage.You, subject.build(instanceBindings{}), from, condition)))
 	}, nil
 }
 

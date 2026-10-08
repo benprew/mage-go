@@ -6762,3 +6762,28 @@ Tests: `TestStaticPermanentFilterPrevention*`,
 `TestWaitingStaticPermanentFilterPreventionStaleCycle`, and the expanded
 `TestRONWaitingStaticPreventionReferences`. Complete Argothian Pixies, Desert
 Nomads and Uncle Istvan records retain `TestRONStaticPrevention*` gameplay evidence.
+
+
+### Live destinations of waiting static damage redirection
+
+`mage.Game.WaitingRedirectionPermanentSources() []mage.DamageSource` reads the
+exact current destination of each active typed static damage redirection rule.
+`mage.ChooseDamageSourceFromWaitingRedirectionReferences(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` saves one matching destination through the shared choice
+service. This category is separate from prevention references and from complete
+CR 609.7a source enumeration.
+
+RON retains conditional `ReplaceWouldDealDamage` lowering for the permanent-source
+and single-card-type source events described above. The destination plan permits
+`ThisPermanent`, or `HostPermanent` in an Aura, and builds its typed reference in
+each factory call. No resolving choice syntax or additional static scope is added.
+A false condition, phased or departed source, missing host, or destination that
+is neither a creature nor a planeswalker supplies no reference. A returned source
+cannot restore a saved cycle rule. Reattachment supplies the new live host.
+Queries neither execute damage nor test a hypothetical matching source.
+
+Complete Veteran Bodyguard and Martyrs of Korlis records map to
+`TestRONWaitingRedirectionReferences` and the existing `TestRONStaticRedirect*`
+tests. Other replacement categories, source-choice shields, command objects and
+complete `ChooseADamageSource` lowering remain separate capabilities.
