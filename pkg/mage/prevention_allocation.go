@@ -74,7 +74,7 @@ func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game)
 					}
 					_, shield := replacement.(*preventionShieldReplacement)
 					source, nextSource := replacement.(*sourcePreventionReplacement)
-					if shield || (nextSource && source.capturesPermanent()) {
+					if shield || (nextSource && source.capturesSourceIdentity()) {
 						if seenShields[replacement] {
 							continue
 						}
@@ -109,7 +109,7 @@ func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game)
 		selected := candidates[choice]
 		if shield, ok := selected.replacement.(*preventionShieldReplacement); ok {
 			shield.allocateBatch(actions, applied, g)
-		} else if source, ok := selected.replacement.(*sourcePreventionReplacement); ok && source.capturesPermanent() {
+		} else if source, ok := selected.replacement.(*sourcePreventionReplacement); ok && source.capturesSourceIdentity() {
 			source.preventBatch(actions, applied, g)
 		} else {
 			applied[selected.index][selected.replacement] = true

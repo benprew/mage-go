@@ -44,7 +44,9 @@ func (e *nextPermanentSourcePrevention) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (r *sourcePreventionReplacement) capturesPermanent() bool { return r.incarnation != uuid.Nil }
+func (r *sourcePreventionReplacement) capturesSourceIdentity() bool {
+	return r.incarnation != uuid.Nil || r.exactSource.Valid()
+}
 
 func (r *sourcePreventionReplacement) preventBatch(actions []Action, applied []map[ReplacementEffect]bool, g *Game) {
 	// One simultaneous event can contain several packets from this source.

@@ -444,6 +444,13 @@
 // Each source keeps its own trample and deathtouch. Shared assignments can
 // supply lethal damage before a source with trample damages the defender.
 //
+// Use [PreventNextDamageFromExactSource] for one damage event from an exact
+// permanent or spell reference to a player this turn. Property checks use
+// current or retained information for that object. A returned permanent or
+// another cast cannot consume the shield. Bindings can change after installation;
+// each shield keeps its own source. Spell-to-permanent continuity needs a
+// separate service before a general source choice can use this operation.
+//
 // Use [PreventNextDamageFromPermanent] for one damage event from a typed
 // permanent source to a player this turn. The filter is checked at installation
 // and before damage. A returned source cannot consume the old shield.

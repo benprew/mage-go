@@ -6787,3 +6787,29 @@ Complete Veteran Bodyguard and Martyrs of Korlis records map to
 `TestRONWaitingRedirectionReferences` and the existing `TestRONStaticRedirect*`
 tests. Other replacement categories, source-choice shields, command objects and
 complete `ChooseADamageSource` lowering remain separate capabilities.
+
+### Exact-object source prevention prerequisite
+
+`PreventNextDamageFromExactSource(source DamageSourceRef, recipient PlayerRef,
+filter DamageSourceFilter) ResolvingEffect` saves one exact permanent incarnation
+or spell stack identity at resolution. It prevents the next positive damage event
+to that player this turn. All matching simultaneous packets use one shield.
+Nonmatching properties, recipients, returned objects and recasts do not consume
+it. Cleanup expires it; clones keep separate consumption state. The filter uses
+current object information when available and retained information after departure.
+
+The RON lowering prerequisite accepts
+`CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(player)), [PreventThatDamage])` only with an existing
+typed `chosenDamageSourcePlan` in the lexical scope and its factory-local binding.
+The plan supplies the choice filter. It rejects unbound references, permanent
+recipients, extra operations and call forms of the two symbols. `Player(player)`
+uses the existing typed player reference grammar.
+
+No production declaration creates that chosen-source scope yet. The seven
+protection records remain rejected at `ChooseADamageSource`. Tests lower their
+exact shield expressions with explicit native producers. This is an exact-object
+primitive: it does not provide the spell-to-permanent continuation required by
+CR 609.7a when a permanent spell is chosen. Complete source enumeration and that
+continuation must precede production source-choice lowering. Other prevention
+operations and recipients require separate contracts.

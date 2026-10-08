@@ -9,10 +9,11 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-STATIC-REDIRECTION-DESTINATIONS` slice is recorded at the end of this
-ledger. It exposes exact live typed redirection destinations for source selection.
-Two accepted names (seven records) have new interaction coverage; compilation
-counts are unchanged. Selected-source shields and complete enumeration remain gaps.
+`EXACT-OBJECT-SOURCE-SHIELDS` prerequisite is recorded at the end of this ledger.
+It adds typed permanent/spell identity and property rechecks with scoped RON
+shield lowering. Three accepted names (18 records) gain interaction coverage;
+compilation counts are unchanged. General source choice, permanent-spell
+continuity and complete enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39627,5 +39628,135 @@ Ranked next candidates to reassess from fresh evidence:
    prevention cards. Keep incomplete categories out of production lowering.
 2. Parameterized bands with others for the eight complete records above.
 3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: typed exact-object source prevention
+
+Status: completed prerequisite slice `EXACT-OBJECT-SOURCE-SHIELDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary update and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+Fresh baseline build and RON tests pass. The loader exits 1 for collection
+rejection: **1,963 compiled / 482 rejected records**, **763 accepted / 223
+rejected unique names**. This is not a build or environment failure.
+The latest ranked candidate was evaluated first. Complete canonical records and
+nested forms were inspected; identical reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected bounded prerequisite: typed exact-object source shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | The shield body is shared by all seven. General source enumeration, other waiting replacement references, face-up command objects and permanent-spell continuity still block complete records. This slice establishes exact permanent/spell identity, filter rechecks and factory-local shield lowering before those adapters. | Small to medium: typed installation, reuse of replacement batches, scoped lowering and native/RON contracts. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible full-family unlocks** | Requires legendary/named band filters, static and token grants, selective removal, band legality and both combat assignment directions. | Large; too broad for one bounded run. |
+| Mixed type/base-value static animation | Animate Artifact, Titania's Song, Xenic Poltergeist, Gaea's Liege, Angry Mob, Nameless Race: **1 immediate unlock** for the bounded conditional-host context | Animate Artifact needs selection retained across type and P/T layers. Angry Mob already loads. The others need sticky lifecycle, temporary type replacement, attack-player counts or entry-life results. Gaea's Liege has the previously recorded predicate concern. | Medium for one host context, large for the full six-card family. |
+
+The selected exact-object primitive is dependency-ready and a concrete shared
+prerequisite for seven cards. No gain is inferred from first diagnostics alone.
+The initial possible two-card animation gain was corrected after inspecting
+complete records and fresh loader evidence: Angry Mob is already accepted.
+Contract, reuse boundary and acceptance cases were stated before editing.
+The `implement-engine` skill supplied the native workflow. No delegation,
+removed card/set skill, Go-card requirements or new Go stubs were used.
+
+### Established contract and reuse boundary
+
+- New native signature: `PreventNextDamageFromExactSource(source DamageSourceRef,
+  recipient PlayerRef, filter DamageSourceFilter) ResolvingEffect`.
+  This is an **exact-object** service, not a complete CR 609.7a selected-source
+  service. Spell-to-permanent continuation remains a separate prerequisite.
+- Resolution reads the source and player once and saves copied information.
+  Sources require exactly one permanent incarnation or spell stack identity.
+  Missing/unbound source information, absent players and nonmatching installation
+  properties create no shield. Definition validation enforces typed references,
+  binding dominance and filter validity.
+- The existing `sourcePreventionReplacement` adds a typed exact-source context;
+  legacy UUID and permanent-filter contexts keep their behavior. `SameObject`
+  excludes recasts, returned objects and incomplete packet identities.
+- The shared `damageReferenceInformation` reader supplies current/exact retained
+  properties. Live information overrides an earlier snapshot. Without retained
+  permanent information, the exact matching packet supplies its own properties.
+  The filter is checked at installation and at each damage event. Mismatching
+  properties, zero damage and other recipients do not consume the shield.
+- Positive matching damage consumes one shield. `capturesSourceIdentity` extends
+  existing simultaneous batching to exact spell identities; all matching packets
+  in one event are prevented together. Affected-player choice and replacement
+  rechecks use the shared planner. Cleanup expires the shield. Clones copy source
+  information and retain independent replacement consumption. Exact permanent
+  subjects use the existing waiting-prevention permanent-reference contract.
+- RON shape: `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(player)), [PreventThatDamage])`. The source and
+  operation must be bare symbols; player references use existing typed scope.
+  The lowering requires a lexical `chosenDamageSourcePlan` and a factory-local
+  entry in `instanceBindings.chosenDamageSources`. The plan carries the filter.
+- `compileFinitePrevention` dispatches the future event to the new adapter.
+  No production producer creates the chosen-source scope yet. Tests supply
+  explicit native producers to exercise the real record expressions. Production
+  `ChooseADamageSource` remains rejected, including all seven complete records.
+  Permanent recipients, additional operations, malformed and unbound declarations
+  remain errors. No incomplete source enumeration or partial registry is published.
+- RON owns syntax, scope and lowering. Mage owns identities, property reads,
+  replacement execution, batches, cleanup and clones. No card-name branch,
+  global last-action slot or game-time declaration panic was introduced.
+- Relevant rules: CR 400.7, 609.7a/b, 615.8/9 and 616.1. No new source-data
+  defect or environment failure was found. No RON source changed.
+
+### Failing-first evidence and card-to-test mapping
+
+New native tests first failed compilation for the missing exact-source API.
+New RON tests independently failed for the missing plan, scope/binding fields and
+lowering function. These expected failures were confirmed before implementation.
+
+| Test/card mapping | Evidence |
+| --- | --- |
+| `TestExactSourcePreventionIdentity` | Live, departed, returned and phased permanent identities, cleared LKI, phase cycle, zero/other-recipient damage, one simultaneous event, cleanup and clones. |
+| `TestExactSourcePreventionSpells` | Exact spell stack identity; live color changes and restoration; departed spell information; recasts cannot consume an earlier shield; cleanup and clones. |
+| `TestExactSourcePreventionDeclarations` | Nil/unbound typed references and invalid source color fail definition validation. |
+| `TestExactSourcePreventionRechecksAndOrder` | Current permanent color overrides earlier packet color; mismatch preserves shield; affected player orders competing finite and exact-source shields. |
+| `TestExactSourcePreventionIndependentBindings` | Two chosen-source bindings, snapshots retained after result clearing, missing binding creates no shield, independent consumption and clones. |
+| All seven protection cards above | `TestRONExactSourcePreventionLowering` uses complete canonical records to extract exact filter/shield expressions, lowers scoped bindings, validates native producer dominance and executes damage/clone/consumption cases. This is **subrule evidence**, not full protection-card gameplay. |
+| Same seven | `TestRONExactSourcePreventionInvalid` covers unbound chosen source, wrong symbol/call shape, wrong reference type, permanent recipient, unbound player and extra operations. Complete records remain rejected at `ChooseADamageSource`. |
+| Lightning Bolt; Prodigal Sorcerer; Orcish Artillery | `TestRONExactSourcePreventionGameplay` executes their complete RON records through real casting/activation and lowered shields: sickness/payment legality, resolution timing, source departure/return/phasing, spell and ability copies, independent artillery self-damage and pending-game clones. **3 accepted names / 18 records** gain interaction coverage. |
+| Existing engine and compiler callers | `TestNextPermanentSourcePrevention*`, `TestRONNextPermanentSourcePrevention*`, `TestWaiting*Prevention*` and `TestRONChosenSourceFilter*` pass without weakening their assertions. |
+
+### Validation and outcome
+
+Required checks passed in fast-fail order:
+
+- Focused RON exact-source/filter/next-permanent-source tests with `-count=1`.
+- Focused native exact-source/next-permanent/waiting-prevention tests with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- First `make lint` rejected two redundant test type assertions (staticcheck S1040).
+  They were removed; `make lint` then passed with 0 issues. Automatic import
+  formatting was reviewed; affected tests were rerun.
+- Additional skill check: `go test ./... -short -count=1`.
+- Post-lint affected focused tests and `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected names**. Diagnostics equal baseline.
+
+Estimated and actual compilation gain: **0 names / 0 records**. New interaction
+coverage is **3 already accepted names / 18 records**, separate from complete
+collection gameplay. All 12 source hashes match the vocabulary snapshot; no
+refresh is needed. No runtime/removal gate is met. No Go card, generator or DSL
+function is removed. A fresh whole-repository caller audit confirms legacy
+source-prevention APIs remain used by production Go cards and tests.
+
+Changed files: new native and RON `exact_source_prevention.go` and tests;
+`replacement.go`, `next_source_prevention.go`, `prevention_allocation.go`,
+`waiting_prevention.go`; RON `compiler.go`, `player_scope.go`,
+`finite_prevention.go`; `doc.go`, API/rules-contract docs and this ledger.
+Runtime loading, complete collection gameplay, Go-card deletion and unused DSL
+cleanup remain unfinished.
+
+Ranked next candidates:
+
+1. Permanent-spell to entered-permanent continuity for selected-source shields;
+   then exact waiting spell/shield references, remaining replacement contexts and
+   face-up command objects before complete source enumeration for the seven cards.
+2. Parameterized bands with others for the eight complete records above.
+3. Mixed-layer conditional host animation, retaining membership before type
+   changes; reassess shared value against remaining multi-card prerequisites.
 
 Stop after this slice. The commit hash is reported in the final response.

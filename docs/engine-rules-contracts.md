@@ -8324,3 +8324,48 @@ This establishes no new damage ordering or payment behavior. Other waiting
 replacement/source/spell contexts, selected-source shields, face-up command
 objects and complete source enumeration remain gaps. No RON record changes or
 full-card compilation gain is claimed.
+
+### Exact-object source shields with typed properties
+
+`PreventNextDamageFromExactSource(DamageSourceRef, PlayerRef, DamageSourceFilter)`
+establishes an exact-object prevention installation at resolution, separate from
+source enumeration and spell-to-permanent continuity. It resolves the source and
+recipient once and copies source information into each replacement instance.
+Sources require exactly one permanent incarnation or spell stack identity. A
+missing binding, incomplete identity, absent player or nonmatching installation
+filter creates no replacement. Definition validation checks typed source/player
+references, binding dominance and the filter declaration.
+
+`sourcePreventionReplacement` preserves legacy UUID and permanent-filter callers.
+The new typed context uses `DamageSource.SameObject` and the shared exact
+information reader. Live permanent/spell properties take precedence over a saved
+packet. Departure and phasing use the existing exact LKI and spell-retention
+services; if permanent information is absent, the matching damage packet supplies
+its source information. Recasts, returned objects and unidentified packets cannot
+substitute another source. A property mismatch or zero damage does not consume
+the shield. Matching positive player damage consumes it. The shared simultaneous
+replacement planner treats exact spell sources like exact permanent sources and
+prevents all matching packets in one event. Affected-player replacement choice,
+rechecks and cleanup retain their existing contracts. Cloning copies the saved
+source information and keeps replacement consumption separate. Exact permanent
+subjects also join the existing waiting-prevention permanent-reference category.
+
+The scoped RON adapter validates the exact two-argument future event, typed
+`Player` recipient and single bare `PreventThatDamage` operation. Its source plan
+and factory-local binding carry the choice filter without a global result slot.
+Production `ChooseADamageSource` remains rejected. This primitive does not join a
+permanent spell to the permanent it becomes; CR 609.7a needs that separate
+continuity service before general chosen-source shields are supported.
+CR 400.7, 609.7b, 615.8–9 and 616.1 apply to the established context.
+
+Evidence: `TestExactSourcePreventionIdentity`, `Spells`, `Declarations`,
+`RechecksAndOrder` and `IndependentBindings` cover identity, cleared LKI,
+phasing, cleanup, stack recasts, live properties, simultaneous events, invalid
+and unbound declarations, competing shields and clone isolation.
+`TestRONExactSourcePreventionLowering` maps the shield expressions in all seven
+protection cards; `TestRONExactSourcePreventionInvalid` covers declaration
+rejection. `TestRONExactSourcePreventionGameplay` uses complete RON Lightning
+Bolt, Prodigal Sorcerer and Orcish Artillery records for real casting/activation,
+payment/sickness legality, ability-source departure/return/phasing, copies,
+independent artillery recipients and pending-game clones. These tests do not
+establish complete gameplay for the rejected protection cards.

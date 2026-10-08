@@ -405,6 +405,8 @@ func (r *colorPreventionReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type sourcePreventionReplacement struct {
+	exactSource  DamageSource
+	sourceFilter DamageSourceFilter
 	replacementBase
 	playerID    uuid.UUID
 	dmgSource   uuid.UUID
@@ -417,6 +419,10 @@ func (r *sourcePreventionReplacement) Matches(a Action, reader GameReader) bool 
 	act, ok := a.(*DamageToPlayerAction)
 	if !ok || act.Amount() <= 0 || act.PlayerID() != r.playerID || act.ActionSource() != r.dmgSource {
 		return false
+	}
+	if r.exactSource.Valid() {
+		g, ok := reader.(*Game)
+		return ok && r.matchesExactSource(act.DamageSource(), g)
 	}
 	if r.incarnation == uuid.Nil {
 		return true
@@ -444,6 +450,7 @@ func (r *sourcePreventionReplacement) IsActive(_ GameReader) bool {
 
 func (r *sourcePreventionReplacement) Clone() ReplacementEffect {
 	c := *r
+	c.exactSource = cloneDamageSource(r.exactSource)
 	return &c
 }
 
