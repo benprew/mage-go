@@ -63,6 +63,10 @@ func (r *halfDamagePreventionShieldReplacement) waitingPreventionPermanents(*Gam
 	return []capturedPermanent{{r.dmgSource, r.incarnation}}
 }
 
+func (r *reverseDamageReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
+	return []capturedPermanent{{r.dmgSource, r.incarnation}}
+}
+
 // WaitingPreventionPermanentSources reads exact references in active prevention effects.
 // A returned object must not replace information for the saved incarnation.
 func (g *Game) WaitingPreventionPermanentSources() []DamageSource {

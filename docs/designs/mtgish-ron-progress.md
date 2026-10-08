@@ -9,12 +9,13 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-LEGACY-SOURCE-SHIELDS` slice adds exact permanent source references to
-finite and half-damage legacy shields and the shared RON choice query. It covers
-incarnation, departure, phasing, information, consumption and clone isolation.
-Seven protection names gain subrule evidence; no complete card is newly accepted.
-Other waiting replacement references, face-up command objects and complete source
-enumeration remain gaps.
+`WAITING-REVERSE-DAMAGE-SOURCES` slice captures exact permanent sources in legacy
+reverse-damage shields and exposes them through the shared RON choice query.
+It covers departure, return exclusion, phasing, current/retained information,
+consumption, cleanup and clone isolation. Seven protection names gain subrule
+evidence; no complete card is newly accepted. Temporary redirection, other waiting
+replacement lifetimes, face-up command objects and complete source enumeration
+remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40549,6 +40550,138 @@ Ranked next candidates:
    completed typed or finite/half source-prevention categories.
 2. Parameterized bands with others: combat prerequisite for the eight named
    records, followed by live/token grants and selective removal.
+3. Conditional host animation across type and base P/T layers for Animate Artifact.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: exact sources of waiting legacy reverse-damage shields
+
+Status: completed implementation slice `WAITING-REVERSE-DAMAGE-SOURCES`.
+This run stops after this slice.
+
+### Environment, candidate comparison and selection
+
+Initial user changes to `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`, were preserved. The user had moved historical
+entries out of this ledger. Only this run's summary replacement and appended entry
+are staged; the user's history relocation remains outside the commit.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader
+JSON exited 1 with 1,964 compiled / 481 rejected records and 764 accepted / 222
+rejected unique names. This is collection rejection, not a build/test failure.
+The architecture, engine reference, API/rules contracts, latest ledger, selected
+engine/compiler code and targeted vocabulary signatures were inspected.
+Complete candidate records were read, including nested forms. All reprints of
+the seven protection names and Reverse Damage have identical complete records.
+
+| Candidate | Distinct names; estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, remaining waiting replacement subjects; selected reverse-damage permanent source prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, shared prerequisite for **7 names / 31 records**. | Exact identity is absent in the legacy reverse shield. Its references must precede complete source enumeration. Temporary redirection, other waiting replacement contexts and face-up command objects still need contracts. The full Reverse Damage record also needs its prevented-amount result. | Small: compatible registration capture, matching, shared reference provider, native contract and RON subrule tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible full-family unlocks**. | Legendary/named parameters, attacking formation, both damage-assignment directions, live/token grants and selective removal are needed together. A combat primitive alone does not unlock all eight. | Large family; medium/large combat prerequisite. |
+| Conditional host animation | Animate Artifact: **1 plausible unlock / 6 records**. | Its nested noncreature host condition must retain membership through added types and mana-value base P/T layers. Enables shared conditional multilayer animation. | Medium layer/attachment/dependency work. |
+
+The bounded portion of candidate #1 is dependency-ready, small and a concrete
+seven-card prerequisite. It wins over the larger combat family and single-card
+animation. The contract, reuse boundary and acceptance cases were stated before
+editing. The `implement-engine` skill supplied the native workflow; no agents,
+removed card skills, generated Go stubs or Go-card requirements were used.
+
+### Established signature, contexts and reuse boundary
+
+- `Game.AddReverseDamageShield(playerID, sourceID uuid.UUID)` keeps its signature.
+  Registration captures a live permanent's incarnation through the existing
+  `legacyPreventionSourceIncarnation` helper. Matching requires positive player
+  damage, the specified player, source card ID and saved incarnation. Consumed
+  rules cannot match. Unknown/nonpermanent source registrations retain legacy
+  ID matching but cannot supply an exact waiting permanent or spell reference.
+- `reverseDamageReplacement.waitingPreventionPermanents(*Game)
+  []capturedPermanent` supplies the exact source to the existing
+  `Game.WaitingPreventionPermanentSources() []DamageSource`. The shared collector
+  checks active ordinary/cycle rules, deduplicates identity, reads current or
+  retained exact information and returns copied snapshots. No duplicate collector
+  or replacement system is introduced.
+- Departure and phasing retain the reference. Cleared ordinary LKI does not
+  replace exact departure information. Return creates a new object: its damage
+  cannot consume the old shield. Current colors and controller are read for a
+  live source. Consumption and end-of-turn cleanup end waiting eligibility.
+  Clones retain separate lifetime and replacement state.
+- Existing default replacement order, prevention, consumption before life gain,
+  life-gain replacement/events and histories remain in their shared services.
+  No new simultaneous-event, unpreventable-damage, targeting or cost contract is
+  claimed. No spell identity or permanent-spell continuation is added to this API.
+- RON spelling/filter validation and typed factory-local binding stay in `ron`:
+  `compileChosenDamageSourceChoice(Node)`,
+  `chosenDamageSourcePlan.waitingPreventionChoice(instanceBindings)` and
+  `compileExactSourcePrevention(Node, scope)` already lower this context exactly.
+  Their supported waiting category now consumes the new producer through the
+  shared query. Adding another adapter would duplicate the established lowering.
+  Tested real-record shape is `ChooseADamageSource(filter)` followed by
+  `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(You)), [PreventThatDamage])`.
+- General production `ChooseADamageSource` stays rejected until complete legal
+  enumeration exists. Tests use explicit native producer fixtures and actual RON
+  choice/prevention ASTs. There are no Go-card fallbacks, partial registries,
+  card-name branches, skipped rules or global last-action slots.
+- CR 400.7, 609.7a, 615.4–8, 616 and 702.26 establish the reference/lifetime
+  boundaries. No RON source defect was found or changed; vocabulary refresh is
+  unnecessary. Existing Go definitions and DSL services remain because the
+  removal gate is not met. API/rules docs describe only this established context.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, all seven RON protection cases failed with
+`missing reverse-damage subject`. The first native run found an unused fixture
+import; adding the planned boundary tests used that import. The independent native
+boundary test then failed with `nonpositive damage matches`. Both expected semantic
+failures preceded registration, matching and provider changes. No assertion was
+weakened.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingReverseDamageReferences` | Live/departed/returned/phased/cycled source, cleared LKI, current controller/colors, independent query snapshots, exact return exclusion, prevention/life-gain histories, consumption, cleanup and clone isolation. |
+| `TestWaitingReverseDamageBoundaries` | Nonpositive damage, wrong recipient, returned-source damage does not consume the old shield, original source retains it, consumed rule cannot match. |
+| `TestWaitingReverseDamageDeduplication` | Ordinary/cycle deduplication, unknown-ID exclusion and compatibility, nil registration exclusion. |
+| `TestRONWaitingReverseDamageProtection` — Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | Complete records supply choice/prevention AST subrules. Native reverse shield producer, live/departed/returned/phased references, color/type filters, cloned choice/prevention, one-use selected shield and binding clearing after cleanup. Full records still reject. |
+| `TestRONWaitingReverseDamageInvalid` | Invalid choice/filter kinds, names and arities, empty logical filter, missing binding and consumer-before-producer rejection. |
+| Existing `TestReverseDamageReplacementMatchesChosenSource`, `TestReverseDamageShieldConsumedBeforeLifeGainReplacement`, `TestReplacementLifeGainOutcomes` | Unchosen source exclusion, nested damage during gain cannot reuse the shield, life-gain replacement/trigger/history and clone regressions. Full Reverse Damage RON gameplay is not claimed. |
+| Existing package/full suites | Accepted records, target legality, transactional rollback, replacement ordering and damage packet contracts retain their existing evidence. |
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingReverseDamage -count=1`: PASS.
+- `go test ./pkg/mage -run 'Test(WaitingReverseDamage|ReverseDamage|ReplacementLifeGainOutcomes)' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes were reviewed; only the
+  intended slice files changed and no additional semantic edits were made.
+- Additional skill check `go test ./... -short -count=1`: PASS after lint.
+- `git diff --check`: PASS; checked again after the final ledger and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,964 compiled / 481
+  rejected records; 764 accepted / 222 rejected unique names**. Complete JSON
+  diagnostics equal the fresh baseline. Strict collection rejection remains.
+- All 12 RON SHA-256 values match the vocabulary snapshot. No source change or
+  environmental blocker; no vocabulary refresh is needed.
+
+Estimated and actual compilation gains match: **0 names / 0 records**.
+Added gameplay subrule evidence covers seven rejected protection names in the
+reverse-shield producer context. Complete-card gameplay coverage does not
+increase. No accepted record is lost. Complete collection loading/gameplay,
+runtime cutover, Go-card deletion and unused DSL cleanup remain unfinished.
+
+Changed files: `pkg/mage/game_mutator.go`, `replacement.go`,
+`waiting_prevention.go`, `doc.go`, new native `waiting_reverse_damage_test.go`,
+new RON `waiting_reverse_damage_test.go`, API/rules-contract docs and this ledger.
+
+Ranked next candidates:
+
+1. Exact temporary-redirection subject/source references (the native creature
+   recipient and attacker/absorber forms), then remaining legacy static and
+   counter-placement replacement lifetimes. Audit all referring replacements
+   before face-up command objects and complete source enumeration for the seven
+   protection names. Do not repeat completed reverse, finite/half or typed categories.
+2. Parameterized bands with others: the eight-name combat prerequisite, followed
+   by live/token grants and selective removal.
 3. Conditional host animation across type and base P/T layers for Animate Artifact.
 
 The commit hash is reported in the final response. No second slice starts.

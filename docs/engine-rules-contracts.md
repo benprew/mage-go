@@ -8607,3 +8607,39 @@ against both native shield forms, including departure, return and phasing.
 order. Complete source enumeration and complete protection records remain
 unsupported. `TestWaitingLegacyPrevention*` covers native lifetime, information,
 return exclusion, clone isolation, finite simultaneous damage and odd half damage.
+
+### Exact permanent sources held by legacy reverse-damage shields
+
+`Game.AddReverseDamageShield(playerID, sourceID uuid.UUID)` now saves the
+incarnation of a live permanent at registration. Positive damage to that player
+must come from the same incarnation. Departure and phasing keep the shield;
+a returned permanent cannot consume it. Nonpositive damage and a consumed
+rule cannot match. The existing replacement order, prevention, consumption
+before life gain, life-gain replacements and event/history services remain in use.
+This change adds no new simultaneous-event or unpreventable-damage contract.
+
+The source joins `Game.WaitingPreventionPermanentSources() []DamageSource`.
+The shared collector reads current or exact departure information, including
+after LKI cleanup, and deduplicates ordinary and cycle replacement lists.
+Queries return independent snapshots. Consumption and end-of-turn cleanup end
+eligibility; game clones retain independent lifetimes. Unknown/nonpermanent IDs
+retain their existing matching behavior but supply no exact waiting reference.
+No spell capture or permanent-spell continuation is established by this API.
+
+RON reuses `compileChosenDamageSourceChoice`, the per-instance
+`chosenDamageSourcePlan.waitingPreventionChoice(instanceBindings)` lowering,
+and `compileExactSourcePrevention` for the chosen-source consumer. Its supported
+category now includes these shield references. `TestRONWaitingReverseDamageProtection`
+executes the complete choice/prevention subrules from the six Circle of Protection
+names and Greater Realm of Preservation with live, departed, returned and phased
+sources and cloned games. `TestRONWaitingReverseDamageInvalid` checks malformed
+choices, missing bindings and consumer-before-producer order.
+`TestWaitingReverseDamageReferences`, `TestWaitingReverseDamageBoundaries` and
+`TestWaitingReverseDamageDeduplication` cover native identity, information,
+consumption, histories, compatibility and cloning. Existing reverse-damage and
+life-outcome tests cover life-gain replacements and nested damage.
+
+CR 400.7, 609.7a, 615.4–8 and 702.26 support the lifetime and reference contract.
+Complete source enumeration remains unsupported. The seven protection names gain
+subrule evidence only; the full Reverse Damage record, including its prevented
+amount result, is not implemented by this change.

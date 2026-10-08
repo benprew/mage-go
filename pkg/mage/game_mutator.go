@@ -511,8 +511,8 @@ func (g *Game) ChooseDamageSource(playerID uuid.UUID) uuid.UUID {
 }
 
 // AddReverseDamageShield adds a source-bound reverse-damage shield for the player.
-// Prepended so it is checked before any prevention shields (which would
-// otherwise absorb the damage before the reverse replacement sees it).
+// A live permanent keeps its incarnation, so a returned object cannot use it.
+// Prepending preserves the existing default replacement order.
 func (g *Game) AddReverseDamageShield(playerID, sourceID uuid.UUID) {
 	if sourceID == uuid.Nil {
 		return
@@ -521,6 +521,7 @@ func (g *Game) AddReverseDamageShield(playerID, sourceID uuid.UUID) {
 		replacementBase: replacementBase{duration: EndOfTurn},
 		playerID:        playerID,
 		dmgSource:       sourceID,
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 	})
 }
 
