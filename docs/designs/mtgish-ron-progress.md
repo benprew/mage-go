@@ -8,13 +8,13 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-DELAYED-CARD-FRAMES` adds singular/plural card capture,
-restoration and exact hand/exile source enumeration for waiting delayed bodies.
-Private inspection, hidden departure facts, reveal lifetime and copied/cloned
-execution are covered. Seven protection names gain RON subrule evidence;
-no complete-card compilation gain is claimed. Waiting graveyard card frames,
-remaining precast target contexts and opaque references remain before complete
-damage-source enumeration. Token quality grants remain unsupported.
+unfinished. `WAITING-DELAYED-GRAVEYARD-FRAMES` adds exact singular/plural
+card-reference enumeration and RON choice lowering for waiting delayed bodies.
+Departure/return, pending/stack lifetime, source phasing/departure and copied/cloned
+execution are covered. Seven protection names gain graveyard subrule evidence;
+no complete-card compilation gain is claimed. Remaining precast target contexts
+and opaque references remain before complete damage-source enumeration.
+Token quality grants remain unsupported.
 Titania's Song still needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -43974,3 +43974,130 @@ Ranked next candidates:
 3. Named-token quality grants for Master of the Hunt: one plausible full-card
    unlock; lower priority while useful multi-card prerequisites remain. Paired
    word substitution remains larger work.
+
+## 2026-10-08: waiting delayed graveyard card frames
+
+Status: completed implementation slice `WAITING-DELAYED-GRAVEYARD-FRAMES`.
+
+### Candidate comparison and selection
+
+Fresh baseline build and RON package tests passed. Strict collection loading
+returned expected exit 1: 1,978 compiled / 467 rejected records and
+773 accepted / 213 rejected unique names. This is collection rejection, not a
+build failure. Full records and nested forms were inspected for all compared
+names; reprints count once. Targeted vocabulary checks covered
+`ChooseADamageSource/1` (46 occurrences) and `CreateFutureTrigger/2` (86).
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- |
+| Waiting delayed graveyard card frames, ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**. | Existing delayed card capture and exact graveyard reader make this ready. Complete source aggregation and remaining reference audits still block all seven full records. Closes a shared prerequisite for their source choice. | Small adapter/query change; medium contract work across singular/plural producers, identity, lifetime and copies/clones. |
+| Remaining precast target contexts and opaque-reference audit, followed by aggregation | The same seven names. **Up to 7 full-card unlocks after prerequisites**. | Graveyard waiting frames and remaining target categories must be complete first. Full enumeration needs a whole-reference audit rather than a first-error count. Enables complete protection choices. | Larger cross-category audit and integration; exceeds this bounded prerequisite. |
+| Named-token quality grants | Master of the Hunt. **1 plausible unlock**. | Complete record has fixed mana payment and one named 1/1 green Wolf token with `BandsWithOthers(And([IsCardtype(Creature),IsNamed(NamedCard("Wolves of the Hunt"))]))`. Loader rejects the token keyword; token metadata, payment, named filters and native quality services already exist. Enables quality grants on token definitions. | Medium token adapter and combat/copy/isolation coverage; lower multi-card value. |
+
+Candidate #1 is ready, bounded, and removes a concrete shared blocker for seven
+names. Contract, reuse boundary and acceptance cases were stated before editing.
+The implement-engine skill supplied the native contract workflow. No removed
+skill, Go-card requirements or delegation was used.
+
+### Signatures, contexts and engine boundary
+
+- `Game.WaitingDelayedGraveyardSources() []DamageSource` enumerates exact
+  graveyard visits from singular `CardBinding` and plural `CardsBinding` frames
+  saved in waiting delayed bodies and modes.
+- `ChooseDamageSourceFromWaitingDelayedGraveyardBindings(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  chooses only from this category at resolution. Shared validation checks
+  player/filter/binding and dominance. Empty/absent-player choices clear results.
+- `chosenDamageSourcePlan.waitingDelayedGraveyardChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+  `You` and the instance's binding. Existing exact future-prevention lowering
+  consumes it; complete production source choice remains rejected.
+- Existing `CreateFutureTrigger/2` lowering calls `AtNext`. Shared capture,
+  immutable replay frames and restoration preserve the saved card identities.
+
+RON owns syntax, scope and per-instance lowering. Mage owns enumeration,
+identity, public information, decisions and timing. Reuse: shared delayed card
+traversal and stack-reference interface; `graveyardVisitInformation` and its
+current/departure readers; deterministic sorting and exact deduplication;
+card-frame capture/restoration; event and discard-cost producers; game cloning,
+stack copying, typed choice validation, prevention and replacement ordering.
+No new zone history, payment transaction, replacement state or clone service.
+
+Invalid identities and nil producers are excluded. The query does not execute
+bodies, inspect the live resolution frame or enumerate future producers. Returned
+cards cannot replace a saved visit. Query and clone snapshots isolate mutable
+facts. Source phasing/departure do not end independent delays. One-shot detection
+ends waiting availability; pending placement supplies no stack reference;
+placement transfers identities to existing stack graveyard enumeration; final
+stack departure ends that category. Duration subscriptions retain their existing
+lifetime. Card actions still require the original live visit.
+
+Rules evidence: local CR 400.7, 603.7a–e, 609.7a–b. This was a missing reusable
+query/choice contract and compiler lowering context. No source defect or
+environment failure was found. RON sources are unchanged, so no vocabulary
+refresh was needed. No fallback, card-name branch, global slot, partial registry,
+DSL deletion or skipped rule was added. Removal gates remain unmet.
+
+### Failing-first tests and card mappings
+
+Before production edits, focused RON tests failed on the missing lowering method
+and native query signature. After implementation, all new tests pass. A test-only
+discard helper name was corrected to the existing `Discard(You, Fixed(1))` API;
+no production contract or assertion was weakened.
+
+| Test | Mapping / evidence |
+| --- | --- |
+| `TestWaitingDelayedGraveyardFrames` | Singular/plural capture and exact deduplication; step/modal/permanent-event delays; current/departure facts; leave/return; snapshot isolation; pending-to-stack transfer; copied/cloned body execution; returned visits cannot resolve saved card actions. |
+| `TestWaitingDelayedGraveyardBoundaries` | Nil/wrong/missing identities; wrong-zone exclusion; public opponent choice; source phasing/departure; future-producer exclusion; departure facts stay separate from returned card changes; one-shot pending/stack/clone lifetime; delayed controller; empty/absent-player clearing; invalid declarations and premature read rejection. |
+| `TestWaitingDelayedGraveyardDiscardEvent` | Real singular discard-event producer transfers its first graveyard visit into a waiting frame. |
+| `TestRONWaitingDelayedGraveyardProtection` | All six Circles and Greater Realm: complete real RON cost, choice and future-prevention declarations plus compiled next-end-step body; real plural discard-cost producer; 35 live/departed/returned/copied/cloned scenarios; payment failure, resolution timing, exact source prevention, shield consumption, empty-category clearing and continued full-record rejection. |
+| `TestRONWaitingDelayedGraveyardInvalid` | Malformed arity/filter/reference, missing instance binding and premature reads. |
+| Existing delayed card restoration, paid discard rollback, graveyard source and next-source prevention tests | Shared error/frame restoration, transactional payment, source property rechecks, simultaneous packets and replacement ordering remain covered in the full suite. |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**.
+Seven protection names gain graveyard subrule evidence; complete-card gameplay
+coverage is unchanged. Full source aggregation and other reference contexts still
+block them as estimated. No accepted record was lost.
+
+### Verification
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Failing-first `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedGraveyard
+  -count=1`: expected missing-signature compilation failure before implementation.
+- Focused RON command above and `go test ./pkg/mage -run
+  TestWaitingDelayedGraveyard -count=1`: PASS after implementation.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make lint`: PASS, 0 issues. The automatic change converts the zone dispatch
+  to a switch in `waiting_delayed_card.go`; reviewed as equivalent. No unrelated
+  changes were found. Post-lint `go test ./... -short -count=1`: PASS. Focused
+  RON/native tests, build and vet were rerun after that change: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. Entire JSON
+  equals baseline. First issue remains Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Collection loading still installs no partial registry.
+
+Changed files: `pkg/mage/waiting_delayed_card.go`, `damage_source_choice.go`,
+`waiting_delayed_graveyard_test.go`, RON `chosen_source_filter.go` and
+`waiting_delayed_graveyard_test.go`, `doc.go`, API/rules-contract docs and this
+ledger. User edits to `.gitignore`, execution design, ledger history relocation
+and the untracked completed-entry archive are preserved. Only this slice's
+summary/append edits are staged from the ledger; user relocation remains unstaged.
+Complete collection gameplay/loading, runtime wiring, Go-card deletion and unused
+DSL cleanup remain unfinished. This run stops after this one capability.
+
+Ranked next candidates:
+
+1. Remaining precast target reference contexts and opaque-reference audit:
+   seven protection names benefit downstream. Establish exact visit and visibility
+   contracts before complete aggregation; zero immediate unlocks if a prerequisite
+   is selected. Include target announcement, departure/return, clone and lifetime.
+2. Complete CR 609.7a aggregation after that audit: seven estimated full-card
+   unlocks, subject to fresh complete-record evidence. Combine all exact reference
+   categories with deterministic deduplication and real RON protection activations.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock.
+   Paired text-word substitution for Magical Hack and Sleight of Mind remains
+   larger work while shared multi-card prerequisites remain.

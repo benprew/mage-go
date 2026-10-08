@@ -7487,5 +7487,29 @@ next-end-step bodies and paid protection activations across live, departed,
 returned, copied and cloned contexts. `TestRONWaitingDelayedCardInvalid` covers
 invalid syntax and binding declarations. General production source choice stays
 rejected until all CR 609.7a categories and the opaque-reference audit are complete.
-Waiting graveyard card frames and remaining precast target contexts are separate
-work; this slice does not claim a complete legal source list.
+Waiting graveyard card frames have a separate contract below. Remaining precast
+target contexts still prevent a complete legal source list.
+
+## RON source choices from delayed graveyard card frames
+
+Validated `ChooseADamageSource(filter)` plans support internal
+`chosenDamageSourcePlan.waitingDelayedGraveyardChoice(instanceBindings)` lowering
+to `mage.ChooseDamageSourceFromWaitingDelayedGraveyardBindings(mage.You,
+filter, binding)`. Each instance supplies its own binding. Existing
+`CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(You)), [PreventThatDamage])` consumes the result.
+
+`mage.Game.WaitingDelayedGraveyardSources() []mage.DamageSource` supplies exact
+singular/plural graveyard visits saved by waiting delayed bodies and modes.
+Current public facts or retained departure facts cannot follow a returned card.
+Existing `CreateFutureTrigger/2` lowering uses shared card capture and restoration.
+Detection, placement and final stack departure retain their existing lifetimes.
+
+`TestRONWaitingDelayedGraveyardProtection` maps all six Circles of Protection and
+Greater Realm of Preservation to this context using a real discard payment,
+compiled RON delayed body, real protection payment and prevention declarations.
+It covers live, departed, returned, copied and cloned choices, resolution timing,
+failed payments, shield consumption and empty-category clearing. `Invalid`
+checks malformed syntax, missing instance bindings and premature reads.
+General production source choice remains rejected until all remaining CR 609.7a
+categories and opaque references are audited. No full-card unlock is claimed.

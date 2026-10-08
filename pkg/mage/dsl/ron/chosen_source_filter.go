@@ -159,3 +159,7 @@ func (p *chosenDamageSourcePlan) waitingPrecastHandChoice(bindings instanceBindi
 func (p *chosenDamageSourcePlan) waitingDelayedCardChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingDelayedCardBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingDelayedGraveyardChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingDelayedGraveyardBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

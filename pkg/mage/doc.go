@@ -167,6 +167,11 @@
 // its permission. A failed payment keeps the visit and its permission.
 // Re-exile creates a new visit. Clones keep separate exile card information.
 //
+// [Game.WaitingDelayedGraveyardSources] reads exact visits in waiting card frames.
+// Current or departure facts keep returned visits separate. Singular and plural
+// bindings share the existing delayed capture, stack transfer and clone services.
+// [ChooseDamageSourceFromWaitingDelayedGraveyardBindings] uses this category only.
+//
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.
 // Each new pass reads current state. Values are read in their applicable layer.

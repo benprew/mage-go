@@ -45,9 +45,12 @@ func (g *Game) waitingDelayedCardSources(viewer uuid.UUID, zone core.Zone) []Dam
 					continue
 				}
 				var source DamageSource
-				if zone == core.ZoneHand {
+				switch zone {
+				case core.ZoneHand:
 					source = g.handVisitInformationFor(viewer, identity.id, identity.visit, false)
-				} else {
+				case core.ZoneGraveyard:
+					source = g.graveyardVisitInformation(identity.id, identity.visit)
+				default:
 					source = g.CaptureExiledDamageSource(identity.visit)
 					if !source.Valid() {
 						source = cloneDamageSource(g.zones.departedExileSources[identity.visit])
@@ -87,4 +90,16 @@ func (g *Game) WaitingDelayedExileSources() []DamageSource {
 // Other source categories need separate enumeration services.
 func ChooseDamageSourceFromWaitingDelayedCardBindings(player PlayerRef, filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect {
 	return &damageSourceChoice{player: player, filter: filter, binding: binding, waitingDelayedCards: true}
+}
+
+// WaitingDelayedGraveyardSources reads saved graveyard visits in waiting card frames.
+// A returned card cannot replace the saved visit.
+func (g *Game) WaitingDelayedGraveyardSources() []DamageSource {
+	return g.waitingDelayedCardSources(uuid.Nil, core.ZoneGraveyard)
+}
+
+// ChooseDamageSourceFromWaitingDelayedGraveyardBindings uses saved graveyard visits.
+// Other source categories need separate enumeration services.
+func ChooseDamageSourceFromWaitingDelayedGraveyardBindings(player PlayerRef, filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect {
+	return &damageSourceChoice{player: player, filter: filter, binding: binding, waitingDelayedGraveyard: true}
 }

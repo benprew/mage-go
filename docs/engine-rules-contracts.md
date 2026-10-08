@@ -9651,7 +9651,8 @@ characteristics, including after departure. Returned visits cannot replace
 saved references. Query snapshots and game clones keep separate mutable facts.
 Placed delayed frames implement the existing stack card-reference interface,
 so hand, exile and graveyard stack queries retain their saved references until
-the referring object leaves. This does not add waiting graveyard enumeration.
+the referring object leaves. Waiting graveyard enumeration has a separate
+contract below.
 
 `ChooseDamageSourceFromWaitingDelayedCardBindings(player PlayerRef,
 filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` merges
@@ -9671,3 +9672,39 @@ The RON test covers all seven protection names in hand/exile contexts using real
 native draw/payment producers and compiled RON delayed-step, cost, source-choice
 and prevention declarations. These are subrule tests; complete general source
 enumeration and complete protection-card gameplay remain unsupported.
+
+## Graveyard card references held by waiting delayed abilities
+
+`Game.WaitingDelayedGraveyardSources() []DamageSource` reads exact graveyard
+visits in singular and plural saved card frames. It shares the existing delayed
+frame traversal, including nested bodies and modes. It rejects nil producers,
+missing visits, wrong physical IDs and other zones, sorts map-derived references,
+and deduplicates exact visits. The query cannot execute a body or future producer.
+
+The shared graveyard visit reader supplies current public facts or exact departure
+facts. A returned card cannot replace its saved visit. Query snapshots and game
+clones keep separate mutable card facts. Source departure and phasing do not end
+an independent delay. One-shot detection ends waiting availability; pending
+placement supplies no stack reference. Placement transfers the frame to existing
+stack graveyard enumeration. Final stack departure ends that category. Persistent
+subscriptions keep their existing lifetime. Saved card actions still require the
+original live visit; retained information cannot authorize an absent action.
+
+`ChooseDamageSourceFromWaitingDelayedGraveyardBindings(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+only this category. Existing declaration validation checks player, filter, binding
+and dominance. Empty or absent-player choices clear the result. Existing exact
+source prevention and replacement ordering remain in use.
+
+Rules: CR 400.7, 603.7a–e and 609.7a–b. Evidence:
+`TestWaitingDelayedGraveyardFrames` covers singular/plural frames, step/modal/event
+producers, exact departure/return facts, query and clone isolation, stack transfer
+and copied/cloned execution. `TestWaitingDelayedGraveyardBoundaries` covers
+malformed frames, public opponent choices, source phasing/departure, future
+producer exclusion, pending lifetime, clearing and invalid declarations.
+`TestWaitingDelayedGraveyardDiscardEvent` proves a real singular discard-event
+producer. `TestRONWaitingDelayedGraveyardProtection` and `Invalid` cover real RON
+cost, choice, future prevention and delayed-step declarations for seven protection
+names. Existing delayed card restoration, payment rollback and prevention tests
+retain error restoration, transactional and simultaneous replacement evidence.
+These are subrule mappings; complete production source aggregation stays rejected.
