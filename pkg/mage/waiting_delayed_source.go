@@ -175,6 +175,27 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 
 func countSetReadsSourcePermanent(subjects PermanentSet) bool {
 	switch s := subjects.(type) {
+	case grantRecipientSet:
+		return permanentRefReadsSourcePermanent(s.subject)
+	case attachedAurasSet:
+		return permanentRefReadsSourcePermanent(s.host)
+	case attachmentHostSet:
+		return countSetReadsSourcePermanent(s.hosts)
+	case blockersOfSet:
+		return permanentRefReadsSourcePermanent(s.attacker)
+	case blockedAttackersOfSet:
+		return permanentRefReadsSourcePermanent(s.blocker)
+	case combatOpponentsSet:
+		return permanentRefReadsSourcePermanent(s.subject)
+	case blockedThisTurnSet:
+		return permanentRefReadsSourcePermanent(s.blocker)
+	case excludedPermanentSet:
+		return countSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
+	case lowestPowerSet:
+		return countSetReadsSourcePermanent(s.subjects)
+	case playerSetPermanents:
+		opponents, ok := s.players.(*opponentsRef)
+		return ok && opponents != nil && playerRefReadsSourcePermanent(opponents.player)
 	case controlledByPermanentSet:
 		return playerRefReadsSourcePermanent(s.controller)
 	case ownedPermanentSet:
@@ -285,5 +306,10 @@ func (e *removeCountersSubjectEffect) refersToSourcePermanent() bool {
 
 func (e *removeAllCountersEffect) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
+	return self
+}
+
+func permanentRefReadsSourcePermanent(ref PermanentRef) bool {
+	_, self := ref.(sourceRef)
 	return self
 }

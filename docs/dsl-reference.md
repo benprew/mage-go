@@ -8009,8 +8009,9 @@ union/intersection and mana-value-limit wrappers. The query does not call
 filters, resolve players, select members or calculate values. Zero arithmetic
 and empty collections keep explicit declarations. Counts read current membership
 at resolution. Saved incarnation, departure information, phasing and clone
-lifetimes use the shared delayed services. Opaque, attached, bound, implicit
-membership and other collection references need separate contracts.
+lifetimes use the shared delayed services. Direct source operands in singleton,
+attachment, combat and history counts now have the contract below. Opaque,
+bound and implicit membership do not declare a direct source read.
 
 RON resolution values now share the graveyard-count adapter used by indefinite
 toughness:
@@ -8164,3 +8165,31 @@ amount/placement scenarios with distinct factories and targets, zero arithmetic,
 departure counter information, returned-target exclusion and later shroud.
 Complete protection records still reject unfinished general source aggregation;
 this evidence does not establish complete-card gameplay coverage.
+
+
+## Waiting delayed collection count operands
+
+`CountPermanents(PermanentSet) ResolutionValue` declares direct `This` operands
+in `SingletonPermanent`, `AttachedAuras`, `BlockersOf`, `BlockedAttackersOf`,
+`BlockingOrBlockedBy` and `BlockedByThisTurn`. `AttachmentsOn`, `LowestPower`,
+filters, union, intersection and mana-value limits retain nested declarations.
+`WithoutPermanent` also declares its direct excluded source. A typed
+`PermanentsControlledByPlayers(OpponentsOf(player), filter)` declares source
+reads in its player. Queries do not resolve references, run filters, select
+members, read values or execute the body. Empty collections retain references.
+An attachment subject or bound reference does not imply the direct source.
+
+RON `TheNumberOfPermanentsOnTheBattlefield(collection)` at resolution now uses
+`compileContextualCollection`. It accepts `SinglePermanent(permanent-ref)`,
+`AttachedToAPermanent(collection)`, `IsBlockingAttacker(permanent-ref)`,
+`IsBlockedByDefender(permanent-ref)`, `WasBlockedByDefenderThisTurn(permanent-ref)`,
+`Ref_TargetPermanents`, typed controller/owner sets, ordinary filters and nested
+nonempty `And([...])` / `Or([...])`. Intersections can repeat controller operands;
+unions count each incarnation once. Existing target scopes and per-instance
+bindings apply. Counts read membership at resolution, including attachments
+created after the delayed ability was installed. Static P/T count restrictions
+and singular counter-information reads keep their separate contexts.
+
+This is one prerequisite for full CR 609.7a source aggregation. The compiler
+still rejects general `ChooseADamageSource` declarations until all source
+categories have contracts.

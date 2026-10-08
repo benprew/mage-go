@@ -551,6 +551,9 @@
 // in their typed player. [CountPermanents] declares these reads in typed
 // controller and owner sets. Filters, unions, intersections and mana-value
 // limits retain the declarations. Queries do not run filters or select members.
+// Singleton, attachment, combat and block-history sets declare direct [This]
+// operands. Exclusions, lowest-power sets and typed opponent-player sets keep
+// those declarations. Queries do not read attachments, combat or history.
 // Counts still read current membership when the delayed body resolves.
 // [RevealHandFor], [DiscardMatchingHand], [Discard] and [DiscardAtRandom]
 // declare direct source reads in their typed player. Both discard amounts

@@ -207,8 +207,6 @@ func TestRONBattlefieldCountInvalid(t *testing.T) {
 		`TheNumberOfPermanentsOnTheBattlefield(ControlledByAPlayer(SinglePlayer(Ref_TargetPlayer)))`,
 		`TheNumberOfPermanentsOnTheBattlefield(ControlledByAPlayer(SinglePlayer(DealsDamage_ThatPlayer)))`,
 		`TheNumberOfPermanentsOnTheBattlefield(ControlledByAPlayer(SinglePlayer(You())))`,
-		`TheNumberOfPermanentsOnTheBattlefield(And([ControlledByAPlayer(SinglePlayer(You)),ControlledByAPlayer(SinglePlayer(You))]))`,
-		`TheNumberOfPermanentsOnTheBattlefield(Or([IsCardtype(Creature),ControlledByAPlayer(SinglePlayer(You))]))`,
 		`TheNumberOfPermanentsOnTheBattlefield(And(AnyPermanent))`,
 		`Twice`, `Twice()`, `Twice(Integer(1),Integer(2))`, `Twice(TheNumberOfCardsInPlayersHand(Ref_TargetPlayer))`,
 	} {

@@ -243,7 +243,6 @@ func TestRONWaitingDelayedFilteredCountInvalid(t *testing.T) {
 		`TheNumberOfCardsOfTypeInPlayersHand(IsCardtype(Creature),Trigger_ThatPlayer)`,
 		`TheNumberOfCardsOfTypeInPlayersHand(IsCardtype(),You)`,
 		`TheNumberOfPermanentsOnTheBattlefield(ControlledByAPlayer(SinglePlayer(Ref_TargetPlayer)))`,
-		`TheNumberOfPermanentsOnTheBattlefield(And([ControlledByAPlayer(SinglePlayer(You)),ControlledByAPlayer(SinglePlayer(You))]))`,
 		`TheNumberOfGraveyardCards(And([IsCardtype(Creature),InAPlayersGraveyard(SinglePlayer(Trigger_ThatPlayer))]))`,
 		`TheNumberOfGraveyardCards(And([IsCardtype(Creature),InAPlayersGraveyard(SinglePlayer(You)),IsColor(White)]))`,
 		`TheNumberOfGraveyardCards(And([IsCardtype(Creature),InAPlayersGraveyard(You)]))`,

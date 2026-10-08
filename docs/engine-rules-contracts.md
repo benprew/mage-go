@@ -10309,8 +10309,9 @@ retains either operand's declaration, including zero and empty results.
 
 The query does not evaluate filters, values, collections or player references.
 Implicit membership in a matching set and opaque callbacks do not supply a
-source declaration. Attached, bound, singleton and other collection forms are
-outside this direct typed player-read contract. Existing delayed capture,
+source declaration. Direct singleton, attachment, combat and history operands
+now have the separate collection-count contract below. Bound references keep
+their existing capture contract. Existing delayed capture,
 incarnation/LKI, phasing, copied snapshots, deduplication and clone services
 retain identity. A returned card cannot replace the saved source (CR 400.7).
 One-shot detection ends waiting availability (CR 603.7a–e). Counts read current
@@ -10486,3 +10487,50 @@ amount/placement scenarios with distinct factories and targets, zero arithmetic,
 departure counter information, returned-target exclusion and later shroud.
 Complete protection records still reject unfinished general source aggregation;
 this evidence does not establish complete-card gameplay coverage.
+
+
+## Waiting delayed collection count operand references
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains the saved source
+incarnation for direct `This` operands in counted singleton, Aura-host, combat
+opponent and block-history sets. Counted attachment collections traverse their
+host set. Counted exclusions traverse both their collection and excluded
+reference; lowest-power sets traverse their collection. Typed opponent-player
+collections retain source reads through their player. Existing filter,
+union/intersection and value-limit traversal applies at every nested level.
+
+Enumeration is a declaration query. It does not select collection members,
+resolve references, test attachments, inspect combat/history, run filters,
+calculate amounts, execute effects or consume choices. Empty counts and zero
+arithmetic retain declarations. Opaque callbacks and implicit matching-set
+membership do not declare a source. An attached or bound operand does not
+become a direct source read. Bound targets use the existing saved-frame service.
+
+Existing capture, exact incarnation, departure information, snapshot copying,
+phasing, deduplication and clone services keep the reference while the delayed
+ability waits. Returned objects cannot replace it (CR 400.7). Detection ends
+one-shot availability before stack placement (CR 603.7a–e). Counts still select
+current legal members at resolution (CR 608.2h). A departed singleton counts
+zero; a returned object can be a new member of a general collection without
+replacing the saved reference. Phasing preserves identity but excludes members
+where the set service requires presence (CR 702.26b). Source choice and damage
+property rechecks retain CR 609.7a–b. Cost rollback, replacement ordering and
+simultaneous operations reuse their existing services.
+
+RON resolving battlefield counts now lower the existing validated collection
+plans with fresh instance bindings. No new target declaration is made at
+resolution. Later shroud does not retarget a saved delayed subject. The former
+count-only filter helper had no other repository callers and was removed.
+
+Evidence: `TestWaitingDelayedCollectionCountReferences` covers ten native set
+forms in six identity states; `TestWaitingDelayedCollectionCountPurity` covers
+nested declarations, zero arithmetic, filter purity, exclusions and invalid
+native definitions; `TestWaitingDelayedCollectionCountLateRelations` covers
+six relations created after delay installation. RON
+`TestRONWaitingDelayedCollectionCountProtection` covers seven real protection
+records, six count forms and seven lifecycle/copy states (294 subrule cases).
+Composition, invalid declaration and instance tests establish duplicate set
+semantics, late attachments, scope rejection, returned source/target exclusion,
+later shroud and independent clone resolution. Complete protection records
+still reject general source aggregation; these tests do not claim full-card
+coverage.
