@@ -9,13 +9,15 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// ZoneSystem manages the battlefield, exile zone, Last-Known Information (LKI),
+// ZoneSystem manages the battlefield, exile and command zones, Last-Known Information (LKI),
 // copy-on-write battlefield sharing, and zone transition bookkeeping.
 type ZoneSystem struct {
 	battlefield            []*Permanent
 	battlefieldShared      bool
 	battlefieldSliceShared bool
 	ownedPermanents        map[uuid.UUID]struct{}
+	commandObjects         []commandObject
+	departedCommandSources map[uuid.UUID]DamageSource
 	exile                  []ExiledCard
 	enteringPermanent      *Permanent
 	lki                    map[uuid.UUID]*PermanentLKI
@@ -52,6 +54,20 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	zs.battlefieldShared = true
 	zs.ownedPermanents = nil
 	clone.battlefieldShared = true
+
+	if zs.departedCommandSources != nil {
+		clone.departedCommandSources = make(map[uuid.UUID]DamageSource, len(zs.departedCommandSources))
+		for visit, source := range zs.departedCommandSources {
+			clone.departedCommandSources[visit] = cloneDamageSource(source)
+		}
+	}
+
+	clone.commandObjects = make([]commandObject, len(zs.commandObjects))
+	for i, object := range zs.commandObjects {
+		clone.commandObjects[i] = object
+		clone.commandObjects[i].card = object.card.Copy()
+		clone.commandObjects[i].card.SetID(object.card.ID())
+	}
 
 	// Deep copy exile zone.
 	if len(zs.exile) > 0 {

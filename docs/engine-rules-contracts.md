@@ -8870,3 +8870,64 @@ used to check prevention. Complete protection declarations still fail compilatio
 Jade Monolith and Reverse Damage remain downstream consumers with separate
 operation gaps. Other explicit legacy replacement references and face-up command
 objects still need contracts before general source choice can be installed.
+
+### Face-up command objects as damage-source choices
+
+`Game.AddCommandObject(card Card, faceDown bool) (uuid.UUID, error)` installs
+an engine object in the command zone with a fresh visit identity. The caller
+must remove it from its former zone first. Nil objects, missing IDs and duplicate
+IDs in the command zone fail without a state change. This placement service does
+not grant casting permission or install command-zone abilities or variant rules.
+`Game.RemoveCommandObject(visit uuid.UUID) (Card, bool)` removes only that visit.
+`Game.SetCommandObjectFaceDown(visit uuid.UUID, faceDown bool) bool` changes its
+visibility without changing identity. Unknown visits have no effect.
+
+`Game.CommandDamageSources() []DamageSource` supplies all face-up installed
+objects in insertion order (CR 609.7a, 408.1). An object needs no damage ability.
+The query excludes face-down objects and does not inspect the battlefield or
+stack. The engine uses its existing `Card` representation for these objects.
+Command objects are not permanents; permanent destruction and phasing cannot
+find them. `FindCardAnywhere` includes command storage with an isolated snapshot.
+
+`DamageSource.CommandVisit() uuid.UUID` distinguishes command entries from
+permanent incarnations and stack spell identities. `SameObject` requires exactly
+one of those three identities, together with the same object ID. A return cannot
+inherit a chosen source or shield. Current face-up information supplies the
+stored object's name, owner, colors and types. A command card has no controller
+(CR 108.4). The visibility service gives hidden objects no public characteristics.
+Removal retains the information at departure by visit; a hidden departure cannot
+restore a previous face-up snapshot. Game clones copy live and departed storage
+and query snapshots independently. Retained visits survive ordinary LKI cleanup.
+
+`ChooseDamageSourceFromCommandObjects(player PlayerRef, filter DamageSourceFilter,
+binding *DamageSourceBinding) ResolvingEffect` queries at resolution and uses
+shared filters, choice validation and per-instance result bindings. Empty choices
+and absent players clear the selected binding. Definition validation checks the
+player, filter, binding and producer order. RON
+`chosenDamageSourcePlan.commandChoice(instanceBindings) mage.ResolvingEffect`
+lowers validated `ChooseADamageSource(filter)` with `You` and its own binding.
+The compiler keeps unrestricted source choices rejected until all categories
+and explicit references have been composed and audited.
+
+Exact-source prevention, selected-source prevention and selected-source
+redirection now accept command visits through the shared identity check.
+Their existing replacement order, event consumption and simultaneous damage
+services remain authoritative. Property checks use current command information
+or exact departure information. Captured delayed damage bindings include command
+visits with deterministic identity ordering and the same information service.
+No new cost or combat rule is introduced.
+
+Evidence: `TestCommandDamageSourceVisits`, `ChoiceAndPrevention`, `Declarations`,
+`RetainedVisibility`, `BatchAndOrder`, `Redirect`, `ZoneLookup` and
+`CapturedReferences` cover identities,
+visibility, departure/return, isolated storage, choices, declarations, replacement
+order, simultaneous damage, consumption and clones. All names have the
+`TestCommandDamageSource` prefix. `TestRONCommandDamageSourceProtection` uses
+actual choice/prevention bodies from all six Circles and Greater Realm of
+Preservation. `TestRONCommandDamageSourceTimingAndCopies` uses the Red Circle's
+actual cost and body with a test-only category restriction, including failed
+payment, resolution-time choice, stack copies and clones.
+`TestRONCommandDamageSourceInvalid` checks invalid syntax and result scope.
+These are subrule tests; they do not establish full-card gameplay or new loader
+acceptance. Waiting rules that retain command visits need an explicit reference
+collector before complete CR 609.7a enumeration is enabled.

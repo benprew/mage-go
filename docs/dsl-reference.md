@@ -7059,3 +7059,30 @@ categories exist; the adapter does not provide a partial source list.
 waiting-reference choice service alongside existing permanent redirection refs.
 Native and RON tests are mapped in `docs/engine-rules-contracts.md`. No RON source
 record or vocabulary hash changed.
+
+### Face-up command-object damage sources
+
+`mage.ChooseDamageSourceFromCommandObjects(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` uses only face-up engine objects installed in the command
+zone. The choice occurs at resolution and does not target. An object need not
+have a damage ability. Invalid declarations fail definition validation; empty
+choices and absent players clear only this result binding.
+
+`Game.AddCommandObject(Card, bool) (uuid.UUID, error)` supplies a fresh visit ID.
+The caller must remove the object from its previous zone first. Nil objects,
+missing IDs and duplicate command IDs fail. `RemoveCommandObject(visit)` and
+`SetCommandObjectFaceDown(visit, bool)` use that visit, so an old reference cannot
+remove or change a returned object. These services do not grant casting
+permission or install command abilities. `Game.CommandDamageSources()` returns
+isolated face-up snapshots in insertion order. `DamageSource.CommandVisit()`
+keeps command entries separate from permanent incarnations and stack spells.
+Departure information and game clones keep exact visits separate.
+
+RON `chosenDamageSourcePlan.commandChoice(instanceBindings)` lowers the validated
+`ChooseADamageSource(filter)` AST to this engine service with `You` and its own
+binding. Exact and selected-source prevention and selected-source redirection
+accept these identities and use the existing damage and replacement pipeline.
+This is one source category. Complete source enumeration, including explicit
+references held by waiting rules, still precedes unrestricted production RON
+source choices. No full-card unlock or production registry change is claimed.

@@ -1,8 +1,6 @@
 package mage
 
 import (
-	"github.com/google/uuid"
-
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -31,7 +29,7 @@ func (e *exactSourcePreventionInstallation) inspectDefinition() definitionNode {
 }
 func (e *exactSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 	source := e.source.resolveDamageSource(ctx)
-	if !source.Valid() || (source.Incarnation() != uuid.Nil) == (source.StackID() != uuid.Nil) {
+	if !source.hasExactIdentity() {
 		return nil
 	}
 	player, ok := e.recipient.resolvePlayer(ctx)

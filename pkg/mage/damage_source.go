@@ -22,6 +22,7 @@ func cloneDamageSource(s DamageSource) DamageSource {
 type DamageSource struct {
 	id, incarnation, controller, owner uuid.UUID
 	stackID                            uuid.UUID
+	commandVisit                       uuid.UUID
 	name                               string
 	colors                             []Color
 	keywords                           map[Keyword]bool
@@ -35,15 +36,23 @@ func (s DamageSource) Incarnation() uuid.UUID { return s.incarnation }
 // StackID keeps separate casts of the same card apart.
 func (s DamageSource) StackID() uuid.UUID { return s.stackID }
 
+// CommandVisit keeps separate command-zone entries of one object apart.
+func (s DamageSource) CommandVisit() uuid.UUID { return s.commandVisit }
+
+func (s DamageSource) hasExactIdentity() bool {
+	count := 0
+	for _, id := range []uuid.UUID{s.incarnation, s.stackID, s.commandVisit} {
+		if id != uuid.Nil {
+			count++
+		}
+	}
+	return s.Valid() && count == 1
+}
+
 // SameObject compares exact source identities. Missing identities cannot match.
 func (s DamageSource) SameObject(other DamageSource) bool {
-	if !s.Valid() || s.id != other.id {
-		return false
-	}
-	if s.incarnation != uuid.Nil {
-		return s.incarnation == other.incarnation && other.stackID == uuid.Nil
-	}
-	return s.stackID != uuid.Nil && s.stackID == other.stackID && other.incarnation == uuid.Nil
+	return s.hasExactIdentity() && other.hasExactIdentity() && s.id == other.id &&
+		s.incarnation == other.incarnation && s.stackID == other.stackID && s.commandVisit == other.commandVisit
 }
 func (s DamageSource) Controller() uuid.UUID     { return s.controller }
 func (s DamageSource) Owner() uuid.UUID          { return s.owner }

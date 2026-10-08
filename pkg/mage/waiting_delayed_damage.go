@@ -7,7 +7,12 @@ import (
 )
 
 func (g *Game) damageReferenceInformation(saved DamageSource) DamageSource {
+	if !saved.hasExactIdentity() {
+		return DamageSource{}
+	}
 	switch {
+	case saved.CommandVisit() != uuid.Nil:
+		return g.commandReferenceInformation(saved)
 	case saved.Incarnation() != uuid.Nil && saved.StackID() == uuid.Nil:
 		p, lki := g.readPermanentIncarnationInformation(capturedPermanent{saved.ID(), saved.Incarnation()})
 		if p != nil {
@@ -25,12 +30,12 @@ func (g *Game) damageReferenceInformation(saved DamageSource) DamageSource {
 func (e *capturedDelayedBody) stackDamageBindings() []DamageSource {
 	sources := make([]DamageSource, 0, len(e.damageSources))
 	for binding, source := range e.damageSources {
-		if binding != nil && source.Valid() && (source.Incarnation() != uuid.Nil) != (source.StackID() != uuid.Nil) {
+		if binding != nil && source.hasExactIdentity() {
 			sources = append(sources, source)
 		}
 	}
 	slices.SortFunc(sources, func(a, b DamageSource) int {
-		for _, pair := range [][2]uuid.UUID{{a.ID(), b.ID()}, {a.Incarnation(), b.Incarnation()}, {a.StackID(), b.StackID()}} {
+		for _, pair := range [][2]uuid.UUID{{a.ID(), b.ID()}, {a.Incarnation(), b.Incarnation()}, {a.StackID(), b.StackID()}, {a.CommandVisit(), b.CommandVisit()}} {
 			if order := slices.Compare(pair[0][:], pair[1][:]); order != 0 {
 				return order
 			}

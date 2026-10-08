@@ -37,7 +37,7 @@ func (e *selectedSourceRedirectInstallation) inspectDefinition() definitionNode 
 }
 func (e *selectedSourceRedirectInstallation) Apply(ctx *EffectContext) error {
 	source := e.source.resolveDamageSource(ctx)
-	if !source.Valid() || (source.Incarnation() != uuid.Nil) == (source.StackID() != uuid.Nil) {
+	if !source.hasExactIdentity() {
 		return nil
 	}
 	ref, ok := e.subject.(permanentInformationReference)

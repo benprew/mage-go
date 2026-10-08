@@ -328,6 +328,13 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 			return ec.Card
 		}
 	}
+	for _, object := range g.zones.commandObjects {
+		if object.card.ID() == id {
+			card := object.card.Copy()
+			card.SetID(id)
+			return card
+		}
+	}
 	return nil
 }
 

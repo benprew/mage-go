@@ -70,6 +70,15 @@
 // supply references. A saved registration cannot follow a returned source.
 // [ChooseDamageSourceFromWaitingCounterPlacementReferences] uses this category only.
 //
+// Use [Game.AddCommandObject] to install an object with a fresh command visit.
+// The caller must remove the object from its former zone first.
+// [Game.CommandDamageSources] supplies face-up objects to source choices.
+// [ChooseDamageSourceFromCommandObjects] uses this category only.
+// [DamageSource.CommandVisit] keeps a return separate from its former visit.
+// Removal retains departure information. Hidden objects supply no public
+// characteristics. Queries and game clones keep separate object snapshots.
+// This service does not grant casting permission or install command abilities.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than
@@ -501,7 +510,7 @@
 // supply lethal damage before a source with trample damages the defender.
 //
 // Use [PreventNextDamageFromExactSource] for one damage event from an exact
-// permanent or spell reference to a player this turn. Property checks use
+// permanent, spell or command reference to a player this turn. Property checks use
 // current or retained information for that object. A returned permanent or
 // another cast cannot consume the shield. Bindings can change after installation;
 // each shield keeps its own source. [PreventNextDamageFromSelectedSource] adds

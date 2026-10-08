@@ -99,3 +99,7 @@ func (p *chosenDamageSourcePlan) waitingRedirectionChoice(bindings instanceBindi
 func (p *chosenDamageSourcePlan) waitingCounterPlacementChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingCounterPlacementReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) commandChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromCommandObjects(mage.You, p.filter, bindings.chosenDamageSources[p])
+}
