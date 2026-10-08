@@ -10765,3 +10765,36 @@ points. `Invalid` rejects nine malformed or unsupported delayed declarations.
 empty relations, late membership and independent clone resolution. Complete
 Feint and Sewers of Estark tests retain native combat and legality coverage.
 The seven protection records still reject general source aggregation.
+
+## Waiting delayed temporary-layer operand declarations
+
+`Game.WaitingDelayedPermanentSources` includes the exact saved source when an
+`untilEffect` declares `This` in a modification subject, permanent collection,
+power or toughness value, control recipient or upkeep player. Source-bound
+`UntilSourceLeaves` and `UntilSourceUntaps` durations declare their source even
+when the modification affects another permanent. `Until`, `UntilNextUpkeep` and
+`UntilEndOfNextUpkeep` share the same operand traversal.
+
+This is a declaration query under CR 609.7a. It does not resolve subjects, select
+members, evaluate values, run filters or install effects. Empty collections and
+zero-valued arithmetic retain their explicit reads. Granted activated and
+triggered ability bodies have a separate future recipient context; their `This`
+reads do not declare the donor. Opaque callbacks and implicit attachments do not
+supply references. A not-yet-created nested delay is also excluded.
+
+The existing delayed capture, per-instance bindings, LKI and clone services keep
+exact incarnations through departure and phasing. Returned objects cannot take
+their place. Trigger detection ends waiting eligibility. Layer installation
+retains the existing CR 603.7c and 611.2 contracts: current legal subjects and
+collection members are saved at resolution, values use their declared current
+or LKI policy, and all modifications share one installation and lifetime.
+
+RON `CreatePermanentLayerEffectUntil/3` now uses
+`compileTemporaryLayer(Node, scope) (effectFactory, error)`. Its existing
+supported modifications and duration restrictions are unchanged. No general
+`ChooseADamageSource` aggregation is enabled by this declaration slice.
+
+Evidence: `TestWaitingDelayedLayerOperands`, `TestWaitingDelayedLayerPurity`,
+`TestRONWaitingDelayedLayerProtection`, `TestRONWaitingDelayedLayerInvalid` and
+`TestRONWaitingDelayedLayerInstanceValues`. The seven protection records receive
+subrule evidence; their complete declarations remain rejected.

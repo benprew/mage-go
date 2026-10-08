@@ -8,12 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-COMBAT-PREVENTION` adds exact source declarations for singular,
-to-and-by and collection combat prevention, with typed union lowering. Seven
-protection names gain 245 subrule cases; native declarations gain ten operand
-cases. Compilation and full-card coverage are unchanged. Temporary layers,
-player collections, remaining conditionals, source aggregation, token grants
-and sticky layers remain gaps.
+`WAITING-DELAYED-TEMPORARY-LAYERS` adds exact source declarations for temporary
+layer subjects, collections, values, controllers and durations. Seven protection
+names gain 105 subrule cases; native declarations gain eleven operand cases.
+Compilation and full-card coverage are unchanged. Player collections, remaining
+conditionals, source aggregation, token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47794,3 +47793,144 @@ Ranked next candidates:
    subject to named identity, native band combat and token clone evidence.
 
 This run stops after `WAITING-DELAYED-COMBAT-PREVENTION`.
+
+## 2026-10-08: waiting delayed temporary-layer operand declarations
+
+Status: completed implementation slice `WAITING-DELAYED-TEMPORARY-LAYERS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+The commit stages only this run's ledger summary and appended entry; the user's
+pending movement of older entries remains a working-tree change.
+
+### Candidate comparison and selection
+
+The seven protection names are Circle of Protection: Black, Blue, Green, Red,
+White, Artifacts, and Greater Realm of Preservation. Their complete RON records,
+including nested source filters and future shields, were read. Reprints count
+once. Complete Deep Spawn, Homarid Warrior, Master of the Hunt, Timetwister and
+Wheel of Fortune records were also inspected. Targeted vocabulary entries cover
+`CreatePermanentLayerEffectUntil/3`, `CreateEachPermanentLayerEffectUntil/3`,
+`AdjustPTX/3`, `AdjustPTXY/4`, `UntilNextUpkeep/1` and tapped-source duration.
+
+| Candidate | Distinct affected names and estimated unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: waiting delayed temporary-layer operands | The seven protection names: **0 full-card unlocks**. Deep Spawn and Homarid Warrior reuse the existing direct layer adapter. | Player collections, remaining conditional declarations and general source aggregation still block the seven records. Completes a shared native operand declaration family for aggregation. | Small: native typed traversal, isolated existing RON lowering, identity/purity and protection/layer lifecycle tests. |
+| Ranked #2: waiting delayed player-collection and conditional declarations | The same seven protection names: **0 full-card unlocks**. Timetwister and Wheel of Fortune reuse player-collection execution. | Collection player provenance, conditional operands and aggregation need their own audit. Enables the same seven-name source choice prerequisite. | Medium: wider typed declaration audit, empty sets and condition/branch purity tests. |
+| Ranked #3: named-token quality grants | Master of the Hunt: **1 plausible full-card unlock**. | Full record requires named green 1/1 Wolf tokens and parameterized named bands. Needs named grant lowering, native band combat and token clone evidence. | Medium: token/grant adapters and combat/clone tests. |
+
+Candidate #1 is dependency-ready, bounded, and supports a concrete seven-card
+prerequisite. It takes priority over wider declaration work and the single-card
+token candidate. The contract, reuse boundary and acceptance cases were stated
+before production edits. No skill, delegation, Go-card requirements or generated
+stubs were used.
+
+### Exact signatures, contexts and engine reuse
+
+- `compileTemporaryLayer(Node, scope) (effectFactory, error)` is the dedicated
+  lowering boundary for `CreatePermanentLayerEffectUntil/3`. This is an exact
+  extraction of existing singular layer lowering, with no broadened syntax.
+  Fresh per-instance subject/value/ability bindings and one shared duration
+  installation remain intact. The dispatcher calls the new function.
+- `(*untilEffect).refersToSourcePermanent() bool` declares source-bound duration
+  reads and explicit native source reads in `upkeepPlayer` and each modification's
+  `subject`, `subjects`, `controller`, `power` and `toughness`. It uses existing
+  `permanentRefReadsSourcePermanent`, `permanentSetReadsSourcePermanent`,
+  `playerRefReadsSourcePermanent` and `resolutionValueReadsSourcePermanent`.
+- Constructors keep their signatures: `Until(Duration,
+  ...ContinuousModification) ResolvingEffect`, `UntilNextUpkeep(PlayerRef,
+  ...ContinuousModification) ResolvingEffect`, `UntilEndOfNextUpkeep(PlayerRef,
+  ...ContinuousModification) ResolvingEffect`, `UntilSourceLeaves(sourceRef,
+  ...ContinuousModification) ResolvingEffect`, and `UntilSourceUntaps(sourceRef,
+  ...ContinuousModification) ResolvingEffect`.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` retains the existing
+  delayed capture, sequence/mode traversal, exact incarnation, deduplication,
+  separate snapshots, target bindings and clone services. Empty collections and
+  zero-valued arithmetic retain explicit reads. Queries do not resolve subjects,
+  select members, evaluate values, execute filters or install layers.
+
+RON owns spelling, validation, scope and lowering. Mage owns typed declarations
+and execution. Bound source lifetimes declare their source even with another
+layer subject. Granted ability bodies keep their future recipient scope and do
+not declare the donor's source. Implicit attachments, opaque callbacks and future
+nested delays do not infer references. Departure and phasing retain waiting
+references; returned objects cannot replace saved incarnations. Trigger detection
+ends waiting eligibility before layer installation. Installation still reads
+current legal subjects/members and current or declared LKI values at resolution,
+then keeps saved membership and the existing expiry. Contracts reuse CR 400.7,
+603.7a–e, 609.7a–b and 611.2a–c. Existing layer ordering, legality, cost rollback,
+replacement ordering and simultaneous-operation services are unchanged.
+No fallback, card-name branch, partial registry or callback introspection is added.
+No caller or obsolete DSL function is removed; removal gates remain closed.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production changes, `go test ./pkg/mage -run TestWaitingDelayedLayer
+-count=1` failed all nine initial native operand cases and the corrected mode
+purity test for missing declarations. A fixture initially supplied only one
+mode; it was corrected to two modes before this assertion-only red run.
+`go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedLayer -count=1` failed all
+105 protection scenarios with missing waiting sources. Both exited 1 as expected.
+Supplemental zero/singleton, invalid and instance-value cases were then added.
+A supplemental test's stale permanent pointer was corrected to query the current
+object; the live game already had the correct layer result.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedLayerOperands | Eleven native operand forms: subjects, singleton/set, power/toughness, zero arithmetic, control recipient, both upkeep endpoints and both source-bound durations; departure/return identity, retained facts and clone lifetime |
+| TestWaitingDelayedLayerPurity | Saved modes, empty collections, filter/value purity, implicit attachment/opaque/future/granted-body exclusion, and three invalid native definitions |
+| TestRONWaitingDelayedLayerProtection | 105 cases across all seven protection records, keyword/dynamic/upkeep layers and live/departed/returned/phased/clone states; real RON costs/filter/shield, failed-payment rollback, resolution-only source choices, shield damage prevention and absent/returned layer subjects |
+| TestRONWaitingDelayedLayerInvalid | Seven malformed, unbound, incompatible, out-of-scope and unsupported-duration delayed declarations reject at compilation |
+| TestRONWaitingDelayedLayerInstanceValues | Two factory instances and a copied ability, three distinct saved references, original target bindings, departed-source LKI values, independent clone resolution and cleanup |
+| TestRONTemporaryLayer* | Existing complete Giant Growth, Jump, Shivan Dragon, Blessing, Elven Lyre and Flying Carpet gameplay retains source/target/attachment identity, copies, legality, mixed layers and cleanup through extracted lowering |
+| TestRONNextUpkeep*; TestRONSourceTappedDuration* | Existing next-upkeep and source-tapped lifetime regressions remain covered by repository validation |
+
+These seven protection mappings are subrule evidence, not full-card gameplay.
+Their complete records still reject general `ChooseADamageSource` aggregation.
+No source defect or environment failure was found. No RON source changed;
+vocabulary refresh is unnecessary. Runtime cutover, Go-card deletion and broad
+DSL cleanup gates remain closed.
+
+### Verification and measured outcome
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline strict loader: expected exit 1 for unsupported collection rejection.
+- Failing-first native and RON commands: expected assertion failures, as above.
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingDelayedLayer|TestRONTemporaryLayer'
+  -count=1`: PASS. `go test ./pkg/mage -run TestWaitingDelayedLayer -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting was reviewed;
+  no unrelated file changed. Post-format focused RON/native tests plus existing
+  next-upkeep and tapped-source duration regressions: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Baseline and final JSON
+  are equal: **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected
+  unique names**, out of 2,445 records / 986 names. First diagnostic remains
+  Animate Dead: `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection rejection remains intact; no partial registry is installed.
+- All 12 vocabulary source hashes match the unchanged RON files.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 105 subrule scenarios; native declarations gain eleven
+operand cases plus purity and invalid evidence. One RON instance/copy/LKI/clone
+scenario and seven RON rejection cases supplement the layer lifecycle coverage.
+Compilation and full-card gameplay coverage are unchanged. API and rules docs
+record only the established declaration and compiler boundary.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_layer_test.go, pkg/mage/dsl/ron/compiler.go,
+pkg/mage/dsl/ron/temporary_layer.go,
+pkg/mage/dsl/ron/waiting_delayed_layer_test.go, pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md, and this ledger's summary
+and appended entry.
+
+Ranked next candidates:
+
+1. Waiting delayed player-collection operand declarations: seven protection
+   names, zero immediate unlocks; shared prerequisite for source aggregation.
+2. Remaining waiting delayed conditional operand declarations: the same seven
+   names; audit conditions and branch scopes before enabling aggregation.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   subject to named identity, native band combat and token clone evidence.
+
+This run stops after `WAITING-DELAYED-TEMPORARY-LAYERS`.

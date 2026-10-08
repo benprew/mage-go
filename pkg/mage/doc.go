@@ -215,6 +215,12 @@
 // empty collections keep the saved source. Queries do not install restrictions
 // or select members. [SkipNextUntapOf] also declares a source read in its player.
 // Resolution still requires present subjects and reads current collection members.
+// [Until], [UntilNextUpkeep], [UntilEndOfNextUpkeep], [UntilSourceLeaves]
+// and [UntilSourceUntaps] declare explicit source reads in their layer subjects,
+// sets, values, control recipients and upkeep players to the same waiting query.
+// Source-bound durations declare their source even with another layer subject.
+// Queries do not read values, select members or install layers. Empty sets and
+// zero values keep explicit reads. Granted ability bodies keep their own scope.
 // Other collection actions need separate contracts.
 // [PreventCombatDamageToAndBy], [PreventCombatDamageBy] and
 // [PreventCombatDamageByThisTurn] declare direct [This] subjects to the same

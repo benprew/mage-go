@@ -8308,3 +8308,13 @@ Existing duration, operation, scope and union restrictions still apply; general
 `ChooseADamageSource` remains unsupported until all categories are complete.
 See the waiting delayed combat-prevention contract in
 `docs/engine-rules-contracts.md` for signatures and test mappings.
+
+### Waiting delayed temporary layers
+
+`CreatePermanentLayerEffectUntil/3` lowers to one typed `Until` installation.
+The waiting source query reads explicit source declarations in its subject,
+collection, values and duration without executing the effect. Saved incarnations
+remain available after departure or phasing. Granted ability bodies keep their
+own future recipient scope. Supported syntax and duration restrictions remain
+unchanged; see the temporary-layer declaration contract in
+[engine-rules-contracts.md](engine-rules-contracts.md).

@@ -368,3 +368,20 @@ func permanentRefReadsSourcePermanent(ref PermanentRef) bool {
 func (e *counterEachEffect) refersToSourcePermanent() bool {
 	return permanentSetReadsSourcePermanent(e.subjects) || resolutionValueReadsSourcePermanent(e.amount)
 }
+
+func (e *untilEffect) refersToSourcePermanent() bool {
+	if e.sourceBound || playerRefReadsSourcePermanent(e.upkeepPlayer) {
+		return true
+	}
+	return slices.ContainsFunc(e.modifications, func(value ContinuousModification) bool {
+		if nilDefinition(value) {
+			return false
+		}
+		m := value.modification()
+		return m != nil && (permanentRefReadsSourcePermanent(m.subject) ||
+			permanentSetReadsSourcePermanent(m.subjects) ||
+			playerRefReadsSourcePermanent(m.controller) ||
+			resolutionValueReadsSourcePermanent(m.power) ||
+			resolutionValueReadsSourcePermanent(m.toughness))
+	})
+}
