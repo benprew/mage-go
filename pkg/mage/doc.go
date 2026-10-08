@@ -512,6 +512,9 @@
 // [Game.WaitingDelayedPermanentSources] reads saved permanent, target and token
 // frames and exact event subjects while delayed abilities wait to trigger.
 // Direct [This] reads in destruction, sacrifice and return bodies also qualify.
+// [TapSubject] and [UntapPermanent] declare their direct [This] subject, even
+// when its tapped state needs no change. Queries do not resolve the subject
+// or change its status. Execution still needs the original present incarnation.
 // Single-recipient [DealDamageFrom] bodies qualify with [This] or
 // [DamageSourceOf] of [This], even when the damage amount is zero.
 // [DealDamageEach], [DealDamageEachPlayer] and [DealDamagePackets] bodies

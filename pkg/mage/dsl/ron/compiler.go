@@ -1338,7 +1338,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
+	case "TapPermanent", "UntapPermanent":
+		build, err := compileTapAction(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -1363,10 +1369,6 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.Destroy(ref)
 			case "DestroyPermanentNoRegen":
 				return mage.DestroyWithoutRegeneration(ref)
-			case "TapPermanent":
-				return mage.TapSubject(ref)
-			case "UntapPermanent":
-				return mage.UntapPermanent(ref)
 			case "RegeneratePermanent":
 				return mage.Regenerate(ref)
 			case "PermanentDoesntUntapDuringControllersNextUntap":

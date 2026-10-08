@@ -8065,3 +8065,43 @@ lifetime use the existing delayed services. RON controller reads retain LKI.
 Opaque, attached, bound and nested future declarations keep their separate
 contracts. This supplies a prerequisite for complete damage-source aggregation;
 the seven protection records still reject incomplete general source choices.
+
+## Waiting delayed tap and untap subjects
+
+`TapSubject(PermanentRef, ...TapResultOption) ResolvingEffect` and
+`UntapPermanent(PermanentRef) ResolvingEffect` declare a direct `This` subject to
+`Game.WaitingDelayedPermanentSources() []DamageSource`. The declaration also
+applies to the shared untap effect used by `UntapPermanentWithResult`.
+Saved sequences, modes and captured delayed bodies retain the declaration.
+Queries do not resolve subjects, change tapped state, emit events, write results
+or consume RNG. A subject already in the requested state keeps its reference.
+Attached, opaque and bound subjects do not imply a direct source declaration;
+bound subjects retain their separate saved-frame contract. A body that creates
+a later delay does not supply that future body's references.
+
+RON `TapPermanent(permanent)` and `UntapPermanent(permanent)` resolving actions
+use `compileTapAction(Node, scope) (effectFactory, error)` and the existing
+`compilePermanentRef` plans. Each factory builds its own typed subject.
+Malformed, incompatible and unbound references reject before execution.
+The same actions work inside `CreateFutureTrigger(event, ActionList([...]))`.
+There is no new RON syntax, payment form or general source aggregation.
+
+The shared source-information service keeps current or exact departure facts.
+Departure, return and phasing retain waiting availability; returned cards cannot
+replace the saved incarnation. Detection ends one-shot waiting availability.
+Execution requires the original present incarnation, including after control
+changes or a phase cycle (CR 400.7, 603.7a–e, 609.7a, 701.26a–b, 702.26b–d).
+Copies and clones retain separate delayed lifetimes. No tap/untap batch or
+replacement behavior changes.
+
+Evidence: `TestWaitingDelayedTapReferences` covers 48 native action, nesting,
+mode and lifecycle cases, pure queries, retained facts and independent clones.
+`TestWaitingDelayedTapBoundaries` checks attached/bound/future exclusions and
+invalid native declarations. `TestRONWaitingDelayedTapProtection` covers 112
+real-record subrule cases for all six Circles of Protection and Greater Realm
+of Preservation, including payment failure, resolution choice, exact prevention,
+shield consumption, stack copies and clones. `TestRONWaitingDelayedTapInvalid`
+rejects 16 declarations. `TestRONWaitingDelayedTapInstances` checks two factory
+instances, saved target incarnations, later shroud and clone execution for both
+actions. Complete protection records still reject general source aggregation;
+these scenarios do not establish complete-card gameplay coverage.

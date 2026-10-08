@@ -61,6 +61,16 @@ func (e *returnToHandSubjectEffect) refersToSourcePermanent() bool {
 	return ok
 }
 
+func (e *tapSubjectEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self
+}
+
+func (e *untapPermanentEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self
+}
+
 func (e *damageFromEffect) refersToSourcePermanent() bool {
 	return damageReadsSourcePermanent(e.source) || damageRecipientReadsSourcePermanent(e.recipient) || resolutionValueReadsSourcePermanent(e.amount)
 }

@@ -8,10 +8,10 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-HAND-ACTION-REFERENCES` retains typed source reads in waiting
-reveal/discard players and amounts; queries do not run actions or consume RNG.
-Seven protection names gain 294 subrule scenarios; native identity gains 108 cases.
-Compilation and complete-card coverage remain unchanged. Other action/collection
+`WAITING-DELAYED-TAP-REFERENCES` retains direct tap/untap subjects in waiting
+bodies; queries do not resolve subjects, change status or consume RNG.
+Seven protection names gain 112 subrule scenarios; native lifecycle gains 48 cases.
+Compilation and complete-card coverage remain unchanged. Counter/collection
 and conditional declarations, token quality grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -46620,3 +46620,143 @@ Ranked next candidates:
    unlock with token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-HAND-ACTION-REFERENCES`.
+
+## 2026-10-08: waiting delayed tap and untap subjects
+
+Status: completed implementation slice `WAITING-DELAYED-TAP-REFERENCES`.
+This run stops after this slice. Existing `.gitignore`, execution-design and
+progress-history archival edits, plus untracked `mtgish-ron-completed.md`, remain
+preserved. Only this run's summary replacement and appended entry are staged.
+
+### Fresh baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The strict loader exited 1 for collection rejection, not compilation failure:
+**1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+names**, out of 2,445 records / 986 names. No partial registry was installed.
+First diagnostic: Animate Dead at `2ED.lines.ron:4:151`, unsupported
+`EnchantGraveyardCard`.
+
+The latest ledger's first candidate was evaluated first. Its direct tap/untap
+portion is dependency-ready and small enough to complete in this run. Complete
+RON records and nested forms were inspected for all six Circles of Protection,
+Greater Realm of Preservation, Jade Monolith, Reverse Damage and Master of the
+Hunt. Reprints count once. Targeted vocabulary entries show `TapPermanent/1`
+478 times and `UntapPermanent/1` 49 times, including payment contexts; those
+frequencies are not full-card unlock estimates.
+
+| Compared candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Rank 1, direct delayed tap/untap subjects | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | A concrete CR 609.7a aggregation prerequisite for seven names; counters, typed collections and remaining conditional declarations still need contracts | Small: two typed engine declarations, existing AST adapter isolation, identity and real-record subrule tests |
+| Rank 2, cast/state/coin and remaining conditional declarations | The same seven protection names; Jade Monolith and Reverse Damage | 0 alone; seven potential after complete aggregation | Broader conditional audit and source aggregation; Jade retains target redirection scope and Reverse Damage retains combined prevention/life-result blockers | Medium to large: captured event facts, branch traversal, purity and gameplay |
+| Rank 3, named-token quality grants | Master of the Hunt | 1 plausible | Token-local BandsWithOthers and exact named quality; token metadata and native band combat exist | Medium: token lowering, formation, damage assignment and clone evidence |
+
+The first candidate wins as a bounded shared prerequisite for seven cards.
+The direct tap/untap portion is this entire slice; collection and counter actions
+remain explicit next work. Contract, reuse boundary and acceptance cases were
+stated before editing. The missing behavior is an engine reference declaration,
+not missing tap/untap execution or source data. Existing lowering already used
+exact typed references. No source-data defect or environment failure was found.
+
+### Exact signatures, contexts and reuse boundary
+
+- `compileTapAction(Node, scope) (effectFactory, error)` now isolates existing
+  RON resolving `TapPermanent(permanent)` and `UntapPermanent(permanent)` lowering.
+  Arity is exactly one. `compilePermanentRef` validates the source/target/host
+  context before a fresh factory builds the subject from `instanceBindings`.
+- `TapSubject(PermanentRef, ...TapResultOption) ResolvingEffect` and
+  `UntapPermanent(PermanentRef) ResolvingEffect` retain their public signatures.
+  Their concrete effects now implement `refersToSourcePermanent() bool` for a
+  direct `sourceRef` subject. The shared result-producing untap effect receives
+  the same declaration; its result execution remains unchanged.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` retains its signature.
+  Saved `CreateFutureTrigger(event, ActionList([...]))` bodies, captured wrappers,
+  sequences and modal bodies propagate these explicit declarations.
+
+Queries do not resolve subjects, change status, emit tap/untap events, write
+results or consume randomness. Already tapped/untapped subjects keep references.
+Attached, bound and opaque subjects do not imply a direct source read. Existing
+saved target/binding frames remain authoritative for their own references. A
+nested future producer does not declare its not-yet-created body's source.
+
+The engine reuses exact source capture, current/departure information, saved
+incarnations, deterministic deduplication, snapshot isolation, stack transfer and
+clone services. Waiting availability survives departure, return and phasing;
+a returned card cannot replace the original object. One-shot detection ends
+availability. Actual tap/untap still requires the original present incarnation.
+Control changes and phase cycles keep that identity. Delayed saved target
+instructions do not target again after later shroud. CR 400.7, 603.7a–e, 609.7a,
+701.26a–b and 702.26b–d establish these boundaries.
+
+RON owns spelling and scope; mage owns references and execution. There are no
+card-name branches, Go-card fallbacks, game-time declaration panics, global
+last-action slots or partial production registries. Cost, replacement ordering
+and simultaneous batch services remain unchanged. Runtime, Go-card removal and
+DSL removal gates remain closed; no definitions or DSL functions were removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, native identity cases failed with `tap declaration lost
+saved source`; protection subrules failed with `query lost source or executed
+tap action`. Invalid declarations continued to reject. Both focused commands
+exited 1 for those assertion failures. Tests passed after typed declarations
+were added. An additional instance fixture initially called the embedded `Card`
+field as a method; that test compilation error was corrected without changing
+its assertions or production contracts.
+
+| Test | Card mapping and contract evidence |
+| --- | --- |
+| `TestWaitingDelayedTapReferences` | 48 native cases: two actions × direct/sequence/mode × eight states. Resolution-time creation, exact incarnation, departure/return, phasing/cycle, current control/color, unchanged status, pure repeated queries, copied facts, RNG preservation and independent clone lifetime/execution. |
+| `TestWaitingDelayedTapBoundaries` | Attached/bound/nested-future exclusions; nil and invalid bound references reject engine definition validation for both actions. |
+| `TestRONWaitingDelayedTapProtection` | 112 real-record subrule cases: seven protection names × two actions × eight states. Real costs and color/type filters, failed payment rollback, resolution choice, exact retained source, actual prevention, consumed shields, stack copies and clones. Complete records still reject unfinished general aggregation. |
+| `TestRONWaitingDelayedTapInvalid` | 16 malformed, incompatible or unbound delayed tap/untap declarations reject during compilation. |
+| `TestRONWaitingDelayedTapInstances` | Both actions use separate factories/controllers and target bindings; exact returned target exclusion, later shroud, independent clone gameplay and four distinct waiting references. |
+| Existing `TestRONPermanent*`, `TestRONHost*` and complete RON suite | Existing source, target and host lowering remains valid after adapter isolation. Regression evidence does not count as new complete-card coverage. |
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedTap -count=1`:
+  PASS after expected assertion failures. Expanded focused command also covered
+  `TestRONPermanent|TestRONHost` and the added instance tests: PASS.
+- Native `go test ./pkg/mage -run TestWaitingDelayedTap -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` reported one redundant native test type declaration and
+  fixed it automatically. The inferred type was reviewed. Final `make lint`:
+  PASS, 0 issues. No unrelated automatic changes occurred.
+- After that fix, native focused tests and the expanded focused RON tests passed
+  with `-count=1`. The final lint run made no further semantic changes.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. JSON matches baseline byte-for-byte: **1,978 compiled / 467 rejected
+  records; 773 accepted / 213 rejected unique names** out of 2,445 / 986.
+  First diagnostic remains Animate Dead, unsupported `EnchantGraveyardCard`.
+- All 12 RON hashes match the vocabulary snapshot; no refresh is required.
+- No source-data, environment or pre-existing validation blocker remains.
+
+Estimated and actual gains: **0 unique names / 0 compiled records**. Seven
+protection names gain 112 subrule scenarios; native lifecycle coverage gains
+48 cases. Added instance and invalid-declaration cases cover the typed lowering.
+Complete-card gameplay coverage remains unchanged, as expected: general source
+aggregation still needs the remaining declaration contracts. Complete collection
+gameplay, runtime integration, Go-card deletion and obsolete DSL cleanup remain
+unfinished.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, native and RON
+`waiting_delayed_tap_test.go`, RON `compiler.go` and `tap_action.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. The user changes remain outside the slice commit.
+
+Ranked next candidates:
+
+1. Direct counter-action and typed collection operand declarations: seven
+   protection names benefit; 0 immediate unlocks. Audit subjects and amounts,
+   then singleton/relation/attachment and player-scoped collection operands
+   without resolving references, running filters or selecting members.
+2. Cast/state/coin and remaining conditional declarations, then complete
+   CR 609.7a aggregation: seven potential full-card unlocks after prerequisites;
+   Jade Monolith and Reverse Damage retain separate blockers.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock with token identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-TAP-REFERENCES`.
