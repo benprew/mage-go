@@ -11340,3 +11340,41 @@ The seven protection consumers cover this source category only. General
 `ChooseADamageSource` remains rejected until complete source aggregation has
 contract evidence. Existing `TestRONPoison*` retains complete Pit Scorpion,
 Marsh Viper and Serpent Generator coverage.
+
+## Waiting delayed mana production operands
+
+`AddManaAmount(color Color, amount ResolutionValue)`,
+`AddManaOfAnyOneColor(amount ResolutionValue)` and
+`AddRestrictedManaOfAnyOneColor(amount ResolutionValue, restriction ManaRestriction)`
+declare explicit source reads in their amounts.
+`AddManaToPlayer(player PlayerRef, color Color, amount ResolutionValue)` and
+`AddManaOfProducedTypeToPlayer(player PlayerRef, types *ManaTypesBinding, amount ResolutionValue)`
+also declare player reads to `Game.WaitingDelayedPermanentSources()`.
+The shared typed source-read services inspect operands without resolving players,
+reading amounts, choosing colors, adding mana or testing spending restrictions.
+Zero amounts retain explicit reads. Sequences and modes preserve declarations;
+implicit attachments, opaque operands and future delayed bodies do not infer them.
+
+Saved exact incarnations survive departure, transient LKI clearing and phasing
+until detection. Returned objects cannot replace saved references. Execution
+retains current and departure information rules and the saved resolving controller.
+A delayed frame now captures produced mana-type bindings with separate slices.
+Step, modal and permanent-event delays restore those bindings only for their body.
+Independent events, stack copies and game clones retain separate frames and pools.
+Existing payment, mana-event, source-filter and prevention services are reused
+(CR 400.7, 603.7a–e, 609.7a, 702.26b–d).
+
+RON `compileResolvingMana(Node, scope) ([]effectFactory, error)` isolates existing
+`AddMana/1` and `AddManaRepeated/2` lowering. Existing literal and paid-result
+restrictions remain. `AddManaRepeatedWithModifiers(AnyManaColor, value,
+CanOnlySpendOnSpells(IsCardtype(Creature)))/3` uses typed instance values,
+including source power, source counters and arithmetic in delayed bodies.
+No new production syntax or broader explicit-player mana context is introduced.
+Land-mana event lowering keeps its existing immediate solver contract.
+
+Evidence: native `TestWaitingDelayedManaProductionOperands`, `Boundaries`,
+`Resolution`, `EventTypes` and `CapturedTypes`; RON
+`TestRONWaitingDelayedManaProductionGameplay`, `Invalid`, `Instances` and
+`Protection`. Seven complete protection records supply their actual source filters,
+costs and one-use shields in category-specific tests. This is subrule evidence;
+general `ChooseADamageSource` still rejects full records until complete aggregation.

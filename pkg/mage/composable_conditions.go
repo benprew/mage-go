@@ -326,6 +326,7 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
+		manaTypes:         cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
 		targets:           cloneDelayedTargets(ctx.targetBindings),
 		sourceIncarnation: ctx.sourceIncarnation,
 		x:                 ctx.Game.resolution.X(),
@@ -373,6 +374,7 @@ type capturedDelayedBody struct {
 	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
 	players           map[*PlayerBinding]uuid.UUID
 	numbers           map[*NumberBinding]int
+	manaTypes         map[*ManaTypesBinding][]Color
 	targets           map[*targetDeclaration][]capturedPermanent
 	sourceIncarnation uuid.UUID
 	x                 int
@@ -402,6 +404,9 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	outerNumbers := state.numberBindings
 	state.numberBindings = maps.Clone(e.numbers)
 	defer func() { state.numberBindings = outerNumbers }()
+	outerManaTypes := state.manaTypesBindings
+	state.manaTypesBindings = cloneManaTypesBindings(e.manaTypes)
+	defer func() { state.manaTypesBindings = outerManaTypes }()
 	outerPlayers := state.playerBindings
 	state.playerBindings = maps.Clone(e.players)
 	defer func() { state.playerBindings = outerPlayers }()
@@ -490,6 +495,7 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
+		manaTypes:         cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
 		targets:           cloneDelayedTargets(ctx.targetBindings),
 		sourceIncarnation: ctx.sourceIncarnation,
 		x:                 ctx.Game.resolution.X(),

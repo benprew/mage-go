@@ -498,6 +498,9 @@ func AddManaToPlayer(player PlayerRef, color Color, amount ResolutionValue) Reso
 
 func (e *manaToPlayerEffect) Text() string                 { return "add mana to player" }
 func (e *manaToPlayerEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaToPlayerEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player) || resolutionValueReadsSourcePermanent(e.amount)
+}
 func (e *manaToPlayerEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"player", e.player}, {"amount", e.amount}}}
 	if e.color < Colorless || e.color >= AnyColor {
@@ -537,6 +540,9 @@ func (e *manaAnyOneColorEffect) Text() string {
 	return fmt.Sprintf("add %s mana of any one color", e.amount.Text())
 }
 func (e *manaAnyOneColorEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaAnyOneColorEffect) refersToSourcePermanent() bool {
+	return resolutionValueReadsSourcePermanent(e.amount)
+}
 func (e *manaAnyOneColorEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
 	if e.restricted && nilDefinition(e.restriction) {
@@ -568,6 +574,9 @@ func (e *manaAmountEffect) Text() string {
 	return fmt.Sprintf("add %s %s mana", e.amount.Text(), e.color)
 }
 func (e *manaAmountEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaAmountEffect) refersToSourcePermanent() bool {
+	return resolutionValueReadsSourcePermanent(e.amount)
+}
 func (e *manaAmountEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
 	if e.color < Colorless || e.color >= AnyColor {
@@ -689,6 +698,9 @@ func AddManaOfProducedTypeToPlayer(player PlayerRef, types *ManaTypesBinding, am
 
 func (*manaFromProducedTypesEffect) Text() string                 { return "add mana of a produced type to player" }
 func (*manaFromProducedTypesEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaFromProducedTypesEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player) || resolutionValueReadsSourcePermanent(e.amount)
+}
 func (e *manaFromProducedTypesEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), bindingRead: e.types,
 		children: []definitionEdge{{"player", e.player}, {"types", e.types}, {"amount", e.amount}}}

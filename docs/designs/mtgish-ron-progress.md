@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-POISON` retains explicit source reads in delayed poison
-player/value operands through exact identity, departure facts and clone lifetimes.
-No new card compiles; seven protection subrules gain poison-reference evidence.
+`WAITING-DELAYED-MANA-PRODUCTION` retains explicit source reads in delayed
+mana player/value operands and saves per-instance produced mana-type bindings.
+No new card compiles; seven protection subrules gain delayed-mana evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49982,3 +49982,148 @@ Ranked next candidates:
    complete general source aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-POISON`.
+
+## 2026-10-08: waiting delayed mana production operands
+
+Status: completed implementation slice `WAITING-DELAYED-MANA-PRODUCTION`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, and untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+Fresh baseline: `make build` and uncached full RON tests passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection:
+1,981 compiled / 464 rejected records; 776 accepted / 210 rejected unique names.
+First issue: Animate Dead / EnchantGraveyardCard. No build failure was found.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 delayed mana operands | Six Circles (Black, Blue, Green, Red, White, Artifacts), Greater Realm of Preservation, Jade Monolith: 0 immediate unlocks; advances 8 downstream unlocks / 37 records. | Four native typed mana effects omit waiting source declarations. Existing repeated restricted mana lowering supplies a complete source-value context. General aggregation still needs remaining operand audits. | Small shared declarations and adapter extraction, with lifecycle, binding, query-purity, legality and consumer tests. |
+| Sticky layer lifecycle | Titania's Song: 1 plausible unlock / 2 records. | Retained source-departure lifecycle, cross-layer membership and per-member mana values. | Larger layer/lifecycle implementation and interaction suite. |
+| Chosen-source partial prevention | Dark Sphere: 0 immediate unlocks; 1 downstream unlock / 1 record. | General aggregation is a prerequisite; then partial amounts and shield consumption. | Medium replacement suite after its prerequisite. |
+
+Complete records and nested forms were read for all three compared candidates,
+including all protection/redirection reprints, both Song records and Dark Sphere.
+Targeted vocabulary inspection confirmed AddMana/1, AddManaRepeated/2,
+AddManaRepeatedWithModifiers/3 and EachPermanentStickyLayerEffect/3.
+The ranked first candidate is ready and advances shared eight-card work, so it
+wins over the two single-card alternatives. Reprints count once for unlocks.
+
+All 22 distinct names with repeated mana or explicit player mana records were
+also inspected: Black Lotus; Implements of Sacrifice; the five Mana Batteries;
+Bottomless Vault, Dwarven Hold, Hollow Trees, Icatian Store, Sand Silos;
+Sacrifice, Priest of Yawgmoth, Metamorphosis; Mana Flare, Wild Growth;
+City of Shadows, Drain Power, Energy Tap, Gauntlet of Might, Mana Drain.
+Existing accepted shapes remain supported. This run does not unblock their
+other cost, trigger, choice or duration gaps. Compilation and full-card gameplay
+remain separate; no new full-card support is claimed.
+
+### Contract, signatures, contexts and reuse boundary
+
+- `AddManaAmount(color Color, amount ResolutionValue) ResolvingEffect`,
+  `AddManaOfAnyOneColor(amount ResolutionValue) ResolvingEffect` and
+  `AddRestrictedManaOfAnyOneColor(amount ResolutionValue, restriction ManaRestriction) ResolvingEffect`
+  declare explicit source reads in amounts.
+- `AddManaToPlayer(player PlayerRef, color Color, amount ResolutionValue) ResolvingEffect`
+  and `AddManaOfProducedTypeToPlayer(player PlayerRef, types *ManaTypesBinding, amount ResolutionValue) ResolvingEffect`
+  declare reads from player and amount. Four effect types implement
+  `refersToSourcePermanent() bool` through the shared typed read helpers.
+- ControllerOf(This), OwnerOf(This), ControllerOfWithLKI(This), source values
+  and typed arithmetic qualify. Queries do not resolve operands, choose colors,
+  add mana or check spending rules. Zero and negative amounts retain explicit
+  reads; sequences/modes preserve them. Implicit attachments, opaque operands
+  and future delayed bodies do not infer reads. Bound targets use saved frames.
+- Exact saved incarnations survive departure, cleared transient LKI and phasing.
+  Returned objects cannot replace them. Detection ends waiting availability
+  before resolution. Execution retains current/departure information semantics
+  and the saved resolving controller. Source control changes do not change that
+  controller. Per-instance bindings, copies and game clones remain independent.
+- `compileResolvingMana(Node, scope) ([]effectFactory, error)` extracts existing
+  AddMana/1 and AddManaRepeated/2 lowering from compiler.go. Literal counts,
+  paid counter/sacrifice result restrictions and event-type routing are unchanged.
+  Existing restricted repeated-mana lowering accepts typed instance values,
+  source power/counters and arithmetic inside supported delayed resolving bodies.
+  No new syntax or broader explicit-player mana context is claimed.
+- A failing event gameplay test found a missing engine prerequisite: delayed
+  frames omitted produced mana-type bindings. `capturedDelayedBody.manaTypes`
+  now saves deep copies through `cloneManaTypesBindings` in step and permanent
+  event creation; body execution restores them and then restores the outer frame.
+  Modal capture inherits this shared service. Two events cannot overwrite types;
+  later mutation, source return and clone execution cannot replace saved slices.
+- Existing delayed capture, definition validation, source facts, deduplication,
+  source choices, costs, mana solver metadata, spending restrictions and damage
+  prevention are reused. No card-name branches, fallbacks or partial registry.
+  Rules evidence: local CR 106.3–4, 400.7, 603.7a–e, 609.7a, 702.26b–d.
+  API/rules-contract docs describe only the behavior established here.
+
+### Failing-first tests and card-to-test mapping
+
+The initial red run failed all ten native operand cases, the native purity/source
+assertion, five native execution states, 14 RON explicit-source lifecycle cases,
+and all seven protection consumers for absent waiting references. Scope rejection
+and literal-zero cases already passed. After declarations were added, actual
+produced-type delayed execution failed with zero mana because its binding was
+not captured. That failure preceded the binding capture implementation.
+Fixture corrections aligned expectations with the existing helper's power 1,
+and with unused mana after payment; tests were not weakened to accept bad rules.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedManaProductionOperands | Ten forms across four effect types: amount, arithmetic, any color, restriction, controller, owner, LKI controller and produced types; exact identity, zero amount, sequence/modes, departure, LKI clearing, return, phasing and independent waiting clone lifetime. |
+| TestWaitingDelayedManaProductionBoundaries | Amount-query purity, no implicit/opaque/future inference; nil operands, missing types/player/target bindings reject definition validation. |
+| TestWaitingDelayedManaProductionResolution | Current source values, departure facts, returned-object exclusion, phase state, control changes and clone execution isolation. |
+| TestWaitingDelayedManaProductionEventTypes | Valid native event declaration, two independent event-time type sets, copied event slices, departed/returned source controller and clone execution with exact per-color pools. |
+| TestWaitingDelayedManaProductionCapturedTypes | Step, modal and permanent-departure delays keep saved type slices after later binding mutation; clones and pools are independent. |
+| TestRONWaitingDelayedManaProductionGameplay | 35 cases: literal zero, explicit-source zero/negative, source power and counter arithmetic across live, departed, returned, phased, phase-cycle, control-change and copied activation states. Creation/detection/resolution timing and creature-only spending legality. |
+| TestRONWaitingDelayedManaProductionInvalid | Ten malformed, wrong-role, unbound or out-of-scope delayed value declarations reject. |
+| TestRONWaitingDelayedManaProductionInstances | Fresh factory targets, distinct source values, independent saved target frames, copied activation and correct per-controller mana amounts. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedManaProductionProtection | Real record costs, source filters and one-use shields choose a departed mana operand source. Failed payment offers no choice; resolution creates the shield, prevention consumes once and delayed mana later uses the saved controller. Subrule coverage only; general source aggregation remains rejected. |
+| Jade Monolith | Downstream aggregation beneficiary; no new Jade-specific gameplay claim. |
+| Metamorphosis, Priest of Yawgmoth / existing TestRONSacrificeMana* | Accepted complete RON mana gameplay, payment rollback, spent restrictions, copies, clones and paid result identities retained. |
+| Five Mana Batteries / existing TestRONCounterPayment* | Accepted record activation/payment result bindings and rollback retained. |
+| Mana Flare, Wild Growth / existing TestRONLandMana* | Accepted complete RON immediate event mana, solver and replacement evidence retained. |
+| Black Lotus, Implements of Sacrifice / existing integration and fixed draw tests | Accepted immediate sacrificed-source mana and real RON consumer tests retained. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedManaProduction -count=1`: PASS.
+- `go test ./pkg/mage -run TestWaitingDelayedManaProduction -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic formatting changes reviewed.
+  Post-lint full suite and uncached native/RON focused suites: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict rejection.
+  JSON is byte-identical to baseline, including every diagnostic.
+
+Estimated and actual gain: **0 new full-card unlocks / 0 new compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. Seven protection subrules gain delayed-mana source
+reference evidence. The discovered binding prerequisite is complete, with no
+syntax expansion. No source defect, RON edit or vocabulary refresh was needed.
+No environment failure was found. Complete gameplay, runtime loading, Go-card
+removal and obsolete DSL cleanup gates remain unmet; callers are preserved.
+
+Changed files: `pkg/mage/composable_costs.go`, `composable_conditions.go`,
+`waiting_delayed_mana_production_test.go`, `doc.go`,
+`pkg/mage/dsl/ron/compiler.go`, `mana_production.go`,
+`waiting_delayed_mana_production_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Bounded delayed regeneration subject declaration: regenerateSubjectEffect
+   has a typed PermanentRef but no source-read declaration. Existing RON
+   RegeneratePermanent lowering and exact regeneration shields are ready.
+   Drudge Skeletons, Living Wall, Uthden Troll and other accepted regenerators
+   supply existing adapter evidence; this advances the same eight source-choice
+   cards / 37 records with 0 immediate unlocks. Compare full records, implicit
+   hosts and saved target contexts before selection. Other explicit-operand
+   gaps (fight, return-to-battlefield controllers and library choices) still
+   require audit before complete CR 609.7a aggregation.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   complete general aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-MANA-PRODUCTION`.

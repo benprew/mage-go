@@ -85,6 +85,15 @@
 // Their registrations save the live incarnation. Phasing suspends them;
 // departure ends them. A return needs a new registration.
 // [ChooseDamageSourceFromWaitingPersistentReplacementReferences] uses this category only.
+// [AddManaAmount], [AddManaOfAnyOneColor] and [AddRestrictedManaOfAnyOneColor]
+// declare explicit source reads in their amount to waiting delayed queries.
+// [AddManaToPlayer] and [AddManaOfProducedTypeToPlayer] also declare player reads.
+// Queries do not read amounts, choose colors or add mana. Zero amounts keep
+// explicit reads. Departure and phasing keep the saved incarnation until detection.
+// Returned sources cannot inherit a saved reference. Delayed frames save produced
+// mana types for each instance. Resolution and clones keep separate type slices.
+// Implicit attachments, opaque operands and future bodies do not infer reads.
+//
 // [Game.WaitingUntapSkipPermanentSources] reads exact sources of active
 // typed untap-step replacements. Queries use the replacement's live ability
 // and incarnation checks. Phasing, departure and ability removal stop them.
