@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-CONDITIONAL-OPERANDS` adds typed source declarations through
-conditional branches and waiting intervening-if conditions, plus scoped RON coin
-lowering and player-binding producer declarations. Seven protection names gain
-98 subrule cases; native declarations gain 31 operand cases. Compilation and
-full-card coverage are unchanged. General source aggregation, token grants and
-sticky layers remain gaps.
+`WAITING-DELAYED-RESOLUTION-CHOICES` adds typed source declarations through
+resolution-choice players, option conditions and option bodies, plus lexical RON
+choice players and scoped counter choices. Seven protection names gain subrule
+scenarios; native and RON tests cover purity, lifecycle, copying and player scope.
+Compilation and full-card coverage are unchanged. General source aggregation,
+remaining numeric/token operands, token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -48211,3 +48211,139 @@ Ranked next candidates:
    mana values. Reassess other multi-card candidates before either single card.
 
 This run stops after `WAITING-DELAYED-CONDITIONAL-OPERANDS`.
+
+## 2026-10-08: source operands of waiting resolution choices
+
+Status: completed slice `WAITING-DELAYED-RESOLUTION-CHOICES`. This run stops
+after this slice. Existing changes to `.gitignore`, the execution design and
+ledger reorganization, and untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's summary and appended entry are staged in the ledger; the
+user's relocation of older entries remains unstaged.
+
+### Fresh baseline and candidate selection
+
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+`go run ./cmd/loadcards -json` exited 1 with 1,978 compiled / 467 rejected records
+and 773 accepted / 213 rejected unique names. This is strict collection rejection,
+not a build failure. No partial production registry was installed.
+
+Complete records were inspected for the seven protection names, Master of the
+Hunt, Titania's Song, Dwarven Armorer, Urza's Avenger, Gabriel Angelfire and Island
+Sanctuary. Targeted vocabulary entries confirmed the exact choice, token and
+sticky-layer signatures. Reprints count once. Requirements came from RON.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: general damage-source aggregation | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: up to 7 unlocks | Not ready: waiting resolution choices omit explicit chooser, condition and body references. Numeric snapshots and token-creation operands also need declarations. All legal categories need a final audit before aggregation. | Large for the complete audit and aggregation |
+| Selected prerequisite: waiting resolution choices | Same 7 protection names: 0 immediate unlocks. Existing choice cards Dwarven Armorer, Urza's Avenger and Gabriel Angelfire gain regression evidence. | Removes a concrete shared source-enumeration gap. General ChooseADamageSource remains rejected. Island Sanctuary's draw replacement is separate. | Small: typed declarations, lexical player adapter and focused lifecycle tests |
+| Ranked #2: named-token quality grants | Master of the Hunt: 1 plausible unlock | NamedTokenWithPT already lowers; nested BandsWithOthers quality needs named identity/parameterized ability support and native band combat/clone evidence. | Medium |
+| Ranked #3: sticky layer lifecycle | Titania's Song: 1 plausible unlock | EachPermanentStickyLayerEffect needs departure retention, membership, ability loss and per-member mana values. Enables sticky global layer behavior. | Medium to large |
+
+Candidate #1 is not dependency-ready. Its bounded choice prerequisite supplies
+concrete downstream value for seven unique names and wins over the single-card
+alternatives. Contract, boundary and acceptance cases were stated before edits.
+No skills, delegation, Go-card fallback, generated stubs or source changes were
+used. No source defect or environment failure was found.
+
+### Exact signatures, supported contexts and engine reuse
+
+- `(*resolutionChoice).refersToSourcePermanent() bool` declares source reads from
+  its typed player, every `ResolutionOption.When` and every `ResolutionOption.Body`.
+  Nested choices use existing condition/effect declaration traversal.
+- `ChooseAtResolution(PlayerRef, ...ResolutionOption) ResolvingEffect` keeps its
+  public signature. `Game.WaitingDelayedPermanentSources() []DamageSource` reads
+  the new declaration through existing delayed frames, sequences and modes.
+- `buildResolutionChoiceFor([]effectFactory, []string, playerReferencePlan)
+  effectFactory` lowers counter and ability choices with the lexical player.
+  `buildResolutionChoice([]effectFactory, []string) effectFactory` preserves the
+  existing color and basic-land choice callers and their You context.
+- `compilePlayerEffect` and `compilePlayerActions` accept the existing counter-only
+  `ChooseAnAction([[PutCounters([ACounterOfTypeOnPermanent(PTCounter(p,t),
+  Ref_TargetPermanent)])], ...])` form inside PlayerAction and PlayerActions.
+  At least two alternatives are required. Target and counter validation remain
+  unchanged. PlayerActions alone declares ActionPlayer.
+- Existing `ChooseAnAbility([ability, ...])` plus adjacent
+  `CreatePermanentLayerEffectUntil(...,[AddAbilityVariable(TheChosenAbility)],...)`
+  retains its supported abilities and contexts, including delayed bodies and
+  nested coin branches. Fresh options use the enclosing lexical player.
+
+RON owns spelling, declaration validation, scope and lowering. Mage owns source
+read declarations and execution. Existing source capture, incarnation/LKI lookup,
+deduplication, option legality, clone and resolution-binding services are reused.
+No query evaluates a condition/value, chooses an option or executes a body.
+Unavailable and unselected options retain explicit reads. Implicit attachments,
+opaque predicates and not-yet-created future delays do not infer source reads.
+Phasing and departure retain the saved incarnation; return cannot replace it.
+One-shot trigger detection ends waiting availability. CR 400.7, 603.7 and 609.7a
+supply the identity/lifetime/source contracts. Payment rollback, replacement
+ordering and simultaneous operations use their existing services without changes.
+
+### Failing-first tests and card mappings
+
+Before implementation, the native portion of `go test ./pkg/mage
+./pkg/mage/dsl/ron -run 'Test(WaitingDelayedChoice|RONWaitingDelayedChoice)'
+-count=1` failed all four source-operand cases and the purity source assertion.
+`go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedChoice -count=1` failed all
+six delayed ability lifecycle cases and scoped counter lowering. Test setup errors
+using nonexistent target/P-T APIs were corrected before those semantic failures.
+A clone assertion was corrected to expect the clone's existing BasePlayer first
+option behavior rather than the original custom player's second option.
+No semantic acceptance check was weakened.
+
+| Tests | Mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedChoiceOperands | Typed chooser, unselected body, unavailable condition and nested choices; exact source, phasing, departure/return, retained color and independent clone lifetime |
+| TestWaitingDelayedChoicePurity | No callback/value/body/choice execution on queries; one condition and one choice at resolution; opaque, implicit and future-delay exclusions |
+| TestResolutionChoiceDeclarations | Existing invalid chooser, missing options/labels/bodies, unbound subject and branch binding escape rejection remains passing |
+| TestRONWaitingDelayedChoiceAbility | Six lifecycle/copy/clone cases with RON ChooseAnAbility; choice at resolution, exact saved source and no layer inheritance by returned objects |
+| TestRONWaitingDelayedChoiceScopedCounter | Both PlayerAction and PlayerActions; captured target, resolution controller after control change, correct option and counter effect |
+| TestRONWaitingDelayedChoiceScopedAbility | Nested scoped coin branch; choice by changed controller and one selected temporary ability |
+| TestRONWaitingDelayedChoiceInvalid | Three compile-time rejection cases for unbound player/target and invalid continuation |
+| TestRONWaitingDelayedChoiceProtection | Seven complete real records supply existing costs, source filters and shield bodies; departed source held only by a RON ability-choice body, payment failure, announcement/resolution timing, source identity, shield prevention/consumption and trigger lifetime |
+| TestRONResolutionChoice* | Complete Dwarven Armorer, Urza's Avenger and Gabriel Angelfire choice behavior and loading remain passing |
+
+Protection mappings establish subrules, not full-card gameplay. Their complete
+records still reject ChooseADamageSource. Island Sanctuary's unsupported draw
+replacement and Master of the Hunt/Titania's Song are comparison candidates only.
+RON files are unchanged, so no vocabulary refresh is needed. No Go definitions
+or DSL exports were removed; cutover and removal gates remain closed.
+
+### Verification and outcome
+
+- Focused RON choice and native waiting/resolution choice tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues; automatic changes reviewed and affected focused
+  tests rerun.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,978 compiled / 467
+  rejected records; 773 accepted / 213 rejected unique names**, out of 2,445
+  records / 986 names. Diagnostics match the baseline. First: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Gameplay evidence gains four native operand cases, purity/lifetime evidence,
+six RON lifecycle cases, two scoped counter cases, one scoped ability case,
+three invalid declarations and seven protection subrule scenarios. Compilation
+and complete-card coverage remain unchanged.
+
+Changed files: pkg/mage/waiting_delayed_choice.go,
+pkg/mage/waiting_delayed_choice_test.go,
+pkg/mage/dsl/ron/waiting_delayed_choice_test.go,
+pkg/mage/dsl/ron/resolution_choice.go, pkg/mage/dsl/ron/player_actions.go,
+pkg/mage/dsl/ron/compiler.go, pkg/mage/doc.go, docs/dsl-reference.md,
+docs/engine-rules-contracts.md, and this ledger.
+
+Ranked next candidates:
+
+1. General damage-source aggregation prerequisites: seven protection names,
+   up to seven downstream unlocks. Audit remaining typed operands; bounded
+   numberSnapshot value and token-creation player/count declarations are concrete
+   remaining gaps. Implement one dependency-ready prerequisite before aggregation.
+2. Named-token quality grants for Master of the Hunt: one plausible unlock;
+   named identity, BandsWithOthers combat and token clone evidence required.
+3. Sticky layer lifecycle for Titania's Song: one plausible unlock; source
+   departure retention, membership, ability loss and per-member mana values.
+   Reassess multi-card candidates before either single card.
+
+This run stops after `WAITING-DELAYED-RESOLUTION-CHOICES`.

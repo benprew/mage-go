@@ -45,7 +45,7 @@ func compileCounterChoice(n Node, ctx scope) (effectFactory, error) {
 			return nil, err
 		}
 	}
-	return buildResolutionChoice(plans, nil), nil
+	return buildResolutionChoiceFor(plans, nil, ctx.player), nil
 }
 
 func compileAbilityChoice(n, continuation Node, ctx scope) (effectFactory, error) {
@@ -106,10 +106,14 @@ func compileAbilityChoice(n, continuation Node, ctx scope) (effectFactory, error
 		}
 		labels[i] = ability.label()
 	}
-	return buildResolutionChoice(plans, labels), nil
+	return buildResolutionChoiceFor(plans, labels, ctx.player), nil
 }
 
 func buildResolutionChoice(plans []effectFactory, labels []string) effectFactory {
+	return buildResolutionChoiceFor(plans, labels, playerReferencePlan{})
+}
+
+func buildResolutionChoiceFor(plans []effectFactory, labels []string, player playerReferencePlan) effectFactory {
 	return func(bindings instanceBindings) mage.Effect {
 		options := make([]mage.ResolutionOption, len(plans))
 		for i, build := range plans {
@@ -120,6 +124,6 @@ func buildResolutionChoice(plans []effectFactory, labels []string) effectFactory
 			}
 			options[i] = mage.ResolutionOption{Label: label, Body: body}
 		}
-		return mage.ChooseAtResolution(mage.You, options...)
+		return mage.ChooseAtResolution(player.build(bindings), options...)
 	}
 }

@@ -1510,6 +1510,13 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "ChooseAnAction" {
+		build, err := compileCounterChoice(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "FlipACoin_OnLose" || n.Name == "FlipACoin_OnWinAndLose" {
 		build, err := compileCoinBranch(n, ctx)
 		if err != nil {

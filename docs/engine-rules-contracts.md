@@ -10878,3 +10878,27 @@ Evidence: `TestWaitingDelayedBranchOperands` (31 native operand forms),
 98 branch/lifecycle cases), `TestRONWaitingDelayedBranchScopedCoin`,
 `TestRONWaitingDelayedBranchInstances` and `TestRONWaitingDelayedBranchInvalid`.
 Complete protection records still reject unsupported general source aggregation.
+
+## Source operands of waiting resolution choices
+
+`ChooseAtResolution(PlayerRef, ...ResolutionOption) ResolvingEffect` declares
+explicit permanent source reads from its chooser, every `When` condition and
+every `Body` to `Game.WaitingDelayedPermanentSources() []DamageSource`.
+Nested choices use the same declaration. An unavailable or unselected option
+still refers to its declared objects under CR 609.7a. Queries do not call player
+choices, evaluate conditions or values, or execute bodies. Opaque predicates,
+implicit attachment references and future delays do not infer a source read.
+
+The saved delayed source retains its incarnation through phasing and departure;
+a returned card cannot replace it (CR 400.7 and 603.7c). Trigger detection ends
+one-shot waiting availability. Existing capture, information, deduplication,
+clone, option legality and per-resolution binding services remain in use.
+There is no new replacement, payment or simultaneous-operation contract.
+
+`TestWaitingDelayedChoiceOperands` and `TestWaitingDelayedChoicePurity` establish
+chooser/body/condition traversal, nested options, purity, phasing, departure and
+return, independent clone lifetimes and execution at resolution.
+`TestRONWaitingDelayedChoiceAbility`, `ScopedCounter`, `Invalid` and `Protection`
+establish RON lowering, copies, scoped players, compile-time rejection and seven
+real protection cost/filter/shield subrules. These subrules do not establish
+complete protection-card gameplay or complete general damage-source selection.

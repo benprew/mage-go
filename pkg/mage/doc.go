@@ -194,6 +194,12 @@
 // replace it. Bound and attached recipients do not declare a source reference.
 // Saved sequences and modes keep the declaration until the delay triggers.
 //
+// [ChooseAtResolution] declares explicit source reads in its player, all
+// option conditions and all option bodies to the same waiting query.
+// Queries do not evaluate conditions or choose an option. Unavailable and
+// unselected options keep their reads until the delayed ability triggers.
+// Future delays in option bodies keep their separate creation lifetime.
+//
 // [TapEach], [UntapEach], [ReturnEachToHand] and [DestroyEach] declare
 // explicit source reads in their typed collections to the same waiting query.
 // [DestroyEachWithoutRegeneration] uses the same declaration.

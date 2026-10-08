@@ -8363,3 +8363,23 @@ Evidence: `TestWaitingDelayedBranchOperands`, `TestWaitingDelayedBranchPurity`,
 `TestWaitingDelayedBranchIntervening` and `TestRONWaitingDelayedBranch*`.
 The seven protection names gain subrule evidence only. General source aggregation
 still rejects their complete RON records.
+
+### Waiting resolution choices and scoped counter choices
+
+RON `ChooseAnAction([[PutCounters([ACounterOfTypeOnPermanent(PTCounter(p,t),
+Ref_TargetPermanent)])], ...])` retains its existing counter-only body contract
+and requires at least two alternatives. It also works inside `PlayerAction`
+and `PlayerActions`, including already-created delayed trigger bodies. The
+lexical player chooses at resolution; `ActionPlayer` is declared only by
+`PlayerActions`. Targets remain typed, bound and captured by the existing delay.
+
+`ChooseAnAbility([ability, ...])` with its adjacent
+`CreatePermanentLayerEffectUntil(..., [AddAbilityVariable(TheChosenAbility)],
+...)` continuation retains its existing supported abilities and contexts.
+Both choice adapters build fresh options and use the lexical player plan.
+The shared helper for color and basic-land choices keeps its current callers.
+
+Mage declares source reads in every option body and condition, plus the chooser,
+for waiting delayed source enumeration. The query does not make a choice or
+check option availability. Unselected options retain explicit source references.
+This does not accept general `ChooseADamageSource` or arbitrary choice bodies.
