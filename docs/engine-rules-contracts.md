@@ -9122,3 +9122,46 @@ clearing and invalid declarations. RON `TestRONWaitingUntapSkipSourceProtection`
 activation copies, clone isolation, empty choices, actual Stasis entry after
 announcement, property rechecks and simultaneous damage shield consumption.
 These are category contracts, not seven complete production card unlocks.
+
+## Typed discard replacement lifecycle and source enumeration
+
+`DiscardToLibraryReplacement() ContinuousEffect` uses a typed layer-ability
+rule, with a declaration identity retained by clones. Each cycle registration
+captures its source incarnation. `discardToLibraryReplacement.currentSource`
+checks that incarnation, phasing and the matching declaration in current static
+abilities. Both execution and `Game.WaitingDiscardPermanentSources()` use this
+check. Departure, phasing and ability removal stop the rule. A phase cycle
+restores it; a return requires a fresh layer registration. A different discard
+ability cannot restore the old registration. The existing public caller form
+is preserved.
+
+Matching and optional payment read the current source controller, including
+when a registration predates a control change. Only effect-caused discards to
+the graveyard match. Acceptance changes the proposed destination to the library;
+decline preserves it. The shared pipeline checks other replacements again after
+that change. No new replacement priority or zone movement service is introduced.
+
+`Game.WaitingDiscardPermanentSources() []DamageSource` collects explicit source
+references from persistent and cycle lists, removes duplicate identities and
+returns separate current snapshots. Queries do not make choices, change layers
+or consume replacements. `ChooseDamageSourceFromWaitingDiscardReferences(
+PlayerRef, DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses shared
+binding validation, decisions, resolution frames and source-property filters.
+Missing players or candidates clear only its binding.
+
+CR 609.7a permits these explicit waiting references. CR 400.7 separates returned
+objects and CR 702.26b suspends phased objects. CR 616.1 and 616.1f supply existing
+affected-player ordering and replacement rechecks. Full source composition,
+zone-scoped and opaque references remain separate contracts.
+
+Evidence: `TestWaitingDiscardSourcesLifecycle` compares enumeration, matching
+and actual replacement execution with deliberately retained stale registrations,
+including control, departure with cleared LKI, phasing and ability removal.
+`Choices` covers filters, isolated bindings, invalid declarations and absent
+players. `Execution` covers actual accept/decline/cost discard movements and a
+second replacement that prevents the changed library move. `InvalidRegistrations`
+rejects wrong source, incarnation and ability identities. RON
+`TestRONWaitingDiscardSourceProtection`, `Invalid` and `TimingAndRechecks` cover
+seven protection names, failed payment, copied activations, cloned shields,
+resolution-time choice, property rechecks and simultaneous damage. This is
+bounded category evidence; full protection records still reject.

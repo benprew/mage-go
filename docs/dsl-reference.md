@@ -7197,3 +7197,27 @@ not complete CR 609.7a enumeration; production declarations remain rejected.
 Evidence: `TestWaitingUntapSkipSources*` and
 `TestRONWaitingUntapSkipSource*`, including actual RON Stasis as a source and
 full-record protection costs and prevention ASTs in a test-only category context.
+
+### Typed discard replacement source references
+
+`mage.DiscardToLibraryReplacement() ContinuousEffect` retains its existing
+calling form and now constructs a typed ability-layer effect. Its replacement
+requires the original live, unphased incarnation and matching static ability.
+Each effect-caused discard reads the current source controller. Declining keeps
+the normal discard; cost discards cannot use the optional replacement.
+
+`Game.WaitingDiscardPermanentSources() []DamageSource` reads exact explicit
+sources from both replacement lists without choices, callbacks or layer passes.
+`mage.ChooseDamageSourceFromWaitingDiscardReferences(player, filter, binding)`
+uses shared source filters, decisions and resolution bindings.
+RON `chosenDamageSourcePlan.waitingDiscardChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` with `You` and its instance binding.
+Empty lists and absent players clear only that binding. Complete production
+source choices still reject until the remaining CR 609.7a audit is complete.
+This does not lower Library of Leng's `ReplaceWouldDiscard` declaration.
+
+Evidence: `TestWaitingDiscardSourcesLifecycle`, `Choices`, `Execution` and
+`InvalidRegistrations`; `TestRONWaitingDiscardSourceProtection`, `Invalid` and
+`TimingAndRechecks`. Seven protection records supply their complete cost,
+choice and prevention ASTs in a test-only category context. This establishes
+category gameplay evidence, not complete production card loading.

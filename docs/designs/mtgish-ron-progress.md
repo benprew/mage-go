@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-UNTAP-SKIP-SOURCES` completes exact typed untap-step
-replacement sources, shared query/execution lifecycle and RON category lowering.
-Additional subrule evidence covers seven protection names and a RON Stasis source
-interaction, with zero full-card unlocks. Legacy cycle/zone and opaque references
-remain in the audit before complete source enumeration.
+unfinished. `WAITING-DISCARD-SOURCES` completes exact typed discard replacement
+sources, shared query/execution lifecycle and RON category lowering. Additional
+subrule evidence covers seven protection names, with zero full-card unlocks.
+Zone-scoped and opaque references remain in the audit before complete source
+enumeration. Library of Leng still needs its RON replacement adapter.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -42234,5 +42234,125 @@ Ranked next candidates:
    for eight names, followed by grants, named-token abilities and selective removal.
 3. Reverse Damage's actual prevented-amount operation after full enumeration;
    prove Jade Monolith's full gameplay with existing redirection lowering.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-07: exact typed discard replacement sources
+
+Status: completed implementation slice `WAITING-DISCARD-SOURCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected for all names below; identical
+reprints count once. The latest ranked #1 is dependency-ready for its bounded
+legacy discard category. No collection frequency was treated as an unlock count.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Exact legacy discard sources, selected from #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Library of Leng requires the underlying rule. | 0; protection choices still need zone and opaque-reference audit/composition. Library of Leng needs its `ReplaceWouldDiscard` compiler adapter. | Seven protection names need this category. Small typed lifecycle/query/choice/lowering change with native and RON tests; preserves existing callers. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria | 0 for a bounded formation prerequisite; five grants, named-token abilities and two selective removals need further adapters. | Eight names benefit; formation and combat assignment need a substantially larger engine/test contract. |
+| Reverse Damage result / Jade Monolith gameplay | Reverse Damage; Jade Monolith | 0 before complete source enumeration; Reverse Damage also needs actual prevented-amount life gain. Jade Monolith already has redirection lowering. | Two eventual names; prevention result/ordering and full source composition exceed this bounded slice. |
+
+Selection rationale: finish the next category in the first-ranked shared
+prerequisite, with concrete seven-card downstream value. Contract, reuse boundary
+and acceptance cases were stated before editing. RON owns syntax, validation and
+instance lowering. The engine owns lifecycle, identity, collection and decisions.
+No new production card is published with an incomplete choice category.
+
+### Exact signatures, context and engine reuse
+
+- `DiscardToLibraryReplacement() ContinuousEffect` keeps its public signature.
+  It now returns typed `discardToLibraryContinuous` with a declaration `ruleID`.
+  Each layer registration saves the source incarnation and declaration identity.
+- `discardToLibraryReplacement.currentSource(GameReader) *Permanent` is the
+  shared query/execution lifecycle check. It requires the original live,
+  unphased incarnation and matching current static ability. Ability removal or
+  replacement ends an old rule; a phase cycle restores it. A returned permanent
+  needs a new layer registration. Matching and the optional choice read the
+  current controller, including with a deliberately retained old registration.
+- `Game.WaitingDiscardPermanentSources() []DamageSource` reads explicit source
+  references from persistent and cycle lists, with shared exact deduplication
+  and separate current snapshots. Queries do not make choices or rebuild layers.
+- `ChooseDamageSourceFromWaitingDiscardReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  uses shared filtering, decisions, binding validation and resolution frames.
+- `chosenDamageSourcePlan.waitingDiscardChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and the plan's instance binding in the bounded category context. Full production
+  declarations continue to reject. Empty/nonmatching lists and absent players
+  clear only their result; missing bindings and reads before producers reject.
+
+Dependencies/reuse: typed static effects and cloning, current runtime abilities,
+exact permanent references and LKI, shared replacement collection and ordering,
+transactional activation costs, resolution frames, selected-source prevention and
+simultaneous damage. Effect-caused discards to the graveyard permit an optional
+library destination; cost discards do not. Declining preserves the action. The
+existing pipeline rechecks other replacements after acceptance. CR 609.7a permits
+waiting references; CR 400.7 separates returns; CR 702.26b suspends phased rules;
+CR 614.1 and 616.1/616.1f supply continuous replacement and recheck contracts.
+No Go-card fallback, name branch, declaration panic or registry relaxation was
+introduced. Library of Leng's RON replacement declaration remains unsupported.
+
+### Failing-first tests and card mappings
+
+Native and RON tests first failed for missing query/choice/lowering signatures.
+They passed after implementation; execution and invalid-registration cases were
+then added to verify the typed lifecycle and existing movement/recheck services.
+
+| Test / mapping | Contract evidence |
+| --- | --- |
+| `TestWaitingDiscardSourcesLifecycle` | Enumeration/matching/execution agreement with retained stale registrations: live, phase, phase cycle, departure with cleared LKI, return/new registration, current controller, ability removal; deduplication, separate snapshots, clone isolation and query purity. |
+| `TestWaitingDiscardSourcesChoices` | Exact filtered choices, unrelated-object exclusion, independent bindings, nonmatching and absent-player clearing; invalid player, binding, name and producer order. |
+| `TestWaitingDiscardSourcesExecution` | Actual effect discard acceptance/decline and cost discard destinations; another replacement prevents the changed library move; queries neither consume rules nor make choices. |
+| `TestWaitingDiscardSourcesInvalidRegistrations` | Wrong source, absent incarnation, wrong ability identity and a different live discard ability cannot restore an old rule. |
+| `TestRONWaitingDiscardSourceProtection` — all six Circles and Greater Realm | Complete-record activation cost and choice/prevention ASTs in a test-only category context; unpaid activation, copied activations, cloned shields, consumption and phased empty choices. Full records still reject. |
+| `TestRONWaitingDiscardSourceInvalid` | Invalid arity, color, filter and reference shape; missing binding and producer order. |
+| `TestRONWaitingDiscardSourceTimingAndRechecks` — Circle of Protection: Blue | Rule enters after announcement and is chosen at resolution; property mismatch retains the shield; matching simultaneous packets share it; cloned consumption remains independent. The source is a synthetic typed engine fixture. |
+
+The seven protection names have 31 reprint records. Library of Leng has six;
+its complete record was inspected, but this run claims only its engine service
+contract, not complete RON gameplay. Compilation gains were estimated at zero
+and measured at **0 unique names / 0 records**. Seven names gain this category's
+interaction evidence; complete-card gameplay totals do not change.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader exited 1 for unsupported collection records, not build failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDiscardSource -count=1` and
+  `go test ./pkg/mage -run TestWaitingDiscardSources -count=1`: PASS after
+  expected missing-signature failures. Existing discard-to-library test also passed.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic formatting was reviewed; both focused
+  test commands passed again afterward.
+- `git diff --check`: PASS, including final ledger and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  diagnostics match baseline. Strict collection loading still rejects atomically.
+
+No environment failure or new source defect was found. All 12 RON hashes match
+the vocabulary snapshot, so no source/vocabulary refresh is needed. Runtime
+cutover, Go-card deletion and unused DSL removal gates remain unmet.
+
+Changed files: `action_discard.go`, new `waiting_discard.go` and native tests;
+`damage_source_choice.go`, `doc.go`; `dsl/ron/chosen_source_filter.go` and new
+RON tests; DSL reference, rules contracts and ledger summary/entry.
+
+Ranked next candidates:
+
+1. Exact zone-scoped waiting exile references: audit
+   `exileInsteadOfGraveyardReplacement` card identity/continuation and shared
+   query/execution lifecycle. Then audit opaque callbacks before full CR 609.7a
+   source composition. Do not repeat the completed typed discard category.
+2. Parameterized bands with others as the formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount operation after full enumeration;
+   prove Jade Monolith's full RON gameplay with existing redirection lowering.
 
 Migration completion gates remain unmet. The commit hash is in the final reply.

@@ -40,46 +40,89 @@ func (a *DiscardAction) withDestination(destination Zone) *DiscardAction {
 
 type discardToLibraryReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	incarnation uuid.UUID
+	ruleID      uuid.UUID
 }
 
-func (r *discardToLibraryReplacement) Matches(action Action, _ GameReader) bool {
+func (r *discardToLibraryReplacement) currentSource(g GameReader) *Permanent {
+	source := g.FindPermanent(r.sourceID)
+	if source == nil || source.PhasedOut || source.incarnationID != r.incarnation {
+		return nil
+	}
+	for _, ability := range source.RuntimeAbilities {
+		if holder, ok := UnwrapAbility(ability).(*StaticAbilityHolder); ok {
+			for _, effect := range holder.Effects {
+				if rule, ok := effect.(*discardToLibraryContinuous); ok && rule.ruleID == r.ruleID {
+					return source
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (r *discardToLibraryReplacement) Matches(action Action, g GameReader) bool {
 	discard, ok := action.(*DiscardAction)
-	return ok && discard.CausedByEffect() && discard.PlayerID() == r.playerID && discard.Destination() == ZoneGraveyard
+	source := r.currentSource(g)
+	return ok && source != nil && discard.CausedByEffect() && discard.PlayerID() == source.ControllerID() && discard.Destination() == ZoneGraveyard
 }
 
 func (r *discardToLibraryReplacement) Replace(action Action, g *Game) Action {
-	discard := action.(*DiscardAction)
-	player := g.GetPlayer(r.playerID)
+	source := r.currentSource(g)
+	if source == nil {
+		return action
+	}
+	player := g.GetPlayer(source.ControllerID())
 	if player == nil || !player.ChooseMayAbility("put discarded card on top of your library instead") {
 		return action
 	}
-	return discard.withDestination(ZoneLibrary)
+	return action.(*DiscardAction).withDestination(ZoneLibrary)
 }
 
 func (r *discardToLibraryReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	return r.currentSource(g) != nil
 }
 
 func (r *discardToLibraryReplacement) Clone() ReplacementEffect {
-	return &discardToLibraryReplacement{
-		replacementBase: replacementBase{sourceID: r.sourceID, duration: r.duration},
-		playerID:        r.playerID,
-	}
+	clone := *r
+	return &clone
 }
 
-// DiscardToLibraryReplacement creates a continuous optional replacement for
-// effect-caused discards by the source's controller.
+// DiscardToLibraryReplacement permits effect-caused discards to go to the library.
+// The source's current controller makes each optional choice.
 func DiscardToLibraryReplacement() ContinuousEffect {
-	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		source := g.FindPermanent(sourceID)
-		if source == nil {
-			return nil
-		}
-		g.effects.AddCycleReplacement(&discardToLibraryReplacement{
-			replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-			playerID:        source.ControllerID(),
+	return &discardToLibraryContinuous{ruleID: uuid.New()}
+}
+
+type discardToLibraryContinuous struct {
+	effectSource
+	ruleID uuid.UUID
+}
+
+func (*discardToLibraryContinuous) Text() string {
+	return "you may discard to the top of your library instead"
+}
+func (*discardToLibraryContinuous) Properties() EffectProperties { return EffectProperties{} }
+func (*discardToLibraryContinuous) GetLayer() Layer              { return LayerAbility }
+func (*discardToLibraryContinuous) GetDuration() Duration        { return WhileOnBattlefield }
+func (e *discardToLibraryContinuous) IsActive(g *Game) bool {
+	source := g.FindPermanent(e.sourceID)
+	return source != nil && !source.PhasedOut
+}
+func (e *discardToLibraryContinuous) inspectDefinition() definitionNode {
+	return definitionNode{Role: "static-discard-replacement", Text: e.Text(), battlefieldSource: true}
+}
+func (e *discardToLibraryContinuous) ApplyContinuous(ctx *EffectContext) error {
+	source := ctx.Game.FindPermanent(e.sourceID)
+	if source != nil && !source.PhasedOut {
+		ctx.Game.effects.AddCycleReplacement(&discardToLibraryReplacement{
+			replacementBase: replacementBase{sourceID: source.ID(), duration: WhileOnBattlefield},
+			incarnation:     source.incarnationID, ruleID: e.ruleID,
 		})
-		return nil
-	})
+	}
+	return nil
+}
+func (e *discardToLibraryContinuous) cloneEffect() ContinuousEffect {
+	clone := *e
+	return &clone
 }

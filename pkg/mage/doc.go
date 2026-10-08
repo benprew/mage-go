@@ -76,6 +76,11 @@
 // typed untap-step replacements. Queries use the replacement's live ability
 // and incarnation checks. Phasing, departure and ability removal stop them.
 // [ChooseDamageSourceFromWaitingUntapSkipReferences] uses this category only.
+// [Game.WaitingDiscardPermanentSources] reads exact sources of active typed
+// discard-to-library replacements. The saved incarnation and live ability
+// control execution and enumeration. Phasing and ability removal stop the rule.
+// Each discard reads the current controller. A return needs a new registration.
+// [ChooseDamageSourceFromWaitingDiscardReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.
