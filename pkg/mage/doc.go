@@ -187,6 +187,12 @@
 // incarnations and spell identities cannot follow returned objects.
 // These categories do not enumerate references hidden in effect callbacks.
 //
+// [Mill] declares source reads in its typed player and amount to
+// [Game.WaitingDelayedPermanentSources]. Queries do not read the amount,
+// call mill modifiers or move cards. Zero amounts keep the reference.
+// Departure and phasing keep the saved incarnation; a return cannot replace it.
+// Implicit attachments and future delayed bodies keep separate boundaries.
+//
 // [Game.WaitingDelayedPermanentSources] includes the saved source when
 // [DealDamageFrom] or a packet in [DealDamagePackets] uses [This] as recipient.
 // Queries do not read amounts or resolve recipients. A zero amount keeps the

@@ -2976,7 +2976,11 @@ func (*millSubjectEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 func (e *millSubjectEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	if amount, ok := e.amount.(fixedValue); ok && amount.n < 0 {
+		n.problem = "supply a nonnegative mill count"
+	}
+	return n
 }
 func (e *millSubjectEffect) Apply(ctx *EffectContext) error {
 	id, ok := e.subject.resolvePlayer(ctx)

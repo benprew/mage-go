@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TOKEN-BANDS-QUALITY` supports token bands-with-other abilities with independent
-quality grants and source state. Master of the Hunt gains complete-record RON
-gameplay evidence and is the one new compiled card.
+`WAITING-DELAYED-MILL-OPERANDS` retains explicit source reads in delayed mill
+players and amounts, and lowers scoped mill amounts through typed values.
+No new card compiles; seven protection subrules gain mill-reference evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49378,3 +49378,136 @@ Ranked next candidates:
    General source aggregation remains its prerequisite.
 
 This run stops after `TOKEN-BANDS-QUALITY`.
+
+## 2026-10-08: waiting delayed mill operands and scoped amounts
+
+Status: completed implementation slice `WAITING-DELAYED-MILL-OPERANDS`.
+This run stops after this slice. Existing changes to `.gitignore`, the execution
+design and the ledger reorganization, plus untracked `mtgish-ron-completed.md`,
+are preserved. Only this run's summary and appended entry are staged.
+
+### Candidate comparison and selection
+
+Complete RON records and nested forms were inspected for all names below.
+Reprints count once. Fresh baseline: `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` PASS; loader exit 1 is collection rejection,
+not a build failure. Baseline totals: 1,981 compiled / 464 rejected records and
+776 accepted / 210 rejected unique names.
+
+| Candidate | Distinct affected names and estimated full-card gain | Blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, bounded explicit-reference prerequisite for general source choice | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith. This bounded slice: 0 unlocks. Complete aggregation: 8 plausible unlocks / 37 records. | General source choice is not dependency-ready: typed delayed mill operands are omitted from declaration queries. Other explicit operands and opaque callback boundaries still need an audit. The selected mill contract advances the complete legal source list used by all eight cards. Existing prevention and selected-source redirection adapters handle their nested bodies. | Small complete slice: one engine declaration method, action value lowering, declaration validation and lifecycle/gameplay tests. Full aggregation remains a larger separate slice. |
+| Sticky layer lifecycle | Titania's Song: 1 plausible unlock / 2 records. | Needs retained source-departure effects, shared membership across type/ability/P/T layers and per-member mana values. Enables sticky animation; it cannot reuse a temporary effect without establishing its lifecycle. | Larger engine lifecycle and layer suite. |
+| Chosen-source partial prevention | Dark Sphere: 0 immediate unlocks; 1 downstream unlock / 1 record. | General source aggregation is still required. Half-rounded-down actual prevention, source property rechecks and shield consumption need their own contract. | Medium prevention/replacement suite after the source-choice prerequisite. |
+
+The selected shared prerequisite has concrete downstream multi-card value.
+The audit found `millSubjectEffect` carries typed PlayerRef and ResolutionValue
+operands but has no `refersToSourcePermanent` contract. The RON action adapter
+also accepts only fixed integers despite the engine's existing typed mill amount.
+These are separate engine declaration and compiler adapter gaps, not data defects.
+Further inspected explicit operand gaps include `loseUnspentManaEffect` and
+library inspection/shuffle players. Combat-exit operands also need the remaining
+audit. This run does not claim the audit or general aggregation is complete.
+
+### Exact signatures, contexts and reuse
+
+- Existing engine `Mill(PlayerRef, ResolutionValue) ResolvingEffect` now declares
+  source reads in both operands to `Game.WaitingDelayedPermanentSources()`.
+  Private `(*millSubjectEffect).refersToSourcePermanent() bool` uses the shared
+  typed player/value walkers. It runs no operand, modifier or player choice.
+- `MillNumberCards(value)` in resolving player scopes lowers through existing
+  `compileInstanceValue(Node, scope) (valueFactory, error)`, with per-instance
+  bindings. Bare actions, PlayerAction and PlayerActions can use scoped values,
+  including source/target power or mana value, arithmetic and saved numbers.
+  Delayed bodies retain their existing lexical context and exact captures.
+- `compileMillAction(Node, scope) ([]effectFactory, error)` checks arity and
+  preserves fixed-integer validation before lowering. Optional mill costs still
+  require positive fixed integers through `compileMillCount`; dynamic costs
+  and all-player milling remain rejected.
+- Native mill definition validation rejects a negative direct Fixed declaration,
+  as well as missing player/amount declarations. Computed nonpositive amounts
+  use the existing no-operation behavior.
+- Queries retain source declarations even for zero amounts; departure, return,
+  phasing, control changes and game clones use existing captured incarnations,
+  retained facts, snapshot copies and delayed trigger lifetimes. Trigger detection
+  ends waiting availability. Implicit attachments, opaque callbacks and future
+  nested delays do not infer a source reference.
+- Resolution reads the amount once, then uses the existing mill modifier and
+  owner-order batch service. Copies and distinct factories keep separate target
+  bindings. Current or exact LKI reads do not follow a returned target. A saved
+  delayed body does not choose new targets when its former target gains shroud.
+
+Rules evidence: local CR 400.7, 603.7a–e, 609.7a–b, 701.17a–b and 702.26.
+No parallel zone, payment, source enumeration or replacement-order system was
+added. RON source is unchanged; no vocabulary snapshot refresh is required.
+API and rules-contract docs describe only the established mill behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, all seven player-operand lifecycle cases failed because
+waiting queries omitted the source. All dynamic amount and zero-amount cases
+failed with `unsupported fixed mill amount`. Native controller, owner, amount
+and zero-amount cases failed with an empty waiting source list; the pure query
+case failed for the same omission. The seven real-record protection subrules
+also failed at their synthetic delayed mill producer's dynamic amount.
+
+A copied test extraction initially included an unrelated duplicate test; it was
+removed before confirming the seven intended failures. The new instance test's
+Controller field was corrected to ControllerID before validation. After initial
+lowering, the native invalid-declaration test exposed acceptance of a negative
+Fixed mill count; definition validation now rejects it. Tests were not weakened.
+
+| Card / test | Evidence |
+| --- | --- |
+| TestWaitingDelayedMillOperands | Controller, owner, amount and computed-zero operands retain one exact source through live, phase cycle, departure with cleared transient LKI and return. Mutable query facts and clone lifetimes are independent. |
+| TestWaitingDelayedMillPurityAndScope | Repeated queries read no amount and move no cards. Resolution reads the amount once and mills as much as possible from the correct player. Implicit attachments and future bodies supply no inferred reference; nil and negative declarations reject. |
+| TestRONWaitingDelayedMillGameplay | 21 operand/lifecycle combinations, each also resolved in a clone: source creation at resolution, player versus amount reads, live/departed/returned/phased/control/copy/clone state, zero amounts, exact identity and independent wait lifetimes. |
+| TestRONWaitingDelayedMillInstances | Distinct factory/target frames and a copied activation; a changed power is read at delayed resolution, departed target uses exact LKI, returned target cannot replace it, shroud does not retarget the saved body, clone does not consume original state. |
+| TestRONWaitingDelayedMillModifiers | Positive and negative computed amounts use existing mill behavior; queries never call modifiers, positive resolution applies its modifier once. |
+| TestRONWaitingDelayedMillInvalid | Eleven malformed, unbound, wrong-role and unsupported dynamic-cost declarations reject. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedMillProtection | Complete source records supply real costs, filters and shields. A departed, zero-amount delayed mill operand is chosen from the waiting category at resolution. Failed payment makes no choice; damage is prevented once and the shield is consumed. Each full record still rejects general ChooseADamageSource. This is subrule evidence, not full-card acceptance. |
+| Millstone / TestRONMillstone, TestRONMillRealCardOwnerOrder | Both complete RON records retain native mill behavior, target legality, activation cost and owner ordering. |
+| Deep Spawn / TestRONDeepSpawnPayment, UnpaidIdentity, ShroudUntap, NativeUpkeep, TestRONMillRealCardOwnerOrder | Complete FEM record retains optional mill payment, unpaid sacrifice, original identity, upkeep timing, shroud/untap behavior and owner ordering. |
+
+### Verification and measured outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedMill -count=1`: PASS.
+- Expanded focused RON mill/Deep Spawn and native waiting-mill/mill suites: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only format the new test import
+  groups; production code is unchanged by lint. Post-lint focused tests: PASS.
+- `git diff --check`: PASS, including this entry and the staged ledger delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict collection
+  rejection. Final JSON is identical to fresh baseline JSON, including all issues.
+
+Estimated and actual gains agree: **0 full-card unlocks / 0 new compiled records**.
+Final totals: **1,981 compiled / 464 rejected records; 776 accepted / 210 rejected
+unique names**. The first diagnostic remains Animate Dead's unsupported
+EnchantGraveyardCard. Accepted records retain their regression evidence; new
+mill operand gameplay and seven protection subrule mappings are separate from
+collection compilation and full-card validation. No partial registry is installed.
+
+No source defect or environmental failure was found. Complete collection
+execution, runtime cutover, Go-card deletion and unused DSL cleanup remain
+unfinished. Their removal gates are not met; existing callers are preserved.
+
+Changed files: `pkg/mage/dsl/ron/mill.go`, `waiting_delayed_mill_test.go`;
+`pkg/mage/composable_actions.go`, `waiting_delayed_mill.go`,
+`waiting_delayed_mill_test.go`, `doc.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Complete the bounded explicit operand audit, starting with delayed mana-player
+   operands and library inspection/shuffle players, then CR 609.7a aggregation
+   and scoped RON source choice. Six Circles, Greater Realm and Jade Monolith
+   remain 8 plausible unlocks / 37 records. Keep general source choice rejected
+   until the legal source list and opaque callback boundary are complete.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records;
+   source departure retention, shared membership and per-member mana values.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   exact-source rechecks, half-rounded-down prevention and shield consumption.
+   General source aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-MILL-OPERANDS`.

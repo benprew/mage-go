@@ -11169,3 +11169,40 @@ phase cycles, restoration and nil-subject rejection. RON tests
 cover the full Master of the Hunt record, costs, timing, copied activations,
 changed source controller/incarnation, token-card copies, named/type qualities,
 attacking and blocking damage decisions, prevention and invalid declarations.
+
+
+## Waiting delayed mill operands and scoped amounts
+
+`Mill(PlayerRef, ResolutionValue) ResolvingEffect` declares explicit source
+reads from its player and amount to `Game.WaitingDelayedPermanentSources()`.
+The shared typed operand walkers inspect declarations only. Queries do not
+resolve players, read amounts, call mill modifiers, choose graveyard order or
+move cards. Zero computed amounts retain the declaration. Saved sequences and
+modes use the existing delayed-body traversal. Implicit attachment references,
+opaque callbacks and future delayed bodies do not infer source reads.
+
+CR 400.7, 603.7a–e, 609.7a–b and 702.26 govern identity and availability.
+Departure information remains tied to the saved incarnation. Phasing retains
+that reference. Trigger detection ends its waiting availability; game clones
+keep independent lifetimes and card facts. Source choices still require the
+complete CR 609.7a aggregation before general RON choice can be accepted.
+
+RON `MillNumberCards(value)` lowers through `compileInstanceValue` in resolving
+player scopes, including delayed bodies. The player and amount use per-instance
+bindings. Reads occur at resolution, with exact LKI where the selected value
+requires it. Returned target objects cannot replace saved targets; gaining
+shroud does not retarget a saved delayed body. Explicit negative integer counts
+remain rejected. Native `Mill` also rejects a negative `Fixed` declaration.
+A nonpositive computed amount moves no cards. Optional mill costs retain their
+positive fixed-count shape and transaction contract. All-player milling remains
+unsupported.
+
+CR 701.17a–b milling uses the existing shared mill service, modifiers and owner
+ordering. This slice adds no replacement ordering policy or zone service.
+Evidence: `TestWaitingDelayedMillOperands`, `TestWaitingDelayedMillPurityAndScope`,
+`TestRONWaitingDelayedMillGameplay`, `Invalid`, `Instances`, `Modifiers` and
+`Protection`. The protection test reads all seven complete source records and
+executes their real costs, filters and shields against a departed delayed mill
+operand. It proves those subrules only; full records remain rejected.
+`TestRONMillstone`, `TestRONDeepSpawn*`, `TestRONMillModifiersAndPaymentFrames`
+and `TestRONMillRealCardOwnerOrder` retain complete-record mill evidence.

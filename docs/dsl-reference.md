@@ -3677,14 +3677,23 @@ card-definition validation. Missing players perform no actions or choices.
 HumanPlayer displays private cards and supplies ordering choices through its
 own choice channels. The Player interface remains unchanged.
 
-## RON fixed milling
+## RON milling
 
 `MillNumberCards(Integer(n))` supports a nonnegative fixed count in resolving
 player actions, including `PlayerAction(player, ...)` and `PlayerActions`.
 The enclosing player scope supplies the subject. A bare action uses the ability
 controller. Typed player targets and local `ActionPlayer` bindings remain
-separate between instances and copies. Dynamic counts and all-player milling
-are not supported by this adapter.
+separate between instances and copies. `MillNumberCards(value)` also accepts
+scoped resolution values through the shared value compiler, including
+`PowerOfPermanent`, `ManaValueOfPermanent`, arithmetic and bound number reads.
+The amount is read once at resolution before mill modifiers apply. Nonpositive
+computed amounts move no cards. All-player milling remains unsupported.
+
+Waiting delayed mill bodies declare explicit source reads from their player and
+amount without evaluating either operand. A zero amount retains the declaration.
+Departure and phasing preserve the saved incarnation; a returned card cannot
+replace it. Implicit attachments and future delayed bodies supply no inferred
+source read.
 
 `MayCost(MillNumberCards(Integer(n)))` and
 `PlayerMayCost(player, MillNumberCards(Integer(n)))` require a positive fixed

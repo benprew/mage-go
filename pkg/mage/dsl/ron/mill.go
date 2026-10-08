@@ -24,11 +24,19 @@ func compileMillCount(n Node, cost bool) (int, error) {
 }
 
 func compileMillAction(n Node, ctx scope) ([]effectFactory, error) {
-	amount, err := compileMillCount(n, false)
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	if n.Args[0].Name == "Integer" {
+		if _, err := compileMillCount(n, false); err != nil {
+			return nil, err
+		}
+	}
+	amount, err := compileInstanceValue(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.Mill(ctx.player.build(bindings), mage.Fixed(amount))
+		return mage.Mill(ctx.player.build(bindings), amount(bindings))
 	}}, nil
 }
