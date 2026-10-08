@@ -9864,3 +9864,29 @@ ability source match each real record's filter. This is category evidence,
 not complete-card gameplay evidence. Invalid order and absent instance bindings
 remain errors. Existing event/death/delayed tests now require the resolving
 object's own reference and still require its removal after body completion.
+
+## Waiting delayed single-recipient damage sources
+
+CR 609.7a permits an object referred to by a waiting delayed triggered ability
+as a chosen damage source. `Game.WaitingDelayedPermanentSources` now includes
+the exact source of single-recipient `DealDamageFrom` instructions using `This`
+or `DamageSourceOf(This)`. Neither a zero amount nor an absent recipient removes
+the declaration. Enumeration does not execute an instruction or inspect a
+callback. Existing sequence, captured-body and modal traversal applies.
+
+CR 603.7a and 603.7b set creation and one-shot waiting lifetimes. The original
+source incarnation and saved controller use the existing delayed-frame service
+(CR 603.7e). Current facts, phasing facts and departure LKI use the existing
+exact permanent reader; CR 400.7 excludes returned incarnations. Bound source
+reads and nested future-delay bodies do not imply a direct self reference.
+Invalid or uncaptured source identities produce no candidates. Separate queries
+and clones do not share mutable facts. Damage and shield execution still use
+the shared engine pipeline, including CR 609.7b property rechecks.
+
+Native evidence: `TestWaitingDelayedDamageBodySources` (42 source/shape/state
+cases), `TestWaitingDelayedDamageBodyBoundaries`, and
+`TestWaitingDelayedDamageBodyPermanentRecipient`. RON evidence:
+`TestRONWaitingDelayedDamageBodyProtection` (49 real-record subrule cases), and
+`TestRONWaitingDelayedDamageBodyInvalid`. The seven protection records still
+reject general source choice. This contract does not complete aggregation or
+the remaining opaque-reference audit.

@@ -7624,3 +7624,37 @@ ability source match each real record's filter. This is category evidence,
 not complete-card gameplay evidence. Invalid order and absent instance bindings
 remain errors. Existing event/death/delayed tests now require the resolving
 object's own reference and still require its removal after body completion.
+
+### Waiting delayed damage-body source references
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes the exact
+permanent source when a waiting body contains single-recipient
+`DealDamageFrom(This, recipient, amount)` or
+`DealDamageFrom(DamageSourceOf(This), recipient, amount)`. The recipient can
+be a player or permanent. Zero damage still declares the source reference.
+Sequences, captured delayed bodies and modes use the existing declaration
+traversal. Enumeration does not resolve the recipient, amount or body.
+
+RON's private
+`chosenDamageSourcePlan.waitingDelayedPermanentChoice(instanceBindings)
+mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+`mage.You` and the instance's `*mage.DamageSourceBinding` to
+`ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect`. Existing `CreateFutureTrigger` and
+`PermanentDealsDamage(ThisPermanent, value, recipient)` lowering supplies the
+delayed source read. General source choice remains rejected until all required
+reference categories and their aggregation have complete contracts.
+
+The original source incarnation supplies current or retained information after
+phasing or departure. A returned card cannot replace it. Registration occurs
+at resolution, and one-shot detection ends this waiting category. Clones keep
+separate frames. Other bound damage sources keep their separate saved-frame
+contract. A future nested delay does not declare its source for an outer delay.
+
+Evidence: `TestWaitingDelayedDamageBodySources`, `Boundaries` and
+`PermanentRecipient` cover both native source forms, sequences, modes, exact
+identity, LKI, control and color changes, phasing, clones, invalid declarations,
+zero amounts and permanent recipients. `TestRONWaitingDelayedDamageBodyProtection`
+maps the real filters, costs and future shields of all six Circles and Greater
+Realm to 49 scenarios with a compiled synthetic RON damage-only delayed source.
+These are subrule scenarios, not complete-card coverage.

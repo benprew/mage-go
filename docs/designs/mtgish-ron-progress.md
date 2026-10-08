@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`RESOLVING-OBJECT-REFERENCES` retains exact permanent and spell references
-through body completion, nested resolution and clones across six source queries.
+`WAITING-DELAYED-DAMAGE-BODY-SOURCES` declares the exact permanent source
+of single-recipient damage-only delayed bodies, through sequences and modes.
 Seven protection names gain 49 real-record subrule scenarios; compilation and
-complete-card coverage are unchanged. Opaque and remaining typed references
-still need audit before full source aggregation. Token quality grants remain
+complete-card coverage are unchanged. Remaining typed and opaque references
+still need audit before general source aggregation. Token quality grants remain
 unsupported. Titania's Song needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -44657,3 +44657,135 @@ Ranked next candidates:
    remain required; Jade Monolith and Reverse Damage benefit downstream.
 3. Named-token quality grants for Master of the Hunt: one plausible unlock;
    reuse native quality/band services with token instance/clone gameplay.
+
+## 2026-10-08: waiting delayed single-recipient damage source reads
+
+Status: completed implementation slice `WAITING-DELAYED-DAMAGE-BODY-SOURCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and ledger, and untracked `mtgish-ron-completed.md`, are preserved. The
+commit stages only this run's summary changes and appended entry in the ledger;
+it does not stage the user's ledger reorganization.
+
+### Candidate comparison and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, the ledger's top status
+and latest entry, targeted vocabulary signatures, source-reference API/rules
+contracts, selected compiler/engine code and complete canonical RON records.
+The seven shared names are Circle of Protection: Artifacts, Black, Blue, Green,
+Red and White, and Greater Realm of Preservation. Reprints count once.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, bounded remaining typed-reference prerequisite (selected) | Seven protection names above; **0** immediate unlocks | Existing waiting queries declare destruction/sacrifice/return self reads, but omit a damage-only delayed body's self source. Exact capture, LKI, sequence/mode traversal and prevention are ready. Supplies a required category for general choice on all seven names. Other typed and opaque references still need audit. | Small: one declarative native adapter, one scoped RON adapter, native identity/boundary tests and seven real-record subrule mappings. |
+| Ranked #2, complete CR 609.7a aggregation | Same seven names; **7** estimated full-card unlocks | Not dependency-ready: the selected gap and remaining typed/opaque declarations prevent complete enumeration. Cross-category ordering and deduplication still need proof. Jade Monolith and Reverse Damage benefit downstream; the latter's extra GainLife operation is a separate blocker, so neither is added to this estimate. | Larger: complete reference audit plus aggregator and full-record activation tests. |
+| Ranked #3, named-token quality grants | Master of the Hunt; **1** plausible full-card unlock | Complete record nests NamedTokenWithPT, PT, Green, Creature, Wolf and BandsWithOthers with a creature/name conjunction. Native quality/band services exist; token ability lowering and instance/clone combat proof remain. No other nested blocker identified. | Small to medium: token adapter and formation/damage/clone tests. |
+
+A concrete shared prerequisite wins over single-card work. The selected context
+is the exact permanent source read in a waiting delayed single-recipient damage
+instruction. It is not a claim to finish the entire ranked #1 audit. No new
+production source chooser is enabled. Estimated and actual compilation gains
+are both **0 unique names / 0 records**. The seven names gain **49** real-record
+subrule scenarios; full-card gameplay coverage is unchanged. Existing accepted
+records continue to pass the RON package and repository suites.
+
+### Exact shapes, dependencies and reuse boundary
+
+- Existing `CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,
+  ActionList([PermanentDealsDamage(ThisPermanent, value, recipient)]))`
+  lowering uses `AtNext` and `DealDamageFrom(DamageSourceOf(This), ...)`.
+  Existing supported step patterns and single-player/permanent recipients keep
+  their existing contracts. This slice adds no RON spelling or source correction.
+- `(*damageFromEffect).refersToSourcePermanent() bool` declares direct `This`
+  and `DamageSourceOf(This)` reads through the existing typed waiting-reference
+  interface. Other source bindings do not imply a self source. Amount and
+  recipient are not resolved during enumeration. A zero amount still refers
+  to the source; CR 609.7a does not require that it can deal damage.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` uses that declaration
+  through existing sequences, captured bodies and modes. It keeps its signature.
+- `chosenDamageSourcePlan.waitingDelayedPermanentChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+  `mage.You` and the instance binding into the existing
+  `ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect`.
+
+RON owns arity/filter/scope checks and per-instance lowering. Mage owns pure
+reference enumeration, exact source capture, live/phasing/departure information,
+registration lifetime, deduplication, choice, cloning, damage and shields.
+No callback is run to discover a reference. No global last-action slot or
+second identity/history store is added. Nested future-delay bodies are not
+references of an outer waiting delay. Invalid or uncaptured incarnations supply
+no candidates. Self damage bodies with permanent recipients also qualify.
+
+Creation occurs at resolution; one-shot detection removes the waiting category.
+Departure and phasing retain the original incarnation. A returned card cannot
+replace it. Current control/color can change the query information; execution
+keeps the delayed ability's saved controller. Clones keep separate waiting
+frames and facts. Chosen prevention still uses the shared replacement pipeline,
+exact source identity, current/departure property rechecks and consumption.
+Rules evidence: local CR 400.7, 603.7a–e and 609.7a–b.
+
+### Failing-first tests and card mapping
+
+Native tests first failed on missing self-source candidates. The initial fixture
+used the wrong opponent symbol and then only one mode; those fixtures were
+corrected to use `You` and the required two modes. Against the unchanged engine,
+all **42** source/shape/state cases then failed the intended source assertion,
+and the zero-damage/duplicate case failed. RON first failed compilation on the
+missing scoped lowering method. After that adapter was added, all **49**
+real-record scenarios failed against unchanged mechanics (42 source-choice
+assertions and seven clone/prevention assertions). No acceptance assertion was
+weakened.
+
+| Test | Card mapping / acceptance evidence |
+| --- | --- |
+| `TestWaitingDelayedDamageBodySources` | Both native self-source forms; direct body, nested sequences and modes; 42 live/departed/returned/phased/phase-cycle/color/control cases. Exact incarnation, current/LKI facts, query isolation, no early damage, clone state, waiting lifetime and original controller at execution. |
+| `TestWaitingDelayedDamageBodyBoundaries` | Unrelated/bound sources, nested future bodies, invalid/uncaptured incarnations, duplicate self reads, zero damage and invalid native source declarations. |
+| `TestWaitingDelayedDamageBodyPermanentRecipient` | Self source with a permanent recipient: enumeration before damage, then actual damage to the permanent. |
+| `TestRONWaitingDelayedDamageBodyProtection` | Circle of Protection: Artifacts/Black/Blue/Green/Red/White and Greater Realm; seven states each, 49 cases. Each complete record supplies its real filter, activation payment and future shield. A fully compiled synthetic RON artifact supplies a damage-only delayed body. Tests payment failure, resolution-time choice, exact departed/returned/phased identity, copied delay deduplication and independent damage, clone lifetime, actual prevention and shield consumption. Full records still reject general aggregation. |
+| `TestRONWaitingDelayedDamageBodyInvalid` | Missing instance binding, read-before-choice, invalid choice arity, incompatible source filter, colorless color filter and empty conjunction remain rejected. |
+| Existing delayed-body/source tests and whole suite | Retain prior destruction/sacrifice/return declarations, modal/APNAP behavior, saved bindings, legality, transactional payments, simultaneous damage and replacement ordering. |
+
+### Verification
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected collection exit 1; **1,978 compiled / 467 rejected
+  records; 773 accepted / 213 rejected unique names**.
+- Failing-first native and RON checks: expected failures described above.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedDamageBody -count=1`: PASS.
+- `go test ./pkg/mage -run 'TestWaitingDelayed(DamageBody|SourceBod)' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- First `make lint`: reported one redundant test variable type and exited 2.
+  Its automatic fixes removed that type and converted the shape branch to a
+  switch. Both changes were reviewed; native and RON focused checks passed
+  again. No production code or unrelated file was changed by lint.
+- Final `make lint`: PASS, **0 issues**.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected collection exit 1;
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**. Entire JSON equals the fresh baseline. First diagnostic remains
+  Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection loading still rejects the collection atomically.
+
+No environment blocker or source-data defect was found. RON assets are unchanged,
+so the vocabulary snapshot needs no source refresh. Changed files: waiting source
+engine declarations, the scoped RON choice adapter, two new test files,
+pkg/mage/doc.go, API/rules contracts and this ledger. Runtime integration,
+complete-card gameplay, Go-card removal and DSL cleanup gates remain unmet.
+Existing callers and services are retained; this slice deletes no DSL function.
+
+Ranked next candidates:
+
+1. Bounded remaining typed-reference declarations and opaque-reference audit
+   before general source aggregation. Seven protection names benefit; zero
+   immediate unlocks. Single-recipient self-source damage reads now qualify;
+   other damage shapes, recipient reads and conditional wrappers still need
+   explicit audit rather than an assumption that the whole family is covered.
+2. Complete CR 609.7a aggregation after that audit: seven estimated full-card
+   unlocks. Prove deterministic cross-category deduplication/order and full real
+   activations. Jade Monolith and Reverse Damage benefit downstream.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock;
+   reuse native quality/band services with token instance and clone gameplay.
+
+This run stops after `WAITING-DELAYED-DAMAGE-BODY-SOURCES`.

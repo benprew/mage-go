@@ -172,3 +172,7 @@ func (p *chosenDamageSourcePlan) waitingDelayedGraveyardChoice(bindings instance
 func (p *chosenDamageSourcePlan) stackAbilityChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromStackAbilities(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingDelayedPermanentChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingDelayedBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

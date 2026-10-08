@@ -59,6 +59,18 @@ func (e *returnToHandSubjectEffect) refersToSourcePermanent() bool {
 	return ok
 }
 
+func (e *damageFromEffect) refersToSourcePermanent() bool {
+	switch source := e.source.(type) {
+	case sourceRef:
+		return true
+	case permanentDamageSource:
+		_, ok := source.subject.(sourceRef)
+		return ok
+	default:
+		return false
+	}
+}
+
 func (e *sequenceEffect) refersToSourcePermanent() bool {
 	for _, effect := range e.effects {
 		if reference, ok := effect.(delayedSourcePermanentReference); ok && reference.refersToSourcePermanent() {
