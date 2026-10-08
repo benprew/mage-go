@@ -509,6 +509,9 @@
 // [IfPaid], [UnlessPaid] and [PayOrElse] declare self reads in their bodies.
 // Both payment branches qualify before payment. Queries do not read the payer,
 // test costs or execute actions. Cost and payer references need separate contracts.
+// [PayActionOrElse] declares self reads in either body and direct [This] reads
+// in a [DamagePayment] source or recipient, or a [DestroyPayment] subject.
+// Queries do not prepare the payment. Player and amount reads remain separate.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.

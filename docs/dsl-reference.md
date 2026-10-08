@@ -7807,3 +7807,31 @@ Evidence: native `TestWaitingDelayedPaymentReferences`, `Boundaries` and
 `Instances`. Protection evidence uses complete records for six Circles of
 Protection and Greater Realm of Preservation with the isolated waiting category.
 It establishes subrule coverage, not complete card coverage.
+
+## Self references in waiting delayed action payments
+
+`PayActionOrElse(PlayerRef, ResolutionActionPayment, ResolvingEffect,
+ResolvingEffect) ResolvingEffect` declares direct self references in either result
+body. It also declares `This` in the source or recipient of `DamagePayment`, or
+the subject of `DestroyPayment`. A source wrapped in `DamageSourceOf(This)`
+qualifies. The declaration remains available before a payment result exists,
+even for zero damage or a payment that cannot be made. Enumeration does not
+prepare a payment, read an amount, resolve a player or run an action.
+
+Existing `compileResolutionActionPayment` lowers adjacent `MayCost` or
+`PlayerMayCost` with `GainLife`, `HavePermanentDealDamage` or `DestroyPermanent`
+into this typed node. Supported continuations are `If`, `Unless` and `IfElse`
+with `CostWasPaid` or `CostWasntPaid`. This slice adds the engine declaration
+contract; it changes no RON spelling, lowering permission or payment semantics.
+Player references, value references, opaque payment callbacks and other payment
+nodes still need separate audits. A nested future producer keeps its own lifetime.
+
+Saved sequences and modes keep the original incarnation. Current or departure
+facts, phasing, return identity, deduplication and clones use the existing waiting
+reference services. General `ChooseADamageSource` remains rejected.
+
+Evidence: `TestWaitingDelayedActionPaymentReferences` and
+`TestWaitingDelayedActionPaymentPurityAndBoundaries`; RON
+`TestRONWaitingDelayedActionPaymentProtection`, `Invalid` and `Instances`.
+The protection tests use real-record filters, costs and shields for six Circles
+of Protection and Greater Realm of Preservation. They establish subrule coverage.

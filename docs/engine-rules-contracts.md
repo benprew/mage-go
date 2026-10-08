@@ -10072,3 +10072,35 @@ RON tests cover 196 protection subrule scenarios, invalid declarations, factory
 isolation, nested and adjacent results, separate controllers, copies and clones.
 They reuse real-record filters, activation costs and consuming prevention rules.
 The full protection records still reject general source aggregation.
+
+## Waiting delayed action-payment declarations
+
+CR 609.7a permits an exact object referred to by a waiting delayed ability even
+when the ability will choose a payment branch later. `resolutionActionPaymentEffect`
+implements `refersToSourcePermanent() bool` for both result bodies and the typed
+instruction. `DamagePayment` declares a direct `This` source or recipient,
+including a source wrapped in `DamageSourceOf`. `DestroyPayment` declares a direct
+`This` subject. `GainLifePayment` has no direct permanent instruction reference.
+Player and value references and opaque payment implementations are outside this
+contract. No payment preparation, reference resolution, amount evaluation,
+choice, RNG or body execution occurs during enumeration.
+
+The shared delayed-frame reader retains the original incarnation and current or
+exact departure facts (CR 400.7, 603.7c). Phasing retains the saved identity
+(CR 702.26b); a phase cycle preserves it. One-shot detection ends waiting
+eligibility before pending placement (CR 603.7b). Sequences, supported nested
+branches and modes keep declarations, while new delayed producers keep separate
+lifetimes. Queries return independent facts and deduplicate exact objects.
+Clones retain separate waiting frames and use their own simulation decisions.
+Payment legality, replacements, prevention and branch selection retain the
+existing resolution action-payment contract. Prevented damage still pays;
+absent, returned and phased destruction subjects cannot pay.
+
+Native evidence covers 105 shape/state cases plus pure queries, invalid native
+nodes and excluded declaration boundaries. RON evidence covers 196 real-record
+protection subrule scenarios, 10 invalid delayed declarations, separate factory
+targets, explicit payers, opposite branch results, exact source identity and
+independent clone execution. Existing `TestRONActionPaymentRealCards` and
+`TestRONActionPaymentNativeCombat` retain full-record payment evidence for
+Delif's Cone, Farrel's Zealot and Floral Spuzzem. General source aggregation is
+still unsupported; no new complete-card coverage is claimed.
