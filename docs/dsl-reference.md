@@ -7989,3 +7989,12 @@ simulation player declines optional payments under its existing decision policy.
 The seven protection names gain subrule evidence, with zero full-card unlocks.
 Their complete records still reject `ChooseADamageSource`; strict collection
 loading and runtime/removal gates are unchanged.
+
+Waiting delayed damage bodies retain direct source declarations in typed player
+recipients and value operands. `DealDamageFrom`, `DealDamageEach`,
+`DealDamageEachPlayer` and each `DealDamagePackets` packet use the same typed
+player/value traversal as waiting payments. Queries preserve exact identity
+without reading amounts or selecting recipients. Zero damage and empty sets
+keep an explicit declaration. Attached, opaque and filtered-count operands need
+separate contracts. This extends `WaitingDelayedPermanentSources`; it does not
+provide the complete legal source list for a general source choice.

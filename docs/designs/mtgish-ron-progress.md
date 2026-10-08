@@ -8,11 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-PLAYER-VALUE-REFERENCES` declares typed controller/owner
-reads and player-derived values in waiting payment operands and direct life/draw
-bodies without evaluating them. Seven protection names gain 98 subrule scenarios;
-compilation and complete-card coverage remain unchanged. Other action/value
-families and cast/state/coin conditions still need audit before aggregation.
+`WAITING-DELAYED-DAMAGE-OPERAND-REFERENCES` retains direct typed player and
+value reads in waiting delayed damage bodies without evaluating operands.
+Seven protection names gain 98 subrule scenarios; native identity coverage gains
+108 cases. Compilation and complete-card coverage remain unchanged. Other
+action families, filtered counts and cast/state/coin conditions still need audit
+before aggregation.
 Token quality grants remain unsupported. Titania's Song needs per-member base
 values and sticky duration.
 
@@ -46199,3 +46200,138 @@ Ranked next candidates:
    unlock with token identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-PLAYER-VALUE-REFERENCES`.
+
+## 2026-10-08: waiting delayed damage player and value references
+
+Status: completed implementation slice `WAITING-DELAYED-DAMAGE-OPERAND-REFERENCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan, the ledger history move and untracked `mtgish-ron-completed.md` are preserved
+and excluded from this slice's commit. Only this entry and the status update are
+staged from the ledger.
+
+### Candidate comparison and selection
+
+Complete canonical RON records inspected: Circle of Protection: Artifacts, Black,
+Blue, Green, Red, White; Greater Realm of Preservation; Jade Monolith; Reverse
+Damage; Master of the Hunt. Reprints count once. Targeted vocabulary checks cover
+`PermanentDealsMultipleDamage` and `TheNumberOfCardsInPlayersHand`; nested
+recipient/value lowering and source-choice requirements were inspected.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Latest rank 1, direct damage player/value declarations | Six Circles of Protection and Greater Realm of Preservation | 0 | Required for complete CR 609.7a source aggregation, which can unlock these seven names; other action, count and condition declarations remain | Small: shared typed traversal, compiler adapter reuse, native matrix and real RON subrules |
+| Latest rank 2, cast/state/coin conditional declarations | Same seven protection names; Jade Monolith and Reverse Damage also depend on general source selection | 0 for declarations alone; seven after all aggregation prerequisites | Requires broader condition operand audit; Jade Monolith has redirection scope blockers and Reverse Damage needs combined prevention/life result execution | Medium: several condition families, purity and captured facts |
+| Latest rank 3, named token quality grants | Master of the Hunt | 1 plausible | NamedTokenWithPT has a BandsWithOthers quality grant; other token metadata and native band combat are available. Requires token-local ability construction, exact named quality, combat and clone tests | Medium: token grant lowering and band behavior |
+
+Rank 1 is dependency-ready. Its remaining work is partitioned into this cohesive
+damage-operand contract. It serves seven unique cards and is a prerequisite for
+their full source choice. It uses existing typed readers and source lifetime
+services. The narrower shared prerequisite is preferred over one token card.
+The contract and acceptance cases were stated before edits. No data defect or
+missing damage-execution service was found; this was a missing reference contract
+and duplicated compiler adapter. No source record changed.
+
+### Exact contract and reuse boundary
+
+Public signatures are unchanged:
+
+- `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue,
+  ...DamageResultOption) ResolvingEffect`: typed player recipient and amount.
+- `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue,
+  ...DamageEachResultOption) ResolvingEffect`: amount declaration only.
+- `DealDamageEachPlayer(DamageSourceRef, PlayerSet, *PlayerBinding,
+  ResolutionValue) ResolvingEffect`: amount declaration only.
+- `DealDamagePackets(DamageSourceRef, ...DamagePacket) ResolvingEffect` and
+  `DamagePacketTo(DamageRecipientRef, ResolutionValue) DamagePacket`: each
+  packet's typed player recipient and amount.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` retains saved source
+  incarnations read through these operands, including zero and empty operations.
+
+Internal `damageRecipientReadsSourcePermanent(DamageRecipientRef) bool` now
+uses `playerRefReadsSourcePermanent(PlayerRef) bool` for typed player recipients.
+All four damage bodies reuse
+`resolutionValueReadsSourcePermanent(ResolutionValue) bool`. Direct `This`
+controller, owner and LKI-controller reads and existing typed permanent/player
+values qualify; arithmetic keeps declarations without calculating values.
+
+RON `compileReferencedPermanentDamage(Node, scope) (effectFactory, error)` now
+shares `compilePlayerRecipientDamage(Node, scope, damageSourceFactory)
+`(effectFactory, error)` for `PermanentDealsDamage(permanent-ref, amount,
+Player(player-ref))`. `compilePermanentRef`, `compilePlayerRef` and
+`compileInstanceValue` retain arity, scope and fresh per-instance bindings.
+Supported tested syntax includes `ControllerOfPermanent(ThisPermanent)`,
+`TheNumberOfCardsInPlayersHand(player)`, `DamageDealtToPlayerThisTurn(player)`
+and `DamageDealtToPlayerThisTurnByPermanents(player,IsCardtype(Artifact))`
+inside `CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList(...))`.
+No new spelling, global state or card-name branch is introduced.
+
+Mage owns pure traversal, saved incarnation/current-or-departure information,
+phasing, snapshot copying, deduplication, captured delayed context, stack transfer,
+cloning and actual damage. RON owns declaration validation, scope and lowering.
+Queries do not resolve players, evaluate amounts, enumerate collections, run
+callbacks, spend costs or execute damage. Attached, bound, opaque, future-body
+and collection-membership operands are outside this direct-source contract.
+Filtered counts and other actions still need audit before aggregation.
+
+CR 400.7, 603.7a–e, 608.2h and 609.7a–b support exact identity, delayed timing,
+information reads and source choices. Existing damage replacements, source LKI,
+target legality, batch ordering and cost transactions are reused without changes.
+No runtime cutover, Go-card removal or DSL removal gate is satisfied.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, native tests failed at `typed player operand lost saved
+source`; real-record protection scenarios failed at `query lost source or offered
+payment`. A later instance fixture initially used a creature for artifact damage
+history; making that fixture an artifact creature corrected its requirements.
+Production behavior and assertions were not weakened.
+
+| Tests | Mapping and behavior |
+| --- | --- |
+| `TestWaitingDelayedDamageOperandReferences` | 108 cases: three typed player references × six damage operand contexts × six live/departed/returned/phased/phase-cycle/control states. Exact incarnation, current/departure facts, copied snapshots, pure repeated queries, independent clone lifetime; delayed sequences propagate declarations. |
+| `TestWaitingDelayedDamageOperandPurityAndBoundaries` | Opaque amounts and collection callbacks never run during queries; zero/empty operations retain explicit reads. Attached and future declarations excluded. Invalid recipient/value declarations reject through engine validation. |
+| `TestRONWaitingDelayedDamageOperandProtection` | All six Circles and Greater Realm: 98 real-record subrule scenarios, recipient/value reads × seven states including activation copies and game clones. Their real filters, activation costs, exact source choice and consuming shields run through the engine. Synthetic targeted damage uses another permanent as damage source, so the tested self reference comes only from the new operand contract. Announcement timing, failed payment, current/departure controller, amount timing, actual damage and shield consumption verified. Full records continue to reject incomplete general source aggregation. |
+| `TestRONWaitingDelayedDamageOperandInvalid` | Five malformed, unbound or wrong-context player/value declarations reject at compile time. |
+| `TestRONWaitingDelayedDamageOperandInstances` | Three real RON value shapes, two independent factory sources/controllers, bound third-party damage source, departure reads and original/clone gameplay. No shared value or delayed lifetime. |
+| Existing referenced-damage and waiting suites | Rechecked after lint; existing target identity, LKI, legality, captured bindings, payment rollback, replacement and simultaneous-damage contracts remain passing. |
+
+### Verification and measured outcome
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected exit 1, strict collection rejection.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedDamageOperand -count=1`
+  and native `go test ./pkg/mage -run TestWaitingDelayedDamageOperand -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic formatting reviewed. Post-lint focused
+  RON operand/referenced-damage and all native waiting suites: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. JSON matches baseline
+  byte-for-byte: **1,978 compiled / 467 rejected records; 773 accepted / 213
+  rejected unique names** out of 2,445 records / 986 names. First diagnostic:
+  Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+- All 12 source hashes match the vocabulary snapshot. No refresh required.
+
+Estimated and actual gains: **0 unique names / 0 compiled records**. Seven
+protection names gain 98 subrule scenarios; complete-card coverage remains
+unchanged. No environment, source-data or pre-existing validation blocker remains.
+Complete collection gameplay, runtime integration, Go-card deletion and obsolete
+DSL cleanup remain unfinished.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, native and RON
+`waiting_delayed_damage_operand_test.go`,
+`pkg/mage/dsl/ron/permanent_damage_source.go`, `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. Remaining direct player/value declarations in other action families and
+   filtered counts: seven protection names benefit; 0 immediate unlocks.
+   Audit typed collection operands without running callbacks or filters.
+2. Cast/state/coin and remaining conditional declarations, then complete
+   CR 609.7a aggregation: seven potential full-card unlocks after prerequisites;
+   Jade Monolith and Reverse Damage retain separate blockers.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock with token identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-DAMAGE-OPERAND-REFERENCES`.

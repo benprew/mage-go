@@ -535,6 +535,9 @@
 // [ArtifactDamageTakenThisTurn] retain these declarations in typed values.
 // Arithmetic reads both declarations without calculating a value.
 // Queries do not resolve players, read amounts or make payment choices.
+// Damage bodies declare these typed player reads in singular recipients and
+// these typed values in single, collection, per-player and packet amounts.
+// Queries do not select recipients, read amounts or execute damage batches.
 // Attached, bound and opaque player references need separate contracts.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.

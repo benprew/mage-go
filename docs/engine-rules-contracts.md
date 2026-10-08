@@ -10229,8 +10229,8 @@ payment branches retain these declarations without evaluating any operand.
 The internal helpers are `playerRefReadsSourcePermanent(PlayerRef) bool` and
 `resolutionValueReadsSourcePermanent(ResolutionValue) bool`. They inspect only
 known typed declarations. Attached, bound and opaque player wrappers remain
-outside this direct-source contract. Ordinary damage-body player/amount operands,
-other action families, filtered counts and cast/state/coin conditions still need
+outside this direct-source contract. The following section extends damage bodies.
+Other action families, filtered counts and cast/state/coin conditions still need
 separate audits before general source aggregation. Nested future producers do
 not expose their future body through the current waiting category.
 
@@ -10266,3 +10266,32 @@ simulation player declines optional payments under its existing decision policy.
 The seven protection names gain subrule evidence, with zero full-card unlocks.
 Their complete records still reject `ChooseADamageSource`; strict collection
 loading and runtime/removal gates are unchanged.
+
+### Waiting delayed damage player and value declarations
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` includes the saved
+source when a typed player recipient or damage amount reads direct `This`.
+`DealDamageFrom` reads both operands; `DealDamageEach` and
+`DealDamageEachPlayer` read their amount declaration; `DealDamagePackets`
+reads each packet's recipient and amount. The existing typed controller,
+owner, LKI controller, permanent values, player values and arithmetic traversal
+supply declarations. Zero amounts and empty collections keep these references.
+Queries do not evaluate values, select recipients, call callbacks, or execute
+replacement or damage operations. Attached, bound, opaque and future-body
+references retain their separate contracts. Filtered counts are not inferred.
+
+RON referenced permanent damage to a player shares
+`compilePlayerRecipientDamage(Node, scope, damageSourceFactory)` with other
+player damage. `compilePermanentRef`, `compilePlayerRef` and
+`compileInstanceValue` still validate scope and build each factory's bindings.
+No new syntax or public signature is added.
+
+CR 400.7, 603.7a–e, 608.2h and 609.7a–b apply. Existing delayed capture,
+incarnation/LKI, phasing, clone, stack-transfer and simultaneous-damage services
+remain authoritative. Returned objects cannot supply the saved source.
+Native evidence: `TestWaitingDelayedDamageOperandReferences` (108 cases) and
+`TestWaitingDelayedDamageOperandPurityAndBoundaries`. RON evidence:
+`TestRONWaitingDelayedDamageOperandProtection` (98 real-record subrule cases),
+`TestRONWaitingDelayedDamageOperandInvalid` and
+`TestRONWaitingDelayedDamageOperandInstances`. General damage-source
+aggregation and complete protection-card coverage remain unfinished.

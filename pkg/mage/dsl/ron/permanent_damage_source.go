@@ -11,14 +11,9 @@ func compileReferencedPermanentDamage(n Node, ctx scope) (effectFactory, error) 
 		return nil, err
 	}
 	if n.Args[2].Name == "Player" {
-		if err := arity(n.Args[2], 1); err != nil {
-			return nil, err
-		}
-		player, err := compilePlayerRef(n.Args[2].Args[0], ctx)
-		if err != nil {
-			return nil, err
-		}
-		ctx.damageRecipient = &player
+		return compilePlayerRecipientDamage(n, ctx, func(bindings instanceBindings) mage.DamageSourceRef {
+			return mage.DamageSourceOf(source.build(bindings))
+		})
 	}
 	recipient, err := compileDamagePacketRecipient(n.Args[2], ctx)
 	if err != nil {
