@@ -36,6 +36,10 @@ func (r *creatureCombatDamagePreventionReplacement) waitingPreventionPermanents(
 	return []capturedPermanent{{r.creatureID, r.incarnation}}
 }
 
+func (r *counterDamagePreventionReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
+	return []capturedPermanent{{r.sourceID, r.incarnation}}
+}
+
 func (r *staticDamagePreventionReplacement) waitingPreventionPermanents(g *Game) []capturedPermanent {
 	subject, ok := r.currentSubject(g)
 	if !ok {

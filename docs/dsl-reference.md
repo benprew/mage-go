@@ -6911,3 +6911,19 @@ Tests: `TestRONDrawStepLifeFasting`, `TestRONDrawStepLifeFastingUpkeep`,
 `TestRONDrawStepLifeInvalid`, `TestRONDrawStepLifeFixedAmounts`,
 `TestWaitingDrawStepLifeReferences` and `TestWaitingDrawStepLifeChoices`.
 Full Fasting gameplay and protection subrule evidence are separate claims.
+
+### Waiting counter-prevention subjects
+
+`PreventDamageToSourceByRemovingCounters(counterType core.CounterType)
+ContinuousEffect` keeps its existing public signature. Use it in a static
+ability. `Game.WaitingPreventionPermanentSources() []DamageSource` now includes
+its exact source while that ability remains active, even with zero counters.
+The query excludes phased or departed sources, removed rules and stale rules
+for returned objects.
+It uses current control and returns independent information snapshots.
+
+RON `chosenDamageSourcePlan.waitingPreventionChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` to the shared waiting-prevention choice
+service with `You` and the instance's typed damage-source binding. This is a
+category-specific prerequisite. General production `ChooseADamageSource` stays
+rejected until complete legal-source enumeration is available.

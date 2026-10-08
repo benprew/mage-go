@@ -1448,13 +1448,7 @@ func (e *preventDamageRuleContinuous) ApplyContinuous(ctx *EffectContext) error 
 // PreventDamageToSourceByRemovingCounters creates a static prevention effect
 // that removes one counter from its source for each 1 damage prevented.
 func PreventDamageToSourceByRemovingCounters(counterType CounterType) ContinuousEffect {
-	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		g.effects.AddCycleReplacement(&counterDamagePreventionReplacement{
-			replacementBase: replacementBase{sourceID: sourceID},
-			counterType:     counterType,
-		})
-		return nil
-	})
+	return &counterPreventionContinuous{counterType: counterType, ruleID: uuid.New()}
 }
 
 // preventNoncombatDamageToControllerContinuous prevents all noncombat damage

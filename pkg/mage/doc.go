@@ -24,6 +24,9 @@
 // [Game.WaitingRegenerationPermanentSources] reads exact subjects of active
 // regeneration shields. Departure and phasing keep their saved references.
 // [ChooseDamageSourceFromWaitingRegenerationReferences] uses this category only.
+// [PreventDamageToSourceByRemovingCounters] supplies its exact live subject to
+// [Game.WaitingPreventionPermanentSources], even with no counters. A saved rule
+// cannot follow a returned source or an ability that was removed.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.

@@ -8544,3 +8544,33 @@ destruction on drawing, control and clone changes, and Howling Mine interaction.
 protection names using a live Fasting source with changed color/type; those
 records remain unsupported in full. `TestRONDrawStepLifeInvalid` and
 `TestRONDrawStepLifeFixedAmounts` cover invalid declarations and fixed amounts.
+
+### Exact waiting counter-prevention subjects
+
+`PreventDamageToSourceByRemovingCounters` now registers a replacement with a
+saved source incarnation and static-rule identity. Execution and enumeration
+share `counterDamagePreventionReplacement.IsActive`: the original unphased
+source must retain that specific runtime ability. A rule retained across a layer
+cycle cannot follow a returned object or another counter-prevention ability.
+New registration can refer to the returned incarnation. Clones keep independent
+counter state and rule lifetimes. Existing callers and the public signature stay.
+
+The rule supplies its source to `Game.WaitingPreventionPermanentSources` through
+the shared reference provider. Zero counters prevent a damage match, but do not
+remove the active reference. Query data uses current characteristics/control,
+exact deduplication across both replacement lists and copied snapshots. LKI cannot
+make an inactive static ability active. Nonpositive damage does not match.
+CR 400.7, 609.7a, 611.3b, 615.1–6 and 702.26 supply these contracts.
+
+`TestWaitingCounterPreventionReferences` covers stale cycles, departure/return,
+phasing, control, ability removal/restoration, snapshots and clone lifetime.
+`TestWaitingCounterPreventionBoundaries` covers zero counters, duplicate and invalid
+references, distinct rule identity, nonpositive damage and clone counter isolation.
+`TestRONWaitingCounterPreventionProtection` executes the choice/prevention subrules
+from seven complete protection records against a native counter-rule fixture.
+It checks filter lowering, per-instance binding, prevention consumption and empty
+choice clearing. `TestRONWaitingCounterPreventionInvalid` rejects malformed filters
+and a consumer before its producer. This establishes subrule gameplay evidence;
+it does not establish full Rock Hydra or protection-card gameplay. Counter removal,
+damage packets, payment and affected-player replacement ordering keep their
+existing mechanics. Other waiting replacement categories remain separate gaps.

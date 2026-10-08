@@ -9,11 +9,12 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`DRAW-STEP-LIFE-REPLACEMENT` slice now executes the full Fasting RON record,
-including optional draw-step skipping, deferred life gain and both destruction
-rules. Exact active replacement sources supply a shared prerequisite for seven
-protection names; their complete source enumeration remains unsupported.
-Other replacement references and face-up command objects remain gaps.
+`WAITING-COUNTER-PREVENTION-SUBJECTS` slice adds exact live counter-rule subjects
+to the shared prevention-source query and RON category-specific choice lowering.
+It covers source incarnation, phasing, ability lifetime and clone isolation.
+Seven protection names gain subrule evidence and Lightning Bolt gains a complete
+RON cast interaction. No complete card is newly accepted. Other waiting
+replacement references, face-up command objects and full enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40282,5 +40283,138 @@ Ranked next candidates:
    eight complete records above, then grants and selective removal.
 3. Conditional host animation across type/base P/T layers; reassess its one
    immediate unlock against remaining shared prerequisites.
+
+The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: exact waiting counter-prevention subjects
+
+Status: completed implementation slice `WAITING-COUNTER-PREVENTION-SUBJECTS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and the reorganized progress ledger, plus untracked
+`mtgish-ron-completed.md`, are preserved. Only this run's summary edit and new
+entry are staged from the ledger.
+
+### Fresh evidence, comparison and selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, not build or
+test failure: 1,964 compiled / 481 rejected records; 764 accepted / 222 rejected
+unique names. The design, API reference, latest ledger, selected engine/compiler
+code, targeted vocabulary entries and complete candidate RON records were read.
+All protection reprints were inspected; reprints count once for selection.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, exact waiting counter-prevention subjects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, prerequisite for **7 names / 31 records**. Rock Hydra supplies the related counter-rule requirement, but its full record remains blocked. | The UUID-only native rule lacks exact incarnation and ability lifetime. Fixing it supplies an additional legal source category to the existing prevention query. Other waiting replacements, face-up command objects and complete source enumeration remain. Rock Hydra also needs ValueX entry counters and its finite prevention event. | Small: native registration/lifetime/provider, RON category lowering and focused lifecycle/choice tests. |
+| Ranked #2, parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible full-family unlocks**. | Complete records need parameterized legendary/named bands, attacking formation and both damage-assignment directions, live/token grants and selective removal. A bounded primitive alone would not unlock all eight. Enables a shared combat family. | Large for full family; medium/large prerequisite with combat and layer contracts. |
+| Ranked #3, conditional host animation | Animate Artifact: **1 plausible unlock / 6 records**. | Conditional noncreature host must coordinate added artifact/creature types with mana-value base P/T across layers. Enables reusable conditional multilayer animation. | Medium: layer dependencies, host identity and attachment interactions. |
+
+The dependency-ready portion of candidate #1 wins on bounded effort and concrete
+seven-card downstream value. Counter prevention is not silently exposed through
+UUID-only references. The contract, reuse boundary and acceptance cases were
+stated before edits. The `implement-engine` skill supplied the native workflow;
+no delegation, removed card skills, generated stubs or Go-card requirements were
+used. The old Go caller was searched only to preserve compatibility.
+
+### Established signatures, context and engine reuse
+
+- Public signatures stay: `PreventDamageToSourceByRemovingCounters(core.CounterType)
+  ContinuousEffect`, `Game.WaitingPreventionPermanentSources() []DamageSource`,
+  and `ChooseDamageSourceFromWaitingPreventionReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`.
+- A cloneable `counterPreventionContinuous` replaces the opaque callback and
+  registers source incarnation plus rule identity. `counterDamagePreventionReplacement`
+  uses the same active-rule check for matching and enumeration. It requires the
+  original unphased permanent and the particular counter-prevention effect in
+  its runtime static ability. Another counter rule cannot restore a removed rule.
+- Source departure, phasing and ability removal exclude stale ordinary/cycle
+  entries. Phase-in and ability restoration can restore the original live rule.
+  A returned object needs new registration with its new incarnation. LKI cannot
+  restore a departed static ability. Control reads use current information.
+- `counterDamagePreventionReplacement.waitingPreventionPermanents(*Game)
+  []capturedPermanent` supplies the exact source to the shared provider. Zero
+  counters stop damage matching but leave the active referred-object eligibility.
+  Existing collector services handle copied snapshots, exact deduplication,
+  invalid identity exclusion and both replacement lists.
+- RON `chosenDamageSourcePlan.waitingPreventionChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and its factory-local typed binding to the existing native choice service.
+  Supported filters are the existing `AnyDamageSource`, color/type and nonempty
+  `And`/`Or` shapes. Missing bindings and consumer-before-producer definitions
+  reject. General production choices remain unsupported until enumeration is
+  complete; no partial source list is installed as complete.
+- The tested real RON protection subrules are the existing choice followed by
+  `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(You)), [PreventThatDamage])`. Complete protection
+  records remain rejected. The counter producer is an explicit native fixture,
+  not a Go-card fallback or accepted Rock Hydra implementation.
+- Mage owns native rule lifetime, exact identity, current information, filtering,
+  player choice and cloned game state. RON owns spelling, declaration scope and
+  per-instance lowering. Existing counter removal and damage prevention mechanics
+  remain. Nonpositive damage no longer matches the counter rule. Payment, APNAP,
+  simultaneous packets and replacement ordering services are unchanged.
+- CR 400.7, 609.7a, 611.3b, 615.1–6 and 702.26 supply the established contracts.
+  Local `data/LEA.json` confirms Rock Hydra's counter-prevention wording. No source
+  defect was found or changed. All 12 source hashes match the vocabulary snapshot;
+  no refresh is needed. No DSL function or Go definition is removed; the removal
+  gate remains unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed with `sources=0 want=1` and stale rules remaining active
+on return and ability removal. RON tests first failed compilation because
+`waitingPreventionChoice` did not exist. These failures preceded implementation.
+New file imports initially needed explicit core qualifiers, and an added test's
+parser helper call was changed to the existing Parse API. Assertions were retained.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingCounterPreventionReferences` | Live and stale-cycle identity; departure with LKI cleared; return/new registration; phase/cycle; current controller; ability removal/restoration; query snapshot isolation; independent clone lifetime. |
+| `TestWaitingCounterPreventionBoundaries` | Ordinary/cycle deduplication; unknown and invalid identities; unrelated source exclusion; zero-counter eligibility; nonpositive damage; clone counter/damage isolation; removing one of two distinct rules cannot keep that removed rule active. |
+| `TestRONWaitingCounterPreventionProtection` — all seven protection names | Complete RON records supply choice/prevention subrules. Native counter fixture supplies the exact subject, changed to each color/type. Choices use independent bindings, prevent once in original/clone, consume the shield, and clear previous bindings when phasing removes all candidates. Full cards remain rejected. |
+| Same test — Lightning Bolt (LEB) | Complete RON cast, unpaid rejection, successful mana payment and resolution against native counter prevention: two counters removed, one damage dealt. This adds interaction evidence to an accepted card. |
+| `TestRONWaitingCounterPreventionInvalid` | Invalid choice/filter kinds/arities, empty logical filter, missing binding and consumer-before-producer definition rejection. |
+| Existing native and RON suite | Existing counter-removal prevention caller, source-choice invalid declarations, damage packet, cost rollback and affected-player ordering regressions continue to pass. No new targeting or simultaneous-operation contract is claimed. |
+
+### Validation and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingCounterPrevention -count=1`.
+- Native `go test ./pkg/mage -run TestWaitingCounterPrevention -count=1`.
+- `make build`; `go vet ./...` (vet repeated after the last gameplay-test edit).
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, 0 issues. Automatic changes only regrouped imports in
+  the new files. Native and RON focused checks passed again after formatting.
+- Additional skill check `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,964 compiled / 481
+  rejected records; 764 accepted / 222 rejected unique names**. Complete JSON
+  diagnostics equal the fresh baseline exactly. Strict collection loading still
+  rejects and cannot install a partial registry. No environmental blocker.
+
+
+Estimated and actual compilation gains match: **0 names / 0 records**.
+New evidence covers seven rejected protection names at subrule level and an
+accepted Lightning Bolt interaction. This is not complete-card validation of
+Rock Hydra or the protection family. No accepted record is lost.
+
+Changed files: new native `counter_prevention_lifetime.go` and
+`waiting_counter_prevention_test.go`; native `continuous_effects.go`,
+`replacement.go`, `waiting_prevention.go`, `doc.go`; RON
+`chosen_source_filter.go` and new `waiting_counter_prevention_test.go`;
+API/rules-contract docs and this ledger. Runtime loading, complete collection
+validation, Go-card removal and DSL cleanup remain unfinished.
+
+Ranked next candidates:
+
+1. Audit remaining waiting replacement subjects, including counter placement and
+   legacy damage rules. Establish exact incarnation/lifetime contracts before
+   enumeration; then face-up command objects and complete source enumeration
+   for the seven protection names. Do not repeat completed counter-prevention,
+   draw-step-life, typed prevention, redirection or regeneration categories.
+2. Parameterized bands with others: shared combat prerequisite for eight names,
+   followed by grants and selective removal.
+3. Conditional host animation across type and base P/T layers for Animate Artifact.
 
 The commit hash is reported in the final response. No second slice starts.

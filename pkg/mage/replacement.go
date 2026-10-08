@@ -1112,11 +1112,13 @@ func (r *damagePreventionRuleReplacement) Clone() ReplacementEffect {
 type counterDamagePreventionReplacement struct {
 	replacementBase
 	counterType CounterType
+	incarnation uuid.UUID
+	ruleID      uuid.UUID
 }
 
 func (r *counterDamagePreventionReplacement) Matches(a Action, g GameReader) bool {
 	damage, ok := a.(*DamageToCreatureAction)
-	if !ok || damage.PermanentID() != r.sourceID {
+	if !ok || damage.Amount() <= 0 || damage.PermanentID() != r.sourceID || !r.IsActive(g) {
 		return false
 	}
 	permanent := g.FindPermanent(r.sourceID)
@@ -1139,7 +1141,20 @@ func (r *counterDamagePreventionReplacement) Replace(a Action, g *Game) Action {
 }
 
 func (r *counterDamagePreventionReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	if source == nil || source.PhasedOut || source.incarnationID != r.incarnation || r.ruleID == uuid.Nil {
+		return false
+	}
+	for _, ability := range source.RuntimeAbilities {
+		if holder, ok := UnwrapAbility(ability).(*StaticAbilityHolder); ok {
+			for _, effect := range holder.Effects {
+				if rule, ok := effect.(*counterPreventionContinuous); ok && rule.ruleID == r.ruleID {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (r *counterDamagePreventionReplacement) Clone() ReplacementEffect {
