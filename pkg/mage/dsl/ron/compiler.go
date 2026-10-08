@@ -1320,7 +1320,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(func(bindings instanceBindings) mage.Effect {
 			return mage.DealDamageFrom(mage.This, bindings.permanents[ctx.permanentTarget], amount(bindings))
 		})
-	case "PermanentDoesntUntapDuringControllersNextNumberUntaps", "EachPermanentDoesntUntapDuringControllersNextUntap":
+	case "PermanentDoesntUntapDuringControllersNextUntap", "PermanentDoesntUntapDuringControllersNextNumberUntaps", "EachPermanentDoesntUntapDuringControllersNextUntap":
 		build, err := compileNextUntaps(n, ctx)
 		if err != nil {
 			return nil, err
@@ -1332,7 +1332,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
+	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "RegeneratePermanent", "SacrificePermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -1359,8 +1359,6 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.DestroyWithoutRegeneration(ref)
 			case "RegeneratePermanent":
 				return mage.Regenerate(ref)
-			case "PermanentDoesntUntapDuringControllersNextUntap":
-				return mage.SkipNextUntap(ref)
 			default:
 				return mage.Sacrifice(ref)
 			}

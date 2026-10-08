@@ -238,6 +238,22 @@ func (e *exileEachEffect) refersToSourcePermanent() bool {
 	return permanentSetReadsSourcePermanent(e.subjects)
 }
 
+func (e *skipNextUntapEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
+func (e *skipNextUntapsEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
+func (e *skipNextUntapEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
+}
+
+func (e *capturedUntapEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.player)
+}
+
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
 	return self || playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)

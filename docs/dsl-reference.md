@@ -8271,3 +8271,22 @@ combat/history and controller/owner operands retain explicit source reads.
 Invalid scopes, empty compositions, plural delayed targets and unsupported
 modifiers remain compilation errors. See the waiting delayed exile contract in
 `docs/engine-rules-contracts.md` for evidence and source-aggregation limits.
+
+## Waiting delayed untap-restriction declarations
+
+Resolving `PermanentDoesntUntapDuringControllersNextUntap(ref)`,
+`PermanentDoesntUntapDuringControllersNextNumberUntaps(ref, Integer(n))` and
+`EachPermanentDoesntUntapDuringControllersNextUntap(collection)` share
+`compileNextUntaps(Node, scope)` and fresh instance bindings. The same forms
+can run inside supported delayed bodies. Counts remain nonnegative literals;
+saved singular targets keep their exact incarnation. Delayed plural targets
+and unbound or incompatible references still reject.
+
+Native `SkipNextUntap`, `SkipNextUntaps` and `SkipNextUntapEach` declare explicit
+source reads to `Game.WaitingDelayedPermanentSources`. `SkipNextUntapOf` also
+checks its typed player operand. Zero counts and empty collections retain the
+source declaration. Queries do not resolve subjects, read membership, install
+restrictions or run filters. Departure and phasing retain the saved reference;
+a returned card cannot replace it. Resolution still requires a present subject
+and reads collection membership then. These declarations do not enable general
+`ChooseADamageSource` aggregation.

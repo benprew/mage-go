@@ -13,12 +13,22 @@ func compileNextUntaps(n Node, ctx scope) (effectFactory, error) {
 		}
 		return func(bindings instanceBindings) mage.Effect { return mage.SkipNextUntapEach(subjects(bindings)) }, nil
 	}
-	if err := arity(n, 2); err != nil {
+	counted := n.Name == "PermanentDoesntUntapDuringControllersNextNumberUntaps"
+	arguments := 1
+	if counted {
+		arguments = 2
+	}
+	if err := arity(n, arguments); err != nil {
 		return nil, err
 	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
+	}
+	if !counted {
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.SkipNextUntap(subject.build(bindings))
+		}, nil
 	}
 	value := n.Args[1]
 	if value.Name != "Integer" {

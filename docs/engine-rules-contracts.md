@@ -10675,3 +10675,52 @@ saved target/factory isolation, later shroud, returned objects, phase exclusion,
 resolution-time membership and clone isolation. Existing `TestExileEach*` tests
 retain simultaneous movement and leave-event evidence. Complete protection
 records still reject; these mappings do not establish full-card coverage.
+
+## Waiting delayed untap-restriction declarations
+
+`SkipNextUntap(PermanentRef) ResolvingEffect` and
+`SkipNextUntaps(PermanentRef, int) ResolvingEffect` declare a direct `This`
+subject to `Game.WaitingDelayedPermanentSources() []DamageSource`.
+`SkipNextUntapEach(PermanentSet) ResolvingEffect` declares explicit source reads
+through the shared typed collection traversal. Nested compositions,
+attachment/combat/history subjects, controller/owner operands and numeric limits
+retain their source declarations. `SkipNextUntapOf(PermanentRef, PlayerRef)
+ResolvingEffect` declares both a direct source subject and an explicit source
+read in the captured-player operand.
+
+Queries do not resolve subjects or players, select members, call filters or
+install restrictions. Zero counts and empty sets retain declarations. Implicit
+matches, attached subjects without a direct source read, opaque callbacks and
+future bodies not installed do not infer a source. Saved sequences and modes
+retain exact incarnation and departure information. One-shot detection ends
+waiting enumeration. Query snapshots, stack copies and clones keep separate
+state (CR 400.7, 603.7a–e, 609.7a–b).
+
+Execution reuses the untap services. Restrictions require the original present
+incarnation at delayed resolution. Collection membership is read then; later
+attachments can be included, and phased members are excluded. Native phase-in
+can subsequently restore a subject without installing a restriction that was
+omitted during its absence (CR 502.1/3, 702.26b/d). Zero counts do not restrict
+untaps. Overlapping restrictions count the same steps, other untaps remain
+legal, control changes preserve counts and departure ends installed restrictions.
+
+RON `compileNextUntaps(Node, scope) (effectFactory, error)` lowers the existing
+singular, counted and collection spellings through fresh instance bindings.
+The singular form retains `SkipNextUntap`; no caller or public API is removed.
+Saved singular targets remain valid after later shroud but cannot follow a
+returned object. Invalid counts, unbound/incompatible references, empty
+compositions and delayed plural targets reject before execution.
+
+Evidence: `TestWaitingDelayedUntapOperands` covers 18 native operand forms,
+exact departure/return identity, isolated snapshots and clone lifetime.
+`TestWaitingDelayedUntapPurity` covers saved modes, empty sets, implicit/opaque/
+future exclusions and invalid definitions. `TestRONWaitingDelayedUntapProtection`
+covers 343 subrule cases across seven real protection records, seven untap
+forms and seven lifecycle/copy states: transactional costs, resolution choices,
+restriction installation/counts, exact-source prevention and shield consumption.
+RON `Invalid`, `Instances` and `LateAttachment` tests cover declaration rejection,
+factory/saved-target isolation, later shroud, returned objects, current membership,
+phase exclusion and clone execution. Existing complete Telekinesis, Spore Cloud,
+Barl's Cage, Elvish Hunter, Deep Spawn and Homarid Warrior gameplay tests retain
+accepted-card evidence. Full protection records still reject general source
+aggregation; these tests do not establish complete protection-card gameplay.

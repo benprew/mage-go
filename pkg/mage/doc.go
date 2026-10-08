@@ -210,6 +210,11 @@
 // [ExileEach] declares source reads in its typed collection. Queries do not
 // select members or move objects. Empty collections keep explicit reads.
 // Resolution uses current, present members and the existing exile batch.
+// [SkipNextUntap], [SkipNextUntaps] and [SkipNextUntapEach] declare explicit
+// source reads in their subjects to the same waiting query. Zero counts and
+// empty collections keep the saved source. Queries do not install restrictions
+// or select members. [SkipNextUntapOf] also declares a source read in its player.
+// Resolution still requires present subjects and reads current collection members.
 // Other collection actions need separate contracts.
 //
 // [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]

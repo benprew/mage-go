@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-EXILE-DECLARATIONS` adds exact source declarations for native
-single and collection exile actions, with shared RON collection lowering.
-Seven protection names gain 245 subrule cases; native declarations gain 14 cases.
-Compilation and full-card coverage are unchanged. Untap/prevention/temporary,
-player collection and remaining conditional declarations, source aggregation,
-token grants and sticky layers remain gaps.
+`WAITING-DELAYED-UNTAP-DECLARATIONS` adds exact source declarations for singular,
+counted, collection and captured-player next-untap services, with shared RON
+lowering. Seven protection names gain 343 subrule cases; native declarations gain
+18 operand cases. Compilation and full-card coverage are unchanged. Combat
+prevention/temporary layers, player collections, remaining conditionals, source
+aggregation, token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47523,3 +47523,142 @@ Ranked next candidates:
    subject to named identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-EXILE-DECLARATIONS`.
+
+## 2026-10-08: waiting delayed untap-restriction declarations
+
+Status: completed implementation slice `WAITING-DELAYED-UNTAP-DECLARATIONS`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary replacement and appended entry are staged for the ledger.
+
+### Fresh evidence, comparison and selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The baseline loader exited 1 for strict collection rejection, with 1,978 compiled
+and 467 rejected records; 773 accepted and 213 rejected unique names. This was
+collection rejection, not build/test failure. Instructions, engine reference,
+execution design, top status/latest ledger entry, targeted vocabulary entries,
+selected code, API/rules contracts and complete RON records were inspected.
+Reprints count once. CR 400.7, 502.1/3, 603.7a–e, 609.7a–b and 702.26b/d
+supply identity, timing, waiting-source eligibility and phasing contracts.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: delayed untap-restriction source declarations | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, shared prerequisite for **7 names**. Existing adapter consumers: Barl's Cage, Deep Spawn, Elvish Hunter, Homarid Warrior, Telekinesis, Spore Cloud. | Execution and contextual collection lowering already exist. Other declaration families and general source aggregation still block the seven protection records. Completes declarations for typed next-untap services, including native captured-player operands. | Small: four native declarations, shared singular/count/collection adapter, operand and RON lifecycle tests. |
+| Ranked #2: delayed combat-prevention and temporary layer declarations | The same seven protection names: **0 immediate unlocks**. Existing consumers include Fog, Telekinesis, Spore Cloud, Deep Spawn and Homarid Warrior. | `combatSourcePreventionInstallation` and `untilEffect` need subject/value/duration and modification operand audits. Player collections and remaining conditionals still block complete aggregation. Concrete downstream benefit is the same seven names. | Medium: wider typed operand traversal and prevention/layer timing tests. |
+| Ranked #3: named-token quality grants | Master of the Hunt: **1 plausible unlock**. | Its complete record requires a fresh named Wolves of the Hunt token, green 1/1 Wolf characteristics and parameterized named bands. Named grant lowering, token clone isolation and native band-combat evidence are needed. General source aggregation is independent. | Medium: token quality adapter and named-band/token combat tests. |
+
+Candidate #1 is dependency-ready and has concrete multi-card downstream value.
+It takes priority over single-card token work. The selected context completes
+untap declarations without broadening general damage-source choice. Contract,
+reuse boundary and acceptance cases were stated before production edits.
+No new skill, delegation, Go-card requirements or generated stubs were used.
+
+### Exact signatures, contexts and reuse boundary
+
+- `compileNextUntaps(Node, scope) (effectFactory, error)` now owns all three
+  resolving forms: `PermanentDoesntUntapDuringControllersNextUntap(ref)`,
+  `PermanentDoesntUntapDuringControllersNextNumberUntaps(ref, Integer(n))`, and
+  `EachPermanentDoesntUntapDuringControllersNextUntap(collection)`.
+  Singular lowering moved from the generic action switch and retains
+  `mage.SkipNextUntap`; counted/collection lowering retains its existing services.
+  All use fresh typed instance bindings and shared contextual collection lowering.
+- `SkipNextUntap(PermanentRef) ResolvingEffect` and
+  `SkipNextUntaps(PermanentRef, int) ResolvingEffect` declare direct `This`
+  subjects through `delayedSourcePermanentReference.refersToSourcePermanent() bool`.
+- `SkipNextUntapEach(PermanentSet) ResolvingEffect` uses
+  `permanentSetReadsSourcePermanent(PermanentSet) bool`, including singleton,
+  nested composition, attachment/combat/history, exclusion, lowest power,
+  controller/owner/opponent and numeric-limit operands.
+- `SkipNextUntapOf(PermanentRef, PlayerRef) ResolvingEffect` declares its direct
+  source subject and explicit source-dependent player operand. Its captured-player
+  execution contract is unchanged; no new RON captured-player spelling is added.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` retains the saved exact
+  incarnation and departure facts until detection. Zero counts and empty sets
+  keep declarations. Queries do not resolve subjects/players, select members,
+  call filters, install restrictions, choose sources or change counters.
+  Saved sequences/modes, stack copies and clones retain independent frames.
+  Implicit matches, opaque callbacks, attached subjects without source reads
+  and future bodies not installed do not infer references.
+
+Mage owns reusable declarations and untap execution; RON owns syntax, scope and
+per-instance lowering. Installation still requires present original subjects.
+Collection membership is read at delayed resolution, so late attachments can
+receive restrictions but phased objects cannot. Control changes and phasing
+preserve installed counts; departure ends them. Overlapping restrictions consume
+the same steps; zero counts do not restrict untaps. Existing LKI, saved targets,
+cost rollback, damage shields, simultaneous untap decisions and clones are reused.
+No card-name branch, fallback, partial registry, callback introspection or
+parallel rules subsystem was added. Public callers remain intact. No broad DSL
+function was removed, so no obsolete-API removal gate was crossed.
+
+### Failing-first evidence and card-to-test mappings
+
+After correcting test fixture API names, before production edits:
+`go test ./pkg/mage -run TestWaitingDelayedUntap -count=1` failed 18 operand
+cases with `untap restriction lost exact source declaration`, plus empty/mode
+purity. `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedUntap -count=1`
+failed all 343 protection cases with missing waiting sources (including clone
+assertions), plus instance and late-attachment declarations. Invalid declarations
+already rejected. Both commands exited 1 for the intended assertion failures.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedUntapOperands | 18 native operand forms; exact departure/return identity, separate fact snapshots and clone waiting lifetime |
+| TestWaitingDelayedUntapPurity | Empty/nested collections, saved modes, query purity, implicit/opaque/future exclusions and invalid native definitions |
+| TestRONWaitingDelayedUntapProtection | 343 cases: seven protection records above, seven untap forms, seven live/departed/returned/phased/control/copy/clone states; real RON costs/filter/shields, failed-payment rollback, resolution choices, correct restriction membership/counts and exact-source shield consumption |
+| TestRONWaitingDelayedUntapInvalid | Ten malformed/count/unbound/incompatible/empty-composition/delayed-plural declarations reject at compilation |
+| TestRONWaitingDelayedUntapInstances | Two factory instances and saved targets, four distinct references, returned-object exclusion, later shroud, one-step expiry and clone execution |
+| TestRONWaitingDelayedUntapLateAttachment | Empty collection retains host declaration; late attachment receives restriction at resolution; phased clone excludes it before native phase-in |
+| TestRONSkipUntapRealCards; TestRONSkipUntapHomaridWarrior; TestRONDeepSpawn* | Complete Barl's Cage, Elvish Hunter, Homarid Warrior and Deep Spawn regressions through the consolidated singular adapter |
+| TestRONNextUntapsTelekinesis; TestRONNextUntapsSporeCloud; TestNextUntaps* | Complete Telekinesis/Spore Cloud and native timing, overlap, other untaps, legality, simultaneous decision and identity regressions |
+
+Protection mappings establish subrule evidence, not complete-card gameplay.
+All seven full records still reject unsupported ChooseADamageSource aggregation.
+No RON source changed; vocabulary hashes remain valid. No source defect or
+environment failure was found. Runtime cutover, Go-card deletion and broad DSL
+cleanup gates remain closed.
+
+### Verification and measured outcome
+
+- Baseline build and complete RON package tests: PASS. Baseline loader:
+  expected exit 1 for strict collection rejection, not build failure.
+- Failing-first native and RON tests: expected assertion failures, as above.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedUntap -count=1`: PASS.
+  Native `go test ./pkg/mage -run 'TestWaitingDelayedUntap|TestNextUntaps'
+  -count=1`: PASS. Counted RON and singular/Deep Spawn regressions also passed.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Formatting edits were reviewed; no unrelated
+  file changed. Native and RON focused/regression tests passed again afterward.
+  `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Baseline and final
+  JSON match byte-for-byte: **1,978 compiled / 467 rejected records; 773 accepted /
+  213 rejected unique names**, out of 2,445 records / 986 names. First diagnostic
+  remains Animate Dead: unsupported EnchantGraveyardCard. Strict collection
+  rejection remains intact; no partial registry is installed.
+- All 12 vocabulary source hashes still match. RON sources were not changed.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 343 subrule scenarios, with 18 native operand cases
+plus purity/invalid evidence, saved-target and late-attachment tests. Compilation
+and full-card gameplay coverage remain unchanged. All required checks passed.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_untap_test.go, pkg/mage/dsl/ron/compiler.go,
+pkg/mage/dsl/ron/next_untaps.go, pkg/mage/dsl/ron/waiting_delayed_untap_test.go,
+pkg/mage/doc.go, docs/dsl-reference.md, docs/engine-rules-contracts.md;
+this ledger's summary and appended entry only.
+
+Ranked next candidates:
+
+1. Waiting delayed combat-prevention operand declarations: typed native execution
+   exists; seven protection names, 0 immediate unlocks, bounded prerequisite for
+   complete general source aggregation.
+2. Waiting delayed temporary-layer operand declarations, followed by player
+   collections and remaining conditional declarations. Seven protection names
+   share the downstream benefit; aggregation requires the full declaration audit.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   subject to named identity, band-combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-UNTAP-DECLARATIONS`.
