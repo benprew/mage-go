@@ -147,3 +147,7 @@ func (p *chosenDamageSourcePlan) stackHandChoice(bindings instanceBindings) mage
 func (p *chosenDamageSourcePlan) inspectableStackHandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromInspectableStackHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingPrecastExileChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingPrecastExileReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

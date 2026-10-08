@@ -7379,3 +7379,41 @@ card. Returned visits, later spells and permanents remain separate objects.
 Invalid declarations, missing bindings and reads before producers still reject;
 empty choices clear the binding. Complete production `ChooseADamageSource`
 remains unsupported pending the remaining reference categories and aggregation.
+
+
+## Waiting damage-rule exile references
+
+`Game.WaitingPreventionExileSources() []DamageSource` and
+`Game.WaitingRedirectionExileSources() []DamageSource` read exact exile visits
+saved by active exact/selected-source prevention and selected-source redirection.
+Both reuse the command category's shared active-replacement walker and the
+existing exile information service. They do not execute replacement callbacks.
+Queries deduplicate exact visits and return separate mutable snapshots.
+Consumption ends availability; end-of-turn cleanup removes temporary rules.
+Cycle registrations keep their existing layer-cycle lifetime.
+
+`ChooseDamageSourceFromWaitingPrecastExileReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` combines
+these categories and resolves the choosing player at resolution. An absent player
+or empty matching set clears the result. Definition validation rejects invalid
+players, filters, bindings and reads before the producer. Other categories,
+including exile-instead replacement subjects, retain their separate APIs.
+
+Current exile facts apply while the visit remains. Departure retains the facts
+at that visit's departure. Face-down exile has no characteristics, even when a
+player can inspect the card. A later visit, spell or permanent cannot inherit
+the source identity (CR 400.7, 406.3a, 609.7a–b). Existing damage replacement
+ordering, rechecks, simultaneous packets, shield consumption and clone services
+own execution; this query adds no replacement policy or zone transition.
+
+RON `chosenDamageSourcePlan.waitingPrecastExileChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` to this category with `You` and a fresh
+instance binding. Complete production enumeration remains rejected until other
+required contexts are complete. No new RON spelling or source edit is needed.
+
+Evidence: `TestWaitingExileSources`, `Declarations`, `VisibilityAndBoundaries`
+and `RechecksAndBatch`; `TestRONWaitingPrecastExileProtection` maps the real
+choice, payment and future-prevention declarations of all six Circles of
+Protection and Greater Realm of Preservation to live/departed/returned, copied
+and cloned waiting references. `TestRONWaitingPrecastExileInvalid` covers
+scope/declaration rejection. These are subrule mappings, not full-card coverage.

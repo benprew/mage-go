@@ -8,13 +8,14 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `PRIVATE-STACK-HAND-SOURCE-INSPECTION` adds viewer-specific choices
-for exact stack hand references, private departure facts and independent shield
-rechecks. Public queries retain hidden information. Seven protection names gain
-RON subrule evidence; no complete-card compilation gain is claimed. Hand targets,
-waiting and delayed card frames, remaining precast contexts and opaque references
-remain before complete damage-source enumeration. Token quality grants remain
-unsupported. Titania's Song still needs per-member base values and sticky duration.
+unfinished. `WAITING-PRECAST-EXILE-SOURCES` adds exact exile references in
+active prevention/redirection rules, with current/departure public facts,
+hidden information, consumption and clone isolation. Seven protection names
+gain RON subrule evidence; no complete-card compilation gain is claimed.
+Waiting hand visits, delayed card/card-set frames, remaining precast target
+contexts and opaque references remain before complete damage-source enumeration.
+Token quality grants remain unsupported. Titania's Song still needs per-member
+base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -43570,3 +43571,134 @@ Ranked next candidates:
 Master of the Hunt's token quality remains behind useful shared prerequisites.
 Do not begin another slice in this run. Commit hash is reported in the final
 response.
+
+
+## 2026-10-08: exact exile visits in waiting damage rules
+
+Status: completed implementation slice `WAITING-PRECAST-EXILE-SOURCES`.
+This run stops after this single capability. Initial user changes to `.gitignore`,
+the execution design and ledger reorganization, and untracked completed-history
+file are preserved. The commit includes only this slice's ledger delta.
+
+### Baseline, comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+Fresh strict loader: expected exit 1, **1,978 compiled / 467 rejected records;
+773 accepted / 213 rejected unique names** of 2,445 records / 986 names.
+This is collection rejection, not a build/test failure. All 31 complete protection
+records and the complete records for the alternatives were inspected, including
+nested forms and identical reprints. Reprints count once. Targeted vocabulary
+inspection confirms `ChooseADamageSource` tuple arity 1.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Latest ranked #1, bounded to waiting exile visits; selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**, shared prerequisite for 7 names / 31 records. | Waiting hand, delayed card/card-set frames, remaining precast target contexts and opaque-reference audit still block full aggregation. Supplies exact exile references after stack departure to the seven protection declarations. | Small: shared active-replacement traversal, existing exile information, one scoped lowering, native/RON tests. |
+| Named-token quality grants | Master of the Hunt. **1 plausible unlock**. | Complete record nests `NamedTokenWithPT` and `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))`; token lowering and copied/runtime quality retention remain. Enables token band formation and damage assignment. | Medium: token adapter and combat/copy contracts; lower shared benefit. |
+| Paired text-word substitution | Magical Hack; Sleight of Mind. **2 plausible unlocks**. | Full modal records target spells and permanents separately and nest paired land/color-word choices plus text-variable changes. Shared text representation, copy/layer isolation and both contexts remain. | Large: multiple contracts; exceeds this bounded slice. |
+
+Ranked #1 is dependency-ready. Its waiting exile context is one complete,
+small capability with concrete multi-card downstream value. The broader candidate
+is split by reference category so this run can finish fully. Contract, reuse
+boundary and acceptance cases were stated before edits. The reusable engine
+workflow uses the `implement-engine` skill; no removed skills or delegation.
+
+### Exact supported context and boundaries
+
+- `Game.WaitingPreventionExileSources() []DamageSource` reads exact exile visits
+  saved by active exact/selected-source prevention.
+- `Game.WaitingRedirectionExileSources() []DamageSource` reads exact visits in
+  active selected-source redirection. It does not enumerate the recipient as an
+  exile source or change the live permanent recipient contract.
+- `ChooseDamageSourceFromWaitingPrecastExileReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  combines these two categories with exact deduplication. It resolves the player
+  at resolution, filters current/departure information and saves an independent
+  binding. Empty/absent choices clear the binding. Invalid player/filter/binding
+  declarations and reads before producers fail definition validation.
+- `chosenDamageSourcePlan.waitingPrecastExileChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+  `You` and the factory instance binding. Existing exact-source future prevention
+  consumes the result. Complete production source aggregation remains rejected.
+- Shared internal `waitingReplacementZoneSources` scans active ordinary/cycle
+  replacement lists without calling replacement callbacks. Typed exact-source
+  interfaces supply references; the zone visit accessor and information reader
+  keep categories separate. Existing command APIs preserve their signatures and
+  behavior. No generic game-time declaration dispatch is introduced.
+
+RON owns spelling, validation, scope and instance lowering. Mage owns active rule
+lifetime, exact identity, public information, choice and damage mechanics.
+Reuse: existing exile capture/departure snapshots, hidden exile semantics,
+`DamageSource.SameObject`, definition validation, decision/binding services,
+replacement order, live property rechecks, simultaneous batches, consumption,
+cleanup, stack copying and game clones. Face-down exile has no characteristics,
+even with inspection permission. Departure keeps that visit's public facts;
+return, casting and permanent entry cannot replace it. Rules evidence: local
+CR 400.7, 406.3/406.3a, 609.7a–b. Cycle registrations keep their existing layer
+cycle lifetime; temporary ordinary rules end at cleanup.
+
+No source defect or environment failure was found. This is a missing engine
+reference query and lowering context, not a RON data correction. No RON source
+changed; all 12 source hashes match the vocabulary snapshot. No refresh needed.
+No Go fallback, card-name branch, partial production registry or skipped rule.
+Removal gates remain unmet; Go definitions and existing DSL callers are retained.
+
+### TDD and card-to-test mappings
+
+Before production edits, native tests failed on the missing two query APIs and
+choice constructor; RON tests failed on missing `waitingPrecastExileChoice`.
+An initial fixture-name collision was corrected and the expected missing-signature
+failures were reconfirmed. These same tests pass after implementation.
+The cleanup boundary fixture was corrected to give synthetic ordinary rules
+end-of-turn duration and expire synthetic cycle rules through the existing layer
+reset; assertions were retained. No production cleanup behavior changed.
+
+| Test | Mapping / evidence |
+| --- | --- |
+| `TestWaitingExileSources` | Exact and selected prevention plus selected redirection; query deduplication/isolation; phased recipient; departure/return; cleared resolution/LKI; choices and consumption in independent clones; empty choice. |
+| `TestWaitingExileSourcesDeclarations` | Valid producer/consumer; premature read; missing/invalid player, binding, label and color filter. |
+| `TestWaitingExileSourcesVisibilityAndBoundaries` | Hidden live/departed exile even with inspection permission; returned face-up card cannot reveal old visit; malformed/other-category exclusion; ordinary/cycle and prevention/redirection choice deduplication; filter rejection; cycle reset/cleanup and clone lifetime. |
+| `TestWaitingExileSourcesRechecksAndBatch` | Current color query and mechanical rechecks without consumption; exact departure facts; simultaneous old-visit packets with a returned-visit packet; consumption and clone isolation. |
+| `TestRONWaitingPrecastExileProtection` | All six Circles plus Greater Realm: real RON payment/choice/future-prevention declarations; native exile-payment stack producer converted to a waiting shield; producer stack removed before choice; live/departed/returned state, separate copies and clones; failed payment, resolution timing, shield consumption, empty choice, full-record rejection. |
+| `TestRONWaitingPrecastExileInvalid` | Arity, color, empty filter composition, incompatible reference, absent instance binding and premature read. |
+| Existing `TestWaitingCommand*`, `TestExileDamageSource*`, `TestSelectedSourceRedirect*`, `TestClone*` | Shared walker preserves command behavior; exile casting boundaries, rollback, hidden information, replacement ordering, batch mechanics and clone allocation budget remain covered. |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**.
+Seven names gain waiting-exile subrule gameplay evidence, not complete-card
+coverage. General enumeration still has explicit blockers; no accepted record
+is lost and no estimated unlock was overstated.
+
+### Verification and loader evidence
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingPrecastExile -count=1`: PASS.
+- `go test ./pkg/mage -run
+  'TestWaitingExileSources|TestWaitingCommand|TestExileDamageSource|TestSelectedSourceRedirect|TestClone'
+  -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS. Skill check `go test ./... -short -count=1`: PASS.
+- `make lint`: PASS, 0 issues. Formatting and automatic changes reviewed; no
+  unrelated code changes. `git diff --check`: PASS, including final ledger delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. Full JSON
+  equals baseline. First issue: Animate Dead, `2ED.lines.ron:4:151:
+  unsupported rule (EnchantGraveyardCard)`. Strict loading installs no registry.
+
+Changed files: waiting exile service/native tests, shared command-reference
+traversal, damage-source choice, RON lowering/tests, `doc.go`, API/rules-contract
+docs and this ledger. Complete RON gameplay/loading, startup integration,
+Go-card removal and unused DSL cleanup remain unfinished. No removal gate is met.
+
+Ranked next candidates:
+
+1. Waiting prevention/redirection exact hand visits: same seven downstream
+   protection names, zero immediate unlocks; preserve viewer-specific private
+   information, public departure visibility, mechanical rechecks and lifetime.
+2. Delayed card/card-set exile and hand frames: same seven downstream names,
+   zero immediate unlocks; audit actual producers and retain exact visits,
+   hidden/public/private facts, event capture lifetime and clone isolation.
+3. Remaining precast target contexts and opaque-reference audit, then complete
+   CR 609.7a aggregation: seven estimated full-card unlocks after prerequisites,
+   subject to complete-record evidence. Do not merge incomplete enumeration.
+
+Master of the Hunt remains below useful shared prerequisites. This run stops
+here; the commit hash is reported in the final response.

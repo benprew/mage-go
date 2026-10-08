@@ -51,6 +51,12 @@
 // [Game.WaitingRedirectionPermanentSources] includes its permanent references.
 // [Game.WaitingRedirectionSpellSources] includes its exact selected spell.
 // [ChooseDamageSourceFromWaitingRedirectionReferences] reads both categories.
+// [Game.WaitingPreventionExileSources] and
+// [Game.WaitingRedirectionExileSources] read exact visits in active damage rules.
+// Departure keeps public facts; face-down cards keep no characteristics.
+// A returned card cannot replace the saved visit. Consumption and cleanup end
+// availability. Cycle registrations retain their existing cycle lifetime.
+// [ChooseDamageSourceFromWaitingPrecastExileReferences] uses these two categories.
 // [Game.WaitingPreventionCommandSources] and
 // [Game.WaitingRedirectionCommandSources] keep exact command visits in active rules.
 // [ChooseDamageSourceFromWaitingCommandReferences] uses these two categories.
