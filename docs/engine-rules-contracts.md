@@ -9090,3 +9090,35 @@ declaration rejection and replacement ordering. RON
 `TimingAndRechecks` cover the bounded lowering, seven protection records across
 all three registration kinds, failed payment, copied activations, resolution
 choices, current-property rechecks, simultaneous damage and cloned shields.
+
+## Typed untap-step replacement source enumeration
+
+`Game.WaitingUntapSkipPermanentSources() []DamageSource` enumerates explicit
+source references of active `untapStepSkipReplacement` entries from persistent
+and cycle lists. It reuses `IsActive`, which requires the live, unphased saved
+incarnation and the matching `ruleID` in its current static abilities. Queries
+neither rebuild layers nor execute a replacement. The shared collector removes
+duplicates and returns separate current characteristic snapshots. Control changes
+update the snapshot. No unrelated permanent or general filter supplies a source.
+
+CR 609.7a permits explicit references from waiting replacements. Once this
+static rule becomes inactive, it supplies none. CR 400.7 separates a returned
+object; CR 702.26b suspends a phased object. A fresh layer registration can refer
+to the returned incarnation. Old registrations cannot. This slice preserves
+existing untap-step replacement execution and affected-player ordering.
+
+`ChooseDamageSourceFromWaitingUntapSkipReferences(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` uses shared filters, decisions, binding
+validation and resolution frames. Missing players or candidates clear only its
+binding. No callback-held or zone-scoped references are added. Full source
+composition remains blocked by the remaining explicit-reference audit.
+
+Evidence: `TestWaitingUntapSkipSourcesLifecycle` tests query/execution agreement,
+phasing, return, cleared LKI, control, ability removal, duplicate registrations,
+separate snapshots and clones. `TestWaitingUntapSkipSourcesChoices` tests exact
+filtered choices, unrelated-object exclusion, independent bindings, absent-player
+clearing and invalid declarations. RON `TestRONWaitingUntapSkipSourceProtection`,
+`Invalid` and `TimingAndRechecks` cover seven protection names, payment failure,
+activation copies, clone isolation, empty choices, actual Stasis entry after
+announcement, property rechecks and simultaneous damage shield consumption.
+These are category contracts, not seven complete production card unlocks.

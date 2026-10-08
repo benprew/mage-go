@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-PERSISTENT-REPLACEMENT-SOURCES` completes exact registered
-life/draw/counter replacement sources, shared execution/query lifecycle and RON
-category lowering. Additional subrule evidence covers seven protection names,
-with zero full-card unlocks. Typed/cycle/zone and opaque references remain in the
-audit before complete source enumeration.
+unfinished. `WAITING-UNTAP-SKIP-SOURCES` completes exact typed untap-step
+replacement sources, shared query/execution lifecycle and RON category lowering.
+Additional subrule evidence covers seven protection names and a RON Stasis source
+interaction, with zero full-card unlocks. Legacy cycle/zone and opaque references
+remain in the audit before complete source enumeration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -42120,3 +42120,119 @@ Ranked next candidates:
    Conditional host animation remains lower priority.
 
 The migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-07: waiting typed untap-step replacement sources
+
+Status: completed implementation slice `WAITING-UNTAP-SKIP-SOURCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Complete RON records and nested forms were inspected; identical reprints count
+once. The latest ranked #1 is a multi-family explicit-reference audit. Its typed
+untap-skip category is dependency-ready and bounded for this run.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Typed untap-skip waiting sources, selected from #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Stasis supplies the typed rule. | 0; cycle discard, zone-scoped and opaque references still block complete enumeration. | One exact category needed by seven protection names. Existing typed lifecycle and collector make this a small query/choice/lowering slice with native and RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria | 0 for the bounded formation prerequisite; five grants, named-token abilities and two selective removals need follow-up adapters. | Eight names benefit, but combat formation and damage assignment require a larger engine/test contract before those adapters. |
+| Reverse Damage result / Jade Monolith gameplay | Reverse Damage; Jade Monolith | 0 before full enumeration; Reverse Damage also needs actual prevented-amount life gain. Jade Monolith's redirection lowering already exists. | Two eventual names; result/prevention ordering and complete source composition cost more than the selected bounded category. |
+
+Selected rationale: finish one category in the first-ranked shared prerequisite.
+This advances seven-card source enumeration with exact existing mechanics.
+The contract, reuse boundary and acceptance cases were stated before editing.
+RON owns syntax, validation and per-instance lowering. The engine owns source
+identity, active replacement checks, enumeration, decisions and resolution state.
+
+### Exact signatures, context and reuse
+
+- `Game.WaitingUntapSkipPermanentSources() []DamageSource` supplies exact explicit
+  sources of active `untapStepSkipReplacement` entries in persistent and cycle
+  lists. Shared collection deduplicates identities and clones current snapshots.
+- `ChooseDamageSourceFromWaitingUntapSkipReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  uses shared choice/filter/binding validation and resolution frames.
+- `chosenDamageSourcePlan.waitingUntapSkipChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and that plan's per-instance binding. This completes the typed category context.
+  Full production source choices still reject until enumeration is complete.
+
+The engine reuses `untapStepSkipReplacement.IsActive`: the source must keep its
+saved incarnation and matching static `ruleID` in current abilities. Phasing,
+departure and ability removal suspend or end availability exactly as execution.
+A phase cycle restores the rule; a returned object needs a fresh layer
+registration. Control changes update source information. Queries do not run
+replacement actions, decisions, factories or layer passes. No general filter
+or unrelated permanent supplies an explicit source. Missing players and empty
+or nonmatching lists clear only their binding.
+
+Dependencies/reuse: typed static untap rules, shared replacement lists and
+collector, exact permanent incarnation snapshots, definition validation,
+resolution frames, transactional activation costs, copying/cloning, selected
+source prevention and simultaneous damage. CR 609.7a permits waiting references;
+CR 400.7 separates returns; CR 702.26b suspends phased sources. Existing CR 609.7b
+property checks and affected-player replacement ordering remain shared services.
+No existing public signatures, replacement execution or callers were changed.
+
+### Failing-first tests and card mapping
+
+Native and RON tests first failed for the missing query/choice/adapter signatures.
+The tests passed after the category was connected to the shared engine services.
+
+| Test / mapping | Contract evidence |
+| --- | --- |
+| `TestWaitingUntapSkipSourcesLifecycle` | Query/execution agreement; live, phase, phase cycle, departure with cleared LKI, return/new registration, current control, ability removal; duplicate references, separate snapshots and clones. |
+| `TestWaitingUntapSkipSourcesChoices` | Exact filtered choice; unrelated-object exclusion; independent bindings; nonmatching and absent-player clearing; invalid player/binding/name and producer order. |
+| `TestRONWaitingUntapSkipSourceProtection` — all six Circles and Greater Realm | Complete-record cost and choice/prevention ASTs in a test-only category context; unpaid activation, copied activations, independent cloned shields, consumption and phased empty choices. Full declarations still reject. |
+| `TestRONWaitingUntapSkipSourceInvalid` | Invalid arity, color, filter and reference shape; missing binding and producer order. |
+| `TestRONWaitingUntapSkipSourceTimingAndRechecks` — Circle of Protection: Blue and Stasis | Actual complete RON Stasis enters after announcement and is chosen at resolution; property mismatch leaves the shield available; matching simultaneous packets share a shield; clone consumption stays separate. |
+
+The seven protection names have 31 identical reprint records. Stasis has six.
+This adds category interaction evidence for seven protection names and a Stasis
+source interaction, not new complete-card gameplay coverage. Estimated and actual
+compilation gains are both **0 unique names / 0 records**. No hidden later blocker
+was counted as an unlock. Compilation and full-card gameplay totals do not change.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader exited 1 for unsupported collection records, not a build failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingUntapSkipSource -count=1` and
+  `go test ./pkg/mage -run TestWaitingUntapSkipSources -count=1`: PASS after
+  the expected missing-signature failures.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` found SA4006 in the new lifecycle test: the returned
+  permanent assignment was unused. The assignment was removed without changing
+  its battlefield entry or identity assertions. Final `make lint`: PASS,
+  0 issues. Automatic import formatting was reviewed; both focused tests passed
+  again after the correction and formatting.
+- `git diff --check`: PASS, including final ledger and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  diagnostics match baseline. The collection still rejects atomically.
+
+No environment failure or new source defect was found. All 12 RON file hashes
+match the vocabulary snapshot; no source or vocabulary refresh is needed.
+Runtime cutover, Go-card deletion and DSL removal gates remain unmet.
+
+Changed files: new `pkg/mage/waiting_untap_skip.go` and native tests;
+`damage_source_choice.go`, `doc.go`; `dsl/ron/chosen_source_filter.go` and
+new RON tests; DSL reference, rules contracts and ledger summary/entry.
+
+Ranked next candidates:
+
+1. Exact legacy cycle discard references: capture incarnation and establish
+   shared execution/query lifecycle, including ability removal. Then audit
+   zone-scoped exile and opaque callback references before full CR 609.7a
+   composition. Do not repeat typed untap or previously completed categories.
+2. Parameterized bands with others as the formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount operation after full enumeration;
+   prove Jade Monolith's full gameplay with existing redirection lowering.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.

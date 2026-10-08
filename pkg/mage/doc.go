@@ -72,6 +72,10 @@
 // Their registrations save the live incarnation. Phasing suspends them;
 // departure ends them. A return needs a new registration.
 // [ChooseDamageSourceFromWaitingPersistentReplacementReferences] uses this category only.
+// [Game.WaitingUntapSkipPermanentSources] reads exact sources of active
+// typed untap-step replacements. Queries use the replacement's live ability
+// and incarnation checks. Phasing, departure and ability removal stop them.
+// [ChooseDamageSourceFromWaitingUntapSkipReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.

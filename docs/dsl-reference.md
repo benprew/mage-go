@@ -7178,3 +7178,22 @@ Evidence: native `TestWaitingPersistentReplacementSources*` and RON
 `TestRONWaitingPersistentReplacementSource*`. The latter use full-record costs
 and choice/prevention ASTs for six Circles and Greater Realm of Preservation in
 a test-only category context. They do not establish full-card loading.
+
+### Typed untap-step replacement source references
+
+`mage.ChooseDamageSourceFromWaitingUntapSkipReferences(player, filter, binding)`
+supplies the explicit source category of active typed `SkipUntapSteps` rules.
+`Game.WaitingUntapSkipPermanentSources() []DamageSource` reads both replacement
+lists without running replacements, choices, factories or layer passes. Each
+source must keep the registered incarnation and the matching live static ability.
+Phasing suspends availability; phase-in restores it. Departure and ability
+removal stop it; a returned permanent needs its new static registration.
+
+RON `chosenDamageSourcePlan.waitingUntapSkipChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` with `You` and its per-instance binding.
+The common source filter and definition validation still apply. Empty or
+nonmatching lists and absent players clear only that result. This category does
+not complete CR 609.7a enumeration; production declarations remain rejected.
+Evidence: `TestWaitingUntapSkipSources*` and
+`TestRONWaitingUntapSkipSource*`, including actual RON Stasis as a source and
+full-record protection costs and prevention ASTs in a test-only category context.
