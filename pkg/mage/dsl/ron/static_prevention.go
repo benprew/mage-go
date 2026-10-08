@@ -63,6 +63,6 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, unsupported(operation, "static prevention operation")
 	}
 	return func() mage.CardOption {
-		return mage.WithStaticAbility(mage.PreventDamageFromTo(from, mage.IsID))
+		return mage.WithAbility(mage.Static(mage.PreventDamageFromMatchingPermanents(ref.build(instanceBindings{}), from)))
 	}, nil
 }

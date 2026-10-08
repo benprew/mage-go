@@ -9,10 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-STATIC-PREVENTION-SUBJECTS` slice is recorded at the end of this
-ledger. It adds current subjects of typed static prevention to the shared
-waiting-reference query, a prerequisite for seven source-choice prevention cards.
-Five accepted cards have new interaction coverage; compilation counts are unchanged.
+`TYPED-STATIC-PERMANENT-FILTER-PREVENTION` slice is recorded at the end of this
+ledger. It lowers self-recipient permanent-filter prevention to a typed native
+rule with an exact live waiting subject, a prerequisite for seven source-choice cards.
+Three accepted cards have new interaction coverage; compilation counts are unchanged.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39379,6 +39379,129 @@ Ranked next candidates to reassess from fresh evidence:
    replacement/source/spell contexts; then face-up command objects and complete
    source selection before the seven shields. Legacy static consumers include
    Argothian Pixies, Desert Nomads and Uncle Istvan.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: typed static prevention from matching permanent sources
+
+Status: completed implementation slice `TYPED-STATIC-PERMANENT-FILTER-PREVENTION`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and the ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's status update and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+Complete canonical RON records and nested forms were inspected; reprints count
+once. The targeted vocabulary confirms the two-argument permanent-source event,
+parameterized band filters and paired word choices.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, typed static permanent-filter prevention, selected | Direct consumers: Argothian Pixies, Desert Nomads, Uncle Istvan, all already accepted: **0 immediate unlocks**. Downstream: Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records**. | Exact self subjects of these three static rules were absent from the waiting-reference query. Other waiting replacement/source/spell contexts, face-up command objects, complete source enumeration, chosen-source shields, permanent-spell continuity and property rechecks remain. | Small: one native typed rule, one lowering change, existing lifecycle/query services, focused native and complete-record interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible unlocks** for the full family. | Legendary/named filters, band formation and both damage-assignment directions; live/token grants and selective temporary removal. Enables all eight consumers and future band grants. | Large: ability representation, combat and layer/token/removal adapters, plus interaction tests. |
+| Typed word choices and substitution | Magical Hack; Sleight of Mind: **2 plausible unlocks**. | Both full modal records require spell and permanent contexts, paired land-type/color-word choices, text-variable substitution, copy and layer isolation. | Large: text representation, paired bindings, two execution contexts and gameplay tests. |
+
+Ranked #1 wins because its dependency-ready part closes a concrete shared gap for
+seven downstream cards within a bounded slice. It replaces a compiler adapter's
+legacy filter-factory lowering with an exact typed subject, rather than trying to
+infer exact references from arbitrary legacy filter closures. Contract, reuse
+boundary and acceptance cases were stated before edits. The `implement-engine`
+skill supplied the native workflow. No delegation or removed card/set skill was
+used. No source-data defect or environment failure was found.
+
+### Exact signatures, contexts and dependencies
+
+- New native API: `PreventDamageFromMatchingPermanents(subject PermanentRef,
+  from PermanentFilter) StaticRule`. It accepts the existing validated static
+  `This` or `AttachedPermanent` subjects. A zero filter becomes `AnyPermanent`;
+  all source filters require exact permanent source information, excluding spell
+  sources even when their card types match.
+- RON supported shape stays top-level permanent
+  `PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(source_filter,
+  Permanent(ThisPermanent)), [PreventThatDamage])`. Existing filter grammar,
+  exact operation count and self-only scope validation remain. Aura hosts,
+  player/event/target recipients, finite amounts and additional operations are
+  still errors for this RON event shape. Native attachment support does not
+  silently extend RON support.
+- `compileStaticPrevention` now builds `WithAbility(Static(
+  PreventDamageFromMatchingPermanents(ref.build(instanceBindings{}), from)))`
+  for each factory instance, replacing `WithStaticAbility(
+  PreventDamageFromTo(from, IsID))` in this adapter only.
+- The existing `staticDamagePreventionRule`, continuous effect and replacement
+  gain a permanent-source mode. Definition validation checks the typed subject.
+  `damagePreventionRuleReplacement.Matches` and `Game.damageFilterSource` retain
+  current/phase/LKI source reads, exact incarnation identity and packet filtering.
+- `staticDamagePreventionReplacement.currentSubject` supplies both damage
+  matching and `Game.WaitingPreventionPermanentSources`. Source phasing,
+  departure/return, current attachment and ability removal use the existing
+  continuous lifecycle. Static subjects are live, not saved departed subjects.
+  Matching source-filter members and registration sources are not extra references.
+- RON owns spelling/scope/lowering; mage owns filtering, identity, lifecycle,
+  queries, cloning and replacement execution. CR 120.7, 400.7, 609.7a/c,
+  611.3, 615.1–6, 616.1 and 702.26b supply the relevant rules contracts.
+- Legacy `PreventDamageFromTo` and DSL aliases remain for existing callers.
+  No Go-card fallback, card-name branch, global action slot, partial registry,
+  game-time declaration panic or new payment/damage ordering is introduced.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed at compilation with undefined
+`PreventDamageFromMatchingPermanents`. RON complete-record tests independently
+failed with `initial subjects=0 want exact subject` for all three consumers.
+The same assertions pass with the implementation.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestStaticPermanentFilterPrevention` | Matching/nonmatching permanent sources; type gain/loss; departed/returned/phased exact sources; matching/nonmatching spell exclusion; unknown identities; unpreventable packets; repeated simultaneous combat/noncombat damage to protected and unrelated recipients and a player. |
+| `TestStaticPermanentFilterPreventionDeclarations`, `AnySource` | Reject nil/target/unbound subjects before gameplay; zero and explicit any-permanent filters still exclude spell sources. |
+| `TestStaticPermanentFilterPreventionLiveHost`, `Recheck` | Native attachment reattachment, phasing/cycles, source/host departure/return, control, source/host ability removal, clones; replacement rechecks after type changes, rule phasing/return and redirection. |
+| `TestWaitingStaticPreventionReferences`, `TestWaitingStaticPermanentFilterPreventionStaleCycle` | Exact live subject and phase exclusion; saved cycle entry cannot follow returned source/host; current attachment/control. Existing typed query boundary tests retain deduplication, independent bindings and snapshot isolation. |
+| Argothian Pixies (ATQ); Desert Nomads (ARN); Uncle Istvan (DRK) | Expanded `TestRONWaitingStaticPreventionReferences`: complete records, exact choice then damage execution, phase/cycle, source departure/return, ability removal, current control, damage/cleanup lifetime and independent clones. New interaction evidence for **3 accepted names / 3 records**. |
+| Same three complete records | Rerun `TestRONStaticPrevention*`: malformed/unbound/out-of-context declarations; source filters and recipient scope; pending paid activations/copies with departure LKI; simultaneous and real combat/spell damage; Pixies blocking and Nomads landwalk; replacement choice/recheck; strict atomic loading and factory isolation. |
+| Existing five typed static consumers | Expanded waiting-subject matrix retains Demonic Torment, Gaseous Form, Enchanted Being, Argothian Treefolk and Wall of Vapor interaction coverage. |
+| Seven source-choice shields | Complete records remain rejected at `ChooseADamageSource`; no full shield gameplay claim. |
+
+### Validation and measured outcome
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 due to collection rejection, not a build
+failure: **1,963 compiled / 482 rejected records; 763 accepted / 223 rejected names**.
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingStaticPrevention|TestRONStaticPrevention' -count=1`.
+- Native focused `TestStaticPermanentFilterPrevention|TestWaitingStatic.*Prevention`
+  tests with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- Additional skill check: `go test ./... -short -count=1`.
+- `make lint`: PASS, 0 issues. Automatic formatting changes were reviewed.
+- Focused native/RON tests rerun after lint: PASS. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected names**. Diagnostics equal baseline.
+
+Estimated and actual compilation gain: **0 names / 0 records**, as expected.
+New gameplay interaction coverage: **3 names / 3 records**; all remain accepted.
+All 12 RON source hashes match the vocabulary snapshot, so no refresh is needed.
+Compilation and gameplay coverage remain separate. No removal gate is met, and no
+DSL service is deleted. A fresh caller search confirms production Go sets and the
+DSL alias still use the legacy static service.
+
+Changed files: `pkg/mage/static_combat_prevention.go`, new
+`pkg/mage/static_permanent_filter_prevention_test.go`, native
+`waiting_static_prevention_test.go`, `pkg/mage/dsl/ron/static_prevention.go`, RON
+`waiting_static_prevention_test.go`, `pkg/mage/doc.go`, API/rules-contract docs
+and this ledger. Runtime loading, full collection gameplay, Go-card deletion and
+unused DSL cleanup remain unfinished.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Exact references in other waiting replacement/source/spell contexts, including
+   selected-source shields; then face-up command objects and full source selection
+   before the seven source-choice prevention cards. Legacy filter-factory rules
+   with collective recipients need explicit typed contracts, not closure inference.
 2. Parameterized bands with others for the eight complete records above.
 3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
 

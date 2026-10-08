@@ -2046,10 +2046,11 @@ introduced by this slice.
 
 RON now lowers
 `PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(filter, Permanent(ThisPermanent)), [PreventThatDamage])`
-to the existing `PreventDamageFromTo(filter, IsID)` static service. The adapter
+to `PreventDamageFromMatchingPermanents(This, filter)` in the typed static
+prevention service. The adapter
 validates the event, recipient and operation list at compilation. Each factory
-creates an independent static ability. No engine signature or replacement
-algorithm changes.
+creates an independent static ability. The source filter and replacement
+algorithm retain their existing behavior.
 
 The shared continuous cycle installs prevention only while the recipient has
 this ability on the battlefield. Source filters use the captured source contract
@@ -8244,3 +8245,36 @@ payment rollback, actual prevention, simultaneous damage and replacement order.
 Wall of Shadows still fails its separate `CanTargetOnly` declaration. Legacy
 filter-factory static rules and other waiting replacement contexts remain gaps.
 No payment, damage batch, replacement order or general source-choice rule changes.
+
+### Typed permanent-filter static prevention
+
+`PreventDamageFromMatchingPermanents(PermanentRef, PermanentFilter) StaticRule`
+uses the typed static prevention lifecycle and current exact subject resolver.
+It delegates permanent source filtering to `damagePreventionRuleReplacement`
+and `Game.damageFilterSource`. A zero filter becomes `AnyPermanent`, so it cannot
+bypass permanent-source identity checks and prevent spell-source damage.
+Combat and noncombat packets use the same filter. Live source characteristics,
+phase information and exact departure LKI retain the existing source contract;
+a returned card cannot replace the original incarnation (CR 400.7, 609.7c).
+
+Subjects are live `This` or `AttachedPermanent` references. Reattachment changes
+the subject; phasing, departure or source ability removal ends its current rule.
+A returned source cannot restore an old cycle entry (CR 611.3, 702.26b).
+The exact current subject also supplies the waiting-prevention reference category
+(CR 120.7, 609.7a). Registration sources and unspecified filter members are not
+additional references. No hypothetical damage event runs during the query.
+
+`TestStaticPermanentFilterPrevention*` covers valid/invalid declarations, zero
+filters, matching and nonmatching sources, source characteristic changes,
+departure/return/phasing, spell exclusion, unknown identities, unpreventable
+packets, repeated simultaneous combat/noncombat damage, live Aura lifecycle,
+control, ability removal, clone isolation and replacement rechecks/redirection.
+`TestWaitingStaticPermanentFilterPreventionStaleCycle` tests saved cycle entries.
+`TestRONWaitingStaticPreventionReferences` now covers complete Argothian Pixies,
+Desert Nomads and Uncle Istvan records through exact choices and damage execution.
+`TestRONStaticPrevention*` retains declaration rejection, pending activation/copy,
+combat, casting, strict loading, instance isolation and recipient replacement order.
+
+This does not establish general source choice or the seven chosen-source shields.
+Other waiting replacement contexts and legacy filter-factory callers remain gaps.
+No costs, damage batch ordering or existing replacement priorities change.

@@ -12,7 +12,17 @@ type staticDamagePreventionRule struct {
 	outgoing         bool
 	allDamage        bool
 	blockedCreatures bool
+	permanentSources bool
 	sourceType       core.CardType
+}
+
+// PreventDamageFromMatchingPermanents prevents matching damage to the current subject.
+// A zero filter permits any permanent source. Spell sources cannot match.
+func PreventDamageFromMatchingPermanents(subject PermanentRef, from PermanentFilter) StaticRule {
+	if from.IsZero() {
+		from = AnyPermanent
+	}
+	return staticDamagePreventionRule{subject: subject, from: from, allDamage: true, permanentSources: true}
 }
 
 // PreventCombatDamageFrom prevents combat damage from the current subject.
@@ -43,6 +53,8 @@ func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "static-rule", Text: "prevent combat damage", battlefieldSource: true, children: []definitionEdge{{"subject", r.subject}}}
 	if r.blockedCreatures {
 		node.Text = "prevent damage from blocked creatures"
+	} else if r.permanentSources {
+		node.Text = "prevent damage from matching permanent sources"
 	} else if r.allDamage {
 		node.Text = "prevent damage from a card type"
 		if r.sourceType < core.TypeCreature || r.sourceType > core.TypePlaneswalker {
@@ -114,7 +126,7 @@ func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameRe
 	id, incarnation := subject.ID(), subject.incarnationID
 	identity := NewPermanentFilter("current prevention subject", func(p *Permanent, _ *Game) bool { return p.ID() == id && p.incarnationID == incarnation })
 	match := &damagePreventionRuleReplacement{combatOnly: !r.rule.allDamage}
-	if r.rule.allDamage && !r.rule.blockedCreatures && !damageSourceHasCardType(action, g, r.rule.sourceType) {
+	if r.rule.allDamage && !r.rule.blockedCreatures && !r.rule.permanentSources && !damageSourceHasCardType(action, g, r.rule.sourceType) {
 		return false
 	}
 	if r.rule.outgoing {

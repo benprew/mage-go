@@ -9,7 +9,7 @@ import (
 )
 
 func TestWaitingStaticPreventionReferences(t *testing.T) {
-	for _, rule := range []StaticRule{PreventCombatDamageFrom(This), PreventCombatDamageTo(This, AnyPermanent), PreventDamageFromCardType(This, core.TypeArtifact), PreventDamageFromBlockedCreatures(This)} {
+	for _, rule := range []StaticRule{PreventCombatDamageFrom(This), PreventCombatDamageTo(This, AnyPermanent), PreventDamageFromCardType(This, core.TypeArtifact), PreventDamageFromBlockedCreatures(This), PreventDamageFromMatchingPermanents(This, IsCreature)} {
 		a, b := NewBasePlayer("A"), NewBasePlayer("B")
 		g := NewGame(a, b)
 		subject := g.PutOnBattlefield(NewCreature("Subject", "{R}", 1, 10, WithAbility(Static(rule))), a.PlayerID())
@@ -66,6 +66,15 @@ func TestWaitingStaticPreventionChoiceBoundaries(t *testing.T) {
 }
 
 func TestWaitingStaticPreventionStaleCycle(t *testing.T) {
+	testWaitingStaticPreventionStaleCycle(t, PreventCombatDamageFrom(AttachedPermanent))
+}
+
+func TestWaitingStaticPermanentFilterPreventionStaleCycle(t *testing.T) {
+	testWaitingStaticPreventionStaleCycle(t, PreventDamageFromMatchingPermanents(AttachedPermanent, IsCreature))
+}
+
+func testWaitingStaticPreventionStaleCycle(t *testing.T, rule StaticRule) {
+	t.Helper()
 	for _, state := range []string{"reattach", "source-phase", "subject-phase", "source-return", "host-return", "control"} {
 		t.Run(state, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
@@ -73,7 +82,7 @@ func TestWaitingStaticPreventionStaleCycle(t *testing.T) {
 			hostCard := NewCreature("Host", "{R}", 1, 10)
 			host := g.PutOnBattlefield(hostCard, a.PlayerID())
 			other := g.PutOnBattlefield(NewCreature("Other", "{U}", 1, 10), b.PlayerID())
-			card := NewAura("Rule", "", WithAbility(Static(PreventCombatDamageFrom(AttachedPermanent))))
+			card := NewAura("Rule", "", WithAbility(Static(rule)))
 			aura := g.PutOnBattlefield(card, a.PlayerID())
 			g.Attach(aura.ID(), host.ID())
 			var saved *staticDamagePreventionReplacement

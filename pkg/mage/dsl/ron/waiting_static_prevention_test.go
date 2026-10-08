@@ -17,6 +17,8 @@ func TestRONWaitingStaticPreventionReferences(t *testing.T) {
 		{"LEG", "Demonic Torment", true}, {"LEG", "Gaseous Form", true},
 		{"LEG", "Enchanted Being", false}, {"ATQ", "Argothian Treefolk", false},
 		{"LEG", "Wall of Vapor", false},
+		{"ATQ", "Argothian Pixies", false}, {"ARN", "Desert Nomads", false},
+		{"DRK", "Uncle Istvan", false},
 	} {
 		for _, state := range []string{"live", "reattach", "source-phase", "subject-phase", "phase-cycle", "depart", "return", "host-return", "remove-source", "remove-host", "control", "damage", "cleanup"} {
 			t.Run(tc.name+"/"+state, func(t *testing.T) {

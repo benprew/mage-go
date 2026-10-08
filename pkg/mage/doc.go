@@ -6,6 +6,8 @@
 // Collection prevention supplies each member saved at resolution.
 // Typed static prevention supplies its current subject. The live rule must
 // remain active; a former attachment cannot supply that subject.
+// [PreventDamageFromMatchingPermanents] supplies its current exact subject.
+// Its permanent filter uses current or retained source information.
 // [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //

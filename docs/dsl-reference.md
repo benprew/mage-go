@@ -2155,8 +2155,8 @@ remain unsupported in this shape. Static combat events have the separate
 contract below. These declarations
 fail compilation before a factory is returned.
 
-Each factory builds a fresh static ability using `PreventDamageFromTo` and
-`IsID`. It prevents all matching damage to that permanent while the ability
+Each factory builds a fresh typed static ability using
+`PreventDamageFromMatchingPermanents(This, source_filter)`. It prevents all matching damage to that permanent while the ability
 is active. It covers combat and noncombat damage without a finite shield.
 Current source characteristics and retained source incarnations use the engine
 source filter contract. This does not make permanent filters match spell sources.
@@ -6735,3 +6735,30 @@ and blocked-creature events use the other two typed rules. Existing declaration,
 scope and filter restrictions remain. This adds no new spelling or general
 `ChooseADamageSource` adapter. Legacy filter-factory static prevention and other
 waiting replacements still need separate reference contracts.
+
+## Typed static prevention from matching permanent sources
+
+`PreventDamageFromMatchingPermanents(subject PermanentRef, from PermanentFilter)
+StaticRule` prevents combat and noncombat damage to its current subject. `This`
+and `AttachedPermanent` use the existing static subject validation. A zero filter
+permits any permanent source. Spell sources cannot match, even when their card
+characteristics match the filter. Exact departed sources use the existing LKI
+service; a returned card cannot supply the old source's information.
+
+RON lowers the existing top-level `PreventDamage(
+DamageWouldBeDealtByAPermanentToRecipient(source_filter,
+Permanent(ThisPermanent)), [PreventThatDamage])` to this rule. The supported RON
+context stays self-only; Aura hosts, event/target references, player recipients,
+finite amounts and additional operations stay rejected in this event shape.
+The native service permits a live attachment subject without extending RON syntax.
+
+The rule supplies its exact live subject through
+`Game.WaitingPreventionPermanentSources`. Source filters do not enumerate their
+matching members. Current subject resolution, source incarnation validation,
+phasing, ability removal, clones and replacement rechecks reuse typed static
+prevention. Legacy `PreventDamageFromTo` callers keep their existing contract.
+
+Tests: `TestStaticPermanentFilterPrevention*`,
+`TestWaitingStaticPermanentFilterPreventionStaleCycle`, and the expanded
+`TestRONWaitingStaticPreventionReferences`. Complete Argothian Pixies, Desert
+Nomads and Uncle Istvan records retain `TestRONStaticPrevention*` gameplay evidence.
