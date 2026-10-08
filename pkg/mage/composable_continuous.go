@@ -26,6 +26,7 @@ type layerModification struct {
 	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
+	removeBandsWithOther  bool
 	removeAbilities       bool
 	cantBeBlocked         bool
 	cantBlock             bool
@@ -305,6 +306,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.removeBandsWithOther {
+			return "loses all bands with other"
+		}
 		if m.bandsQuality != nil {
 			return "bands with other " + m.bandsQuality.Text()
 		}
@@ -382,6 +386,7 @@ type capturedModification struct {
 	protectionGrant       bool
 	removeKeyword         bool
 	removeLandwalk        bool
+	removeBandsWithOther  bool
 	removeAbilities       bool
 	cantBeBlocked         bool
 	cantBlock             bool
@@ -411,7 +416,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 func (m *layerModification) captureMembers(ctx *EffectContext, members []*Permanent) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, bandsQuality: m.bandsQuality, protectionColors: m.protectionColors, protectionGrant: m.protectionGrant, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeBandsWithOther: m.removeBandsWithOther, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, cantBlock: m.cantBlock, assignsNoCombatDamage: m.assignsNoCombatDamage, blockerFilter: m.blockerFilter, requiredBlockerFilter: m.requiredBlockerFilter, blockEachAttacker: m.blockEachAttacker, blockAnyNumber: m.blockAnyNumber, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, setToughnessOnly: m.setToughnessOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -476,6 +481,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			}
 			key := capturedPermanent{p.ID(), p.incarnationID}
 			g.effects.bandsWithOther[key] = append(g.effects.bandsWithOther[key], *v.bandsQuality)
+		} else if v.removeBandsWithOther {
+			delete(g.effects.bandsWithOther, capturedPermanent{p.ID(), p.incarnationID})
 		} else if v.protectionGrant {
 			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ProtectionFromColors(append([]Color(nil), v.protectionColors...)...)))
 		} else if v.assignsNoCombatDamage {

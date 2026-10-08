@@ -7283,6 +7283,20 @@ also match the grant's color and current controller selection.
 
 The supported context is an unconditional static collection layer with one or
 more bands-with-other grants. Combined unrelated modifications, Aura/singular
-subjects, printed declarations, token abilities, temporary grants and selective
-`AnyBandsWithOthers` removal remain declaration errors. Ordinary banding removal
-uses the shared engine rule and removes bands-with-other grants too.
+subjects, printed declarations, token abilities and temporary grants remain
+declaration errors. Ordinary banding removal uses the shared engine rule and
+removes bands-with-other grants too.
+
+### RON selective bands-with-other removal
+
+`CreatePermanentLayerEffectUntil(subject, [LosesAbility(AnyBandsWithOthers)],
+UntilEndOfTurn)` lowers to `RemoveBandsWithOther(PermanentRef)` in the existing
+singular resolving modification context. `AnyBandsWithOthers` is a symbol;
+call forms and use in `AddAbility` are invalid. Typed subject scope checks and
+supported duration checks apply. Static collection removal remains unsupported.
+
+The operation removes every quality grant in layer 6, preserves ordinary
+banding, and uses the saved subject incarnation until cleanup. A later layer
+grant can restore the ability. A formed band persists, while damage assignment
+checks the abilities that remain. Shelkin Brownie uses selective removal;
+Tolaria combines it with ordinary banding removal and an upkeep restriction.

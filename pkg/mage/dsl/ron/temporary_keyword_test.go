@@ -183,7 +183,7 @@ func TestRONTemporaryKeywordScarwoodOrder(t *testing.T) {
 func TestRONTemporaryKeywordInvalid(t *testing.T) {
 	for _, modification := range []string{
 		`LosesAbility()`, `LosesAbility(Flying, Banding)`, `LosesAbility(Flying())`,
-		`LosesAbility(TheChosenAbility)`, `LosesAbility(AnyBandsWithOthers)`,
+		`LosesAbility(TheChosenAbility)`, `LosesAbility(AnyBandsWithOthers())`,
 		`LosesAbility(AnyLandwalk())`, `LosesAbility(Landwalk(IsLandType(Forest())))`,
 		`LosesAbility(Landwalk(IsLandType(Snow)))`, `LosesAbility(Landwalk(AnyPermanent))`,
 		`LosesAbility(Enchant(IsCardtype(Creature)))`, `AddAbility([AnyLandwalk])`,

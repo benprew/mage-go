@@ -22,6 +22,11 @@ func compileTemporaryKeywordRemoval(n Node, subject permanentReferencePlan) (fun
 		return nil, err
 	}
 	ability := n.Args[0]
+	if ability.Kind == Symbol && ability.Name == "AnyBandsWithOthers" {
+		return func(bindings instanceBindings) mage.ContinuousModification {
+			return mage.RemoveBandsWithOther(subject.build(bindings))
+		}, nil
+	}
 	if ability.Kind == Symbol && ability.Name == "AnyLandwalk" {
 		return func(bindings instanceBindings) mage.ContinuousModification {
 			return mage.RemoveLandwalk(subject.build(bindings))

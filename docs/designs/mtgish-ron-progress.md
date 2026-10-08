@@ -2,15 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **771 accepted / 215 rejected unique card
-names** (986 total), and **1,976 compiled / 469 rejected records** (2,445 total).
+The latest recorded inventory reports **773 accepted / 213 rejected unique card
+names** (986 total), and **1,978 compiled / 467 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `STATIC-BANDS-WITH-OTHER` adds typed quality formation and damage
-assignment plus complete RON gameplay for five Legends lands. Token grants and
-selective bands-with-other removal remain unsupported. Precast zone visits and
+unfinished. `SELECTIVE-BANDS-WITH-OTHER-REMOVAL` adds exact layer 6 removal
+and complete RON gameplay for Shelkin Brownie and Tolaria. The five Legends
+lands retain their typed quality formation and assignment support. Token grants
+remain unsupported. Precast zone visits and
 opaque references remain before complete damage-source enumeration. Titania's
 Song still needs per-member base values and sticky duration.
 
@@ -42808,5 +42809,133 @@ Ranked next candidates:
    typed quality and combat rules now exist; preserve per-token source bindings
    and clone/creation isolation. One estimated unlock; defer while useful
    multi-card work remains.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-08: selective bands-with-other removal
+
+Status: completed implementation slice `SELECTIVE-BANDS-WITH-OTHER-REMOVAL`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended ledger entry are staged.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 is dependency-ready. Complete Shelkin Brownie,
+Tolaria, Master of the Hunt and the seven protection records were inspected,
+including their nested forms. Reprints count once.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected: selective `AnyBandsWithOthers` removal | Shelkin Brownie; Tolaria: **2 names / 2 records** | Existing typed quality grants, combat, tap costs, creature targets, durations and upkeep restrictions cover both complete records. Adds the shared removal counterpart for quality grants and future token abilities. No other blocker for these two cards. | Small: one capture flag and layer operation, compiler adapter, native layer/combat tests and complete-record lifecycle tests. |
+| Precast exile visits and permitted-cast identity | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | Exact precast visits enable source continuity for all seven. Opaque references and complete CR 609.7a enumeration still block general `ChooseADamageSource`. | Medium: zone visit and cast continuation contract, cloning, departure and reference tests. |
+| Named-token quality ability lowering | Master of the Hunt: **1 name / 1 record** | Its complete record uses supported fixed mana payment and named-token metadata, but token-local `BandsWithOthers` lowering is absent. Combat quality rules exist. Enables token consumers with separate source bindings. | Small to medium: token ability lowering, repeated creation, copy/clone isolation and combat tests. |
+
+Selection: two immediate full-card unlocks with a bounded shared adapter/engine
+contract. This is a larger immediate gain for the effort than the token form,
+and needs less new lifecycle state than precast exile identity. That prerequisite
+remains useful multi-card work and is ranked first for the next run.
+
+### Contract, dependencies and reuse
+
+- RON signature: `LosesAbility(AnyBandsWithOthers)` inside the existing singular
+  resolving `CreatePermanentLayerEffectUntil(subject, modifications, duration)`.
+  The argument must be a symbol. Existing typed permanent references, scope
+  validation and duration plans apply. It can combine with `LosesAbility(Banding)`.
+  Call forms, use as a grant, unbound targets and static collection removal remain
+  declaration errors. No new rule is accepted through a name-specific branch.
+- Compiler: `compileTemporaryKeywordRemoval(Node, permanentReferencePlan)
+  (func(instanceBindings) mage.ContinuousModification, error)` builds a fresh
+  subject reference for each factory instance. RON keeps syntax and scope logic.
+- Engine: `RemoveBandsWithOther(PermanentRef) ContinuousModification` removes all
+  qualities from the selected live incarnation in layer 6, preserving ordinary
+  banding and unrelated keywords. The existing `capturedModification` saves the
+  removal flag and exact permanent incarnation. Later grants restore qualities
+  in timestamp order; later removal erases them again (CR 613.3, 613.7a/b).
+- Existing durations preserve installed removal through control changes and phase
+  cycles, exclude returned objects, and expire at cleanup. Source departure does
+  not end a resolved duration. Illegal targets are checked before resolution.
+  No LKI fallback supplies an absent subject to the modification.
+- A formed band remains after removal (CR 702.22e). Formation and damage choices
+  read current abilities (CR 702.22c/j/k). Ordinary banding still transfers damage
+  choices; ordinary banding removal keeps its broader CR 702.22b behavior.
+
+Reuse boundary: existing permanent references, per-instance target bindings,
+exact incarnation capture, layer ordering, static land qualities, combat band
+and damage services, stack copying, game cloning, activation legality, payment
+transactions and cleanup. This slice adds no replacement, simultaneous-operation,
+LKI or payment subsystem. Existing simultaneous damage totals are tested after
+removal. Tap payment failure/timing uses the existing transaction service.
+
+Both complete records match the local Oracle text in `data/LEG.json`. Tolaria
+can activate during either player's upkeep; its mana ability remains immediate.
+No source-data defect or environment failure was found. All 12 RON hashes match
+the vocabulary snapshot; no source/vocabulary refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, the native test build failed on missing
+`RemoveBandsWithOther`. Initial RON test helper spelling errors were corrected;
+the RON record and strict-loader tests then failed specifically at unsupported
+`AnyBandsWithOthers` lowering. Invalid-declaration tests already rejected the
+bad shapes. During test refinement, fixtures were given distinct legendary
+names so the legend rule could not remove a required combat partner. The native
+layer-order assertion was corrected to remove both independently granted holders
+before expecting no assignment permission; its two-holder contract is retained.
+
+| Tests | Card mapping / evidence |
+| --- | --- |
+| `TestBandsWithOtherRemoval` | Synthetic two qualities and two subjects: complete selective removal, ordinary banding/flying preservation, retained band, live assignment permission, grant/remove timestamp ordering, clone isolation and cleanup. |
+| `TestRONBandsWithOtherRemovalRecords` | Shelkin Brownie and Tolaria complete records: definition validation, tap payment, summoning sickness, invalid creature target, opponent upkeep, mana production, changed step before resolution, source departure, stack copy, pending clone, target departure/return, phasing before/after resolution, control changes, shroud, unrelated subject, formation and cleanup. Ordinary banding remains for Brownie and is removed for Tolaria. |
+| `TestRONBandsWithOtherRemovalCombat` | Both complete records: removal after band formation preserves membership but stops the quality's damage assignment choice; unremoved controls keep the choice. Separate simultaneous source totals remain four incoming and two outgoing damage. |
+| `TestRONBandsWithOtherRemovalInvalid` | Invalid argument call/arity, grant use, unbound reference and unsupported static collection context. |
+| `TestRONBandsWithOtherRemovalStrictLoad` | Two complete records and identical synthetic reprints, fresh card/ability identities, and atomic rejection of an invalid collection. |
+| Existing `TestRONActivationSteps` and temporary-keyword tests | Any-upkeep step contract, copy retargeting and shared legality/duration regressions remain passing. The old rejection fixture now tests the still-invalid call form. |
+
+Estimate and actual gain match: **+2 accepted names / +2 compiled records**.
+Both names now have complete RON behavior mappings. This gain does not establish
+complete gameplay validation for the rest of the collection.
+
+### Validation and loader evidence
+
+- Baseline `make build`; `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader: expected exit 1; **1,976 compiled / 469 rejected records;
+  771 accepted / 215 rejected unique names**. This is collection rejection.
+- `go test ./pkg/mage/dsl/ron -run TestRONBandsWithOtherRemoval -count=1`: PASS.
+  Native `go test ./pkg/mage -run TestBandsWithOtherRemoval -count=1`: PASS.
+  Focused bands-with-other and temporary-keyword regressions: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the two new
+  test files was reviewed. Focused native/RON suites and `make build` passed
+  again after formatting.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. Diagnostics
+  differ from baseline only by removing Shelkin Brownie and Tolaria. No new
+  diagnostic appeared. First remaining issue: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  The complete collection remains rejected atomically.
+
+Changed files: engine `bands_with_other.go`, `composable_continuous.go` and new
+native removal tests; RON temporary-keyword lowering, new complete-record removal
+tests, rejection fixture and inventory count expectations; engine API reference,
+rules contracts, DSL reference and this ledger summary/entry.
+
+No Go definition, runtime consumer, generator or DSL function meets its removal
+gate in this run. Complete collection gameplay, runtime loading, Go-card deletion
+and unused DSL cleanup remain unfinished. No environmental blocker was found.
+
+Ranked next candidates:
+
+1. Precast exile visits and exact permitted-cast/continuation identity: bounded
+   prerequisite for the seven protection names, zero immediate unlocks. Preserve
+   zone visits, source facts and clone isolation before general enumeration.
+2. Opaque-reference audit and complete CR 609.7a source enumeration after the
+   precast prerequisite. Seven estimated protection-card unlocks, subject to the
+   audit; do not accept a source list with missing categories.
+3. Named-token `BandsWithOthers` lowering for Master of the Hunt. One estimated
+   unlock; preserve each token's binding and repeated creation/copy/clone state.
+   Defer while useful multi-card prerequisites remain.
 
 Migration completion gates remain unmet. The commit hash is in the final reply.

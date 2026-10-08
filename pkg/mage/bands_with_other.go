@@ -13,6 +13,12 @@ func GrantEachBandsWithOther(subjects PermanentSet, quality PermanentFilter) Con
 	return &layerModification{subjects: subjects, bandsQuality: &quality, layer: core.LayerAbility}
 }
 
+// RemoveBandsWithOther removes all quality abilities in layer 6.
+// Ordinary banding stays available.
+func RemoveBandsWithOther(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, removeBandsWithOther: true, layer: core.LayerAbility}
+}
+
 func (g *Game) bandsQualities(p *Permanent) []PermanentFilter {
 	return g.effects.bandsWithOther[capturedPermanent{p.ID(), p.incarnationID}]
 }

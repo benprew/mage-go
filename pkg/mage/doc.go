@@ -127,6 +127,11 @@
 // its member. Losing banding also removes all bands-with-other grants.
 // A matching holder and another matching creature transfer the damage choice.
 // The choice can assign damage to any eligible combat opponent.
+// [RemoveBandsWithOther] removes all quality grants in layer 6.
+// Ordinary banding stays available. Later grants can restore a quality.
+// With [Until], the saved incarnation keeps removal through a phase cycle.
+// A returned permanent cannot inherit it. Removal keeps a formed band.
+// Combat damage choices use the abilities that remain at assignment.
 // A blocker across several groups divides one amount among its opponents.
 // The shared damage batch keeps each source and its own keywords separate.
 //

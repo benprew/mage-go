@@ -9277,5 +9277,26 @@ saved. The new shape introduces no payment, replacement ordering or zone service
 Native evidence: `TestBandsWithOtherFormation`, `FormationWindow`, `Damage` and
 `AssignmentRecipients`. RON evidence: `TestRONBandsWithOtherRecords`, `Lifecycle`,
 `Invalid` and `StrictLoad`, for Adventurers' Guildhouse, Cathedral of Serra,
-Mountain Stronghold, Seafarer's Quay and Unholy Citadel. Token grants and
-`AnyBandsWithOthers` removal are separate unsupported RON contexts.
+Mountain Stronghold, Seafarer's Quay and Unholy Citadel. Token grants
+remain a separate unsupported RON context.
+
+### Selective bands-with-other removal
+
+`RemoveBandsWithOther(subject PermanentRef) ContinuousModification` removes all
+quality grants from the exact live subject in layer 6. It preserves ordinary
+banding and unrelated abilities. The existing capture service carries the
+removal flag with the subject incarnation. `Until(EndOfTurn, ...)` preserves
+that identity through phasing and control changes, but excludes a returned
+object. Cleanup removes the duration. Layer timestamp order permits later
+quality grants to restore the ability (CR 613.3, 613.7a/b).
+
+Removal does not dissolve a formed band (CR 702.22e). Damage assignment reads
+current abilities (CR 702.22j/k); ordinary banding can still transfer the choice.
+Ordinary banding removal retains its broader rule under CR 702.22b.
+
+RON accepts `LosesAbility(AnyBandsWithOthers)` in the existing singular
+`CreatePermanentLayerEffectUntil` resolving context, including combined ordinary
+banding removal. The argument must be a symbol. Grants and static collection
+removal remain rejected. Native evidence: `TestBandsWithOtherRemoval`. Complete
+Shelkin Brownie and Tolaria evidence: `TestRONBandsWithOtherRemovalRecords`,
+`Combat`, `Invalid` and `StrictLoad`.
