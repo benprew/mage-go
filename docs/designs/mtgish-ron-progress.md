@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-MANA-PRODUCTION` retains explicit source reads in delayed
-mana player/value operands and saves per-instance produced mana-type bindings.
-No new card compiles; seven protection subrules gain delayed-mana evidence.
+`WAITING-DELAYED-REGENERATION` retains explicit typed regeneration subjects
+in waiting delayed source queries, with exact identity and pure enumeration.
+No new card compiles; seven protection subrules gain delayed-regeneration evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -50127,3 +50127,134 @@ Ranked next candidates:
    complete general aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-MANA-PRODUCTION`.
+
+## 2026-10-08: waiting delayed regeneration subject declarations
+
+Status: completed implementation slice `WAITING-DELAYED-REGENERATION`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary replacement and appended entry are staged in the ledger.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -short -count=1` passed.
+The baseline strict loader exited 1 for unsupported declarations, not a build
+failure: 1,981 compiled / 464 rejected records, 776 accepted / 210 rejected unique
+names. Complete records and nested forms were inspected; reprints count once.
+Targeted vocabulary evidence: `RegeneratePermanent/1`, 83 occurrences; source
+choice, future prevention, replacement, typed permanent and player operands.
+
+| Candidate | Distinct affected names and full-card estimate | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Delayed regeneration subject declaration, ranked first | Six Circles (Black, Blue, Green, Red, White, Artifacts), Greater Realm of Preservation, Jade Monolith: eight names / 37 records, zero immediate full-card unlocks. Existing regeneration syntax occurs in 28 names / 83 records. | Exact delayed captures, typed RON references and regeneration shields are ready. General source aggregation still needs other explicit-operand audits. This prerequisite advances the same shared eight-card source-choice contract. | Small engine declaration and bounded compiler extraction; medium lifecycle, scope and consumer tests. |
+| Sticky layer lifecycle | Titania's Song: one plausible full-card unlock / two records. | Entire noncreature-artifact sticky layer must preserve membership, source departure lifetime, ability removal and mana-value P/T across layers and dependencies. Enables reusable sticky continuous effects. | Larger engine lifecycle and cross-layer test work. |
+| Chosen-source partial prevention | Dark Sphere: one downstream unlock / one record, zero dependency-ready immediate unlocks. | Tap/sacrifice cost and damage-relative half-rounded-down operation must feed a chosen-source shield. Complete general source aggregation is still required. Enables damage-relative prevention. | Medium prevention adapter/tests after aggregation. |
+
+The first candidate is ready and enables shared eight-card work. It wins over
+the single-card alternatives. No first-error count is used as a full-card estimate.
+
+All 28 regeneration records were inspected: Clay Statue, Clergy of the Holy
+Nimbus, Death Ward, Delif's Cube, Diabolic Machine, Draconian Cylix, Drowned,
+Drudge Skeletons, Elephant Graveyard, Feral Thallid, Ghost Ship, Goblin Chirurgeon,
+Horror of Horrors, Life Matrix, Living Wall, Niall Silvain, Ragnar, Regeneration,
+Scavenging Ghoul, Sedge Troll, The Brute, Thrull Retainer, Uthden Troll, Walking
+Dead, Wall of Bone, Wall of Brambles, Will-o'-the-Wisp and Zombie Master.
+Clergy's replacement body remains rejected; it is outside the resolving-effect
+context established here. The other 27 names retain existing compilation.
+
+### Contract, signatures, contexts and reuse boundary
+
+- `Regenerate(subject PermanentRef) ResolvingEffect` remains the engine API.
+  `(*regenerateSubjectEffect).refersToSourcePermanent() bool` uses
+  `permanentRefReadsSourcePermanent` to declare an explicit source operand.
+- `compileRegeneration(Node, scope) (effectFactory, error)` extracts
+  `RegeneratePermanent(permanent)/1` lowering from the shared action switch.
+  `compilePermanentRef` owns source, Aura host, numbered target and supported
+  event scopes; the fresh instance binding map builds the engine reference.
+  No new spelling, reference scope or replacement-operation context is claimed.
+- Waiting queries do not resolve subjects, install/consume shields, tap objects,
+  remove combat participants or mutate game state. Sequences and modal bodies
+  retain declarations. Implicit attachments, opaque references and future delayed
+  bodies do not infer source reads. Bound targets use saved frames independently.
+- Saved incarnations survive departure, transient LKI clearing and phasing until
+  detection. Returned objects cannot replace them. Detection removes waiting
+  availability before body resolution. Current control preserves exact identity.
+- Resolution creates shields only for present phased-in subjects with the saved
+  incarnation. Saved targets do not recheck later shroud. Implicit Aura hosts
+  resolve the current attachment. Copies create independent consumable shields;
+  game clones keep separate delayed and shield lifetimes.
+- Existing regeneration replaces destruction, removes damage, taps the subject
+  and removes it from combat. No replacement ordering or simultaneous-operation
+  behavior changes. Shared delayed captures, source facts, query deduplication,
+  target legality, payments, source filters and damage prevention are reused.
+  No Go-card fallback, card-name branch or partial production registry is added.
+- Rules evidence: local CR 400.7, 603.7a–e, 609.7a, 701.19a–c, 702.26b–d.
+  API and rules-contract docs describe only this bounded behavior.
+
+### Failing-first tests and card-to-test mapping
+
+The first executable red run failed both native source/sequence cases, seven
+RON lifecycle cases and all seven real-record protection consumers because
+waiting queries omitted the regeneration subject. Invalid declarations and
+saved-target cases already passed. This preceded the engine declaration and
+compiler extraction. An initial unused test import was resolved before that
+executable red run. Later fixture errors (missing Aura subtype and missing host
+owner) were corrected without weakening assertions.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedRegenerationOperands | Explicit source and repeated sequence declaration; exact incarnation, phase cycle, departure, cleared transient LKI, return exclusion and clone waiting lifetime. Queries do not create shields or remove combat participants. |
+| TestWaitingDelayedRegenerationBoundaries | No inferred attachment or future source; nil, undeclared saved binding and undeclared target reject engine definition validation. |
+| TestWaitingDelayedRegenerationModesAndPurity | Modal declaration, pure repeated queries, no opaque-reference inference or resolution. |
+| TestRONWaitingDelayedRegenerationGameplay | Seven source states: live, departed, returned, phased, phase cycle, control change and copied activation. Announcement/detection/resolution timing, cloned execution, damage clearing, tapping, combat removal, one shield per copy and consumption. |
+| TestRONWaitingDelayedRegenerationInstances | Two fresh factories/players keep distinct saved targets; returned targets receive no shield, later shroud does not invalidate a saved subject, cloned execution is independent. |
+| TestRONWaitingDelayedRegenerationInvalid | Eight malformed, wrong-role, unbound or out-of-scope delayed declarations reject. |
+| TestRONWaitingDelayedRegenerationHost | An implicit Aura host supplies no explicit source read and uses the later attachment at resolution. |
+| Drudge Skeletons, Living Wall, Uthden Troll, Wall of Bone, Wall of Brambles, Will-o'-the-Wisp, Regeneration / TestRONWaitingDelayedRegenerationRecords | Unchanged complete records compile and execute their real payment and immediate regeneration. Failed payment changes no stack state; resolution creates protection and destruction consumes it once. Existing broader card tests retain keyword/layer evidence. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedRegenerationProtection | Complete records supply real costs, source filters and one-use shields. Their bounded waiting category chooses a departed synthetic RON regeneration operand source. Failed payment offers no choice; announcement does not choose; prevention consumes once. Full compilation still rejects general aggregation. Subrule evidence only. |
+| Death Ward, Drudge Skeletons, Living Wall / existing TestRONWaitingRegeneration | Immediate shields retain exact subjects across departure, return, phase, consumption, cleanup and illegal resolution. |
+| Remaining regeneration names / existing package suite | Existing accepted contexts remain supported; no new whole-card gameplay claim. |
+| Jade Monolith | Downstream source-aggregation beneficiary; no new Jade-specific gameplay claim. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedRegeneration -count=1`: PASS.
+- `go test ./pkg/mage -run TestWaitingDelayedRegeneration -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- First `make lint`: one preallocation finding in the new test. Fixed the
+  two-subject slice capacity; native and RON focused tests reran and passed.
+- Final `make lint`: PASS, zero issues. Automatic changes were reviewed;
+  no unrelated files changed. No additional implementation edits followed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict collection
+  rejection; JSON is byte-identical to baseline, including every diagnostic.
+
+Estimated and actual gain: **zero new full-card unlocks / zero compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. Seven protection consumers gain delayed regeneration
+source-reference evidence. No source defect, RON edit or vocabulary refresh was
+needed. No environment failure was found. Runtime loading, complete gameplay,
+Go-card removal and obsolete DSL cleanup gates remain unmet; callers are preserved.
+
+Changed files: `pkg/mage/composable_actions.go`, `doc.go`,
+`waiting_delayed_regeneration_test.go`, `pkg/mage/dsl/ron/compiler.go`,
+`regeneration.go`, `waiting_delayed_regeneration_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. Typed Fight/2 adapter and delayed operand declaration. `fightReferencedEffect`
+   has two typed `PermanentRef` operands but no source-read declaration. The
+   engine fight service and two independent RON target groups are ready; the
+   Fight adapter is missing. Arena supplies the complete two-target RON record:
+   one plausible immediate unlock, plus shared downstream benefit for the same
+   eight source-choice cards / 37 records. Compare implicit hosts, saved targets
+   and simultaneous damage before selection. Return-to-battlefield
+   controllers and library choices still need source-operand audits before
+   complete CR 609.7a aggregation.
+2. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
+3. Chosen-source partial prevention for Dark Sphere: one downstream unlock;
+   complete general aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-REGENERATION`.

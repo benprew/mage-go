@@ -3459,6 +3459,10 @@ func (e *regenerateSubjectEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
 }
 
+func (e *regenerateSubjectEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
 func (e *regenerateSubjectEffect) Apply(ctx *EffectContext) error {
 	if e.subject != nil {
 		if p, ok := e.subject.resolvePermanent(ctx); ok {

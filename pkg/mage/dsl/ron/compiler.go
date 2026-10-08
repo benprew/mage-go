@@ -1328,7 +1328,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "RegeneratePermanent", "SacrificePermanent":
+	case "RegeneratePermanent":
+		build, err := compileRegeneration(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "SacrificePermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -1353,8 +1359,6 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.Destroy(ref)
 			case "DestroyPermanentNoRegen":
 				return mage.DestroyWithoutRegeneration(ref)
-			case "RegeneratePermanent":
-				return mage.Regenerate(ref)
 			default:
 				return mage.Sacrifice(ref)
 			}

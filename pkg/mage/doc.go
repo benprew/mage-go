@@ -85,6 +85,12 @@
 // Their registrations save the live incarnation. Phasing suspends them;
 // departure ends them. A return needs a new registration.
 // [ChooseDamageSourceFromWaitingPersistentReplacementReferences] uses this category only.
+// [Regenerate] declares an explicit source subject to
+// [Game.WaitingDelayedPermanentSources]. Queries do not resolve the subject
+// or create a shield. Departure and phasing keep the saved incarnation until
+// detection. Returned objects cannot inherit it. Implicit attachments and
+// future delayed bodies do not infer reads; bound subjects use saved frames.
+//
 // [AddManaAmount], [AddManaOfAnyOneColor] and [AddRestrictedManaOfAnyOneColor]
 // declare explicit source reads in their amount to waiting delayed queries.
 // [AddManaToPlayer] and [AddManaOfProducedTypeToPlayer] also declare player reads.

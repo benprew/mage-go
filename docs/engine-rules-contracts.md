@@ -11378,3 +11378,38 @@ Evidence: native `TestWaitingDelayedManaProductionOperands`, `Boundaries`,
 `Protection`. Seven complete protection records supply their actual source filters,
 costs and one-use shields in category-specific tests. This is subrule evidence;
 general `ChooseADamageSource` still rejects full records until complete aggregation.
+
+## Waiting delayed regeneration subjects
+
+`Regenerate(subject PermanentRef) ResolvingEffect` declares an explicit `This`
+subject to `Game.WaitingDelayedPermanentSources()`. The query uses the shared
+source-read declaration and saved delayed incarnation. It does not resolve a
+subject, create a shield, consume a shield or change combat. Sequences and modes
+preserve the declaration. Departure, cleared transient LKI and phasing keep the
+reference until trigger detection. A returned object cannot replace it.
+Implicit attachments, opaque references and nested future bodies do not infer
+source reads. Target and saved bindings use the existing captured frame service.
+
+At resolution the shared regeneration service protects only a present,
+phased-in subject with the saved identity. Current control does not change that
+identity. Copies create separate shields; clones keep separate frames and shield
+lifetimes. Destruction consumes one shield, removes damage, taps the subject and
+removes it from combat. Later shroud does not invalidate an already saved delayed
+subject. A departed or returned target receives no shield. Implicit Aura hosts
+use the attachment at body resolution (CR 400.7, 603.7a–e, 609.7a, 701.19a–c,
+702.26b–d). No replacement ordering or simultaneous-operation contract changes.
+
+RON `compileRegeneration(Node, scope) (effectFactory, error)` lowers
+`RegeneratePermanent(permanent)/1` through `compilePermanentRef`. Existing source,
+Aura host, target and event scopes remain unchanged, including supported delayed
+resolving bodies. Wrong arity, wrong roles and unbound references reject before
+factory publication. Fresh factories retain distinct target bindings.
+
+Evidence: native `TestWaitingDelayedRegenerationOperands`, `Boundaries` and
+`ModesAndPurity`; RON `TestRONWaitingDelayedRegenerationGameplay`, `Instances`,
+`Invalid`, `Host`, `Records` and `Protection`. Seven complete protection records
+supply actual costs, source filters and one-use prevention in category-specific
+tests. Full general source choice remains rejected. Unchanged Drudge Skeletons,
+Living Wall, Uthden Troll, Wall of Bone, Wall of Brambles, Will-o'-the-Wisp and
+Regeneration records retain immediate gameplay evidence. This slice adds no
+new complete-card compilation claim.
