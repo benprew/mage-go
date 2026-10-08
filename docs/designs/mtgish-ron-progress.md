@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **775 accepted / 211 rejected unique card
-names** (986 total), and **1,980 compiled / 465 rejected records** (2,445 total).
+The latest recorded inventory reports **776 accepted / 210 rejected unique card
+names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`RESOLVING-END-COMBAT-LAYERS` supports singular layer duration in spell, trigger
-and delayed resolving bodies. Glyph of Destruction gains complete-record
-RON gameplay evidence and is the one new compiled card.
+`TOKEN-BANDS-QUALITY` supports token bands-with-other abilities with independent
+quality grants and source state. Master of the Hunt gains complete-record RON
+gameplay evidence and is the one new compiled card.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-General damage-source aggregation, named-token grants and sticky layers remain gaps.
+General damage-source aggregation and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -49225,3 +49225,156 @@ Ranked next candidates:
    departure retention, shared membership and per-member mana values.
 
 This run stops after `RESOLVING-END-COMBAT-LAYERS`.
+
+## 2026-10-08: token bands-with-other quality abilities
+
+Status: completed implementation slice `TOKEN-BANDS-QUALITY`. This run stops
+here. Initial changes to `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`, are preserved. Only this run's status
+change and appended entry are staged for the ledger.
+
+### Baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+A repeated strict loader run confirmed **1,980 compiled / 465 rejected records;
+775 accepted / 211 rejected unique names**. An initial concurrent invocation
+reported 1,978 compiled records; the independent repeat and inventory tests agree
+on 1,980. This initial observation is not used as the coverage baseline.
+Collection rejection is the expected loader exit 1, not a build failure.
+
+The latest ranked candidates were evaluated first. Complete RON records and
+nested forms were read; reprints are counted once. Targeted vocabulary entries
+confirm six BandsWithOthers occurrences, including one token declaration, and
+two sticky-layer records.
+
+| Candidate | Affected distinct names and estimated unlocks | Dependencies and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: complete reference/category audit, then general damage-source choice | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Jade Monolith: 8 plausible downstream unlocks / 37 records. Reverse Damage, Dark Sphere and Eye for an Eye also use the syntax but have additional consumer gaps. Audit alone: 0 unlocks. | Existing docs still require explicit auditing of opaque callback references before aggregation. No bounded complete aggregate contract is established by the category services alone. Reverse Damage needs prevented-damage life results; Dark Sphere needs partial prevention; Eye for an Eye needs damage continuation and controller bindings. This remains shared work, but an entire audit plus aggregate is not one dependency-ready bounded syntax slice. | Large for the complete audit and aggregate; individual audit slices need a concrete reference contract. |
+| Ranked #2, selected: token quality grants | Master of the Hunt: 1 plausible full-card unlock / 1 record; no other collection token has this grant. | Existing static quality filters, layers, combat, payments and token creation are reusable. Singular subject grants and static token source isolation are needed. Enables quality-bearing token definitions in spell and activation producers, including multiple independent qualities. | Small lowering; medium gameplay, isolation, copy/clone and combat tests. |
+| Ranked #3: sticky layer lifecycle | Titania's Song: 1 plausible full-card unlock / 2 records. | Must retain shared membership through ability loss and source departure until cleanup, with separate member mana values. Existing type, ability and P/T layers are prerequisites, but sticky lifetime is not just a duration adapter. | Medium to large lifecycle and dependency tests. |
+
+Named-token quality grants are the bounded ready capability with the largest
+credible gain for its effort among these ready choices. The contract, reuse
+boundary and acceptance cases were stated before editing. No Go card definition
+was used as a requirement. No source correction, new RON spelling, card-name
+branch, fallback registry or DSL removal was needed.
+
+### Exact signatures, contexts and engine contracts
+
+- `TokenWithPT(PT(p,t), colors, [], types, SubtypesList(subtypes), abilities)`
+  and `NamedTokenWithPT(name, PT(p,t), colors, [], types,
+  SubtypesList(subtypes), abilities)` now accept `BandsWithOthers(quality)`.
+  Existing integer P/T, permanent type, color, subtype and modifier validation
+  remains unchanged. The shape works with the existing NumberTokens instruction
+  and resolving spell, activation and delayed token creation contexts.
+- Private `compileBandsQuality(Node) (mage.PermanentFilter, error)` reuses
+  `compileStaticPermanentFilter` and rejects source-dependent controller and
+  exclusion plans. Static global grants and token grants share this validation.
+- Private `compileTokenBandsAbility(Node) (func() mage.Ability, error)` returns
+  a fresh static ability with `GrantBandsWithOther(mage.This, quality)`.
+  RON owns spelling and quality scope. Each ability is a separate quality grant;
+  it does not grant ordinary banding.
+- New engine `GrantBandsWithOther(PermanentRef, PermanentFilter)
+  ContinuousModification` reuses `layerModification`, exact captured subjects,
+  layer 6 and the existing bands-with-other combat service. No new combat system
+  or token-specific quality representation is introduced.
+- `ValidateCardDefinition` enters a permanent source context at the existing
+  `tokenAbilityDefinition` boundary. Its separate binding scope still excludes
+  producer bindings and targets. A token's This refers to the token even when
+  its producer is a spell, not to the producer's source.
+- `cloneTokenAbility` now uses the existing permanent-spell-copy continuous
+  effect cloning logic for static holders. `newPermanentSpellCopyCard` delegates
+  to that shared service. Effect source state is separate for every token and
+  copy; immutable filters and rules remain shared. No new reflection mechanism
+  or callback inference was introduced.
+- Existing services retained: `CreateTokenCopies`, `TokenAbilities`, simultaneous
+  token entry, payment transactions, stack copies, game clones, native layer
+  expiry/removal, `FormAttackingBand` and shared combat damage with prevention.
+
+Rules evidence: local CR 702.22a–m, especially b/c/e/j/k/m, plus 702.26b for
+phasing and 400.7 for returned sources. The singular grant is a reusable engine
+adapter; missing static token isolation and token definition context were engine
+contract defects exposed by the failing native test. RON source is unchanged,
+so the vocabulary source snapshot needs no refresh. API and rules documentation
+were updated only for this slice's behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial fixture compilation exposed incorrect test-only ManaPool and PhaseIn
+signatures; these were corrected before implementation. All six initial real-card
+RON scenarios then failed at `unsupported token keyword (BandsWithOthers)`.
+The native test failed to compile because `GrantBandsWithOther` did not exist.
+Invalid declarations remained rejected.
+
+After lowering, the native test rejected a spell-produced token's This reference.
+Fixing that boundary exposed a batch member with zero quality grants because
+static effects shared source state. The same test passed after moving the
+existing static-effect copy service into `cloneTokenAbility`. Test-only phased
+lookups use `FindPermanentIncludingPhased`; batch counts use Integer(n).
+A post-suite review added a stronger card-copy assertion. It failed because
+`BaseCard.Copy` shared token abilities. Token copies now use the same isolated
+ability service; the original quality survives copy departure. Required checks
+were rerun after this fix.
+
+| Card / test | Evidence |
+| --- | --- |
+| Master of the Hunt / TestRONTokenBandsMaster | Complete LEG record, native casting, exact 2GG activation costs, unpaid rejection without stack/token changes, repeated activations, resolution timing, token name/type/color/P/T/mana value, owners/controllers, independent ability identities and sources; copied activations, pending game clones, departed-and-returned, phased and changed-controller producers. |
+| Master of the Hunt / TestRONTokenBandsCombat | Two generated Wolves form an attacking band or block together; source departure does not remove token abilities. Correct player chooses incoming damage on both sides; shared outgoing damage and prevention execute through native combat. |
+| Master of the Hunt / TestRONTokenBandsLifecycle | Wrong names and noncreature names cannot form the quality band. Losing banding or all abilities prevents formation until cleanup; a phased token cannot attack. A token-card copy retains the quality ability. |
+| TestRONTokenBandsSpellBatch | Strict synthetic spell registry; two batch tokens with two independent quality abilities. Removing one token's abilities does not remove the other's second quality, which permits a differently named green creature to band. |
+| TestRONTokenBandsInvalid | Eight malformed or out-of-scope quality declarations reject without publishing a registry: bare/empty/excess-arity forms, empty filters, source exclusion, source controller, empty name and target reference. |
+| TestTokenBandsSingularGrant | Native spell-produced batch with two qualities per token; no grant to an unrelated subject, fresh identities, individual removal, clone state, phased suspension/restoration, second-quality formation and nil-subject rejection. |
+| TestTokenBandsCardCopy | Native token-card copy retains separate quality source state and ability identity. Copy departure cannot remove the original token's quality. |
+| Existing permanent-spell-copy and token-ability suites | Shared clone service retains existing spell-copy and token runtime identity behavior. Full required checks rerun. |
+| InventoryRepositoryCollection and numeric inventory tests | Fresh exact totals increase by one record. Master of the Hunt must no longer appear in rejected inventory. |
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONTokenBands -count=1`: PASS.
+  Native `go test ./pkg/mage -run
+  'TestTokenBands|TestPermanentSpellCopy|TestCreatedTokenAbilities' -count=1`:
+  PASS, including the strengthened token-card-copy regression.
+- `make build`; `go vet ./...`: PASS after the token-card-copy fix.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS, both rerun after
+  the token-card-copy fix. Accepted records retain their previous regression tests.
+- First `make lint` failed only on the new test's variable named copy, which
+  shadows a builtin. It was renamed to copied. Formatting changes were reviewed.
+- Final `make lint`: PASS, 0 issues. Automatic formatting only changed the
+  slice's test import groups; no unrelated Go file changed. Post-lint token
+  quality, existing global quality, token creation, native token identity and
+  permanent-spell-copy focused suites: PASS.
+- `git diff --check`: PASS, including the completed ledger and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+  Exact issue comparison removes only Master of the Hunt from baseline issues.
+
+Estimated and actual gains agree: **1 full-card unlock / 1 compiled record**,
+Master of the Hunt. Final measured totals are **1,981 compiled / 464 rejected
+records; 776 accepted / 210 rejected unique names**. Only Master of the Hunt is
+removed from the baseline diagnostic list. First diagnostic remains Animate
+Dead's unsupported EnchantGraveyardCard. No partial production registry is
+installed. Compilation totals remain separate from collection-wide gameplay
+coverage; the new full-card behavior mapping is the Master of the Hunt suite.
+
+No source defect or environmental failure was found. Runtime cutover, complete
+collection gameplay, Go-card deletion and unused DSL cleanup remain unfinished;
+their removal gates are not met. Existing Go callers are preserved.
+
+Changed files: `pkg/mage/dsl/ron/bands_with_other.go`, `token_creation.go`,
+`token_bands_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`pkg/mage/bands_with_other.go`, `card.go`, `definition.go`, `token_ability.go`,
+`permanent_spell_copy.go`, `token_bands_test.go`, `doc.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Bound the remaining explicit-reference/opaque-callback audit, then complete
+   CR 609.7a aggregation and scoped RON source choice. Six Circles, Greater Realm
+   and Jade Monolith remain 8 plausible unlocks / 37 records. Preserve rejection
+   until all source categories have contracts; do not publish a partial source list.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records;
+   source departure retention, shared membership and per-member mana values.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   exact-source rechecks, half-rounded-down actual prevention and shield use.
+   General source aggregation remains its prerequisite.
+
+This run stops after `TOKEN-BANDS-QUALITY`.

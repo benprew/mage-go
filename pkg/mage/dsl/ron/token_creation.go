@@ -164,6 +164,14 @@ func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 	var attrs []core.Attr
 	var abilities []func() mage.Ability
 	for _, entry := range entries {
+		if entry.Name == "BandsWithOthers" {
+			ability, err := compileTokenBandsAbility(entry)
+			if err != nil {
+				return nil, err
+			}
+			abilities = append(abilities, ability)
+			continue
+		}
 		if entry.Name == "TriggerA" {
 			if err := arity(entry, 2); err != nil {
 				return nil, err

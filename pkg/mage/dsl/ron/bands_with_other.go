@@ -29,17 +29,11 @@ func compileBandsWithOtherLayer(n Node, parts []Node) (optionFactory, error) {
 			if ability.Name != "BandsWithOthers" {
 				return nil, unsupported(ability, "combined bands-with-other grant")
 			}
-			if err := arity(ability, 1); err != nil {
-				return nil, err
-			}
-			quality, err := compileStaticPermanentFilter(ability.Args[0])
+			quality, err := compileBandsQuality(ability)
 			if err != nil {
 				return nil, err
 			}
-			if quality.controlled || quality.excludeSource {
-				return nil, unsupported(ability.Args[0], "source-dependent bands quality")
-			}
-			qualities = append(qualities, quality.filter)
+			qualities = append(qualities, quality)
 		}
 	}
 	return func() mage.CardOption {
@@ -49,5 +43,30 @@ func compileBandsWithOtherLayer(n Node, parts []Node) (optionFactory, error) {
 		}
 		condition := mage.StateConditionFunc("static bands with other", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
 		return mage.WithAbility(mage.Static(mage.While(condition, modifications...)))
+	}, nil
+}
+
+func compileBandsQuality(n Node) (mage.PermanentFilter, error) {
+	if err := arity(n, 1); err != nil {
+		return mage.PermanentFilter{}, err
+	}
+	quality, err := compileStaticPermanentFilter(n.Args[0])
+	if err != nil {
+		return mage.PermanentFilter{}, err
+	}
+	if quality.controlled || quality.excludeSource {
+		return mage.PermanentFilter{}, unsupported(n.Args[0], "source-dependent bands quality")
+	}
+	return quality.filter, nil
+}
+
+func compileTokenBandsAbility(n Node) (func() mage.Ability, error) {
+	quality, err := compileBandsQuality(n)
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.Ability {
+		condition := mage.StateConditionFunc("token bands with other", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+		return mage.Static(mage.While(condition, mage.GrantBandsWithOther(mage.This, quality)))
 	}, nil
 }

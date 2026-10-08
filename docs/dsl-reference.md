@@ -8539,3 +8539,24 @@ Circles and Greater Realm supply actual costs, filters and prevention bodies.
 Their explicit-list/category test seams establish subrules, not complete-card
 gameplay or complete CR 609.7a aggregation. Existing choice and redirection tests
 continue to establish simultaneous packets, replacement ordering and legality.
+
+## Token quality abilities
+
+`TokenWithPT` and `NamedTokenWithPT` accept `BandsWithOthers(quality)` in their
+ability lists. The quality uses the existing source-independent static permanent
+filters, including `And`, `Or`, type, color and `IsNamed(NamedCard(name))`.
+Empty filters, malformed constructors, target references and source-dependent
+controller/exclusion filters remain errors. Multiple quality abilities remain
+independent; ordinary banding is not granted.
+
+The compiler creates a fresh static ability for each declaration and uses
+`GrantBandsWithOther(This, quality)`. Token construction copies each ability's
+continuous effects. A spell producer cannot supply its source or bindings to
+the token ability. Creation, resolution controllers, simultaneous entry, layer
+application, removal, phasing and combat reuse the native token and layer services.
+
+`TestRONTokenBandsMaster`, `Combat` and `Lifecycle` use the complete Master of
+the Hunt record. `SpellBatch` covers two independent qualities on a batch created
+by a spell; `Invalid` checks declaration rejection. Native
+`TestTokenBandsSingularGrant` establishes singular subjects, batch isolation,
+multiple qualities, phasing, removal, cloning and definition validation.

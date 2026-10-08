@@ -8,6 +8,11 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
+// GrantBandsWithOther grants one quality ability to the subject in layer 6.
+func GrantBandsWithOther(subject PermanentRef, quality PermanentFilter) ContinuousModification {
+	return &layerModification{subject: subject, bandsQuality: &quality, layer: core.LayerAbility}
+}
+
 // GrantEachBandsWithOther grants a combat ability with the given quality in layer 6.
 func GrantEachBandsWithOther(subjects PermanentSet, quality PermanentFilter) ContinuousModification {
 	return &layerModification{subjects: subjects, bandsQuality: &quality, layer: core.LayerAbility}

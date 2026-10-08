@@ -213,6 +213,11 @@ func (c *BaseCard) Copy() Card {
 	copy(cp.subTypes, c.subTypes)
 	cp.abilities = make([]Ability, len(c.abilities))
 	copy(cp.abilities, c.abilities)
+	if c.isToken {
+		for i, ability := range c.abilities {
+			cp.abilities[i] = cloneTokenAbility(ability)
+		}
+	}
 	if len(c.modes) > 0 {
 		cp.modes = make([]string, len(c.modes))
 		copy(cp.modes, c.modes)

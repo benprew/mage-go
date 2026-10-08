@@ -309,7 +309,8 @@
 // Each new pass reads current state. Values are read in their applicable layer.
 // Type dependencies compare selections in separate game probes.
 //
-// Use [GrantEachBandsWithOther] for a static combat ability with a quality filter.
+// Use [GrantBandsWithOther] for one subject and [GrantEachBandsWithOther]
+// for a set of subjects. Both grant a combat ability with a quality filter.
 // Current subjects and qualities control formation and damage assignment.
 // [Game.FormAttackingBand] checks distinct attackers with one defender before
 // blocker declaration. Ability loss keeps the band; combat removal removes
@@ -1033,6 +1034,8 @@
 // Nonpositive amounts make no change. The existing state check handles loss
 // at ten poison counters. [TokenAbilities] gives each token its own ability
 // identity; event bindings keep their values in the resolution frame.
+// Static token abilities keep separate continuous effects and source identities.
+// Definition validation uses the token as the source of its own abilities.
 //
 // Use [ShuffleHandsAndGraveyardsIntoLibraries] before a separate draw action.
 // Use [ShuffleHandsIntoLibrariesAndDraw] to draw each player's moved count.

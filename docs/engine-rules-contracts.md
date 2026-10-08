@@ -11143,3 +11143,29 @@ Evidence: `TestEndCombatLayerPhaseBoundary`, `TestRONEndCombatLayerGlyph`,
 `TestRONEndCombatLayerDelayedResolution`, and `TestRONEndCombatLayerInvalid`.
 No new replacement ordering, cost transaction or damage batch behavior is
 introduced. Those tests use the existing shared services.
+
+## Token static quality ability isolation
+
+`GrantBandsWithOther(PermanentRef, PermanentFilter) ContinuousModification`
+grants one quality ability to a singular subject in layer 6. It uses the same
+captured modification and combat services as `GrantEachBandsWithOther`.
+Multiple qualities remain independent (CR 702.22c/m). They grant no ordinary
+banding. Ability loss preserves a formed band but changes damage assignment
+permission (CR 702.22b/e/j/k). Phasing suspends the ability (CR 702.26b).
+
+`cloneTokenAbility` now copies static continuous effects with the existing
+`deepCloneableEffect` service and existing copy fallback. Each token keeps its
+own source state. Permanent spell copies and token `BaseCard.Copy` use this same service. The immutable
+rule and filter declarations remain shared. Definition validation enters a
+permanent ability context at `tokenAbilityDefinition`; its existing binding
+scope still excludes producer targets and bindings. This supports a token's
+`This` reference when its producer is a spell.
+
+`TestTokenBandsCardCopy` verifies separate source state and continued original
+quality after copy departure. `TestTokenBandsSingularGrant` verifies two batch members with two qualities,
+singular membership, separate ability identities, removal, clone isolation,
+phase cycles, restoration and nil-subject rejection. RON tests
+`TestRONTokenBandsMaster`, `Combat`, `Lifecycle`, `SpellBatch` and `Invalid`
+cover the full Master of the Hunt record, costs, timing, copied activations,
+changed source controller/incarnation, token-card copies, named/type qualities,
+attacking and blocking damage decisions, prevention and invalid declarations.
