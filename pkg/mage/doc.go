@@ -131,14 +131,17 @@
 // [Game.CaptureHandDamageSource] reads one live hand visit.
 // [DamageSource.HandVisit] keeps returned cards separate from saved sources.
 // Hidden hands supply identity and owner only. Public hands supply current facts.
-// [Game.StackHandSources] reads singular and plural payment card bindings
+// [Game.StackHandSources] reads exact hand targets and payment card bindings
 // and nested event card captures on stack objects. Departure keeps the facts
 // available at that visit's departure; final stack departure ends this category.
 // [ChooseDamageSourceFromStackHandReferences] uses this category only.
 // A cost reveal keeps its exact card public until that stack object leaves.
 // Copies keep the reference without extending the original reveal.
 // A selected hand source cannot follow a later spell or permanent.
-// Waiting card frames and hand targets need separate reference contracts.
+// Hand targets save their exact visit at announcement. Copies keep that visit.
+// A new target choice saves the current visit, even with the same card ID.
+// Returned targets are illegal for the original spell or ability.
+// Waiting card frames use their separate reference contracts.
 // [Game.CaptureHandDamageSourceFor] and [Game.StackHandSourcesFor] add the
 // hand player's private inspection information. Other viewers keep public facts.
 // [ChooseDamageSourceFromInspectableStackHandReferences] uses the choosing player.

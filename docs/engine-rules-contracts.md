@@ -9708,3 +9708,53 @@ cost, choice, future prevention and delayed-step declarations for seven protecti
 names. Existing delayed card restoration, payment rollback and prevention tests
 retain error restoration, transactional and simultaneous replacement evidence.
 These are subrule mappings; complete production source aggregation stays rejected.
+
+
+## Exact hand-target source references
+
+`Game.StackHandSources() []DamageSource` and
+`Game.StackHandSourcesFor(viewer uuid.UUID) []DamageSource` now include exact
+hand targets, alongside their existing payment/event/reveal references.
+Announcement captures the physical card ID, hand visit and zone before payment.
+A target discarded as a cost keeps its hand visit; it supplies no graveyard
+reference. Failed payment installs no target frame. Stack insertion retains the
+saved visit and also captures targets for direct stack insertion. Target
+incarnations also use the hand visit for resolution legality. An absent visit
+or a conflicting saved incarnation supplies no source. Queries only read
+identities listed in the stack object's current targets; old retarget snapshots
+cannot add choices. Sorting and exact deduplication use the existing reader.
+
+A live visit supplies current facts. Departure supplies the same visit's saved
+facts and public visibility. The hand player can inspect private facts; other
+players receive only public information. Targeting does not reveal a hand card.
+A later reveal cannot expose a hidden departed visit. Queries return separate
+snapshots. No source continues to a returned card, spell or permanent.
+
+Copies retain exact targets. An explicit legal new choice saves its current
+visit, including a returned card with the same physical ID. Cancellation keeps
+the original visit. Copy maps are separate; game clones share immutable target
+identities through copy-on-write. The original returned hand target is illegal
+at resolution. Illegal targets remain available as source references until the
+last referring stack object leaves. Resolving hand frames retain these target
+references until resolution ends, including cloned frames.
+
+RON `chosenDamageSourcePlan.inspectableStackHandChoice(instanceBindings)`
+reuses `ChooseDamageSourceFromInspectableStackHandReferences(You, filter,
+binding)` for validated `ChooseADamageSource(filter)` in this context. Each
+instance retains its own binding. The existing exact future-prevention adapter
+consumes it. The public `stackHandChoice` lowering remains available. General
+production source choice remains rejected pending complete source aggregation.
+No additional source-choice syntax or targeting declaration is introduced.
+
+Rules: CR 400.7, 402.3, 601.2c, 608.2b, 609.7a–b and 707.10c.
+Phasing does not apply to hand cards. Payment rollback, damage batches,
+replacement ordering, source-property rechecks and shield consumption use their
+existing engine services.
+
+Evidence: native `TestHandTargetSourcesIdentity`, `LegalityAndRetarget`,
+`Boundaries`, `Visibility`, `ResolutionAndClone`, `SpellCopy`, and
+`PaymentDeparture` and `FailedPayment`; RON
+`TestRONHandTargetSourcesProtection` and `Invalid`. The RON test maps all six
+Circles of Protection and Greater Realm of Preservation to their complete real
+cost/choice/future-prevention declarations in this hand-target context. It does
+not claim complete-card gameplay or compilation gains.

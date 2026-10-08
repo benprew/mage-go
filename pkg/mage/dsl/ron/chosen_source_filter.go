@@ -144,6 +144,8 @@ func (p *chosenDamageSourcePlan) stackHandChoice(bindings instanceBindings) mage
 	return mage.ChooseDamageSourceFromStackHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
 
+// Hand targets and captured card frames use the same exact-visit reader.
+// The choosing player can inspect a private hand without a reveal.
 func (p *chosenDamageSourcePlan) inspectableStackHandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromInspectableStackHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }

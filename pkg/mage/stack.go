@@ -18,6 +18,7 @@ type StackObject struct {
 	// Saved spell data uses copy-on-write so stack clones can share it.
 	targetSpellSources     map[uuid.UUID]DamageSource
 	targetGraveyardSources map[uuid.UUID]DamageSource
+	targetHandCards        map[uuid.UUID]capturedCard
 	// Saved event information must stay separate from current source queries.
 	boundSpellSources  map[uuid.UUID]DamageSource
 	sourceIncarnation  uuid.UUID

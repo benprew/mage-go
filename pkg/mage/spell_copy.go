@@ -75,6 +75,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		revealedHandCards:      slices.Clone(original.revealedHandCards),
 		targetSpellSources:     maps.Clone(original.targetSpellSources),
 		targetGraveyardSources: maps.Clone(original.targetGraveyardSources),
+		targetHandCards:        maps.Clone(original.targetHandCards),
 		boundSpellSources:      maps.Clone(original.boundSpellSources),
 	}
 	if copiedCard == nil {
@@ -124,15 +125,17 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 			cp.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
 		}
 		for i, id := range cp.Targets {
-			if i >= len(original.Targets) || original.Targets[i] != id {
-				delete(cp.targetIncarnations, id)
-				delete(cp.targetSpellSources, id)
-				delete(cp.targetGraveyardSources, id)
-				if p := g.FindPermanent(id); p != nil {
-					cp.targetIncarnations[id] = p.incarnationID
-				} else if visit := g.graveyardVisit(id); visit != uuid.Nil {
-					cp.targetIncarnations[id] = visit
-				}
+			if i < len(original.Targets) && original.Targets[i] == id {
+				continue
+			}
+			delete(cp.targetIncarnations, id)
+			delete(cp.targetSpellSources, id)
+			delete(cp.targetGraveyardSources, id)
+			delete(cp.targetHandCards, id)
+			if p := g.FindPermanent(id); p != nil {
+				cp.targetIncarnations[id] = p.incarnationID
+			} else if visit := g.cardTargetVisit(id); visit != uuid.Nil {
+				cp.targetIncarnations[id] = visit
 			}
 		}
 	}
@@ -219,12 +222,13 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 		if valid {
 			copy(out[offset:offset+count], chosen)
 			for _, id := range chosen {
-				visit := g.graveyardVisit(id)
+				visit := g.cardTargetVisit(id)
 				if visit == uuid.Nil || !slices.Contains(possible, id) {
 					continue
 				}
-				// The same card ID can select a new graveyard visit.
+				// A selected card can have a new visit with the same physical ID.
 				delete(obj.targetGraveyardSources, id)
+				delete(obj.targetHandCards, id)
 				if obj.targetIncarnations == nil {
 					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
 				}

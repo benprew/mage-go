@@ -119,7 +119,7 @@ func hiddenHandSource(source DamageSource) DamageSource {
 	return DamageSource{id: source.ID(), handVisit: source.HandVisit(), owner: source.Owner()}
 }
 
-// StackHandSources reads exact hand visits in saved card bindings.
+// StackHandSources reads exact hand targets and saved card bindings.
 // Departure information alone cannot make a source available for a choice.
 func (g *Game) StackHandSources() []DamageSource {
 	return g.StackHandSourcesFor(uuid.Nil)
@@ -136,6 +136,11 @@ func (g *Game) StackHandSourcesFor(viewer uuid.UUID) []DamageSource {
 	}
 	for _, object := range g.stack.handReferenceObjects() {
 		identities := slices.Clone(object.revealedHandCards)
+		for _, id := range object.Targets {
+			if identity, ok := object.targetHandCards[id]; ok && identity.id == id && identity.zone == core.ZoneHand {
+				identities = append(identities, identity)
+			}
+		}
 		for binding, identity := range object.capturedCards {
 			if binding != nil {
 				identities = append(identities, identity)

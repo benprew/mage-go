@@ -284,6 +284,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		ownsHandReveals:        obj.ownsHandReveals,
 		targetSpellSources:     obj.targetSpellSources,
 		targetGraveyardSources: obj.targetGraveyardSources,
+		targetHandCards:        obj.targetHandCards,
 		boundSpellSources:      obj.boundSpellSources,
 		sourceIncarnation:      obj.sourceIncarnation,
 		capturedNumbers:        maps.Clone(obj.capturedNumbers),

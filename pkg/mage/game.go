@@ -2723,6 +2723,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if err != nil {
 		return fmt.Errorf("cannot pay total cost for %s: %w", name, err)
 	}
+	handTargets := g.handTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -2747,6 +2748,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		CapturedNumbers:        payment.payment.paidNumbers,
 		CapturedCards:          payment.payment.paidCards,
 		RevealedHandCards:      payment.payment.revealedHandCards,
+		HandTargetCards:        handTargets,
 		CapturedCardSets:       payment.payment.paidCardSets,
 		CapturedPermanents:     payment.payment.paidPermanents,
 	})
@@ -3275,6 +3277,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		}
 		capturedNumbers, capturedPermanents = definition.captureValues(g, perm, playerID, captureSpecs, targets)
 	}
+	handTargets := g.handTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -3292,6 +3295,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
 	obj.activatedAbility = true
+	obj.targetHandCards = handTargets
 	obj.DamageDistribution = damageDistribution
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)

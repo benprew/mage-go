@@ -92,6 +92,18 @@ func (g *Game) graveyardVisit(id uuid.UUID) uuid.UUID {
 // Used to track game-specific state before pushing object onto stack
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
+	g.captureHandTargetCards(obj)
+	for _, id := range obj.Targets {
+		if identity, saved := obj.targetHandCards[id]; saved {
+			if _, captured := obj.targetIncarnations[id]; !captured {
+				obj.targetIncarnations = maps.Clone(obj.targetIncarnations)
+				if obj.targetIncarnations == nil {
+					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
+				}
+				obj.targetIncarnations[id] = identity.visit
+			}
+		}
+	}
 	g.captureGraveyardTargetSources(obj)
 	spellSourcesCopied := false
 	for _, id := range obj.Targets {
@@ -118,7 +130,7 @@ func (g *Game) pushStack(obj *StackObject) {
 		if p := g.FindPermanent(id); p != nil {
 			incarnation = p.incarnationID
 		} else {
-			incarnation = g.graveyardVisit(id)
+			incarnation = g.cardTargetVisit(id)
 		}
 		if incarnation != uuid.Nil {
 			if obj.targetIncarnations == nil {
@@ -129,7 +141,11 @@ func (g *Game) pushStack(obj *StackObject) {
 	}
 	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
 	for _, t := range obj.Targets {
-		obj.TargetZones[t] = g.zoneOfTarget(t)
+		if _, saved := obj.targetHandCards[t]; saved {
+			obj.TargetZones[t] = ZoneHand
+		} else {
+			obj.TargetZones[t] = g.zoneOfTarget(t)
+		}
 	}
 
 	g.stack.Push(obj)
@@ -217,8 +233,8 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 			}
 			incarnationLegal := true
 			if incarnation, ok := obj.targetIncarnations[t]; ok {
-				if obj.TargetZones[t] == ZoneGraveyard {
-					incarnationLegal = g.graveyardVisit(t) == incarnation
+				if obj.TargetZones[t] == ZoneGraveyard || obj.TargetZones[t] == ZoneHand {
+					incarnationLegal = g.cardTargetVisit(t) == incarnation
 				} else {
 					p := g.FindPermanent(t)
 					incarnationLegal = p != nil && p.incarnationID == incarnation

@@ -241,6 +241,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	if err != nil {
 		return fmt.Errorf("cannot pay total cost for %s: %w", card.Name(), err)
 	}
+	handTargets := g.handTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -264,6 +265,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		CapturedNumbers:        payment.payment.paidNumbers,
 		CapturedCards:          payment.payment.paidCards,
 		RevealedHandCards:      payment.payment.revealedHandCards,
+		HandTargetCards:        handTargets,
 		CapturedCardSets:       payment.payment.paidCardSets,
 		CapturedPermanents:     payment.payment.paidPermanents,
 	})
