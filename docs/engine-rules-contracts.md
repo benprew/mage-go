@@ -10638,3 +10638,40 @@ shroud, returned-object exclusion and independent factories/clones. Existing
 `TestRONCounterInformation` tests retain real singleton card regressions.
 Full protection records still reject general source aggregation. These tests
 increase subrule coverage, not complete-card coverage.
+
+## Waiting delayed exile declarations
+
+`Exile(PermanentRef) ResolvingEffect` declares a direct `This` subject to
+`Game.WaitingDelayedPermanentSources() []DamageSource`.
+`ExileEach(PermanentSet) ResolvingEffect` declares explicit source reads through
+its typed collection, including nested compositions, attachment/combat/history
+subjects, controller/owner operands and numeric limits. Enumeration does not
+resolve references, select members, run filters or move objects. Empty sets
+retain declarations. Implicit matching members, opaque callbacks, direct `AttachedPermanent`
+references and future bodies not yet installed do not infer source reads.
+
+Exact saved incarnation, departure facts, independent query snapshots,
+copy/clone frames and one-shot detection use the existing delayed services
+(CR 400.7, 603.7a–e, 609.7a–b). Departure, return and phasing retain enumeration.
+Exile execution still requires the original present subject; collection execution
+selects current distinct members and uses the existing simultaneous exile batch.
+Phased members and returned saved subjects are excluded (CR 702.26b).
+
+RON `Exile([Permanent(ref)], [])` and
+`Exile([EachPermanent(collection)], [])` retain their signatures. Collections
+lower directly through `compileContextualCollection(Node, scope)` and fresh
+instance bindings. Saved singular targets remain supported in delayed bodies;
+plural delayed targets, unbound references, empty compositions, multiple subjects
+and unsupported modifiers still reject at compilation. No general source
+aggregation is enabled by this contract.
+
+Evidence: `TestWaitingDelayedExileOperands` covers 14 typed native declarations;
+`TestWaitingDelayedExilePurity` covers modes, empty/opaque sets, query purity and
+invalid definitions. `TestRONWaitingDelayedExileProtection` covers 245 subrule
+cases across seven real protection records, five forms and seven lifecycle/copy
+states, including payment rollback, resolution choice and shield consumption.
+RON `Invalid`, `Instances` and `LateAttachment` tests cover declaration rejection,
+saved target/factory isolation, later shroud, returned objects, phase exclusion,
+resolution-time membership and clone isolation. Existing `TestExileEach*` tests
+retain simultaneous movement and leave-event evidence. Complete protection
+records still reject; these mappings do not establish full-card coverage.

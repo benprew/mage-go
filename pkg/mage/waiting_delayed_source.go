@@ -230,6 +230,14 @@ func (e *destroyEachEffect) refersToSourcePermanent() bool {
 	return permanentSetReadsSourcePermanent(e.subjects)
 }
 
+func (e *exileSubjectEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
+func (e *exileEachEffect) refersToSourcePermanent() bool {
+	return permanentSetReadsSourcePermanent(e.subjects)
+}
+
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
 	return self || playerRefReadsSourcePermanent(e.player) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)

@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-COUNTER-COLLECTIONS` adds typed counter collection totals and
-source declarations in native counter collection subjects and amounts.
-Seven protection names gain 294 subrule cases; native declarations gain 24 cases.
-Compilation and full-card coverage are unchanged. Exile/player collection and
-conditional declarations, source aggregation, token grants and sticky layers
-remain gaps.
+`WAITING-DELAYED-EXILE-DECLARATIONS` adds exact source declarations for native
+single and collection exile actions, with shared RON collection lowering.
+Seven protection names gain 245 subrule cases; native declarations gain 14 cases.
+Compilation and full-card coverage are unchanged. Untap/prevention/temporary,
+player collection and remaining conditional declarations, source aggregation,
+token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -47382,3 +47382,144 @@ Ranked next candidates:
    named identity, native band combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-COUNTER-COLLECTIONS`.
+
+## 2026-10-08: waiting delayed exile source declarations
+
+Status: completed implementation slice `WAITING-DELAYED-EXILE-DECLARATIONS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's incremental ledger changes are staged for its commit.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 is dependency-ready: native exile execution,
+contextual collection lowering, delayed frame capture and exact source queries
+already exist; exile actions lack their source declarations.
+Complete RON records and nested forms were inspected for all names below.
+Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers; downstream capabilities | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Waiting delayed exile declarations (selected) | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation | 0 | General CR 609.7a source aggregation remains; closes a shared declaration prerequisite for seven protection names | Small; two native declarations, shared lowering, lifecycle/purity and protection subrule tests |
+| Typed player collections and remaining cast/state/coin conditions | Same seven protection names; Jade Monolith and Reverse Damage also need aggregation | 0 for prerequisite alone | Multiple declaration families and redirection/prevention adapters remain; enables eventual general aggregation | Medium–large; several typed traversals and timing contracts |
+| Named-token quality grants | Master of the Hunt | 1 plausible | Named identity, BandsWithOthers quality, native band combat and clone contracts required | Medium; token lowering and combat evidence |
+
+The selected shared prerequisite takes priority over the single-card token work.
+It is a complete exile declaration context, not partial general source selection.
+The other declaration families are separate slices. No full-card unlock is
+expected because the seven complete protection records still reject aggregation.
+Jade Monolith and Reverse Damage retain separate adapter boundaries.
+
+### Signatures, context and reuse boundary
+
+- `compilePermanentExile(Node, scope) (effectFactory, error)` retains
+  `Exile([Permanent(ref)], [])` and `Exile([EachPermanent(collection)], [])`.
+  Collection lowering now directly uses
+  `compileContextualCollection(Node, scope) (permanentSetFactory, error)`.
+  The duplicate private `compileExilePermanentCollection` adapter was removed
+  after a fresh whole-repository audit found only its definition and this caller.
+  Shared lowering already handles resolving plural targets; its existing delayed
+  plural-target capture restriction remains. No broad DSL API was removed.
+- `Exile(PermanentRef) ResolvingEffect` declares a direct `This` subject through
+  `delayedSourcePermanentReference.refersToSourcePermanent() bool`.
+- `ExileEach(PermanentSet) ResolvingEffect` declares explicit source reads through
+  `permanentSetReadsSourcePermanent(PermanentSet) bool`. Typed singleton,
+  attachment, combat/history, exclusion, lowest-power, controller/owner/opponent,
+  numeric-limit and nested collection operands reuse the same traversal.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` keeps exact saved
+  source incarnations and departure facts until one-shot detection. Queries
+  do not select members, run filters, evaluate values, exile objects or choose
+  sources. Empty sets and saved modes retain declarations. Attached references,
+  implicit matches, opaque callbacks and future bodies not installed do not
+  infer source reads. Query snapshots and clone lifetimes remain independent.
+
+Mage owns reusable declaration and exile execution; RON owns syntax, scope and
+per-instance lowering. Existing saved singular target/event bindings, spell
+copying, delayed capture, source LKI, clone services, source shield rechecks,
+payment transactions and simultaneous exile batches remain in use.
+CR 400.7, 603.7a–e, 609.7a–b and 702.26b define identity, waiting lifetime,
+source eligibility and phase exclusion. No new zone/replacement pipeline,
+card-name branch, Go fallback, partial registry or game-time panic was added.
+
+A targeted audit of other supported RON collection actions found further
+prerequisites: `SkipNextUntaps`/`SkipNextUntapEach`, native
+`combatSourcePreventionInstallation`, and `untilEffect` lack delayed source-read
+contracts. RON next-untap, combat prevention and temporary layer adapters can
+use these services inside delayed bodies. Player actions use DrawEach,
+DiscardEach and shuffle services, and player damage recipients need their own
+operand audit. These are recorded gaps; no second slice was started.
+Tawnos's Coffin, Hazezon Tamar and Stangg complete records were also inspected
+for exile/delay contexts: multiple-subject linked exile, token-result collections
+and departure subscriptions remain separate unsupported contracts. None is an
+unlock from this source-declaration slice.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production edits, `go test ./pkg/mage -run TestWaitingDelayedExile -count=1`
+failed all 14 operand cases with `exile action lost exact source declaration`,
+and the purity test failed for its empty/mode declaration.
+`go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedExile -count=1` failed
+protection scenarios with `query lost source or offered payment` (and clone
+source assertions). Both commands exited 1 for the intended missing behavior.
+Invalid RON tests already rejected, preserving the supported-context boundary.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedExileOperands | 14 native typed declarations; exact departure/return identity, isolated fact snapshots and clone detection lifetime |
+| TestWaitingDelayedExilePurity | Empty/nested sets and saved modes, no filter/action execution, implicit/opaque/future exclusions, invalid native definitions |
+| TestRONWaitingDelayedExileProtection | 245 cases: seven protection names above, five exile forms, seven live/departed/returned/phased/control/copy/clone states; real RON costs/filter/shield rules, failed-payment rollback, resolution choice, exact source prevention and consumption; current exile membership |
+| TestRONWaitingDelayedExileInvalid | Ten malformed/unbound/incompatible/multiple-subject/modifier/plural delayed declarations reject before execution |
+| TestRONWaitingDelayedExileInstances | Two factories and saved singular targets; four distinct waiting references, returned-object exclusion, later shroud and independent clone resolution |
+| TestRONWaitingDelayedExileLateAttachment | Empty collection retains host declaration; a late attachment is selected at resolution; phased clone excludes it |
+| Existing TestExileEach* and full suite | Simultaneous movement, source leave triggers, stale/duplicate/phased members, token disappearance, native validation and accepted RON regressions |
+
+These tests establish subrule contracts. The seven complete protection records
+still reject unsupported ChooseADamageSource, and no new full-card claim is made.
+RON sources did not change; all 12 vocabulary source hashes still match.
+No source-data defect or environment failure was found. Go-card deletion, runtime
+cutover and broad DSL cleanup gates remain closed.
+
+### Verification and measured outcome
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader exit 1 was strict collection rejection, not a build failure.
+- Failing-first native and RON tests: expected exit 1, diagnostics above.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedExile -count=1`: PASS.
+  Native `go test ./pkg/mage -run 'TestWaitingDelayedExile|TestExileEach' -count=1`:
+  PASS. Both commands passed again after lint formatting.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic native-test import grouping was reviewed;
+  no unrelated file changed. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Baseline and final JSON
+  match byte-for-byte: **1,978 compiled / 467 rejected records; 773 accepted /
+  213 rejected unique names**, out of 2,445 records / 986 names. First diagnostic
+  remains Animate Dead: unsupported EnchantGraveyardCard. Strict rejection
+  installs no partial registry.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Seven protection names gain 245 subrule scenarios, and native exile declarations
+have 14 operand cases plus purity/invalid evidence. Saved-target, late-attachment
+and clone contracts have separate RON tests. Compilation and full-card gameplay
+coverage remain unchanged. Full collection gameplay, runtime startup, Go-card
+removal and unused broad DSL cleanup remain unfinished. All required checks passed.
+
+Changed files: pkg/mage/waiting_delayed_source.go,
+pkg/mage/waiting_delayed_exile_test.go,
+pkg/mage/dsl/ron/permanent_exile.go,
+pkg/mage/dsl/ron/waiting_delayed_exile_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+
+Ranked next candidates:
+
+1. Waiting delayed untap-restriction source declarations: typed singular and
+   collection services already execute; seven protection names, 0 immediate
+   unlocks, another concrete prerequisite for complete source aggregation.
+2. Waiting delayed combat-prevention and temporary layer operand declarations,
+   followed by player collection and remaining conditional contracts. Seven
+   protection names share the downstream benefit; general aggregation remains
+   blocked until the declaration audit is complete.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   subject to named identity, native band combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-EXILE-DECLARATIONS`.

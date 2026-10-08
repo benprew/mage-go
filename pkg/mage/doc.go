@@ -206,6 +206,10 @@
 // Queries do not select members or read counters. Zero amounts keep the reads.
 // Totals select current, distinct, present incarnations at resolution.
 // RON singleton counter information retains [CountersOnWithLKI].
+// [Exile] declares a direct [This] subject to the same waiting query.
+// [ExileEach] declares source reads in its typed collection. Queries do not
+// select members or move objects. Empty collections keep explicit reads.
+// Resolution uses current, present members and the existing exile batch.
 // Other collection actions need separate contracts.
 //
 // [PayCountersOrElse] and [PayChosenCountersOrElse] declare a direct [This]

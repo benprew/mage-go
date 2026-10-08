@@ -8254,3 +8254,20 @@ shroud, returned-object exclusion and independent factories/clones. Existing
 `TestRONCounterInformation` tests retain real singleton card regressions.
 Full protection records still reject general source aggregation. These tests
 increase subrule coverage, not complete-card coverage.
+
+### Waiting delayed exile references
+
+`Exile(This)` and `ExileEach(subjects)` declare explicit source reads to
+`Game.WaitingDelayedPermanentSources`. Typed collection operands use the same
+source-read service as counter and other collection actions. Queries do not
+select members or exile objects; an empty collection keeps explicit source reads.
+Saved references retain their incarnation after departure, return or phasing.
+Execution still excludes absent/phased subjects and uses the existing exile batch.
+
+RON `Exile([Permanent(ref)], [])` and
+`Exile([EachPermanent(collection)], [])` use the existing scoped references and
+shared contextual collection compiler. Nested union/intersection, attachment,
+combat/history and controller/owner operands retain explicit source reads.
+Invalid scopes, empty compositions, plural delayed targets and unsupported
+modifiers remain compilation errors. See the waiting delayed exile contract in
+`docs/engine-rules-contracts.md` for evidence and source-aggregation limits.
