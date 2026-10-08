@@ -3255,6 +3255,16 @@ lowers to `RemovePermanentFromCombatAndUnblock` and explicitly makes qualifying
 attackers unblocked. It checks both current blocking membership and the set of
 blocker incarnations recorded for that attacker during this combat. Removing a
 different blocker does not make the remaining blocker historically sole.
+
+Both removal actions accept the same typed references in delayed action lists.
+An explicit `ThisPermanent` subject declares the saved source incarnation to
+`Game.WaitingDelayedPermanentSources`. Queries do not resolve the subject or
+change combat. Departure and phasing retain the saved reference until detection;
+a returned object cannot replace it. An implicit attachment and a future delay
+body do not infer source reads. Saved target bindings keep their separate frame
+references. `TestRONWaitingDelayedCombatExit*` covers delayed execution,
+identities, history, copies, clones, scope rejection and protection consumers.
+
 A returned card cannot replace an old blocker. Combat reset clears the history;
 game clones keep independent history maps. No attack-unblocked trigger is fired
 by removal after blocker declaration.

@@ -1069,6 +1069,10 @@ type removePermanentFromCombatEffect struct {
 	unblock bool
 }
 
+func (e *removePermanentFromCombatEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+
 func (e *removePermanentFromCombatEffect) Text() string {
 	if e.unblock {
 		return "remove from combat and unblock " + InspectDefinition(e.subject).Text

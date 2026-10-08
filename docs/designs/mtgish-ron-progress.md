@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-MANA-PLAYER` retains explicit source reads in delayed
-mana-loss player operands through exact identity and clone lifetimes.
-No new card compiles; seven protection subrules gain mana-reference evidence.
+`WAITING-DELAYED-COMBAT-EXIT` retains explicit source reads in delayed
+combat-removal subjects through exact identity, combat history and clone lifetimes.
+No new card compiles; seven protection subrules gain combat-exit-reference evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49735,3 +49735,124 @@ Ranked next candidates:
    general source aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-MANA-PLAYER`.
+
+## 2026-10-08: waiting delayed combat-exit subjects
+
+Status: completed implementation slice `WAITING-DELAYED-COMBAT-EXIT`.
+This run stops after this slice. Initial `.gitignore`, execution-design and
+ledger reorganization changes, and untracked completed ledger, are preserved.
+Only this run's summary change and appended entry are staged.
+
+Fresh baseline: `make build` and uncached full RON tests passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection:
+1,981 compiled / 464 rejected records; 776 accepted / 210 rejected unique names.
+First issue: Animate Dead / EnchantGraveyardCard. No build failure was found.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 delayed combat-exit prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith. 0 immediate unlocks; 8 plausible downstream unlocks / 37 records. Mijae Djinn and Ydwen Efreet retain accepted gameplay. | Missing native source-read declaration for both removal forms. Complete aggregation still needs remaining explicit-operand and opaque-boundary audit. | Small shared declaration and existing AST adapter; exact identity, combat history, copy/clone and consumer tests. |
+| Sticky layers | Titania's Song: 1 plausible unlock / 2 records. | Needs retained source-departure lifecycle, shared layer membership and per-member mana values. | Larger lifecycle and layer suite. |
+| Chosen-source partial prevention | Dark Sphere: 0 immediate unlocks; 1 downstream unlock / 1 record. | General source aggregation precedes partial prevention, actual amounts and consumption. | Medium replacement suite after its prerequisite. |
+
+Complete compared records and nested costs, filters, operations and durations
+were inspected. The first candidate is ready and advances a concrete eight-card
+shared dependency, so it takes priority over the single-card alternatives.
+All complete records containing either combat-removal form were also inspected:
+Mijae Djinn (2 records), Ydwen Efreet (1), False Orders (5), Disharmony (1),
+and Imprison (1). Existing card behavior is reused, not derived from Go definitions.
+False Orders, Disharmony and Imprison retain their other unsupported forms;
+this slice does not claim their full gameplay coverage.
+
+The missing contract belongs in the engine. AST lowering already exists; this
+slice isolates it in a dedicated typed adapter and tests delayed contexts through
+real engine execution. No new RON syntax or data correction is claimed.
+No source edit or source defect was found; vocabulary refresh is unnecessary.
+
+### Signatures, contexts and reuse boundary
+
+- `RemovePermanentFromCombat(subject PermanentRef) ResolvingEffect` and
+  `RemovePermanentFromCombatAndUnblock(subject PermanentRef) ResolvingEffect`
+  declare direct This reads through
+  `removePermanentFromCombatEffect.refersToSourcePermanent()` and the shared
+  `permanentRefReadsSourcePermanent` service.
+- `compileCombatExit(Node, scope) (effectFactory, error)` lowers exactly
+  `RemoveCreatureFromCombat(ref)/1` and
+  `RemoveCreatureFromCombatAndUnblockBlockers(ref)/1` with fresh per-instance
+  typed references. Supported spell, mode, activation, trigger and delayed
+  resolving contexts retain their existing lexical scope. Malformed arguments,
+  wrong roles and unbound targets/event/loop references reject at compilation.
+- Waiting queries do not resolve subjects or remove combat members. A subject
+  outside combat still supplies its reference. Departure, cleared transient LKI
+  and phasing retain the original incarnation. Returned objects cannot replace
+  it. Detection ends one-shot waiting availability before stack placement.
+  Implicit attachments and future delay bodies do not infer source reads.
+- Saved target bindings keep their separate frame references. Existing delayed
+  capture, exact incarnation facts, deduplication, definition validation, target
+  legality, copy and clone services are reused. Resolution still requires the
+  original present subject and uses shared combat removal/history mechanics.
+  Ordinary removal keeps blocked status; explicit unblocking requires the exact
+  blocker to be historically sole. Removing another blocker cannot erase history.
+- Local rules evidence: CR 400.7, 506.4, 509.1h, 603.7a–e, 609.7a–b and
+  702.26b–d. API and rules-contract documentation describe this bounded behavior.
+
+### Failing-first tests and card-to-test mapping
+
+Before implementation, native tests failed for both explicit source forms with
+empty waiting references. All 16 RON lifecycle cases failed the same assertion;
+all seven protection consumers failed to choose the departed delayed source.
+The invalid, implicit/future boundary and explicit target-frame tests already
+passed because their existing validation and capture services were intact.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedCombatExitOperands | Both native forms; query purity, phase cycle, departure, cleared transient LKI, return, exact identity and independent clone waiting lifetime. |
+| TestWaitingDelayedCombatExitBoundaries | No inferred implicit attachment or future-delay reads; nil, unbound saved and undeclared target subjects reject definition validation. |
+| TestRONWaitingDelayedCombatExitGameplay | 16 combinations of both forms with live, departed, returned, phased, phase-cycle, copied, multiple-blocker and former-multiple-blocker states. Creation/detection timing, actual removal, blocked history, clone execution and original isolation. |
+| TestRONWaitingDelayedCombatExitInstances | Separate factory target declarations and saved target frames, copied activation and independent removals. |
+| TestRONWaitingDelayedCombatExitInvalid | 12 malformed/wrong-role/unbound delayed declarations reject. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedCombatExitProtection | Complete records supply real costs, filters and one-use prevention. Departed delayed combat-exit source is selected at resolution; failed payment offers no choice; prevention consumes once. Subrule coverage only; full records still reject ChooseADamageSource. |
+| Mijae Djinn, Ydwen Efreet / existing TestRONCombatExit* | Complete records/reprints retain native coin, attack/block trigger, vigilance, target legality, departure, return, phasing, control/ability removal, copy/clone and instance/history evidence. |
+| Jade Monolith | Downstream beneficiary of complete source aggregation; no new Jade-specific or full-card gameplay claim. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedCombatExit -count=1`: PASS.
+- Native TestWaitingDelayedCombatExit, TestTypedCombatRemoval,
+  TestCombatRemoval and TestCombatExit focused tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes reviewed; new test import
+  formatting only. Post-lint focused native/RON and existing RON combat-exit
+  suites: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict rejection.
+  JSON is byte-identical to baseline, including every diagnostic.
+
+Estimated and actual gains: **0 full-card unlocks / 0 new compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. Seven protection subrules gain combat-exit-reference
+coverage; compilation and gameplay coverage remain separate. Strict loading
+installs no partial registry. Runtime cutover, Go-card deletion and obsolete DSL
+removal gates remain unmet; callers are preserved. No environment blocker found.
+
+Changed files: `pkg/mage/composable_actions.go`, `waiting_delayed_combat_exit_test.go`,
+`pkg/mage/dsl/ron/compiler.go`, `combat_exit.go`, `waiting_delayed_combat_exit_test.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger.
+
+Ranked next candidates:
+
+1. Bounded delayed poison-player operands: AddPoisonFor has typed player/value
+   operands but lacks its source-read declaration. Existing RON counter lowering
+   supports typed players and literal counts; Pit Scorpion, Marsh Viper and
+   Serpent Generator retain accepted poison behavior. 0 immediate unlocks;
+   advances the same eight downstream source-choice cards / 37 records. Finish
+   the remaining explicit-operand and opaque-boundary audit before general
+   CR 609.7a aggregation; general choice remains rejected.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   general source aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-COMBAT-EXIT`.

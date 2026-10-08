@@ -899,8 +899,13 @@
 // Use [RemovePermanentFromCombat] with a typed reference to remove combat
 // membership. An attacker stays blocked when its last blocker is removed.
 // Use [RemovePermanentFromCombatAndUnblock] when the instruction makes
-// historically sole-blocked attackers unblocked. [CantBlock] with [Until]
-// restricts later blocks and keeps its captured incarnation until cleanup.
+// historically sole-blocked attackers unblocked. Both actions declare an
+// explicit [This] subject to [Game.WaitingDelayedPermanentSources]. Queries
+// do not resolve subjects or change combat. Departure and phasing keep the
+// saved incarnation until trigger detection. A returned object cannot replace
+// it. Implicit attachments and future delays keep separate scopes.
+// [CantBlock] with [Until] restricts later blocks and keeps its captured
+// incarnation until cleanup.
 //
 // Use [ManaCostPayment] for announced X activation mana. The payment
 // transaction substitutes X before an activation cost reduction. The stack

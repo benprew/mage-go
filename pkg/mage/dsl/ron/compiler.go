@@ -1115,19 +1115,11 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "RemoveCreatureFromCombat", "RemoveCreatureFromCombatAndUnblockBlockers":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		subject, err := compilePermanentRef(n.Args[0], ctx)
+		build, err := compileCombatExit(n, ctx)
 		if err != nil {
 			return nil, err
 		}
-		return one(func(bindings instanceBindings) mage.Effect {
-			if n.Name == "RemoveCreatureFromCombatAndUnblockBlockers" {
-				return mage.RemovePermanentFromCombatAndUnblock(subject.build(bindings))
-			}
-			return mage.RemovePermanentFromCombat(subject.build(bindings))
-		})
+		return one(build)
 	case "FlipACoin_OnLose", "FlipACoin_OnWinAndLose":
 		build, err := compileCoinBranch(n, ctx)
 		if err != nil {

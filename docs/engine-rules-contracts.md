@@ -11270,3 +11270,42 @@ scopes. `Protection` uses the six Circles and Greater Realm's complete records
 for costs, filters and one-use prevention with a departed delayed mana source.
 Those are subrule tests; complete records still reject general source choice.
 Existing `TestRONManaDenial*` retains complete Mana Short and Power Sink evidence.
+
+
+## Waiting delayed combat-exit subjects
+
+`RemovePermanentFromCombat(subject PermanentRef) ResolvingEffect` and
+`RemovePermanentFromCombatAndUnblock(subject PermanentRef) ResolvingEffect`
+declare explicit `This` subjects through the shared typed reference walker.
+`Game.WaitingDelayedPermanentSources() []DamageSource` supplies the saved source
+incarnation while the delayed ability waits. Queries do not resolve subjects,
+remove combat members or change blocked status. A noncombat subject still
+supplies its reference. Departure, cleared transient LKI and phasing preserve
+availability; returned cards cannot replace saved incarnations. Detection ends
+waiting availability before stack placement. Implicit attachments and future
+delays retain their separate scopes (CR 400.7, 603.7a–e, 609.7a, 702.26b–d).
+
+Execution still uses the existing typed permanent resolver and combat services.
+Ordinary removal keeps an attacker blocked. Explicit unblocking requires the
+present exact blocker to be historically sole for that attacker; removal of a
+second blocker cannot change that history (CR 506.4 and 509.1h).
+
+RON `RemoveCreatureFromCombat(ref)/1` and
+`RemoveCreatureFromCombatAndUnblockBlockers(ref)/1` lower through
+`compileCombatExit(Node, scope) (effectFactory, error)`. The adapter retains
+per-instance typed references in supported resolving spell, activation, trigger,
+mode and delayed contexts. Wrong arity, role and unbound references reject before
+execution. No new RON spelling or general source aggregation is established.
+
+`TestWaitingDelayedCombatExitOperands` covers both native declarations, pure
+queries, phase cycles, departure, cleared LKI, return and clone lifetime.
+`Boundaries` rejects invalid definitions and excludes implicit/future reads.
+`TestRONWaitingDelayedCombatExitGameplay` covers 16 action/lifecycle combinations,
+actual removal and historical blocked status, detection timing, copied activations
+and independent clone execution. `Instances` covers independent factory target
+bindings and copied frames. `Invalid` rejects 12 malformed or unbound declarations.
+`Protection` uses the complete records of all six Circles and Greater Realm for
+real costs, source filters and one-use prevention with a departed delayed source.
+These are subrule tests; complete records still reject general source choice.
+Existing `TestRONCombatExit*` retains complete Mijae Djinn and Ydwen Efreet evidence,
+and typed target legality, source departure, control and ability removal checks.
