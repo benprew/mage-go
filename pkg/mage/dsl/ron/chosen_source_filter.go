@@ -135,3 +135,7 @@ func (p *chosenDamageSourcePlan) waitingDiscardChoice(bindings instanceBindings)
 func (p *chosenDamageSourcePlan) waitingExileChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingExileReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) stackGraveyardChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromStackGraveyardReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `EXACT-PRECAST-EXILE-SOURCE-VISITS` adds exact exile source identity,
-stack card-binding enumeration, departure information, clone isolation and
-visit-bound casting permission. Seven protection names have new RON subrule
-behavior evidence; no complete-card compilation gain is claimed. Precast
-hand/graveyard references, waiting exile references and opaque references remain
+unfinished. `EXACT-PRECAST-GRAVEYARD-STACK-SOURCES` adds exact graveyard source
+identity, stack target/payment/event references, departure facts and clone
+isolation. Seven protection names have RON subrule behavior evidence in this
+context; no complete-card compilation gain is claimed. Precast hand references,
+waiting exile references, delayed card frames and opaque references remain
 before complete damage-source enumeration. Token quality grants remain
 unsupported. Titania's Song still needs per-member base values and sticky duration.
 
@@ -43104,3 +43104,151 @@ Ranked next candidates:
 
 Named-token quality lowering for Master of the Hunt remains a one-card candidate
 behind useful shared prerequisites. Migration completion gates remain unmet.
+
+## 2026-10-08: exact precast graveyard sources on the stack
+
+Status: completed implementation slice `EXACT-PRECAST-GRAVEYARD-STACK-SOURCES`.
+Stop after this slice. Initial changes to `.gitignore`, the execution design and
+this ledger, and the untracked completed-entry archive, remain user work. Only
+this slice's summary replacement and appended entry are staged in this ledger.
+
+### Candidate comparison and selection
+
+Evaluated the latest ranked candidates, starting with #1. Complete canonical
+RON records inspected: Circle of Protection: Black, Blue, Green, Red, White,
+Artifacts, and Greater Realm of Preservation. Their nested bodies combine fixed
+mana payment, color/type or red-or-black source selection, and next-event
+prevention to `Player(You)`. Reprints count once; these seven names have 31
+records. Existing structural reprint validation remains in use.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact graveyard stack targets and card bindings (#1, selected) | The seven protection names above | 0 | Hand visits, waiting exile and delayed card references, opaque references and aggregation remain. Supplies the public precast graveyard category required by all seven. | Medium, bounded: existing graveyard visits, target identities and payment/event captures; add source identity, departure facts and clone/copy contracts. |
+| Waiting exile references in prevention/redirection and delayed card contexts (#2) | The same seven names | 0 | Other precast categories and aggregation remain. Reuses exact exile identity for waiting references across all seven. | Medium: shared information reads exist, but delayed card-frame traversal/lifetime needs a contract. |
+| Opaque-reference audit and complete CR 609.7a aggregation (#3) | The same seven names | 7, conditional on prerequisites | Both preceding candidates, hand visits and delayed card references remain. Enables production general choice after a complete legal-category audit. | High; not dependency-ready for one bounded run. |
+
+Candidate #1 is dependency-ready and has concrete shared downstream value.
+It uses existing visit and binding primitives and closes one complete stack
+context. It wins over starting the still-dependent aggregate. No single-card
+capability, source-data correction or removal gate is part of this slice.
+
+### Contract, exact signatures and reuse boundary
+
+- `DamageSource.GraveyardVisit() uuid.UUID` is an exact identity category.
+  `SameObject` requires one category, the card ID and the visit. A graveyard
+  object has public characteristics and an owner, but no controller (CR 404.2).
+- `Game.CaptureGraveyardDamageSource(visit uuid.UUID) DamageSource` reads only a
+  live visit. Physical IDs, absent and nil visits cannot select an object.
+- `Game.StackGraveyardSources() []DamageSource` reads exact graveyard targets,
+  non-nil `CardBinding`/`CardsBinding` payment captures, and nested event-card
+  capture sequences on stack objects. Queries are pure, sort map-derived
+  references and deduplicate exact visits. Wrong zones/IDs, absent visits and
+  unreferenced cards are excluded.
+- Stack insertion saves target visits. Copies keep original visits; native
+  retargeting captures the new target. Illegal targets still refer to the old
+  object (CR 609.7a); unused copied snapshots do not supply references. Final
+  referring stack departure ends availability.
+- `BasePlayer.RemoveFromGraveyard`, `ClearGraveyard` and `SetGraveyard` retain
+  departure information. The whole-zone setter retains its existing fresh-visit
+  behavior. Return cannot replace a saved source (CR 400.7). Immutable history
+  maps use copy-on-write; queries and clones keep separate mutable card facts
+  with physical IDs intact. Wrapped-player extraction retains history.
+- `ChooseDamageSourceFromStackGraveyardReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared
+  resolution decision service. Invalid declarations and premature reads reject;
+  an empty result clears the binding.
+- RON `chosenDamageSourcePlan.stackGraveyardChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and its separate instance binding. Existing `CreateFuturePreventDamage(
+  NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource,
+  Player(You)), [PreventThatDamage])` consumes the choice.
+
+Reuse: typed target and payment/event bindings, stack copying, definition
+validation, source filters, resolution choices, exact prevention, affected-player
+replacement ordering, simultaneous damage and cleanup. The shared information
+query supports graveyard identity in typed damage-source frames without changing
+saved event facts. A graveyard source cannot continue to a later spell/permanent.
+Phasing does not apply in the graveyard; existing permanent rules remain.
+Waiting replacement references and delayed card/card-set frames are separate
+contexts. General source choice remains unsupported; no partial production
+registry or Go-card fallback is added.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, RON tests failed on missing `StackGraveyardSources`,
+`GraveyardVisit` and `stackGraveyardChoice`; native tests failed on missing
+capture/enumeration APIs. These are the expected new-signature failures. Final copy review added a
+same-card-ID return/reselection test. Its explicit-reselect case failed before
+the retarget service was corrected; cancellation already retained the old visit.
+
+The engine short suite then found a new allocation regression: stack-heavy
+cloning used 142 allocations against the unchanged limit of 138. Temporarily
+restoring shared graveyard cards made that test pass, identifying the cause.
+Mutable graveyard isolation was retained. Modal target UUIDs now use one storage
+allocation with separate capacity-limited segments. The unchanged allocation
+budget and clone tests pass; no test limit or gameplay assertion was weakened.
+
+| Tests | Card mapping / evidence |
+| --- | --- |
+| `TestGraveyardDamageSourceVisits` | Native exact identity/public facts, single/clear/whole-zone departure, returned visits, immutable query results, current-card and departure clone isolation. |
+| `TestGraveyardDamageSourceStackReferences` | Singular/plural saved references, nested event sequences, deduplication, current/departure facts, copies, final reference lifetime and clone isolation. |
+| `TestGraveyardDamageSourcePayment`, `SingularPayment` | Real singular/plural discard payments, new graveyard visits, failed-payment rollback and resolution lifetime. |
+| `TestGraveyardDamageSourceTargetsAndRetarget` | Target-only references, departure colors, copied old visits, native retargeting, deterministic order and exclusion of unused snapshots. |
+| `TestGraveyardDamageSourceReselectReturnedTarget` | Explicit selection of a returned card with the same physical ID saves its new visit; cancellation keeps the old reference. |
+| `TestGraveyardDamageSourcePendingEvent` | Real creature death saves the first graveyard visit before trigger placement; pending events are excluded, returned cards stay separate, stack departure ends availability. |
+| `TestGraveyardDamageSourceInvalid` | Nil producers, wrong IDs/zones, missing/absent visits, mixed identity categories, invalid players/bindings/filters and premature reads. |
+| `TestGraveyardDamageSourceRechecksAndBatch` | Live property rechecks, restored color, nonpositive damage, affected-player replacement choices, retained departure color, simultaneous old/returned packets, shield consumption and cleanup. |
+| `TestGraveyardDamageSourceCloneTargetStorage`; existing `TestClone*` | Modal-target mutations/appends cannot cross contexts or clones; existing allocation budget remains passing. |
+| `TestRONGraveyardDamageSourceProtection` | All seven named protection cards: real RON payment/choice/prevention subrules with target and paid-card contexts; live/departed/returned/copy/clone states, payment/timing, separate copy choices, pending clone isolation, exact shield lifetime/consumption and empty result reset. |
+| `TestRONGraveyardDamageSourceInvalid` | Invalid arity, callable symbols, colorless color, empty filter list, incompatible references and missing instance bindings. |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**. Seven
+names gain subrule behavior evidence in a new source context, not seven complete
+card mappings. Full records continue to reject incomplete general source choice.
+
+### Verification and collection status
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader: expected exit 1; **1,978 compiled / 467 rejected records;
+  773 accepted / 213 rejected unique names**, 2,445 records / 986 names total.
+- `go test ./pkg/mage/dsl/ron -run TestRONGraveyardDamageSource -count=1`: PASS.
+  Native `go test ./pkg/mage -run 'TestGraveyardDamageSource|TestClone|TestCopy' -count=1`:
+  PASS, including the unchanged allocation budget after the isolation fix.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS after the allocation
+  correction. New pending-event and invalid-filter cases also pass natively.
+- Initial `make lint` found one new `nestingReduce` issue in graveyard removal.
+  The condition was inverted without changing behavior. Final `make lint`: PASS,
+  0 issues. Automatic formatting was reviewed. Focused native/RON tests and
+  build/vet/engine/full checks were rerun after the correction and passed. `git diff --check`:
+  PASS, including the ledger and staged slice delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected names**. Report and every
+  diagnostic exactly match baseline. First issue remains Animate Dead:
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  This is strict atomic collection rejection, not a build/test failure.
+- All 12 RON source hashes match the vocabulary snapshot. No source change,
+  snapshot refresh, source defect or environmental blocker was found.
+
+Changed files: new engine `graveyard_damage_source.go` and native tests;
+`damage_source.go`, `damage_source_choice.go`, `player.go`, `clone.go`, `stack.go`,
+`stack_resolver.go`, `spell_copy.go` and `waiting_delayed_damage.go`; RON
+`chosen_source_filter.go` and new RON graveyard-source tests; `pkg/mage/doc.go`,
+engine rules contracts, DSL reference and this ledger. Current callers remain.
+No runtime consumer, Go definition, generator or DSL function meets its removal
+gate. Complete collection gameplay/loading, runtime cutover, Go-card deletion
+and unused DSL removal remain unfinished.
+
+Ranked next candidates:
+
+1. Exact precast hand visits in stack card targets, reveal payments and event
+   captures: shared prerequisite for the same seven protection names, zero
+   immediate unlocks; preserve hidden/public information and departure identity.
+2. Waiting exile references in prevention/redirection and delayed card contexts:
+   reuse exact exile visits for the same seven names, zero immediate unlocks;
+   cover consumption, departure, capture lifetime and clone isolation.
+3. Complete CR 609.7a aggregation and opaque-reference audit after all precast
+   and delayed-card contracts: seven estimated full-card unlocks, subject to audit.
+
+Named-token quality lowering for Master of the Hunt remains behind useful shared
+prerequisites. Do not begin another slice in this run.

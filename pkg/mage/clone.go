@@ -107,7 +107,12 @@ func extractBasePlayer(p Player) *BasePlayer {
 			bp.handVisits[card.ID()] = visited.handVisit(card.ID())
 		}
 	}
-	bp.graveyard = cloneCardSlice(p.Graveyard())
+	bp.graveyard = cloneGraveyardCards(p.Graveyard())
+	if history, ok := p.(interface {
+		graveyardDepartures() map[uuid.UUID]DamageSource
+	}); ok {
+		bp.departedGraveyardSources = history.graveyardDepartures()
+	}
 	if visited, ok := p.(interface{ graveyardVisit(uuid.UUID) uuid.UUID }); ok {
 		bp.graveyardVisits = make(map[uuid.UUID]uuid.UUID, len(bp.graveyard))
 		for _, card := range bp.graveyard {
@@ -137,10 +142,11 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 		poisonCounters:  bp.poisonCounters,
 		manaPool:        NewManaPool(),
 	}
-	// Copy card slices (sharing Card refs).
+	// Mutable graveyard facts must stay separate in each game.
 	clone.hand = cloneCardSlice(bp.hand)
 	clone.handVisits = bp.handVisits
-	clone.graveyard = cloneCardSlice(bp.graveyard)
+	clone.graveyard = cloneGraveyardCards(bp.graveyard)
+	clone.departedGraveyardSources = bp.departedGraveyardSources
 	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)
 	clone.ante = cloneCardSlice(bp.ante)
@@ -256,31 +262,32 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		targetIncarnations: obj.targetIncarnations,
-		targetSpellSources: obj.targetSpellSources,
-		boundSpellSources:  obj.boundSpellSources,
-		sourceIncarnation:  obj.sourceIncarnation,
-		capturedNumbers:    maps.Clone(obj.capturedNumbers),
-		capturedPlayers:    maps.Clone(obj.capturedPlayers),
-		capturedCards:      maps.Clone(obj.capturedCards),
-		capturedCardSets:   cloneCardsBindings(obj.capturedCardSets),
-		capturedPermanents: maps.Clone(obj.capturedPermanents),
-		stateKey:           obj.stateKey,
-		ID:                 obj.ID,
-		Card:               obj.Card, // shared Card ref
-		Controller:         obj.Controller,
-		SourceID:           obj.SourceID,
-		TargetSource:       obj.TargetSource,
-		IsAbility:          obj.IsAbility,
-		activatedAbility:   obj.activatedAbility,
-		abilitySourceVisit: obj.abilitySourceVisit,
-		XValue:             obj.XValue,
-		ModeChoice:         obj.ModeChoice,
-		EventAmount:        obj.EventAmount,
-		EventSourceID:      obj.EventSourceID,
-		IsCopy:             obj.IsCopy,
-		CastZone:           obj.CastZone,
-		CastContext:        obj.CastContext.clone(),
+		targetIncarnations:     obj.targetIncarnations,
+		targetSpellSources:     obj.targetSpellSources,
+		targetGraveyardSources: obj.targetGraveyardSources,
+		boundSpellSources:      obj.boundSpellSources,
+		sourceIncarnation:      obj.sourceIncarnation,
+		capturedNumbers:        maps.Clone(obj.capturedNumbers),
+		capturedPlayers:        maps.Clone(obj.capturedPlayers),
+		capturedCards:          maps.Clone(obj.capturedCards),
+		capturedCardSets:       cloneCardsBindings(obj.capturedCardSets),
+		capturedPermanents:     maps.Clone(obj.capturedPermanents),
+		stateKey:               obj.stateKey,
+		ID:                     obj.ID,
+		Card:                   obj.Card, // shared Card ref
+		Controller:             obj.Controller,
+		SourceID:               obj.SourceID,
+		TargetSource:           obj.TargetSource,
+		IsAbility:              obj.IsAbility,
+		activatedAbility:       obj.activatedAbility,
+		abilitySourceVisit:     obj.abilitySourceVisit,
+		XValue:                 obj.XValue,
+		ModeChoice:             obj.ModeChoice,
+		EventAmount:            obj.EventAmount,
+		EventSourceID:          obj.EventSourceID,
+		IsCopy:                 obj.IsCopy,
+		CastZone:               obj.CastZone,
+		CastContext:            obj.CastContext.clone(),
 	}
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
@@ -288,11 +295,17 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	}
 	if len(obj.ModalTargets) > 0 {
 		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
-		for i, t := range obj.ModalTargets {
-			if len(t) > 0 {
-				cp := make([]uuid.UUID, len(t))
-				copy(cp, t)
-				clone.ModalTargets[i] = cp
+		count := 0
+		for _, targets := range obj.ModalTargets {
+			count += len(targets)
+		}
+		// Store modal targets together to limit clone allocations.
+		storage := make([]uuid.UUID, count)
+		for i, targets := range obj.ModalTargets {
+			if len(targets) > 0 {
+				copy(storage, targets)
+				clone.ModalTargets[i] = storage[:len(targets):len(targets)]
+				storage = storage[len(targets):]
 			}
 		}
 	}
@@ -486,7 +499,7 @@ func cloneGameRules(gr *GameRules) *GameRules {
 // cloneCardSlice shares the backing array with the source but forces cap == len
 // so any subsequent append on either side allocates a new backing array.
 // Mutation paths that would otherwise touch shared memory (middle-element
-// removal in RemoveFromHand/Graveyard/Ante, ShuffleLibrary) are required to
+// removal in RemoveFromHand/Ante, ShuffleLibrary) are required to
 // allocate fresh slices — see player.go.
 func cloneCardSlice(src []Card) []Card {
 	if len(src) == 0 {

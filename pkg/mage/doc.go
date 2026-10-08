@@ -115,6 +115,16 @@
 // characteristics. Queries and game clones keep separate object snapshots.
 // This service does not grant casting permission or install command abilities.
 //
+// [Game.CaptureGraveyardDamageSource] reads one live graveyard visit.
+// [DamageSource.GraveyardVisit] keeps returned cards separate from saved sources.
+// [Game.StackGraveyardSources] reads exact targets, payment card bindings
+// and nested event card captures on stack objects. Departure keeps public facts;
+// the final referring stack departure ends this category's availability.
+// Queries and game clones keep separate mutable card facts.
+// [ChooseDamageSourceFromStackGraveyardReferences] uses this category only.
+// A selected graveyard source cannot follow a later spell or permanent.
+// Waiting and delayed card frames need separate reference contracts.
+//
 // [Game.CaptureExiledDamageSource] reads one live exile visit.
 // [DamageSource.ExileVisit] keeps each visit separate from later objects.
 // Face-down cards supply no characteristics, even with inspection permission.

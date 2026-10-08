@@ -13,7 +13,8 @@ type StackObject struct {
 	// Target incarnations are immutable after stack insertion and shared by clones.
 	targetIncarnations map[uuid.UUID]uuid.UUID
 	// Saved spell data uses copy-on-write so stack clones can share it.
-	targetSpellSources map[uuid.UUID]DamageSource
+	targetSpellSources     map[uuid.UUID]DamageSource
+	targetGraveyardSources map[uuid.UUID]DamageSource
 	// Saved event information must stay separate from current source queries.
 	boundSpellSources  map[uuid.UUID]DamageSource
 	sourceIncarnation  uuid.UUID

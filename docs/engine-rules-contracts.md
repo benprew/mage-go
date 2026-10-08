@@ -9364,3 +9364,60 @@ six Circles of Protection and Greater Realm of Preservation with live,
 departed, returned, copied and cloned references. These are subrule behavior
 mappings, not complete-card gameplay acceptance. Phasing does not apply to
 exile objects; existing permanent-spell and phase contracts remain unchanged.
+
+## Exact precast graveyard sources on the stack
+
+`Game.CaptureGraveyardDamageSource(visit uuid.UUID) DamageSource` reads a live
+face-up graveyard object. `DamageSource.GraveyardVisit() uuid.UUID` is an exact
+identity category alongside permanent incarnations, spell stack IDs, command
+visits and exile visits. `SameObject` requires one category, the physical card
+ID and the matching visit. The object supplies public characteristics and its
+owner; it has no controller (CR 404.2). The physical card ID alone cannot select
+it. No query changes state or makes a choice.
+
+`BasePlayer.RemoveFromGraveyard`, `ClearGraveyard` and `SetGraveyard` save
+immutable departure information for each removed visit. Replacement of a whole
+graveyard retains the setter's existing fresh-visit behavior. Return creates a
+new visit (CR 400.7). Queries return separate snapshots; clones copy live
+graveyard card data with physical IDs intact and share immutable departure maps
+through copy-on-write. Wrapped players that embed `BasePlayer` retain history
+when extracted into a search clone.
+
+`Game.StackGraveyardSources() []DamageSource` reads exact graveyard targets,
+non-nil singular/plural payment card bindings, and nested event-card capture
+sequences on objects still on the stack. Target insertion saves the exact visit;
+copying retains it, while retargeting saves the new target's visit. Explicitly
+selecting a returned card with the same physical ID saves its new visit;
+cancellation retains the old reference. Queries read
+current information for a present object or departure information for that same
+visit. An illegal target still refers to the object until its referring stack
+object leaves (CR 609.7a). Unreferenced cards, wrong zones, absent visits, wrong
+card IDs, nil bindings and mixed identity categories supply no source. Map reads
+are sorted, exact visits are deduplicated, and unused snapshots from retargeted
+copies do not supply references. Final reference departure ends availability.
+
+`ChooseDamageSourceFromStackGraveyardReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+the existing non-targeted decision service at resolution. Invalid declarations
+and reads before their producer fail definition validation. An empty category
+clears its result. Exact prevention, current-property rechecks (CR 609.7b),
+replacement choices, simultaneous damage, consumption and cleanup use shared
+engine services. A graveyard source does not continue to a later spell or
+permanent. Phasing does not apply in the graveyard.
+
+RON `chosenDamageSourcePlan.stackGraveyardChoice(instanceBindings)` lowers the
+validated `ChooseADamageSource(filter)` shape with `You` and a separate instance
+binding. The existing selected-source prevention adapter consumes that binding.
+General production source choice remains unsupported. This establishes the
+stack target/payment/event context; waiting replacement references and delayed
+card/card-set frames are separate contracts. Typed damage-source frames use the
+new identity through the shared information query without changing saved facts.
+
+Evidence: native `TestGraveyardDamageSourceVisits`, `StackReferences`, `Payment`,
+`SingularPayment`, `TargetsAndRetarget`, `PendingEvent`, `CloneTargetStorage`,
+`ReselectReturnedTarget`, `Invalid` and `RechecksAndBatch`;
+RON `TestRONGraveyardDamageSourceProtection` and `Invalid`. The RON tests execute
+the complete choice/payment/prevention subrules of six Circles of Protection and
+Greater Realm of Preservation for target and payment references. They cover
+live, departed, returned, copied and cloned states, but do not establish complete
+card acceptance or complete source enumeration.

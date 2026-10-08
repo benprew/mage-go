@@ -92,6 +92,7 @@ func (g *Game) graveyardVisit(id uuid.UUID) uuid.UUID {
 // Used to track game-specific state before pushing object onto stack
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
+	g.captureGraveyardTargetSources(obj)
 	spellSourcesCopied := false
 	for _, id := range obj.Targets {
 		if _, saved := obj.targetSpellSources[id]; saved {

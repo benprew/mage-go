@@ -7318,3 +7318,21 @@ adapter consumes validated `ChooseADamageSource(filter)` plans with separate
 instance bindings. It shares the existing exact-source prevention lowering.
 General source choice remains unsupported in complete RON records until the
 full CR 609.7a source list and remaining reference contracts are established.
+
+### Precast graveyard references on the stack
+
+`mage.Game.CaptureGraveyardDamageSource(visit)` and
+`mage.Game.StackGraveyardSources()` read exact graveyard visits referred to by
+stack targets, card/card-set payments and nested event-card captures.
+`mage.ChooseDamageSourceFromStackGraveyardReferences(player, filter, binding)`
+uses only that category. Current facts are read while the visit is present;
+departure facts stay separate from returned cards. Copies retain original target
+visits; retargeting captures the new target. Final referring stack departure
+ends category availability. A graveyard source does not become a later spell
+or permanent source. Game clones and queries keep separate mutable facts.
+
+RON's private `chosenDamageSourcePlan.stackGraveyardChoice(instanceBindings)`
+lowers `ChooseADamageSource(filter)` with separate instance bindings and the
+existing selected-source prevention body. General production source choice still
+rejects until the complete CR 609.7a list is supported. Waiting references and
+delayed card frames remain separate contexts.

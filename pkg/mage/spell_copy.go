@@ -51,29 +51,30 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp := &StackObject{
-		ID:                 uuid.New(),
-		Card:               copiedCard,
-		Controller:         controller,
-		IsAbility:          original.IsAbility,
-		activatedAbility:   original.activatedAbility,
-		abilitySourceVisit: original.abilitySourceVisit,
-		XValue:             original.XValue,
-		ModeChoice:         original.ModeChoice,
-		EventAmount:        original.EventAmount,
-		IsCopy:             true,
-		CastZone:           original.CastZone,
-		CastContext:        original.CastContext.clone(),
-		TargetSource:       copiedCard,
-		sourceIncarnation:  original.sourceIncarnation,
-		capturedNumbers:    maps.Clone(original.capturedNumbers),
-		capturedPlayers:    maps.Clone(original.capturedPlayers),
-		capturedCards:      maps.Clone(original.capturedCards),
-		capturedCardSets:   cloneCardsBindings(original.capturedCardSets),
-		capturedPermanents: maps.Clone(original.capturedPermanents),
-		EventSourceID:      original.EventSourceID,
-		targetIncarnations: maps.Clone(original.targetIncarnations),
-		targetSpellSources: maps.Clone(original.targetSpellSources),
-		boundSpellSources:  maps.Clone(original.boundSpellSources),
+		ID:                     uuid.New(),
+		Card:                   copiedCard,
+		Controller:             controller,
+		IsAbility:              original.IsAbility,
+		activatedAbility:       original.activatedAbility,
+		abilitySourceVisit:     original.abilitySourceVisit,
+		XValue:                 original.XValue,
+		ModeChoice:             original.ModeChoice,
+		EventAmount:            original.EventAmount,
+		IsCopy:                 true,
+		CastZone:               original.CastZone,
+		CastContext:            original.CastContext.clone(),
+		TargetSource:           copiedCard,
+		sourceIncarnation:      original.sourceIncarnation,
+		capturedNumbers:        maps.Clone(original.capturedNumbers),
+		capturedPlayers:        maps.Clone(original.capturedPlayers),
+		capturedCards:          maps.Clone(original.capturedCards),
+		capturedCardSets:       cloneCardsBindings(original.capturedCardSets),
+		capturedPermanents:     maps.Clone(original.capturedPermanents),
+		EventSourceID:          original.EventSourceID,
+		targetIncarnations:     maps.Clone(original.targetIncarnations),
+		targetSpellSources:     maps.Clone(original.targetSpellSources),
+		targetGraveyardSources: maps.Clone(original.targetGraveyardSources),
+		boundSpellSources:      maps.Clone(original.boundSpellSources),
 	}
 	if copiedCard == nil {
 		cp.TargetSource = original.TargetSource
@@ -125,6 +126,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 			if i >= len(original.Targets) || original.Targets[i] != id {
 				delete(cp.targetIncarnations, id)
 				delete(cp.targetSpellSources, id)
+				delete(cp.targetGraveyardSources, id)
 				if p := g.FindPermanent(id); p != nil {
 					cp.targetIncarnations[id] = p.incarnationID
 				} else if visit := g.graveyardVisit(id); visit != uuid.Nil {
@@ -215,6 +217,18 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 		}
 		if valid {
 			copy(out[offset:offset+count], chosen)
+			for _, id := range chosen {
+				visit := g.graveyardVisit(id)
+				if visit == uuid.Nil || !slices.Contains(possible, id) {
+					continue
+				}
+				// The same card ID can select a new graveyard visit.
+				delete(obj.targetGraveyardSources, id)
+				if obj.targetIncarnations == nil {
+					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
+				}
+				obj.targetIncarnations[id] = visit
+			}
 		}
 		offset += count
 	}

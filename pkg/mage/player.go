@@ -169,21 +169,22 @@ type Player interface {
 
 // BasePlayer implements Player with basic functionality.
 type BasePlayer struct {
-	id              uuid.UUID
-	name            string
-	life            int
-	startingLife    int
-	lost            bool // true if the player has lost the game (e.g. deck-out)
-	drewFromEmpty   bool // set when a draw is attempted from an empty library
-	hand            []Card
-	handVisits      map[uuid.UUID]uuid.UUID
-	graveyard       []Card
-	graveyardVisits map[uuid.UUID]uuid.UUID
-	library         []Card
-	ante            []Card
-	manaPool        *ManaPool
-	lastDrawnCardID uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
-	poisonCounters  int
+	id                       uuid.UUID
+	name                     string
+	life                     int
+	startingLife             int
+	lost                     bool // true if the player has lost the game (e.g. deck-out)
+	drewFromEmpty            bool // set when a draw is attempted from an empty library
+	hand                     []Card
+	handVisits               map[uuid.UUID]uuid.UUID
+	graveyard                []Card
+	graveyardVisits          map[uuid.UUID]uuid.UUID
+	departedGraveyardSources map[uuid.UUID]DamageSource
+	library                  []Card
+	ante                     []Card
+	manaPool                 *ManaPool
+	lastDrawnCardID          uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
+	poisonCounters           int
 }
 
 func NewBasePlayer(name string) *BasePlayer {
@@ -295,6 +296,10 @@ func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
 func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
 
 func (p *BasePlayer) SetGraveyard(cards []Card) {
+	for _, card := range p.graveyard {
+		p.saveGraveyardDeparture(card)
+	}
+	p.graveyardVisits = nil
 	p.graveyard = cards
 	for _, card := range cards {
 		p.recordGraveyardVisit(card.ID())
@@ -320,10 +325,14 @@ func (p *BasePlayer) AddToGraveyard(c Card) {
 
 func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 	for i, c := range p.graveyard {
-		if c.ID() == id {
-			p.graveyard = removeAt(p.graveyard, i)
-			return c, true
+		if c.ID() != id {
+			continue
 		}
+		p.saveGraveyardDeparture(c)
+		p.graveyardVisits = maps.Clone(p.graveyardVisits)
+		delete(p.graveyardVisits, id)
+		p.graveyard = removeAt(p.graveyard, i)
+		return c, true
 	}
 	return nil, false
 }
@@ -337,7 +346,7 @@ func (p *BasePlayer) AddToLibrary(c Card) {
 }
 
 func (p *BasePlayer) ClearGraveyard() {
-	p.graveyard = nil
+	p.SetGraveyard(nil)
 }
 
 func (p *BasePlayer) Ante() []Card { return p.ante }
