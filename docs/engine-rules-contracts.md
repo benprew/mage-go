@@ -10134,3 +10134,33 @@ invalid delayed declarations; `Instances` checks separate chosen results,
 counters and cloned execution. These are subrule tests; the seven complete
 records still reject general source aggregation. Existing resolution counter
 payment tests retain rollback, stale-choice and nested-result evidence.
+
+## Waiting delayed exact sacrifice-payment references
+
+`IfSacrificePaid` and `UnlessSacrificePaid` declare their direct `This` subject
+and source reads in their continuation to `Game.WaitingDelayedPermanentSources`.
+Both branch polarities qualify without a payment result. Sequence, mode and
+nested audited-payment declarations use the same saved source incarnation.
+Queries do not resolve players or subjects, test legality or make choices.
+Attached subjects, player/value reads and future producers are outside this
+contract. An impossible payment still refers to its declared subject.
+
+Current or exact departure facts, isolated snapshots, phasing, return identity,
+deduplication and clone lifetime use existing waiting reference services.
+Trigger detection ends waiting eligibility before pending placement. Payment
+uses the original present subject under the payer's control. The existing
+transaction rejects a stale choice without sacrificing a returned object.
+Replacement can change the sacrifice destination without changing successful
+payment. This slice changes no replacement order or simultaneous operation.
+CR 400.7, 603.7a–e, 609.7a–b, 701.21a and 702.26b support these boundaries.
+
+Evidence: `TestWaitingDelayedSacrificePaymentReferences` has 84 shape, nesting,
+mode and lifecycle cases. `Boundaries` covers pure impossible-payment queries,
+excluded references and invalid declarations. RON
+`TestRONWaitingDelayedSacrificePaymentProtection` has 140 scenarios for six
+Circles of Protection and Greater Realm of Preservation, using real-record
+filters, costs and consuming shields. `Invalid` rejects nine malformed or
+unbound delayed declarations; `Instances` covers all four polarities and
+independent payments and cloned execution. Existing `TestResolutionSacrifice*`
+and `TestRONTypedSacrifice*` retain exact bound-subject, target-legality,
+rollback, replacement, regeneration and nested-payment evidence.

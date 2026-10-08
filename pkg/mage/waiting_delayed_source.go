@@ -123,6 +123,11 @@ func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	return self || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }
 
+func (e *sacrificePaymentEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || effectReadsSourcePermanent(e.body)
+}
+
 func (e *resolutionActionPaymentEffect) refersToSourcePermanent() bool {
 	return actionPaymentReadsSourcePermanent(e.payment) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }

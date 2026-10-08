@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-COUNTER-PAYMENT-REFERENCES` declares direct counter-payment
-subjects and source reads in both result bodies without making payment choices.
-Seven protection names gain 196 counter-payment subrule scenarios plus instance
-evidence; compilation and complete-card coverage remain unchanged. Other payment
-nodes, player/value and conditional references still need audit before general
+`WAITING-DELAYED-SACRIFICE-PAYMENT-REFERENCES` declares exact sacrifice subjects
+and source reads in paid or unpaid continuations without making payment choices.
+Seven protection names gain 140 sacrifice-payment scenarios plus four instance
+and polarity scenarios; compilation and complete-card coverage remain unchanged.
+Dynamic mana, player/value and conditional references still need audit before
 aggregation. Token quality grants remain unsupported. Titania's Song needs
 per-member base values and sticky duration.
 
@@ -45771,3 +45771,132 @@ Ranked next candidates:
    native band services with token identity, combat and clone evidence.
 
 This run stops after `WAITING-DELAYED-COUNTER-PAYMENT-REFERENCES`.
+
+## 2026-10-08: exact sacrifice subjects in waiting delayed payments
+
+Status: completed implementation slice `WAITING-DELAYED-SACRIFICE-PAYMENT-REFERENCES`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and progress ledger, plus untracked `mtgish-ron-completed.md`,
+are preserved. Only this slice's summary and appended entry are staged from the
+ledger; the user's history move is excluded from this commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The strict loader exited 1 for collection rejection: **1,978 compiled / 467
+rejected records; 773 accepted / 213 rejected unique names**. This was not a
+build or test failure. Complete records and nested forms were inspected for
+Circle of Protection: Black (LEB), Blue, Green, Red, White (LEA), Artifacts
+(ATQ), Greater Realm of Preservation and Master of the Hunt (LEG). Reprints
+count once. Jade Monolith and Reverse Damage's complete LEA records were also
+inspected to confirm their extra redirection/prevented-result blockers.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, exact sacrifice-payment declarations, selected | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: 0 immediate unlocks. | Dynamic mana, player/value and conditional references still need audit before complete CR 609.7a aggregation. Completes another typed waiting-body prerequisite for 7 unique protection names / 31 records. | Small: one native declaration method, existing AST lowering, identity/purity and RON gameplay tests. |
+| Remaining dynamic mana-payment declarations | The same 7 protection names: 0 immediate unlocks. | Both payer and amount can read permanent information. Requires typed value traversal and boundaries before complete source aggregation. Enables the same shared seven-card source-choice capability. | Medium: audit resolution-value wrappers, nested expressions and pure reads, then payment/clone evidence. |
+| Named-token quality grants | Master of the Hunt: 1 plausible full-card unlock. | Complete record needs NamedTokenWithPT's nested BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard(...))])). Native bands exist; fresh token grants and combat/clone evidence remain. Titania's Song has separate per-member values and sticky duration. | Medium: token lowering, ability identity and combat assignment tests. |
+
+Candidate #1 is dependency-ready, bounded and supplies concrete shared value.
+It wins over a larger reference audit and a single-card token capability while
+multi-card prerequisites remain. Contract, reuse boundary and acceptance cases
+were stated before editing. This is a missing engine declaration contract, not
+missing AST syntax, a source defect or an environment failure.
+
+### Exact signatures, contexts and engine reuse
+
+Existing AST lowering is reused without a duplicate adapter:
+
+- `compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error)`
+  accepts supported resolving `MayCost(SacrificePermanent(ref))` and
+  `PlayerMayCost(player, SacrificePermanent(ref))`, with adjacent nonempty
+  `If` / `Unless` and symbol `CostWasPaid` / `CostWasntPaid`.
+- `compileDelayedStep(Node, scope) (effectFactory, error)` keeps existing
+  `CreateFutureTrigger(event, ActionList([...]))` capture and scope behavior.
+  Tests use permanent-source next-end-step bodies with `ThisPermanent`.
+- `IfSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect) ResolvingEffect`
+  and `UnlessSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect) ResolvingEffect`
+  retain their signatures, exact subject resolution and shared transaction.
+- New `(*sacrificePaymentEffect).refersToSourcePermanent() bool` declares a
+  direct native `This` payment subject or an audited typed source read in the
+  continuation. Paid and unpaid polarities both qualify before a result exists.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` and
+  `ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`
+  keep their shared identity, information, decision and binding services.
+
+RON owns spelling, arity, typed scope, branch polarity and per-instance lowering.
+Mage owns reusable declaration traversal, capture, incarnation identity, current
+or exact departure facts, isolated snapshots and delayed lifetime. Sequences,
+modes and nested audited payments propagate declarations. Queries do not resolve
+the payer or subject, check legality or offer a payment. Impossible subjects
+still qualify. Attached subjects do not imply source references. Player/value
+reads and future delayed producers remain separate contracts.
+
+Departure and phasing keep the saved incarnation; a return cannot replace it.
+Detection ends waiting eligibility before pending placement. Payment still
+requires the original present subject under the payer's control. The shared
+transaction rejects stale choices without sacrificing a returned object.
+Replacement may change the destination without changing successful payment.
+No replacement ordering or simultaneous-operation behavior changes.
+CR 400.7, 603.7a–e, 609.7a–b, 701.21a and 702.26b supply rules evidence.
+No source-data defect was found. No DSL removal or Go-card cutover gate is met.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production edits, the native reference matrix failed at
+`conditional reference lost source incarnation`. RON protection and instance
+tests failed at `sacrifice payment lost source choice` and
+`factory instances lost distinct references`. The same assertions passed after
+adding the native declaration method. Invalid declarations were added before
+implementation. No production registry is installed by the subrule harness.
+
+| Tests | Card mapping and behavior evidence |
+| --- | --- |
+| `TestWaitingDelayedSacrificePaymentReferences` | 84 cases: paid/unpaid subject and body-only declarations × direct/nested/mode × live, departed, returned, phased, phase cycle, color and control. Exact identity, current/departure facts, snapshot isolation, deduplication and independent clone lifetime. |
+| `TestWaitingDelayedSacrificePaymentBoundaries` | Repeated pure queries with an impossible departed subject; payer reads only at resolution. Attached subject, payer-only and future references excluded. Nil payer/subject/body and unbound saved subjects reject. |
+| `TestRONWaitingDelayedSacrificePaymentProtection` | Circle of Protection: Artifacts, Black, Blue, Green, Red, White and Greater Realm of Preservation: 140 scenarios using real-record filters, activation costs and consuming shields. Paid/unpaid continuations; live/departed/returned/phased/phase-cycle/control/copied/cloned/replaced/stale subjects. Announcement timing, failed activation, exact choice, actual sacrifice, branch execution, replaced destination and shield consumption. |
+| `TestRONWaitingDelayedSacrificePaymentInvalid` | Nine malformed, unbound or incompatible delayed declarations reject. |
+| `TestRONWaitingDelayedSacrificePaymentInstances` | All four If/Unless polarities with explicit You; two factory instances keep distinct references, decisions and sacrifices. Original and cloned execution keep separate results and lifetimes. |
+| Existing `TestResolutionSacrifice*`, `TestRONTypedSacrifice*` and full suites | Exact bound-subject identity, target legality, stale-choice rollback, replacement, regeneration, indestructibility and nested-result regressions retained. Existing complete Curse Artifact and Mindstab Thrull RON gameplay remains accepted. |
+
+These are subrule gains for seven protection names, not full-card gains. Their
+complete records still reject general damage-source aggregation.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedSacrificePayment -count=1`: PASS.
+- Native `go test ./pkg/mage -run 'TestWaitingDelayedSacrificePayment|TestResolutionSacrifice' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes reviewed; focused native and
+  RON tests rerun after lint: PASS. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection;
+  entire JSON report matches baseline: **1,978 compiled / 467 rejected records;
+  773 accepted / 213 rejected unique names** (2,445 records / 986 names).
+  First diagnostic remains Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+
+Estimated and actual compilation gains are **0 names / 0 records**. Seven
+protection names gain 140 sacrifice-payment subrule scenarios plus four
+instance/polarity scenarios. Accepted records remain accepted; complete-card
+coverage is unchanged. All 12 RON hashes match the vocabulary snapshot, so no
+source or vocabulary update is required. No environmental or pre-existing
+verification blocker remains. Complete collection gameplay, runtime integration,
+Go-card deletion and unused DSL cleanup remain unfinished.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, native and RON
+`waiting_delayed_sacrifice_payment_test.go`, `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. Remaining dynamic mana-payment reference declarations, followed by explicit
+   player/value reads: seven protection names benefit; 0 immediate unlocks.
+   Keep each contract bounded and audit typed value wrappers before aggregation.
+2. Cast/state/coin and remaining conditional typed-reference audit, then complete
+   CR 609.7a aggregation: seven potential full-card unlocks after prerequisites.
+   Jade Monolith and Reverse Damage retain additional blockers.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock using
+   native band services with token identity, combat and clone evidence.
+
+This run stops after `WAITING-DELAYED-SACRIFICE-PAYMENT-REFERENCES`.

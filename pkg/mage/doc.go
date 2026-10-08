@@ -200,6 +200,11 @@
 // make payment choices. Zero and impossible payments keep the reference.
 // A saved incarnation survives departure and phasing until the delay triggers.
 // Counter removal still requires the original subject to be present.
+// [IfSacrificePaid] and [UnlessSacrificePaid] declare a direct [This] payment
+// subject and source reads in their continuation to the same waiting query.
+// Queries do not resolve the subject or payer, or offer a sacrifice payment.
+// Departure and phasing keep the saved reference; a return cannot replace it.
+// Sacrifice still requires the original present subject under the payer's control.
 //
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.

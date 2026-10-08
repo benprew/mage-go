@@ -7858,3 +7858,32 @@ Evidence: `TestRONWaitingDelayedCounterPaymentProtection`, `Invalid` and
 `Instances`, plus native `TestWaitingDelayedCounterPaymentReferences` and
 `Boundaries`. The seven protection names gain subrule coverage; their complete
 records still reject general damage-source aggregation.
+
+## Self references in waiting delayed exact sacrifice payments
+
+Existing `compileResolutionPayment(payment, continuation Node, ctx scope)
+(effectFactory, error)` lowering accepts
+`MayCost(SacrificePermanent(ThisPermanent))` and
+`PlayerMayCost(player, SacrificePermanent(ThisPermanent))` in supported
+`CreateFutureTrigger` resolving lists. The adjacent nonempty `If` or `Unless`
+uses `CostWasPaid` or `CostWasntPaid`. All four polarities retain their existing
+local result and per-instance scope.
+
+The native `IfSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect)` and
+`UnlessSacrificePaid(PlayerRef, PermanentRef, ResolvingEffect)` now declare a
+direct `This` payment subject or a typed source read in their continuation to
+`Game.WaitingDelayedPermanentSources() []DamageSource`. A paid or unpaid
+continuation qualifies before a payment decision exists. Sequences, modes and
+nested audited payments preserve the declaration. Queries do not resolve the
+payer or subject, check payment legality or offer a choice. Attached subjects,
+player/value reads and future delayed producers need separate contracts.
+
+The saved incarnation uses current or exact departure facts, including after
+phasing. A returned object cannot inherit it. Sacrifice execution still requires
+the original present subject under the payer's control and uses the existing
+transaction and zone replacements.
+
+Evidence: native `TestWaitingDelayedSacrificePaymentReferences` and `Boundaries`;
+RON `TestRONWaitingDelayedSacrificePaymentProtection`, `Invalid` and `Instances`.
+The seven protection names gain subrule coverage. General source aggregation
+and their complete declarations remain unsupported.
