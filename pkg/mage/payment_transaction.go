@@ -26,6 +26,7 @@ type costPaymentTransaction struct {
 	resetDrainedBeforeMana bool
 	paidNumbers            map[*NumberBinding]int
 	paidCards              map[*CardBinding]capturedCard
+	revealedHandCards      []capturedCard
 	paidCardSets           map[*CardsBinding][]capturedCard
 	paidPermanents         map[*PermanentBinding]capturedPermanent
 }
@@ -231,7 +232,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				tx.costs[i] = counter
 			}
 		}
-		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
+		if reveal, ok := cost.(*revealFromHandCost); ok {
 			payer := tx.game.GetPlayer(tx.controller)
 			if payer == nil {
 				return ErrPlayerNotFound
@@ -410,6 +411,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 func (tx *costPaymentTransaction) Commit() error {
 	tx.paidNumbers = nil
 	tx.paidCards = nil
+	tx.revealedHandCards = nil
 	tx.paidCardSets = nil
 	tx.paidPermanents = nil
 	for _, cost := range tx.costs {
@@ -432,12 +434,14 @@ func (tx *costPaymentTransaction) Commit() error {
 func (tx *costPaymentTransaction) commit() (commitErr error) {
 	tx.paidNumbers = nil
 	tx.paidCards = nil
+	tx.revealedHandCards = nil
 	tx.paidCardSets = nil
 	tx.paidPermanents = nil
 	defer func() {
 		if commitErr != nil {
 			tx.paidNumbers = nil
 			tx.paidCards = nil
+			tx.revealedHandCards = nil
 			tx.paidCardSets = nil
 			tx.paidPermanents = nil
 		}
@@ -449,7 +453,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 	millTotal := 0
 	counterTotals := make(map[CounterType]int)
 	for _, cost := range tx.costs {
-		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture && !reveal.CanPay(tx.sourceID, tx.controller, tx.game) {
+		if reveal, ok := cost.(*revealFromHandCost); ok && !reveal.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen reveal")
 		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
@@ -604,11 +608,15 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			}
 			tx.paidPermanents[taps.paid] = taps.selected[0]
 		}
-		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
-			if tx.paidCards == nil {
-				tx.paidCards = make(map[*CardBinding]capturedCard)
+		if reveal, ok := cost.(*revealFromHandCost); ok {
+			identity := capturedCard{id: reveal.selected, visit: reveal.visit, zone: ZoneHand}
+			tx.revealedHandCards = append(tx.revealedHandCards, identity)
+			if reveal.capture {
+				if tx.paidCards == nil {
+					tx.paidCards = make(map[*CardBinding]capturedCard)
+				}
+				tx.paidCards[reveal.paidCard] = identity
 			}
-			tx.paidCards[reveal.paidCard] = capturedCard{id: reveal.selected, visit: reveal.visit, zone: ZoneHand}
 		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
 			if tx.paidNumbers == nil {

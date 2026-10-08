@@ -115,6 +115,18 @@
 // characteristics. Queries and game clones keep separate object snapshots.
 // This service does not grant casting permission or install command abilities.
 //
+// [Game.CaptureHandDamageSource] reads one live hand visit.
+// [DamageSource.HandVisit] keeps returned cards separate from saved sources.
+// Hidden hands supply identity and owner only. Public hands supply current facts.
+// [Game.StackHandSources] reads singular and plural payment card bindings
+// and nested event card captures on stack objects. Departure keeps the facts
+// available at that visit's departure; final stack departure ends this category.
+// [ChooseDamageSourceFromStackHandReferences] uses this category only.
+// A cost reveal keeps its exact card public until that stack object leaves.
+// Copies keep the reference without extending the original reveal.
+// A selected hand source cannot follow a later spell or permanent.
+// Waiting card frames and hand targets need separate reference contracts.
+//
 // [Game.CaptureGraveyardDamageSource] reads one live graveyard visit.
 // [DamageSource.GraveyardVisit] keeps returned cards separate from saved sources.
 // [Game.StackGraveyardSources] reads exact targets, payment card bindings

@@ -7336,3 +7336,22 @@ lowers `ChooseADamageSource(filter)` with separate instance bindings and the
 existing selected-source prevention body. General production source choice still
 rejects until the complete CR 609.7a list is supported. Waiting references and
 delayed card frames remain separate contexts.
+
+## RON hand source references on the stack
+
+Validated `ChooseADamageSource(filter)` has an internal
+`chosenDamageSourcePlan.stackHandChoice(instanceBindings)` lowering for exact
+hand visits in singular/plural payment card bindings and nested event captures
+on stack objects. It calls
+`mage.ChooseDamageSourceFromStackHandReferences(mage.You, filter, binding)`.
+The separate instance binding is consumed by the existing
+`CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(You)), [PreventThatDamage])` lowering.
+
+Hidden hands supply no public characteristics. Public hands use current
+visibility; saved departures keep only the facts public at departure. Cost
+reveals keep their exact card public until the paid stack object leaves, including
+resolution. Copies retain cost references without extending the original reveal. Returned cards, later spells
+and permanents keep separate identities. Invalid declarations and premature
+reads reject. Empty choices clear the result. General production source choice
+remains unsupported until complete enumeration and its opaque-reference audit.

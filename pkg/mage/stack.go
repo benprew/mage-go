@@ -10,6 +10,9 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
+	// Copies keep cost references without extending the original reveal.
+	revealedHandCards []capturedCard
+	ownsHandReveals   bool
 	// Target incarnations are immutable after stack insertion and shared by clones.
 	targetIncarnations map[uuid.UUID]uuid.UUID
 	// Saved spell data uses copy-on-write so stack clones can share it.
@@ -199,10 +202,11 @@ func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
 
 // Stack represents the game stack.
 type Stack struct {
-	objects          []*StackObject
-	spellSources     map[uuid.UUID]DamageSource
-	spellManaValues  map[uuid.UUID]int
-	spellControllers map[uuid.UUID]uuid.UUID
+	resolvingHandObjects []*StackObject
+	objects              []*StackObject
+	spellSources         map[uuid.UUID]DamageSource
+	spellManaValues      map[uuid.UUID]int
+	spellControllers     map[uuid.UUID]uuid.UUID
 }
 
 func NewStack() *Stack {

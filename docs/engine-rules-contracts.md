@@ -9421,3 +9421,69 @@ the complete choice/payment/prevention subrules of six Circles of Protection and
 Greater Realm of Preservation for target and payment references. They cover
 live, departed, returned, copied and cloned states, but do not establish complete
 card acceptance or complete source enumeration.
+
+## Exact precast hand sources in stack card bindings
+
+`Game.CaptureHandDamageSource(visit uuid.UUID) DamageSource` reads one live
+hand visit. `DamageSource.HandVisit() uuid.UUID` adds an exact identity category.
+The physical card ID alone cannot select a visit. `SameObject` requires exactly
+one identity category and the matching card ID and visit (CR 400.7).
+
+The query supplies public information only. A hidden hand supplies identity
+and owner, with no name, controller, card characteristics or keywords. A hand
+made public by the existing visibility rule supplies current characteristics
+(CR 400.2, 402.3, 108.4). A cost reveal keeps its exact card public until the
+paid spell or ability
+leaves the stack, including its resolution (CR 701.20a). Reveal history alone
+does not keep a card public. The query does not inspect private cards on behalf
+of their owner.
+
+`BasePlayer.RemoveFromHand` and `SetHand` retain departure facts by visit.
+The layer service copies current public-hand visibility to the player's zone
+state before state-trigger checks. Departure saves only the facts public then.
+A hidden departure cannot expose characteristics through later public visibility.
+The whole-hand setter preserves visits of retained cards, including arrangement
+changes; removed cards save departure facts. A later addition creates a fresh
+visit. Queries copy mutable snapshots and preserve physical card IDs. Game clones
+copy mutable live hand cards, visibility and immutable departure maps; subsequent
+map writes use copy-on-write. Wrapped players retain this state in search clones.
+
+`Game.StackHandSources() []DamageSource` reads non-nil singular and plural
+card payment bindings, exact reveal-cost references (with or without a result
+binding), and nested event-card capture sequences on stack objects. The resolving
+object retains these references until resolution ends. Nested resolution retains
+each outer frame; clones copy all active frames.
+It checks zone, physical ID and exact visit, sorts map-derived references and
+deduplicates visits across bindings and copies. Unreferenced hand cards, absent
+visits, nil producers and invalid identities supply no source. Pending event
+captures supply no stack source before trigger placement. The final referring
+stack object's departure ends this enumeration category (CR 609.7a). Copies
+retain cost references, but do not extend the original cost reveal. Clones keep
+their own active reveal lifetime. The player zone service reads its game's
+stack for exact active reveal visits at departure; new games and clones bind
+that stack explicitly. Reveals cannot expose a returned hand visit.
+
+`ChooseDamageSourceFromStackHandReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+the existing resolution choice and definition-validation services. An empty
+result clears the binding. Invalid player, filter and binding declarations and
+premature reads reject. RON `chosenDamageSourcePlan.stackHandChoice(instanceBindings)`
+lowers validated `ChooseADamageSource(filter)` with `You` and a separate instance
+binding. Existing exact-source prevention consumes that binding. Current-property
+rechecks, competing replacements, simultaneous packets, consumption and cleanup
+use the shared engine services (CR 609.7b). A hand source cannot continue to a
+later spell or permanent; permanent-spell continuity is a different contract.
+
+This establishes stack payment/event card bindings, including publicly revealed
+hands. Hand target declarations, waiting and delayed card frames, and complete
+CR 609.7a aggregation remain separate work. General production source choice
+still rejects; no partial registry or Go factory fallback is installed.
+
+Evidence: native `TestHandDamageSourceVisits`, `StackReferences`, `Invalid`,
+`RechecksAndBatch`, `HiddenVisibility`, `PaymentRollback`, `PendingDraw`,
+`CastBoundary`, `RevealStackLifetime`, `RevealSpellPaths`, `NestedResolution` and
+`CloneTargetStorage`; RON `TestRONHandDamageSourceProtection`
+and `Invalid`. The seven protection cards gain source-choice/payment/prevention
+subrule evidence with real reveal payments and RON Revelation. These mappings
+are not complete-card acceptance. The unchanged clone allocation budget passes
+with separate capacity-limited flat and modal target storage segments.

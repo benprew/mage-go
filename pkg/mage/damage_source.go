@@ -14,6 +14,7 @@ func cloneDamageSource(s DamageSource) DamageSource {
 	s.keywords = maps.Clone(s.keywords)
 	if s.card != nil {
 		s.card = s.card.Copy()
+		s.card.SetID(s.id)
 	}
 	return s
 }
@@ -25,6 +26,7 @@ type DamageSource struct {
 	commandVisit                       uuid.UUID
 	exileVisit                         uuid.UUID
 	graveyardVisit                     uuid.UUID
+	handVisit                          uuid.UUID
 	name                               string
 	colors                             []Color
 	keywords                           map[Keyword]bool
@@ -47,9 +49,12 @@ func (s DamageSource) ExileVisit() uuid.UUID { return s.exileVisit }
 // GraveyardVisit keeps separate graveyard entries of one card apart.
 func (s DamageSource) GraveyardVisit() uuid.UUID { return s.graveyardVisit }
 
+// HandVisit keeps separate hand entries of one card apart.
+func (s DamageSource) HandVisit() uuid.UUID { return s.handVisit }
+
 func (s DamageSource) hasExactIdentity() bool {
 	count := 0
-	for _, id := range []uuid.UUID{s.incarnation, s.stackID, s.commandVisit, s.exileVisit, s.graveyardVisit} {
+	for _, id := range []uuid.UUID{s.incarnation, s.stackID, s.commandVisit, s.exileVisit, s.graveyardVisit, s.handVisit} {
 		if id != uuid.Nil {
 			count++
 		}
@@ -60,7 +65,7 @@ func (s DamageSource) hasExactIdentity() bool {
 // SameObject compares exact source identities. Missing identities cannot match.
 func (s DamageSource) SameObject(other DamageSource) bool {
 	return s.hasExactIdentity() && other.hasExactIdentity() && s.id == other.id &&
-		s.incarnation == other.incarnation && s.stackID == other.stackID && s.commandVisit == other.commandVisit && s.exileVisit == other.exileVisit && s.graveyardVisit == other.graveyardVisit
+		s.incarnation == other.incarnation && s.stackID == other.stackID && s.commandVisit == other.commandVisit && s.exileVisit == other.exileVisit && s.graveyardVisit == other.graveyardVisit && s.handVisit == other.handVisit
 }
 func (s DamageSource) Controller() uuid.UUID     { return s.controller }
 func (s DamageSource) Owner() uuid.UUID          { return s.owner }

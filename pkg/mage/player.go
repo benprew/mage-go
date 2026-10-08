@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"math/rand"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -177,6 +178,9 @@ type BasePlayer struct {
 	drewFromEmpty            bool // set when a draw is attempted from an empty library
 	hand                     []Card
 	handVisits               map[uuid.UUID]uuid.UUID
+	handPublic               bool
+	handStack                *Stack
+	departedHandSources      map[uuid.UUID]DamageSource
 	graveyard                []Card
 	graveyardVisits          map[uuid.UUID]uuid.UUID
 	departedGraveyardSources map[uuid.UUID]DamageSource
@@ -251,6 +255,11 @@ func (p *BasePlayer) AddToHand(c Card) {
 
 func (p *BasePlayer) SetHand(cards []Card) {
 	previous := p.handVisits
+	for _, card := range p.hand {
+		if !slices.ContainsFunc(cards, func(current Card) bool { return current.ID() == card.ID() }) {
+			p.saveHandDeparture(card)
+		}
+	}
 	p.hand = cards
 	p.handVisits = make(map[uuid.UUID]uuid.UUID, len(cards))
 	for _, card := range cards {
@@ -274,12 +283,14 @@ func (p *BasePlayer) handVisit(id uuid.UUID) uuid.UUID { return p.handVisits[id]
 
 func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 	for i, c := range p.hand {
-		if c.ID() == id {
-			p.hand = removeAt(p.hand, i)
-			p.handVisits = maps.Clone(p.handVisits)
-			delete(p.handVisits, id)
-			return c, true
+		if c.ID() != id {
+			continue
 		}
+		p.saveHandDeparture(c)
+		p.hand = removeAt(p.hand, i)
+		p.handVisits = maps.Clone(p.handVisits)
+		delete(p.handVisits, id)
+		return c, true
 	}
 	return nil, false
 }

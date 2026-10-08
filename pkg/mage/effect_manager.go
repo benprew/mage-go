@@ -821,6 +821,7 @@ func (em *EffectManager) Apply(g *Game) {
 	for _, p := range g.zones.battlefield {
 		g.syncAbilityContext(p)
 	}
+	g.syncHandVisibility()
 	g.CheckStateTriggers()
 }
 

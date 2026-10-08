@@ -55,6 +55,7 @@ func (g *Game) Clone() *Game {
 
 	// Deep copy stack.
 	c.stack = cloneStack(g.stack)
+	c.bindHandStack()
 
 	// Deep copy combat.
 	c.combat = cloneCombat(g.combat)
@@ -100,14 +101,22 @@ func extractBasePlayer(p Player) *BasePlayer {
 		bp.lost = true
 	}
 	// Copy zones.
-	bp.hand = cloneCardSlice(p.Hand())
+	bp.hand = cloneZoneCards(p.Hand())
+	if state, ok := p.(interface{ handIsPublic() bool }); ok {
+		bp.handPublic = state.handIsPublic()
+	}
+	if history, ok := p.(interface {
+		handDepartures() map[uuid.UUID]DamageSource
+	}); ok {
+		bp.departedHandSources = history.handDepartures()
+	}
 	if visited, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
 		bp.handVisits = make(map[uuid.UUID]uuid.UUID, len(bp.hand))
 		for _, card := range bp.hand {
 			bp.handVisits[card.ID()] = visited.handVisit(card.ID())
 		}
 	}
-	bp.graveyard = cloneGraveyardCards(p.Graveyard())
+	bp.graveyard = cloneZoneCards(p.Graveyard())
 	if history, ok := p.(interface {
 		graveyardDepartures() map[uuid.UUID]DamageSource
 	}); ok {
@@ -142,10 +151,12 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 		poisonCounters:  bp.poisonCounters,
 		manaPool:        NewManaPool(),
 	}
-	// Mutable graveyard facts must stay separate in each game.
-	clone.hand = cloneCardSlice(bp.hand)
+	// Mutable zone facts must stay separate in each game.
+	clone.hand = cloneZoneCards(bp.hand)
+	clone.departedHandSources = bp.departedHandSources
+	clone.handPublic = bp.handPublic
 	clone.handVisits = bp.handVisits
-	clone.graveyard = cloneGraveyardCards(bp.graveyard)
+	clone.graveyard = cloneZoneCards(bp.graveyard)
 	clone.departedGraveyardSources = bp.departedGraveyardSources
 	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)
@@ -250,6 +261,12 @@ func cloneStack(s *Stack) *Stack {
 		return NewStack()
 	}
 	clone := &Stack{spellSources: maps.Clone(s.spellSources), spellManaValues: maps.Clone(s.spellManaValues), spellControllers: maps.Clone(s.spellControllers)}
+	if len(s.resolvingHandObjects) > 0 {
+		clone.resolvingHandObjects = make([]*StackObject, len(s.resolvingHandObjects))
+		for i, object := range s.resolvingHandObjects {
+			clone.resolvingHandObjects[i] = cloneStackObject(object)
+		}
+	}
 	if len(s.objects) > 0 {
 		clone.objects = make([]*StackObject, len(s.objects))
 		for i, obj := range s.objects {
@@ -263,6 +280,8 @@ func cloneStack(s *Stack) *Stack {
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
 		targetIncarnations:     obj.targetIncarnations,
+		revealedHandCards:      slices.Clone(obj.revealedHandCards),
+		ownsHandReveals:        obj.ownsHandReveals,
 		targetSpellSources:     obj.targetSpellSources,
 		targetGraveyardSources: obj.targetGraveyardSources,
 		boundSpellSources:      obj.boundSpellSources,
@@ -293,14 +312,21 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
 		clone.ColorOverride = &colors
 	}
-	if len(obj.ModalTargets) > 0 {
-		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
-		count := 0
+	if len(obj.ModalTargets) > 0 || len(obj.Targets) > 0 {
+		if len(obj.ModalTargets) > 0 {
+			clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
+		}
+		count := len(obj.Targets)
 		for _, targets := range obj.ModalTargets {
 			count += len(targets)
 		}
-		// Store modal targets together to limit clone allocations.
+		// Store target groups together to limit clone allocations.
 		storage := make([]uuid.UUID, count)
+		if len(obj.Targets) > 0 {
+			copy(storage, obj.Targets)
+			clone.Targets = storage[:len(obj.Targets):len(obj.Targets)]
+			storage = storage[len(obj.Targets):]
+		}
 		for i, targets := range obj.ModalTargets {
 			if len(targets) > 0 {
 				copy(storage, targets)
@@ -313,11 +339,6 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	if len(obj.Effects) > 0 {
 		clone.Effects = make([]Effect, len(obj.Effects))
 		copy(clone.Effects, obj.Effects)
-	}
-	// Copy targets.
-	if len(obj.Targets) > 0 {
-		clone.Targets = make([]uuid.UUID, len(obj.Targets))
-		copy(clone.Targets, obj.Targets)
 	}
 	if len(obj.TargetSpecs) > 0 {
 		clone.TargetSpecs = append([]Target(nil), obj.TargetSpecs...)

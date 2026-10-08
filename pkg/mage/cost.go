@@ -703,7 +703,8 @@ func DiscardCardsWithDifferentNamesCostWithCards(n int, paid *CardsBinding) Cost
 
 // revealFromHandCost is an additional cost that requires the controller
 // to reveal a card from their hand matching the given filter. The card
-// stays in hand after being revealed (CR 701.16) — no zone change.
+// stays in hand after the reveal (CR 701.20). The card remains public
+// until the paid spell or ability leaves the stack.
 //
 // Used by "as an additional cost, reveal an X card from your hand"
 // (Wren's Run Vanquisher's first OR branch, etc.).
@@ -818,7 +819,7 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 			chosen = c2
 		}
 	}
-	// Reveal the card; no zone change (CR 701.16). The card stays in
+	// Reveal the card without a zone change (CR 701.20). The card stays in
 	// hand. Engine clients can observe the reveal via [Game.LastCostReveal].
 	g.resolution.SetLastCostReveal(chosen)
 	g.recordPublicReveal(chosen)

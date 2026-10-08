@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -15,6 +16,7 @@ type castStackObjectOptions struct {
 	DamageDistribution     map[uuid.UUID]int
 	CapturedNumbers        map[*NumberBinding]int
 	CapturedCards          map[*CardBinding]capturedCard
+	RevealedHandCards      []capturedCard
 	CapturedCardSets       map[*CardsBinding][]capturedCard
 	CapturedPermanents     map[*PermanentBinding]capturedPermanent
 	Card                   Card
@@ -120,6 +122,8 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	obj := &StackObject{
 		capturedNumbers:    maps.Clone(opts.CapturedNumbers),
 		capturedCards:      maps.Clone(opts.CapturedCards),
+		revealedHandCards:  slices.Clone(opts.RevealedHandCards),
+		ownsHandReveals:    !opts.IsCopy && len(opts.RevealedHandCards) > 0,
 		capturedCardSets:   cloneCardsBindings(opts.CapturedCardSets),
 		capturedPermanents: maps.Clone(opts.CapturedPermanents),
 		ID:                 uuid.New(),

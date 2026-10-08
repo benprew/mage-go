@@ -131,7 +131,7 @@ func NewGame(playerA, playerB Player) *Game {
 }
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
-	return &Game{
+	g := &Game{
 		players:        []Player{playerA, playerB},
 		anteEnabled:    anteEnabled,
 		originalOwners: make(map[uuid.UUID]uuid.UUID),
@@ -148,6 +148,8 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		turns:          NewTurnSystem(),
 		customState:    make(map[string]any),
 	}
+	g.bindHandStack()
+	return g
 }
 
 // GetPlayer returns the player with the given ID.
@@ -2744,6 +2746,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		SnapshotCast:           true,
 		CapturedNumbers:        payment.payment.paidNumbers,
 		CapturedCards:          payment.payment.paidCards,
+		RevealedHandCards:      payment.payment.revealedHandCards,
 		CapturedCardSets:       payment.payment.paidCardSets,
 		CapturedPermanents:     payment.payment.paidPermanents,
 	})
@@ -3292,6 +3295,8 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.DamageDistribution = damageDistribution
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)
+	obj.revealedHandCards = slices.Clone(payment.revealedHandCards)
+	obj.ownsHandReveals = len(obj.revealedHandCards) > 0
 	obj.capturedCardSets = cloneCardsBindings(payment.paidCardSets)
 	if len(payment.paidPermanents) > 0 {
 		if capturedPermanents == nil {

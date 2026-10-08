@@ -51,7 +51,7 @@ func (p *BasePlayer) graveyardDepartures() map[uuid.UUID]DamageSource {
 	return p.departedGraveyardSources
 }
 
-func cloneGraveyardCards(cards []Card) []Card {
+func cloneZoneCards(cards []Card) []Card {
 	if len(cards) == 0 {
 		return nil
 	}

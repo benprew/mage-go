@@ -8,13 +8,14 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `EXACT-PRECAST-GRAVEYARD-STACK-SOURCES` adds exact graveyard source
-identity, stack target/payment/event references, departure facts and clone
-isolation. Seven protection names have RON subrule behavior evidence in this
-context; no complete-card compilation gain is claimed. Precast hand references,
-waiting exile references, delayed card frames and opaque references remain
-before complete damage-source enumeration. Token quality grants remain
-unsupported. Titania's Song still needs per-member base values and sticky duration.
+unfinished. `EXACT-PRECAST-HAND-STACK-BINDINGS` adds exact hand visits in stack
+payment/event bindings and reveal-cost references, with public reveal lifetime,
+hidden information, departure facts and clone isolation. Seven protection names
+have RON subrule evidence in this context; no complete-card compilation gain is
+claimed. Hand targets, waiting and delayed card frames, remaining precast contexts
+and opaque references remain before complete damage-source enumeration. Token
+quality grants remain unsupported. Titania's Song still needs per-member base
+values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -43252,3 +43253,176 @@ Ranked next candidates:
 
 Named-token quality lowering for Master of the Hunt remains behind useful shared
 prerequisites. Do not begin another slice in this run.
+
+## 2026-10-08: exact precast hand sources in stack bindings
+
+Status: completed implementation slice `EXACT-PRECAST-HAND-STACK-BINDINGS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended ledger entry are staged.
+
+### Candidate comparison and selection
+
+The latest entry ranked hand visits first, waiting exile/delayed references
+second, and complete source aggregation third. Complete canonical RON records
+and their nested choice/filter/payment/prevention forms were inspected for the
+five colored Circles of Protection, Circle of Protection: Artifacts and Greater
+Realm of Preservation. Identical reprints count once. Revelation's complete RON
+record supplies the already supported public-hand rule in integration tests.
+Targeted vocabulary queries confirm `ChooseADamageSource/1`, the selected-source
+prevention event `/2` and bare `TheChosenDamageSource`.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Exact hand visits in stack payment/event bindings and reveal-cost references | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation (7) | 0 | General source aggregation, remaining waiting/delayed precast references and opaque audit; completes a shared stack source category for all seven | Medium: existing hand visits, typed payment/event captures and visibility rule; add departure identity, reveal lifetime and clone contracts |
+| Exact precast exile in waiting prevention/redirection and delayed card frames | The same seven names | 0 | General aggregation and other delayed/precast contexts; completes waiting categories for all seven | Higher: exact exile visits exist, but delayed card/card-set frame capture and waiting reference lifetimes need separate contracts |
+| Complete CR 609.7a aggregation and opaque-reference audit | The same seven names | 7, conditional on prerequisites | Hand category and remaining waiting/delayed references still block dependency readiness; enables full factories after all categories pass | High and not ready: audit and aggregate every legal category without accepting incomplete declarations |
+
+Candidate #1 wins as a dependency-ready shared prerequisite. This slice completes
+one supported context: stack payment/event card bindings and exact reveal-cost
+references. Hand target declarations have no established hand-target incarnation
+contract and remain separate work. No target semantics are inferred from a card ID.
+The one-card named-token capability for Master of the Hunt remains lower priority.
+
+### Contract, exact signatures and reuse boundary
+
+- `DamageSource.HandVisit() uuid.UUID` adds exact hand identity. `SameObject`
+  requires one identity category, the physical card ID and its matching visit.
+- `Game.CaptureHandDamageSource(visit uuid.UUID) DamageSource` reads only a live
+  visit. Missing/physical IDs cannot select it. Hidden hands expose identity and
+  owner only; public hands expose current characteristics with no controller.
+- `Game.StackHandSources() []DamageSource` reads non-nil singular/plural payment
+  card bindings, nested event-card sequences and exact reveal-cost references,
+  including every active resolving frame. It checks zones, IDs and visits, sorts
+  map-derived references and deduplicates exact objects. Unreferenced cards,
+  pending triggers, invalid producers and absent visits are excluded.
+- `BasePlayer.RemoveFromHand` and `SetHand` save immutable departure information.
+  Retained cards keep their existing visits when arranged; a later addition gets
+  a fresh visit. A returned card cannot replace a saved object (CR 400.7).
+- Public-hand visibility uses the existing layer rule. The player zone service
+  reads its game's stack for exact cost-reveal visibility at departure. New games
+  and clones bind this read-only stack reference explicitly. Hidden departures
+  expose no later private characteristics. Queries and clones keep separate mutable
+  hand facts and preserve physical IDs; history maps use copy-on-write.
+- CR 701.20a keeps cost reveals public until the paid spell/ability leaves the
+  stack, including resolution. `costPaymentTransaction.revealedHandCards` and
+  `StackObject.revealedHandCards` retain exact cost identities even without a
+  result binding. `ownsHandReveals` distinguishes paid objects from copies.
+  Copies retain references without extending the original reveal. Clones retain
+  their own active lifetime. Return cannot inherit an old reveal.
+- `ChooseDamageSourceFromStackHandReferences(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect` uses the shared resolution decision
+  service. Invalid declarations and premature reads reject; an empty category
+  clears the binding.
+- RON `chosenDamageSourcePlan.stackHandChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and a separate instance binding. Existing selected-source prevention consumes
+  it. General production source choice remains unsupported.
+
+Reuse: existing typed hand visits, payment transactions, optional costs, event
+captures, definition validation, public visibility, source filters, resolution
+choices, exact prevention, affected-player replacement ordering, simultaneous
+damage, cleanup, spell/ability copying and shared source-information queries.
+RON owns syntax/scope/binding lowering; mage owns identity, visibility and lifetime.
+A hand source does not continue to a later spell or permanent. Phasing applies to
+visibility sources, not hand cards. Hand targets, private viewer-specific queries,
+waiting/delayed card frames and complete aggregation remain distinct contexts.
+No RON source or production registry is changed; no Go-card fallback is added.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, RON tests failed on missing `StackHandSources`,
+`HandVisit` and `stackHandChoice`; native tests failed on missing capture and
+choice APIs. These were expected new-signature failures.
+
+A targeted rules check corrected the initial assumption that a paid reveal ends
+at payment completion. `TestHandDamageSourceHiddenVisibility` then failed with
+`reveal payment ended before stack departure` before the reveal-lifetime fix.
+`TestHandDamageSourceRevealStackLifetime` subsequently failed with `copy extended
+original cost reveal` before copy lifetime was separated from saved references.
+Its resolution-clone assertion also caught an omitted clone flag, which was fixed.
+Final review's `TestHandDamageSourceNestedResolution` failed with `nested resolution
+lost outer references` before the resolving context was changed to per-stack
+active frames. Nested resolution now retains every outer object and clones keep
+separate frame objects. This does not use a last-action slot.
+
+Mutable hand-card isolation initially raised the unchanged stack-heavy clone
+allocation test to 145 allocations against its 138 limit. Flat and modal target
+UUIDs now use one storage allocation with separate capacity-limited segments.
+The unchanged budget and mutation/append isolation tests pass; no limit was raised.
+
+| Tests | Card mapping / evidence |
+| --- | --- |
+| `TestHandDamageSourceVisits` | Native visit identity, physical/wrong-zone rejection, retained hand arrangement, single/whole-hand departure, returned visits, query and live/departure clone isolation |
+| `TestHandDamageSourceStackReferences` | Singular/plural bindings and nested event captures, deduplication across copies, departure facts, query purity and final-reference lifetime |
+| `TestHandDamageSourceInvalid` | Nil/wrong-zone/wrong-ID/missing/absent visits, mixed identity categories, invalid player/filter/binding and premature reads |
+| `TestHandDamageSourceRechecksAndBatch` | Current/departure colors, nonpositive damage, competing replacement choices, simultaneous original/returned packets, shield consumption and cleanup |
+| `TestHandDamageSourceHiddenVisibility` | Hidden/public facts, real reveal payment, end of reveal on stack departure, Revelation-style visibility, phasing, independent clone visibility and public/hidden departure snapshots |
+| `TestHandDamageSourcePaymentRollback` | Failed reveal-plus-mana payment preserves hand visits and reveal history; successful payment/resolution lifetime |
+| `TestHandDamageSourcePendingDraw` | Real draw-event capture saves its original hand visit before trigger placement; pending exclusion, returned-object legality and resolution lifetime |
+| `TestHandDamageSourceCastBoundary` | Unfiltered hidden source selection/prevention; later casts and permanents cannot inherit the hand shield |
+| `TestHandDamageSourceRevealStackLifetime` | Bound/unbound reveal costs, exact visibility, original/copy lifetimes, resolving-object references and resolution-clone isolation |
+| `TestHandDamageSourceNestedResolution` | Nested resolution retains outer hand references and public reveals; completion ends only its own frame; nested clones retain both contexts |
+| `TestHandDamageSourceRevealSpellPaths` | Standard and alternate-zone casting retain public reveal-cost identities; departure snapshots, returned secrecy and clone isolation |
+| `TestHandDamageSourceCloneTargetStorage`; existing `TestClone*` | Flat/modal mutations and appends cannot cross groups or clones; unchanged allocation budget |
+| `TestRONHandDamageSourceProtection` | All seven named protection cards: real RON choice/payment/prevention subrules with actual reveal payments and complete RON Revelation; live/departed/returned/copy/clone states, payment/timing, separate copy choices, exact consumption and empty reset. Hidden draw-event references cease to match when Revelation phases out |
+| `TestRONHandDamageSourceInvalid` | Invalid arity, callable symbols, colorless color, empty filters, incompatible references and missing per-instance bindings |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**. Seven
+names gain behavior evidence for a new source context, not complete-card mappings.
+Revelation is already accepted and supplies its existing public-visibility behavior.
+General source choice continues to reject the seven full protection records.
+
+### Verification and collection status
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader: expected exit 1; **1,978 compiled / 467 rejected records;
+  773 accepted / 213 rejected unique names**, 2,445 records / 986 names total.
+- `go test ./pkg/mage/dsl/ron -run TestRONHandDamageSource -count=1`: PASS.
+  Native `go test ./pkg/mage -run 'TestHandDamageSource|TestClone|TestGraveyardDamageSource' -count=1`:
+  PASS, including the unchanged allocation budget.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS after the final
+  reveal/copy/resolution/clone fixes, standard/alternate casting tests and the
+  nested-resolution frame correction.
+- Initial `make lint` found one new `nestingReduce` issue in hand removal.
+  The condition was inverted without changing behavior. Final `make lint`:
+  PASS, 0 issues. Automatic formatting was reviewed; no unrelated code change
+  remains. Focused native/RON tests, build and vet were rerun after lint and pass.
+  `git diff --check`: PASS, including the final ledger and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. The entire
+  JSON report equals the baseline. First issue remains Animate Dead:
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  This is atomic collection rejection, not a build/test failure.
+- All 12 RON hashes match the vocabulary snapshot. No source change or snapshot
+  refresh is needed. No RON source defect or environmental blocker was found.
+  The outdated engine reveal-cost comment was corrected from CR 701.16 to
+  CR 701.20; reveal lifetime is established with local CR 701.20a evidence.
+
+Changed files: new engine `hand_damage_source.go` and native tests; source identity,
+choice, player zones, clone storage, game construction, payment transaction,
+standard/alternate casting, reveal-cost documentation, stack copying/resolution and shared information query;
+RON choice lowering and new RON hand-source tests; engine API/rules contracts,
+DSL reference and this ledger. Current callers remain. No runtime consumer, Go
+card definition, generator or broad DSL function meets its removal gate.
+
+Ranked next candidates:
+
+1. Viewer-specific private hand source information and choices: the public
+   snapshot context is complete, but the owner's CR 402.3 inspection right
+   needs its own typed choice/information contract before general source choice;
+   shared prerequisite for the same seven names, zero immediate unlocks.
+2. Exact precast exile/hand references in waiting prevention/redirection and
+   delayed card/card-set frames: shared prerequisite for the same seven names,
+   zero immediate unlocks; preserve exact visits, public/departure information,
+   capture lifetime, consumption and clone isolation.
+3. Remaining precast target contexts and opaque-reference audit: confirm actual
+   producers and public/hidden zone contracts before source aggregation; same
+   seven downstream names, zero immediate unlocks as a prerequisite.
+4. Complete CR 609.7a aggregation after all required contexts: seven estimated
+   full-card unlocks, subject to the opaque-reference and full-record audit.
+
+Named-token quality lowering for Master of the Hunt remains behind useful shared
+prerequisites. Complete collection gameplay/loading, runtime cutover, Go-card
+removal and unused DSL cleanup remain unfinished. Do not begin another slice.
