@@ -9014,3 +9014,41 @@ and clone isolation. `TestRONWaitingModifierSourceInvalid` covers invalid syntax
 and binding order. These establish subrules, not full-card acceptance. Opaque
 callback-held references, other replacement families and complete source-list
 composition still need contracts.
+
+
+### Exact sources of waiting empty-library draw replacements
+
+`Game.WaitingEmptyLibraryPermanentSources() []DamageSource` reads the explicit
+source passed to active `AddEmptyLibraryDrawReplacement` callbacks. CR 609.7a
+permits this referred object as a damage source. Queries do not call callbacks,
+make choices, prune registrations or change game state. A nonempty library does
+not end a waiting rule. A nil callback supplies no reference. Objects hidden in
+callback closures are outside this contract.
+
+Registration captures the live permanent's incarnation. Both replacement
+execution and source enumeration require that same live unphased incarnation
+(CR 400.7, 702.26b). Phase-in restores availability; departure or return cannot
+restore a saved rule. Registration before source entry cannot follow that entry.
+Control changes update queried characteristics without changing the registered
+draw player. Removing abilities does not remove a separate registration.
+Callbacks retain their existing signature, and matching retains the explicit
+player and empty-library check for normal and effect draws. The shared CR 616
+pipeline selects among competing replacements; this slice adds no ordering path.
+
+`ChooseDamageSourceFromWaitingEmptyLibraryReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+shared definition validation, source filters, result clearing and isolated card
+snapshots. Clones retain independent registration and permanent state. The RON
+`chosenDamageSourcePlan.waitingEmptyLibraryChoice(instanceBindings)` adapter
+uses `You` and its per-instance binding. Unrestricted choices remain rejected.
+
+Evidence: `TestWaitingEmptyLibrarySourcesLifecycle`, `Choices`,
+`SavedRegistrations`, and `ReplacementOrderAndClones` cover query purity,
+deduplication, identity, phasing, departure/return, library contents, player and
+control checks, separate registration after ability removal, invalid declarations,
+absent-player and nonmatching result clearing, replacement choices and clones.
+`TestRONWaitingEmptyLibrarySourceProtection` maps all six Circles and Greater
+Realm of Preservation to their actual RON payment and choice/prevention bodies.
+`TimingAndRechecks` adds resolution timing, property rechecks and simultaneous
+packets; `Invalid` checks syntax and producer order. These are category/subrule
+tests, not complete source enumeration or full-card gameplay evidence.

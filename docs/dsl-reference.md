@@ -7137,3 +7137,18 @@ RON `ChooseADamageSource(filter)` has a category adapter
 It uses `You` and the plan's instance binding. This prerequisite does not accept
 unrestricted production source choices. Objects hidden in callback closures and
 other legal categories need separate reference contracts.
+
+
+### Waiting empty-library replacement source choice
+
+`mage.ChooseDamageSourceFromWaitingEmptyLibraryReferences(player, filter, binding)`
+chooses among the explicit sources of active empty-library draw replacements.
+`Game.WaitingEmptyLibraryPermanentSources()` reads this category without calling
+callbacks. Registration saves the current live source incarnation. A phased,
+departed or returned source cannot supply the old registration. Phase-in restores
+the same registration; a returned source requires a fresh registration.
+
+The RON `chosenDamageSourcePlan.waitingEmptyLibraryChoice(instanceBindings)`
+adapter lowers validated `ChooseADamageSource(filter)` with `You` and its own
+binding. It completes this category only. Full production source choices remain
+rejected until the legal source list is complete.

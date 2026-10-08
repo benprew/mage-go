@@ -674,17 +674,14 @@ func (g *Game) SetDrawReplacement(playerID uuid.UUID, count int) {
 	g.effects.AddReplacement(&drawReplacementEffect{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, count: count})
 }
 
-// AddEmptyLibraryDrawReplacement registers a replacement effect that fires
-// when playerID would draw a card while their library is empty. The
-// replacement stays active while sourceID is on the battlefield (CR 614 +
-// 614.6: replacement effects on a permanent function only while it's on
-// the battlefield). The callback runs in place of the draw, receiving
-// the game and source permanent ID. Used by Ormos, Archive Keeper —
-// "If you would draw a card while your library has no cards in it,
-// instead put five +1/+1 counters on Ormos."
+// AddEmptyLibraryDrawReplacement replaces a draw from an empty library.
+// The registration requires the same live, unphased source incarnation.
+// A returned source needs a new registration. The callback receives the game
+// and source ID. A separate registration survives removal of source abilities.
 func (g *Game) AddEmptyLibraryDrawReplacement(sourceID, playerID uuid.UUID, callback func(g *Game, sourceID uuid.UUID)) {
 	g.effects.AddReplacement(&emptyLibraryDrawReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		incarnation:     g.legacyPreventionSourceIncarnation(sourceID),
 		playerID:        playerID,
 		callback:        callback,
 	})

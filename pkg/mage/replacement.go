@@ -998,8 +998,9 @@ func (r *drawReplacementEffect) Clone() ReplacementEffect {
 
 type emptyLibraryDrawReplacement struct {
 	replacementBase
-	playerID uuid.UUID
-	callback func(g *Game, sourceID uuid.UUID)
+	incarnation uuid.UUID
+	playerID    uuid.UUID
+	callback    func(g *Game, sourceID uuid.UUID)
 }
 
 func (r *emptyLibraryDrawReplacement) Matches(a Action, g GameReader) bool {
@@ -1025,7 +1026,8 @@ func (r *emptyLibraryDrawReplacement) Replace(_ Action, g *Game) Action {
 }
 
 func (r *emptyLibraryDrawReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	return source != nil && !source.PhasedOut && r.incarnation != uuid.Nil && source.incarnationID == r.incarnation
 }
 
 func (r *emptyLibraryDrawReplacement) Clone() ReplacementEffect {

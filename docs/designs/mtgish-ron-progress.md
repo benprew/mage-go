@@ -8,8 +8,8 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-MODIFIER-SOURCE-REFERENCES` adds explicit registered and static
-mill/life modifier sources, exact active identities, read-only queries and RON
+unfinished. `WAITING-EMPTY-LIBRARY-SOURCE-REFERENCES` completes exact registered
+empty-library replacement sources, shared execution/query lifecycle and RON
 category lowering. Additional subrule evidence covers seven protection names,
 with zero full-card unlocks. Complete source enumeration and the remaining
 explicit-reference audit remain gaps.
@@ -41848,3 +41848,138 @@ Ranked next candidates:
 
 Complete collection gameplay/loading, runtime cutover, Go-card deletion and unused
 DSL cleanup remain unfinished. The commit hash is reported in the final reply.
+
+## 2026-10-07: exact sources of waiting empty-library draw replacements
+
+Status: completed implementation slice `WAITING-EMPTY-LIBRARY-SOURCE-REFERENCES`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+plan and progress ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` pass.
+`go run ./cmd/loadcards -json` exits 1: **765 accepted / 221 rejected unique
+names**, **1,965 compiled / 480 rejected records**. This is strict collection
+rejection, not a build/test or environment failure. Reprints count once.
+Complete canonical records and nested forms were inspected for all names below.
+Targeted vocabulary inspection covered `ChooseADamageSource/1`,
+`BandsWithOthers/1`, `AnyBandsWithOthers` and `SetPowerAndToughnessBoth/1`.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- |
+| Exact empty-library replacement source category, bounded prerequisite of ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**. Downstream Jade Monolith and Reverse Damage. | Complete legal source enumeration still needs the other reference families and opaque callback reference audit, then composition. Seven protection names have existing selected-source prevention adapters; Jade Monolith has redirection; Reverse Damage still needs actual prevented-amount life gain. | One bounded run: registration lifecycle, query, typed choice, RON adapter and interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0 bounded prerequisite unlocks; up to 8 after dependents**. | Requires combat formation and both assignment directions, then grants, named-token abilities and selective removal. Tolaria also needs its upkeep modifier. | Several combat slices with larger interaction matrices. |
+| Conditional host animation | Animate Artifact. **1 estimated unlock**. | Noncreature membership must persist across type/P/T layers under the dependency contract. | One larger layer/dependency slice; single-card benefit. |
+
+Candidate #1 is dependency-ready at the explicit empty-library source boundary.
+Its callback receives a source ID, and the registration can save its incarnation
+without running the callback. This concrete shared prerequisite wins over the
+larger combat prerequisite and single-card animation. The contract, reuse
+boundary and acceptance cases were stated before edits. The compiler spelling
+and instance binding remain in `ron`; exact lifecycle and queries remain in
+`mage`. No callback bodies are interpreted or invoked by the query.
+
+### Exact signatures, contexts and dependencies
+
+- `Game.WaitingEmptyLibraryPermanentSources() []DamageSource` reads explicit
+  sources of active `emptyLibraryDrawReplacement` entries in the shared
+  replacement lists. A nil callback supplies no reference. Library contents
+  do not affect availability of the waiting rule.
+- `Game.AddEmptyLibraryDrawReplacement(sourceID, playerID uuid.UUID,
+  callback func(*Game, uuid.UUID))` retains its existing signature and now saves
+  the live source incarnation. Both execution and enumeration require that
+  incarnation to remain live and unphased. Phase-in restores the same rule;
+  departure or return cannot revive it. Registration before entry cannot follow
+  that entry. Fresh registration supplies the returned incarnation.
+- Registered draw player and empty-library matching remain unchanged, for normal
+  and effect draws. Current control changes update source properties. Removing
+  source abilities does not remove a separate registration. Existing replacement
+  ordering, callback execution and clone services remain shared.
+- `ChooseDamageSourceFromWaitingEmptyLibraryReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` reads
+  this category at resolution. Shared definition validation checks player,
+  filter, binding and producer order. Empty/nonmatching categories and absent
+  players clear only the selected result. Snapshot data and clone state stay
+  isolated; duplicate registrations supply one choice.
+- `chosenDamageSourcePlan.waitingEmptyLibraryChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated RON `ChooseADamageSource(filter)` with
+  `You` and the plan's per-instance binding. This completes one source category.
+  Full production source choices remain rejected pending complete enumeration.
+
+Dependencies: permanent incarnation and current property services, replacement
+list lifecycle, typed source filters/bindings, resolution frames and clones.
+CR 609.7a permits referred sources; CR 400.7 separates returns; CR 702.26b
+suspends phased sources. The shared CR 616 affected-player ordering remains in
+use. Selected-source prevention retains CR 609.7b property rechecks and shared
+consumption/simultaneous-operation behavior. Arbitrary callback-held references
+remain outside this contract.
+
+### Failing-first tests and card mapping
+
+Native and RON tests first failed to compile for the missing signatures/adapter.
+Test setup calls were corrected to existing phase, zone and library APIs; the
+native missing-signature failure was confirmed before implementation. Adding the
+query/adapter surface then produced native assertion failures because registrations
+had no saved incarnation. Registration and execution were connected afterward.
+A snapshot test's synthetic card owner was initialized explicitly, and the clone
+ordering test was adjusted for the existing base-player clone choice behavior.
+
+| Test / card mapping | Evidence |
+| --- | --- |
+| `TestWaitingEmptyLibrarySourcesLifecycle` | Query purity; live/phase/phase cycle; departure with cleared LKI; return/new registration; current control; separate registration after ability removal; empty/nonempty library; explicit draw player; isolated snapshots and clones. |
+| `TestWaitingEmptyLibrarySourcesChoices` | Duplicate/nonlive/nil-callback entries; read-only storage; typed filters; independent bindings; absent-player/nonmatching result clearing; invalid player/binding/empty name/consumer order. |
+| `TestWaitingEmptyLibrarySourcesSavedRegistrations` | Registration before entry and a retained cloned registration after return cannot bind to the new object. |
+| `TestWaitingEmptyLibrarySourcesReplacementOrderAndClones` | Two competing empty-library replacements use the shared affected-player choice; persistent availability and callback writes stay isolated across clones. |
+| `TestRONWaitingEmptyLibrarySourceProtection` — six Circles and Greater Realm | Full-record RON cost and choice/prevention ASTs in a test-only category context; failed payment; copied activations; independent clone/shield state; consumption and empty phased-source choice. Full declarations remain rejected. |
+| `TestRONWaitingEmptyLibrarySourceTimingAndRechecks` — Circle of Protection: Red | Registration after announcement chosen at resolution; property mismatch does not consume prevention; matching simultaneous packets share one shield; clone and consumption independence. |
+| `TestRONWaitingEmptyLibrarySourceInvalid` | Invalid arity, color, filter, reference kind, missing binding and producer order. |
+
+Estimated/actual compilation gain: **0 unique names / 0 records**; no discrepancy.
+Additional source-category evidence maps **7 unique protection names**. Full-card
+compilation and full-card gameplay coverage do not change.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingEmptyLibrarySource -count=1`
+  and native `go test ./pkg/mage -run TestWaitingEmptyLibrarySources -count=1`:
+  PASS after the documented expected failures.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import grouping in the new native test
+  was reviewed. Both focused commands were rerun afterward: PASS.
+- `git diff --check`: PASS, including the final ledger and staged diff.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  JSON diagnostics match the baseline exactly. Strict collection loading still
+  rejects unsupported records and installs no partial registry.
+
+No source-data defect or environmental blocker was found. All 12 RON hashes
+match the vocabulary snapshot; no refresh is needed. Complete collection
+loading/gameplay, runtime cutover, Go-card deletion and unused-DSL removal gates
+remain unmet. Existing callers and Go definitions remain in place. There is no
+partial production registry, Go fallback, card-name branch, runtime declaration
+panic or source-data change.
+
+Changed files: new native waiting-empty-library query and tests, RON category
+tests; `damage_source_choice.go`, `replacement.go`, `game_mutator.go`,
+`dsl/ron/chosen_source_filter.go`, `doc.go`; DSL/API and rules-contract docs;
+ledger summary and this entry.
+
+Ranked next candidates:
+
+1. Finish the explicit-reference audit and compose the complete CR 609.7a source
+   list for seven protection names. Registered/static mill/life sources and the
+   empty-library callback's explicit source are complete; do not repeat them.
+   Inspect remaining typed/legacy replacement families and hidden callback
+   references before enabling unrestricted choices.
+2. Parameterized bands with others as a bounded formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount life operation after full enumeration;
+   prove Jade Monolith's full RON gameplay with its existing redirection adapter.
+   Conditional host animation remains lower priority.
+
+The migration completion gates remain unmet. The commit hash is in the final reply.

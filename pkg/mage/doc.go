@@ -62,6 +62,11 @@
 // A saved registration cannot follow a returned source. Static factories use
 // current abilities; ability removal stops their references.
 // [ChooseDamageSourceFromWaitingModifierReferences] uses this category only.
+// [Game.WaitingEmptyLibraryPermanentSources] reads exact sources of active
+// empty-library draw replacements without calling their callbacks.
+// [Game.AddEmptyLibraryDrawReplacement] saves the live source incarnation.
+// Phasing suspends the rule. Departure ends it; a return needs a new registration.
+// [ChooseDamageSourceFromWaitingEmptyLibraryReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.
