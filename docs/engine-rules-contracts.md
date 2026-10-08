@@ -9578,3 +9578,46 @@ choice, payment and future-prevention declarations of all six Circles of
 Protection and Greater Realm of Preservation to live/departed/returned, copied
 and cloned waiting references. `TestRONWaitingPrecastExileInvalid` covers
 scope/declaration rejection. These are subrule mappings, not full-card coverage.
+
+
+## Waiting damage-rule hand references
+
+`Game.WaitingPreventionHandSourcesFor(viewer uuid.UUID) []DamageSource` and
+`Game.WaitingRedirectionHandSourcesFor(viewer uuid.UUID) []DamageSource` read
+exact hand visits retained by active exact/selected-source prevention and
+selected-source redirection. The shared replacement walker checks ordinary and
+cycle rule lifetime without calling replacement callbacks, excludes malformed
+and other-zone identities, deduplicates visits, and returns separate snapshots.
+Consumption and cleanup end availability; cycle rules retain their layer lifetime.
+No stack reference is required once the waiting rule retains the visit.
+
+The existing hand information reader supplies current facts with the viewer's
+inspection rights. The hand player can inspect private characteristics; other,
+nil and unknown viewers receive public facts only. Departure keeps that visit's
+private facts and separate public visibility. Later reveals and returns cannot
+rewrite it. A waiting reference does not extend a cost reveal after the paying
+stack object leaves. Inspection adds no unreferenced card to the source list.
+
+`ChooseDamageSourceFromWaitingPrecastHandReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` combines
+both categories using the choosing player's information at resolution, even when
+that player differs from the controller. Empty matches or an absent player clear
+the result. Definition validation checks player, filter, binding and producer
+order. Options and saved choices keep separate mutable data.
+
+RON `chosenDamageSourcePlan.waitingPrecastHandChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` with `You` and the instance binding.
+Existing future prevention consumes it. General production enumeration still
+rejects pending other categories; this API supplies only waiting hand references.
+The engine's rules information reader still rechecks actual characteristics for
+prevention and redirection. Hidden information does not stop an installed shield.
+A returned visit, later spell or permanent cannot inherit it. Replacement order,
+simultaneous damage, consumption, phasing and clone behavior reuse existing rules.
+
+Rules: CR 400.2/400.7, 402.3, 609.7a–b, 615.9 and 701.20a.
+Evidence: native `TestWaitingHandSources`, `Declarations`,
+`VisibilityAndBoundaries`, `RechecksAndBatch`, `Inspection` and `RevealLifetime`;
+RON `TestRONWaitingPrecastHandProtection` and `Invalid`. All six Circles of
+Protection and Greater Realm of Preservation map their real payment, choice and
+future-prevention declarations to this waiting-reference context. These mappings
+establish subrule gameplay, not full-card acceptance.

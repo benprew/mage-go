@@ -105,6 +105,16 @@ func (g *Game) handReferenceInformation(saved DamageSource) DamageSource {
 	return hiddenHandSource(saved)
 }
 
+func (g *Game) handReferenceInformationFor(viewer uuid.UUID, saved DamageSource) DamageSource {
+	if viewer == uuid.Nil {
+		return g.handReferenceInformation(saved)
+	}
+	if source := g.handVisitInformationFor(viewer, saved.ID(), saved.HandVisit(), false); source.SameObject(saved) {
+		return source
+	}
+	return hiddenHandSource(saved)
+}
+
 func hiddenHandSource(source DamageSource) DamageSource {
 	return DamageSource{id: source.ID(), handVisit: source.HandVisit(), owner: source.Owner()}
 }

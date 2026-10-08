@@ -46,6 +46,7 @@ type damageSourceChoice struct {
 	waitingDelayedDamage          bool
 	waitingCommands               bool
 	waitingPrecastExile           bool
+	waitingPrecastHand            bool
 	waitingModifiers              bool
 	waitingEmptyLibrary           bool
 	waitingPersistentReplacements bool
@@ -67,7 +68,7 @@ func (*damageSourceChoice) Properties() EffectProperties { return EffectProperti
 func (e *damageSourceChoice) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "damage-source-choice", Text: e.Text(), bindingWrite: e.binding,
 		children: []definitionEdge{{"player", e.player}, {"binding", e.binding}, {"filter", e.filter}}}
-	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingPrecastExile && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.waitingPersistentReplacements && !e.waitingUntapSkip && !e.waitingDiscard && !e.waitingExile && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackExileBindings && !e.stackGraveyardReferences && !e.stackHandReferences && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
+	if len(e.sources) == 0 && !e.liveObjects && !e.waitingCommands && !e.waitingPrecastExile && !e.waitingPrecastHand && !e.waitingModifiers && !e.waitingEmptyLibrary && !e.waitingPersistentReplacements && !e.waitingUntapSkip && !e.waitingDiscard && !e.waitingExile && !e.commandObjects && !e.stackAbilities && !e.stackTargets && !e.stackSpellTargets && !e.stackBindings && !e.stackExileBindings && !e.stackGraveyardReferences && !e.stackHandReferences && !e.stackDamageBindings && !e.stackSpellBindings && !e.waitingDelayedBindings && !e.waitingDelayedSpells && !e.waitingDelayedDamage && !e.waitingPrevention && !e.waitingPreventionSpells && !e.waitingRedirection && !e.waitingRegeneration && !e.waitingDrawStepLife && !e.waitingCounterPlacement {
 		n.problem = "supply at least one source reference"
 	}
 	for i, source := range e.sources {
@@ -154,6 +155,10 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 	}
 	if e.waitingModifiers {
 		candidates = append(candidates, ctx.Game.WaitingModifierPermanentSources()...)
+	}
+	if e.waitingPrecastHand {
+		candidates = append(candidates, ctx.Game.WaitingPreventionHandSourcesFor(playerID)...)
+		candidates = append(candidates, ctx.Game.WaitingRedirectionHandSourcesFor(playerID)...)
 	}
 	if e.waitingPrecastExile {
 		candidates = append(candidates, ctx.Game.WaitingPreventionExileSources()...)

@@ -57,6 +57,13 @@
 // A returned card cannot replace the saved visit. Consumption and cleanup end
 // availability. Cycle registrations retain their existing cycle lifetime.
 // [ChooseDamageSourceFromWaitingPrecastExileReferences] uses these two categories.
+// [Game.WaitingPreventionHandSourcesFor] and
+// [Game.WaitingRedirectionHandSourcesFor] read exact hand visits in active rules.
+// The hand player can inspect private facts. Other viewers receive public facts.
+// Departure keeps separate private facts and public visibility for that visit.
+// A waiting reference cannot extend a cost reveal or follow a returned card.
+// [ChooseDamageSourceFromWaitingPrecastHandReferences] uses the choosing player.
+// Consumption and cleanup end availability. Queries and clones keep separate data.
 // [Game.WaitingPreventionCommandSources] and
 // [Game.WaitingRedirectionCommandSources] keep exact command visits in active rules.
 // [ChooseDamageSourceFromWaitingCommandReferences] uses these two categories.

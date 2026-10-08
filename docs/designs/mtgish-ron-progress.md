@@ -8,14 +8,14 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-PRECAST-EXILE-SOURCES` adds exact exile references in
-active prevention/redirection rules, with current/departure public facts,
-hidden information, consumption and clone isolation. Seven protection names
-gain RON subrule evidence; no complete-card compilation gain is claimed.
-Waiting hand visits, delayed card/card-set frames, remaining precast target
-contexts and opaque references remain before complete damage-source enumeration.
-Token quality grants remain unsupported. Titania's Song still needs per-member
-base values and sticky duration.
+unfinished. `WAITING-PRECAST-HAND-SOURCES` adds exact hand references in active
+prevention/redirection rules, with choosing-player inspection, public departure
+visibility, mechanical rechecks, consumption and clone isolation. Seven
+protection names gain RON subrule evidence; no complete-card compilation gain
+is claimed. Delayed card/card-set frames, remaining precast target contexts and
+opaque references remain before complete damage-source enumeration. Token
+quality grants remain unsupported. Titania's Song still needs per-member base
+values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -43702,3 +43702,138 @@ Ranked next candidates:
 
 Master of the Hunt remains below useful shared prerequisites. This run stops
 here; the commit hash is reported in the final response.
+
+## 2026-10-08: exact hand visits in waiting prevention and redirection
+
+Status: completed implementation slice `WAITING-PRECAST-HAND-SOURCES`.
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+Baseline strict loader: expected exit 1, **1,978 compiled / 467 rejected records;
+773 accepted / 213 rejected unique names**, of 2,445 records / 986 names.
+This is collection rejection, not build/test failure. The working tree already
+contained edits to `.gitignore`, the execution design and this progress file,
+and an untracked completed-history file. Those changes are preserved; only this
+slice's summary replacement and appended entry are staged from the ledger.
+
+### Candidate comparison and selection
+
+The latest ranked #1 is dependency-ready and enables concrete multi-card work.
+All 31 complete protection records and all complete alternative records were
+inspected, including reprints and nested forms. Reprints count once. Targeted
+vocabulary inspection confirms `ChooseADamageSource` arity 1 and
+`NamedTokenWithPT` arity 7.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers / downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Waiting prevention/redirection exact hand visits; selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**, prerequisite for 7 names / 31 records. | Delayed card/card-set frames, precast target contexts and opaque-reference audit still block full aggregation. Completes waiting-hand availability after a stack reference ends, including private information. | Small: reuse replacement traversal, hand visit facts and validated choices; native and RON contracts. |
+| Named-token quality grants | Master of the Hunt. **1 plausible unlock**. | Complete record nests named 1/1 green Wolf creation and `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))`. Token lowering and runtime/copied quality retention remain. Enables token band formation and damage assignment. | Medium: token adapter plus combat/copy contracts; lower shared value. |
+| Paired text-word substitution | Magical Hack; Sleight of Mind. **2 plausible unlocks**. | Full modal records target spells and permanents separately, choose paired land/color words, and change text variables. Shared text representation and copy/layer isolation remain. | Large: multiple new contracts, beyond this bounded run. |
+
+The selection, contract, reuse boundary and acceptance cases were stated before
+editing. The implement-engine skill supplies the native contract workflow;
+no removed card/set skill, delegation or Go card requirement was used.
+
+### Signatures, context and engine boundary
+
+- `Game.WaitingPreventionHandSourcesFor(viewer uuid.UUID) []DamageSource`
+  reads exact hand visits in active exact/selected-source prevention rules.
+- `Game.WaitingRedirectionHandSourcesFor(viewer uuid.UUID) []DamageSource`
+  reads exact hand visits in active selected-source redirection rules.
+- `ChooseDamageSourceFromWaitingPrecastHandReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  combines these categories, deduplicates exact visits, filters with the
+  choosing player's information and stores a separate result at resolution.
+  An absent player or empty matching set clears the binding. Definition
+  validation rejects invalid player/filter/binding declarations and premature
+  reads. The controller does not substitute for the choosing player.
+- `chosenDamageSourcePlan.waitingPrecastHandChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with
+  `You` and the instance binding. Existing exact-source future prevention
+  consumes it. Complete production source aggregation remains rejected.
+- Internal `handReferenceInformationFor(viewer uuid.UUID, saved DamageSource)
+  DamageSource` adds viewer-aware access alongside the existing public hand
+  reference reader. Both reuse the hand visit service; public callers keep
+  their behavior.
+
+RON owns spelling, declaration validation, scope and instance lowering. Mage
+owns exact identity, information, active rule lifetime, decisions and mechanics.
+Reuse: shared ordinary/cycle active replacement traversal, hand visit and
+immutable departure snapshots, reveal lifetime, typed choice/binding services,
+actual-rules information for shield installation/rechecks, simultaneous damage,
+replacement ordering, consumption/cleanup and copy/clone services.
+
+The hand player can inspect private facts; other, nil and unknown viewers see
+public facts only. Departure retains separate private facts and visibility at
+that visit. Later reveals and returned visits cannot rewrite it. Waiting rules
+cannot extend a cost reveal when the paying stack object leaves. A hand visit
+cannot follow a later spell or permanent. No new zone, replacement, payment or
+clone state is introduced. Phasing uses existing live-reveal and recipient rules.
+Rules evidence: local CR 400.2/400.7, 402.3, 609.7a–b, 615.9 and 701.20a.
+
+This is a missing engine enumeration contract and compiler lowering context.
+No source defect or environment failure was found. All 12 RON source hashes
+match the vocabulary snapshot; no refresh is needed. No fallback, card-name
+branch, global action slot, partial registry or skipped rule was added. Removal
+gates remain unmet; Go definitions and current DSL callers are retained.
+
+### Failing-first tests and card mappings
+
+Before production edits, native tests failed on the missing two query APIs and
+choice constructor, and RON tests failed on the missing lowering method and
+query. These intended missing-signature failures were confirmed independently.
+The same tests pass after implementation; additional information/reveal boundary
+cases also pass. Existing assertion contracts were retained.
+
+| Test | Mapping / evidence |
+| --- | --- |
+| `TestWaitingHandSources` | Exact and selected prevention plus selected redirection; exact deduplication and separate query snapshots; phased recipient; departure/return; cleared resolution/LKI; independent clones; consumption and empty choice. |
+| `TestWaitingHandSourcesDeclarations` | Valid producer/consumer and rejection of premature read, missing player/binding/label and invalid color. |
+| `TestWaitingHandSourcesVisibilityAndBoundaries` | Hidden live/departed facts; malformed/other-category exclusion; ordinary/cycle and cross-category deduplication; filter rejection; cycle reset/cleanup and clone lifetime. |
+| `TestWaitingHandSourcesRechecksAndBatch` | Current color rechecks without consumption; exact departure facts; simultaneous old-visit packets plus a returned-visit packet; consumption and clone isolation. |
+| `TestWaitingHandSourcesInspection` | Private/public/nil/unknown viewers; choosing player differs from controller; unreferenced hand exclusion; query/choice mutation isolation; empty/absent player clears result; phased reveal; private/public departures and later reveals; wrapped-player clones and hidden mechanics. |
+| `TestWaitingHandSourcesRevealLifetime` | Real native reveal-cost producer; public during reveal; waiting reference survives final stack departure without extending visibility; departure during reveal retains public facts; hand visit does not continue to battlefield; consumption. |
+| `TestRONWaitingPrecastHandProtection` | All six Circles plus Greater Realm: actual RON payment, choice and future-prevention declarations; native draw-event stack producer converted into a waiting shield; referring stack removed before choice; live/departed/returned, copied and cloned choices; failed payment, resolution timing, shield consumption, empty category and full-record rejection. |
+| `TestRONWaitingPrecastHandInvalid` | Invalid arity/color/filter composition/reference, missing instance binding and premature read. |
+| Existing hand, selected-redirection, waiting-exile/command and clone tests | Shared information/traversal compatibility, hidden mechanical rechecks, payment rollback, replacement ordering, cast boundaries, batch handling and clone allocation budget. |
+
+Estimated and actual compilation gain: **+0 accepted names / +0 compiled
+records**. Seven names gain waiting-hand subrule gameplay evidence, not
+complete-card coverage. Other enumeration contexts still block their complete
+records; no accepted card is lost and no unlock estimate was overstated.
+
+### Verification
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingPrecastHand -count=1`: PASS.
+- Native focused waiting-hand, hand-source, waiting-exile/command,
+  selected-redirection and clone tests: PASS.
+- Final `make build`; `go vet ./...`: PASS.
+- Final `go test ./pkg/mage/... -short -count=1`: PASS.
+- Final `make test`: PASS. Skill check `go test ./... -short -count=1`: PASS.
+- Initial `make lint` found an unused private `handVisitInformation` helper
+  after factoring the reader. The viewer-aware reader now delegates nil-viewer
+  reads to the unchanged public path. Focused tests, build, vet, engine short,
+  full and whole-repository short tests were rerun after the correction: PASS.
+- Final `make lint`: PASS, 0 issues. Formatting and automatic changes reviewed;
+  no unrelated code changes. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. Entire JSON
+  equals baseline. First issue: Animate Dead, `2ED.lines.ron:4:151:
+  unsupported rule (EnchantGraveyardCard)`. Strict loading installs no registry.
+
+Changed files: `pkg/mage/waiting_precast_hand.go`, native waiting-hand tests,
+`hand_damage_source.go`, `damage_source_choice.go`, RON chosen-source lowering
+and waiting-hand tests, `doc.go`, API/rules-contract docs and this ledger.
+Complete gameplay/loading, startup integration, Go-card removal and unused DSL
+cleanup remain unfinished. This run implements one slice and stops.
+
+Ranked next candidates:
+
+1. Delayed card/card-set hand and exile frames: seven downstream protection
+   names, zero immediate unlocks; audit actual producers and retain exact visits,
+   hidden/public/private facts, event-capture lifetime and clone isolation.
+2. Remaining precast target contexts and opaque-reference audit, followed by
+   complete CR 609.7a aggregation: seven estimated full-card unlocks after
+   prerequisites, subject to full-record evidence. Keep incomplete enumeration
+   rejected.
+3. Named-token quality grants for Master of the Hunt: one plausible full-card
+   unlock after token lowering and combat/copy quality contracts; remains below
+   useful shared prerequisites. Paired word substitution remains larger work.
