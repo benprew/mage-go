@@ -56,6 +56,12 @@
 // [ChooseDamageSourceFromWaitingCommandReferences] uses these two categories.
 // Departure keeps the visit; a return cannot replace it. Hidden information
 // stays hidden. Consumption and cleanup end availability.
+// [Game.WaitingModifierPermanentSources] reads explicit sources of active
+// registered mill and life-gain modifiers and their static factories.
+// Queries do not call callbacks or factories. Phasing suspends availability.
+// A saved registration cannot follow a returned source. Static factories use
+// current abilities; ability removal stops their references.
+// [ChooseDamageSourceFromWaitingModifierReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //
 // [Game.SetCreatureDamageRedirect] saves a live subject until use or cleanup.

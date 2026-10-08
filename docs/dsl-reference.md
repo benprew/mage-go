@@ -7122,3 +7122,18 @@ Evidence: native `TestWaitingCommandSources`, `VisibilityAndCleanup`,
 Circles and Greater Realm of Preservation for their actual choice/prevention
 bodies, plus the Red Circle's activation cost. These tests establish subrule
 coverage, not full-card acceptance or complete gameplay validation.
+
+### Waiting callback modifier source choice
+
+`mage.ChooseDamageSourceFromWaitingModifierReferences(player, filter, binding)`
+chooses among the explicit sources of active registered mill/life-gain modifiers
+and their static factories. `Game.WaitingModifierPermanentSources()` reads that
+category without calling callbacks or factories. Registered sources need their
+saved live unphased incarnation; static sources also need their current ability.
+The result uses the existing typed `DamageSourceBinding` and shared source filters.
+
+RON `ChooseADamageSource(filter)` has a category adapter
+`chosenDamageSourcePlan.waitingModifierChoice(instanceBindings)` for this context.
+It uses `You` and the plan's instance binding. This prerequisite does not accept
+unrestricted production source choices. Objects hidden in callback closures and
+other legal categories need separate reference contracts.

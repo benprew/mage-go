@@ -107,3 +107,7 @@ func (p *chosenDamageSourcePlan) commandChoice(bindings instanceBindings) mage.R
 func (p *chosenDamageSourcePlan) waitingCommandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromWaitingCommandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) waitingModifierChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingModifierReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

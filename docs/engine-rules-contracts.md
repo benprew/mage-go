@@ -8967,3 +8967,50 @@ Evidence: native `TestWaitingCommandSources`, `VisibilityAndCleanup`,
 Circles and Greater Realm of Preservation for their actual choice/prevention
 bodies, plus the Red Circle's activation cost. These tests establish subrule
 coverage, not full-card acceptance or complete gameplay validation.
+
+### Explicit sources of waiting callback modifiers
+
+`Game.WaitingModifierPermanentSources() []DamageSource` supplies the explicit
+permanent-source context of registered mill and life-gain modifiers and their
+static factories. These services are legacy amount modifiers, with their existing
+registration order; this collector does not give them CR 616 replacement choices.
+CR 609.7a permits an object referred to by a waiting replacement. A callback's
+explicit registration source, or the source passed to its static factory, supplies
+that reference. Arbitrary objects hidden in closures do not gain a reference.
+
+Registered modifiers require a nonnil function, a saved nonzero incarnation and
+the same live unphased permanent. A legacy life modifier registered without a
+source cannot supply an exact reference. Departure ends the registration's
+availability; retained information and a returned card cannot restore it
+(CR 400.7). A fresh registration can supply the new incarnation. Removing an
+ability does not remove a separately registered modifier. Static factories use
+current runtime abilities; departure, phasing and ability removal stop their
+availability. A returned static source supplies its new incarnation.
+
+Queries do not call functions or factories, prune registrations, make choices,
+or write game state. References use current properties, shared deterministic
+identity ordering and deduplication, and isolated card snapshots. Multiple
+registrations or static factories for the same object supply one option. Clones
+retain independent source state and registrations through existing clone services.
+
+`ChooseDamageSourceFromWaitingModifierReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` reads
+this category at resolution through the shared source-choice service. Declaration
+validation checks the player, filter, result binding and producer order. Empty or
+nonmatching lists and absent players clear only the selected result. The RON
+`chosenDamageSourcePlan.waitingModifierChoice(instanceBindings)
+mage.ResolvingEffect` adapter uses `You` and the per-instance binding from validated
+`ChooseADamageSource(filter)`. Unrestricted production choices remain rejected.
+
+Evidence: `TestWaitingModifierSourcesLifecycle` and `Choices` cover registered
+and static mill/life services, no callback execution during queries, malformed
+references, duplicate registration, phase cycles, departure/return, control and
+ability changes, isolated query data, clone execution and declaration rejection.
+`TestRONWaitingModifierSourceProtection` maps the six Circles and Greater Realm
+of Preservation to their actual cost and choice/prevention bodies in this category.
+`TestRONWaitingModifierSourceTimingAndRechecks` covers the Red Circle's
+resolution-time registration, property rechecks, simultaneous damage, consumption
+and clone isolation. `TestRONWaitingModifierSourceInvalid` covers invalid syntax
+and binding order. These establish subrules, not full-card acceptance. Opaque
+callback-held references, other replacement families and complete source-list
+composition still need contracts.

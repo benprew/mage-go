@@ -8,9 +8,9 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-COMMAND-REFERENCES` adds exact command visits held by active
-prevention and redirection rules, isolated current/departure information and
-RON category lowering. Additional subrule evidence covers seven protection names,
+unfinished. `WAITING-MODIFIER-SOURCE-REFERENCES` adds explicit registered and static
+mill/life modifier sources, exact active identities, read-only queries and RON
+category lowering. Additional subrule evidence covers seven protection names,
 with zero full-card unlocks. Complete source enumeration and the remaining
 explicit-reference audit remain gaps.
 
@@ -41715,6 +41715,136 @@ Ranked next candidates:
 3. Reverse Damage's actual prevented-amount life operation after full enumeration;
    prove Jade Monolith's complete RON gameplay with its existing redirection adapter.
    Conditional host animation for Animate Artifact remains lower priority.
+
+Complete collection gameplay/loading, runtime cutover, Go-card deletion and unused
+DSL cleanup remain unfinished. The commit hash is reported in the final reply.
+
+## 2026-10-07: explicit sources of waiting callback modifiers
+
+Status: completed implementation slice `WAITING-MODIFIER-SOURCE-REFERENCES`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` pass.
+`go run ./cmd/loadcards -json` exits 1 with **765 accepted / 221 rejected unique
+names**, **1,965 compiled / 480 rejected records**. This is collection rejection,
+not a build, test or environment failure. Reprints count once. The comparison
+inspected complete canonical RON records and nested forms for the names below.
+Targeted vocabulary inspection covered `ChooseADamageSource/1`,
+`BandsWithOthers/1`, `AnyBandsWithOthers` and `SetPowerAndToughnessBoth/1`.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Explicit callback modifier sources, a bounded prerequisite of ranked #1 | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. Downstream Jade Monolith. **0 immediate unlocks**. | Complete enumeration still requires the remaining reference audit and category composition. Seven protection names then have existing selected-source shield adapters; Jade Monolith has its existing redirection adapter. | One bounded run for registered and static mill/life sources, using current identities and lifecycle. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. **0 bounded prerequisite unlocks; up to 8 after dependent work**. | Combat formation and both assignment directions precede static grants, named-token abilities and selective removal. Tolaria also needs its upkeep restriction. | Several combat slices with larger interaction-test effort. |
+| Conditional host animation | Animate Artifact. **1 estimated unlock**. | Noncreature membership must persist across type/P/T layers under the dependency contract. | One larger layer/dependency run; single-card value. |
+
+The first candidate is dependency-ready at its explicit modifier-source boundary.
+The source registration and the source passed to a static factory are inspectable
+without executing opaque callbacks. The full candidate is too broad for this run:
+other callback/reference families still need contracts. This shared prerequisite
+wins over the larger combat prerequisite and single-card animation. The contract,
+reuse boundary and acceptance cases were stated before edits.
+
+### Exact signatures, contexts and dependencies
+
+- `Game.WaitingModifierPermanentSources() []DamageSource` reads the explicit
+  sources of `millModifierEntry`, `lifeGainModifierEntry`, `staticMillReplacement`
+  and `staticLifeGainReplacement`.
+- Registered entries require a nonnil function, nonzero saved incarnation and
+  matching live unphased source. Legacy life entries registered without an exact
+  incarnation cannot supply a reference. Source departure ends availability;
+  LKI and a returned card cannot restore it. A new registration supplies the
+  returned incarnation. Removing abilities does not end a separate registration.
+- Static factories require their current runtime ability and live unphased source.
+  Ability removal ends availability. Returned static sources have new identities.
+- Queries do not invoke callbacks/factories, prune storage or mutate game state.
+  Shared `appendPermanentReferenceSources` supplies deterministic identity order,
+  deduplication, current properties and isolated card snapshots. Existing clone
+  services keep registrations and runtime abilities independent.
+- `ChooseDamageSourceFromWaitingModifierReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+  the shared `damageSourceChoice` with this category enabled. Shared definition
+  validation checks player/filter/binding and producer order. Empty/nonmatching
+  categories and absent players clear only that result binding.
+- RON `chosenDamageSourcePlan.waitingModifierChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` with `You`
+  and its own instance binding. This category is complete. Unrestricted source
+  choices remain rejected pending complete enumeration.
+
+Dependencies: exact permanent incarnation information, current runtime abilities,
+registered modifier lifecycle, typed filters/bindings, resolution frames and
+clones. CR 609.7a supplies referred-source legality; CR 400.7 separates returns;
+CR 702.26b suspends phased objects. Selected-source prevention retains its existing
+property rechecks under CR 609.7b, consumption, ordering and simultaneous events.
+Mill/life modifiers retain their existing legacy amount/registration order; this
+slice does not establish CR 616 choices for those services. Arbitrary objects
+hidden in callbacks are not inferred as references.
+
+### Failing-first tests and card mapping
+
+Native tests first failed to compile for the missing query and choice signatures.
+RON tests first failed for the missing adapter; a test-only cost helper name was
+corrected to existing `compileCosts`, then the missing-adapter failure was confirmed
+again. Production code was added only after these failures.
+
+| Test / cards | Evidence |
+| --- | --- |
+| `TestWaitingModifierSourcesLifecycle` | Registered/static mill/life sources; no callback or factory execution during queries; phasing and phase cycles; departure with LKI clearing; return and fresh registration; control/ability changes; isolated snapshots; independent clone queries and modifier execution. |
+| `TestWaitingModifierSourcesChoices` | Cross-family deduplication; malformed/nonexact registrations; read-only storage; typed choices; filter mismatch and absent-player result clearing; independent bindings; invalid player, binding, empty binding and consumer-before-producer rejection. |
+| `TestRONWaitingModifierSourceProtection` — all six Circles and Greater Realm | Actual full-record cost and choice/prevention ASTs in a test-only category context; registered/static mill/life sources; failed payment; copied activations; clone/shield independence; consumption; empty phased-source category. Full declarations remain rejected. |
+| `TestRONWaitingModifierSourceTimingAndRechecks` — Circle of Protection: Red | Registration after announcement is chosen at resolution; current property mismatch does not consume a shield; later matching simultaneous damage uses one shield for all packets; consumption and clones are independent. |
+| `TestRONWaitingModifierSourceInvalid` | Invalid arity, color, filter and reference kind; absent binding and consumer-before-producer rejection. |
+
+Estimated and actual compilation gain: **0 unique names / 0 records**.
+Additional category/subrule evidence maps **7 unique protection names**. Full-card
+compilation and gameplay counts do not change. There is no estimate discrepancy.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingModifierSource -count=1`
+  and `go test ./pkg/mage -run TestWaitingModifierSources -count=1`: PASS after
+  the expected missing-signature failures.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting in both new test
+  files was reviewed; both focused commands rerun after formatting: PASS.
+- `git diff --check`: PASS, including the final ledger and staged diff.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Complete
+  JSON diagnostics are identical to the fresh baseline. Strict loading continues
+  to reject the incomplete collection without installing a partial registry.
+
+No source-data defect or environmental blocker was found. All 12 RON source hashes
+match the vocabulary snapshot; no refresh is needed. Complete gameplay/loading,
+runtime cutover, Go-card deletion and unused-DSL removal gates remain unmet.
+Existing callers remain in place. No partial production registry, Go-card fallback,
+card-name execution branch, declaration-time runtime panic or source-data change
+was introduced.
+
+Changed files: new `pkg/mage/waiting_modifier_source.go`, native tests and RON
+waiting-modifier tests; `pkg/mage/damage_source_choice.go`, `pkg/mage/doc.go`,
+RON `chosen_source_filter.go`; API/rules-contract documentation; ledger summary
+and this appended entry.
+
+Ranked next candidates:
+
+1. Finish the explicit-reference audit and compose the complete CR 609.7a source
+   list for seven protection names. Explicit registered/static mill and life
+   modifier sources are now complete; do not repeat them. The empty-library
+   callback replacement and other typed/legacy replacement families still need
+   inspection, as do references hidden in callback bodies.
+2. Parameterized bands with others as a bounded formation/assignment prerequisite
+   for eight names, followed by grants, named-token abilities and selective removal.
+3. Reverse Damage's actual prevented-amount life operation after full enumeration;
+   prove Jade Monolith's full RON gameplay with its existing redirection adapter.
+   Conditional host animation remains lower priority.
 
 Complete collection gameplay/loading, runtime cutover, Go-card deletion and unused
 DSL cleanup remain unfinished. The commit hash is reported in the final reply.
