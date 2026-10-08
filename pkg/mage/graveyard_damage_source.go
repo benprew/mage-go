@@ -91,6 +91,9 @@ func (g *Game) graveyardReferenceInformation(saved DamageSource) DamageSource {
 
 func (g *Game) captureGraveyardTargetSources(object *StackObject) {
 	for _, id := range object.Targets {
+		if _, saved := object.targetExileCards[id]; saved {
+			continue
+		}
 		if _, saved := object.targetGraveyardSources[id]; saved {
 			continue
 		}

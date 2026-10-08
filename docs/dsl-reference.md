@@ -7563,3 +7563,16 @@ Evidence: native `TestHandTargetSourcesIdentity`, `LegalityAndRetarget`,
 Circles of Protection and Greater Realm of Preservation to their complete real
 cost/choice/future-prevention declarations in this hand-target context. It does
 not claim complete-card gameplay or compilation gains.
+
+### RON stack exile target source context
+
+The internal `chosenDamageSourcePlan.stackExileChoice(instanceBindings)` adapter
+for `ChooseADamageSource(filter)` now includes exact exile targets on stack and
+resolving objects. It reuses `ChooseDamageSourceFromStackExileBindings` and the
+existing per-instance `DamageSourceBinding`; no RON spelling changes.
+Announcement saves the exile visit before payment. Copies keep it unless a new
+legal choice saves a current visit. Returned targets are illegal. Face-down
+references expose no characteristics. Current/departure information, clones,
+reference lifetime and selected-source shields use the native services.
+General `ChooseADamageSource` compilation remains rejected until enumeration
+is complete. No new exile target declaration is introduced.

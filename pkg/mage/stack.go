@@ -19,6 +19,7 @@ type StackObject struct {
 	targetSpellSources     map[uuid.UUID]DamageSource
 	targetGraveyardSources map[uuid.UUID]DamageSource
 	targetHandCards        map[uuid.UUID]capturedCard
+	targetExileCards       map[uuid.UUID]capturedCard
 	// Saved event information must stay separate from current source queries.
 	boundSpellSources  map[uuid.UUID]DamageSource
 	sourceIncarnation  uuid.UUID

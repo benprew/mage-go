@@ -8,12 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `STACK-HAND-TARGET-REFERENCES` adds exact hand-target visits to
-stack source choices through the existing RON lowering and native visibility
-reader. Announcement before payment, target legality, departure/return, copies,
-clones and resolving-frame lifetime are covered. Seven protection names gain
-hand-target subrule evidence; no complete-card compilation gain is claimed.
-Exile target contexts and opaque references remain before complete enumeration.
+unfinished. `STACK-EXILE-TARGET-REFERENCES` adds exact exile-target visits to
+stack source choices through existing RON lowering and native information readers.
+Announcement before payment, target legality, departure/return, copies, clones,
+face-down visibility and resolving-frame lifetime are covered. Seven protection
+names gain exile-target subrule evidence; no complete-card compilation gain is
+claimed. Opaque-reference audit and aggregation remain before full enumeration.
 Token quality grants remain unsupported.
 Titania's Song still needs per-member base values and sticky duration.
 
@@ -44253,3 +44253,147 @@ Ranked next candidates:
    full-card unlocks, subject to fresh full-record evidence; deterministic
    deduplication and real RON activations across all source categories.
 3. Named-token quality grants for Master of the Hunt: one plausible unlock.
+
+## 2026-10-08: exact exile target references for damage-source choices
+
+Status: completed implementation slice `STACK-EXILE-TARGET-REFERENCES`.
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` PASS;
+loader exits 1 for collection rejection, not build failure: 773 accepted /
+213 rejected unique names; 1,978 compiled / 467 rejected records.
+The tree had user changes to `.gitignore`, execution design and progress ledger,
+and an untracked completed-entry archive. All remain separate from this slice.
+
+The latest ranked candidates were evaluated from complete RON records and nested
+forms. The seven shared names are Circle of Protection: Black, Blue, Green, Red,
+White and Artifacts, and Greater Realm of Preservation. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Exact exile target references, ranked #1 | The seven protection names | 0 | Exact stack references are a prerequisite for complete CR 609.7a enumeration. Opaque-reference audit and aggregation still block full compilation. | Bounded: capture, announcement, legality, copies, resolving frames and two focused test groups. |
+| Complete source aggregation, ranked #2 | The same seven names | 7, conditional on audit | Exile target visits and opaque references must first have contracts. Enables all-source protection choices; other source-choice cards have additional replacement operations. | Larger: cross-category audit, deterministic aggregation and complete-card gameplay. |
+| Named-token quality grants, ranked #3 | Master of the Hunt | 1 | Its full record requires `NamedTokenWithPT` with `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))`. Native quality/band services exist, but token lowering and clone contracts need evidence. | Bounded token-definition and combat tests; less shared immediate value. |
+
+Select #1 as the dependency-ready shared prerequisite. The engine accepts target
+IDs through `StackObject.Targets` and caller-supplied target specs, but had no
+exact exile-target capture. No collection record declares an exile-card target;
+this slice adds the reference contract, not a new target spelling or constructor.
+Synthetic test targets use the existing Target interface. Existing RON lowering
+is reused, rather than introducing a second adapter. The broader opaque-reference
+audit is deferred; this slice does not claim complete enumeration.
+
+### Supported signatures, ownership and contracts
+
+- `ChooseADamageSource(filter)` retains its existing arity, source filters and
+  declaration validation. `chosenDamageSourcePlan.stackExileChoice(instanceBindings)
+  mage.ResolvingEffect` uses `You` and that instance's `DamageSourceBinding`.
+- `ChooseDamageSourceFromStackExileBindings(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  now consumes exact exile target references through the existing query.
+- `Game.StackBoundExileSources() []DamageSource` includes exile targets and
+  existing payment/event/delayed card bindings on stack and resolving frames.
+- `StackObject.targetExileCards map[uuid.UUID]capturedCard` stores immutable
+  identities. `Game.exileTargetCards([]uuid.UUID)` captures before payment;
+  `castStackObjectOptions.ExileTargetCards` transfers through standard and
+  alternate/free casting. `Game.cardTargetVisit(uuid.UUID) uuid.UUID` now
+  shares exile visit handling with hand/graveyard copy and legality checks.
+
+RON owns syntax, arity/filter/scope validation and per-instance lowering. Mage
+owns exact visits, public/departure information, announcement, payment boundaries,
+copy/clone lifetime and legality. Reused engine services: exile visit/departure
+readers, `capturedCard`, deterministic sorted bindings, exact deduplication,
+shared source-choice validation, copy target groups, resolving frames, zone/game
+cloning, payment transactions and selected-source prevention/damage replacement.
+No new history store, global last-action slot, callback execution, card-name
+branch, Go-card fallback or partial production registry is introduced.
+
+Targets save their exile visit before payment can move them. Failed payment
+publishes no reference. A paid exile target retains its announced zone and cannot
+become a hand, graveyard or spell reference. Original returned targets are illegal.
+Copies without new choices keep the visit; legal new choices save current visits,
+including the same physical ID. Cancellation retains the old visit. Stale target
+snapshots do not supply unused choices. Live and departure facts keep visits
+separate; face-down exile supplies no characteristics, including after returning
+face up and despite inspection permission. Queries and clones isolate mutable
+facts. Exile cards do not phase; keeper phasing/departure does not end independent
+stack references. Resolving frames and their clones retain references until body
+completion. The last referring object leaving ends category availability.
+
+Rules evidence: local CR 400.7, 406.3a, 601.2c, 608.2b, 609.7a–b and 707.10c.
+This repairs missing native identity/enumeration/legality contracts; no missing
+compiler spelling or source-data defect was found. RON sources and vocabulary
+are unchanged. Removal gates remain unmet, so no Go definition or DSL service
+was removed. API and rules-contract docs describe only this established context.
+
+### Failing-first tests and card mapping
+
+Before production changes, native tests failed for absent announced references,
+returned-target legality and resolving-frame references. RON tests failed for
+missing exile target choices for all seven names. Test fixture generation first
+needed Python 3 and syntax/unused-variable fixes; those setup failures are not
+claimed as TDD evidence. Length guards replaced incidental empty-slice panics
+with explicit assertions. No behavioral assertion was weakened.
+
+| Test | Mapping / acceptance evidence |
+| --- | --- |
+| `TestExileTargetSourcesIdentity` | Live/departed/returned visits, current/departure characteristics, copy deduplication, query isolation, clone isolation and last-reference lifetime. |
+| `TestExileTargetSourcesLegalityAndRetarget` | Ability copies keeping visits; legal same-ID new visits, other targets and cancellation; returned original targets fail resolution. |
+| `TestExileTargetSourcesBoundaries` | Direct stack targets, duplicates, player/random exclusions, wrong visits and absent live targets. |
+| `TestExileTargetSourcesResolutionAndClone` | Resolving frame, departure during body, cloned frame and final availability. |
+| `TestExileTargetSourcesSpellCopy` | Real spell announcement, same-ID retarget, clone isolation and resolution. |
+| `TestExileTargetSourcesHidden` | Face-down exile remains hidden despite inspection rights and later face-up return. |
+| `TestExileTargetSourcesPaymentDeparture` | Activation, standard spell and alternate/free casting retain prepayment visits through departure to hand; no cross-zone enumeration, no returned-target legality; unpaid activation leaves the visit and publishes no reference. |
+| `TestRONExileTargetSourcesProtection` | All six Circles and Greater Realm: complete real RON cost/choice/future-prevention subrules; 49 live/departed/returned/copied/cloned/keeper-phased/keeper-departed scenarios, unpaid costs, resolution timing, exact shields, consumption, empty-category clearing and continued complete-record rejection. |
+| `TestRONExileTargetSourcesInvalid` | Invalid arity/filter/reference, missing instance binding and read-before-choice rejection. |
+| Existing exile and selected-source tests, full suite | Property rechecks, cost rollback, shield cleanup, replacement ordering and simultaneous damage retain their shared engine contracts. |
+
+Estimated and actual compilation gain: **+0 unique names / +0 records**.
+Seven names gain exile-target subrule gameplay evidence. Complete-card gameplay
+coverage remains unchanged; no accepted record is lost.
+
+### Verification
+
+- Baseline build/compiler tests: PASS; baseline loader: expected collection exit 1.
+- Failing-first native and RON commands: expected assertion failures as above.
+- `go test ./pkg/mage/dsl/ron -run TestRONExileTargetSources -count=1`: PASS,
+  including all 49 RON scenarios and invalid declarations.
+- `go test ./pkg/mage -run TestExileTargetSources -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- Initial `make lint`: one test `prealloc` issue; corrected without behavior
+  changes. Formatter import ordering was reviewed. Final `make lint`: PASS,
+  **0 issues**. Post-format focused native/RON tests, build and vet: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**.
+  Entire JSON equals baseline (`cmp` exit 0). First issue remains Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  The strict collection loader still installs no partial registry.
+
+Complete collection gameplay/loading, runtime cutover, Go-card deletion and
+unused DSL cleanup remain unfinished. No unresolved native validation or
+environment blocker prevents this slice's commit.
+
+Changed files: native `exile_target_source.go` and tests, `exile_damage_source.go`,
+`hand_target_source.go`, `graveyard_damage_source.go`, stack capture/resolution,
+spell copy, clone and standard/alternate casting files; RON source-context
+contract comment and `exile_target_source_test.go`; `doc.go`, API/rules-contract
+docs and this ledger. User changes to `.gitignore`, execution design, ledger
+history relocation and completed-entry archive are preserved. Only this slice's
+summary/append changes are staged from the ledger. This run stops here.
+
+Ranked next candidates:
+
+1. Opaque-reference audit and resolving-frame consistency before CR 609.7a
+   aggregation: seven protection names benefit downstream; zero immediate
+   unlocks. Read complete native stack/waiting storage and retained references;
+   distinguish explicit typed references from callbacks that need a contract.
+   Exile target visits are now established; no new target spelling is needed.
+2. Complete CR 609.7a source aggregation after that audit: seven estimated
+   full-card unlocks, subject to fresh complete-record evidence; deterministic
+   cross-category deduplication and complete real RON activations.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock,
+   using existing native quality/band services and token clone behavior.

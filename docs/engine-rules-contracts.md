@@ -9758,3 +9758,40 @@ Evidence: native `TestHandTargetSourcesIdentity`, `LegalityAndRetarget`,
 Circles of Protection and Greater Realm of Preservation to their complete real
 cost/choice/future-prevention declarations in this hand-target context. It does
 not claim complete-card gameplay or compilation gains.
+
+## Exact exile target references on the stack
+
+`Game.StackBoundExileSources() []DamageSource` now includes exact exile targets
+alongside payment and nested event/delayed card bindings. It also reads the
+existing resolving stack frames. Final reference departure ends availability;
+departure history alone cannot supply a choice. References exclude wrong zones,
+physical IDs and visits, and deduplicate copies by exact object identity.
+
+Exile targets save their visit before activation or spell payment, including
+alternate/free casting. Payment departure keeps that visit and the announced
+zone. It cannot produce a new hand, graveyard or spell target reference. Failed
+payment publishes no stack reference. A returned card is illegal for the original
+spell or ability. Copies retain visits unless an explicit legal new choice saves
+the current visit; choosing the same physical ID can save a new visit. Cancelled
+choices keep the old visit. Unused target snapshots cannot add choices.
+
+Live and departure facts use the existing exile information reader. Face-down
+objects supply identity and owner only, even with inspection permission and
+after return face up. Queries and clones isolate mutable facts. Exile objects do
+not phase; source phasing or departure does not end an independent stack target
+reference. Resolving frames and their clones retain references through the body.
+
+RON `chosenDamageSourcePlan.stackExileChoice(instanceBindings)` reuses
+`ChooseDamageSourceFromStackExileBindings(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` with
+`You` and a fresh per-instance binding. Existing `ChooseADamageSource(filter)`
+validation and exact selected-source prevention consume the extended category.
+This establishes a reference context, not a new exile target declaration.
+General production source enumeration remains rejected pending its full audit.
+
+Rules evidence: CR 400.7, 406.3a, 601.2c, 608.2b, 609.7a–b and 707.10c.
+Native evidence: `TestExileTargetSourcesIdentity`, `LegalityAndRetarget`,
+`Boundaries`, `ResolutionAndClone`, `SpellCopy`, `Hidden` and `PaymentDeparture`.
+RON evidence: `TestRONExileTargetSourcesProtection` (all seven protection names,
+49 source-reference scenarios) and `Invalid`. These are subrule mappings;
+complete-card gameplay coverage and compilation counts do not increase.

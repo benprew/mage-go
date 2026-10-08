@@ -76,6 +76,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		targetSpellSources:     maps.Clone(original.targetSpellSources),
 		targetGraveyardSources: maps.Clone(original.targetGraveyardSources),
 		targetHandCards:        maps.Clone(original.targetHandCards),
+		targetExileCards:       maps.Clone(original.targetExileCards),
 		boundSpellSources:      maps.Clone(original.boundSpellSources),
 	}
 	if copiedCard == nil {
@@ -132,6 +133,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 			delete(cp.targetSpellSources, id)
 			delete(cp.targetGraveyardSources, id)
 			delete(cp.targetHandCards, id)
+			delete(cp.targetExileCards, id)
 			if p := g.FindPermanent(id); p != nil {
 				cp.targetIncarnations[id] = p.incarnationID
 			} else if visit := g.cardTargetVisit(id); visit != uuid.Nil {
@@ -229,6 +231,7 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 				// A selected card can have a new visit with the same physical ID.
 				delete(obj.targetGraveyardSources, id)
 				delete(obj.targetHandCards, id)
+				delete(obj.targetExileCards, id)
 				if obj.targetIncarnations == nil {
 					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
 				}

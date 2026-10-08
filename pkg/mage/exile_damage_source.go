@@ -70,12 +70,17 @@ func (e *sequenceEffect) stackCardBindings() []capturedCard {
 	return identities
 }
 
-// StackBoundExileSources reads exact exile visits saved by stack card bindings.
+// StackBoundExileSources reads exact exile targets and saved card bindings.
 // Other source categories need separate enumeration services.
 func (g *Game) StackBoundExileSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.handReferenceObjects() {
 		var identities []capturedCard
+		for _, id := range object.Targets {
+			if identity, ok := object.targetExileCards[id]; ok && identity.id == id && identity.zone == core.ZoneExile {
+				identities = append(identities, identity)
+			}
+		}
 		for binding, identity := range object.capturedCards {
 			if binding != nil {
 				identities = append(identities, identity)

@@ -104,6 +104,7 @@ func (p *chosenDamageSourcePlan) commandChoice(bindings instanceBindings) mage.R
 	return mage.ChooseDamageSourceFromCommandObjects(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
 
+// Exile targets and card bindings use the same exact visit query.
 func (p *chosenDamageSourcePlan) stackExileChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromStackExileBindings(mage.You, p.filter, bindings.chosenDamageSources[p])
 }

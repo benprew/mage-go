@@ -162,9 +162,12 @@
 // [Game.CaptureExiledDamageSource] reads one live exile visit.
 // [DamageSource.ExileVisit] keeps each visit separate from later objects.
 // Face-down cards supply no characteristics, even with inspection permission.
-// [Game.StackBoundExileSources] reads card and card-set payment bindings
+// [Game.StackBoundExileSources] reads exact exile targets, card payment bindings
 // and event card captures on stack objects. Departure keeps exact information.
 // [ChooseDamageSourceFromStackExileBindings] uses only this category.
+// Exile targets save their visit before payment. Copies keep the visit until
+// a legal new target choice saves the current visit. Returned targets are illegal.
+// The resolving stack frame keeps references until resolution ends.
 // A selected exile source cannot follow a later cast or battlefield entry.
 // [Game.GrantCastFromExile] saves the current exile visit. Departure ends
 // its permission. A failed payment keeps the visit and its permission.
