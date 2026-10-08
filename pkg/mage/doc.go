@@ -207,6 +207,12 @@
 // created token's scope and do not declare reads of the producer's source.
 // Saved incarnations survive departure and phasing until the delay triggers.
 //
+// [SnapshotNumber] declares explicit source reads in its typed value to
+// [Game.WaitingDelayedPermanentSources]. Zero values keep these declarations.
+// Queries do not evaluate the value or write the binding. Saved numbers do not
+// infer an object reference. Departure and phasing keep the saved incarnation;
+// a returned source cannot replace it. Future delays keep a separate lifetime.
+//
 // [TapEach], [UntapEach], [ReturnEachToHand] and [DestroyEach] declare
 // explicit source reads in their typed collections to the same waiting query.
 // [DestroyEachWithoutRegeneration] uses the same declaration.

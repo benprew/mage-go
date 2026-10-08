@@ -9,6 +9,13 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "CreateValueX" {
+			effect, err := compileCreatedValue(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return append(effects, effect), nil
+		}
 		if part.Name == "ChooseABasicLandType" {
 			if i+1 == len(parts) {
 				return nil, problem(part, "basic land choice requires an adjacent landwalk continuation")
@@ -290,6 +297,10 @@ func compileResolutionManaCost(n Node, ctx scope) (core.ManaCost, valueFactory, 
 		return cost, func(bindings instanceBindings) mage.ResolutionValue {
 			return mage.ManaValueOfSpellWithLKI(spell.build(bindings))
 		}, nil
+	}
+	if amount.Name == "ValueX" && ctx.createdValue != nil {
+		value, err := compileInstanceValue(amount, ctx)
+		return cost, value, err
 	}
 	value, err := compileValue(amount, ctx)
 	if err != nil {

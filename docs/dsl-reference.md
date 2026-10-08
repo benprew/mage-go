@@ -8395,3 +8395,27 @@ Mage declares source reads in every option body and condition, plus the chooser,
 for waiting delayed source enumeration. The query does not make a choice or
 check option availability. Unselected options retain explicit source references.
 This does not accept general `ChooseADamageSource` or arbitrary choice bodies.
+
+### Created resolution values
+
+RON `CreateValueX(value)` saves an existing typed resolution value at its place
+in an action sequence. Subsequent `ValueX` reads use a private number binding in
+that sequence and its nested action bodies. A second producer can read the first
+saved value in its operand, then supplies a fresh binding for later instructions.
+A branch or future delay does not export a producer to its enclosing sequence.
+An announced X is available before a producer. Saved X takes precedence after it.
+Unbound reads and malformed producers are compile errors. Contexts that require
+announcement values or legacy value sources reject saved-number reads.
+
+The compiler lowers the producer to
+`mage.SnapshotNumber(ResolutionValue, *NumberBinding) ResolvingEffect`.
+Dynamic resolution `PayManaX([ManaCostX], ValueX)` uses this binding for its amount.
+Bindings are built per factory instance and values stay in the engine resolution
+frame. Saved values pass through existing delayed capture and copy services.
+Primordial Ooze uses the producer after its counter instruction and before its
+optional payment. Its unpaid damage reads the same saved counter total.
+
+A waiting delayed snapshot declares explicit source reads in its operand.
+Queries do not evaluate the value or write the binding. Zero arithmetic keeps
+explicit references. An already-saved number does not infer an object reference.
+Future delays and implicit attachment reads keep their separate source contracts.

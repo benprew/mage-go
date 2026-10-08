@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	createdValue         *createdValuePlan
 	chosenDamageSource   *chosenDamageSourcePlan
 	spellTargets         bool
 	destructionCount     *destructionCountPlan
@@ -1027,6 +1028,9 @@ func protectionColors(n Node) ([]core.Color, error) {
 
 func compileValue(n Node, ctx scope) (mage.ValueSource, error) {
 	if n.Kind == Symbol && n.Name == "ValueX" {
+		if ctx.createdValue != nil {
+			return nil, problem(n, "created ValueX requires a resolution value context")
+		}
 		if !ctx.x {
 			return nil, problem(n, "unbound ValueX")
 		}

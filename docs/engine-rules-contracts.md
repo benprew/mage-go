@@ -10945,3 +10945,40 @@ and shield bodies can select a departed source retained only by a RON token coun
 Those scenarios establish subrules; general `ChooseADamageSource` still rejects.
 Existing token-creation tests retain payment, legality and simultaneous-batch
 coverage. No complete-card coverage or loader acceptance gain is claimed.
+
+## Waiting number snapshots and RON resolution values
+
+`SnapshotNumber(ResolutionValue, *NumberBinding) ResolvingEffect` declares explicit
+source reads in its operand to `Game.WaitingDelayedPermanentSources()`.
+Typed arithmetic, information, player and collection operands use the existing
+source traversal. Zero values retain their declarations. Enumeration does not
+read the value or write the binding. The saved source incarnation survives
+phasing and departure; a returned card cannot replace it. Trigger detection ends
+waiting availability. Implicit attachments, opaque values, saved numbers without
+an object reference and future delays do not infer source reads (CR 400.7,
+603.7a–e and 609.7a).
+
+RON `CreateValueX(value)` in an action sequence lowers to `SnapshotNumber` and a
+fresh per-instance number binding. Its operand uses the existing typed resolution
+value compiler. Subsequent `ValueX` reads in that sequence and its nested bodies
+read the saved number. A later producer reads the previous scope in its operand
+and establishes a new binding for its continuation. A branch or future delay
+cannot export a producer into its enclosing sequence. An announced X remains
+available before a producer; the saved number takes precedence after it.
+Contexts that require announcement or legacy values reject a saved-number read.
+Dynamic resolution `PayManaX` accepts the saved number without changing announced
+X, payment transactions or damage execution. The snapshot runs in action order,
+not at announcement or trigger placement (CR 608.2c). Existing resolution frames,
+delayed captures, stack copies and game clones retain separate values.
+
+`TestWaitingDelayedNumberOperands`, `Purity` and `Scope` establish declaration,
+identity, LKI, clone lifetime, zero operands and pure enumeration.
+`TestRONCreatedValueSnapshot`, `Ordering`, `AnnouncedX`, `Invalid` and `Inventory`
+establish lowering, dominance, repeated producers, copies, delayed transfer and
+semantic operand reporting. `TestRONCreatedValuePrimordialOoze`, `OozeAttack` and
+`OozePaymentTiming` load the complete Primordial Ooze record and cover its attack
+requirement, controller upkeep, counter-before-payment order, paid/unpaid and
+unaffordable payments, source departure/return, phasing, control and stack copies.
+`TestRONCreatedValueProtection` covers real cost/filter/shield subrules for the
+six Circles of Protection and Greater Realm of Preservation. Their complete
+records still reject general damage-source aggregation.

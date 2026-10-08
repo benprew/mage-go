@@ -2,18 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **773 accepted / 213 rejected unique card
-names** (986 total), and **1,978 compiled / 467 rejected records** (2,445 total).
+The latest recorded inventory reports **774 accepted / 212 rejected unique card
+names** (986 total), and **1,979 compiled / 466 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-TOKEN-OPERANDS` adds typed source declarations through token
-creation players/counts and lexical RON token players. Native tests cover all
-three typed constructors; RON tests cover lifecycle, copying, player scopes,
-Rukh Egg and seven protection subrules. Compilation and full-card coverage are
-unchanged. General source aggregation, number snapshots, token grants and sticky
-layers remain gaps.
+`CREATED-RESOLUTION-VALUE` lowers CreateValueX to private number bindings and
+adds waiting source declarations for SnapshotNumber operands. Primordial Ooze
+gains complete-record gameplay coverage and compilation; seven protection names
+gain snapshot subrule evidence. General source aggregation, named-token grants
+and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -48489,3 +48488,146 @@ Ranked next candidates:
    Reassess multi-card candidates before either single card.
 
 This run stops after `WAITING-DELAYED-TOKEN-OPERANDS`.
+
+## 2026-10-08: created resolution values and waiting number snapshots
+
+Status: completed implementation slice `CREATED-RESOLUTION-VALUE`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's ledger changes are staged; the existing archive move stays
+outside the commit.
+
+### Baseline, comparison and selection
+
+Fresh `make build` and uncached RON package tests passed. The baseline strict
+loader exited 1 with 1,978 compiled / 467 rejected records and 773 accepted /
+213 rejected unique names, out of 2,445 records / 986 names. This is collection
+rejection, not a build failure. The complete records for Primordial Ooze, the six
+Circles of Protection, Greater Realm of Preservation, Master of the Hunt and
+Titania's Song were inspected, including nested costs, filters, values and bodies.
+Targeted vocabulary queries covered CreateValueX/1, ValueX/0, PayManaX/2,
+BandsWithOthers/1, NamedCard/1 and EachPermanentStickyLayerEffect/3.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- |
+| Selected ranked #1: waiting numberSnapshot declarations with CreateValueX lowering | Primordial Ooze: 1 plausible unlock. Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: 0 immediate, up to 7 downstream | No RON path to SnapshotNumber existed. CreateValueX supplies the missing producer. Ooze's attack, counter, dynamic payment and damage services already exist. Protection still needs the final operand/source-category audit and general aggregation. | Small to medium: scoped producer, saved payment value, native declarations, invalid and gameplay/lifecycle tests |
+| Ranked #2: named-token quality grants | Master of the Hunt: 1 plausible unlock | IsNamed(NamedCard(...)) already works in permanent filters; the missing token grant needs per-token BandsWithOthers identity, combat and clone evidence. | Medium |
+| Ranked #3: sticky layer lifecycle | Titania's Song: 1 plausible unlock | Departure retention, shared membership across ability loss and per-member mana values remain missing. | Medium to large |
+
+The first candidate is dependency-ready after identifying its existing RON
+producer. It combines one immediate full-card gain with a concrete seven-card
+prerequisite and wins over either isolated single-card capability. Reprints count
+once. First-error frequency was not used as an unlock estimate. Contract, scope,
+reuse boundary and acceptance cases were stated before implementation. No skill,
+delegation, Go-card fallback, generated stub or source correction was used.
+
+### Exact signatures, contexts, dependencies and reuse
+
+- `(*numberSnapshot).refersToSourcePermanent() bool` declares its typed value's
+  explicit source operands through `resolutionValueReadsSourcePermanent`.
+- Existing public `SnapshotNumber(ResolutionValue, *NumberBinding)
+  ResolvingEffect` and `Game.WaitingDelayedPermanentSources() []DamageSource`
+  signatures are unchanged.
+- `compileCreatedValue(Node, []Node, scope) (effectFactory, error)` lowers
+  CreateValueX/1 at its ordered position in an action sequence. Its operand uses
+  `compileInstanceValue`; its continuation receives a private createdValuePlan.
+  Fresh NumberBindings and a copied instance binding map keep factory instances
+  separate. Engine frames keep per-resolution values separate.
+- Subsequent symbolic ValueX uses the created number in typed resolution-value
+  contexts, including existing arithmetic, life, damage and token operands,
+  nested bodies, delayed captures and dynamic resolution PayManaX. Announced X
+  remains available before the producer. A later producer can read the old value
+  before supplying a fresh binding for its continuation.
+- Branch and delayed-body producers cannot escape to enclosing sequences.
+  Announcement/legacy value contexts explicitly reject created-value reads.
+  Unbound references, wrong arities and non-symbolic ValueX remain errors.
+  No new RON spelling or separate game-time dispatch is introduced.
+- Inventory argument roles report CreateValueX's operand as a value.
+
+RON owns syntax, scope, validation and lowering. Mage owns execution and explicit
+source declarations. Existing typed value traversal, snapshot binding writes,
+definition validation/dominance, delayed context capture, incarnation/LKI lookup,
+deduplication, stack copies and game clones are reused. Queries do not evaluate
+values or write bindings. Zero arithmetic keeps explicit reads. Already-saved
+numbers, opaque values, implicit attachments and future nested delays do not
+infer a source. Departure/phasing keep the original incarnation until detection;
+a returned card cannot replace it. Existing dynamic mana transactions, counter
+replacements, damage/prevention ordering, target legality and simultaneous batch
+services are unchanged. CR 400.7, 603.7a–e, 608.2c and 609.7a establish the relevant
+identity, timing, lifetime and source contracts.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `go test ./pkg/mage ./pkg/mage/dsl/ron -run
+'Test(WaitingDelayedNumber|RONCreatedValue)' -count=1` failed four native source
+assertions and eight RON cases: five delayed snapshot states, ordered producers
+and both complete Ooze payment branches. A test setup method name was corrected
+from HasAttribute to the existing HasAttr before this recorded semantic failure.
+The post-implementation copy expectation was corrected: the first delay removes
+counters, so the second snapshot saves zero. Both separate values are asserted.
+The pre-resolution counter check uses its count rather than map length, because
+zero entries can exist. No acceptance behavior was omitted.
+
+| Tests | Mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedNumberOperands | Native power, zero arithmetic and controller operands; exact source, phase cycle, departure/return, LKI, clone lifetime and execution |
+| TestWaitingDelayedNumberPurity; Scope | Enumeration does not read operands or write bindings; one evaluation at resolution; fixed/saved values, implicit attachments and future delays do not infer reads |
+| TestRONCreatedValueSnapshot | Five live/phased/returned/copy/clone states; counter snapshot before removal, exact identity, separate copy values and clone state |
+| TestRONCreatedValueOrdering; AnnouncedX | Independent instances, repeated producers, saved-number transfer to delays, no invented source reference and precedence over announced X |
+| TestRONCreatedValueInvalid; Inventory | Seven invalid dominance/arity/reference declarations and semantic value-role reporting |
+| TestRONCreatedValuePrimordialOoze | Complete LEG record: attack attribute, upkeep placement timing, counter-before-payment order, paid/unpaid amount and damage versus mana consumption |
+| TestRONCreatedValueOozeAttack | Complete Ooze record: required attack when able; sickness, tapping, phasing and ability removal obey attack legality |
+| TestRONCreatedValueOozePaymentTiming | Complete Ooze record: opponent-upkeep exclusion, insufficient payment leaves mana intact, source departure/return, phasing, control changes and copied triggers with sequential counter totals |
+| TestRONCreatedValueProtection | Complete records supply real costs, filters and shield bodies for all seven protection names. A departed source retained only by CreateValueX is selectable at resolution; failed payment runs no choice; shield prevents one event and is consumed; detection ends waiting availability |
+
+Protection scenarios are subrule evidence, not full-card gameplay. Their full
+records still reject general ChooseADamageSource. The former Ooze rejection in
+counter_information_test.go is replaced by its complete gameplay tests. Exact
+collection-count assertions are updated and explicitly reject an unexpected
+Ooze issue. No test is weakened to tolerate collection failures.
+
+### Verification and outcome
+
+- Focused RON and native snapshot tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- First short engine suite identified three stale inventory-count assertions:
+  actual 1,979 / 466 versus expected 1,978 / 467. Exact assertions were updated;
+  focused inventory regressions and build/vet reran successfully.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS after those updates.
+- `make lint`: PASS, 0 issues. Automatic formatting reviewed; affected focused
+  RON/native tests rerun successfully.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, 1,979 compiled / 466
+  rejected records; 774 accepted / 212 rejected unique names. Total remains
+  2,445 records / 986 names. Diagnostic comparison removes only Primordial Ooze;
+  all remaining diagnostics equal the baseline. First: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+- No source-data defect, environment blocker or unresolved test failure.
+
+Estimated and actual gains match: 1 unique full-card unlock / 1 compiled record,
+Primordial Ooze, with complete-record gameplay tests for all its rules. Seven
+protection names gain snapshot subrule evidence only. General aggregation,
+runtime cutover, Go-card deletion and unused-DSL removal remain unfinished.
+RON sources are unchanged, so the source vocabulary snapshot is not refreshed.
+No definitions or DSL functions are removed before their removal gates.
+
+Changed files: pkg/mage/waiting_delayed_number.go and its tests;
+pkg/mage/dsl/ron/created_value.go and its tests; compiler.go, optional_payment.go,
+player_scope.go, sacrifice_value.go, inventory.go, inventory_test.go,
+numeric_consumers_test.go and counter_information_test.go in that package;
+pkg/mage/doc.go; docs/dsl-reference.md; docs/engine-rules-contracts.md;
+and this ledger.
+
+Ranked next candidates:
+
+1. Final typed-operand and source-category audit, then general damage-source
+   aggregation: seven protection names have concrete downstream value. Token
+   operands and number snapshots no longer block the audit. Bound references
+   and any remaining implicit/opaque categories must retain explicit contracts.
+2. Named-token quality grants for Master of the Hunt: 1 plausible unlock;
+   per-token BandsWithOthers combat/copy/clone evidence remains required.
+3. Sticky layer lifecycle for Titania's Song: 1 plausible unlock; departure
+   retention, shared membership after ability loss and per-member mana values.
+   Reassess multi-card alternatives before selecting either single-card feature.
+
+This run stops after `CREATED-RESOLUTION-VALUE`.

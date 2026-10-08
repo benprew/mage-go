@@ -714,6 +714,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "action":
+		if n.Name == "CreateValueX" && len(n.Args) == 1 {
+			return "value"
+		}
 		if n.Name == "ChooseAColor" && len(n.Args) == 1 {
 			return "color_choice_filter"
 		}
