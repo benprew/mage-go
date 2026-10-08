@@ -9,10 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-COMBAT-PREVENTION-REFERENCES` slice is recorded at the end of this
-ledger. It adds exact subjects from resolved combat prevention to the shared
+`WAITING-STATIC-PREVENTION-SUBJECTS` slice is recorded at the end of this
+ledger. It adds current subjects of typed static prevention to the shared
 waiting-reference query, a prerequisite for seven source-choice prevention cards.
-Nine accepted cards have new interaction coverage; compilation counts are unchanged.
+Five accepted cards have new interaction coverage; compilation counts are unchanged.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39240,5 +39240,146 @@ Ranked next candidates to reassess from fresh evidence:
    complete source selection and the seven shields.
 2. Parameterized bands with others across the eight complete records above.
 3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+
+## 2026-10-07: live subjects of waiting typed static prevention
+
+Status: completed implementation slice `WAITING-STATIC-PREVENTION-SUBJECTS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended ledger entry are staged.
+
+### Fresh evidence, comparison and selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for expected strict collection rejection:
+1,963 compiled / 482 rejected records; 763 accepted / 223 rejected unique names.
+This is collection rejection, not a compilation or test failure. The design,
+engine reference, latest ledger, targeted vocabulary entries, relevant API/rules
+contracts, selected compiler/engine code and complete candidate records were
+inspected. AST parsing and compilation checked all reprints of selected consumers
+and the seven downstream shields. CR 120.7, 400.7, 609.7a/c, 611.3, 615.1/2/4
+and 702.26b supply the identity and live static-reference contracts.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, typed static prevention subjects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 immediate unlocks**, a prerequisite for **7 names / 31 records**. Typed static consumers: Demonic Torment, Gaseous Form, Enchanted Being, Argothian Treefolk, Wall of Vapor and Wall of Shadows. Initially estimated six accepted consumers; complete compilation confirms five. | Legacy filter-factory static subjects, other waiting replacements and source/spell contexts, face-up command objects, full source enumeration, chosen-source shields, permanent-spell continuity and property rechecks remain. Wall of Shadows separately needs `CanTargetOnly`. | Small: game-aware typed provider, shared current-subject resolver, native and full-record RON lifecycle/choice tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 plausible unlocks** for the complete family. | Complete nested records require legendary/named parameterized bands, combat formation and both damage-assignment directions, live/token grants and selective temporary removal. Enables eight consumers and future band grants. | Large: ability representation, combat, layers, token and removal adapters plus interaction tests. |
+| Typed word choices and text substitution | Magical Hack; Sleight of Mind: **2 plausible unlocks**. | Both complete modal records require spell and permanent contexts, paired land-type/color-word choices, text-variable substitution, copy and layer isolation. Current color/basic-land choices are insufficient. Enables reusable text-changing effects. | Large: shared text representation, choice scopes, both execution contexts and gameplay tests. |
+
+Selection rationale: the dependency-ready part of ranked candidate #1 has concrete
+seven-card downstream value and a bounded reusable engine gap. Current RON AST
+lowering already supplies exact typed subject references, so it needs no redundant
+adapter. Source choice remains rejected until all categories and shield contracts
+are ready. Contract, reuse boundary and acceptance cases were stated before edits.
+The `implement-engine` skill supplied the engine workflow. No delegation or
+removed card/set skill was used.
+
+### Exact signatures, contexts and reuse boundary
+
+- Public API is unchanged: `Game.WaitingPreventionPermanentSources() []DamageSource`
+  and `ChooseDamageSourceFromWaitingPreventionReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`.
+- Private provider changes from `waitingPreventionPermanents() []capturedPermanent`
+  to `waitingPreventionPermanents(*Game) []capturedPermanent`. Existing captured
+  recipient and combat providers ignore the game and retain their exact semantics.
+- `staticDamagePreventionReplacement.waitingPreventionPermanents(*Game)` uses
+  `currentSubject(*Game) (*Permanent, bool)`, shared with its `Matches` method.
+  Source incarnation, current controller and the typed subject are checked once
+  per query without hypothetical damage or execution of the replacement body.
+- Engine producers: `PreventCombatDamageFrom(PermanentRef) StaticRule`,
+  `PreventCombatDamageTo(PermanentRef, PermanentFilter) StaticRule`,
+  `PreventDamageFromCardType(PermanentRef, core.CardType) StaticRule`, and
+  `PreventDamageFromBlockedCreatures(PermanentRef) StaticRule`.
+- Existing RON static `PreventDamage(event, [PreventThatDamage])` lowering is reused
+  in `static_prevention.go`, `static_combat_prevention.go`,
+  `static_source_type_prevention.go` and `blocked_damage_prevention.go`.
+  Combat events are `CombatDamageWouldBeDealtByCreature(subject)`,
+  `CombatDamageWouldBeDealtToRecipient(Permanent(subject))`, their matching `Or`
+  union, and `CombatDamageWouldBeDealtByACreatureToRecipient(filter,
+  Permanent(subject))`. These permit existing `ThisPermanent`/Aura `HostPermanent`
+  scopes. Source-card-type form is
+  `DamageWouldBeDealtByASourceToRecipient(IsCardtype(kind), Permanent(subject))`.
+  Blocked form is `DamageWouldBeDealtByAPermanentToRecipient(And([
+  IsCardtype(Creature), IsBlockedByDefender(ThisPermanent)]),
+  Permanent(ThisPermanent))`; its existing restriction to the source stays.
+- Live static references follow current attachment. Absent/phased sources or
+  subjects supply no reference. An old cycle entry cannot follow a returned
+  source. A new creature rule supplies its new incarnation. Source ability
+  removal uses the existing layer lifecycle; host removal cannot erase an Aura
+  rule. Cleanup and matching damage do not consume active static prevention.
+- Query snapshot isolation, exact deduplication, source filtering and independent
+  choice bindings reuse shared services. Registration sources, unspecified
+  filter members and blocked attackers do not become extra subjects. Captured
+  resolved shields keep their existing retained-information behavior.
+
+RON owns spelling, scope and instance construction; mage owns the reusable live
+query and reference behavior. No Go fallback, card-name branch, global action slot,
+partial registry or game-time declaration panic is added. No payment, target,
+replacement ordering or simultaneous-operation behavior changes. Legacy static
+filter-factory and other waiting replacement contexts are explicit separate gaps.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, native tests failed with `missing typed static subject`
+and the RON tests with `initial subjects=0 want exact subject`. The same assertions
+pass after implementation. An initial owner-isolation fixture needed explicit
+owner setup; the test still checks that changing a returned snapshot cannot
+change the query's next result. Wall of Shadows failed its independent complete
+record compilation; it is excluded from accepted gameplay claims, not simplified.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestWaitingStaticPreventionReferences` | All four native typed rule kinds; exact identity and immediate source phasing. |
+| `TestWaitingStaticPreventionStaleCycle` | Retains an old cycle entry directly; current reattachment/control and exclusion after source/host phasing or source/host return. |
+| `TestWaitingStaticPreventionChoiceBoundaries` | Multiple rules/Auras deduplicate one subject; registration sources, global prevention and unrelated permanents are excluded; filtered independent choices, empty output clearing, snapshot isolation and cleared LKI after host return. |
+| Demonic Torment; Gaseous Form (LEG) | `TestRONWaitingStaticPreventionReferences`: complete Aura records, current host/reattachment, source/host phase/cycle, departure/return, source/host ability removal, control, damage/cleanup, independent clones and selected host supplying damage. Gaseous Form's two directions deduplicate one subject. |
+| Enchanted Being (LEG); Argothian Treefolk (ATQ); Wall of Vapor (LEG) | Same test for complete self-subject records, new incarnation after return, phasing, ability removal, current control, damage/cleanup, clone and selected-subject execution. |
+| Invalid declarations and existing gameplay | Rerun `TestRONStaticCombatPrevention*`, `TestRONStaticSourceTypePrevention*`, `TestRONBlockedDamagePrevention*`: malformed/unbound/incompatible declarations, illegal Aura resolution, casting/payment rollback, instance isolation, actual prevention, simultaneous packets and affected-player replacement ordering. |
+| Wall of Shadows (LEG) | Complete record remains rejected at `unsupported spell target filter (CanTargetOnly)`; no full-card gameplay claim. |
+| Seven source-choice shields | All 31 records parsed/compiled; remain rejected at `ChooseADamageSource`. No complete shield gameplay claim. |
+
+### Validation and measured outcome
+
+Required verification passed in fast-fail order through the full suite:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingStaticPrevention -count=1`.
+- Native `go test ./pkg/mage -run TestWaitingStaticPrevention -count=1`.
+- Combined new RON and existing static combat/source-type/blocked prevention tests,
+  including invalid declarations, passed with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- Additional skill check: `go test ./... -short -count=1`.
+- `make lint`: PASS, 0 issues. Automatic changes only grouped imports in the
+  two new test files; engine/source diffs and both test files were reviewed.
+- Combined native/RON new tests and existing static prevention tests were rerun
+  after lint and passed. `git diff --check`: PASS, including the final ledger.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected unique names**. JSON diagnostics
+  equal baseline exactly. `go run ./cmd/loadcards -inventory` gives the same counts.
+
+Estimated and actual compilation gains are **0 unique names / 0 records**.
+New interaction evidence covers **5 accepted names / 5 records**. The original
+six-consumer coverage estimate included Wall of Shadows, whose separate target
+restriction blocks complete compilation. No accepted record was lost. There is
+no source defect or environmental failure. All 12 source hashes match the
+vocabulary snapshot, so no source/vocabulary refresh is needed.
+
+Changed files: `pkg/mage/waiting_prevention.go`,
+`pkg/mage/static_combat_prevention.go`, `pkg/mage/doc.go`, new native/RON
+`waiting_static_prevention_test.go`, API/rules-contract docs and this ledger.
+Runtime loading, complete collection gameplay, Go-card deletion and unused DSL
+cleanup remain unfinished. No removal gate is met; no DSL functions are removed.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Exact subjects in remaining legacy static prevention and other waiting
+   replacement/source/spell contexts; then face-up command objects and complete
+   source selection before the seven shields. Legacy static consumers include
+   Argothian Pixies, Desert Nomads and Uncle Istvan.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed word choice/substitution for Magical Hack and Sleight of Mind.
 
 Stop after this slice. The commit hash is reported in the final response.

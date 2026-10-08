@@ -7,27 +7,35 @@ import (
 )
 
 type waitingPreventionReferences interface {
-	waitingPreventionPermanents() []capturedPermanent
+	waitingPreventionPermanents(*Game) []capturedPermanent
 }
 
-func (r *preventionShieldReplacement) waitingPreventionPermanents() []capturedPermanent {
+func (r *preventionShieldReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
 	return []capturedPermanent{{r.targetID, r.targetIncarnation}}
 }
 
-func (r *sourcePreventionReplacement) waitingPreventionPermanents() []capturedPermanent {
+func (r *sourcePreventionReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
 	return []capturedPermanent{{r.dmgSource, r.incarnation}}
 }
 
-func (r *damagePreventionRuleReplacement) waitingPreventionPermanents() []capturedPermanent {
+func (r *damagePreventionRuleReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
 	return []capturedPermanent{r.recipientPermanent}
 }
 
-func (r *combatSourcePreventionReplacement) waitingPreventionPermanents() []capturedPermanent {
+func (r *combatSourcePreventionReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
 	return []capturedPermanent{{r.preventedID, r.incarnation}}
 }
 
-func (r *creatureCombatDamagePreventionReplacement) waitingPreventionPermanents() []capturedPermanent {
+func (r *creatureCombatDamagePreventionReplacement) waitingPreventionPermanents(*Game) []capturedPermanent {
 	return []capturedPermanent{{r.creatureID, r.incarnation}}
+}
+
+func (r *staticDamagePreventionReplacement) waitingPreventionPermanents(g *Game) []capturedPermanent {
+	subject, ok := r.currentSubject(g)
+	if !ok {
+		return nil
+	}
+	return []capturedPermanent{{subject.ID(), subject.incarnationID}}
 }
 
 // WaitingPreventionPermanentSources reads exact references in active prevention effects.
@@ -40,7 +48,7 @@ func (g *Game) WaitingPreventionPermanentSources() []DamageSource {
 			if !ok || !replacement.IsActive(g) {
 				continue
 			}
-			for _, ref := range refs.waitingPreventionPermanents() {
+			for _, ref := range refs.waitingPreventionPermanents(g) {
 				if ref.id == uuid.Nil || ref.incarnation == uuid.Nil {
 					continue
 				}

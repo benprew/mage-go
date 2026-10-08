@@ -6713,3 +6713,25 @@ collection]))` for the supported combat relation collections. Operations must be
 `[PreventThatDamage]`. Singular forms permit `UntilEndOfTurn`; supported
 collection unions also permit `UntilEndOfCombat`. Existing scope checks remain.
 There is no new spelling or general `ChooseADamageSource` adapter.
+
+### Waiting references from typed static prevention
+
+`Game.WaitingPreventionPermanentSources() []DamageSource` also reads the current
+subject of `PreventCombatDamageFrom`, `PreventCombatDamageTo`,
+`PreventDamageFromCardType`, and `PreventDamageFromBlockedCreatures`.
+`This` resolves the live rule source; `AttachedPermanent` resolves its current
+host. The source incarnation must still match. Phased or absent sources and
+subjects supply no reference. Reattachment changes the subject. Ability removal
+uses the existing layer lifecycle; removing a host's abilities does not remove
+an Aura's rule. Queries remain read-only and return separate, deduplicated
+snapshots. Source filters and blocked attackers do not declare extra subjects.
+
+Existing RON `PreventDamage(event, [PreventThatDamage])` lowering is reused:
+`CombatDamageWouldBeDealtByCreature(subject)`,
+`CombatDamageWouldBeDealtToRecipient(Permanent(subject))`, their matching `Or`
+union, and `CombatDamageWouldBeDealtByACreatureToRecipient(filter,
+Permanent(subject))` use the static combat rules. The supported source-card-type
+and blocked-creature events use the other two typed rules. Existing declaration,
+scope and filter restrictions remain. This adds no new spelling or general
+`ChooseADamageSource` adapter. Legacy filter-factory static prevention and other
+waiting replacements still need separate reference contracts.

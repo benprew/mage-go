@@ -4,6 +4,8 @@
 // retained by finite recipient, unlimited recipient and next-source prevention.
 // Resolved combat prevention supplies its exact source or to-and-by subject.
 // Collection prevention supplies each member saved at resolution.
+// Typed static prevention supplies its current subject. The live rule must
+// remain active; a former attachment cannot supply that subject.
 // [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //

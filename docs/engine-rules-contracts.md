@@ -8207,3 +8207,40 @@ subjects as noncombat damage sources. Existing invalid declaration, combat
 membership, legality, payment rollback and simultaneous combat tests still apply.
 This is added interaction evidence for accepted cards, not complete general source
 choice or a full-card compilation gain.
+
+### Live subjects of waiting typed static prevention
+
+`staticDamagePreventionReplacement` supplies its current exact subject to
+`Game.WaitingPreventionPermanentSources`. Its private `currentSubject(*Game)`
+resolver is shared with damage matching. It checks the source incarnation,
+current controller and current `PermanentRef` before returning a subject.
+It does not test a hypothetical damage event or execute the prevention body.
+CR 120.7 and 609.7a permit a referred object even if it cannot deal damage.
+Source filters and current blocked attackers do not add unspecified members.
+
+This contract covers `PreventCombatDamageFrom`, `PreventCombatDamageTo`,
+`PreventDamageFromCardType` and `PreventDamageFromBlockedCreatures`, with `This`
+or `AttachedPermanent`. Static subjects are live references: reattachment changes
+membership; source or subject phasing/departure removes it (CR 702.26b, 611.3).
+A returned source cannot satisfy an old cycle entry (CR 400.7). Source ability
+removal uses the existing continuous layer lifecycle. Host ability removal does
+not remove a separate Aura rule. A fresh rule on a returned creature supplies
+the new incarnation. These semantics differ from saved resolved shields.
+
+`TestWaitingStaticPreventionReferences` covers all four native rule kinds.
+`TestWaitingStaticPreventionStaleCycle` directly retains an old cycle entry to
+check reattachment, source/host phase, source/host return and changed control.
+`TestWaitingStaticPreventionChoiceBoundaries` covers duplicate subjects, exclusion
+of registration sources/global prevention/unrelated permanents, independent
+filtered bindings, empty output clearing, separate snapshots and cleared LKI.
+`TestRONWaitingStaticPreventionReferences` executes complete Demonic Torment,
+Gaseous Form, Enchanted Being, Argothian Treefolk and Wall of Vapor records. It
+checks live/reattached identity, phase/cycle, source/host departure and return,
+source/host ability removal, control, repeated query after damage, cleanup,
+independent clones and choice followed by damage from that subject.
+Existing static prevention tests retain declaration rejection, casting and
+payment rollback, actual prevention, simultaneous damage and replacement order.
+
+Wall of Shadows still fails its separate `CanTargetOnly` declaration. Legacy
+filter-factory static rules and other waiting replacement contexts remain gaps.
+No payment, damage batch, replacement order or general source-choice rule changes.

@@ -96,15 +96,18 @@ type staticDamagePreventionReplacement struct {
 	rule              staticDamagePreventionRule
 }
 
-func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameReader) bool {
-	// The source can phase out before the next layer cycle.
-	g := reader.(*Game)
+func (r *staticDamagePreventionReplacement) currentSubject(g *Game) (*Permanent, bool) {
 	source := g.FindPermanent(r.sourceID)
 	if source == nil || source.incarnationID != r.sourceIncarnation {
-		return false
+		return nil, false
 	}
 	ctx := &EffectContext{Game: g, SourceID: source.ID(), Controller: source.ControllerID(), sourceCaptured: true, sourceIncarnation: source.incarnationID}
-	subject, ok := r.rule.subject.resolvePermanent(ctx)
+	return r.rule.subject.resolvePermanent(ctx)
+}
+
+func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameReader) bool {
+	g := reader.(*Game)
+	subject, ok := r.currentSubject(g)
 	if !ok {
 		return false
 	}
