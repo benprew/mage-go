@@ -45,6 +45,7 @@ type BaseCard struct {
 	id              uuid.UUID
 	name            string
 	manaCost        ManaCost
+	hasManaCost     bool
 	types           []CardType
 	superTypes      []SuperType
 	subTypes        []string
@@ -62,6 +63,7 @@ type BaseCard struct {
 	isToken         bool            // true for token cards (created by NewToken)
 	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
 	definitionPlan  *CardDefinitionPlan
+	copiableValues  *CopiableValues
 }
 
 // AuraAIProfile tells the AI how an aura affects the creature it enchants so
@@ -128,9 +130,13 @@ func (c *BaseCard) SetColorOverride(colors []Color) {
 	c.colorOverride = append([]Color(nil), colors...)
 }
 
-func (c *BaseCard) ID() uuid.UUID           { return c.id }
-func (c *BaseCard) Name() string            { return c.name }
-func (c *BaseCard) ManaCost() ManaCost      { return c.manaCost }
+func (c *BaseCard) ID() uuid.UUID      { return c.id }
+func (c *BaseCard) Name() string       { return c.name }
+func (c *BaseCard) ManaCost() ManaCost { return c.manaCost }
+
+// HasManaCost separates an absent cost from a printed zero cost.
+func (c *BaseCard) HasManaCost() bool { return c.hasManaCost }
+
 func (c *BaseCard) Types() []CardType       { return c.types }
 func (c *BaseCard) SuperTypes() []SuperType { return c.superTypes }
 func (c *BaseCard) SubTypes() []string      { return c.subTypes }
@@ -166,11 +172,13 @@ func (c *BaseCard) AddSubType(st string) {
 }
 
 func (c *BaseCard) AddAbility(a Ability) {
+	c.copiableValues = nil
 	c.abilities = append(c.abilities, a)
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
 	c.definitionPlan = nil
+	c.copiableValues = nil
 	c.name = other.Name()
 	c.manaCost = other.ManaCost()
 	c.power = other.Power()
@@ -192,6 +200,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 		copy(c.castTargets, ct)
 	}
 	if bc, ok := other.(*BaseCard); ok {
+		c.hasManaCost = bc.hasManaCost
 		if len(bc.attrSeeds) > 0 {
 			c.attrSeeds = make(map[Attr]int, len(bc.attrSeeds))
 			maps.Copy(c.attrSeeds, bc.attrSeeds)
@@ -207,6 +216,8 @@ func (c *BaseCard) CloneFrom(other Card) {
 func (c *BaseCard) Copy() Card {
 	cp := *c
 	cp.id = uuid.New()
+	cp.manaCost.Hybrid = slices.Clone(c.manaCost.Hybrid)
+	cp.colorOverride = slices.Clone(c.colorOverride)
 	cp.types = make([]CardType, len(c.types))
 	copy(cp.types, c.types)
 	cp.superTypes = make([]SuperType, len(c.superTypes))
@@ -233,6 +244,11 @@ func (c *BaseCard) Copy() Card {
 
 // CardOption configures a card during construction.
 type CardOption func(*BaseCard)
+
+// WithManaCostPresence retains whether the definition prints a mana cost.
+func WithManaCostPresence(present bool) CardOption {
+	return func(card *BaseCard) { card.hasManaCost = present }
+}
 
 // CastTargets returns the targeting requirements for casting this card.
 // For auras, this is the enchant target. For spells with SpellAbility targets,
@@ -442,12 +458,13 @@ func splitSpellConstructorParts(parts ...any) (*SpellAbility, []CardOption) {
 // NewCreature creates a new creature card.
 func NewCreature(name, cost string, power, toughness int, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:        uuid.New(),
-		name:      name,
-		manaCost:  ParseManaCost(cost),
-		types:     []CardType{TypeCreature},
-		power:     power,
-		toughness: toughness,
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeCreature},
+		power:       power,
+		toughness:   toughness,
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -478,10 +495,11 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 func NewInstant(name, cost string, parts ...any) *BaseCard {
 	spell, opts := splitSpellConstructorParts(parts...)
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeInstant},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeInstant},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -495,10 +513,11 @@ func NewInstant(name, cost string, parts ...any) *BaseCard {
 func NewSorcery(name, cost string, parts ...any) *BaseCard {
 	spell, opts := splitSpellConstructorParts(parts...)
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeSorcery},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeSorcery},
 	}
 	if spell != nil {
 		c.AddAbility(spell)
@@ -521,10 +540,11 @@ func NewLand(name string, opts ...CardOption) *BaseCard {
 // NewArtifact creates a new artifact card.
 func NewArtifact(name, cost string, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeArtifact},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeArtifact},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -533,10 +553,11 @@ func NewArtifact(name, cost string, opts ...CardOption) *BaseCard {
 // NewEnchantment creates a new enchantment card.
 func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeEnchantment},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeEnchantment},
 	}
 	applyCardOpts(c, opts)
 	return c
@@ -551,10 +572,11 @@ func NewEnchantment(name, cost string, opts ...CardOption) *BaseCard {
 // CheckStateBasedActions.
 func NewPlaneswalker(name, cost string, startingLoyalty int, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypePlaneswalker},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypePlaneswalker},
 	}
 	if startingLoyalty > 0 {
 		c.AddAbility(EntersWithNCounters(Loyalty, startingLoyalty))
@@ -570,6 +592,7 @@ func NewAura(name, cost string, opts ...CardOption) *BaseCard {
 		id:          uuid.New(),
 		name:        name,
 		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
 		types:       []CardType{TypeEnchantment},
 		subTypes:    []string{"Aura"},
 		castTargets: []Target{TargetCreature()},
@@ -581,11 +604,12 @@ func NewAura(name, cost string, opts ...CardOption) *BaseCard {
 // NewEquipment creates a new equipment artifact card.
 func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 	c := &BaseCard{
-		id:       uuid.New(),
-		name:     name,
-		manaCost: ParseManaCost(cost),
-		types:    []CardType{TypeArtifact},
-		subTypes: []string{"Equipment"},
+		id:          uuid.New(),
+		name:        name,
+		manaCost:    ParseManaCost(cost),
+		hasManaCost: cost != "",
+		types:       []CardType{TypeArtifact},
+		subTypes:    []string{"Equipment"},
 	}
 	applyCardOpts(c, opts)
 	return c

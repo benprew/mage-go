@@ -3,12 +3,20 @@
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.
-// The retained plan supplies printed metadata, not current copiable values.
+// The retained plan supplies independent printed declarations.
 // Saved owners, targets, source identities and resolution choices do not transfer.
 // [BaseCard.Copy] retains the plan. [BaseCard.CloneFrom] clears it because
 // legacy rule replacement cannot establish the new definition's construction plan.
-// RON factories retain their validated plans. Entry copying and copy exceptions
-// need separate services before they can use these declarations.
+// RON factories retain their validated plans and copiable metadata.
+// Use [Game.CaptureCopiableValues] for a present permanent with known provenance.
+// The immutable [CopiableValues] rebuilds independent face-up prototypes.
+// Ordinary layers, counters, ownership and saved choices do not transfer.
+// Standard face-down status supplies a nameless, colorless 2/2 creature.
+// [CopiableValues.HasManaCost] keeps an absent cost separate from a zero cost.
+// Returned and phased subjects cannot supply a new capture. Saved values remain.
+// Legacy copy layers and untracked characteristic changes return errors.
+// Entry copying, copy exceptions and live copy-layer installation need separate
+// services. The snapshot does not supply casting or battlefield entry permission.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]

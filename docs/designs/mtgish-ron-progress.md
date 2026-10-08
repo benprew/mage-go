@@ -7,9 +7,10 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`FRESH-DEFINITION-PLANS` retains validated printed-definition builders. All
-accepted records rebuild independently. Compilation and complete-card gameplay
-counts are unchanged; the three entry-copy consumers retain their other blockers.
+`PERMANENT-COPIABLE-SNAPSHOTS` retains immutable metadata and builds independent
+face-up prototypes from validated RON definitions or standard face-down values.
+Compilation and complete-card gameplay counts are unchanged; the three copy
+consumers still need entry-copy scheduling and copy exceptions.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Entry copying, player-keyed permanent choices, exchanges and replacements remain gaps.
@@ -51433,3 +51434,172 @@ Ranked next candidates:
    delayed-source identity. Resolved-spell history for Backdraft remains separate.
 
 This run stops after FRESH-DEFINITION-PLANS.
+
+
+## 2026-10-08: immutable permanent copiable snapshots
+
+Status: completed implementation slice `PERMANENT-COPIABLE-SNAPSHOTS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged in this ledger.
+The `implement-engine` skill supplied the engine contract workflow; this request
+also authorizes the RON compiler integration. No removed card/set skill was used.
+
+### Fresh evidence, candidate comparison and selection
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+Baseline strict loader: expected exit 1, 2,019 compiled / 426 rejected records;
+785 accepted / 201 rejected unique names, out of 2,445 records / 986 names.
+Collection rejection is distinct from a build or test failure.
+
+Evaluated the latest ledger's ranked candidates. Read the complete Clone, Copy
+Artifact and Vesuvan Doppelganger records, including every nested CopyEffects
+body and the recursive upkeep ability, and all identical reprints. Read complete
+Forcefield and Rainbow Vale records. Targeted vocabulary queries confirmed
+EnterAsACopyOfAPermanent/2 (18 occurrences), CopyEffects/1, IsACopyOfPermanent/2,
+NoCopyEffects, and GainControlOfPermanent/1. Counts below count reprints once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers | Downstream capability / effort |
+| --- | --- | --- | --- | --- |
+| Immutable copiable snapshots | Clone, Copy Artifact, Vesuvan Doppelganger (18 records) | 0 | Early entry-copy scheduling and physical-card/copy lifecycle; Copy Artifact's additional type; Vesuvan's retained color and recursive granted upkeep ability | Shared accurate metadata and independent rules for all three; medium, bounded engine/compiler work with reconstruction and gameplay tests. |
+| Next combat damage leaving one point | Forcefield (five records) | 1 | One-event shield contract, exact chosen-source continuity, simultaneous consumption and prevention ordering/bypass | Completes one chosen-source prevention shape; medium replacement work. |
+| Explicit-player indefinite control | Rainbow Vale (one record) | 1 | Indefinite control adapter and exact delayed-source lifecycle; player choice is ready | Completes one delayed control transfer; smaller adapter/lifecycle work. |
+
+Selected dependency-ready candidate #1. Retained validated definition plans
+already supply fresh rules. Immutable snapshots must precede accurate copying
+for three names; that concrete shared benefit takes priority over the single-card
+alternatives. The supported context is a live permanent with validated printed
+provenance, a saved-snapshot prototype, or standard face-down characteristics.
+This is a complete snapshot/prototype prerequisite, not partial production entry
+copying. Before editing, stated independent metadata/declarations, copy-of-copy,
+face-down values, incarnation/phasing, invalid inputs and real RON gameplay as
+acceptance cases. Zero immediate full-card unlocks were expected.
+
+### Exact contracts, contexts, dependencies and engine reuse
+
+- `(*mage.Game).CaptureCopiableValues(*mage.Permanent)
+  (*mage.CopiableValues, error)` reads the game's present exact incarnation.
+  A corresponding reference in a clone reads that clone. Departure, return and
+  phasing reject new captures. Saved snapshots remain usable. Capture does not
+  call the definition builder, choose, pay, move objects or execute actions.
+- `(*mage.CopiableValues).Build() (mage.Card, error)` makes an independent
+  face-up prototype. Rules, targets, costs and bindings come from the retained
+  definition plan. Ownership, controller, attachments, entry/target choices,
+  counters, spent payments, token status and ordinary layer changes do not copy.
+  The caller supplies the new lifecycle. This API grants no entry or cast permission.
+- `(*mage.CardDefinitionPlan).CopiableValues() *mage.CopiableValues` supplies
+  immutable printed provenance. Snapshots retain copied metadata and the pure
+  builder, not the source, game or resolution frame. Initial and later plan
+  builds must keep printed metadata. Existing independent-declaration validation
+  remains mandatory; arbitrary callback purity is still a caller contract.
+- `mage.WithCopiableValues(*mage.CopiableValues) mage.CardOption` retains
+  provenance after construction. Capture checks metadata and plan association.
+  Snapshot prototypes supply their same provenance to later captures, including
+  face-up copies of standard face-down values. Ordinary BaseCard.Copy retains
+  provenance and now copies mutable hybrid-mana and color slices. CloneFrom and
+  rules added after construction clear copy provenance.
+- Standard Permanent.FaceDown supplies a nameless, colorless 2/2 creature with
+  no mana cost, supertypes, subtypes, keywords or abilities. The new prototype
+  stays face up; turning the source face up cannot change the saved snapshot.
+- `(*mage.BaseCard).HasManaCost() bool`,
+  `mage.WithManaCostPresence(bool) mage.CardOption`, and
+  `(*mage.CopiableValues).HasManaCost() bool` distinguish absent and printed-zero
+  mana costs. Native constructors derive presence from the string. RON lowers
+  field presence, including explicit empty and zero cost lists, at compilation.
+  It does not capture the mutable AST map in the returned factory. Legacy casting
+  payment/permission behavior remains outside this metadata contract.
+- RON `Compile(Node) (mage.CardFactory, error)` lowers this provenance for every
+  supported card-definition context alongside the validated declaration plan.
+  No new RON spelling, target group or binding scope is added. Unsupported entry
+  copying and CopyEffects bodies remain errors; no Go-card fallback is introduced.
+- Nil/uninitialized snapshots, absent games/objects, missing provenance,
+  untracked metadata/rule changes, mismatched plans and builder drift return
+  errors. Any active legacy layer-1 effect conservatively rejects a face-up
+  capture: its old interface cannot supply complete affected subjects/copiable
+  values. Standard face-down characteristics still supply a complete snapshot.
+  No approximate legacy copy result is used.
+- Reused definition trees, per-instance builders/bindings, incarnation checks,
+  game cloning, entry services, payments, target legality and shared layers.
+  No parallel zone, layer, damage or replacement subsystem is added. No global
+  action slot, card-name branch, game-time declaration panic or partial registry.
+- Local CR 707.2-6, 707.9, 708.2-8, 202.1b and 118.6 support the boundaries.
+  Live copy-layer installation, early entry scheduling, special entry-set
+  characteristics, double-faced/nonstandard face-down shapes, copy exceptions
+  and stack announcement copying remain separate contracts.
+
+### Failing-first evidence and card-to-test mappings
+
+New native and RON tests first failed at the absent CaptureCopiableValues and
+CopiableValues APIs. Added absent-versus-zero tests failed at missing metadata
+APIs. Further tests exposed acceptance of an uninitialized snapshot and shared
+hybrid-mana data in ordinary Copy; both now pass. Initial fixture corrections
+used the existing zero-cost display representation and the active player's
+sorcery-speed Aura window. Nil versus empty copied slices compare semantically.
+No gameplay assertion was removed. Absent mana cost is tested explicitly instead
+of inferring it from the legacy cost display string.
+
+| Tests | Evidence / card mapping |
+| --- | --- |
+| TestCopiableValuesIndependence | Independent metadata/declarations; ordinary P/T/color/type/ability changes and counters excluded; control, source departure, returned incarnations and phase cycles. Shared prerequisite for Clone, Copy Artifact and Vesuvan Doppelganger. |
+| TestCopiableValuesFaceDownAndCopies | Face-up and standard face-down snapshots, source turning face up, face-up copy of hidden values, copy-of-copy provenance and clone capture. |
+| TestCopiableValuesInvalid, BuilderDrift | Missing/nil provenance, absent game/object, uninitialized snapshot, legacy CloneFrom/rule additions, untracked characteristics/copy layer and inconsistent initial/later builders reject. |
+| TestCopiableValuesCostPresenceAndTokens, ReadOnlyAndColor | No-cost versus zero/hybrid mana, token status exclusion, mutable cost/color isolation, color indicator retention, read-only capture, current controller changes and independent clone face-down state. |
+| TestRONCopiableValuesGameplay | Full Icatian Javelineers record: spent source counter/tap cost, new entry counters, independent sources/targets, two pending activations, copy-of-copy entry rules and pending game clone. |
+| TestRONCopiableValuesLayersAndFaceDown | Full Air Elemental and Giant Growth: real spell boost stays outside copied values; Flying copies; standard face-down source produces face-up nameless 2/2 without Flying. |
+| TestRONCopiableValuesAuraTargets | Full Holy Strength with full Wall of Wood/Hill Giant fixtures: saved target choices do not transfer; fresh casting targets, separate attachments and layer results. |
+| TestRONCopiableValuesProvenanceAndInvalid | Full Birds of Paradise and Wall of Wood: printed metadata and ordinary Copy provenance; unbound player references and premature entry-copy declarations reject. |
+| TestRONCopiableValuesManaCostPresence, ColorIndicator | Synthetic explicit absent/empty/zero costs; multitype/supertype/subtype/keyword/color metadata; input AST mutation cannot alter lowered presence. |
+| Existing TestRONDefinitionPlanAcceptedCollection, CopyConsumersRemainRejected | All 2,019 accepted records still rebuild independently and validate. Complete Clone, Copy Artifact and Vesuvan Doppelganger remain rejected; their full-card gameplay is not claimed. |
+
+New evidence comprises six native and six RON test functions. Existing payment
+rollback, LKI, event timing, replacement ordering and simultaneous-operation
+regressions pass. Snapshot capture adds no operation that changes those services.
+
+### Verification and measured outcome
+
+- Final `go test ./pkg/mage/dsl/ron -run TestRONCopiableValues -count=1`: PASS.
+  Native `go test ./pkg/mage -run TestCopiableValues -count=1`: PASS. Also ran
+  the retained native and RON definition-plan tests with the new tests: PASS.
+- Final `make build`; `go vet ./...`: PASS.
+- Final `go test ./pkg/mage/... -short -count=1`; `make test`: PASS. Both repeated
+  after the lint correction. Accepted-collection and prior gameplay tests pass.
+- First lint run found three new RON test variables named copy that shadowed the
+  built-in. Renamed them, reran focused/build/vet/engine/full checks, then reran
+  lint. Final `make lint`: PASS, zero issues. Reviewed automatic format/modernize
+  output; no production source edits were made by lint. `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. JSON is byte-identical to the fresh baseline. Final counts remain
+  **2,019 compiled / 426 rejected records; 785 accepted / 201 rejected names**.
+  All 426 diagnostics are unchanged. No accepted record regresses and the loader
+  publishes no partial production registry. No environment or validation blocker.
+- No source-data defect was corrected and no RON record changed; the vocabulary
+  snapshot needs no source-hash refresh. Runtime cutover, Go-card deletion and
+  unused DSL removal remain gated by complete loading/gameplay/startup evidence.
+
+Estimated and actual full-card unlock gain: **0 names / 0 records**. Compilation
+and complete-card gameplay counts stay unchanged as expected. The three copy
+consumers gain shared snapshot/prototype contracts, not entry-copy gameplay.
+Snapshot-backed real RON gameplay and metadata coverage increase separately.
+
+Changed files: pkg/mage/copiable_values.go/test, card.go, card_definition_plan.go
+and doc.go; pkg/mage/dsl/ron/compiler.go and copiable_values_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Unrelated user changes and the untracked archive remain unstaged.
+
+Ranked next candidates:
+
+1. Early entry-copy scheduling for EnterAsACopyOfAPermanent(filter, NoCopyEffects),
+   using these snapshots and fresh declarations. Clone is one plausible unlock /
+   six records; the same entry mechanism is required by Copy Artifact and Vesuvan
+   Doppelganger (three consumers / 18 records). Establish incarnation-local copied
+   definitions without changing the physical card's later-zone printed identity;
+   execute acquired entry replacements/choices before entry observers. Split that
+   installation contract into a prerequisite slice if needed to keep this bounded.
+2. Next combat damage from the chosen permanent, leaving one point: Forcefield
+   (one plausible unlock / five records). Exact source continuity, simultaneous
+   one-event consumption, prevention ordering/bypass and cleanup remain.
+3. Explicit-player indefinite control transfer: Rainbow Vale (one plausible
+   unlock / one record). Reuse player choice, control layers and saved delayed
+   source identity; source return must not transfer control to a new incarnation.
+
+This run stops after PERMANENT-COPIABLE-SNAPSHOTS.

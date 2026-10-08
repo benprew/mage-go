@@ -371,6 +371,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	if types[0] == core.TypePlaneswalker {
 		return nil, unsupported(n, "planeswalker metadata")
 	}
+	_, costPresent := n.Fields["ManaCost"]
 	var definition *mage.CardDefinitionPlan
 	factory := func() mage.Card {
 		opts := make([]mage.CardOption, 0, 1+len(types)+len(options))
@@ -408,7 +409,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if len(indicator) > 0 {
 			card.SetColorOverride(indicator)
 		}
+		mage.WithManaCostPresence(costPresent)(card)
 		mage.WithCardDefinitionPlan(definition)(card)
+		mage.WithCopiableValues(definition.CopiableValues())(card)
 		return card
 	}
 	definition, err = mage.NewCardDefinitionPlan(factory)

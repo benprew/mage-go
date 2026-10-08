@@ -8929,3 +8929,36 @@ rebuild every currently accepted record and execute reconstructed Icatian
 Javelineers, Swords to Plowshares and Holy Strength. Birds of Paradise and Wall
 of Wood cover printed metadata and keyword seeds. Synthetic player choices
 cover independent delayed bindings and clones.
+
+## RON copiable provenance and saved prototypes
+
+Each successful RON `Compile(Node) (mage.CardFactory, error)` now lowers printed
+mana-cost presence and retains immutable `mage.CopiableValues` beside its
+`mage.CardDefinitionPlan`. `ManaCost` absent is separate from `ManaCost: []` or an
+explicit zero cost. Metadata comes from the validated definition; live source
+choices are never retained in that provenance. The compiler captures field
+presence at lowering, so later mutation of the input AST cannot change it.
+No new RON spelling or lexical scope is added in this prerequisite slice.
+
+`game.CaptureCopiableValues(source)` returns saved values for one present exact
+incarnation. `values.Build()` reconstructs independent face-up prototypes with
+fresh rule declarations. Ordinary layers, counters, controller, ownership,
+attachments, paid costs and target/entry choices do not transfer. A prototype
+built from saved values supplies the same provenance to another capture.
+Standard face-down sources supply a nameless colorless 2/2 creature with no mana
+cost or abilities; the prototype is face up. Values remain fixed after the source
+changes, phases or leaves. Capture itself does not run the construction builder.
+
+Missing provenance, untracked changes, inactive subjects and active legacy copy
+layers return errors. Nil or uninitialized snapshots cannot build. Mutable card
+cost/color data is separate in ordinary copies. Rules added after construction
+and legacy `CloneFrom` clear copy provenance. The existing builder contract still
+requires pure construction and immutable lowered declarations.
+
+This service does not grant casting/entry permission, schedule entry replacements,
+install live copy layers or implement `CopyEffects` exceptions. Those are the
+remaining contracts for Clone, Copy Artifact and Vesuvan Doppelganger. These
+complete records remain rejected rather than running approximate copy behavior.
+
+Evidence: `TestCopiableValues*`, `TestRONCopiableValues*`, and the retained
+`TestRONDefinitionPlan*` reconstruction/accepted-collection regressions.

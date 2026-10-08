@@ -10,9 +10,10 @@ import (
 // CardDefinitionPlan retains a builder for a printed card definition.
 // The builder must be pure and must create independent declarations each time.
 type CardDefinitionPlan struct {
-	build CardFactory
-	seed  map[any]bool
-	name  string
+	build          CardFactory
+	seed           map[any]bool
+	name           string
+	copiableValues *CopiableValues
 }
 
 // NewCardDefinitionPlan checks a builder before the plan can be used.
@@ -29,6 +30,10 @@ func NewCardDefinitionPlan(build CardFactory) (*CardDefinitionPlan, error) {
 	if first.Name() != second.Name() {
 		return nil, fmt.Errorf("card definition builder must keep the printed name")
 	}
+	printed := printedCopiableCharacteristics(first)
+	if !printed.matches(second) {
+		return nil, fmt.Errorf("card definition builder must keep printed characteristics")
+	}
 	if err := independentCardDefinitions(first, second); err != nil {
 		return nil, err
 	}
@@ -36,11 +41,13 @@ func NewCardDefinitionPlan(build CardFactory) (*CardDefinitionPlan, error) {
 	for identity := range cardDeclarationIdentities(second) {
 		seed[identity] = true
 	}
-	return &CardDefinitionPlan{build: build, seed: seed, name: first.Name()}, nil
+	plan := &CardDefinitionPlan{build: build, seed: seed, name: first.Name()}
+	plan.copiableValues = &CopiableValues{definition: plan, printed: printed}
+	return plan, nil
 }
 
 // Build creates a new printed definition with no owner or saved game choices.
-// Current copy effects and other changes need a separate copiable-value service.
+// Use CopiableValues for prototypes made from saved copy information.
 func (p *CardDefinitionPlan) Build() (Card, error) {
 	if p == nil {
 		return nil, fmt.Errorf("card definition requires a plan")
@@ -49,8 +56,8 @@ func (p *CardDefinitionPlan) Build() (Card, error) {
 	if err != nil {
 		return nil, err
 	}
-	if card.Name() != p.name {
-		return nil, fmt.Errorf("card definition builder must keep the printed name")
+	if !p.copiableValues.printed.matches(card) {
+		return nil, fmt.Errorf("card definition builder must keep printed characteristics")
 	}
 	for identity := range cardDeclarationIdentities(card) {
 		if p.seed[identity] {
@@ -58,6 +65,7 @@ func (p *CardDefinitionPlan) Build() (Card, error) {
 		}
 	}
 	card.definitionPlan = p
+	card.copiableValues = p.copiableValues
 	return card, nil
 }
 

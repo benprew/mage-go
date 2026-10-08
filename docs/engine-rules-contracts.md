@@ -11688,3 +11688,69 @@ independent counter costs, failed mana payment, target departure information,
 separate Aura attachments, saved delayed frames and game clones. All accepted
 collection records are reconstructed and validated. The three copy consumers
 remain rejected and receive no complete-card gameplay claim from this slice.
+
+## Immutable permanent copiable snapshots
+
+`(*Game).CaptureCopiableValues(*Permanent) (*CopiableValues, error)` reads the
+current state of the supplied live incarnation. It uses the game's object, so a
+corresponding reference in a clone reads that clone. A departed, returned or
+phased object cannot supply a new capture. Previously saved values remain usable
+through departure, control changes, phasing and source changes (CR 400.7,
+707.2b). No LKI lookup, decision, payment, builder call or action occurs at capture.
+
+The supported face-up context is a `BaseCard` with validated definition provenance,
+or a prototype built from a saved snapshot. Printed name, mana cost and its
+presence, color indicator, types, supertypes, subtypes, P/T, keyword seeds and
+mode metadata are immutable. Fresh rules, targets, costs and bindings come from
+the retained definition plan. Capture excludes ordinary layers, counters,
+controller, owner, token status, attachments, entry choices and saved targets
+(CR 707.2, 707.2a, 707.6). Snapshot builds have fresh identities and declarations.
+Copying a snapshot prototype uses its same copiable provenance (CR 707.3).
+Source choices and costs already paid do not transfer to the new instance.
+
+Standard `Permanent.FaceDown` status supplies a nameless, colorless 2/2 creature
+with no mana cost, supertypes, subtypes, keywords or abilities (CR 708.2a).
+`(*CopiableValues).Build() (Card, error)` constructs a face-up prototype; it does
+not copy face-down status or permit a face-up copy to turn up again. Its saved
+values persist if the original turns face up. The engine's standard face-down
+representation is the only face-down shape established here.
+
+`(*CardDefinitionPlan).CopiableValues() *CopiableValues` exposes immutable printed
+provenance. The plan checks printed metadata across its initial validation builds
+and later builds. `WithCopiableValues(*CopiableValues) CardOption` retains that
+provenance after construction. Capture checks both metadata and plan association.
+`BaseCard.Copy` retains provenance and copies mutable hybrid-mana and color data;
+`CloneFrom` and rule additions clear copy provenance. Builders must still obey
+the existing pure, independent-declaration contract. Snapshot validation does not
+prove arbitrary callback purity or permit mutation of lowered rule declarations.
+
+`(*BaseCard).HasManaCost() bool`, `WithManaCostPresence(bool) CardOption` and
+`(*CopiableValues).HasManaCost() bool` retain absent versus printed-zero costs.
+Native constructors derive presence from the cost string. RON lowers field
+presence, including explicit empty or zero-valued cost lists. This metadata does
+not change legacy casting payment or permission checks; prototypes do not grant
+casting permission (CR 202.1b and 118.6). Token status is also excluded: the caller
+selects the new object's lifecycle.
+
+Nil/uninitialized snapshots, absent games or objects, missing provenance,
+untracked characteristic changes and mismatched plans return errors. For a
+face-up source, any active legacy layer-1 effect causes conservative rejection,
+because the legacy layer interface cannot declare complete affected subjects or
+copiable values. A standard face-down source still has its complete replacement
+characteristics. No legacy approximate copy result is used as a fallback.
+
+This establishes saved prototypes, not early entry-copy scheduling, live copy
+layer installation, exceptions under CR 707.9, special entry-set characteristics,
+double-faced objects, nonstandard face-down shapes, or stack announcement copying.
+Clone, Copy Artifact and Vesuvan Doppelganger still reject. Their later adapters
+must use the snapshot and independent rule builders with their own entry/layer
+contracts. Existing layer, replacement, damage and simultaneous services remain.
+
+Evidence: native `TestCopiableValuesIndependence`, `FaceDownAndCopies`, `Invalid`,
+`BuilderDrift`, `CostPresenceAndTokens`, `ReadOnlyAndColor`; RON
+`TestRONCopiableValuesGameplay`, `LayersAndFaceDown`, `AuraTargets`,
+`ProvenanceAndInvalid`, `ManaCostPresence`, `ColorIndicator`. Real records cover
+Icatian Javelineers costs/entry/targets, Air Elemental with Giant Growth,
+Holy Strength on Wall of Wood/Hill Giant, and Birds of Paradise metadata.
+These tests supply prerequisite gameplay evidence, not new complete copy-card
+coverage. The accepted-collection reconstruction regression remains required.
