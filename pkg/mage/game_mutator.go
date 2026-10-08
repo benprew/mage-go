@@ -898,7 +898,7 @@ func (g *Game) SetNoMaximumHandSize(playerID uuid.UUID) {
 // MaximumHandSize returns the player's current maximum hand size. A negative
 // value means the player has no maximum hand size.
 func (g *Game) MaximumHandSize(playerID uuid.UUID) int {
-	return g.effects.Rules.MaxHandSize(playerID)
+	return g.maximumHandSizeWithStaticRules(playerID)
 }
 
 // AddExpansionCastBlock blocks spells from the given set code from being cast.

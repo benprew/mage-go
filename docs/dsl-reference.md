@@ -6589,3 +6589,30 @@ executes complete Dragon Whelp, Nalathni Dragon, Rocket Launcher and Rakalite
 records, payment failure, delayed creation and native delayed actions.
 These are added contracts for accepted records, not complete prevention-card
 coverage. General RON `ChooseADamageSource` remains rejected.
+
+## RON static maximum hand size
+
+Top-level permanent rules support these complete shapes:
+
+```text
+PlayerEffect(You, [HasNoMaximumHandSize])
+PlayerEffect(You, [SetMaximumHandSize(Integer(n))])
+PlayerEffect(TheChosenPlayer, [HasNoMaximumHandSize])
+PlayerEffect(TheChosenPlayer, [SetMaximumHandSize(Integer(n))])
+```
+
+`n` is a nonnegative integer literal. `TheChosenPlayer` requires the existing
+`AsPermanentEnters(ThisPermanent, [ChooseAPlayer(Opponent)])` declaration on the
+same card. Each list has exactly one operation. These are static declarations;
+resolving actions, combined operation lists, target/event player references,
+constructor-form symbols, dynamic amounts and negative maxima remain errors.
+The inventory assigns the fixed amount the `value` role.
+
+RON lowers these forms to `SetMaximumHandSizeStatic(PlayerRef, int)` and
+`NoMaximumHandSizeStatic(PlayerRef)`, both returning `ContinuousEffect`.
+`ChosenPlayerOf(PermanentRef) PlayerRef` supplies the saved entry choice through
+a live incarnation; it reads no LKI. Use `WithStaticAbility` for native callers.
+`Game.MaximumHandSize` and cleanup share the live rule query and timestamp order.
+The existing direct hand-size setters remain available to current callers.
+Cursed Rack is covered as a complete RON card. Library of Leng's discard
+replacement remains unsupported; its hand-size rule alone has gameplay evidence.

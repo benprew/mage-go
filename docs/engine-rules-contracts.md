@@ -7981,3 +7981,38 @@ executes complete Dragon Whelp, Nalathni Dragon, Rocket Launcher and Rakalite
 records, payment failure, delayed creation and native delayed actions.
 These are added contracts for accepted records, not complete prevention-card
 coverage. General RON `ChooseADamageSource` remains rejected.
+
+## Static maximum hand size
+
+`SetMaximumHandSizeStatic(PlayerRef, int) ContinuousEffect` sets a nonnegative
+maximum. `NoMaximumHandSizeStatic(PlayerRef) ContinuousEffect` removes the
+maximum. Use `WithStaticAbility`. Definition validation rejects nil references,
+unbound resolution bindings and negative fixed sizes. Each factory has its own
+effect source. Clones copy that source state.
+
+`ChosenPlayerOf(PermanentRef) PlayerRef` reads the live incarnation's entry-chosen
+player. It supplies no player for an absent, phased, returned or unchosen object,
+or an unknown player ID. It does not use LKI. `You` reads the source's current
+controller for these static rules; the entry choice stays fixed through control
+changes and phasing. A new entry gets a new choice.
+
+`Game.MaximumHandSize` evaluates the active typed rules in existing continuous
+source timestamp order after object characteristics are established (CR 613.11).
+The last matching set or no-maximum rule wins. This query uses the existing
+printed-ability suppression and phasing lifecycle without a layer pass or a
+mutation. A phase cycle can restore an earlier rule. Removing or returning a
+source cannot leave its old rule active. Legacy direct setters retain their
+existing computed-map behavior and supply the baseline for this typed query.
+
+Cleanup uses the same query for the active player (CR 402.2, 514.1). A zero
+maximum requires discarding the whole hand; no maximum requires no discard.
+Inactive players do not discard. The shared cleanup/discard service still owns
+card choice, movement, replacements and trigger placement. This slice adds no
+new discard replacement or payment operation.
+
+Evidence: `TestMaximumHandSizeStatic*`, `TestChosenPlayerOfLiveIncarnation` and
+`TestRONMaximumHandSize*`. The RON tests cover the complete Cursed Rack record,
+casting payment rollback, pre-entry timing, cleanup, choice and source lifetime,
+independent factories, cloning, declaration rejection and atomic loader rejection.
+Library of Leng's hand-size rule is tested from its real record in isolation;
+its full record still rejects its unsupported discard replacement.

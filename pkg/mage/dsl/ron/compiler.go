@@ -466,6 +466,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "EachPlayerEffect":
 		return compileAllPlayerRule(n)
 	case "PlayerEffect":
+		if isHandSizeRule(n) {
+			return compileHandSizeRule(n, ctx)
+		}
 		return compilePlayerCostReduction(n)
 	case "PreventDamage":
 		return compileStaticPrevention(n, ctx)

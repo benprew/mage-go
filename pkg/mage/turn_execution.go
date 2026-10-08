@@ -344,7 +344,7 @@ func (g *Game) doCleanupActions() bool {
 	})
 	// Hand size discard: active player discards down to max hand size (CR 514.1)
 	p := active
-	maxHS := g.effects.Rules.MaxHandSize(p.PlayerID())
+	maxHS := g.MaximumHandSize(p.PlayerID())
 	for maxHS >= 0 && len(p.Hand()) > maxHS {
 		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
 		if len(chosen) == 0 {

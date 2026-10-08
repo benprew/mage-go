@@ -38491,3 +38491,159 @@ Ranked next candidates to reassess:
 3. Parameterized bands with others across the eight compared contexts.
 
 Stop after this slice. The commit hash is reported in the final response.
+
+## Run 2026-10-07: STATIC-MAXIMUM-HAND-SIZE
+
+Status: one completed dependency-ready slice. Stop after this slice.
+Initial user edits to `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`, are preserved outside this commit. No
+sub-agents were used. The implement-engine skill supplied the reusable engine
+workflow. No removed card skill, Go-card requirement, generator or fallback was
+used.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, progress and vocabulary,
+the selected compiler/engine code, API/rules-contract docs, and complete RON
+records for all compared names. Fresh AST inventory includes nested forms beneath
+unsupported parents. Local `data/ATQ.json` and `data/LEA.json` confirm Cursed Rack
+and Library of Leng's Oracle requirements. CR 402.2, 514.1 and 613.7/613.11 supply
+the hand-size, cleanup and timestamp contracts. Incarnation and phasing reuse
+existing permanent-reference and continuous-source contracts.
+
+Before editing, `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+`go run ./cmd/loadcards -json` and `-inventory` exited 1 for collection rejection,
+not build failure: 2,445 records / 986 unique names; 1,962 compiled / 483 rejected
+records; 762 accepted / 224 rejected names. Inventory: 72,952 occurrences,
+8,556 signatures and 3,988 unknown-role occurrences. Collection-wide engine
+validation and gameplay counts remain null; compilation is separate evidence.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers; downstream reuse | Effort |
+| --- | --- | --- | --- |
+| Static hand-size rules, selected | Cursed Rack; Library of Leng. 1 unique name / 1 record immediately. | Cursed Rack's entry choice is supported. Library of Leng's six identical records still need effect-only optional discard-to-library replacement. Adds typed entry-chosen player access, live fixed/unlimited rule declarations and shared cleanup query. | Small to medium: missing engine declaration/query contract and compiler adapters; source lifetime, timestamp, cleanup and real RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria. 8 plausible unique-name / 8 record unlocks after the full family. | Nested records require legendary/named formation matching, both combat assignment directions, static/token grants and temporary removal. Ordinary banding is insufficient. | High: combat and assignment rules, layers, tokens, removal adapters and integration tests. |
+| Complete source selection and next-damage shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. 7 plausible names / 31 records after all prerequisites. | Full records need both ChooseADamageSource and CreateFuturePreventDamage. Waiting typed damage/spell frames, replacement/prevention referred objects, command objects, full enumeration, spell-to-permanent continuity and property rechecks remain prerequisites. | High for the full family; individual shared prerequisites are smaller but have zero immediate unlocks. |
+
+Selection rationale stated before edits: hand-size rules have a concrete complete
+card gain for the least implementation effort, and supply a shared engine/player
+reference prerequisite for a second unique card. The other candidates need much
+larger contracts. First-error frequency was not used as an unlock estimate.
+Single-card follow-up discard replacement is deferred while useful multi-card
+work remains.
+
+### Supported contract and reuse boundary
+
+New native APIs:
+
+- `ChosenPlayerOf(PermanentRef) PlayerRef`: a live exact-incarnation entry choice;
+  absent/phased/returned/unchosen objects and unknown player IDs supply no player.
+  It does not use LKI.
+- `SetMaximumHandSizeStatic(PlayerRef, int) ContinuousEffect`: nonnegative fixed
+  size, including zero. Use `WithStaticAbility`.
+- `NoMaximumHandSizeStatic(PlayerRef) ContinuousEffect`: no maximum; use
+  `WithStaticAbility`.
+
+RON supports top-level permanent
+`PlayerEffect(You | TheChosenPlayer, [SetMaximumHandSize(Integer(n))])` and
+`PlayerEffect(You | TheChosenPlayer, [HasNoMaximumHandSize])`.
+`n` is nonnegative and literal. TheChosenPlayer requires the existing same-card
+`AsPermanentEnters(ThisPermanent, [ChooseAPlayer(Opponent)])` declaration.
+One operation per list is supported. Combined lists, dynamic values, resolving
+contexts, event/target players and malformed/unbound references stay rejected.
+The fixed amount now has the semantic inventory `value` role.
+
+RON owns spelling, shape validation and entry-declaration checks. mage owns the
+live rules and typed player reference. `Game.MaximumHandSize` evaluates active
+hand-size declarations in the existing source timestamp order after object
+characteristics. The last matching fixed/unlimited declaration wins. Cleanup
+now uses this same service. `You` follows the current controller; an entry choice
+stays fixed until a new entry. Existing direct setters retain their computed-map
+behavior and supply the baseline for the typed query. Current callers stay intact.
+
+Reuse: continuous-source registration/removal/timestamp order, printed-ability
+suppression, permanent reference identity, phasing, ChooseOpponentAsEnters,
+cloneEffect, definition validation, transactional casting, and native cleanup/
+discard/zone/trigger services. No layer enum, parallel rule subsystem, global
+last-action value or game-time declaration panic is added. The live query reads
+only matching rule lifetimes; it makes no choices, consumes no RNG and mutates
+no rules. No new replacement ordering or simultaneous-discard contract is
+claimed. Runtime cutover/deletion gates are unmet; no Go card, generator or DSL
+function is removed, and no unused-DSL audit is claimed.
+
+### TDD and card-to-test mappings
+
+Native tests first failed because the three engine APIs did not exist. RON tests
+then failed at Cursed Rack's unsupported chosen player and Library of Leng's
+unsupported no-maximum operation. A test fixture map assignment was corrected
+before obtaining those expected RON failures. Initial gameplay tests exposed
+stale map results after phasing; the implementation now uses a pure live query,
+like the existing live spell target restrictions. The exact-incarnation fixture
+was corrected to set the existing sourceCaptured flag. No existing requirement
+or gameplay assertion was weakened.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestMaximumHandSizeStaticLifecycle` | Native controller/chosen subjects; live control, phasing, ability removal/restoration, departure/re-entry, default limits and clone isolation. |
+| `TestMaximumHandSizeStaticOrderAndCleanup` | Both timestamp orders of fixed/no-maximum rules, earlier rule resumption, active-player-only native cleanup and no stack use. |
+| `TestMaximumHandSizeStaticDeclarationsAndAbsentChoices` | Nil/unbound references, negative fixed sizes, absent and unknown choices. |
+| `TestMaximumHandSizeStaticZeroAndCloneSources` | Zero-size cleanup, cloned effect source isolation and source departure. |
+| `TestChosenPlayerOfLiveIncarnation` | Exact captured identity, no phasing/LKI fallback, recipient adaptation, returned and absent subjects. |
+| `TestMaximumHandSizeStaticPureQuery` | Repeated queries do not change the computed map or evaluate unrelated effect lifetimes. |
+| Cursed Rack, ATQ | `TestRONMaximumHandSizeCursedRack` covers the complete record: mana failure/rollback, casting versus entry timing, pre-entry choice, both players' cleanup, control, phase cycle, removed/restored ability, return and clone independence. `TestRONMaximumHandSizeStrictLoadAndInventory` covers strict full-record loading and separate factory choices. |
+| Library of Leng, LEA (six identical reprints) | `TestRONMaximumHandSizeLibraryRule` reads the real record, verifies full-record rejection advances to ReplaceWouldDiscard, then tests its isolated hand-size rule and controller cleanup. This is partial gameplay evidence, not an accepted/full-card mapping. |
+| Invalid RON | `TestRONMaximumHandSizeInvalid` covers symbol/tuple/arity errors, negative/dynamic amounts, unbound/constructor-form players, combined lists and resolving-context rejection. Strict loading with an invalid record leaves the existing registry unchanged. |
+
+Three inventory regression assertions used exact old loader counts. They were
+updated to the independently measured 1,963/482; their registry and semantic
+assertions remain intact. Initial required engine/make test runs failed only on
+these snapshots; final runs passed after the update. Automatic lint formatting
+only changed import order in new files; it was reviewed and affected checks were
+rerun.
+
+### Final validation and measurements
+
+Focused tests ran with `-count=1`, including the new native/RON contracts,
+entry-choice and spell-cost-reduction regressions, and updated inventory tests.
+Final checks passed:
+
+- `go test ./pkg/mage/... -short -count=1`
+- `make test`
+- `go test ./... -short -count=1` (engine skill final check)
+- `make build`
+- `go vet ./...`
+- `make lint` (0 issues; automatic changes reviewed)
+- `git diff --check` (worktree and staged slice)
+
+Fresh strict loader and AST inventory still exit 1 for expected collection
+rejection: 1,963 compiled / 482 rejected records; 763 accepted / 223 rejected
+unique names. 72,952 occurrences and 8,556 signatures remain; unknown-role
+occurrences decrease from 3,988 to 3,986. No accepted record is lost.
+Estimated and actual immediate gain match: Cursed Rack, 1 name / 1 record,
+with one new full-record gameplay mapping. Library of Leng gains isolated
+hand-size evidence; all six records still reject at `unsupported rule
+(ReplaceWouldDiscard)`. Representative remaining diagnostics include
+`unsupported action (ChooseADamageSource)` and `unsupported static ability grant
+(BandsWithOthers)`.
+
+All 12 RON source hashes match the baseline inventory. No RON source changed;
+no vocabulary syntax snapshot refresh or source correction is needed. Its loader
+snapshot is historical; this entry and the fresh measurements give the current
+compiler results. No environmental blocker remains. Previously recorded source
+defects are separate from this slice.
+
+Changed files: new engine and RON `maximum_hand_size.go` and
+`maximum_hand_size_test.go`; `pkg/mage/game_mutator.go`, `turn_execution.go`,
+`doc.go`; RON `compiler.go`, `inventory.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; API/rules-contract docs and this appended entry.
+Only this slice is staged. Existing user edits and untracked files remain intact.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Typed waiting delayed damage-source/spell frames and complete referred-source
+   prerequisites for the seven source-choice prevention cards.
+2. Parameterized bands with others across the eight complete records compared.
+3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
+
+Library of Leng's discard replacement remains a single-card follow-up to defer
+while useful multi-card work remains. Stop here. The descriptive commit hash is
+reported in the final response after checks pass.

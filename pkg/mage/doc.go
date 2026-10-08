@@ -661,6 +661,11 @@
 // Use [ChooseOpponentAsEnters] for an opponent choice before battlefield entry.
 // Each permanent keeps its choice through control changes and phasing.
 // [EventIsChosenPlayerUpkeep] checks that choice when the upkeep event occurs.
+// [ChosenPlayerOf] reads a live permanent's entry choice without LKI.
+// Use [SetMaximumHandSizeStatic] or [NoMaximumHandSizeStatic] with a typed
+// player reference. [Game.MaximumHandSize] and cleanup read active rules in
+// timestamp order after the object layers. Phasing and source departure stop
+// the rule. An entry choice stays fixed when the source changes controller.
 // Use [ChooseBasicLandTypeAsEnters] for a land choice before battlefield entry.
 // [Permanent.ChosenBasicLandType] keeps the typed choice separate from color.
 // [BecomesChosenBasicLandTypeAttachedEffect] applies it to the current host.
