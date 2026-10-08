@@ -138,6 +138,8 @@ func (e *resolutionManaPayment) refersToSourcePermanent() bool {
 func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 	var subject PermanentRef
 	switch v := value.(type) {
+	case sourceCounterValue:
+		return true
 	case permanentResolutionValue:
 		subject = v.subject
 	case permanentManaValue:
@@ -264,4 +266,24 @@ func (e *discardSubjectEffect) refersToSourcePermanent() bool {
 
 func (e *randomDiscardSubjectEffect) refersToSourcePermanent() bool {
 	return playerRefReadsSourcePermanent(e.subject) || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *counterSubjectEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *boundedCountersEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *removeCountersSubjectEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || resolutionValueReadsSourcePermanent(e.amount)
+}
+
+func (e *removeAllCountersEffect) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self
 }

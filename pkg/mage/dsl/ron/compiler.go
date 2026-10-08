@@ -1220,20 +1220,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "PutCountersWithRestriction":
-		build, err := compileBoundedCounterPlacement(n, ctx)
-		if err != nil {
-			return nil, err
-		}
-		return one(build)
-	case "PutCounters":
-		build, err := compileCounterPlacement(n, ctx)
-		if err != nil {
-			return nil, err
-		}
-		return one(build)
-	case "RemoveCounters":
-		build, err := compileResolvingCounterRemoval(n, ctx)
+	case "PutCountersWithRestriction", "PutCounters", "RemoveCounters":
+		build, err := compileCounterAction(n, ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -512,6 +512,12 @@
 // [Game.WaitingDelayedPermanentSources] reads saved permanent, target and token
 // frames and exact event subjects while delayed abilities wait to trigger.
 // Direct [This] reads in destruction, sacrifice and return bodies also qualify.
+// [AddCountersTo], [AddCountersUpTo], [RemoveCountersFrom] and
+// [RemoveAllCounters] declare direct [This] subjects in waiting bodies.
+// Typed amount reads also qualify, including [SourceCounters].
+// Zero amounts and full counter limits keep the saved reference.
+// Queries do not read amounts, choose counters or write removal results.
+// Counter execution still requires the original present incarnation.
 // [TapSubject] and [UntapPermanent] declare their direct [This] subject, even
 // when its tapped state needs no change. Queries do not resolve the subject
 // or change its status. Execution still needs the original present incarnation.

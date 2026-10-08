@@ -8105,3 +8105,62 @@ rejects 16 declarations. `TestRONWaitingDelayedTapInstances` checks two factory
 instances, saved target incarnations, later shroud and clone execution for both
 actions. Complete protection records still reject general source aggregation;
 these scenarios do not establish complete-card gameplay coverage.
+
+## Waiting delayed counter-action references
+
+`AddCountersTo(PermanentRef, CounterType, ResolutionValue) ResolvingEffect`,
+`AddCountersUpTo(PermanentRef, CounterType, ResolutionValue, int) ResolvingEffect`,
+`RemoveCountersFrom(PermanentRef, CounterType, ResolutionValue) ResolvingEffect`
+and `RemoveAllCounters(PermanentRef, CounterType) ResolvingEffect` declare direct
+`This` subjects to `Game.WaitingDelayedPermanentSources() []DamageSource`.
+The result-producing `RemoveCountersFromWithResult` shares the removal declaration.
+The first three also declare typed source reads in their amounts. Existing typed
+permanent, player, arithmetic and count declarations apply. `SourceCounters`
+now declares its source without reading the count. Zero and negative amounts,
+empty counters and full bounded limits keep the reference.
+
+Queries do not resolve subjects, evaluate amounts, offer number choices, place
+or remove counters, write results, emit events or consume random results.
+Attached, bound and opaque subjects do not imply a direct source read. Saved
+binding frames retain their separate contracts. A nested delay producer does
+not declare its future body before creation. Sequences, modes and captured
+bodies propagate the current body's declaration.
+
+RON `compileCounterAction(Node, scope) (effectFactory, error)` routes resolving
+`PutCounters/1`, `PutCountersWithRestriction/2` and `RemoveCounters/1` through
+existing typed lowering. Supported singular permanent instructions are
+`ACounterOfTypeOnPermanent(counter, permanent)`,
+`NumberCountersOfTypeOnPermanent(amount, counter, permanent)`,
+`UptoNumberCountersOfTypeOnPermanent(amount, counter, permanent)` with its
+matching `CantCauseTheNumberOfCountersOfTypeOnPermanentToBeGreaterThan` limit,
+and `ACounterOfTypeFromPermanent(counter, permanent)` or
+`AllCountersOfTypeFromPermanent(counter, permanent)`. Each instruction list
+has one member. Scope and binding validation precede fresh factory construction.
+This contract applies inside `CreateFutureTrigger(event, ActionList([...]))`.
+Player poison placement keeps its existing lowering but gains no declaration
+contract in this slice. Collection counter operands remain separate work.
+
+Current and exact departure information use the existing source service.
+Departure, return and phasing retain waiting availability. Returned objects
+cannot replace the saved incarnation. One-shot detection ends availability
+before stack placement (CR 400.7, 603.7a–e, 609.7a, 702.26b–d).
+Execution needs the original present subject; phase cycles and control changes
+keep that identity. Saved delayed targets are not targeted again after shroud.
+Counter placement, replacement limits and removal results reuse existing
+counter services (CR 122). Copies and clones keep independent delayed lifetimes.
+No cost, replacement ordering or simultaneous batch behavior changes.
+
+Evidence: `TestWaitingDelayedCounterActionReferences` has 96 native action,
+nesting, mode and lifecycle cases. `TestWaitingDelayedCounterActionOperands`
+checks five typed amount forms independently, attached/bound/future exclusions
+and invalid subjects. `TestWaitingDelayedCounterActionZeroAndResult` checks
+nonpositive amounts, full limits, exact removed-count results and clone isolation.
+`TestRONWaitingDelayedCounterActionProtection` has 224 real-record subrule cases
+for the six Circles of Protection and Greater Realm of Preservation: costs,
+rollback, resolution choice, retained source prevention, consumed shields,
+stack copies and clones. `TestRONWaitingDelayedCounterActionInvalid` rejects
+11 declarations. `TestRONWaitingDelayedCounterActionInstances` has six typed
+amount/placement scenarios with distinct factories and targets, zero arithmetic,
+departure counter information, returned-target exclusion and later shroud.
+Complete protection records still reject unfinished general source aggregation;
+this evidence does not establish complete-card gameplay coverage.
