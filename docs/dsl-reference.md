@@ -6554,3 +6554,38 @@ This is a permanent-frame and exact-event-subject contract. Other typed saved
 references, source reads in future bodies, untyped legacy IDs, waiting replacement
 and prevention effects and command objects still need separate contracts. No RON
 syntax is added. General `ChooseADamageSource` remains rejected.
+
+
+## Source references in waiting delayed action bodies
+
+`Game.WaitingDelayedPermanentSources` also reads explicit `This` subjects in
+`Destroy`, `DestroyWithoutRegeneration`, `Sacrifice` and `ReturnToHand` bodies.
+This context includes saved `capturedDelayedBody` wrappers, nested `Sequence`
+bodies and each saved modal body. The typed reference interface does not execute
+an action. A source ID alone does not qualify. An action that will create another
+delayed ability does not supply its future body's references in this context.
+Other source-reading action kinds and conditional wrappers remain separate forms.
+
+The ability must have a captured source and a known permanent incarnation.
+The reader uses the saved source ID/incarnation, the existing incarnation
+information service and the existing deterministic deduplication service.
+Current color and control, departure LKI, phasing and hidden characteristics use
+the same contracts as saved target references. Returned cards cannot replace the
+original source (CR 400.7, 603.7c, 603.7e, 609.7a and 702.26).
+
+`ChooseDamageSourceFromWaitingDelayedBindings` can consume this category through
+its existing filtered choice, validation and output services. One-shot detection
+ends waiting eligibility before pending placement. Copies on the stack do not
+create waiting abilities; clones keep independent waiting lifetimes. The actions
+keep their existing legality: a player cannot sacrifice a source controlled by
+another player. This slice adds no cost or replacement operation.
+
+Evidence: `TestWaitingDelayedSourceBodies`, `TestWaitingDelayedSourceBodyBoundaries`
+and `TestWaitingDelayedSourceBodyChoicesAndInstances` cover exact identity,
+current and retained information, query snapshot isolation, modal and sequence
+bodies, declaration rejection, independent filtered outputs, empty/absent-player
+clearing, APNAP, stack copies and clone execution. `TestRONWaitingSourceBodies`
+executes complete Dragon Whelp, Nalathni Dragon, Rocket Launcher and Rakalite
+records, payment failure, delayed creation and native delayed actions.
+These are added contracts for accepted records, not complete prevention-card
+coverage. General RON `ChooseADamageSource` remains rejected.

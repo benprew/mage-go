@@ -259,6 +259,8 @@
 // [ChooseDamageSourceFromStackBindings] chooses only from these binding contexts.
 // [Game.WaitingDelayedPermanentSources] reads saved permanent, target and token
 // frames and exact event subjects while delayed abilities wait to trigger.
+// Direct [This] reads in destruction, sacrifice and return bodies also qualify.
+// Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.
 // [Game.StackBoundDamageSources] reads permanent and spell source identities

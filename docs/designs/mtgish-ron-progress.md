@@ -38359,3 +38359,135 @@ Ranked next candidates to reassess from fresh evidence:
 
 Stop after this slice. The descriptive commit hash is reported in the final
 response after all required checks pass.
+
+## Run 2026-10-07: WAITING-DELAYED-SOURCE-ACTIONS
+
+Status: completed dependency-ready engine prerequisite; stop after this slice.
+Initial edits to `.gitignore`, the execution design and this ledger, and untracked
+`mtgish-ron-completed.md`, remain outside the commit. No delegation was used.
+The implement-engine skill supplied the engine workflow; no removed card skill,
+Go definition requirement, fallback registry or stub generator was used.
+
+### Evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, progress and vocabulary,
+selected compiler and engine code, complete candidate and consumer RON records
+and identical reprints, relevant API/rules contracts, and CR 400.7, 603.7,
+609.7 and 702.26. Local LEA/ATQ Oracle data confirms the destruction, sacrifice
+and return bodies. No source-data correction is needed.
+
+Fresh short engine tests and build passed before editing. Strict loader and AST
+inventory exited 1 for collection rejection, not a build failure: 2,445 records,
+986 unique names, 1,962 compiled / 483 rejected records, 762 accepted / 224
+rejected names. Inventory: 72,952 occurrences, 8,556 signatures and 3,988
+unknown-role occurrences. Collection-wide engine-validation and gameplay counts
+remain null. Nested records, not first-error frequency, supplied these estimates.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Waiting delayed explicit source action references, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: 0 immediate unlocks, prerequisite for 7 names / 31 records. Accepted consumers: Dragon Whelp, Nalathni Dragon, Rocket Launcher, Rakalite. | Other action reference contexts, typed waiting damage/spell frames, waiting replacement/prevention references, command objects, complete enumeration, spell-to-permanent shield continuity and property rechecks remain. Adds exact source references without executing bodies. | Small: typed action interface and existing incarnation reader; engine identity/lifetime/choice and real RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Master of the Hunt, Shelkin Brownie, Tolaria: 8 plausible unlocks. | Full records need legendary/named formation matching, both assignment directions, static/token grants and temporary removal. Ordinary banding does not supply these contracts. | High: combat, layers, token/grant adapters and both damage assignment contracts. |
+| Text-word choices and changes | Magical Hack, Sleight of Mind: 2 plausible unlocks. | Complete records need spell/permanent target alternatives, ordered typed choices, layer 3 substitutions, spell-to-permanent continuity and copy isolation. | High: text-change engine, choice bindings and target-context adapters. |
+
+Selection rationale: the small typed source-action context has concrete reuse
+across four accepted cards and removes a shared prerequisite for seven shields.
+The comparison's other multi-card families require much larger contracts. Zero
+immediate compiler unlocks were stated before editing. Single-card capabilities
+remain deferred. No second slice starts.
+
+### Contract, dependencies and reuse
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` now includes explicit
+`This` subjects in `Destroy`, `DestroyWithoutRegeneration`, `Sacrifice` and
+`ReturnToHand`, within captured delayed bodies, nested `Sequence` and saved
+modal bodies. These lower the RON `DestroyPermanent(ThisPermanent)`,
+`SacrificePermanent(ThisPermanent)` and
+`PutPermanentIntoItsOwnersHand(ThisPermanent)` actions in `CreateFutureTrigger`.
+This is a complete supported context, not a claim of general source-body support.
+Conditional wrappers and other source-reading action kinds remain separate forms.
+
+Private `delayedSourcePermanentReference` exposes a pure typed boolean query.
+The waiting reader requires the delayed ability's captured source identity and
+uses the existing exact incarnation information reader, LKI/phasing services,
+sorted deduplication and copied source snapshots. It executes no body, choice or
+RNG and reads no global last-action slot. A source ID alone, unknown incarnation,
+uncaptured source or future delayed-action producer does not qualify.
+
+`ChooseDamageSourceFromWaitingDelayedBindings(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect` consumes the new context through existing
+filtering, validation, dominance, independent outputs and fallback. TriggerSystem
+still owns waiting detection, APNAP placement and cloning. One-shot detection
+ends waiting eligibility before pending placement. Stack copies do not create
+waiting abilities. Existing action legality remains: sacrifice requires control
+by the resolving ability's controller. Costs, replacements, damage ordering and
+simultaneous operations retain their existing services; no new contract there
+is claimed. RON spelling and scope logic stay in ron; no adapter is added.
+
+### TDD and card-to-test mappings
+
+The new native and real RON tests first failed at missing original source-body
+references. Implementation made those assertions pass. Later test corrections
+account for existing face-down creature characteristics, controller-restricted
+sacrifice, and `ApplyEffect` restoring its outer resolution frame. The absent
+player assertion now calls the effect inside the frame it inspects. No production
+requirement or existing test was weakened. The first short-engine run started
+before that fixture correction and failed on that assertion; it was rerun.
+Lint first reported one missing test-slice capacity. The slice was given capacity
+two, and lint and affected checks were rerun.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestWaitingDelayedSourceBodies` | Four native action variants; live/departed/returned/phased/phase-cycle, color/control, face-down/shroud, snapshot isolation, nested sequences, waiting/pending timing, copied controllers, native actions and clone execution. |
+| `TestWaitingDelayedSourceBodyBoundaries` | Source-ID-only and future-body exclusion, modal deduplication, missing/wrong/uncaptured incarnation, invalid action subjects. |
+| `TestWaitingDelayedSourceBodyChoicesAndInstances` | Independent source instances, registration order, native modal action and APNAP, filtered invalid-answer fallback, distinct outputs, empty/absent-player clearing, clone lifetime. |
+| Dragon Whelp (LEB; six reprints), Nalathni Dragon (PROMOS) | `TestRONWaitingSourceBodies`: four paid activations, delay creation at fourth resolution, source choice, return/phasing/departure and native sacrifice. Existing `TestRONActivationHistory*` supplies the remaining activation-history, power, timing and copy contracts. |
+| Rocket Launcher (ATQ; also 3ED) | `TestRONWaitingSourceBodies`: payment failure, native targeted activation, captured delayed destruction, source choice, identity/phasing and clone execution. Existing activation-property and delayed-step tests retain restriction/target/damage evidence. |
+| Rakalite (ATQ) | `TestRONWaitingSourceBodies`: payment failure, native activation, owner-hand return, source choice and clone execution. Existing `TestRONFinitePrevention*`, including `RakaliteDelay`, retains actual prevention/target/timing evidence. |
+| Invalid RON | `TestRONWaitingSourceBodyInvalid`: tuple misuse, unbound trigger/host references and action arity rejection. Existing delayed/departure invalid declaration tests also pass. |
+
+Compilation and gameplay remain separate: 0 new full-card mappings or compiler
+unlocks; 4 accepted unique cards / 10 records gain source-reference evidence.
+Estimated and actual immediate gains match: 0 names / 0 records. The seven
+prevention cards still reject and do not gain full gameplay mappings.
+
+### Validation and measurements
+
+Focused tests ran with `-count=1`, including waiting/delayed/departure,
+activation-history/property and finite-prevention regressions. Required checks
+and engine-skill whole-repository short checks passed on the final files:
+
+- `go test ./pkg/mage/... -short -count=1`
+- `make test`
+- `go test ./... -short -count=1`
+- `make build`
+- `go vet ./...`
+- `make lint` (zero issues; automatic formatting reviewed)
+- `git diff --check` (worktree and staged slice)
+
+`go run ./cmd/loadcards -json` and `-inventory` both exit 1 for expected
+collection rejection. Final loader JSON and semantic inventory exactly match
+baseline: 1,962 compiled / 483 rejected records, 762 accepted / 224 rejected
+names; 72,952 occurrences / 8,556 signatures / 3,988 unknown-role occurrences.
+No accepted record is lost. Representative diagnostics remain unsupported
+`ChooseADamageSource` (11 names, including seven compared shields), static
+`BandsWithOthers` (five names), and color-action-list rejection for Magical Hack
+and Sleight of Mind. All 12 RON source hashes and the vocabulary loader snapshot
+match; no source change or vocabulary refresh is needed. No environmental or
+pre-existing blocker remains; previously recorded source defects stay separate.
+
+Changed files: `pkg/mage/waiting_delayed_source.go`, new engine
+`waiting_delayed_source_body_test.go`, new RON `waiting_source_body_test.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
+this ledger entry. Initial user edits remain outside staging. Runtime cutover,
+complete gameplay and deletion gates remain unmet. No Go cards, generator or DSL
+functions are removed; no unused-caller audit is claimed.
+
+Ranked next candidates to reassess:
+
+1. Typed damage-source/spell frames in waiting delayed abilities, including
+   capture/restoration and departure information before enumeration.
+2. Waiting replacement/prevention references and face-up command objects, then
+   complete source enumeration and shield continuity/property rechecks.
+3. Parameterized bands with others across the eight compared contexts.
+
+Stop after this slice. The commit hash is reported in the final response.
