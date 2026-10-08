@@ -52,7 +52,7 @@ func (e *selectedSourceRedirectInstallation) Apply(ctx *EffectContext) error {
 	if !ok || ctx.Game.GetPlayer(player) == nil {
 		return nil
 	}
-	information := ctx.Game.damageReferenceInformation(source)
+	information := ctx.Game.damageSourceRuleInformation(source)
 	if !information.SameObject(source) {
 		information = source
 	}
@@ -79,7 +79,7 @@ func (r *selectedSourceRedirectReplacement) Matches(action Action, reader GameRe
 	}
 	g := reader.(*Game)
 	subject := g.FindPermanent(r.subject.id)
-	information := g.damageReferenceInformation(damage.DamageSource())
+	information := g.damageSourceRuleInformation(damage.DamageSource())
 	if !information.SameObject(damage.DamageSource()) {
 		information = damage.DamageSource()
 	}

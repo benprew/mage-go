@@ -106,7 +106,7 @@ func extractBasePlayer(p Player) *BasePlayer {
 		bp.handPublic = state.handIsPublic()
 	}
 	if history, ok := p.(interface {
-		handDepartures() map[uuid.UUID]DamageSource
+		handDepartures() map[uuid.UUID]handDeparture
 	}); ok {
 		bp.departedHandSources = history.handDepartures()
 	}

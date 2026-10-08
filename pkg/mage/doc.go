@@ -126,6 +126,12 @@
 // Copies keep the reference without extending the original reveal.
 // A selected hand source cannot follow a later spell or permanent.
 // Waiting card frames and hand targets need separate reference contracts.
+// [Game.CaptureHandDamageSourceFor] and [Game.StackHandSourcesFor] add the
+// hand player's private inspection information. Other viewers keep public facts.
+// [ChooseDamageSourceFromInspectableStackHandReferences] uses the choosing player.
+// Inspection does not reveal a card. Departure saves separate public visibility;
+// returned visits cannot inherit it. Damage rechecks use actual current or
+// departure facts, independent of the information shown to a player.
 //
 // [Game.CaptureGraveyardDamageSource] reads one live graveyard visit.
 // [DamageSource.GraveyardVisit] keeps returned cards separate from saved sources.

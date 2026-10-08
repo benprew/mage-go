@@ -180,7 +180,7 @@ type BasePlayer struct {
 	handVisits               map[uuid.UUID]uuid.UUID
 	handPublic               bool
 	handStack                *Stack
-	departedHandSources      map[uuid.UUID]DamageSource
+	departedHandSources      map[uuid.UUID]handDeparture
 	graveyard                []Card
 	graveyardVisits          map[uuid.UUID]uuid.UUID
 	departedGraveyardSources map[uuid.UUID]DamageSource

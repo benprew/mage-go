@@ -7355,3 +7355,27 @@ resolution. Copies retain cost references without extending the original reveal.
 and permanents keep separate identities. Invalid declarations and premature
 reads reject. Empty choices clear the result. General production source choice
 remains unsupported until complete enumeration and its opaque-reference audit.
+
+
+## RON choices with private hand inspection
+
+Validated `ChooseADamageSource(filter)` plans also have a private
+`chosenDamageSourcePlan.inspectableStackHandChoice(instanceBindings)` lowering.
+It calls `mage.ChooseDamageSourceFromInspectableStackHandReferences` with `You`
+and the instance's own binding. The choosing player can inspect their referenced
+hand cards; other players receive public information only. Filters use that
+player's information at resolution. Inspection does not reveal the hand.
+
+`mage.Game.CaptureHandDamageSourceFor(viewer, visit)` reads a live visit and
+`mage.Game.StackHandSourcesFor(viewer)` reads the existing stack-reference
+category. Departures retain private facts and separate public visibility.
+Queries and clones preserve exact visits and separate mutable snapshots.
+The original public query and choice APIs remain available.
+
+The chosen-source future prevention and native selected-source redirection
+recheck actual hand characteristics through the engine's rules reader.
+A private matching choice can therefore install a shield without revealing the
+card. Returned visits, later spells and permanents remain separate objects.
+Invalid declarations, missing bindings and reads before producers still reject;
+empty choices clear the binding. Complete production `ChooseADamageSource`
+remains unsupported pending the remaining reference categories and aggregation.

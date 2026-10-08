@@ -21,6 +21,16 @@ func damageSourceFromHandCard(card Card, visit uuid.UUID, public bool) DamageSou
 // CaptureHandDamageSource reads one live hand visit.
 // A physical card ID cannot select a visit.
 func (g *Game) CaptureHandDamageSource(visit uuid.UUID) DamageSource {
+	return g.CaptureHandDamageSourceFor(uuid.Nil, visit)
+}
+
+// CaptureHandDamageSourceFor includes the hand player's inspection information.
+// Other viewers receive only public facts. This query does not reveal a card.
+func (g *Game) CaptureHandDamageSourceFor(viewer, visit uuid.UUID) DamageSource {
+	return g.captureHandDamageSource(viewer, visit, false)
+}
+
+func (g *Game) captureHandDamageSource(viewer, visit uuid.UUID, rules bool) DamageSource {
 	if visit == uuid.Nil {
 		return DamageSource{}
 	}
@@ -31,11 +41,16 @@ func (g *Game) CaptureHandDamageSource(visit uuid.UUID) DamageSource {
 		}
 		for _, card := range player.Hand() {
 			if visitor.handVisit(card.ID()) == visit {
-				return damageSourceFromHandCard(card, visit, g.IsHandRevealed(player.PlayerID()) || g.stack.handVisitRevealed(card.ID(), visit))
+				return damageSourceFromHandCard(card, visit, rules || viewer == player.PlayerID() || g.IsHandRevealed(player.PlayerID()) || g.stack.handVisitRevealed(card.ID(), visit))
 			}
 		}
 	}
 	return DamageSource{}
+}
+
+type handDeparture struct {
+	source DamageSource
+	public bool
 }
 
 func (p *BasePlayer) saveHandDeparture(card Card) {
@@ -45,28 +60,38 @@ func (p *BasePlayer) saveHandDeparture(card Card) {
 	}
 	p.departedHandSources = maps.Clone(p.departedHandSources)
 	if p.departedHandSources == nil {
-		p.departedHandSources = make(map[uuid.UUID]DamageSource)
+		p.departedHandSources = make(map[uuid.UUID]handDeparture)
 	}
-	p.departedHandSources[visit] = damageSourceFromHandCard(card, visit, p.handPublic || p.handStack.handVisitRevealed(card.ID(), visit))
+	p.departedHandSources[visit] = handDeparture{
+		source: damageSourceFromHandCard(card, visit, true),
+		public: p.handPublic || p.handStack.handVisitRevealed(card.ID(), visit),
+	}
 }
 
-func (p *BasePlayer) handDepartures() map[uuid.UUID]DamageSource {
+func (p *BasePlayer) handDepartures() map[uuid.UUID]handDeparture {
 	return p.departedHandSources
 }
 
 func (g *Game) handVisitInformation(id, visit uuid.UUID) DamageSource {
+	return g.handVisitInformationFor(uuid.Nil, id, visit, false)
+}
+
+func (g *Game) handVisitInformationFor(viewer, id, visit uuid.UUID, rules bool) DamageSource {
 	if id == uuid.Nil || visit == uuid.Nil {
 		return DamageSource{}
 	}
-	if source := g.CaptureHandDamageSource(visit); source.ID() == id {
+	if source := g.captureHandDamageSource(viewer, visit, rules); source.ID() == id {
 		return source
 	}
 	for _, player := range g.players {
 		if history, ok := player.(interface {
-			handDepartures() map[uuid.UUID]DamageSource
+			handDepartures() map[uuid.UUID]handDeparture
 		}); ok {
-			if source, found := history.handDepartures()[visit]; found && source.ID() == id {
-				return cloneDamageSource(source)
+			if departure, found := history.handDepartures()[visit]; found && departure.source.ID() == id {
+				if rules || viewer == player.PlayerID() || departure.public {
+					return cloneDamageSource(departure.source)
+				}
+				return hiddenHandSource(departure.source)
 			}
 		}
 	}
@@ -77,12 +102,22 @@ func (g *Game) handReferenceInformation(saved DamageSource) DamageSource {
 	if source := g.handVisitInformation(saved.ID(), saved.HandVisit()); source.SameObject(saved) {
 		return source
 	}
-	return cloneDamageSource(saved)
+	return hiddenHandSource(saved)
+}
+
+func hiddenHandSource(source DamageSource) DamageSource {
+	return DamageSource{id: source.ID(), handVisit: source.HandVisit(), owner: source.Owner()}
 }
 
 // StackHandSources reads exact hand visits in saved card bindings.
 // Departure information alone cannot make a source available for a choice.
 func (g *Game) StackHandSources() []DamageSource {
+	return g.StackHandSourcesFor(uuid.Nil)
+}
+
+// StackHandSourcesFor reads references with the viewer's hand inspection rights.
+// An unreferenced card cannot become a choice through inspection alone.
+func (g *Game) StackHandSourcesFor(viewer uuid.UUID) []DamageSource {
 	var sources []DamageSource
 	appendSource := func(source DamageSource) {
 		if source.hasExactIdentity() && !slices.ContainsFunc(sources, source.SameObject) {
@@ -115,7 +150,7 @@ func (g *Game) StackHandSources() []DamageSource {
 		})
 		for _, identity := range identities {
 			if identity.zone == core.ZoneHand {
-				appendSource(g.handVisitInformation(identity.id, identity.visit))
+				appendSource(g.handVisitInformationFor(viewer, identity.id, identity.visit, false))
 			}
 		}
 	}
@@ -185,4 +220,19 @@ func (s *Stack) handReferenceObjects() []*StackObject {
 		return s.objects
 	}
 	return slices.Concat(s.objects, s.resolvingHandObjects)
+}
+
+// ChooseDamageSourceFromInspectableStackHandReferences uses the choosing player's information.
+// Public queries and other source categories keep their separate contracts.
+func ChooseDamageSourceFromInspectableStackHandReferences(player PlayerRef, filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect {
+	return &damageSourceChoice{player: player, filter: filter, binding: binding, stackHandReferences: true, inspectHandSources: true}
+}
+
+func (g *Game) damageSourceRuleInformation(saved DamageSource) DamageSource {
+	if saved.hasExactIdentity() && saved.HandVisit() != uuid.Nil {
+		if source := g.handVisitInformationFor(uuid.Nil, saved.ID(), saved.HandVisit(), true); source.SameObject(saved) {
+			return source
+		}
+	}
+	return g.damageReferenceInformation(saved)
 }

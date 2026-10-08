@@ -38,6 +38,7 @@ type damageSourceChoice struct {
 	stackExileBindings            bool
 	stackGraveyardReferences      bool
 	stackHandReferences           bool
+	inspectHandSources            bool
 	stackDamageBindings           bool
 	stackSpellBindings            bool
 	waitingDelayedBindings        bool
@@ -104,7 +105,11 @@ func (e *damageSourceChoice) Apply(ctx *EffectContext) error {
 		candidates = append(candidates, ctx.Game.StackBoundPermanentSources()...)
 	}
 	if e.stackHandReferences {
-		candidates = append(candidates, ctx.Game.StackHandSources()...)
+		if e.inspectHandSources {
+			candidates = append(candidates, ctx.Game.StackHandSourcesFor(playerID)...)
+		} else {
+			candidates = append(candidates, ctx.Game.StackHandSources()...)
+		}
 	}
 	if e.stackGraveyardReferences {
 		candidates = append(candidates, ctx.Game.StackGraveyardSources()...)

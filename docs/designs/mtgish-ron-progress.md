@@ -8,14 +8,13 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `EXACT-PRECAST-HAND-STACK-BINDINGS` adds exact hand visits in stack
-payment/event bindings and reveal-cost references, with public reveal lifetime,
-hidden information, departure facts and clone isolation. Seven protection names
-have RON subrule evidence in this context; no complete-card compilation gain is
-claimed. Hand targets, waiting and delayed card frames, remaining precast contexts
-and opaque references remain before complete damage-source enumeration. Token
-quality grants remain unsupported. Titania's Song still needs per-member base
-values and sticky duration.
+unfinished. `PRIVATE-STACK-HAND-SOURCE-INSPECTION` adds viewer-specific choices
+for exact stack hand references, private departure facts and independent shield
+rechecks. Public queries retain hidden information. Seven protection names gain
+RON subrule evidence; no complete-card compilation gain is claimed. Hand targets,
+waiting and delayed card frames, remaining precast contexts and opaque references
+remain before complete damage-source enumeration. Token quality grants remain
+unsupported. Titania's Song still needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -43426,3 +43425,148 @@ Ranked next candidates:
 Named-token quality lowering for Master of the Hunt remains behind useful shared
 prerequisites. Complete collection gameplay/loading, runtime cutover, Go-card
 removal and unused DSL cleanup remain unfinished. Do not begin another slice.
+
+
+## 2026-10-08: private inspection of exact stack hand sources
+
+Status: completed implementation slice `PRIVATE-STACK-HAND-SOURCE-INSPECTION`.
+This run stops after one slice. The initial `.gitignore`, execution design and
+ledger reorganization, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's summary/append delta is included in the ledger commit.
+
+### Baseline, candidate comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Baseline strict loader returned expected exit 1: **1,978 compiled / 467 rejected
+records; 773 accepted / 213 rejected unique names**, 2,445 records / 986 names.
+This is collection rejection, not a build or test failure. Complete RON records
+and nested forms were read for the following candidates. All 31 protection
+records, including identical reprints, were inspected; reprints count once.
+Targeted vocabulary inspection confirmed `ChooseADamageSource` tuple arity 1.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: private stack hand-source inspection, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0 immediate unlocks**; shared prerequisite for 7 names / 31 records. | Public exact stack references are complete; private CR 402.3 information is missing. Remaining waiting/delayed precast contexts, hand targets and opaque-reference audit block full aggregation. This slice supplies choosing-player information and independent mechanical rechecks for the seven protection declarations. | Small: shared query/departure/choice services, one scoped lowering and native/RON contract tests. |
+| Named-token quality grant | Master of the Hunt. **1 plausible unlock**. | Its complete record nests `NamedTokenWithPT` and `BandsWithOthers(And([IsCardtype(Creature), IsNamed(NamedCard("Wolves of the Hunt"))]))`. Static qualities exist; token lowering and copiable/runtime grant retention need evidence. Enables token combat-quality grants. | Medium: token definition/grant adapter plus formation, assignment and copy tests. Lower shared benefit than the dependency-ready top candidate. |
+| Text-word choices and substitution | Magical Hack; Sleight of Mind. **2 plausible unlocks**. | Complete modal records have separate spell and permanent targets, paired basic-land/color-word choices and text-variable changes. Needs shared text representation, copy/layer isolation and both target contexts. | Large: multiple engine contracts and adapters; too broad for this bounded run. |
+
+Candidate #1 is dependency-ready and gives a concrete seven-card downstream
+benefit. The contract, reuse boundary and acceptance cases were stated before
+editing. The reusable engine workflow uses the `implement-engine` skill; no
+removed card/set skill, agent delegation or Go-card requirements were used.
+
+### Exact signatures, contexts and engine boundary
+
+- `Game.CaptureHandDamageSourceFor(viewer, visit uuid.UUID) DamageSource` reads
+  a live exact visit. The hand player receives current private characteristics;
+  other, nil and unknown viewers receive public information only. A physical ID,
+  nil or departed visit cannot select a live card.
+- `Game.StackHandSourcesFor(viewer uuid.UUID) []DamageSource` uses the existing
+  payment card/card-set, reveal-cost and nested event-card references, sorting,
+  exact visit checks, copy deduplication and active resolution frames. Inspection
+  alone cannot add a hand card to this category. Existing public methods and
+  `ChooseDamageSourceFromStackHandReferences` retain their APIs and visibility.
+- `ChooseDamageSourceFromInspectableStackHandReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  resolves the choosing player before enumeration/filtering. The effect
+  controller cannot replace that player. Validation rejects invalid player,
+  filter and binding declarations and premature reads. Empty/absent choices
+  clear their result. Options and saved binding data stay separate.
+- `chosenDamageSourcePlan.inspectableStackHandChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated RON `ChooseADamageSource(filter)` with
+  `You` and the factory instance's own binding. The existing exact-source
+  future-prevention lowering consumes it. No new source spelling or general
+  production acceptance is introduced.
+- `handDeparture` stores a complete immutable snapshot plus visibility at that
+  visit's departure. The former hand player can inspect departure facts; public
+  queries expose only facts public at departure. Later revelation, phasing of
+  revelation, return and changes to the returned card cannot rewrite them.
+  Player clone/extraction contracts retain this map with copy-on-write updates;
+  query snapshots and live cards keep separate mutable state.
+- Internal `Game.damageSourceRuleInformation(DamageSource) DamageSource` reads
+  actual current/departure hand characteristics for exact-source prevention and
+  selected-source redirection installation/rechecks. Other categories reuse
+  their existing information reader. Public source snapshots stay hidden.
+  Property changes suspend matching without consumption; exact departure facts
+  and simultaneous matching packets use the existing replacement pipeline.
+
+RON owns spelling, filter/scope validation and instance lowering. Mage owns
+identity, viewer information, snapshot lifetime, choices and mechanical reads.
+Reuse includes typed visits, definition validation, decisions, public/reveal
+visibility, payment rollback, exact prevention/redirection, damage batches,
+replacement order, consumption, cleanup, stack copying and clone services.
+Rules evidence: local CR 400.2/400.7, 402.3, 608.2h, 609.7a–b, 615.9 and 701.20a.
+No public visibility rule is added by inspection. There is no card-name branch,
+Go fallback, global last-action slot, skipped rule or partial registry.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, new RON tests failed on missing
+`inspectableStackHandChoice`; native tests failed on missing viewer-aware
+capture/query and choice APIs. These are expected new-signature failures.
+The same assertions pass after implementation. Native fixture signature errors
+were corrected without weakening the contract assertions.
+
+| Test | Card mapping / evidence |
+| --- | --- |
+| `TestHandSourceInspectionInformation` | Live own-hand inspection; public/opponent/nil/unknown readers; physical/nil/departed visit rejection; mutable query isolation; private departure, return and live/departed wrapped-player clone isolation; final-reference lifetime. |
+| `TestHandSourceInspectionChoiceAndRechecks` | Owner versus opponent filtering, chooser/binding isolation, current color rechecks without consumption, exact departure/return, cloned shield consumption, simultaneous prevention and empty-result clearing. |
+| `TestHandSourceInspectionVisibilityAndInvalid` | Real public-hand rule, phasing, private inspection through phase changes, public departure boundary; invalid player/filter/binding and premature reads. |
+| `TestHandSourceInspectionPlayerAndRedirect` | Bound choosing player differs from controller; private selected-source redirection, positive damage, consumption, source information and clone isolation. |
+| `TestRONHandSourceInspectionProtection` | All six named Circles and Greater Realm: actual RON choice/payment/future-prevention declarations, real draw-event hand references, failed payment, resolution timing, live/departed/returned states, separate stack-copy choices, game clones, public-query secrecy and shield consumption after final referring stack departure. Full records continue to reject incomplete enumeration. |
+| `TestRONHandSourceInspectionInvalid` | Invalid arity, colorless color, empty composition, incompatible source reference and absent per-instance binding. |
+| Existing `TestHandDamageSource*`, `TestRONHandDamageSource*`, `TestSelectedSourceRedirect*`, `TestClone*` | Public queries/choices, invalid exact references, reveal payments and rollback, nested frames, replacement order, batching, cleanup, spell boundaries, retarget/copy data isolation and unchanged clone allocation budget remain covered. |
+
+Estimated and actual gain: **+0 accepted names / +0 compiled records**.
+Seven names gain private-source context evidence, not complete-card mappings.
+Complete `ChooseADamageSource` still rejects because other required categories
+remain. No accepted record is lost and no estimated unlock was overstated.
+
+### Verification and collection status
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONHandSourceInspection -count=1`:
+  PASS. Combined new/existing RON hand-source tests: PASS.
+- Native `go test ./pkg/mage -run
+  'TestHandSourceInspection|TestHandDamageSource|TestSelectedSourceRedirect|TestClone'
+  -count=1`: PASS, including the unchanged allocation budget.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS. Additional skill check `go test ./... -short -count=1`:
+  PASS.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the new native
+  test was reviewed. No unrelated code change remains. Focused native/RON
+  tests, build and vet were rerun after lint and pass.
+- `git diff --check`: PASS, including final documentation and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,978 compiled /
+  467 rejected records; 773 accepted / 213 rejected unique names**. The full
+  report equals the baseline. First issue remains Animate Dead:
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  The loader installs no partial registry.
+
+All 12 source hashes match the vocabulary snapshot. No RON source or vocabulary
+refresh is needed. No source defect or environmental blocker was found. The
+missing contract was private engine information and its lowering, not a source
+transcription error. Full collection gameplay/loading, runtime wiring, Go-card
+removal and unused DSL cleanup remain unfinished. No removal gate is met;
+current callers, card definitions and generation tooling remain.
+
+Changed files: engine hand-source storage/queries/choice and native tests;
+player clone/extraction, exact-source prevention and selected-source redirection;
+RON chosen-source lowering and tests; `doc.go`, API/rules-contract docs and this
+ledger. Only this slice is committed; user changes remain in the working tree.
+
+Ranked next candidates:
+
+1. Exact precast exile/hand references in waiting prevention/redirection and
+   delayed card/card-set frames: shared prerequisite for the same seven names,
+   zero immediate unlocks; retain exact visits, viewer/public/departure facts,
+   capture lifetime, consumption and clone isolation.
+2. Remaining precast target contexts and opaque-reference audit: confirm actual
+   producers and public/hidden zone contracts before source aggregation; same
+   seven downstream names, zero immediate unlocks as a prerequisite.
+3. Complete CR 609.7a aggregation after required contexts: seven estimated
+   full-card unlocks, subject to the full-record and opaque-reference audit.
+
+Master of the Hunt's token quality remains behind useful shared prerequisites.
+Do not begin another slice in this run. Commit hash is reported in the final
+response.

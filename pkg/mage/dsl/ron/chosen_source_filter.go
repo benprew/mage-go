@@ -143,3 +143,7 @@ func (p *chosenDamageSourcePlan) stackGraveyardChoice(bindings instanceBindings)
 func (p *chosenDamageSourcePlan) stackHandChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromStackHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
+
+func (p *chosenDamageSourcePlan) inspectableStackHandChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromInspectableStackHandReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

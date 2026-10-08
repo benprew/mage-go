@@ -9440,8 +9440,8 @@ of their owner.
 
 `BasePlayer.RemoveFromHand` and `SetHand` retain departure facts by visit.
 The layer service copies current public-hand visibility to the player's zone
-state before state-trigger checks. Departure saves only the facts public then.
-A hidden departure cannot expose characteristics through later public visibility.
+state before state-trigger checks. Departure retains current facts and separate public visibility.
+Public queries expose only the facts public then. A hidden departure cannot expose characteristics through later public visibility.
 The whole-hand setter preserves visits of retained cards, including arrangement
 changes; removed cards save departure facts. A later addition creates a fresh
 visit. Queries copy mutable snapshots and preserve physical card IDs. Game clones
@@ -9487,3 +9487,56 @@ and `Invalid`. The seven protection cards gain source-choice/payment/prevention
 subrule evidence with real reveal payments and RON Revelation. These mappings
 are not complete-card acceptance. The unchanged clone allocation budget passes
 with separate capacity-limited flat and modal target storage segments.
+
+
+## Private inspection of exact stack hand sources
+
+`Game.CaptureHandDamageSourceFor(viewer, visit uuid.UUID) DamageSource` reads
+one live visit with the hand player's CR 402.3 inspection information.
+`Game.StackHandSourcesFor(viewer uuid.UUID) []DamageSource` applies the same
+information boundary to the existing exact payment/reveal/event references.
+The viewer must match the player whose hand contains the card; other, absent,
+nil and unknown viewers receive public information only. Inspection alone does
+not add an unreferenced card to the legal source category (CR 609.7a).
+The existing public queries and public-only choice API keep their signatures
+and information contract. These APIs do not reveal a card or grant casting rights.
+
+Departure saves a complete immutable card snapshot and the public visibility
+at that exact visit. The former hand player can read its departure facts;
+public readers see only facts public at departure. Later hand visibility,
+returned cards and subsequent color changes cannot rewrite the former visit.
+Snapshots preserve physical IDs, queries copy mutable data, and map writes use
+copy-on-write. Wrapped-player search clones retain the departure records and
+separate live card state. Reference availability still ends at final referring
+stack departure, including copies and nested resolution frames.
+
+`ChooseDamageSourceFromInspectableStackHandReferences(player PlayerRef,
+filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect` uses
+the resolved choosing player's information before filtering. The effect's
+controller does not substitute for that player. Declaration validation checks
+the player, filter, binding and producer order; an empty or absent choice clears
+its result. Options and saved bindings keep separate mutable snapshots.
+
+The internal `damageSourceRuleInformation` service reads actual hand
+characteristics for exact-source prevention and selected-source redirection at
+installation and damage recheck. Other categories reuse their existing reader.
+A hidden source's public snapshot cannot make an installed matching shield stop
+working. Current property changes still suspend matching without consumption;
+departure uses the former visit's facts. Returned objects cannot consume the
+old rule. This separates player information from CR 609.7b/615.9 mechanics.
+The existing damage batch, replacement ordering, consumption and cleanup apply.
+
+RON `chosenDamageSourcePlan.inspectableStackHandChoice(instanceBindings)`
+lowers validated `ChooseADamageSource(filter)` to this typed choice with `You`
+and a separate instance binding. The existing future-prevention lowering
+consumes the result. General production source choice remains rejected until
+all required categories and the opaque-reference audit are complete.
+
+Evidence: native `TestHandSourceInspectionInformation`, `ChoiceAndRechecks`,
+`VisibilityAndInvalid` and `PlayerAndRedirect`; RON
+`TestRONHandSourceInspectionProtection` and `Invalid`. Seven protection names
+supply their actual RON choice, activation-payment and shield declarations.
+The tests establish this context, not complete-card acceptance. Existing hand
+source, payment rollback, reveal lifetime, nested-resolution, replacement-order
+and clone budget tests retain their separate contracts. Rules: CR 400.2/400.7,
+402.3, 608.2h, 609.7a–b, 615.9 and 701.20a.

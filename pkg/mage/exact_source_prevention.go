@@ -36,7 +36,7 @@ func (e *exactSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 	if !ok || ctx.Game.GetPlayer(player) == nil {
 		return nil
 	}
-	information := ctx.Game.damageReferenceInformation(source)
+	information := ctx.Game.damageSourceRuleInformation(source)
 	if !information.SameObject(source) {
 		information = source
 	}
@@ -55,7 +55,7 @@ func (r *sourcePreventionReplacement) matchesExactSource(source DamageSource, g 
 	if !r.exactSource.SameObject(source) && !r.continuedSource.SameObject(source) {
 		return false
 	}
-	information := g.damageReferenceInformation(source)
+	information := g.damageSourceRuleInformation(source)
 	if !information.SameObject(source) {
 		information = source
 	}
