@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `SELECTED-SOURCE-PERMANENT-REDIRECTION` adds exact chosen-source damage
-redirection from a permanent to a saved player, permanent-spell continuity and
-waiting permanent/spell references. New subrule evidence covers Jade Monolith
-and seven protection names, with zero full-card unlocks. Remaining replacement
-references, face-up command objects and complete source enumeration remain gaps.
+unfinished. `WAITING-COUNTER-PLACEMENT-EXCLUSIONS` adds exact source-exclusion
+references in active entry-counter replacements, shared typed source choice and
+RON lowering. New subrule evidence covers seven protection names, with zero
+full-card unlocks. Remaining legacy replacement references, face-up command
+objects and complete source enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -40996,3 +40996,138 @@ Ranked next candidates:
    opposite redirection adapter, including all declaration/target contracts.
 
 The commit hash is reported in the final response. No second slice starts.
+
+## 2026-10-07: waiting entry-counter source-exclusion references
+
+Status: completed implementation slice `WAITING-COUNTER-PLACEMENT-EXCLUSIONS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and the condensed ledger, plus untracked `mtgish-ron-completed.md`, are
+preserved. Only this run's summary replacement and appended entry are staged
+from the ledger; the user's earlier ledger reorganization remains unstaged.
+
+### Fresh evidence, comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The strict
+loader exited 1 with 1,965 compiled / 480 rejected records and 765 accepted /
+221 rejected unique names. This was expected collection rejection, not a build
+or test failure. The design, engine reference, status/latest ledger, targeted
+`ChooseADamageSource/1` vocabulary, relevant API/rules contracts and selected
+engine/compiler code were read. Complete RON records were inspected for the
+seven protection names (31 records), the eight bands names and Animate Artifact.
+The implement-engine skill supplied the engine contract workflow. No Go card
+definitions were used as requirements; no delegation or removed skills were used.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, explicit entry-counter source exclusions, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0** full-card unlocks. | Completes one waiting replacement category for all seven source-choice consumers. General source enumeration, remaining legacy referring replacements and face-up command objects still block full cards. Jade Monolith can reuse the category later but has no new gameplay mapping here. | Small: exact registration lifetime, shared collector/choice adapter and native/RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8** potential family unlocks. | Parameterized combat formation and assignment must precede live/token grants and selective removal; complete nested records require all of these. | Large; a full family exceeds this bounded slice. |
+| Conditional host animation | Animate Artifact: **1** potential unlock, six records. | Conditional type/base-P/T effect, host mana value and dependency/self-condition behavior. Reusable animation support but only one immediate name established. | Medium. |
+
+Candidate #1 is dependency-ready with concrete seven-card downstream value.
+Its explicit source-exclusion context is a complete bounded prerequisite; the
+broader legacy-replacement audit is not claimed complete. Contract, reuse boundary
+and acceptance cases were stated before editing.
+
+### Exact shapes, dependencies and engine reuse
+
+- `Game.WaitingCounterPlacementPermanentSources() []DamageSource` supplies the
+  exact source explicitly excluded by an active
+  `etbAdditionalCountersReplacement` with `excludeSelf=true`. Generic filter
+  members, registrations with `excludeSelf=false` and counter doublers supply
+  no named references. Rule provenance alone does not fabricate a reference.
+- Existing `AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType,
+  extra int, filter PermanentFilter, excludeSelf bool)` keeps its signature and
+  captures the live source incarnation. `IsActive`, `Matches`, `Replace` and
+  existing entry-counter synthesis agree on that incarnation. Replace rechecks
+  applicability. Phasing/departure/absent registration stops the rule; a phase
+  cycle restores it, and a returned card requires a new registration. Cleanup
+  does not expire the battlefield-duration rule.
+- This direct explicit-registration service preserves its existing lifetime
+  ownership. It is not a typed static ability and does not gain an ability-removal
+  contract; registration owners still manage removal. No counter-doubler behavior
+  changes. The shared counter pipeline retains entry timing, source exclusion,
+  filters, amounts, replacement order and simultaneous placement behavior.
+- `ChooseDamageSourceFromWaitingCounterPlacementReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  uses the shared pure filters, choices, binding validation and clearing.
+  `waitingReplacementPermanentSources` reads both replacement lists, rejects
+  invalid identities, deduplicates exact objects and copies current source data.
+  Existing game/replacement cloning keeps independent state.
+- RON `chosenDamageSourcePlan.waitingCounterPlacementChoice(instanceBindings)
+  mage.ResolvingEffect` lowers a validated `ChooseADamageSource(filter)` AST plan
+  with `You` and its own instance binding. Existing filter arity/type validation
+  and exact-source prevention consume the plan. Production general source choice
+  remains rejected until all categories can be composed; no partial registry,
+  Go fallback, card-name branch, global result slot or runtime panic is added.
+
+CR 400.7, 609.7a, 614.1c–d and 702.26b establish exact objects, referred source
+eligibility, entry replacement timing and phasing. Complete protection records
+contain only mana payment, source choice and the chosen-source shield; the source
+category is the remaining prerequisite under test, not a claim of full execution.
+No RON source changes or newly identified source defects occurred. Existing Nova
+Pentacle source-choice and other source defects remain outside this slice. No
+vocabulary refresh is needed because RON source files are unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON tests failed compilation on the missing query and plan adapter;
+native tests failed on the missing query/choice API. One fixture field was
+corrected from `ControllerID` to `Controller`. New direct Replace assertions
+then failed for phased, departed and returned sources before the applicability
+recheck was implemented. Assertions were retained.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingCounterPlacementReferences` | Exact live identity, phasing and phase cycle, departure/return with cleared LKI and deliberately retained stale registrations, re-registration, current control, isolated query snapshots, cleanup, direct Matches/Replace rechecks, entry-counter execution and clone independence. |
+| `TestWaitingCounterPlacementChoices` | Explicit exclusion versus general filters/doublers, invalid sources, duplicates across both replacement lists, color filters, independent bindings, nil binding rejection, source exclusion and entry-only matching. |
+| `TestRONWaitingCounterPlacementProtection` — six Circles and Greater Realm | Each complete real record supplies its actual choice and shield ASTs; synthetic native entry rule supplies this source category. Original/cloned gameplay proves filtered choice, damage prevention, one-use consumption, phased-source exclusion and stale binding clearing. Missing instance bindings fail definition validation. Full card declarations continue to reject general enumeration. |
+| `TestRONWaitingCounterPlacementInvalid` | Malformed choice arities, wrong filter/reference kinds, invalid color and empty conjunction rejection; consumer-before-producer rejection. |
+| Existing counter replacement, entry-counter and repository suites | Unchanged counter ordering/batch/filter contracts and accepted records remain covered by required full validation. |
+
+Compilation and gameplay coverage are separate. Estimated and actual full-card
+gains are **0 unique names / 0 records**. New subrule gameplay evidence covers
+**7 unique names**; there is no additional complete-card gameplay claim.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingCounterPlacement
+  -count=1` and native `go test ./pkg/mage -run TestWaitingCounterPlacement
+  -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Additional skill check `go test ./... -short -count=1`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes normalized the native test's
+  import groups only; reviewed. Post-lint focused native/RON tests: PASS.
+- `git diff --check`: PASS; repeated after ledger update and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. The entire
+  JSON report exactly matches the fresh baseline, including diagnostics and
+  rejected record identities. No partial registry is installed.
+- All 12 RON source hashes match the vocabulary snapshot.
+
+No required check failed, no accepted records were removed and no tests were
+weakened. There was no environment blocker. Compilation gains match the zero
+estimate; source enumeration still requires the remaining categories.
+
+Changed files: `pkg/mage/waiting_counter_placement.go` and native tests;
+`pkg/mage/dsl/ron/chosen_source_filter.go` and new RON tests;
+`pkg/mage/damage_source_choice.go`, `game_mutator.go`, `replacement.go`,
+`doc.go`; `docs/engine-rules-contracts.md`; this ledger's summary and new entry.
+No Go definitions, RON records, generators or obsolete DSL functions are removed:
+complete loading, runtime wiring and test migration gates have not been met.
+
+Ranked next candidates:
+
+1. Audit remaining legacy static replacement lifetimes and explicit referred
+   objects, then face-up command objects and complete source enumeration for the
+   seven protection names and Jade Monolith. Do not repeat the completed explicit
+   entry-counter source-exclusion category or enumerate general filter members.
+2. Parameterized bands with others as a bounded combat prerequisite for its
+   eight names, followed by grants and selective removal.
+3. Finite-amount creature-recipient redirection if it shares the remaining
+   references; otherwise conditional host animation for Animate Artifact.
+
+Complete collection gameplay/loading, runtime integration, Go-card removal and
+unused DSL cleanup remain unfinished. Commit hash is reported in the final reply.

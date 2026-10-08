@@ -8730,3 +8730,47 @@ fixture executes Jade Monolith's unchanged target and replacement AST with an
 explicit source list. Seven protection records supply actual choice/prevention
 ASTs for this producer. These are subrule evidence; all eight complete names
 remain rejected pending complete source enumeration. No full-card claim is added.
+
+### Waiting counter-placement references: explicit source exclusions
+
+`Game.WaitingCounterPlacementPermanentSources() []DamageSource` supplies only
+an `etbAdditionalCountersReplacement` source explicitly excluded by
+`excludeSelf=true`. A general counter filter or counter doubler does not name
+all its possible members and supplies no references through this category.
+CR 609.7a permits objects referred to by waiting replacements even when they
+cannot deal damage. The source need not match the entry filter.
+
+`AddETBAdditionalCounters` retains the live source incarnation at registration.
+`IsActive`, `Matches`, `Replace` and entry-counter synthesis use that identity.
+Departure, phasing or absent registration stops execution and enumeration;
+a phase cycle restores the same object, while a returned card needs a new
+registration. `Replace` rechecks applicability. Cleanup does not expire this
+battlefield-duration rule. This direct registration API retains its existing
+explicit-registration lifetime; it does not become a typed static ability or
+acquire an ability-removal contract. Static registration owners still manage
+registration removal. Counter amounts, entry timing, filters, source exclusion,
+affected-player ordering and counter batches use the existing pipeline.
+
+The shared collector reads both replacement lists, rejects invalid identities,
+deduplicates exact references and supplies isolated current-information snapshots.
+Clones retain separate registration state. General filters and rule provenance
+alone do not create referred objects.
+
+`ChooseDamageSourceFromWaitingCounterPlacementReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared choice,
+filter and binding services. The RON adapter
+`chosenDamageSourcePlan.waitingCounterPlacementChoice(instanceBindings)` lowers
+validated `ChooseADamageSource(filter)` with `You` and the instance's own binding.
+Missing bindings and reads before a producer fail definition validation. Empty
+or mismatched choices clear only that binding. General RON source enumeration
+remains rejected pending the remaining categories.
+
+Evidence: `TestWaitingCounterPlacementReferences` covers lifecycle, stale
+registrations, current control, entry execution, cleanup and clones.
+`TestWaitingCounterPlacementChoices` covers excluded/generic/invalid/duplicate
+references, filters, independent results, declaration validation and self/entry
+restrictions. `TestRONWaitingCounterPlacementProtection` executes the actual
+choice/prevention ASTs of the six Circles and Greater Realm with this category,
+including consumption, phasing, clearing and clones. These are subrule tests;
+none establishes complete source enumeration. `TestRONWaitingCounterPlacementInvalid`
+rejects malformed declarations and invalid producer order.

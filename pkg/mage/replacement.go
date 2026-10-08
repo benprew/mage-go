@@ -1244,6 +1244,7 @@ func (r *counterDoublerReplacement) Clone() ReplacementEffect {
 
 type etbAdditionalCountersReplacement struct {
 	replacementBase
+	incarnation uuid.UUID
 	counterType CounterType
 	extra       int
 	filter      PermanentFilter
@@ -1252,6 +1253,9 @@ type etbAdditionalCountersReplacement struct {
 }
 
 func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool {
+	if !r.IsActive(g) {
+		return false
+	}
 	act, ok := a.(*AddCountersAction)
 	if !ok || !act.OnEntry() {
 		return false
@@ -1273,13 +1277,17 @@ func (r *etbAdditionalCountersReplacement) Matches(a Action, g GameReader) bool 
 	return r.filter.Match(perm, game)
 }
 
-func (r *etbAdditionalCountersReplacement) Replace(a Action, _ *Game) Action {
+func (r *etbAdditionalCountersReplacement) Replace(a Action, g *Game) Action {
+	if !r.Matches(a, g) {
+		return a
+	}
 	act := a.(*AddCountersAction)
 	return act.WithAmount(act.Amount() + r.extra)
 }
 
 func (r *etbAdditionalCountersReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+	source := g.FindPermanent(r.sourceID)
+	return source != nil && r.incarnation != uuid.Nil && source.incarnationID == r.incarnation
 }
 
 func (r *etbAdditionalCountersReplacement) Clone() ReplacementEffect {

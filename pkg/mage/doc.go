@@ -56,6 +56,11 @@
 // inherit it. [PreventNextDamageFromExactSource] keeps exact-object behavior.
 // Both services require a typed source; source enumeration is separate.
 //
+// Use [Game.WaitingCounterPlacementPermanentSources] for explicit source
+// exclusions in active entry-counter replacements. General filters do not
+// supply references. A saved registration cannot follow a returned source.
+// [ChooseDamageSourceFromWaitingCounterPlacementReferences] uses this category only.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

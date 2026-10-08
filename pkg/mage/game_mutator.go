@@ -796,8 +796,13 @@ func (g *Game) AddCounterDoubler(sourceID uuid.UUID, ct CounterType, filter Perm
 // (e.g. "Each other Rogue creature you control enters with an additional
 // +1/+1 counter on it").
 func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extra int, filter PermanentFilter, excludeSelf bool) {
+	var incarnation uuid.UUID
+	if source := g.FindPermanent(sourceID); source != nil {
+		incarnation = source.incarnationID
+	}
 	g.effects.AddReplacement(&etbAdditionalCountersReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		incarnation:     incarnation,
 		counterType:     ct,
 		extra:           extra,
 		filter:          filter,
