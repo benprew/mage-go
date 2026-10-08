@@ -8,11 +8,11 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `WAITING-COUNTER-PLACEMENT-EXCLUSIONS` adds exact source-exclusion
-references in active entry-counter replacements, shared typed source choice and
-RON lowering. New subrule evidence covers seven protection names, with zero
-full-card unlocks. Remaining legacy replacement references, face-up command
-objects and complete source enumeration remain gaps.
+unfinished. `WAITING-LEGACY-CYCLE-REDIRECTION` adds exact live destinations in
+three legacy redirection registrations, identity checks and shared RON source
+choice. New subrule evidence covers seven protection names, with zero full-card
+unlocks. Other legacy replacement references, face-up command objects and
+complete source enumeration remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -41131,3 +41131,147 @@ Ranked next candidates:
 
 Complete collection gameplay/loading, runtime integration, Go-card removal and
 unused DSL cleanup remain unfinished. Commit hash is reported in the final reply.
+
+## 2026-10-07: waiting legacy cycle redirection destinations
+
+Status: completed implementation slice `WAITING-LEGACY-CYCLE-REDIRECTION`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's status change and appended entry are staged in this ledger.
+The implement-engine skill supplied the engine contract workflow. No delegation,
+removed skills, Go card requirements, production fallback or partial registry
+were used. The design, engine API and relevant rules contracts were read;
+`ChooseADamageSource/1`, `BandsWithOthers/1`, `AnyBandsWithOthers/0` and
+`SetPowerAndToughnessBoth/1` vocabulary entries were inspected selectively.
+Complete records were inspected for the seven protection names, Jade Monolith,
+Veteran Bodyguard, Martyrs of Korlis, Personal Incarnation, the eight bands names
+and Animate Artifact. Identical reprints count once.
+
+| Candidate | Distinct names / estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, legacy cycle redirection destinations, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith: **0** immediate full-card unlocks. | Adds exact references for three remaining legacy redirection registrations. Seven protection consumers and Jade Monolith can use this category when general enumeration is complete. Other legacy referring rules, temporary redirects and face-up command objects remain. Veteran Bodyguard and Martyrs already use typed RON redirection; their accepted implementations are retained. | Small: registration identity, shared collector, direct rechecks and native/RON tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8** potential family unlocks. | Formation and damage assignment precede live/token grants and selective removal. Complete nested forms require all these contracts; the family is too large for this run. | Large. |
+| Conditional host animation | Animate Artifact: **1** potential unlock, six records. | Conditional host type/base-P/T, host mana value and layer dependency/self-condition behavior. Reusable animation capability with one immediate name. | Medium. |
+
+Candidate #1 is a dependency-ready, bounded part of the ranked audit and has
+concrete multi-card downstream value. It reuses the existing RON choice adapter;
+there is no missing spelling adapter or reason to introduce a duplicate one.
+The missing engine contracts were exact legacy destinations and applicability
+rechecks. Selection, contract, reuse boundary and acceptance cases were stated
+before editing. The broader legacy replacement audit is not claimed complete.
+
+### Exact signatures, contexts and reuse
+
+- `BodyguardContinuous() ContinuousEffect`,
+  `PersonalIncarnationRedirect() ContinuousEffect` and
+  `Game.SetArtifactDamageRedirect(controllerID, permID uuid.UUID)` keep their
+  signatures and capture the live destination incarnation. Their respective
+  bodyguard/player/artifact replacement registrations use that identity in
+  `IsActive`, `Matches` and direct `Replace`. Wrong action kinds and inapplicable
+  damage return unchanged. Redirection preserves amount, combat status and source.
+- `Game.WaitingRedirectionPermanentSources() []DamageSource` now includes those
+  active legacy destinations alongside existing typed redirection references.
+  Departure and phasing exclude an inactive registration. A phase cycle keeps
+  identity; a returned permanent needs a new registration. Bodyguard also checks
+  its live untapped condition; the artifact installer retains its caller-owned
+  conditions. Generic filter members and provenance alone supply no references.
+- Legacy entries retain their existing explicit cycle ownership. Layer rebuilds
+  clear cycle entries; owners must register again. Retained manual entries do not
+  gain an ability-removal contract or become typed static abilities. Existing
+  ID-only internal test fixtures retain matching behavior and supply no exact
+  references. Personal Incarnation's legacy all-player-damage redirect remains
+  its existing engine operation, not a RON implementation of that card.
+- The shared `waitingReplacementPermanentSources` collector visits both lists,
+  rejects missing identities, deduplicates exact objects and supplies isolated
+  current-information snapshots. Existing replacement/game cloning stays in use.
+- `chosenDamageSourcePlan.waitingRedirectionChoice(instanceBindings)
+  mage.ResolvingEffect` lowers validated `ChooseADamageSource(filter)` through
+  `ChooseDamageSourceFromWaitingRedirectionReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`.
+  It uses `You` and the plan's per-instance binding. The existing adapter now
+  reaches this complete additional source category through the expanded engine
+  query. Filter validation, binding dominance/clearing and exact-source prevention
+  reuse their existing services. No new RON syntax or mutable global result is added.
+
+CR 400.7, 609.7a, 702.26b and 614.5/616.1 establish exact identity, referred
+objects, phasing and replacement boundaries. Existing damage services own source
+information, attribution, damage history, affected-player choices and simultaneous
+packets. Payment/rollback, target legality and LKI policy are not changed.
+No RON source changes or newly identified source-data defects occurred. Existing
+source defects remain outside this slice. All 12 source hashes match the
+vocabulary snapshot, so no refresh is needed.
+
+### Failing-first tests and card mapping
+
+New RON tests failed for all seven records because the legacy destination was
+absent from the query. Native assertions failed for missing references, stale
+returned objects, bodyguard's untapped lifetime and direct replacement rechecks.
+The corrected artifact-card and post-layer-registration fixtures still failed
+on the intended gaps before implementation. Later gameplay fixtures were corrected
+to run damage through replacement processing and to scope competing prevention
+exclusively to the player. Assertions were retained; no production rule was
+changed to accommodate a fixture.
+
+| Tests / cards | Evidence |
+| --- | --- |
+| `TestWaitingLegacyRedirectionReferences` | Three registration kinds across live, tap, phase, phase cycle, departure/return with cleared LKI, current control and cleanup. Deliberately retained stale rules, direct `IsActive`/`Matches`/`Replace`, exact snapshots and independent clones. |
+| `TestWaitingLegacyRedirectionChoices` | Duplicates across ordinary/cycle lists, invalid/missing identity, two independent bindings, color filtering and clearing, absent player/binding and consumer-before-producer rejection. |
+| `TestWaitingLegacyRedirectionDamageAndCycle` | Actual redirected damage and attribution, player/combat/action restrictions, persistent references after damage, cycle rebuild removal and new registration after return. |
+| `TestWaitingLegacyRedirectionReplacementOrder` | Both affected-player choices with simultaneous packets and player-only prevention; amount and persistent query lifetime. |
+| `TestRONWaitingLegacyRedirectionProtection` — six Circles and Greater Realm | Complete real records provide the unchanged choice/prevention ASTs. A synthetic legacy cycle destination is chosen through the existing RON plan, then damage is prevented in original/cloned games. One-use consumption, phasing exclusion, stale binding clearing, missing binding validation and strict full-card rejection. |
+| `TestRONWaitingLegacyRedirectionInvalid` | Choice arity/kind, color, empty filter, wrong reference kind and consumer dominance rejection. |
+| Existing `TestRONWaitingRedirectionReferences` — Veteran Bodyguard and Martyrs of Korlis | Accepted typed RON redirection retains its lifecycle and gameplay evidence; included in post-lint checks and full suites. |
+
+Estimated and actual compilation gains are **0 unique names / 0 records**.
+New subrule gameplay evidence covers **7 unique names**; no complete-card gameplay
+claim is added. Jade Monolith is a downstream consumer without a new mapping here.
+
+### Validation and measured result
+
+All required checks passed in fast-fail order:
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline strict loader exited 1 for unsupported records, not build/test failure.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingLegacyRedirection
+  -count=1` and native `go test ./pkg/mage -run TestWaitingLegacyRedirection
+  -count=1`: PASS after the expected failing-first assertions.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Additional skill verification `go test ./... -short -count=1`: PASS.
+- `make lint`: PASS, 0 issues. Automatic native import grouping reviewed;
+  post-lint focused native/RON and accepted typed RON redirection tests: PASS.
+- `git diff --check`: PASS, repeated after ledger update and staging.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,965 compiled /
+  480 rejected records; 765 accepted / 221 rejected unique names**. Its complete
+  JSON, including diagnostics and rejected identities, matches the fresh baseline.
+  The strict loader installs no partial registry. All 12 RON source hashes match.
+
+A progress message reported full-suite/lint completion too early after reading
+an old downstream log; it was corrected while validation was running. Final
+results above were established from the current processes' successful exits.
+No required check failed, no accepted record was removed and no environment
+blocker remains.
+
+Changed files: `pkg/mage/waiting_redirection.go`, `replacement.go`,
+`continuous_effects.go`, `game_mutator.go`, `doc.go`; new native tests;
+`pkg/mage/dsl/ron/chosen_source_filter.go` and new RON tests;
+`docs/engine-rules-contracts.md`; this ledger's status and appended entry.
+No Go card definitions, RON records, generators or obsolete DSL functions were
+removed because full collection loading, runtime wiring and test migration gates
+remain unmet.
+
+Ranked next candidates:
+
+1. Remaining explicit references and lifetimes in legacy replacements, starting
+   with temporary creature/attacker redirects, followed by referring draw/life
+   rules. Audit actual referred objects; do not enumerate generic filter members
+   or repeat the completed legacy cycle destination category. Then implement
+   face-up command objects and compose complete source enumeration for seven
+   protection names and Jade Monolith.
+2. Parameterized bands with others as a bounded formation/assignment prerequisite
+   for eight names, followed by grants and selective removal.
+3. Finite-amount creature-recipient-to-player redirection if shared references
+   justify it; otherwise conditional host animation for Animate Artifact.
+
+Complete collection gameplay/loading, runtime cutover, Go-card removal and unused
+DSL cleanup remain unfinished. The commit hash is reported in the final reply.

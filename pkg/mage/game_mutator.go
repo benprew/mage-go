@@ -647,6 +647,7 @@ func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 	g.effects.AddCycleReplacement(&artifactDamageRedirectReplacement{
 		controllerID:   controllerID,
 		redirectPermID: permID,
+		incarnation:    g.legacyPreventionSourceIncarnation(permID),
 	})
 }
 

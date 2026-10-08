@@ -1322,6 +1322,7 @@ func BodyguardContinuous() ContinuousEffect {
 			replacementBase: replacementBase{sourceID: sourceID},
 			controllerID:    src.ControllerID(),
 			bodyguardPermID: src.ID(),
+			incarnation:     src.incarnationID,
 		})
 		return nil
 	}, SourceUntapped)
@@ -1340,6 +1341,7 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 			replacementBase: replacementBase{sourceID: sourceID},
 			controllerID:    src.ControllerID(),
 			redirectPermID:  src.ID(),
+			incarnation:     src.incarnationID,
 		})
 		return nil
 	})

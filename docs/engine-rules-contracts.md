@@ -8774,3 +8774,48 @@ choice/prevention ASTs of the six Circles and Greater Realm with this category,
 including consumption, phasing, clearing and clones. These are subrule tests;
 none establishes complete source enumeration. `TestRONWaitingCounterPlacementInvalid`
 rejects malformed declarations and invalid producer order.
+
+
+### Waiting legacy cycle redirection destinations
+
+`Game.WaitingRedirectionPermanentSources() []DamageSource` also reads exact
+permanent destinations in `bodyguardReplacement`,
+`playerDamageRedirectReplacement` and `artifactDamageRedirectReplacement`.
+`BodyguardContinuous() ContinuousEffect`,
+`PersonalIncarnationRedirect() ContinuousEffect` and
+`Game.SetArtifactDamageRedirect(controllerID, permID uuid.UUID)` retain their
+signatures and save the live destination incarnation at registration.
+
+The query, `IsActive`, `Matches` and direct `Replace` agree on that identity.
+Phasing and departure stop the rule. A phase cycle restores the same object;
+a returned card needs a new registration. The bodyguard rule also requires its
+live destination to be untapped. The artifact installer does not impose that
+condition. General source filters and registration provenance do not add named
+references. Current source information and isolated snapshots use the shared
+collector, including exact deduplication across both replacement lists.
+
+These legacy registrations retain their explicit cycle ownership. Layer rebuilds
+clear cycle entries and owners must register them again. This change does not
+convert legacy continuous callbacks into typed static abilities or give retained
+manual registrations an ability-removal contract. Existing ID-only native test
+fixtures retain their matching behavior but cannot supply exact references.
+The legacy player redirect remains its existing engine operation; it is not an
+implementation of the Personal Incarnation RON declaration.
+
+RON `chosenDamageSourcePlan.waitingRedirectionChoice(instanceBindings)` reuses
+`ChooseDamageSourceFromWaitingRedirectionReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`. Validated
+`ChooseADamageSource(filter)` plans lower with `You` and a per-instance binding.
+Invalid filters, missing bindings and a consumer before its producer fail
+validation. Empty choices clear only their own binding. The existing exact-source
+prevention action consumes the chosen reference. General source enumeration
+continues to reject full protection declarations.
+
+CR 400.7, 609.7a and 702.26b establish the exact-object and phasing boundaries.
+Damage amount, combat status, source attribution, replacement choices and
+simultaneous packets retain the shared pipeline (CR 614.5, 616.1).
+Evidence: native `TestWaitingLegacyRedirectionReferences`, `Choices`,
+`DamageAndCycle` and `ReplacementOrder`; RON
+`TestRONWaitingLegacyRedirectionProtection` and `Invalid`. The seven protection
+names supply their complete real choice/shield ASTs for this source category.
+These are subrule tests, not full-card gameplay claims.

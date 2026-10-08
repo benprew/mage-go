@@ -2,7 +2,7 @@ package mage
 
 import "github.com/google/uuid"
 
-// WaitingRedirectionPermanentSources reads exact references in typed redirection rules.
+// WaitingRedirectionPermanentSources reads exact references in active redirection rules.
 // Other replacement references require separate contracts.
 func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 	return g.waitingReplacementPermanentSources(func(replacement ReplacementEffect) []capturedPermanent {
@@ -11,6 +11,14 @@ func (g *Game) WaitingRedirectionPermanentSources() []DamageSource {
 		}
 		if rule, ok := replacement.(*permanentDamageRedirectReplacement); ok {
 			return []capturedPermanent{rule.from, rule.to}
+		}
+		switch rule := replacement.(type) {
+		case *bodyguardReplacement:
+			return []capturedPermanent{{rule.bodyguardPermID, rule.incarnation}}
+		case *playerDamageRedirectReplacement:
+			return []capturedPermanent{{rule.redirectPermID, rule.incarnation}}
+		case *artifactDamageRedirectReplacement:
+			return []capturedPermanent{{rule.redirectPermID, rule.incarnation}}
 		}
 		rule, ok := replacement.(*staticDamageRedirectReplacement)
 		if !ok {
@@ -40,4 +48,12 @@ func (g *Game) WaitingRedirectionSpellSources() []DamageSource {
 		}
 		return []DamageSource{rule.source}
 	})
+}
+
+func legacyRedirectionDestination(g GameReader, id, incarnation uuid.UUID) *Permanent {
+	subject := g.FindPermanent(id)
+	if subject == nil || subject.PhasedOut || (incarnation != uuid.Nil && subject.incarnationID != incarnation) {
+		return nil
+	}
+	return subject
 }

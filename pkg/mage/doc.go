@@ -11,6 +11,9 @@
 // [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
 // [Game.WaitingRedirectionPermanentSources] reads live destinations of typed
 // static damage redirection. It uses the same subject check as damage execution.
+// Legacy cycle redirection also supplies its exact live destination.
+// Each registration keeps the destination incarnation. A returned card needs
+// a new registration. Cycle owners still control registration removal.
 // [ChooseDamageSourceFromWaitingRedirectionReferences] uses this category only.
 // Use [Game.WaitingPreventionSpellSources] for exact spell references in
 // active source shields. Live or retained spell data keeps separate casts apart.
