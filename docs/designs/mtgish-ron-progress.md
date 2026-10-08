@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **776 accepted / 210 rejected unique card
-names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total).
+The latest recorded inventory reports **777 accepted / 209 rejected unique card
+names** (986 total), and **1,982 compiled / 463 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-REGENERATION` retains explicit typed regeneration subjects
-in waiting delayed source queries, with exact identity and pure enumeration.
-No new card compiles; seven protection subrules gain delayed-regeneration evidence.
+`FIGHT-TYPED-OPERANDS` lowers typed Fight actions and retains explicit source
+operands in waiting delayed queries. Arena gains complete-record gameplay
+evidence; seven protection subrules gain delayed-Fight source-choice evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -50258,3 +50258,138 @@ Ranked next candidates:
    complete general aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-REGENERATION`.
+
+## 2026-10-08: typed fight actions and waiting delayed operands
+
+Status: completed implementation slice `FIGHT-TYPED-OPERANDS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, and untracked `mtgish-ron-completed.md`, are preserved.
+The commit stages only this run's summary replacement and appended entry in the
+ledger, without staging the user's move of earlier entries into the archive.
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The strict loader exited 1 for unsupported records, not a build failure:
+1,981 compiled / 464 rejected records; 776 accepted / 210 rejected unique names.
+Complete Arena, Titania's Song (both reprints), Dark Sphere and all 37 source-choice
+beneficiary records were inspected, including nested forms. Vocabulary evidence:
+`Fight/2` occurs once, in Arena. Reprints count once in the estimates below.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Typed Fight adapter and delayed operand declaration, ranked first | Arena: one name / one record, one immediate unlock. Shared downstream beneficiaries: Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith: eight names / 37 records, no immediate unlocks for these eight. | Typed two-target groups, opponent choices, tap collections, exact delayed frames and simultaneous fight damage already exist. General CR 609.7a aggregation still needs return-controller and library-choice operand audits. This closes another concrete prerequisite for the same eight-card source-selection capability. | Small compiler/engine changes; medium gameplay, lifecycle, invalid declaration and collection tests. |
+| Sticky continuous layers | Titania's Song: one name / two records, one plausible unlock. | Requires persistent membership across type, ability and P/T layers, dependencies and source-departure lifetime. Enables reusable sticky continuous effects. | Larger engine lifecycle and cross-layer tests. |
+| Partial chosen-source prevention | Dark Sphere: one name / one record, zero dependency-ready immediate unlocks; one downstream unlock. | The complete tap/sacrifice payment is available, but general source aggregation still blocks it. Half-rounded-down damage-relative prevention needs an exact source shield. | Medium adapter and prevention tests after aggregation. |
+
+Candidate #1 is dependency-ready and supplies both an immediate full-card unlock
+and a shared multi-card prerequisite. The missing parts are compiler lowering,
+inventory roles and explicit engine source-read metadata. No missing fight damage
+contract, source-data defect or environment failure was found.
+
+### Contract, signatures, contexts and reuse
+
+- RON resolving action `Fight(first, second)/2` lowers through
+  `compileFight(Node, scope) (effectFactory, error)` to existing engine API
+  `Fight(first, second PermanentRef) ResolvingEffect`.
+- Both operands use `compilePermanentRef` and the fresh `instanceBindings` map:
+  explicit source, implicit Aura host, singular/numbered targets and existing
+  supported event scopes. Arity, role and scope errors reject at compilation.
+  No costs, static rules or replacement-operation Fight context is added.
+- Inventory gives both operands the `permanent_reference` role. Strict loading
+  still validates the entire collection before publication; malformed Fight
+  records cannot replace or extend an installed registry.
+- `(*fightReferencedEffect).refersToSourcePermanent() bool` declares a source
+  when either operand has an explicit typed source read. It uses the existing
+  `permanentRefReadsSourcePermanent` service. Sequences and delayed modes retain
+  the declaration. Bound operands use existing saved delayed frames separately.
+- Waiting queries do not resolve operands, select targets, deal damage, remove
+  combat participants or emit fight events. Implicit hosts, opaque references
+  and future delayed bodies do not infer source reads.
+- Saved incarnations survive departure, cleared transient LKI and phasing until
+  detection. Returned objects cannot replace them. Detection removes waiting
+  availability before resolution; clones keep separate waiting lifetimes.
+- Resolution requires both original objects to be present creatures. An absent,
+  phased, returned, noncreature or illegal target prevents both damage packets.
+  Other independent instructions still affect legal targets. Delayed saved
+  operands do not recheck shroud as new targets; implicit hosts read the current
+  attachment. Current control does not change a saved identity.
+- Current powers feed the existing simultaneous noncombat damage service, its
+  prevention/replacement pipeline, and fight events. Self-fight deals twice
+  power; nonpositive power deals no damage. Existing native observers verify
+  both damage results are visible together. Copies and factory instances keep
+  separate bindings; cloned execution cannot change the original game.
+- Rules evidence: local CR 400.7, 603.7a–e, 609.7a, 701.14a–d, 702.26b–d.
+  API/rules docs describe only this slice. No Go-card fallback, name branch,
+  partial registry or cleanup/cutover change is introduced.
+
+### Failing-first tests and card-to-test mapping
+
+The executable red runs failed all nine Arena cases and fourteen delayed RON
+cases at unsupported Fight, and both native declaration cases at an omitted
+waiting source. A test fixture initially used a nonexistent `DamageSource.Power`
+field; it was corrected before the executable red run. A separate inventory red
+run failed because Fight operand roles were `unknown`, before adding that role.
+
+| Mapping | Evidence |
+| --- | --- |
+| Arena / TestRONFightArena | Complete unchanged PROMOS record; real mana/tap costs, failed-payment state, announcement/body timing, opponent-controlled target selection, live/returned/phased/phase-cycle/shroud/control/noncreature targets, source departure, copied activation and clone isolation. Legal independent tap instructions survive partial illegality; neither creature deals damage if one fight target is illegal. |
+| TestRONFightDelayed | Both source operand orders with a saved target; live/departed/returned/phased/phase-cycle/control/copied states; pure exact waiting references, no damage before body resolution, detection lifetime, later shroud, clone execution and independent copied damage. |
+| TestWaitingDelayedFightOperands | Native source and sequence declarations; exact identity, phase cycle, departure, cleared LKI, return exclusion, combat/query purity and clone waiting lifetime. |
+| TestWaitingDelayedFightBoundaries | No inferred attachment, opaque operand or future body; nil/unbound/undeclared operands reject engine validation; delayed modal source declaration and repeated pure queries. |
+| TestRONFightInvalid | Eleven malformed, wrong-role or out-of-scope declarations reject compilation. |
+| TestRONFightHost | Implicit Aura host is not enumerated; delayed resolution fights the later attachment. |
+| TestRONFightSelfAndNoncombat | Negative, zero and positive power; twice-power self damage; combat-only prevention does not prevent fight damage. |
+| TestRONFightInstances | Two factory instances/players keep distinct pairs; stack timing and cloned resolution preserve both groups. |
+| TestRONFightInventoryAndStrictLoad | Both permanent operand roles, supported compilation and all-or-nothing invalid collection publication. |
+| Six Circles and Greater Realm / TestRONFightWaitingProtection | Complete real-record costs, source filters and shield bodies choose a departed synthetic RON Fight source through the bounded waiting category; failed payment, choice timing and one-use prevention. General source aggregation remains rejected. These are seven subrule tests, not full-card gameplay claims. |
+| Jade Monolith | Shared downstream source-aggregation beneficiary; no new Jade-specific gameplay claim. |
+| Existing TestFight* and TestRONOpponentTargetsRecordFragments | Typed validation, simultaneous damage observers, copies/clones and complete Arena target syntax retain regression evidence. Three old Arena rejection assertions now require successful compilation. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONFight -count=1`: PASS.
+- `go test ./pkg/mage -run 'TestWaitingDelayedFight|TestFight' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+  The first short run found three old inventory-count assertions. Their exact
+  expected totals were updated for Arena's one-record gain; the validation
+  sequence was then rerun. No gameplay assertions were weakened.
+- `make lint`: PASS; automatic import formatting changes were reviewed. Native and RON focused
+  tests reran after formatting and passed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection, **1,982 compiled / 463 rejected records; 777 accepted / 209 rejected
+  unique names**. Arena is the only removed diagnostic; every other diagnostic
+  is unchanged. No partial production registry is installed.
+
+Estimated and actual gains agree: **one unique full-card compilation unlock and
+one compiled record**, Arena, with new complete-record gameplay evidence.
+Seven protection consumers gain bounded delayed-Fight subrule evidence.
+No RON source change or vocabulary refresh was needed. Remaining source-choice
+aggregation, sticky layers, other unsupported records, complete gameplay,
+runtime loading, Go-card removal and unused DSL cleanup gates remain unfinished.
+Current callers are preserved. No unused DSL function is removed in this slice.
+
+Changed files: `pkg/mage/composable_actions.go`, `pkg/mage/doc.go`,
+`pkg/mage/waiting_delayed_fight_test.go`, `pkg/mage/dsl/ron/fight.go`,
+`fight_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`,
+`numeric_consumers_test.go`, `opponent_target_test.go`,
+`reference_collection_test.go`, `singular_target_groups_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. Delayed return-to-battlefield controller source-read declaration. The existing
+   `returnCardToBattlefieldEffect` has a typed `PlayerRef` controller without a
+   source-read declaration. Audit complete supported RON shapes and retain exact
+   graveyard visits, entry timing and saved-source controller semantics. This is
+   another prerequisite for the same eight general source-choice cards / 37
+   records, with zero expected immediate compilation unlocks.
+2. Delayed library-choice amount source-read audit. Complete the remaining
+   explicit-operand audit before claiming CR 609.7a general aggregation; retain
+   pure enumeration, choice timing and saved frames. Compare current collection
+   demand with aggregation readiness before selection.
+3. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
+
+This run stops after `FIGHT-TYPED-OPERANDS`.

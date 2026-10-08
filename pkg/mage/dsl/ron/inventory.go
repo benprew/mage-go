@@ -896,6 +896,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_reference"
 			}
+		case "Fight":
+			if len(n.Args) == 2 {
+				return "permanent_reference"
+			}
 		case "PermanentDoesntUntapDuringControllersNextNumberUntaps":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "value"}[index]

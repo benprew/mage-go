@@ -11413,3 +11413,25 @@ tests. Full general source choice remains rejected. Unchanged Drudge Skeletons,
 Living Wall, Uthden Troll, Wall of Bone, Wall of Brambles, Will-o'-the-Wisp and
 Regeneration records retain immediate gameplay evidence. This slice adds no
 new complete-card compilation claim.
+
+### Typed fight delayed source operands
+
+`Fight(first, second PermanentRef) ResolvingEffect` declares a direct source
+read in either operand to `Game.WaitingDelayedPermanentSources`. The declaration
+uses `permanentRefReadsSourcePermanent`; it does not resolve operands. Sequences
+and delayed modes preserve it. Saved frames separately retain bound targets.
+Implicit attachments, opaque references and future delayed bodies do not infer
+reads. The query performs no damage, target choice or fight event.
+
+The saved source incarnation remains available after departure, transient LKI
+clearing and phasing until trigger detection. Returned objects cannot replace
+it. Clones keep independent waiting lifetimes. Resolution still requires both
+original objects to be present creatures; delayed saved references do not become
+new targets. This establishes the source declaration, without changing the
+existing simultaneous damage, prevention, replacement or fight-event services.
+Rules: CR 400.7, 603.7a–e, 609.7a, 701.14a–d and 702.26b.
+
+Evidence: `TestWaitingDelayedFightOperands`, `TestWaitingDelayedFightBoundaries`,
+`TestRONFightArena`, `TestRONFightDelayed`, `TestRONFightHost`,
+`TestRONFightSelfAndNoncombat`, `TestRONFightInstances`,
+`TestRONFightWaitingProtection` and existing native `TestFight*` tests.

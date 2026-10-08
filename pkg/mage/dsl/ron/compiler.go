@@ -1328,6 +1328,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "Fight":
+		build, err := compileFight(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "RegeneratePermanent":
 		build, err := compileRegeneration(n, ctx)
 		if err != nil {

@@ -195,11 +195,9 @@ func TestRONReferenceCollectionDelayedCapture(t *testing.T) {
 }
 
 func TestRONReferenceCollectionDownstream(t *testing.T) {
-	for _, tc := range []struct{ set, name, gap string }{{"PROMOS", "Arena", "unsupported action (Fight)"}} {
-		n := hostUntapRecord(t, tc.set, tc.name)
-		if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s: expected downstream gap %s, got %v", tc.name, tc.gap, err)
-		}
+	n := hostUntapRecord(t, "PROMOS", "Arena")
+	if _, err := Compile(n); err != nil {
+		t.Fatal("reference collection consumer rejected", err)
 	}
 }
 

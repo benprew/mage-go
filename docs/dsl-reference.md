@@ -8720,3 +8720,23 @@ tests. Full general source choice remains rejected. Unchanged Drudge Skeletons,
 Living Wall, Uthden Troll, Wall of Bone, Wall of Brambles, Will-o'-the-Wisp and
 Regeneration records retain immediate gameplay evidence. This slice adds no
 new complete-card compilation claim.
+
+### RON Fight operands
+
+`Fight(first, second)/2` lowers resolving actions to
+`mage.Fight(first, second PermanentRef) ResolvingEffect`. Both operands use the
+existing permanent scope: explicit source, implicit Aura host, declared singular
+or numbered targets, and supported event bindings. Each card factory creates
+its own bindings. Wrong-role, missing and out-of-scope operands reject compilation.
+
+Both present creatures deal current power as simultaneous noncombat damage.
+If either operand is absent, phased out, no longer a creature, a returned object,
+or an illegal resolving target, neither fights. Self-fight deals twice power.
+Earlier independent instructions still resolve for legal targets. Saved delayed
+operands preserve identity and do not recheck shroud as new targets.
+
+A direct source in either operand declares that source to waiting delayed damage
+source queries. Queries do not resolve operands or deal damage. Implicit hosts,
+opaque references and future delayed bodies supply no inferred source read.
+Arena now compiles and has real-record gameplay tests; general damage-source
+aggregation remains rejected.

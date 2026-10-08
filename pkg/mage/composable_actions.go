@@ -2416,6 +2416,9 @@ func (*fightReferencedEffect) Properties() EffectProperties {
 func (e *fightReferencedEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"first", e.first}, {"second", e.second}}}
 }
+func (e *fightReferencedEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.first) || permanentRefReadsSourcePermanent(e.second)
+}
 func (e *fightReferencedEffect) Apply(ctx *EffectContext) error {
 	first, firstOK := e.first.resolvePermanent(ctx)
 	second, secondOK := e.second.resolvePermanent(ctx)

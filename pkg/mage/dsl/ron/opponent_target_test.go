@@ -349,12 +349,12 @@ func TestRONOpponentTargetsTriggerAndModes(t *testing.T) {
 func TestRONOpponentTargetsRecordFragments(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
 		{"DRK", "Preacher", "source control duration"},
-		{"PROMOS", "Arena", "Fight"},
+		{"PROMOS", "Arena", ""},
 		{"LEG", "Nova Pentacle", "unbound or incompatible chosen damage source"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			record := chosenDiscardRecord(t, tc.set, tc.name)
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), tc.blocker) {
+			if _, err := Compile(record); (tc.blocker == "" && err != nil) || (tc.blocker != "" && (err == nil || !strings.Contains(err.Error(), tc.blocker))) {
 				t.Fatalf("next full-record blocker: %v", err)
 			}
 			rules := record.Fields["Rules"]

@@ -203,11 +203,11 @@ func TestRONSingularGroupsStrictLoadAndConsumers(t *testing.T) {
 	for _, tc := range []struct{ set, name, want string }{
 		{"LEG", "Gauntlets of Chaos", "SharesACardtypeWithPermanentFromAmongCardtypes"},
 		{"LEG", "Glyph of Delusion", "WasBlockedByDefenderThisTurn"},
-		{"PROMOS", "Arena", "Fight"},
+		{"PROMOS", "Arena", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			record := chosenDiscardRecord(t, tc.set, tc.name)
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), tc.want) {
+			if _, err := Compile(record); (tc.want == "" && err != nil) || (tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want))) {
 				t.Fatalf("remaining blocker: %v", err)
 			}
 		})
