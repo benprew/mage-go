@@ -205,6 +205,11 @@
 // Queries do not resolve the subject or payer, or offer a sacrifice payment.
 // Departure and phasing keep the saved reference; a return cannot replace it.
 // Sacrifice still requires the original present subject under the payer's control.
+// [IfManaPaid] and [UnlessManaPaid] declare source reads in their amount and body.
+// Typed permanent power, toughness, mana value and counter reads qualify.
+// Arithmetic keeps declarations from both operands, even with a zero multiplier.
+// Queries do not read values or offer payment. Payer reads need a separate audit.
+// The saved incarnation survives departure and phasing until the delay triggers.
 //
 // [WhileWithSharedSubjects] reads its condition and exact subjects at its first layer.
 // Later layers keep those objects for the same pass, even after ability removal.

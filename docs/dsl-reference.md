@@ -7887,3 +7887,46 @@ Evidence: native `TestWaitingDelayedSacrificePaymentReferences` and `Boundaries`
 RON `TestRONWaitingDelayedSacrificePaymentProtection`, `Invalid` and `Instances`.
 The seven protection names gain subrule coverage. General source aggregation
 and their complete declarations remain unsupported.
+
+
+## Waiting delayed dynamic mana-payment references
+
+`IfManaPaid(PlayerRef, ManaCost, ResolutionValue, ResolvingEffect)` and
+`UnlessManaPaid` declare source reads in their amount and continuation to
+`Game.WaitingDelayedPermanentSources() []DamageSource`. Paid and unpaid
+continuations qualify before payment. Sequences, modes and nested audited
+payments preserve the declaration. Typed direct `This` power, toughness, mana
+value and counter reads qualify, with either live-only or exact-information
+semantics. Arithmetic traverses both operands without reading them; a zero
+multiplier does not remove a reference.
+
+Queries do not read amounts or players, inspect affordability, offer payment or
+execute a body. Attached subjects, player-derived values, opaque legacy/custom
+values and nested future producers are outside this contract. Fixed and
+announced-X wrappers contain no permanent reference. Spell-value amounts keep
+their separate spell reference contract. The engine retains the exact saved
+source through departure, return and phasing. A returned incarnation cannot
+replace it. Queries copy characteristic information. Trigger detection ends
+waiting eligibility before pending placement; cloned games keep separate
+lifetimes. Payment still uses the existing transaction and reads its amount once
+before payment choices. No replacement ordering or simultaneous action changes.
+CR 400.7, 603.7a–e, 608.2h, 609.7a–b and 702.26b establish these boundaries.
+
+RON reuses `compileResolutionPayment`, `compileResolutionManaCost` and
+`compileDelayedStep`. Supported resolving `MayCost` / `PlayerMayCost` with
+`PayManaX(mana, amount)` require an adjacent nonempty `If` / `Unless` using bare
+`CostWasPaid` / `CostWasntPaid`. Amounts remain nonnegative `Integer`, a bound
+`ValueX`, or typed `ManaValueOfSpell`. This slice adds no new amount syntax or
+`IfElse` support. Binding plans are built per factory instance.
+
+Evidence: `TestWaitingDelayedManaPaymentReferences` covers 189 declaration,
+nesting, mode and lifecycle cases. `Boundaries` checks pure queries, excluded
+operands and invalid definitions. `TestRONWaitingDelayedManaPaymentProtection`
+covers 98 real-record subrule scenarios for Circle of Protection: Artifacts,
+Black, Blue, Green, Red, White and Greater Realm of Preservation, including
+costs, shields, copies, clones and actual dynamic payment. `Invalid` rejects nine
+malformed or unbound delayed declarations. `Instances` checks nested and adjacent
+payments, separate targets, opposite results, mana spending and clone lifetime.
+Existing `TestResolutionManaPayment*` and `TestRONResolutionMana*` retain amount
+locking, mana solver, rollback, spell identity and complete In the Eye of Chaos
+coverage. General source aggregation still rejects the seven protection cards.

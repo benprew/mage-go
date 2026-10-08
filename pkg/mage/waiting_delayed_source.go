@@ -118,6 +118,32 @@ func (e *unlessPaidEffect) refersToSourcePermanent() bool {
 	return effectReadsSourcePermanent(e.effect) || (e.twoBranches && effectReadsSourcePermanent(e.otherwise))
 }
 
+func (e *resolutionManaPayment) refersToSourcePermanent() bool {
+	return resolutionValueReadsSourcePermanent(e.amount) || effectReadsSourcePermanent(e.effect)
+}
+
+func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
+	var subject PermanentRef
+	switch v := value.(type) {
+	case permanentResolutionValue:
+		subject = v.subject
+	case permanentManaValue:
+		subject = v.subject
+	case permanentInformationValue:
+		subject = v.subject
+	case counterResolutionValue:
+		subject = v.subject
+	case permanentCounterInformation:
+		subject = v.subject
+	case arithmeticValue:
+		return resolutionValueReadsSourcePermanent(v.left) || resolutionValueReadsSourcePermanent(v.right)
+	default:
+		return false
+	}
+	_, self := subject.(sourceRef)
+	return self
+}
+
 func (e *resolutionCounterPayment) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
 	return self || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
