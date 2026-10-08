@@ -11115,3 +11115,31 @@ Circles and Greater Realm supply actual costs, filters and prevention bodies.
 Their explicit-list/category test seams establish subrules, not complete-card
 gameplay or complete CR 609.7a aggregation. Existing choice and redirection tests
 continue to establish simultaneous packets, replacement ordering and legality.
+
+
+## RON singular layer duration at end of combat
+
+`CreatePermanentLayerEffectUntil/3` accepts bare `UntilEndOfCombat` in each
+supported resolving context. The compiler has no activation or trigger-event
+restriction on this duration. The existing typed subject and modification
+checks still apply. Collection layers and installed event subscriptions use
+separate adapters and gain no support from this change.
+
+The engine service is `Until(EndOfCombat, ...ContinuousModification)`.
+It captures subject incarnations at resolution (CR 611.2a, 611.2c–d, 400.7).
+Departure and removal from combat cannot transfer or end the saved modification.
+A phase cycle keeps identity; application is suspended while phased out
+(CR 702.26b). The end-of-combat step first detects triggers and runs priority.
+Only then does native turn execution remove combat-duration effects and reset
+combat (CR 511.2–3). Effects installed during that priority round expire at the
+same boundary. Clones keep separate effect lists and expiry.
+
+Glyph of Destruction's +10/+0 ends there. Its independent turn-long prevention
+continues until cleanup, and its next-end-step destruction can still resolve.
+Destruction permits regeneration. Returned or phased targets are illegal at
+spell resolution; a resolved delayed destruction cannot follow a returned Wall.
+
+Evidence: `TestEndCombatLayerPhaseBoundary`, `TestRONEndCombatLayerGlyph`,
+`TestRONEndCombatLayerDelayedResolution`, and `TestRONEndCombatLayerInvalid`.
+No new replacement ordering, cost transaction or damage batch behavior is
+introduced. Those tests use the existing shared services.

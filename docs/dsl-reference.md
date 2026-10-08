@@ -1267,12 +1267,11 @@ limits remain conjunctive. Queries and mana planning check the same conditions
 without payment. Resolution does not repeat the announcement restriction.
 Malformed tuples and other step predicates remain errors.
 
-In an immediate activation body, `CreatePermanentLayerEffectUntil/3` accepts
+In supported resolving bodies, `CreatePermanentLayerEffectUntil/3` accepts
 bare `UntilEndOfCombat` for supported singular permanent modifications.
 It reuses `Until(core.EndOfCombat, modifications...)`, captures each subject's
-incarnation at resolution, and expires after end-of-combat priority. Spell,
-delayed and collection modification contexts gain no new duration support.
-The existing source-attack trigger context retains its duration support.
+incarnation at resolution, and expires after end-of-combat priority. Singular
+spell, trigger and delayed modification contexts also accept this duration. Collection modifications retain their separate duration restrictions.
 
 Evidence: `TestRONActivationSteps*` covers Jade Statue and Desert through their
 complete repository records, including animation, damage, timing, payment,
@@ -1695,6 +1694,35 @@ Giant, Hunding Gjornersen, Marhault Elsdragon and Wolverine Pack.
 Chromium also uses the shared `TestRONUpkeepPayment*` lifecycle tests.
 
 ## RON resolving continuous durations
+
+### End-of-combat duration
+
+`CreatePermanentLayerEffectUntil(subject, modifications, UntilEndOfCombat)`
+accepts the existing singular permanent references and temporary modifications
+in all supported resolving bodies, including spells, triggers and delayed bodies.
+The duration is a bare symbol. It does not grant casting permission or declare a
+combat target. Collection layers, rule effects and installed event subscriptions
+retain their separate adapters and restrictions.
+
+Lowering reuses `mage.Until(core.EndOfCombat, modifications...)`. Resolution
+captures each subject's incarnation and amounts. Source departure and removal
+from combat do not end the effect. Phasing suspends application; a phase cycle
+keeps identity. A returned permanent cannot inherit the effect. Each copied
+spell resolves its own target frame; game clones retain separate expiry state.
+
+The effect remains active during end-of-combat trigger resolution and priority.
+Native `RunStepWithPriority(EndCombat)` removes it when the combat phase ends,
+before the next combat. This does not expire independent turn-long prevention
+or next-end-step destruction.
+
+`TestRONEndCombatLayerGlyph` executes the complete Glyph of Destruction record,
+including payment, blocking-Wall targets, +10/+0, damage prevention, next-end-step
+destruction, regeneration, copies, clones and incarnation checks.
+`TestRONEndCombatLayerDelayedResolution` covers delayed creation during the
+end-of-combat step. `TestRONEndCombatLayerUpkeep` covers a noncombat trigger.
+`TestRONEndCombatLayerInvalid` rejects malformed durations,
+missing bindings and invalid modifications. Native
+`TestEndCombatLayerPhaseBoundary` checks expiry after trigger resolution.
 
 ### Next-upkeep duration
 
@@ -4647,7 +4675,8 @@ creates a separate binding, and each pending event saves its player.
 The adapter uses `TurnStepBegins` with `EachBeginCombat` or `YourBeginCombat`.
 Supported action lists retain their existing target and payment contracts.
 Temporary permanent layer effects in this immediate body can use
-`UntilEndOfCombat`. A nested delayed-step body does not inherit that permission.
+`UntilEndOfCombat`. Singular layer modifications in a nested delayed-step body
+also accept that duration.
 Other player filters, malformed tuples, and event references outside their body
 are rejected during compilation. This does not add `TriggerI`, combat-scoped
 installed triggers, optional nonmana effect payments, or conditional attack tap

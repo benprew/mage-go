@@ -154,7 +154,7 @@ func TestRONWaitingDelayedLayerInvalid(t *testing.T) {
 		`CreatePermanentLayerEffectUntil(You,[AddAbility([Flying])],UntilEndOfTurn)`,
 		`CreatePermanentLayerEffectUntil(ThisPermanent,[],UntilEndOfTurn)`,
 		`CreatePermanentLayerEffectUntil(ThisPermanent,[AdjustPTX(PlusX,Zero,PowerOfPermanent(Trigger_ThatPermanent))],UntilEndOfTurn)`,
-		`CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Flying])],UntilEndOfCombat)`,
+		`CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Flying])],UntilEndOfCombat())`,
 		`CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Flying])],UntilNextUpkeep(Opponent))`,
 		`CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Flying])],ForAsLongAsPermanentRemainsTapped(Ref_TargetPermanent))`,
 	} {

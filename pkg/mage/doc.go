@@ -921,6 +921,14 @@
 // Ghosts of the Damned and Pradesh Gypsies use negative power modifiers.
 // Tuknir Deathlock uses the same target and duration with a +2/+2 bonus.
 //
+// Use [Until] with EndOfCombat for captured singular layer modifications.
+// The effect stays active through end-of-combat triggers and priority.
+// Native turn execution ends it when the combat phase ends. Source departure
+// and removal from combat do not end it. A phase cycle keeps the subject;
+// a returned permanent cannot inherit the modification. Clones expire separately.
+// Glyph of Destruction keeps its turn prevention and delayed destruction
+// separate from this duration.
+//
 // Use [Until] with [ModifyEachPT] for a temporary collection boost.
 // [ControlledPermanents] with [IsCreature] selects your creatures at resolution.
 // Shield Wall uses this collection with a +0/+2 bonus until end of turn.

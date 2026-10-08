@@ -257,8 +257,8 @@ func TestRONBeginCombatConsumerBoundaries(t *testing.T) {
 func TestRONBeginCombatScopeRejection(t *testing.T) {
 	for _, rules := range []string{
 		`TriggerA(AtTheBeginningOfCombatDuringAPlayersTurn(AnyPlayer),ActionList([])),Activated(PayMana([]),ActionList([PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))]))`,
-		`TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer),ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Banding])],UntilEndOfCombat)]))`,
-		`TriggerA(AtTheBeginningOfCombatDuringAPlayersTurn(AnyPlayer),ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Banding])],UntilEndOfCombat)]))]))`,
+		`TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer),ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Banding])],UntilEndOfCombat())]))`,
+		`TriggerA(AtTheBeginningOfCombatDuringAPlayersTurn(AnyPlayer),ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AddAbility([Banding])],UntilEndOfCombat())]))]))`,
 	} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[` + rules + `])`
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")

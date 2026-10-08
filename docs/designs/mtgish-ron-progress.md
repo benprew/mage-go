@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **774 accepted / 212 rejected unique card
-names** (986 total), and **1,979 compiled / 466 rejected records** (2,445 total).
+The latest recorded inventory reports **775 accepted / 211 rejected unique card
+names** (986 total), and **1,980 compiled / 465 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
+`RESOLVING-END-COMBAT-LAYERS` supports singular layer duration in spell, trigger
+and delayed resolving bodies. Glyph of Destruction gains complete-record
+RON gameplay evidence and is the one new compiled card.
+
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-DAMAGE-CHOICE-OPERANDS` declares explicit source reads in
-fixed-list damage-source choices and typed choice players. Native and RON
-lifecycle, copy/clone and eight-card subrule tests pass; no new record compiles.
-General damage-source aggregation remains unfinished.
-Named-token grants and sticky layers remain gaps.
+General damage-source aggregation, named-token grants and sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -49086,3 +49086,142 @@ Ranked next candidates:
    departure retention, shared membership and per-member mana values.
 
 This run stops after `WAITING-DELAYED-DAMAGE-CHOICE-OPERANDS`.
+
+## 2026-10-08: singular resolving end-of-combat layer duration
+
+Status: completed implementation slice `RESOLVING-END-COMBAT-LAYERS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged for the ledger.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The strict
+loader exited 1 with 1,979 compiled / 466 rejected records and 774 accepted /
+212 rejected unique names. Collection rejection was not a build or test failure.
+Complete RON records and nested forms were read; reprints were counted once.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: general damage-source aggregation and choice | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Jade Monolith: 8 plausible unlocks / 37 records | Existing category readers and choice consumers are available, but remaining attachment and nested/opaque reference declaration audit is not complete. `permanentRefReadsSourcePermanent` recognizes direct source reads, not attachment references. A complete legal list must be proved before production choice can be enabled. Dark Sphere, Reverse Damage and Eye for an Eye retain independent replacement-body gaps. | Large; aggregation plus completeness audit and scoped producer exceeds this bounded adapter slice. |
+| Resolving singular `UntilEndOfCombat` layer duration | Glyph of Destruction, Jade Statue, Battering Ram, Murk Dwellers, Johan: 5 names / 9 records. Estimated new unlock: Glyph of Destruction, 1 name / 1 record. | Jade Statue, Battering Ram and Murk Dwellers already compile in permitted activation/combat-trigger contexts. Johan still needs effect payment and nested attack restriction support. Shared duration lowering also enables noncombat triggers and nested delayed bodies. Goblin Flotilla's combat-lifetime subscription is a separate missing context; it is not counted as a new unlock. | Small; exact engine duration already exists. Adapter, gameplay/lifecycle tests and documentation fit one run. |
+| Ranked #2: named-token BandsWithOthers grants | Master of the Hunt: 1 plausible unlock / 1 record | Requires named token ability construction and independent quality grants, plus combat, copying and clone tests. Existing top-level quality and layer services can be reused; token lowering still rejects the ability. No other collection token uses this exact grant. | Medium; more grant and combat integration than duration reuse. |
+
+The shared multi-card choice remains dependency-blocked. Of the compared ready
+adapters, duration reuse has the same credible immediate gain as the token grant
+for less effort and removes an arbitrary context gate on an existing engine
+service. It introduces no card-specific rule. Initial downstream discussion
+included Goblin Flotilla and Johan; their complete nested forms show that neither
+is unlocked by this layer context alone. No claim of two or three unlocks is made.
+
+The contract, engine reuse boundary and acceptance cases were stated before
+editing. RON owns duration spelling and declaration checks. The engine owns
+captured subjects, layers, phase expiry, phasing, targets, costs, damage,
+prevention and delayed destruction. No Go-card requirements, fallback registry,
+new source syntax, removed skills or delegation were used.
+
+### Exact signatures, contexts and engine reuse
+
+- Existing AST shape:
+  `CreatePermanentLayerEffectUntil(subject, [modifications...], UntilEndOfCombat)`.
+  The duration is a bare symbol. Existing singular permanent reference and
+  modification validation remains in force.
+- `compileTemporaryDuration(Node, scope)
+  (func([]mage.ContinuousModification) mage.Effect, error)` now accepts that
+  duration in every supported resolving layer body, including spells, upkeep
+  triggers and nested delayed bodies. Activation, source-attack and combat-start
+  bodies remain supported. There is no event-specific duration permission.
+- `compileTemporaryLayer(Node, scope) (effectFactory, error)` remains the only
+  caller. Collection layers, rule effects, costs and installed event
+  subscriptions retain their separate adapters and supported contexts.
+- Engine reuse: `Until(Duration, ...ContinuousModification) ResolvingEffect`,
+  `ModifyPT`, `GrantKeywordModification`, per-instance targets, `composedLayerEffect`,
+  `EffectManager.RemoveEndOfCombat` and `Game.RunStepWithPriority(EndCombat)`.
+  No missing engine mechanics or new public signature was needed.
+- Subjects and values are captured at resolution. Returned incarnations cannot
+  inherit the modification. A phase cycle retains identity; application is
+  suspended while phased out. Removal from combat and source departure do not
+  end the resolved effect. Clones keep separate expiry state.
+- End-of-combat triggers and priority run before combat-duration expiry. Layers
+  installed during that step expire at the same phase boundary. The next combat
+  cannot inherit them. Independent end-of-turn prevention and next-end-step
+  destruction retain their own lifetimes.
+
+Rules evidence: local CR 400.7, 511.2–3, 611.2a/c/d and 702.26b. This is a missing
+compiler adapter, not a missing engine contract, source defect or environment
+failure. RON source is unchanged; the vocabulary source snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+After correcting fixture-only API signatures, all nine initial Glyph scenarios
+failed at the expected `unsupported duration (UntilEndOfCombat)` diagnostic
+before implementation. Invalid declarations remained rejected. The initial
+synthetic delayed fixture also needed Artifact metadata instead of a Creature
+without CardPT. Native tests prove the reused engine boundary rather than
+requiring an artificial new engine API.
+
+Fixture corrections after lowering preserved behavior: phasing removes a Wall
+from combat, so the pre-resolution phase-cycle case assigns it to block again;
+turn-long prevention ends through native cleanup, not continuous-layer removal;
+queries after copy-on-write cloning use the current permanent object; direct
+phase-in after expiry requires the same explicit layer refresh as native step
+execution before priority.
+
+| Card / tests | Evidence |
+| --- | --- |
+| Glyph of Destruction / TestRONEndCombatLayerGlyph | Complete LEG record; eleven lifecycle scenarios cover failed payment, illegal target, announcement versus resolution, +10/+0, combat and noncombat prevention, removal from combat, phase cycles, expiry while phased out, leave-and-return before/after resolution, phased illegal target, copied spell, cloned pending resolution, native end-combat/end-step expiry and regeneration. Copied spells add separate bonuses; delayed destruction cannot follow a returned Wall. Turn prevention survives combat expiry and ends at cleanup. |
+| TestRONEndCombatLayerDelayedResolution | A nested delayed action creates P/T and flying layers during end-combat resolution; both expire at the combat boundary. |
+| TestRONEndCombatLayerUpkeep | A noncombat upkeep trigger creates P/T and banding layers; they survive combat start and end at combat phase completion. |
+| TestRONEndCombatLayerInvalid | Rejects unbound targets, empty modifications, constructor-shaped durations, excess duration arguments and malformed keyword declarations. |
+| TestEndCombatLayerPhaseBoundary | Native engine trigger reads boosted power before expiry; phase cycle and game clone keep exact subjects and independent expiry; a later combat reads unboosted power. |
+| Existing activation/source-attack/combat-start suites | Retain Jade Statue, Battering Ram and Murk Dwellers behavior and scope/identity evidence; required suites rerun. No new complete-card claim for these existing names. |
+| InventoryRepositoryCollection, InventoryLeavesRealRONGameplayAndRegistryUnchanged, RONNumericConsumerInventory | Exact measured counts updated; Glyph explicitly cannot remain rejected. Inspection still preserves production registry and existing real-card gameplay. |
+
+Five former context-rejection examples now describe valid layer declarations.
+They were replaced by malformed durations or incompatible/unbound references,
+and positive spell, upkeep and delayed gameplay tests cover the valid contexts.
+No remaining binding check or unsupported subscription/collection rule was removed.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONEndCombatLayer -count=1`:
+  PASS. Native `go test ./pkg/mage -run TestEndCombatLayerPhaseBoundary
+  -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS after replacing
+  the obsolete context-rejection cases. Both rerun with the phased-expiry case.
+- `make lint`: PASS, 0 issues. Automatic formatting reviewed; no unrelated
+  Go changes. End-combat, activation, combat-start and waiting-layer RON suites,
+  plus the native phase-boundary test, rerun after lint: PASS.
+- `git diff --check`: PASS; repeated for the completed ledger and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict collection
+  rejection. **1,980 compiled / 465 rejected records; 775 accepted / 211 rejected
+  unique names**. Removing only Glyph of Destruction from baseline issues produces
+  the exact final issue list. First diagnostic remains Animate Dead's unsupported
+  EnchantGraveyardCard. No partial registry is installed.
+
+Estimated and actual gains agree: **1 complete-card unlock / 1 compiled record**,
+Glyph of Destruction. This record now has complete-rule gameplay evidence in the
+new suite; compilation totals are still separate from collection-wide gameplay.
+No accepted record was lost. No source defect or environmental failure was found.
+Runtime loading, complete collection gameplay, Go-card deletion and unused DSL
+removal remain unfinished; their removal gates are not met.
+
+Changed files: `pkg/mage/dsl/ron/source_tapped_duration.go`,
+`end_combat_layer_test.go`, `activation_step_test.go`, `begin_combat_test.go`,
+`waiting_delayed_layer_test.go`, `inventory_test.go`, `numeric_consumers_test.go`,
+`pkg/mage/end_combat_layer_test.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Finish the remaining typed-reference/category audit before general CR 609.7a
+   aggregation and scoped RON source choice. Six Circles, Greater Realm and
+   Jade Monolith remain 8 plausible unlocks / 37 records. Do not enable a partial
+   production source list.
+2. Named-token quality grants for Master of the Hunt: 1 plausible unlock;
+   independent named BandsWithOthers grants, combat, copying and clones.
+3. Sticky layer lifecycle for Titania's Song: 1 plausible unlock;
+   departure retention, shared membership and per-member mana values.
+
+This run stops after `RESOLVING-END-COMBAT-LAYERS`.

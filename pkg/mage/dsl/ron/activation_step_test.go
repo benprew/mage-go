@@ -374,8 +374,8 @@ func TestRONActivationStepsCombatDurationInvalid(t *testing.T) {
 	for _, rule := range []string{
 		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AdjustPT(1,1)],UntilEndOfCombat())]))`,
 		`Activated(PayMana([]),ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AdjustPT(1,1)],UntilEndOfCombat(You))]))`,
-		`SpellActions(Targeted([TargetPermanent(AnyPermanent)],ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPermanent,[AdjustPT(1,1)],UntilEndOfCombat)])))`,
-		`Activated(PayMana([]),ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([CreatePermanentLayerEffectUntil(ThisPermanent,[AdjustPT(1,1)],UntilEndOfCombat)]))]))`,
+		`SpellActions(Targeted([TargetPermanent(AnyPermanent)],ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPlayer,[AdjustPT(1,1)],UntilEndOfCombat)])))`,
+		`Activated(PayMana([]),ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([CreatePermanentLayerEffectUntil(Trigger_ThatPermanent,[AdjustPT(1,1)],UntilEndOfCombat)]))]))`,
 	} {
 		kind := "Artifact"
 		if strings.HasPrefix(rule, "SpellActions") {
