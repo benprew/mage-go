@@ -11206,3 +11206,31 @@ executes their real costs, filters and shields against a departed delayed mill
 operand. It proves those subrules only; full records remain rejected.
 `TestRONMillstone`, `TestRONDeepSpawn*`, `TestRONMillModifiersAndPaymentFrames`
 and `TestRONMillRealCardOwnerOrder` retain complete-record mill evidence.
+
+## Waiting delayed library inspection and shuffle operands
+
+`LookAtLibraryTopNumber(viewer, library PlayerRef, count ResolutionValue,
+reorder bool) ResolvingEffect` declares source reads through the shared typed
+player and value walkers. `LookAtLibraryTop` retains its integer API.
+`MayShuffleLibrary(chooser, library PlayerRef)` declares both player operands.
+Queries run no operand or choice. Zero counts retain explicit source reads.
+Saved frames keep exact incarnations through departure, return, phasing and clone
+operations until trigger detection (CR 400.7, 603.7a–e, 609.7a and 702.26).
+Implicit attachments, opaque callbacks and future delay bodies infer no reads.
+
+Resolution reads the count once after both players are available. Computed
+nonpositive counts inspect nothing. Nil counts and negative direct Fixed counts
+fail definition validation. The existing private snapshots, top ordering and
+optional shuffle services retain their behavior; no cards change zones during
+inspection. This establishes no general damage-source aggregation contract.
+
+`TestWaitingDelayedLibraryOperands` covers all five operand positions and exact
+waiting lifetime. `TestWaitingDelayedLibraryPurity` covers pure queries, single
+count evaluation, privacy, invalid counts and scope exclusions.
+`TestRONWaitingDelayedLibraryGameplay` covers 18 operand/state combinations and
+clone resolution; `Instances` covers distinct factories, copied bindings, changed
+power, departed targets, returned objects and saved targets that gain shroud.
+`Protection` uses seven complete protection records' costs, filters and shields
+with a departed zero-count inspection source; these remain subrule tests.
+Existing `TestRONLibraryInspection*` retains complete Natural Selection, Visions
+and Orcish Spy gameplay evidence, including ordering and optional decisions.

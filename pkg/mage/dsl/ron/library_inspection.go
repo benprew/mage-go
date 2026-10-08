@@ -10,7 +10,12 @@ func compileLibraryInspection(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	count, err := fixedLibraryInspectionCount(n.Args[1])
+	if n.Args[1].Name == "Integer" {
+		if _, err := fixedLibraryInspectionCount(n.Args[1]); err != nil {
+			return nil, err
+		}
+	}
+	count, err := compileInstanceValue(n.Args[1], ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +39,7 @@ func compileLibraryInspection(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(operation, "library inspection ordering operation")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.LookAtLibraryTop(mage.You, player.build(bindings), count, reorder)
+		return mage.LookAtLibraryTopNumber(mage.You, player.build(bindings), count(bindings), reorder)
 	}, nil
 }
 

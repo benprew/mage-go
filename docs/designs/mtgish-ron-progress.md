@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-MILL-OPERANDS` retains explicit source reads in delayed mill
-players and amounts, and lowers scoped mill amounts through typed values.
-No new card compiles; seven protection subrules gain mill-reference evidence.
+`WAITING-DELAYED-LIBRARY-OPERANDS` retains explicit source reads in delayed
+inspection and optional shuffle, and lowers scoped inspection counts.
+No new card compiles; seven protection subrules gain library-reference evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49511,3 +49511,117 @@ Ranked next candidates:
    General source aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-MILL-OPERANDS`.
+
+## 2026-10-08: waiting delayed library inspection and shuffle operands
+
+Status: completed implementation slice `WAITING-DELAYED-LIBRARY-OPERANDS`.
+This run stops after this slice. Existing `.gitignore`, execution-design and
+ledger reorganization changes and untracked completed ledger are preserved.
+Only this run's summary and appended entry are staged.
+
+Fresh baseline: `make build` and uncached full RON package tests passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection, not a
+build failure: 1,981 compiled / 464 rejected records; 776 accepted / 210 rejected
+unique names. First issue: Animate Dead / EnchantGraveyardCard.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected cards / estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 explicit operand prerequisite, bounded to library inspection/shuffle | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith. 0 immediate unlocks; complete aggregation remains 8 plausible unlocks / 37 records. Natural Selection, Visions and Orcish Spy retain accepted inspection gameplay. | Inspection viewer/library/count and optional-shuffle chooser/library lack declaration contracts. Mana players and remaining explicit/opaque boundaries still need audit before complete legal source aggregation. | Small complete engine declaration and scoped-value adapter with lifecycle tests. |
+| Sticky layers | Titania's Song: 1 plausible unlock / 2 records. | Source-departure retention, membership shared across layers and per-member mana value must precede lowering. | Larger lifecycle and layer suite. |
+| Partial chosen-source prevention | Dark Sphere: 0 immediate unlocks, 1 downstream unlock / 1 record. | General source aggregation, half-rounded-down actual prevention and consumption/rechecks remain required. | Medium replacement suite after aggregation. |
+
+Complete records and their nested forms were inspected, not just first errors.
+The shared prerequisite wins over single-card work because it advances the exact
+legal source list for eight distinct cards. This slice covers one cohesive
+library inspection/shuffle operand family; it does not claim the full audit.
+These are missing engine declarations and a compiler value adapter, not source
+defects. No RON source changed; no vocabulary refresh is required.
+
+### Established signatures, context and reuse
+
+- `LookAtLibraryTopNumber(viewer, library PlayerRef, count ResolutionValue,
+  reorder bool) ResolvingEffect` evaluates its count once at resolution after
+  both players are available. The existing `LookAtLibraryTop(..., count int, ...)`
+  delegates with Fixed and preserves callers. Nil or negative direct Fixed counts
+  fail definition validation; computed nonpositive counts inspect nothing.
+- `libraryInspectionEffect.refersToSourcePermanent()` declares viewer, library
+  and count reads. `mayShuffleLibraryEffect.refersToSourcePermanent()` declares
+  chooser and library reads, using the existing typed operand walkers.
+- `LookAtTheTopNumberCardsOfPlayersLibrary(player, value, [operation])` lowers
+  through `compileInstanceValue` with fresh per-instance bindings in existing
+  resolving spell, activation, trigger and delayed scopes. The only operations
+  remain bare LeaveRemainingCardsOnTopOfLibraryInSameOrder or
+  PutTheRemainingCardsOnTopOfLibraryInAnyOrder. Direct Integer counts must be
+  nonnegative. Unbound/wrong-role values, unsupported ordering, costs and entry
+  declarations remain errors. Existing `MayHavePlayerAction(player, Shuffle)`
+  retains its spelling and player scope.
+- Waiting queries read no operand, inspect no cards and make no choices. Zero
+  counts retain declarations. Exact delayed captures and retained departure facts
+  survive phasing, return and clones until trigger detection. Implicit attachments,
+  opaque values and future delayed producers infer no source read.
+- Existing private card snapshots, top-order validation, optional shuffle choices,
+  delayed capture, target legality, stack copying and game cloning services are
+  reused. No parallel state, card-name executor or production fallback was added.
+
+Rules evidence: local CR 400.7, 603.7a–e, 609.7a–b and 702.26b–d.
+API and rules-contract docs describe only this established behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the new typed-count signature. RON tests
+then failed on all player/shuffle lifecycle cases with missing waiting references,
+and all dynamic-count cases with unsupported fixed library inspection count.
+An initial test extraction included an unrelated duplicate instance test; it was
+removed before confirming intended RON failures. Later isolated instance extraction
+needed its uuid import. These fixture errors were corrected, not hidden.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedLibraryOperands | All five native operand positions; live, phase cycle, departure with cleared transient LKI, returned object, exact identity and clone lifetime. |
+| TestWaitingDelayedLibraryPurity | No count evaluation or private observations during queries; count read once at resolution; private inspection, invalid counts and implicit/future scope exclusions. |
+| TestRONWaitingDelayedLibraryGameplay | 18 player/count/shuffle lifecycle combinations, each resolved in a clone and original; delayed creation timing, departure/return/phasing/control, copied activations, private inspection and correct shuffle player. |
+| TestRONWaitingDelayedLibraryInstances | Separate factories and target frames, copied activation, resolution-time changed power, exact departed target information, returned object exclusion, saved target gaining shroud and clone isolation. |
+| TestRONWaitingDelayedLibraryInvalid | Six malformed or unbound/wrong-role/out-of-scope value declarations reject. Existing library invalid tests retain arity, ordering and context rejection. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedLibraryProtection | Complete records supply real costs, filters and shields. A departed zero-count delayed inspection source is chosen at resolution, failed payment offers no choice, shield prevents once and is consumed. Full records still reject general ChooseADamageSource; this is subrule evidence. |
+| Natural Selection, Visions, Orcish Spy / TestRONLibraryInspectionCards, Reprints, Invalid and other existing TestRONLibraryInspection tests | Complete records retain privacy, order, short/empty libraries, shuffle accept/decline, copies, clones, costs, illegal targets and departed/phased sources. |
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedLibrary
+  -count=1` and expanded existing library suite: PASS.
+- Native waiting-library and library-inspection suites: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only format new test import
+  groups; production changes retain their reviewed form. Post-lint focused RON
+  and native tests: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+  JSON is byte-identical to fresh baseline, including every diagnostic.
+
+Estimated and actual gains: **0 complete-card unlocks / 0 new compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. New scoped-value and waiting-reference gameplay evidence
+is separate from full-card acceptance. General source choice remains rejected;
+strict loading installs no partial registry. No source defect or environment
+failure was found. Runtime cutover, Go-card removal and DSL cleanup gates are
+unmet; current callers remain.
+
+Changed files: `pkg/mage/library_inspection.go`, `waiting_delayed_library_test.go`,
+`pkg/mage/dsl/ron/library_inspection.go`, `waiting_delayed_library_test.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and
+this ledger.
+
+Ranked next candidates:
+
+1. Bounded delayed mana-player operand contract (`LoseUnspentManaFor`), then
+   finish remaining combat-exit/explicit operand and opaque-boundary audit before
+   CR 609.7a aggregation and scoped source choice. Eight plausible downstream
+   unlocks / 37 records remain concrete; keep general source choice rejected.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   general source aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-LIBRARY-OPERANDS`.

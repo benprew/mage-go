@@ -1024,6 +1024,11 @@
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
 // Use [LookAtLibraryTop] for private inspection and optional top ordering.
+// [LookAtLibraryTopNumber] reads a typed count once at resolution.
+// Both forms and [MayShuffleLibrary] declare explicit source reads in their
+// players and count to [Game.WaitingDelayedPermanentSources]. Queries do not
+// inspect cards, read counts or offer choices. Zero counts keep the reference.
+// Departure and phasing keep the saved incarnation until trigger detection.
 // The viewer and library player are separate typed references.
 // [MayShuffleLibrary] lets the chooser decide after the inspection.
 // [Game.LibraryLooks] returns copied history for the selected viewer.

@@ -3641,20 +3641,21 @@ this declaration.
 
 Resolving action lists accept:
 
-- `LookAtTheTopNumberCardsOfPlayersLibrary(player, Integer(n),
+- `LookAtTheTopNumberCardsOfPlayersLibrary(player, value,
   [LeaveRemainingCardsOnTopOfLibraryInSameOrder])`.
 - The same form with `[PutTheRemainingCardsOnTopOfLibraryInAnyOrder]`.
 - `MayHavePlayerAction(player, Shuffle)`.
 
-`n` is a nonnegative integer literal. Each form reads an existing typed player
-reference; it does not declare a target. Unbound references, dynamic counts,
+`value` is a scoped resolution value. Direct integer literals must be nonnegative;
+computed nonpositive counts inspect no cards. Each form reads an existing typed
+player reference; it does not declare a target. Unbound references,
 other ordering operations, multiple operations, and other optional actions
 remain errors. Rules, costs and entry operations do not gain these actions.
 The resolving controller sees the cards and chooses their order or optional
 shuffle, even when the library belongs to another player. Factories build fresh
 target references. Copies can retain or change their own targets.
 
-Lowering uses `LookAtLibraryTop(You, player, n, reorder)` and
+Lowering uses `LookAtLibraryTopNumber(You, player, value, reorder)` and
 `MayShuffleLibrary(You, player)`. Short libraries supply all remaining cards;
 empty libraries permit a later optional shuffle. Inspection neither reveals
 cards publicly nor changes their zones. Evidence: `TestRONLibraryInspection*`.
@@ -8569,3 +8570,18 @@ the Hunt record. `SpellBatch` covers two independent qualities on a batch create
 by a spell; `Invalid` checks declaration rejection. Native
 `TestTokenBandsSingularGrant` establishes singular subjects, batch isolation,
 multiple qualities, phasing, removal, cloning and definition validation.
+
+## Waiting delayed library operands
+
+Library inspection declares explicit source reads in the viewer, library player
+and typed count. Optional shuffle declares them in the chooser and library player.
+Waiting queries do not read values, inspect cards, order cards or offer choices.
+Zero counts keep source references. Saved incarnations survive departure and
+phasing until trigger detection; returned objects cannot replace them.
+Implicit attachments, opaque values and future delayed bodies keep separate scopes.
+
+`LookAtLibraryTopNumber(viewer, library PlayerRef, count ResolutionValue,
+reorder bool)` reads the count once at resolution. Missing players perform no
+inspection. Nil counts and negative direct Fixed counts fail definition validation.
+`LookAtLibraryTop` preserves its integer API through this service.
+Evidence: `TestRONWaitingDelayedLibrary*` and `TestWaitingDelayedLibrary*`.

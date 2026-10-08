@@ -23,30 +23,39 @@ func (g *Game) LibraryLooks(viewer uuid.UUID) []PublicCardReveal {
 // LookAtLibraryTop shows at most count cards to the viewer. The viewer can
 // change their order when reorder is true. The cards stay in the library.
 func LookAtLibraryTop(viewer, library PlayerRef, count int, reorder bool) ResolvingEffect {
+	return LookAtLibraryTopNumber(viewer, library, Fixed(count), reorder)
+}
+
+// LookAtLibraryTopNumber reads the inspection count when the effect resolves.
+func LookAtLibraryTopNumber(viewer, library PlayerRef, count ResolutionValue, reorder bool) ResolvingEffect {
 	return &libraryInspectionEffect{viewer, library, count, reorder}
 }
 
 type libraryInspectionEffect struct {
 	viewer, library PlayerRef
-	count           int
+	count           ResolutionValue
 	reorder         bool
 }
 
 func (*libraryInspectionEffect) Text() string                 { return "look at the top cards of the selected library" }
 func (*libraryInspectionEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *libraryInspectionEffect) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"viewer", e.viewer}, {"library", e.library}}}
-	if e.count < 0 {
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"viewer", e.viewer}, {"library", e.library}, {"count", e.count}}}
+	if count, ok := e.count.(fixedValue); ok && count.n < 0 {
 		n.problem = "library inspection count must not be negative"
 	}
 	return n
 }
 func (e *libraryInspectionEffect) Apply(ctx *EffectContext) error {
 	viewer, owner := handOperationPlayer(e.viewer, ctx), handOperationPlayer(e.library, ctx)
-	if viewer == nil || owner == nil || e.count <= 0 {
+	if viewer == nil || owner == nil {
 		return nil
 	}
-	cards := ctx.Game.RevealTopN(owner, e.count)
+	count := e.count.resolveValue(ctx)
+	if count <= 0 {
+		return nil
+	}
+	cards := ctx.Game.RevealTopN(owner, count)
 	if len(cards) == 0 {
 		return nil
 	}
@@ -118,4 +127,11 @@ func (e *mayShuffleLibraryEffect) Apply(ctx *EffectContext) error {
 		owner.ShuffleLibrary()
 	}
 	return nil
+}
+
+func (e *libraryInspectionEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.viewer) || playerRefReadsSourcePermanent(e.library) || resolutionValueReadsSourcePermanent(e.count)
+}
+func (e *mayShuffleLibraryEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.chooser) || playerRefReadsSourcePermanent(e.library)
 }
