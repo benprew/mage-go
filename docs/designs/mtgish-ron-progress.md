@@ -7,9 +7,9 @@ names** (986 total), and **1,982 compiled / 463 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`FIGHT-TYPED-OPERANDS` lowers typed Fight actions and retains explicit source
-operands in waiting delayed queries. Arena gains complete-record gameplay
-evidence; seven protection subrules gain delayed-Fight source-choice evidence.
+`WAITING-DELAYED-RETURN-CONTROLLER` adds explicit entry controllers and exact
+source reads to waiting delayed queries. Seven protection subrules gain bounded
+return-controller source-choice evidence; full-card compilation is unchanged.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -50393,3 +50393,144 @@ Ranked next candidates:
 3. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
 
 This run stops after `FIGHT-TYPED-OPERANDS`.
+
+## 2026-10-08: delayed battlefield-return controller references
+
+Status: completed implementation slice `WAITING-DELAYED-RETURN-CONTROLLER`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary change and appended entry are staged in the ledger;
+the user's history relocation is not included in this commit.
+
+### Candidate comparison and selection
+
+Shared downstream beneficiaries are Circle of Protection: Black, Blue, Green,
+Red, White and Artifacts, Greater Realm of Preservation, and Jade Monolith:
+**eight unique names / 37 records**. Complete canonical records and their nested
+source-choice/shield/redirection forms were inspected; reprints count once.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Delayed return controller declaration, ranked first | The eight shared beneficiaries above: zero immediate unlocks. Direct return syntax occurs in Animate Dead, Nether Shadow, Resurrection, Hell's Caretaker, Triassic Egg and Soul Exchange (six names / 21 records); zero new unlocks. | Existing typed controller, exact graveyard targets, delayed captures, LKI, entry replacements and choices supply the prerequisites. The missing engine declaration closes one source-aggregation gap. Explicit entry-controller lowering supplies a reusable adapter; Animate Dead still needs graveyard attachment, result/link bindings and later layer/leave behavior. Nether Shadow needs graveyard-source/history triggers; Soul Exchange needs exile payment/result bindings. | Small compiler/engine change; medium declaration, lifecycle, entry and real-record subrule tests. |
+| Delayed library-choice amount declaration audit | No direct Scry/Surveil constructors occur in this RON collection. The same eight shared downstream beneficiaries; zero immediate unlocks. | Native typed library-choice amounts still need an explicit source-read audit before general aggregation can claim the complete engine operand boundary. Choices and amount evaluation must stay out of queries. This is a concrete shared prerequisite, but has less direct RON syntax value than candidate #1. | Small declaration change; medium pure-query, saved-frame and choice-timing tests. |
+| Sticky continuous layers | Titania's Song: one unique name / two records; one plausible full-card unlock. | Its complete record needs sticky noncreature-artifact membership across type, ability and mana-value P/T layers, dependency ordering and source-departure lifetime through cleanup. It does not close the shared source-choice prerequisite. | Larger engine lifecycle and cross-layer regression tests. |
+
+Candidate #1 is dependency-ready and closes a concrete multi-card prerequisite.
+It was selected over a single-card layer change and the otherwise comparable
+library-choice audit. The work separates a missing compiler adapter from a
+missing engine declaration; no new zone-move or controller-information engine
+was needed. Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. The baseline loader rejected the collection with the recorded counts.
+
+### Contract, signatures, contexts and reuse
+
+- `compileGraveyardReturn(Node, scope) (effectFactory, error)` now supports
+  `PutGraveyardCardOntoBattlefield(card, [EntersUnderPlayersControl(player)])/2`.
+  `card` must be a declared singular graveyard target with a creature-requiring
+  filter. Exactly one entry operation is supported. Bare `EntersNormally`
+  continues to use `You`; multiple operations, invalid arity, wrong roles and
+  out-of-scope references reject at compilation.
+- The player lowers through `compilePlayerRef` and fresh `instanceBindings`
+  into the existing `ReturnCardToBattlefield(card CardRef, controller PlayerRef,
+  options ...BattlefieldEntryOption) ResolvingEffect`. Existing resolving scopes,
+  including delayed bodies, keep their typed bindings. This adds no graveyard
+  Aura attachment, self-graveyard source, return-result producer or other
+  `EntersUnderPlayersControl` parent operation.
+- Inventory marks the entry controller as `player_reference`, including nested
+  `ControllerOfPermanent` and its `permanent_reference` operand. The nine entry
+  controller occurrences were inspected: Animate Dead (six), Reincarnation
+  (one), and Takklemaggot (two). Reincarnation's card-choice return and
+  Takklemaggot's payment, dead-Aura return and attachment contexts remain gaps.
+- `(*returnCardToBattlefieldEffect).refersToSourcePermanent() bool` delegates
+  to `playerRefReadsSourcePermanent(controller)`. Native `ControllerOf(This)`,
+  `ControllerOfWithLKI(This)` and `OwnerOf(This)` declare explicit source reads.
+  Sequences, modes and tapped-entry options retain them. Implicit hosts, opaque
+  players and nested future bodies do not infer source reads.
+- Waiting queries do not read controllers, resolve cards, move cards or trigger
+  entry effects. Exact source incarnations survive departure, cleared transient
+  LKI and phasing until detection. Returned sources cannot replace them;
+  detection removes waiting availability before resolution. Clones retain
+  independent waiting lifetimes.
+- Existing saved frames keep exact graveyard visits. A moved-and-returned card
+  is not affected. Existing controller information reads use current control,
+  retained departure control or phase information for that exact incarnation.
+  `You` uses the delayed ability's controller, including a copied activation
+  controlled by another player. An implicit host reads the current attachment.
+- The normal battlefield entry pipeline applies entry replacements before
+  events; entry triggers resolve separately. Ownership stays independent of
+  control. No cost rollback, replacement ordering or simultaneous-operation
+  contract is changed. Rules evidence: local CR 400.6–7, 603.7a–e, 609.7a and
+  702.26b–d. API and rules-contract docs describe only this established behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial red runs failed at unsupported explicit entry controllers and omitted
+native controller source references. The first synthetic entry creature fixture
+omitted CardPT; it was corrected. A second red run against the original
+implementation confirmed all 16 explicit-controller gameplay cases, seven
+protection subrules, the instance case and inventory/strict-load case fail at
+the intended unsupported adapter. Native tests failed all three source operand
+variants and the modal declaration. Existing default-entry cases passed.
+A test initially resolved the whole stack before checking entry-trigger timing;
+it now resolves one body before checking the separately queued entry trigger.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestRONWaitingDelayedReturnGameplay | 24 RON gameplay cases across default entry, explicit You and explicit source-controller entry. Mana failure rollback, announcement/body timing, source control changes, departure/return, phasing/cycle, stale graveyard visits, different-controller copied activations, clone isolation, tapped entry replacement and separate entry-trigger resolution. |
+| TestRONWaitingDelayedReturnInstances | Two factory instances with distinct players, sources and graveyard targets; saved controller and target isolation, clone execution and separate waiting lifetime. |
+| TestRONWaitingDelayedReturnHost | Implicit host supplies no inferred source; delayed return reads the later attachment's controller while retaining the card's owner. |
+| TestRONWaitingDelayedReturnInvalid | Thirteen malformed, wrong-role, unbound-player, duplicate/mixed entry and wrong-card-type declarations reject at compilation. |
+| TestRONWaitingDelayedReturnInventory | Correct nested roles, supported factory validation and strict invalid collection rejection without replacing an installed registry. |
+| TestWaitingDelayedReturnController | Three native controller/owner reference forms; exact source identity after phasing, departure, cleared transient LKI and return; independent clone detection lifetime. |
+| TestWaitingDelayedReturnBoundaries | No implicit host, opaque player or future-body inference; query does not call player callbacks; sequence/mode and tapped-entry declaration; nil and unbound declarations reject engine validation. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedReturnProtection | Complete unchanged canonical RON records supply real costs, source filters and one-use shield bodies. The bounded waiting category selects a departed synthetic RON return-controller source. Failed payment makes no choice; selection occurs at resolution; the shield consumes once and the saved card returns later. These are seven new subrule mappings, not full-card gameplay claims. |
+| Jade Monolith | Shared downstream aggregation beneficiary; no new Jade-specific gameplay claim. |
+| Resurrection, Hell's Caretaker, Triassic Egg | Existing complete-record coverage retained: TestRONGraveyardReturnCards/NormalEntry/Caretaker and TestRONActivationPropertyTriassicEgg. The focused graveyard regressions and full suite pass. These are previously accepted cards, not new unlocks. |
+| Animate Dead, Nether Shadow, Soul Exchange, Reincarnation, Takklemaggot | Complete records audited; the blockers above remain. No new complete-card gameplay claim or compiler fallback. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedReturn -count=1`: PASS.
+- Focused RON tests with `TestRONGraveyardReturn` and native tests with
+  `TestWaitingDelayedReturn`, `TestTypedGraveyardReturnToBattlefield` and
+  `TestReturnCardToBattlefieldTapped`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS after fixing two test-only findings: an unused returned
+  source assignment and a two-element slice capacity. Formatting output and
+  changes were reviewed; native and RON focused tests passed again after the
+  fixes. Build, vet, short tests and the full suite were also rerun.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **1,982 compiled /
+  463 rejected records; 777 accepted / 209 rejected unique names**. Every loader
+  diagnostic is unchanged from the fresh baseline. Strict loading installs no
+  partial production registry.
+
+Estimated and actual compilation gains agree: **zero new full-card unlocks**
+and **zero new compiled records**. Coverage gains are the explicit controller
+entry capability, native delayed-source contract, and seven bounded protection
+subrule mappings. Compilation and full-card gameplay remain separate measures.
+No RON data defect was found or corrected. RON source and vocabulary snapshot
+are unchanged. General source aggregation, sticky layers, other rejected
+records, complete collection gameplay, runtime cutover, Go-card removal and
+unused DSL cleanup gates remain unfinished. No DSL function is removed, and
+current callers are preserved.
+
+Changed files: `pkg/mage/composable_actions.go`, `pkg/mage/doc.go`,
+`pkg/mage/waiting_delayed_return_test.go`, `pkg/mage/dsl/ron/graveyard_return.go`,
+`inventory.go`, `waiting_delayed_return_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+Ranked next candidates:
+
+1. Delayed library-choice amount source-read audit: zero direct RON card demand,
+   but the remaining recorded typed operand prerequisite for the eight shared
+   source-choice beneficiaries / 37 records. Keep enumeration pure and choices
+   at body resolution; use saved frames and exact identities.
+2. General CR 609.7a source aggregation after the remaining audit. Reassess all
+   categories and complete records before estimating eight full-card unlocks;
+   preserve information visibility, exact visits, permanent-spell continuation,
+   pure enumeration, choice timing and source-property rechecks.
+3. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
+
+This run stops after `WAITING-DELAYED-RETURN-CONTROLLER`.

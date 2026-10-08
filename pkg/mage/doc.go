@@ -91,6 +91,14 @@
 // Returned sources cannot replace them. Implicit hosts and future delayed bodies
 // do not infer source reads. Bound operands use the saved frame.
 //
+// [ReturnCardToBattlefield] declares explicit source reads in its controller
+// to [Game.WaitingDelayedPermanentSources]. Queries do not read the controller
+// or move a card. Departure and phasing keep the saved incarnation until
+// detection. A returned source cannot replace it. Implicit attachments,
+// opaque players and future delayed bodies do not infer source reads.
+// Entry options do not change the declaration. Saved graveyard visits and
+// controller information use their existing frame and information services.
+//
 // [Regenerate] declares an explicit source subject to
 // [Game.WaitingDelayedPermanentSources]. Queries do not resolve the subject
 // or create a shield. Departure and phasing keep the saved incarnation until

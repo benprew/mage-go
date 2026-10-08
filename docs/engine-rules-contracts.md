@@ -11435,3 +11435,35 @@ Evidence: `TestWaitingDelayedFightOperands`, `TestWaitingDelayedFightBoundaries`
 `TestRONFightArena`, `TestRONFightDelayed`, `TestRONFightHost`,
 `TestRONFightSelfAndNoncombat`, `TestRONFightInstances`,
 `TestRONFightWaitingProtection` and existing native `TestFight*` tests.
+
+### Delayed battlefield-return controller source reads
+
+`ReturnCardToBattlefield(card CardRef, controller PlayerRef,
+options ...BattlefieldEntryOption) ResolvingEffect` declares an explicit source
+read in its controller through `playerRefReadsSourcePermanent`. This covers
+`ControllerOf(This)`, `ControllerOfWithLKI(This)` and `OwnerOf(This)`.
+Sequences and delayed modes retain the declaration, including tapped entry.
+The waiting query does not resolve either operand or move a card, and does not
+infer an implicit host, opaque player or nested future body's references.
+
+The saved source incarnation remains available after departure, transient LKI
+clearing and phasing until detection. Returned objects cannot replace it.
+Detection removes waiting availability before body resolution. Clones keep
+independent waiting lifetimes. Existing saved target frames keep exact graveyard
+visits; the return cannot follow a card that leaves and returns. Existing
+controller information reads use current control or retained departure/phase
+information for the exact source. `You` retains the delayed ability's controller.
+This declaration does not change zone moves, entry replacement ordering,
+simultaneous operations or cost transactions (CR 400.6–7, 603.7a–e, 609.7a,
+702.26b–d).
+
+RON supports one creature graveyard target with one entry operation, either
+`EntersNormally` or `EntersUnderPlayersControl(player)/1`, in existing resolving
+scopes. Invalid player roles, arity and scope reject before publication.
+
+Evidence: `TestWaitingDelayedReturnController`, `TestWaitingDelayedReturnBoundaries`,
+`TestRONWaitingDelayedReturnGameplay`, `Instances`, `Host`, `Invalid`, `Inventory`
+and `Protection`, plus existing `TestRONGraveyardReturn*` and native typed
+graveyard-return tests. Seven protection records gain bounded source-choice
+evidence; this does not establish full general aggregation or Animate Dead
+gameplay.

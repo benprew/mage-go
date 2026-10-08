@@ -125,11 +125,29 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(entries) != 1 || entries[0].Kind != Symbol || entries[0].Name != "EntersNormally" {
+	if len(entries) != 1 {
 		return nil, unsupported(n.Args[1], "graveyard battlefield entry")
 	}
+	var controller playerReferencePlan
+	entry := entries[0]
+	switch entry.Name {
+	case "EntersNormally":
+		if _, err := symbol(entry); err != nil {
+			return nil, err
+		}
+	case "EntersUnderPlayersControl":
+		if err := arity(entry, 1); err != nil {
+			return nil, err
+		}
+		controller, err = compilePlayerRef(entry.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, unsupported(entry, "graveyard battlefield entry")
+	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.ReturnCardToBattlefield(card.build(bindings), mage.You)
+		return mage.ReturnCardToBattlefield(card.build(bindings), controller.build(bindings))
 	}, nil
 }
 

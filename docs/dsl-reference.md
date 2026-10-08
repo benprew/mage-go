@@ -8740,3 +8740,32 @@ source queries. Queries do not resolve operands or deal damage. Implicit hosts,
 opaque references and future delayed bodies supply no inferred source read.
 Arena now compiles and has real-record gameplay tests; general damage-source
 aggregation remains rejected.
+
+### RON graveyard entry controller
+
+`PutGraveyardCardOntoBattlefield(card, [EntersUnderPlayersControl(player)])`
+lowers through `compileGraveyardReturn(Node, scope) (effectFactory, error)`
+to `mage.ReturnCardToBattlefield(card CardRef, controller PlayerRef,
+options ...BattlefieldEntryOption) ResolvingEffect`. The card must be an existing
+singular graveyard target whose filter requires a creature. One bare
+`EntersNormally` still uses `You`. One `EntersUnderPlayersControl(player)/1`
+uses the existing typed player scope and fresh factory bindings. Multiple entry
+operations, invalid roles and unbound players reject at compilation. This adds
+no graveyard-Aura attachment, source-zone card or action-result binding.
+
+The controller is read when the return resolves. `ControllerOfPermanent` uses
+current or retained exact-incarnation information; `You` uses the resolving
+ability's controller. An implicit `HostController` reads the current attachment.
+The exact graveyard visit must still be present. Normal entry replacements run
+before entry events; entry triggers resolve separately.
+
+A direct source read in the controller supplies the saved source to
+`Game.WaitingDelayedPermanentSources` until trigger detection. Queries do not
+resolve players or move cards. Departure, phasing, return exclusion, sequences,
+modes and clone isolation use existing engine services. Implicit attachments,
+opaque players and future delayed bodies do not infer source reads.
+
+Evidence: `TestRONWaitingDelayedReturnGameplay`, `Instances`, `Host`, `Invalid`,
+`Inventory` and `Protection`; native `TestWaitingDelayedReturnController` and
+`Boundaries`. Protection evidence uses bounded category choices with real-record
+costs, filters and shields. General `ChooseADamageSource` remains rejected.
