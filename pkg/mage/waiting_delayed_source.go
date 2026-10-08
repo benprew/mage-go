@@ -17,6 +17,9 @@ func (g *Game) WaitingDelayedPermanentSources() []DamageSource {
 			}
 		}
 		identities = append(identities, capturedPermanent{delayed.MatchEventID, delayed.matchIncarnation})
+		if delayed.sourceCaptured && stateConditionReadsSourcePermanent(delayed.interveningCondition) {
+			identities = append(identities, capturedPermanent{delayed.SourceID, delayed.sourceIncarnation})
+		}
 		for _, effect := range delayed.Effects {
 			addSourceReference(effect)
 			if references, ok := effect.(stackPermanentBindingReferences); ok {
@@ -120,7 +123,7 @@ func (e *capturedDelayedBody) refersToSourcePermanent() bool {
 
 func (e *permanentInformationBranch) refersToSourcePermanent() bool {
 	_, self := e.subject.(sourceRef)
-	return self || effectReadsSourcePermanent(e.body) || (e.hasElse && effectReadsSourcePermanent(e.otherwise))
+	return self || (e.controlHistory && playerRefReadsSourcePermanent(e.controlPlayer)) || effectReadsSourcePermanent(e.body) || (e.hasElse && effectReadsSourcePermanent(e.otherwise))
 }
 
 func (e *combatStateBranch) refersToSourcePermanent() bool {

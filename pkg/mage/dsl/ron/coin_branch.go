@@ -38,6 +38,6 @@ func compileCoinBranch(n Node, ctx scope) (effectFactory, error) {
 				results[i] = mage.OnLoss(body)
 			}
 		}
-		return mage.FlipCoin(mage.You, results...)
+		return mage.FlipCoin(ctx.player.build(bindings), results...)
 	}, nil
 }

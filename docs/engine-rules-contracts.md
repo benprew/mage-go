@@ -10838,3 +10838,43 @@ ability, exact target values, departure LKI and clone isolation.
 `TestRONWaitingDelayedPlayerAmountOnce` checks a scoped hand count before both
 players draw. Existing Wheel of Fortune and Timetwister gameplay tests retain
 their full-card coverage.
+
+## Waiting delayed typed conditional references
+
+The CR 609.7a declaration query `Game.WaitingDelayedPermanentSources` now
+traverses typed conditional operands and all potential bodies without executing
+them. Card-type and cast branches retain body reads; enchantment-subtype branches
+retain subject and body reads; positive branches retain value and body reads.
+State branches and waiting intervening-if conditions retain explicit typed
+source, counter, combat, control and history reads, including all/any/not trees.
+Activation-history branches retain the exact source incarnation in their history
+key, even when the count is zero. Coin branches retain player and both result
+bodies. Control-history alternatives retain their player operand. A scoped
+player snapshot declares the source read that produces its local binding.
+
+False conditions, zero values and unselected outcomes still supply references.
+Queries do not evaluate conditions, values or callbacks, consume RNG, make
+choices, perform payments or execute bodies. Opaque callbacks, implicit
+attachments and not-yet-created nested delays remain excluded. No callback
+introspection or general battlefield scan infers additional identities.
+
+CR 400.7 and 603.7a–e still govern exact identity and delayed creation. Departure
+and phasing retain saved references; returns cannot replace them. One-shot
+trigger detection ends waiting eligibility. An intervening-if condition that is
+false at detection retains its wait; a true detection consumes the wait and the
+condition is checked again at resolution. Existing condition-specific current
+state and LKI policies remain unchanged. Copies and clones keep independent
+binding frames, waiting lifetimes and random queues.
+
+RON scoped coin lowering uses the same `FlipCoin` service as unscoped branches.
+Player scope comes from the existing typed reference or per-instance player
+snapshot. The flip occurs only at resolution and consumes one queued outcome.
+The selected body retains its lexical player scope. Payment transactions,
+replacement ordering and simultaneous-operation mechanics are unchanged.
+
+Evidence: `TestWaitingDelayedBranchOperands` (31 native operand forms),
+`TestWaitingDelayedBranchPurity`, `TestWaitingDelayedBranchIntervening`,
+`TestRONWaitingDelayedBranchProtection` (seven real protection subrules across
+98 branch/lifecycle cases), `TestRONWaitingDelayedBranchScopedCoin`,
+`TestRONWaitingDelayedBranchInstances` and `TestRONWaitingDelayedBranchInvalid`.
+Complete protection records still reject unsupported general source aggregation.

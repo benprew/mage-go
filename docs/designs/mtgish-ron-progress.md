@@ -8,11 +8,12 @@ Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-`WAITING-DELAYED-PLAYER-COLLECTIONS` adds exact source declarations for typed
-player collections and their amounts, plus scoped RON all-player draw values.
-Seven protection names gain seven subrule cases; native declarations gain fifteen
-operand cases. Compilation and full-card coverage are unchanged. Remaining
-conditionals, source aggregation, token grants and sticky layers remain gaps.
+`WAITING-DELAYED-CONDITIONAL-OPERANDS` adds typed source declarations through
+conditional branches and waiting intervening-if conditions, plus scoped RON coin
+lowering and player-binding producer declarations. Seven protection names gain
+98 subrule cases; native declarations gain 31 operand cases. Compilation and
+full-card coverage are unchanged. General source aggregation, token grants and
+sticky layers remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -48067,3 +48068,146 @@ Ranked next candidates:
    subject to named identity, native band combat and token clone evidence.
 
 This run stops after `WAITING-DELAYED-PLAYER-COLLECTIONS`.
+
+## 2026-10-08: waiting delayed typed conditional operands
+
+Status: completed implementation slice `WAITING-DELAYED-CONDITIONAL-OPERANDS`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's summary replacement and appended entry are staged for the ledger.
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` pass.
+The strict loader exits 1 for collection rejection, not a build or test failure:
+1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique names.
+The working tree had no staged changes. Complete protection records and nested
+conditional/coin forms were inspected; no Go card definition supplied requirements.
+Reprints count once. Targeted vocabulary keys: If/2, IfElse/3,
+CameUnderControlOfPlayerThisTurn/1, CreateFutureTrigger/2,
+FlipACoin_OnLose/1, FlipACoin_OnWinAndLose/2 and PlayerActions/2.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, selected: waiting delayed conditional operands | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **0 unlocks**. Existing conditional/coin callers retain coverage. | Missing wrapper, state-condition and branch declarations block the shared legal-source enumeration prerequisite for seven names. | Small to medium: typed traversal, scoped branch lowering, purity, lifecycle, RNG and gameplay cases. |
+| Ranked #2: general damage-source aggregation | The same seven protection names: **up to 7 unlocks** after prerequisites. Their complete records otherwise have supported costs and exact-source prevention. | Conditional declarations are missing at selection; complete category and operand audits must precede aggregation. | Medium to large: aggregate all legal categories, deduplicate identities, visibility, rechecks, choices and full-card scenarios. |
+| Ranked #3: named-token quality grants | Master of the Hunt: **1 plausible unlock**. | NamedTokenWithPT and nested BandsWithOthers need named identity and parameterized ability lowering, combat and clone evidence. | Medium: token/grant adapters and combat cases. |
+
+Candidate #1 is dependency-ready, bounded and supplies concrete downstream value
+for seven unique names. This shared prerequisite takes priority over the blocked
+aggregation and single-card token capability. Contract, reuse boundary and
+acceptance cases were stated before production changes. No skill, delegation,
+Go-card fallback, generated stub or source-data correction was used.
+
+### Exact shapes, boundaries and engine reuse
+
+- `stateConditionReadsSourcePermanent(StateCondition) bool` declares typed source
+  reads through tapped/LKI, blocking, attack/damage history, counters, permanent
+  property/combat/control/owner and last-turn history conditions. All/any/not
+  conditions traverse all operands. Opaque callbacks and general battlefield
+  predicates do not infer source identity.
+- `refersToSourcePermanent() bool` now covers card-type and cast branch bodies,
+  enchantment-subtype subject/body, positive value/body, state condition/body,
+  activation-history identity and coin player/both outcomes. Control-history
+  branches include their explicit player operand. `playerSnapshot` declares
+  source reads in the producer of a scoped player binding.
+- `Game.WaitingDelayedPermanentSources() []DamageSource` also reads typed
+  intervening-if operands of already-created waiting delayed abilities.
+  Existing capture, source incarnation, LKI, deterministic deduplication,
+  sequence/mode traversal, trigger transfer and clone services are reused.
+- `compileCoinBranch(Node, scope) (effectFactory, error)` uses the lexical player
+  plan rather than a fixed You operand. `compilePlayerEffect` and
+  `compilePlayerActions` support both existing coin forms in `PlayerAction`
+  and `PlayerActions`, including delayed contexts. Lists must be nonempty;
+  references remain typed and lexical. Only PlayerActions declares ActionPlayer.
+  Factories construct separate bindings; copied frames retain the original
+  producer identity. Native constructor signatures remain unchanged.
+
+RON owns spelling, shape validation, player scope and lowering. Mage owns typed
+reference declarations and runtime execution. Queries do not evaluate values,
+conditions or filters, run bodies, offer payments, choose modes, flip coins or
+consume RNG. False conditions and unselected outcomes keep explicit declarations.
+Implicit attachments and not-yet-created future delays remain excluded.
+
+Departure and phasing retain exact saved incarnations; returned objects cannot
+replace them. Current or retained information uses the existing information
+service. Trigger detection ends waiting eligibility. False intervening-if
+conditions retain the wait; successful detection consumes it and resolution
+rechecks the condition. Scoped coin execution occurs at resolution and consumes
+one outcome. Source-controller reads follow their existing LKI policy.
+CR 400.7, 603.7a–e and 609.7a–b govern these contracts. Payment transactions,
+replacement ordering and simultaneous-operation services are unchanged.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production changes, `go test ./pkg/mage -run TestWaitingDelayedBranch
+-count=1` failed thirty conditional operand cases and the purity case for missing
+references. The intervening-if test separately failed for a lost waiting source.
+`go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedBranch -count=1` failed
+protection source choices and scoped coin lowering. After the first fix, a new
+producer-reference assertion failed before adding the playerSnapshot declaration.
+Initial test setup mistakes (counter constant, one-mode list and ControllerOf
+spelling) were corrected before the recorded semantic failures. No tests were
+weakened. Supplemental scope, copy and instance cases were then added.
+
+| Tests | Mapping and evidence |
+| --- | --- |
+| TestWaitingDelayedBranchOperands | 31 native forms: condition/body operands, both outcomes, nested state trees, source-history identity and scoped player producer; phasing, departure/return, retained color and clone waiting lifetime |
+| TestWaitingDelayedBranchPurity | No value/callback execution or RNG consumption; implicit, opaque and future exclusions; five invalid native declarations |
+| TestWaitingDelayedBranchIntervening | False condition retains waiting eligibility; true detection consumes it; changed state prevents execution at resolution |
+| TestRONWaitingDelayedBranchProtection | Seven real protection records, 98 branch/lifecycle cases: existing RON cost/filter/shield subrules, source incarnation/LKI, phasing, copies, clones, unpaid rollback, resolution-only choice and shield consumption |
+| TestRONWaitingDelayedBranchScopedCoin | Both PlayerAction and PlayerActions; both outcomes, changed source control, resolution player, producer reference, one RNG result and independent clone queues |
+| TestRONWaitingDelayedBranchInstances | Two factories plus a copied ability; exact departed/returned producer, saved controller, independent player bindings and clone execution |
+| TestRONWaitingDelayedBranchInvalid | Five unbound target/player or empty branch declarations reject at compile time |
+| TestRONCoin* | Existing Bottle of Suleiman, Orcish Captain, Goblin Artisans, Mijae Djinn, Ydwen Efreet and Goblin Kites full-record coin gameplay remains passing |
+| TestRONPropertyAlternatives*; TestRONWaitingSourceBodies | Existing Erg Raiders and Dragon Whelp conditional/history gameplay, and delayed source-body regressions remain passing |
+
+The seven protection mappings establish subrules, not complete-card gameplay.
+Their complete records still reject general ChooseADamageSource. Native-only
+condition forms do not imply new RON syntax. No source defect or environmental
+failure was found. RON source files are unchanged; no vocabulary refresh is needed.
+No Go definitions or DSL exports were removed; cutover gates remain closed.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingDelayedBranch|TestRONCoin|TestRONPropertyAlternatives|TestRONWaitingSourceBodies' -count=1`: PASS.
+  `go test ./pkg/mage -run TestWaitingDelayedBranch -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic formatting was reviewed; affected
+  focused tests were rerun and passed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Counts remain
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**, out of 2,445 records / 986 names. Diagnostics are identical to the
+  fresh baseline. First diagnostic: Animate Dead,
+  `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict collection rejection still installs no partial registry.
+
+Estimated and actual gains match: **0 full-card unlocks / 0 compiled records**.
+Gameplay evidence gains 31 native operand cases, 98 protection subrule cases,
+scoped coin and producer binding cases, five RON rejection cases, purity and
+intervening-if timing evidence. Compilation and complete-card coverage are
+unchanged. These declarations prepare the shared seven-card source enumeration
+capability; they do not claim the general legal-source audit is complete.
+
+Changed files: pkg/mage/waiting_delayed_branch.go,
+pkg/mage/waiting_delayed_branch_test.go, pkg/mage/waiting_delayed_source.go,
+pkg/mage/dsl/ron/coin_branch.go, pkg/mage/dsl/ron/compiler.go,
+pkg/mage/dsl/ron/player_actions.go,
+pkg/mage/dsl/ron/waiting_delayed_branch_test.go, pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md,
+and this ledger's summary and appended entry.
+
+Ranked next candidates:
+
+1. General damage-source aggregation: seven protection names, up to seven
+   full-card unlocks. First audit all remaining typed reference operands and
+   legal-source categories; implement any bounded missing prerequisite first.
+2. Named-token quality grants for Master of the Hunt: one plausible unlock;
+   requires named identity, native band combat and token clone evidence.
+3. Sticky layer lifecycle for Titania's Song: one plausible unlock; needs
+   source departure retention, layer membership, ability loss and per-member
+   mana values. Reassess other multi-card candidates before either single card.
+
+This run stops after `WAITING-DELAYED-CONDITIONAL-OPERANDS`.

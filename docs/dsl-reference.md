@@ -8333,3 +8333,33 @@ singular library-recycling sets retain their typed operands. Draw, discard, life
 library recycling, random choice, damage and player-controlled permanent
 collections use these declarations. Queries do not execute the operation or
 select members. General damage-source aggregation remains unsupported.
+
+## Waiting delayed conditional operands and scoped coin branches
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains explicit source
+reads through typed card-type, cast, enchantment-subtype, positive-value, state,
+activation-history and coin branches. State conditions declare typed source
+subjects, counter/combat/history reads and nested all/any/not operands.
+`UnlessPermanentCameUnderControlThisTurn` also declares its player operand.
+`SnapshotPlayer` declares source reads in the binding producer. Waiting delayed
+intervening-if conditions use the same typed traversal.
+
+Both branches declare references, even when a condition is false or a branch
+cannot run. Queries do not check conditions, read amounts, flip coins or run
+callbacks. Opaque callbacks, implicit attachment reads and future nested delays
+remain excluded. The existing saved incarnation, LKI, phasing, deduplication,
+trigger detection and clone services retain their behavior.
+
+RON `compileCoinBranch(Node, scope) (effectFactory, error)` lowers the current
+player scope with `mage.FlipCoin(PlayerRef, ...CoinBranch) ResolvingEffect`.
+Both `FlipACoin_OnLose([actions])` and
+`FlipACoin_OnWinAndLose([win_actions], [loss_actions])` now support `PlayerAction`
+and `PlayerActions` contexts, including delayed bodies. Branch lists must be
+nonempty. `PlayerActions` supplies its existing local `ActionPlayer` binding;
+`PlayerAction` supplies no new binding. Nested actions retain the same lexical
+player scope. Unbound or incompatible references remain compile errors.
+
+Evidence: `TestWaitingDelayedBranchOperands`, `TestWaitingDelayedBranchPurity`,
+`TestWaitingDelayedBranchIntervening` and `TestRONWaitingDelayedBranch*`.
+The seven protection names gain subrule evidence only. General source aggregation
+still rejects their complete RON records.

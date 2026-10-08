@@ -229,6 +229,14 @@
 // Queries do not select players, read history, draw cards or consume randomness.
 // Empty sets and zero amounts keep the saved source until the delay triggers.
 // Other collection actions need separate contracts.
+// Typed conditional bodies declare explicit source reads in every branch to
+// [Game.WaitingDelayedPermanentSources]. [IfState] and delayed intervening
+// conditions retain typed source operands without checking the condition.
+// [IfPositive] retains its value and body. [FlipCoin] retains its player and
+// both outcomes. [IfActivationsAtLeast] retains its source incarnation history.
+// [SnapshotPlayer] retains explicit source reads in the binding producer.
+// Queries do not read values, check conditions, run branches or consume randomness.
+// Opaque callbacks, implicit attachments and future delays do not infer reads.
 // [PreventCombatDamageToAndBy], [PreventCombatDamageBy] and
 // [PreventCombatDamageByThisTurn] declare direct [This] subjects to the same
 // waiting query. [PreventCombatDamageByEach] and
