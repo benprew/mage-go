@@ -85,14 +85,13 @@ func defaultOutgoingBandAssignments(g *Game, sources []outgoingBandSource, recip
 // Each source must reach the damage pipeline with its own captured information.
 func (c *Combat) assignOutgoingBandDamage(g *Game, plan *combatDamagePlan, members, blockers []uuid.UUID, defenderID uuid.UUID, firstStrike bool) {
 	var recipients []*Permanent
-	defendingBand := false
+	defendingBand := g.hasBandingAssignment(blockers)
 	for _, id := range blockers {
 		blocker := g.FindPermanent(id)
 		if blocker == nil || blocker.PhasedOut {
 			continue
 		}
 		recipients = append(recipients, blocker)
-		defendingBand = defendingBand || blocker.HasKeyword(core.Banding)
 	}
 	var sources []outgoingBandSource
 	for _, id := range members {

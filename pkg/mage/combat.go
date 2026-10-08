@@ -246,6 +246,18 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 	delete(c.Attackers, id)
 	delete(c.AttackerIncarnations, id)
+	if members, ok := c.Bands[id]; ok {
+		remaining := make([]uuid.UUID, 0, len(members))
+		for _, member := range members {
+			if member != id {
+				remaining = append(remaining, member)
+			}
+		}
+		delete(c.Bands, id)
+		for _, member := range remaining {
+			c.Bands[member] = remaining
+		}
+	}
 	for _, g := range c.Groups {
 		if g.AttackerID == id {
 			g.AttackerID = uuid.Nil
@@ -414,6 +426,10 @@ func (p *combatDamagePlan) permanent(g *Game, recipient *Permanent, amount int, 
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
 func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
+	if c.needsSharedBandAssignment(g) {
+		c.resolveSharedBandDamage(g, isFirstStrikeStep)
+		return
+	}
 	// Track which band leaders we've already processed to avoid double-dealing.
 	processedBands := make(map[uuid.UUID]bool)
 	// Save all assignments before replacement choices can change game state.

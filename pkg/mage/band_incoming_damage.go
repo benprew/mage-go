@@ -6,8 +6,6 @@ import (
 	"math"
 
 	"github.com/google/uuid"
-
-	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 type incomingBandSource struct {
@@ -71,7 +69,7 @@ func chooseBandDamageAssignment(chooser Player, source incomingBandSource, recip
 // Separate sources let prevention choices and damage results use the correct object.
 func (c *Combat) assignIncomingBandDamage(g *Game, plan *combatDamagePlan, members, blockers []uuid.UUID, firstStrike bool) {
 	var recipients []*Permanent
-	banding := false
+	var eligible []uuid.UUID
 	for _, id := range members {
 		member := g.FindPermanent(id)
 		if member == nil || member.PhasedOut || !c.Attackers[id] {
@@ -81,8 +79,9 @@ func (c *Combat) assignIncomingBandDamage(g *Game, plan *combatDamagePlan, membe
 			continue
 		}
 		recipients = append(recipients, member)
-		banding = banding || member.HasKeyword(core.Banding)
+		eligible = append(eligible, id)
 	}
+	banding := g.hasBandingAssignment(eligible)
 	if len(recipients) == 0 {
 		return
 	}

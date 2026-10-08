@@ -9235,3 +9235,47 @@ attachment changes and returned hosts, phasing, source ability removal and
 departure, existing artifact creatures, counters, bonuses and P/T switching.
 Existing `While` callers keep their separate live layer selections.
 Titania's Song still needs sticky duration and its RON context.
+
+## Bands with other: live static grants and combat assignment
+
+`GrantEachBandsWithOther(subjects PermanentSet, quality PermanentFilter)
+ContinuousModification` grants the specified quality ability in layer 6. Each
+layer pass reads the current selected subjects. `EffectManager.bandsWithOther`
+keys each subject by its permanent ID and incarnation; clones copy its quality
+slices. Phasing, departure and source ability removal suspend the static grant.
+Current controller, color and legendary status determine land-grant membership.
+There is no LKI fallback for a live combat ability. Removing ordinary banding
+also removes these grants (CR 702.22b); a later grant can restore them in layer
+order. Removing all abilities uses that same removal service.
+
+`Game.FormAttackingBand(ids []uuid.UUID) error` accepts distinct current attackers
+with one controller and defender, before blocker declaration. A creature cannot
+join two bands. Ordinary banding permits one member without ordinary banding;
+a quality band instead requires one matching holder and all members matching
+that holder's quality (CR 702.22c/d). One-member bands are legal. Ability loss
+keeps a formed band, but combat removal removes that member (CR 702.22e/f).
+Existing blocking propagation and exact attack/block incarnations still apply.
+The scripted `BandFormer` path calls the same validation service.
+
+Damage assignment checks current abilities and qualities for each source's
+actual combat opponents. Ordinary banding or a matching holder plus another
+matching creature transfers the choice under CR 702.22j/k. Once the condition
+holds, all eligible opponents can receive that source's damage, including
+opponents outside the quality. No band shares keywords or damage power.
+A blocker across multiple groups assigns its power once, divided among the
+attackers it actually blocks (CR 510.1d). The shared path also covers two
+independent attackers blocked by the same creature; formation is not required.
+
+Shared combat planning reuses `assignOutgoingBandDamage`,
+`assignIncomingBandDamage`, validated player assignment maps and bounded number
+choices. First strike, nonpositive power, trample lethal checks, damage source
+snapshots, prevention, lifelink and simultaneous damage use the existing services.
+Ordinary bands without the new abilities retain their aggregate legacy incoming
+assignment interface. Replacement choices occur after the complete plan is
+saved. The new shape introduces no payment, replacement ordering or zone service.
+
+Native evidence: `TestBandsWithOtherFormation`, `FormationWindow`, `Damage` and
+`AssignmentRecipients`. RON evidence: `TestRONBandsWithOtherRecords`, `Lifecycle`,
+`Invalid` and `StrictLoad`, for Adventurers' Guildhouse, Cathedral of Serra,
+Mountain Stronghold, Seafarer's Quay and Unholy Citadel. Token grants and
+`AnyBandsWithOthers` removal are separate unsupported RON contexts.

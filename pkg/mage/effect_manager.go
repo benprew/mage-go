@@ -358,6 +358,7 @@ func (e *targetEffect) ApplyContinuous(ctx *EffectContext) error {
 type EffectManager struct {
 	animationMembers           map[animationCycleKey][]capturedPermanent
 	composedMembers            map[composedCycleKey]composedCycleSelection
+	bandsWithOther             map[capturedPermanent][]PermanentFilter
 	effects                    []ContinuousEffect
 	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
@@ -405,6 +406,13 @@ func (em *EffectManager) GrantAttr(permID uuid.UUID, a Attr) {
 // instances of the same landwalk are redundant, not additive), unless a later
 // grant re-adds it. See GrantAttr for the last-writer-wins model.
 func (em *EffectManager) RevokeAttr(permID uuid.UUID, a Attr) {
+	if a == Banding {
+		for subject := range em.bandsWithOther {
+			if subject.id == permID {
+				delete(em.bandsWithOther, subject)
+			}
+		}
+	}
 	if em.attrDeltas[permID] == nil {
 		em.attrDeltas[permID] = make(map[Attr]int)
 	}
@@ -582,6 +590,7 @@ func (em *EffectManager) Apply(g *Game) {
 	em.animationMembers = make(map[animationCycleKey][]capturedPermanent)
 	em.composedMembers = make(map[composedCycleKey]composedCycleSelection)
 	clear(em.attrDeltas)
+	clear(em.bandsWithOther)
 	clear(em.blockPairRestrictions)
 	em.resetCombatRestrictions()
 	em.cycleReplacements = em.cycleReplacements[:0]

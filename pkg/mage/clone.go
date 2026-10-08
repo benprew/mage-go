@@ -422,6 +422,13 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 	clone.cycleReplacements = cloneReplacementSlice(em.cycleReplacements)
 	// Clone subsystems.
 	clone.Rules = cloneGameRules(em.Rules)
+	if len(em.bandsWithOther) > 0 {
+		clone.bandsWithOther = make(map[capturedPermanent][]PermanentFilter, len(em.bandsWithOther))
+		for subject, qualities := range em.bandsWithOther {
+			clone.bandsWithOther[subject] = slices.Clone(qualities)
+		}
+	}
+
 	return clone
 }
 

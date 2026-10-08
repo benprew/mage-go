@@ -120,6 +120,16 @@
 // Each new pass reads current state. Values are read in their applicable layer.
 // Type dependencies compare selections in separate game probes.
 //
+// Use [GrantEachBandsWithOther] for a static combat ability with a quality filter.
+// Current subjects and qualities control formation and damage assignment.
+// [Game.FormAttackingBand] checks distinct attackers with one defender before
+// blocker declaration. Ability loss keeps the band; combat removal removes
+// its member. Losing banding also removes all bands-with-other grants.
+// A matching holder and another matching creature transfer the damage choice.
+// The choice can assign damage to any eligible combat opponent.
+// A blocker across several groups divides one amount among its opponents.
+// The shared damage batch keeps each source and its own keywords separate.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

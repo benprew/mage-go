@@ -2,17 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **766 accepted / 220 rejected unique card
-names** (986 total), and **1,971 compiled / 474 rejected records** (2,445 total).
+The latest recorded inventory reports **771 accepted / 215 rejected unique card
+names** (986 total), and **1,976 compiled / 469 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `CONDITIONAL-LAYER-MEMBERSHIP` adds exact grouped subjects across
-continuous layers and complete Animate Artifact gameplay (six reprint records).
-Titania's Song still needs collective per-member values and sticky duration.
-Precast zone visits and opaque references remain before complete damage-source
-enumeration. Library of Leng still needs its RON replacement adapter.
+unfinished. `STATIC-BANDS-WITH-OTHER` adds typed quality formation and damage
+assignment plus complete RON gameplay for five Legends lands. Token grants and
+selective bands-with-other removal remain unsupported. Precast zone visits and
+opaque references remain before complete damage-source enumeration. Titania's
+Song still needs per-member base values and sticky duration.
+
 ## Run 2026-10-03: P0-INVENTORY
 
 Status: complete semantic inventory/reporting slice. Scope/instance prerequisites
@@ -42655,5 +42656,157 @@ Ranked next candidates:
 3. Collective per-member live base values and sticky source-exit duration,
    reusing the new grouped membership contract for Titania's Song. This remains
    lower priority than useful multi-card work unless selected as its prerequisite.
+
+Migration completion gates remain unmet. The commit hash is in the final reply.
+
+## 2026-10-08: static bands-with-other grants and combat assignment
+
+Status: completed implementation slice `STATIC-BANDS-WITH-OTHER`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and this ledger, plus untracked `mtgish-ron-completed.md`, are
+preserved. Only this run's summary update and appended entry are staged for the
+ledger; its existing relocation and historical-entry removal are not staged.
+
+### Candidate comparison and selection
+
+Complete RON records and nested forms were read for the eight bands-with-other
+names, the seven source-choice prevention names, Jade Monolith, Reverse Damage,
+and Titania's Song. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Ranked #1: typed bands formation and assignment, with static grants | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel; Master of the Hunt; Shelkin Brownie; Tolaria | Five lands. Master of the Hunt still needs named-token ability lowering; Shelkin Brownie and Tolaria need selective `AnyBandsWithOthers` removal. | Shared eight-name prerequisite. Moderate work for quality grants, formation, live assignment eligibility, multi-attacker blocker allocation, layers, cloning and RON tests. Selected. |
+| Ranked #2: precast exile visits | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation | Zero. Permitted-cast/continuation identity and the opaque-reference audit still block complete damage-source enumeration. | Concrete seven-name source category, then complete source choices also serve Jade Monolith and Reverse Damage. Larger zone/cast integration prerequisite; separate bounded slices remain necessary. |
+| Ranked #3: collective per-member base values and sticky duration | Titania's Song | One. Both per-member mana values and source-exit duration remain missing. | Reuses grouped membership but needs two additional engine contracts. Moderate to large effort for one unique card; deferred while shared multi-card work remains. |
+
+The selected shape is an unconditional static collection grant. Its complete
+contract includes CR 702.22b/c/d/e/f/h/j/k, not just parsing a quality or recording
+a band. A blocker across independent attacker groups previously dealt its full
+power to each attacker. One source allocation across its actual opponents was a
+necessary prerequisite and is included. Other grant/removal contexts stay errors.
+
+### Signatures, ownership and dependencies
+
+- RON: `EachPermanentLayerEffect(filter, [AddAbility([BandsWithOthers(quality)])])`.
+  One or more bands-with-other grants are allowed in this layer body. Existing
+  static subject filters supply color, legendary creature and current-controller
+  selection. The quality uses an existing pure static permanent filter plan;
+  source exclusions, controller bindings, target references, empty compositions,
+  bad arities and invalid names remain declaration errors. Unrelated combined
+  modifications, singular/Aura contexts, printed/token abilities and temporary
+  grants are not accepted by this adapter.
+- Compiler: `compileBandsWithOtherLayer(Node, []Node) (optionFactory, error)`
+  validates the declaration and builds fresh modifications inside
+  `Static(While(...))`. RON owns spelling, scope and diagnostics.
+- Engine: `GrantEachBandsWithOther(PermanentSet, PermanentFilter)
+  ContinuousModification` installs quality grants in layer 6. Per-pass
+  `EffectManager.bandsWithOther` stores immutable quality filters under exact
+  permanent/incarnation keys. Clones copy the map and slices only when nonempty.
+  Current subject selection controls grant availability; departure, phasing,
+  controller/color/type changes and source ability removal cannot restore an
+  obsolete registration. Queries do not mutate state or use LKI for absence.
+- Engine: `Game.FormAttackingBand([]uuid.UUID) error` shares validation with the
+  scripted `BandFormer` path. Members must be distinct current attackers with
+  one controller and defender, before blocker declaration, and in no prior band.
+  Ordinary formation keeps its own rules. Quality formation requires a matching
+  holder and all members matching that holder's quality. Single-member bands
+  are legal. Losing abilities preserves a formed band; leaving combat removes
+  the member. A phase cycle or returned incarnation cannot rejoin that band.
+- Damage choices use current ordinary banding or a matching holder plus another
+  matching opponent for each source. Every eligible combat opponent can receive
+  the damage after this condition holds. Multiple qualities do not combine into
+  a broader formation predicate. Removing ordinary banding clears all current
+  bands-with-other grants; later layer grants and cleanup can restore them.
+- The shared combat path plans outgoing sources separately, then each distinct
+  blocker once across its actual live attack/block pairs. It reuses existing
+  assignment map validation, bounded choices, first-strike services, trample
+  lethal checks and simultaneous damage. Ordinary bands without these qualities
+  retain the existing aggregate legacy incoming distribution interface.
+
+Reuse boundary: typed permanent collections, exact attack/block incarnations,
+static source lifecycle, live layer selection, current controller and property
+filters, clone services, outgoing/incoming source damage plans, damage snapshots,
+prevention, replacement ordering/rechecks, actual damage and lifelink. No new
+payment, zone, replacement or LKI subsystem was added. This slice adds no costs,
+so cost rollback has no new contract; land play uses the existing land service.
+All five complete land records were compared with local Oracle text in
+`data/LEG.json`; no source-data defect was found.
+
+### Failing-first evidence and card-to-test mapping
+
+Tests were written before production edits. Initial native and RON test builds
+failed on the missing `GrantEachBandsWithOther`, `FormAttackingBand` and live
+assignment APIs. Incidental test helper spelling errors were corrected and the
+expected new-signature failures were confirmed before implementation.
+`TestBandsWithOtherFormationWindow` separately failed its assertion that a band
+must not form after blocker declaration; the formation validation was then fixed.
+
+| Test | Card mapping / evidence |
+| --- | --- |
+| `TestBandsWithOtherFormation` | Synthetic typed quality: three-member bands, duplicate and overlapping rejection, common defender, retained formation after ability loss, clone isolation and phase-cycle membership. |
+| `TestBandsWithOtherFormationWindow` | Synthetic formation rejection after blocker declaration. |
+| `TestBandsWithOtherDamage` | Synthetic incoming/outgoing choices, independent attacker groups, nonmatching qualities, source loss, first strike and trample lethal checks. |
+| `TestBandsWithOtherAssignmentRecipients` | Synthetic matching holder plus partner: choice can assign to a third nonmatching opponent; one qualifying opponent does not transfer the choice. One blocking source, finite prevention and actual lifelink. |
+| `TestRONBandsWithOtherRecords` | All five lands: validated complete records, normal land play without a stack object, three-member attack bands and three blocking recipients, exact chooser per source, simultaneous separate source totals, finite prevention and pending clone isolation. |
+| `TestRONBandsWithOtherLifecycle` | All five lands: a different-color legendary partner need not hold the grant; nonlegendary rejection, source phasing/control/ability removal, recipient banding/all-ability removal, cleanup restoration and returned attacker exclusion. |
+| `TestRONBandsWithOtherInvalid` | Invalid quality spelling/arity, bound source/controller references, empty composition and empty named quality. |
+| `TestRONBandsWithOtherStrictLoad` | Complete five-record collection plus identical reprints, independent factory/card/ability identities and atomic rejection of an invalid collection. |
+
+Estimated and actual gains match: **+5 accepted unique names / +5 compiled
+records**, with complete RON behavior mappings for the five lands. Master of the
+Hunt, Shelkin Brownie and Tolaria remain rejected and gain no full-card coverage
+claim. Compilation and collection gameplay completion remain separate.
+
+### Validation and fresh loader evidence
+
+- Baseline `make build`; `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+  Baseline loader: expected exit 1; 1,971 compiled / 474 rejected records,
+  766 accepted / 220 rejected unique names. This is collection rejection,
+  not a build or environment failure.
+- `go test ./pkg/mage/dsl/ron -run TestRONBandsWithOther -count=1`: PASS.
+  Native `go test ./pkg/mage -run TestBandsWithOther -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+  The initial short suite found the existing clone allocation budget exceeded
+  by one allocation. Nonempty-only cloning fixed it without weakening the
+  budget. The initial ordinary-band regression in legacy aggregate totals was
+  fixed by distinguishing repeated members of one band from independent groups;
+  its original assertions remain intact.
+- `make lint`: PASS, 0 issues. The first run reported six test slice
+  preallocation issues; they were fixed. Automatic import formatting was
+  reviewed. Both focused suites, ordinary-band regressions and the clone
+  allocation check passed again, and `make build` passed again.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,976 compiled /
+  469 rejected records; 771 accepted / 215 rejected unique names**. Diagnostics
+  match the baseline after removing exactly the five land records. First
+  remaining issue: Animate Dead, `2ED.lines.ron:4:151: unsupported rule
+  (EnchantGraveyardCard)`. The collection is still rejected atomically.
+
+All 12 RON source hashes match the vocabulary snapshot. No source or vocabulary
+refresh is required. No environmental blocker was found. No Go definition,
+registry consumer, generator or DSL function meets its removal gate in this run.
+Complete collection gameplay, embedded runtime cutover, Go-card deletion and
+unused DSL cleanup remain unfinished.
+
+Changed files: new engine and RON `bands_with_other.go` and tests; combat,
+continuous modifications, effect manager, cloning and turn execution; RON layer
+adapter and inventory expectations; engine API reference, rules contracts, DSL
+reference and this ledger summary/entry.
+
+Ranked next candidates:
+
+1. Selective `AnyBandsWithOthers` removal through the new typed grant service:
+   Shelkin Brownie and Tolaria have otherwise supported complete records. Keep
+   ordinary banding separate, test layer timestamps, source/target incarnation,
+   upkeep restrictions, cloning and cleanup. Estimated two unique unlocks.
+2. Precast exile visits and exact permitted-cast/continuation identity for the
+   seven-name prevention prerequisite, then opaque-reference auditing and full
+   CR 609.7a source enumeration. Zero immediate unlocks with concrete multi-card
+   benefit; size the zone prerequisite independently.
+3. Named-token bands-with-other ability lowering for Master of the Hunt. The
+   typed quality and combat rules now exist; preserve per-token source bindings
+   and clone/creation isolation. One estimated unlock; defer while useful
+   multi-card work remains.
 
 Migration completion gates remain unmet. The commit hash is in the final reply.

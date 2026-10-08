@@ -19,6 +19,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		}
 		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
 			for _, ability := range part.Args[0].Args {
+				if ability.Name == "BandsWithOthers" {
+					return compileBandsWithOtherLayer(n, parts)
+				}
 				if ability.Name == "Activated" || ability.Name == "ActivatedWithModifiers" {
 					return compileStaticActivatedGrant(n, parts, ctx)
 				}

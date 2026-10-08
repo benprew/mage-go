@@ -7264,3 +7264,25 @@ Animate Artifact therefore keeps its base P/T after its own type addition
 makes the host a creature. A host that was already a creature is unaffected.
 A fresh pass checks the condition again. This does not add sticky effects or
 collective dynamic base-value lowering.
+
+### RON static bands-with-other grants
+
+The compiler accepts
+`EachPermanentLayerEffect(filter, [AddAbility([BandsWithOthers(quality)])])`.
+The collection selector uses existing static permanent filters, including
+`ControlledByAPlayer(SinglePlayer(You))`. The quality is a pure permanent filter;
+source/controller bindings, target references and empty compositions are
+rejected. `And`, `IsSupertype`, `IsCardtype` and `IsNamed(NamedCard("name"))`
+use their existing validated filter plans. Each factory builds its own grant.
+
+This shape lowers to `GrantEachBandsWithOther(PermanentSet, PermanentFilter)`
+inside `Static(While(...))`. The engine checks qualities at band formation and
+combat damage assignment. All members of a quality band must match the quality;
+only one matching member must hold the ability. Static land recipients must
+also match the grant's color and current controller selection.
+
+The supported context is an unconditional static collection layer with one or
+more bands-with-other grants. Combined unrelated modifications, Aura/singular
+subjects, printed declarations, token abilities, temporary grants and selective
+`AnyBandsWithOthers` removal remain declaration errors. Ordinary banding removal
+uses the shared engine rule and removes bands-with-other grants too.

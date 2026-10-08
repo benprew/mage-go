@@ -256,9 +256,7 @@ func (g *Game) doDeclareAttackers() {
 	// Form attacking bands if the player has scripted them.
 	if bf, ok := active.(BandFormer); ok {
 		for _, band := range bf.GetBandFormations(g.turns.Turn(), g) {
-			if g.isValidBand(band) {
-				g.combat.AddBand(band)
-			}
+			_ = g.FormAttackingBand(band)
 		}
 	}
 
@@ -286,29 +284,6 @@ func (g *Game) AttackedDuringLastTurn(playerID, permID uuid.UUID) bool {
 		return m[permID]
 	}
 	return false
-}
-
-// isValidBand checks that a slice of attacker IDs meets banding requirements:
-// all must be currently attacking, at least one must have banding, and at most
-// one may lack banding.
-func (g *Game) isValidBand(memberIDs []uuid.UUID) bool {
-	if len(memberIDs) < 2 {
-		return false
-	}
-	bandingCount := 0
-	nonBandingCount := 0
-	for _, id := range memberIDs {
-		perm := g.FindPermanent(id)
-		if perm == nil || !g.combat.IsAttacking(id) {
-			return false
-		}
-		if perm.HasKeyword(Banding) {
-			bandingCount++
-		} else {
-			nonBandingCount++
-		}
-	}
-	return bandingCount >= 1 && nonBandingCount <= 1
 }
 
 func (g *Game) doDeclareBlockers() {
