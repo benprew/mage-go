@@ -1,5 +1,7 @@
 package mage
 
+import "slices"
+
 // WaitingDelayedPermanentSources reads saved frames, event subjects and source reads.
 // Only abilities that still wait to trigger can supply this source category.
 func (g *Game) WaitingDelayedPermanentSources() []DamageSource {
@@ -88,15 +90,19 @@ func damageReadsSourcePermanent(ref DamageSourceRef) bool {
 }
 
 func (e *sequenceEffect) refersToSourcePermanent() bool {
-	for _, effect := range e.effects {
-		if reference, ok := effect.(delayedSourcePermanentReference); ok && reference.refersToSourcePermanent() {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(e.effects, effectReadsSourcePermanent)
 }
 
 func (e *capturedDelayedBody) refersToSourcePermanent() bool {
-	reference, ok := e.body.(delayedSourcePermanentReference)
+	return effectReadsSourcePermanent(e.body)
+}
+
+func (e *permanentInformationBranch) refersToSourcePermanent() bool {
+	_, self := e.subject.(sourceRef)
+	return self || effectReadsSourcePermanent(e.body) || (e.hasElse && effectReadsSourcePermanent(e.otherwise))
+}
+
+func effectReadsSourcePermanent(effect Effect) bool {
+	reference, ok := effect.(delayedSourcePermanentReference)
 	return ok && reference.refersToSourcePermanent()
 }

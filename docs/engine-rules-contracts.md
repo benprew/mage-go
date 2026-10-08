@@ -7958,7 +7958,8 @@ This context includes saved `capturedDelayedBody` wrappers, nested `Sequence`
 bodies and each saved modal body. The typed reference interface does not execute
 an action. A source ID alone does not qualify. An action that will create another
 delayed ability does not supply its future body's references in this context.
-Other source-reading action kinds and conditional wrappers remain separate forms.
+Other source-reading action kinds remain separate forms. Property branches have
+the reference contract below; other conditional wrappers remain separate.
 
 The ability must have a captured source and a known permanent incarnation.
 The reader uses the saved source ID/incarnation, the existing incarnation
@@ -9922,5 +9923,50 @@ payments and shields, and prove copied delays, exact departed/returned/phased
 references, clone isolation, simultaneous damage and shield consumption.
 
 This slice establishes these source declarations only. Recipient self reads,
-conditional wrappers, other damage implementations and opaque references still
-need audit before complete source aggregation.
+other conditional wrappers, other damage implementations and opaque references
+still need audit before complete source aggregation. Property branches have the
+reference contract below.
+
+## Waiting delayed property-branch permanent references
+
+`permanentInformationBranch.refersToSourcePermanent() bool` declares `This`
+when the condition subject is the source, or when either declared action body
+reads the source through the existing typed interface. The same implementation
+serves `IfPermanentMatches`, `UnlessPermanentMatches`,
+`IfPermanentMatchesElse` and the native control-history variant. It does not
+read a filter, choose a branch, evaluate a value or run an action. False and
+unknown conditions do not change declaration membership. Only a declared else
+body qualifies. `effectReadsSourcePermanent(Effect) bool` shares the interface
+read with saved bodies and sequences.
+
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains its signature
+and exact source-capture requirement. Saved sequences, modes and nested property
+branches propagate the declaration. A bound or attached condition does not imply
+self; explicit source reads in its bodies can still qualify. An instruction
+that will create another delayed ability does not expose its future body's
+references. Opaque callbacks, combat branches and other conditional effect
+implementations gain no inferred reference contract.
+
+The existing deterministic deduplication, incarnation information, delayed
+capture, pending transfer and game cloning services supply identity and lifetime.
+Queries return separate mutable facts. Current color and control can change;
+departure retains facts, phasing keeps identity, and return cannot replace the
+saved source. One-shot detection ends this waiting category before stack
+placement. Querying does not commit to the eventual branch. Resolution retains
+its existing current/LKI property checks and saved ability controller.
+CR 400.7, 603.7a–e and 609.7a–b apply. Cost, damage, replacement-ordering and
+simultaneous-operation contracts are unchanged.
+
+Evidence: `TestWaitingDelayedConditionalReferences` covers 35 source-location
+and lifecycle cases, query purity, unknown/false conditions, current and retained
+facts, exact returned identity, snapshot isolation and independent clone lifetime.
+`TestWaitingDelayedConditionalBoundaries` excludes unrelated and nested future
+references and rejects missing native subjects/bodies.
+`TestRONWaitingDelayedConditionalProtection` exercises 147 real protection-record
+subrule scenarios across three branch forms and seven lifecycle states, including
+payment failure, resolution-only source choice, copied delays, clone execution,
+exact prevention and consumption. `TestRONWaitingDelayedConditionalInstances`
+proves separate factory identities/controllers and independent resolution-time
+conditions. `TestRONWaitingDelayedConditionalDeclarations` rejects malformed,
+unbound, incompatible and empty delayed declarations. Full source aggregation
+and complete protection-card gameplay remain separate work.

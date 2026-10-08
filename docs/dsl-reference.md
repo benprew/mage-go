@@ -6564,7 +6564,8 @@ This context includes saved `capturedDelayedBody` wrappers, nested `Sequence`
 bodies and each saved modal body. The typed reference interface does not execute
 an action. A source ID alone does not qualify. An action that will create another
 delayed ability does not supply its future body's references in this context.
-Other source-reading action kinds and conditional wrappers remain separate forms.
+Other source-reading action kinds remain separate forms. Property branches have
+the reference contract below; other conditional wrappers remain separate.
 
 The ability must have a captured source and a known permanent incarnation.
 The reader uses the saved source ID/incarnation, the existing incarnation
@@ -7691,3 +7692,30 @@ Protection names and Greater Realm of Preservation to 147 real-record subrule
 scenarios; `TestRONWaitingDelayedMultiDamageInstances` proves separate factory
 instances and source-tapped aliases; `TestRONWaitingDelayedMultiDamageInvalid`
 proves declaration rejection. This is subrule coverage, not complete-card proof.
+
+### RON waiting delayed property-branch references
+
+In a supported `CreateFutureTrigger(event, ActionList([...]))` body,
+`If(PermanentPassesFilter(permanent, filter), [actions])`, the corresponding
+`Unless`, and `IfElse(condition, [matching], [nonmatching])` retain explicit
+permanent self references from the property condition and both action branches.
+`compileResolvingPermanentBranch(Node, scope)` continues to build fresh scoped
+references and lower to `IfPermanentMatches`, `UnlessPermanentMatches`, or
+`IfPermanentMatchesElse`. Existing property filters and declaration restrictions
+apply. Source aliases use the existing permanent-reference scope.
+
+`Game.WaitingDelayedPermanentSources` reads these declarations without executing
+the condition or a branch. False conditions and unselected branches still refer
+to their declared objects. Saved sequences and modes keep the exact source
+incarnation. The current or retained information and one-shot waiting lifetime
+use the existing delayed services. Nested future producers do not expose their
+future bodies through the outer branch. No new syntax or general source-choice
+adapter is added. Combat branches and other conditional implementations still
+need their own reference contracts.
+
+Evidence: `TestRONWaitingDelayedConditionalProtection`,
+`TestRONWaitingDelayedConditionalInstances`, and
+`TestRONWaitingDelayedConditionalDeclarations`. The seven protection records
+supply real filters, costs and shields; their complete general source selection
+remains rejected. These tests establish subrule interactions, not complete-card
+coverage.

@@ -493,6 +493,9 @@
 // [DealDamageEach], [DealDamageEachPlayer] and [DealDamagePackets] bodies
 // also declare these source reads without evaluating recipients or amounts.
 // Empty collections and zero amounts keep the source reference.
+// [IfPermanentMatches], [UnlessPermanentMatches] and [IfPermanentMatchesElse]
+// declare self references in the condition and both bodies without checking
+// the condition. A false condition does not remove a declared reference.
 // Saved sequences and modes retain the original source incarnation.
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.
