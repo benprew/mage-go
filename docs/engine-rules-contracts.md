@@ -8410,3 +8410,40 @@ Catapult. Sorcerer and Artillery use real activation, sickness checks, resolutio
 and separate self-damage; the other four supply source-identity interaction
 evidence through native damage. These are subrule tests for the rejected
 protection cards, not full-card gameplay evidence.
+
+### Exact spell references held by waiting prevention shields
+
+`Game.WaitingPreventionSpellSources() []DamageSource` supplies the exact spell
+references held by active typed source-prevention shields in both replacement
+lists. CR 609.7a permits these objects after they leave the stack. Only a valid
+spell identity with a stack ID and no permanent incarnation qualifies; legacy
+card IDs and malformed mixed identities do not. Duplicate references are merged
+in replacement-list order. Queries copy card data and do not change game state.
+
+Current stack information takes precedence over exact retained departure data,
+with the shield's saved snapshot as fallback. Recasting the same card and separate
+spell copies cannot replace the original identity. A selected permanent spell's
+continuation retains the original spell reference and separately supplies the
+entered incarnation through `WaitingPreventionPermanentSources`. Consumption or
+cleanup removes eligibility; source departure, control changes and phasing of the
+continued permanent do not end an unconsumed shield. Clones keep independent
+snapshots and lifetimes. Existing CR 400.7c, 609.7b, 615 and 616 mechanics remain
+unchanged.
+
+`ChooseDamageSourceFromWaitingPreventionSpellReferences(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared typed
+choice service for this category only. It filters current or retained information,
+clears its own result when no candidate exists, and validates player, filter and
+binding declarations. It does not grant a general source enumeration contract.
+
+`TestWaitingPreventionSpellReferences` covers live properties/control, departure,
+recast, copy, missing departure history, exact-object callers, continuation,
+phasing, consumption, cleanup, copied query data and clones.
+`TestWaitingPreventionSpellChoice` covers both lists, deduplication, invalid
+identities, legacy exclusion, independent bindings, empty choice and invalid
+engine definitions. `TestRONWaitingPreventionSpell` lowers the seven protection
+records' choice plans and shields with this explicit category consumer, executes
+complete RON source casts, then checks waiting identity and independent shield
+consumption in original and cloned games. `TestRONWaitingPreventionSpellInvalid`
+checks syntax and missing factory binding rejection. This is subrule evidence;
+the seven protection cards remain rejected pending complete source enumeration.

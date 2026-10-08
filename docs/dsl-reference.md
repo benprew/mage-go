@@ -6822,3 +6822,25 @@ The continued permanent joins waiting prevention references. Clones copy both
 identities and keep separate consumption. Complete source enumeration must
 precede production source-choice lowering. Other prevention operations and
 recipients require separate contracts.
+
+### Waiting prevention spell choice prerequisite
+
+`Game.WaitingPreventionSpellSources()` reads exact spell identities held by active
+typed source shields. `ChooseDamageSourceFromWaitingPreventionSpellReferences(
+player, filter, binding)` selects from this category through the shared resolution
+choice service. Current spell data or retained departure data supplies properties;
+the saved shield snapshot is the fallback. Recasts and copies keep separate stack
+identities. Consumption and cleanup remove the reference. A continued permanent
+supplies a separate incarnation through the permanent-reference query.
+
+RON `compileChosenDamageSourceChoice` validates exactly
+`ChooseADamageSource(filter)` and produces an immutable `chosenDamageSourcePlan`.
+The category lowering `waitingPreventionSpellChoice(instanceBindings)` uses the
+plan's filter, `You`, and its own factory-local chosen-source binding. It supports
+synthetic category consumers alongside the existing scoped
+`CreateFuturePreventDamage` lowering. Invalid arity/filter and absent bindings
+fail declaration validation. The production compiler still rejects general
+`ChooseADamageSource`: remaining replacement references and face-up command
+objects need contracts before complete enumeration can run. No partial registry
+is published. This establishes subrule evidence for the seven protection records,
+not complete-card gameplay or new collection compilation coverage.

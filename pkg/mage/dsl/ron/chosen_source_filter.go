@@ -59,3 +59,21 @@ func compileChosenDamageSourceFilter(n Node) (mage.DamageSourceFilter, error) {
 		return mage.DamageSourceFilter{}, unsupported(n, "chosen damage source filter")
 	}
 }
+
+func compileChosenDamageSourceChoice(n Node) (*chosenDamageSourcePlan, error) {
+	if n.Name != "ChooseADamageSource" {
+		return nil, unsupported(n, "damage source choice")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	filter, err := compileChosenDamageSourceFilter(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	return &chosenDamageSourcePlan{filter: filter}, nil
+}
+
+func (p *chosenDamageSourcePlan) waitingPreventionSpellChoice(bindings instanceBindings) mage.ResolvingEffect {
+	return mage.ChooseDamageSourceFromWaitingPreventionSpellReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
+}

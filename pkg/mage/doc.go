@@ -12,6 +12,11 @@
 // [Game.WaitingRedirectionPermanentSources] reads live destinations of typed
 // static damage redirection. It uses the same subject check as damage execution.
 // [ChooseDamageSourceFromWaitingRedirectionReferences] uses this category only.
+// Use [Game.WaitingPreventionSpellSources] for exact spell references in
+// active source shields. Live or retained spell data keeps separate casts apart.
+// [ChooseDamageSourceFromWaitingPreventionSpellReferences] uses this category only.
+// Consumption and cleanup end its availability. A continued permanent keeps
+// its separate incarnation reference.
 // Other waiting replacement references need separate contracts.
 //
 // Use [PreventNextDamageFromSelectedSource] for a chosen-source shield.

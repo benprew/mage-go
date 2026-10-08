@@ -1063,10 +1063,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
 	case "ChooseADamageSource":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		if _, err := compileChosenDamageSourceFilter(n.Args[0]); err != nil {
+		if _, err := compileChosenDamageSourceChoice(n); err != nil {
 			return nil, err
 		}
 		// Complete source enumeration is required before this action can run.

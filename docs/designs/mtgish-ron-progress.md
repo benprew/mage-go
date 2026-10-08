@@ -9,13 +9,13 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`SELECTED-SOURCE-SPELL-CONTINUITY` prerequisite is recorded at the end of this
-ledger. Scoped chosen-source shields now follow the exact permanent a spell
-becomes, with independent copy/clone identities and property rechecks. Six
-accepted names (31 records) gain continuity interaction evidence; seven rejected
-protection names (31 records) gain subrule evidence. Compilation is unchanged.
-Exact waiting spell/shield references, remaining replacement references, face-up
-command objects and complete source enumeration remain gaps.
+`WAITING-PREVENTION-SPELL-REFERENCES` prerequisite is recorded at the end of this
+ledger. Active typed shields now supply exact current or retained spell sources,
+including after departure and permanent-spell continuation. Seven rejected
+protection names (31 records) gain subrule evidence; six accepted source names
+(31 records) gain interaction evidence. Compilation is unchanged. Remaining
+replacement references, face-up command objects and complete source enumeration
+remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39897,3 +39897,126 @@ Ranked next candidates:
    layers; reassess its single immediate unlock against shared prerequisites.
 
 Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: exact spell references held by waiting prevention shields
+
+Status: completed implementation slice `WAITING-PREVENTION-SPELL-REFERENCES`.
+This run stops after this slice. Initial edits to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this run's status update and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 is dependency-ready. Complete canonical records
+and their nested forms were inspected for all compared names; reprints count
+once. Fresh baseline build and RON package tests passed. The strict loader's
+exit 1 was collection rejection, not a build or environment failure.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Selected: exact waiting spell references in prevention shields | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7 names / 31 records; 0 immediate unlocks** | Remaining replacement references and face-up command objects still block complete source enumeration. This category permits all seven to choose a spell retained by an active shield, including after departure. | Small: typed reference query, shared choice integration, scoped lowering prerequisite, native and RON interaction tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: **8 estimated family unlocks** | Attack-band legality, both damage assignment directions, legendary/named filters, static and named-token grants, selective removal and upkeep restrictions need complete support. | Large; split combat prerequisites before grants and removal. |
+| Conditional host animation and mixed-layer forms | Animate Artifact, Titania's Song, Xenic Poltergeist, Gaea's Liege, Angry Mob, Nameless Race: **1 immediate unlock**, Animate Artifact | Host membership must persist across type/base P/T layers. Song needs sticky lifecycle; Liege needs attacked-player counts and its recorded predicate audit; Race needs entry-life results. Xenic Poltergeist and Angry Mob already load. | Medium for the host; large for the whole family. |
+
+The selected prerequisite has concrete seven-card downstream value and fits one
+bounded run. It was selected before editing. `implement-engine` supplied the
+native contract workflow. No delegation, Go-card requirements, generated stubs,
+removed skill, card-specific branch or fallback was used.
+
+### Established shape, context and engine reuse
+
+- `Game.WaitingPreventionSpellSources() []DamageSource` reads exact spell
+  references held by active typed `sourcePreventionReplacement` shields in both
+  ordinary and cycle replacement lists. Valid source ID plus stack ID, with no
+  permanent incarnation, is required. Consumed shields, malformed mixed
+  identities, legacy UUID-only shields and unrelated replacements cannot supply
+  a spell. Duplicate identities are merged in list order.
+- Queries reuse `spellReferenceInformation`: current stack data, exact retained
+  departure data, then the saved shield snapshot. Returned data is copied.
+  Recasts and separate copies cannot replace an earlier spell. Missing retained
+  history still permits the shield's saved exact snapshot.
+- A selected permanent spell keeps its original spell reference after entry;
+  its continued permanent remains a separate incarnation supplied through
+  `WaitingPreventionPermanentSources`. Phasing does not change these identities.
+  Shield consumption or cleanup ends waiting eligibility. Clones keep their own
+  replacement state and copied information.
+- `ChooseDamageSourceFromWaitingPreventionSpellReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` supplies this one
+  category through `damageSourceChoice`. Shared validation, pure filtering,
+  player decisions, binding writes and no-candidate clearing are reused.
+- RON `compileChosenDamageSourceChoice(Node) (*chosenDamageSourcePlan, error)`
+  validates exactly `ChooseADamageSource(filter)` and builds an immutable plan.
+  `chosenDamageSourcePlan.waitingPreventionSpellChoice(instanceBindings)
+  mage.ResolvingEffect` lowers the explicit category consumer with `You`, the
+  typed filter and factory-local binding. Existing scoped
+  `CreateFuturePreventDamage(NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+  TheChosenDamageSource, Player(player)), [PreventThatDamage])` consumes that
+  binding. Complete enumeration remains required before production choice
+  lowering, so the production compiler validates the plan then still rejects
+  general `ChooseADamageSource`. There is no partial registry.
+- Mage owns source information, choices, damage, replacement order and lifecycle.
+  RON owns syntax and lexical/factory bindings. No cost, simultaneous-damage,
+  replacement-order, targeting or entry contract is changed. The existing
+  selected-source focused regression tests cover those services.
+- Rules read: CR 400.7c, 609.7a/b, 615.8/9 and the 616 replacement ordering
+  contract. API and rules-contract documentation describes only this category.
+  No source-data defect or environment failure was found; no RON source changed.
+
+### Failing-first and card-to-test evidence
+
+Native tests first failed compilation on the missing query and choice APIs.
+RON tests first failed compilation on the missing query and choice-plan compiler.
+Both failures preceded implementation. Test fixture corrections supplied a main
+phase for creature recasting, preserved the input binding when installing a
+copy shield, and required two independent shields to prevent two separate events.
+The engine's payment, resolution and replacement rules were not weakened.
+
+| Tests / affected cards | Evidence |
+| --- | --- |
+| `TestWaitingPreventionSpellReferences` | Live color/control, retained departure color, recast, copy, fallback without retained history, exact-object API, continued permanent and phasing, consume/cleanup, copied results, clones before and after changes. |
+| `TestWaitingPreventionSpellChoice` | Both replacement lists, deduplication, legacy/malformed exclusion, typed choice/filter, separate binding outputs, no-candidate clearing and nil player/binding or invalid filter rejection. |
+| `TestWaitingPreventionSpellSeparateCopies` | Original and separately chosen copy remain distinct in stable order; simultaneous copy damage consumes its shield without consuming the original; cloned-game execution remains independent. |
+| `TestRONWaitingPreventionSpell` — all seven protection names | Reads complete records, lowers choice plan and shield subrules with explicit native category producers, then chooses the retained spell and installs another lowered shield. Stack, resolved, countered/recast, copy and cleanup cases run through original/cloned games. Two shields prevent two separate events, then damage succeeds. Full records still reject at general `ChooseADamageSource`. |
+| Frozen Shade, Prodigal Sorcerer, Llanowar Elves, Orcish Artillery, Samite Healer, Grapeshot Catapult | The same RON test casts complete records, resolves permanent spells in the resolved case and verifies exact source identity through native damage. This is source interaction evidence, not new coverage of their other abilities. |
+| `TestRONWaitingPreventionSpellInvalid` | Rejects symbol/call arity, bad colors, empty filters, called color symbols and missing factory-local binding. |
+
+### Validation and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingPreventionSpell -count=1`.
+- Native `TestWaitingPreventionSpell` and focused existing chosen-source,
+  selected-source and waiting-prevention regression groups with `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, **0 issues**. Automatic formatting was reviewed and the
+  affected native and RON tests rerun successfully.
+- Skill verification `go test ./... -short -count=1`: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected unique names**. Final JSON is
+  identical to the fresh baseline, including every diagnostic.
+
+Estimated and actual compilation gains: **0 names / 0 records**. Seven rejected
+names (31 records) gain waiting-spell choice/shield subrule evidence. Six already
+accepted names (31 records) gain cast/source-identity interaction evidence.
+Compilation and complete-card gameplay remain separate. All 12 RON source hashes
+match the vocabulary snapshot, so no refresh is needed.
+
+Changed files: new native `waiting_prevention_spell.go` and tests; RON
+`waiting_prevention_spell_test.go`; `damage_source_choice.go`,
+`chosen_source_filter.go`, `compiler.go`, `doc.go`, API/rules-contract docs and
+this ledger. The runtime/removal gate is unmet. Go definitions, generators and
+existing DSL callers remain. No DSL function was removed or cleanup claim made.
+
+Ranked next candidates:
+
+1. Audit and implement the remaining exact references held by waiting replacement
+   effects, then face-up command objects before complete source enumeration for
+   the seven protection cards.
+2. Parameterized bands with others: first a bounded reusable combat prerequisite
+   for the eight complete records above, then grants and selective removal.
+3. Conditional host animation retaining membership across type/base P/T layers;
+   reassess its single immediate unlock against shared prerequisites.
+
+The commit hash is reported in the final response. No second slice starts.
