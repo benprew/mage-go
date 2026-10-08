@@ -1,5 +1,10 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.WaitingPreventionPermanentSources] for exact permanent references
+// retained by finite recipient, unlimited recipient and next-source prevention.
+// [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
+// Other waiting replacement references need separate contracts.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

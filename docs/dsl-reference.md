@@ -6664,3 +6664,29 @@ source captures that supported delayed bodies can retain. Existing amount and
 recipient spellings keep their scope. No new source-reference spelling is added.
 General RON `ChooseADamageSource` still requires the other source categories and
 complete shield contracts.
+
+### Waiting prevention permanent references
+
+`mage.Game.WaitingPreventionPermanentSources() []mage.DamageSource` reads exact
+permanent recipients saved by `PreventNextDamage` and `PreventDamageThisTurn`,
+and exact source subjects saved by `PreventNextDamageFromPermanent`. It scans
+active persistent and cycle replacements in registration order, removes exact
+duplicates, and returns separate snapshots. Player IDs, legacy source IDs
+without incarnations, filters over unspecified future members, unknown objects,
+consumed shields and removed effects do not supply references.
+
+`mage.ChooseDamageSourceFromWaitingPreventionReferences(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` uses this category with the shared non-targeted choice and
+binding service. Missing players and empty filtered categories clear that output.
+
+Existing RON lowering of
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount,
+recipient), [PreventThatDamage])` and
+`CreatePreventDamageUntil(DamageWouldBeDealtToRecipient(recipient),
+[PreventThatDamage], UntilEndOfTurn)` now supplies these references after
+resolution. The permanent-source-filter variant of the second declaration keeps
+its existing behavior; its filter does not declare individual source objects.
+No new RON syntax or partial `ChooseADamageSource` adapter is introduced.
+Other prevention/replacement contexts, spell references and command-zone sources
+remain separate prerequisites for general source choice.

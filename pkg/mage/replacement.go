@@ -994,6 +994,7 @@ func (r *emptyLibraryDrawReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type damagePreventionRuleReplacement struct {
+	recipientPermanent capturedPermanent
 	replacementBase
 	from          PermanentFilter
 	to            PermanentFilter

@@ -9,10 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`DELAYED-DAMAGE-SOURCE-FRAMES` slice is recorded at the end of this ledger.
-It adds captured damage-source replay, RON received-event source capture and
-waiting-source queries as a shared prerequisite for seven prevention cards,
-with no immediate compilation gain.
+`WAITING-PREVENTION-PERMANENT-REFERENCES` slice is recorded at the end of this
+ledger. It adds exact retained permanent references from three waiting prevention
+contexts as a shared prerequisite for seven source-choice prevention cards.
+Four accepted cards have new interaction coverage; compilation counts are unchanged.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -38955,6 +38955,156 @@ Ranked next candidates to reassess from fresh evidence:
 1. Typed waiting replacement/prevention source references, then remaining
    referred-object and command-zone categories before general choice and shields
    for the seven prevention cards.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: typed permanent references in waiting prevention effects
+
+Status: completed implementation slice `WAITING-PREVENTION-PERMANENT-REFERENCES`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design, this ledger's history organization and untracked completed-history file
+are preserved. The ledger is staged against its tracked history so the existing
+history move is excluded from the slice commit.
+
+### Fresh baseline, candidate comparison and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, the ledger's status
+and latest entry, targeted vocabulary keys, the selected compiler and engine,
+relevant API/rules contracts, CR 609.7a–c and complete RON records for the names
+below. Source information and identity reuse follow the existing CR 400.7 and
+phasing contracts. No Go card definition supplied requirements.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The loader
+exited 1 for expected atomic collection rejection: **1,963 compiled / 482
+rejected records; 763 accepted / 223 rejected unique names**, from 2,445 records
+and 986 names. This was not a build/test failure.
+
+| Candidate | Distinct cards; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, bounded captured-permanent prevention prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. **0** immediate unlocks; concrete prerequisite for all 7. | Other waiting replacement/prevention references, command objects, complete source choice, chosen-source shield installation and property rechecks remain. Existing finite and unlimited RON recipient lowering already works; missing explicit unlimited recipient metadata and enumeration prevent these effects from supplying their referred objects. | Small/medium: typed metadata, shared exact-information reads, lifecycle/choice/clone tests and real RON interactions. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel. Potential **8** full-card unlocks after the complete contract. | Parameterized abilities, formation/damage assignment, nested token grants and selective removal remain. | Large: combat, ability/layer and token contracts plus adapters. |
+| Text-word choice/substitution | Magical Hack, Sleight of Mind. Potential **2** full-card unlocks after the complete contract. | Independent word choices, spell/permanent modal lowering, text substitutions, affected consumers and copy behavior remain. | Large: typed word bindings and text-layer contracts. |
+
+Ranked #1 is dependency-ready as one complete captured-permanent context. Its
+seven-card downstream benefit and bounded effort justify zero immediate gains.
+Other candidates need larger engine contracts. Reprints count once; nested
+forms and complete records, not first-error counts, inform these estimates.
+The contract, boundary and acceptance cases were stated before editing. The
+`implement-engine` skill supplied the engine workflow; no removed card skill
+or delegated agent was used.
+
+### Exact shapes, contexts, dependencies and engine reuse
+
+- `Game.WaitingPreventionPermanentSources() []DamageSource` enumerates exact
+  permanent recipients retained by `preventionShieldReplacement` and resolved
+  `damagePreventionRuleReplacement`, and exact source subjects retained by typed
+  `sourcePreventionReplacement`. Persistent then cycle registration order is
+  deterministic. Exact duplicates are removed. Active effects only: finite or
+  next-source consumption and cleanup end eligibility; unlimited prevention
+  survives matching damage. Player IDs, legacy source IDs without incarnations,
+  unknown/mismatched incarnations, future filter members and unsupported
+  replacement declarations supply no references.
+- Unlimited recipient installation retains an explicit `capturedPermanent`
+  beside its existing matching filter. Existing finite and next-source ID pairs
+  are reused. Current/exact departure/phasing information comes from
+  `damageReferenceInformation` and `readPermanentIncarnationInformation`.
+  Leave-and-return cannot replace identity or information. Clearing the short
+  LKI cache does not erase retained departure information. Results have separate
+  card data. Copies of the existing replacement keep the captured values;
+  game clones keep independent consumption and cleanup lifetimes.
+- `ChooseDamageSourceFromWaitingPreventionReferences(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses the shared
+  choice, filter, per-output binding and definition-validation service. Empty
+  filtered categories and absent players clear that result. Separate results
+  remain independent. The existing fallback and non-targeted legality contracts
+  are retained.
+- RON AST lowering is reused exactly, rather than adding duplicate adapters:
+  `CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount,
+  recipient), [PreventThatDamage])` lowers through `PreventNextDamage`;
+  `CreatePreventDamageUntil(DamageWouldBeDealtToRecipient(recipient),
+  [PreventThatDamage], UntilEndOfTurn)` lowers through `PreventDamageThisTurn`.
+  The source-filter variant retains its existing behavior. These existing typed
+  declarations now supply waiting references after resolution. No new RON
+  spelling is introduced, and `ChooseADamageSource` stays rejected until its
+  complete source-list and consuming-shield contracts are ready.
+
+RON owns declaration validation, scope and existing lowering; mage owns typed
+retention, enumeration, exact information, choices and lifetimes. No payment,
+replacement ordering, damage allocation, target legality or simultaneous damage
+contract is changed. There is no card-name executor, Go fallback, partial
+production registry, global last-action slot or game-time declaration panic.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed at the missing APIs. With a minimal empty-query stub,
+both native and RON tests failed at the missing installed-reference assertion.
+Implementation then passed those assertions. Fixture corrections used the
+existing `GetEffects`, `Controller` and `Card.Owner` APIs. Choice tests use one
+explicit resolution context because independent `ApplyEffect` calls restore
+outer binding frames; no behavior assertion was weakened.
+
+| Test/card | Evidence |
+| --- | --- |
+| `TestWaitingPreventionPermanentSources` | All three supported contexts; live identity, departure/return, cleared short LKI, phase/cycle, control, cleanup, finite/one-shot consumption, unlimited persistence and cloned lifetimes. |
+| `TestWaitingPreventionChoicesAndBoundaries` | Deduplication, invalid identities, player-recipient exclusion, separate outputs, empty-category clearing, clone isolation and invalid native declarations. |
+| `TestWaitingPreventionInformationAndChoice` | Current and retained source colors, filtered choices, phasing information and separate mutable query snapshots. |
+| Samite Healer (LEB) | `TestRONWaitingPreventionReferences`: full record activation, sickness rollback, typed any-target binding, resolution timing, legality and waiting recipient lifecycle. |
+| Healing Salve (LEB) | Same test: full record modal prevention, unpaid casting rollback and resolution/lifecycle evidence. Existing life-mode regressions remain intact. |
+| Alabaster Potion (LEG) | Same test: full record X/modal prevention, unpaid casting rollback and resolution/lifecycle evidence. Existing X/life-mode regressions remain intact. |
+| Indestructible Aura (LEG) | Same test: full record targeted unlimited prevention, unpaid casting rollback, resolution/lifecycle evidence and persistence after damage. |
+| All four accepted cards | The same new test covers departure/return, phasing/cycles, consumption/cleanup, target phased before resolution, cloned queries and damage from a chosen retained recipient after departure. This is added interaction coverage, not a new full-card acceptance claim. |
+| Invalid RON | Existing `TestRONFinitePreventionInvalidAndInventory` and `TestRONRecipientPreventionInvalidAndInventory` reject unbound/malformed recipients, operations and durations; rerun with the new tests. |
+| Seven source-choice shields | Complete records inspected; no new full-card gameplay or acceptance claim. Independent prerequisites remain explicit. |
+
+### Verification, measured coverage and remaining work
+
+Required checks passed in fast-fail order:
+
+- Focused native: `go test ./pkg/mage -run TestWaitingPrevention -count=1`
+  (included in the combined native/RON focused run).
+- Focused RON: `go test ./pkg/mage/dsl/ron -run
+  'TestRONWaitingPrevention|TestRONFinitePreventionInvalidAndInventory|TestRONRecipientPreventionInvalidAndInventory'
+  -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- Additional skill check: `go test ./... -short -count=1`.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the new native/RON
+  tests was reviewed. Combined focused native/RON and invalid-declaration tests
+  were rerun after formatting and passed.
+- `git diff --check`: PASS, including the final ledger update.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. JSON exactly matches the fresh baseline: **1,963 compiled / 482
+  rejected records; 763 accepted / 223 rejected names**. No accepted record was
+  lost. Remaining diagnostics include `ChooseADamageSource` (11 names),
+  `BandsWithOthers`-related errors (8 names), and the color-action restriction on
+  Magical Hack and Sleight of Mind (2 names).
+
+No environment or pre-existing validation blocker remains.
+
+Estimated and actual compilation gains both equal **0 names / 0 records**.
+Accepted records retain their existing behavior. New interaction coverage maps
+four complete accepted card records to the waiting-reference contract. General
+source choice remains rejected; runtime loading, collection gameplay validation,
+Go-card removal and unused DSL cleanup remain unfinished. No removal gate is met.
+
+All 12 RON source hashes match the vocabulary snapshot. There is no RON source
+change or vocabulary syntax refresh. No new source defect was found; prior
+source defects remain separate. The current gap is an engine reference contract,
+not a missing parser shape or environment failure. Exact existing AST adapters
+are intentionally reused; no compiler implementation change is needed for this
+prerequisite.
+
+Changed files: new native `waiting_prevention.go` and tests; new RON
+`waiting_prevention_test.go`; native `damage_source_choice.go`,
+`recipient_prevention.go`, `replacement.go`, `doc.go`; API/rules-contract docs
+and this ledger. Existing callers and production registries remain unchanged.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Remaining typed referred objects in waiting replacement/prevention effects,
+   including saved spell/source references and other exact permanent subjects;
+   then command-zone objects before general source choice and the seven shields.
 2. Parameterized bands with others for the eight complete records above.
 3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
 

@@ -8129,3 +8129,43 @@ return/recast, phasing, copied triggers, filtered choices and cloned delayed lif
 gain. `TestRONWaitingDelayedDamageInvalid` covers declaration rejection. Existing
 complete Fungusaur and Living Artifact received-damage regressions also pass.
 This adds accepted-card interaction coverage, with no full shield unlock.
+
+### Waiting prevention references: captured permanent contexts
+
+`Game.WaitingPreventionPermanentSources` supplies the CR 609.7a referred-object
+category for three exact contexts: finite recipient shields, resolved unlimited
+recipient rules, and next-permanent-source prevention. Existing RON AST lowering
+through `PreventNextDamage` and `PreventDamageThisTurn` remains the adapter;
+no duplicate compiler or game-time declaration service is needed.
+
+Unlimited recipient installation now retains an explicit `capturedPermanent`
+identity beside its matching filter. Finite recipients and next-source rules
+reuse their existing ID/incarnation pairs. Only active effects expose them.
+Query order follows persistent then cycle registration; exact duplicates are
+removed. Player recipients, incomplete IDs and unknown incarnations are excluded.
+Source properties use the shared current/exact departure/phasing information
+reader. A returned object cannot substitute its identity or information, even
+when the old short-lived LKI cache is cleared. Snapshots have separate card data.
+Choices use existing filter validation, player decisions, fallback indices,
+per-output binding writes and definition checks. Clones retain independent
+replacement lifetimes. Consumption and cleanup end eligibility; unlimited
+prevention remains eligible after matching damage. CR 400.7, 609.7a, 615.1–4,
+615.6–7 and the existing phasing information contract apply.
+
+Evidence: `TestWaitingPreventionPermanentSources` covers all three contexts,
+departure/return, cleared LKI, phase cycles, control, cleanup, consumption and
+clones. `TestWaitingPreventionChoicesAndBoundaries` covers invalid identities,
+exact deduplication, independent outputs, empty-choice clearing and declaration
+rejection. `TestWaitingPreventionInformationAndChoice` covers current and retained
+colors, filtered choices and separate query snapshots.
+`TestRONWaitingPreventionReferences` executes complete Samite Healer, Healing
+Salve, Alabaster Potion and Indestructible Aura records through their existing
+AST lowering, payment/sickness rollback, resolution timing, target legality,
+departure/return, phasing, consumption, cleanup and clone gameplay. Selected
+absent recipients can supply damage sources through the shared damage executor.
+Existing invalid RON prevention declarations remain rejected.
+
+This establishes no new replacement ordering or payment behavior. General
+`ChooseADamageSource`, other waiting prevention/replacement references, saved
+spell references and command-zone categories remain unfinished. No full-card
+compilation gain or complete CR 609.7a enumeration is claimed.

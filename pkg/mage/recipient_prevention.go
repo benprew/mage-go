@@ -58,6 +58,7 @@ func (e *recipientPreventionInstallation) Apply(ctx *EffectContext) error {
 			return nil
 		}
 		incarnation := p.incarnationID
+		rule.recipientPermanent = capturedPermanent{id, incarnation}
 		rule.to = NewPermanentFilter("captured recipient", func(current *Permanent, _ *Game) bool {
 			return current.ID() == id && current.incarnationID == incarnation
 		})
