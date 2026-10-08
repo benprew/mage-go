@@ -13,24 +13,7 @@ func (g *Game) StackBoundDamageSources() []DamageSource {
 	var sources []DamageSource
 	for _, object := range g.stack.objects {
 		for _, saved := range stackBoundDamageSources(object) {
-			var source DamageSource
-			switch {
-			case saved.Incarnation() != uuid.Nil && saved.StackID() == uuid.Nil:
-				p, lki := g.readPermanentIncarnationInformation(capturedPermanent{saved.ID(), saved.Incarnation()})
-				if p != nil {
-					source = damageSourceFromPermanent(p)
-				} else if lki != nil {
-					source = damageSourceFromLKI(lki)
-				}
-			case saved.StackID() != uuid.Nil && saved.Incarnation() == uuid.Nil:
-				source = g.CaptureSpellDamageSource(saved.StackID())
-				if !source.SameObject(saved) {
-					source = object.boundSpellSources[saved.StackID()]
-				}
-				if !source.SameObject(saved) {
-					source = saved
-				}
-			}
+			source := g.damageReferenceInformation(saved)
 			if source.SameObject(saved) && !slices.ContainsFunc(sources, source.SameObject) {
 				sources = append(sources, cloneDamageSource(source))
 			}

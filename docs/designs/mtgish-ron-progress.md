@@ -9,9 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`DELAYED-SPELL-EVENT-FRAMES` slice is recorded at the end of this ledger.
-It adds captured spell-event replay and waiting-source queries as a shared
-prerequisite for seven prevention cards, with no immediate compilation gain.
+`DELAYED-DAMAGE-SOURCE-FRAMES` slice is recorded at the end of this ledger.
+It adds captured damage-source replay, RON received-event source capture and
+waiting-source queries as a shared prerequisite for seven prevention cards,
+with no immediate compilation gain.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -38798,5 +38799,163 @@ Ranked next candidates to reassess from fresh evidence:
    prevention/replacement and command-zone categories before general choice.
 2. Parameterized bands with others for the eight complete records above.
 3. Typed text-word choices/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+## 2026-10-07: typed damage-source frames in waiting delayed abilities
+
+Status: completed implementation slice `DELAYED-DAMAGE-SOURCE-FRAMES`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and this ledger's history organization, plus the untracked
+`mtgish-ron-completed.md`, are preserved and excluded from the slice commit.
+The ledger is staged against its original tracked history so the user's history
+move is not included in this commit.
+
+### Fresh baseline, candidate comparison and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, the ledger's top status
+and latest entry, targeted vocabulary keys, selected compiler/engine services,
+related API/rules contracts, CR 400.7, 603.7a–e and 609.7a–c, and complete RON
+records for all names below. No Go card definitions supplied requirements.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection:
+1,963 compiled / 482 rejected records and 763 accepted / 223 rejected unique
+names, from 2,445 records / 986 names. This was not a build/test failure.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Ranked #1: typed waiting delayed damage-source frames | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation. 0 immediate unlocks; a shared prerequisite for all 7. | Waiting prevention/replacement references, other referred shapes, command objects, full source enumeration, chosen-source shields and property rechecks still block the complete records. Completes saved damage-source replay/enumeration for the remaining neighboring delayed-frame category. | Small/medium: capture/replay, source reader/choice, RON event lowering, identity/lifecycle tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel. Potential 8 unlocks after the full contract. | Parameterized ability representation, band formation/assignment, nested token grants and selective removal remain. Complete records expose these nested forms, not just five first-error grants. | Large: engine combat/ability/layer contracts and adapters. |
+| Text-word choice/substitution | Magical Hack, Sleight of Mind. Potential 2 unlocks after the full contract. | Two independent choices, spell/permanent modal adapters, persistent word substitutions and all affected rule consumers remain. | Large: word bindings, text layer, spell consumers and copy isolation. |
+
+Candidate #1 is dependency-ready and concrete downstream multi-card value
+justifies zero immediate compilation gains. Select its damage-source frame
+prerequisite as one complete bounded slice. The other candidates require much
+larger engine contracts. All seven complete shield records still combine source
+choice with unsupported shield creation; none is counted as an immediate unlock.
+Reprints count once. Complete Lightning Bolt and Prodigal Sorcerer records supply
+real damage gameplay. The compiler change also touches the supported received
+trigger contexts of Fungusaur and Living Artifact; complete Lich remains rejected
+by its independent player/replacement/payment rules. All three records were read.
+
+### Supported signatures, contexts, dependencies and reuse
+
+- `AtNext`, `AtNextModes`, `WhenDiesThisTurn`, `WhenLeavesThisTurn` and
+  `WhenAttacksUnblockedThisTurn` save a deep copy of the current typed
+  `DamageSourceBinding` map at creation. Each body execution restores a separate
+  copy and restores the outer map afterward, including on errors. Event-time
+  facts remain separate from current-information queries. Modal and copied
+  bodies keep immutable saved frames; game clones keep separate lifetimes.
+- `Game.WaitingDelayedDamageSources() []DamageSource` traverses saved ordinary,
+  sequence and modal frames. Registration/traversal order and sorted exact
+  object/incarnation/stack identities within frames give deterministic results;
+  exact duplicates are removed. Nil declarations, invalid/incompatible identities,
+  unknown permanent incarnations, source IDs alone, global frames and future
+  producers cannot supply candidates. One-shot detection ends waiting eligibility
+  before placement. Persistent delays remain eligible until cleanup.
+- `ChooseDamageSourceFromWaitingDelayedDamageBindings(PlayerRef,
+  DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` reuses the shared
+  filtered non-targeted choice, validation and result service. Empty categories
+  and absent players clear only the named output. Independent outputs remain
+  separate; invalid choice indices use the existing fallback.
+- Placed delayed frames supply the existing `StackBoundDamageSources` category.
+  Both stack and waiting readers use shared exact-incarnation information and
+  exact spell departure history, then the saved spell snapshot. This preserves
+  information changed before a departing spell's delayed frame reached the stack.
+  Return/recast cannot replace an old identity. Face-down and phased information
+  follow the existing engine reader. Query results have separate card data.
+- RON `TriggerA(WhenAPlayerIsDealtDamage(SinglePlayer(You)), body)` and
+  `TriggerA(WhenAPermanentIsDealtDamage(SinglePermanent(ThisPermanent)), body)`
+  now lower through `.WithSource` with a fresh internal damage-source binding per
+  factory. Supported `CreateFutureTrigger` and `CreateTriggerUntil` bodies can
+  retain that event frame. No new public RON source-reference spelling is added.
+  Existing amount/recipient scopes and declaration rejection remain unchanged.
+
+RON owns declaration spelling and event lowering. mage owns frame capture,
+replay, identity, source information, choices and lifecycle. Reuse includes the
+existing damage-source clone service, typed event snapshots, exact permanent
+information reader, spell departure history, sequence traversal, delayed trigger
+registration, APNAP, cloning/copies, damage batches and definition validation.
+This establishes no new payment or replacement ordering contract. Native rollback
+and prevention evidence exercise the existing services. There is no Go-card
+fallback, partial production registry, card-name executor, global last-action
+slot or new game-time declaration panic. Runtime/removal gates are unmet; no Go
+card definitions, generators or unused DSL services are deleted.
+
+### Failing-first evidence and card-to-test mapping
+
+New native tests initially failed to compile at the missing APIs. With minimal
+nil-result stubs and corrected test fixtures, both native and RON suites failed
+at the expected missing saved-frame assertion. A stronger stack-transition
+assertion then failed for recolored, departed/recast spells: waiting queries
+had departure information but placed frames fell back to old snapshots. Shared
+exact-information reads fixed this failure. No gameplay assertion was weakened.
+Fixture repairs supplied two required modal choices, explicit creature P/T,
+initialized a cleared resolution map, and removed an unrelated fixture spell
+before the isolated lifelink assertion.
+
+| Test/card | Contract evidence |
+| --- | --- |
+| `TestWaitingDelayedDamageFrames` | Ordinary/modal source capture and replay; permanent/spell identity; current color/control; departure, return/recast, phasing/cycles and face-down information; separate query snapshots; waiting-to-stack transition, copied bodies, clone lifetimes and outer-frame restoration. |
+| `TestWaitingDelayedDamageBoundaries` | Persistent departure delay, cleanup expiration, exact deduplication, filtered choice/fallback, independent outputs, empty/absent-player clearing, invalid declarations and exclusion of future/global references. |
+| `TestWaitingDelayedDamageIndependentEvents` | Separate factories, four simultaneous event frames, saved source/amount identity, deduplication, APNAP placement and clone gameplay after observer departure. |
+| `TestWaitingDelayedDamageSavedFacts` | Deep capture isolation, current color/control queries and body replay with the original event-time lifelink controller. |
+| `TestWaitingDelayedDamageInvalidFrames` | Nil/bad/incompatible identities and unknown permanent incarnations cannot mask a valid saved frame. |
+| `TestWaitingDelayedDamageErrorRestoration` | Body errors propagate; separate execution snapshots and outer bindings survive repeated failing execution. |
+| Lightning Bolt and Prodigal Sorcerer, LEA | `TestRONWaitingDelayedDamageFrames` executes complete real records through casting/activation, payment/sickness rollback, actual damage and synthetic RON controller/permanent received-event delays. Covers prevention, creation timing, departure/return/recast, phasing, copied triggers, filtered waiting choices, observer departure and cloned delayed life gain. Adds interaction coverage to 2 accepted cards. |
+| Invalid RON | `TestRONWaitingDelayedDamageInvalid` rejects incompatible received-event shapes and delayed unbound event amounts. |
+| Fungusaur and Living Artifact, LEB | Existing `TestRONDamageReceived*` complete-record/clause regressions rerun against the new internal event source capture. Their existing gameplay assertions remain intact. |
+| Seven source-choice shields; Lich | Complete records inspected; no new full-card acceptance/gameplay claim. Independent blockers remain explicit. |
+
+### Verification, measured coverage and remaining work
+
+Required checks passed, in fast-fail order:
+
+- `go test ./pkg/mage -run 'TestWaitingDelayedDamage|TestWaitingDelayedSpell|TestStackBoundDamageSources' -count=1`
+- `go test ./pkg/mage/dsl/ron -run 'TestRONWaitingDelayedDamage|TestRONDamageReceived|TestRONStackBoundDamageSource' -count=1`
+- `make build`
+- `go vet ./...`
+- `go test ./pkg/mage/... -short -count=1`
+- `make test`
+- `go test ./... -short -count=1` (engine skill final check)
+- `make lint`
+- `git diff --check`
+
+Final loader results and lint review are recorded below after execution.
+
+The first lint run found one test preallocation issue; it was fixed. Automatic
+import formatting was reviewed. Both focused native/RON checks and final lint
+were rerun and passed; final lint reports 0 issues. No environment or pre-existing
+validation blocker remains.
+
+Final `go run ./cmd/loadcards -json` exits 1 for expected strict collection
+rejection. Its JSON equals the fresh baseline: **1,963 compiled / 482 rejected
+records; 763 accepted / 223 rejected unique names**. Estimated and actual gains
+both equal 0 names / 0 records. No accepted record is lost. New gameplay evidence
+covers this delayed-frame interaction for two complete accepted damage cards,
+not the complete seven shields. Representative remaining diagnostics include
+`unsupported action (ChooseADamageSource)` (11 names),
+`unsupported static ability grant (BandsWithOthers)` (5 first-error names), and
+`supply one color action for this target category (ActionList)` for the two
+text-change spells.
+
+All 12 source SHA-256 hashes still match the vocabulary snapshot. There is no
+RON source change or vocabulary syntax refresh. No new source defect was found;
+prior source defects remain separate. Complete collection gameplay/loading,
+runtime cutover, Go-card deletion and unused DSL cleanup remain unfinished.
+
+Changed files: new native `waiting_delayed_damage.go` and tests, new RON
+`waiting_delayed_damage_test.go`; native `composable_conditions.go`,
+`damage_source_choice.go`, `stack_bound_damage_source.go`, `doc.go`; RON
+`damage_received.go`; API/rules-contract documentation and this ledger. No source
+record is changed.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Typed waiting replacement/prevention source references, then remaining
+   referred-object and command-zone categories before general choice and shields
+   for the seven prevention cards.
+2. Parameterized bands with others for the eight complete records above.
+3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
 
 Stop after this slice. The commit hash is reported in the final response.

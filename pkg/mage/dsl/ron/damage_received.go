@@ -42,10 +42,11 @@ func compileDamageReceivedTrigger(event, body Node, ctx scope) (optionFactory, e
 	}
 	return func() mage.CardOption {
 		amount := mage.BindNumber(ctx.damageAmount.name)
+		source := mage.BindDamageSource("damage event source")
 		actions := plan.buildWithBindings(instanceBindings{damageAmounts: map[*damageAmountPlan]*mage.NumberBinding{ctx.damageAmount: amount}})
-		var pattern mage.EventPattern = mage.ControllerIsDealtDamage(amount)
+		var pattern mage.EventPattern = mage.ControllerIsDealtDamage(amount).WithSource(source)
 		if permanent {
-			pattern = mage.ReceivesDamage(mage.This, amount)
+			pattern = mage.ReceivesDamage(mage.This, amount).WithSource(source)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil

@@ -8061,3 +8061,71 @@ executes the complete Lightning Bolt record with a synthetic RON delayed-event
 consumer, including unpaid casting rollback, timing, source departure, recasting,
 copying and clone execution. `TestRONWaitingDelayedSpellInvalid` covers invalid
 reference shapes and types. Existing stack spell-binding tests remain required.
+
+## Damage-source references in waiting delayed frames
+
+`AtNext`, `AtNextModes`, `WhenDiesThisTurn`, `WhenLeavesThisTurn`, and
+`WhenAttacksUnblockedThisTurn` capture typed `DamageSourceBinding` maps at delayed
+creation. Captures copy each source snapshot. Execution restores a separate
+copy of the saved map and restores the outer map afterward, including on an
+error. Body reads retain event-time facts; current source queries cannot change
+those facts. Modal bodies share immutable captured declarations and receive
+separate execution maps. Existing cloning and stack copying preserve these
+immutable frames.
+
+`Game.WaitingDelayedDamageSources() []DamageSource` reads source references in
+waiting frames through the typed `stackDamageBindingReferences` service. It
+traverses saved sequences and modes without executing them. Results follow
+registration/traversal order, then sorted object ID/incarnation/stack identity
+within a frame, with exact deduplication. Nil bindings, invalid or incompatible
+identities, unknown permanent incarnations, global resolution slots, source IDs
+alone, and future producers cannot supply candidates. One-shot detection ends
+waiting eligibility before pending placement. Persistent delays retain it until
+cleanup. Placed bodies supply `StackBoundDamageSources`; copies do not create
+new waiting abilities.
+
+Both waiting and stack damage-source queries now reuse the exact information
+reader. Permanent reads use current, phase, or departure information for the
+saved incarnation. Spell reads use current stack information, exact departure
+history, then the saved snapshot. This preserves departure updates that occurred
+before a waiting body reached the stack. Return/recast cannot supply another
+object's information. Queries are pure and return separate snapshots; face-down
+permanents retain hidden characteristics. These services follow CR 400.7,
+603.7a–e, 609.7a, and the existing phasing information contract.
+
+`ChooseDamageSourceFromWaitingDelayedDamageBindings(PlayerRef,
+DamageSourceFilter, *DamageSourceBinding) ResolvingEffect` uses shared filtered
+non-targeted choices, definition validation, binding dominance and output
+isolation. Empty categories or absent players clear only this output. This
+category alone cannot implement general RON source choice. Waiting replacement
+and prevention references, command objects, other referred forms, and complete
+shield installation/property rechecks remain separate gaps. This slice changes
+no payment, replacement ordering, or simultaneous damage rules.
+
+RON `WhenAPlayerIsDealtDamage(SinglePlayer(You))` and
+`WhenAPermanentIsDealtDamage(SinglePermanent(ThisPermanent))` now lower with a
+fresh internal damage-source binding per factory. This event capture can pass
+into supported `CreateFutureTrigger` and `CreateTriggerUntil` frames. The source
+capture adds no public RON reference spelling or targeting permission. Existing
+amount and recipient bindings keep their established scope and execution.
+Invalid received-event shapes and unbound amount reads remain errors.
+
+Evidence: `TestWaitingDelayedDamageFrames` covers ordinary/modal replay,
+current control/color, departure/return/recast, phase cycles, hidden information,
+immutable queries, stack transition, copies, clones and outer-frame restoration.
+`TestWaitingDelayedDamageBoundaries` covers persistent departure delays, cleanup,
+filtered choices, output clearing, invalid definitions and future/global source
+exclusion. `TestWaitingDelayedDamageIndependentEvents` covers separate factories,
+four simultaneous event frames, deduplication, APNAP and clone gameplay.
+`TestWaitingDelayedDamageSavedFacts` proves capture isolation and event-time
+lifelink controller replay despite a different current source controller.
+`TestWaitingDelayedDamageErrorRestoration` proves independent execution snapshots
+and outer-frame restoration when the delayed body returns an error.
+`TestWaitingDelayedDamageInvalidFrames` excludes bad identities without masking
+valid frames. `TestRONWaitingDelayedDamageFrames` executes complete Lightning
+Bolt and Prodigal Sorcerer records with synthetic RON received-event consumers,
+including payment/sickness rollback, prevention, waiting timing, source departure,
+return/recast, phasing, copied triggers, filtered choices and cloned delayed life
+gain. `TestRONWaitingDelayedDamageInvalid` covers declaration rejection. Existing
+complete Fungusaur and Living Artifact received-damage regressions also pass.
+This adds accepted-card interaction coverage, with no full shield unlock.

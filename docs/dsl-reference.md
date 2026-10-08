@@ -6640,3 +6640,27 @@ In supported RON delayed bodies, bound `CounterSpell(Trigger_ThatSpell)` and
 other existing spell-reference consumers now use the saved cast-event frame.
 `Trigger_ThatSpell` requires an enclosing cast event. It does not become a target
 and cannot refer to a later cast. This adds no RON spelling or production registry.
+
+### Delayed damage-source frames
+
+`AtNext`, `AtNextModes` and delayed permanent-event operations save the current
+`DamageSourceBinding` frame. `FromDamageSource` reads the saved facts during
+body execution. Separate executions receive separate maps, and the outer frame
+is restored afterward.
+
+`mage.Game.WaitingDelayedDamageSources() []mage.DamageSource` reads exact source
+references held by waiting delayed frames. Queries use current or exact departure
+information, preserve return/recast identity, and return separate snapshots.
+Placed bodies supply `StackBoundDamageSources`. One-shot detection ends waiting
+eligibility; duration-based delays retain it until cleanup.
+
+`mage.ChooseDamageSourceFromWaitingDelayedDamageBindings(player mage.PlayerRef,
+filter mage.DamageSourceFilter, binding *mage.DamageSourceBinding)
+mage.ResolvingEffect` chooses from this category through the existing filtered
+choice service. Empty categories and absent players clear only the named output.
+
+RON's supported controller/source received-damage events create fresh internal
+source captures that supported delayed bodies can retain. Existing amount and
+recipient spellings keep their scope. No new source-reference spelling is added.
+General RON `ChooseADamageSource` still requires the other source categories and
+complete shield contracts.

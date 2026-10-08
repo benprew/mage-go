@@ -238,6 +238,13 @@
 // Queries use current or exact departure information. A later cast cannot
 // replace a saved spell. These services supply one source category.
 //
+// Delayed bodies also keep typed damage-source bindings and their saved facts.
+// Use [Game.WaitingDelayedDamageSources] and
+// [ChooseDamageSourceFromWaitingDelayedDamageBindings] for these waiting frames.
+// Queries read current or exact departure information. Body execution restores
+// the saved event information without changing the outer resolution frame.
+// Placed delayed bodies use [Game.StackBoundDamageSources].
+//
 // Use [ChooseDamageSourceFrom] for a non-targeted choice from explicit legal
 // source references. [DamageSourceChooser] permits typed player decisions.
 // The result uses [DamageSourceBinding] in the current resolution frame.
@@ -270,9 +277,9 @@
 // One-shot detection ends this category; duration-based delays can keep waiting.
 // [ChooseDamageSourceFromWaitingDelayedBindings] uses only these references.
 // [Game.StackBoundDamageSources] reads permanent and spell source identities
-// saved by event captures on stack objects. Current queries stay separate from
+// saved by event captures and delayed frames on stack objects. Queries stay separate from
 // the event information used by the trigger body. Spell departure information
-// stays on each referring object and remains separate in cloned games.
+// uses the exact stack identity and remains separate in cloned games.
 // [ChooseDamageSourceFromStackDamageBindings] chooses only from this category.
 // [Game.StackBoundSpellSources] reads spell identities saved by cast events.
 // Detection saves information before a pending trigger reaches the stack.
