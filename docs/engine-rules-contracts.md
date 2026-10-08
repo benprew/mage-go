@@ -9795,3 +9795,31 @@ Native evidence: `TestExileTargetSourcesIdentity`, `LegalityAndRetarget`,
 RON evidence: `TestRONExileTargetSourcesProtection` (all seven protection names,
 49 source-reference scenarios) and `Invalid`. These are subrule mappings;
 complete-card gameplay coverage and compilation counts do not increase.
+
+### Resolving graveyard source references
+
+`Game.StackGraveyardSources() []DamageSource` includes the object whose body
+is resolving. The engine removes that object from the stack queue before it
+runs the body. Its target visits, singular and plural payment bindings, nested
+event captures and placed delayed frames remain available until resolution
+completes. This is the same frame service used by hand and exile references.
+Nested resolution restores the outer frame; game clones copy retained frames.
+
+The query retains exact graveyard visits and uses current or departure public
+information. A returned card cannot replace a saved visit. Duplicate references
+supply one choice. Invalid visits, nil bindings, other zones and unreferenced
+history supply no choices. Queries return separate card facts. Removing or
+phasing the ability source does not remove the paid stack object's references.
+Final frame departure ends this category, while an installed shield keeps its
+own selected source through consumption or cleanup.
+
+RON reuses `chosenDamageSourcePlan.stackGraveyardChoice(instanceBindings)` and
+`ChooseDamageSourceFromStackGraveyardReferences(PlayerRef, DamageSourceFilter,
+*DamageSourceBinding) ResolvingEffect`. Choice runs at resolution after payment;
+failed payment publishes no frame. The seven protection records have coverage
+for this context in `TestRONResolvingGraveyardSourcesProtection`; native frame
+forms and nested/clone lifetime use `TestResolvingGraveyardSourcesFrames`.
+Invalid declarations and read-before-choice remain rejected. CR 400.7,
+608.2 and 609.7a–b supply the identity, resolution and selected-source contracts.
+Other stack source categories and opaque callbacks still need audit before
+complete source aggregation. This context does not enable general source choice.

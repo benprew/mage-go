@@ -7,15 +7,13 @@ names** (986 total), and **1,978 compiled / 467 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-Complete collection loading/gameplay, runtime integration and removal remain
-unfinished. `STACK-EXILE-TARGET-REFERENCES` adds exact exile-target visits to
-stack source choices through existing RON lowering and native information readers.
-Announcement before payment, target legality, departure/return, copies, clones,
-face-down visibility and resolving-frame lifetime are covered. Seven protection
-names gain exile-target subrule evidence; no complete-card compilation gain is
-claimed. Opaque-reference audit and aggregation remain before full enumeration.
-Token quality grants remain unsupported.
-Titania's Song still needs per-member base values and sticky duration.
+Complete collection gameplay, runtime integration and removal remain unfinished.
+`RESOLVING-GRAVEYARD-REFERENCES` retains exact target, payment and event card
+visits through resolving frames, nested resolution and clones. Seven protection
+names gain 49 real-record subrule scenarios; compilation and complete-card
+coverage are unchanged. Other permanent/spell frames and opaque references
+remain to audit before full source aggregation. Token quality grants remain
+unsupported. Titania's Song needs per-member base values and sticky duration.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -44397,3 +44395,137 @@ Ranked next candidates:
    cross-category deduplication and complete real RON activations.
 3. Named-token quality grants for Master of the Hunt: one plausible unlock,
    using existing native quality/band services and token clone behavior.
+
+## 2026-10-08: graveyard references in resolving frames
+
+Status: completed implementation slice `RESOLVING-GRAVEYARD-REFERENCES`.
+
+### Selection and candidate comparison
+
+The working tree began with user changes to `.gitignore`, the execution design,
+and the progress ledger, plus untracked `mtgish-ron-completed.md`. These changes
+are preserved. Only this slice's status and appended entry are staged from the
+ledger; history relocation is left to the user.
+
+Read the latest ranked candidates, targeted vocabulary entries
+`ChooseADamageSource/1` (46 occurrences) and `BandsWithOthers/1` (6 occurrences),
+and complete canonical RON records for all seven protection names and Master of
+the Hunt. Reprints count once. The seven names are Circle of Protection:
+Artifacts, Black, Blue, Green, Red and White, and Greater Realm of Preservation.
+Their complete nested forms require a mana payment, filtered resolution choice
+and future selected-source prevention. All but general enumeration have existing
+adapters. Master of the Hunt requires named-token creation with a name-filtered
+bands-with-other quality grant.
+
+| Candidate | Distinct affected names / estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, bounded resolving graveyard context (selected) | The seven protection names above; **0** complete unlocks | Own payment/event/target references disappear from graveyard queries when the referring object is popped for resolution. Exact visits, information readers, cost bindings, choice lowering and shields already exist. Repairs one concrete multi-card prerequisite before aggregation. Other native reference categories and opaque callbacks remain to audit. | Small: shared frame reuse, five native reference forms, nested resolution/clone tests, 49 real-record subrule cases. |
+| Ranked #2, complete CR 609.7a aggregation | The same seven names; **7** estimated unlocks after prerequisites | Not dependency-ready: the fresh audit found inconsistent resolving-frame queries for permanent and spell references as well as graveyard. Opaque-reference enumeration must also be settled. Enables general source choice; Jade Monolith and Reverse Damage benefit downstream, without a complete-card claim for those names. | Larger than one bounded run: finish contracts/audit, aggregate/deduplicate and test complete activations. |
+| Ranked #3, named-token quality grants | Master of the Hunt; **1** plausible unlock | Existing quality/band engine services suffice, but token ability lowering, fresh identities and clone behavior need proof. No other nested blocker found in this record. | Small to medium: token adapter and combat/clone gameplay. Deferred while shared seven-card prerequisites remain. |
+
+Ranked #1 contains an actionable, dependency-ready mechanics gap. This run
+implements the complete graveyard resolving-frame context, not the entire opaque
+callback audit. Estimated and actual compilation gain are both **0 names /
+0 records**. Seven names gain subrule gameplay evidence; complete-card gameplay
+coverage remains unchanged. No accepted record is lost.
+
+### Exact signatures, dependencies and reuse boundary
+
+- `chosenDamageSourcePlan.stackGraveyardChoice(instanceBindings)
+  mage.ResolvingEffect` reuses validated `ChooseADamageSource(filter)` lowering
+  with `You` and that plan's per-instance `DamageSourceBinding`.
+- `ChooseDamageSourceFromStackGraveyardReferences(player PlayerRef,
+  filter DamageSourceFilter, binding *DamageSourceBinding) ResolvingEffect`
+  retains its existing signature, definition validation and resolution timing.
+- `Game.StackGraveyardSources() []DamageSource` now reads stack and resolving
+  frames, retaining exact graveyard target visits, singular/plural payment
+  bindings, nested event captures and placed delayed card frames.
+- `Stack.referenceObjects() []*StackObject` and
+  `Stack.resolvingReferenceObjects []*StackObject` generalize the existing
+  hand/exile frame service. Resolution saves/restores frame depth; cloning
+  copies frames with the existing `cloneStackObject` implementation.
+
+RON owns spelling, filter/arity/scope validation and instance lowering. Mage
+owns lifetime, identity, departure information, deterministic ordering,
+deduplication and choice execution. This fixes missing engine query mechanics,
+not missing RON spelling. Reused contracts include graveyard visit/departure
+readers, card/event/delayed binding collectors, transactional payment rollback,
+copy/clone isolation and selected-source shield installation/consumption.
+There is no new history store or resolution-global last-action slot.
+
+References remain available during nested resolution and in a clone of the
+resolving game, then leave with the last referring frame. Returned visits cannot
+replace saved visits. Public facts use current/departure information; returned
+characteristic changes cannot alter the old visit. Queries cannot mutate retained
+facts. Nil bindings, wrong visits, other zones and unreferenced history supply
+no choices. Copies choose independently. Source phasing/departure does not undo
+a paid activation. Graveyard cards do not phase. Failed payment publishes no
+reference or choice. Installed shields keep independent selected sources after
+resolution and consume normally.
+
+Rules evidence: local CR 400.7, 608.2 and 609.7a–b. General source choice remains
+rejected. No source defect was found; RON source and vocabulary are unchanged.
+Removal gates remain unmet; Go card definitions and DSL services remain.
+API/rules docs describe only the established graveyard context.
+
+### Failing-first tests and card mapping
+
+Before production changes, all five native reference forms failed with an empty
+resolving query. All 49 RON cases failed to choose their exact payment source or
+retain it in a clone. An initial test fixture lacked an owner for destruction;
+that fixture was corrected before confirming all 49 expected assertion failures.
+No assertion was weakened. Moving the shared helper to Stack initially missed
+its `slices` import; this build failure was corrected, then checks restarted.
+
+| Test | Card mapping / acceptance evidence |
+| --- | --- |
+| `TestResolvingGraveyardSourcesFrames` | Target, singular/plural payment, nested event and delayed frame shapes; exact visit, departure/return, public information, query isolation, clone isolation, nested resolution and final-frame lifetime. |
+| `TestResolvingGraveyardSourcesInvalidReferences` | Nil binding, wrong visit, wrong zone and unreferenced graveyard exclusion while resolving. |
+| `TestRONResolvingGraveyardSourcesProtection` | All six Circles and Greater Realm; 49 own-payment scenarios across live/departed/returned/copied/cloned/source-phased/source-departed states. Real RON choice filters, costs and future prevention are lowered; the fixture adds a bound discard payment to exercise this reference category. Choice occurs at resolution, failed payment rolls back, copies install independent shields, final resolution ends availability, and full records remain rejected pending aggregation. |
+| `TestRONResolvingGraveyardSourcesInvalid` and existing `TestRONGraveyardDamageSourceInvalid` | Read-before-choice, invalid arity/filter/reference and missing instance binding remain rejected. |
+| Existing graveyard, hand and exile tests; repository suite | Target legality, payment, shield property rechecks, simultaneous damage and replacement ordering retain shared contracts. |
+
+### Verification
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline loader: expected collection exit 1; 1,978 compiled / 467 rejected
+  records, 773 accepted / 213 rejected unique names. An in-progress output read
+  initially showed an older count; the completed fresh result matches the ledger.
+- Failing-first native and RON tests: expected assertion failures described above.
+- `go test ./pkg/mage/dsl/ron -run 'TestRON(ResolvingGraveyardSources|GraveyardDamageSource)' -count=1`: PASS.
+- `go test ./pkg/mage -run 'Test(ResolvingGraveyardSources|GraveyardDamageSource|Hand|ExileTargetSources)' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make lint`: PASS, **0 issues**. Automatic test import ordering was reviewed;
+  post-format focused native/RON tests, build and vet: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected collection exit 1;
+  **1,978 compiled / 467 rejected records; 773 accepted / 213 rejected unique
+  names**. Entire JSON equals baseline (`cmp` exit 0). First issue remains
+  Animate Dead, `2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)`.
+  Strict loading still rejects the collection and installs no partial registry.
+
+Complete gameplay/loading, runtime integration, Go-card deletion and unused DSL
+cleanup remain unfinished. No environment or native validation blocker prevents
+this slice's commit.
+
+Changed files: graveyard source query and tests; shared stack frame naming,
+resolution, cloning and hand/exile consumers; RON lowering contract comment and
+new resolving-graveyard tests; `pkg/mage/doc.go`, API/rules docs and this ledger.
+This run stops after this slice.
+
+Ranked next candidates:
+
+1. Resolving permanent/spell reference consistency and opaque-reference audit:
+   seven protection names benefit downstream; zero immediate unlocks. Fresh
+   inspection found `StackBoundPermanentSources`, `StackAbilityPermanentSources`,
+   `StackTargetPermanentSources`, `StackTargetSpellSources`,
+   `StackBoundSpellSources` and `StackBoundDamageSources` still read queue-only
+   objects. Establish the required contexts with failing-first gameplay evidence;
+   do not assume this graveyard change completed their audit.
+2. Complete CR 609.7a aggregation after the reference audit: seven estimated
+   full-card unlocks; deterministic cross-category deduplication and complete
+   real RON activation evidence remain required.
+3. Named-token quality grants for Master of the Hunt: one plausible unlock;
+   reuse the native quality/band service with token instance/clone tests.

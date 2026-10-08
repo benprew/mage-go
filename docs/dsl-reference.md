@@ -7576,3 +7576,11 @@ references expose no characteristics. Current/departure information, clones,
 reference lifetime and selected-source shields use the native services.
 General `ChooseADamageSource` compilation remains rejected until enumeration
 is complete. No new exile target declaration is introduced.
+
+RON graveyard damage-source choices reuse exact visits from targets and card
+bindings on stack and resolving objects. The body retains its own references
+through nested resolution and cloning; completing the body ends availability.
+`ChooseDamageSourceFromStackGraveyardReferences` uses these visits with a
+per-instance `DamageSourceBinding`. General RON `ChooseADamageSource` still
+requires complete source enumeration. See the resolving graveyard source
+contract and `TestRONResolvingGraveyardSourcesProtection` for this context.

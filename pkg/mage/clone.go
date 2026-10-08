@@ -261,10 +261,10 @@ func cloneStack(s *Stack) *Stack {
 		return NewStack()
 	}
 	clone := &Stack{spellSources: maps.Clone(s.spellSources), spellManaValues: maps.Clone(s.spellManaValues), spellControllers: maps.Clone(s.spellControllers)}
-	if len(s.resolvingHandObjects) > 0 {
-		clone.resolvingHandObjects = make([]*StackObject, len(s.resolvingHandObjects))
-		for i, object := range s.resolvingHandObjects {
-			clone.resolvingHandObjects[i] = cloneStackObject(object)
+	if len(s.resolvingReferenceObjects) > 0 {
+		clone.resolvingReferenceObjects = make([]*StackObject, len(s.resolvingReferenceObjects))
+		for i, object := range s.resolvingReferenceObjects {
+			clone.resolvingReferenceObjects[i] = cloneStackObject(object)
 		}
 	}
 	if len(s.objects) > 0 {

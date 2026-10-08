@@ -134,7 +134,7 @@ func (g *Game) StackHandSourcesFor(viewer uuid.UUID) []DamageSource {
 			sources = append(sources, source)
 		}
 	}
-	for _, object := range g.stack.handReferenceObjects() {
+	for _, object := range g.stack.referenceObjects() {
 		identities := slices.Clone(object.revealedHandCards)
 		for _, id := range object.Targets {
 			if identity, ok := object.targetHandCards[id]; ok && identity.id == id && identity.zone == core.ZoneHand {
@@ -207,7 +207,7 @@ func (s *Stack) handVisitRevealed(id, visit uuid.UUID) bool {
 	if s == nil || visit == uuid.Nil {
 		return false
 	}
-	for _, object := range s.handReferenceObjects() {
+	for _, object := range s.referenceObjects() {
 		if !object.ownsHandReveals {
 			continue
 		}
@@ -228,13 +228,6 @@ func (g *Game) bindHandStack() {
 			state.setHandStack(g.stack)
 		}
 	}
-}
-
-func (s *Stack) handReferenceObjects() []*StackObject {
-	if len(s.resolvingHandObjects) == 0 {
-		return s.objects
-	}
-	return slices.Concat(s.objects, s.resolvingHandObjects)
 }
 
 // ChooseDamageSourceFromInspectableStackHandReferences uses the choosing player's information.

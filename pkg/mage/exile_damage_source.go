@@ -74,7 +74,7 @@ func (e *sequenceEffect) stackCardBindings() []capturedCard {
 // Other source categories need separate enumeration services.
 func (g *Game) StackBoundExileSources() []DamageSource {
 	var sources []DamageSource
-	for _, object := range g.stack.handReferenceObjects() {
+	for _, object := range g.stack.referenceObjects() {
 		var identities []capturedCard
 		for _, id := range object.Targets {
 			if identity, ok := object.targetExileCards[id]; ok && identity.id == id && identity.zone == core.ZoneExile {

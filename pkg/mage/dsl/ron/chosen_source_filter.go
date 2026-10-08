@@ -137,6 +137,7 @@ func (p *chosenDamageSourcePlan) waitingExileChoice(bindings instanceBindings) m
 	return mage.ChooseDamageSourceFromWaitingExileReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }
 
+// The engine keeps the exact visit through the resolving frame.
 func (p *chosenDamageSourcePlan) stackGraveyardChoice(bindings instanceBindings) mage.ResolvingEffect {
 	return mage.ChooseDamageSourceFromStackGraveyardReferences(mage.You, p.filter, bindings.chosenDamageSources[p])
 }

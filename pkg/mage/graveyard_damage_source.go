@@ -114,6 +114,7 @@ func (g *Game) captureGraveyardTargetSources(object *StackObject) {
 }
 
 // StackGraveyardSources reads exact graveyard targets and saved card bindings.
+// Resolving frames keep their references until the body completes.
 // Departure information alone cannot make a source available for a choice.
 func (g *Game) StackGraveyardSources() []DamageSource {
 	var sources []DamageSource
@@ -122,7 +123,7 @@ func (g *Game) StackGraveyardSources() []DamageSource {
 			sources = append(sources, source)
 		}
 	}
-	for _, object := range g.stack.objects {
+	for _, object := range g.stack.referenceObjects() {
 		for _, id := range object.Targets {
 			saved, ok := object.targetGraveyardSources[id]
 			if ok && saved.ID() == id && saved.GraveyardVisit() != uuid.Nil {

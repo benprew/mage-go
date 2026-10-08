@@ -2,6 +2,7 @@ package mage
 
 import (
 	"maps"
+	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 
@@ -204,11 +205,11 @@ func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
 
 // Stack represents the game stack.
 type Stack struct {
-	resolvingHandObjects []*StackObject
-	objects              []*StackObject
-	spellSources         map[uuid.UUID]DamageSource
-	spellManaValues      map[uuid.UUID]int
-	spellControllers     map[uuid.UUID]uuid.UUID
+	resolvingReferenceObjects []*StackObject
+	objects                   []*StackObject
+	spellSources              map[uuid.UUID]DamageSource
+	spellManaValues           map[uuid.UUID]int
+	spellControllers          map[uuid.UUID]uuid.UUID
 }
 
 func NewStack() *Stack {
@@ -332,4 +333,12 @@ func (s *Stack) FindBySourceID(sourceID uuid.UUID) *StackObject {
 // Objects returns all objects on the stack for inspection.
 func (s *Stack) Objects() []*StackObject {
 	return s.objects
+}
+
+// Resolution removes an object from the queue before its body completes.
+func (s *Stack) referenceObjects() []*StackObject {
+	if len(s.resolvingReferenceObjects) == 0 {
+		return s.objects
+	}
+	return slices.Concat(s.objects, s.resolvingReferenceObjects)
 }

@@ -154,6 +154,7 @@
 // [Game.StackGraveyardSources] reads exact targets, payment card bindings
 // and nested event card captures on stack objects. Departure keeps public facts;
 // the final referring stack departure ends this category's availability.
+// Resolving frames retain these references until body completion.
 // Queries and game clones keep separate mutable card facts.
 // [ChooseDamageSourceFromStackGraveyardReferences] uses this category only.
 // A selected graveyard source cannot follow a later spell or permanent.

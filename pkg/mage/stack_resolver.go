@@ -193,8 +193,8 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 }
 
 func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Color) {
-	handDepth := len(g.stack.resolvingHandObjects)
-	g.stack.resolvingHandObjects = append(g.stack.resolvingHandObjects, obj)
+	referenceDepth := len(g.stack.resolvingReferenceObjects)
+	g.stack.resolvingReferenceObjects = append(g.stack.resolvingReferenceObjects, obj)
 	previousMana, previousTracking := g.resolution.manaProduced, g.resolution.manaTracking
 	previousColors := g.resolution.manaColors
 	g.resolution.manaColors = nil
@@ -215,7 +215,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 		g.triggers.resolvingState = previousState
 		g.CheckStateTriggers()
 	}()
-	defer func() { g.stack.resolvingHandObjects = g.stack.resolvingHandObjects[:handDepth] }()
+	defer func() { g.stack.resolvingReferenceObjects = g.stack.resolvingReferenceObjects[:referenceDepth] }()
 
 	// Check for fizzle: if the spell/ability has targets but all are now illegal,
 	// it fails to resolve (MTG rule 608.2b)
