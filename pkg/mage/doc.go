@@ -1054,6 +1054,11 @@
 // Counts stay local to each resolution. Empty hands still cause a shuffle.
 //
 // Use [LoseUnspentManaFor] to clear one selected player's mana pool.
+// Its typed player declares explicit source reads to
+// [Game.WaitingDelayedPermanentSources]. Queries do not resolve the player
+// or clear mana. An empty pool keeps the declaration. Departure and phasing
+// keep the saved incarnation until trigger detection. A returned source
+// cannot replace it. Implicit attachments and future delays infer no reads.
 // Use [HasManaAbility] to check current abilities without testing payment
 // or current output. [ControllerOfSpellWithLKI] keeps departure control
 // for instructions that run after a spell is countered.

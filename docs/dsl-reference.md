@@ -8585,3 +8585,24 @@ reorder bool)` reads the count once at resolution. Missing players perform no
 inspection. Nil counts and negative direct Fixed counts fail definition validation.
 `LookAtLibraryTop` preserves its integer API through this service.
 Evidence: `TestRONWaitingDelayedLibrary*` and `TestWaitingDelayedLibrary*`.
+
+## Waiting delayed mana-loss player operands
+
+Bare `LoseUnspentMana` lowers to `LoseUnspentManaFor(player PlayerRef)` in the
+current resolving player scope. `PlayerAction(player, LoseUnspentMana)` keeps
+its typed player operand; `PlayerActions(player, [LoseUnspentMana])` uses its
+existing player snapshot and local binding. Both work in delayed bodies.
+Tuple spelling, unbound targets, wrong reference roles and out-of-scope event
+or action players remain errors. Each factory keeps separate bindings.
+
+`LoseUnspentManaFor` declares explicit source reads from its typed player to
+`Game.WaitingDelayedPermanentSources`. Queries do not resolve players or clear
+mana. Empty pools keep the declaration. Saved incarnations survive departure,
+return and phasing until trigger detection. Bound player values, implicit
+attachments and future delayed bodies do not infer a source reference.
+Resolution uses the existing player reference and mana-pool services, including
+restricted mana removal without life loss. General source choice still requires
+the complete legal source aggregation.
+
+Evidence: `TestWaitingDelayedManaOperands`, `Boundaries`,
+`TestRONWaitingDelayedManaGameplay`, `Instances`, `Invalid` and `Protection`.

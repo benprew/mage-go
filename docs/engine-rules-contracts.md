@@ -11234,3 +11234,39 @@ power, departed targets, returned objects and saved targets that gain shroud.
 with a departed zero-count inspection source; these remain subrule tests.
 Existing `TestRONLibraryInspection*` retains complete Natural Selection, Visions
 and Orcish Spy gameplay evidence, including ordering and optional decisions.
+
+## Waiting delayed mana-loss player operands
+
+`LoseUnspentManaFor(player PlayerRef) ResolvingEffect` declares explicit source
+reads in its player through the shared typed player-reference walker.
+`ControllerOf(This)`, `ControllerOfWithLKI(This)` and `OwnerOf(This)` retain the
+saved exact source in `Game.WaitingDelayedPermanentSources`. Empty mana pools
+keep the reference. Queries do not resolve players or change mana, life or
+production history. Implicit attachments, bound player values and future delay
+bodies retain their existing separate scopes.
+
+Saved frames, exact incarnation information, deduplication, trigger detection,
+stack copies and game cloning use the existing services. Departure and phasing
+retain waiting availability; a returned object cannot replace the saved source.
+Detection ends one-shot waiting availability before stack placement. Resolution
+clears only the resolved player's pool, including restricted mana, without mana
+burn (CR 106.4, 400.7, 603.7a–e, 609.7a and 702.26b–d).
+
+RON `PlayerAction(player, LoseUnspentMana)` preserves its typed operand;
+`PlayerActions(player, [LoseUnspentMana])` retains the existing player snapshot.
+The dedicated adapter accepts only bare `LoseUnspentMana` in resolving player
+contexts and uses fresh per-instance bindings. No new syntax or general source
+aggregation is established.
+
+`TestWaitingDelayedManaOperands` covers native controller, LKI controller and
+owner declarations through phasing, departure, cleared transient LKI, return
+and clone lifetime. `Boundaries` rejects invalid definitions and excludes
+implicit and future reads. `TestRONWaitingDelayedManaGameplay` covers both
+player forms through live, departed, returned, phased, control-changed and copied
+activations, resolving each in a clone and original. `Instances` covers separate
+factories and target bindings, copies, departed target LKI, returned object
+exclusion and current target control. `Invalid` rejects malformed and unbound
+scopes. `Protection` uses the six Circles and Greater Realm's complete records
+for costs, filters and one-use prevention with a departed delayed mana source.
+Those are subrule tests; complete records still reject general source choice.
+Existing `TestRONManaDenial*` retains complete Mana Short and Power Sink evidence.

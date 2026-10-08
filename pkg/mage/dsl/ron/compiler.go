@@ -1555,12 +1555,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compileMillAction(n, ctx)
 	}
 	if n.Name == "LoseUnspentMana" {
-		if n.Kind != Symbol {
-			return nil, problem(n, "LoseUnspentMana requires a symbol")
-		}
-		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.LoseUnspentManaFor(ctx.player.build(bindings))
-		}}, nil
+		return compileLoseUnspentMana(n, ctx)
 	}
 	if n.Name == "RevealHand" || n.Name == "DiscardCards" || n.Name == "DiscardHand" {
 		return compileHandPlayerAction(n, ctx)

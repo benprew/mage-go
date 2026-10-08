@@ -7,9 +7,9 @@ names** (986 total), and **1,981 compiled / 464 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-LIBRARY-OPERANDS` retains explicit source reads in delayed
-inspection and optional shuffle, and lowers scoped inspection counts.
-No new card compiles; seven protection subrules gain library-reference evidence.
+`WAITING-DELAYED-MANA-PLAYER` retains explicit source reads in delayed
+mana-loss player operands through exact identity and clone lifetimes.
+No new card compiles; seven protection subrules gain mana-reference evidence.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 General damage-source aggregation and sticky layers remain gaps.
@@ -49625,3 +49625,113 @@ Ranked next candidates:
    general source aggregation remains its prerequisite.
 
 This run stops after `WAITING-DELAYED-LIBRARY-OPERANDS`.
+
+## 2026-10-08: waiting delayed mana-loss player operands
+
+Status: completed implementation slice `WAITING-DELAYED-MANA-PLAYER`.
+This run stops after this slice. Initial `.gitignore`, execution-design and
+ledger reorganization changes, and untracked completed ledger, are preserved.
+Only this run's summary update and appended entry are staged.
+
+Fresh baseline: `make build` and uncached full RON tests passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection:
+1,981 compiled / 464 rejected records; 776 accepted / 210 rejected unique names.
+First issue: Animate Dead / EnchantGraveyardCard. No build failure was found.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Ranked #1 delayed mana-player prerequisite | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Jade Monolith. 0 immediate unlocks; 8 plausible downstream unlocks / 37 records. Mana Short and Power Sink retain accepted gameplay. | Missing native declaration for LoseUnspentManaFor. Complete source aggregation still needs combat-exit/remaining explicit operand and opaque-boundary audit. | Small typed engine declaration, existing AST lowering, lifecycle and consuming-operation tests. |
+| Sticky layers | Titania's Song: 1 plausible unlock / 2 records. | Requires source-departure retention, shared layer membership and per-member mana values before lowering. | Larger layer/lifecycle suite. |
+| Chosen-source partial prevention | Dark Sphere: 0 immediate unlocks; 1 downstream unlock / 1 record. | General source aggregation precedes half-rounded-down prevention, actual amounts and consumption. | Medium replacement suite after its prerequisite. |
+
+Complete selected and compared card records, including nested costs, filters,
+amounts and durations, were inspected. The bounded first candidate is ready and
+advances a concrete eight-card shared dependency, so it takes priority over the
+single-card alternatives. The gap is an engine declaration contract. The RON
+adapter already supports this action; its lowering is isolated in a dedicated
+helper and tested end-to-end. No new RON syntax is claimed. No source defect or
+source edit was found; the vocabulary snapshot needs no refresh.
+
+### Signatures, contexts and reuse boundary
+
+- `LoseUnspentManaFor(player PlayerRef) ResolvingEffect` declares explicit source
+  reads through `loseUnspentManaEffect.refersToSourcePermanent()` and the shared
+  `playerRefReadsSourcePermanent` service. ControllerOf(This),
+  ControllerOfWithLKI(This) and OwnerOf(This) supply the saved exact source.
+- `compileLoseUnspentMana(Node, scope) ([]effectFactory, error)` accepts only
+  bare LoseUnspentMana and builds the typed player with per-instance bindings.
+  `PlayerAction(player, LoseUnspentMana)` keeps the direct typed player;
+  `PlayerActions(player, [LoseUnspentMana])` keeps its existing player snapshot.
+  Resolving spells, activations, triggers and delayed bodies keep their current
+  player scopes. Invalid tuple spelling, unbound/wrong-role targets, and
+  out-of-scope event/action players reject before game execution.
+- Waiting queries do not resolve players or clear mana. Empty pools keep the
+  declaration. Exact saved incarnations survive phasing, departure, return and
+  cleared transient LKI until trigger detection. Returned objects cannot replace
+  them. Implicit attachments, bound player values and future delays do not infer
+  source references.
+- Existing delayed capture, incarnation information, deduplication, snapshot,
+  target legality, stack copy, clone and mana-pool services are reused.
+  Resolution uses current or exact retained controller information and clears
+  only that player's pool, including restricted mana, without life loss.
+- Rules evidence: local CR 106.4, 400.7, 603.7a–e, 609.7a–b and 702.26b–d.
+  API and rules-contract documentation describe only this behavior.
+
+### Failing-first tests and card-to-test mapping
+
+Native tests failed assertions for all three explicit player forms with an empty
+waiting reference list. RON tests failed all six direct PlayerAction lifecycle
+cases and all seven protection cases on missing source availability.
+PlayerActions cases already passed because SnapshotPlayer declared the reference.
+An initial test used mage.ArtifactSpellsOnly instead of core.ArtifactSpellsOnly;
+that fixture compilation error was corrected before confirming semantic failure.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestWaitingDelayedManaOperands | Native controller, LKI controller and owner reads; live, phase cycle, departure, cleared transient LKI, return, exact identity and independent clone wait lifetime. |
+| TestWaitingDelayedManaBoundaries | No inferred implicit attachment or future-delay reads; nil and undeclared bound/target players fail definition validation. |
+| TestRONWaitingDelayedManaGameplay | Both singular and snapshot player forms across live, departed, returned, phased, control-changed and copied activations; pure queries, creation/detection timing, restricted pool removal, no mana burn, clone and original resolution. |
+| TestRONWaitingDelayedManaInstances | Separate factory instances and target frames, copied activation, departure LKI, returned-target exclusion, current control and clone isolation. |
+| TestRONWaitingDelayedManaInvalid | Five malformed or unbound/wrong-role/out-of-scope declarations reject. |
+| Six Circles and Greater Realm / TestRONWaitingDelayedManaProtection | Complete records supply actual costs, filters and one-use prevention. A departed delayed mana source is chosen only at resolution; failed payment offers no choice; damage prevention consumes once. These are subrule tests; full records still reject ChooseADamageSource. |
+| Mana Short, Power Sink / existing TestRONManaDenial* | Complete records and reprints retain payment, target legality, membership, optional payment, source/spell departure, copy/instance, trigger/delayed and clone coverage. |
+| Jade Monolith | Downstream beneficiary of complete source aggregation; no new full-card or Jade-specific gameplay claim in this slice. |
+
+### Validation and outcome
+
+- `go test ./pkg/mage/dsl/ron -run TestRONWaitingDelayedMana -count=1`: PASS.
+- Expanded TestRONManaDenial and native TestWaitingDelayedMana /
+  TestLoseUnspentManaFor focused suites: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. No automatic changes to production behavior;
+  reviewed new test import formatting. Post-lint focused native and RON tests: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+  JSON is byte-identical to baseline, including every diagnostic.
+
+Estimated and actual gains: **0 full-card unlocks / 0 new compiled records**.
+Final totals remain **1,981 compiled / 464 rejected records; 776 accepted / 210
+rejected unique names**. Added mana-reference gameplay evidence is separate from
+full-card acceptance. Strict loading rejects unsupported records and installs no
+partial registry. Runtime cutover, Go-card removal and unused DSL deletion gates
+remain unmet; existing callers are preserved. No environment blocker was found.
+
+Changed files: `pkg/mage/player_mana_denial.go`, `waiting_delayed_mana_test.go`,
+`pkg/mage/dsl/ron/compiler.go`, `player_mana_denial.go`,
+`waiting_delayed_mana_test.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Ranked next candidates:
+
+1. Bounded delayed combat-exit operand contract (RemovePermanentFromCombat and
+   RemovePermanentFromCombatAndUnblock), then finish explicit operand and opaque
+   boundary audit before general CR 609.7a aggregation and scoped source choice.
+   Eight plausible downstream unlocks / 37 records remain; general choice rejects.
+2. Sticky layer lifecycle for Titania's Song: 1 plausible unlock / 2 records.
+3. Chosen-source partial prevention for Dark Sphere: 1 downstream unlock;
+   general source aggregation remains its prerequisite.
+
+This run stops after `WAITING-DELAYED-MANA-PLAYER`.

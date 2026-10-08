@@ -4,6 +4,10 @@ import . "github.com/benprew/mage-go/pkg/mage/core"
 
 type loseUnspentManaEffect struct{ player PlayerRef }
 
+func (e *loseUnspentManaEffect) refersToSourcePermanent() bool {
+	return playerRefReadsSourcePermanent(e.player)
+}
+
 // LoseUnspentManaFor removes all unspent mana from the selected player's pool.
 func LoseUnspentManaFor(player PlayerRef) ResolvingEffect {
 	return &loseUnspentManaEffect{player: player}
