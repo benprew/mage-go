@@ -9,10 +9,10 @@ rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`WAITING-PREVENTION-PERMANENT-REFERENCES` slice is recorded at the end of this
-ledger. It adds exact retained permanent references from three waiting prevention
-contexts as a shared prerequisite for seven source-choice prevention cards.
-Four accepted cards have new interaction coverage; compilation counts are unchanged.
+`WAITING-COMBAT-PREVENTION-REFERENCES` slice is recorded at the end of this
+ledger. It adds exact subjects from resolved combat prevention to the shared
+waiting-reference query, a prerequisite for seven source-choice prevention cards.
+Nine accepted cards have new interaction coverage; compilation counts are unchanged.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -39106,6 +39106,139 @@ Ranked next candidates to reassess from fresh evidence:
    including saved spell/source references and other exact permanent subjects;
    then command-zone objects before general source choice and the seven shields.
 2. Parameterized bands with others for the eight complete records above.
+3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
+
+Stop after this slice. The commit hash is reported in the final response.
+
+
+## 2026-10-07: exact waiting combat-prevention subjects
+
+Status: completed implementation slice `WAITING-COMBAT-PREVENTION-REFERENCES`.
+This run stops after this slice. Initial user changes to `.gitignore`, the execution
+design and this ledger, and untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's ledger delta is staged; the user's ledger reorganization is not
+included in the commit. No Go card definitions or unrelated files are changed.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Strict
+`go run ./cmd/loadcards -json` returned expected exit 1: 1,963 compiled / 482
+rejected records, 763 accepted / 223 rejected names. Collection rejection is not
+a build failure. Complete records and nested forms were inspected for all compared
+candidates, including the accepted consumers below. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, exact waiting combat-prevention subjects, selected | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: 0 immediate unlocks; shared prerequisite for 7 names / 31 records. Nine accepted consumers below gain interaction evidence. | Static and other waiting replacement subjects, spell/source references, command objects, complete source enumeration, chosen-source shields, permanent-spell continuity and property rechecks remain. Completes the exact resolved combat-prevention category for general source choice. | Small: two typed reference providers reuse the existing query; native and full-record RON lifecycle/choice tests. |
+| Parameterized bands with others | Adventurers' Guildhouse, Cathedral of Serra, Master of the Hunt, Mountain Stronghold, Seafarer's Quay, Shelkin Brownie, Tolaria, Unholy Citadel: 8 plausible unlocks after the complete family. | Nested records need parameterized legendary/named bands, both damage-assignment directions, live and token grants, and selective temporary removal. Ordinary banding cannot supply these contracts. | Large: ability representation, combat formation/assignment, layers, token and removal adapters. |
+| Text-word choices and substitution | Magical Hack; Sleight of Mind: 2 plausible unlocks. | Full modal records require both spell and permanent contexts, paired typed choices, text-variable substitution, and copy/layer isolation. Existing color/basic-land choices do not implement text substitution. | Large: shared text representation and choice scopes, both contexts and gameplay tests. |
+
+Selection rationale: candidate #1 is dependency-ready and has a concrete
+seven-card downstream benefit. Exact saved IDs already exist; the missing contract
+is enumeration, not parser syntax or source data. Its bounded implementation and
+nine accepted consumers give credible value within one run. Contract, reuse
+boundary and acceptance cases were stated before editing. The `implement-engine`
+skill supplied the engine workflow; no removed card skill or agent delegation was
+used.
+
+### Exact contexts, lowering and engine contract
+
+- `Game.WaitingPreventionPermanentSources() []DamageSource` now reads exact
+  ID/incarnation pairs from `combatSourcePreventionReplacement` and
+  `creatureCombatDamagePreventionReplacement`. These use the existing typed
+  `waitingPreventionReferences` interface. No new exported API is needed.
+- Native producers: `PreventCombatDamageToAndBy(PermanentRef)`,
+  `PreventCombatDamageBy(PermanentRef)`,
+  `PreventCombatDamageByThisTurn(PermanentRef)`,
+  `PreventCombatDamageByEach(PermanentSet)` and
+  `PreventCombatDamageByEachThisTurn(PermanentSet)`.
+- Existing RON AST lowering is reused exactly: `CreatePreventDamageUntil(event,
+  [PreventThatDamage], UntilEndOfTurn)` with
+  `CombatDamageWouldBeDealtByCreature(permanent)` or the matching source/recipient
+  `Or` union; collection form
+  `CombatDamageWouldBeDealtByACreature(Or([SinglePermanent(permanent), collection]))`
+  uses `IsBlockingAttacker` / `IsBlockedByDefender` relations and also permits
+  `UntilEndOfCombat`. Typed scope and per-factory references stay in ron. No
+  redundant compiler adapter or new RON syntax is introduced.
+- Collection membership is saved at resolution. Querying does not execute bodies
+  or follow later combat membership. Exact duplicates are removed, including
+  repeated shields and copied stack resolutions. To-and-by supplies one object.
+  Registration sources, global prevention, unknown objects and incomplete
+  identities do not become subjects.
+- Current/control, exact departure and phase information use the existing
+  `damageReferenceInformation` reader. Return cannot replace an old incarnation;
+  clearing the short LKI cache does not lose exact departure information. Queries
+  have separate card data. Choice uses
+  `ChooseDamageSourceFromWaitingPreventionReferences(PlayerRef, DamageSourceFilter,
+  *DamageSourceBinding) ResolvingEffect`, with existing filter validation,
+  decisions and independent output clearing.
+- Unlimited combat prevention remains eligible after damage. Existing combat or
+  turn duration removal ends eligibility. Clones retain independent replacement
+  lifetimes. CR 120.7, 400.7, 609.7a and 615.4/6 apply.
+
+The engine owns reusable subjects, information, choices and lifetimes. ron owns
+spelling, declaration validation, lexical scope and lowering. Static replacement
+subjects and other contexts remain explicit separate gaps. No payment,
+replacement-ordering, target-legality or simultaneous-operation behavior changes.
+There is no fallback, card-name branch, global last-action slot, game-time
+declaration panic, skipped rule or partial production registry.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, focused native tests failed with `missing installed combat
+reference` and RON tests with `references=0 want=1` / `want=2`. The implementation
+then passed the same assertions. No test was weakened or replaced with a stub.
+
+| Test or card | Evidence |
+| --- | --- |
+| `TestWaitingCombatPreventionReferences` | Singular source, to-and-by, turn collection and combat collection; capture, removed combat membership, departure/return, cleared LKI, phase/cycle, current control, repeated damage prevention, combat/turn expiry and independent clone cleanup. |
+| `TestWaitingCombatPreventionChoiceBoundaries` | Repeated/duplicate subjects, incomplete/unknown identity, global-prevention exclusion, filtered independent choices, empty output clearing and mutable snapshot isolation. |
+| Maze of Ith (DRK); Ebony Horse (ARN; identical 3ED record inspected); Elvish Scout (FEM) | `TestRONWaitingCombatPreventionReferences`: complete to-and-by RON activation, payment rejection where applicable, resolution timing, phased-target illegality, departure/return, phase/cycle, stack copies, duration boundaries, cloned query/execution and retained-source noncombat damage. |
+| Horn of Deafening; Lady Evangela; Subdue; Telekinesis (LEG) | Same test for exact source prevention, with their complete activation/spell records and the interactions above. Existing Subdue bonus and Telekinesis untap regressions remain in the full suite. |
+| Feint (LEG); Sewers of Estark (PROMOS) | Same test for captured two-member combat collections, copied resolution deduplication, distinct combat/turn durations and the interactions above. Existing `TestRONCombatCollectionCards` covers later and departed blockers, simultaneous combat and captured membership. |
+| Invalid declarations | Rerun `TestRONCombatCollectionInvalid`, `TestRONTargetCombatPreventionDeclarations`, `TestRONSourceCombatPreventionDeclarations` and native waiting-prevention declaration/choice tests. Reject unbound, malformed, incompatible or invalid-duration declarations. |
+| Seven source-choice shields | Full records inspected; still rejected at `ChooseADamageSource`. No complete shield gameplay claim. |
+
+### Validation and measured outcome
+
+Required verification passed in fast-fail order:
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONWaitingCombatPrevention -count=1`
+  and native `go test ./pkg/mage -run TestWaitingCombatPrevention -count=1`.
+- Focused invalid declarations and existing combat collection gameplay passed.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- Additional skill check: `go test ./... -short -count=1`.
+- `make lint`: PASS, 0 issues. No semantic automatic changes; reviewed both new
+  test files and tracked source diffs. Combined focused native/RON and invalid
+  declaration tests were rerun after lint and passed.
+- `git diff --check`: PASS, including the final ledger update and staged delta.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. JSON exactly matches baseline: **1,963 compiled / 482 rejected
+  records; 763 accepted / 223 rejected names**. No accepted record was lost.
+
+No environmental or pre-existing validation blocker remains.
+
+Estimated and actual gains are both **0 names / 0 records**. Added interaction
+coverage maps **9 accepted unique cards** to this engine contract. Compilation
+and full-card gameplay remain separate. Accepted records keep their existing
+lowering and behavior. Remaining diagnostics include `ChooseADamageSource`
+(11 names), bands-with-others forms (8 names), and text-word contexts (2 names).
+No source defect or environment failure was found. All 12 RON source hashes match
+the vocabulary snapshot; no source or vocabulary refresh is needed.
+
+Changed files: `pkg/mage/waiting_prevention.go`, `pkg/mage/doc.go`, new native and
+RON `waiting_combat_prevention_test.go`, API/rules-contract documentation and this
+ledger. Runtime loading, full collection gameplay, Go-card deletion and unused
+DSL cleanup remain unfinished. No removal gate is met and no DSL service is
+removed.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Remaining waiting prevention/replacement references: live static subjects and
+   other exact permanent/spell/source contexts; then face-up command objects before
+   complete source selection and the seven shields.
+2. Parameterized bands with others across the eight complete records above.
 3. Typed text-word choice/substitution for Magical Hack and Sleight of Mind.
 
 Stop after this slice. The commit hash is reported in the final response.

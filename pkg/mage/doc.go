@@ -2,6 +2,8 @@
 //
 // Use [Game.WaitingPreventionPermanentSources] for exact permanent references
 // retained by finite recipient, unlimited recipient and next-source prevention.
+// Resolved combat prevention supplies its exact source or to-and-by subject.
+// Collection prevention supplies each member saved at resolution.
 // [ChooseDamageSourceFromWaitingPreventionReferences] uses this category only.
 // Other waiting replacement references need separate contracts.
 //

@@ -8169,3 +8169,41 @@ This establishes no new replacement ordering or payment behavior. General
 `ChooseADamageSource`, other waiting prevention/replacement references, saved
 spell references and command-zone categories remain unfinished. No full-card
 compilation gain or complete CR 609.7a enumeration is claimed.
+
+
+### Exact waiting combat-prevention subjects
+
+Resolved `combatSourcePreventionReplacement` and
+`creatureCombatDamagePreventionReplacement` supply their saved ID/incarnation
+pairs to the existing waiting-prevention reference query. This establishes the
+CR 120.7 / 609.7a referred-object category for exact resolved combat prevention,
+including collection members saved at resolution. The replacement's registration
+source is not an additional subject. Global prevention and unspecified filter
+members do not supply exact references. Static subjects and other replacement
+contexts need separate contracts.
+
+Current characteristics and control, exact departure information, and phased
+information use `damageReferenceInformation`. CR 400.7 identity prevents a
+returned card from replacing the saved object. Clearing the short LKI cache does
+not discard the exact departure information. Queries return separate snapshots,
+remove exact duplicates, and reject incomplete or unknown identities. Matching
+damage does not consume this unlimited prevention. Existing duration removal
+ends reference eligibility. Clones retain independent replacement lifetimes.
+No damage, replacement-ordering, target, payment or simultaneous-operation rule
+changes in this slice.
+
+`TestWaitingCombatPreventionReferences` covers singular to-and-by, singular source,
+turn collection and combat collection contexts; capture, departure/return,
+cleared LKI, phasing/cycles, current control, repeated prevention, duration removal
+and clone isolation. `TestWaitingCombatPreventionChoiceBoundaries` covers filtered
+independent choices, empty output clearing, duplicate/incomplete/unknown subjects,
+global-prevention exclusion and query snapshot isolation.
+`TestRONWaitingCombatPreventionReferences` executes complete Maze of Ith, Ebony
+Horse, Elvish Scout, Horn of Deafening, Lady Evangela, Subdue, Telekinesis, Feint
+and Sewers of Estark records. It covers payment failure, resolution timing,
+phased target rejection, saved identity after departure/return, phasing, stack
+copies, combat/turn duration boundaries, clone queries, and selected retained
+subjects as noncombat damage sources. Existing invalid declaration, combat
+membership, legality, payment rollback and simultaneous combat tests still apply.
+This is added interaction evidence for accepted cards, not complete general source
+choice or a full-card compilation gain.

@@ -22,6 +22,14 @@ func (r *damagePreventionRuleReplacement) waitingPreventionPermanents() []captur
 	return []capturedPermanent{r.recipientPermanent}
 }
 
+func (r *combatSourcePreventionReplacement) waitingPreventionPermanents() []capturedPermanent {
+	return []capturedPermanent{{r.preventedID, r.incarnation}}
+}
+
+func (r *creatureCombatDamagePreventionReplacement) waitingPreventionPermanents() []capturedPermanent {
+	return []capturedPermanent{{r.creatureID, r.incarnation}}
+}
+
 // WaitingPreventionPermanentSources reads exact references in active prevention effects.
 // A returned object must not replace information for the saved incarnation.
 func (g *Game) WaitingPreventionPermanentSources() []DamageSource {

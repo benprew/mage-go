@@ -6690,3 +6690,26 @@ its existing behavior; its filter does not declare individual source objects.
 No new RON syntax or partial `ChooseADamageSource` adapter is introduced.
 Other prevention/replacement contexts, spell references and command-zone sources
 remain separate prerequisites for general source choice.
+
+
+### Waiting references from resolved combat prevention
+
+`Game.WaitingPreventionPermanentSources() []DamageSource` also includes exact
+subjects retained by `PreventCombatDamageToAndBy`, `PreventCombatDamageBy`,
+`PreventCombatDamageByThisTurn`, `PreventCombatDamageByEach`, and
+`PreventCombatDamageByEachThisTurn`. Collection members are saved at resolution;
+later members cannot enter the reference list. A to-and-by subject appears once.
+The shared query and `ChooseDamageSourceFromWaitingPreventionReferences` retain
+the existing identity, information, deduplication, filtering and binding contract.
+Combat prevention remains available after matching damage. End-of-combat or
+end-of-turn removal ends its eligibility according to its declared duration.
+
+RON uses the existing `CreatePreventDamageUntil` lowering:
+`CombatDamageWouldBeDealtByCreature(permanent)` for one source;
+`Or([CombatDamageWouldBeDealtToRecipient(Permanent(permanent)),
+CombatDamageWouldBeDealtByCreature(permanent)])` for a to-and-by subject;
+and `CombatDamageWouldBeDealtByACreature(Or([SinglePermanent(permanent),
+collection]))` for the supported combat relation collections. Operations must be
+`[PreventThatDamage]`. Singular forms permit `UntilEndOfTurn`; supported
+collection unions also permit `UntilEndOfCombat`. Existing scope checks remain.
+There is no new spelling or general `ChooseADamageSource` adapter.
