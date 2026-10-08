@@ -8469,3 +8469,44 @@ it. Detection ends one-shot waiting availability before stack placement. Native
 and RON tests cover lifecycle, copying, cloning, payment and declaration errors.
 The seven protection records gain waiting-redirection subrule coverage. General
 `ChooseADamageSource` still requires the remaining category audit and aggregation.
+
+
+## Source operands of waiting damage-source choices
+
+`ChooseDamageSourceFrom(PlayerRef, []DamageSourceRef, *DamageSourceBinding)
+ResolvingEffect` and `ChooseDamageSourceMatchingFrom(PlayerRef,
+[]DamageSourceRef, DamageSourceFilter, *DamageSourceBinding) ResolvingEffect`
+declare explicit permanent source reads in their player and fixed source list
+through `damageSourceChoice.refersToSourcePermanent() bool`.
+Category choices use the same typed player declaration. The query
+`Game.WaitingDelayedPermanentSources() []DamageSource` retains the saved exact
+incarnation when the player reads its controller or owner, or the list contains
+`This` or `DamageSourceOf(This)`. Lists with duplicate operands still supply
+one reference. Filters that cannot match do not remove declarations.
+
+Queries do not resolve references or players, apply filters, select candidates,
+write choice bindings or install damage rules. Implicit attachments, opaque
+references, category enumeration alone and future delayed bodies do not infer
+source reads. Departure and phasing retain the saved incarnation and current or
+exact departure facts; a return cannot replace it. One-shot detection ends
+waiting availability before stack placement. These boundaries follow CR 400.7,
+603.7a–e, 609.7a–b and 702.26b.
+
+Execution reuses source choice, exact-object deduplication, per-instance binding
+frames, clone isolation and the shared damage/replacement services. RON reuses
+`compileChosenDamageSourceChoice`, `compileSelfDamageSource`, `compilePlayerRef`,
+`compileActions`, `compileExactSourcePrevention` and the existing category
+lowering. No new RON spelling or general source aggregation is enabled.
+`ChooseADamageSource/1` continues to reject in production.
+
+`TestWaitingDelayedDamageChoiceOperands`, `PurityAndBoundaries` and `Invalid`
+establish lifecycle declarations, snapshot isolation, query purity, implicit and
+opaque boundaries, clone lifetime and definition validation.
+`TestRONWaitingDelayedDamageChoiceOperands`, `Protection` and `Invalid` establish
+RON typed operand and consuming-operation lowering, copies, failed payment,
+resolution timing, exact identity, independent consumption and rejection of
+invalid declarations. Jade Monolith supplies the target/redirection body; six
+Circles and Greater Realm supply actual costs, filters and prevention bodies.
+Their explicit-list/category test seams establish subrules, not complete-card
+gameplay or complete CR 609.7a aggregation. Existing choice and redirection tests
+continue to establish simultaneous packets, replacement ordering and legality.

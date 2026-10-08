@@ -201,6 +201,14 @@
 // Implicit attachments and future delayed bodies keep separate boundaries.
 // Saved incarnations survive departure and phasing until trigger detection.
 //
+// [ChooseDamageSourceFrom] and [ChooseDamageSourceMatchingFrom] declare
+// explicit source reads in their typed source list and player to
+// [Game.WaitingDelayedPermanentSources]. Category choices also declare their
+// typed player reads. Queries do not resolve operands, check filters or choose
+// a source. Empty runtime lists and nonmatching filters keep explicit reads.
+// Saved incarnations survive departure and phasing until trigger detection.
+// Implicit attachments, opaque references and future delays do not infer reads.
+//
 // [ChooseAtResolution] declares explicit source reads in its player, all
 // option conditions and all option bodies to the same waiting query.
 // Queries do not evaluate conditions or choose an option. Unavailable and
