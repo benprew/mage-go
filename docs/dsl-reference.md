@@ -8977,3 +8977,31 @@ This builder grants no entry permission and does not schedule replacements.
 `EnterAsACopyOfAPermanent` and `CopyEffects` still reject until their complete
 entry-copy and exception contracts are available. No RON copy declaration is
 accepted through a partial adapter.
+
+### RON token copiable-value prerequisite
+
+`mage.NewTokenDefinitionFactory(build mage.TokenDefinitionFactory)
+(mage.TokenDefinitionFactory, error)` checks a pure builder of fresh token
+characteristics, abilities and bindings. The returned factory supplies independent
+`TokenDefinition` declarations with one immutable `CardDefinitionPlan`.
+RON lowering uses it for the existing supported `TokenWithPT/6` and
+`NamedTokenWithPT/7` forms in `CreateTokens/2`, including `NumberTokens/2`.
+No syntax, binding scope or supported token characteristic is added.
+
+`CreateTokenCopies`, `CreateTokenCopiesInto` and `CreateOneToken` build fresh cards
+from this retained plan before the shared entry batch. Build failures return
+errors without installing a partial batch; result bindings clear first. Existing
+`DefineToken` callers retain their old path. The public card-plan constructor
+keeps its signature; its internal builder can now return an error.
+
+Created tokens supply exact snapshots through `CaptureCopiableValues`.
+Snapshots retain token name, types, subtypes, colors, printed P/T, keywords and
+fresh rules, with an absent mana cost. Saved values omit token status, owner,
+counters, controller and choices. `values.Build()` produces a fresh nontoken
+prototype; `BuildEntryCopy` preserves the physical copying object's token status.
+Phasing or departure prevents a new capture but does not invalidate saved values.
+This prerequisite does not accept Clone or add entry-copy scheduling.
+
+Evidence: `TestTokenDefinitionPlan*`, `TestRONTokenCopiableValuesGameplay`,
+`TestRONTokenCopiableValuesDeclarations`, and existing token creation/banding,
+copy snapshot and entry-copy identity suites.

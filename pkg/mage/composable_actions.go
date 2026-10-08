@@ -3775,6 +3775,7 @@ type TokenOption interface {
 }
 
 type tokenDefinition struct {
+	plan             *CardDefinitionPlan
 	name             string
 	types            []CardType
 	subtypes         []string
@@ -3945,7 +3946,10 @@ func (e *createTokenCopiesIntoEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	d := e.token.(*tokenDefinition)
-	created := createTokenBatchWithResult(ctx.Game, player, count, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities)
+	created, err := createDefinitionTokenBatch(ctx.Game, player, count, d)
+	if err != nil {
+		return err
+	}
 	for _, p := range created {
 		ctx.Game.resolution.createdTokenBindings[e.result] = append(ctx.Game.resolution.createdTokenBindings[e.result], capturedPermanent{p.ID(), p.incarnationID})
 	}
@@ -3971,7 +3975,10 @@ func (e *createOneTokenEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	d := e.token.(*tokenDefinition)
-	created := createTokenBatchWithResult(ctx.Game, player, 1, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities)
+	created, err := createDefinitionTokenBatch(ctx.Game, player, 1, d)
+	if err != nil {
+		return err
+	}
 	if len(created) == 0 {
 		return nil
 	}
@@ -4007,7 +4014,8 @@ func (e *createTokenCopiesEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	d := e.token.(*tokenDefinition)
-	return createTokenBatch(ctx.Game, player, count, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities)
+	_, err := createDefinitionTokenBatch(ctx.Game, player, count, d)
+	return err
 }
 
 // --- from composable_stack.go ---

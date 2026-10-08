@@ -7,10 +7,10 @@ names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ENTRY-COPY-PHYSICAL-IDENTITY` builds independent battlefield copy rules while
-retaining the physical card's printed departure rules, ID, owner and token status.
-RON factories retain the printed origin. Compilation and complete-card gameplay
-counts are unchanged; entry-copy scheduling and copy exceptions remain gaps.
+`TOKEN-COPIABLE-DEFINITION-PROVENANCE` gives supported RON-created tokens
+validated copy plans and independent snapshot rules. Four real creator scenarios
+and fifteen token declarations gain copy-source evidence. Compilation and
+complete-card gameplay counts are unchanged; copy scheduling remains a gap.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Entry copying, player-keyed permanent choices, exchanges and replacements remain gaps.
@@ -51743,3 +51743,142 @@ Ranked next candidates:
    records. Reuse exact chosen sources and the shared prevention pipeline.
 
 This run stops after ENTRY-COPY-PHYSICAL-IDENTITY.
+
+## 2026-10-08: token copiable definition provenance
+
+Status: completed implementation slice `TOKEN-COPIABLE-DEFINITION-PROVENANCE`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and the ledger archive, plus untracked
+`mtgish-ron-completed.md`, are preserved. Only this slice's status and appended
+entry are staged for the ledger; the archive reorganization remains user work.
+
+### Candidate comparison and selection
+
+Complete RON records and nested forms were inspected for the latest ranked
+candidates. Reprints count once for gameplay value.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: early entry-copy scheduling with NoCopyEffects | Clone, Copy Artifact, Vesuvan Doppelganger (18 records) | Clone: one name / six records after prerequisites | Physical identity and snapshots exist, but RON-created tokens lack copiable provenance. Copy Artifact also needs copiable added types; Vesuvan also needs color/ability exceptions and live copying. Scheduling enables all three consumers. | Medium to high: early proposed-entry action, CR 616 priorities/rechecks, acquired entry rules, copied replacement identity and token sources. |
+| Ranked #2: CopyExceptions/AddCardtypes | Copy Artifact (six records) | One name / six records after scheduling | Depends on #1; added types must become copiable, preserve other types and interact with later layers. | Medium, with type/copy/layer tests. |
+| Ranked #3: next combat-source damage leaving one point | Forcefield (five records) | One name / five records | Independent choice and exact source services exist. Needs prevention amount and simultaneous-event consumption; does not unblock multiple card names. | Medium: source filter, next-event amount and batch/identity tests. |
+| Selected prerequisite of #1: token copiable definition provenance | Clone, Copy Artifact, Vesuvan Doppelganger downstream; 17 creator names / 23 records inspected | Zero names / zero records | Provides accurate values and fresh rules for supported RON-created token sources. Fifteen supported token declarations, including Night Soil's independently valid token; 14 creator names / 20 records already compile. Stangg and Tetravus have unsupported token declarations. | Small to medium: compiler plan lowering, shared token builders, error propagation and snapshot/identity tests. |
+
+An initial failing-first scheduler probe exposed the token-source gap. Accepting
+Clone at this stage would silently omit valid token copies. The scheduler probe
+and its production edits were removed. Per the dependency rule, this run instead
+completes the shared token prerequisite. Single-card alternatives remain deferred
+while this concrete three-card prerequisite exists. This is a missing engine and
+compiler provenance contract, not a RON source defect or environment failure.
+
+### Exact contracts, contexts and engine reuse
+
+- `mage.TokenDefinitionFactory func() mage.TokenDefinition` is a pure builder.
+  `mage.NewTokenDefinitionFactory(build mage.TokenDefinitionFactory)
+  (mage.TokenDefinitionFactory, error)` validates fresh characteristics, abilities
+  and scoped bindings using the existing CardDefinitionPlan. Returned token
+  declarations retain the validated immutable card plan.
+- RON `compileCreatureToken` lowers all already supported `TokenWithPT/6` and
+  `NamedTokenWithPT/7` forms to these factories, in `CreateTokens/2` with an empty
+  modifier list and optional `NumberTokens/2`. Existing empty supertype, type,
+  subtype, literal P/T, color, keyword, bands-with-other and damage-trigger
+  restrictions remain. No new spelling or lexical binding context is accepted.
+- `CreateTokenCopies`, `CreateTokenCopiesInto` and `CreateOneToken` share
+  `createDefinitionTokenBatch`. Planned tokens use fresh plan builds before any
+  member enters. Builder errors return through effects and install no partial
+  batch; result bindings clear before construction. Existing DefineToken callers
+  keep their old construction path and public signatures.
+- The internal CardDefinitionPlan builder now returns `(Card, error)`, so token
+  declaration failures reach the shared validator without introducing a panic.
+  `NewCardDefinitionPlan(CardFactory)` and its existing callers are unchanged.
+  Nil/invalid/throwing builders and reused scoped bindings return errors.
+- Each actual token retains copy provenance with an absent mana cost. Saved
+  values retain name, colors, types/subtypes, base P/T, keywords and fresh rules.
+  Owner/controller, token status, counters, source identity and saved bindings
+  do not transfer. `CopiableValues.Build()` makes a nontoken prototype;
+  `BuildEntryCopy` preserves the physical copying object's token status.
+- Capture still requires the original present incarnation. Phasing and departure
+  prohibit a new capture; already saved values survive both. Physical departure
+  and copied LKI continue to use the entry-copy identity services. Standard
+  face-down snapshots retain their existing contract.
+- Reuses card-definition validation and reconstruction, existing token options,
+  CopiableValues, BuildEntryCopy, shared simultaneous token entry, costs, event
+  captures and game clones. No replacement ordering or simultaneous-operation
+  service is changed. Existing entry/batch/replacement suites retain those rules.
+  No Go-card fallback, card-name dispatch, global action slot or partial registry.
+- Rules: local CR 111.2–3, 111.5–8 and 707.2–3, 707.5–7. This prerequisite does
+  not schedule entry-copy replacements, copy exceptions or live copy layers.
+
+### Failing-first tests and card-to-test mapping
+
+`TestRONTokenCopiableValuesGameplay` first failed for all four real creator cards
+with “copiable values require retained definition provenance.” Native tests first
+failed compilation because TokenDefinitionFactory/NewTokenDefinitionFactory were
+absent. The completed tests keep their snapshot and gameplay assertions.
+
+| Test | Cards and contract evidence |
+| --- | --- |
+| TestRONTokenCopiableValuesGameplay | Full RON The Hive, Boris Devilboon, Master of the Hunt and Serpent Generator: actual activation payment/resolution; pending clone; token snapshot; physical Air Elemental copied entry; no token status/counters transfer; independent abilities; copied Snake poison trigger; token phasing/departure; physical departure and copied LKI; saved prototypes after source loss. |
+| TestRONTokenCopiableValuesDeclarations | Walks complete unique creator records and tests their supported nested token declarations: The Hive, Bottle of Suleiman, Rukh Egg, Breeding Pit, Elvish Farmer, Goblin Warrens, Homarid Spawning Bed, Icatian Town, Night Soil, Thallid, Thallid Devourer, Boris Devilboon, Hazezon Tamar, Master of the Hunt, Serpent Generator. Two-token batches and snapshot rebuilds verify names, colors, types/subtypes, P/T, keywords, absent cost, independent rule IDs and source bindings. This is token-declaration evidence, not a new complete-card gameplay claim. Stangg and Tetravus still reject their complete unsupported token shapes. |
+| TestTokenDefinitionPlanInvalid | Nil/throwing builders, missing creature P/T, invalid keyword and a shared damage-player binding reject before execution. |
+| TestTokenDefinitionPlanCreationAndDrift | Native two-token batch supplies independent snapshots; failure while building the second member installs no members. |
+| TestTokenDefinitionPlanResultPaths | Single and plural result-producing token services supply provenance and exact results; failed later construction clears old results without changing the battlefield. |
+| Existing TestRONTokenCreation*, TestRONTokenBands*, TestRONDefinitionPlan* and native copy/identity suites | Accepted records, payment rollback, source changes, clone isolation, banding combat, simultaneous entry observers and retained definition boundaries remain covered. |
+
+Two RON test functions and three native test functions add token-source and
+reconstruction evidence. Complete-card gameplay and compiler coverage counts
+remain separate and unchanged. Night Soil remains blocked by its graveyard
+payment shape; Stangg by legendary token supertypes and later linked lifecycle;
+Tetravus by token CantBeEnchanted and later exile/payment results. These are
+unsupported contracts, not approved source corrections.
+
+### Verification and measured result
+
+- Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` PASS.
+  Baseline loader exited 1 for unsupported collection records, not a build or
+  test failure: 2,019 compiled / 426 rejected records.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONTokenCopiableValues -count=1`
+  and native `go test ./pkg/mage -run TestTokenDefinitionPlan -count=1`: PASS.
+  Broader token creation/banding, definition-plan, snapshot and physical-identity
+  focused regressions also PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS (42.4 seconds).
+- `make test`: PASS (36.4 seconds).
+- Initial `make lint` found one redundant test variable type and formatted the
+  two new test files. Reviewed the changes and used an inferred declaration.
+  Both affected focused suites PASS again. Final `make lint`: PASS, zero issues;
+  its second run changed no Go files.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; JSON is byte-identical
+  to the fresh baseline. **2,019 compiled / 426 rejected records; 785 accepted /
+  201 rejected unique names**. All 426 diagnostics are unchanged. The collection
+  remains rejected and publishes no partial registry.
+- No environment or pre-existing validation blocker.
+
+Estimated and actual immediate unlocks: **zero names / zero records**. Four real
+creator scenarios and fifteen token-declaration fixtures gain copy-source
+coverage. This establishes a prerequisite for three copy consumers / 18 records,
+without claiming full gameplay for those consumers. No source-data correction;
+RON files and vocabulary hashes are unchanged. Runtime cutover, Go-card deletion
+and unused DSL removal remain gated. No DSL function was removed, so no deletion
+caller audit is claimed.
+
+Changed files: pkg/mage/token_definition_plan.go/test,
+card_definition_plan.go, composable_actions.go and doc.go;
+pkg/mage/dsl/ron/token_creation.go and token_copiable_values_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. Early entry-copy replacement scheduling for
+   AsPermanentEnters(ThisPermanent,[MayActions([EnterAsACopyOfAPermanent(filter,
+   NoCopyEffects)])]). Physical identity and supported token-source provenance
+   are ready. Clone can unlock one name / six records; scheduling is shared by
+   all three copy consumers / 18 records. Test copy priorities/rechecks, repeated
+   copied replacement identity, acquired entry choices/counters and observers.
+2. CopyExceptions/AddCardtypes for Copy Artifact after the scheduler: one name /
+   six records. Modified types must become copiable and interact with layers.
+3. Forcefield's next combat source event leaving one point: one name / five
+   records. Reuse exact chosen sources and shared prevention batches.
+
+This run stops after TOKEN-COPIABLE-DEFINITION-PROVENANCE.

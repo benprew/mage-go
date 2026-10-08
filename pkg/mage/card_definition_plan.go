@@ -10,7 +10,7 @@ import (
 // CardDefinitionPlan retains a builder for a printed card definition.
 // The builder must be pure and must create independent declarations each time.
 type CardDefinitionPlan struct {
-	build          CardFactory
+	build          func() (Card, error)
 	seed           map[any]bool
 	name           string
 	copiableValues *CopiableValues
@@ -19,6 +19,13 @@ type CardDefinitionPlan struct {
 // NewCardDefinitionPlan checks a builder before the plan can be used.
 // It checks two builds to detect declarations shared by different instances.
 func NewCardDefinitionPlan(build CardFactory) (*CardDefinitionPlan, error) {
+	if build == nil {
+		return nil, fmt.Errorf("card definition requires a factory")
+	}
+	return newCardDefinitionPlan(func() (Card, error) { return build(), nil })
+}
+
+func newCardDefinitionPlan(build func() (Card, error)) (*CardDefinitionPlan, error) {
 	first, err := buildCardDefinition(build)
 	if err != nil {
 		return nil, err
@@ -85,7 +92,7 @@ func RebuildCardDefinition(card Card) (Card, error) {
 	return base.definitionPlan.Build()
 }
 
-func buildCardDefinition(build CardFactory) (card *BaseCard, err error) {
+func buildCardDefinition(build func() (Card, error)) (card *BaseCard, err error) {
 	defer func() {
 		if problem := recover(); problem != nil {
 			card, err = nil, fmt.Errorf("card definition factory: %v", problem)
@@ -94,7 +101,10 @@ func buildCardDefinition(build CardFactory) (card *BaseCard, err error) {
 	if build == nil {
 		return nil, fmt.Errorf("card definition requires a factory")
 	}
-	built := build()
+	built, err := build()
+	if err != nil {
+		return nil, err
+	}
 	if nilDefinition(built) {
 		return nil, fmt.Errorf("card definition factory requires a card")
 	}

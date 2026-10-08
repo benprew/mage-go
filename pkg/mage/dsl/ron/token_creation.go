@@ -205,11 +205,15 @@ func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 	if len(attrs) > 0 {
 		options = append(options, mage.TokenKeywords(attrs...))
 	}
-	return func() mage.TokenDefinition {
+	factory, err := mage.NewTokenDefinitionFactory(func() mage.TokenDefinition {
 		instanceOptions := slices.Clone(options)
 		for _, ability := range abilities {
 			instanceOptions = append(instanceOptions, mage.TokenAbilities(ability()))
 		}
 		return mage.DefineToken(name, instanceOptions...)
-	}, nil
+	})
+	if err != nil {
+		return nil, problem(n, err.Error())
+	}
+	return factory, nil
 }

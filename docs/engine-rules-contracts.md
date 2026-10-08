@@ -11791,3 +11791,40 @@ Tests: native `TestEntryCopyIdentityInvalid`, `IndependentAndCopyOfCopy`,
 `FaceDownAndTokens`; RON `TestRONEntryCopyIdentityGameplay`, `Departure`,
 `EntryReplacements`, `DeathAndFreshEntryChoices`. Existing accepted-definition
 and copy-consumer rejection tests retain the collection boundaries.
+
+## Token copiable definition provenance
+
+`NewTokenDefinitionFactory(build TokenDefinitionFactory)
+(TokenDefinitionFactory, error)` validates a pure builder and independent token
+rules with the shared card-definition plan. Nil builders, invalid declarations,
+construction panics and shared scoped bindings return declaration errors.
+The returned declarations retain a plan for fresh cards; game-time builds return
+errors through the effect instead of raising declaration panics. Existing native
+`DefineToken` callers keep their construction path.
+
+RON lowers all currently supported creature token forms through this service.
+`CreateTokenCopies`, `CreateTokenCopiesInto` and `CreateOneToken` build every card
+before entering any member of the shared token batch. A later build failure
+installs no members. Each result-producing effect clears its old result before
+building. Entry replacement, simultaneous visibility and event ordering use the
+existing entry batch; this service adds no replacement scheduling or new cost.
+
+Tokens retain the characteristics and rules set by the creating instruction
+(CR 111.3). The retained plan supplies copiable name, types, subtypes, colors,
+printed P/T, keywords and independent abilities (CR 707.2–3). Token mana cost is
+absent for these declarations (CR 111.3). Token status, owner, controller, counters, attachments and saved
+choices do not transfer to a snapshot prototype (CR 707.2, 707.6).
+`CopiableValues.Build` produces a nontoken prototype. `BuildEntryCopy` instead
+preserves the physical object's token status while it applies the saved rules.
+New capture requires a live exact incarnation; saved values remain usable after
+phasing or departure. Standard face-down values keep their existing contract.
+Untracked legacy definitions and copy layers still reject snapshot capture.
+
+Tests: native `TestTokenDefinitionPlanInvalid`, `CreationAndDrift`, `ResultPaths`;
+RON `TestRONTokenCopiableValuesGameplay` (The Hive, Boris Devilboon, Master of the
+Hunt, Serpent Generator, with reconstructed poison trigger and physical departure)
+and `Declarations` (15 token declarations from 17 complete unique records;
+Stangg and Tetravus retain unsupported token forms). Existing creation and token
+banding suites retain payment, combat, clone and simultaneous-entry contracts.
+Clone, Copy Artifact and Vesuvan Doppelganger remain rejected pending scheduling
+and copy exceptions. No complete copy-card gameplay is claimed.

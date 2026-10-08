@@ -23,6 +23,13 @@
 // RON factories retain this origin with [WithPrintedCardDefinitionPlan].
 // The caller must supply entry permission, copy choice and replacement order.
 // This builder does not schedule entry-copy replacements or install live layers.
+// [NewTokenDefinitionFactory] checks pure token builders and retains their
+// copiable definition plans. RON token declarations use this factory.
+// Creation builds all independent token cards before the shared entry batch.
+// Builder errors stop the batch and clear its result bindings.
+// Token snapshots have no mana cost, owner, source identity or saved choices.
+// Their prototypes are not tokens; [BuildEntryCopy] keeps physical token status.
+// Legacy [DefineToken] callers keep their existing construction behavior.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
