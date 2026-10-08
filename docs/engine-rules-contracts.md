@@ -11493,3 +11493,50 @@ cost, chosen-source filter and shield lowering with a native delayed library
 body. There is no scry/surveil spelling in the collection, and this contract
 adds none. Seven protection subrules gain bounded source-choice evidence;
 general source aggregation and complete-card coverage remain separate gates.
+
+
+## General CR 609.7a damage-source aggregation
+
+`Game.DamageSourcesFor(uuid.UUID) []DamageSource` combines the existing live,
+stack/resolving, waiting replacement/prevention, waiting delayed, and face-up
+command categories. It keeps their lifetime and exact-information rules.
+Current or retained incarnation, stack identity and zone-visit facts prevent a
+returned object from replacing an earlier reference. A phased permanent is
+excluded from live enumeration but can remain an explicitly referred source.
+Sources of graveyard activated abilities also supply their saved graveyard
+visit through the existing current/departure information reader. Removal of
+the last referring ability ends availability; returning the card does not
+replace the visit. The combined list removes exact duplicates; different casts and returned
+incarnations remain separate. Results have separate mutable card data.
+
+Hand information is normalized for the choosing player after collection,
+including hand visits supplied only through captured damage-source bindings.
+This prevents a category's public snapshot from hiding information from the
+hand player or exposing private information to another player. Unreferred hand
+cards remain excluded; a saved reference does not extend a reveal.
+
+`ChooseDamageSource(PlayerRef, DamageSourceFilter, *DamageSourceBinding)
+ResolvingEffect` uses this query at resolution, then filters and makes one
+non-targeted choice. It clears a stale result if no player or matching source
+exists. The shared chooser copies option data and validates the returned index.
+Declaration validation requires a player and a named result binding. Queries
+make no decisions, read no delayed operands and install no replacement rules.
+
+RON lowering declares each result in the continuation of `ChooseADamageSource/1`
+inside an action sequence. Factory instances allocate separate bindings;
+branches do not export a declaration. The next-source prevention and targeted
+redirection adapters retain their existing mechanics. Property mismatch does
+not consume a shield; matching simultaneous damage consumes it once. Permanent
+spells continue to their exact permanent before entry effects run. Native
+replacement ordering and cost transactions remain in their shared services.
+Rules: CR 120.7, 400.7, 603.7, 609.7a–b, 615.9 and 702.26b–d.
+
+Evidence: `TestGeneralDamageSourceUnion`, `TestGeneralDamageSourceDeclarations`,
+`TestGeneralDamageSourceStackAndPrivacy`,
+`TestGeneralDamageSourceGraveyardAbility`, and `TestRONGeneralDamageSource*`.
+The seven full protection records and Jade Monolith have complete RON gameplay
+mappings. Existing bounded-category tests retain their behavior assertions and
+now require the supported full records to compile. The three different
+replacement bodies in Reverse Damage, Dark Sphere and Eye for an Eye still
+reject. This section supersedes earlier claims that general aggregation is
+unavailable; those sections retain their bounded operand contracts.

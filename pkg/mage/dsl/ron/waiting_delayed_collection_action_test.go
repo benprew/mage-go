@@ -168,8 +168,8 @@ func TestRONWaitingDelayedCollectionActionProtection(t *testing.T) {
 							t.Fatal("clone shares lifetime")
 						}
 					}
-					if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-						t.Fatal("unfinished aggregation accepted", err)
+					if _, err := Compile(record); err != nil {
+						t.Fatal("complete source-choice record rejected", err)
 					}
 				})
 			}

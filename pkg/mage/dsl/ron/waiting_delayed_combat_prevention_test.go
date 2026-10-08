@@ -181,8 +181,8 @@ func TestRONWaitingDelayedCombatPreventionProtection(t *testing.T) {
 					if combatPrevented() {
 						t.Fatal("prevention survived cleanup")
 					}
-					if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-						t.Fatal("incomplete aggregation accepted", err)
+					if _, err := Compile(record); err != nil {
+						t.Fatal("complete source-choice record rejected", err)
 					}
 				})
 			}

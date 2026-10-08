@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **777 accepted / 209 rejected unique card
-names** (986 total), and **1,982 compiled / 463 rejected records** (2,445 total).
+The latest recorded inventory reports **785 accepted / 201 rejected unique card
+names** (986 total), and **2,019 compiled / 426 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`WAITING-DELAYED-LIBRARY-CHOICE-AMOUNT` adds exact source reads in typed
-scry/surveil amounts to waiting delayed queries. Seven protection subrules gain
-bounded library-choice source evidence; full-card compilation is unchanged.
+`GENERAL-DAMAGE-SOURCE-CHOICE` adds CR 609.7a aggregation and scoped RON
+choice lowering. The six Circles, Greater Realm and Jade Monolith gain complete
+RON gameplay mappings and eight compilation unlocks / 37 records.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-General damage-source aggregation and sticky layers remain gaps.
+Entry-copy choices, sticky layers and further replacement bodies remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -50663,3 +50663,152 @@ Ranked next candidates:
    Keep ability/type/P/T interactions and retained membership through cleanup.
 
 This run stops after `WAITING-DELAYED-LIBRARY-CHOICE-AMOUNT`.
+
+## 2026-10-08: general damage-source aggregation
+
+Status: completed implementation slice `GENERAL-DAMAGE-SOURCE-CHOICE`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and ledger, and untracked `mtgish-ron-completed.md`, are preserved. Only
+this run's summary and appended entry are staged in the ledger.
+
+### Candidate comparison and selection
+
+The latest entry ranked general CR 609.7a aggregation first. The typed operand
+prerequisites are complete. Complete canonical records and identical reprints
+were read for the six Circles, Greater Realm, Jade Monolith, Titania's Song,
+Reverse Damage, Dark Sphere and Eye for an Eye. All nested costs, filters,
+targets and replacement operations were checked. Targeted vocabulary lookup
+confirmed ChooseADamageSource/1 has 46 occurrences; 37 belong to the eight
+selected cards. Frequency was not used as a full-card unlock estimate.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| General source aggregation, selected | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; Jade Monolith. Eight unlocks / 37 records. | Category readers, filter lowering, next-source shields and targeted redirection already exist. Also supplies the choice prerequisite for Reverse Damage, Dark Sphere and Eye for an Eye, whose replacement bodies remain unsupported. | Moderate: shared engine aggregation and lexical lowering; category, privacy, identity and complete-record gameplay tests. |
+| Sticky layer lifecycle | Titania's Song. One plausible unlock / two records. | Requires ability removal, artifact/creature types, mana-value P/T and retained membership after source departure until cleanup. | Medium engine lifecycle, layer and compiler work. |
+| Chosen-source prevention with life gain | Reverse Damage. Zero unlocks before aggregation; one plausible unlock / six records afterward. | Needs exact prevention-result scope and life gain from the amount actually prevented. The existing reverse-damage service needs an adapter and an operation-contract audit. | Small to medium after the selected prerequisite; replacement-order and actual-result tests. |
+
+Candidate #1 is dependency-ready and offers eight credible full-card gains.
+It takes priority over both single-card alternatives. This run adds no other
+replacement body or layer capability. The gap was missing aggregation and
+compiler sequence binding, with viewer-information and graveyard-ability source boundaries found in tests;
+there was no source-data defect or environmental build failure.
+
+### Exact contracts, dependencies and reuse
+
+- Engine: `(*Game).DamageSourcesFor(playerID uuid.UUID) []DamageSource` is a pure
+  aggregate query; `ChooseDamageSource(player PlayerRef, filter DamageSourceFilter,
+  binding *DamageSourceBinding) ResolvingEffect` makes the non-targeted choice
+  at resolution using the shared chooser and resolution-frame binding service.
+- The shared `damageSourceChoice.candidates(*Game, uuid.UUID) []DamageSource`
+  retains bounded callers. General enumeration includes live permanents and
+  spells; face-up command objects; stack/resolving ability sources, permanent
+  and spell targets, permanent/card/damage/spell bindings; waiting counter,
+  draw-step life, regeneration, redirection, exile, discard, untap, persistent,
+  empty-library and modifier references; waiting permanent/spell/hand/exile/
+  command prevention references; and waiting delayed permanent, spell, damage
+  and hand/graveyard/exile card references. Existing readers own exact facts
+  and active lifetimes. The aggregate also reads the saved graveyard visit of
+  graveyard activated ability sources through graveyardVisitInformation.
+  Opaque callbacks do not invent references.
+- Exact identities deduplicate one object across categories but retain distinct
+  casts, copies, incarnations and zone visits. Phasing removes live membership
+  while an explicit reference can remain available. Departure information and
+  old visits cannot follow a returned card. Queries and chooser options have
+  separate mutable card data. Querying does not choose, evaluate delayed
+  operands, install rules or extend availability.
+- Every hand source is normalized through the existing viewer-aware information
+  service before deduplication and filtering. This also covers a visit supplied
+  only by a captured damage-source binding. Private inspection does not reveal
+  the hand or make unreferred cards available.
+- RON: `compileGeneralDamageSource(Node, []Node, scope) (effectFactory, error)`
+  validates ChooseADamageSource/1 and lowers its remaining action sequence.
+  AnyDamageSource is a symbol; IsColor/1 and IsCardtype/1 are tuples; And/1 and
+  Or/1 take nonempty filter lists. Existing exact filter validation is reused.
+- The producer declares TheChosenDamageSource only in its continuation. Nested
+  branch choices cannot export bindings. Subsequent choices allocate separate
+  bindings and shadow the prior declaration in their own continuation. Each
+  factory call clones the compiler binding map and creates a fresh typed engine
+  binding. Direct effect contexts without an action sequence reject.
+- The six Circles and Greater Realm use the existing
+  PreventNextDamageFromSelectedSource service. Jade uses
+  RedirectNextDamageFromSelectedSource with its exact creature target and saved
+  ability controller. The engine retains property rechecks, one-use event
+  consumption, simultaneous packets, replacement ordering, cleanup and exact
+  permanent-spell continuation before entry effects. Payments and legality stay
+  in existing shared services. No Go-card fallback or partial registry is added.
+- Rules read locally: CR 120.7, 400.7a–c, 603.7a–e, 609.7a–c, 615.9 and
+  702.26b–d. API and rules-contract docs describe only this established slice.
+
+### Failing-first tests and card mappings
+
+The native tests initially failed to compile because the two new public APIs
+were absent. After correcting test-fixture API names, the RON tests failed at
+unsupported ChooseADamageSource for all seven protection cards and all 37
+reprint records. The hand-only damage-binding test then failed because the
+chooser could not inspect its private hand reference; viewer normalization
+fixed that assertion. A final native reference audit found the source visit of
+a graveyard activated ability was absent; a separate red test confirmed it, and
+the aggregate now reads that visit through the existing information service.
+Fixture cleanup was corrected to use replacement cleanup,
+and permanent spell casts were made on their caster's active turn. These were
+test setup corrections, not changes to engine timing or cleanup mechanics.
+
+| Mapping | Evidence |
+| --- | --- |
+| TestGeneralDamageSourceUnion | Live/waiting/command union; cross-category duplicates; objects unable to deal damage; live, phased, departed with cleared transient LKI, and returned incarnations; pure copied query data; clone waiting lifetime; empty choice clears old result. |
+| TestGeneralDamageSourceDeclarations | Nil players, nil result bindings and empty binding names fail definition validation. |
+| TestGeneralDamageSourceStackAndPrivacy | Live and captured spell references deduplicate; copies remain distinct; departure retains references. Hand live/departure/return visits use separate choosing-player/private and opponent/public views. Hand-only damage bindings retain inspection rights; unreferred hands remain excluded. |
+| TestGeneralDamageSourceGraveyardAbility | Saved graveyard-ability source visit through live/departure/return states; no returned characteristics; last-reference and clone lifetime. |
+| Six Circles and Greater Realm / TestRONGeneralDamageSourceProtection | Seven complete unchanged RON records, eight scenarios each: live, departed, phased, return, property recheck, copy, cleanup and permanent spell. Real costs, no early choice, failed payment, saved exact choice, clone shields, property mismatch without consumption, one-use prevention, and permanent-spell continuity. |
+| Jade Monolith / TestRONGeneralDamageSourceJade | Complete unchanged RON record; live/departed/phased source, source return, illegal creature target, control change and cleanup. Real Prodigal Sorcerer activation supplies a stack-referred source and actual damage; choice timing and saved redirecting player are checked in original and clone games. |
+| TestRONGeneralDamageSourceBindingsAndBatch | Two choices in one lowered action list and two factory instances/controllers keep independent result bindings and shields. Simultaneous damage uses native packet handling; later damage proves consumption. |
+| TestRONGeneralDamageSourceInvalid and Scope | Wrong arity/kind, invalid filters, use before producer and malformed result reject. A valid branch-local choice compiles; its result cannot escape the branch. |
+| TestRONGeneralDamageSourceReprints | All 37 records / eight names compile and validate; factory calls create distinct card identities. Existing category-specific gameplay tests retain all their assertions and now require these full records to compile. |
+| Reverse Damage, Dark Sphere, Eye for an Eye | Choice lowering now passes, but their unsupported replacement bodies still reject. No new full-card gameplay claim. |
+
+### Verification and outcome
+
+- Fresh baseline: make build and uncached ron package tests PASS. Loader exit 1
+  was strict collection rejection: 1,982 compiled / 463 rejected records;
+  777 accepted / 209 rejected unique names.
+- Focused ron TestRONGeneralDamageSource and native TestGeneralDamageSource,
+  both with -count=1: PASS. Full uncached ron package tests: PASS.
+- make build; go vet ./...: PASS.
+- go test ./pkg/mage/... -short -count=1; make test: PASS.
+- make lint: PASS. Automatic formatting changes were reviewed; focused and
+  affected package checks were rerun after formatting.
+- git diff --check: PASS.
+- Final go run ./cmd/loadcards -json: expected exit 1; **2,019 compiled /
+  426 rejected records; 785 accepted / 201 rejected unique names**.
+  No newly rejected record. Nine existing diagnostics advance from choice to
+  unsupported replacement bodies: Reverse Damage (six), Eye for an Eye (two),
+  Dark Sphere (one). Other remaining diagnostics are unchanged.
+
+Estimated and actual gains agree: **eight full-card compilation unlocks and
+37 newly compiled records**. Gameplay coverage adds complete RON mappings for
+those eight cards plus aggregate engine, scope and instance contracts. Compilation
+and gameplay remain separate measures; the collection still fails strict loading
+and no partial registry is installed. No RON source was changed, so no vocabulary
+source snapshot refresh is needed. No source defect was corrected.
+
+Changed files: general_damage_source.go and general_damage_source_test.go in
+pkg/mage and pkg/mage/dsl/ron; pkg/mage/damage_source_choice.go and doc.go;
+ron compiler.go and optional_payment.go; existing ron source-category tests and
+inventory counts; docs/dsl-reference.md; docs/engine-rules-contracts.md; this
+ledger. No DSL function or Go card was removed. Complete collection gameplay,
+runtime startup cutover and removal gates remain unfinished.
+
+Ranked next candidates:
+
+1. Optional entry-copy choice prerequisite for Clone, Copy Artifact and Vesuvan
+   Doppelganger. Complete records show shared MayActions/EnterAsACopyOfAPermanent
+   entry context, with separate copiable exceptions and repeat-copy bodies.
+   Audit entry-stage selection and copy services before estimating unlocks;
+   this is a concrete three-card dependency, not a generic resolution MayActions
+   shortcut.
+2. Sticky layer lifecycle for Titania's Song: one plausible unlock / two records.
+   Preserve cross-layer membership, ability loss, departure and cleanup.
+3. Chosen-source prevention with actual prevented-damage life gain for Reverse
+   Damage: one plausible unlock / six records after this aggregation slice.
+
+This run stops after GENERAL-DAMAGE-SOURCE-CHOICE.

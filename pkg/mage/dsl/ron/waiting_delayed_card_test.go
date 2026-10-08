@@ -159,8 +159,8 @@ func TestRONWaitingDelayedCardProtection(t *testing.T) {
 					if a.Life() != want {
 						t.Fatal("empty category retained a stale choice")
 					}
-					if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported action (ChooseADamageSource)") {
-						t.Fatal("incomplete enumeration accepted", err)
+					if _, err := Compile(record); err != nil {
+						t.Fatal("complete source-choice record rejected", err)
 					}
 				})
 			}

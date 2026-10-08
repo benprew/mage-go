@@ -8795,3 +8795,33 @@ cost, chosen-source filter and shield lowering with a native delayed library
 body. There is no scry/surveil spelling in the collection, and this contract
 adds none. Seven protection subrules gain bounded source-choice evidence;
 general source aggregation and complete-card coverage remain separate gates.
+
+
+## General damage-source choice
+
+`mage.ChooseDamageSource(player PlayerRef, filter DamageSourceFilter,
+binding *DamageSourceBinding) ResolvingEffect` chooses from the CR 609.7a
+categories at resolution. `(*Game).DamageSourcesFor(playerID uuid.UUID)
+[]DamageSource` reads the same categories without a choice. It combines live
+permanents and spells, exact references on stack and resolving objects, waiting
+replacement/prevention and delayed references, and face-up command objects.
+Graveyard activated ability sources supply their exact saved visit.
+An object need not be able to deal damage. Exact identities remove duplicates.
+Hand references use the viewer's inspection rights; inspection adds no source.
+Other category-specific choice APIs retain their bounded behavior.
+
+RON `ChooseADamageSource(filter)` in an `ActionList` declares
+`TheChosenDamageSource` for its following actions. Each factory call allocates
+its own binding. A later choice has its own binding and shadows the prior choice
+for its continuation. A branch-local choice does not declare a result outside
+that branch. Filters support `AnyDamageSource`, `IsColor(color)`,
+`IsCardtype(type)`, and nonempty `And([filters])` / `Or([filters])` lists.
+
+The six Circles of Protection and Greater Realm of Preservation lower their
+next-source shield to `PreventNextDamageFromSelectedSource`. Jade Monolith uses
+`RedirectNextDamageFromSelectedSource` with its exact creature target. The
+existing engine services own property rechecks, simultaneous damage,
+one-use consumption, cleanup, and permanent-spell continuation.
+Replacement bodies for Reverse Damage, Dark Sphere and Eye for an Eye still
+reject. Earlier bounded-source prerequisite sections describe their original
+scope; this section establishes the general aggregation contract.

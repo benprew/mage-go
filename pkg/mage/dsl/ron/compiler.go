@@ -1072,8 +1072,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if _, err := compileChosenDamageSourceChoice(n); err != nil {
 			return nil, err
 		}
-		// Complete source enumeration is required before this action can run.
-		return nil, unsupported(n, "action")
+		return nil, problem(n, "damage source choice requires an action sequence")
 	case "ChooseAnAction":
 		build, err := compileCounterChoice(n, ctx)
 		if err != nil {

@@ -100,8 +100,8 @@ func TestRONSelectedSourceRedirectAction(t *testing.T) {
 				}
 			}
 			for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
-				if _, err := Compile(staticBaseRecord(t, set, "Jade Monolith")); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-					t.Fatal("incomplete source enumeration accepted", err)
+				if _, err := Compile(staticBaseRecord(t, set, "Jade Monolith")); err != nil {
+					t.Fatal("complete source-choice record rejected", err)
 				}
 			}
 		})

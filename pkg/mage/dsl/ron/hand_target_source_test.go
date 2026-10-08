@@ -120,8 +120,8 @@ func TestRONHandTargetSourcesProtection(t *testing.T) {
 				if a.Life() != 19 {
 					t.Fatal("shield did not consume")
 				}
-				if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported action (ChooseADamageSource)") {
-					t.Fatal("partial enumeration accepted full card", err)
+				if _, err := Compile(record); err != nil {
+					t.Fatal("complete source-choice record rejected", err)
 				}
 			})
 		}

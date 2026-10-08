@@ -241,8 +241,8 @@ func TestRONWaitingDelayedDamageChoiceProtection(t *testing.T) {
 			if a.Life() != 19 {
 				t.Fatal("shield did not consume once")
 			}
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-				t.Fatal("incomplete general choice accepted", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete source-choice record rejected", err)
 			}
 		})
 	}

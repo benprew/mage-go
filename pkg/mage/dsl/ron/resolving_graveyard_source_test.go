@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -113,8 +112,8 @@ func TestRONResolvingGraveyardSourcesProtection(t *testing.T) {
 				if b.Life() != 19 {
 					t.Fatal("independent shield consumption failed")
 				}
-				if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-					t.Fatal("incomplete aggregation accepted", err)
+				if _, err := Compile(record); err != nil {
+					t.Fatal("complete source-choice record rejected", err)
 				}
 			})
 		}

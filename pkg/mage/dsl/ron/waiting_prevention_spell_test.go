@@ -91,8 +91,8 @@ func TestRONWaitingPreventionSpell(t *testing.T) {
 						t.Fatal("consumed shields still prevented damage")
 					}
 				}
-				if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported action (ChooseADamageSource)") {
-					t.Fatal("incomplete enumeration published", err)
+				if _, err := Compile(record); err != nil {
+					t.Fatal("complete source-choice record rejected", err)
 				}
 			})
 		}

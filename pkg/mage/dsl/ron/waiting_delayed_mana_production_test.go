@@ -219,8 +219,8 @@ func TestRONWaitingDelayedManaProductionProtection(t *testing.T) {
 			if len(g.WaitingDelayedPermanentSources()) != 0 || a.ManaPool().TotalMana() != manaBeforeDelay+1 || b.ManaPool().TotalMana() != 0 {
 				t.Fatal("mana delay remained waiting")
 			}
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-				t.Fatal("general aggregation was accepted", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete source-choice record rejected", err)
 			}
 		})
 	}

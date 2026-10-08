@@ -151,8 +151,8 @@ func TestRONWaitingRegenerationProtection(t *testing.T) {
 					t.Fatal("shield did not expire")
 				}
 			}
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported action (ChooseADamageSource)") {
-				t.Fatal("incomplete source enumeration accepted", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete source-choice record rejected", err)
 			}
 			invalid := plan.waitingRegenerationChoice(instanceBindings{})
 			if mage.ValidateCardDefinition("Invalid", mage.NewArtifact("Invalid", "", mage.WithAbility(mage.Activate(mage.Costs(), invalid)))) == nil {

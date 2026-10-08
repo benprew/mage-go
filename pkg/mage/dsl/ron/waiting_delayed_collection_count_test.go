@@ -161,8 +161,8 @@ func TestRONWaitingDelayedCollectionCountProtection(t *testing.T) {
 					if a.Life() != wantA-1 {
 						t.Fatal("shield not consumed")
 					}
-					if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-						t.Fatal("incomplete aggregation accepted", err)
+					if _, err := Compile(record); err != nil {
+						t.Fatal("complete source-choice record rejected", err)
 					}
 				})
 			}

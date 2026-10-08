@@ -165,8 +165,8 @@ func TestRONWaitingDelayedMultiDamageProtection(t *testing.T) {
 					if a.Life() != want-1 {
 						t.Fatal("shield was not consumed")
 					}
-					if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseADamageSource") {
-						t.Fatal("incomplete general aggregation accepted", err)
+					if _, err := Compile(record); err != nil {
+						t.Fatal("complete source-choice record rejected", err)
 					}
 				})
 			}

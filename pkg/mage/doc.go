@@ -621,6 +621,15 @@
 // the saved event information without changing the outer resolution frame.
 // Placed delayed bodies use [Game.StackBoundDamageSources].
 //
+// [Game.DamageSourcesFor] reads the CR 609.7a categories for a choosing player.
+// [ChooseDamageSource] saves one filtered, non-targeted choice at resolution.
+// Live objects, stack references, waiting replacement and delayed references,
+// and face-up command objects share exact identity checks. Duplicate references
+// supply one option. Hand references use the choosing player's inspection rights.
+// Queries do not make choices or extend reference lifetimes. Returned objects,
+// later casts and later zone visits cannot replace saved references.
+// Source shields use their existing property rechecks and spell continuation.
+//
 // Use [ChooseDamageSourceFrom] for a non-targeted choice from explicit legal
 // source references. [DamageSourceChooser] permits typed player decisions.
 // The result uses [DamageSourceBinding] in the current resolution frame.
@@ -711,8 +720,7 @@
 // Current queries and departure snapshots keep the exact spell identity.
 // [ChooseDamageSourceFromStackSpellBindings] chooses only from this category.
 // Other saved binding types need separate source contracts.
-// General source choices also need the other referred and command-zone objects.
-// A general source choice needs all categories before it can use the complete list.
+// [ChooseDamageSource] combines these services with the waiting categories.
 // Use [ChooseDamageSourceMatchingFrom] for a property filter on that list.
 // [DamageSourceHasColor] and [DamageSourceHasType] read the supplied information.
 // [AllDamageSources] and [AnyOfDamageSources] combine those filters.

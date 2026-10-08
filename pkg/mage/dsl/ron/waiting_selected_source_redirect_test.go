@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -83,8 +82,8 @@ func TestRONSelectedSourceRedirectProtection(t *testing.T) {
 						t.Fatal("empty choice retained previous binding")
 					}
 				}
-				if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported action (ChooseADamageSource)") {
-					t.Fatal("incomplete source enumeration accepted", err)
+				if _, err := Compile(record); err != nil {
+					t.Fatal("complete source-choice record rejected", err)
 				}
 				if err := mage.ValidateCardDefinition("Invalid", mage.NewArtifact("Invalid", "", mage.WithAbility(mage.Activate(mage.Costs(), plan.waitingRedirectionChoice(instanceBindings{}))))); err == nil {
 					t.Fatal("missing binding accepted")
