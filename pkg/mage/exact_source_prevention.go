@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -12,6 +14,9 @@ func PreventNextDamageFromExactSource(source DamageSourceRef, recipient PlayerRe
 }
 
 type exactSourcePreventionInstallation struct {
+	amount                 ProposedDamageValue
+	gainLifeRecipient      PlayerRef
+	operationProblem       string
 	source                 DamageSourceRef
 	recipient              PlayerRef
 	filter                 DamageSourceFilter
@@ -25,7 +30,14 @@ func (*exactSourcePreventionInstallation) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *exactSourcePreventionInstallation) inspectDefinition() definitionNode {
-	return definitionNode{Role: "install-exact-source-prevention", Text: e.Text(), children: []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipient", e.recipient}, {"filter", e.filter}}}
+	n := definitionNode{Role: "install-exact-source-prevention", Text: e.Text(), problem: e.operationProblem, children: []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipient", e.recipient}, {"filter", e.filter}}}
+	if e.amount != nil {
+		n.children = append(n.children, definitionEdge{"amount", e.amount})
+	}
+	if e.gainLifeRecipient != nil {
+		n.children = append(n.children, definitionEdge{"life gain recipient", e.gainLifeRecipient})
+	}
+	return n
 }
 func (e *exactSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 	source := e.source.resolveDamageSource(ctx)
@@ -43,10 +55,16 @@ func (e *exactSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 	if !e.filter.Match(information) {
 		return nil
 	}
+	gainLifePlayer := uuid.Nil
+	if e.gainLifeRecipient != nil {
+		if recipient, ok := e.gainLifeRecipient.resolvePlayer(ctx); ok && ctx.Game.GetPlayer(recipient) != nil {
+			gainLifePlayer = recipient
+		}
+	}
 	ctx.Game.effects.AddReplacement(&sourcePreventionReplacement{
 		replacementBase: replacementBase{duration: core.EndOfTurn}, playerID: player, dmgSource: source.ID(),
 		exactSource: cloneDamageSource(information), sourceFilter: e.filter,
-		continuePermanentSpell: e.continuePermanentSpell,
+		continuePermanentSpell: e.continuePermanentSpell, amount: e.amount, gainLifePlayerID: gainLifePlayer,
 	})
 	return nil
 }

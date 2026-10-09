@@ -69,8 +69,29 @@ func (r *sourcePreventionReplacement) capturesSourceIdentity() bool {
 	return r.incarnation != uuid.Nil || r.exactSource.Valid()
 }
 
-func (r *sourcePreventionReplacement) preventBatch(actions []Action, applied []map[ReplacementEffect]bool, g *Game) {
+func (r *sourcePreventionReplacement) preventBatch(actions []Action, applied []map[ReplacementEffect]bool, g *Game) preventionLifeGain {
 	// One simultaneous event can contain several packets from this source.
+	if r.amount != nil {
+		total := 0
+		for i, action := range actions {
+			if action != nil && !applied[i][r] && !damageReplacementBlocked(action, g) && r.Matches(action, g) {
+				total += damageActionAmount(action)
+			}
+		}
+		prevented := r.preventProposedAmount(total)
+		remaining := prevented
+		for i, action := range actions {
+			if action == nil || applied[i][r] || damageReplacementBlocked(action, g) || !r.Matches(action, g) {
+				continue
+			}
+			applied[i][r] = true
+			amount := damageActionAmount(action)
+			reduction := min(amount, remaining)
+			remaining -= reduction
+			actions[i] = damageActionWithAmount(action, amount-reduction)
+		}
+		return r.lifeGainForPrevention(prevented)
+	}
 	leave := r.leave
 	for i, action := range actions {
 		if action == nil || applied[i][r] || damageReplacementBlocked(action, g) || !r.Matches(action, g) {
@@ -86,4 +107,5 @@ func (r *sourcePreventionReplacement) preventBatch(actions []Action, applied []m
 			actions[i] = r.Replace(action, g)
 		}
 	}
+	return preventionLifeGain{}
 }

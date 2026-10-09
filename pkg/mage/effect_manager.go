@@ -1001,9 +1001,16 @@ func (em *EffectManager) removeReplacements(sourceID uuid.UUID, sourceExit bool)
 // Returns nil if the action was fully prevented/replaced.
 // Each replacement fires at most once per event to prevent infinite loops.
 func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
+	result, outcomes := em.prepareReplacements(action, g)
+	applyPreventionLifeGains(g, outcomes)
+	return result
+}
+
+func (em *EffectManager) prepareReplacements(action Action, g *Game) (Action, []preventionLifeGain) {
+	var outcomes []preventionLifeGain
 	if dca, ok := action.(*DamageToCreatureAction); ok {
 		if perm := g.FindPermanent(dca.PermanentID()); perm != nil && perm.HasAttr(AttrDamageCantBePreventedOrRedirected) {
-			return action
+			return action, outcomes
 		}
 	}
 	applied := make(map[ReplacementEffect]bool)
@@ -1011,11 +1018,11 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 		switch damage := action.(type) {
 		case *DamageToPlayerAction:
 			if damage.Amount() <= 0 {
-				return nil
+				return nil, outcomes
 			}
 		case *DamageToCreatureAction:
 			if damage.Amount() <= 0 {
-				return nil
+				return nil, outcomes
 			}
 		}
 		candidates := em.replacementCandidates(action, g, applied)
@@ -1025,10 +1032,18 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 		index := chooseReplacement(candidates, action, g)
 		r := candidates[index]
 		applied[r] = true
-		action = r.Replace(action, g)
+		if source, ok := r.(*sourcePreventionReplacement); ok && source.amount != nil {
+			var outcome preventionLifeGain
+			action, outcome = source.preventAction(action)
+			if outcome.amount > 0 {
+				outcomes = append(outcomes, outcome)
+			}
+		} else {
+			action = r.Replace(action, g)
+		}
 	}
 
-	return action
+	return action, outcomes
 }
 
 func (em *EffectManager) replacementCandidates(action Action, g *Game, applied map[ReplacementEffect]bool) []ReplacementEffect {

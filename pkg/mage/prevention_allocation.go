@@ -43,6 +43,13 @@ type damageReplacementCandidate struct {
 }
 
 func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game) []Action {
+	result, outcomes := em.prepareDamageBatchReplacements(actions, g)
+	applyPreventionLifeGains(g, outcomes)
+	return result
+}
+
+func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Game) ([]Action, []preventionLifeGain) {
+	var outcomes []preventionLifeGain
 	// Keep one use per packet so redirection cannot apply a rule twice.
 	applied := make([]map[ReplacementEffect]bool, len(actions))
 	for i := range applied {
@@ -111,7 +118,10 @@ func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game)
 		if shield, ok := selected.replacement.(*preventionShieldReplacement); ok {
 			shield.allocateBatch(actions, applied, g)
 		} else if source, ok := selected.replacement.(*sourcePreventionReplacement); ok && source.capturesSourceIdentity() {
-			source.preventBatch(actions, applied, g)
+			outcome := source.preventBatch(actions, applied, g)
+			if outcome.amount > 0 {
+				outcomes = append(outcomes, outcome)
+			}
 		} else if redirect, ok := selected.replacement.(*selectedSourceRedirectReplacement); ok {
 			redirect.redirectBatch(actions, applied, g)
 		} else {
@@ -119,7 +129,7 @@ func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game)
 			actions[selected.index] = selected.replacement.Replace(actions[selected.index], g)
 		}
 	}
-	return actions
+	return actions, outcomes
 }
 
 func damageActionSource(action Action) DamageSource {

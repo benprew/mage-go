@@ -947,6 +947,18 @@
 // each shield keeps its own source. [PreventNextDamageFromSelectedSource] adds
 // permanent-spell continuity for a source chosen before that spell resolves.
 //
+// Use [PreventNextDamageFromSelectedSourceWithOperations] for an event amount.
+// [PreventProposedDamage] reads [ProposedDamageAmount] or
+// [HalfProposedDamageRoundedDown] when the rule applies. Matching simultaneous
+// packets share one amount. Replacement order can change that amount.
+// No actual prevention keeps the rule for a later event.
+// [GainLifeFromPreventedDamage] can follow prevention for a separate saved player.
+// It uses that rule's actual prevention after the original damage event.
+// The rule is consumed before this gain can cause further damage.
+// Life modifiers, replacements, history and events use the shared life service.
+// Each saved rule keeps its own source, player and outcome. Values do not escape
+// the event or read resolution bindings. Selected spell continuity still applies.
+//
 // Use [PreventNextDamageFromPermanent] for one damage event from a typed
 // permanent source to a player this turn. The filter is checked at installation
 // and before damage. A returned source cannot consume the old shield.

@@ -34,11 +34,12 @@ func compileExactSourcePrevention(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "PreventThatDamage" {
-		return nil, problem(n.Args[1], "exact-source prevention requires the symbol PreventThatDamage")
+	program, err := compileSourcePreventionOperations(n.Args[1], operations)
+	if err != nil {
+		return nil, err
 	}
 	plan := ctx.chosenDamageSource
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.PreventNextDamageFromSelectedSource(mage.FromDamageSource(bindings.chosenDamageSources[plan]), player.build(bindings), plan.filter)
+		return mage.PreventNextDamageFromSelectedSourceWithOperations(mage.FromDamageSource(bindings.chosenDamageSources[plan]), player.build(bindings), plan.filter, program...)
 	}, nil
 }

@@ -409,6 +409,8 @@ func (r *colorPreventionReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type sourcePreventionReplacement struct {
+	amount                 ProposedDamageValue
+	gainLifePlayerID       uuid.UUID
 	combatOnly             bool
 	leave                  int
 	exactSource            DamageSource
@@ -454,6 +456,11 @@ func (r *sourcePreventionReplacement) Matches(a Action, reader GameReader) bool 
 }
 
 func (r *sourcePreventionReplacement) Replace(a Action, g *Game) Action {
+	if r.amount != nil {
+		result, outcome := r.preventAction(a)
+		outcome.apply(g)
+		return result
+	}
 	if r.combatOnly {
 		amount := min(damageActionAmount(a), r.leave)
 		r.consumed = damageActionAmount(a) > amount

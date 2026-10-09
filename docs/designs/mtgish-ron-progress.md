@@ -2,18 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **788 accepted / 198 rejected unique card
-names** (986 total), and **2,036 compiled / 409 rejected records** (2,445 total).
+The latest recorded inventory reports **790 accepted / 196 rejected unique card
+names** (986 total), and **2,043 compiled / 402 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`NEXT-COMBAT-SOURCE-ALLOWANCE` implements a saved unprevented amount for the next
-combat event from an exact creature to a player. Native and RON tests cover
-simultaneous packets, no-prevention retention, replacement order, identity,
-phasing, clones, payment and double strike. Forcefield gains all five records.
+`SELECTED-SOURCE-PREVENTION-OPERATIONS` implements proposed all/half amounts and
+actual-prevention life gain for a saved source event. Native and RON tests cover
+simultaneous amounts, event timing, separate players, no-prevention retention,
+identity, phasing, copies, clones, payment and combat. Two names gain seven records.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Typed exact-source prevention outcomes, added abilities and live copies remain gaps.
+Added abilities, live copies and other unsupported capabilities remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -52490,3 +52490,193 @@ Ranked next candidates:
    layer, phasing, departure, retained-trigger and clone contracts.
 
 This run stops after NEXT-COMBAT-SOURCE-ALLOWANCE.
+
+## 2026-10-08: selected-source prevention operations
+
+Status: completed implementation slice `SELECTED-SOURCE-PREVENTION-OPERATIONS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+design and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's summary change and appended entry are staged for the ledger;
+the user's history relocation remains unstaged. No Go definitions or DSL
+functions are removed. No removed card skill or Go-card requirements are used.
+The implement-engine skill supplies the native contract workflow.
+
+### Fresh evidence, candidate comparison and selection
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The baseline loader exited 1 with 2,036 compiled / 409 rejected records and
+788 accepted / 198 rejected unique names. This is strict collection rejection,
+not a build/test failure. The complete Dark Sphere record, all six Reverse
+Damage records and all six Vesuvan Doppelganger records were read, including
+nested operations, payments, copy modifications and added upkeep abilities.
+Reprints count once. Targeted vocabulary reads identify one partial-prevention
+operation, six actual-prevention result reads and three proposed-damage reads;
+the two Eye for an Eye reads need a different damage-replacement contract.
+Local `data/DRK.json` and `data/LEA.json` supply Oracle text. CR 400.7, 609.7b,
+614.5, 615.3–9 and 616.1 establish the relevant contracts.
+
+| Candidate | Affected unique names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: selected-source proposed amounts and actual-prevention outcomes | Dark Sphere (one record), Reverse Damage (six records) | 2 names / seven records | Complete-record review finds no remaining unrelated blocker. Choice, payment, source identity and permanent-spell continuity are ready. Establishes event-local proposed amounts, zero-prevention retention and post-event actual outcomes for later consumers. | Medium: reuse source replacement and batch services; native amount/order/timing/identity tests and full RON gameplay. |
+| Ranked #2: fresh AddAbility / AddAbilityVariable copy provenance | Vesuvan Doppelganger (six records) | 0 immediately | Live IsACopyOfPermanent also blocks. Fresh declarations enable copied upkeep abilities and stable replacement identities in later copies. | Medium to large: independent scopes, retained ability provenance and rebuilds. |
+| Ranked #3: live copy-layer installation | Vesuvan Doppelganger (six records) | 0 now; 1 name / six records after provenance | Added-ability provenance must precede the targeted optional upkeep recopy. Enables repeated live copying with retained abilities and colors. | Large: layer lifetime, target legality, retained triggers, phasing, departure and clones. |
+
+Candidate #1 is dependency-ready and offers the largest credible gain within a
+single bounded slice. It resolves both consumers of one shared next-source
+prevention event. The other candidates affect the same single name and remain
+dependency-blocked. Selection, reuse boundary and acceptance cases were stated
+before editing. No unrelated capability starts.
+
+### Exact signatures, contexts and reusable contract
+
+- `ProposedDamageValue` is a sealed, immutable event value.
+  `ProposedDamageAmount() ProposedDamageValue` reads the matching proposed
+  amount; `HalfProposedDamageRoundedDown() ProposedDamageValue` reads half,
+  rounded down. These values do not read resolution bindings or retain game state.
+- `PreventProposedDamage(amount ProposedDamageValue) SourcePreventionOperation`
+  specifies one prevention operation.
+  `GainLifeFromPreventedDamage(player PlayerRef) SourcePreventionOperation`
+  specifies its optional additional life gain to a separately saved player.
+- `PreventNextDamageFromSelectedSourceWithOperations(source DamageSourceRef,
+  recipient PlayerRef, filter DamageSourceFilter, operations
+  ...SourcePreventionOperation) ResolvingEffect` requires one prevention
+  operation and at most one following life-gain operation. Definition validation
+  rejects empty, nil, reversed or repeated operations, nil amounts/players,
+  invalid filters and unbound references. Source and player declarations retain
+  existing scope validation. Prior public APIs and callers are preserved.
+- Installation saves the exact chosen source, protected player and gain player.
+  The amount is read when prevention applies, after earlier replacements.
+  Matching simultaneous packets from that source to that player share one
+  amount. Half is rounded once across those packets, then removed from them.
+  Other sources and recipients do not contribute. Zero damage cannot consume
+  the rule; one-point half prevention prevents zero and keeps it for a later
+  event (CR 609.7b). Each packet still records the rule as applied.
+- Actual prevention consumes the rule before the additional gain. The original
+  single or simultaneous damage event finishes before its life gain (CR 615.5).
+  Private replacement preparation returns local typed gain outcomes to the damage
+  service. No result lives in a game-wide slot. The gain uses this rule's actual
+  prevention once per event; shared life modifiers, replacements, Lich, history
+  and actual-gain triggers apply. Damage during a gain replacement cannot reuse
+  the consumed shield. Prevented damage supplies no damage history or lifelink.
+- Current/exact retained source properties, spell identity, selected permanent
+  spell continuation before entry, returned-incarnation exclusion, phasing,
+  cleanup and cloning reuse existing services. Active shields retain waiting
+  source references. Explicit source reads in a gain player qualify in delayed
+  bodies without evaluating that player. No general unpreventable-damage or
+  arbitrary replacement-body execution contract is added.
+- RON accepts `CreateFuturePreventDamage(
+  NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource,
+  Player(playerRef)), operations)` in resolving actions after a dominating
+  damage-source choice. The list starts with bare `PreventThatDamage` or
+  `PreventSomeOfThatDamage(proposedValue)`. Supported proposed values are bare
+  `WouldDealDamage_ThatMuchDamage` and
+  `HalfRoundedDown(WouldDealDamage_ThatMuchDamage)`. The optional next operation
+  is `GainLife(TheAmountOfDamagePreventedThisWay)`. Implicit gain uses the saved
+  action controller, independently of the event recipient. Proposed amounts and
+  actual results cannot escape the operation list. Wrong kinds/arities, unbound
+  choices, wrong recipients, reversed/duplicate operations and other value forms
+  reject during compilation. Inventory supplies `proposed_damage_value`,
+  `prevention_result` and `damage_source_reference` roles.
+- RON owns spelling and lexical scopes; mage owns mechanics and runtime state.
+  Reuses sourcePreventionReplacement, affected-player replacement choices and
+  rechecks, exact damage information/LKI, shared single and simultaneous damage,
+  life services, waiting references, transactional mana/tap/sacrifice costs,
+  resolution choices and game/stack/definition cloning. No card-name branch,
+  Go fallback, declaration panic, skipped rule or partial registry is added.
+
+### Failing-first evidence and card-to-test mappings
+
+All seven real RON records first failed at unsupported exact-source prevention
+operations. Native tests first failed compilation at the new public signatures.
+The inventory assertion failed at the unknown proposed-amount role. Initial
+amount, identity and order tests passed after the implementation. Final review
+added two meaningful failing assertions: additional life gain ran before the
+original damage event, and implicit gain incorrectly followed a different
+protected player. Local deferred outcomes and a separately saved typed gain
+player correct those failures. A fixture-only clone assertion was corrected to
+use the cloned Player interface instead of assuming BasePlayer; its player
+becomes SearchPlayer. Lifelink expectations account for self-damage and its
+matching self-lifelink gain. No production test was weakened.
+
+| Test | Card / contract evidence |
+| --- | --- |
+| TestRONSourcePreventionOperationsGameplay | Complete DRK Dark Sphere and LEA, LEB, 2ED, 3ED, CED and CEI Reverse Damage records: failed payment, tap/sacrifice payment, resolution-only choice of a shrouded source, simultaneous 2+3 damage, actual lifelink, one-event consumption and pending-clone execution. |
+| TestRONSourcePreventionOperationsLifecycle | Complete Dark Sphere and LEB Reverse Damage: departure, returned source exclusion, phasing/cycle, cleanup, selected permanent-spell continuation and installed clone isolation. |
+| TestRONSourcePreventionOperationsCopyBindings | Complete LEB Reverse Damage copied on the stack: different source choices, independent outcomes and shield consumption, installed clone isolation. |
+| TestRONSourcePreventionOperationsCombat | Complete Dark Sphere and LEB Reverse Damage: first-strike and normal damage are separate events for a double striker. |
+| TestRONSourcePreventionOperationsInvalid / Inventory | Malformed/reversed/duplicate operations and wrong amounts/results reject; proposed and actual values cannot escape into ordinary actions. Semantic inventory supplies both value roles. Existing chosen-source tests retain unbound and branch-scope rejection. |
+| TestRONSourcePreventionOperationsSupportedPrograms / ExplicitPlayers | Synthetic RON direct proposed amount and half-plus-gain composition; a protected opponent and separate saved action controller establish implicit gain semantics. Synthetic fixtures add no inventory cards. |
+| TestSourcePreventionOperationsAmounts / Identity / Declarations | Native zero/even/odd and split amounts, one-point no-prevention retention, history, next-event consumption, nil/unbound/reversed declarations, departure with cleared LKI, returns, phasing, control and cleanup; clones keep independent rules. |
+| TestSourcePreventionOperationsOrder / SpellIdentity | Affected-player order changes the amount prevented and gained; exact spell/departed/recast/copy identity, property rechecks, continuation and waiting spell/permanent references. |
+| TestSourcePreventionOperationsLifeGain / LifeOutcomes / AdditionalEffectTiming | Consume before reentrant damage; one actual gain per simultaneous event, modifiers, replacement amounts, zero gain, Lich and actual-gain triggers; gains run after original single and mixed simultaneous player/permanent damage. |
+| TestSourcePreventionOperationsGainPlayerAndWaiting | Typed protected and gain players differ; an explicit gain-player source survives departure and cleared LKI in waiting delayed queries and their clones. |
+| Existing accepted-collection and source-prevention tests | Independent validated rebuilding covers all 2,043 accepted records; old exact/selected/next-combat APIs and their regressions pass. Only expected collection counts and Dark Sphere/Reverse Damage rejection expectations change. Eye for an Eye remains rejected. |
+
+Adds complete-record gameplay mappings for **two unique names / seven records**.
+Compilation counts remain separate from complete collection gameplay coverage.
+
+### Verification and measured outcome
+
+- Baseline `make build` and RON package tests: PASS. Baseline loader: expected
+  exit 1, 2,036 compiled / 409 rejected records; 788 accepted / 198 rejected names.
+- Final focused `go test ./pkg/mage/dsl/ron -run
+  TestRONSourcePreventionOperations -count=1`: PASS.
+- Final native `TestSourcePreventionOperations` and prior exact/selected,
+  next-combat, replacement-life and waiting-prevention checks: PASS.
+- Final `make build`, `go vet ./...`,
+  `go test ./pkg/mage/... -short -count=1` and `make test`: PASS.
+- Skill's additional `go test ./... -short -count=1`: PASS.
+- Final `make lint`: PASS, 0 issues. No automatic changes were made; post-lint
+  focused RON/native and affected compatibility checks pass.
+- Final `git diff --check` and staged diff check: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,043 compiled /
+  402 rejected records; 790 accepted / 196 rejected unique names**, from
+  2,445 records / 986 names. Unsupported collection rejection remains atomic.
+- No remaining required-check, pre-existing or environmental blocker.
+
+Estimated and actual full-card compilation gains match: **2 unique names / seven
+records**. Only one Dark Sphere and six Reverse Damage diagnostics disappear;
+all other baseline diagnostics are unchanged. Neither collection execution nor
+runtime cutover is complete. Go-card deletion and obsolete DSL cleanup remain
+gated. No function removal or whole-repository caller-removal audit is claimed.
+
+No source-data defect was found for this slice. RON source files are unchanged,
+and all 12 hashes match the vocabulary snapshot; no refresh is required.
+API/rules-contract documentation covers only this capability.
+
+Changed files: new pkg/mage/source_prevention_operations.go/test and
+pkg/mage/dsl/ron/source_prevention_operations.go/test; engine
+exact_source_prevention.go, next_source_prevention.go, replacement.go,
+effect_manager.go, prevention_allocation.go, damage_system.go,
+waiting_delayed_prevention.go and doc.go; RON exact_source_prevention.go,
+inventory.go, chosen_source_filter_test.go, definition_plan_test.go,
+inventory_test.go and numeric_consumers_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. Temporary typed mana-type replacements for Deep Water and Quarum Trench
+   Gnomes (two unique names / two records). Both complete records were inspected.
+   Choices, mana/tap costs and land targeting are ready; verify exact event and
+   target-bound departure duration contracts before estimating full unlocks.
+   Share proposed mana-type replacement between a saved player/filter through
+   cleanup and an exact chosen permanent through departure. This is useful
+   multi-card work ahead of the single-name copy family.
+2. Scoped resolution card-name choices: Nebuchadnezzar and Petra Sphinx (two
+   names / two records). Complete records were inspected. Zero immediate unlocks
+   until random reveal/discard and top-card result consumers are ready; Petra
+   Sphinx also needs its chosen-name result to survive the nested player body.
+   A typed name binding is a concrete shared prerequisite. AnyOracleCard needs
+   a complete name catalog independent of the partial production loader.
+3. Fresh copied AddAbility/AddAbilityVariable provenance: zero immediate
+   unlocks, prerequisite for Vesuvan Doppelganger's six records. Preserve
+   independent binding construction and stable replacement identities. Live
+   IsACopyOfPermanent follows that prerequisite. Defer while useful multi-card
+   capabilities remain.
+
+Eye for an Eye's two complete records were also inspected: its continued damage,
+replacement-time source controller and subsequent spell damage need a distinct
+future-replacement contract. Do not treat the new prevention amount as that
+complete capability or claim a compilation gain for it.
+
+This run stops after SELECTED-SOURCE-PREVENTION-OPERATIONS.

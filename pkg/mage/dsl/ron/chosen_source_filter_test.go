@@ -58,7 +58,7 @@ func chosenSourceFilter(t *testing.T, set, name string) (mage.DamageSourceFilter
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err = Compile(card); name == "Reverse Damage" || name == "Eye for an Eye" || name == "Dark Sphere" {
+		if _, err = Compile(card); name == "Eye for an Eye" {
 			if err == nil || strings.Contains(err.Error(), "ChooseADamageSource") {
 				t.Fatal("unsupported replacement body was accepted or choice rejected", name, err)
 			}

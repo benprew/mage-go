@@ -12032,3 +12032,69 @@ phase cycles, return exclusion, provider departure, later blocked status and
 cleanup. `Invalid` rejects unsupported shapes and `Inventory` checks semantic
 source/amount roles. This adds full-record Forcefield gameplay coverage without
 claiming complete collection gameplay.
+
+## Proposed amounts and outcomes of selected-source prevention
+
+`PreventNextDamageFromSelectedSourceWithOperations(source DamageSourceRef,
+recipient PlayerRef, filter DamageSourceFilter, operations
+...SourcePreventionOperation) ResolvingEffect` accepts one
+`PreventProposedDamage(amount ProposedDamageValue)` followed by at most one
+`GainLifeFromPreventedDamage(player PlayerRef)`. Definition validation rejects
+empty, nil,
+reversed or duplicate operations, nil amounts, invalid filters and nil or
+unbound references. Existing selected-source and exact-source APIs keep their
+contracts.
+
+`ProposedDamageAmount()` and `HalfProposedDamageRoundedDown()` are immutable
+values that read the positive matching damage when prevention applies, after
+previous replacements. They cannot read resolution bindings. All matching
+simultaneous packets from the saved source to the saved player form one amount;
+half is rounded down once, then removed across those packets. Other sources and
+recipients do not contribute. Single-event and batch execution use the same
+amount operation. Actual prevention consumes the rule before its additional
+life gain; prevention of zero keeps the rule (CR 609.7b and 615.8). Each packet
+marks the rule applied even when it prevents zero (CR 614.5).
+
+The additional life gain saves its own typed player at installation, separate
+from the protected player. RON implicit `GainLife` uses the saved action
+controller (`You`), even when the event protects another player. Explicit source
+reads in the gain player also qualify for waiting delayed queries without
+resolving that player. The additional gain uses this rule's actual prevention,
+once per source event. It takes place immediately after the original damage
+event (CR 615.5) through
+`gainLifeWithEvent`, including modifiers, life-gain replacements, Lich, history
+and actual-gain triggers. Single and simultaneous damage keep a local list of
+additional outcomes; all original damage finishes before those gains run. No
+result is stored on the game or in a global action slot. Damage caused during
+a life-gain replacement cannot
+reuse the consumed rule. Prevented damage never enters damage history or
+supplies lifelink. The shared pipeline retains affected-player replacement
+choices and rechecks (CR 616.1).
+
+Source selection remains a resolution-only non-target choice. Installation saves
+an exact source and player, independent of later bindings. Current or retained
+source properties, spell identity, permanent-spell continuity before entry,
+returned-incarnation exclusion, phasing, waiting queries, cleanup and clone
+isolation use the existing selected-source services. This adds no general
+unpreventable-damage contract or arbitrary replacement-body executor.
+
+RON supports `NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+TheChosenDamageSource, Player(playerRef))` inside `CreateFuturePreventDamage/2`
+in resolving action contexts. Its operation list starts with bare
+`PreventThatDamage` or `PreventSomeOfThatDamage(proposedValue)`. A proposed value
+is bare `WouldDealDamage_ThatMuchDamage` or
+`HalfRoundedDown(WouldDealDamage_ThatMuchDamage)`. An optional second operation
+is `GainLife(TheAmountOfDamagePreventedThisWay)`. The proposed amount and actual
+result are private to this operation list and cannot appear in normal actions,
+costs or other value contexts. Wrong arities, unbound choices, incompatible
+recipients, reversed or repeated operations and other value forms reject before
+factory publication. RON owns syntax and lexical scope; mage owns the rules.
+
+Evidence: native `TestSourcePreventionOperationsAmounts`, `Identity`,
+`Declarations`, `Order`, `LifeGain`, `SpellIdentity`, `LifeOutcomes`,
+`AdditionalEffectTiming` and `GainPlayerAndWaiting`; RON
+`TestRONSourcePreventionOperationsGameplay`, `Invalid`, `Inventory`, `Lifecycle`,
+`CopyBindings`, `SupportedPrograms`, `Combat` and `ExplicitPlayers`. Gameplay
+covers the complete Dark Sphere record and all six
+Reverse Damage records, including payment, sacrifice, source choices,
+simultaneous outcomes, lifelink, spell continuation, copies and clones.

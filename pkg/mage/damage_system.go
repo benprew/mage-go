@@ -414,11 +414,13 @@ func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, a
 		return damageOutcome{}
 	}
 	action := NewDamageToPlayerAction(source.ID(), p.PlayerID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
-	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return damageOutcome{}
+	result, gains := g.effects.prepareReplacements(action, g)
+	outcome := damageOutcome{}
+	if result != nil {
+		outcome = executeDamageOutcome(g, result)
 	}
-	return executeDamageOutcome(g, result)
+	applyPreventionLifeGains(g, gains)
+	return outcome
 }
 
 func (ds *DamageSystem) prepareDamageToPlayer(g *Game, request damageRequest) Action {
@@ -588,10 +590,13 @@ func (ds *DamageSystem) dealDamageToPermanentFromSource(g *Game, perm *Permanent
 }
 
 func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Permanent, amount int, source DamageSource) damageOutcome {
-	if action := g.effects.ApplyReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g); action != nil {
-		return executeDamageOutcome(g, action)
+	action, gains := g.effects.prepareReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g)
+	outcome := damageOutcome{}
+	if action != nil {
+		outcome = executeDamageOutcome(g, action)
 	}
-	return damageOutcome{}
+	applyPreventionLifeGains(g, gains)
+	return outcome
 }
 
 func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest) Action {
@@ -639,7 +644,7 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			actions = append(actions, action)
 		}
 	}
-	actions = g.effects.applyDamageBatchReplacements(actions, g)
+	actions, gains := g.effects.prepareDamageBatchReplacements(actions, g)
 	batch := &damageBatch{}
 	g.damageBatch = batch
 	outcomes := make([]damageOutcome, 0, len(actions))
@@ -657,6 +662,7 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			ds.onDamageDealt(notification.source, notification.target, notification.amount, notification.combat)
 		}
 	}
+	applyPreventionLifeGains(g, gains)
 	return outcomes
 }
 

@@ -9144,3 +9144,34 @@ that object. Cleanup ends the rule. Game and stack copies keep independent state
 Evidence: `TestRONNextCombatPreventionForcefield`, `Lifecycle`, `Invalid` and
 `Inventory`, and native `TestNextCombatPrevention*`. All five complete Forcefield
 records compile. Full collection execution and runtime cutover remain separate.
+
+## Selected-source prevention operations
+
+Use `PreventNextDamageFromSelectedSourceWithOperations(source, player, filter,
+PreventProposedDamage(amount))` for the next matching source event this turn.
+Use `ProposedDamageAmount()` for all of the proposed damage or
+`HalfProposedDamageRoundedDown()` for half. Matching simultaneous packets share
+one amount, read after earlier replacements. Prevention of zero keeps the rule.
+Append `GainLifeFromPreventedDamage(player PlayerRef)` to gain life for a
+separately saved player from this rule's actual
+prevention after the original damage event through the shared life service. The
+outcome stays local to that rule.
+Supply one prevention operation and at most one following life gain operation.
+Definition validation rejects malformed programs and unbound references.
+
+The saved source uses existing selected-source identity, property rechecks and
+permanent-spell continuity. Cleanup expires the rule; phasing keeps its exact
+reference, and a returned object cannot inherit it. Existing next-source APIs
+remain available. These operations do not use `ResolutionValue` or a global
+last-result slot.
+
+RON uses `CreateFuturePreventDamage(
+NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(TheChosenDamageSource,
+Player(playerRef)), operations)` after a damage-source choice in the same scope.
+Supported lists contain `PreventThatDamage` or
+`PreventSomeOfThatDamage(WouldDealDamage_ThatMuchDamage)` or
+`PreventSomeOfThatDamage(HalfRoundedDown(WouldDealDamage_ThatMuchDamage))`,
+optionally followed by `GainLife(TheAmountOfDamagePreventedThisWay)`. The proposed
+amount and actual result cannot escape this prevention list. Implicit `GainLife`
+uses `You`, independent of the event recipient. Dark Sphere and
+Reverse Damage have complete-record gameplay tests for these shapes.
