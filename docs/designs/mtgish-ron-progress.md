@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **804 accepted / 182 rejected unique card
-names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total).
+The latest recorded inventory reports **805 accepted / 181 rejected unique card
+names** (986 total), and **2,077 compiled / 368 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`CONTROLLER-COLLECTION-SACRIFICE` adds resolving collection sacrifice by each
-subject's current controller, with replacement preparation, owner ordering and
-simultaneous movement. Golgothian Sylex and City in a Bottle gain a shared
-prerequisite. **+0 unique names / +0 records**, as estimated; Sylex now reaches
-its missing original-printing filter. Existing complete-card mappings remain
-unchanged. Focused/native tests and all required repository checks pass.
+`ORIGINAL-PRINTING-NAME-FILTERS` adds fixed CR 206.3a/b name membership through
+shared permanent-filter consumers. Golgothian Sylex gains complete RON gameplay
+coverage; City in a Bottle gains a shared prerequisite. **+1 unique name / +1
+record**, as estimated. Face-down name-based P/T effects now recheck correctly.
+Focused/native tests and all required repository checks pass. Existing complete
+card mappings remain; Bottle still needs its state trigger and player rules.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -56774,3 +56774,185 @@ Ranked next candidates:
    and implementation size before selecting it.
 
 Stop after CONTROLLER-COLLECTION-SACRIFICE. Migration incomplete.
+
+## 2026-10-09: fixed original-printing name filters
+
+Capability: **ORIGINAL-PRINTING-NAME-FILTERS**, complete for the two symbol
+forms in permanent-filter contexts. This run stops after this slice.
+
+### Environment and candidate comparison
+
+The working tree began with modified `.gitignore`, execution design and progress
+ledger, and untracked `mtgish-ron-completed.md`. These user changes are preserved.
+The user's ledger history relocation is excluded from the staged patch; only
+this run's summary update and appended entry are committed.
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection, not a
+build or test failure: 2,076 compiled / 369 rejected records; 804 accepted /
+182 rejected unique names. Totals remain 2,445 records / 986 unique names.
+The complete Sylex, Bottle and Time Vault records and their nested forms were
+read. Vocabulary evidence: one Antiquities symbol and three Arabian Nights
+symbols, affecting two distinct names. Reprints count once.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | ---: | --- | --- |
+| Ranked #1: original-printing name filters | Golgothian Sylex; City in a Bottle | 1 name / 1 record | Sylex's controller-sacrifice action is ready. Bottle still needs state-event collection capture and player spell/land restrictions. One immutable name service supplies the shared prerequisite and future restriction membership. | Small to medium: authoritative embedded name lists, current-name predicate, exact compiler shapes, and gameplay/identity tests. |
+| Ranked #2: state-event permanent collection capture | City in a Bottle | 0 | Original-printing filters and player restrictions still block complete execution. Requires arming/rearming and event collection identity; enables Bottle's controller-sacrifice body, but no second collection-event producer occurs in this source snapshot. | Medium: trigger lifecycle, event subjects, captured bindings and delayed/copy tests. |
+| Ranked #3: optional begin-turn skip replacement | Time Vault, five records | 1 name / 5 records | Entry tapped, untap prohibition and extra-turn action are ready. Missing begin-turn replacement, optional skip payment and paid untap continuation; enables turn replacements and extra/skipped-turn interactions. | Large: scheduler/replacement lifecycle, affected-player order and normal/extra/skipped-turn regressions. |
+
+Candidate #1 is dependency-ready, unlocks Sylex and supplies a shared prerequisite
+for Bottle. It wins on credible benefit for effort. The old `PrintedInSet`
+predicate uses mutable catalog set membership and is not the required contract:
+Mountain was printed in ARN but is not on the CR 206.3a list. The engine skill
+`implement-engine` was used for the reusable engine contract; the user's explicit
+RON slice scope supplies compiler wiring and full-record gameplay tests.
+
+### Exact signatures, contexts and reuse boundary
+
+RON `SharesANameOriginallyPrintedInAntiquities` and
+`SharesANameOriginallyPrintedInArabianNights` are symbols with no arguments.
+`compileFilter(Node) (mage.PermanentFilter, error)` lowers them through:
+
+- `mage.OriginalPrintingNameCatalog(setCode string) (*mage.CardNameCatalog, error)`.
+- `mage.HasNameIn(catalog *mage.CardNameCatalog) mage.PermanentFilter`.
+- `(*mage.CardNameCatalog).Matches(names []string) bool`.
+
+The catalog supports exactly ARN and ATQ. Unknown codes return errors before
+execution. Embedded assets contain the entire CR 206.3a/b name lists, with
+77 ARN and 85 ATQ names. Typographic apostrophes become ASCII English-name
+apostrophes; accents remain. The local lists exactly match the current official
+rules effective 2026-09-25, retrieved from
+https://media.wizards.com/2026/downloads/MagicCompRules%2020260925.txt.
+`original_printing_names_source.json` records provenance, counts and SHA-256
+hashes. Membership does not depend on physical printing, runtime registry,
+filesystem layout or mutable catalog initialization.
+
+`CardNameCatalog.Matches` reads supplied names and the existing interchangeable
+English-name groups under CR 201.2a/201.3. Nil catalogs and absent names cannot
+match. `Names()` keeps separate sorted storage. The engine models one current
+name per permanent; the pure catalog matcher also accepts supplied multiple-name
+lists without claiming a new object-name model. `HasNameIn` reads current names,
+excludes face-down objects under CR 708.2 and deliberately leaves token status
+separate. Sylex's exact `IsNonToken` conjunction excludes token copies.
+
+Supported consumers: permanent targets, resolving collections, matching
+sacrifice payments, static permanent selections and resolving property
+conditions. `compileResolvingPropertyFilter` explicitly admits both symbols.
+Invalid tuple forms, action/cost/player roles and unsupported enclosing
+spell/land restriction declarations still reject atomically. Inventory retains
+its existing permanent-filter role; no reporting adapter or fabricated binding
+is needed. The prior controller-sacrifice rejection fixture now checks a
+malformed tuple rather than the newly supported valid symbol.
+
+A failing static recheck established a required engine integration fix:
+face-down subjects retained a former name-based P/T bonus because their layer
+reset was skipped. `(*mage.Permanent).resetComputedPT()` now resets computed
+P/T bonuses, CDAs and switching in every pass, including face-down subjects.
+Base overrides remain fixed. Copy-on-write preserves clone isolation. This is
+part of the shared filter's layer contract, not a separate migration slice.
+
+Reuse: immutable `CardNameCatalog`, its sorted membership and copy-on-read names,
+Oracle interchangeable-name groups, permanent characteristic names, definition
+plans, entry copying/printed restoration, target declarations and exact
+incarnations, phasing, current collection selection, LKI information branches,
+transactional mana/sacrifice payment, cloned frames, controller-sacrifice
+replacement preparation, owner ordering and simultaneous zone batches.
+RON owns syntax, arity, roles and supported-context admission. Engine owns name
+membership and execution contracts. No new result slot, movement pipeline,
+card-name branch, Go factory fallback or partial registry was added.
+
+No RON source defect was established or changed. RON asset hashes remain
+unchanged; vocabulary refresh is not required. Existing legacy set filters and
+casting blocks retain their callers. Go definitions, generators and DSL exports
+remain because runtime loading, test migration and removal gates are unmet.
+
+### Failing-first evidence and gameplay mappings
+
+Before implementation, focused RON tests failed at ATQ:35:277 and ARN:13:235 on
+the unsupported permanent filters. Engine tests failed compilation on the
+missing catalog, matcher and filter APIs. A test-only nonexistent player
+constant was corrected and the missing-signature failure was confirmed again.
+Supplemental context tests found the missing resolving-property admission and
+the face-down layer reset. `TestOriginalPrintingNamesFaceDownLayerRecheck`
+confirmed an assertion failure before the layer correction. Test-only shallow
+AST mutation, card-ID replacement and helper signature errors were corrected;
+production tests and contracts were not weakened.
+
+| Test | Card mapping and contract evidence |
+| --- | --- |
+| `TestRONOriginalPrintingNamesSylex` | Complete unmodified ATQ Golgothian Sylex. Missing-mana rollback, tap/mana announcement, current controllers versus owners, late collection entrants, return as a new collection member, phasing/cycle, face-down and token exclusion, source departure/phasing, stack copies and independent pending game clones. |
+| `TestRONOriginalPrintingNamesSylexCast` | Complete Sylex mana value/casting cost and battlefield resolution, followed by activation against a real 3ED Ornithopter reprint. Failed casting preserves hand, mana and stack. |
+| `TestRONOriginalPrintingNamesSylexSimultaneous` | Complete Sylex selects and sacrifices itself and an opponent's named subject in one observable batch; indestructible and regeneration do not prevent sacrifice. |
+| `TestRONOriginalPrintingNamesBottleFilter` | Exact Bottle nested nontoken/Arabian Nights conjunction in a synthetic resolving activation; Aladdin's Ring and City in a Bottle match, Mountain does not. Complete Bottle still rejects its missing state-event producer. This is prerequisite evidence only. |
+| `TestRONOriginalPrintingNamesTargets` | Synthetic name-filtered permanent target, normal/rechecked names, face-down illegality, returned identity, phasing/cycle, stack copies and independent clone legality. |
+| `TestRONOriginalPrintingNamesSharedContexts` | Both symbols in static selections, transactional matching sacrifice payments, exact-source LKI information branches, and semantic inventory. Static face-down name rechecks and source phasing; failed and nameless payments retain mana and subjects. |
+| `TestRONOriginalPrintingNamesDeclarations` | Tuple arities and incompatible resolving/cost/player restriction roles reject without publishing a registry. |
+| `TestOriginalPrintingNamesRules` | Every ARN/ATQ name checked against the complete authoritative local CR lists; exact counts, nonmembers, accents/apostrophes, copy-on-read storage, unsupported set codes, nil/nameless input, multiple supplied names and interchangeable-name reuse. |
+| `TestOriginalPrintingNamesCurrentCharacteristics` | Synthetic current-name changes, type/controller independence, token-name membership, face-down exclusion and clone isolation. |
+| `TestOriginalPrintingNamesEntryCopy` | Synthetic copied entry matches the copied name; departure LKI retains it; the returned physical card restores its printed name. |
+| `TestOriginalPrintingNamesFaceDownLayerRecheck` | Native prior name-bonus removal, repeated layer passes, face-down base override preservation and clone isolation. |
+
+Golgothian Sylex gains complete RON gameplay coverage. City in a Bottle gains
+shared filter evidence but not a complete-card claim. Existing
+`TestControllersSacrifice*` provides native replacement ordering, replacement
+source departure, cancellation and graveyard-order evidence for the reused
+batch. Existing complete-card mappings are retained.
+
+### Verification and measured outcome
+
+Required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONOriginalPrintingNames -count=1`.
+- `go test ./pkg/mage -run 'TestOriginalPrintingNames|TestControllersSacrifice' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- The first engine-short run identified four exact inventory count assertions
+  that still expected 2,076/369. They now assert 2,077/368; the inventory also
+  explicitly rejects any regression of Sylex. Focused count tests, build, vet,
+  engine-short and full tests were then rerun and passed. No gameplay assertion
+  was relaxed.
+- `make lint`: PASS, 0 issues. Automatic formatting added a blank line in new
+  test imports only. Reviewed; focused RON/native tests and the skill-required
+  `go test ./... -short -count=1` passed afterwards.
+- `git diff --check`: PASS, including the staged patch before commit.
+- Snapshot count/hash verification against the provenance manifest: PASS.
+- `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+
+Final loader: **2,077 compiled / 368 rejected records; 805 accepted / 181 rejected
+unique names**, totals 2,445 records / 986 names. Actual gain **+1 unique name /
++1 record** matches the estimate. Every remaining diagnostic is identical to
+baseline; the sole removed rejection is Golgothian Sylex's original-printing
+filter. No accepted record regressed. Compilation and complete Sylex gameplay
+coverage both increase; Bottle's complete gameplay remains unverified. No
+source-data or environment blocker remains for this slice.
+
+Changed files: `pkg/mage/original_printing_names.go`, native tests, the two
+embedded name assets and provenance manifest; `pkg/mage/effect_manager.go`;
+RON `compiler.go`, `resolving_condition.go`, new original-printing tests,
+controller-sacrifice declaration fixture, definition-plan/inventory/numeric
+collection-count tests; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this progress summary/entry.
+Commit message: `feat(ron): implement original-printing name filters`.
+
+Ranked next candidates:
+
+1. Shared constrained activation `XIs` contracts for Voodoo Doll and Reflecting
+   Mirror. Complete records show counter-based and target-spell-based announcement
+   values. Voodoo Doll is a credible next unlock after checking all nested forms.
+   Reflecting Mirror's RON target requires mana value equal to X while its X is
+   twice that value; verify Oracle/source fidelity before claiming an unlock.
+   Do not substitute a freely chosen X or a resolution-time read.
+2. Shared temporary player-effect lifecycle for Channel, Guardian Angel and
+   North Star. Complete records need distinct nested mana/paid prevention/one-shot
+   casting operations. Scope a reusable installed-ability/lifetime prerequisite
+   first; the outer action alone does not unlock these three cards.
+3. City in a Bottle state-event permanent collection capture. Both original-name
+   selection and controller-sacrifice are now ready. Still needs arming/rearming,
+   captured exact subjects, source identity and player spell/land restrictions.
+   Compare this single-card prerequisite with the shared candidates above.
+
+Time Vault's begin-turn skip replacement remains a larger deferred candidate.
+Runtime integration, complete collection gameplay, Go-card deletion and unused
+DSL removal remain unfinished. Stop after ORIGINAL-PRINTING-NAME-FILTERS.
+Migration incomplete.

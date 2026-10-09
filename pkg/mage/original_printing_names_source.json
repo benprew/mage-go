@@ -1,0 +1,21 @@
+{
+  "source": "docs/comprehensive-rules.md",
+  "verified_against": "https://media.wizards.com/2026/downloads/MagicCompRules%2020260925.txt",
+  "rules_effective": "2026-09-25",
+  "verified_utc": "2026-10-09T08:51:33.922136+00:00",
+  "transform": "Read the complete CR 206.3a and 206.3b lists; replace typographic apostrophes with ASCII English-name apostrophes; sort names; retain UTF-8 accents. The local and current official lists agree. Physical set membership is not used.",
+  "assets": {
+    "ARN": {
+      "rule": "206.3a",
+      "asset": "original_names_arn.txt",
+      "names": 77,
+      "sha256": "f664aee1db6e52f5cbf048ebe394883e9306939475df27ce5080000b55986c98"
+    },
+    "ATQ": {
+      "rule": "206.3b",
+      "asset": "original_names_atq.txt",
+      "names": 85,
+      "sha256": "a1339187dc0de43f6012a7721708a5aa24b0d810b9b457550b1ccc5216271a9a"
+    }
+  }
+}

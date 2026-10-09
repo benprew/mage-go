@@ -624,7 +624,10 @@ func (em *EffectManager) Apply(g *Game) {
 			p.computedController = p.baseController
 		}
 		if p.FaceDown {
-			// Face-down permanents keep their overrides and empty abilities
+			p = g.MutablePermanent(p.ID())
+			if p != nil {
+				p.resetComputedPT()
+			}
 			continue
 		}
 		needsReset := len(p.SubTypeOverride) > 0 ||
@@ -683,16 +686,12 @@ func (em *EffectManager) Apply(g *Game) {
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil
 		p.resetSubtypeFamilyEffects()
-		p.cdaPower = nil
-		p.cdaToughness = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
 		// Assigning a zero array is a fast memcpy — no allocation.
 		p.grantedAttrs = [NumAttrs]int8{}
-		p.powerBonus = 0
-		p.toughBonus = 0
-		p.ptSwitched = false
+		p.resetComputedPT()
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -1306,4 +1305,13 @@ func (em *EffectManager) removeEndOfNextUpkeep(playerID uuid.UUID) {
 		filtered = append(filtered, effect)
 	}
 	em.effects = filtered
+}
+
+// Face-down base values stay fixed, but P/T effects must be read each pass.
+func (p *Permanent) resetComputedPT() {
+	p.cdaPower = nil
+	p.cdaToughness = nil
+	p.powerBonus = 0
+	p.toughBonus = 0
+	p.ptSwitched = false
 }

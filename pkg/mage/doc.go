@@ -1566,8 +1566,18 @@
 // Leave triggers retain the former battlefield and source abilities.
 // Waiting queries declare explicit source reads without selecting or moving.
 // RON supports ControllersSacrificeEachPermanent with existing resolving
-// permanent collections. State-trigger collections and set-origin filters need
-// separate compiler contracts.
+// permanent collections. State-trigger collections need a separate contract.
+//
+// [OriginalPrintingNameCatalog] supplies the fixed ARN and ATQ lists from
+// CR 206.3a and 206.3b. These lists do not use physical expansion symbols,
+// registry membership or mutable catalogs. Unsupported set codes return errors.
+// [CardNameCatalog.Matches] checks supplied names and interchangeable names.
+// [HasNameIn] reads a permanent's current name; face-down subjects cannot match.
+// Token status is separate. Collections, targets, layers and LKI readers keep
+// their existing identity and timing contracts. Computed P/T fields are reset
+// for face-down subjects each layer pass; face-down base values stay fixed.
+// RON supports both original-printing symbols in permanent-filter contexts.
+// Spell and land restriction adapters need separate contracts.
 //
 // # Further Documentation
 //

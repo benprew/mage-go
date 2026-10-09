@@ -895,6 +895,16 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.AnyPermanent, nil
 		case "IsNonToken":
 			return mage.Not(mage.IsToken), nil
+		case "SharesANameOriginallyPrintedInAntiquities", "SharesANameOriginallyPrintedInArabianNights":
+			setCode := "ATQ"
+			if n.Name == "SharesANameOriginallyPrintedInArabianNights" {
+				setCode = "ARN"
+			}
+			catalog, err := mage.OriginalPrintingNameCatalog(setCode)
+			if err != nil {
+				return mage.PermanentFilter{}, problem(n, err.Error())
+			}
+			return mage.HasNameIn(catalog), nil
 		case "IsEnchanted":
 			return mage.IsEnchanted, nil
 		case "IsntEnchanted":

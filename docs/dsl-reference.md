@@ -9959,3 +9959,36 @@ Bottle still requires its state-trigger collection and player restrictions;
 `Trigger_ThosePermanents` remains unbound outside that missing event contract.
 No complete-card unlock is claimed. Evidence: `TestRONControllersSacrifice*`
 and native `TestControllersSacrifice*`.
+
+### Original-printing name filters
+
+RON symbols `SharesANameOriginallyPrintedInAntiquities` and
+`SharesANameOriginallyPrintedInArabianNights` lower to the engine's
+`OriginalPrintingNameCatalog(setCode string) (*CardNameCatalog, error)` and
+`HasNameIn(catalog *CardNameCatalog) PermanentFilter`. Only symbol forms are
+supported; tuples and action/payment/player-filter roles reject. Supported
+permanent-filter consumers include targets, resolving collections, matching
+sacrifice costs, static selections and resolving property conditions.
+
+The embedded, immutable CR 206.3a/b snapshots contain 77 ARN and 85 ATQ names.
+`CardNameCatalog.Matches(names []string) bool` checks supplied current or
+retained English names, including the existing interchangeable-name groups.
+`Names()` returns separate storage. An unknown set code returns an error;
+a nil catalog and nameless objects do not match. Membership is independent of
+executable cards and the mutable set catalog. Mountain is excluded from ARN.
+`HasNameIn` excludes face-down names but leaves token status to the caller.
+
+Targets keep announcement identity and recheck names at resolution. Collections
+read current membership; a returned permanent can be a new collection member.
+Static selections read names each layer pass. Resolving information predicates
+retain the exact object's departure facts. No information read permits a move
+of an absent object. Face-down subjects have their computed P/T fields reset
+each layer pass, while their face-down base values remain fixed.
+
+The complete Golgothian Sylex RON record is now executable and has casting,
+activation, payment, timing, reprint, copy, clone, owner/controller, phasing,
+nameless/token exclusion and simultaneous-sacrifice tests. City in a Bottle's
+exact nested filter has a resolving prerequisite probe; its state trigger and
+spell/land restrictions remain rejected. This does not establish full Bottle
+execution. Source evidence and snapshot hashes are in
+`pkg/mage/original_printing_names_source.json`.

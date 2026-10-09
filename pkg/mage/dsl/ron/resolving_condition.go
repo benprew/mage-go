@@ -121,7 +121,7 @@ func compileResolvingPropertyFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
-	case "AnyPermanent", "IsNonToken", "IsTapped", "IsUntapped", "AttackedThisTurn", "DidntAttackThisTurn", "IsSupertype", "IsNonSupertype", "IsCardtype", "IsNonCardtype", "IsCreatureType", "IsNonCreatureType", "IsLandType", "IsNonLandType", "IsEnchantmentType", "IsColor", "IsNonColor", "HasAbility", "DoesntHaveAbility", "PowerIs", "ToughnessIs", "PowerAndToughnessIsEqualTo":
+	case "SharesANameOriginallyPrintedInAntiquities", "SharesANameOriginallyPrintedInArabianNights", "AnyPermanent", "IsNonToken", "IsTapped", "IsUntapped", "AttackedThisTurn", "DidntAttackThisTurn", "IsSupertype", "IsNonSupertype", "IsCardtype", "IsNonCardtype", "IsCreatureType", "IsNonCreatureType", "IsLandType", "IsNonLandType", "IsEnchantmentType", "IsColor", "IsNonColor", "HasAbility", "DoesntHaveAbility", "PowerIs", "ToughnessIs", "PowerAndToughnessIsEqualTo":
 		return compileFilter(n)
 	default:
 		return mage.PermanentFilter{}, unsupported(n, "resolving permanent property filter")

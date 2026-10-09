@@ -73,7 +73,7 @@ func TestRONControllersSacrificeDeclarations(t *testing.T) {
 		`ControllersSacrificeEachPermanent(AnyPermanent,AnyPermanent)`,
 		`ControllersSacrificeEachPermanent(SinglePlayer(You))`,
 		`ControllersSacrificeEachPermanent(Trigger_ThosePermanents)`,
-		`ControllersSacrificeEachPermanent(SharesANameOriginallyPrintedInAntiquities)`,
+		`ControllersSacrificeEachPermanent(SharesANameOriginallyPrintedInAntiquities())`,
 	} {
 		t.Run(action, func(t *testing.T) {
 			record := staticBaseRecord(t, "ATQ", "Golgothian Sylex")

@@ -13235,3 +13235,46 @@ Evidence: `TestControllersSacrificeBatch`, `IdentityAndDefinition`, `Replacement
 cost and action; only the unsupported original-printing predicate is replaced by
 a supported test collection. City in a Bottle remains rejected and has no new
 complete-card coverage claim.
+
+## Fixed original-printing names
+
+CR 206.3 replaces expansion-symbol tests with original-printing English-name
+membership. `OriginalPrintingNameCatalog(string) (*CardNameCatalog, error)`
+supplies immutable embedded ARN and ATQ lists from CR 206.3a/b. The local lists
+were compared with the official rules effective September 25, 2026:
+[Wizards Comprehensive Rules](https://media.wizards.com/2026/downloads/MagicCompRules%2020260925.txt).
+The snapshots retain all 77 and 85 names. Mountain is not in the ARN list.
+Unsupported codes fail at declaration time. No runtime catalog initialization
+or registry lookup supplies membership. `PrintedInSet` and the legacy expansion
+casting blocks remain unchanged for their current callers.
+
+`CardNameCatalog.Matches([]string) bool` accepts any matching supplied name,
+uses existing CR 201.3 interchangeable-name groups, and excludes absent names.
+`HasNameIn(*CardNameCatalog) PermanentFilter` reads the supplied permanent's
+current characteristic name and excludes face-down subjects (CR 708.2).
+The filter does not exclude tokens; Sylex's separate `IsNonToken` does that.
+The existing engine models one current name per permanent. The catalog matcher
+can also consume a supplied multiple-name list without a new object model.
+
+Presence, incarnations, phasing and target legality belong to existing consumer
+services. Collections select at resolution and can include new incarnations.
+Targets retain their original incarnations and recheck current names.
+Information conditions can use exact departure snapshots without authorizing an
+absent action (CR 400.7, 608.2b, 608.2h). Entry copies use copied characteristic
+names; departure restores the physical definition for the next entry.
+
+The new static-name recheck test exposed a layer reset gap: face-down subjects
+kept computed P/T effects from a prior name. `Permanent.resetComputedPT()` now
+clears computed bonuses, CDAs and switching for each layer pass, including
+face-down subjects. Their base overrides remain fixed. Copy-on-write isolates
+clones. This correction is required for the shared name-filter layer context.
+
+Evidence: `TestOriginalPrintingNamesRules`, `CurrentCharacteristics`,
+`EntryCopy`, `FaceDownLayerRecheck`; `TestRONOriginalPrintingNamesSylex`,
+`SylexCast`, `SylexSimultaneous`, `BottleFilter`, `Targets`, `SharedContexts`,
+`Declarations`. Sylex uses its unmodified complete RON record and a real Revised
+Ornithopter reprint. Bottle uses its exact nested nontoken/name conjunction in a
+synthetic resolving probe and remains rejected as a complete record. Existing
+controller-sacrifice native tests retain replacement ordering, departing
+replacement sources and graveyard-order evidence. No new movement, cost, LKI,
+result binding or replacement pipeline was introduced.
