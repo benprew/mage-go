@@ -2,15 +2,15 @@
 
 ## Current status
 
-The latest recorded inventory reports **790 accepted / 196 rejected unique card
-names** (986 total), and **2,043 compiled / 402 rejected records** (2,445 total).
+The latest recorded inventory reports **792 accepted / 194 rejected unique card
+names** (986 total), and **2,045 compiled / 400 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`SELECTED-SOURCE-PREVENTION-OPERATIONS` implements proposed all/half amounts and
-actual-prevention life gain for a saved source event. Native and RON tests cover
-simultaneous amounts, event timing, separate players, no-prevention retention,
-identity, phasing, copies, clones, payment and combat. Two names gain seven records.
+`TEMPORARY-MANA-TYPE-REPLACEMENTS` implements all-type player rules through
+cleanup and white-only exact-subject rules through departure. Native and RON
+tests cover amounts, restrictions, planning, order, timing, identity, phasing,
+copies, clones, rollback and waiting references. Two names gain two records.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -52680,3 +52680,197 @@ future-replacement contract. Do not treat the new prevention amount as that
 complete capability or claim a compilation gain for it.
 
 This run stops after SELECTED-SOURCE-PREVENTION-OPERATIONS.
+
+## 2026-10-08: temporary typed mana type replacements
+
+Status: completed vertical slice `TEMPORARY-MANA-TYPE-REPLACEMENTS`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved.
+Only this slice's summary change and appended entry are staged in this ledger;
+the user's existing documentation reorganization remains outside the commit.
+
+### Candidate comparison and selection
+
+The previous entry's ranked first candidate is dependency-ready and unlocks two
+unique cards. Every complete Deep Water and Quarum Trench Gnomes record was read,
+as were Nebuchadnezzar, Petra Sphinx and all six Vesuvan Doppelganger records.
+Nested operations, durations and choice consumers were included in the comparison.
+Targeted vocabulary entries confirm two temporary mana actions, two name choices,
+one random-hand reveal/discard consumer and one top-library reveal consumer.
+Reprints count once.
+
+| Candidate | Distinct affected names / records | Estimated complete-card compilation gains | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Temporary mana type replacements, selected | Deep Water; Quarum Trench Gnomes / two records | Two names / two records | Mana/tap payments, land targets and resolution frames exist. Needs a shared proposed production event, pure payment projection, exact target-bound duration and a source-data correction. Enables reusable mana-event replacements and correct possible-type queries. | Medium: one event/service, two validated adapters, five production paths and lifecycle/payment tests; complete in this run. |
+| Scoped resolution card-name choices | Nebuchadnezzar; Petra Sphinx / two records | Zero immediately | Needs a complete Oracle name catalog independent of the partial registry. Random reveal/discard and top-card result consumers remain; Petra needs a name saved across a nested player body. Concrete shared prerequisite for both cards. | Medium for catalog/binding/choice; additional consumer slices before full unlocks. |
+| Fresh added-ability copy provenance | Vesuvan Doppelganger / six identical records | Zero immediately | AddAbility/AddAbilityVariable need fresh binding construction and stable replacement identities; live IsACopyOfPermanent is another blocker. Enables the entry and repeated upkeep copying of this one unique name. | High; separate provenance and live-copy slices. Deferred while shared work remains. |
+
+The first candidate gives the largest credible immediate multi-card gain among
+these inspected candidates. It required an engine contract, compiler adapters
+and a proven source correction, rather than a spelling-only adapter. No missing
+choice/payment/target prerequisite remains for its supported contexts.
+
+### Supported contracts and reuse boundary
+
+New mage services:
+
+- `ReplaceTappedManaTypeForPlayerThisTurn(player PlayerRef,
+  filter PermanentFilter, to Color) ResolvingEffect` saves the player at
+  resolution and replaces all types from matching permanents controlled by that
+  player when that player taps them for mana. Membership/control stay live;
+  later entries qualify. Source departure does not end it; cleanup does.
+- `ReplaceTappedManaTypeUntilLeaves(subject PermanentRef,
+  from, to Color) ResolvingEffect` captures a present exact incarnation and
+  changes only the specified type from its tap-symbol mana abilities. Later
+  subtype/control changes do not remove the rule. Phasing keeps the rule;
+  departure ends it permanently. No returned incarnation can inherit it.
+- `(*Game).ManaTypesAbilityCouldProduce(ability Ability,
+  sourceID uuid.UUID) []Color` reads every possible resulting type without
+  checking payment/tapped status, making choices or changing state. The existing
+  opponent-land color service uses it. Raw production metadata APIs stay intact.
+- `(*Game).WaitingManaReplacementPermanentSources() []DamageSource` supplies
+  exact subjects of active indefinite mana rules to general damage-source
+  choices. Phasing keeps those references; departure ends them. Player/filter
+  rules do not infer permanent references. Typed installation effects also
+  declare explicit source reads through the existing delayed-body contract.
+
+RON accepts `CreateReplaceWouldProduceManaUntil/3` in resolving action lists:
+
+1. `PlayerTappingAPermanentWouldProduceMana(You, controlledFilter)`, one
+   `WouldProduceMana_ReplaceType(concreteType)` operation, `UntilEndOfTurn`.
+   The filter must include `ControlledByAPlayer(SinglePlayer(You))`, use existing
+   independent permanent filters, and omit source exclusion.
+2. `TappingPermanentWouldProduceMana(permanentRef)`, one
+   `WouldProduceMana_ReplaceTypeOfType(fromType, toType)` operation,
+   `UntilPermanentLeavesBattlefield(theSamePermanentRef)`. References use current
+   lexical declarations and fresh per-instance bindings.
+
+Both preserve amounts and spending restrictions. Other shapes, nonconcrete
+colors, unbound references, multiple operations, incompatible contexts and
+mismatched durations reject at compilation or native definition validation.
+Inventory reports `mana_replacement_event`, `mana_replacement_operation`,
+`mana_type` and typed duration references.
+
+RON owns syntax, scope checks and lowering. Mage owns the proposed event,
+replacement state, identity and execution. The new internal manaProductionAction
+uses shared replacement candidates, priorities, affected-player choices,
+rechecks and once-per-event execution. Manual/direct/typed mana abilities replace
+production before pool addition. Actual types feed bonuses and tapped-for-mana
+facts. Separate typed add instructions remain separate production events.
+Non-tap conversions, spells and triggered bonus mana do not acquire tap context.
+
+Automatic payment projects pure type transformations through the same candidate
+and priority checks. Conditional replacements consider concrete color choices;
+projection deduplicates equivalent states and repeated operations. Queries do
+not make choices, tap, spend or add mana. Execution checks current outputs,
+restrictions, costs, source incarnation and bonuses before payment, then uses
+its selected order. Stable per-rule IDs work with cloned registrations. Existing
+transactional casting/activation rollback, pool restrictions, mana solver,
+resolution frames, delayed bodies, target legality, LKI, phasing, copies and
+cloning remain the shared services. No card-name branch, Go-card fallback,
+declaration panic, skipped record or partial production registry was introduced.
+
+### Source defect and vocabulary evidence
+
+`cards/mtgish/LEG.lines.ron`, Quarum Trench Gnomes, previously used
+`WouldProduceMana_ReplaceType(ManaProduceC)`, which replaced every proposed type.
+Local authoritative `data/LEG.json` Oracle text is:
+
+> {T}: If target Plains is tapped for mana, it produces colorless mana instead
+> of white mana. (This effect lasts indefinitely.)
+
+CR 106.1b distinguishes colorless from the five colors; CR 106.12b applies this
+replacement to the mana production event, and CR 616.1 requires affected-player
+ordering with rechecks. The sole Gnomes record now uses
+`WouldProduceMana_ReplaceTypeOfType(ManaProduceW, ManaProduceC)`. There are no
+identical reprints to correct. Mixed white/green gameplay proves that green
+remains green. Deep Water's local `data/DRK.json` Oracle changes types only;
+its all-type operation remains unchanged and preserves the produced amount.
+No unrelated source correction was made.
+
+The vocabulary snapshot was refreshed from all 12 RON files with the existing
+AST parser, including file hashes, constructor signatures, positions/examples
+and fresh loader diagnostics. It has 602 tuple signatures, up from 601. The new
+two-type operation adds one signature; ManaProduceW gains one occurrence and
+the old all-type operation loses one. Other stale example positions and loader
+diagnostics are refreshed without changing RON outside the sole Gnomes record.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, both complete RON records failed at unsupported
+CreateReplaceWouldProduceManaUntil. Native tests, after fixture API corrections,
+failed only at the new public signatures. A new assertion then proved that the
+planner could produce white from an any-color source despite an installed
+white-only replacement. Concrete color projection corrects that failure.
+A could-produce assertion failed because raw metadata did not project
+replacements. A separate pure query and service integration establish this
+contract while preserving raw metadata callers.
+Waiting-subject tests first failed at the missing query signature. Final lint
+found one test variable that shadowed `copy`; it was renamed and focused checks
+were rerun. Fixture corrections retained the intended behavior assertions.
+
+| Tests | Card / contract evidence |
+| --- | --- |
+| TestRONManaTypeReplacementCompleteRecords | Complete DRK Deep Water and LEG Quarum Trench Gnomes: mana/tap payment, resolution timing, mixed production amounts, all-type versus white-only replacement, other players/subjects, creator departure and pending clones. |
+| TestRONManaTypeReplacementLifecycle | Both complete records: target property changes, shroud, leave/return before and after resolution, phasing/cycles, target control, ability copies, cleanup, source ability removal/departure. Gnomes keeps its exact rule after cleanup; Deep Water ends. |
+| TestRONManaTypeReplacementGnomesTargetPayment | Complete Gnomes: non-Plains targets, summoning sickness and tapped-source failures cannot pay; an opponent's Plains is a legal subject and automatic payment produces colorless. |
+| TestRONManaTypeReplacementCopyAndInstances | Complete Gnomes: a retargeted copied ability and original install independent subjects; pending and installed clones remain independent; printed rebuilding supplies fresh targets. |
+| TestRONManaTypeReplacementInvalid / Inventory | Invalid events, operations, amounts/types, durations, contexts and unbound targets reject. Semantic inventory supplies event/operation/type roles. Synthetic records add no collection names. |
+| TestManaTypeReplacementProductionPaths / WhiteOnly / AnyColorPlanning | Native manual tap, direct activation, typed body, planned payment and planned delayed body; mixed amounts/types, conditional white-only changes, any-one-color and any-combination choices; impossible white payments make no mutation. |
+| TestManaTypeReplacementDeclarations / OrderAndPurity / RepeatedOrders | Invalid typed operands/types reject; affected-player choice changes the last resulting type; pure queries expose both possible colors without choices; automatic payment chooses a valid order. Forty repeated competing rules avoid permutation repetition. |
+| TestManaTypeReplacementRestrictionsAndBonuses / TimingAndIdentity / NonTapAndZero | Restrictions remain on transformed units; matching bonuses use actual types. Control, phasing, exact departure/returns, cleanup, ability removal and clone durations behave independently. Non-tap and zero production are not transformed. |
+| TestManaTypeReplacementCouldProduce / WaitingSubject / StalePlanAndRollback | Pure possible-type queries ignore tap affordability and update the opponent-land service; exact phased subjects qualify for general damage-source choice; departure ends their references. Stale plans and failed casting payments preserve live resources. |
+| Existing full collection and compatibility tests | All 2,045 accepted records validate and rebuild independently. Raw mana metadata, prior mana production/planning, damage replacement, Go-card callers and accepted RON regressions pass. Collection loading remains atomic. |
+
+Adds complete-record gameplay mappings for **two unique names / two records**.
+Compilation acceptance remains separate from full collection gameplay validation.
+
+### Verification and measured result
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Fresh baseline loader: expected exit 1, 2,043 compiled / 402 rejected records,
+  790 accepted / 196 rejected names. A pre-existing temporary report was stale;
+  a separate fresh file confirmed the baseline before selection.
+- Final focused `go test ./pkg/mage/dsl/ron -run
+  TestRONManaTypeReplacement -count=1`: PASS.
+- Final native `go test ./pkg/mage -run TestManaTypeReplacement -count=1`: PASS.
+- `make build`, `go vet ./...`,
+  `go test ./pkg/mage/... -short -count=1`, and `make test`: PASS.
+- Final `make lint`: PASS, 0 issues. Automatic formatting was reviewed;
+  the only failed lint finding was the corrected test variable name.
+- Final `git diff --check` and staged diff check: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,045 compiled /
+  400 rejected records; 792 accepted / 194 rejected unique names**, from
+  2,445 records / 986 names. Collection rejection remains atomic.
+
+Estimated and actual compilation gains match: **two unique names / two records**.
+Only Deep Water and Quarum Trench Gnomes leave the rejection list; all other
+fresh baseline diagnostics are unchanged. Remaining collection execution,
+complete runtime integration, Go-card removal and obsolete DSL cleanup are still
+gated. No function removal or caller-removal audit is claimed.
+
+Changed files: cards/mtgish/LEG.lines.ron; new pkg/mage/mana_type_replacement.go
+and test, new pkg/mage/dsl/ron/mana_type_replacement.go and test; engine
+continuous_effects.go, costed_mana.go, damage_source_choice.go, doc.go,
+effect_manager.go, effect_spells.go, game.go, mana_system.go and stack.go;
+RON compiler.go, inventory.go, inventory_test.go, definition_plan_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md,
+the vocabulary snapshot and this ledger.
+
+Ranked next candidates:
+
+1. Scoped resolution card-name choice and independent complete name catalog.
+   Nebuchadnezzar and Petra Sphinx share this prerequisite (two names / two
+   records). Zero immediate full-card gains until random reveal/discard and
+   top-card result consumers are ready. Preserve the choice across Petra's
+   nested player body. Reassess catalog readiness before implementation.
+2. Fresh added-ability copy provenance for AddAbility/AddAbilityVariable.
+   Zero immediate gains; enables Vesuvan Doppelganger's six records, which also
+   need live IsACopyOfPermanent. Preserve fresh bindings, copiable provenance
+   and stable replacement identities. Defer behind useful multi-card work.
+3. Continued future damage replacement for Eye for an Eye (one unique name /
+   two records). Its replacement-time source controller and subsequent spell
+   damage need a separate event contract. Defer while shared multi-card work
+   remains; do not treat prevention amounts or the new mana event as that rule.
+
+This run stops after TEMPORARY-MANA-TYPE-REPLACEMENTS.

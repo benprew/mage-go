@@ -1323,6 +1323,19 @@
 // Both conditions read current history at detection and resolution.
 // Cleanup clears this history. Information reads do not permit absent actions.
 //
+// Use [ReplaceTappedManaTypeForPlayerThisTurn] to change all mana types from
+// matching permanents controlled by a saved player when that player taps them
+// for mana. Cleanup ends the rule. Source departure does not end it.
+// [ReplaceTappedManaTypeUntilLeaves] changes one type from a saved incarnation.
+// Phasing keeps that rule; departure ends it permanently. Amounts and spending
+// restrictions remain. Actual types supply tap bonuses and mana events.
+// Manual production and automatic payment share replacement candidates and order.
+// Planning makes no choices or mutations. Stable rule IDs survive game cloning.
+// [Game.ManaTypesAbilityCouldProduce] includes all possible replacement orders
+// without checking payment or tapped status. Raw metadata stays separate.
+// [Game.WaitingManaReplacementPermanentSources] supplies exact active subjects
+// to general damage-source choices. Phasing keeps references; departure ends them.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -3340,6 +3340,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			PlayerID:          playerID,
 			Flag:              hasTapCost,
 		})
+		obj.tappedForMana = hasTapCost
 		produced, colors := g.resolveStackObject(obj)
 		if hasTapCost && produced > 0 {
 			g.mana.ApplyManaBonuses(g, perm, colors, g.GetPlayer(playerID))

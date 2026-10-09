@@ -12098,3 +12098,75 @@ Evidence: native `TestSourcePreventionOperationsAmounts`, `Identity`,
 covers the complete Dark Sphere record and all six
 Reverse Damage records, including payment, sacrifice, source choices,
 simultaneous outcomes, lifelink, spell continuation, copies and clones.
+
+## Temporary mana type replacements
+
+`ReplaceTappedManaTypeForPlayerThisTurn(player PlayerRef, filter PermanentFilter,
+ to Color) ResolvingEffect` saves the player at resolution. It changes every
+mana type produced by a matching permanent controlled by that player when that
+player activates its mana ability with a tap symbol. Membership and control are
+read at production. Later entries qualify. Source departure and ability removal
+do not end the effect; cleanup ends it.
+
+`ReplaceTappedManaTypeUntilLeaves(subject PermanentRef, from, to Color)
+ ResolvingEffect` saves a present incarnation at resolution. It changes only the
+specified type when that permanent is tapped for mana, regardless of controller
+or later subtype changes. Phasing suspends production but preserves the rule.
+Departure ends it permanently, including leave-and-return of the physical card.
+Both declarations require concrete types and valid typed operands.
+
+The internal `manaProductionAction` carries one proposed production event with
+its source incarnation, activating player, tap-symbol context and independent
+production entries. Shared replacement candidates, priorities, affected-player
+choices and once-per-event application implement CR 106.12b and 616.1. Amounts
+and spending restrictions remain on their entries (CR 106.6). Actual produced
+types supply tap bonuses and `EvtTappedForMana`; separate typed add instructions
+remain separate production events. Spells, non-tap conversions and triggered
+bonus production cannot inherit a tap-symbol context.
+
+Manual, direct and typed mana activation use the replacement pipeline before
+pool addition. Automatic planning enumerates pure typed transformations with the
+same candidate and priority checks. It makes no choices or resource changes.
+Conditional type replacement enumerates concrete color choices; identical rule
+transformations and equivalent projection states avoid permutation repetition.
+Execution rechecks the selected source, output, restrictions, costs and bonuses
+before payment and runs its selected replacement order. Stable rule IDs keep
+orders valid in cloned games. Planned bodies retain their delayed operations.
+Failed casting payments keep live sources, pools, hands and stacks unchanged.
+
+`(*Game).ManaTypesAbilityCouldProduce(ability Ability, sourceID uuid.UUID)
+ []Color` includes all possible type outcomes without checking payment or tapped
+status (CR 106.7). The opponent-land color service uses it. Existing raw mana
+production metadata APIs retain their behavior.
+`(*Game).WaitingManaReplacementPermanentSources() []DamageSource` supplies exact
+subjects of active indefinite mana replacements to general damage-source choices
+(CR 609.7a). A phased subject remains available; departure ends its reference.
+Player/filter replacements do not invent permanent references.
+
+RON accepts two resolving-action contexts:
+
+- `CreateReplaceWouldProduceManaUntil(
+  PlayerTappingAPermanentWouldProduceMana(You, controlledFilter),
+  [WouldProduceMana_ReplaceType(concreteType)], UntilEndOfTurn)`.
+  `controlledFilter` must include `ControlledByAPlayer(SinglePlayer(You))` and
+  cannot exclude the source. Existing independent permanent filters compose.
+- `CreateReplaceWouldProduceManaUntil(
+  TappingPermanentWouldProduceMana(permanentRef),
+  [WouldProduceMana_ReplaceTypeOfType(fromType, toType)],
+  UntilPermanentLeavesBattlefield(theSamePermanentRef))`.
+  Typed references retain declaration scopes and per-instance target bindings.
+
+Other events, operations, recipients and durations remain compilation errors.
+RON owns syntax and declaration checks; mage owns event mechanics and identity.
+Local `data/LEG.json` Oracle text requires Quarum Trench Gnomes to replace white
+mana only. Its sole RON record now uses the explicit two-type operation. Deep
+Water retains its all-type operation and preserves the produced amount.
+
+Evidence: native `TestManaTypeReplacementProductionPaths`, `WhiteOnly`,
+`Declarations`, `AnyColorPlanning`, `OrderAndPurity`, `RestrictionsAndBonuses`,
+`TimingAndIdentity`, `NonTapAndZero`, `CouldProduce`, `RepeatedOrders`,
+`WaitingSubject`, and `StalePlanAndRollback`; RON
+`TestRONManaTypeReplacementCompleteRecords`, `Invalid`, `Lifecycle`,
+`GnomesTargetPayment`, `CopyAndInstances`, and `Inventory`. Complete-record
+behavior mappings cover Deep Water and Quarum Trench Gnomes, two unique names
+and two records. They do not establish complete collection gameplay coverage.

@@ -459,18 +459,7 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *addManaEffect) Apply(ctx *EffectContext) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	p.ManaPool().Add(e.color, e.amount)
-	if ctx.Game.resolution.manaTracking {
-		ctx.Game.resolution.manaProduced += max(e.amount, 0)
-		if e.amount > 0 {
-			ctx.Game.resolution.manaColors = appendProducedColor(ctx.Game.resolution.manaColors, e.color)
-		}
-	}
-	return nil
+	return addEffectMana(ctx, []ManaProduction{{Color: e.color, Amount: e.amount}})
 }
 
 func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
@@ -479,11 +468,20 @@ func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	color := p.ChooseManaColor("add mana")
-	addManaProductionToPool(p.ManaPool(), color, e.amount, e.restriction)
-	if ctx.Game.resolution.manaTracking {
-		ctx.Game.resolution.manaProduced += max(e.amount, 0)
-		if e.amount > 0 {
-			ctx.Game.resolution.manaColors = appendProducedColor(ctx.Game.resolution.manaColors, color)
+	return addEffectMana(ctx, []ManaProduction{{Color: color, Amount: e.amount, Restriction: e.restriction}})
+}
+
+func addEffectMana(ctx *EffectContext, productions []ManaProduction) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	productions = ctx.Game.effectManaProduction(ctx, productions)
+	for _, prod := range productions {
+		addManaProductionToPool(p.ManaPool(), prod.Color, prod.Amount, prod.Restriction)
+		if ctx.Game.resolution.manaTracking && prod.Amount > 0 {
+			ctx.Game.resolution.manaProduced += prod.Amount
+			ctx.Game.resolution.manaColors = appendProducedColor(ctx.Game.resolution.manaColors, prod.Color)
 		}
 	}
 	return nil

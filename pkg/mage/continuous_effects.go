@@ -1129,15 +1129,9 @@ func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
 				continue
 			}
 			for _, ability := range land.RuntimeAbilities {
-				for _, production := range abilityManaProductions(UnwrapAbility(ability), g, land.ID()) {
-					if production.Color == AnyColor {
-						for _, color := range []Color{White, Blue, Black, Red, Green} {
-							colors[color] = true
-						}
-						continue
-					}
-					if production.Color != Colorless {
-						colors[production.Color] = true
+				for _, color := range g.ManaTypesAbilityCouldProduce(ability, land.ID()) {
+					if color != Colorless {
+						colors[color] = true
 					}
 				}
 			}

@@ -1007,6 +1007,10 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 }
 
 func (em *EffectManager) prepareReplacements(action Action, g *Game) (Action, []preventionLifeGain) {
+	return em.prepareReplacementsChoosing(action, g, chooseReplacement)
+}
+
+func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, choose func([]ReplacementEffect, Action, *Game) int) (Action, []preventionLifeGain) {
 	var outcomes []preventionLifeGain
 	if dca, ok := action.(*DamageToCreatureAction); ok {
 		if perm := g.FindPermanent(dca.PermanentID()); perm != nil && perm.HasAttr(AttrDamageCantBePreventedOrRedirected) {
@@ -1029,7 +1033,7 @@ func (em *EffectManager) prepareReplacements(action Action, g *Game) (Action, []
 		if len(candidates) == 0 {
 			break
 		}
-		index := chooseReplacement(candidates, action, g)
+		index := choose(candidates, action, g)
 		r := candidates[index]
 		applied[r] = true
 		if source, ok := r.(*sourcePreventionReplacement); ok && source.amount != nil {

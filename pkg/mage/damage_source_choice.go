@@ -192,6 +192,9 @@ func (e *damageSourceChoice) candidates(g *Game, playerID uuid.UUID) []DamageSou
 	if e.allSources || e.waitingExile {
 		candidates = append(candidates, g.WaitingExileSources()...)
 	}
+	if e.allSources {
+		candidates = append(candidates, g.WaitingManaReplacementPermanentSources()...)
+	}
 	if e.allSources || e.waitingDiscard {
 		candidates = append(candidates, g.WaitingDiscardPermanentSources()...)
 	}

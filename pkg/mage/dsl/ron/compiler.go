@@ -1176,6 +1176,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreateReplaceWouldProduceManaUntil":
+		build, err := compileManaTypeReplacement(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateFuturePreventDamage":
 		build, err := compileFinitePrevention(n, ctx)
 		if err != nil {

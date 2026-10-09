@@ -7,12 +7,14 @@ import (
 )
 
 type manaSourceAbility struct {
-	AbilityIndex    int
-	Productions     []ManaProduction
-	ManaCost        ManaCost
-	Interchangeable bool
-	Repeatable      bool
-	ResolveBody     bool
+	replacementOrder    []uuid.UUID
+	originalProductions []ManaProduction
+	AbilityIndex        int
+	Productions         []ManaProduction
+	ManaCost            ManaCost
+	Interchangeable     bool
+	Repeatable          bool
+	ResolveBody         bool
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {

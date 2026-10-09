@@ -91,12 +91,15 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 			if !sourceAbility.Repeatable && (perm.Tapped || !perm.CanTapForEffect(g)) {
 				continue
 			}
-			abilities = append(abilities, sourceAbility)
-			for _, p := range sourceAbility.Productions {
-				for _, c := range expandProductionColor(p.Color) {
-					if !seen[c] {
-						seen[c] = true
-						colors = append(colors, c)
+			variants := manaPlanningVariants(g, perm, sourceAbility)
+			abilities = append(abilities, variants...)
+			for _, variant := range variants {
+				for _, p := range variant.Productions {
+					for _, c := range expandProductionColor(p.Color) {
+						if !seen[c] {
+							seen[c] = true
+							colors = append(colors, c)
+						}
 					}
 				}
 			}
@@ -397,7 +400,15 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	if ability.Repeatable {
 		bonuses = nil
 	}
-	if !plannedManaChoiceAvailable(ability.Productions, bonuses, action) {
+	available := false
+	for _, variant := range manaPlanningVariants(g, perm, ability) {
+		if plannedManaChoiceAvailable(variant.Productions, bonuses, action) {
+			ability = variant
+			available = true
+			break
+		}
+	}
+	if !available {
 		return fmt.Errorf("planned mana production is no longer available")
 	}
 	player := g.GetPlayer(playerID)
@@ -420,7 +431,15 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		g.TapPermanent(perm)
 	}
 	if !ability.ResolveBody {
-		addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
+		productions := action.Productions
+		if len(ability.replacementOrder) > 0 {
+			original := ability.originalProductions
+			if len(original) == 0 {
+				original = action.Productions
+			}
+			productions = g.replaceManaProduction(&manaProductionAction{source: perm.ID(), incarnation: sourceIncarnation, player: playerID, tapping: !ability.Repeatable, productions: original}, ability.replacementOrder)
+		}
+		addConcreteMana(player.ManaPool(), productions, action.BonusColors)
 	}
 
 	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
@@ -435,6 +454,8 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 			g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: !ability.Repeatable})
 			obj := newStackObject(playerID, perm.ID(), nil, activated.effects, nil, 0, true)
 			obj.sourceIncarnation = sourceIncarnation
+			obj.tappedForMana = !ability.Repeatable
+			obj.manaReplacementOrder = ability.replacementOrder
 			obj.TargetSource = perm.Card
 			g.resolveStackObject(obj)
 			addConcreteMana(player.ManaPool(), nil, action.BonusColors)
@@ -525,35 +546,35 @@ func (ms *ManaSystem) AddManaProductions(g *Game, productions []ManaProduction, 
 }
 
 func (ms *ManaSystem) addManaProductionsWithTypes(g *Game, productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) (int, []Color) {
-	var producedColors []Color
-	producedAmount := 0
+	var concrete []ManaProduction
 	for _, prod := range productions {
-		amt := prod.Amount
-		if amt <= 0 {
-			amt = 1
-		}
-		producedAmount += amt
-		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
-			for i := 0; i < amt; i++ {
-				color := p.ChooseManaColor("add mana")
-				addManaProductionToPool(p.ManaPool(), color, 1, prod.Restriction)
-				producedColors = appendProducedColor(producedColors, color)
+		prod.Amount = normalizedManaAmount(prod.Amount)
+		if prod.Color == AnyColor {
+			if prod.AnyCombination && prod.Amount > 1 {
+				for range prod.Amount {
+					unit := prod
+					unit.Amount = 1
+					unit.Color = p.ChooseManaColor("add mana")
+					unit.AnyCombination = false
+					concrete = append(concrete, unit)
+				}
+				continue
 			}
-			continue
-		}
-		color := prod.Color
-		if color == AnyColor {
 			if preferredColor != Colorless {
-				color = preferredColor
+				prod.Color = preferredColor
 			} else {
-				color = p.ChooseManaColor("add mana")
+				prod.Color = p.ChooseManaColor("add mana")
 			}
 		}
-		addManaProductionToPool(p.ManaPool(), color, amt, prod.Restriction)
-		producedColors = appendProducedColor(producedColors, color)
+		concrete = append(concrete, prod)
 	}
-	ms.ApplyManaBonuses(g, perm, producedColors, p)
-	return producedAmount, producedColors
+	concrete = g.replaceManaProduction(&manaProductionAction{source: perm.ID(), incarnation: perm.incarnationID, player: p.PlayerID(), tapping: true, productions: concrete}, nil)
+	for _, prod := range concrete {
+		addManaProductionToPool(p.ManaPool(), prod.Color, prod.Amount, prod.Restriction)
+	}
+	types := productionTypes(concrete)
+	ms.ApplyManaBonuses(g, perm, types, p)
+	return productionsTotalAmount(concrete), types
 }
 
 // RunManaPostProduction runs follow-up effects from mana production.

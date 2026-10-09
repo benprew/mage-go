@@ -646,6 +646,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "SubtypesList" && len(n.Args) == 1 {
 			return "token_subtype"
 		}
+	case "mana_replacement_event":
+		if n.Name == "PlayerTappingAPermanentWouldProduceMana" && len(n.Args) == 2 {
+			return []string{"player_reference", "permanent_filter"}[index]
+		}
+		if n.Name == "TappingPermanentWouldProduceMana" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+	case "mana_replacement_operation":
+		if n.Name == "WouldProduceMana_ReplaceType" || n.Name == "WouldProduceMana_ReplaceTypeOfType" {
+			return "mana_type"
+		}
 	case "proposed_damage_value":
 		if n.Name == "HalfRoundedDown" && len(n.Args) == 1 {
 			return role
@@ -807,6 +818,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "PutGraveyardCardOntoBattlefield":
 			if len(n.Args) == 2 {
 				return []string{"card_reference", "entry_operation"}[index]
+			}
+		case "CreateReplaceWouldProduceManaUntil":
+			if len(n.Args) == 3 {
+				return []string{"mana_replacement_event", "mana_replacement_operation", "duration"}[index]
 			}
 		case "CreateFuturePreventDamage":
 			if len(n.Args) == 2 {
@@ -1118,14 +1133,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "UntilPermanentChangesControl" && len(n.Args) == 2 {
 			return []string{"player_reference", "permanent_reference"}[index]
 		}
-		if n.Name == "ForAsLongAsPermanentRemainsTapped" && len(n.Args) == 1 {
+		if (n.Name == "ForAsLongAsPermanentRemainsTapped" || n.Name == "UntilPermanentLeavesBattlefield") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "duration":
 		if (n.Name == "UntilNextUpkeep" || n.Name == "UntilEndOfNextUpkeep") && len(n.Args) == 1 {
 			return "player_reference"
 		}
-		if n.Name == "ForAsLongAsPermanentRemainsTapped" && len(n.Args) == 1 {
+		if (n.Name == "ForAsLongAsPermanentRemainsTapped" || n.Name == "UntilPermanentLeavesBattlefield") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "fixed_pt":

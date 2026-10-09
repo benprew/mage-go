@@ -9175,3 +9175,27 @@ optionally followed by `GainLife(TheAmountOfDamagePreventedThisWay)`. The propos
 amount and actual result cannot escape this prevention list. Implicit `GainLife`
 uses `You`, independent of the event recipient. Dark Sphere and
 Reverse Damage have complete-record gameplay tests for these shapes.
+
+### Temporary mana type replacement
+
+Use `ReplaceTappedManaTypeForPlayerThisTurn(player, filter, to)` to change all
+mana types from matching permanents controlled by the saved player when that
+player taps them for mana. Cleanup ends the effect. Use
+`ReplaceTappedManaTypeUntilLeaves(subject, from, to)` to change one type from a
+saved permanent until it leaves. A phase cycle keeps that identity. Neither
+operation changes amounts or spending restrictions.
+
+`Game.ManaTypesAbilityCouldProduce(ability, sourceID)` reads possible types after
+replacement, with no payment or choice. Raw production metadata remains separate.
+`Game.WaitingManaReplacementPermanentSources()` reads exact subjects of active
+indefinite rules, including phased subjects, for damage-source choices.
+
+RON uses `CreateReplaceWouldProduceManaUntil/3` in resolving actions. The player
+form supports `PlayerTappingAPermanentWouldProduceMana(You, controlledFilter)`,
+one `WouldProduceMana_ReplaceType(concreteType)` operation, and `UntilEndOfTurn`.
+The filter must include `ControlledByAPlayer(SinglePlayer(You))`.
+The exact permanent form supports `TappingPermanentWouldProduceMana(ref)`, one
+`WouldProduceMana_ReplaceTypeOfType(from, to)` operation, and
+`UntilPermanentLeavesBattlefield(ref)` with the same reference. These shapes
+implement Deep Water and Quarum Trench Gnomes. The latter replaces only white
+mana, including when the Plains has an ability that also produces another type.

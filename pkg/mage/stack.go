@@ -11,6 +11,8 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
+	tappedForMana        bool
+	manaReplacementOrder []uuid.UUID
 	// Copies keep cost references without extending the original reveal.
 	revealedHandCards []capturedCard
 	ownsHandReveals   bool
