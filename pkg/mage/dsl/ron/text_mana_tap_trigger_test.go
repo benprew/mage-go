@@ -179,7 +179,7 @@ func TestRONTextManaTapTriggerBoundaries(t *testing.T) {
 			t.Fatal("other event acquired mana-tap revision")
 		}
 	}
-	for _, name := range []string{"Gauntlet of Might", "Magical Hack", "Sleight of Mind"} {
+	for _, name := range []string{"Magical Hack", "Sleight of Mind"} {
 		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err == nil {
 			t.Fatalf("%s lost unsupported boundary", name)
 		}

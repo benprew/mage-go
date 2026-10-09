@@ -267,6 +267,9 @@ func describeDefinition(v any) definitionNode {
 			addEffects(e.effects)
 		}
 	case *ManaBonusAbility:
+		if e.controllerRecipient && (e.BonusMana < Colorless || e.BonusMana >= AnyColor || e.AttachedOnly || e.MatchProduced) {
+			n.problem = "controller mana bonus requires a fixed global bonus"
+		}
 		if e.manaTapTextRevision && !e.supportsManaTapTextRevision() {
 			n.problem = "text revision requires a valid fixed, attached or produced-type mana bonus"
 		}

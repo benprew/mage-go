@@ -2,21 +2,20 @@
 
 ## Current status
 
-The latest verified worktree inventory reports **809 accepted / 177 rejected
-unique card names** (986 total), and **2,091 compiled / 354 rejected records**
+The latest verified worktree inventory reports **811 accepted / 175 rejected
+unique card names** (986 total), and **2,097 compiled / 348 rejected records**
 (2,445 total). The baseline includes pre-existing Eureka entry-round changes.
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-HOST-BASIC-LAND-PT` adds checked current-host Basic/land-type
-conditions with global creature-subtype P/T recipients. It preserves active
-IDs, registration order, attachment identity, clones, phasing and restoration.
-Bounded revision evidence adds **2 accepted names / 2 records**. Acceptance gain
-is **+0 names / +0 records**. Live text installation is separate.
+`LAND-SUBTYPE-MANA-BONUS` adds fixed persistent and end-of-turn bonuses for
+current land subtypes. It keeps planning and production together, distinguishes
+land-controller and activating-player recipients, and preserves printed
+revision identity, clone isolation and cleanup. Acceptance gain is
+**+2 names / +6 records**: Gauntlet of Might and High Tide.
 
-Complete collection gameplay, runtime integration and removal remain unfinished.
-Live text layers, Tablet owner-assignment fidelity, physical card transports,
-counter-note/return entry, turn-skip replacements and other gaps remain.
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished.
 
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -60544,3 +60543,177 @@ Ranked next candidates:
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished. Migration incomplete. Stop here.
+
+## 2026-10-09: fixed land-subtype mana bonuses
+
+Capability: `LAND-SUBTYPE-MANA-BONUS`. Complete supported persistent and
+UntilEndOfTurn contexts. Two new unique cards / six records compile and have
+complete-record gameplay evidence. Migration remains incomplete.
+
+### Environment, candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 because of collection rejection:
+2,091 compiled / 354 rejected records and 809 accepted / 177 rejected unique
+names. No partial registry was installed. Existing tracked edits and untracked
+files, including the ledger archive and Eureka entry-round work, were preserved.
+No Go card definitions were used as requirements.
+
+Evaluated the latest entry's ranked candidates, with full records and nested
+forms. Reprints count once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Shared layer-3 lifetime/expiry | Magical Hack, Sleight of Mind | 0 for the native prerequisite | Spell text installation and coordinated restoration/order across checked declaration kinds remain. Both spells need their spell and permanent branches. Enables two full text consumers plus their checked subject declarations. The broad service is not yet audited as a bounded installation contract. | High; multiple declaration kinds, restoration, expiry and pending-body correspondence. |
+| Shared land-subtype fixed bonuses, selected | Gauntlet of Might, High Tide | 2 | Gauntlet's existing red-creature P/T rule works; its remaining gap is persistent subtype mana lowering. High Tide needs a temporary subtype bonus that participates in the solver, with future activating-player recipient. Both use current land types and the same bonus service. Enables further filtered mana consumers and printed land-word revision. | Medium; bounded syntax plus temporary lifetime, recipient distinction, shared planning and production. |
+| Per-player coin rounds | Mana Clash | 1 | Nested player flips, round-local tails/heads results, simultaneous damage, and repeated-round termination all need one coordinated result contract. Existing repeat and damage services are reusable. Enables later per-player repeated result consumers. | Medium to high; new typed round results plus RNG, prevention and repetition tests. |
+
+Candidate 1 has concrete downstream value but spans several unaudited live
+installation contracts. Candidate 2 becomes multi-card work by including High
+Tide's temporary context in the same fixed subtype-bonus capability. It gives
+more immediate value than the single-card coin procedure and is dependency-ready:
+printed bonuses, current filters, EffectManager lifetimes, mana solver metadata,
+transactions and checked printed revision already exist. Estimated and actual
+gain match: +2 unique names / +6 records.
+
+### Contract, signatures and reuse boundary
+
+RON supports exactly:
+
+```ron
+TriggerA(WhenAPermanentIsTappedForMana(IsLandType(land_type)),
+  ActionList([PlayerAction(ControllerOfPermanent(Trigger_ThatPermanent),
+    AddMana(fixed_mana_type))]))
+
+CreateTriggerUntil(WhenAPlayerTapsAPermanentForMana(AnyPlayer,
+  IsLandType(land_type)), ActionList([AddMana(fixed_mana_type)]), UntilEndOfTurn)
+```
+
+The permanent declaration has one controller-directed action. The temporary
+operation has one implicit future-activator action, in a resolving action list.
+Both require one known land subtype, one concrete mana unit and exact arities.
+Unknown/wrong-family subtypes, malformed symbols, other recipients/durations,
+extra body actions, dynamic amounts and incompatible result references reject
+at compilation. General filtered non-mana events remain unsupported.
+
+Native signatures:
+
+- `LandManaBonusThisTurn(filter PermanentFilter, color core.Color) ResolvingEffect`.
+- `NewControllerManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility`.
+- Existing `ManaSystem.ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusColor`.
+- Existing `Game.RevisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error`.
+
+RON owns spelling, declaration checks and lowering. It combines IsLand with
+HasSubType and uses the existing known-subtype event validation. Persistent
+lowering uses the new explicit controller-recipient option on the existing
+ManaBonusAbility. Old constructors retain their activating-player semantics.
+Checked revision retains recipient context, active identity and registration
+position. Land-word substitutions change the filter; mana symbols remain fixed.
+Factories retain independent ability identities and immutable filter plans.
+
+The temporary resolving effect installs a private continuous rule in the shared
+EffectManager. It uses EndOfTurn expiry and the existing survivesSourceExit
+contract. It does not grant an ability to each land. Current lands under either
+player, including nonbasic, later and returned lands, can match; phasing suspends
+subject availability. Source departure, phasing and removal do not end it.
+Clones copy registrations; cleanup in one clone cannot change another.
+
+ManaSystem uses one internal bonus-entry query for both solver colors and actual
+production, retaining controller/activator recipient metadata. Planning uses
+controlled sources. A tap-symbol mana activation with positive production gets
+one bonus per declaration, even if its original production has several units or
+colors (CR 106.12, 605.4a). Ordinary taps, zero production and mana activations
+without a tap symbol do not qualify. Actual mana-type replacement changes the
+original production; the fixed bonus keeps its type. Existing transactions keep
+failed payments atomic. Multiple persistent and temporary bonuses accumulate.
+No target/LKI permissions, damage batches, replacement ordering or new
+simultaneous-operation behavior were introduced.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, TestRONSubtypeManaBonusRecords failed on all five
+Gauntlet reprints at IsLandType and on High Tide at its unsupported temporary
+mana event. Native TestTemporaryManaBonus failed compilation because
+LandManaBonusThisTurn did not exist. A test fixture initially used the wrong P/T
+reader; it was repaired before confirming these expected compiler failures.
+
+The membership test exposed that source exit removed the temporary registration;
+adding the shared source-independent lifetime hook fixed it. The mixed-production
+fixture needed Desert rather than Island, because the latter correctly supplies
+intrinsic blue mana. The controller/activator recipient test then failed against
+the old bonus service. The explicit controller option fixed that distinction.
+TestControllerManaBonusDeclarations failed on invalid colors before adding native
+validation. No gameplay assertion was weakened. Two obsolete assertions that
+Gauntlet must fail compilation were replaced by the complete-record tests.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Gauntlet of Might, all five full records | TestRONSubtypeManaBonusRecords: unpaid/paid casting, both players' Mountains, red-creature P/T and green exclusion, fixed red bonus and immediate timing. |
+| High Tide, complete FEM record | TestRONSubtypeManaBonusRecords: unpaid/paid casting, no bonus before resolution, both players, future entries, automatic payments, clone cleanup and expiry. |
+| Both cards | TestRONSubtypeManaBonusRecipients: legal noncontroller activation sends Gauntlet red to the controller and High Tide blue to the activator. TestRONSubtypeManaBonusLiveTypes: dual/nonbasic lands, current type changes and newly matching lands, phasing, shared solver reads. |
+| Gauntlet revision | TestRONSubtypeManaBonusPrintedRevision: foreign IDs, active ID retention, clone and sibling isolation, land-word changes without changing mana symbols, phasing, ability removal/restoration, old visit rejection and printed rules on return. Existing TestRONTextStaticPT retains the red-creature rule's checked revision evidence. |
+| Temporary stacking | TestRONSubtypeManaBonusTemporaryStacking: two High Tides plus Mana Flare, solver/production agreement, cleanup removes only temporary bonuses. |
+| Invalid declarations | TestRONSubtypeManaBonusInvalid and TestControllerManaBonusDeclarations: arities, unknown/wrong-family subtypes, malformed symbols, recipients, duration, unsupported bodies and mana types. |
+| Native mechanics | TestTemporaryManaBonusContract, MembershipAndTiming, ReplacementAndCastingRollback: mixed production, one bonus per activation, all production paths, impossible payment/cast rollback, current membership, source/subject phasing, source exit, returned subjects, control, removal, type changes, nonland/zero/non-tap exclusions, clone expiry and original mana replacement. TestControllerManaBonusRecipients retains old constructors' behavior beside controller and temporary bonuses. |
+| Preserved contexts | TestRONLandMana*, TestRONTextManaTapTrigger*, TestManaBonusLifecycle, TestTextManaTapTrigger*, existing mana solver and casting suites. |
+
+### Verification and collection status
+
+All required checks passed on the final working tree:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONSubtypeManaBonus|TestRONLandMana|TestRONTextManaTapTrigger|TestRONTextStaticPT|TestRONDefinitionPlanAcceptedCollection|TestInventoryRepositoryCollection|TestInventoryLeavesRealRONGameplayAndRegistryUnchanged|TestRONNumericConsumerInventory' -count=1`.
+- `go test ./pkg/mage -run 'TestTemporaryManaBonus|TestControllerManaBonus|TestManaBonusLifecycle|TestTextManaTapTrigger|TestManaSystem_ManaBonuses|TestAutoTapForCost_ManaBonus' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`; staged diff whitespace check.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, with counts below.
+
+The first engine short run found four exact inventory assertions that needed
+the measured +6/-6 record change. Updated those assertions and added Gauntlet
+and High Tide to accepted-card guards; the rerun passed. First lint found one
+prealloc issue in the new shared query. Preallocation now retains the old nil
+result when no bonuses exist. Reran focused tests, build, vet, engine short,
+full tests and lint. Its only automatic edit was import grouping in the new
+native test. No existing user file was changed by lint.
+
+The isolated staged tree also passes native/real-RON focused tests and a whole
+repository build. Its count assertions are 2,096 compiled / 349 rejected,
+reflecting HEAD plus this slice alone. The working tree retains the separate
+uncommitted Eureka implementation (+1/-1); those changes are not in this
+commit. Both exact inventories are tested. No environment or pre-existing
+verification blocker remains.
+
+Final collection: 2,097 compiled / 348 rejected records, 811 accepted / 175
+rejected unique names. Loader exit 1 remains expected collection rejection.
+Compared with the fresh baseline, the only removed diagnostics are Gauntlet of
+Might in LEA/LEB/2ED/CED/CEI and High Tide in FEM. No new or changed remaining
+diagnostic exists. Every previously accepted record remains accepted.
+Compilation and full collection gameplay remain separate measures.
+
+Local data/LEA.json and data/FEM.json Oracle text confirms the different bonus
+recipients and High Tide duration. No source defect was found. All identical
+reprints were tested without editing RON; the vocabulary snapshot needs no
+refresh. Application cutover and removal gates remain unmet. No Go definitions,
+generators or DSL functions were removed. The whole-repository removal audit is
+not established by this slice.
+
+Changed files: new engine temporary_mana_bonus.go / temporary_mana_bonus_test.go;
+engine mana_ability.go / mana_system.go / text_mana_tap_trigger.go / definition.go /
+doc.go; new compiler subtype_mana_bonus.go / subtype_mana_bonus_test.go;
+compiler land_mana.go / departure_delay.go; the two affected boundary test files;
+definition-plan and inventory count tests; DSL reference, engine rules
+contracts and this ledger. Only this slice is staged;
+pre-existing changes, the archive and untracked Eureka files remain separate.
+
+Ranked next candidates:
+
+1. Bounded native layer-3 lifetime/expiry for checked printed declarations.
+   Select one complete installation/restoration context before production
+   Magical Hack and Sleight of Mind consumers; audit cross-kind dependencies.
+2. Shared typed source/host reader contexts: compare Backfire, Farrel's Mantle,
+   Artifact Ward and Tourach's Gate by complete records before selecting one
+   reusable capability. Their first diagnostics do not establish full unlocks.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished. Stop after this slice.

@@ -94,7 +94,7 @@ func (g *Game) revisePrintedManaBonus(current *Permanent, active *ManaBonusAbili
 	}
 	fresh, ok := replacement.(*ManaBonusAbility)
 	if !ok || !fresh.manaTapTextRevision || !fresh.supportsManaTapTextRevision() ||
-		fresh.AttachedOnly != active.AttachedOnly || fresh.MatchProduced != active.MatchProduced {
+		fresh.AttachedOnly != active.AttachedOnly || fresh.MatchProduced != active.MatchProduced || fresh.controllerRecipient != active.controllerRecipient {
 		return fmt.Errorf("text mana-tap revision changed the bonus contract")
 	}
 	rebuilt := *fresh

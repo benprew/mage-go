@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [LandManaBonusThisTurn] for one fixed bonus from matching lands.
+// The shared mana query keeps planning and production in agreement.
+// Each positive tap-symbol mana activation adds one bonus to its player.
+// Current land types control membership, including later and nonbasic lands.
+// Resolved rules survive source departure, phasing and ability removal.
+// Cleanup ends them. Clones keep separate registrations and cleanup.
+// RON supports one known land subtype, concrete mana type and UntilEndOfTurn.
+// Its printed subtype bonus uses [NewControllerManaBonusAbility].
+// That bonus pays the land controller and permits checked text revision.
+// General filtered events and live text layers need separate services.
+//
 // Use [Game.RevisePrintedManaTapTrigger] for a printed mana-tap declaration.
 // [GenericTriggered.WithManaTapTextRevision] opts in typed land mana events.
 // [ManaBonusAbility.WithManaTapTextRevision] opts in shared mana bonuses.

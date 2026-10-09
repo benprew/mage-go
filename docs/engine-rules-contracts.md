@@ -1,5 +1,67 @@
 # Engine rules contracts
 
+## Land-subtype mana bonuses
+
+`LandManaBonusThisTurn(filter PermanentFilter, color core.Color) ResolvingEffect`
+installs an independent fixed bonus through `EffectManager`. Definition validation
+requires a concrete mana type. The filter reads current lands under either
+player, including nonbasic lands and later entries. Each matching tap adds one
+mana to the activating player, regardless of the spell controller. Multiple
+bonuses accumulate. Source departure, phasing and ability removal do not end the
+resolved rule. Subject phasing prevents use; a returned land is a new current
+member. Cleanup removes the registration (CR 514.2). Clones keep separate effect
+registrations and cleanup. The effect uses the existing source-independent
+lifetime contract and does not grant a removable ability to each land.
+
+`NewControllerManaBonusAbility(filter PermanentFilter, bonusMana Color)
+*ManaBonusAbility` supplies a fixed printed bonus to the matching land's current
+controller. This recipient can differ from the activating player when the mana
+ability permits another player to activate it. Existing constructors keep their
+activating-player behavior. Checked printed revisions must retain this recipient
+contract. Definition validation rejects nonconcrete, attached and produced-type
+controller bonuses. Automatic payment uses controlled sources; bonus entries
+retain recipient metadata for actual production.
+
+`ManaSystem.ManaBonuses` includes these rules alongside printed fixed, attached
+and produced-type bonuses. Planning, affordability, direct activation and actual
+production use that same query. Only a tap-symbol mana activation that produces
+positive mana receives the bonus (CR 106.12, 605.4a). Ordinary taps, zero
+production and mana activations without a tap symbol do not qualify. A mixed
+production receives one bonus per declaration, rather than one per mana unit.
+Mana-type replacements change the original production; the fixed bonus keeps
+its declared type. Failed cast payments use the existing transaction rollback.
+These registrations change no damage or simultaneous-operation contract.
+
+RON supports these complete contexts:
+
+- `TriggerA(WhenAPermanentIsTappedForMana(IsLandType(type)),
+  ActionList([PlayerAction(ControllerOfPermanent(Trigger_ThatPermanent),
+  AddMana(fixed_type))]))` lowers to `NewControllerManaBonusAbility` and opts in checked
+  printed mana-tap revision. Revision changes the land word, retains the active
+  ability ID, and keeps mana symbols fixed. Existing clone, phasing,
+  removal/restoration and returned-source contracts apply.
+- `CreateTriggerUntil(WhenAPlayerTapsAPermanentForMana(AnyPlayer,
+  IsLandType(type)), ActionList([AddMana(fixed_type)]), UntilEndOfTurn)` lowers
+  to `LandManaBonusThisTurn`. The implicit recipient is the future activating
+  player. It installs at resolution, without capturing the spell controller as
+  that recipient. It supports exactly one fixed mana action.
+
+Both forms require one known land subtype and one concrete mana unit. Other
+players, durations, body shapes, amounts and unbound references reject during
+compilation. RON owns spelling and shape checks; the engine owns production,
+payment planning and lifetime. General filtered mana events and live layer-3
+text installation remain separate capabilities.
+
+Evidence: `TestRONSubtypeManaBonus*` maps complete Gauntlet of Might records in
+LEA, LEB, 2ED, CED and CEI, plus High Tide in FEM. It covers casting, both
+players, distinct controller/activator recipients, immediate timing,
+current/nonbasic subtypes, payment planning,
+stacking, cleanup, clones, printed revision identity and isolation,
+phasing and ability restoration. `TestTemporaryManaBonus*` covers native
+validation, mixed production, zero/non-tap production, membership, source
+independence, cloning, replacement agreement and failed casting rollback.
+
+
 ## Printed mana-tap declaration text revision
 
 `GenericTriggered.WithManaTapTextRevision() *GenericTriggered` opts in a typed
@@ -33,7 +95,8 @@ RON opts in its existing complete land-mana `TriggerA` contexts: AnyPlayer plus
 IsCardtype(Land) non-mana bodies, the exact produced-type bonus, and the exact
 Aura-host concrete bonus. Mana symbols are not color words (CR 612.2): Wild
 Growth's ManaProduceG remains green after a Green-to-Blue word substitution.
-Subtype events, temporary rules and other mana bodies remain compiler errors.
+The bounded subtype bonus forms above are also supported. Other filtered mana
+events and mana bodies remain compiler errors.
 The caller must supply layer-3 order, lifetime and original-text restoration.
 This bridge does not install a live text layer or change spell text.
 

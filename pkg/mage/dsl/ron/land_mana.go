@@ -16,6 +16,9 @@ type landManaEventBindings struct {
 
 func compileLandManaTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	attached := event.Name == "WhenAPermanentIsTappedForMana"
+	if attached && len(event.Args) > 0 && event.Args[0].Name == "IsLandType" {
+		return compileSubtypeManaTrigger(event, body)
+	}
 	if attached {
 		if err := arity(event, 1); err != nil {
 			return nil, err

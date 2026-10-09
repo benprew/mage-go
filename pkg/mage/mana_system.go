@@ -36,11 +36,33 @@ func (ms *ManaSystem) EmptyManaPools(players []Player) {
 
 // ManaBonuses returns bonus mana colors for when a permanent is tapped for mana.
 func (ms *ManaSystem) ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusColor {
+	entries := ms.manaBonusEntries(g, permanentID)
+	if len(entries) == 0 {
+		return nil
+	}
+	colors := make([]ManaBonusColor, 0, len(entries))
+	for _, entry := range entries {
+		colors = append(colors, entry.color)
+	}
+	return colors
+}
+
+type manaBonusEntry struct {
+	color               ManaBonusColor
+	controllerRecipient bool
+}
+
+func (ms *ManaSystem) manaBonusEntries(g *Game, permanentID uuid.UUID) []manaBonusEntry {
 	tappedPerm := g.FindPermanent(permanentID)
 	if tappedPerm == nil {
 		return nil
 	}
-	var bonuses []ManaBonusColor
+	var bonuses []manaBonusEntry
+	for _, effect := range g.effects.effects {
+		if bonus, ok := effect.(*temporaryLandManaBonus); ok && effect.IsActive(g) && tappedPerm.HasType(TypeLand) && bonus.filter.Match(tappedPerm, g) {
+			bonuses = append(bonuses, manaBonusEntry{color: ManaBonusColor(bonus.color)})
+		}
+	}
 	for _, perm := range g.zones.battlefield {
 		if perm.PhasedOut {
 			continue
@@ -50,13 +72,13 @@ func (ms *ManaSystem) ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusCol
 			if mb, ok := inner.(*ManaBonusAbility); ok {
 				if mb.AttachedOnly {
 					if perm.AttachedTo == tappedPerm.ID() && perm.attachedIncarnation == tappedPerm.incarnationID {
-						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
+						bonuses = append(bonuses, manaBonusEntry{color: ManaBonusColor(mb.BonusMana), controllerRecipient: mb.controllerRecipient})
 					}
 				} else if mb.Filter.Match(tappedPerm, g) {
 					if mb.MatchProduced {
-						bonuses = append(bonuses, MatchProduced)
+						bonuses = append(bonuses, manaBonusEntry{color: MatchProduced, controllerRecipient: mb.controllerRecipient})
 					} else {
-						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
+						bonuses = append(bonuses, manaBonusEntry{color: ManaBonusColor(mb.BonusMana), controllerRecipient: mb.controllerRecipient})
 					}
 				}
 			}
@@ -629,21 +651,32 @@ func productionTypes(productions []ManaProduction) []Color {
 
 // ApplyManaBonuses applies any mana bonus abilities when a permanent is tapped for mana.
 func (ms *ManaSystem) ApplyManaBonuses(g *Game, tappedPerm *Permanent, producedColors []Color, p Player) {
-	for _, bonus := range ms.ManaBonuses(g, tappedPerm.ID()) {
-		bonusColor := Color(bonus)
-		if bonus == MatchProduced {
+	for _, bonus := range ms.manaBonusEntries(g, tappedPerm.ID()) {
+		recipient := p
+		if bonus.controllerRecipient {
+			current := g.FindPermanent(tappedPerm.ID())
+			if current == nil || current.incarnationID != tappedPerm.incarnationID {
+				continue
+			}
+			recipient = g.GetPlayer(current.ControllerID())
+		}
+		if recipient == nil {
+			continue
+		}
+		bonusColor := Color(bonus.color)
+		if bonus.color == MatchProduced {
 			if len(producedColors) == 0 {
 				continue
 			}
 			bonusColor = producedColors[0]
 			if len(producedColors) > 1 {
-				chosen := p.ChooseManaColor("add bonus mana")
+				chosen := recipient.ChooseManaColor("add bonus mana")
 				if slices.Contains(producedColors, chosen) {
 					bonusColor = chosen
 				}
 			}
 		}
-		p.ManaPool().Add(bonusColor, 1)
+		recipient.ManaPool().Add(bonusColor, 1)
 	}
 }
 

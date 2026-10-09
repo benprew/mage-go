@@ -260,7 +260,7 @@ func TestRONTextStaticPTBoundaries(t *testing.T) {
 			t.Fatal("unmarked shape accepted", name)
 		}
 	}
-	for _, tc := range []struct{ set, name string }{{"LEA", "Gauntlet of Might"}, {"LEG", "Rohgahh of Kher Keep"}, {"LEA", "Magical Hack"}, {"LEA", "Sleight of Mind"}} {
+	for _, tc := range []struct{ set, name string }{{"LEG", "Rohgahh of Kher Keep"}, {"LEA", "Magical Hack"}, {"LEA", "Sleight of Mind"}} {
 		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
 			t.Fatal("dependent record accepted", tc.name)
 		}

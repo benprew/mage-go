@@ -178,6 +178,7 @@ func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []Ma
 // If MatchProduced is true, the bonus mana color matches whatever color the land
 // produced (e.g. Mana Flare: "adds one mana of any type that land produced").
 type ManaBonusAbility struct {
+	controllerRecipient    bool
 	manaTapTextRevision    bool
 	textRevisionDefinition Card
 	BaseAbility
@@ -198,6 +199,14 @@ func NewManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbil
 		Filter:    filter,
 		BonusMana: bonusMana,
 	}
+}
+
+// NewControllerManaBonusAbility pays the matching permanent's controller.
+// The activating player can differ when an ability permits other players.
+func NewControllerManaBonusAbility(filter PermanentFilter, bonusMana Color) *ManaBonusAbility {
+	ability := NewManaBonusAbility(filter, bonusMana)
+	ability.controllerRecipient = true
+	return ability
 }
 
 // NewAttachedManaBonusAbility creates a mana bonus that triggers only when the
