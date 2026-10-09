@@ -1,0 +1,9 @@
+{
+  "source": "https://api.scryfall.com/catalog/card-names",
+  "retrieved_utc": "2026-10-09T02:42:26.750084+00:00",
+  "source_sha256": "68e6b7beda9e43857e366ffc598f496d58d220c349ca41bc4d72d93361af4f52",
+  "source_values": 35137,
+  "legal_choice_values": 35919,
+  "transform": "Split combined names on \" // \", deduplicate exact English names, sort, and store one name per line.",
+  "asset_sha256": "f5cdea09d003c4e19deade756910dedf6748be3823e8336864e9893373ad0cb1"
+}

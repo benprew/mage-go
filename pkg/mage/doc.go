@@ -111,6 +111,15 @@
 // Entry replacement identities survive the omission of color definitions.
 // Added abilities and live copy installation need separate services.
 //
+// Use [OracleCardNameCatalog] for legal English names without card factories.
+// The retained nontoken snapshot includes separate faces and excludes combined
+// names. [CardNameCatalog.Names] returns separate storage for a choice.
+// [ChooseCardName] uses the specified player at resolution and saves a typed
+// [CardNameBinding]. An absent chooser clears the result. An invalid answer
+// uses the first legal name. Clones and resolution frames keep separate results.
+// RON supports ChooseACardName(AnyOracleCard) in resolving action contexts.
+// Chosen-name filters and reveal results need separate compiler adapters.
+//
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
 // belongs to its resolution frame. An empty set or absent chooser clears it.

@@ -291,7 +291,7 @@ func TestRONManaDenialInvalidAndInventory(t *testing.T) {
 	for _, action := range []string{
 		`PlayerActions(You,DrawACard)`, `PlayerActions(You,[],[])`, `PlayerActions(You(),[])`,
 		`PlayerActions(Ref_TargetPlayer,[])`, `PlayerActions(Ref_TargetPermanent,[])`,
-		`PlayerActions(You,[LoseUnspentMana()])`, `PlayerActions(You,[ChooseACardName(AnyOracleCard)])`,
+		`PlayerActions(You,[LoseUnspentMana()])`, `PlayerActions(You,[ChooseACardName(AnyCard)])`,
 		`PlayerAction(ActionPlayer,LoseUnspentMana)`,
 		`PlayerActions(You,[]),PlayerAction(ActionPlayer,LoseUnspentMana)`,
 		`TapEachPermanent(ControlledByAPlayer(SinglePlayer(ActionPlayer)))`,

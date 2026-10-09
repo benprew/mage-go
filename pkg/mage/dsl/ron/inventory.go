@@ -762,6 +762,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "action":
+		if n.Name == "ChooseACardName" && len(n.Args) == 1 {
+			return "card_name_catalog"
+		}
 		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}
@@ -1316,6 +1319,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "ChooseACardName" && len(n.Args) == 1 {
+			return "card_name_catalog"
+		}
 		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}

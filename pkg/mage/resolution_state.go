@@ -11,6 +11,7 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
+	cardNameBindings      map[*CardNameBinding]string
 	manaProduced          int
 	manaColors            []Color
 	manaTracking          bool
@@ -131,6 +132,7 @@ func (s *ResolutionState) Clear() {
 	s.cardBindings = nil
 	s.cardsBindings = nil
 	s.spellBindings = nil
+	s.cardNameBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
 	s.manaTypesBindings = nil
@@ -207,6 +209,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		cardBindings:           maps.Clone(s.cardBindings),
 		cardsBindings:          cloneCardsBindings(s.cardsBindings),
 		spellBindings:          maps.Clone(s.spellBindings),
+		cardNameBindings:       maps.Clone(s.cardNameBindings),
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
 		manaTypesBindings:      cloneManaTypesBindings(s.manaTypesBindings),

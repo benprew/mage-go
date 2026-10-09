@@ -9415,3 +9415,35 @@ or reveal adapters, paid-player collections or general zone replacements.
 Bronze Tablet and Tempest Efreet remain rejected; Rebirth needs paid-player
 collection dispatch. Go definitions and the legacy DSL remain until the runtime
 and removal gates pass.
+
+### Complete name catalog and required resolution choice
+
+RON `ChooseACardName(AnyOracleCard)` lowers to
+`mage.ChooseCardName(player mage.PlayerRef, catalog *mage.CardNameCatalog,
+result *mage.CardNameBinding) mage.ResolvingEffect`. The chooser comes from the
+current action player: controller by default, or the explicit `PlayerAction`
+or `PlayerActions` player. Spell, activation and trigger resolution bodies are
+supported. Cost, entry and static contexts reject this operation. Other name
+filters, malformed tuples and `AnyOracleCard()` reject at compilation.
+
+`mage.OracleCardNameCatalog() *mage.CardNameCatalog` supplies an immutable,
+embedded snapshot independent of registered/executable cards, decks, formats,
+and filesystem paths. `Names() []string` returns separate sorted storage;
+`Contains(string) bool` tests an exact English face name. The source and hashes
+are in `pkg/mage/oracle_card_names_source.json`. The Scryfall nontoken English
+name catalog supplies all names at retrieval, with combined names split into
+separate faces under CR 201.4b–f. A later data update must retain these checks.
+
+`mage.BindCardName(string) *mage.CardNameBinding` declares one result.
+`(*mage.CardNameBinding).Resolve(*mage.EffectContext) (string, bool)` reads the
+current frame. Each RON factory constructs separate declarations. Choices run
+at resolution through `Player.ChooseMode`, with a copy of the name list.
+Invalid indices select the first legal name; an absent chooser clears the result.
+This is a required choice and has no decline branch. Frame cleanup, cloning,
+nested application and loops keep separate result storage.
+
+This establishes the catalog and choice prerequisite for Nebuchadnezzar and
+Petra Sphinx. `TheChosenName` consumers, including `IsNamed(TheChosenName)`,
+result-bound reveal checks, interchangeable-name matching, and result capture
+across delayed bodies need separate typed compiler/engine consumers. Neither
+real card is accepted or claimed as complete gameplay by this prerequisite.

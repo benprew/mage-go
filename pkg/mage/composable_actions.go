@@ -1886,15 +1886,18 @@ func (e *damageResultLoop) inspectDefinition() definitionNode {
 func (e *damageResultLoop) Apply(ctx *EffectContext) error {
 	outcomes := cloneDamageOutcomes(ctx.Game.resolution.damageResultsBindings[e.results])
 	state := &ctx.Game.resolution
+	outerNames := state.cardNameBindings
 	outerNumbers, outerPlayers := state.numberBindings, state.playerBindings
 	outerPermanents, outerSources := state.permanentBindings, state.damageSourceBindings
 	outerResults, outerItems := state.damageResultsBindings, state.damageResultBindings
 	defer func() {
+		state.cardNameBindings = outerNames
 		state.numberBindings, state.playerBindings = outerNumbers, outerPlayers
 		state.permanentBindings, state.damageSourceBindings = outerPermanents, outerSources
 		state.damageResultsBindings, state.damageResultBindings = outerResults, outerItems
 	}()
 	for _, outcome := range outcomes {
+		state.cardNameBindings = maps.Clone(outerNames)
 		state.numberBindings, state.playerBindings = maps.Clone(outerNumbers), maps.Clone(outerPlayers)
 		state.permanentBindings, state.damageSourceBindings = maps.Clone(outerPermanents), cloneDamageSourceBindings(outerSources)
 		state.damageResultsBindings = cloneDamageResultsBindings(outerResults)
@@ -2865,6 +2868,8 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	for _, permanent := range subjects {
 		members = append(members, capturedPermanent{permanent.ID(), permanent.incarnationID})
 	}
+	outerNames := ctx.Game.resolution.cardNameBindings
+	defer func() { ctx.Game.resolution.cardNameBindings = outerNames }()
 	outerNumbers := ctx.Game.resolution.numberBindings
 	defer func() { ctx.Game.resolution.numberBindings = outerNumbers }()
 	outerPlayers := ctx.Game.resolution.playerBindings
@@ -2875,6 +2880,7 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	defer func() { ctx.Game.resolution.createdTokenBindings = outerCreated }()
 	for _, member := range members {
 		ctx.Game.resolution.createdTokenBindings = cloneCreatedTokenBindings(outerCreated)
+		ctx.Game.resolution.cardNameBindings = maps.Clone(outerNames)
 		ctx.Game.resolution.numberBindings = maps.Clone(outerNumbers)
 		ctx.Game.resolution.playerBindings = maps.Clone(outerPlayers)
 		frame := maps.Clone(outer)
@@ -2943,6 +2949,7 @@ func (e *savedCardLoop) Apply(ctx *EffectContext) error {
 		state.cardsBindings = outer.cardsBindings
 		state.spellBindings = outer.spellBindings
 		state.playerBindings = outer.playerBindings
+		state.cardNameBindings = outer.cardNameBindings
 		state.numberBindings = outer.numberBindings
 		state.manaTypesBindings = outer.manaTypesBindings
 		state.damageSourceBindings = outer.damageSourceBindings
@@ -2956,6 +2963,7 @@ func (e *savedCardLoop) Apply(ctx *EffectContext) error {
 		state.cardsBindings = cloneCardsBindings(outer.cardsBindings)
 		state.spellBindings = maps.Clone(outer.spellBindings)
 		state.playerBindings = maps.Clone(outer.playerBindings)
+		state.cardNameBindings = maps.Clone(outer.cardNameBindings)
 		state.numberBindings = maps.Clone(outer.numberBindings)
 		state.manaTypesBindings = cloneManaTypesBindings(outer.manaTypesBindings)
 		state.damageSourceBindings = cloneDamageSourceBindings(outer.damageSourceBindings)

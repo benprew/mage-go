@@ -7,13 +7,14 @@ names** (986 total), and **2,064 compiled / 381 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ANTE-OWNERSHIP-EXCHANGE` adds independent typed ownership acquisition and atomic
-ante/library-top exchange. All six Darkpact reprints include the missing Oracle
-ownership instruction and have complete RON gameplay coverage: **+1 unique name /
-+6 records**. Empty libraries receive the ante card. Ownership persists when an
-ineligible top prevents exchange. Bronze Tablet and Tempest Efreet still need
-result/payment adapters; Rebirth still needs paid-player dispatch. Prior complete
-ante gameplay mappings remain in force.
+`ORACLE-NAME-CHOICE` adds a complete embedded nontoken English name snapshot
+and `ChooseACardName(AnyOracleCard)` in resolving action contexts. The catalog
+has **35,919 distinct face-name choices** independent of executable factories.
+Typed results belong to each instance and resolution frame. This shared
+prerequisite covers the name-choice subrules of Nebuchadnezzar and Petra Sphinx;
+**+0 unique names / +0 records**. Their reveal/result consumers remain rejected.
+Prior complete card gameplay mappings remain in force. Full-card compilation
+counts are unchanged; prerequisite gameplay coverage is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -53743,3 +53744,167 @@ Ranked next candidates:
    APNAP decisions and replacement-aware life setting.
 
 This run stops after ANTE-OWNERSHIP-EXCHANGE. Migration remains incomplete.
+
+## 2026-10-08: independent Oracle name catalog and resolution choice
+
+Status: complete `ORACLE-NAME-CHOICE` prerequisite slice. This run stops here.
+The initial tree had user changes in `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. All are preserved. Only this
+run's summary update and appended entry are staged from the ledger; the user's
+history relocation is not part of this commit.
+
+### Candidate comparison and selection
+
+The latest entry ranked the independent complete legal name catalog first.
+Complete RON records were inspected: LEG Nebuchadnezzar, Petra Sphinx, Tempest
+Efreet and Rebirth, and ATQ Bronze Tablet. Reprints are counted once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Independent name catalog and required choice | Nebuchadnezzar; Petra Sphinx | 0 | Both need typed chosen-name consumers and reveal results. Nebuchadnezzar needs random hand reveal/discard matching; Petra needs top reveal, result condition and branch movement. A catalog derived from 986 executable RON names or Go factories cannot supply all legal choices. This prerequisite enables both cards. | Small, one embedded data snapshot, one engine choice/result service, one compiler adapter and focused identity/timing tests. |
+| Result-bound exile/reveal ownership operands | Bronze Tablet; Tempest Efreet | 0 for one bounded result form | Bronze Tablet needs ordered exile results, optional life payment, paid/unpaid branches, graveyard movement and ownership exchange. Tempest Efreet needs random-hand reveal result, optional life payment, ownership exchange and subsequent hand/graveyard moves. Existing visit-preserving ownership is reusable. Hand and exile results have different visibility and identity contracts. | High, multiple independent result/payment/zone contracts; not a complete single-run two-card slice. |
+| Paid-player collection/dispatch | Rebirth | 1 if the whole chain is completed | Requires each player's optional AnteTopCost, saved paid-player collection, APNAP choices and replacement-aware SetLifeTotal. Enables Rebirth's life dispatch using existing transactional ante payment. | Medium/high, payment result lifetime, multiple decisions and life-setting contracts; one unique card. |
+
+Candidate #1 is dependency-ready and has concrete shared value. It was selected
+as instructed. The bounded supported shape includes the catalog's actual required
+choice at resolution, without starting the separate chosen-name matching/reveal
+slice. Estimated and measured full-card unlocks agree: **0 unique names / 0
+records**. This is shared prerequisite progress, not full-card gameplay coverage.
+
+### Contract, exact signatures and reuse boundary
+
+RON supports exactly `ChooseACardName(AnyOracleCard)` in resolving spells,
+activations and triggers, directly or under explicit `PlayerAction`/
+`PlayerActions`. `AnyOracleCard` is a symbol. Wrong kinds/arities, other name
+filters and cost/entry/static roles reject before gameplay. Inventory descends
+with `card_name_catalog` for both action and player-action arguments.
+
+RON owns syntax validation, the current typed player plan and fresh factory
+construction. `compileCardNameCatalog(Node)` lowers the exact name-set symbol;
+`compileCardNameChoice(Node, scope)` builds a fresh engine binding for each
+instance. No Go-card lookup, name-specific card branch, skipped rule, global
+last-choice slot, runtime declaration panic or partial registry is introduced.
+
+Engine contracts:
+
+- `OracleCardNameCatalog() *CardNameCatalog`: retained immutable catalog.
+- `(*CardNameCatalog).Names() []string`: separate sorted list storage.
+- `(*CardNameCatalog).Contains(string) bool`: exact English membership.
+- `BindCardName(string) *CardNameBinding`: separate typed declaration.
+- `(*CardNameBinding).Resolve(*EffectContext) (string, bool)`: current-frame read.
+- `ChooseCardName(PlayerRef, *CardNameCatalog, *CardNameBinding) ResolvingEffect`:
+  required non-targeting resolution choice. An absent chooser clears the result;
+  an invalid decision index selects the first legal name.
+
+Reuse: existing PlayerRef resolution, `Player.ChooseMode`, definition inspection,
+per-instance construction, stack resolution/copy, game clone, resolution frames,
+loop frames, typed source reads and waiting delayed-source/LKI services. The
+engine adds a typed name-result map to ResolutionState, Clear/Clone, nested effect
+frames and permanent/card/damage-result loop frames. Decision list storage cannot
+change the catalog. No zone, payment, replacement or simultaneous-operation
+service is changed. Failed payment makes no choice; choice occurs only when the
+pending action resolves. Existing callers remain.
+
+The embedded asset has 35,919 distinct sorted names derived from all 35,137
+entries in https://api.scryfall.com/catalog/card-names. Source documentation:
+https://scryfall.com/docs/api/catalogs/card-names (all nontoken English names).
+Retrieval time, source hash, transformation and final asset hash are retained in
+`pkg/mage/oracle_card_names_source.json`. Combined names are split on ` // `,
+then exact English names are deduplicated and sorted. CR 201.4/201.4b–f requires
+Oracle names, excludes token-only names and permits individual split, flip,
+double-faced, meld and adventure names. Choices include names outside the game's
+format and executable collection. The snapshot is deterministic, embedded and
+requires neither runtime network access nor a working-directory path. It must
+be refreshed when new card data is adopted.
+
+`TheChosenName` operand lowering, chosen-name matching (including CR 201.3 and
+201.4g interchangeable names), scoped reads across PlayerActions and reveal-result
+consumers remain separate prerequisites. A delayed body can make a fresh choice;
+capture of an earlier name by a delayed consumer is not established here. No
+unsupported consumer is accepted. Neither full real card is claimed complete.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed compilation on missing catalog/binding/choice APIs.
+The first RON test attempt had two incorrect harness API names; after correcting
+those names, RON tests failed with unsupported `ChooseACardName` in spell,
+activation and trigger bodies. Those expected failures preceded implementation.
+A trigger fixture initially chose the controller as its target through the base
+player's default target decision; the fixture now explicitly chooses the other
+player, and retains all chooser/count assertions.
+
+| Tests | Card mapping / contract evidence |
+| --- | --- |
+| `TestRONCardNameChoiceRealDeclarations` | Executes the actual name-choice AST extracted from each complete LEG record for Nebuchadnezzar and Petra Sphinx. Subrule evidence only; full records stay rejected. |
+| `TestRONCardNameChoiceGameplay` | Synthetic RON spell, activation, trigger, explicit player scope, resolution timing, pending clone, separate chooser decisions and factory declarations. |
+| `TestRONCardNameChoiceDeclarations`, `Inventory` | Malformed shape, unsupported name filter, unbound/incompatible numeric use, cost/entry/static roles, continued rejection of both real records, and catalog inventory role. |
+| `TestRONCardNameChoicePendingSource`, `PaymentAndCopy` | Pending choices after source departure/phasing, failed-payment purity, paid activation and independently controlled stack copy. |
+| `TestCardNameChoiceCatalog` | Legal ordinary/outside-collection names, individual split/DFC/meld/adventure names, token-only/combined/invented-name exclusion, sorted broad catalog and defensive storage. |
+| `TestCardNameChoiceBindings`, `Declarations` | Independent bindings, clone isolation, frame cleanup, nested-frame restoration, absent chooser, invalid response recovery, nil operands, empty catalog and unnamed binding rejection. |
+| `TestCardNameChoiceWaitingSource`, `LoopIsolation` | Pure waiting queries, source LKI, departure/return and phasing, correct delayed chooser, and member-local results that do not overwrite the outer frame. |
+
+No gameplay assertion was weakened. One prior mana-denial test used the now
+supported `PlayerActions(You,[ChooseACardName(AnyOracleCard)])` as an unsupported
+example. It now rejects `AnyCard` instead; the new gameplay tests positively
+cover the valid explicit-player choice shape.
+
+### Validation and fresh loader evidence
+
+Baseline before edits: `make build` and uncached RON package tests PASS;
+`go run ./cmd/loadcards -json` returned expected exit 1, 2,064 compiled / 381
+rejected records and 796 accepted / 190 rejected unique names.
+
+Final checks, in the requested fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCardNameChoice -count=1`: PASS.
+- `go test ./pkg/mage -run TestCardNameChoice -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- First engine short run exposed the obsolete rejection fixture described above.
+  After updating it, focused name-choice and mana-denial tests PASS; build/vet
+  rerun PASS; `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository.
+- `make lint`: PASS, 0 issues. Automatic import formatting in new tests was
+  reviewed; no unrelated Go file changed. Native focused tests and RON focused
+  tests including `TestRONManaDenialInvalidAndInventory` rerun PASS.
+- `git diff --check`: PASS, including the final ledger.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,064 compiled / 381
+  rejected records; 796 accepted / 190 rejected unique names**. Collection
+  rejection continues to prevent partial registry installation.
+- Catalog asset SHA-256, count, uniqueness, sorted order and absence of combined
+  names were independently checked against the retained source manifest: PASS.
+
+The rejected record/name sets match the baseline exactly. No accepted record was
+lost. Only these two first diagnostics moved:
+
+- Nebuchadnezzar, LEG:180:316 `unsupported action (ChooseACardName)` becomes
+  LEG:180:379 `expected 1 positional arguments
+  (RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType)`. This is an adapter
+  gap for its two-operand reveal/discard form, not evidence of a source defect.
+- Petra Sphinx, LEG:190:292 `unsupported scoped player action (ChooseACardName)`
+  becomes LEG:190:324 `unsupported scoped player action (RevealTopCardOfLibrary)`.
+
+No source-data defect or environmental blocker was found for this slice. RON
+source records were not changed, so no vocabulary-source snapshot refresh was
+required. No count expectations changed. Native and synthetic RON gameplay
+coverage increased for the prerequisite; full-card acceptance and complete-card
+coverage did not increase.
+
+Changed files: native/RON `card_name_choice.go` and tests; embedded
+`oracle_card_names.txt` and source manifest; compiler/inventory/player actions;
+resolution state/effect/loop frames; the obsolete mana-denial rejection fixture;
+`doc.go`, DSL/API rules-contract docs and this ledger. Go definitions, generators
+and the legacy DSL remain because the full collection/gameplay/runtime/removal
+gates are not met. No DSL function is removed and no deletion audit is claimed.
+
+Ranked next candidates:
+
+1. Typed chosen-name operands and lexical result scope across PlayerActions,
+   with Oracle name-equivalence evidence before matching. Shared prerequisite
+   for Nebuchadnezzar and Petra Sphinx; keep reveal consumers separately rejected.
+2. Shared result-bound reveal/exile operands for Tempest Efreet and Bronze
+   Tablet. Compare visibility, visits and remaining optional life-payment and
+   ownership-exchange consumers before selecting one complete bounded form.
+3. Scoped paid-player collection and dispatch for Rebirth, using AnteTopCost,
+   APNAP choices and replacement-aware life setting.
+
+This run stops after ORACLE-NAME-CHOICE. Migration remains incomplete.

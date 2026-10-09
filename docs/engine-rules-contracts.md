@@ -12437,3 +12437,41 @@ or reveal adapters, paid-player collections or general zone replacements.
 Bronze Tablet and Tempest Efreet remain rejected; Rebirth needs paid-player
 collection dispatch. Go definitions and the legacy DSL remain until the runtime
 and removal gates pass.
+
+### Oracle card name catalog and resolution choice (CR 201.4)
+
+`OracleCardNameCatalog` is separate from the card factory registry. It supplies
+all nontoken English names in the retained Scryfall catalog snapshot, including
+cards outside the game's format and executable collection. CR 201.4 prohibits
+token-only names. CR 201.4b–f permits individual split, flip, double-faced, meld
+and adventure names. Combined ` // ` names are split and not offered as choices.
+The immutable embedded asset contains 35,919 unique sorted face names from
+35,137 source entries; source URI, retrieval time and hashes are retained beside
+it. Runtime choice does not make a network request or load Go card definitions.
+Source: https://scryfall.com/docs/api/catalogs/card-names.
+
+`ChooseCardName(PlayerRef, *CardNameCatalog, *CardNameBinding) ResolvingEffect`
+performs a required choice during resolution, using the resolved explicit player.
+Announcement, affordability and static/waiting queries do not choose names.
+The decision receives separate list storage through existing `Player.ChooseMode`.
+An invalid response uses the first legal entry, consistent with other required
+choice recovery. An absent chooser clears the result without a decision.
+Definition validation rejects nil operands, empty catalogs and unnamed bindings.
+Results have per-binding, per-resolution storage; frame cleanup clears them,
+clones copy them, nested applications restore outer results, and loops isolate
+member choices. Pending stack copies make their own choices. No zone operation,
+replacement ordering or simultaneous operation is part of choosing a name.
+
+The chooser declares explicit source reads for waiting delayed references.
+Queries do not choose names. Existing permanent references and LKI keep the
+original chooser after source departure/return, and phasing keeps the reference.
+Choice inside a delayed body is supported; capture of a prior name result by a
+delayed consumer is not established here. No chosen-name characteristic or
+interchangeable-name matching contract is claimed by this operation.
+
+Evidence: native `TestCardNameChoiceCatalog`, `Bindings`, `Declarations`,
+`WaitingSource`, `LoopIsolation`; RON `TestRONCardNameChoiceGameplay`,
+`Declarations`, `PendingSource`, `PaymentAndCopy`, `Inventory`,
+`RealDeclarations`. The last test executes the name-choice AST from the complete
+Nebuchadnezzar and Petra Sphinx records as subrule evidence. Both complete cards
+remain rejected because other adapters are missing.
