@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	exileLink            *mage.ExileLink
 	drawnCard            *handRevealPlan
 	handReveal           *handRevealPlan
 	libraryReveal        *libraryRevealPlan
@@ -304,6 +305,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
+		if err != nil {
+			return nil, err
+		}
+		ctx.exileLink, err = compileExileAssociation(rules, permanent)
 		if err != nil {
 			return nil, err
 		}
@@ -1273,6 +1278,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ReturnEachExiledCardToOwnersHand", "PutExiledCardsIntoOwnersGraveyards":
+		effect, err := compileLinkedExileTransport(n, ctx)
+		return []effectFactory{effect}, err
 	case "Exile":
 		build, err := compilePermanentExile(n, ctx)
 		if err != nil {

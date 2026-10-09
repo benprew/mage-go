@@ -30,7 +30,7 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 			faceDown = true
 		}
 		return func(bindings instanceBindings) mage.Effect {
-			return mage.ExileLibraryTopLinked(ctx.player.build(bindings), mage.NewExileLink(), faceDown)
+			return mage.ExileLibraryTopLinked(ctx.player.build(bindings), producerExileLink(ctx), faceDown)
 		}, nil
 	}
 	if subject.Name == "CardInGraveyards" {
@@ -91,8 +91,15 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 	}
 	return func(bindings instanceBindings) mage.Effect {
 		if ctx.permanent {
-			return mage.ExilePermanentLinked(ref.build(bindings), mage.NewExileLink())
+			return mage.ExilePermanentLinked(ref.build(bindings), producerExileLink(ctx))
 		}
 		return mage.Exile(ref.build(bindings))
 	}, nil
+}
+
+func producerExileLink(ctx scope) *mage.ExileLink {
+	if ctx.exileLink != nil {
+		return ctx.exileLink
+	}
+	return mage.NewExileLink()
 }

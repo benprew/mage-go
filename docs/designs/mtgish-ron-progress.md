@@ -2,20 +2,20 @@
 
 ## Current status
 
-The latest recorded inventory reports **801 accepted / 185 rejected unique card
-names** (986 total), and **2,073 compiled / 372 rejected records** (2,445 total).
+The latest recorded inventory reports **802 accepted / 184 rejected unique card
+names** (986 total), and **2,074 compiled / 371 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`REQUIRED-TYPED-SACRIFICE` adds mandatory payment of one exact permanent at
-resolution. Typed subjects use existing transactions, replacement ordering,
-source identity, delayed queries and clone contracts. Knowledge Vault has
-payment-rule gameplay evidence; its complete record still rejects linked hand
-return. **+0 unique names / +0 records**, matching the prerequisite estimate.
-Linked-pair association and consumer transport remain the next shared work.
+`LINKED-EXILE-OWNER-TRANSPORT` adds one-producer association and exact-visit
+transport to owners' hands or graveyards. Knowledge Vault's complete RON record
+has gameplay evidence for all three rules. Safe Haven has producer-association
+evidence; its owner-controlled battlefield entry remains unsupported.
+**+1 unique name / +1 record**, matching the estimate. Shared exile, ownership,
+ordering, source identity, delayed queries and clone services are reused.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Linked exile, turn-skip replacements and other unsupported capabilities remain gaps.
+Linked battlefield entry, turn-skip replacements and other gaps remain.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -55729,3 +55729,153 @@ Ranked next candidates:
    ordering and normal/extra/skipped turn scheduling.
 
 Stop after REQUIRED-TYPED-SACRIFICE. Migration incomplete.
+
+
+## 2026-10-08: linked exile association and owner-zone transport
+
+Status: completed implementation slice `LINKED-EXILE-OWNER-TRANSPORT`.
+This run stops after one slice. User changes to `.gitignore`, the execution design,
+the ledger reorganization and untracked completed-history file are preserved.
+Only this slice's summary and appended entry are staged in the ledger.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict
+`go run ./cmd/loadcards -json` returned expected exit 1: 2,073 compiled / 372
+rejected records; 801 accepted / 185 rejected unique names. Collection rejection
+is separate from build or test failure. Full records and nested forms were read
+for Knowledge Vault (LEG), Safe Haven and Wand of Ith (DRK), and the identical
+Time Vault records (LEA, LEB, 2ED, CED, CEI). Reprints count once. Targeted vocabulary
+inspection confirmed WasExiledWithPermanent tuple/1, both owner-zone consumers
+tuple/1 and the library-top symbol. No full vocabulary dump was used.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, linked exile association plus hand/graveyard transport, selected | Knowledge Vault, Safe Haven; 1 name / 1 record | Knowledge Vault has no other compiler blocker after mandatory sacrifice. Safe Haven still needs owner-controlled battlefield entry. Shared association is a prerequisite for both cards, with exact-visit consumer selection reusable for entry. | Small/medium: typed association preflight, two destinations of one movement service, full-record gameplay and identity/batch tests. |
+| Saved reveal mana value and dynamic typed life payment | Wand of Ith; 1 name / 1 record after the complete payment slice | Fixed life payment, reveal predicates, random reveal, discard-result and activation timing already exist. Saved mana value and dynamic transactional life cost remain. Wider consumers give no proven additional complete-card unlock. | Medium: saved-value representation and dynamic transaction preparation, missing-result, affordability and rollback contracts. |
+| Optional begin-turn skip replacement | Time Vault; 1 name / 5 records | Normal/extra/skipped turn scheduling, affected-player replacement ordering, optional skip payment and untap continuation need one lifecycle contract. Extra-turn action and entry/untap rules already exist. | Large: shared scheduling and replacement integration with ordering and turn-history tests. |
+
+Candidate #1 is dependency-ready, gives one complete-card gain and supplies the
+shared association required by Safe Haven. The hand/graveyard destination slice
+fits one run; owner-controlled battlefield entry has separate entry replacement,
+prohibition and simultaneous-entry obligations and is deferred. No single-card
+turn/payment subsystem displaced this useful shared prerequisite.
+
+### Exact signatures, contexts and reuse boundary
+
+New native signatures:
+
+- `ReturnExiledCardsToOwnersHands(subjects ExiledCardSet) ResolvingEffect`
+- `PutExiledCardsInOwnersGraveyards(subjects ExiledCardSet) ResolvingEffect`
+
+RON adds `ReturnEachExiledCardToOwnersHand(WasExiledWithPermanent(ref))` and
+`PutExiledCardsIntoOwnersGraveyards(WasExiledWithPermanent(ref))` in resolving
+activated, triggered and delayed permanent-source bodies. The supported declaration
+has exactly one library-top or singular permanent exile instruction. A definition
+preflight associates that producer with source-local consumers. Missing or multiple
+producers reject instead of inferring a link. `ThisPermanent` and the source-departure
+`Trigger_ThatPermanent` use the existing typed source reference. Other object
+references, malformed arity/set expressions and cost/static/entry contexts reject.
+Multiple linked producer groups and battlefield consumers remain unsupported.
+
+The link is an immutable declaration retained by the compiled definition. It has
+no chosen state or game state. Each producer saves its exact source incarnation
+on the new exile visit; each consumer selects by that declaration and source.
+Factory instances and pending effects use the existing per-instance targets,
+source captures and resolution frames. Different physical sources and returned
+sources cannot inherit one another's linked visits. Copies and clones retain
+immutable declarations and separate mutable zones and frames.
+
+RON owns syntax, declaration association, scope checks and lowering. The engine
+owns transport. Existing `CardsExiledWith`, `ExiledCardSet`, exact exile visits,
+`RemoveFromExile`, owner hand/graveyard insertion, graveyard ordering, source LKI,
+stack copies and clone services are reused. Transport saves membership once,
+deduplicates physical visits and checks each saved visit and owner again after
+choices. Current owners supply destinations. Graveyard choices occur in active-
+player order before movement; all moves finish before zone-change events.
+Face-down exile needs no inspection permission for transport. A public graveyard
+arrival permits its owner to order the arriving cards (CR 400.6). This operation
+is neither a draw, discard, mill nor death. Destination services create new visits.
+
+Waiting delayed queries retain direct source reads through the selected set.
+They do not select cards, make choices or execute transport. Source departure
+and phasing keep saved identity; a later incarnation cannot replace it. Native
+nil sets, links and references fail definition validation before execution.
+
+Rules evidence: local CR 400.3, 400.6–7, 406.3/6/7, 607.1/2a and 608.2f, plus
+existing payment/phasing contracts. Local data/LEG.json, DRK.json and LEA.json
+Oracle text was checked for the compared cards. No source defect was found or
+corrected. All RON source hashes remain unchanged; no vocabulary refresh is
+needed. No fallback, card-name branch, game-time declaration panic, global action
+result, skipped rule or partial production registry was added. Existing callers
+remain. No Go-card or unused-DSL removal gate is met.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, native tests failed compilation on both undefined transport
+signatures. Full-record RON gameplay failed at LEG.lines.ron:149:404, unsupported
+ReturnEachExiledCardToOwnersHand. Both expected failures were confirmed.
+A native fixture initially lacked its physical source owner, and the ownership
+change fixture initially omitted ante setup; both setups were corrected. The
+returned-source test was corrected to account for normal pending departure-trigger
+placement by ResolveStack. The final tests distinguish failed sacrifice from
+legitimate departure-to-graveyard transport; no rule expectation was weakened.
+
+| Test | Card mapping and contracts |
+| --- | --- |
+| TestRONLinkedExileTransportKnowledgeVault | Complete, unmodified LEG Knowledge Vault record: repeated face-down library exile, owner destinations, mandatory sacrifice, discard-before-return, separate departure graveyard path, empty linked set after return and independent pending clone storage. Existing TestRONLinkedExileProducers covers payment failure and announcement/resolution timing. |
+| TestRONLinkedExileTransportSourceIdentity | Complete Knowledge Vault: two independent Vaults, phased and phase-cycled payment, control loss, source departure/return, stack copy controlled by another player, sacrifice replaced by exile and independently resolved clones. Departure uses the old incarnation and leaves the returned source intact. |
+| TestRONLinkedExileTransportSafeHavenProducer | Actual first DRK Safe Haven rule plus a synthetic hand consumer proves singular permanent producer association and owner versus controller. This is prerequisite evidence, not full Safe Haven gameplay. |
+| TestRONLinkedExileTransportContexts | Synthetic activated, upkeep-triggered and delayed hand consumers; saved source after departure/return, private producer, pure waiting queries and explicit owners. |
+| TestRONLinkedExileTransportInvalid / InvalidContexts | Missing/ambiguous producer, malformed arity/set expressions, incompatible/unbound refs and forbidden cost/static/entry declarations reject at compile time. |
+| TestLinkedExileTransport | Both native destinations, source departure, unrelated exile exclusion, all moves before events and clone independence. |
+| TestLinkedExileTransportExactVisitsAndOwners | Saved exile visit cannot follow re-exile, duplicate visit moves once and current ownership supplies destination. |
+| TestLinkedExileTransportOrderAndWaiting | Owner graveyard ordering and source reads after departure; repeated waiting queries make no choices or moves. |
+| TestLinkedExileTransportOrderRechecks | Both owners choose before movement in active-player order; a re-exile during a choice cannot replace the saved visit; graveyard arrivals get new visits. |
+| TestLinkedExileTransportDefinition | Nil sets, links and subjects fail native definition validation. |
+
+Knowledge Vault now has complete-record gameplay mapping for all three rules.
+Existing typed sacrifice tests continue to cover affordability, invalid-selection
+rollback and competing battlefield zone replacements; transport creates no new
+payment or replacement-ordering system. Compilation and gameplay remain separate.
+
+### Verification and measured outcome
+
+The first engine short run found four inventory snapshot assertions expecting
+2,073/372. These were updated to the measured 2,074/371 without changing gameplay
+or declaration assertions. Required checks were then rerun in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONLinkedExileTransport -count=1`: PASS.
+- Focused native linked-exile and transport tests: PASS.
+- Focused accepted-definition and inventory assertions: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues after correcting three test-slice preallocation findings and a local variable that shadowed copy. Automatic import formatting was reviewed; affected checks were rerun and passed.
+- `git diff --check`: PASS, including the final ledger and staged patch.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+
+Final counts: **2,074 compiled / 371 rejected records; 802 accepted / 184 rejected
+unique names**, totals 2,445 records / 986 names. Actual gains are **+1 name /
++1 record**, matching the estimate. Knowledge Vault's unsupported diagnostic is
+removed. Safe Haven still rejects PutEachExiledCardOntoTheBattlefield. All other
+loader diagnostics are unchanged. No accepted record regresses; the strict loader
+continues to install no partial registry. No environmental or required-validation
+blocker remains.
+
+Changed files: new native and RON linked_exile_transport.go and tests; RON
+compiler.go and permanent_exile.go; definition_plan_test.go, inventory_test.go
+and numeric_consumers_test.go count snapshots; pkg/mage/doc.go; API/rules-contract
+docs; this ledger. The user ledger reorganization is excluded from the commit.
+Commit message: `feat(ron): implement linked exile owner-zone transport`.
+
+Ranked next candidates:
+
+1. Exact-visit linked battlefield transport under each owner's control for Safe
+   Haven. Association is now available; compare shared batch entry reuse with
+   Tawnos's Coffin's attachment/counter/result prerequisites before selecting.
+2. Saved reveal mana-value semantics plus dynamic typed resolution life payment
+   for Wand of Ith; compare wider consumers before selecting the single-card slice.
+3. Optional begin-turn skip replacement for Time Vault, including affected-player
+   ordering and normal/extra/skipped turn scheduling.
+
+Stop after LINKED-EXILE-OWNER-TRANSPORT. Migration incomplete.

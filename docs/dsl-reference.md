@@ -9724,14 +9724,30 @@ RON supports `Exile([TheTopCardOfLibrary], [])` and
 bodies, including activated, triggered and delayed bodies. The top is read at
 resolution. Empty libraries have no effect. This is neither a draw nor a reveal.
 `Exile([Permanent(ref)], [])` in these bodies uses linked transport with the
-existing typed subject and target legality. Each built producer has a fresh link.
+existing typed subject and target legality. Unassociated producers have separate links.
 Spell-source permanent exile retains the existing ordinary exile operation.
 Costs, entry operations and static operations do not accept library-top exile.
 Plural subjects and face-down permanent exile remain unsupported.
 
-This is the producer prerequisite. RON `WasExiledWithPermanent` association and
-hand, graveyard and battlefield consumers still reject. Knowledge Vault and Safe
-Haven have producer-rule tests; neither has complete-card gameplay coverage yet.
+RON associates a single unambiguous producer declaration with
+`ReturnEachExiledCardToOwnersHand(WasExiledWithPermanent(ThisPermanent))` and
+`PutExiledCardsIntoOwnersGraveyards(WasExiledWithPermanent(ref))` in resolving
+activated, triggered and delayed bodies. The reference is `ThisPermanent`, or
+`Trigger_ThatPermanent` from a source-departure event. Missing or multiple
+producer declarations and incompatible references reject. The immutable link
+belongs to the compiled definition; the exact source incarnation separates
+physical instances, pending resolutions and returned objects. No mutable result
+is stored in the declaration.
+
+Native `ReturnExiledCardsToOwnersHands(ExiledCardSet) ResolvingEffect` and
+`PutExiledCardsInOwnersGraveyards(ExiledCardSet) ResolvingEffect` select current
+exile visits at resolution. They check each visit again after graveyard-order
+choices, move cards to their current owners, and send zone events after all
+moves. Face-down transport gives no inspection permission while cards remain
+in exile. Waiting delayed queries retain explicit source reads without selection,
+choices or movement. Knowledge Vault has complete-record gameplay evidence.
+Safe Haven's battlefield consumer and multiple linked producer groups still
+require separate adapters.
 
 
 ## Mandatory payment of one typed permanent
@@ -9771,4 +9787,4 @@ covers Knowledge Vault's real payment rule with an observable test continuation,
 announcement/resolution timing, changed-controller copies, cloned pending
 resolution, branch polarity, independent nested results, resolving contexts,
 waiting-source queries and target legality. This is payment-rule evidence;
-Knowledge Vault still requires linked-exile consumers before complete-card coverage.
+Knowledge Vault uses the linked-exile consumer contract for complete-record gameplay.

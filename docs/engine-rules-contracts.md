@@ -12892,13 +12892,13 @@ without characteristics or inspection.
 
 Delayed producer queries declare the original source without reading a library
 or moving a card. CountExiledCards of a linked set retains direct source reads as well.
-Nil links and typed operands fail declaration validation. Cross-ability RON
-association, return consumers, linked acquisition/copy adaptation, plural exile,
-replacement exile and token zone persistence are outside this contract.
+Nil links and typed operands fail declaration validation. The hand and graveyard
+consumer extension is specified below. Linked acquisition/copy adaptation, plural
+exile, replacement exile and token zone persistence remain separate contracts.
 
 RON lowering supports `Exile([TheTopCardOfLibrary], [])`, the same form with one
 symbol `ExilesFaceDown`, and linked `Exile([Permanent(ref)], [])` in resolving
-permanent bodies. Each constructed producer gets its own declaration. Invalid
+permanent bodies. Unassociated producers get separate declarations. Invalid
 arity, tuple spellings for symbols, duplicate or unknown modifiers, unbound
 subjects and unsupported cost/static/entry/spell-source contexts reject before
 execution. Ordinary spell exile and existing cost services retain their callers.
@@ -12906,8 +12906,8 @@ execution. Ordinary spell exile and existing cost services retain their callers.
 Evidence: TestLinkedExileIdentity, PermanentAndEvents, Declarations, Waiting and
 RepeatedAndTokens; TestRONLinkedExileProducers, Contexts and Invalid. The producer
 mapping uses the first actual rule from complete Knowledge Vault and Safe Haven
-records. The omitted consumer rules remain rejected by strict loading, and this
-mapping does not establish complete-card gameplay support.
+records. These producer-only tests do not establish complete-card gameplay
+support. The consumer extension below supplies Knowledge Vault coverage.
 
 
 ## Mandatory payment of one typed permanent
@@ -12947,4 +12947,38 @@ covers Knowledge Vault's real payment rule with an observable test continuation,
 announcement/resolution timing, changed-controller copies, cloned pending
 resolution, branch polarity, independent nested results, resolving contexts,
 waiting-source queries and target legality. This is payment-rule evidence;
-Knowledge Vault still requires linked-exile consumers before complete-card coverage.
+Knowledge Vault uses the linked-exile consumer contract for complete-record gameplay.
+
+
+## Linked exile hand and graveyard transport
+
+`ReturnExiledCardsToOwnersHands(ExiledCardSet) ResolvingEffect` and
+`PutExiledCardsInOwnersGraveyards(ExiledCardSet) ResolvingEffect` use the existing
+exact-visit exile selection. CR 406.6 and 607.2a restrict each consumer to its
+producer declaration and source incarnation. CR 400.7 and 406.7 prevent returned
+sources and later exile visits from inheriting that association.
+
+Selection occurs once at resolution. Duplicate visits move once. Current owners
+supply destinations. Graveyard order choices use the existing ordering service
+in active-player order before movement. Each saved visit and owner is checked
+again after choices. All moves finish before zone-change events (CR 608.2f).
+Transport is neither a draw, discard, mill nor a death. Face-down cards can move
+without an inspection permission; the public graveyard destination permits its
+owner to order the arriving cards. Existing destination services create visits.
+Clones keep separate exile and destination storage. Nil sets or invalid linked
+references fail definition validation.
+
+The effect declares direct source reads in its linked set to waiting delayed
+queries. Queries do not select cards, make choices or move cards. Saved source
+incarnations survive departure and phasing. Actions on exile cards still require
+the saved visits; source LKI never permits movement of a returned exile card.
+
+RON supports one unambiguous exile producer with source-local hand/graveyard
+consumers in activated, triggered and delayed resolving bodies. Knowledge Vault's
+complete record proves discard-before-return, successful sacrifice despite an
+exile replacement, failed sacrifice, copied activations, independent sources,
+source departure and pending clone isolation. Its sacrifice queues a departure
+trigger; that trigger sees no linked cards after the resolving activation returns
+them. Separate departure instead sends linked cards to owners' graveyards.
+Safe Haven has producer-association evidence, but battlefield entry remains a gap.
+Multiple producer groups and other source references remain unsupported.

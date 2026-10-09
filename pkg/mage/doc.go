@@ -12,9 +12,12 @@
 // can select these cards without exposing their characteristics to players.
 // Clones keep the declaration but copy exile cards and visibility storage.
 // Waiting queries retain source reads without moving cards or reading a library.
-// RON supports library-top exile and singular permanent exile producers in
-// resolving permanent bodies. Cross-ability association and return consumers
-// need separate adapters; complete linked-exile cards remain unsupported.
+// [ReturnExiledCardsToOwnersHands] and [PutExiledCardsInOwnersGraveyards]
+// move selected visits to their current owners' zones before zone events.
+// Graveyard order uses the existing owner choices before movement.
+// RON associates one unambiguous producer with source-local consumers in
+// resolving permanent bodies. Knowledge Vault uses both destinations.
+// Battlefield entry and multiple producer groups need separate adapters.
 //
 // Use [WithAnteDeckRestriction] for a physical card that requires ante.
 // [PrepareCardsForAnte] separates these cards from non-ante decks and sideboards.
