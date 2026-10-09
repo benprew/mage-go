@@ -38,7 +38,7 @@ func Activated(costs []mage.Cost, actions Actions) *mage.ActionDefinition {
 
 func actionOptions(actions Actions) []mage.ActionOption {
 	opts := make([]mage.ActionOption, 0, 1+len(actions.targets))
-	opts = append(opts, mage.WithEffects(actions.effects...))
+	opts = append(opts, mage.WithEffects(mage.Sequence(actions.effects...)))
 	for _, target := range actions.targets {
 		opts = append(opts, mage.WithTarget(target))
 	}

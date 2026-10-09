@@ -21,13 +21,21 @@ func (e *revealHandForEffect) Apply(ctx *EffectContext) error {
 }
 
 type discardMatchingHandEffect struct {
-	player PlayerRef
-	filter CardFilter
+	player      PlayerRef
+	filter      CardFilter
+	nameMatcher CardNameMatcher
+	matchName   bool
 }
 
 // DiscardMatchingHand discards all matching hand cards in one batch.
 func DiscardMatchingHand(player PlayerRef, filter CardFilter) ResolvingEffect {
-	return &discardMatchingHandEffect{player, filter}
+	return &discardMatchingHandEffect{player: player, filter: filter}
+}
+
+// DiscardHandMatchingName checks a saved name before the shared discard batch.
+// All subjects come from the selected player's current hand.
+func DiscardHandMatchingName(player PlayerRef, matcher CardNameMatcher) ResolvingEffect {
+	return &discardMatchingHandEffect{player: player, nameMatcher: matcher, matchName: true}
 }
 func (*discardMatchingHandEffect) Text() string {
 	return "discard all matching cards in the selected player's hand"
@@ -36,7 +44,11 @@ func (*discardMatchingHandEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 func (e *discardMatchingHandEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"player", e.player}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"player", e.player}}}
+	if e.matchName {
+		n.children = append(n.children, definitionEdge{"name-matcher", e.nameMatcher})
+	}
+	return n
 }
 func (e *discardMatchingHandEffect) Apply(ctx *EffectContext) error {
 	player := handOperationPlayer(e.player, ctx)
@@ -45,7 +57,11 @@ func (e *discardMatchingHandEffect) Apply(ctx *EffectContext) error {
 	}
 	var actions []*DiscardAction
 	for _, card := range player.Hand() {
-		if e.filter.Match(card) {
+		matches := e.filter.Match(card)
+		if e.matchName {
+			matches = e.nameMatcher.Match([]string{card.Name()}, ctx)
+		}
+		if matches {
 			actions = append(actions, NewDiscardAction(ctx.SourceID, player.PlayerID(), card.ID()))
 		}
 	}

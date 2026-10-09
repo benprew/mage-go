@@ -121,8 +121,12 @@
 // [FromCardName] supplies a typed [CardNameRef] for the current frame.
 // Definition checks require a producer before each read on every path.
 // RON name operands keep lexical choice identity through PlayerActions.
-// Conditional choices stay in their branch. Name matching and reveal results
-// need separate compiler adapters.
+// Conditional choices stay in their branch. [MatchesChosenCardName] checks
+// supplied object names with the retained interchangeable English names.
+// A missing choice or a nameless object cannot match. [DiscardHandMatchingName]
+// selects the current hand before the shared discard batch and its replacements.
+// RON DiscardCards(IsNamed(TheChosenName)) uses this service at resolution.
+// Reveal results and their consumers need separate compiler adapters.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]

@@ -1,0 +1,281 @@
+{
+  "source": "https://api.scryfall.com/cards/search?q=set%3Aslx&unique=prints",
+  "rules_evidence": "https://magic.wizards.com/en/news/announcements/whats-new-on-the-list-for-wilds-of-eldraine",
+  "retrieved_utc": "2026-10-09T03:16:23.205047+00:00",
+  "source_cards": 30,
+  "face_groups": 31,
+  "transform": "For each SLX interchangeable-name printing, collect distinct English paper names from prints with the same Oracle identity, using printed_name when present; pair separate faces by index. Flavor titles and digital-only names are excluded.",
+  "asset_sha256": "1aad0a793da2595f6e38b4edca7091644910065631c8d2185eadfa5dec8768c5",
+  "evidence": [
+    {
+      "oracle_id": "eae3e762-dacd-4bd2-923c-3abb5ceb729a",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeae3e762-dacd-4bd2-923c-3abb5ceb729a&unique=prints",
+      "response_sha256": "927f3fe1299bac26c0e0326f38bd978cb1255e97e87481420f3977c9408aff8b",
+      "names": [
+        "Aisha of Sparks and Smoke",
+        "Ken, Burning Brawler"
+      ]
+    },
+    {
+      "oracle_id": "9abecd23-a2d9-43c7-8d01-f8afdc53026e",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9abecd23-a2d9-43c7-8d01-f8afdc53026e&unique=prints",
+      "response_sha256": "7a6fc7faa04487d57d5b278838d8e7ab3f016b700f6b4e3e119342c4db44d951",
+      "names": [
+        "Arvinox, the Mind Flail",
+        "Mind Flayer, the Shadow"
+      ]
+    },
+    {
+      "oracle_id": "14493624-fdc7-4630-9b1e-f35668651108",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A14493624-fdc7-4630-9b1e-f35668651108&unique=prints",
+      "response_sha256": "6feeaf9081baf28337bf882c9e1e95b97fe469c0879d5d90337bca5b1309c6c9",
+      "names": [
+        "Baldin, Century Herdmaster",
+        "E. Honda, Sumo Champion"
+      ]
+    },
+    {
+      "oracle_id": "c880fbdc-bdd9-4f80-81d4-e3e1124f76ca",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac880fbdc-bdd9-4f80-81d4-e3e1124f76ca&unique=prints",
+      "response_sha256": "023d3859fa8c47b55ceaa37ce4868a06f4b3341a94a9b0febb401efcc0bd9018",
+      "names": [
+        "Bjorna, Nightfall Alchemist",
+        "Lucas, the Sharpshooter"
+      ]
+    },
+    {
+      "oracle_id": "ab31b652-ddf2-480f-a955-e8b5c87728f9",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aab31b652-ddf2-480f-a955-e8b5c87728f9&unique=prints",
+      "response_sha256": "1b2a8861bfcaed2ebd8cb347244fb6e40c168df4ea9ce3610b615bb367b00793",
+      "names": [
+        "Bohn, Beguiling Balladeer",
+        "Edgin, Larcenous Lutenist"
+      ]
+    },
+    {
+      "oracle_id": "b7bdb688-f8ee-4d22-a679-37a2ecd390a1",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab7bdb688-f8ee-4d22-a679-37a2ecd390a1&unique=prints",
+      "response_sha256": "d80e941a45a0df686b7ed87ff651d81a2bffad955f4e2b983248d10a10f6e282",
+      "names": [
+        "Casal, Lurkwood Pathfinder // Casal, Pathbreaker Owlbear",
+        "Doric, Nature's Warden // Doric, Owlbear Avenger"
+      ]
+    },
+    {
+      "oracle_id": "a726c27d-2955-4d41-b8a6-fca654c020a2",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa726c27d-2955-4d41-b8a6-fca654c020a2&unique=prints",
+      "response_sha256": "3fadefd031547c0782de21bc0befffa705fabbbb5dbb31c04c31872e43ad3280",
+      "names": [
+        "Cecily, Haunted Mage",
+        "Eleven, the Mage"
+      ]
+    },
+    {
+      "oracle_id": "5a35201d-e9b1-433a-bb70-3280ceedbcd6",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5a35201d-e9b1-433a-bb70-3280ceedbcd6&unique=prints",
+      "response_sha256": "1b094655250a8065cf5165f2a3faa451c13d93e379e1f506ff8fb1fd3814b62a",
+      "names": [
+        "Elmar, Ulvenwald Informant",
+        "Max, the Daredevil"
+      ]
+    },
+    {
+      "oracle_id": "558fd7a9-9b39-4c82-b909-5febf55dc010",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A558fd7a9-9b39-4c82-b909-5febf55dc010&unique=prints",
+      "response_sha256": "599da7d35c016fd67c1a993cde37037a7b195b76923d9e6541a21a46c785c60a",
+      "names": [
+        "Enkira, Hostile Scavenger",
+        "Michonne, Ruthless Survivor"
+      ]
+    },
+    {
+      "oracle_id": "f688f839-c7c2-45a9-8c60-9fdb030803e6",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af688f839-c7c2-45a9-8c60-9fdb030803e6&unique=prints",
+      "response_sha256": "70ed5dd98debbd3cd4fa136551dbf2adbd72b3bb49d2693355fbf6dd56138db7",
+      "names": [
+        "Evin, Waterdeep Opportunist",
+        "Forge, Neverwinter Charlatan"
+      ]
+    },
+    {
+      "oracle_id": "9c298c7b-9c63-4a66-a0fc-977491b623c7",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9c298c7b-9c63-4a66-a0fc-977491b623c7&unique=prints",
+      "response_sha256": "c4fb0f98df974a710c205d52df02d648bf77dfd33b0a44328789fbe5264a3676",
+      "names": [
+        "Gisa's Favorite Shovel",
+        "Lucille"
+      ]
+    },
+    {
+      "oracle_id": "0b64da77-ca1c-427b-b48b-b919f0fe08e9",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0b64da77-ca1c-427b-b48b-b919f0fe08e9&unique=prints",
+      "response_sha256": "3e82350b85241036a922a12c8f5324c8190a01009dd59ded3d41f807757a451e",
+      "names": [
+        "Glenn, the Voice of Calm",
+        "Gregor, Shrewd Magistrate"
+      ]
+    },
+    {
+      "oracle_id": "739a5220-50cd-4148-be58-1bbdeef2954e",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A739a5220-50cd-4148-be58-1bbdeef2954e&unique=prints",
+      "response_sha256": "ab8f09a93271daefca5dbcd3df7071a95956bd3faed4916d6cdc32db25d99ada",
+      "names": [
+        "Greymond, Avacyn's Stalwart",
+        "Rick, Steadfast Leader"
+      ]
+    },
+    {
+      "oracle_id": "d818f863-17ee-4387-94bf-d7e6e8ab590c",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad818f863-17ee-4387-94bf-d7e6e8ab590c&unique=prints",
+      "response_sha256": "4801a6629a8369a41b899f191977c8f45f2e8c5e298ef4648948cc060f68e032",
+      "names": [
+        "Daryl, Hunter of Walkers",
+        "Hansk, Slayer Zealot"
+      ]
+    },
+    {
+      "oracle_id": "747009e7-da07-48c7-b838-687f19b884ea",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A747009e7-da07-48c7-b838-687f19b884ea&unique=prints",
+      "response_sha256": "d96de5c4ecd3adf1b52449a24b80bde14507457202dca063a91a35c852f84304",
+      "names": [
+        "Dustin, Gadget Genius",
+        "Hargilde, Kindly Runechanter"
+      ]
+    },
+    {
+      "oracle_id": "e71ac446-02a4-4468-8d29-f28b21617665",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae71ac446-02a4-4468-8d29-f28b21617665&unique=prints",
+      "response_sha256": "0d7cce6d83481738113194cb674fc7d6a3a8890fc0aaeb3cf7d0a7f50465ac6a",
+      "names": [
+        "Havengul Laboratory // Havengul Mystery",
+        "Hawkins National Laboratory // The Upside Down"
+      ]
+    },
+    {
+      "oracle_id": "104f65d3-bedb-4dc5-a5dd-8ab9fe796af4",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A104f65d3-bedb-4dc5-a5dd-8ab9fe796af4&unique=prints",
+      "response_sha256": "47ab4b9fee39fcaf1b51f5f15935b1d9dd1b5033a683b36ea2651c158438d5f4",
+      "names": [
+        "Guile, Sonic Soldier",
+        "Immard, the Stormcleaver"
+      ]
+    },
+    {
+      "oracle_id": "de384867-8bb4-4edf-b542-970538718fdd",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ade384867-8bb4-4edf-b542-970538718fdd&unique=prints",
+      "response_sha256": "c48a625a59124e6e71f816451f32f8f6f9de9d3e8638870feed34830c95c9e34",
+      "names": [
+        "Holga, Relentless Rager",
+        "Jurin, Leading the Charge"
+      ]
+    },
+    {
+      "oracle_id": "a46f9f5c-775c-470d-8935-9556e1bbb23d",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa46f9f5c-775c-470d-8935-9556e1bbb23d&unique=prints",
+      "response_sha256": "02a8f82690bff23e7a787734b59436e200bdb66af9e02cde2802eae3339adeec",
+      "names": [
+        "Maarika, Brutal Gladiator",
+        "Zangief, the Red Cyclone"
+      ]
+    },
+    {
+      "oracle_id": "416608a1-89a4-44ce-8fd0-fab6b023d3d4",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A416608a1-89a4-44ce-8fd0-fab6b023d3d4&unique=prints",
+      "response_sha256": "12d8bd7807cd7a1f86b97aa3fb6cc0f06d6c2e02f9d8cabdbd92eed91426a121",
+      "names": [
+        "Malik, Grim Manipulator",
+        "Negan, the Cold-Blooded"
+      ]
+    },
+    {
+      "oracle_id": "61be7df8-cc78-4822-9e70-f226a8a96c9d",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A61be7df8-cc78-4822-9e70-f226a8a96c9d&unique=prints",
+      "response_sha256": "b30f7ff162674e2012aa1c1cf029382ec5d418855abfa89b34f4ce58c67fceda",
+      "names": [
+        "Mathise, Surge Channeler",
+        "Simon, Wild Magic Sorcerer"
+      ]
+    },
+    {
+      "oracle_id": "4ee401bf-dc86-41a9-84f9-57aa0a314d08",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4ee401bf-dc86-41a9-84f9-57aa0a314d08&unique=prints",
+      "response_sha256": "01f713f71f39f631dd4211ec018898b69c13330923d62085172eb8f476ee6d79",
+      "names": [
+        "Mike, the Dungeon Master",
+        "Othelm, Sigardian Outcast"
+      ]
+    },
+    {
+      "oracle_id": "c0c39f80-cf12-482e-a7c4-757db85125b0",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac0c39f80-cf12-482e-a7c4-757db85125b0&unique=prints",
+      "response_sha256": "3bac35789c5fcad7f42983f36f960b4505a3f875b97aa2b60285cd08dfbcbb73",
+      "names": [
+        "Rashel, Fist of Torm",
+        "Xenk, Paladin Unbroken"
+      ]
+    },
+    {
+      "oracle_id": "095dabda-4570-4764-8d62-4a29eb19d3e6",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A095dabda-4570-4764-8d62-4a29eb19d3e6&unique=prints",
+      "response_sha256": "92011feb8dc5249370d4d324c2fba1b48139ab3f1fde6036336256b3aeb40c90",
+      "names": [
+        "Chief Jim Hopper",
+        "Sophina, Spearsage Deserter"
+      ]
+    },
+    {
+      "oracle_id": "b4b5b928-8b98-4f65-9f15-212859874fe4",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab4b5b928-8b98-4f65-9f15-212859874fe4&unique=prints",
+      "response_sha256": "bc349d75c9a4994e61e174eb3ed90401add22899cb8feed31c322e3e0e52083e",
+      "names": [
+        "Dhalsim, Pliable Pacifist",
+        "Tadeas, Juniper Ascendant"
+      ]
+    },
+    {
+      "oracle_id": "4a67946e-8903-4994-9641-d31fbb62082c",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4a67946e-8903-4994-9641-d31fbb62082c&unique=prints",
+      "response_sha256": "32eff92139c60158554c545038fe5b6a214c7e0686d7ffe8420cd278af66a3d2",
+      "names": [
+        "Blanka, Ferocious Friend",
+        "The Howling Abomination"
+      ]
+    },
+    {
+      "oracle_id": "a422a5b0-1aff-4d07-bcc5-edfbda09dc44",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa422a5b0-1aff-4d07-bcc5-edfbda09dc44&unique=prints",
+      "response_sha256": "a0d6e0bc9166717e8cb65bd1c254eb705ffb7d4e61a8b573c9863d8ab573bf06",
+      "names": [
+        "Themberchaud"
+      ]
+    },
+    {
+      "oracle_id": "ad43ccce-3052-4817-8c46-f5c23cb49300",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aad43ccce-3052-4817-8c46-f5c23cb49300&unique=prints",
+      "response_sha256": "9709fe6186c3aa6a2d2a1fe31d69d28098939725646df339f3cf5314c0a0512d",
+      "names": [
+        "Ryu, World Warrior",
+        "Vikya, Scorching Stalwart"
+      ]
+    },
+    {
+      "oracle_id": "6cd03270-54cc-43e1-9b86-70c76960c841",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6cd03270-54cc-43e1-9b86-70c76960c841&unique=prints",
+      "response_sha256": "095dff238329bbf218159cd26bf818c39a6c53c30866f1ad62e671afdcee41f2",
+      "names": [
+        "Wernog, Rider's Chaplain",
+        "Will the Wise"
+      ]
+    },
+    {
+      "oracle_id": "ac136d46-32b7-4222-a840-b8be011c1872",
+      "prints_source": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aac136d46-32b7-4222-a840-b8be011c1872&unique=prints",
+      "response_sha256": "5b302102079fa59ee37068a4a07651cf3f9ec289ea5d245396640938a853e841",
+      "names": [
+        "Chun-Li, Countless Kicks",
+        "Zethi, Arcane Blademaster"
+      ]
+    }
+  ],
+  "source_sha256": "398a28ded9c1e24f90b7cd222b26a265d4d69b46d5850ec93e9d9239ead33136"
+}

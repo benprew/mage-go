@@ -3,7 +3,6 @@ package mage
 import (
 	_ "embed"
 	"slices"
-	"strings"
 )
 
 // CardNameCatalog keeps legal English name choices separate from card factories.
@@ -12,9 +11,7 @@ type CardNameCatalog struct{ names []string }
 //go:embed oracle_card_names.txt
 var oracleCardNamesText string
 
-var oracleCardNames = &CardNameCatalog{
-	names: strings.Split(strings.TrimSuffix(oracleCardNamesText, "\n"), "\n"),
-}
+var oracleCardNames = loadOracleCardNameCatalog()
 
 // OracleCardNameCatalog returns the retained complete nontoken name snapshot.
 // Separate faces are choices. Combined names are not choices under CR 201.4.

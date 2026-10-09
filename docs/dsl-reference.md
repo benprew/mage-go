@@ -9431,8 +9431,10 @@ embedded snapshot independent of registered/executable cards, decks, formats,
 and filesystem paths. `Names() []string` returns separate sorted storage;
 `Contains(string) bool` tests an exact English face name. The source and hashes
 are in `pkg/mage/oracle_card_names_source.json`. The Scryfall nontoken English
-name catalog supplies all names at retrieval, with combined names split into
-separate faces under CR 201.4b–f. A later data update must retain these checks.
+name catalog supplies canonical names, with combined names split into separate
+faces under CR 201.4b–f. The interchangeable-name supplement below adds the
+original English names omitted by that endpoint. A later update must retain
+these checks.
 
 `mage.BindCardName(string) *mage.CardNameBinding` declares one result.
 `(*mage.CardNameBinding).Resolve(*mage.EffectContext) (string, bool)` reads the
@@ -9444,9 +9446,10 @@ nested application and loops keep separate result storage.
 
 This establishes the catalog and choice prerequisite for Nebuchadnezzar and
 Petra Sphinx. Typed `TheChosenName` operand lowering and unconditional
-`PlayerActions` result scope are established below. `IsNamed(TheChosenName)`,
-result-bound reveal checks, interchangeable-name matching, and result capture
-across delayed bodies need separate typed compiler/engine consumers. Neither
+`PlayerActions` result scope are established below. Typed
+`IsNamed(TheChosenName)` matching and a resolving hand-discard consumer are
+established below. Result-bound reveal checks and result capture across
+delayed bodies need separate typed compiler/engine consumers. Neither
 real card is accepted or claimed as complete gameplay by this prerequisite.
 
 ### Typed chosen-name operands and lexical scope
@@ -9472,12 +9475,40 @@ scoped player does not replace the outer action player. Conditional branches
 receive the outer environment, but cannot export a choice from only one path.
 
 This is an operand/scope prerequisite for Nebuchadnezzar and Petra Sphinx.
-It does not accept their reveal/discard/filter consumers. No name comparison
-is implemented: CR 201.3 and 201.4g require interchangeable-name evidence before
-matching. Prior-name capture by delayed consumers, result export from a single
+It does not accept their reveal consumers. The matching service below uses
+retained interchangeable-name evidence under CR 201.3 and 201.4g. Prior-name
+capture by delayed consumers, result export from a single
 `PlayerAction`, optional branches and loops remain separate contexts.
 
 Evidence: `TestRONCardNameScopeOperand`, `PlayerActions`, `Sequence`,
 `BranchBoundary`, `RealOperands`; native `TestCardNameRefContract`,
 `Declarations`, `Frames`, `PendingResolution`. Existing RON name-choice
 spell/activation/trigger/payment/copy gameplay tests remain in force.
+
+### Resolving chosen-name filters
+
+`IsNamed(TheChosenName)` lowers through
+`compileResolvingCardNameFilter(Node, scope) (cardNameMatcherFactory, error)`.
+Its factory builds `mage.MatchesChosenCardName(mage.FromCardName(binding))` with
+the same per-instance declaration as the dominating choice. The matcher checks
+supplied characteristic names under CR 201.2a/201.3/201.4g. It does not select
+objects or expose private information. A missing result cannot match.
+
+`PlayerAction(player, DiscardCards(IsNamed(TheChosenName)))` and
+`PlayerActions(player, [DiscardCards(IsNamed(TheChosenName))])` use
+`mage.DiscardHandMatchingName(player mage.PlayerRef, matcher mage.CardNameMatcher)
+mage.ResolvingEffect`. Membership comes from the current hand at resolution.
+Replacements and simultaneous discard events use the existing shared batch.
+The name remains local to its declaration and frame. RON action lists pass
+through `mage.Sequence` so native validation checks instruction order.
+
+The independent legal-choice catalog now contains 35,950 names, including the
+31 original English names from 31 interchangeable face pairs. The supplement
+and per-Oracle-identity source evidence are retained in
+`pkg/mage/oracle_name_equivalences.txt` and its `_source.json` file. English
+`printed_name` on these printings supplies original names; artwork flavor titles
+are excluded. Both names in a pair can be chosen and match either member.
+
+Cost/static/entry uses, nested boolean name filters and reveal consumers remain
+unsupported. This slice does not accept the full Nebuchadnezzar or Petra Sphinx
+records. Evidence: `TestRONCardNameMatch*` and native `TestCardNameMatch*`.

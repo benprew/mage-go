@@ -7,13 +7,14 @@ names** (986 total), and **2,064 compiled / 381 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`CHOSEN-NAME-OPERAND-SCOPE` adds typed current-frame name reads and lexical
-choice plans across unconditional nested `PlayerActions`. Each factory has
-separate binding declarations; branches cannot export conditional choices.
+`CHOSEN-NAME-MATCHING` adds typed resolving name filters with retained Oracle
+interchangeable names and simultaneous named hand discard. RON action sequences
+use native producer-before-read validation. The legal-choice catalog restores
+31 original names, for 35,950 choices. Separate instance/frame bindings remain.
 This shared prerequisite covers Nebuchadnezzar and Petra Sphinx subrules;
-**+0 unique names / +0 records**. Matching and reveal consumers stay rejected.
+**+0 unique names / +0 records**. Their reveal consumers stay rejected.
 Prior complete card gameplay mappings remain in force. Compilation counts are
-unchanged; prerequisite gameplay coverage is separate.
+unchanged; prerequisite and synthetic RON gameplay coverage increased.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -54061,3 +54062,171 @@ Ranked next candidates:
    setting, if no higher-value multi-card prerequisite is dependency-ready.
 
 This run stops after CHOSEN-NAME-OPERAND-SCOPE. Migration remains incomplete.
+
+## 2026-10-08: typed chosen-name matching and resolving hand discard
+
+Capability: `CHOSEN-NAME-MATCHING`. Complete bounded slice; migration remains
+incomplete. The implement-engine skill was used for native contracts. No agent
+was delegated work. No removed card/set skill or Go-card requirements were used.
+
+### Baseline, candidates and selection
+
+The starting tree contained user changes to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`. They were preserved;
+only this run's status edit and appended entry are staged from this ledger.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The baseline
+loader exited 1 for collection rejection, with 2,064 compiled / 381 rejected
+records and 796 accepted / 190 rejected unique names. This was not a build failure.
+
+Complete records were read for LEG Nebuchadnezzar, Petra Sphinx, Tempest Efreet,
+Rebirth and ATQ Bronze Tablet. Nested forms, not first-error frequency, informed
+these estimates. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: Oracle equivalence and typed name matching | Nebuchadnezzar; Petra Sphinx | 0 | Nebuchadnezzar still needs random partial hand reveal/discard. Petra needs top reveal, a revealed-card condition and exact-card branch movement. Matching supplies a common prerequisite for both consumers. | Small to medium: retained alias evidence, matcher, compiler factory, a bounded resolving consumer and binding/frame/batch tests. |
+| Ranked #2: bounded reveal/exile result references | Nebuchadnezzar; Petra Sphinx; Tempest Efreet; Bronze Tablet | 0 for a bounded result prerequisite | Random hand and library-top reveal need distinct producer adapters and visibility. Tempest also needs ownership exchange and movement; Bronze needs ordered exile results, its owner/nontoken target filter, exchange and movement. Name matching would still block the named consumers. | Larger: exact visits, hidden/public information, ordered results and multiple producer shapes; must be divided into bounded slices. |
+| Ranked #3: paid-player collection and dispatch | Rebirth | 1 if implemented fully | AnteTopCost already exists; needs APNAP optional payments, typed paid-player collection and replacement-aware life setting. No shared multi-card prerequisite identified for this bounded form. | Medium to large: collection producer, dispatch, payment and life contracts. |
+
+Candidate #1 is dependency-ready, with a concrete shared two-card benefit. It
+wins over the wider result contracts and single-card Rebirth work. The contract,
+reuse boundary and acceptance cases were stated before editing. A resolving
+`DiscardCards` consumer was included to exercise the matcher through a complete
+compiled RON ability, while both real reveal consumers remain rejected.
+
+### Exact signatures, contexts and dependencies
+
+- `mage.OracleNamesInterchangeable(first, second string) bool`: nonempty exact
+  English names or members of one retained interchangeable-name group match.
+  Empty names and unrelated names do not match. Artwork flavor titles are not
+  aliases. The implementation does not change legacy Named filters, registry
+  lookup or deck-construction services.
+- `mage.CardNameMatcher`: typed `Match([]string, *EffectContext) bool` with native
+  declaration inspection. Supplied names may be current or retained; object
+  identity, LKI selection and visibility belong to the caller.
+- `mage.MatchesChosenCardName(CardNameRef) CardNameMatcher`: a pure current-frame
+  matcher. Missing/cleared results and nameless sets do not match. Nil operands
+  and undominated reads reject during definition validation.
+- `mage.DiscardHandMatchingName(PlayerRef, CardNameMatcher) ResolvingEffect`:
+  uses current single-name hand-card characteristics, selects subjects before
+  movement, then executes the existing simultaneous discard batch. Missing
+  players/results do nothing. Replacements see the initial hand. Redirected
+  discards still send discard events; prevented discards do not.
+- `ron.compileResolvingCardNameFilter(Node, scope) (cardNameMatcherFactory, error)`:
+  exact `IsNamed(TheChosenName)` with a dominating lexical choice. Wrong arity,
+  symbol/tuple shape, incompatible operands and unbound names reject.
+- Resolving `PlayerAction(player, DiscardCards(IsNamed(TheChosenName)))` and
+  `PlayerActions(player, [...])` lower to the native discard service. Factory
+  bindings retain the producer identity and remain separate between instances.
+  Cost/static/entry contexts, boolean name-filter nesting and reveal consumers
+  remain unsupported. Single-PlayerAction choice export is not added.
+- RON `actionOptions` now passes ordered effects through `mage.Sequence`.
+  The first gameplay test exposed that sibling effects could not establish
+  producer-before-read dominance. Sequence supplies the existing native contract;
+  target declarations remain on the outer action.
+
+Reuse: CardNameRef/Binding, choice plans and lexical scope, the resolution name
+map, clone/clear/nested/loop frames, PlayerRef and target services, Sequence,
+`discardMatchingHandEffect`, `discardActionsTogetherWithEvents`, replacements,
+zone movement and events. No parallel zone/payment system, global last-action
+slot, Go-card fallback, partial registry, new replacement order or batching
+service was introduced. No DSL function was deleted; no deletion audit is claimed.
+Runtime cutover and removal gates remain unmet.
+
+Local CR 201.2a, 201.3, 201.4g, 201.6 and 608.2c–j were read. Retained primary
+sources and URLs are documented in the API/rules-contract updates.
+
+### Name-data correction and source evidence
+
+The retained Scryfall card-name catalog omitted original interchangeable names,
+including Eleven, the Mage. Current Scryfall print data uses the renamed Oracle
+name and retains the original English name in `printed_name`; double-faced
+printings use face-local fields. The separate embedded supplement covers all
+30 SLX printings, with 31 face pairs. Themberchaud has no different name to add.
+Pairing by face index prevents cross-face matches. Flavor titles and digital-only
+names are excluded. Source query, retrieval time, source/response hashes, each
+Oracle identity, print-query URLs and the final asset hash are retained.
+
+The choice catalog merges both members of each pair, adding 31 legal choices:
+35,919 canonical names become 35,950 choices. Tests verify every group, legal
+choice membership, symmetry, unique names and the asset hash. This is a catalog
+source gap, not a RON transcription defect. No RON source changed, so the
+vocabulary-source snapshot does not need refresh. Transient retrieval errors
+were resolved; no environment failure remains.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on missing CardNameMatcher,
+OracleNamesInterchangeable and MatchesChosenCardName. The RON tests first failed
+compilation on missing compileResolvingCardNameFilter. Consumer tests then failed
+on missing DiscardHandMatchingName and unsupported hand IsNamed lowering. All
+expected failures preceded the corresponding implementations. A replacement test
+expectation was corrected after inspecting the shared batch contract: a library
+redirection remains a discard event. No production assertion was weakened.
+
+| Test | Card mapping and acceptance evidence |
+| --- | --- |
+| TestRONCardNameMatchRealOperands | Both complete LEG Nebuchadnezzar and Petra Sphinx records supply their actual choice and filter ASTs. They execute through choice/matcher services with an interchangeable original name, reject shared instance state and keep both full records rejected. Subrule evidence only. |
+| TestRONCardNameMatchDeclarations / InvalidConsumers | Exact shape/type/scope and use-before-producer rejection, including complete invalid RON declarations. |
+| TestRONCardNameMatchGameplay | Synthetic compiled activation: explicit target player, payment failure without choices/discards, resolution timing, source departure/return/phasing, independent cloned choices, matching/nonmatching membership and correct hand/graveyard results. |
+| TestRONCardNameMatchScopedGameplay | Synthetic compiled spell: nested unconditional PlayerActions choice export, later outer consumer, original action player and shared instance binding through native Sequence validation. |
+| TestCardNameMatchEquivalence / Snapshot | Exact and absent names, bidirectional aliases, unrelated/flavor-title rejection, both DFC faces with no cross-face match, all 31 groups and catalog/source integrity. |
+| TestCardNameMatchContract / Declarations | Pure reads, missing/cleared choices, multiple supplied names, clone independence, no extra choices, nil and undominated declaration rejection. |
+| TestCardNameMatchPendingAndFrames | Pending actions after source departure/return/phasing; clone choices, end-of-frame cleanup and nested/loop-frame isolation. |
+| TestCardNameMatchDiscardBatch | Simultaneous moves before events; prevention and library redirection see the initial hand; precise discard-event counts and invalid native operand rejection. |
+| Existing TestCardNameChoice*, TestCardNameRef*, TestRONCardNameChoice*, TestRONCardNameScope*, TestHandOperations* | Prior timing, waiting, LKI, scope, payment, stack-copy, batch and replacement contracts retained. |
+
+Complete-card gameplay coverage is unchanged. Subrule coverage increases for
+Nebuchadnezzar and Petra Sphinx, and complete synthetic RON consumer gameplay is
+added. The estimated and actual full-card gains are both 0 names / 0 records.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCardNameMatch -count=1`: PASS.
+- Native `go test ./pkg/mage -run 'TestCardName(Match|Choice|Ref)' -count=1`: PASS.
+- Whole RON package `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository.
+- `make lint`: PASS, 0 issues. Automatic import formatting in the two new test
+  files was reviewed. No unrelated Go file changed. Both focused slice suites
+  were rerun after lint: PASS.
+- Skill final `go test ./... -short -count=1`: PASS, after lint.
+- `git diff --check`: PASS, including final documentation and ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for unsupported records,
+  **2,064 compiled / 381 rejected records; 796 accepted / 190 rejected names**.
+  The entire final JSON equals the baseline, including every diagnostic. Strict
+  loading still publishes no partial registry, and no accepted record was lost.
+
+No required check failed or remains blocked. Collection rejection is expected,
+not an environmental or build/test failure. The exact named-card blockers remain:
+Nebuchadnezzar LEG:180:379, `expected 1 positional arguments
+(RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType)`; Petra Sphinx
+LEG:190:324, `unsupported scoped player action (RevealTopCardOfLibrary)`.
+The actual zero compilation gains match the estimate: the named consumers need
+additional reveal-result contracts. Compilation and full-card gameplay remain
+separate measures.
+
+Changed files: native card_name_choice.go, new card_name_match.go and tests,
+hand_operations.go, doc.go; RON new card_name_match.go and tests,
+hand_operations.go and vocabulary.go; oracle_name_equivalences.txt and its
+source metadata; DSL reference, engine rules contracts and this ledger.
+User documentation reorganization and other unrelated changes remain unstaged.
+
+Ranked next candidates:
+
+1. Shared typed reveal-result references with exact visits and visibility for
+   Petra Sphinx, Nebuchadnezzar and Tempest Efreet. Compare library-top and random
+   hand producers before selecting one complete bounded context; the matcher is
+   now ready for their consumers. Do not accept reveal records before exact-card
+   dispatch and hidden-information contracts are complete.
+2. Nebuchadnezzar's bounded random partial-hand reveal and matching discard,
+   reusing announced X, the matcher, scripted RNG and the existing discard batch;
+   evaluate shared reveal prerequisites before a single-card full unlock.
+3. Rebirth paid-player collection/dispatch through AnteTopCost and life setting,
+   if no higher-value multi-card prerequisite is dependency-ready. Ordered exile
+   results and ownership exchange for Bronze Tablet remain later work.
+
+This run stops after CHOSEN-NAME-MATCHING. Migration remains incomplete.

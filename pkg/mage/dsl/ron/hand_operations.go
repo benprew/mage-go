@@ -79,6 +79,15 @@ func compileHandPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
+	if n.Name == "DiscardCards" && n.Args[0].Name == "IsNamed" {
+		matcher, err := compileResolvingCardNameFilter(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DiscardHandMatchingName(ctx.player.build(bindings), matcher(bindings))
+		}}, nil
+	}
 	filter, err := compileHandCardFilter(n.Args[0])
 	if err != nil {
 		return nil, err

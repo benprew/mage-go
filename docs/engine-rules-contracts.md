@@ -12445,9 +12445,11 @@ all nontoken English names in the retained Scryfall catalog snapshot, including
 cards outside the game's format and executable collection. CR 201.4 prohibits
 token-only names. CR 201.4b–f permits individual split, flip, double-faced, meld
 and adventure names. Combined ` // ` names are split and not offered as choices.
-The immutable embedded asset contains 35,919 unique sorted face names from
-35,137 source entries; source URI, retrieval time and hashes are retained beside
-it. Runtime choice does not make a network request or load Go card definitions.
+The canonical embedded asset contains 35,919 unique sorted face names from
+35,137 source entries. The interchangeable-name supplement below adds 31
+original English names, for 35,950 choices. Source URIs, retrieval times and
+hashes are retained beside the assets. Runtime choice does not make a network
+request or load Go card definitions.
 Source: https://scryfall.com/docs/api/catalogs/card-names.
 
 `ChooseCardName(PlayerRef, *CardNameCatalog, *CardNameBinding) ResolvingEffect`
@@ -12496,5 +12498,59 @@ Native evidence: `TestCardNameRefContract`, `Declarations`, `Frames`,
 RON evidence: `TestRONCardNameScope*` establishes operand type, instance identity,
 unconditional PlayerActions export, independent subsequent choices and branch
 boundaries. The real Nebuchadnezzar and Petra Sphinx operands are covered only
-as subrules; both full records remain rejected. CR 201.3/201.4g name equivalence
-and reveal-result consumers remain prerequisites before name matching.
+as subrules; both full records remain rejected. CR 201.3/201.4g name equivalence is
+established below; reveal-result consumers remain separate prerequisites.
+
+### Typed chosen-name matching and hand discard (CR 201.2a, 201.3, 201.4g)
+
+`OracleNamesInterchangeable(first, second string) bool` is a pure English-name
+comparison. Equal nonempty names match. Distinct names match only in the same
+retained interchangeable-name group. Empty names never match. Artwork flavor
+titles are not aliases (CR 201.6). The snapshot covers the 30 Universes Within
+printings, with 31 distinct face pairs; Themberchaud has the same English name
+on both printings and needs no pair. Double-faced pairs are matched by face
+index, not across faces. The retained source metadata records each Oracle
+identity, print-query URI, response hash, English names, retrieval time and
+asset hash. Scryfall canonicalizes these printings and puts original names in
+English `printed_name`, including face-local fields. The name catalog now
+includes both members of every pair. Runtime matching has no network or registry
+lookup. This snapshot must be updated when new interchangeable names appear.
+Evidence: [Wizards' indicator explanation](https://magic.wizards.com/en/news/announcements/whats-new-on-the-list-for-wilds-of-eldraine),
+[Scryfall SLX printings](https://api.scryfall.com/cards/search?q=set%3Aslx&unique=prints),
+and the per-identity URLs in `oracle_name_equivalences_source.json`.
+
+`MatchesChosenCardName(CardNameRef) CardNameMatcher` supplies
+`Match(names []string, ctx *EffectContext) bool`. It checks whether any supplied
+characteristic name matches the saved choice. The caller owns current/LKI
+selection, object identity and visibility. The matcher does not resolve objects,
+reveal cards, move cards, make decisions or mutate either input. Missing/cleared
+choices and empty/nameless sets return false. Native declaration inspection
+traverses the name operand, so a nil operand or an undominated binding rejects.
+Existing per-frame choice storage supplies nested, loop and clone isolation.
+
+`DiscardHandMatchingName(PlayerRef, CardNameMatcher) ResolvingEffect` checks the
+selected player's current hand names at resolution, then uses the same
+`discardMatchingHandEffect` and `discardActionsTogetherWithEvents` batch as the
+legacy filtered discard. All replacements see the initial hand; all moves finish
+before discard events. A redirected discard still sends a discard event;
+a prevented discard sends none. An absent player or name result discards nothing.
+This uses the engine's current single-name hand-card characteristic. Additional
+object-name representations and reveal-result movement are separate services.
+
+RON supports `DiscardCards(IsNamed(TheChosenName))` in `PlayerAction` and
+`PlayerActions` resolving bodies. The name requires a dominating lexical choice.
+`IsNamed` has exactly one positional operand; incompatible operands, unbound
+results and other shapes reject. The private `compileResolvingCardNameFilter`
+factory is also ready for reveal consumers. Cost/static/entry use and nested
+boolean name filters remain unsupported. `actionOptions` supplies the ordered
+RON action list through `mage.Sequence`, so native definition validation sees
+producer-before-read order across the list; targets remain on the outer action.
+
+Native evidence: `TestCardNameMatchEquivalence`, `Contract`, `Declarations`,
+`PendingAndFrames`, `DiscardBatch`, `Snapshot`. RON evidence:
+`TestRONCardNameMatchDeclarations`, `InvalidConsumers`, `RealOperands`,
+`Gameplay`, `ScopedGameplay`. Actual Nebuchadnezzar/Petra Sphinx choice/filter
+ASTs execute through native choice and matcher services; their complete records
+still reject. Synthetic RON activation/spell gameplay covers explicit players,
+failed payment, source departure/return/phasing, nested choice export and cloning.
+No full-card gameplay mapping or collection compilation gain is claimed.
