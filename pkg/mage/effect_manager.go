@@ -822,6 +822,7 @@ func (em *EffectManager) Apply(g *Game) {
 		g.syncAbilityContext(p)
 	}
 	g.syncHandVisibility()
+	g.syncLibraryTopVisibility()
 	g.CheckStateTriggers()
 }
 

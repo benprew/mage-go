@@ -33,6 +33,7 @@ func compileRandomHandReveal(n Node, remaining []Node, ctx scope) (effectFactory
 	}
 	plan := &handRevealPlan{name: "revealed hand card " + n.Position.String()}
 	ctx.handReveal = plan
+	ctx.libraryReveal = nil
 	body, err := compileActionSequence(remaining, ctx)
 	if err != nil {
 		return nil, err

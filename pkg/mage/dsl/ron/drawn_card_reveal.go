@@ -7,7 +7,7 @@ import (
 )
 
 func drawnCardAction(n Node, ctx scope) (Node, playerReferencePlan, error) {
-	if n.Name == "PlayerAction" && len(n.Args) == 2 && n.Args[1].Name == "DrawACard" {
+	if n.Name == "PlayerAction" && len(n.Args) == 2 && (n.Args[1].Name == "DrawACard" || n.Args[1].Name == "RevealTopCardOfLibrary") {
 		player, err := compilePlayerRef(n.Args[0], ctx)
 		return n.Args[1], player, err
 	}
@@ -27,6 +27,7 @@ func compileDrawnCardProducer(n Node, player playerReferencePlan, remaining []No
 		ctx.drawnCard = plan
 	} else {
 		ctx.handReveal = plan
+		ctx.libraryReveal = nil
 	}
 	body, err := compileActionSequence(remaining, ctx)
 	if err != nil {

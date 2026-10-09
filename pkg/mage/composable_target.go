@@ -620,6 +620,15 @@ func (r savedCardRef) resolveCard(ctx *EffectContext) (Card, bool) {
 		return nil, false
 	}
 	for _, player := range ctx.Game.players {
+		if value.zone == ZoneLibrary {
+			if visitor, ok := player.(interface{ libraryVisit(uuid.UUID) uuid.UUID }); ok && visitor.libraryVisit(value.id) == value.visit {
+				for _, card := range player.Library() {
+					if card.ID() == value.id {
+						return card, true
+					}
+				}
+			}
+		}
 		visitor, hasVisit := player.(interface{ handVisit(uuid.UUID) uuid.UUID })
 		if value.zone == ZoneHand && hasVisit && visitor.handVisit(value.id) == value.visit {
 			for _, card := range player.Hand() {

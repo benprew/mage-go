@@ -7,12 +7,12 @@ names** (986 total), and **2,070 compiled / 375 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`EXTRA-TURN-SCHEDULING` adds a typed resolving extra-turn action and shared
-newest-first scheduling with normal-turn resumption through nested extra turns.
-Time Walk's five complete records now have native-stack gameplay coverage.
-Time Vault gains activation prerequisite coverage; its full records still reject.
-**+1 unique name / +5 records**; complete-card gameplay coverage gains Time Walk.
-Library reveal results, dynamic life payment and turn replacements remain gaps.
+`LIBRARY-TOP-REVEAL-RESULTS` adds scoped public top-card reveals, saved facts,
+and exact library visits with reorder, shuffle and continuous visibility identity.
+Petra Sphinx gains native producer/predicate coverage; its movements still reject.
+**+0 unique names / +0 records**; complete-card gameplay coverage is unchanged.
+Shared library identity enables further Petra Sphinx, Knowledge Vault and
+Aladdin's Lamp work. Dynamic life payment and turn replacements remain gaps.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -54922,3 +54922,162 @@ Ranked next candidates:
    payment before selecting a single-card adapter.
 
 This run stops after EXTRA-TURN-SCHEDULING. Migration remains incomplete.
+
+## 2026-10-08: library-top reveal results and library visit identity
+
+Status: completed implementation slice `LIBRARY-TOP-REVEAL-RESULTS`.
+
+### Baseline and candidate comparison
+
+The working tree had user changes in .gitignore, the execution design and this
+ledger, plus the untracked completed-entry archive. These are preserved. Fresh
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The initial strict
+loader exited 1 with 2,070 compiled / 375 rejected records and 798 accepted /
+188 rejected names. This was collection rejection, not a build or test failure.
+
+The latest entry ranked library identity/reveal first. Complete RON records and
+nested forms were inspected for each comparison; reprints count once.
+
+| Candidate | Distinct cards and estimated complete-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Library visit/reorder identity and top reveal | Petra Sphinx; Field of Dreams visibility interaction. Downstream Knowledge Vault and Aladdin's Lamp. Estimated +0 names / +0 records | Petra still needs top-to-hand/graveyard movements. Knowledge Vault needs top capture, linked face-down exile and departure/return consumers. Aladdin's Lamp's two records need draw replacement, selection and randomized bottom order. Shared exact library identity supports all three downstream cards | Moderate: player zone/clone integration, reveal lowering, scoped results and rules identity tests |
+| Bounded plural random partial-hand reveal and named discard | Nebuchadnezzar. Estimated +1 name / +1 record | Existing X payment, chosen-name matcher, activation restriction, RNG and discard services are available. Needs distinct random sampling, bounded selection and simultaneous matching discard; no other full-record blocker found | Moderate: new plural producer, random selection and replacement/batch tests |
+| Optional begin-turn skip replacement and source untap | Time Vault. Estimated +1 name / +5 records | Entry tapping, untap restriction and extra-turn scheduling are available. Needs proposed-turn replacement, optional skip outcome, exact source untap and native/harness lifecycle integration. Enables shared turn replacement contracts. Wand of Ith's separate dynamic life payment is still a competing single-card gap | Higher: replacement decisions, competing rules, turn skips, phasing and scheduler tests |
+
+Selection: candidate 1 is dependency-ready and is the ranked shared prerequisite.
+It provides concrete library identity reuse for Petra Sphinx, Knowledge Vault
+and Aladdin's Lamp. The scope stops at one resolving top-reveal capability and
+its identity contract. No top movement, linked exile or draw replacement is
+partially installed. Source requirements came from RON, not Go definitions.
+Legacy Go definitions were inspected only for the required library caller audit.
+
+### Established signatures, contexts and reuse
+
+- `RevealLibraryTopInto(player PlayerRef, result *CardBinding) ResolvingEffect`:
+  read the current selected library top at resolution, save its exact visit and
+  immutable name/type facts, and record copied public reveal history. No movement,
+  random selection or player choice. Empty libraries and absent players clear
+  the result. Missing engine visit provenance fails before public reveal.
+- `FromCard(*CardBinding) CardRef`: existing signature now resolves saved library
+  visits. Departure/return, shuffle and reordering end the reference. Removing
+  another card or inserting a new card preserves retained order and visits.
+- `BasePlayer.SetLibrary([]Card)`, `AddToLibrary(Card)`, `DrawCard()` and
+  `ShuffleLibrary()` retain their public signatures. Private libraryVisits and
+  saved libraryOrder identify each object and changed order region. A stationary
+  index inside a reordered region receives a new visit; untouched suffixes do
+  not. Shuffle renews all visits, including a one-card library.
+- Existing continuous library-top visibility now ends a retained top's visit
+  when it stops being revealed, through top changes or the final live rule's
+  departure/phasing/ability removal. Multiple rules retain uninterrupted
+  visibility. The existing layer pass synchronizes this state once per pass.
+  Player extraction and game/SearchPlayer cloning retain independent mutation
+  state. Local CR 400.7, 401.6, 608.2i and 701.20a–e establish these boundaries.
+
+RON supports exactly the bare symbol `RevealTopCardOfLibrary` in resolving
+lists, `PlayerAction(playerRef, RevealTopCardOfLibrary)`, and unconditional
+nested `PlayerActions` producers. Scoped results can reach their outer
+continuation while the action player stays local. Existing reveal type/name
+predicates read the latest lexical reveal. Library and hand results remain
+incompatible for hand discard. Branch-local production cannot dominate outer
+reads. Tuple/argument forms, unbound players, costs, static/entry/replacement
+operations and optional/plural reveal declarations remain rejected.
+
+The compiler owns spelling, scope and per-instance libraryRevealPlan bindings.
+The engine owns visits, continuous visibility transitions and public snapshots.
+Reuse: existing CardBinding/resolution frames, typed PlayerRef and target groups,
+name catalog/matcher, historical reveal predicates, waiting-source declarations,
+LKI, delayed capture, native stack execution, cost transactions and cloning.
+No global last-action slot, game-time declaration panic, card-name branch,
+Go-card fallback or partial production registry was added. Reveal introduces no
+replacement candidate or simultaneous movement; existing announcement legality
+and cost rollback services retain those contracts.
+
+The mutation audit covers engine services and retained Go-card callers. Some
+legacy callers reorder the returned library slice before SetLibrary. The saved
+ID order detects that case without changing the public slice APIs or cards.
+No Go definitions, generators or DSL functions were removed: complete collection
+loading, gameplay, startup and removal gates remain unmet. No RON source or
+source defect changed, so vocabulary source hashes require no refresh.
+
+### Failing-first tests and card mapping
+
+The first native tests failed compilation on missing RevealLibraryTopInto and
+libraryVisit signatures. RON tests failed on unsupported scoped reveal and the
+unsupported explicit reveal action. Further failing-first regressions exposed a
+stationary index inside a reordered region, loss of continuous top visibility,
+and a legacy mutable-slice reorder. Each now passes. Test fixtures were corrected
+for source ownership, the actual target binding name, a concrete player wrapper
+that retains private engine visit methods, and GetOpponent's existing name.
+No gameplay assertions were weakened.
+
+| Test | Mapping and evidence |
+| --- | --- |
+| TestRONLibraryTopRevealPetraPrerequisite | Complete LEG Petra Sphinx record inspected; its actual PlayerActions producer and chosen-name predicate run on the native activation stack. Top movements remain unsupported; prerequisite evidence only |
+| TestRONLibraryTopRevealGameplay | Explicit/nested player scopes, failed payment, announcement timing, source departure/return/phasing, empty library, independent cloned stacks and outer player scope |
+| TestRONLibraryTopRevealContexts | Spell, triggered and delayed action lists; saved historical facts after library departure/return and cloned delayed frames |
+| TestRONLibraryTopRevealDistinctResults | Separate controller/opponent producers and two independent pending activations |
+| TestRONLibraryTopRevealInvalid / InvalidContexts | Wrong spelling/arity, unbound player, unproduced and conditional results, incompatible hand discard, costs, static and entry declarations |
+| TestLibraryTopRevealVisits / RemovalAndClone | Current visit, empty/absent clearing, return/reorder/shuffle invalidation, retained facts, draw removal and clone isolation |
+| TestLibraryTopRevealReorderRegion / MutableCallerOrder | Changed order regions, stationary middle index, untouched suffix and in-place legacy caller compatibility |
+| TestLibraryTopRevealContinuousVisibility | Field of Dreams' existing shared visibility contract: top covering, source departure/phasing, uninterrupted multiple-source visibility and clone isolation |
+| TestLibraryTopRevealWaitingAndFrames | Nested frame restoration, pure waiting queries, departed-source LKI, exclusion of a returned source with another controller, cloned delayed execution |
+| TestLibraryTopRevealDeclarations / MissingIdentity | Valid typed definitions and dominating production; nil/empty/unproduced declarations and non-engine visit provenance rejected |
+
+Actual complete-card gains match the estimate: **+0 unique names / +0 records**.
+Petra Sphinx gains actual producer/predicate gameplay evidence, not complete-card
+coverage. Existing Field of Dreams RON coverage remains supported; its identity
+interaction has additional native evidence. Knowledge Vault and Aladdin's Lamp
+are concrete downstream requirements, not newly validated complete cards.
+
+### Verification and measured outcome
+
+Required checks completed in fast-fail order on the final implementation:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONLibraryTopReveal -count=1`: PASS.
+- Native focused library reveal, visibility, hand-visit and library inspection
+  tests with `-count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS, including accepted-record
+  rebuild validation and unchanged inventory assertions.
+- `make test`: PASS, whole repository and retained Go-card callers.
+- `make lint`: PASS, 0 issues; automatic source changes: 0.
+- Skill final `go test ./... -short -count=1`: PASS.
+- `git diff --check` and staged diff check: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **2,070 compiled /
+  375 rejected records; 798 accepted / 188 rejected unique names**. Totals remain
+  2,445 records / 986 names. Strict collection rejection remains intact.
+
+Every rejection is retained; no previously accepted record regresses. Only
+Petra Sphinx's diagnostic changes: from unsupported scoped RevealTopCardOfLibrary
+at LEG.lines.ron:190:324 to expected positional arguments for unsupported
+PutTopOfLibraryInHand at :190:438. The graveyard movement is also still missing.
+No other diagnostic changes. The estimated zero full-card gain is confirmed.
+
+The first lint attempt failed when goimports could not execute
+/opt/homebrew/bin/go during a concurrent Homebrew Go update. The executable
+returned as Go 1.27.2 (initial baseline was 1.27.1). Focused tests, build, vet,
+engine short tests, full tests, lint, final short tests and loader were rerun on
+1.27.2 and passed with the expected collection rejection. No required check is
+blocked. No environment workaround or repository configuration change was made.
+
+Changed files: new pkg/mage/library_top_reveal.go and library_top_reveal_test.go;
+new pkg/mage/dsl/ron/library_top_reveal.go and library_top_reveal_test.go;
+pkg/mage/player.go, clone.go, composable_target.go, effect_manager.go and doc.go;
+RON compiler.go, player_scope.go, optional_payment.go, player_actions.go,
+reveal_result.go, random_hand_reveal.go and drawn_card_reveal.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+The ledger commit includes only the summary update and appended entry; the user's
+archive/reorganization changes remain in the working tree.
+Commit message: `feat(ron): implement library-top reveal results`.
+
+Ranked next candidates:
+
+1. Typed library-top movement to hand/graveyard for Petra Sphinx; compare shared
+   exact top capture and exile needs in Knowledge Vault before bounding the next
+   library operation. Keep linked exile as a separate prerequisite.
+2. Bounded plural random partial-hand reveal and named discard for Nebuchadnezzar;
+   reuse X, chosen-name results, RNG and simultaneous discard.
+3. Optional begin-turn skip replacement for Time Vault; compare shared turn
+   lifecycle value with Wand of Ith's dynamic revealed-card life payment.
+
+This run stops after LIBRARY-TOP-REVEAL-RESULTS. Migration remains incomplete.

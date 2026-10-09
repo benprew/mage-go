@@ -185,6 +185,9 @@ type BasePlayer struct {
 	graveyardVisits          map[uuid.UUID]uuid.UUID
 	departedGraveyardSources map[uuid.UUID]DamageSource
 	library                  []Card
+	libraryVisits            map[uuid.UUID]uuid.UUID
+	libraryOrder             []uuid.UUID
+	libraryTopPublic         bool
 	ante                     []Card
 	anteVisits               map[uuid.UUID]uuid.UUID
 	manaPool                 *ManaPool
@@ -357,12 +360,82 @@ func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 	return nil, false
 }
 
-func (p *BasePlayer) Library() []Card     { return p.library }
-func (p *BasePlayer) SetLibrary(l []Card) { p.library = l }
+func (p *BasePlayer) Library() []Card { return p.library }
+
+// SetLibrary keeps retained visits outside reordered regions.
+// A revealed card becomes a new object when its region is reordered.
+func (p *BasePlayer) SetLibrary(cards []Card) {
+	previous := p.libraryVisits
+	oldOrder := make([]uuid.UUID, 0, len(p.libraryOrder))
+	newOrder := make([]uuid.UUID, 0, len(cards))
+	present := make(map[uuid.UUID]bool, len(cards))
+	for _, card := range cards {
+		present[card.ID()] = true
+	}
+	for _, id := range p.libraryOrder {
+		if present[id] {
+			oldOrder = append(oldOrder, id)
+		}
+	}
+	for _, card := range cards {
+		if previous[card.ID()] != uuid.Nil {
+			newOrder = append(newOrder, card.ID())
+		}
+	}
+	reordered := make(map[uuid.UUID]bool)
+	balance := make(map[uuid.UUID]int)
+	unmatched := 0
+	update := func(id uuid.UUID, change int) {
+		if balance[id] != 0 {
+			unmatched--
+		}
+		balance[id] += change
+		if balance[id] != 0 {
+			unmatched++
+		}
+	}
+	for i, id := range newOrder {
+		changed := unmatched != 0 || oldOrder[i] != id
+		update(oldOrder[i], 1)
+		update(id, -1)
+		reordered[id] = changed
+	}
+	p.libraryVisits = make(map[uuid.UUID]uuid.UUID, len(cards))
+	for _, card := range cards {
+		visit := previous[card.ID()]
+		if visit == uuid.Nil || reordered[card.ID()] {
+			visit = uuid.New()
+		}
+		p.libraryVisits[card.ID()] = visit
+	}
+	if p.libraryTopPublic && len(p.libraryOrder) != 0 {
+		oldTop := p.libraryOrder[0]
+		if present[oldTop] && (len(cards) == 0 || cards[0].ID() != oldTop) {
+			p.libraryVisits[oldTop] = uuid.New()
+		}
+	}
+	p.libraryOrder = make([]uuid.UUID, len(cards))
+	for i, card := range cards {
+		p.libraryOrder[i] = card.ID()
+	}
+	p.library = cards
+}
+
+func (p *BasePlayer) libraryVisit(id uuid.UUID) uuid.UUID { return p.libraryVisits[id] }
+
+func (p *BasePlayer) recordLibraryVisit(id uuid.UUID) {
+	p.libraryVisits = maps.Clone(p.libraryVisits)
+	if p.libraryVisits == nil {
+		p.libraryVisits = make(map[uuid.UUID]uuid.UUID)
+	}
+	p.libraryVisits[id] = uuid.New()
+}
 
 func (p *BasePlayer) AddToLibrary(c Card) {
 	p.assertOwner(c)
 	p.library = append(p.library, c)
+	p.libraryOrder = append(slices.Clone(p.libraryOrder), c.ID())
+	p.recordLibraryVisit(c.ID())
 }
 
 func (p *BasePlayer) ClearGraveyard() {
@@ -413,9 +486,17 @@ func (p *BasePlayer) ShuffleLibrary() {
 	fresh := make([]Card, len(p.library))
 	copy(fresh, p.library)
 	p.library = fresh
+	p.libraryVisits = make(map[uuid.UUID]uuid.UUID, len(p.library))
+	for _, card := range p.library {
+		p.libraryVisits[card.ID()] = uuid.New()
+	}
 	rand.Shuffle(len(p.library), func(i, j int) {
 		p.library[i], p.library[j] = p.library[j], p.library[i]
 	})
+	p.libraryOrder = make([]uuid.UUID, len(p.library))
+	for i, card := range p.library {
+		p.libraryOrder[i] = card.ID()
+	}
 }
 
 func (p *BasePlayer) DrawCard() (Card, bool) {
@@ -425,6 +506,9 @@ func (p *BasePlayer) DrawCard() (Card, bool) {
 	}
 	c := p.library[0]
 	p.library = p.library[1:]
+	p.libraryOrder = p.libraryOrder[1:]
+	p.libraryVisits = maps.Clone(p.libraryVisits)
+	delete(p.libraryVisits, c.ID())
 	p.AddToHand(c)
 	p.lastDrawnCardID = c.ID()
 	return c, true

@@ -43,7 +43,7 @@ func compileRevealResultBranch(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(condition, 1); err != nil {
 		return nil, err
 	}
-	if ctx.handReveal == nil {
+	if ctx.handReveal == nil && ctx.libraryReveal == nil {
 		return nil, problem(condition, "reveal predicate requires a bound reveal result")
 	}
 	if ctx.activation && containsManaAction(n) {
@@ -83,6 +83,10 @@ func compileRevealResultBranch(n Node, ctx scope) (effectFactory, error) {
 		if n.Name == "Unless" {
 			bodies[0], bodies[1] = bodies[1], bodies[0]
 		}
-		return mage.IfRevealedCardMatches(bindings.handReveals[plan], matcher(bindings), bodies[0], bodies[1])
+		result := bindings.handReveals[plan]
+		if ctx.libraryReveal != nil {
+			result = ctx.libraryReveal.binding(bindings)
+		}
+		return mage.IfRevealedCardMatches(result, matcher(bindings), bodies[0], bodies[1])
 	}, nil
 }

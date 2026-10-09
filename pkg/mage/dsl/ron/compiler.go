@@ -19,6 +19,7 @@ type costFactory func() mage.Cost
 type scope struct {
 	drawnCard            *handRevealPlan
 	handReveal           *handRevealPlan
+	libraryReveal        *libraryRevealPlan
 	chosenName           *cardNameChoicePlan
 	anteSourcePayment    bool
 	chosenPlayer         *playerChoicePlan
@@ -107,6 +108,7 @@ func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBinding
 func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
 	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
+	bindings.libraryReveals = make(map[*libraryRevealPlan]*mage.CardBinding)
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
 	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)

@@ -9628,3 +9628,28 @@ branches and PlayerActions bodies; only the supported outer action-list
 continuation can read them. Cost/static/entry/replacement and plural/library
 producers remain separate contexts. Sindbad's complete ARN record supplies
 end-to-end gameplay evidence in `TestRONDrawnCardRevealSindbad`.
+
+### Library-top reveal results
+
+Use `RevealLibraryTopInto(player, result)` with a `CardBinding` for a public
+reveal of the current library top at resolution. `FromCard(result)` requires
+its original library visit. Departure, return, shuffle or reordering end that
+reference. A continuously public top also gets a new visit when it stops
+being revealed (CR 401.6). Removal of another card preserves the visit.
+`IfRevealedCardMatches` reads
+immutable name/type facts after identity ends. Empty libraries clear the result;
+reveal does not draw, mill or move a card.
+
+RON supports the symbol `RevealTopCardOfLibrary` in resolving action lists,
+`PlayerAction(playerRef, RevealTopCardOfLibrary)`, and unconditional nested
+`PlayerActions(playerRef, [..., RevealTopCardOfLibrary])`. The scoped reveal
+result can reach the outer continuation; the player scope stays local. Existing
+`ACardWasRevealedThisWay` type/name predicates inspect that result. Results are
+separate for each producer and factory. Conditional producers stay in their
+branch. Hand-discard operands cannot consume a library result. Cost/static/entry/
+replacement and tuple forms remain unsupported.
+
+`TestRONLibraryTopRevealPetraPrerequisite` executes Petra Sphinx's actual producer
+and chosen-name predicate. Its movement branches remain unsupported, so complete
+Petra is still rejected. This supersedes earlier library-producer gap statements
+only for the singular resolving top-reveal shape.

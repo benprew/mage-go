@@ -42,12 +42,26 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			effects = append(effects, effect)
 			continue
 		}
+		if action.Name == "RevealTopCardOfLibrary" {
+			effect, result, err := compileLibraryTopReveal(action, player)
+			if err != nil {
+				return nil, nil, err
+			}
+			ctx.libraryReveal = result
+			ctx.handReveal = nil
+			effects = append(effects, effect)
+			continue
+		}
 		if part.Name == "PlayerActions" {
-			effect, result, err := compilePlayerActionsWithName(part, ctx)
+			effect, result, reveal, err := compilePlayerActionsWithResults(part, ctx)
 			if err != nil {
 				return nil, nil, err
 			}
 			ctx.chosenName = result
+			if reveal != ctx.libraryReveal {
+				ctx.handReveal = nil
+			}
+			ctx.libraryReveal = reveal
 			effects = append(effects, effect)
 			continue
 		}

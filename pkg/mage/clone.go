@@ -129,6 +129,18 @@ func extractBasePlayer(p Player) *BasePlayer {
 		}
 	}
 	bp.library = cloneCardSlice(p.Library())
+	if order, ok := p.(interface{ libraryOrderSnapshot() []uuid.UUID }); ok {
+		bp.libraryOrder = order.libraryOrderSnapshot()
+	}
+	if state, ok := p.(interface{ libraryTopIsPublic() bool }); ok {
+		bp.libraryTopPublic = state.libraryTopIsPublic()
+	}
+	if visited, ok := p.(interface{ libraryVisit(uuid.UUID) uuid.UUID }); ok {
+		bp.libraryVisits = make(map[uuid.UUID]uuid.UUID, len(bp.library))
+		for _, card := range bp.library {
+			bp.libraryVisits[card.ID()] = visited.libraryVisit(card.ID())
+		}
+	}
 	bp.ante = cloneCardSlice(p.Ante())
 	if visitor, ok := p.(interface{ anteVisit(uuid.UUID) uuid.UUID }); ok {
 		bp.anteVisits = make(map[uuid.UUID]uuid.UUID, len(bp.ante))
@@ -166,6 +178,9 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.departedGraveyardSources = bp.departedGraveyardSources
 	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)
+	clone.libraryVisits = bp.libraryVisits
+	clone.libraryOrder = bp.libraryOrder
+	clone.libraryTopPublic = bp.libraryTopPublic
 	clone.ante = cloneCardSlice(bp.ante)
 	clone.anteVisits = bp.anteVisits
 	// Copy mana pool state.

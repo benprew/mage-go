@@ -12714,3 +12714,64 @@ spell/trigger/delayed resolution, explicit players, saved historical facts,
 returned-visit rejection, lexical shadowing and independent factories/clones.
 Sindbad gains complete RON gameplay evidence; Petra Sphinx remains blocked by
 its library producer and movements, and Wand by dynamic life payment.
+
+## Library-top reveal results and library visits
+
+`RevealLibraryTopInto(player PlayerRef, result *CardBinding) ResolvingEffect`
+reveals the selected player's current library top at resolution. It saves an
+immutable name/type snapshot and an exact library visit in the existing card
+frame, and records copied public history. It makes no choice, uses no randomness,
+and moves no card. Empty libraries and absent players clear the result. A
+nonempty library without engine visit identities returns an error before reveal.
+Definition validation checks player/result declarations and producer dominance.
+
+`BasePlayer` owns library visits. Additions create fresh visits; draw and
+SetLibrary removal end departed visits. SetLibrary compares retained order, so
+insertion or removal alone preserves retained visits. Reordered regions receive
+fresh visits, including unchanged indices inside a changed region; untouched
+prefixes and suffixes keep their visits. Shuffle renews every current visit,
+including a one-card library. The existing continuous visibility service also
+ends a retained top's visit when that card stops being the public top, or when
+the final visibility rule ends (CR 401.6). Source phasing and ability removal
+use that same layer-pass transition. Multiple active visibility rules preserve
+the visit when one rule ends. Player extraction, SearchPlayer and game clones
+retain visits with separate storage on mutation. Existing callers remain valid.
+The repository mutation audit found BasePlayer mutations and SetLibrary callers.
+Some retained Go callers change the returned library slice before SetLibrary.
+An independent saved ID order lets SetLibrary detect those changes without
+changing the public slice APIs or the card implementations.
+
+`FromCard(result)` now resolves the original library visit, even when another
+card's removal changes its index. Departure, return, shuffle and reordering end
+that permission. `IfRevealedCardMatches` keeps historical reveal facts after the
+visit ends. This separation follows local CR 400.7, 608.2i and 701.20a–e;
+701.20d explicitly makes reordered revealed cards new objects. The operation
+supplies no permission to draw, move, exile, or inspect another card.
+
+RON supports bare `RevealTopCardOfLibrary`, explicit `PlayerAction(player,
+RevealTopCardOfLibrary)`, and unconditional nested `PlayerActions` production in
+resolving action lists. A scoped producer can supply its lexical result to the
+outer continuation without changing the outer player. Existing `If`, `Unless`
+and `IfElse(ACardWasRevealedThisWay(filter), ...)` use the current reveal's saved
+facts and existing type/name matchers. Library results cannot supply a hand
+reveal discard. Branch-local production cannot supply an outer result. Tuples,
+arguments, unbound players, costs, static rules, entry and replacement operations
+remain rejected. Spell, activation, trigger and delayed action lists share the
+same adapter. Factories allocate separate result bindings; saved resolution and
+delayed frames reuse existing clone/capture behavior.
+
+The typed player's explicit source reads participate in waiting delayed-source
+queries. Queries do not reveal or inspect the library. Source departure uses its
+saved controller information; returned sources cannot replace the incarnation.
+This introduces no replacement candidate or simultaneous movement. Payment
+rollback and target legality use existing announcement services.
+
+Evidence: native `TestLibraryTopRevealVisits`, `RemovalAndClone`,
+`ReorderRegion`, `Declarations`, `WaitingAndFrames`, `MissingIdentity`,
+`ContinuousVisibility`, `MutableCallerOrder`; RON
+`TestRONLibraryTopRevealGameplay`, `Contexts`, `DistinctResults`, `Invalid`,
+`PetraPrerequisite`. The Petra test extracts the actual scoped producer and name
+predicate from its complete LEG record and executes them on the native stack.
+It is prerequisite coverage only. Complete Petra still rejects top-card movement;
+Knowledge Vault needs linked face-down exile; Aladdin's Lamp needs draw
+replacement and library selection. No complete-card gameplay gain is claimed.

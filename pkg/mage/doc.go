@@ -1281,6 +1281,18 @@
 // Result predicates, saved characteristics and library reveals need separate
 // contracts. A saved card reference does not permit an action on an absent card.
 //
+// Use [RevealLibraryTopInto] for a public top-card reveal at resolution.
+// It saves name and type facts with an exact library visit in a [CardBinding].
+// [FromCard] cannot follow departure, return, shuffle or a reordered region.
+// A continuously revealed top gets a new visit when its visibility ends.
+// Removal of other cards keeps retained visits. Reveal predicates retain their
+// historical facts after identity ends. An empty library clears the result.
+// Clones and saved resolution frames keep separate visits and results.
+// Typed player operands declare source reads without revealing during queries.
+// RON supports RevealTopCardOfLibrary in resolving player action lists.
+// Unconditional PlayerActions producers retain their lexical result outside
+// that player scope. Top-card movement and linked exile need separate adapters.
+//
 // Use [LookAtLibraryTop] for private inspection and optional top ordering.
 // [LookAtLibraryTopNumber] reads a typed count once at resolution.
 // Both forms and [MayShuffleLibrary] declare explicit source reads in their
