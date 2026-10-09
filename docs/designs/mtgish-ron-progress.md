@@ -8,10 +8,10 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-STATIC-ANIMATION` adds a checked printed animation revision bridge.
-It preserves active IDs, registration order, exact per-pass membership, layers,
-clones, phasing, removal/restoration and printed-origin return.
-Bounded revision evidence covers **3 accepted names / 13 records**.
+`TEXT-PRINTED-STATIC-LAND-TYPE` adds a checked printed global land-type bridge.
+It preserves active IDs, registration positions, semantic input/output changes,
+land dependencies, intrinsic mana, clones, phasing and revised restoration.
+Bounded revision evidence covers **2 accepted names / 7 records**.
 Acceptance gain is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -59667,6 +59667,143 @@ Ranked next candidates:
    Hack and Sleight of Mind. Do not bypass unsupported declaration kinds.
 3. Per-player coin result rounds and simultaneous player damage for Mana Clash;
    defer this single-card producer while shared prerequisites remain useful.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: checked printed static basic-land-type text revision
+
+Capability: `TEXT-PRINTED-STATIC-LAND-TYPE`. Complete bounded declaration bridge;
+full live text installation and runtime cutover remain separate. Stop after this
+slice. Preserve the pre-existing Eureka entry-round changes, documentation edits,
+ledger relocation and unrelated untracked files. Commit only this slice's delta.
+
+### Fresh baseline and candidate selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The strict
+loader exited 1 for collection rejection: 2,091 compiled / 354 rejected records;
+809 accepted / 177 rejected unique names (2,445 records / 986 names). This is a
+capability gap, not a build or environment failure.
+
+Read the design, engine API, top status/latest entry, targeted vocabulary keys,
+selected compiler/engine code and complete affected RON records, including
+nested forms and all reprints. Read local CR 305.6–305.8, 612 and 613 contracts.
+Reprints count once when comparing unique-card benefit.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: printed static basic-land-type revision | Conversion, Blood Moon; 0 new names; 2 accepted names / 7 records gain bounded revision evidence | Semantic text builders, printed declaration correspondence, the checked static installer, intrinsic mana and land dependency services are ready. Shared prerequisite for Magical Hack. Aura-host/chosen-type rules and live text installation remain separate. | Small: checked declaration adapter, native rejection/registration tests, seven RON records and revised dependency tests |
+| Shared live text installer | Magical Hack, Sleight of Mind; eventual 2 names / 12 records, 0 credible unlocks in a small slice now | Complete records need spell/permanent union-target bodies, ordered layer-3 installation, expiry/restoration and separate spell lifecycle. Remaining printed declaration categories still block full cards. | Large: several categories and separate spell contracts |
+| Per-player coin rounds | Mana Clash; 1 name / 1 record | Typed target and repeated execution exist. Nested body still needs per-player coin results, tails selection, all-heads predicate and simultaneous damage before repeat. One remaining producer benefits. | Medium: local round bindings, deterministic randomness and shared damage tests |
+
+Select ranked #1: dependency-ready, small and shared by two land declarations,
+with concrete downstream benefit for Magical Hack. Do not pursue the single-card
+coin producer while shared prerequisites remain useful. Estimated unlocks were
+zero; actual acceptance gain is zero, as estimated.
+
+### Exact supported context and engine boundary
+
+RON opts in unconditional `EachPermanentLayerEffect(filter,
+[SetLandType(Plains|Island|Swamp|Mountain|Forest)])`. Existing typed static filter
+validation applies. Source-dependent selection and combined global lists still
+reject. Aura-host, chosen-type, conditional and temporary contexts do not opt in.
+No new syntax, scope spelling or card-name branch enters the engine.
+
+Engine signatures:
+
+- `(*StaticAbilityHolder).WithLandTypeTextRevision() *StaticAbilityHolder`.
+- `(*Game).RevisePrintedStaticLandType(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error`.
+
+Definition validation requires exactly one typed `basicLandSetEffect`, with one
+valid basic land type and battlefield duration in layer 4. Empty, nil, typed-nil,
+foreign, duplicate, multi-type and mixed declarations reject. The zero-value
+permanent filter keeps its existing all-permanents meaning.
+
+Reuse `revisePrintedStaticAbility`, semantic definition builders, declaration
+groups and `printedStaticEffect` registration/restoration. Fresh rules retain
+the active ID, exact source incarnation, current controller and original
+registration position. Each declaration keeps its own ordered revision
+prototype. Clones and sibling groups remain independent. Printed metadata and
+copiable origin stay fixed; only validated semantic input/output words change.
+
+Reuse `BecomesBasicLandsEffect`, its selection dependency detector, printed-rule
+existence probes and the shared layer sorter. Revisions can change dependencies
+and override timestamps (CR 613.8). Each pass reads current subjects, including
+later entries. Setting a basic land type removes old land types and printed
+rules, supplies intrinsic mana, and keeps granted abilities, other subtype
+families, card types and supertypes (CR 305.6–305.8).
+
+Phasing suspends the rule and keeps revisions. Layer-6 removal does not undo the
+earlier type layer; restoration uses the revised registration. LKI retains
+revised types. Return restores printed rules and rejects the old source visit.
+Granted, face-down, absent, phased, unmarked and foreign declarations reject
+without mutation. The caller still supplies layer-3 order, duration and original
+text restoration. This service does not install full live text or spell rules.
+
+No payment, replacement-order or simultaneous-operation service changes. Existing
+casting/payment transactions are reused and tested. No Go-card fallback or partial
+production registry is introduced. Runtime/removal gates remain unmet; retain Go
+cards and existing DSL callers. No source defect was found or corrected. RON
+sources and the vocabulary snapshot are unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, focused RON and native tests failed compilation on the
+missing `RevisePrintedStaticLandType` / `WithLandTypeTextRevision` APIs. After
+implementation, corrected fixture type/API errors without weakening assertions.
+All new behavioral tests pass.
+
+| Cards / context | Evidence |
+| --- | --- |
+| Conversion (LEA, LEB, 2ED, 3ED, CED, CEI) | `TestRONTextStaticLandTypeRecords`: Plains→Island output, ordered Island→Swamp revision, current/later Mountain membership and all lifecycle cases below. |
+| Blood Moon (DRK) | `Records`: Mountain→Island output, ordered Island→Swamp revision, nonbasic membership, no added Basic supertype, intrinsic mana and suppressed Strip Mine destruction/failed activation rollback. |
+| All seven records | Failed and paid casting, no pre-entry rule, unchanged metadata/active ID, clone isolation, source/subject phasing, removed-declaration rejection, revised restoration, departure LKI and printed-origin return. |
+| Both cards together | `TestRONTextStaticLandTypeDependencies`: Conversion's Mountain→Island selection and Blood Moon's Mountain→Island output, then Conversion's Plains→Swamp output; both timestamp orders, repeated passes, basic-land exclusion and source departure. |
+| Conversion's other rule | `TestRONTextStaticLandTypeUpkeep`: opponent upkeep does not offer payment; controller upkeep pays WW after land revision; decline sacrifices source and restores Mountains. Existing `TestRONConversionUsesConvertedManaForUpkeep` remains intact. |
+| Synthetic declarations | `TestRONTextStaticLandTypeDeclarations`: sibling groups, independent factories, foreign-ID rejection and global selection through source control changes. `Boundaries`: Aura-host/chosen types/animation reject revision; malformed static declarations and dependent Magical Hack/Sleight of Mind remain rejected. |
+| Native contracts | `TestTextStaticLandTypeDeclaration`: exact typed shape and malformed declarations. `Rejects`: missing builder/group/registration/source, granted/face-down/foreign declarations, invalid changes and changed fresh contracts reject without mutation. `RegistrationOrder`: retained position/source and no old/duplicate mana rules. `RetainsGrantedRules`: printed ability removal, one new intrinsic mana ability, retained granted mana, creature subtype/type, legendary supertype and P/T. |
+
+Bounded revision/gameplay coverage gain: **2 accepted names / 7 records**.
+Compilation gain: **+0 names / +0 records**. This bridge does not establish
+complete text-changing-card gameplay. Existing card behavior evidence is retained.
+
+### Validation and final collection result
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticLandType -count=1`.
+- `go test ./pkg/mage -run TestTextStaticLandType -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; focused native/RON checks after lint; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+  Parsed report and every diagnostic equal the fresh baseline: **2,091 compiled
+  / 354 rejected records**, **809 accepted / 177 rejected unique names**.
+  All previously accepted records remain accepted; no partial registry is installed.
+
+The first lint run reported one `prealloc` issue in a new declaration fixture.
+Set its capacity to two, then reran native/RON focused tests and `make lint`
+successfully. Reviewed lint output and file changes; there were no automatic
+rewrites to production or unrelated files. No environment blocker was found.
+
+Changed files: engine `text_static_land_type.go` and tests, `ability.go`,
+`definition.go`, `text_static_pt.go`, `doc.go`; RON `layers.go` and
+`text_static_land_type_test.go`; DSL reference, engine rules contracts and ledger.
+Commit: `feat(ron): implement printed static basic-land-type text revision`.
+
+Ranked next candidates:
+
+1. Checked printed mana-tap trigger revision for Wild Growth, Mana Flare and
+   Manabarbs; inspect native triggered-mana identity, event snapshots and
+   immediate execution before opt-in. Gauntlet of Might additionally needs its
+   typed land-subtype event filter. Shared prerequisite for both text spells.
+2. Shared live text installation with complete declaration classification,
+   ordering, expiry/restoration and separate spell lifecycle for Magical Hack
+   and Sleight of Mind. Keep unsupported categories explicit; Aura-host fixed
+   land types and chosen-type declarations still need checked bridges.
+3. Per-player coin results and simultaneous damage for Mana Clash; defer this
+   single-card producer while useful shared prerequisites remain.
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete. Stop after this slice.

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [StaticAbilityHolder.WithLandTypeTextRevision] for a printed land rule.
+// [Game.RevisePrintedStaticLandType] checks its declaration and source visit.
+// Exactly one global effect must set one basic land type in layer 4.
+// RON opts in unconditional global SetLandType lists with one fixed type.
+// Input and output words change in order. Fresh rules keep the active ID and
+// registration position. The shared land service keeps intrinsic mana, printed
+// ability removal and type dependencies. Clones and siblings stay separate.
+// Phasing keeps revisions; restoration uses revised rules. Return uses printed
+// rules. The caller must supply text-layer order and lifetime. Aura-host rules,
+// chosen types, temporary rules and live text installation need separate services.
+//
 // Use [StaticAbilityHolder.WithAnimationTextRevision] for a printed animation.
 // [Game.RevisePrintedStaticAnimation] checks its declaration and source visit.
 // All ordered effects must come from one [AnimateEach] rule. Fresh rules keep

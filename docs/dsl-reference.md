@@ -1,5 +1,49 @@
 # DSL reference
 
+## Printed static basic-land-type text revision
+
+`StaticAbilityHolder.WithLandTypeTextRevision() *StaticAbilityHolder` permits
+checked revision through `Game.RevisePrintedStaticLandType(source *Permanent,
+abilityID uuid.UUID, changes ...TextChange) error`. Definition validation requires
+exactly one global `BecomesBasicLandsEffect` with one valid basic land type.
+Empty, nil, foreign, duplicate, multi-type and mixed declarations reject.
+The zero-value permanent filter retains its normal all-permanents meaning.
+
+RON opts in unconditional `EachPermanentLayerEffect(filter,
+[SetLandType(Plains|Island|Swamp|Mountain|Forest)])` declarations. Existing filter
+validation remains; source-dependent selections, combined global modifications,
+Aura-host effects, chosen types and temporary effects do not opt in.
+
+The shared printed-static revision service keeps the active declaration ID,
+source incarnation, current controller and registration position. Semantic
+builders change validated input and output land words in order. Each declaration
+and clone keeps its own revision prototype. Names, mana cost and printed copy
+information remain unchanged. Rebuilt effects use the existing layer-4 land
+service and dependency detector, including selection changes that override
+timestamps (CR 613.8). Current and later subjects use current membership.
+
+Setting a basic land type removes old land types and printed abilities, supplies
+intrinsic mana, and keeps granted abilities, other subtype families, card types
+and supertypes (CR 305.6–305.8). Phasing suspends the rule and keeps its revision.
+Layer-6 ability removal does not undo the earlier type layer. Restoration uses
+the revised registration; departure information retains revised types. Returned
+sources use printed rules and cannot accept an old visit. Granted, absent,
+phased, face-down, unmarked and foreign declarations reject without mutation.
+The caller must supply layer-3 order, duration and original-text restoration.
+Live text installation and spell revisions remain separate contracts.
+
+Evidence: `TestRONTextStaticLandTypeRecords` covers Conversion's six reprints and
+Blood Moon (2 names / 7 records), with casting rollback, entry timing, revisions,
+intrinsic mana, printed-ability suppression, clones, phasing, removal/restoration,
+LKI and printed-origin return. `Dependencies` changes both selection and output
+words in both timestamp orders. `Declarations` checks independent groups and
+source control; `Upkeep` checks Conversion's separate payment/sacrifice rule.
+`Boundaries` keeps unsupported contexts rejected. Native
+`TestTextStaticLandTypeDeclaration`, `Rejects`, `RegistrationOrder` and
+`RetainsGrantedRules` cover invalid declarations, failure atomicity, retained
+positions and unrelated characteristics/abilities.
+
+
 ## Printed static animation text revision
 
 `StaticAbilityHolder.WithAnimationTextRevision()` marks a printed declaration
