@@ -13555,3 +13555,35 @@ Evidence: native `TestObjectTargetBodyDeclarations`, `SavedIdentity`,
 `ProjectionIdentity`, `BranchBindings`; RON `TestRONObjectTargetBodyGameplay`,
 `Invalid`, `RealChoices`, `LegalityAndPayment`, `RetargetCopy`,
 `DepartureInformation`; and unchanged `TestRONLace*` coverage.
+
+## Private hand inspection
+
+`LookAtHand(viewer, player PlayerRef)` reads both players and the current hand at
+resolution (CR 402.3, 701.20e, 608.2c). The entire hand is saved before observer
+delivery. Only the viewer receives `HandLookObserver` notifications. Observers,
+`Game.HandLooks(viewerID)` callers and game clones receive independent card and
+type storage. Historical observations retain the facts seen at inspection;
+subsequent hand changes do not update them. HumanPlayer shows these private cards
+through the existing choice channel.
+
+Inspection leaves hand visits, card ownership, order, zones, public reveal
+history and continuous hand visibility unchanged. It sends no reveal or zone
+change event and uses no randomness. Empty hands and missing players do nothing.
+Nil, unbound or undeclared player references fail definition validation. A queued
+activation keeps its action controller as viewer after source control changes,
+phasing, departure or return. Retargeted copies have separate target declarations
+and use the copy controller as viewer.
+
+Both player operands declare source reads to waiting delayed queries without
+reading a hand or sending observer notifications. Existing typed player reads
+supply current or exact source LKI as specified by the reference; returned
+sources cannot replace saved incarnations. Inspection itself creates no card
+binding, lasting inspection permission, controlled-play permission, cost,
+replacement, simultaneous movement or new LKI rule.
+
+Evidence: `TestHandInspectionPrivacyAndVisits`,
+`TestHandInspectionInvalidAndMissingPlayers`, `TestHumanHandInspection`, and RON
+`TestRONHandInspectionGlasses`, `Casting`, `InvalidAndReprints`,
+`InstancesAndRetarget`, `DelayedReads`, and `SpellAndTrigger`. Glasses of Urza's
+six complete records are covered. Word of Command remains rejected; this service
+is a prerequisite for its inspection step, not evidence for controlled play.

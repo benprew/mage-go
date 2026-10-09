@@ -1248,6 +1248,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "LookAtPlayersHand":
+		build, err := compileHandInspection(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "LookAtTheTopNumberCardsOfPlayersLibrary":
 		build, err := compileLibraryInspection(n, ctx)
 		if err != nil {

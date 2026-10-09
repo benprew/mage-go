@@ -2,19 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **807 accepted / 179 rejected unique card
-names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total).
+The latest recorded inventory reports **808 accepted / 178 rejected unique card
+names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`SEMANTIC-TEXT-DEFINITION-PROTOTYPES` builds fresh rules from retained RON
-with typed color/basic-land word changes and validated CR 612.2 semantic roles.
-Names, mana symbols and color indicators stay unchanged; printed copy information
-stays separate. Real changed definitions pass protection, landwalk, filter,
-spell-legality and trigger tests. Magical Hack and Sleight of Mind have their
-actual substitution declarations tested; complete records still reject.
-**+0 unique names / +0 records**, as estimated. Full-card gameplay unlocks stay
-unchanged. All required checks pass; the loader report is unchanged.
+`PRIVATE-HAND-INSPECTION` implements resolving typed-player hand inspection,
+independent private snapshots, cloned history and native private UI delivery.
+Glasses of Urza has complete RON casting and activation gameplay coverage across
+all six reprints. Word of Command's controlled-play operation still rejects.
+**+1 unique name / +6 records**, as estimated; one complete-card gameplay gain.
+All required checks pass. Only the six Glasses diagnostics disappeared.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -57960,3 +57958,151 @@ Ranked next candidates:
 
 Complete gameplay, runtime cutover, Go-card deletion and unused DSL removal remain
 unfinished. Migration incomplete. Stop after this slice.
+
+## Run 2026-10-09: PRIVATE-HAND-INSPECTION
+
+Status: complete resolving hand-inspection slice. Collection migration remains
+incomplete. Stop after this slice.
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection: 2,084 compiled /
+361 rejected records; 807 accepted / 179 rejected unique names. This was not a
+build or test failure. Totals remain 2,445 records and 986 unique names.
+
+Started with the latest ranked candidate, permanent layer-3 text installation.
+The retained prototype builder does not supply live ability rebinding, copy-layer
+provenance or stable active ability instances. Those engine lifecycle contracts
+must precede the adapter. Both complete text spells also require their spell
+branch. Complete records and nested forms for Magical Hack, Sleight of Mind,
+Bronze Tablet, Tempest Efreet, Glasses of Urza and Word of Command were inspected
+from RON. Reprints count once. No Go card definitions supplied requirements.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream capabilities | Effort |
+| --- | --- | --- | --- | --- |
+| Permanent text installation, latest candidate 1 | Magical Hack; Sleight of Mind | 0 for the permanent domain alone | Live declaration rebinding, active ability identities, copy exceptions, layer timestamps and spell-to-entry continuation remain. Enables both complete text spells after both domains work. | Large; split lifecycle prerequisites first. |
+| Physical-card transports, latest candidate 3 | Bronze Tablet; Tempest Efreet | 0 for a bounded shared prerequisite; up to 2 after remaining work | Tablet owner-assignment source fidelity and target owner filtering remain; Efreet needs hand-to-hand and source-from-anywhere destinations. Existing grouped-exile-to-graveyard transport is already implemented. | Moderate to large; separate source and movement contracts. |
+| Private hand inspection | Glasses of Urza; Word of Command | 1 unique name / 6 records | Glasses has no other nested blocker. Word's combined inspection, choice and controlled play remains unsupported, but this service establishes its private observation prerequisite. | Small; typed player scope and private snapshot services already exist. |
+
+Selected private hand inspection for a complete immediate unlock and a concrete
+shared dependency for controlled play. Direct compiler acceptance affects only
+Glasses of Urza; Word of Command receives no acceptance or gameplay claim.
+The comparison does not infer unlocks from first-error frequency.
+
+### Supported signatures, contexts and reuse boundary
+
+- `LookAtHand(viewer, player PlayerRef) ResolvingEffect`.
+- `HandLookObserver.ObserveHandLook([]Card, GameReader)`.
+- `Game.HandLooks(viewer uuid.UUID) []PublicCardReveal`.
+- RON `LookAtPlayersHand(player)` is a one-argument tuple in resolving action
+  bodies. The action controller is the viewer; the operand uses lexical typed
+  player scope. Spell, activated, triggered and delayed bodies are covered.
+  Symbol/empty/extra arguments, tuple player symbols, wrong types, unbound target
+  and event operands, costs, static modifications and entry operations reject.
+- Inventory assigns the operand `player_reference`, with an assertion test.
+
+RON owns syntax, role routing, lexical references and lowering. Mage owns current
+hand selection, independent private snapshots, observer delivery and cloned
+history. HumanPlayer uses the existing private choice-channel display.
+Reuse: `PlayerRef`, `handOperationPlayer`, per-instance target/event bindings,
+`Card.Copy`, `clonePublicReveals`, `Game.Clone`, existing source-read walkers,
+LKI and delayed frames. The Player interface and existing callers are preserved.
+
+CR 402.3 and 701.20e establish private inspection. Both players and the hand are
+read at resolution. All card snapshots precede notification. Inspection preserves
+hand visits, owner, order, zones and public visibility. It sends no events, uses
+no randomness and grants no lasting current-hand access. Missing players and
+empty hands do nothing. Observers, history callers and clones have separate card
+and type storage. Queued activations keep their original controller as viewer;
+copies use their own controller and can retarget independently.
+
+Both player operands declare source reads to waiting delayed queries without
+executing inspection. Existing reference contracts provide current or exact LKI;
+a returned source cannot replace the saved incarnation. This slice establishes
+no new payment, replacement, simultaneous movement, phasing or LKI subsystem.
+No global last-action slot, card-name branch, Go fallback, declaration panic or
+partial production registry was added.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON and native tests failed compilation on missing `HandLooks` and
+`LookAtHand`. A fixture's nonexistent opponent symbol was corrected to the typed
+active-player reference, then the missing-API compilation failure was confirmed.
+The inventory assertion subsequently failed with operand role `unknown`; explicit
+role routing fixed it without weakening the assertion.
+
+| Test | Card / contract mapping |
+| --- | --- |
+| `TestRONHandInspectionGlasses` | Complete Glasses of Urza: tap payment, resolution-time current hand, self/other/empty hands, private history, source departure/phasing/return/control change, ability copies, clone isolation, invalid target and failed payment. |
+| `TestRONHandInspectionCasting` | Complete Glasses: mana cost, failed-payment preservation, artifact entry and immediate legal activation. |
+| `TestRONHandInspectionInvalidAndReprints` | All six Glasses records (LEA, LEB, 2ED, 3ED, CED, CEI), inventory operand role, invalid declarations and contexts; complete Word of Command still rejects its combined controlled-play action. |
+| `TestRONHandInspectionInstancesAndRetarget` | Two complete Glasses instances and an opponent-controlled retargeted copy retain separate targets and viewers. |
+| `TestRONHandInspectionDelayedReads` | Synthetic delayed action: pure source queries, exact source/LKI after departure and return, phasing, control change and clone isolation. |
+| `TestRONHandInspectionSpellAndTrigger` | Synthetic spell target and upkeep event-player scopes retain private action-controller viewing. |
+| `TestHandInspectionPrivacyAndVisits` | Observer and history mutation isolation, unchanged hand visits, historical facts after departure and separate cloned storage. |
+| `TestHandInspectionInvalidAndMissingPlayers` | Native nil/unbound/undeclared players reject; absent players and empty hands cause no notification. |
+| `TestHumanHandInspection` | Native private card display and acknowledgement preserve zones and public visibility. |
+
+Actual compilation gain: **1 unique name / 6 records**, equal to the estimate.
+Complete-card gameplay gain: **Glasses of Urza**, with all its rules mapped above.
+Word of Command remains a downstream dependency, not an unlocked card.
+
+### Validation and loader comparison
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONHandInspection -count=1`.
+- `go test ./pkg/mage ./pkg/mage/interactive -run
+  'TestHandInspection|TestHumanHandInspection' -count=1`.
+- Focused collection/definition/inventory regression tests after count updates.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues. Automatic fixes were reviewed; no further source
+  changes required a repeat check.
+- `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+
+The first engine short run found four existing tests pinned to the former
+collection counts. Updated their exact expectations to 2,090/355 in
+`definition_plan_test.go`, `inventory_test.go` and `numeric_consumers_test.go`.
+Assertions, retained accepted-card checks and definition rebuild coverage remain.
+Focused tests, build, vet and engine short checks were then rerun successfully.
+
+Final loader: **2,090 compiled / 355 rejected records; 808 accepted / 178 rejected
+unique names**. Baseline/final comparison removes exactly the six Glasses issues;
+all other diagnostics are identical. No accepted record regressed. Strict loading
+still rejects the entire collection and publishes no partial registry.
+
+### Source defects, documentation and preserved work
+
+No RON source changes or new source defect; vocabulary source hashes need no
+refresh. Tablet's known owner-assignment issue remains separate. API reference,
+engine rules contracts and `pkg/mage/doc.go` document only established behavior.
+No Go cards, generator or DSL function removed because cutover/removal gates are
+not met. No obsolete caller was retired as part of this slice.
+
+Initial user changes: `.gitignore`, execution design, ledger/archive
+reorganization, and untracked `mtgish-ron-completed.md`. Preserve them. Stage only
+this status update and appended entry against the tracked ledger, leaving the
+user's archive move outside the commit. Changed files: new engine/RON hand
+inspection implementations and tests; engine game/clone/doc; RON compiler,
+inventory and three exact-count test files; interactive private display/test;
+API/rules-contract docs and progress ledger.
+
+Commit message: `feat(ron): implement private hand inspection`.
+
+Ranked next candidates:
+
+1. Bounded live-definition/active-ability identity prerequisite for layer-3 text
+   changes. Magical Hack and Sleight of Mind need it in both target domains;
+   estimate zero immediate unlocks, with two names / twelve records downstream.
+2. Exact physical-card transport after ownership changes, reassessing complete
+   Bronze Tablet and Tempest Efreet records. Keep Tablet's source-fidelity repair
+   separate; do not recreate its existing grouped exile transport.
+3. Private inspected-hand choice and controlled-player decision services for
+   Word of Command after this observation contract. Estimate zero for choice
+   alone; one name / five records only after the entire controlled-play contract.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.

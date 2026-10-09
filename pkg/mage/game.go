@@ -60,6 +60,7 @@ type Game struct {
 	playerPayments    []installedPlayerPayment
 	publicReveals     []PublicCardReveal
 	libraryLooks      map[uuid.UUID][]PublicCardReveal
+	handLooks         map[uuid.UUID][]PublicCardReveal
 	anteEnabled       bool
 	originalOwners    map[uuid.UUID]uuid.UUID
 	anteResult        []OwnershipChange

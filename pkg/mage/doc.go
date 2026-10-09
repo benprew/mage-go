@@ -1432,6 +1432,16 @@
 // RON supports PutTopOfLibraryInHand and PutTopOfLibraryInGraveyard as symbols
 // in resolving player actions. These actions do not read a saved reveal result.
 //
+// Use [LookAtHand] to show a current hand only to a typed viewer.
+// [Game.HandLooks] returns independent snapshots of past observations.
+// [HandLookObserver] receives separate card copies during resolution.
+// Inspection keeps hand visits, public visibility and zones unchanged.
+// Copies use their own controller as viewer. Clones keep separate history.
+// Both player operands declare source reads to waiting delayed queries.
+// Queries do not inspect hands. Missing players and empty hands do nothing.
+// RON supports LookAtPlayersHand in resolving bodies with typed player scope.
+// Controlled play requires separate choices and player-control services.
+//
 // Use [LookAtLibraryTop] for private inspection and optional top ordering.
 // [LookAtLibraryTopNumber] reads a typed count once at resolution.
 // Both forms and [MayShuffleLibrary] declare explicit source reads in their

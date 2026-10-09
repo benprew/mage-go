@@ -11,6 +11,15 @@ import (
 
 // ObserveLibraryLook shows the private cards before the next resolution choice.
 func (p *HumanPlayer) ObserveLibraryLook(cards []mage.Card, _ mage.GameReader) {
+	p.showPrivateCards(cards)
+}
+
+// ObserveHandLook shows private cards before the next resolution choice.
+func (p *HumanPlayer) ObserveHandLook(cards []mage.Card, _ mage.GameReader) {
+	p.showPrivateCards(cards)
+}
+
+func (p *HumanPlayer) showPrivateCards(cards []mage.Card) {
 	details := make([]string, len(cards))
 	for i, c := range cards {
 		details[i] = c.Name() + " " + c.ManaCost().String() + ": " + buildRulesText(c)

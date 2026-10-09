@@ -35,6 +35,12 @@ func (g *Game) Clone() *Game {
 	c.mana = g.mana.Clone()
 	c.damage = g.damage.Clone()
 	c.publicReveals = clonePublicReveals(g.publicReveals)
+	if g.handLooks != nil {
+		c.handLooks = make(map[uuid.UUID][]PublicCardReveal, len(g.handLooks))
+		for viewer, cards := range g.handLooks {
+			c.handLooks[viewer] = clonePublicReveals(cards)
+		}
+	}
 	if g.libraryLooks != nil {
 		c.libraryLooks = make(map[uuid.UUID][]PublicCardReveal, len(g.libraryLooks))
 		for viewer, cards := range g.libraryLooks {

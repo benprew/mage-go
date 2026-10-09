@@ -10163,3 +10163,18 @@ card names or ordinary entry choices. Pair producers inside player bodies remain
 local to those bodies. The compiler adapters retain typed operands for subsequent
 text-effect work; `CreateSpellEffect` and color/land text modifications remain
 unsupported. No complete-card support gain is claimed for this prerequisite.
+
+### Private hand inspection
+
+`LookAtHand(viewer, player PlayerRef) ResolvingEffect` shows the selected player's
+current hand to the viewer during resolution. `Game.HandLooks(viewerID)` returns
+copied historical observations; `HandLookObserver.ObserveHandLook([]Card,
+GameReader)` receives independent card copies. Neither interface grants later
+access to the hand. Empty hands and missing players produce no observation.
+
+RON `LookAtPlayersHand(player)` uses the resolving action controller as viewer.
+Its operand uses the current typed player scope, including declared targets,
+event players and source-controller reads. It is an action, not a cost, static
+modification or entry operation. Glasses of Urza has complete RON gameplay tests.
+Word of Command's combined inspection, selection and controlled play remains
+unsupported until its separate decision and player-control contracts are ready.

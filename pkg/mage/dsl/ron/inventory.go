@@ -803,6 +803,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]
 			}
+		case "LookAtPlayersHand":
+			if len(n.Args) == 1 {
+				return "player_reference"
+			}
 		case "LookAtTheTopNumberCardsOfPlayersLibrary":
 			if len(n.Args) == 3 {
 				return []string{"player_reference", "value", "library_ordering_operation"}[index]
