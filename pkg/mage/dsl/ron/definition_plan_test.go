@@ -210,7 +210,7 @@ func TestRONDefinitionPlanCopyConsumerBoundaries(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-			} else if err == nil || !strings.Contains(err.Error(), "KeepColor") {
+			} else if err == nil || !strings.Contains(err.Error(), "AddAbility") {
 				t.Fatalf("copy consumer: %v", err)
 			}
 		}

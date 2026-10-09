@@ -45,6 +45,15 @@
 // Type additions keep abilities and the entry rules' original identities.
 // Color exceptions, added abilities and live copy layers need separate services.
 //
+// Use [MayCopyAsEntersKeepingColors] to retain its copiable colors.
+// [CopyRetainColors] keeps a saved color set in an immutable copy snapshot.
+// Empty sets are colorless, even with a colored copied mana cost.
+// Color-defining effects use [ColorCharacteristicDefinition]. Their abilities
+// are omitted from this copy; ordinary color-changing abilities remain.
+// Later copies retain the exception. Ordinary color layers still apply.
+// Entry replacement identities survive the omission of color definitions.
+// Added abilities and live copy installation need separate services.
+//
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
 // belongs to its resolution frame. An empty set or absent chooser clears it.

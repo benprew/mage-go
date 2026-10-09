@@ -9064,4 +9064,44 @@ Modified snapshots build independent abilities, targets and costs. Subsequent
 copies inherit the added types; ordinary layers and counters do not transfer.
 Type additions keep the original declaration identities for replacement ordering.
 Physical departure rules and phasing use the existing entry-copy services.
-KeepColor, added abilities and live copying remain separate capabilities.
+Added abilities and live copying remain separate capabilities.
+
+## Retained colors in entry copies
+
+`mage.CopyRetainColors(colors ...core.Color) mage.CopyModification` retains a
+saved color set in a copy snapshot. The constructor copies and deduplicates its
+input. An empty set or `core.Colorless` represents colorless; `AnyColor` and
+invalid values reject during definition validation. Copied mana cost remains.
+`mage.MayCopyAsEntersKeepingColors(mage.PermanentFilter,
+...mage.CopyModification) mage.Ability` captures the entering object's copiable colors
+when the copy replacement applies, before replacing its definition. Other copy
+modifications use the existing immutable snapshot service.
+
+RON accepts the zero-argument **symbol** `KeepColor` in the existing sole optional
+entry-copy context:
+
+```ron
+AsPermanentEnters(ThisPermanent, [MayActions([
+    EnterAsACopyOfAPermanent(IsCardtype(Creature), CopyEffects([KeepColor]))
+])])
+```
+
+`KeepColor` can appear with `AddCardtypes`; repeated occurrences are idempotent.
+Tuple forms such as `KeepColor()` reject. Unsupported operations in the same
+list still reject the whole definition. Entry context, choice, target exclusion,
+filter legality and physical departure rules retain their existing contracts.
+This adapter does not enable resolving or live copy-layer contexts.
+
+Mage replaces the donor's color indicator with the saved colors. A colorless
+exception remains distinct from absent color metadata and therefore overrides
+the donor's colored mana cost. A static continuous effect that defines color
+must implement `mage.ColorCharacteristicDefinition` with `DefinesColor() bool`.
+A true result omits its entire static ability from the copy (CR 707.9d).
+Ordinary color changes must not use this marker. P/T definitions and ordinary
+color-changing abilities remain. This is a copy classification contract, not a
+new color-CDA authoring or all-zone evaluation service.
+
+Later copies inherit the saved colors and omitted abilities. Ordinary color
+layers remain effective and stay outside the snapshot. Existing native and RON
+callers remain compatible. Vesuvan Doppelganger advances to its unsupported
+`AddAbility` exception; its complete definition is still rejected.

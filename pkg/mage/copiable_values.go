@@ -47,7 +47,7 @@ func (v copiableCharacteristics) matches(card *BaseCard) bool {
 	return v.name == card.name && v.power == card.power && v.toughness == card.toughness &&
 		v.hasManaCost == card.hasManaCost &&
 		slices.Equal(v.types, card.types) && slices.Equal(v.superTypes, card.superTypes) &&
-		slices.Equal(v.subTypes, card.subTypes) && slices.Equal(v.colorOverride, card.colorOverride) &&
+		slices.Equal(v.subTypes, card.subTypes) && (v.colorOverride == nil) == (card.colorOverride == nil) && slices.Equal(v.colorOverride, card.colorOverride) &&
 		maps.Equal(v.attrSeeds, card.attrSeeds) && slices.Equal(v.modes, card.modes) &&
 		cost.Generic == other.Generic && cost.White == other.White && cost.Blue == other.Blue &&
 		cost.Black == other.Black && cost.Red == other.Red && cost.Green == other.Green &&

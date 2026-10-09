@@ -11885,7 +11885,7 @@ phasing, departure/LKI, clone isolation, token and copied donors, face-down valu
 and acquired entry choices. Existing entry-copy identity tests retain copied death
 abilities and all departure destinations. All six Clone reprints compile; Copy
 Artifact now uses the copiable type-addition contract below. Vesuvan Doppelganger
-still rejects its color and ability exceptions.
+still rejects its added-ability and live-copy rules.
 
 ## Copiable type additions in entry copies
 
@@ -11912,7 +11912,7 @@ additions reject during definition validation. Missing snapshots and failed
 builders return errors. Entry failure keeps the existing failed-entry path.
 Supported RON spelling is the sole optional entry-copy context with nonempty
 `CopyEffects([AddCardtypes([...]), ...])`. Other modifications remain rejected;
-there is no approximate color, added-ability or live-layer implementation.
+color retention uses the contract below. Added abilities and live layers still reject.
 
 Physical identity, ownership, departure rules, LKI, choice timing, phasing,
 replacement priority and simultaneous preparation retain the existing contracts.
@@ -11929,3 +11929,56 @@ phasing, cloned pending-spell choices, departure/LKI, Disenchant legality,
 ordinary type/color/P/T layers, cleanup, composed additions and rejection.
 All six Copy Artifact reprints compile; compilation and gameplay evidence remain
 separate from complete collection validation.
+
+## Retained copy colors and color-definition omission
+
+`CopyRetainColors(...core.Color) CopyModification` supplies immutable saved
+colors to `CopiableValues.WithModifications`. Empty sets are explicitly
+colorless, separate from absent overrides that derive colors from mana cost.
+The constructor normalizes Colorless and duplicates, copies input slices and
+rejects AnyColor or invalid values during validation. The donor's name, mana
+cost, types, P/T and remaining rules retain their existing copy contracts.
+The donor's color indicator is replaced, not combined with the saved colors
+(CR 707.9c–d). Subsequent copies keep these values (CR 707.3, 707.9b).
+
+`ColorCharacteristicDefinition` is the explicit copy classification contract
+for static continuous effects. `DefinesColor() bool` must return true for a
+color-defining effect and false, or remain absent, for an ordinary color change.
+When an effect in a StaticAbilityHolder defines color, the whole ability is
+omitted from the modified definition (CR 707.9d). Other abilities remain,
+including P/T definitions and ordinary color effects. This contract does not
+introduce a color-CDA constructor or change all-zone color evaluation.
+
+`MayCopyAsEntersKeepingColors(PermanentFilter, ...CopyModification) Ability`
+reads the entering object's copiable colors at replacement application. The
+current definition supplies these colors before ordinary color layers (CR 613.2).
+A changed spell color can continue to entry as an ordinary color effect, but it
+cannot enter the retained copiable values. Later copies inherit the retained
+colors; ordinary layers remain excluded from copy snapshots.
+Choice remains optional and nontargeted at resolution, before later entry
+replacements, counters and triggers (CR 614.12, 707.5). Replacement keys use the
+original plan and the entry-copy rule ordinal, so omitting another ability
+cannot repeat an already applied rule in the same entry (CR 614.5). Later
+entries start fresh. No new provenance is inferred for added abilities.
+
+Physical departure restores printed rules; departure LKI retains the copied
+object's current colors. Phasing keeps copied values without another choice.
+Snapshots, payment transactions, clone isolation and simultaneous entry
+preparation use the existing shared services. No copy state is stored globally.
+
+Native TestCopyColorSnapshots covers colored, multicolor, colorless, duplicate,
+immutable-input, indicator, fresh-rule, entry-counter, ordinary-layer and invalid
+color cases. TestCopyColorDefinitionAndReplacementIdentity distinguishes a
+color definition from an ordinary color-changing ability, proves omission,
+donor independence and one-use entry identity. TestCopyColorBatchAndPriority
+covers separate color sets within one batch, early replacement priority and
+invalid entry declarations. RON TestRONCopyColorGameplay uses complete Birds of
+Paradise and Clone records as donor and subsequent-copy interactions. It covers
+nontarget choice of a shrouded donor, colors, copied flying/type/mana metadata,
+ordinary layers, phasing, cloned-game changes, physical departure/LKI and return.
+TestRONCopyColorSpellTiming covers failed payment, resolution-time choice,
+spell color continuity without inclusion in copiable values, subsequent copying
+and cloned pending-spell decline.
+TestRONCopyColorInvalid and Dependencies cover invalid symbols and all six
+Vesuvan Doppelganger reprints' continued rejection at AddAbility. The synthetic
+KeepColor producer does not claim complete Doppelganger gameplay.

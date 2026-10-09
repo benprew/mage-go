@@ -125,11 +125,10 @@ func (c *BaseCard) deriveAuraAIProfile() (AuraAIProfile, bool) {
 // NewPermanent uses these to populate the permanent's baseAttrs.
 func (c *BaseCard) AttrSeeds() map[Attr]int { return c.attrSeeds }
 
-// SetColorOverride sets the colors of a card directly, bypassing mana cost
-// derivation. Used by token-creation paths that produce colored tokens
-// (CreateColoredToken).
+// SetColorOverride replaces the colors derived from the mana cost.
+// An empty list sets colorless. A nil list restores mana cost colors.
 func (c *BaseCard) SetColorOverride(colors []Color) {
-	c.colorOverride = append([]Color(nil), colors...)
+	c.colorOverride = slices.Clone(colors)
 }
 
 func (c *BaseCard) ID() uuid.UUID      { return c.id }
@@ -847,7 +846,7 @@ func (p *Permanent) Colors() []Color {
 	if p.ColorOverride != nil {
 		return *p.ColorOverride
 	}
-	if bc, ok := p.Card.(*BaseCard); ok && len(bc.colorOverride) > 0 {
+	if bc, ok := p.Card.(*BaseCard); ok && bc.colorOverride != nil {
 		return bc.colorOverride
 	}
 	return p.Card.ManaCost().Colors()

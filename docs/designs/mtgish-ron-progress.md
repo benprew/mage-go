@@ -7,13 +7,13 @@ names** (986 total), and **2,031 compiled / 414 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`COPIABLE-TYPE-ADDITIONS` adds immutable copy type exceptions and entry lowering
-for CopyEffects([AddCardtypes(...)]) with stable replacement identities. Copy
-Artifact gains six compiled records and real RON gameplay evidence, including
-subsequent copying, ordinary layers, copied abilities and physical departure.
+`COPIABLE-RETAINED-COLORS` implements optional entry KeepColor lowering,
+immutable color exceptions, color-definition omission and stable entry identities.
+Native and RON tests cover subsequent copies, ordinary layers, payment timing,
+phasing, departure/LKI and cloning. No additional full card compiles in this slice.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Color/ability copy exceptions, live copy layers and other rejected forms remain gaps.
+Added-ability exceptions, live copy layers and other rejected forms remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -52172,3 +52172,160 @@ Ranked next candidates:
    Do not omit its optional targeted upkeep recopy rule.
 
 This run stops after COPIABLE-TYPE-ADDITIONS.
+
+## 2026-10-08: retained copiable colors in optional entry copies
+
+Status: completed implementation slice `COPIABLE-RETAINED-COLORS`. This run
+stops after this slice. Initial changes to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only
+this slice's ledger summary and appended entry are staged; the user's history
+relocation remains unstaged. No Go definitions or DSL callers are removed.
+
+### Fresh evidence and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+The fresh loader exited 1 with 2,031 compiled / 414 rejected records, covering
+787 accepted / 199 rejected names. This is collection rejection, not a build
+failure. The complete six Doppelganger and five Forcefield records, including
+nested forms, were inspected. Targeted vocabulary queries found 12 KeepColor
+symbols, six IsACopyOfPermanent tuples and the nested AddAbilityVariable uses.
+Reprints count once in the comparison.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| #1: KeepColor | Vesuvan Doppelganger (six records) | 0 now | AddAbility, AddAbilityVariable(ThisAbility) and live IsACopyOfPermanent still block. Establishes saved color exceptions and color-definition omission for both entry and upkeep copy paths, plus shared subsequent-copy snapshots. | Small: immutable color modification, entry adapter, colorless representation and stable replacement identity; native and RON contract tests. |
+| #2: chosen-source next combat event leaving one damage | Forcefield (five records) | 1 name / five records if completed | ChooseAPermanent, IsUnblocked, typed choice bindings and activation payment already work. NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient and PreventAllButSomeOfThatDamage need the exact next-event contract. Enables a reusable finite combat prevention service. | Medium: simultaneous packets, one-event consumption, recipient/source identity, competing replacements and cleanup tests. |
+| #3: fresh added-ability provenance and live copying | Vesuvan Doppelganger (six records) | 1 name / six records after prerequisites | KeepColor and fresh AddAbility/AddAbilityVariable provenance precede live layer installation. The targeted optional upkeep trigger cannot be omitted. | Large: fresh ability reconstruction, copy-layer lifetime and priority, trigger retention, target legality, layering, LKI and cloning. |
+
+Candidate #1 is dependency-ready and an unblocking prerequisite. Its small
+contract is complete within this run. Candidate #3 cannot be safely reduced to
+one incomplete full-card implementation. Candidate #2 offers an immediate gain
+but needs a larger damage-event contract. Selection, scope, reuse and acceptance
+cases were stated before editing. The implement-engine skill supplied the native
+workflow. No removed card skill, Go-card requirement, stub generation or agent
+delegation was used.
+
+### Supported signatures, contexts and ownership
+
+- `CopyRetainColors(colors ...core.Color) CopyModification` retains an immutable,
+  deduplicated color set. Empty input and core.Colorless represent colorless.
+  White, Blue, Black, Red and Green are supported. AnyColor and invalid values
+  reject during definition validation. The donor's mana cost remains unchanged.
+- Existing `(*CopiableValues).WithModifications(...CopyModification)
+  (*CopiableValues, error)` builds independent validated snapshots and rules.
+  Color overrides distinguish absent metadata from explicitly colorless values.
+  Provenance comparison preserves this distinction. SetColorOverride uses an
+  empty list for colorless and nil to restore mana-cost derivation.
+- `ColorCharacteristicDefinition` supplies `DefinesColor() bool` on static
+  continuous effects. A true result omits the effect's entire StaticAbilityHolder
+  from a retained-color copy (CR 707.9d). Ordinary color effects must not claim
+  this classification. Other abilities, including P/T definitions, remain.
+  This is a copy classification boundary, not a new all-zone color-CDA service.
+- `MayCopyAsEntersKeepingColors(PermanentFilter, ...CopyModification) Ability`
+  captures the entering object's copiable colors before replacing its definition.
+  Ordinary spell color changes can continue to entry but do not enter the copy
+  snapshot (CR 613.2, 707.2). Existing type modifications compose
+  with the saved color exception through the shared snapshot builder.
+- RON accepts `AsPermanentEnters(ThisPermanent,
+  [MayActions([EnterAsACopyOfAPermanent(filter,
+  CopyEffects([KeepColor, ...]))])])`. KeepColor is a zero-argument symbol.
+  Repeated symbols are idempotent; AddCardtypes operations remain supported.
+  Malformed tuple forms, lists and unsupported mixed modifications reject.
+  The copy remains the sole optional entry operation. Resolving, required-copy,
+  attachment, external-grant and live-copy contexts gain no support.
+- RON owns spelling, shape validation and the typed copy-modification plan.
+  Mage owns retained colors, classification, immutable definitions and lifecycle.
+  No card-name branch, fallback, global result slot, game-time declaration panic
+  or partial production registry is introduced.
+- Retained colors replace the copied indicator (CR 707.9c–d), become copiable
+  values (707.9b) and survive subsequent copies (707.3). Later ordinary Layer 5
+  changes still apply and are excluded from subsequent snapshots (707.2).
+- Entry replacement identity uses original definition provenance and the entry-copy
+  rule ordinal. Removing a preceding color definition cannot repeat an applied
+  entry rule (CR 614.5). Later entries use fresh applied sets. Added abilities
+  still need a separate provenance contract.
+- Reuses CardDefinitionPlan, CaptureCopiableValues, BuildEntryCopy, replacement
+  priority/rechecks, simultaneous entry preparation, entry counters, source choices,
+  cost transactions, ordinary layers, phasing, departure/LKI and game cloning.
+  Existing callers remain compatible. Runtime and deletion gates remain closed.
+
+### Failing-first evidence and card-to-test mapping
+
+After correcting fixture-only API spellings, RON gameplay and dependency tests
+failed at unsupported KeepColor. Native tests failed compilation on the two new
+APIs. Those same assertions pass after implementation. Rules review then strengthened
+the spell-color case: the live copy remains red, but a subsequent copy must be
+blue. That assertion failed before the entry adapter was corrected to read
+copiable colors rather than ordinary layer results. Follow-up tests cover
+spell timing, concurrent entries and absent/colorless provenance distinctions.
+Two old rejection assertions now name AddAbility rather than KeepColor, and the
+old type-only invalid list no longer calls the newly supported symbol invalid.
+No inventory count or gameplay assertion was weakened. CR 613.2 and 707.2
+were checked against the local rules and the official June 2026 rulebook:
+https://media.wizards.com/2026/downloads/MagicCompRules%2020260619.pdf.
+
+| Test | Card / evidence |
+| --- | --- |
+| TestRONCopyColorGameplay | Complete Birds of Paradise donor and Clone subsequent copy with a RON KeepColor producer: mono/multicolor, colorless, original indicator, shrouded nontarget donor, copied flying/type/mana metadata, ordinary color exclusion, phasing, cloned-game color isolation, physical departure/LKI, return and saved-copy independence. |
+| TestRONCopyColorSpellTiming | RON producer with complete Birds of Paradise: failed casting payment preserves hand/choices, choice occurs at resolution, changed spell color continues as an ordinary effect while subsequent snapshot builds retain the original blue color, cloned pending-spell decline and printed departure color. |
+| TestRONCopyColorInvalid | Tuple KeepColor forms and nested misplaced CopyEffects reject before gameplay. Existing entry-copy and type-addition tests retain context/list/mixed-operation restrictions. |
+| TestRONCopyColorDependencies | All six complete Vesuvan Doppelganger records still reject, now at AddAbility. No complete Doppelganger gameplay claim is made. |
+| TestCopyColorSnapshots | Native saved colors and input isolation, donor indicator replacement, duplicate/colorless normalization, unchanged donor, fresh abilities, retained P/T definition, entry counters, ordinary-layer exclusion, explicit-colorless provenance and invalid colors. |
+| TestCopyColorDefinitionAndReplacementIdentity | Native color-definition omission, retained ordinary color-changing ability, unmodified donor, saved base color and one-use replacement identity after removing a preceding ability. |
+| TestCopyColorBatchAndPriority | Native independent blue/colorless entries in one batch, early copy priority before counters, fresh rules and invalid color/nonpermanent declarations. |
+| Existing entry-copy/type-addition/copiable tests and accepted-collection suite | Clone and Copy Artifact regressions, copied entry identities, validated fresh reconstruction for all 2,031 accepted records and strict registry behavior. |
+
+Birds of Paradise, Clone and Copy Artifact are donor/interaction/regression
+mappings, not new acceptance claims. This prerequisite adds native and RON-backed
+color-copy coverage; it does not establish complete collection gameplay.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONCopyColor -count=1`
+  and native `go test ./pkg/mage -run TestCopyColor -count=1`: PASS.
+- Final `make build` and `go vet ./...`: PASS.
+- Final `go test ./pkg/mage/... -short -count=1` and `make test`: PASS.
+- Additional skill check `go test ./... -short -count=1`: PASS after the
+  final implementation correction.
+- Initial lint found two test-only issues: preallocation and a variable that
+  shadowed the copy builtin. Both were fixed. Final `make lint`: PASS, 0 issues.
+  Automatic formatting was reviewed; no unrelated implementation changes remain.
+- Post-lint native/RON color, type-addition, entry-copy, definition-plan and
+  copiable-value regression tests with `-count=1`: PASS.
+- `git diff --check`: PASS, including final ledger and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with the counts below.
+  Strict collection rejection remains; no partial registry is installed.
+- No remaining required-check, pre-existing or environment failure.
+
+Estimated and actual full-card gains are both **0 names / 0 records**. Loader
+counts remain **2,031 compiled / 414 rejected records; 787 accepted / 199 rejected
+unique names**. Exactly six Doppelganger diagnostics advance from KeepColor to
+AddAbility. The other 408 diagnostics are unchanged. Accepted records retain
+validated reconstruction and existing gameplay regressions. Compilation and
+complete-card gameplay coverage remain separate.
+
+No source defect, environment failure or remaining validation blocker was found.
+All 12 RON hashes match the vocabulary snapshot; no source/vocabulary refresh is
+needed. No unused DSL function was removed, so no removal caller audit is claimed.
+Complete collection gameplay, runtime loading, Go-card removal and unused DSL
+cleanup remain unfinished.
+
+Changed files: pkg/mage/copy_modification.go, entry_copy.go, card.go,
+copiable_values.go, object_color.go, doc.go and new copy_color_test.go;
+pkg/mage/dsl/ron/entry_copy.go, new copy_color_test.go, copy_modification_test.go,
+definition_plan_test.go and optional_entry_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. Forcefield's chosen exact source and next combat-damage event leaving one point:
+   one potential name / five records. Existing permanent choice and filters are
+   ready; implement next-event consumption, simultaneous packets and replacements.
+2. Fresh copied AddAbility/AddAbilityVariable provenance: zero immediate unlocks,
+   prerequisite for Vesuvan Doppelganger's entry and upkeep bodies (six records).
+   Preserve independent bindings and replacement identities in subsequent copies.
+3. Live IsACopyOfPermanent installation after added-ability provenance: one
+   potential name / six records. Retain the optional targeted upkeep recopy rule;
+   test layers, phasing, departure, retained triggers and cloned games.
+
+This run stops after COPIABLE-RETAINED-COLORS.

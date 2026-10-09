@@ -13,7 +13,7 @@ func cardColors(card Card) []Color {
 	if view, ok := card.(targetSourceLKI); ok {
 		return append([]Color(nil), view.colors...)
 	}
-	if base, ok := card.(*BaseCard); ok && len(base.colorOverride) > 0 {
+	if base, ok := card.(*BaseCard); ok && base.colorOverride != nil {
 		return append([]Color(nil), base.colorOverride...)
 	}
 	return card.ManaCost().Colors()

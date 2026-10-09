@@ -100,7 +100,7 @@ func TestRONCopyTypeModificationManaAndLegality(t *testing.T) {
 }
 
 func TestRONCopyTypeModificationInvalid(t *testing.T) {
-	for _, form := range []string{`CopyEffects`, `CopyEffects()`, `CopyEffects([])`, `CopyEffects(AddCardtypes([Enchantment]))`, `CopyEffects([AddCardtypes])`, `CopyEffects([AddCardtypes()])`, `CopyEffects([AddCardtypes([])])`, `CopyEffects([AddCardtypes([Enchantment()])])`, `CopyEffects([AddCardtypes([Instant])])`, `CopyEffects([AddCardtypes([Unknown])])`, `CopyEffects([KeepColor])`, `CopyEffects([AddCardtypes([Enchantment]),KeepColor])`, `CopyEffects([AddCardtypes([Enchantment]),AddAbility([])])`} {
+	for _, form := range []string{`CopyEffects`, `CopyEffects()`, `CopyEffects([])`, `CopyEffects(AddCardtypes([Enchantment]))`, `CopyEffects([AddCardtypes])`, `CopyEffects([AddCardtypes()])`, `CopyEffects([AddCardtypes([])])`, `CopyEffects([AddCardtypes([Enchantment()])])`, `CopyEffects([AddCardtypes([Instant])])`, `CopyEffects([AddCardtypes([Unknown])])`, `CopyEffects([AddCardtypes([Enchantment]),AddAbility([])])`} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[]),Rules:[AsPermanentEnters(ThisPermanent,[MayActions([EnterAsACopyOfAPermanent(IsCardtype(Artifact),` + form + `)])])])`
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
 		if err != nil {

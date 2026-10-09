@@ -18,13 +18,21 @@ func compileEntryCopy(n Node) (optionFactory, error) {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.MayCopyAsEntersWithModifications(filter, modifications...))
+		if modifications.keepColors {
+			return mage.WithAbility(mage.MayCopyAsEntersKeepingColors(filter, modifications.operations...))
+		}
+		return mage.WithAbility(mage.MayCopyAsEntersWithModifications(filter, modifications.operations...))
 	}, nil
 }
 
-func compileCopyModifications(n Node) ([]mage.CopyModification, error) {
+type copyModificationPlan struct {
+	operations []mage.CopyModification
+	keepColors bool
+}
+
+func compileCopyModifications(n Node) (*copyModificationPlan, error) {
 	if n.Kind == Symbol && n.Name == "NoCopyEffects" {
-		return nil, nil
+		return &copyModificationPlan{}, nil
 	}
 	if n.Name != "CopyEffects" {
 		return nil, unsupported(n, "entry copy modifications")
@@ -39,8 +47,15 @@ func compileCopyModifications(n Node) ([]mage.CopyModification, error) {
 	if len(parts) == 0 {
 		return nil, problem(n, "copy modifications require at least one operation")
 	}
-	modifications := make([]mage.CopyModification, 0, len(parts))
+	modifications := &copyModificationPlan{operations: make([]mage.CopyModification, 0, len(parts))}
 	for _, part := range parts {
+		if part.Name == "KeepColor" {
+			if part.Kind != Symbol {
+				return nil, problem(part, "KeepColor requires a symbol")
+			}
+			modifications.keepColors = true
+			continue
+		}
 		if part.Name != "AddCardtypes" {
 			return nil, unsupported(part, "entry copy modifications")
 		}
@@ -65,7 +80,7 @@ func compileCopyModifications(n Node) ([]mage.CopyModification, error) {
 			}
 			kinds = append(kinds, kind)
 		}
-		modifications = append(modifications, mage.CopyAddCardTypes(kinds...))
+		modifications.operations = append(modifications.operations, mage.CopyAddCardTypes(kinds...))
 	}
 	return modifications, nil
 }

@@ -14,6 +14,53 @@ type CopyModification interface {
 	applyCopyModification(*BaseCard)
 }
 
+// ColorCharacteristicDefinition identifies an effect that defines color.
+// Ordinary color changes must not implement this contract.
+type ColorCharacteristicDefinition interface {
+	DefinesColor() bool
+}
+
+type copyRetainedColors struct{ colors []core.Color }
+
+// CopyRetainColors keeps saved colors as part of the copied characteristics.
+// An empty list keeps the copy colorless. Color definitions are not copied.
+func CopyRetainColors(colors ...core.Color) CopyModification {
+	saved := make([]core.Color, 0, len(colors))
+	for _, color := range colors {
+		if color != core.Colorless && !slices.Contains(saved, color) {
+			saved = append(saved, color)
+		}
+	}
+	return copyRetainedColors{colors: saved}
+}
+
+func (m copyRetainedColors) validateCopyModification() error {
+	for _, color := range m.colors {
+		switch color {
+		case core.White, core.Blue, core.Black, core.Red, core.Green:
+		default:
+			return fmt.Errorf("retained copy colors require Magic colors; use an empty list for colorless")
+		}
+	}
+	return nil
+}
+
+func (m copyRetainedColors) applyCopyModification(card *BaseCard) {
+	card.colorOverride = slices.Clone(m.colors)
+	card.abilities = slices.DeleteFunc(card.abilities, func(ability Ability) bool {
+		holder, ok := UnwrapAbility(ability).(*StaticAbilityHolder)
+		if !ok {
+			return false
+		}
+		for _, effect := range holder.Effects {
+			if definition, ok := effect.(ColorCharacteristicDefinition); ok && definition.DefinesColor() {
+				return true
+			}
+		}
+		return false
+	})
+}
+
 type copyTypeAddition struct{ types []core.CardType }
 
 // CopyAddCardTypes adds permanent types to the copied characteristics.
@@ -83,7 +130,7 @@ func (v *CopiableValues) WithModifications(modifications ...CopyModification) (*
 	if err != nil {
 		return nil, err
 	}
-	// Type changes must not give existing entry rules another use in one event.
+	// Copy exceptions must not give existing entry rules another use in one event.
 	plan.declarationOrigin = v.definition
 	if plan.declarationOrigin != nil && plan.declarationOrigin.declarationOrigin != nil {
 		plan.declarationOrigin = plan.declarationOrigin.declarationOrigin

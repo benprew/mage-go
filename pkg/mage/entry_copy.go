@@ -20,10 +20,19 @@ func MayCopyAsEntersWithModifications(filter PermanentFilter, modifications ...C
 	return &entryCopyAbility{BaseAbility: BaseAbility{id: uuid.New(), abilityType: core.AbilityStatic}, filter: filter, modifications: slices.Clone(modifications)}
 }
 
+// MayCopyAsEntersKeepingColors retains the entering object's copiable colors.
+// Later copies keep those colors. Ordinary color changes still apply afterward.
+func MayCopyAsEntersKeepingColors(filter PermanentFilter, modifications ...CopyModification) Ability {
+	ability := MayCopyAsEntersWithModifications(filter, modifications...).(*entryCopyAbility)
+	ability.keepColors = true
+	return ability
+}
+
 type entryCopyAbility struct {
 	BaseAbility
 	filter        PermanentFilter
 	modifications []CopyModification
+	keepColors    bool
 }
 
 func (a *entryCopyAbility) inspectDefinition() definitionNode {
@@ -53,7 +62,8 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 		return nil
 	}
 	var result []ReplacementEffect
-	for i, ability := range a.permanent.RuntimeAbilities {
+	index := 0
+	for _, ability := range a.permanent.RuntimeAbilities {
 		copyAbility, ok := UnwrapAbility(ability).(*entryCopyAbility)
 		if !ok {
 			continue
@@ -62,7 +72,9 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 		if plan != nil && plan.declarationOrigin != nil {
 			plan = plan.declarationOrigin
 		}
-		key := entryCopyKey{plan, i}
+		// Other ability omissions must not change an entry rule's identity.
+		key := entryCopyKey{plan, index}
+		index++
 		replacement := a.copies[key]
 		if replacement == nil {
 			replacement = &entryCopyReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityCopy}, ability: copyAbility}
@@ -119,7 +131,11 @@ func (r *entryCopyReplacement) Replace(action Action, g *Game) Action {
 	if err != nil {
 		return nil
 	}
-	values, err = values.WithModifications(r.ability.modifications...)
+	modifications := r.ability.modifications
+	if r.ability.keepColors {
+		modifications = append(slices.Clone(modifications), CopyRetainColors(cardColors(p.Card)...))
+	}
+	values, err = values.WithModifications(modifications...)
 	if err != nil {
 		return nil
 	}
