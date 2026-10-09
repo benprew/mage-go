@@ -165,7 +165,9 @@ func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
 // StaticAbilityHolder holds continuous effects as a static ability.
 type StaticAbilityHolder struct {
 	BaseAbility
-	Effects []ContinuousEffect
+	ptTextRevision         bool
+	textRevisionDefinition Card
+	Effects                []ContinuousEffect
 }
 
 // StaticAbility creates a static ability that applies continuous effects while the source is on the battlefield.

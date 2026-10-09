@@ -1,5 +1,34 @@
 # DSL reference
 
+## Printed static P/T text revision
+
+`StaticAbilityHolder.WithPTTextRevision() *StaticAbilityHolder` opts in a printed
+static declaration whose nonempty effects all use layer 7c and
+`WhileOnBattlefield`. `Game.RevisePrintedStaticPTAbility(source *Permanent,
+abilityID uuid.UUID, changes ...TextChange) error` installs fresh checked effects
+for the original present face-up source and active printed declaration.
+
+RON opts in `EachPermanentLayerEffect(creatureFilter, [AdjustPT(integer,
+integer)])` through `compileStaticLayer`. The existing validated creature filter
+can include control, source exclusion, color, subtype and combat state. Other
+parts, general permanent filters, Aura hosts, conditional statics and CDAs do
+not opt in. Invalid syntax and out-of-scope references retain their errors.
+
+The service retains the active UUID and each effect's registration position.
+It does not retimestamp a static rule when its text changes. Independent siblings
+and source instances retain independent ordered changes. Current membership and
+controller are read by the existing P/T effects on each layer pass. Source
+phasing suspends execution. Temporary ability removal suspends the registration;
+restoration uses the revised declaration. Departure ends registration; returning
+uses printed rules. Game clones retain separate replacements and registrations.
+
+Missing registrations, unknown IDs, absent/phased/returned/face-down sources,
+granted or unmarked abilities, invalid changes, failed builders and changed
+effect counts reject before mutation. Printed/copiable definitions stay separate.
+The caller must coordinate layer-3 order and text-effect lifetime. This bounded
+service does not establish complete Magical Hack or Sleight of Mind execution.
+
+
 ## Printed spell-cast trigger text revision
 
 `(*mage.GenericTriggered).WithSpellCastTextRevision() *GenericTriggered` opts a

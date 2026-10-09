@@ -31,9 +31,20 @@ type deepCloneableEffect interface {
 
 type printedAbilityContinuousEffect struct {
 	ContinuousEffect
+	declaration *StaticAbilityHolder
+	incarnation uuid.UUID
 }
 
 func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
+	if e.declaration != nil {
+		source := g.FindPermanent(e.SourceID())
+		if source == nil || source.incarnationID != e.incarnation {
+			return false
+		}
+		if !slices.ContainsFunc(source.RuntimeAbilities, func(a Ability) bool { return a.AbilityID() == e.declaration.AbilityID() }) {
+			return false
+		}
+	}
 	if continuation, ok := e.ContinuousEffect.(interface{ continuesAcrossLayers(*Game) bool }); ok && continuation.continuesAcrossLayers(g) {
 		return true
 	}
@@ -79,7 +90,9 @@ func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
 	if cloneable, ok := inner.(deepCloneableEffect); ok {
 		inner = cloneable.cloneEffect()
 	}
-	return &printedAbilityContinuousEffect{ContinuousEffect: inner}
+	clone := *e
+	clone.ContinuousEffect = inner
+	return &clone
 }
 
 // effectSource provides SourceID/SetSourceID to all continuous effects.
@@ -670,7 +683,7 @@ func (em *EffectManager) Apply(g *Game) {
 			restored := make([]Ability, 0, len(p.Card.Abilities())+len(p.RuntimeAbilities))
 			for _, a := range p.Card.Abilities() {
 				if !existing[a.AbilityID()] {
-					restored = append(restored, a)
+					restored = append(restored, g.registeredPrintedStaticAbility(p, a))
 				}
 			}
 			p.RuntimeAbilities = append(restored, p.RuntimeAbilities...)

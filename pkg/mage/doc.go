@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [StaticAbilityHolder.WithPTTextRevision] for a printed static P/T rule.
+// [Game.RevisePrintedStaticPTAbility] checks its declaration and source visit.
+// It keeps the active ID and registration order with fresh validated effects.
+// Each effect must modify P/T while its source is on the battlefield.
+// Each declaration keeps its own ordered text changes. Clones stay separate.
+// Phasing suspends the rule. Ability removal suspends it; restoration keeps
+// the revised declaration. A returned source uses its printed rules.
+// RON opts in global creature collections with one fixed AdjustPT action.
+// The caller must supply text-layer order and lifetime. Other static layers,
+// conditional rules, Aura rules and full text consumers need separate services.
+//
 // Use [GenericTriggered.WithSpellCastTextRevision] for a printed spell-cast trigger.
 // [Game.RevisePrintedSpellCastTrigger] checks its declaration and source visit.
 // It keeps the active ID with fresh rules, targets and event bindings.

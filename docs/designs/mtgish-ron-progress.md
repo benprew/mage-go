@@ -7,12 +7,14 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-SPELL-CAST-TRIGGER` lowers an opt-in for typed printed battlefield
-spell-cast triggers and installs checked fresh declarations with stable active IDs.
-RON revision gameplay covers eleven accepted unique cards, pending targets,
-captured players/spells, payments, copies, clones, control changes and phase/return
-identity. Static registration, other trigger kinds and the layer-3 owner remain
-unsupported. **+0 unique names / +0 records**, as estimated. All required checks pass; loader diagnostics match the fresh baseline.
+`TEXT-STATIC-PT` lowers an opt-in for unconditional global creature AdjustPT
+rules and installs checked fresh P/T effects with stable active IDs and registration
+order. RON revision gameplay covers eleven accepted unique names / 31 records,
+independent declarations, clones, live control/membership, phasing, removal and
+restoration, return identity and departure LKI. Other static layers, remaining
+trigger kinds, spell installation and the layer-3 owner remain unsupported.
+**+0 unique names / +0 records**, as estimated. All required checks pass; loader
+diagnostics exactly match the fresh baseline.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -58527,6 +58529,153 @@ Ranked next candidates:
    the complete optional-entry and coin/damage consumers before selecting a context.
 3. Exact physical-card transport for Tempest Efreet; keep Bronze Tablet's source
    owner-assignment fidelity correction separate.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: TEXT-STATIC-PT — printed static P/T registration revision
+
+Status: complete bounded static P/T installation slice. No second slice started.
+
+### Fresh environment and candidate comparison
+
+The tree began with user edits to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`. Preserve those edits and the
+archive. Only this slice's status update and appended entry belong in the commit.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict
+loader exited 1 for collection rejection, not build failure: 2,090 compiled /
+355 rejected records; 808 accepted / 178 rejected unique names.
+
+Read the latest ranked candidates first, then complete records and nested forms.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers, downstream benefit and effort |
+| --- | --- | --- |
+| Ranked #1, bounded static P/T declaration installation | Bad Moon, Crusade, Castle, Gauntlet of Might, Orcish Oriflamme, Sunken City, Thrull Champion, Arcades Sabboth, Jacques le Vert, Kobold Taskmaster, Rohgahh of Kher Keep, Mightstone, Weakstone. 0 new full-card unlocks. | Dependency-ready semantic builder, printed groups and layer services. Gauntlet rejects `WhenAPermanentIsTappedForMana(IsLandType(Mountain))`; Rohgahh rejects `CreatePermanentsList` and still needs its control continuation. Concrete prerequisite for Magical Hack/Sleight of Mind (2 names / 12 records), with broader static contexts, remaining triggers, spell installation and layer-3 ordering/expiry still required. Small bounded effort: one engine service, RON opt-in, registration lifecycle and rejection/gameplay tests. |
+| Ranked #2, repeated-procedure round/result scope | Eureka, Mana Clash. 0 unlocks for a shared scope prerequisite; up to 2 for the complete distinct consumers. | Eureka requires caster-first optional hand entry and round-wide action results/termination. Mana Clash requires per-player coin results, tails selection, simultaneous damage and all-heads termination. Both reject `RepeatableActions`; reading the entire bodies confirms a first-error adapter alone cannot unlock them. Shared scope benefits both; medium-to-large effort with separate consumers. |
+| Ranked #3, exact physical-card transport | Tempest Efreet. 1 estimated full-card unlock for both exact transports. | Existing paid source-card result, random reveal, ownership exchange and life payment supply inputs. Missing `PutCardFromHandIntoPlayersHand` and `PutCardFromAnywhereIntoPlayersGraveyard(ThisCard)` require current-owner, exact-visit, event and clone contracts. Bronze Tablet has a separate source owner-assignment fidelity issue. Medium effort with one immediate name; deferred while useful shared work remains. |
+
+Select #1, bounded to unconditional global creature P/T modification declarations.
+It supplies shared static registration machinery with eleven accepted real-card
+fixtures and a concrete two-card text-effect dependency. Broader static layers
+are not dependency-complete merely because the registration list now exists.
+Actual collection gain **0 unique names / 0 records**, matching the estimate.
+The Gauntlet fixture exposed its existing event blocker; it was kept in rejection
+coverage rather than simplified. Sunken City is in DRK, not FEM; fix the fixture
+set. No source-data defect or environment failure was found.
+
+### Exact contract, ownership and reuse
+
+- `(*StaticAbilityHolder).WithPTTextRevision() *StaticAbilityHolder` marks a
+  printed static declaration. Definition validation requires nonempty effects,
+  all layer 7c (`SublayerPT_Modify`) with `WhileOnBattlefield` duration. Empty,
+  nil, type/ability-layer, base-P/T-setting and other-duration effects reject.
+- `(*Game).RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks exact present face-up source incarnation,
+  retained definition, printed declaration group/member, active eligible holder,
+  complete registrations, semantic builder and fresh validated correspondence.
+  Fresh effect count must equal the current registration count.
+- RON lowers the marker only in `compileStaticLayer` for
+  `EachPermanentLayerEffect(creatureFilter, [AdjustPT(integer, integer)])`.
+  Existing validated filters include color, subtype, name, controller, source
+  exclusion and combat state. General permanent filters, conditional statics,
+  Aura hosts, mixed actions and CDAs do not acquire the marker. Existing argument
+  and lexical reference validation remains strict.
+- The active UUID and each registration position remain. Each declaration keeps
+  an independent ordered revision prototype. Fresh effects replace all earlier
+  effects together; no old or duplicate effect is retained. Static source
+  timestamps do not change when text changes (CR 613.7a).
+- Registration saves its declaration and source incarnation. Membership and
+  controller use the existing layer-7c callbacks on each pass (CR 611.3a/c,
+  613.4c). Clones have separate effect lists and runtime replacement. No choice,
+  target or result state is introduced.
+- Phasing suspends the rule without discarding the revision. Layer-6 removal
+  suspends its layer-7c registration. Subsequent restoration uses the retained
+  revised holder, so ending removal restores revised rules. Departure removes
+  registrations and retains normal P/T LKI; return uses printed origin (CR 400.7).
+- Unknown IDs, IDs from another source, granted, removed, unmarked, absent,
+  phased, returned and face-down declarations reject before mutation. Invalid
+  substitutions, failed builders, incomplete registrations, lost groups and
+  changed contracts also reject without modifying runtime rules or registrations.
+
+RON owns syntax, filter validation and opt-in lowering. Mage owns declaration
+eligibility, checked installation, registration identity/order and restoration.
+Reuse: semantic AST text builder, `BuildTextDefinitionRevision`, definition
+plans/groups, typed source incarnations, shared P/T layers, ability suppression,
+copy-on-write permanents/effect lists, game cloning, departure LKI and printed
+origin. No separate zone, payment, replacement or simultaneous-operation system.
+No global result slot, card-name branch, fallback registry or game-time declaration
+panic. Payment rollback and replacement ordering are unchanged by this slice.
+
+The caller still supplies layer-3 order, text-effect expiry and restoration of
+original text at expiry. This is a bounded installation prerequisite, not a
+partial Magical Hack/Sleight of Mind production consumer. Static type/ability
+layers, conditional declarations, CDAs, Aura rules, other triggers and spell text
+remain separate. No RON source change; vocabulary hashes remain valid.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `TestRONTextStaticPT` failed compilation on missing
+`RevisePrintedStaticPTAbility`. Native `TestTextStaticPT` failed compilation on
+that service and missing `WithPTTextRevision`. The service was then implemented
+against those tests. Invalid forms retain explicit declaration errors.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestRONTextStaticPTColors` | Complete Bad Moon, Crusade, Sunken City, Jacques le Vert records: changed color membership, current controller restrictions, stable IDs, preserved printed cost and single replacement effect. |
+| `TestRONTextStaticPTLifetime` | Bad Moon: other-source ID rejection, independent simultaneous source contributions, clone revisions, ordered changes, phased-source rejection and suspension, removal/restoration, exact return rejection, printed reset and departure P/T LKI. |
+| `TestRONTextStaticPTIndependentDeclarations` | Complete synthetic two-rule RON source: independent sibling transformations and exact independent P/T contributions. |
+| `TestRONTextStaticPTControlAndShapes` | Castle, Orcish Oriflamme, Thrull Champion, Arcades Sabboth, Kobold Taskmaster, Mightstone, Weakstone: no-matching-word revision with stable IDs and actual P/T gameplay, control/owner distinction, combat/tapped membership, source inclusion/exclusion. Jacques le Vert: revised membership changes with current controller. Wrong arity/value and unbound player filters reject. |
+| `TestRONTextStaticPTBoundaries` | Holy Strength/Goblin King remain unmarked; Gauntlet of Might/Rohgahh retain independent compiler gaps; Magical Hack/Sleight of Mind still reject their live consumers. |
+| Native `TestTextStaticPTDeclaration`, `Rejects`, `RegistrationOrder` | Unsupported opt-ins, grants, face-down/absent/nil sources, unknown IDs, missing builder/group/marker/registration, invalid change, builder failure and changed effect count/layer. Rejections preserve all runtime declarations and effects. Multiple-effect replacement retains positions between other effects and applies each fresh effect exactly once. |
+
+Bounded static revision gameplay now covers **11 accepted unique names / 31
+records**. This is additional capability evidence, not a global complete-card
+coverage claim. Existing tests retain other-rule evidence: static controller and
+source-exclusion suites; `TestRONNonattackingArcades*` and upkeep payment fixtures;
+Thrull Champion source-control tests. Full-card compilation and complete gameplay
+remain separate. Gauntlet/Rohgahh add no accepted gameplay count.
+
+### Verification and files
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticPT -count=1`.
+- Native `go test ./pkg/mage -run TestTextStaticPT -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: final 0 issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for strict collection rejection.
+
+The first lint run reported one `prealloc` issue in a new native rejection test.
+Replace its mixed-effect append with the explicit two-effect fixture. Reviewed
+automatic edits: import grouping only in the three new Go files; no semantic or
+unrelated automatic change. Reran both focused suites and `make lint`, then both
+focused suites again after formatting. All passed. This fixture allocation change
+does not alter the successful full-suite behavior assertions.
+
+Final loader JSON, including every diagnostic message, is exactly equal to the
+fresh baseline: **2,090 compiled / 355 rejected records; 808 accepted / 178 rejected
+unique names**. No acceptance regression or partial registry. No source defect,
+RON source change or vocabulary snapshot change. Commit message:
+`feat(ron): implement printed static P/T text revision`.
+
+Files: engine service/native tests (`text_static_pt.go`, `text_static_pt_test.go`),
+static holder state/validation (`ability.go`, `definition.go`), source registration
+and restoration (`game.go`, `effect_manager.go`), RON opt-in/gameplay tests
+(`layers.go`, `text_static_pt_test.go`), `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No Go card definitions,
+generators or DSL services removed; runtime/removal gates remain unmet.
+
+Ranked next candidates:
+
+1. Checked printed static ability-layer declarations and grant/protection
+   registration lifecycle; inspect complete Ward and landwalk records. Shared
+   prerequisite for the two text-change spells; no immediate unlock estimate.
+2. Remaining printed battlefield trigger text installation, starting with a
+   bounded typed land-tap event context (Lifetap and Lifeblood); coordinate later layer-3 order, expiry and spell installation.
+3. Shared repeated-procedure round/result scope for Eureka and Mana Clash;
+   compare full optional-entry and coin/damage consumers. Exact Tempest Efreet
+   transports remain a one-card fallback if shared candidates are not ready.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

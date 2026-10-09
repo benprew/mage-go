@@ -1,5 +1,48 @@
 # Engine rules contracts
 
+## Printed static P/T registration under text revision
+
+`StaticAbilityHolder.WithPTTextRevision()` and
+`Game.RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` establish checked installation for one printed
+static P/T modification declaration. Definition validation requires nonempty
+layer-7c effects with `WhileOnBattlefield` duration. RON opts in only its
+unconditional global creature collection with one fixed `AdjustPT` operation.
+
+CR 612.2 semantic word substitution and CR 612.3 printed/granted distinction use
+the retained text builder and declaration-group correspondence. The service
+checks exact source incarnation, face-up presence, active opt-in, printed group,
+complete registrations, fresh definition validation and matching effect count
+before any live change. All registrations and the runtime declaration change
+together. Unknown, granted, removed, unmarked, absent, phased, returned and
+incompatible declarations reject without mutation; failed builders do likewise.
+
+CR 611.3a/c and 613.4c use the existing P/T services for live membership and
+controller reads. CR 613.7a preserves a static effect's source timestamp:
+replacement changes effects in their existing registration positions. Siblings
+and separate sources keep independent ordered changes. Cloning retains separate
+registration lists and runtime replacement; no result binding is shared.
+
+A registration saves the source incarnation and declaration identity. Phasing
+suspends it without ending the saved revision. Layer-6 ability removal prevents
+layer-7c execution. At the next pass, restoration uses the retained revised
+holder before applying ability layers, so ending a removal restores revised
+rules. Departure removes registrations and keeps the shared departure LKI;
+CR 400.7 return uses printed origin and cannot inherit the earlier revision.
+
+This is an installation service. The caller still supplies layer-3 ordering,
+expiry and restoration of original text when a text effect ends. Other static
+layers, conditional declarations, CDAs, Aura rules, other trigger kinds and
+spell text need separate contracts. No payment, replacement-order or simultaneous
+zone-operation contract changes.
+
+Evidence: `TestRONTextStaticPTColors`, `Lifetime`, `IndependentDeclarations`,
+`ControlAndShapes`, `Boundaries`; native `TestTextStaticPTDeclaration`, `Rejects`
+and `RegistrationOrder`. Eleven accepted unique cards receive bounded static
+revision evidence. Gauntlet of Might and Rohgahh of Kher Keep retain other
+compiler blockers. Compilation progress and complete gameplay remain separate.
+
+
 ## Semantic text definition prototypes
 
 `mage.ReplaceColorWord(from, to core.Color) (TextChange, error)` and

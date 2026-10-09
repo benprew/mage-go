@@ -230,7 +230,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		for i, build := range effects {
 			values[i] = build()
 		}
-		return mage.WithStaticAbility(values...)
+		holder := mage.StaticAbility(values...)
+		if global && !general && len(parts) == 1 && parts[0].Name == "AdjustPT" {
+			holder.WithPTTextRevision()
+		}
+		return mage.WithAbility(holder)
 	}, nil
 }
 

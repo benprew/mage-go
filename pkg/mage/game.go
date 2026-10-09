@@ -573,7 +573,7 @@ func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorS
 				e = g.bindCharacteristicEffect(e, perm)
 				// Set the source ID on the continuous effect
 				g.setEffectSource(e, perm.ID())
-				g.effects.Add(&printedAbilityContinuousEffect{ContinuousEffect: e})
+				g.effects.Add(printedStaticEffect(e, perm, sa))
 			}
 		}
 	}
@@ -859,7 +859,7 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 			for _, e := range sa.Effects {
 				e = g.bindCharacteristicEffect(e, perm)
 				g.setEffectSource(e, perm.ID())
-				g.effects.Add(&printedAbilityContinuousEffect{ContinuousEffect: e})
+				g.effects.Add(printedStaticEffect(e, perm, sa))
 			}
 		}
 	}
