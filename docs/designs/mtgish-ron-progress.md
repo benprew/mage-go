@@ -2,20 +2,19 @@
 
 ## Current status
 
-The latest recorded inventory reports **802 accepted / 184 rejected unique card
-names** (986 total), and **2,074 compiled / 371 rejected records** (2,445 total).
+The latest recorded inventory reports **803 accepted / 183 rejected unique card
+names** (986 total), and **2,075 compiled / 370 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LINKED-EXILE-OWNER-TRANSPORT` adds one-producer association and exact-visit
-transport to owners' hands or graveyards. Knowledge Vault's complete RON record
-has gameplay evidence for all three rules. Safe Haven has producer-association
-evidence; its owner-controlled battlefield entry remains unsupported.
-**+1 unique name / +1 record**, matching the estimate. Shared exile, ownership,
-ordering, source identity, delayed queries and clone services are reused.
+`LINKED-EXILE-OWNER-BATTLEFIELD-ENTRY` adds exact-visit batch entry under current
+owners' control. Safe Haven's complete RON record now has gameplay evidence.
+Entry replacements, Aura legality, failure destinations and source identity use
+shared engine services. **+1 unique name / +1 record**, matching the estimate.
+Tawnos's Coffin still needs result, counter and explicit attachment capabilities.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Linked battlefield entry, turn-skip replacements and other gaps remain.
+Dynamic reveal-value payments, turn-skip replacements and other gaps remain.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -55879,3 +55878,149 @@ Ranked next candidates:
    ordering and normal/extra/skipped turn scheduling.
 
 Stop after LINKED-EXILE-OWNER-TRANSPORT. Migration incomplete.
+
+
+## 2026-10-09: linked exile entry under owners' control
+
+Status: completed implementation slice `LINKED-EXILE-OWNER-BATTLEFIELD-ENTRY`.
+This run stops after one slice. Existing user changes to `.gitignore`, the
+execution design, the ledger reorganization and untracked completed-history file
+are preserved. Only this slice's summary and appended entry are staged here.
+
+### Fresh baseline and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+strict loader returned expected exit 1: 2,074 compiled / 371 rejected records,
+802 accepted / 184 rejected unique names. This is collection rejection, not a
+build or test failure. Full records and nested forms were read for Safe Haven
+(DRK), Tawnos's Coffin (ATQ), Wand of Ith (DRK), and Time Vault's five identical
+records (LEA, LEB, 2ED, CED, CEI). Targeted vocabulary inspection confirmed
+PutEachExiledCardOntoTheBattlefield tuple/2, WasExiledWithPermanent tuple/1 and
+EntersUnderOwnersControl symbol. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: exact linked battlefield entry, selected | Safe Haven, Tawnos's Coffin; 1 name / 1 record | Safe Haven's producer association, upkeep and optional sacrifice already work. Coffin still needs plural/result-bound exile, counter notes, untap/departure delay, exact return payment and explicit Aura attachment. Shared batch entry and owner control establish its entry prerequisite. | Medium: reuse preparation/replacement/registration, exact visit rechecks, Aura choices, batch events, full-record gameplay. |
+| Saved reveal mana value and dynamic resolution life payment | Wand of Ith; 1 name / 1 record | Reveal predicates, fixed life payment, discard-result and timing already exist. Needs saved mana value and dynamic transaction preparation. No further complete-card gain demonstrated. | Medium: result snapshot, dynamic transaction, affordability and rollback. |
+| Optional begin-turn skip replacement | Time Vault; 1 name / 5 records | Normal/extra/skipped turn scheduling and affected-player replacement ordering need a shared lifecycle contract. Entry, untap restriction and extra-turn action already exist. | Large: turn scheduling, optional skip payment, replacement ordering and history. |
+
+Candidate #1 is dependency-ready and gives one complete card plus a concrete
+shared prerequisite for Coffin. It fits this run without implementing Coffin's
+separate result, counter and explicit attachment forms. Shared entry reuse wins
+against Wand's equally sized single-card gain and Time Vault's larger subsystem.
+
+### Exact signatures, contexts and reuse
+
+Native API:
+`PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet) ResolvingEffect`.
+RON supports exactly
+`PutEachExiledCardOntoTheBattlefield(WasExiledWithPermanent(ref), [EntersUnderOwnersControl])`
+in activated, triggered and delayed resolving permanent-source bodies. The
+existing single-unambiguous-producer association is retained. `ref` is the local
+ThisPermanent or source-departure Trigger_ThatPermanent. Other sets/options,
+missing/ambiguous producers, incompatible/unbound refs and cost/static/entry
+contexts reject before execution. No result-bound or explicit attachment forms
+are silently approximated.
+
+RON owns syntax, option validation and source scope. The engine owns transport.
+It reuses CardsExiledWith, exact exile visits, Card.Copy, printed departure
+provenance, the shared entry replacement pipeline, counter/tapped operations,
+attachment legality, graveyard ordering, registration and event services.
+Private prepareBattlefieldEntryResult reports existing failed-entry graveyard
+destinations for deferred batch movement; legacy prepareBattlefieldEntry keeps
+its immediate behavior. completeBattlefieldEntryFrom supplies the exact exile
+origin while legacy entry callers keep ZoneAny. No existing caller is removed.
+
+Selection saves distinct visits once. Current owners supply entry control and
+APNAP choices while subjects remain in exile. Prepared cards have independent
+storage and the same physical ID. All visits, owners, Aura host incarnations and
+land-entry prohibitions are rechecked after choices. Returned/re-exiled cards
+cannot substitute. Prohibited lands, tokens, nonpermanent cards and Auras without
+legal existing hosts remain in exile. Aura entry does not target; protection and
+enchant restrictions still apply. Same-batch entering objects cannot be hosts.
+Failed entry operations keep the existing graveyard destination, with owner
+ordering before movement. Owners can order their own simultaneous entry choices. All successful entries and graveyard moves finish
+before attachment/zone events. Copy, counter and tapped entry rules are fresh.
+These uncast cards use zero X and cast colors; the enclosing X is restored.
+The resolving controller is the actor, separate from each card's entry owner.
+Waiting queries retain source identity without selecting cards or making choices.
+Clones keep separate zones and pending resolutions.
+
+Rules evidence: local CR 101.4, 107.3g, 111.8, 303.4d/f/g, 400.4a/6/7, 406.6/7,
+607.2a, 608.2f and 614.12/616.1; existing typed payment and phasing contracts.
+Safe Haven's local data/DRK.json Oracle text agrees with its unchanged RON.
+No source defect was corrected and no RON source changed, so the vocabulary
+snapshot needs no refresh. No fallback, card-name branch, declaration panic,
+global result slot or partial production registry was added. Go-card/DSL removal
+and runtime cutover gates remain unmet.
+
+### Failing-first and card-to-test mapping
+
+The complete Safe Haven record first failed at DRK.lines.ron:88:463, unsupported
+PutEachExiledCardOntoTheBattlefield. Native tests failed compilation on the new
+undefined signature. Native fixture API names were corrected and the missing-API
+failure was confirmed in isolation. The additional failure-destination test first
+failed its assertion before deferred graveyard movement was implemented. The
+owner-order test failed before the shared choice-order service was added. Phased
+queries and explicit clone decision fixtures were corrected without weakening
+rule expectations. A departure fixture was corrected to the existing RON spelling.
+
+| Test | Card mapping and contracts |
+| --- | --- |
+| TestRONLinkedExileEntrySafeHaven | Complete unchanged DRK record: payment/exile, illegal target, optional sacrifice paid/declined, source control loss/departure/return, phasing/cycle, copied upkeep trigger, independent sources, token disappearance, current owner control and pending clone isolation. |
+| TestRONLinkedExileEntryContexts | Synthetic activated, source-departure and delayed consumers: face-down producer, old source incarnation after return, pure waiting queries and owner control. |
+| TestRONLinkedExileEntryCopyReplacement | Actual Clone and Icatian Javelineers RON records through a synthetic linked producer/consumer: copy choice only at entry, acquired entry counters, printed departure and copied LKI. Prerequisite interaction evidence, not another new full-card unlock. |
+| TestRONLinkedExileEntryInvalid | Unsupported options/sets, incompatible/unbound references, forbidden declaration contexts and missing/ambiguous association reject. |
+| TestLinkedExileEntryBatch | Multiple owners, all entries before events, exact linked membership, source departure, fresh tapped/counter state, waiting-query purity and clone independence. |
+| TestLinkedExileEntryVisitsAndProhibition | Saved exile visit, duplicate subject, ownership change, blocked land, nonpermanent and token exclusion. |
+| TestLinkedExileEntryAura | Nontargeted shroud host, missing/phased/prohibited host and returned host identity; illegal Aura retains its exact exile visit. |
+| TestLinkedExileEntryChoiceRechecks | APNAP entry choices before movement, re-exile/owner/prohibition changes during later choices, and existing failure-to-graveyard behavior. |
+| TestLinkedExileEntryChoiceOrder | The owner orders simultaneous entry choices through the shared sanitized card-order service. |
+| TestLinkedExileEntryDoesNotCast / Definition | Entry cannot inherit enclosing X and restores it; nil sets/links/references reject definition validation. |
+
+Existing typed sacrifice tests retain cost affordability, rollback and competing
+zone replacement coverage. This slice adds no payment subsystem. Gameplay and
+compilation coverage remain separate. Coffin is not claimed as working.
+
+### Verification and measured outcome
+
+After the final implementation changes, checks ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONLinkedExileEntry -count=1`: PASS.
+- `go test ./pkg/mage -run TestLinkedExileEntry -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `go test ./... -short -count=1` (engine skill check): PASS.
+- `make lint`: PASS, 0 issues. The first pass found gocritic's pointer-to-interface
+  parameter finding; the preparer now returns typed permanent/card results.
+  The complete required sequence was rerun after that change and owner ordering.
+- Automatic import formatting was reviewed. Focused RON, native entry, existing
+  copy-entry, failed-entry and mill tests passed again after lint.
+- `git diff --check`: PASS, including the final ledger and staged patch.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict rejection.
+
+No environmental or required-validation blocker remains.
+
+Final counts: **2,075 compiled / 370 rejected records; 803 accepted / 183 rejected
+unique names**, totals 2,445 records / 986 names. Actual gains are **+1 name /
++1 record**, matching the estimate. Safe Haven's diagnostic is removed; every
+other loader diagnostic is unchanged. Strict collection loading still rejects
+and installs no partial registry. Accepted-definition reconstruction and numeric
+inventory tests use the measured counts without weaker gameplay assertions.
+
+Changed files: new native linked_exile_entry.go and tests; new RON entry tests;
+RON compiler.go and linked_exile_transport.go; game.go, cost_mill.go, doc.go; definition-plan,
+inventory and numeric-consumer count tests; API/rules-contract docs; this ledger.
+User reorganization and unrelated files are excluded from the commit.
+Commit message: `feat(ron): implement linked exile owner battlefield entry`.
+
+Ranked next candidates:
+
+1. Saved reveal mana-value semantics and dynamic typed life payment for Wand of
+   Ith; compare dynamic payment consumers before selecting its single-card gain.
+2. Optional begin-turn skip replacement for Time Vault; establish scheduling and
+   affected-player replacement ordering together.
+3. Result-bound plural exile for Tawnos's Coffin, with exact per-resolution visits;
+   compare other result-bound consumers before selecting its counter/attachment chain.
+
+Stop after LINKED-EXILE-OWNER-BATTLEFIELD-ENTRY. Migration incomplete.

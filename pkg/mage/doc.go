@@ -17,7 +17,13 @@
 // Graveyard order uses the existing owner choices before movement.
 // RON associates one unambiguous producer with source-local consumers in
 // resolving permanent bodies. Knowledge Vault uses both destinations.
-// Battlefield entry and multiple producer groups need separate adapters.
+// [PutExiledCardsOntoBattlefieldUnderOwnersControl] uses the shared entry pipeline.
+// Entry choices use active-player order before movement. Saved visits and Aura
+// hosts are checked again before all successful entries reach the battlefield.
+// Prohibited entries keep their exile visits. Failed entry operations keep the
+// existing graveyard destination. Copy, counter and tapped entry rules apply.
+// No casting payment or announced X transfers to this entry.
+// Multiple producer groups and explicit entry attachments need separate adapters.
 //
 // Use [WithAnteDeckRestriction] for a physical card that requires ante.
 // [PrepareCardsForAnte] separates these cards from non-ante decks and sideboards.

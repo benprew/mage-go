@@ -83,6 +83,10 @@ func (g *Game) millCards(playerID uuid.UUID, amount int) {
 }
 
 func (g *Game) orderCardsForGraveyard(p Player, cards []Card) []Card {
+	return g.orderCardsByChoice(p, cards, "choose the next card for your graveyard")
+}
+
+func (g *Game) orderCardsByChoice(p Player, cards []Card, reason string) []Card {
 	remaining := slices.Clone(cards)
 	ordered := make([]Card, 0, len(remaining))
 	for len(remaining) > 1 {
@@ -91,7 +95,7 @@ func (g *Game) orderCardsForGraveyard(p Player, cards []Card) []Card {
 			snapshots[i] = card.Copy()
 			snapshots[i].SetID(card.ID())
 		}
-		chosen := p.ChooseCardFromLibrary(snapshots, "choose the next card for your graveyard", g)
+		chosen := p.ChooseCardFromLibrary(snapshots, reason, g)
 		index := max(0, slices.IndexFunc(remaining, func(card Card) bool { return chosen != nil && card.ID() == chosen.ID() }))
 		ordered = append(ordered, remaining[index])
 		remaining = slices.Delete(remaining, index, index+1)

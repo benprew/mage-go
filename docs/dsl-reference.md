@@ -9746,8 +9746,8 @@ choices, move cards to their current owners, and send zone events after all
 moves. Face-down transport gives no inspection permission while cards remain
 in exile. Waiting delayed queries retain explicit source reads without selection,
 choices or movement. Knowledge Vault has complete-record gameplay evidence.
-Safe Haven's battlefield consumer and multiple linked producer groups still
-require separate adapters.
+Safe Haven's battlefield consumer uses the owner-controlled entry contract below.
+Multiple linked producer groups still require separate adapters.
 
 
 ## Mandatory payment of one typed permanent
@@ -9788,3 +9788,35 @@ announcement/resolution timing, changed-controller copies, cloned pending
 resolution, branch polarity, independent nested results, resolving contexts,
 waiting-source queries and target legality. This is payment-rule evidence;
 Knowledge Vault uses the linked-exile consumer contract for complete-record gameplay.
+
+
+## Linked exile entry under owners' control
+
+`PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects ExiledCardSet) ResolvingEffect`
+selects exact exile visits once at resolution. Each present nontoken permanent
+card enters under its current owner's control. Entry replacements, copy choices,
+tapped status and counters use the shared battlefield entry pipeline. This is
+not casting; announced X and cast colors are zero during entry, and the enclosing
+resolution's X is restored afterward. Each prepared definition is an independent
+card copy with the physical card ID and printed departure provenance.
+
+Entry choices use active-player order while the cards remain in exile. Each
+owner chooses the order of their simultaneous entry choices. All saved
+visits, owners, Aura hosts and land-entry prohibitions are checked again after
+choices. A new exile visit cannot replace the saved subject. Prohibited lands,
+nonpermanent cards, tokens and Auras without legal hosts remain in exile. Aura
+host selection uses the existing permanent attachment legality service without
+targeting; shroud does not prevent entry. Hosts must already be on the battlefield
+and retain their incarnation. Existing entry operations that return failure keep
+their graveyard destination, with owner ordering before movement. All successful
+entries and graveyard moves finish before zone events. Clones have separate state.
+Waiting delayed queries retain the linked source without choices or movement.
+
+RON supports exactly
+`PutEachExiledCardOntoTheBattlefield(WasExiledWithPermanent(ref), [EntersUnderOwnersControl])`
+in activated, triggered and delayed resolving permanent bodies. The existing
+one-producer association and source-reference checks apply. `ref` is
+`ThisPermanent` or the source-departure `Trigger_ThatPermanent`. Costs, static
+rules, entry declarations, other sets and other entry options reject. Safe Haven
+has complete-record gameplay evidence. Tawnos's Coffin still needs result-bound
+exile, counter notes, explicit attachments and conditional return payments.

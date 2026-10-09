@@ -12980,5 +12980,49 @@ exile replacement, failed sacrifice, copied activations, independent sources,
 source departure and pending clone isolation. Its sacrifice queues a departure
 trigger; that trigger sees no linked cards after the resolving activation returns
 them. Separate departure instead sends linked cards to owners' graveyards.
-Safe Haven has producer-association evidence, but battlefield entry remains a gap.
+Safe Haven now has complete-record gameplay evidence through owner-controlled entry.
 Multiple producer groups and other source references remain unsupported.
+
+
+## Linked exile battlefield entry
+
+`PutExiledCardsOntoBattlefieldUnderOwnersControl(ExiledCardSet) ResolvingEffect`
+uses linked selection (CR 406.6, 607.2a), exact exile visits and independent
+prepared definitions (CR 400.7). Selection deduplicates physical cards. Each
+current owner controls the new permanent; the resolving controller is the actor.
+Unknown owners, tokens and nonpermanent cards cannot enter (CR 400.4a, 111.8).
+
+The shared battlefield preparation pipeline applies entry copies and replacements,
+then tapped status, counters and entry choices (CR 614.12, 616.1). Preparation
+keeps cards in exile until choices finish in active-player order (CR 101.4, 608.2f).
+The enclosing announced X does not enter this operation; X and cast colors are
+zero for these uncast cards (CR 107.3g). Preparation restores the caller's X.
+Each owner can order their simultaneous entry choices (CR 101.4c) through the
+shared sanitized card-order choice service. The existing failure-to-graveyard
+entry contract remains: failed preparations
+report their destination for the batch instead of moving immediately. Legacy
+single-entry callers still receive their immediate graveyard behavior. Owner
+graveyard ordering precedes movement.
+
+Aura entry chooses a legal existing permanent without targeting (CR 303.4f–g).
+The shared attachment service checks enchant limits, protection and creature-Aura
+restrictions. A phased or returned host cannot qualify. Aura hosts entering in
+the same batch are not yet on the battlefield and cannot qualify. Exile visits,
+owners, hosts and entry prohibitions are checked after all choices. Ineligible
+subjects retain their exact exile visits; valid entry-operation failures move to
+the graveyard. Every successful permanent is registered before attachment or
+zone-change events. Entry zone events report exile as their origin.
+
+The linked set retains source identity through departure, phasing and delayed
+resolution. Waiting queries retain explicit source reads without running entry.
+Clones keep independent exile, battlefield and pending resolution state. New
+entries acquire fresh counters and tapped/copy rules rather than old battlefield
+state. Physical identity and printed departure definitions remain.
+
+Evidence: `TestLinkedExileEntryBatch`, `VisitsAndProhibition`, `Aura`,
+`ChoiceRechecks`, `ChoiceOrder`, `DoesNotCast`, `Definition`; `TestRONLinkedExileEntrySafeHaven`, `Contexts`,
+`CopyReplacement`, `Invalid`. Full Safe Haven tests use its unchanged RON record
+and cover successful/declined sacrifice, control loss, departure/return, phasing,
+stack copies, independent sources, illegal targets, tokens and pending clones.
+The complete Coffin record remains unsupported; no counter-note or explicit
+attachment semantics are inferred from this entry service.

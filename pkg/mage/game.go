@@ -428,8 +428,23 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 }
 
 func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) *Permanent {
+	perm, failed := g.prepareBattlefieldEntryResult(card, controller, colors, castColorsSpent, tapped)
+	if failed != nil {
+		owner := failed.Owner()
+		if owner == uuid.Nil {
+			owner = controller
+		}
+		if player := g.GetPlayer(owner); player != nil {
+			player.AddToGraveyard(failed)
+		}
+	}
+	return perm
+}
+
+// Entry batches must finish choices before a failed entry moves to the graveyard.
+func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) (*Permanent, Card) {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
-		return nil
+		return nil, nil
 	}
 	perm := NewPermanent(card, controller)
 	if colors != nil {
@@ -445,17 +460,10 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 	defer g.zones.ClearEnteringPermanent()
 	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement)}
 	if g.effects.ApplyReplacements(entry, g) == nil {
-		owner := perm.Card.Owner()
-		if owner == uuid.Nil {
-			owner = perm.ControllerID()
-		}
-		if player := g.GetPlayer(owner); player != nil {
-			player.AddToGraveyard(cardForBattlefieldDeparture(perm.Card))
-		}
-		return nil
+		return nil, cardForBattlefieldDeparture(perm.Card)
 	}
 	if perm.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
-		return nil
+		return nil, nil
 	}
 
 	// Set tapped status before entry effects and triggers inspect this permanent.
@@ -542,20 +550,12 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 	for _, a := range perm.RuntimeAbilities {
 		if asEnter, ok := UnwrapAbility(a).(AsEntersBattlefieldAbility); ok {
 			if !asEnter.OnEnter(g, perm) {
-				owner := perm.Card.Owner()
-				if owner == uuid.Nil {
-					owner = perm.ControllerID()
-				}
-				p := g.GetPlayer(owner)
-				if p != nil {
-					p.AddToGraveyard(cardForBattlefieldDeparture(perm.Card))
-				}
-				return nil
+				return nil, cardForBattlefieldDeparture(perm.Card)
 			}
 		}
 	}
 
-	return perm
+	return perm, nil
 }
 
 func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorSourceID uuid.UUID) {
@@ -578,6 +578,10 @@ func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorS
 }
 
 func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int) {
+	g.completeBattlefieldEntryFrom(perm, controller, actor, castColorsSpent, ZoneAny)
+}
+
+func (g *Game) completeBattlefieldEntryFrom(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int, origin Zone) {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
@@ -602,7 +606,7 @@ func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.
 		ActorID:         actor,
 		Amount:          g.resolution.X(), // preserve X from resolving spell for ETB triggers
 		CastColorsSpent: castColorsSpent,
-		FromZone:        ZoneAny, // engine doesn't model the precise origin of an ETB
+		FromZone:        origin,
 		ToZone:          ZoneBattlefield,
 	})
 }

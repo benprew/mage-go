@@ -42,8 +42,18 @@ func compileExileAssociation(rules []Node, permanent bool) (*mage.ExileLink, err
 }
 
 func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
-	if err := arity(n, 1); err != nil {
+	args := 1
+	if n.Name == "PutEachExiledCardOntoTheBattlefield" {
+		args = 2
+	}
+	if err := arity(n, args); err != nil {
 		return nil, err
+	}
+	if args == 2 {
+		options := n.Args[1]
+		if options.Kind != List || len(options.Args) != 1 || options.Args[0].Kind != Symbol || options.Args[0].Name != "EntersUnderOwnersControl" {
+			return nil, problem(options, "supply only EntersUnderOwnersControl for linked battlefield entry")
+		}
 	}
 	set := n.Args[0]
 	if set.Name != "WasExiledWithPermanent" {
@@ -66,6 +76,9 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 		subjects := mage.CardsExiledWith(ctx.exileLink, ref.build(bindings))
 		if n.Name == "ReturnEachExiledCardToOwnersHand" {
 			return mage.ReturnExiledCardsToOwnersHands(subjects)
+		}
+		if n.Name == "PutEachExiledCardOntoTheBattlefield" {
+			return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects)
 		}
 		return mage.PutExiledCardsInOwnersGraveyards(subjects)
 	}, nil

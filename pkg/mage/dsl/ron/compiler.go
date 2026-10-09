@@ -1278,7 +1278,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
-	case "ReturnEachExiledCardToOwnersHand", "PutExiledCardsIntoOwnersGraveyards":
+	case "ReturnEachExiledCardToOwnersHand", "PutExiledCardsIntoOwnersGraveyards", "PutEachExiledCardOntoTheBattlefield":
 		effect, err := compileLinkedExileTransport(n, ctx)
 		return []effectFactory{effect}, err
 	case "Exile":
