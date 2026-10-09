@@ -1,5 +1,56 @@
 # Engine rules contracts
 
+## Semantic text definition prototypes
+
+`mage.ReplaceColorWord(from, to core.Color) (TextChange, error)` and
+`mage.ReplaceBasicLandWord(from, to core.BasicLandType) (TextChange, error)`
+require two different legal words. Colorless, any-color, missing land types and
+zero-value changes reject. `TextChange.ApplyColor` and `ApplyBasicLand` operate
+only on words the caller has assigned to the corresponding semantic role.
+
+`mage.BuildTextChangedDefinition(card Card, changes ...TextChange) (Card, error)`
+builds an independent, ownerless prototype through the card's retained pure
+`WithTextDefinitionBuilder(func([]TextChange) (CardFactory, error))` callback.
+The builder validates independent declarations and protected printed metadata.
+It applies previously saved changes before new changes. It retains original
+printed definition and copy information. `BaseCard.Copy` retains the immutable
+text builder; `CloneFrom` clears it. No game object is modified by this API.
+
+RON compilation retains a private AST. Definition transformation visits rules
+through validated syntax roles and the type line's basic land subtypes. It
+changes color filters, protection, explicit token colors, land filters, landwalk,
+land-type operations and explicit token land subtypes where their role is known.
+A matching word with an unknown role returns a positioned error. Card names,
+named-card operands, token names, mana symbols and color indicators are excluded
+(CR 612.2). Type-line substitution removes duplicate subtypes.
+
+`compileTextSubstitution` lowers the two real two-argument
+`ReplaceColorWordVariableWithNewColorWordVariable` and
+`ReplaceLandTypeVariableWithNewLandTypeVariable` declarations using their
+lexically bound first/second choice references. Wrong arity, identical references,
+unbound references and cross-domain words reject. Mage's `ColorWordSubstitution`
+and `BasicLandWordSubstitution` return `TextChangeRef`; missing or identical
+resolved words cannot supply a change. Their definition edges expose both reads
+for producer validation. They make no choices and retain no global result slot.
+
+This is a printed-definition transformation prerequisite. It does not install
+`CreateSpellEffect` or `CreatePermanentLayerEffect` text operations. Live layer-3
+timestamps, active abilities, granted-ability exclusions (CR 612.3), copied
+exceptions, exact object identity, spell-to-entry continuation and departure
+restoration remain separate installation contracts. In particular, changed
+subtype prototypes are not registered live text layers and do not pass the
+existing current-characteristic copy-capture guard. Use retained printed plans
+for prototype copy provenance; do not bypass that guard.
+
+Evidence: `TestRONTextDefinitionGameplay`, `Ordering`, `Roles`,
+`FiltersAndIsolation`, `SubstitutionDeclarations`, `SpellAndTrigger`,
+`MetadataAndTypeSet`; `TestTextDefinitionInvalidWords`, `BuilderContracts`,
+`TypedReads`. Real changed definitions cover Black Knight, Bog Wraith, Island,
+Tropical Island, Bad Moon, Blue Elemental Blast and Lifetap. Black Ward has
+complete-record AST transformation evidence. Magical Hack and Sleight of Mind
+have their actual substitution declarations tested; their complete records
+still reject. These tests add no complete-card unlocks for those two spells.
+
 ## Extra turns after the current turn
 
 `ExtraTurnFor(player PlayerRef) ResolvingEffect` adds one turn for a present

@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [BuildTextChangedDefinition] for an independent text prototype.
+// [ReplaceColorWord] and [ReplaceBasicLandWord] require different legal words.
+// RON retains a private AST and changes only validated semantic word roles.
+// Names, mana symbols and color indicators keep their printed values.
+// Each build has fresh declarations. Successive changes keep their order.
+// Printed copy information stays separate. Legacy rule replacement clears
+// the text builder. Unknown matching word roles return an error.
+// [ColorWordSubstitution] and [BasicLandWordSubstitution] read typed pairs
+// from the current resolution frame without making choices.
+// This builder does not install a text layer or change a present object.
+// Live timestamps, ability instances and spell entry need separate services.
+//
 // Use [ResolveObjectTarget] for two resolving bodies with one union target.
 // [SpellFromObjectTarget] and [PermanentFromObjectTarget] share its declaration.
 // The saved category selects one body at resolution, without a mode choice.

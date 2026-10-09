@@ -64,6 +64,7 @@ type BaseCard struct {
 	isToken               bool            // true for token cards (created by NewToken)
 	auraAIProfile         *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
 	definitionPlan        *CardDefinitionPlan
+	textDefinition        *textDefinition
 	copiableValues        *CopiableValues
 	printedDefinitionPlan *CardDefinitionPlan
 	departureCard         Card
@@ -195,6 +196,7 @@ func (c *BaseCard) AddAbility(a Ability) {
 
 func (c *BaseCard) CloneFrom(other Card) {
 	c.definitionPlan = nil
+	c.textDefinition = nil
 	c.copiableValues = nil
 	c.name = other.Name()
 	c.manaCost = other.ManaCost()

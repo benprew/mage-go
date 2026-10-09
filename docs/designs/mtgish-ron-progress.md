@@ -7,17 +7,17 @@ names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`UNION-TARGET-RESOLVING-BODIES` executes branch-local resolving actions through
-one spell-or-permanent target, with typed projections and exact saved identity.
-Copies can retarget across categories; clones and factories keep separate frames.
-Magical Hack and Sleight of Mind now execute their real union choice wrappers
-with unsupported text consumers omitted. Their complete records still reject.
-**+0 unique names / +0 records**, as estimated; complete-card gameplay counts
-stay unchanged. All required checks pass; counts stay unchanged. Their twelve
-loader diagnostics now reach the unsupported spell text consumer.
+`SEMANTIC-TEXT-DEFINITION-PROTOTYPES` builds fresh rules from retained RON
+with typed color/basic-land word changes and validated CR 612.2 semantic roles.
+Names, mana symbols and color indicators stay unchanged; printed copy information
+stays separate. Real changed definitions pass protection, landwalk, filter,
+spell-legality and trigger tests. Magical Hack and Sleight of Mind have their
+actual substitution declarations tested; complete records still reject.
+**+0 unique names / +0 records**, as estimated. Full-card gameplay unlocks stay
+unchanged. All required checks pass; the loader report is unchanged.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Text substitution, Tablet owner-assignment fidelity, physical card transports,
+Live text layers, Tablet owner-assignment fidelity, physical card transports,
 counter-note/return entry, turn-skip replacements and other gaps remain.
 
 
@@ -57798,3 +57798,165 @@ Ranked next candidates:
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete.
+
+## Run 2026-10-09: SEMANTIC-TEXT-DEFINITION-PROTOTYPES
+
+Status: complete bounded prerequisite. Full collection migration remains incomplete.
+
+### Candidate comparison and selection
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection, not a
+build or test failure: 2,084 compiled / 361 rejected records; 807 accepted / 179
+rejected unique names; totals 2,445 records / 986 names.
+
+Started with the preceding entry's ranked candidates. Complete Magical Hack and
+Sleight of Mind records contain spell/permanent union branches, paired choices,
+and the corresponding two-argument substitution in both branches. All nested
+text consumers still need installation. Complete Bronze Tablet and Tempest Efreet
+records establish the separate owner/transport dependencies below. Reprints count
+once. No Go card definition supplied requirements.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Semantic color/basic-land word definition transformation | Magical Hack; Sleight of Mind | 0 | Enables both text consumers to obtain fresh executable rules with correct CR 612.2 word roles. Live layers, active ability handling, copy exceptions and spell entry remain. | Moderate, one bounded prototype/rebinding slice with native and RON tests. |
+| Live text installation in both target domains | Magical Hack; Sleight of Mind | 2 only after all contracts pass | Requires the selected prerequisite, layer-3 timestamp ordering, exact subject identity, ability instances, granted-ability exclusions, spell continuation and departure restoration. | Large; multiple dependency slices. |
+| Shared ante physical-card transport | Bronze Tablet; Tempest Efreet | 0 for a bounded common prerequisite; up to 2 after remaining work | Tablet's known owner-assignment source issue remains distinct. Efreet needs hand-to-selected-hand and paid-source-anywhere-to-graveyard transport. Tablet needs its retained exile-to-graveyard continuation. | Moderate to large; several transport contracts plus source fidelity work. |
+
+Candidate 1 is dependency-ready and supplies concrete two-card downstream value.
+Selected the complete independent-definition prototype context, rather than
+claiming live text effects. CR 612.1–4 and retained definition/copiable APIs supply
+the rules boundary. Colorless, mana symbols, names and color indicators are not
+color-word replacements. Land words in type lines and known rule roles qualify.
+No source-data repair is needed for this prerequisite.
+
+### Supported signatures, contexts and boundaries
+
+Mage APIs:
+
+- `ReplaceColorWord(core.Color, core.Color) (TextChange, error)`.
+- `ReplaceBasicLandWord(core.BasicLandType, core.BasicLandType)
+  (TextChange, error)`.
+- `TextChange.ApplyColor(core.Color) core.Color` and
+  `ApplyBasicLand(core.BasicLandType) core.BasicLandType` for semantic operands.
+- `WithTextDefinitionBuilder(func([]TextChange) (CardFactory, error)) CardOption`.
+- `BuildTextChangedDefinition(Card, ...TextChange) (Card, error)`.
+- `ColorWordSubstitution(ColorWordRef, ColorWordRef) TextChangeRef` and
+  `BasicLandWordSubstitution(BasicLandWordRef, BasicLandWordRef) TextChangeRef`.
+- `TextChangeRef.Resolve(*EffectContext) (TextChange, bool)` and declaration edges
+  for both typed operands.
+
+RON `compileTextSubstitution` lowers exactly the two two-argument
+`ReplaceColorWordVariableWithNewColorWordVariable` and
+`ReplaceLandTypeVariableWithNewLandTypeVariable` declarations. Operands must be
+bound first/second choice symbols of the correct domain and different references.
+These declaration adapters are ready for the next consumers; they do not accept
+`CreateSpellEffect` or live `CreatePermanentLayerEffect` text actions.
+
+Every successfully compiled RON card retains a private AST and a pure text
+builder. Transformation walks validated rule roles plus type-line basic land
+subtypes, changing all matching words in one pass per substitution. It reuses
+inventory role routing with explicit protection and spell-filter adapters.
+Known color/token-color and land/subtype/token-subtype roles are supported;
+a matching unknown role rejects with its source position. Card/named-card/token
+names, mana symbols and color indicators stay unchanged. Type-line changes remove
+duplicate subtypes. Subsequent builds replay prior substitutions before new ones.
+
+Mage reuses `NewCardDefinitionPlan`, `Build`, declaration independence validation,
+existing word-pair bindings, resolution frames, clone and printed/copiable state.
+RON owns syntax, semantic roles, lexical bindings, errors and fresh lowering.
+Mage owns validated typed changes, typed reads and prototype validation. The
+engine rejects missing provenance, nil/error/shared builders, zero changes and
+protected metadata changes. Each prototype has fresh identity and declarations,
+no owner or saved game choices. Printed copy information stays separate;
+`BaseCard.Copy` retains the immutable builder and `CloneFrom` clears it.
+
+This API changes no live object and grants no entry or casting permission. It
+installs no layers, replacement effects, payments, movement or timestamps.
+Changed subtype prototypes remain subject to the existing copy-capture guard;
+retained printed plans provide their prototype copy provenance. Live layer
+installation must establish copy capture, copied exceptions, granted-ability
+exclusions, exact object/LKI/phasing, active ability preservation and spell entry
+contracts before accepting the two complete spells. No engine guard was weakened.
+No global last-action state, card-name branch, Go fallback, skipped rule, runtime
+declaration panic or partial registry was added.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON tests failed compilation on the missing typed-change and prototype
+APIs. Fixture protection/color APIs were corrected, then the expected missing-API
+failure was confirmed. Declaration-lowering tests separately failed compilation
+on missing `compileTextSubstitution`. Additional assertion failures exposed
+missing protection/spell-filter semantic roles and duplicate land subtypes;
+implementation fixed these without weakening assertions.
+
+| Test | Card / contract evidence |
+| --- | --- |
+| `TestRONTextDefinitionGameplay` | Black Knight: changed protection, original instance isolation, cloned game and original printed rebuild. Bog Wraith: changed landwalk with actual defending Island. |
+| `TestRONTextDefinitionOrdering` | Black Knight: successive White→Red→Green transformations and independent rebuilt prototype identity. |
+| `TestRONTextDefinitionRoles` | Complete Black Ward AST remains unchanged while its protection operand transforms; Island type changes while its name stays; named-card strings and unknown matching roles; complete Magical Hack still rejects. |
+| `TestRONTextDefinitionFiltersAndIsolation` | Bad Moon: changed global color filter, original printed factory, and retained AST isolation from caller mutation. |
+| `TestRONTextDefinitionSubstitutionDeclarations` | Magical Hack and Sleight of Mind: actual full-record substitution nodes and real paired choices feed changed Black Knight protection and Plains type-line gameplay; independent declarations keep separate choices; missing results, unbound/wrong-domain/tuple/same references, wrong arity and unknown operation reject. |
+| `TestRONTextDefinitionSpellAndTrigger` | Blue Elemental Blast: changed permanent target color, illegal old target preserves hand/mana/stack, actual destruction and clone resolution. Lifetap: opponent Island triggers while old Forest does not. |
+| `TestRONTextDefinitionMetadataAndTypeSet` | Tropical Island subtype deduplication; Black Knight with synthetic color indicator tests indicator exclusion independently of protection words. |
+| `TestTextDefinitionInvalidWords` | Invalid color/land pairs, nil and legacy definitions reject. |
+| `TestTextDefinitionBuilderContracts` | Builder errors, nil/shared factories, renamed/mana/indicator metadata, zero changes and legacy rule replacement reject. |
+| `TestTextDefinitionTypedReads` | Producer dominance, nil operands, missing/same words, typed read, and clone resolution-frame isolation. |
+
+Actual compilation gains: **0 unique names / 0 records**, equal to estimates.
+Complete-card gameplay unlocks: **0**; tests add changed-definition gameplay for
+already accepted cards and actual declaration coverage for the two blocked spells.
+Compilation and complete-card gameplay remain separate. All accepted records
+must still compile; strict loader comparison below checks this.
+
+### Source defects, cleanup and working tree
+
+No RON source changes or new source defect. Vocabulary source hashes need no
+refresh. Tablet's known fidelity issue remains separate. No Go cards, generators,
+engine service or DSL function removed: complete loading, runtime integration and
+test migration gates remain unmet.
+
+Initial user changes: `.gitignore`, execution design, ledger/archive reorganization,
+and untracked `mtgish-ron-completed.md`. These are preserved. Stage only the new
+status summary and this appended entry against the tracked ledger; archive moves
+stay outside this slice's commit. Changed files: engine `card.go`, `doc.go`, new
+`text_definition.go` and native tests; RON `compiler.go`, new `text_definition.go`
+and tests; API/rules-contract references and progress ledger.
+
+### Validation
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextDefinition -count=1`.
+- `go test ./pkg/mage -run TestTextDefinition -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues. Automatic formatting only adjusted new test imports;
+  changes were reviewed. The added declaration-to-real-prototype assertions
+  passed the focused RON tests again after the full-suite run.
+- `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected strict collection rejection, exit 1.
+
+Final loader: **2,084 compiled / 361 rejected records; 807 accepted / 179 rejected
+unique names**, totals 2,445 records / 986 names. Baseline and final JSON reports
+are identical, including all 361 diagnostics. No new rejection or acceptance.
+Magical Hack and Sleight of Mind still reach unsupported `CreateSpellEffect`.
+No environment or pre-existing validation failure blocks the slice.
+Commit message: `feat(ron): implement semantic text definition prototypes`.
+
+Ranked next candidates:
+
+1. Layer-3 text installation for permanent subjects using the new prototype
+   service: timestamps, active ability instance preservation, granted-ability
+   exclusion and exact incarnation/phasing/copy handling. Shared prerequisite
+   for Magical Hack and Sleight of Mind, estimated zero complete unlocks until
+   their spell domain also works.
+2. Spell text installation and exact spell-to-permanent continuation for the same
+   two names after lifecycle readiness. Estimate two unique / twelve record
+   unlocks only after both domains and all remaining semantic roles are verified.
+3. Shared physical-card transports for Bronze Tablet and Tempest Efreet, with
+   Tablet owner-assignment fidelity handled separately and Efreet's two explicit
+   destinations kept dependency-ready.
+
+Complete gameplay, runtime cutover, Go-card deletion and unused DSL removal remain
+unfinished. Migration incomplete. Stop after this slice.

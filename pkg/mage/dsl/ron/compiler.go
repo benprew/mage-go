@@ -211,6 +211,7 @@ func fields(n Node, required, optional []string) error {
 // Compile validates a complete card and returns a factory with private instance state.
 // No declaration can use a registered Go card as a substitute for a RON rule.
 func Compile(n Node) (mage.CardFactory, error) {
+	n = cloneTextNode(n)
 	if n.Name != "Card" {
 		return nil, problem(n, "expected Card")
 	}
@@ -443,6 +444,13 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if len(indicator) > 0 {
 			card.SetColorOverride(indicator)
 		}
+		mage.WithTextDefinitionBuilder(func(changes []mage.TextChange) (mage.CardFactory, error) {
+			changed, err := transformTextDefinition(n, changes)
+			if err != nil {
+				return nil, err
+			}
+			return Compile(changed)
+		})(card)
 		mage.WithManaCostPresence(costPresent)(card)
 		mage.WithCardDefinitionPlan(definition)(card)
 		mage.WithPrintedCardDefinitionPlan(definition)(card)
