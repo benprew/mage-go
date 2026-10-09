@@ -13386,3 +13386,47 @@ Evidence: `TestPlayerPaymentLifetime`, `Declarations`, `FramesAndRollback`,
 `MultipleOperations`. Shared
 prevention and mana suites retain replacement-order and simultaneous-damage
 coverage; this capability adds no new replacement order or damage-batch service.
+
+## Exact source-card payment results (CR 400.7j, 118.11, 603.6c, 701.13, 701.21)
+
+`SacrificeSourceCostWithCard(result *CardBinding) Cost` and
+`ExileSourceCostWithCard(result *CardBinding) Cost` supply an activated ability's
+source card in its first new public-zone visit. The shared transaction locks the
+source incarnation before mana payment. It preflights the full payment again
+before spending live resources. Departure/return and phasing invalidate either locked payment. Control changes
+invalidate a locked sacrifice payment. An exile payment keeps the ability's
+permission for another player to act; exile does not require control of the
+source. Queries do not move cards or make choices.
+
+Payment uses the existing sacrifice replacement and exile services inside the
+shared zone batch. Capture occurs after movement and before zone events, so an
+event cannot substitute a later visit. Sacrifice replaced by exile saves that
+exile visit. Prevented departure cannot pay. Tokens pay but supply an empty card
+result. `FromCard` retains its ordinary visit and visibility checks. LKI does
+not authorize an action on a missing card. No physical-ID lookup follows future
+zone moves. Costs have no mutable result state; the transaction and stack frame
+own results. Copies, delayed frames and clones use existing card-binding storage.
+
+Definition validation requires a nonempty result declaration, rejects duplicate
+result producers, and permits the producer only as an activated ability cost.
+The same source payment without a card consumer retains its existing callers.
+No new simultaneous multi-permanent operation or replacement ordering exists.
+
+RON accepts the symbol `ThisPermanent` as an ownership-exchange card operand in
+an activation with exactly one unconditional source sacrifice/exile payment,
+or after a grouped exile with one unambiguous singular source group. The latter
+uses `SingleExiledCardFrom` and changes no exile mechanics. The binding belongs
+to each ability factory; branches and delays read the retained lexical result.
+An unpaid source, ambiguous source producers, `ThisPermanent()` and `ThisCard`
+remain declaration errors. Static, entry and cost-role ownership operations
+remain unsupported. This contract does not implement source transport from
+anywhere, hand transfer, or independent ownership assignments.
+
+Evidence: `TestSourceCardPayment*` covers both payments, exact visit loss/return,
+tokens, copy/clone isolation, replacement destinations, stale-payment rollback,
+invalid declarations and capture before event-induced return. `TestRONSourceCard*`
+covers fresh instances, delayed frames, synthetic paid-source exchanges and a
+Tempest Efreet requirement fragment with its actual tap/sacrifice, life payment,
+random reveal and ownership exchange. Its two later unsupported transports are
+omitted only in that explicitly partial test; the complete record still rejects.
+Bronze Tablet's existing ownership-assignment source defect remains unresolved.

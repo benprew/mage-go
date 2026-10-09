@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [SacrificeSourceCostWithCard] or [ExileSourceCostWithCard] for an
+// activated ability that needs its paid source card. The payment saves its
+// first new public-zone visit before zone events. Tokens supply no card.
+// The transaction saves the source incarnation and checks it before payment.
+// [FromCard] cannot follow a later visit. Copies and delays keep the result;
+// clones keep separate cards and owners. RON ownership exchanges accept
+// ThisPermanent after one source payment or one singular source exile group.
+// This reference does not permit movement from anywhere.
+//
 // Use [PlayerManaPaymentThisTurn] for a repeatable player payment at instant timing.
 // The player and source references are saved when the permission starts.
 // [Game.GetPlayerPayments] lists affordable permissions without making choices.
@@ -90,7 +99,8 @@
 // Two cards with one owner make no change. Returned visits cannot qualify.
 // Existing ownership storage keeps clones and final settlement separate.
 // RON accepts bound singular exile, hand reveal, graveyard and ante operands.
-// Physical source references and explicit destination moves need separate adapters.
+// Paid source references use typed card results. Explicit destination moves
+// and references from anywhere need separate adapters.
 //
 // Use [AcquireCardOwnership] for a present typed card in an ante game.
 // Ownership uses [Game.ChangeOwner] and does not move the card or change its

@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sourceCardPayment    *sourceCardPaymentPlan
 	groupedExile         *groupedExilePlan
 	exileLink            *mage.ExileLink
 	drawnCard            *handRevealPlan

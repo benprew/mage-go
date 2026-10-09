@@ -119,6 +119,19 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 		manaSolution:           solution,
 		resetDrainedBeforeMana: spec.ResetDrainedBeforeMana,
 	}
+	for i, cost := range tx.costs {
+		source, ok := cost.(*sourceCardCost)
+		if !ok {
+			continue
+		}
+		p := g.FindPermanent(tx.sourceID)
+		if p == nil || p.PhasedOut {
+			return nil, ErrSourceNotFound
+		}
+		locked := *source
+		locked.incarnation = p.incarnationID
+		tx.costs[i] = &locked
+	}
 	if validation == nil {
 		validation = cloneGameForCostPayment(g)
 	}
@@ -429,7 +442,8 @@ func (tx *costPaymentTransaction) Commit() error {
 		_, isSacrifice := cost.(*sacrificeMatchingCost)
 		_, isPlacement := cost.(*putCounterOnMatchingCost)
 		_, isAnte := cost.(*anteCost)
-		if random || isSacrifice || isPlacement || isAnte {
+		_, isSource := cost.(*sourceCardCost)
+		if random || isSacrifice || isPlacement || isAnte || isSource {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)
@@ -593,7 +607,16 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 				paidSubtype = 1
 			}
 		}
-		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
+		if source, ok := cost.(*sourceCardCost); ok {
+			result, err := source.payCard(tx.sourceID, tx.controller, tx.game)
+			if err != nil {
+				return err
+			}
+			if tx.paidCards == nil {
+				tx.paidCards = make(map[*CardBinding]capturedCard)
+			}
+			tx.paidCards[source.result] = result
+		} else if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
 		}
 		if mill, ok := cost.(*millCost); ok && mill.capture {

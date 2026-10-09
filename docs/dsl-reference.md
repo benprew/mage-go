@@ -10040,3 +10040,25 @@ queries and execution reject use during stack resolution. Fixed nonnegative
 ordinary mana and nonempty operation/body lists are supported. X, hybrid mana,
 other durations, life-to-mana and one-use casting are separate capabilities.
 Guardian Angel is the complete collection card covered by this adapter.
+
+## RON source-card references after payment
+
+`ExchangeOwnershipOfTwoCards(ThisPermanent, cardRef)` can read the source card
+saved by one unconditional `SacrificePermanent(ThisPermanent)` or
+`Exile([Permanent(ThisPermanent)], [])` activation cost. The order of the two
+exchange operands can be reversed. The source card has its first new public-zone
+visit, including sacrifice replaced by exile. A later visit cannot replace it.
+Each factory builds a separate `CardBinding` for the producer and consumers.
+
+After a grouped resolving `Exile`, the same operand can read its unambiguous
+singular source group through the existing exile result. No arbitrary permanent
+operand converts to a card reference. Unpaid or ambiguous sources and tuple
+spellings are rejected. `ThisCard` and movement from anywhere remain unsupported.
+
+Native callers use `SacrificeSourceCostWithCard(*CardBinding) Cost` or
+`ExileSourceCostWithCard(*CardBinding) Cost`, then `FromCard` in the resolving
+body. These result-producing costs require an activated ability declaration.
+The engine checks source identity, payment rollback and saved visits; RON owns
+spelling and lexical binding. Tests are `TestSourceCardPayment*` and
+`TestRONSourceCard*`. This establishes a prerequisite, with no newly accepted
+complete card or complete-card gameplay mapping.

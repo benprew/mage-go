@@ -33,6 +33,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	ctx.exilePayment = exile
+	ctx.sourceCardPayment = &sourceCardPaymentPlan{}
 	costs, hasX, err := compileExileActivationCosts(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
@@ -72,6 +73,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	return func() mage.CardOption {
 		bindings := instanceBindings{counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+		if ctx.sourceCardPayment.used {
+			bindings.sourceCards = map[*sourceCardPaymentPlan]*mage.CardBinding{ctx.sourceCardPayment: mage.BindCard("paid source card")}
+		}
 		if exile != nil {
 			bindings.exiles = map[*exilePaymentPlan]*mage.NumberBinding{exile: mage.BindNumber("paid exile mana value")}
 		}

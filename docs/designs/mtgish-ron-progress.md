@@ -7,14 +7,13 @@ names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEMPORARY-PLAYER-MANA-PAYMENT` installs repeatable fixed mana payments at instant
-timing, with saved player/source/target identity, separate execution frames and
-cleanup expiry. Guardian Angel gains complete RON gameplay coverage across six
-records. **+1 unique name / +6 records**, as estimated. Source LKI, payment
-rollback, copies, clones and native priority have contract tests. The shared
-priority coordinator now retains the acting player after a successful action.
-All required checks pass. Channel and North Star keep explicit nested-operation
-rejections. Shared physical source-card transport is the next ranked prerequisite.
+`EXACT-SOURCE-CARD-RESULTS` saves source-card visits from sacrifice/exile
+payments for resolving ownership exchanges, with exact source locking,
+replacement outcomes, payment rollback and separate factory/frame storage.
+Grouped source exile reuses its existing singular result. **+0 unique names /
++0 records**, as estimated for this prerequisite. Full-card gameplay counts stay
+unchanged. All required checks pass; the strict loader still rejects remaining
+unsupported records. Tempest Efreet now reports its hand-transfer blocker.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -57315,3 +57314,178 @@ Mirror's constrained target-derived X and City in a Bottle's state collection
 remain lower-priority candidates with the recorded blockers. Complete RON
 execution, runtime cutover, Go-card deletion and unused DSL removal remain
 unfinished. Stop after TEMPORARY-PLAYER-MANA-PAYMENT. Migration incomplete.
+
+## 2026-10-09 — EXACT-SOURCE-CARD-RESULTS
+
+Completed one dependency slice: source-card references from an exact paid or
+resolving-exile continuation. Full physical source transport from anywhere is
+still a separate capability. No second slice was started.
+
+### Environment and candidate selection
+
+Initial user changes: `.gitignore`, execution design and progress ledger; an
+untracked `mtgish-ron-completed.md` archive. They remain in the working tree.
+Only this entry and its status update are staged from the ledger; the user's
+history/archive restructuring is excluded from the commit. Fresh baseline
+`make build` and uncached whole RON tests passed. The initial strict loader
+exited 1 for unsupported declarations, not for a build or test failure:
+2,084 compiled / 361 rejected records; 807 accepted / 179 rejected unique names.
+
+The latest ranked candidate #1 was evaluated first. Complete source transport
+needs a safe source-card continuation before later moves or ownership actions.
+This run completes that bounded prerequisite, rather than accepting an incomplete
+full-card execution. Complete RON records and nested forms were inspected for
+all compared names; six identical reprints of each blue instant count once.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Exact source-card result prerequisite, selected from ranked #1 | Tempest Efreet; Bronze Tablet as downstream assignment work | 0 names / 0 records | Efreet needs revealed-hand transfer and physical from-anywhere graveyard transport. Tablet already has grouped source exile results, but needs independent owner assignment and its recorded data correction. Exact paid-source results and a common source-exile operand permit later typed ownership/movement work. | Moderate: two source-payment forms under one result contract, compiler scope, replacement/identity/rollback/frame tests. |
+| Ranked #2 text-word choice/layer prerequisite | Magical Hack; Sleight of Mind | 0 for choices alone; 2 names / 12 records for the whole family | Both need two choices and text-variable replacement on spells and permanents. Shared typed word bindings must precede live text-layer mechanics. | Small-to-moderate for choices; high for both complete cards, too large for this run. |
+| Ranked #3 life-to-mana permission | Channel | 1 name / 6 records if complete | Lifetime/frame service exists. Actual mana opportunities and automatic payment solver integration remain mandatory. North Star's one-use casting permission is separate. | High for complete payment/solver integration; single-card work deferred. |
+
+Selection: complete the dependency-ready exact source result from candidate #1.
+It establishes safe typed references for later source ownership/transport work;
+there is no credible immediate full-card unlock. Bronze Tablet's grouped source
+alias is reusable but not a new compilation gain. Its existing valid exile
+results are not counted as new engine mechanics. No first-error count is used
+as a full-card estimate.
+
+### Supported signatures, context and reuse boundary
+
+Native signatures:
+
+- `SacrificeSourceCostWithCard(result *CardBinding) Cost`.
+- `ExileSourceCostWithCard(result *CardBinding) Cost`.
+- Existing `FromCard(*CardBinding) CardRef` and
+  `ExchangeCardOwnership(CardRef, CardRef) ResolvingEffect` supply consumers.
+
+The result-producing costs require activated ability declarations. Definition
+validation rejects nil/empty results, duplicate producers, and misplaced costs.
+The shared transaction locks the original source incarnation before mana use,
+then preflights before live spending. Payment requires the present, unphased
+source. Sacrifice requires the payer's control (CR 701.21a); exile retains an
+ability's permission for another player to act (CR 701.13a). Capture occurs after movement and before zone
+events inside the existing zone batch. Sacrifice-to-exile replacements save the
+first exile visit. Tokens pay but produce an empty reference. A prevented
+source departure cannot pay. Costs retain no mutable result state.
+
+RON supports the symbol `ThisPermanent` in either operand of a resolving
+`ExchangeOwnershipOfTwoCards` after exactly one unconditional activation source
+payment: `SacrificePermanent(ThisPermanent)` or
+`Exile([Permanent(ThisPermanent)], [])`. It also supports that operand after a
+grouped resolving exile with one unambiguous singular source group, using the
+existing `SingleExiledCardFrom` contract. Tuple spelling, unpaid/ambiguous
+sources, arbitrary permanent-to-card conversion, and `ThisCard` remain errors.
+The ability factory builds one independent source `CardBinding` shared by that
+ability's producer/consumers. Branches and delayed bodies retain lexical scope.
+Unconsumed payment forms keep their current callers and behavior.
+
+Mage owns cost locking, source movement, result capture and exact visit checks.
+RON owns spelling, supported contexts, producer selection and binding lowering.
+Reuse: shared mana/cost transaction, sacrifice replacement pipeline, exile and
+zone batch, definition-plan validation, current/LKI departure services, card
+bindings, stack copies, game clones, delayed frame capture and restore, ownership
+exchange and ante settlement. No global last-action result, physical-ID future
+lookup, Go-card fallback, card-name branch, game-time declaration panic or partial
+production registry is introduced. No new simultaneous-operation or replacement
+ordering service is introduced.
+
+### Failing-first evidence and gameplay mapping
+
+First RON tests failed on the unsupported source card operand and the complete
+Tempest Efreet record's same diagnostic. Native tests failed on the two missing
+APIs. After correcting test setup API names, native compilation failed only on
+those new signatures. Implementation initially exposed a missing definition
+cost edge and binding dominance integration; both were fixed without weakening
+result assertions. Exact exile assertions use `FindExiledCard`: `CardZone` reports
+Stack for the source ID while that source's ability is pending. This existing
+query ambiguity was not broadened into another engine slice.
+
+| Tests | Card mapping / contract evidence |
+| --- | --- |
+| `TestSourceCardPayment` | Synthetic native sacrifice/exile payments: announcement timing, missing and returned visits, tokens, source phasing, copies, clones, failed mana payment and sacrifice-to-exile replacement. Two copied exchanges run separately and can swap owners back. |
+| `TestSourceCardPaymentStaleLock` | Returned incarnation, phasing and control change after preparation reject before mana is spent; no paid result survives failure. |
+| `TestSourceCardPaymentEventIdentity` | Native result capture precedes zone-event callbacks; an event-induced return cannot replace the first visit. |
+| `TestSourceCardPaymentExilePermission` | A permitted noncontroller can exile the source; the result belongs to that payer's stack frame. A failing test first exposed an excess control restriction, then passed after correcting it. |
+| `TestSourceCardPaymentDeclarations` | Nil/empty and duplicate result producers rejected. |
+| `TestRONSourceCardPayment`, `Invalid` | Both payment syntax forms execute through the engine; missing, duplicate and tuple producers/operands reject. `ThisCard` stays unsupported. |
+| `TestRONSourceCardTempestGameplay` | Actual complete LEG record read, with only the two later unsupported transports omitted in the test copy. Its actual tap/sacrifice, target opponent, optional life payment, random reveal and source-card exchange execute; paid/declined branches, source return and clone isolation. Explicit partial-card evidence, not a complete-card gameplay claim. |
+| `TestRONSourceCardTempestRequirement` | Unmodified complete record still rejects at `PutCardFromHandIntoPlayersHand`, after the supported source-card exchange. |
+| `TestRONSourceCardGroupedExile` | Bronze Tablet prerequisite shape uses a singular source-exile continuation for typed ownership exchange. Actual Tablet source assignment remains unresolved. |
+| `TestRONSourceCardInstancesAndDelay` | Two independent source factories/controllers retain distinct payment results; delayed bodies retain bindings; repeated waiting queries execute nothing. |
+| Existing `TestRONCardOwnershipExchange*` | Existing real-form fragment/context mappings and strict full-card rejection remain; Efreet assertion advances to the next independent blocker. |
+
+No unique card gains complete gameplay coverage. Existing complete-card mappings
+remain unchanged. New behavior coverage is a reusable prerequisite contract.
+
+### Source data and removal gates
+
+Local `data/LEG.json` confirms the source sacrifice, reveal/exchange sequence and
+explicit later transport in Efreet. CR 400.7j allows the ability to find its
+cost's new public-zone object; it does not authorize following a later visit.
+CR 400.3 keeps hand/graveyard destinations with the current owner. This slice
+establishes neither remaining transport. Local `data/ATQ.json` and the prior
+ownership contract retain Tablet's owner/controller assignment defect: a two-card
+owner swap is not equivalent when its owner differs from its controller. No RON
+record is corrected, and vocabulary hashes/snapshot need no refresh.
+
+Missing adapters, missing engine contracts and source defects remain distinct:
+this slice adds an engine payment-result contract and compiler adapter; Efreet's
+remaining movement adapters and Tablet's source defect remain explicit. No
+production definition or DSL function is removed. Complete collection gameplay,
+strict successful loading, runtime startup wiring, Go-card deletion and obsolete
+DSL removal gates are not met.
+
+### Verification and measured outcome
+
+Required checks passed in fast-fail order, repeated after the final permission
+correction:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONSourceCard -count=1`.
+- `go test ./pkg/mage -run TestSourceCardPayment -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: the initial run reported one `nestingReduce` issue in source
+  payment locking. The conditional was inverted; final lint reports 0 issues.
+  Formatting changes were reviewed. Post-lint focused native/RON tests and
+  `go test ./... -short -count=1` passed.
+- `git diff --check` and the staged patch check passed.
+- `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. No partial production registry is installed.
+
+Final loader: **2,084 compiled / 361 rejected records; 807 accepted / 179 rejected
+unique names**, totals 2,445 records / 986 names. Actual **+0 unique names / +0
+records** equals the prerequisite estimate. No newly rejected or newly accepted
+record exists. The only changed diagnostic is Tempest Efreet, from unsupported
+`ThisPermanent` at column 552 to unsupported `PutCardFromHandIntoPlayersHand` at
+column 568. Compilation and complete-card gameplay counts are unchanged.
+No environment or pre-existing validation failure blocks this completed slice.
+
+Changed files: native `source_card_payment.go` and tests; engine
+`payment_transaction.go`, `definition.go`, `composable_costs.go`, `doc.go`; RON
+`activation_timing.go`, `exile_payment.go`, `card_ownership_exchange.go`, its
+existing test, new `source_card_test.go`, `compiler.go`, `player_scope.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger's status
+and appended entry. Commit message:
+`feat(ron): implement exact source card results`.
+
+Ranked next candidates:
+
+1. Shared resolution text-word choice prerequisite for Magical Hack and Sleight
+   of Mind. Scope typed paired color/basic-land choices and saved operands before
+   implementing text layers. Reassess full-card records and compare effort; a
+   choice-only slice has zero immediate complete-card gain but two concrete
+   downstream consumers.
+2. Independent ownership assignment for Bronze Tablet, reusing exact grouped
+   exile results and `AcquireCardOwnership`. Establish its source-owner versus
+   ability-controller contract, correct the documented source defect with local
+   Oracle evidence, and retain its optional life-payment branch. It is single-card
+   completion work; defer while useful multi-card prerequisites remain.
+3. Remaining hand transfer and explicit physical source transport for Tempest
+   Efreet. The exact cost-source reference is now available, but from-anywhere
+   movement requires its own full zone/identity/permission contract. Keep it
+   separate from a saved-visit reference. Channel mana-opportunity/solver work
+   also remains single-card work. North Star's one-use operation is separate.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Stop after EXACT-SOURCE-CARD-RESULTS. Migration incomplete.

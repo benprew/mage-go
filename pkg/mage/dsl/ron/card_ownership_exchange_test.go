@@ -216,8 +216,8 @@ func TestRONCardOwnershipExchangeRevealContexts(t *testing.T) {
 			}
 		})
 	}
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unbound or incompatible card reference") {
-		t.Fatal("physical source reference must remain unsupported", err)
+	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PutCardFromHandIntoPlayersHand") {
+		t.Fatal("hand transfer must remain unsupported", err)
 	}
 }
 

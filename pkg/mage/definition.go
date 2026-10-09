@@ -168,6 +168,12 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if _, ok := cost.(*sourceCardCost); ok {
+				if e.kind != ActionActivated {
+					n.problem = "paid source card requires an activated ability cost"
+				}
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if _, ok := cost.(activationTargetMana); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
@@ -396,6 +402,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if n.problem != "" {
 			fail(n.problem)
 		}
+		if source, ok := value.(*sourceCardCost); ok && !nilDefinition(source.result) && assigned[source.result] {
+			fail("duplicate paid source card binding")
+		}
 		if mill, ok := value.(*millCost); ok && mill.capture && !nilDefinition(mill.paid) && assigned[mill.paid] {
 			fail("duplicate paid mill count binding")
 		}
@@ -476,6 +485,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			_, capture := edge.value.(activationCapture)
 			_, history := edge.value.(activationHistoryDeclaration)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
+			_, paidSource := edge.value.(*sourceCardCost)
 			paidTap, tapCost := edge.value.(*tapNOtherMatchingCost)
 			exileCost, exilePayment := edge.value.(*exileMatchingCardFromGraveyardCost)
 			exileCards, exileCardsPayment := edge.value.(*exileFromGraveyardCost)
@@ -488,7 +498,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !history && !paidCost && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !history && !paidCost && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}
