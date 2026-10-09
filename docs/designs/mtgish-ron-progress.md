@@ -7,14 +7,13 @@ names** (986 total), and **2,064 compiled / 381 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`CHOSEN-NAME-MATCHING` adds typed resolving name filters with retained Oracle
-interchangeable names and simultaneous named hand discard. RON action sequences
-use native producer-before-read validation. The legal-choice catalog restores
-31 original names, for 35,950 choices. Separate instance/frame bindings remain.
-This shared prerequisite covers Nebuchadnezzar and Petra Sphinx subrules;
-**+0 unique names / +0 records**. Their reveal consumers stay rejected.
-Prior complete card gameplay mappings remain in force. Compilation counts are
-unchanged; prerequisite and synthetic RON gameplay coverage increased.
+`RANDOM-HAND-REVEAL` adds a resolving random hand producer with a typed exact
+hand-visit result and explicit-player discard. Native permanent loops now
+isolate singular card bindings. Real producer ASTs from Wand of Ith and Tempest
+Efreet execute through the engine; both complete records remain rejected.
+**+0 unique names / +0 records**; synthetic and subrule gameplay coverage grew.
+Wand of Ith's second land predicate is a confirmed source defect, left unchanged.
+Prior full-card gameplay mappings and chosen-name contracts remain in force.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -54230,3 +54229,199 @@ Ranked next candidates:
    results and ownership exchange for Bronze Tablet remain later work.
 
 This run stops after CHOSEN-NAME-MATCHING. Migration remains incomplete.
+
+## 2026-10-08: RANDOM-HAND-REVEAL
+
+Status: complete bounded random hand reveal/result/discard slice. This run stops
+after this capability. No complete-card gameplay gain or runtime cutover is
+claimed. The starting tree had user changes to `.gitignore`, the execution
+design and this ledger, plus an untracked completed-entry archive. Those changes
+are preserved; only this entry and its status summary belong to this slice.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict
+`go run ./cmd/loadcards -json` exited 1 with 2,064 compiled / 381 rejected records
+and 796 accepted / 190 rejected names. Collection rejection is an expected
+unsupported-record result, not a build/test or environment failure.
+
+The latest ranked candidate was evaluated first, splitting its shared reveal
+prerequisite into bounded library and hand contexts. All compared cards' complete
+RON records and nested forms were read; reprints were counted once. Targeted
+vocabulary lookups covered RevealACardFromHandAtRandom, RevealTopCardOfLibrary,
+ACardWasRevealedThisWay, TheCardRevealedFromHandThisWay, discard/mana-value
+consumers, EachPlayerMayCost and PaidCost.
+
+| Candidate | Distinct cards and estimated full-card unlocks | Remaining blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Singular random hand reveal with exact result and discard | Wand of Ith, Tempest Efreet: 0 full cards | Wand needs reveal predicates, saved mana value and a source correction. Tempest needs ownership exchange and exact hand/graveyard dispatch. Native hand production also supplies a building block for Nebuchadnezzar's plural random reveal and matching discard. | Moderate: two small native operations, one continuation adapter, identity/frame/replacement and RON tests; feasible in one run. |
+| Library-top reveal/result | Petra Sphinx directly; Sindbad also needs draw-result capture: 0 full cards for a producer prerequisite | No library-visit contract exists in CardBinding/FromCard. Library reorder/shuffle invalidation, result-name predicate and exact library dispatch are prerequisites. Enables Petra Sphinx; result services can later be shared with Sindbad's drawn hand card. | Higher: library identity/invalidation service plus producer, predicates, dispatch and tests; less bounded than the hand context. |
+| Ante paid-player collection | Rebirth: 0 for collection alone; 1 only with a life-setting contract | AnteTopCost, explicit players and deck restriction exist. SetLifeTotal has no RON adapter or typed rules-aware native setter. Needs optional decisions, paid-set binding, iteration, and life gain/loss replacement semantics. Narrower downstream benefit. | Moderate for the prerequisite; higher for a full unlock including rules-aware life setting and tests. |
+
+Selected the dependency-ready hand part of ranked candidate 1. Its shared exact
+result and explicit-player discard contracts support two distinct cards directly
+and a later plural producer, while avoiding the missing library identity service.
+The expected immediate gain was zero full cards. The source/predicate/ownership
+blockers were known before editing; first-error counts were not used as unlock
+estimates. The candidate, reuse boundary and acceptance cases were stated before
+editing. An initial one-card Rebirth estimate assumed life setting was ready.
+A further native/compiler caller audit found only raw Player.SetLife, not a
+SetLifeTotal adapter or typed rules-aware operation. The table corrects that
+estimate: paid-player collection alone would unlock zero cards. The selected
+hand slice and its estimated gain did not change.
+
+### Supported signatures, contexts and dependencies
+
+- `mage.RevealRandomHandCardInto(PlayerRef, *CardBinding) ResolvingEffect`:
+  selects one current hand card with Game.RandomCardFromHand, saves its exact
+  hand visit and records public reveal history. No move or player choice occurs.
+  An absent player or empty hand clears the result without consuming randomness.
+  A present card without engine hand-visit identity returns an explicit error;
+  it cannot silently skip the operation or publish an unbound reveal.
+- `mage.DiscardCardFromHandFor(PlayerRef, CardRef) ResolvingEffect`:
+  requires current membership in the explicit player's hand before the existing
+  PlayerDiscardByEffect service. The saved visit cannot follow a returned card.
+  Prevention and library redirection retain the shared discard/event behavior.
+- RON `PlayerAction(player, RevealACardFromHandAtRandom)` in resolving action
+  sequences; the producer operation is a bare symbol. The producer compiles its
+  remaining continuation with a lexical handRevealPlan and creates a fresh
+  CardBinding per factory build. Later producers shadow locally, without mutable
+  state in the plan or a global last-action slot.
+- `ron.compileRevealedHandCardRef(Node, scope)
+  (func(instanceBindings) mage.CardRef, error)` accepts only the bound symbol
+  `TheCardRevealedFromHandThisWay`. Current RON consumer:
+  `PlayerAction(player, DiscardTheCardRevealedThisWay)`, also a bare symbol.
+  Unbound/incompatible references, malformed producers/consumers, wrong players,
+  use before production and optional-branch result escape reject.
+- The adapter uses resolving spell/mode/activation/trigger/delayed sequences.
+  Direct PlayerActions production/export, cost/static/entry/replacement contexts,
+  drawn/library/plural producers, reveal predicates, saved mana-value reads,
+  ownership exchange and movement consumers remain unsupported.
+
+Reuse: CardBinding/FromCard/capturedCard, hand visits, resolution maps, native
+Sequence and definition dominance validation, PlayerRef/targets, random queues,
+public reveal snapshots, clone and nested/saved-card-loop frames, delayed source
+read declarations, shared discard replacements and events. Permanent-loop tests
+exposed a missing singular-card frame boundary; ForEach now clones cardBindings
+per iteration and restores the outer map with deferred cleanup. No replacement
+priority, simultaneous batch or payment service was changed. Reveal is singular;
+plural simultaneous operation contracts are not claimed.
+
+No Go card implementation was read as requirements, no fallback or partial
+registry was installed, and no card definition, RON source, DSL function or
+caller was deleted. Runtime and removal gates remain unmet. No vocabulary source
+refresh is needed because RON source is unchanged.
+
+### Source defect and rules evidence
+
+`cards/mtgish/DRK.lines.ron:112`, Wand of Ith's second
+`If(ACardWasRevealedThisWay(IsCardtype(Land)), ...)`, repeats the land predicate.
+Retained authoritative `data/DRK.json` Oracle text requires the second payment
+branch for a nonland card, at its mana value. The first land branch requires one
+life. The complete record is still rejected at its first reveal predicate; the
+source was not changed in this prerequisite run. There is only one record of
+Wand of Ith in this collection, so no identical reprints need correction.
+Retained `data/LEG.json` Oracle text was also read for Petra Sphinx,
+Nebuchadnezzar, Tempest Efreet and Rebirth. No other source defect is claimed.
+
+Local CR 400.2/400.7, 608.2c and 701.20a–e establish hidden-zone identity,
+instruction order, public revelation without movement, repeated reveals and the
+separate library-reordering boundary. Public history saves copied revealed facts;
+it does not reveal the remaining hand or expose a later returned visit. Current
+card references cannot act through LKI on an absent hand visit. Reveal predicates
+and their retained characteristic semantics need a separate contract.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests failed compilation on missing RevealRandomHandCardInto and
+DiscardCardFromHandFor before implementation. RON gameplay tests failed on
+unsupported RevealACardFromHandAtRandom lowering before implementation. The
+native Frames test then failed its outer-result assertion, exposing the existing
+ForEach isolation gap; its assertion was retained and the engine boundary fixed. A missing-hand-visit
+wrapper test first failed its expected-error assertion before error handling
+was added.
+Test fixture errors (invalid helper calls and a missing physical owner) were
+corrected without weakening production assertions.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| TestRONRandomHandRevealRealOperands | Full Wand of Ith DRK and Tempest Efreet LEG records supply their actual producer ASTs and explicit player targets. Native stack activation reveals the exact selected opponent-hand card without moving it; both full records remain rejected. Subrule evidence only. |
+| TestRONRandomHandRevealGameplay | Synthetic compiled activation with explicit target player; failed payment, no reveal at announcement, source departure/return/phasing, empty hand, exact revealed/discarded identity and independent clone RNG/results. |
+| TestRONRandomHandRevealInvalid / References | Wrong shapes/types/players, unbound and before-producer consumers, typed hand-result operand checks, optional-branch result escape, unsupported PlayerActions production. |
+| TestRONRandomHandRevealDistinctProducers | Two factory instances and two producers each; correct lexical result shadowing, explicit-player membership, separate visits and reveal order. |
+| TestRandomHandRevealIdentity | No result before production; public copied reveal facts, no movement, exact random selection, wrong-player no-op, departure/return invalidation, cloned saved visit, empty-result clearing and no empty RNG consumption. |
+| TestRandomHandRevealDeclarations / Frames | Native definition rejection, producer dominance, nested execution and permanent-loop frame restoration, frame cleanup. |
+| TestRandomHandRevealReplacements | Shared normal/prevented/library-redirected discard; exact reveal history and RNG, correct discard events. |
+| TestRandomHandRevealMissingIdentity | A player wrapper without engine hand visits returns an explicit error without publishing a reveal or moving a card. |
+| TestRandomHandRevealAbsentAndWaiting | Absent-player clearing; pure waiting delayed source references without hand operations or randomness. |
+| Existing TestCardNameMatchPendingAndFrames / TestWaitingDelayedHandAction* | Neighboring name-frame and typed hand-source behavior retained. |
+
+Complete-card gameplay coverage is unchanged. Direct reveal subrule coverage
+increases for Wand of Ith and Tempest Efreet; complete synthetic RON
+reveal/discard gameplay and native identity/frame/replacement contracts are new.
+Nebuchadnezzar is downstream work, not newly verified gameplay. Estimated and
+actual complete-card gains are both 0 unique names / 0 records.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order, and were repeated after the final native
+error-path change:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONRandomHandReveal -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestRandomHandReveal -count=1`: PASS.
+- Neighboring `TestCardNameMatchPendingAndFrames` and
+  `TestWaitingDelayedHandAction*`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository.
+- First `make lint` reported one preallocation issue in the new RON builder.
+  It was fixed without semantic changes. Final `make lint`: PASS, 0 issues.
+  Automatic import formatting was reviewed; no unrelated Go file changed.
+- Both focused slice suites after final lint: PASS.
+- Skill final `go test ./... -short -count=1`: PASS, after final lint.
+- `git diff --check`: PASS, including final documentation and ledger changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,064 compiled /
+  381 rejected records; 796 accepted / 190 rejected unique names**. The total
+  remains 2,445 records / 986 unique names.
+
+The before/after rejected-record identity sets are identical; no accepted record
+was lost and no incomplete record was accepted. Exactly two first diagnostics
+advanced:
+
+- Wand of Ith `DRK.lines.ron:112:334`: `unsupported activation history condition
+  (ACardWasRevealedThisWay)`.
+- Tempest Efreet `LEG.lines.ron:259:492`: `unsupported action
+  (ExchangeOwnershipOfTwoCards)`.
+
+All other loader diagnostics are unchanged. Strict loading still rejects the
+whole collection and publishes no partial registry. The zero compilation gain
+matches the selected-slice estimate. No required check remains failed or blocked;
+collection rejection is an unsupported-capability result. No environment failure
+remains. The corrected Rebirth comparison also reads local CR 119.5: life setting
+must cause the required gain or loss, rather than bypassing the shared rules with
+a raw Player.SetLife call.
+
+Changed files: native random_hand_reveal.go and tests, composable_actions.go,
+doc.go; RON random_hand_reveal.go and tests, compiler.go, optional_payment.go,
+player_scope.go; DSL reference, engine rules contracts and this ledger.
+User `.gitignore`, design edits and documentation archive/reorganization remain
+outside this slice's staging.
+
+Ranked next candidates:
+
+1. Shared typed reveal-result characteristic snapshots and resolving
+   `ACardWasRevealedThisWay` predicates for Wand of Ith, Petra Sphinx and Sindbad.
+   Compare hand/library/drawn producer dependencies before selecting a bounded
+   context. Cover retained public facts, returned visits, empty reveals and
+   IsNamed/IsCardtype consumers. Correct Wand's nonland branch with its retained
+   Oracle evidence when implementing and testing that consumer.
+2. Nebuchadnezzar's bounded plural random partial-hand reveal and chosen-name
+   discard. The announced X, name matcher, RNG and shared discard batch exist;
+   selection without replacement and exact reveal-set identity remain needed.
+   Compare its full-card value against the shared result prerequisites.
+3. Library-visit identity and top-reveal/result dispatch for Petra Sphinx, with
+   shuffle/reorder invalidation and independent clones. Its name choice/matcher
+   are ready, but full acceptance also requires the result predicate. Rebirth's
+   paid-player collection and rules-aware life setting remain a later alternative.
+
+This run stops after RANDOM-HAND-REVEAL. Migration remains incomplete.

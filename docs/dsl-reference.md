@@ -9512,3 +9512,46 @@ are excluded. Both names in a pair can be chosen and match either member.
 Cost/static/entry uses, nested boolean name filters and reveal consumers remain
 unsupported. This slice does not accept the full Nebuchadnezzar or Petra Sphinx
 records. Evidence: `TestRONCardNameMatch*` and native `TestCardNameMatch*`.
+
+### RON random hand reveal results
+
+The resolving action sequence supports
+`PlayerAction(player, RevealACardFromHandAtRandom)`. The reveal operation must be
+a bare symbol. It reveals one card from the selected player's current hand at
+resolution and leaves that card in the hand. Empty hands and absent players
+clear the result without consuming randomness. This is a public reveal, not a
+private inspection or a cost.
+
+The continuation has a lexical typed card result,
+`TheCardRevealedFromHandThisWay`, lowered to `mage.FromCard(binding)` by
+`compileRevealedHandCardRef`. The current supported RON consumer is
+`PlayerAction(player, DiscardTheCardRevealedThisWay)`. It requires the same exact
+hand visit and membership in the explicit player's hand, then uses the shared
+discard replacement and event service. A different player, departed card, or
+returned visit cannot supply the discard. The native API is
+`RevealRandomHandCardInto(PlayerRef, *CardBinding) ResolvingEffect` and
+`DiscardCardFromHandFor(PlayerRef, CardRef) ResolvingEffect`.
+
+The producer owns its remaining action sequence. Each factory build has separate
+bindings; a later producer shadows the earlier result only in its continuation.
+Optional payment bodies retain their local scope. Unbound reads, reads before
+production, malformed symbols, and incompatible player/card references reject at
+compile time. Direct `PlayerActions` reveal production and export, drawn-card
+results, library reveals, reveal predicates, mana-value results, plural random
+reveal, and ownership/movement consumers remain unsupported. Spell, mode,
+activation, trigger and delayed resolving action sequences share this adapter;
+no cost, static, entry or replacement-operation adapter is added.
+
+Native resolution frames, saved card visits, public reveal snapshots, scripted
+randomness and clone handling are reused. Permanent loops now isolate singular
+card bindings as well as their other existing saved values. Typed player source
+reads participate in waiting delayed queries without resolving operands or
+consuming randomness. Public history records the revealed visit's facts; it
+does not expose the rest of the hand or a later returned visit.
+
+Evidence: `TestRONRandomHandReveal*` and native `TestRandomHandReveal*`.
+Complete Wand of Ith and Tempest Efreet records supply real producer ASTs to
+engine-backed tests; both full records remain rejected. This is subrule coverage,
+not complete-card gameplay coverage. Rules: local CR 400.2, 400.7, 608.2c,
+701.20a–c. Reveal itself causes no zone change; discard replacements remain in
+the shared pipeline.

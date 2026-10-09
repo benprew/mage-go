@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if isRandomHandReveal(part) {
+			effect, err := compileRandomHandReveal(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, effect), ctx.chosenName, nil
+		}
 
 		if part.Name == "ChooseACardName" {
 			effect, result, err := compileCardNameChoiceWithResult(part, ctx)

@@ -35,6 +35,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	handReveals          map[*handRevealPlan]*mage.CardBinding
 	chosenNames          map[*cardNameChoicePlan]*mage.CardNameBinding
 	chosenPlayers        map[*playerChoicePlan]*mage.PlayerBinding
 	chosenPermanents     map[*permanentChoicePlan]*mage.PermanentBinding

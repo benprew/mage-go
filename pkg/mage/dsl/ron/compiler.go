@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	handReveal           *handRevealPlan
 	chosenName           *cardNameChoicePlan
 	anteSourcePayment    bool
 	chosenPlayer         *playerChoicePlan
@@ -1517,6 +1518,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "DiscardTheCardRevealedThisWay" {
+		return compileRevealedHandDiscard(n, ctx)
+	}
 	if n.Name == "ChooseACardName" {
 		build, err := compileCardNameChoice(n, ctx)
 		if err != nil {

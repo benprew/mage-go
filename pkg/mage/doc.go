@@ -1236,6 +1236,17 @@
 // [DiscardMatchingHand] moves all matching hand cards before discard events.
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
+// Use [RevealRandomHandCardInto] for a public random hand reveal at resolution.
+// [FromCard] keeps the exact saved hand visit. Departure and return end that
+// reference. Empty hands and absent players clear it without random selection.
+// [DiscardCardFromHandFor] checks the explicit player before shared discard
+// replacements and events. Public reveal history keeps separate card snapshots.
+// Nested execution, permanent loops and clones keep separate card bindings.
+// Typed players declare source reads to waiting delayed queries. These queries
+// do not reveal cards, read the hand or use randomness.
+// Result predicates, saved characteristics and library reveals need separate
+// contracts. A saved card reference does not permit an action on an absent card.
+//
 // Use [LookAtLibraryTop] for private inspection and optional top ordering.
 // [LookAtLibraryTopNumber] reads a typed count once at resolution.
 // Both forms and [MayShuffleLibrary] declare explicit source reads in their

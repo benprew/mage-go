@@ -12554,3 +12554,43 @@ ASTs execute through native choice and matcher services; their complete records
 still reject. Synthetic RON activation/spell gameplay covers explicit players,
 failed payment, source departure/return/phasing, nested choice export and cloning.
 No full-card gameplay mapping or collection compilation gain is claimed.
+
+## Random hand reveal with an exact card result
+
+`RevealRandomHandCardInto(player PlayerRef, result *CardBinding) ResolvingEffect`
+selects one current hand card uniformly through the game's random service,
+records a public reveal snapshot, and saves its exact hand visit. It makes no
+player choice and moves no card. An absent player or empty hand clears the
+binding without using randomness. A present selected card without an engine
+hand-visit identity returns an explicit error before publication. The binding belongs to the existing resolution
+frame. `FromCard(result)` can act only on the original still-present visit;
+departure and return invalidate it. Revealed facts remain in copied public
+history, which supplies no action permission or current visibility for a later
+visit. New reveals can reveal the same present card again.
+
+`DiscardCardFromHandFor(player PlayerRef, card CardRef) ResolvingEffect` first
+requires current membership in the explicit player's hand. It passes the exact
+card to `Game.PlayerDiscardByEffect`, preserving prevention, destination
+redirection and discard events. Prevented discards send no discard event;
+redirected discards still send that event. It makes no second choice or random
+selection. The action cannot follow an absent or returned saved card.
+
+Definitions validate non-nil players/results/references, binding names and
+producer-before-read order. Each factory build keeps its own declarations.
+Clones, nested effects and permanent-loop iterations keep separate singular
+card maps. Permanent-loop execution now restores the outer singular-card map
+also on error; this closes an isolation gap exposed by the reveal tests.
+
+Both native operations declare explicit source reads in typed player operands
+to waiting delayed queries. Those queries do not resolve the player, reveal,
+select a card, discard or consume randomness. The same existing source and LKI
+services support pending resolution after source departure or phasing; no LKI
+makes an absent hand card available for an action.
+
+Evidence: `TestRandomHandRevealIdentity`, `Declarations`, `Frames`,
+`Replacements`, `AbsentAndWaiting`, `MissingIdentity`; `TestRONRandomHandRevealGameplay`, `Invalid`,
+`RealOperands`, `References`, `DistinctProducers`. Rules: local CR 400.2, 400.7,
+608.2c and 701.20a–c. Singular hand production and exact discard are established;
+reveal-result property snapshots/predicates, plural reveals, library visits and
+ownership exchange need separate contracts. No new simultaneous-operation or
+replacement-order service is introduced.

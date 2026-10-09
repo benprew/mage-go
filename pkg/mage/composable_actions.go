@@ -2870,6 +2870,8 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	}
 	outerNames := ctx.Game.resolution.cardNameBindings
 	defer func() { ctx.Game.resolution.cardNameBindings = outerNames }()
+	outerCards := ctx.Game.resolution.cardBindings
+	defer func() { ctx.Game.resolution.cardBindings = outerCards }()
 	outerNumbers := ctx.Game.resolution.numberBindings
 	defer func() { ctx.Game.resolution.numberBindings = outerNumbers }()
 	outerPlayers := ctx.Game.resolution.playerBindings
@@ -2879,6 +2881,7 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	outerCreated := ctx.Game.resolution.createdTokenBindings
 	defer func() { ctx.Game.resolution.createdTokenBindings = outerCreated }()
 	for _, member := range members {
+		ctx.Game.resolution.cardBindings = maps.Clone(outerCards)
 		ctx.Game.resolution.createdTokenBindings = cloneCreatedTokenBindings(outerCreated)
 		ctx.Game.resolution.cardNameBindings = maps.Clone(outerNames)
 		ctx.Game.resolution.numberBindings = maps.Clone(outerNumbers)
