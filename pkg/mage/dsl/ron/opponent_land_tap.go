@@ -61,6 +61,6 @@ func compileOpponentLandTap(n Node) (func(mage.Effect) *mage.GenericTriggered, e
 		return nil, problem(filter, "supply one land subtype and one opponent controller filter")
 	}
 	return func(effect mage.Effect) *mage.GenericTriggered {
-		return mage.WhenEvent(mage.OpponentLandBecomesTapped().OfSubtype(subtype), effect).(*mage.GenericTriggered)
+		return mage.WhenEvent(mage.OpponentLandBecomesTapped().OfSubtype(subtype), effect).(*mage.GenericTriggered).WithLandTapTextRevision()
 	}, nil
 }

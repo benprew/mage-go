@@ -1,5 +1,42 @@
 # DSL reference
 
+## Printed opponent land-tap trigger text revision
+
+`GenericTriggered.WithLandTapTextRevision() *GenericTriggered` opts in a
+printed typed `OpponentLandBecomesTapped` declaration. Definition validation
+requires `EvtTapped`, battlefield source, no extra zones and no state trigger.
+`Game.RevisePrintedLandTapTrigger(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` checks the exact present face-up incarnation,
+active printed declaration, retained semantic builder and fresh correspondence
+before mutation. The replacement must retain its marker and typed event contract.
+
+RON opts in `TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+ControlledByAPlayer(Opponent)])), body)` with the existing validated land subtype
+and resolving body contexts. Either filter order works. Unbound event reads and
+other tap-event forms retain their separate compiler contracts. No card-name
+branch is used. The shared checked trigger installer preserves the active UUID
+and declaration position, with fresh targets, effects and bindings per build.
+
+CR 612.2 word roles and CR 612.3 printed/granted separation use retained RON
+prototypes and printed group keys. Detection uses event-time subtype and control
+(CR 603.2, 603.3a); pending and queued bodies keep earlier text and targets
+(CR 603.3, 113.7a). Typed native land bindings keep exact incarnations through
+copies and departure. Returned targets cannot replace saved targets. Phasing
+suspends detection and keeps revision state. Ability restoration uses a retained
+revised trigger on that battlefield incarnation. The shared installer also keeps
+spell-cast revisions through removal and restoration. The retention map changes
+by copy; game clones keep independent later revisions. Return uses printed rules.
+
+Evidence: `TestRONTextLandTapTriggerRecords` covers complete Lifetap (six
+reprints) and Lifeblood; `Lifetime`, `RemovalAndTargets` and `Boundaries` cover
+identity, control, phasing, clones, restored rules, queued targets and rejection.
+Native `TestTextLandTapTriggerDeclaration`, `Rejects` and `Bindings` cover
+validation, rejection without mutation and per-event saved identities.
+Existing `TestRONOpponentLandTap*` retains payment rollback, batch, entry-tapped
+and subtype evidence. Collection acceptance does not change. Live layer-3 order,
+expiry, original-text restoration and complete text consumers remain separate.
+
+
 ## Printed global ability and P/T grant text revision
 
 `StaticAbilityHolder.WithGrantTextRevision() *StaticAbilityHolder` opts in a

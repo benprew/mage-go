@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/google/uuid"
@@ -24,6 +25,12 @@ func (t *GenericTriggered) supportsSpellCastTextRevision() bool {
 // RevisePrintedSpellCastTrigger replaces one present printed spell-cast trigger.
 // The caller must supply the text layer's order and lifetime separately.
 func (g *Game) RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
+		return t.spellCastTextRevision && t.supportsSpellCastTextRevision()
+	}, changes...)
+}
+
+func (g *Game) revisePrintedTrigger(source *Permanent, abilityID uuid.UUID, eligible func(*GenericTriggered) bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text trigger revision requires a present source")
 	}
@@ -46,7 +53,7 @@ func (g *Game) RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.U
 			continue
 		}
 		active, ok = ability.(*GenericTriggered)
-		if !ok || !active.spellCastTextRevision || !active.supportsSpellCastTextRevision() {
+		if !ok || !eligible(active) {
 			return fmt.Errorf("text trigger revision requires an eligible printed trigger")
 		}
 		index = i
@@ -76,7 +83,7 @@ func (g *Game) RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.U
 		return fmt.Errorf("text trigger revision lost its replacement")
 	}
 	fresh, ok := replacement.(*GenericTriggered)
-	if !ok || !fresh.spellCastTextRevision || !fresh.supportsSpellCastTextRevision() {
+	if !ok || !eligible(fresh) {
 		return fmt.Errorf("text trigger revision changed the trigger contract")
 	}
 	rebuilt := *fresh
@@ -87,5 +94,10 @@ func (g *Game) RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.U
 	mutable := g.MutablePermanent(current.ID())
 	mutable.RuntimeAbilities = slices.Clone(mutable.RuntimeAbilities)
 	mutable.RuntimeAbilities[index] = &rebuilt
+	mutable.revisedPrintedTriggers = maps.Clone(mutable.revisedPrintedTriggers)
+	if mutable.revisedPrintedTriggers == nil {
+		mutable.revisedPrintedTriggers = make(map[uuid.UUID]*GenericTriggered)
+	}
+	mutable.revisedPrintedTriggers[abilityID] = &rebuilt
 	return nil
 }

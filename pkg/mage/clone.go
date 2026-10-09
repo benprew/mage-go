@@ -227,6 +227,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		StoredValue:                src.StoredValue,
 		CreatedBy:                  src.CreatedBy,
 		printedAbilitiesSuppressed: src.printedAbilitiesSuppressed,
+		revisedPrintedTriggers:     src.revisedPrintedTriggers,
 		powerBonus:                 src.powerBonus,
 		toughBonus:                 src.toughBonus,
 		ptSwitched:                 src.ptSwitched,

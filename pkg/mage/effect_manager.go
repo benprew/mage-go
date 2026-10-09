@@ -680,7 +680,11 @@ func (em *EffectManager) Apply(g *Game) {
 			restored := make([]Ability, 0, len(p.Card.Abilities())+len(p.RuntimeAbilities))
 			for _, a := range p.Card.Abilities() {
 				if !existing[a.AbilityID()] {
-					restored = append(restored, g.registeredPrintedStaticAbility(p, a))
+					if revised := p.revisedPrintedTriggers[a.AbilityID()]; revised != nil {
+						restored = append(restored, revised)
+					} else {
+						restored = append(restored, g.registeredPrintedStaticAbility(p, a))
+					}
 				}
 			}
 			p.RuntimeAbilities = append(restored, p.RuntimeAbilities...)

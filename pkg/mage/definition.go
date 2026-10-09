@@ -253,6 +253,9 @@ func describeDefinition(v any) definitionNode {
 			addEffects(e.effects)
 		}
 	case *GenericTriggered:
+		if e.landTapTextRevision && !e.supportsLandTapTextRevision() {
+			n.problem = "text revision requires a typed battlefield opponent land-tap trigger"
+		}
 		if e.spellCastTextRevision && !e.supportsSpellCastTextRevision() {
 			n.problem = "text revision requires a typed battlefield spell-cast trigger"
 		}

@@ -7,11 +7,11 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-GLOBAL-GRANT` adds checked printed global keyword/landwalk revision,
-including fixed P/T-and-ability declarations. Global grants keep selected subjects
-through all keyword grants and layers 6 and 7c, including after later ability removal in the same pass.
-Revision evidence covers **9 accepted unique names / 24 records**. Source visits,
-active IDs, registration order, clones, phasing, removal/restoration and LKI stay
+`TEXT-LAND-TAP-TRIGGER` adds checked printed opponent land-tap trigger revision.
+Lifetap and Lifeblood use revised land words for future events; detected bodies
+keep their earlier text, targets and controllers. Revision evidence covers
+**2 accepted unique names / 7 records**. Source visits, active IDs, ordered
+changes, event bindings, copies, clones, phasing and restored abilities stay
 separate. **+0 unique names / +0 records**, as estimated. Complete live text
 installation, remaining trigger kinds and intrinsic printed abilities remain gaps.
 All required build, vet, test and lint checks pass. Final loader diagnostics
@@ -58989,6 +58989,145 @@ Ranked next candidates:
    concrete color-protection consumers and preserve granted-ability exclusion.
 3. Shared repeated-procedure round/result scope for Eureka and Mana Clash; keep
    ordered optional-entry and per-round coin/damage consumers explicit.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## Run 2026-10-09: TEXT-LAND-TAP-TRIGGER
+
+### Candidate comparison and selection
+
+Evaluated latest ranked candidate #1 first. It is dependency-ready and completes
+an event-family prerequisite for text changes on several distinct sources.
+Read all seven complete Lifetap/Lifeblood RON records, the relevant vocabulary
+keys, typed tap events, text prototypes/correspondence, the checked spell-cast
+installer, and CR 612.2–3, 603.2–3 and 113.7a. No Go card was a requirement.
+Also inspected complete Black Knight, White Knight, Repentant Blacksmith, Eureka,
+Mana Clash, Magical Hack and Sleight of Mind records, including nested forms.
+
+| Candidate | Distinct affected cards | Estimated full-card compilation gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Printed typed opponent land-tap trigger revision | Lifetap, Lifeblood (2 names / 7 records) | 0: both already compile | Provides live printed trigger replacement for Magical Hack's permanent branch; complete text consumers still need layer-3 lifetime/order and other declaration families | Low: reuse event, semantic builder and checked installer; identity, pending-body, target and lifecycle tests |
+| Printed intrinsic protection/keyword revision | Bounded comparison: Black Knight, White Knight, Repentant Blacksmith (3 names) | 0: these already compile | Bridges intrinsic ability representation; enables Sleight of Mind's permanent branch across multiple protection consumers; complete text installation remains blocked | Medium: printed attribute/protection correspondence, restoration and grant exclusion |
+| Shared repeat-round scope | Eureka, Mana Clash (2 names / 2 records) | 0 for the scope prerequisite alone; potentially 2 with both consumers | Eureka also needs ordered optional hand entry with a round action result; Mana Clash needs per-player coin outcomes, simultaneous tail damage and all-heads termination | High for both full consumers; a standalone scope needs explicit producer/result contracts before either unlock |
+
+Selected candidate #1 because the exact event contract, semantic transformation
+and definition correspondence already exist. Shared checked installation gives
+multi-card revision value within this run. The two broader candidates need
+additional representation or result contracts. No first-error count was treated
+as an unlock estimate. Before implementation, stated the contract, reuse boundary
+and acceptance cases. No further slice began.
+
+### Established signatures, contexts and dependencies
+
+- `(*GenericTriggered).WithLandTapTextRevision() *GenericTriggered` opts in
+  only typed `OpponentLandBecomesTapped` battlefield events with `EvtTapped`,
+  no extra zone declarations and no state trigger. Definition validation rejects
+  a marked incompatible declaration.
+- `(*Game).RevisePrintedLandTapTrigger(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks original present face-up source visit,
+  active printed declaration and marker, retained semantic builder, declaration
+  group correspondence and eligible fresh replacement before mutation.
+- RON opts in its complete existing
+  `TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+  ControlledByAPlayer(Opponent)])), body)` path, in either filter order.
+  Body compilation retains existing scopes, target declarations and validation.
+  Host/artifact tap and mana events do not acquire this marker. Unbound
+  `Trigger_ThatPermanent` and `Trigger_ThatPlayer` reads still reject in this path.
+- Extracted shared checked trigger installation from the spell-cast installer.
+  Both APIs preserve active ID and declaration position and build fresh effects,
+  targets and event bindings. Each active declaration keeps its own ordered
+  semantic prototype; other instances and game clones cannot inherit changes.
+- Reused typed event-time subtype/controller checks, pending trigger snapshots,
+  stack-copy frames, target incarnation checks, shared layer removal, phasing,
+  LKI, printed-origin return and definition validation. RON owns spelling and
+  opt-in; mage owns installation and retention. No card-name branch, global
+  result slot, Go fallback or partial registry.
+- Added per-incarnation revised-trigger retention for ability restoration.
+  Writes copy the map; cloned permanents retain their earlier state. The shared
+  installer also retains spell-cast revisions. Returned sources start with
+  printed declarations and no retention map. Granted abilities remain excluded.
+- The caller still owns text-layer ordering, lifetime and original-text
+  restoration. This slice does not claim full Magical Hack/Sleight of Mind
+  execution. No new costs, replacement ordering or simultaneous move semantics.
+  Existing payment rollback and tap-batch contracts remain covered.
+- No source-data defect, RON edit or vocabulary refresh. No unused DSL removal:
+  runtime cutover and deletion gates remain unmet, and existing callers remain.
+
+### Failing-first tests and card-to-test mapping
+
+Initial native tests failed compilation on missing `WithLandTapTextRevision`
+and `RevisePrintedLandTapTrigger`. Initial RON tests also used incorrect basic
+land constant names; corrected the fixture and reran to confirm only the expected
+missing installer failure before implementation. All tests then passed.
+
+Added removal/restoration coverage failed with `restored ability lost revision`:
+layer reset rebuilt the printed origin after ability removal. Added exact-source
+revision retention and restoration, including cloned removed sources; the same
+assertion now passes. A native binding fixture initially copied an unspecified
+member of two same-controller pending triggers, yielding two counters on the
+Forest. Placed the Forest trigger on the stack before detecting the Island event
+to specify which trigger is copied. Exact returned-visit assertions remain;
+no production behavior or expected rule was weakened.
+
+| Tests | Cards and contracts |
+| --- | --- |
+| `TestRONTextLandTapTriggerRecords` | Complete Lifetap in LEA, LEB, 2ED, 3ED, CED, CEI and Lifeblood in LEG: original tap detected before revision, old subtype stops detecting, Island detects, active UUID preserved, pending/queued bodies retained, copies use their controllers, clone resolution isolation and independent successive Island-to-Swamp revision. |
+| `TestRONTextLandTapTriggerLifetime` | Complete Lifetap: foreign declaration rejects, sibling instance keeps printed Forest filter, event controller saved through control changes and phasing, phased source rejects, phase cycle keeps revised Island filter, old source visit rejects and returned source uses printed Forest. |
+| `TestRONTextLandTapTriggerRemovalAndTargets` | Synthetic validated RON: pre-revision Forest target retained, fresh Island target used, removed declaration rejects and detects nothing, pending bodies survive removal, original and clone restore revised rules independently, returned land cannot satisfy an earlier target. |
+| `TestRONTextLandTapTriggerBoundaries` | Synthetic spell-cast and artifact-tap declarations reject through the new installer. |
+| Native `TestTextLandTapTriggerDeclaration`, `Rejects`, `Bindings` | Marked event/zone/state validation; nil, absent, unknown, face-down, granted, unmarked, missing builder/marker and changed-contract rejection without mutation; fresh native land event bindings, pending bodies, copied bodies, exact returned visits and cloned resolution. |
+| Existing `TestRONOpponentLandTap*` | Both real cards: malformed filters and unbound event reads reject; real mana taps, paid casting, failed-payment rollback, simultaneous tap batch, subtype/dual-land checks, entry-tapped, phasing and event ordering. |
+| Existing `TestTextSpellCastTrigger*`, `TestRONTextSpellCastTrigger*` | Preserved callers and shared-installer regression coverage. |
+
+Actual compilation gain: **+0 unique names / +0 records**, exactly estimated.
+Bounded revision gameplay evidence covers **2 accepted unique names / 7 records**.
+This is capability evidence, not a new global complete-card gameplay total.
+
+### Validation and files
+
+Fresh baseline: `make build` passed; focused opponent-land-tap and spell-cast
+RON tests passed. `go run ./cmd/loadcards -json` exited 1 for strict collection
+rejection, not a build or test failure. Baseline: **2,090 compiled / 355 rejected
+records; 808 accepted / 178 rejected unique names**.
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextLandTapTrigger -count=1`.
+- `go test ./pkg/mage -run 'TestText(LandTap|SpellCast)Trigger' -count=1` and
+  preserved RON opponent-land-tap/spell-cast tests.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` (RON 32.501s).
+- `make test` (RON 34.175s; all repository packages passed).
+- `make lint`; `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; parsed JSON exactly
+  equals baseline, including all diagnostics. **2,090 compiled / 355 rejected
+  records; 808 accepted / 178 rejected unique names**. No partial registry.
+
+Lint reported **0 issues**. Reviewed automatic formatting/modernize output:
+no unrelated or semantic automatic changes. Reran focused RON land-tap,
+opponent-land-tap and spell-cast tests and both native trigger revision suites
+after lint; all passed. Final diff checks passed.
+No environment or pre-existing failure blocked independent work.
+
+Files: new native `text_land_tap_trigger.go` and `text_land_tap_trigger_test.go`,
+RON `text_land_tap_trigger_test.go`, `opponent_land_tap.go`, shared
+`text_spell_cast_trigger.go`, `triggered.go`, `definition.go`, `card.go`,
+`clone.go`, `effect_manager.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. The user's `.gitignore`,
+execution-design edits and history archive relocation remain unstaged.
+Only this entry and the status update are staged from this ledger.
+Commit message: `feat(ron): implement printed land-tap trigger text revision`.
+
+Ranked next candidates:
+
+1. Checked printed intrinsic protection/keyword text revision: compare Black
+   Knight, White Knight and Repentant Blacksmith; bridge printed attribute and
+   protection representations while excluding granted abilities.
+2. Shared repeated-procedure round/result scope for Eureka and Mana Clash;
+   separate optional-entry action results from coin outcome collections.
+3. Checked text installation for other typed trigger families: inventory shared
+   subtype/color consumers and preserve detected bodies before live layer-3 work.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

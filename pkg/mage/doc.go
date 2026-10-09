@@ -34,6 +34,15 @@
 // The caller must supply text-layer order and lifetime. Other static layers,
 // conditional rules, Aura rules and full text consumers need separate services.
 //
+// Use [GenericTriggered.WithLandTapTextRevision] for a printed land-tap trigger.
+// [Game.RevisePrintedLandTapTrigger] checks its declaration and source visit.
+// RON opts in its typed opponent land-subtype tap event. The active ID stays.
+// Pending bodies keep earlier text, targets and captured event identities.
+// Phasing keeps revisions. Ability restoration uses the revised declaration.
+// Clones keep separate later changes. Return restores printed rules.
+// The caller must supply text-layer order, lifetime and original-text restoration.
+// Other event kinds and complete text consumers need separate services.
+//
 // Use [GenericTriggered.WithSpellCastTextRevision] for a printed spell-cast trigger.
 // [Game.RevisePrintedSpellCastTrigger] checks its declaration and source visit.
 // It keeps the active ID with fresh rules, targets and event bindings.
