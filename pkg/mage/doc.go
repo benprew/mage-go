@@ -56,6 +56,17 @@
 // The caller must supply text-layer order and lifetime. Other static layers,
 // conditional rules, Aura rules and full text consumers need separate services.
 //
+// Use [GenericTriggered.WithCombatPairTextRevision] for a printed pair trigger.
+// [Game.RevisePrintedCombatPairTrigger] checks its declaration and source visit.
+// The typed event must keep its block direction and battlefield source.
+// It keeps the active ID with fresh filters, targets and opponent bindings.
+// Pending triggers, copies and delayed bodies keep their prior text and facts.
+// Phasing keeps revisions. Ability restoration uses the revised declaration.
+// Clones and sibling declarations keep separate changes. Return uses printed rules.
+// RON opts in its source and Aura-host TriggerA combat-pair path.
+// The caller must supply text-layer order, lifetime and original-text restoration.
+// Grouped events, creature-type substitutions and full text consumers are separate.
+//
 // Use [GenericTriggered.WithLandTapTextRevision] for a printed land-tap trigger.
 // [Game.RevisePrintedLandTapTrigger] checks its declaration and source visit.
 // RON opts in its typed opponent land-subtype tap event. The active ID stays.

@@ -49,6 +49,7 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 type GenericTriggered struct {
 	spellCastTextRevision  bool
 	landTapTextRevision    bool
+	combatPairTextRevision bool
 	textRevisionDefinition Card
 	eventDefinition        EventPattern
 	stepDefinition         TurnStepPattern

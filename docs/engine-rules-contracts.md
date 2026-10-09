@@ -1,5 +1,52 @@
 # Engine rules contracts
 
+## Printed combat-pair trigger text revision
+
+`GenericTriggered.WithCombatPairTextRevision() *GenericTriggered` opts in
+`BlocksCreatureMatching`, `BecomesBlockedByCreatureMatching` or
+`BlocksOrBecomesBlockedByCreatureMatching`. Definition validation requires the
+matching event kind, a battlefield source, no extra zones, no state trigger,
+and a checked source or attachment subject.
+
+`Game.RevisePrintedCombatPairTrigger(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` uses the shared checked printed-trigger installer.
+It requires the exact present face-up source, an active unwrapped printed
+ability, retained semantic builder and fresh declaration correspondence. The
+replacement must keep its marker and event direction. Failure changes no runtime
+ability or retention state. Success keeps the active ID and position with fresh
+event filters, targets, bodies and per-instance opponent bindings.
+
+RON marks the existing `TriggerA` combat-pair path: two-argument
+`WhenACreatureBlocksACreature` and `WhenACreatureBecomesBlockedByACreature`,
+or their matching two-member `Or` union. Subjects are
+`SinglePermanent(ThisPermanent)` or `SinglePermanent(HostPermanent)`.
+Existing creature, subtype, color and fixed toughness filters remain unchanged.
+`TriggerI`, grouped combat events and temporary granted triggers are separate.
+Color substitutions change validated filter and body word roles (CR 612.2).
+This service does not add creature-subtype substitutions.
+
+Detection and pending abilities keep the prior text, controller and exact
+opponent capture (CR 603.2–3). Copies and future end-of-combat bodies retain
+those bindings. A returned opponent cannot replace a saved incarnation.
+Information reads use the existing source LKI services; they do not permit
+movement of absent subjects. Phasing keeps revisions and suspends detection.
+Ability removal suspends the declaration; restoration retrieves its revised
+rules. Clones and sibling declarations retain separate subsequent changes.
+A returned source uses printed rules. Granted abilities cannot qualify
+(CR 612.3). Layer-3 ordering, expiry and original-text restoration remain
+caller responsibilities; complete live text installation is separate work.
+
+Evidence: native `TestTextCombatPairTriggerDeclaration` and `Rejects`; RON
+`TestRONTextCombatPairRecords`, `BodyAndLifetime`, `AuraAndRecords`,
+`Boundaries`, `PendingTargets`, `PaidCastAndNativeBlocks` and `ControlAndLKI`.
+Complete records supply bounded revision evidence for Abomination, Aisling
+Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram and
+Venom: seven unique names / 17 records. Existing combat-pair tests retain
+full combat, regeneration and attachment evidence. Collection acceptance stays
+unchanged. This mapping does not claim complete collection gameplay coverage.
+
+
+
 ## Printed intrinsic basic-landwalk text revision
 
 `WithPrintedBasicLandwalk(keyword core.Attr) CardOption` adds a distinct

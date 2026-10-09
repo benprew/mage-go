@@ -2,20 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **808 accepted / 178 rejected unique card
-names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total).
+The latest verified worktree inventory reports **809 accepted / 177 rejected
+unique card names** (986 total), and **2,091 compiled / 354 rejected records**
+(2,445 total). The baseline includes pre-existing Eureka entry-round changes.
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-BASIC-LANDWALK` adds checked printed basic-landwalk declarations
-and revision. Distinct IDs and intrinsic contributions preserve duplicate rules,
-grants, clones, phasing, removal/restoration, LKI and printed-origin return.
-Revision gameplay evidence covers **10 accepted unique names / 20 records**.
-The full basic-landwalk inventory has **13 names / 23 records**; three remain
-blocked by unrelated rules. **+0 unique names / +0 records**, as estimated.
-Full live text installation and other intrinsic keyword contracts remain gaps.
-All required build, vet, test and final lint checks pass. Final loader diagnostics
-exactly match the fresh baseline; strict collection rejection remains expected.
+`TEXT-PRINTED-COMBAT-PAIR-TRIGGER` adds a checked printed pair-trigger revision
+bridge. It preserves active IDs, fresh bindings, pending text, delayed opponent
+identity, clones, phasing, removal/restoration and printed-origin return.
+Bounded revision evidence covers **7 accepted names / 17 records**.
+Acceptance gain is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -59410,6 +59407,146 @@ Ranked next candidates:
    keywords; inventory word-bearing forms and full live text installation needs.
 3. Combat-pair trigger text revision: preserve event facts and delayed bodies;
    separate color-word consumers from future creature-subtype substitutions.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete. Stop after this slice.
+
+
+## 2026-10-09: printed combat-pair trigger text revision
+
+Status: completed implementation slice `TEXT-PRINTED-COMBAT-PAIR-TRIGGER`.
+
+### Candidate comparison and selection
+
+Fresh worktree baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. Strict loader exited 1 with **2,091 compiled / 354 rejected records**,
+**809 accepted / 177 rejected names**. Existing user changes include Eureka's
+repeated-entry implementation, its tests and ledger entry, documentation changes,
+execution-design edits, `.gitignore` and completed-history relocation. Preserve
+these changes and all unrelated untracked files. The baseline includes that
+pre-existing Eureka work; this slice's commit does not include it.
+
+The latest entry has no ranked list. Evaluated the preceding ranked list in
+order, with complete records and nested forms rather than first-error frequency:
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Repeated round/result prerequisite | Eureka, Mana Clash; Eureka already accepted, remaining coin producer could unlock 1 name | Entry rounds are already complete. Mana Clash still needs per-player coin outcomes, tails selection and simultaneous player damage. Useful to one remaining card; defer while shared prerequisites remain. | Medium, 1–2 hours plus repository checks |
+| Remaining intrinsic keyword declaration bridge | Bounded nonbasic-landwalk remainder: Desert Nomads, Livonya Silone; 0 new names | Full records are accepted. Desert, Legendary and FirstStrike contain no supported Magic color or basic-land word. Plain keyword symbols also contain no such word. General identities could support later full text installation, but have no current word-substitution gain. | Medium, broader attribute/removal/clone changes and tests |
+| Printed combat-pair trigger revision | Abomination, Aisling Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram, Venom; 0 new names, 7 accepted names / 17 records gain bounded revision evidence | Ready typed pair patterns, semantic builders and checked trigger installer. Abomination changes event color words; Aisling changes body color words. Enables live Sleight of Mind consumers while preserving exact delayed opponents. Other text declaration kinds and spell text still block complete live text installation. | Small, one validated adapter with lifecycle and gameplay tests |
+
+Select the third candidate for its concrete shared value and small reuse boundary.
+The full pair syntax inventory also includes Giant Shark, Goblin Flotilla,
+Infinite Authority, Wall of Caltrops and Wall of Dust. They remain rejected:
+damage-history filter shape/state trigger; temporary pair duration; missing paired
+subject binding for later counters; intervening-if pair event; and temporary rule
+reference/duration, respectively. No new full-card unlock was estimated for them.
+Creature-subtype word changes remain separate from Magic color/basic-land changes.
+
+### Supported shapes and engine boundary
+
+RON opts in the existing `TriggerA` two-argument pair path:
+
+- `WhenACreatureBlocksACreature(SinglePermanent(subject), filter)`.
+- `WhenACreatureBecomesBlockedByACreature(SinglePermanent(subject), filter)`.
+- A two-member `Or` of those directions with identical subject and filter,
+  including the existing reversed order.
+
+`subject` is `ThisPermanent` or `HostPermanent`. Existing validated creature,
+subtype, color and fixed toughness filter contexts remain unchanged. The existing
+body adapter supplies resolving actions, targets and exact opponent bindings.
+Grouped events, `TriggerI` and temporary granted pair rules do not opt in.
+No RON spelling or scope policy moves into the engine.
+
+Engine signatures:
+
+- `(*GenericTriggered).WithCombatPairTextRevision() *GenericTriggered`.
+- `(*Game).RevisePrintedCombatPairTrigger(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error`.
+
+Marked declarations require `filteredCombatPairPattern`, one supported matching
+event kind, battlefield source, no extra zones, no state trigger and a checked
+source/attachment subject. The fresh replacement must preserve its event direction
+and opt-in marker. Reuse `revisePrintedTrigger`, `BuildTextDefinitionRevision`,
+printed group correspondence and `revisedPrintedTriggers` restoration. The checked
+installer preserves active ID/position/source/current controller with fresh event
+filters, targets, actions and bindings. Each declaration retains its own ordered
+prototype; immutable prior triggers remain separate.
+
+Pending triggers, stack copies and future bodies retain earlier text and captured
+opponents (CR 603.2–3). Departed/returned opponents cannot supply an old action.
+Information reads use existing LKI; present-object actions retain legality checks.
+Phasing suspends detection and keeps revisions. Ability removal suspends the
+rule; restoration uses the revised declaration. Clones and sibling declarations
+keep separate later changes. A returned source uses its printed definition.
+Granted abilities reject (CR 612.3). Source mana, name, printed colors and copiable
+origin stay separate from semantic word roles (CR 612.2).
+
+This is a complete checked declaration bridge, not full live layer installation.
+The caller still supplies layer-3 order, duration and original-text restoration.
+No payment, replacement-ordering or simultaneous-action service is replaced.
+Existing shared combat-pair tests retain regeneration, indestructibility, attachment,
+multiple pair events and delayed identity contracts. No Go fallback or partial
+registry is introduced. Runtime cutover and DSL removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, focused RON and native tests failed compilation on missing
+`RevisePrintedCombatPairTrigger` and `WithCombatPairTextRevision`. Test fixture
+API mistakes were corrected before confirming that expected missing-signature
+failure. The implementation then passed all focused cases; no assertion was
+removed or weakened to change the supported contract.
+
+| Complete card records | Tests and behavior |
+| --- | --- |
+| Abomination (LEG) | `TestRONTextCombatPairRecords`: both directions, Green→Red→Blue order, White remains eligible, event-time filter text, pending bodies, copies, cloned revisions, delayed destruction after source departure, exact opponent return rejection. |
+| Aisling Leprechaun (LEG) | `TestRONTextCombatPairBodyAndLifetime`: pending Green body versus new Red body, ID stability, copies, foreign IDs, phasing, removal/restoration and clone isolation, return resets printed text. `PaidCastAndNativeBlocks`: failed casting rollback, paid casting, entry timing, actual native attack/block declaration uses revised body. |
+| Cockatrice, Thicket Basilisk (LEA, LEB, 2ED, 3ED, CED, CEI) | `TestRONTextCombatPairAuraAndRecords`: each complete reprint has independently revised pair declarations and exact delayed opponent destruction. Existing `TestRONCombatPairNative` retains Flying/Wall legality and combat damage evidence. |
+| Infernal Medusa (LEG), Battering Ram (ATQ), Venom (DRK) | `TestRONTextCombatPairAuraAndRecords`: complete records, pair declaration selection, Wall-inclusive Battering Ram, Aura-host union, binding survival into future destruction. Existing extended/native tests retain both directions, exclusions, attachment movement and Battering Ram's combat-start Banding. |
+| Synthetic contexts | `TestRONTextCombatPairPendingTargets`: old pending Green versus new Red target declarations. `ControlAndLKI`: detection across source control change, explicit resolution player reads departure controller LKI. `Boundaries`: unrelated events and malformed/unbound filters reject. Native `TestTextCombatPairTriggerDeclaration` and `Rejects`: wrong kind/type/subject, state/zone, unmarked/granted/face-down/absent/nil/foreign source, missing builder/marker, changed direction and invalid changes reject without runtime or retention mutation. |
+
+Coverage gain: **7 accepted names / 17 records** with bounded revision evidence.
+Compilation gain: **+0 names / +0 records**, exactly estimated. This is not an
+increase in the ledger's complete-card gameplay total.
+
+### Validation and result
+
+Required final checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextCombatPair -count=1`.
+- `go test ./pkg/mage -run TestTextCombatPair -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; post-lint affected focused tests; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1. Full parsed JSON, including
+  every diagnostic, exactly matches fresh baseline: **2,091 compiled / 354
+  rejected records**, **809 accepted / 177 rejected names**, 2,445 records /
+  986 unique names. Strict collection rejection is independent of passing build
+  and test checks. All previously accepted records remain accepted.
+
+The first lint run found one preallocation issue in the new reprint fixture.
+Preallocated its list, reran both focused suites and all lint steps, and reviewed
+the automatic import formatting. No environment failure or source correction was
+needed. The RON source is unchanged, so its vocabulary snapshot is unchanged.
+Preserve user's dirty files and history relocation; stage only the slice's new
+files, code hunks, documentation additions, status update and appended entry.
+
+Files: `pkg/mage/text_combat_pair_trigger.go` and native tests; `triggered.go`,
+`definition.go`, `doc.go`; RON `combat_pair.go` and
+`text_combat_pair_trigger_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit message: `feat(ron): implement printed combat-pair trigger text revision`.
+
+Ranked next candidates:
+
+1. Checked printed static animation/type/color text revision, starting with
+   Kormus Bell and Living Lands; inventory shared layer contracts and keep
+   Titania's Song's unsupported sticky membership separate.
+2. Shared live text layer installer with declaration classification, ordering,
+   expiry and restoration, once remaining printed declaration bridges are ready;
+   enables Sleight of Mind and Magical Hack rather than unchecked replacement.
+3. Per-player coin result rounds and simultaneous player damage for Mana Clash;
+   defer this remaining single-card producer while shared prerequisites are useful.
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete. Stop after this slice.
