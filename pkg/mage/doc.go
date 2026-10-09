@@ -924,6 +924,10 @@
 // [PreventNextDamage] permits allocation across simultaneous damage sources.
 // The affected player or recipient controller chooses within legal bounds.
 // Native combat saves all assignments before the damage batch starts.
+// Use [PreventNextCombatDamageFromPermanentExcept] to leave a saved amount
+// in the next combat event from one exact creature to one player this turn.
+// Matching simultaneous packets share one amount. The shield remains if it
+// prevents no damage. A returned creature cannot use the saved shield.
 // First-strike and normal damage steps use separate batches.
 // [BandingDamageAssigner] lets a player assign each blocking source separately
 // to an attacking band. Each source keeps its own damage information.

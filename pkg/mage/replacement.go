@@ -409,6 +409,8 @@ func (r *colorPreventionReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type sourcePreventionReplacement struct {
+	combatOnly             bool
+	leave                  int
 	exactSource            DamageSource
 	continuedSource        DamageSource
 	continuePermanentSpell bool
@@ -424,6 +426,9 @@ type sourcePreventionReplacement struct {
 func (r *sourcePreventionReplacement) Matches(a Action, reader GameReader) bool {
 	act, ok := a.(*DamageToPlayerAction)
 	if !ok || act.Amount() <= 0 || act.PlayerID() != r.playerID {
+		return false
+	}
+	if r.combatOnly && !act.IsCombatDamage() {
 		return false
 	}
 	if r.exactSource.Valid() {
@@ -449,6 +454,11 @@ func (r *sourcePreventionReplacement) Matches(a Action, reader GameReader) bool 
 }
 
 func (r *sourcePreventionReplacement) Replace(a Action, g *Game) Action {
+	if r.combatOnly {
+		amount := min(damageActionAmount(a), r.leave)
+		r.consumed = damageActionAmount(a) > amount
+		return damageActionWithAmount(a, amount)
+	}
 	r.consumed = true
 	return nil
 }

@@ -9105,3 +9105,42 @@ Later copies inherit the saved colors and omitted abilities. Ordinary color
 layers remain effective and stay outside the snapshot. Existing native and RON
 callers remain compatible. Vesuvan Doppelganger advances to its unsupported
 `AddAbility` exception; its complete definition is still rejected.
+
+## Next combat event with an unprevented amount
+
+`mage.PreventNextCombatDamageFromPermanentExcept(subject PermanentRef,
+recipient PlayerRef, amount ResolutionValue) ResolvingEffect` saves an exact
+creature, player and nonnegative amount at resolution. It prevents damage above
+that amount in the next matching combat event this turn. Matching simultaneous
+packets share one allowance. If no damage is prevented, the shield remains
+(CR 609.7b); the allowance is not a finite damage-prevention budget.
+
+RON lowers this resolving shape:
+
+```ron
+CreateFuturePreventDamage(
+  NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient(
+    TheChosenPermanent, Player(You)),
+  [PreventAllButSomeOfThatDamage(Integer(1))])
+```
+
+The source uses the existing typed permanent-reference adapter, including a
+preceding `ChooseAPermanent` result; the player and amount use their existing
+scoped adapters. Exactly one operation is required. Nil, unbound, wrong-role,
+malformed and negative fixed declarations reject before gameplay. Dynamic
+negative amounts become zero, as in other resolving amount operations.
+Permanent recipients, other events and other prevention operations gain no
+support from this adapter. Spell actions, activated/triggered actions and delayed
+bodies use the same resolving effect and retain their own bindings.
+
+Forcefield chooses an unblocked creature at resolution without targeting.
+Shroud does not prohibit that choice. Blocker declaration sets unblocked status;
+activation before that declaration is legal but an empty choice installs no rule.
+The installed shield checks creature type and exact identity before damage.
+Noncombat damage and damage to other recipients cannot consume it. A phase cycle
+keeps identity; departure keeps exact damage-source facts; return cannot replace
+that object. Cleanup ends the rule. Game and stack copies keep independent state.
+
+Evidence: `TestRONNextCombatPreventionForcefield`, `Lifecycle`, `Invalid` and
+`Inventory`, and native `TestNextCombatPrevention*`. All five complete Forcefield
+records compile. Full collection execution and runtime cutover remain separate.

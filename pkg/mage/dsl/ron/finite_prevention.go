@@ -7,6 +7,9 @@ func compileFinitePrevention(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient" {
+		return compileNextCombatPrevention(n, ctx)
+	}
 	if event.Name == "NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient" {
 		return compileExactSourcePrevention(n, ctx)
 	}

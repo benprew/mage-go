@@ -11982,3 +11982,53 @@ and cloned pending-spell decline.
 TestRONCopyColorInvalid and Dependencies cover invalid symbols and all six
 Vesuvan Doppelganger reprints' continued rejection at AddAbility. The synthetic
 KeepColor producer does not claim complete Doppelganger gameplay.
+
+## Next combat-source event with an unprevented amount
+
+`PreventNextCombatDamageFromPermanentExcept(PermanentRef, PlayerRef,
+ResolutionValue) ResolvingEffect` installs one end-of-turn source-prevention rule
+in the existing replacement service. Installation requires a present, unphased
+creature and an existing player. The source incarnation, recipient and amount
+are saved at resolution. Nil/unbound/undeclared references, nil amounts and
+negative fixed amounts reject during definition validation. Dynamic negative
+amounts become zero. Later power changes do not recalculate a saved amount.
+
+The rule matches positive combat damage to that player from the exact creature.
+Creature type is checked with current or exact retained source information
+(CR 609.7b, 615.9). It does not reselect a source or follow a returned card
+(CR 400.7). Phasing keeps saved identity and does not consume a shield.
+Noncombat damage, zero damage and damage to another recipient do not use it.
+An absent or phased subject at installation produces no rule. Forcefield's
+unblocked choice remains in the existing resolution-time permanent-choice set;
+this engine operation does not impose a targeting or combat-choice restriction.
+
+All matching packets in one simultaneous event share the saved unprevented
+amount. The rule is applied once per packet through the existing batch pipeline;
+actual prevention in any matching packet consumes it for later events. A packet
+or event that prevents no damage keeps the shield under CR 609.7b. Thus a
+one-point Forcefield event leaves its shield available, and two independent
+shields need not both be consumed by the same event. If another prevention
+removes the event, unapplied shields remain. Affected-player replacement order
+and rechecks use the shared service (CR 614.5, 616.1). Damage history, lifelink and
+notifications use the resulting damage, not the originally proposed amount.
+
+The existing source-replacement clone and cleanup paths isolate consumption and
+expire the rule. `WaitingPreventionPermanentSources` supplies the exact source
+while active, including a shield that prevented no damage. Explicit source reads
+in subject, player and amount also qualify in waiting delayed bodies; queries do
+not install prevention or read amounts. No new damage-source category or
+unpreventable-damage rule is introduced.
+
+Native evidence: `TestNextCombatPreventionIdentity`, `BatchAndAmount`, `Order`,
+`Declarations`, `IndependentBindings`, `AmountAndWaiting` and `ActualDamage` cover
+identity/LKI with cleared cache, phasing, control, property rechecks, cleanup,
+clones, simultaneous packets, zero/large allowances, no-prevention retention,
+competing shields, payment failure, stack copies, saved amounts, waiting queries,
+actual combat notifications and lifelink. Existing next-source tests retain
+prior API behavior. RON `TestRONNextCombatPreventionForcefield` executes all five
+complete records with failed payment, nontarget shrouded choices, empty early
+choice, deferred decisions, double strike and pending clones. `Lifecycle` covers
+phase cycles, return exclusion, provider departure, later blocked status and
+cleanup. `Invalid` rejects unsupported shapes and `Inventory` checks semantic
+source/amount roles. This adds full-record Forcefield gameplay coverage without
+claiming complete collection gameplay.

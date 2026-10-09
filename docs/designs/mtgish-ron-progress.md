@@ -2,18 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **787 accepted / 199 rejected unique card
-names** (986 total), and **2,031 compiled / 414 rejected records** (2,445 total).
+The latest recorded inventory reports **788 accepted / 198 rejected unique card
+names** (986 total), and **2,036 compiled / 409 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`COPIABLE-RETAINED-COLORS` implements optional entry KeepColor lowering,
-immutable color exceptions, color-definition omission and stable entry identities.
-Native and RON tests cover subsequent copies, ordinary layers, payment timing,
-phasing, departure/LKI and cloning. No additional full card compiles in this slice.
+`NEXT-COMBAT-SOURCE-ALLOWANCE` implements a saved unprevented amount for the next
+combat event from an exact creature to a player. Native and RON tests cover
+simultaneous packets, no-prevention retention, replacement order, identity,
+phasing, clones, payment and double strike. Forcefield gains all five records.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Added-ability exceptions, live copy layers and other rejected forms remain gaps.
+Typed exact-source prevention outcomes, added abilities and live copies remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -52329,3 +52329,164 @@ Ranked next candidates:
    test layers, phasing, departure, retained triggers and cloned games.
 
 This run stops after COPIABLE-RETAINED-COLORS.
+
+## 2026-10-08: next combat-source event with an unprevented amount
+
+Status: completed implementation slice `NEXT-COMBAT-SOURCE-ALLOWANCE`. This run
+stops after this slice. Initial changes to `.gitignore`, the execution design and
+this ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only this
+slice's summary change and appended entry are staged for the ledger; the user's
+history relocation remains unstaged. No Go definitions or DSL functions are
+removed. No removed card skill, Go-card requirements or agent delegation is used.
+The implement-engine skill supplies the native contract workflow.
+
+### Fresh evidence, candidate comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+The baseline loader exited 1: 2,031 compiled / 414 rejected records and
+787 accepted / 199 rejected unique names. This is strict collection rejection,
+not a build/test failure. The complete five Forcefield and six Vesuvan
+Doppelganger RON records were inspected, including nested copy modifications,
+added upkeep abilities, their retained ability variables and live copy bodies.
+Targeted vocabulary reads confirmed five next-combat events and five all-but
+operations; existing permanent choice, IsUnblocked and typed bindings are ready.
+Reprints count once. Local `data/LEA.json` supplies Forcefield's Oracle text.
+CR 400.7, 510.1–2, 609.7b, 614.5, 615.3–9 and 616.1 establish the contracts.
+
+| Candidate | Affected unique names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: next chosen-creature combat event leaving an amount | Forcefield (five records) | 1 name / five records | No other compiler blocker after complete-record review. Choice, payment and exact-source services exist. Adds a reusable bounded combat event allowance and no-prevention retention. | Medium: adapt existing source replacement and simultaneous batch; native identity/order/clone/amount tests and real RON combat. |
+| Ranked #2: fresh AddAbility / AddAbilityVariable copy provenance | Vesuvan Doppelganger (six records) | 0 immediately | Live IsACopyOfPermanent also blocks. Fresh ability reconstruction enables added entry/upkeep rules and later copies with stable identities. | Medium to large: independent scopes, retained ability provenance, rebuilds and replacement identity. |
+| Ranked #3: live copy-layer installation | Vesuvan Doppelganger (six records) | 0 now; 1 name / six records after provenance | Added-ability provenance must precede the optional targeted upkeep recopy. Enables repeated copy layers with retained abilities/colors. | Large: copy priority, lifetimes, target legality, LKI, phase and clone interactions. |
+
+Candidate #1 is dependency-ready and offers the largest immediate credible gain
+within one bounded run. The other candidates affect the same unique card and
+remain dependency-blocked. Selection, engine/compiler reuse boundary and
+acceptance cases were stated before editing. No unrelated capability begins.
+
+### Exact supported shapes and reusable engine contract
+
+- `PreventNextCombatDamageFromPermanentExcept(subject PermanentRef,
+  recipient PlayerRef, amount ResolutionValue) ResolvingEffect` saves the exact
+  creature incarnation, player and amount at resolution. Installation requires
+  a present, unphased creature and an existing player. Definition validation
+  rejects nil/unbound/undeclared references, nil amounts and negative fixed
+  amounts. Dynamic negative values become zero; later power changes do not
+  recalculate the allowance.
+- It matches positive combat damage from that exact creature to that player.
+  Creature properties use current or exact retained information. Noncombat,
+  zero damage, a different recipient or a returned object cannot consume it.
+  A saved shield survives phasing and control changes; cleanup expires it.
+- Matching simultaneous packets share one allowance. Actual prevention consumes
+  the rule; if no damage is prevented, it remains available (CR 609.7b). In
+  particular, a one-point Forcefield event does not consume its shield. Two
+  independent shields can therefore protect successive events. Replacement
+  order and rechecks belong to the existing affected-player pipeline.
+- RON accepts `CreateFuturePreventDamage(
+  NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient(permanentRef,
+  Player(playerRef)), [PreventAllButSomeOfThatDamage(value)])` in resolving action
+  contexts. Exactly one operation is required. The adapters retain their
+  existing typed reference/value scopes and per-instance binding construction.
+  Permanent recipients, other operations/events and malformed declarations
+  reject. Inventory classifies the event source as permanent_reference and the
+  operation amount as value.
+- Forcefield's preceding ChooseAPermanent owns unblocked membership at resolution,
+  with nontarget choice and existing shroud behavior. Activation before blocker
+  declaration is legal; an empty choice installs nothing. Later blocked status
+  does not rewrite the saved subject; damage to a blocker cannot use a player
+  shield. RON owns spelling/context; mage owns rules and runtime state.
+- Reuses sourcePreventionReplacement, damage-source identity/current/LKI services,
+  affected-player replacement choices, simultaneous damage batches, actual damage
+  notifications/lifelink, duration cleanup, source queries, transactional mana
+  costs, scoped permanent choices and game/stack cloning. Existing APIs retain
+  prior behavior. No card-name branch, Go fallback, declaration panic, global
+  result slot or partial production registry is added.
+- Active rules supply the exact subject through WaitingPreventionPermanentSources.
+  Explicit source reads in subject/player/amount also qualify in waiting delayed
+  bodies without evaluating amounts or installing a rule. This adds no general
+  unpreventable-damage or new source-category contract.
+
+### Failing-first evidence and card-to-test mapping
+
+RON tests first failed at the unsupported next-combat event for all five complete
+Forcefield records. Native tests failed compilation on the new public function.
+Those tests pass after implementation. Rules review then added assertions for
+CR 609.7b's no-prevention retention; batch/copy tests failed before consumption
+was corrected. The competing-shield expectation was corrected to account for
+one point actually dealt when finite prevention is applied first. A semantic
+inventory test failed at unknown amount role before its adapter was added.
+Fixture-only API corrections used existing cleanup, ModifyPT and permanent
+incarnation accessors. A second unblocked attacker makes the decision observable
+because the existing choice service automatically selects a sole candidate.
+
+| Test | Card / contract evidence |
+| --- | --- |
+| TestRONNextCombatPreventionForcefield | All complete LEA, LEB, 2ED, CED and CEI Forcefield records: failed payment, empty choice before blockers, resolution-only nontarget choice of a shrouded double striker, one protected first-strike event, full later damage, noncombat exclusion and pending-clone execution. |
+| TestRONNextCombatPreventionLifecycle | Complete LEB Forcefield: phase cycle and new combat with same incarnation, return exclusion, provider departure, later blocked status and recipient isolation, native cleanup expiry. |
+| TestRONNextCombatPreventionInvalid | Unbound choice, malformed reference/operation, negative fixed amount, wrong recipient, empty and mixed operations reject during compilation. |
+| TestRONNextCombatPreventionInventory | Accepted synthetic RON shape has correct permanent-reference and amount roles without publishing a registry. |
+| TestNextCombatPreventionIdentity | Native current/exact retained source, cleared LKI, departure/return, phasing/cycle, control, type rechecks, zero and noncombat exclusions, cleanup and independent clones. |
+| TestNextCombatPreventionBatchAndAmount | Native shared allowance across simultaneous packets from one source, other sources/recipients, zero and large allowances, no-prevention retention, waiting references and clone consumption. |
+| TestNextCombatPreventionOrder | Affected player chooses between all-but and finite prevention; rechecks and no-prevention retention change later-event results. |
+| TestNextCombatPreventionDeclarations / IndependentBindings | Invalid typed declarations and absent subjects, failed mana payment, independent copied ability/shield state and successive next-event consumption. |
+| TestNextCombatPreventionAmountAndWaiting / ActualDamage | Saved power-derived amount, exact waiting subject, explicit delayed amount reads, actual one-point combat notification and one-point lifelink. |
+| Existing next-source and accepted-collection tests | Prior source-prevention APIs remain intact; independent validated rebuilding now covers all 2,036 accepted records. Forcefield's old rejection check becomes a success check; only exact collection counts change elsewhere. |
+
+Only Forcefield gains complete-record gameplay mappings in this slice. Synthetic
+fixtures establish reusable edge contracts, not additional inventory cards.
+Compilation and complete collection gameplay coverage remain separate.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONNextCombatPrevention
+  -count=1` and native `TestNextCombatPrevention|TestNextPermanentSourcePrevention`:
+  PASS on final behavior.
+- Final `make build` and `go vet ./...`: PASS.
+- Final `go test ./pkg/mage/... -short -count=1`, `make test`, and skill's
+  additional `go test ./... -short -count=1`: PASS.
+- An intermediate full test run compiled the intentionally failing new inventory
+  assertion before its role adapter was added. The fresh final suite passes;
+  no assertion was weakened. No pre-existing/environment check failure remains.
+- `make lint`: PASS, 0 issues. The only automatic change groups the new native
+  test's imports; it was reviewed. Post-lint focused RON/native next-combat,
+  existing next-source, permanent-choice and waiting-prevention checks pass.
+- `git diff --check`: PASS, including final documentation and staged changes.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 with the counts below;
+  unsupported collection rejection remains atomic.
+- No remaining required-check or environmental blocker.
+
+Estimated and actual full-card compilation gains match: **1 unique name / five
+records**. The final loader reports **2,036 compiled / 409 rejected records;
+788 accepted / 198 rejected unique names**, from 2,445 records / 986 names.
+Exactly five Forcefield diagnostics disappear; all other diagnostics are
+unchanged. Strict collection rejection remains; no partial registry is installed.
+
+No RON source defect or environment failure was found. All 12 source hashes match
+the vocabulary snapshot; no source/snapshot refresh is required. No DSL function
+was removed, so no caller-removal audit is claimed. Complete gameplay, runtime
+loading, Go-card deletion and unused DSL cleanup remain gated.
+
+Changed files: pkg/mage/next_source_prevention.go, replacement.go,
+waiting_delayed_prevention.go, doc.go and new next_combat_prevention_test.go;
+new pkg/mage/dsl/ron/next_combat_prevention.go/test, finite_prevention.go,
+inventory.go, inventory_test.go, definition_plan_test.go,
+numeric_consumers_test.go and permanent_choice_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+Ranked next candidates:
+
+1. Typed proposed-damage amounts and actual-prevention results for exact selected
+   sources: shared prerequisite for Dark Sphere (one record) and Reverse Damage
+   (six records), two unique names. Full records were inspected; chosen-source
+   bindings/payment are ready, but half-prevention and post-prevention life gain
+   need separate exact-source outcome adapters. Prefer a bounded common outcome
+   contract before those consumers; legacy ID shields do not supply exact spell,
+   continued permanent, simultaneous and frame contracts automatically.
+2. Fresh copied AddAbility/AddAbilityVariable provenance: zero immediate unlocks,
+   prerequisite for Vesuvan Doppelganger's six records. Keep independent bindings
+   and stable replacement identities through subsequent copies.
+3. Live IsACopyOfPermanent after added-ability provenance: one potential name /
+   six records. Preserve the optional targeted upkeep recopy rule and establish
+   layer, phasing, departure, retained-trigger and clone contracts.
+
+This run stops after NEXT-COMBAT-SOURCE-ALLOWANCE.

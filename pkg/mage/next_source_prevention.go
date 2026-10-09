@@ -13,10 +13,19 @@ func PreventNextDamageFromPermanent(subject PermanentRef, recipient PlayerRef, f
 	return &nextPermanentSourcePrevention{subject: subject, recipient: recipient, filter: filter}
 }
 
+// PreventNextCombatDamageFromPermanentExcept leaves the specified damage amount
+// in the next combat event from this creature to the player this turn.
+// The amount is saved at resolution. The shield remains if it prevents no damage.
+func PreventNextCombatDamageFromPermanentExcept(subject PermanentRef, recipient PlayerRef, amount ResolutionValue) ResolvingEffect {
+	return &nextPermanentSourcePrevention{subject: subject, recipient: recipient, filter: IsCreature, combatOnly: true, leave: amount}
+}
+
 type nextPermanentSourcePrevention struct {
-	subject   PermanentRef
-	recipient PlayerRef
-	filter    PermanentFilter
+	subject    PermanentRef
+	recipient  PlayerRef
+	filter     PermanentFilter
+	combatOnly bool
+	leave      ResolutionValue
 }
 
 func (*nextPermanentSourcePrevention) Text() string {
@@ -26,7 +35,14 @@ func (*nextPermanentSourcePrevention) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *nextPermanentSourcePrevention) inspectDefinition() definitionNode {
-	return definitionNode{Role: "install-next-source-prevention", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"recipient", e.recipient}}}
+	n := definitionNode{Role: "install-next-source-prevention", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"recipient", e.recipient}}}
+	if e.combatOnly {
+		n.children = append(n.children, definitionEdge{"amount", e.leave})
+		if amount, ok := e.leave.(fixedValue); ok && amount.n < 0 {
+			n.problem = "supply a nonnegative damage amount"
+		}
+	}
+	return n
 }
 func (e *nextPermanentSourcePrevention) Apply(ctx *EffectContext) error {
 	source, ok := e.subject.resolvePermanent(ctx)
@@ -34,12 +50,17 @@ func (e *nextPermanentSourcePrevention) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	player, ok := e.recipient.resolvePlayer(ctx)
-	if !ok || !e.filter.Match(source, ctx.Game) {
+	if !ok || ctx.Game.GetPlayer(player) == nil || !e.filter.Match(source, ctx.Game) {
 		return nil
+	}
+	leave := 0
+	if e.combatOnly {
+		leave = max(0, e.leave.resolveValue(ctx))
 	}
 	ctx.Game.effects.AddReplacement(&sourcePreventionReplacement{
 		replacementBase: replacementBase{duration: core.EndOfTurn},
 		playerID:        player, dmgSource: source.ID(), incarnation: source.incarnationID, from: e.filter,
+		combatOnly: e.combatOnly, leave: leave,
 	})
 	return nil
 }
@@ -50,11 +71,19 @@ func (r *sourcePreventionReplacement) capturesSourceIdentity() bool {
 
 func (r *sourcePreventionReplacement) preventBatch(actions []Action, applied []map[ReplacementEffect]bool, g *Game) {
 	// One simultaneous event can contain several packets from this source.
+	leave := r.leave
 	for i, action := range actions {
 		if action == nil || applied[i][r] || damageReplacementBlocked(action, g) || !r.Matches(action, g) {
 			continue
 		}
 		applied[i][r] = true
-		actions[i] = r.Replace(action, g)
+		if r.combatOnly {
+			amount := min(damageActionAmount(action), leave)
+			leave -= amount
+			actions[i] = damageActionWithAmount(action, amount)
+			r.consumed = r.consumed || damageActionAmount(action) > amount
+		} else {
+			actions[i] = r.Replace(action, g)
+		}
 	}
 }

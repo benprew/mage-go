@@ -258,7 +258,13 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 			}
 			count++
 			_, err := Compile(n)
-			blocker := "NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient"
+			if name == "Forcefield" {
+				if err != nil {
+					t.Fatalf("Forcefield: %v", err)
+				}
+				continue
+			}
+			blocker := ""
 			if name == "Juxtapose" {
 				blocker = "ExchangeControl"
 				actions := n.Fields["Rules"].Args[0].Args[0].Args[1].Args[0].Args

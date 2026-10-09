@@ -647,6 +647,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "token_subtype"
 		}
 	case "prevention_event":
+		if n.Name == "NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "prevention_recipient"}[index]
+		}
 		if n.Name == "DamageWouldBeDealtByASourceToRecipient" && len(n.Args) == 2 {
 			return []string{"damage_source_filter", "prevention_recipient"}[index]
 		}
@@ -667,6 +670,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "CombatDamageWouldBeDealtByCreature" && len(n.Args) == 1 {
 			return "permanent_reference"
+		}
+	case "prevention_operation":
+		if n.Name == "PreventAllButSomeOfThatDamage" && len(n.Args) == 1 {
+			return "value"
 		}
 	case "redirection_operation":
 		if n.Name == "DealToCreatureOrPlaneswalkerInstead" && len(n.Args) == 1 {

@@ -9,7 +9,7 @@ func (e *recipientPreventionInstallation) refersToSourcePermanent() bool {
 }
 
 func (e *nextPermanentSourcePrevention) refersToSourcePermanent() bool {
-	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.recipient)
+	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.recipient) || resolutionValueReadsSourcePermanent(e.leave)
 }
 
 func (e *exactSourcePreventionInstallation) refersToSourcePermanent() bool {
