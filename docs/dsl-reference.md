@@ -1,5 +1,19 @@
 # DSL reference
 
+## Ante deck declarations
+
+RON supports `DeckConstruction(RemoveFromDeckIfNotPlayingForAnte)` once at the
+top level of any card's rules. The operation must be a bare symbol. It is
+pregame metadata and cannot occur in costs, actions, triggers or static branches.
+
+The adapter uses `mage.WithAnteDeckRestriction()`. `mage.NewGame` excludes marked
+cards from initial libraries before drawing; `mage.NewGameWithAnte` retains them.
+Use `mage.PrepareCardsForAnte(cards, enabled)` for explicit deck and sideboard
+preparation; it returns retained and excluded cards without changing the input.
+There is no sideboard zone in the engine. This declaration supplies no ante
+zone action or permission to bring a restricted card in from outside the game.
+
+
 This checkout has the legacy facade in `pkg/mage/dsl/dsl.go`. It does not have
 `pkg/mage/dsl/composable.go`. Proposed signatures in the migration plan are
 not implemented APIs.

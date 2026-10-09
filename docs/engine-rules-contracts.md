@@ -1,5 +1,44 @@
 # Engine rules contracts
 
+## Ante deck preparation
+
+`WithAnteDeckRestriction() CardOption` marks a physical card for the pregame
+restriction in CR 407.3. `(*BaseCard).RequiresAnte() bool` reads it.
+`PrepareCardsForAnte(cards []Card, enabled bool) (retained, excluded []Card)`
+separates restricted cards when ante is disabled, for both decks and sideboards.
+The query does not mutate cards, input slices, ownership, IDs or game state.
+Both output slices have separate storage and keep their respective input order.
+It uses declared metadata, never card names or registered factories.
+
+`NewGame` applies this preparation to both initial libraries before zone binding
+and any draw. Excluded cards do not enter another game zone and do not emit zone
+change events. Existing hands and other supplied scenario zones are outside this
+pregame deck contract. `NewGameWithAnte` retains restricted cards, including cards
+selected for the initial ante. Sideboard consumers use `PrepareCardsForAnte`
+explicitly; the engine has no sideboard zone. Ordinary card copies retain the
+restriction, `CloneFrom` does not replace it, and `BuildEntryCopy` keeps the
+physical printed restriction rather than the copied prototype's restriction.
+Cloned games keep the already prepared libraries and ante setting.
+
+RON accepts exactly one top-level
+`DeckConstruction(RemoveFromDeckIfNotPlayingForAnte)` per card, including
+instant and sorcery declarations. It creates metadata rather than an ability,
+cost, trigger, entry operation or resolving effect. Wrong arity, non-symbol
+operations, duplicate declarations and nested action/static contexts reject.
+Other rules in the record still require independent complete support.
+
+This establishes deck and sideboard preparation only. CR 407.3 outside-game
+admission requires a separate service before such actions can compile. Ante
+zone actions, ownership exchanges and ante result bindings remain unsupported
+RON contracts. No full ante card gameplay claim follows from this metadata.
+
+Evidence: `TestAnteDeckPreparation`, `TestAnteDeckGameSetup`,
+`TestAnteDeckEntryCopyKeepsPhysicalRestriction`, `TestAnteDeckSideboardPreparation`,
+and `TestRONAnteDeckDeclaration`, `Invalid`, `CollectionDeclarations`, `Inventory`.
+The collection test executes all 22 actual deck declarations for seven unique
+names and checks that their complete records still reject on remaining rules.
+
+
 ## Non-targeting permanent choices and highest mana value
 
 `HighestManaValue(subjects PermanentSet) PermanentSet` reads its collection once

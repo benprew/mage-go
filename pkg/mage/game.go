@@ -131,6 +131,17 @@ func NewGame(playerA, playerB Player) *Game {
 }
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
+	if !anteEnabled {
+		for _, player := range []Player{playerA, playerB} {
+			if player == nil {
+				continue
+			}
+			retained, excluded := PrepareCardsForAnte(player.Library(), false)
+			if len(excluded) != 0 {
+				player.SetLibrary(retained)
+			}
+		}
+	}
 	g := &Game{
 		players:        []Player{playerA, playerB},
 		anteEnabled:    anteEnabled,

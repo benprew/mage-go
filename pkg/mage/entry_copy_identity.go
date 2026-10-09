@@ -55,6 +55,7 @@ func BuildEntryCopy(original Card, values *CopiableValues) (Card, error) {
 	result.id = original.ID()
 	result.owner = original.Owner()
 	result.isToken = original.IsToken()
+	result.requiresAnte = physical.(*BaseCard).requiresAnte
 	result.printedDefinitionPlan = base.printedDefinitionPlan
 	result.departureCard = physical
 	return result, nil

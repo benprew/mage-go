@@ -294,7 +294,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	permanent := !slices.Contains(types, core.TypeInstant) && !slices.Contains(types, core.TypeSorcery)
 	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
 	var options []optionFactory
-	spellCount, enchantCount := 0, 0
+	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
 		if err != nil {
@@ -341,6 +341,18 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		for _, rule := range rules {
 			if rule.Name == "CastEffect" || rule.Name == "CDA_Power" || rule.Name == "CDA_Toughness" {
+				continue
+			}
+			if rule.Name == "DeckConstruction" {
+				deckCount++
+				if deckCount > 1 {
+					return nil, problem(rule, "duplicate DeckConstruction rule")
+				}
+				option, err := compileDeckConstruction(rule)
+				if err != nil {
+					return nil, err
+				}
+				options = append(options, option)
 				continue
 			}
 			if rule.Name == "SpellActions" {

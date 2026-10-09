@@ -42,6 +42,7 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
+	requiresAnte          bool
 	id                    uuid.UUID
 	name                  string
 	manaCost              ManaCost

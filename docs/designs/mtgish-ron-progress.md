@@ -7,10 +7,10 @@ names** (986 total), and **2,045 compiled / 400 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEMPORARY-MANA-TYPE-REPLACEMENTS` implements all-type player rules through
-cleanup and white-only exact-subject rules through departure. Native and RON
-tests cover amounts, restrictions, planning, order, timing, identity, phasing,
-copies, clones, rollback and waiting references. Two names gain two records.
+`ANTE-DECK-EXCLUSION` lowers pregame ante restrictions and removes marked
+cards from non-ante initial libraries. A pure service prepares decks and
+sideboards; physical copies retain eligibility. Tests cover all 22 actual
+declarations across seven names. No complete card or record is unlocked.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -52874,3 +52874,151 @@ Ranked next candidates:
    remains; do not treat prevention amounts or the new mana event as that rule.
 
 This run stops after TEMPORARY-MANA-TYPE-REPLACEMENTS.
+
+## 2026-10-08: ante deck exclusion
+
+Status: completed implementation slice `ANTE-DECK-EXCLUSION`. This run stops
+after this slice. Initial changes to `.gitignore`, the execution design and
+this ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only this
+slice's ledger delta is staged; the user's archive move is not committed.
+
+### Candidate comparison and selection
+
+Fresh baseline: build and RON tests pass; strict loading rejects 400 of 2,445
+records, accepting 2,045 records and 792 of 986 unique names. Reprints count once.
+Complete records and nested forms were examined for the following candidates.
+
+| Candidate | Distinct names / records | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: scoped Oracle card-name choice | Nebuchadnezzar, Petra Sphinx / 2 | 0 | Local `pkg/catalog` covers registered set printings, not a complete independent Oracle name catalog. Name choice must include legal face names and interchangeable names (CR 201.4b–g). Nebuchadnezzar also needs random reveal and matching discard; Petra needs reveal results and top-card consumers, with its name escaping the nested player body. | Large: catalog acquisition/validation, decision interface, bindings, nested scopes and name matching. Not dependency-ready as an adapter. |
+| Ranked #2: added-ability copy provenance | Vesuvan Doppelganger / 6 | 0 | `AddAbility` and `AddAbilityVariable` require fresh declarations, retained definition provenance and stable entry-replacement identities. Live `IsACopyOfPermanent` remains another blocker. Enables six records, but only one distinct name. | Large: copy exceptions, live ability identity and rebuilding. |
+| Ante deck exclusion, selected prerequisite | Contract from Below, Darkpact, Demonic Attorney, Rebirth, Bronze Tablet, Jeweled Bird, Tempest Efreet / 22 | 0 | Removes a common first blocker for all seven names. Subsequent shared ante-top actions enable Demonic Attorney and supply Contract from Below, which also needs a top-level DiscardHand adapter; optional ante payments enable Rebirth and Jeweled Bird; ante targets, exact zone results and ownership exchange enable Darkpact, Bronze Tablet and Tempest Efreet. | Small: physical metadata, pure preparation, initial-library integration, compiler adapter and identity tests. |
+
+The selected prerequisite is dependency-ready, has a concrete seven-name
+benefit, and fits one run. It provides no ante action implementation and does
+not extend unsupported card-name choices or live copies. Acceptance cases were
+stated before editing: order, non-ante removal before drawing, sideboards,
+ante-enabled retention, physical/factory copies, and invalid contexts.
+
+### Supported shape, contract and reuse boundary
+
+Exact RON shape: one top-level
+`DeckConstruction(RemoveFromDeckIfNotPlayingForAnte)` in any card's `Rules` list,
+including instant and sorcery records. The operation is a bare symbol.
+Wrong arity, duplicate declarations, unknown operations and action, cost, entry
+or static nesting reject. RON owns this spelling and declaration context.
+The semantic inventory assigns its operand `deck_construction_operation`.
+
+Engine signatures:
+
+- `WithAnteDeckRestriction() CardOption`
+- `(*BaseCard).RequiresAnte() bool`
+- `PrepareCardsForAnte(cards []Card, enabled bool) (retained, excluded []Card)`
+
+The pure engine service supplies deck and sideboard preparation. It preserves
+card IDs, owners and order, and returns separate slice storage without input
+mutation. `NewGame` removes marked cards from both initial libraries before
+zone binding or drawing; excluded cards enter no game zone. `NewGameWithAnte`
+keeps them eligible for initial ante selection. No sideboard zone exists;
+sideboard callers use the explicit service. Existing supplied scenario hands
+and other zones are not treated as pregame decks.
+
+Physical `BaseCard.Copy` retains the metadata. `CloneFrom` cannot replace
+physical deck eligibility. `BuildEntryCopy` takes eligibility from the physical
+printed definition, not from the copied prototype. Existing printed-definition
+plans rebuild the RON declaration with fresh card identities. Existing game
+cloning keeps prepared libraries and the ante flag. No global choice state,
+new event pipeline, production partial registry, Go-card fallback, card-name
+branch or runtime declaration panic is introduced.
+
+Rules evidence: CR 407.3 requires removal from non-ante decks and sideboards;
+CR 407.2 places initial ante selection before draws. Complete local Oracle text
+in `data/LEA.json`, `ARN.json`, `ATQ.json` and `LEG.json` confirms the shared
+pregame sentence for all seven names. No source defect was found or corrected.
+No RON source changed; the vocabulary source snapshot need not be regenerated.
+Its historic loader examples remain a snapshot, not current support evidence.
+
+This establishes the complete pregame deck/sideboard context only. Outside-game
+admission remains a separate prerequisite under CR 407.3; the declaration grants
+no admission permission. Ante actions, targets, result bindings and ownership
+exchange remain unsupported and cannot bypass strict collection rejection.
+
+### Failing-first evidence and card-to-test mappings
+
+Initial native and RON tests failed at the missing engine API signatures.
+A fixture lookup typo was corrected before repeating native failure evidence.
+A separate entry-copy assertion then failed because the copied prototype supplied
+its restriction; taking it from the physical printed definition fixes that case.
+Tests use synthetic complete RON declarations and actual collection declarations.
+They do not substitute fragments for production card factories.
+
+| Tests | Card / contract evidence |
+| --- | --- |
+| `TestRONAnteDeckCollectionDeclarations` | All 22 declarations for Contract from Below, Darkpact, Demonic Attorney, Rebirth, Bronze Tablet, Jeweled Bird and Tempest Efreet: actual AST declaration lowering and non-ante/ante engine preparation. Every complete record still rejects independently at its next missing behavior. This is declaration coverage, not full-card gameplay coverage. |
+| `TestRONAnteDeckDeclaration` | Complete synthetic artifact, creature, sorcery and instant RON: factory isolation, physical IDs, printed rebuilding and removal at game setup. |
+| `TestRONAnteDeckInvalid`, `TestRONAnteDeckInventory` | Invalid shapes, duplicate declarations and incompatible contexts reject; semantic operand role and compilation reporting remain separate. |
+| `TestAnteDeckPreparation`, `TestAnteDeckSideboardPreparation` | Pure ordered deck/sideboard partition, repeated instances, separate result storage, empty input and metadata on ordinary physical copies and after characteristic replacement. |
+| `TestAnteDeckGameSetup` | Both players' libraries, removal before draws, absence from game zones, enabled initial ante selection, and game-clone preservation. |
+| `TestAnteDeckEntryCopyKeepsPhysicalRestriction` | Both restriction directions: copying a restricted prototype cannot restrict an ordinary physical card; copying an ordinary prototype cannot clear a restricted physical card. |
+| Full repository and existing collection tests | Accepted records, existing Go callers, prior mana/copy/zone behavior and atomic collection loading remain valid. |
+
+No unique name is added to complete-card gameplay coverage. Adds pregame
+contract evidence for seven names / 22 records, separately from compilation.
+
+### Verification and measured result
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Baseline `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+  A report inspected while the process ran was stale; the completed fresh run
+  established 2,045 compiled / 400 rejected records and 792 / 194 names.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONAnteDeck -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestAnteDeck -count=1`: PASS.
+- `make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`,
+  and `make test`: PASS.
+- First lint found one redundant adapter wrapper (`gocritic/unlambda`). It was
+  replaced with the direct factory function. Formatting changes were reviewed.
+  Focused RON tests, build, vet and the full RON package were rerun and PASS;
+  two explicit invalid cost/static-context cases also pass in that recheck.
+- Final `make lint`: PASS, 0 issues. Final `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; collection rejection,
+  not build or test failure. No partial registry is published.
+
+Estimated and actual full-card unlocks match: **zero names / zero records**.
+Fresh baseline and final loader counts match: **2,045 compiled / 400 rejected
+records; 792 accepted / 194 rejected unique names**. Only the 22 ante records'
+first diagnostics advance; their remaining blockers are:
+
+- Bronze Tablet: `ATQ.lines.ron:15:345: unsupported permanent filter (IsNonToken)`.
+- Contract from Below: `2ED.lines.ron:43:208: unsupported action (DiscardHand)`.
+- Darkpact: `2ED.lines.ron:56:217: unsupported target (TargetAnteCard)`.
+- Demonic Attorney: `2ED.lines.ron:60:264: unsupported all-player action (AnteTopCardOfLibrary)`.
+- Jeweled Bird: `ARN.lines.ron:43:246: unsupported mandatory sacrifice cost (AnteAPermanent)`.
+- Rebirth: `LEG.lines.ron:212:238: unsupported action (EachPlayerMayCost)`.
+- Tempest Efreet: `LEG.lines.ron:259:462: expected 1 positional arguments (RevealACardFromHandAtRandom)`.
+
+Changed files: new `pkg/mage/ante_deck.go` and test, new
+`pkg/mage/dsl/ron/ante_deck.go` and test; engine `card.go`, `game.go`,
+`entry_copy_identity.go`, `doc.go`; RON `compiler.go`, `inventory.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+No Go definition or DSL function was removed: runtime loading, complete
+collection gameplay and caller migration have not met the removal gates.
+
+Ranked next candidates:
+
+1. Typed ante-top-card resolution action. Demonic Attorney and Contract from
+   Below share it (two names / twelve records), with deck exclusions now
+   supported. Estimate six immediate record gains for Demonic Attorney;
+   Contract also requires its existing hand-discard engine service to be
+   adapted in the top-level action context. Rebirth supplies a third concrete
+   downstream consumer through optional ante payments. Recheck all-player
+   simultaneous operation, empty libraries, owners, zone events and enabled-game
+   legality before choosing this slice.
+2. Typed optional ante payments and paid-player results. Rebirth and Jeweled
+   Bird share ante legality and result prerequisites (two names / two records);
+   Jeweled Bird also needs source ante payment and return of other owned ante cards.
+3. Independent complete Oracle name catalog, then scoped resolution card-name
+   choices for Nebuchadnezzar and Petra Sphinx. Zero immediate gains until their
+   reveal/discard and reveal-result consumers are ready. Keep all CR 201.4 face
+   and interchangeable-name rules explicit.
+
+This run stops after ANTE-DECK-EXCLUSION.

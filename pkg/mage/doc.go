@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithAnteDeckRestriction] for a physical card that requires ante.
+// [PrepareCardsForAnte] separates these cards from non-ante decks and sideboards.
+// The results keep card identity, ownership and order, with separate slice storage.
+// [NewGame] removes these cards from initial libraries before game actions.
+// [NewGameWithAnte] keeps them eligible for explicit initial ante selection.
+// Copies of game characteristics do not change the physical deck restriction.
+// This pregame contract does not permit outside-game entry or execute ante actions.
+//
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.

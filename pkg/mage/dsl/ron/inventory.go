@@ -231,6 +231,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "DeckConstruction" && len(n.Args) == 1 {
+			return "deck_construction_operation"
+		}
 		if (n.Name == "CDA_Power" || n.Name == "CDA_Toughness") && len(n.Args) == 1 {
 			return "characteristic_count_value"
 		}
