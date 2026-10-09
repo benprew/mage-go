@@ -67,8 +67,8 @@ func TestRONAntePaymentPermanent(t *testing.T) {
 
 func TestRONAntePaymentRecordSubrules(t *testing.T) {
 	record := staticBaseRecord(t, "ARN", "Jeweled Bird")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PutEachCardFromAnteInGraveyard") {
-		t.Fatalf("expected independent ante movement gap: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("complete Jeweled Bird declaration: %v", err)
 	}
 	rules := record.Fields["Rules"]
 	activation := rules.Args[1]

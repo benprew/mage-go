@@ -567,6 +567,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "InAPlayersGraveyard" && len(n.Args) == 1 {
 			return "player_filter"
 		}
+	case "ante_card_filter":
+		if n.Name == "Other" && len(n.Args) == 1 {
+			return "ante_card_filter"
+		}
+		if n.Name == "OwnedByAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 	case "cost", "resolution_cost":
 		if role == "resolution_cost" && n.Name == "AnteAPermanent" && len(n.Args) == 1 {
 			return "ante_payment_subject"
@@ -828,6 +835,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "PutGraveyardCardIntoHand":
 			if len(n.Args) == 1 {
 				return "card_reference"
+			}
+		case "PutEachCardFromAnteInGraveyard":
+			if len(n.Args) == 1 {
+				return "ante_card_filter"
 			}
 		case "PutGraveyardCardOntoBattlefield":
 			if len(n.Args) == 2 {

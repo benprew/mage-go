@@ -2,16 +2,16 @@
 
 ## Current status
 
-The latest recorded inventory reports **794 accepted / 192 rejected unique card
-names** (986 total), and **2,057 compiled / 388 rejected records** (2,445 total).
+The latest recorded inventory reports **795 accepted / 191 rejected unique card
+names** (986 total), and **2,058 compiled / 387 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ANTE-CARD-REFERENCES` adds exact shared-ante targets and prepayment visit
-capture through typed references, copies and clones. Darkpact and Jeweled Bird
-share this prerequisite; neither has complete gameplay coverage. Complete-card
-gains are zero. Ante movement, ownership exchange and paid-player collections
-remain gaps. Prior complete ante gameplay mappings remain in force.
+`ANTE-GRAVEYARD-MOVEMENT` adds typed current-owner ante selections, exact-visit
+departure, source exclusion, owner-controlled graveyard order and movement before
+zone events. Jeweled Bird has complete RON gameplay coverage: **+1 unique name /
++1 record**. Darkpact's ownership acquisition/exchange and Rebirth's paid-player
+collections remain gaps. Prior complete ante gameplay mappings remain in force.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -53421,3 +53421,160 @@ Ranked next candidates:
    Nebuchadnezzar and Petra Sphinx with separate reveal-result consumers.
 
 This run stops after ANTE-CARD-REFERENCES. Migration and removal remain incomplete.
+
+## 2026-10-08: typed ante-to-graveyard movement
+
+Status: completed implementation slice `ANTE-GRAVEYARD-MOVEMENT`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and the progress ledger, plus the untracked completed-entry
+archive, are preserved. The commit contains only this slice's changes; the
+ledger's existing archive reorganization is not included in the commit.
+
+### Fresh baseline and candidate comparison
+
+Initial `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+Fresh strict loader: expected exit 1, **2,057 compiled / 388 rejected records;
+794 accepted / 192 rejected unique names**. This is collection rejection,
+not a build or test failure. All 2,445 records / 986 names remain in scope.
+The latest ranked candidates were evaluated from complete records, including
+nested payment and result consumers, before editing. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: shared typed ante departure/movement family; bounded graveyard batch step | Jeweled Bird; Darkpact | 1 name / 1 record for the selected step | Bird's payment, continuation, draw and deck restriction are ready; movement and explicit source exclusion are its last gap. Darkpact still needs ownership acquisition and atomic library exchange. An exact-visit departure helper without premature event delivery is a reusable prerequisite for that exchange. | Medium: typed selection, owner order, visit rechecks, simultaneous movement, source scope and real gameplay. |
+| Ranked #2: paid-player results | Rebirth | 0 for results alone; 1 only after the complete payment/dispatch/life operation | AnteTopCost is ready. All-player decisions, local result collection and replacement-aware life setting remain. | Medium/high: payment ordering, scoped producers and consumers, replacement-aware life changes. |
+| Ranked #3: complete Oracle names and scoped choices | Nebuchadnezzar; Petra Sphinx | 0 for catalog/choice alone | Nebuchadnezzar also needs named random reveal/discard; Petra Sphinx needs reveal results and top-card movement. The complete legal-name dataset is an independent prerequisite. | High: data completeness, scoped choices, hidden information, consumers and clones. |
+
+Ranked #1 is dependency-ready and gives the largest credible immediate gain for
+this bounded run. This step completes one movement capability in that shared
+family, rather than adding incomplete ownership/exchange adapters. Darkpact is
+a concrete downstream consumer of exact ante departure; it is not counted as
+unlocked. The contract, reuse boundary and acceptance cases were stated before
+editing. No first-error count was treated as a complete-card unlock estimate.
+
+### Exact signatures, contexts and engine reuse
+
+Engine API:
+
+- `AnteCardSet`: sealed typed selection of exact shared-ante visits.
+- `AnteCardsOwnedBy(owner PlayerRef) AnteCardSet`: pure current-owner selection
+  across both players' storage.
+- `OtherAnteCards(subjects AnteCardSet) AnteCardSet`: physical source exclusion
+  after its payment moves it to ante.
+- `PutAnteCardsInGraveyards(subjects AnteCardSet) ResolvingEffect`: saves visits,
+  deduplicates subjects, offers each owner's graveyard order in APNAP order,
+  then moves all available cards before any zone-change event.
+
+Private `Game.removeAnteVisit(capturedCard) (Card, bool)` checks exact ante
+identity and removes without event delivery, so future atomic operations can
+complete their destination state before observers run. This replaces no legacy
+caller. It rejects absent, returned, disabled and settled subjects. Movement
+uses current ownership, preserves prior graveyard order and creates new visits
+through existing player storage. All choices use card snapshots and precede
+movement; invalid answers select the first remaining candidate. Saved visits
+and owners are rechecked after choices. Ownership changes preserve the visit;
+departure and return do not. Clones retain separate zones and visit mutations.
+
+`Game.orderCardsForGraveyard` extracts existing mill ordering without changing
+mill semantics. Ante movement does not call mill modifiers, cause a death, or
+use battlefield-departure replacements. No general zone replacement behavior
+is added. Owner references retain existing explicit-source waiting declarations;
+queries do not execute selections or choices. Physical source exclusion is not
+an implicit permanent-information read. No global result, card-name executor,
+Go fallback, game-time declaration panic or partial registry is introduced.
+
+RON action shape:
+`PutEachCardFromAnteInGraveyard(OwnedByAPlayer(SinglePlayer(playerRef)))`.
+Existing typed player references and local target bindings are reused in
+resolving spell, activation and trigger action contexts. Explicit source
+exclusion is `Other(OwnedByAPlayer(SinglePlayer(playerRef)))`, available only
+in the paid branch of an adjacent source-permanent ante payment and its
+immediate nested actions. Unpaid, out-of-continuation and delayed reads reject.
+Cost, entry and static roles reject, as do malformed filters and unbound or
+incompatible references. Inventory records ante-card-filter, player-filter and
+player-reference roles and descends into unsupported forms.
+
+Rules evidence: local CR 407.2–4 (shared ante and ante movement), 400.7/400.7j
+(new visits and finding a payment's publicly moved card), 400.5/404.3 (graveyard
+order) and 101.4 (APNAP choices before simultaneous actions). Source phasing or
+return cannot pay the existing exact-permanent payment. Ante cards do not phase.
+LKI cannot enable an action on an absent selected visit. Existing transaction
+rollback and payment-result scopes are preserved and regression-tested.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial native tests failed to compile on the missing typed movement APIs.
+Initial RON tests failed on unsupported `PutEachCardFromAnteInGraveyard`.
+After lowering, real Bird tests failed because the uncorrected record moved the
+source itself. The stronger multi-owner test failed because player B's active
+turn still offered player A the first choice. Both behavior failures were fixed.
+No gameplay assertion was weakened. Observer tests ignore transaction-validation
+clones and observe live draw events through `EvtCardDrawn`.
+
+| Tests | Mapping / evidence |
+| --- | --- |
+| `TestRONAnteMovementJeweledBird` | Complete corrected ARN Jeweled Bird: tap at activation, mandatory ante at resolution, keep Bird, move owned other cards, then draw; no-other set, foreign ownership, control change, phasing, departure/return, clone isolation and ability copies. |
+| `TestRONAnteMovementBirdSequenceAndOrder` | Complete Bird deck restriction; tap payment prevents a second activation; actual source payment precedes the full graveyard batch, which precedes drawing; owner controls order. |
+| `TestRONAnteMovementExplicitPlayerAndInventory` | Synthetic complete RON spell: explicit target player owns cards held in the other player's ante storage; destination ownership and semantic roles. |
+| `TestRONAnteMovementDeclarations`, `SourceScope` | Wrong kind/arity/filter/role, unbound or incompatible player reads, unpaid paths, post-continuation reads and delayed source exclusions reject at compile time. |
+| `TestAnteMovementOwnedOtherBatch` | Pure selection, physical exclusion, owner change in another player's storage, owner order, prior graveyard order, complete event visibility, new graveyard visits and clone storage. |
+| `TestAnteMovementExactVisits`, `OrderRecheck`, `MultipleOwners`, `LegalityAndDefinition` | Returned visits cannot substitute; duplicates move once; current owner supplies destination; invalid order fallback; return during choice cannot replace saved visit; multiple owners use APNAP decisions before movement; disabled/settled/empty/missing owners and nil definitions. |
+| Existing `TestRONAntePayment*`, `TestRONAnteReference*`, `TestRONAnteDeck*`, `TestMillOwnerOrderAndBatch` and native ante tests | Preserve payment rollback, target identity and copies, deck metadata, historical payment subrule coverage and shared mill ordering. |
+
+### Validation, measured gains and source review
+
+- `go test ./pkg/mage/dsl/ron -run TestRONAnteMovement -count=1`: PASS.
+- Focused native movement and ante payment/target/deck regressions: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Initial test preallocation issue fixed; focused
+  native and RON movement checks rerun and lint rerun. Automatic changes reviewed.
+- `git diff --check`: PASS, including the final ledger and staged slice.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,058 compiled /
+  387 rejected records; 795 accepted / 191 rejected unique names**. Collection
+  rejection still prevents installation of a partial production registry.
+- Remaining diagnostics match fresh baseline exactly after removing Bird's one
+  diagnostic. No environment or pre-existing validation failure blocks this slice.
+
+Estimated and actual complete-card gains agree: **1 unique name / 1 record**.
+Jeweled Bird now compiles, validates its factory and has complete RON gameplay
+coverage. No accepted record was lost. Relative to fresh baseline, the only
+removed diagnostic is Jeweled Bird's movement action; every remaining diagnostic
+is unchanged. Darkpact's six complete records still reject exchange. Complete
+collection gameplay remains unfinished; inventory does not infer a total number
+of fully behavior-verified cards from compilation.
+
+Four existing collection tests initially failed only because their exact counts
+still expected 2,057/388. They now assert the fresh 2,058/387 counts while retaining
+all factory validation, inspection purity, registry and gameplay assertions.
+
+Source defect corrected: ARN Jeweled Bird's movement operand omitted Oracle's
+“all other cards.” Local authoritative `data/ARN.json` confirms the exclusion.
+The complete record now uses explicit `Other(...)`; it is the collection's sole
+Bird record, so no identical reprint is left unchanged. Vocabulary refresh uses
+fresh AST inventory for Other occurrence counts, changed example positions,
+ARN source hash and current loader evidence. The prior snapshot loader section
+was stale at 2,045 compiled; refreshing it is not this run's measured gain.
+Darkpact's separate ownership acquisition remains required by local Oracle data
+and is not silently folded into targeting or implemented by this slice.
+
+Changed files: new engine/RON `ante_movement.go` and tests; shared ordering in
+`cost_mill.go`; RON compiler, payment scope and semantic inventory; payment/deck
+and exact collection-count tests; corrected ARN record; vocabulary snapshot;
+`doc.go`, DSL/API rules-contract docs and this ledger. Go card definitions,
+generators and the old DSL remain because runtime, gameplay and removal gates
+are not met. No DSL API is removed, so no deletion audit is claimed.
+
+Ranked next candidates:
+
+1. Typed ownership acquisition and atomic ante/library exchange boundaries.
+   Darkpact's targets and exact ante departure are ready. Its ownership action
+   must precede exchange, including an empty-library case. Shared ownership
+   primitives also support the still-blocked ante ownership cards; do not claim
+   their full behavior from this prerequisite.
+2. Scoped paid-player collection and dispatch for Rebirth, using AnteTopCost,
+   all-player decision order and replacement-aware life setting.
+3. Independent complete legal Oracle name catalog, then scoped choices for
+   Nebuchadnezzar and Petra Sphinx with separate reveal-result consumers.
+
+This run stops after ANTE-GRAVEYARD-MOVEMENT. Migration remains incomplete.

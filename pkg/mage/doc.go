@@ -35,6 +35,15 @@
 // Clones keep separate ante storage and target state. No LKI permits an
 // action on an absent card. Ante movement and exchange need separate services.
 //
+// Use [AnteCardsOwnedBy] for typed current-owner selection in shared ante.
+// [OtherAnteCards] excludes the physical source after its payment moves it.
+// [PutAnteCardsInGraveyards] saves exact visits and uses current owners.
+// All owner order choices precede movement and use active-player order.
+// All movement precedes zone events. A returned visit cannot replace a saved
+// subject. Clones keep separate zones. This movement is not a death or mill.
+// RON source exclusion is local to a paid source-ante continuation.
+// Ownership acquisition and atomic library exchange need separate operations.
+//
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.

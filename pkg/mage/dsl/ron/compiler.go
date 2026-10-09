@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	anteSourcePayment    bool
 	chosenPlayer         *playerChoicePlan
 	chosenPermanent      *permanentChoicePlan
 	createdValue         *createdValuePlan
@@ -1100,6 +1101,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "PutEachCardFromAnteInGraveyard":
+		build, err := compileAnteGraveyard(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ChooseADamageSource":
 		if _, err := compileChosenDamageSourceChoice(n); err != nil {
 			return nil, err

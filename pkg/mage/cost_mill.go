@@ -74,7 +74,17 @@ func (g *Game) millCards(playerID uuid.UUID, amount int) {
 	library := slices.Clone(p.Library())
 	count := min(amount, len(library))
 	remaining := slices.Clone(library[:count])
-	ordered := make([]Card, 0, count)
+	ordered := g.orderCardsForGraveyard(p, remaining)
+	// All choices precede the moves so the player sees one complete batch.
+	p.SetLibrary(library[count:])
+	for _, card := range ordered {
+		p.AddToGraveyard(card)
+	}
+}
+
+func (g *Game) orderCardsForGraveyard(p Player, cards []Card) []Card {
+	remaining := slices.Clone(cards)
+	ordered := make([]Card, 0, len(remaining))
 	for len(remaining) > 1 {
 		snapshots := make([]Card, len(remaining))
 		for i, card := range remaining {
@@ -87,9 +97,5 @@ func (g *Game) millCards(playerID uuid.UUID, amount int) {
 		remaining = slices.Delete(remaining, index, index+1)
 	}
 	ordered = append(ordered, remaining...)
-	// All choices precede the moves so the player sees one complete batch.
-	p.SetLibrary(library[count:])
-	for _, card := range ordered {
-		p.AddToGraveyard(card)
-	}
+	return ordered
 }

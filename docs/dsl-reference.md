@@ -9276,8 +9276,8 @@ phasing, return, offer-time return, disabled/settled games, exact physical IDs,
 transaction rollback and stale preflight. `TestRONAntePayment*` covers actual
 casting and activation, branch-local nested results, explicit target payers,
 permanent subjects, clone/copy behavior, delayed identity and invalid contexts.
-Jeweled Bird's retained real payment/activation subrule is executed with a draw
-continuation; its complete record still rejects owned-ante-card movement.
+Jeweled Bird's retained payment subrule uses a draw continuation. Its complete
+record and ante movement now have separate `TestRONAnteMovement*` coverage.
 Rebirth's complete record still rejects paid-player collection dispatch. These
 are prerequisite mappings, not complete-card gameplay claims.
 
@@ -9306,7 +9306,8 @@ spell, activation and trigger contexts. It declares local `Ref_TargetAnteCard`
 as a typed card reference with a fresh binding per factory instance. Other
 filter shapes and incompatible permanent/player/graveyard reads reject at
 compilation. Inventory descends into the still-unsupported exchange action.
-There is no ante movement or ownership-exchange adapter in this slice.
+Targeting alone does not supply movement or ownership exchange. The movement
+contract below establishes a separate ante-to-graveyard operation.
 
 Native `TestAnteReference*` covers visits, current ownership, typed reads,
 prepayment capture, zone changes during payment, clone isolation, copies,
@@ -9315,4 +9316,50 @@ covers casting, failed payment, return illegality, independent activations,
 entry triggers, invalid declarations and semantic inventory. Darkpact's actual
 target subrule runs with a test-only life continuation; all six complete
 records still reject their exchange action. This is prerequisite gameplay
-coverage, not complete Darkpact or Jeweled Bird coverage.
+coverage, not complete Darkpact coverage. Complete Jeweled Bird coverage is
+recorded in the ante-to-graveyard movement contract below.
+
+
+## Typed ante-to-graveyard movement
+
+`AnteCardsOwnedBy(owner PlayerRef) AnteCardSet` selects exact current ante
+visits with that current owner, across both players' storage. Selection is pure.
+`OtherAnteCards(subjects AnteCardSet) AnteCardSet` excludes the physical source
+card after payment moves it to ante (CR 400.7j).
+`PutAnteCardsInGraveyards(subjects AnteCardSet) ResolvingEffect` saves the
+selection once, removes duplicate visits, and moves each available card to its
+current owner's graveyard. Ownership changes do not replace a visit. Departure
+and return do. Disabled or settled ante games and missing owners move nothing.
+
+Owner-controlled graveyard order uses the existing card-choice service and the
+same helper as milling. Choices follow APNAP order (CR 101.4), use card copies,
+and precede all movement. Invalid answers use the first remaining card. The
+operation preserves prior graveyard order (CR 400.5 and 404.3). Exact visits and
+ownership are checked again after choices. All moves finish before zone events;
+events identify the destination owner. New graveyard visits use existing player
+storage. This is neither a death nor milling; battlefield-departure replacements
+and mill modifiers do not apply. No general zone replacement contract is added.
+Clones retain separate zone storage. No absent-card LKI enables movement.
+
+RON action shape: `PutEachCardFromAnteInGraveyard(OwnedByAPlayer(SinglePlayer(playerRef)))`.
+The owner uses existing typed player references in resolving spell, activation
+and trigger action contexts. `Other(OwnedByAPlayer(SinglePlayer(playerRef)))`
+is supported only in the paid branch of an adjacent source-permanent ante
+payment and its immediate nested actions. It is rejected outside that branch,
+on unpaid paths and in delayed bodies. Entry, cost and static contexts reject.
+Other filter shapes, invalid arity and unbound/incompatible references reject
+at compilation. Inventory classifies the operands as ante card filters, player
+filters and player references, including descendants of rejected declarations.
+
+Jeweled Bird's full ARN record uses explicit `Other(...)` to preserve Oracle's
+“all other cards.” `TestRONAnteMovementJeweledBird` covers payment, source
+exclusion, ownership/control distinctions, departed/returned/phased sources,
+clones, ability copies, empty other-card sets and drawing. `BirdSequenceAndOrder`
+covers deck preparation, tap payment, owner order, simultaneous movement and
+payment-before-movement-before-draw. `ExplicitPlayerAndInventory`, `Declarations`
+and `SourceScope` cover typed owners, reporting and invalid declarations.
+Native `TestAnteMovement*` covers saved visits, ownership changes, duplicates,
+multiple owners, APNAP decisions, invalid choices, return during a decision,
+clone storage and invalid definitions. Existing mill-order tests protect the
+shared helper's callers. Darkpact still rejects its ownership/exchange operation;
+the exact ante-departure helper is available for that later atomic operation.

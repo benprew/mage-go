@@ -67,7 +67,12 @@ func compileAntePayment(payment, continuation Node, ctx scope) (effectFactory, e
 		if len(parts) == 0 {
 			return nil, problem(continuation.Args[i+1], "ante payment branch requires at least one action")
 		}
-		branches[i], err = compileActionSequence(parts, ctx)
+		branchScope := ctx
+		paidFirst := (continuation.Name == "Unless") != (condition.Name == "CostWasPaid")
+		if !top && cost.Args[0].Args[0].Kind == Symbol && cost.Args[0].Args[0].Name == "ThisPermanent" && (i == 0) == paidFirst {
+			branchScope.anteSourcePayment = true
+		}
+		branches[i], err = compileActionSequence(parts, branchScope)
 		if err != nil {
 			return nil, err
 		}
