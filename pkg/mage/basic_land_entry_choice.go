@@ -35,10 +35,5 @@ func (*basicLandEntryChoiceAbility) inspectDefinition() definitionNode {
 // BecomesChosenBasicLandTypeAttachedEffect uses the source's saved land choice.
 // The existing land-type service applies the mana and ability rules.
 func BecomesChosenBasicLandTypeAttachedEffect() ContinuousEffect {
-	return AttachedEffect(core.LayerType, func(g *Game, source, target *Permanent) error {
-		if landType := source.ChosenBasicLandType.String(); landType != "" {
-			applyBecomesBasicLand(g, target, []string{landType})
-		}
-		return nil
-	})
+	return newBasicLandAttachedEffect(nil, true)
 }

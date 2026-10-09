@@ -132,7 +132,7 @@ func describeDefinition(v any) definitionNode {
 		}
 	case *StaticAbilityHolder:
 		if e.landTypeTextRevision && !e.supportsLandTypeTextRevision() {
-			n.problem = "text land-type revision requires one global battlefield basic-land-type effect"
+			n.problem = "text land-type revision requires one global or attached battlefield basic-land-type effect"
 		}
 		if e.animationTextRevision && !e.supportsAnimationTextRevision() {
 			n.problem = "text animation revision requires all layers from one battlefield animation rule"

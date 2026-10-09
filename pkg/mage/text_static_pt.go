@@ -124,6 +124,9 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 	if !ok || !eligible(fresh) || len(fresh.Effects) != len(active.Effects) {
 		return fmt.Errorf("text static revision changed the static contract")
 	}
+	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {
+		return fmt.Errorf("text static revision changed the land-type context")
+	}
 	for i, effect := range active.Effects {
 		next := fresh.Effects[i]
 		if effect.GetLayer() != next.GetLayer() || getEffectSublayer(effect) != getEffectSublayer(next) || effect.GetDuration() != next.GetDuration() {

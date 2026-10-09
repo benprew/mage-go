@@ -138,7 +138,7 @@ func TestTextStaticLandTypeDeclaration(t *testing.T) {
 			case "typed-nil":
 				effects[0] = (*basicLandSetEffect)(nil)
 			case "foreign":
-				effects[0] = BecomesBasicLandAttachedEffect("Plains")
+				effects[0] = AttachedEffect(core.LayerType, func(*Game, *Permanent, *Permanent) error { return nil })
 			case "duplicate":
 				effects = append(effects, effects[0])
 			case "all-filter":

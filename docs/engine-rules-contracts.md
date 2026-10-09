@@ -51,14 +51,23 @@ replacement-order or simultaneous-operation service is established.
 `StaticAbilityHolder.WithLandTypeTextRevision() *StaticAbilityHolder` permits
 checked revision through `Game.RevisePrintedStaticLandType(source *Permanent,
 abilityID uuid.UUID, changes ...TextChange) error`. Definition validation requires
-exactly one global `BecomesBasicLandsEffect` with one valid basic land type.
-Empty, nil, foreign, duplicate, multi-type and mixed declarations reject.
+exactly one global `BecomesBasicLandsEffect`, fixed
+`BecomesBasicLandAttachedEffect` with one valid basic land type, or
+`BecomesChosenBasicLandTypeAttachedEffect` using the source's entry choice.
+Empty, nil, opaque callback, duplicate, multi-type and mixed declarations reject.
+Fresh revisions must retain the global, fixed-host or chosen-host context.
 The zero-value permanent filter retains its normal all-permanents meaning.
 
 RON opts in unconditional `EachPermanentLayerEffect(filter,
 [SetLandType(Plains|Island|Swamp|Mountain|Forest)])` declarations. Existing filter
-validation remains; source-dependent selections, combined global modifications,
-Aura-host effects, chosen types and temporary effects do not opt in.
+validation remains; source-dependent global selections, combined modifications
+and temporary effects do not opt in. Aura scope also opts in the complete
+`PermanentLayerEffect(HostPermanent, [SetLandType(basicType)])` and
+`PermanentLayerEffect(HostPermanent, [SetLandTypeVariable(TheChosenLandType)])`
+forms. The variable form requires a validated source entry-choice declaration.
+Chosen types are saved choices, not printed land words (CR 612.2). Revision does
+not change that choice or repeat the entry operation. Each rule reads the current
+host through the shared attachment-incarnation check.
 
 The shared printed-static revision service keeps the active declaration ID,
 source incarnation, current controller and registration position. Semantic
@@ -88,6 +97,17 @@ source control; `Upkeep` checks Conversion's separate payment/sacrifice rule.
 `TestTextStaticLandTypeDeclaration`, `Rejects`, `RegistrationOrder` and
 `RetainsGrantedRules` cover invalid declarations, failure atomicity, retained
 positions and unrelated characteristics/abilities.
+
+`TestRONTextAttachedLandTypeRecords` covers Evil Presence and Phantasmal Terrain
+in all six core reprints (2 names / 12 records): casting legality and rollback,
+entry timing, saved-choice exclusion, ordered revisions, mana, reattachment,
+clones, source/host phasing, ability removal/restoration, LKI and printed return.
+`Declarations` checks foreign IDs, sibling instances and controller changes.
+`Boundaries` retains invalid syntax/scope checks and excludes mixed declarations.
+Native `TestTextAttachedLandType*` covers typed declaration checks, all six
+cross-context replacements without mutation, and retained registration order.
+The typed attached effect keeps existing callers and land mechanics; no new
+replacement or simultaneous-operation contract is established.
 
 
 ## Printed static animation text revision

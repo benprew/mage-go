@@ -8,10 +8,10 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-MANA-TAP` adds checked printed mana-tap declaration revision.
-It preserves active IDs, queued event facts, bonus solver/production agreement,
+`TEXT-PRINTED-ATTACHED-LAND-TYPE` adds checked fixed/chosen Aura-host land rules.
+It preserves active IDs, registration order, attachments, saved entry choices,
 ordered changes, clones, phasing and revised restoration. Bounded revision
-evidence covers **3 accepted names / 18 records**. Acceptance gain is
+evidence adds **2 accepted names / 12 records**. Acceptance gain is
 **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -59952,3 +59952,149 @@ Ranked next candidates:
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: printed Aura-host basic-land-type declaration revision
+
+Capability: `TEXT-PRINTED-ATTACHED-LAND-TYPE`. Complete bounded declaration bridge;
+live text installation remains separate. Stop after this slice.
+
+### Baseline and candidate comparison
+
+The initial worktree contained user edits to the migration design, ledger,
+reference docs, definition validation and Eureka entry-round implementation,
+plus unrelated `.gitignore` changes and untracked completed-ledger files.
+Preserve all of them. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader exit 1 was collection
+rejection, not a build/test failure: 2,091 compiled / 354 rejected records;
+809 accepted / 177 rejected unique names. No partial registry is installed.
+
+Evaluated the latest entry's ranked candidates and their complete nested records:
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers / downstream value | Implementation and test effort |
+| --- | --- | --- | --- |
+| Ranked #1, bounded Aura-host land declaration bridge | Evil Presence, Phantasmal Terrain: 2 names / 12 records; 0 new full-card unlocks | Both already compile. Shared prerequisite for Magical Hack and Sleight of Mind; their live layer-3 installation, spell branch and remaining declaration classification still block both cards. Full classification is too broad for this run; this host bridge is dependency-ready. | Small/medium: typed effect metadata, checked context transfer, compiler opt-in, declaration and lifecycle tests. |
+| Ranked #2, subtype mana-tap bonus | Gauntlet of Might: 1 name / 6 records; estimated 1 full-card compilation unlock | Its red creature P/T rule already works; Mountain event filter needs a typed adapter and exact bonus/solver agreement. Enables that event context and its printed text-revision path. | Medium: shared event/bonus adapter, solver, mana replacement and text filter tests. |
+| Ranked #3, per-player coin rounds | Mana Clash: 1 name / 1 record; estimated 1 full-card compilation unlock | Target and repeat services exist; nested per-player flips, tails selection, all-heads termination and simultaneous damage remain. Enables reusable round-result bindings. | Medium/large: typed local results, deterministic RNG, round isolation and simultaneous damage/prevention tests. |
+
+Select the ready host bridge within ranked #1. It gives concrete multi-card
+text-spell prerequisites and covers two distinct already accepted cards, while
+the alternatives each unlock one name. Estimated acceptance gain was zero;
+actual gain is zero. Compilation and bounded revision gameplay are separate.
+
+Read all 12 complete Evil Presence and Phantasmal Terrain records. Targeted
+vocabulary inspection: SetLandType tuple/1, SetLandTypeVariable tuple/1.
+Local authoritative `data/LEA.json` confirms both Oracle texts. CR 305.6–8,
+612.1–3, 613.1c and 613.8 establish intrinsic mana, printed-word roles and layers.
+No source-data defect was found or corrected. RON and vocabulary are unchanged.
+
+### Exact shapes, contracts and reuse boundary
+
+RON now opts in one unconditional Aura-host declaration:
+
+- `PermanentLayerEffect(HostPermanent, [SetLandType(Plains|Island|Swamp|Mountain|Forest)])`.
+- `PermanentLayerEffect(HostPermanent, [SetLandTypeVariable(TheChosenLandType)])`,
+  with the existing validated `AsPermanentEnters(ThisPermanent,
+  [ChooseABasicLandType])` source declaration.
+
+These extend the existing engine APIs without signature changes:
+
+- `(*StaticAbilityHolder).WithLandTypeTextRevision() *StaticAbilityHolder`.
+- `(*Game).RevisePrintedStaticLandType(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error`.
+- `BecomesBasicLandAttachedEffect(subtypes ...string) ContinuousEffect`.
+- `BecomesChosenBasicLandTypeAttachedEffect() ContinuousEffect`.
+
+The attached constructors now produce a private typed `basicLandAttachedEffect`.
+It retains immutable fixed subtype metadata or a source-choice flag, embeds the
+existing attachment-incarnation lifecycle and clones its subtype storage.
+`landTypeRevisionContext` separates global, fixed-host and chosen-host shapes.
+Exactly one effect is eligible. Empty, nil, opaque callback, multi-type, mixed,
+invalid-type and malformed chosen declarations reject. All six cross-context
+rebuilds reject before runtime mutation. Unmarked callers retain their behavior.
+
+RON owns spelling, scope, entry-declaration validation and opt-in. The engine
+owns the typed context and execution. Existing semantic AST builders replace
+printed fixed words in order; the saved chosen type is not a printed word and
+is neither changed nor chosen again (CR 612.2). The source's current host uses
+the exact attachment incarnation. Reattachment changes the host; an absent or
+returned host cannot inherit an old attachment.
+
+Reuse `revisePrintedStaticAbility`, definition group correspondence, runtime
+registration/restoration, shared attachment checks and `applyBecomesBasicLand`.
+The active ability ID, source visit, controller, effect layer/duration and
+registration position remain. Ordered prototypes, sibling instances and clones
+stay separate. Phasing retains revisions. Layer-6 removal does not undo layer 4;
+restoration keeps the revised declaration. LKI retains revised host types;
+new source entries use printed rules and a fresh entry choice.
+
+The caller still supplies layer-3 order, lifetime and restoration. Conditional,
+combined and temporary rules and live spell/permanent installation remain
+separate. No parallel land, replacement or simultaneous-action subsystem,
+card-name production branch, fallback registry or game-time declaration panic
+was added. Runtime/removal gates remain unmet. No Go definitions or DSL services
+were removed; no unused DSL audit/removal is justified by this slice.
+
+### Failing-first and card-to-test evidence
+
+New RON tests first failed assertions on unmarked printed static declarations
+for both cards in all six sets. Native declaration tests first rejected the two
+new supported typed contexts; cross-context tests also exposed that prerequisite.
+During verification, corrected synthetic fixtures: use indefinite surrounding
+registrations, supply an explicit land enchant target, and retain the Aura
+subtype for a mixed-declaration fixture. Production semantics and assertions
+were not weakened.
+
+| Card / contract | Tests |
+| --- | --- |
+| Evil Presence, Phantasmal Terrain in LEA/LEB/2ED/3ED/CED/CEI | `TestRONTextAttachedLandTypeRecords`: all 12 complete records; unpaid casting, illegal targets without spending mana, announcement/entry timing, fixed word revision, chosen-word exclusion, stable IDs, intrinsic mana, sequential changes, clones, reattachment, source/host phasing, ability removal/restoration, LKI, departed/returned source and host identities. |
+| Evil Presence | `TestRONTextAttachedLandTypeDeclarations`: foreign IDs, independent factory siblings, controller change and competing Aura timestamp order. Existing `TestRONStaticLandType*` retains base land, printed-ability removal and mana execution evidence. |
+| Phantasmal Terrain | `TestRONBasicLandChoiceTerrain` retains all five entry choices, normal casting and saved choice/attachment behavior. New record tests prove revision does not repeat choices and return makes a fresh choice. |
+| Invalid RON declarations | `TestRONTextAttachedLandTypeBoundaries` includes existing invalid syntax, scope and entry-choice tests and rejects revision of a mixed fixed-land/ability declaration. |
+| Native declarations and transfer | `TestTextAttachedLandTypeDeclaration`: fixed/chosen acceptance; nil, empty, nonbasic, plural, malformed chosen and opaque callback rejection. `Context`: all six shape transitions reject without changing registrations. `RegistrationOrder`: preserved neighboring registrations, source and ID. Existing `TestTextStaticLandType*` retains face-down/granted/absent/unmarked/builder/group/registration rejection, layer contracts and failure atomicity. |
+
+Bounded revision gameplay coverage adds **2 accepted unique names / 12 records**.
+Acceptance gain: **+0 names / +0 records**. Complete Magical Hack and Sleight of
+Mind gameplay is not established.
+
+### Validation and collection result
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONText(AttachedLandType|StaticLandType)' -count=1`.
+- `go test ./pkg/mage -run 'TestText(AttachedLandType|StaticLandType)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`;
+  `go test ./... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **2,091 compiled /
+  354 rejected records**, **809 accepted / 177 rejected unique names**.
+  Report and all diagnostics equal the fresh baseline. All accepted records
+  remain accepted. Strict collection loading still publishes no partial registry.
+
+Lint first found one ineffectual context initializer in this slice. Replaced it
+with a typed declaration, then reran focused tests, build, vet, engine short
+and full repository tests before the final lint pass. Reviewed automatic import
+group changes in four slice files and reran the affected focused suites. No
+unrelated file was changed by lint. No environment or pre-existing check blocker
+was found.
+
+Changed files: engine `basic_land_attached_effect.go`, `basic_land_entry_choice.go`,
+`continuous_effects.go`, `definition.go`, `text_static_land_type.go`,
+`text_static_pt.go`, `text_attached_land_type_test.go`,
+`text_static_land_type_test.go`, `doc.go`; compiler `basic_land_choice.go`,
+`layers.go`, `text_attached_land_type_test.go`, `text_static_land_type_test.go`;
+DSL reference, engine rules contracts and progress ledger. Only this slice's
+changes are staged; prior ledger reorganization remains in the worktree.
+Commit: `feat(ron): implement printed Aura-host land-type revision`.
+
+Ranked next candidates:
+
+1. Checked conditional source P/T declaration revision for Sedge Troll and
+   Kird Ape: shared printed land-condition prerequisite for Magical Hack.
+   Audit their complete conditions and runtime registration contexts first.
+2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with native
+   bonus/solver reuse and printed text revision. Reassess against shared work.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete RON gameplay, live text layers, runtime integration, Go-card deletion
+and unused DSL removal remain unfinished. Migration incomplete. Stop here.

@@ -162,10 +162,7 @@ func ChangeAttachedSubTypes(newSubTypes []string) ContinuousEffect {
 // into the listed basic land types in layer 4.
 func BecomesBasicLandAttachedEffect(subtypes ...string) ContinuousEffect {
 	validateBasicLandSubtypes("BecomesBasicLandAttachedEffect", subtypes)
-	return AttachedEffect(LayerType, func(g *Game, _, target *Permanent) error {
-		applyBecomesBasicLand(g, target, subtypes)
-		return nil
-	})
+	return newBasicLandAttachedEffect(subtypes, false)
 }
 
 // ChangeAttachedSubTypesByChosenColor replaces the subtypes of the attached permanent

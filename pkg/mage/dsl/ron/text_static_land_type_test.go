@@ -215,7 +215,7 @@ func TestRONTextStaticLandTypeDependencies(t *testing.T) {
 
 func TestRONTextStaticLandTypeBoundaries(t *testing.T) {
 	change, _ := mage.ReplaceBasicLandWord(core.SwampLandType, core.IslandLandType)
-	for _, tc := range []struct{ set, name string }{{"LEA", "Evil Presence"}, {"LEA", "Phantasmal Terrain"}, {"LEA", "Living Lands"}} {
+	for _, tc := range []struct{ set, name string }{{"LEA", "Living Lands"}} {
 		g, a, _ := ronGame()
 		source := g.PutOnBattlefield(repositoryCard(t, tc.set, tc.name), a.PlayerID())
 		if err := g.RevisePrintedStaticLandType(source, textStaticID(t, source), change); err == nil {

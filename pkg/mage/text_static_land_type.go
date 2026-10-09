@@ -1,24 +1,64 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 // WithLandTypeTextRevision permits checked replacement of a printed land rule.
-// The declaration must set one basic land type with one global effect.
+// The declaration must set one basic land type with one global or attached effect.
 func (a *StaticAbilityHolder) WithLandTypeTextRevision() *StaticAbilityHolder {
 	a.landTypeTextRevision = true
 	return a
 }
 
 func (a *StaticAbilityHolder) supportsLandTypeTextRevision() bool {
+	return a.landTypeTextRevisionContext() != 0
+}
+
+type landTypeRevisionContext uint8
+
+const (
+	invalidLandTypeRevision landTypeRevisionContext = iota
+	globalLandTypeRevision
+	attachedLandTypeRevision
+	chosenAttachedLandTypeRevision
+)
+
+func (a *StaticAbilityHolder) landTypeTextRevisionContext() landTypeRevisionContext {
 	if len(a.Effects) != 1 {
-		return false
+		return 0
 	}
-	effect, ok := a.Effects[0].(*basicLandSetEffect)
-	if !ok || effect == nil || len(effect.subtypes) != 1 {
-		return false
+	var subtypes []string
+	var context landTypeRevisionContext
+	switch effect := a.Effects[0].(type) {
+	case *basicLandSetEffect:
+		if effect == nil {
+			return 0
+		}
+		subtypes, context = effect.subtypes, globalLandTypeRevision
+	case *basicLandAttachedEffect:
+		if effect == nil || effect.GetLayer() != core.LayerType || effect.GetDuration() != core.WhileOnBattlefield {
+			return 0
+		}
+		if effect.chosen {
+			if len(effect.subtypes) != 0 {
+				return 0
+			}
+			return chosenAttachedLandTypeRevision
+		}
+		subtypes, context = effect.subtypes, attachedLandTypeRevision
+	default:
+		return 0
 	}
-	_, valid := basicLandTypeColor(effect.subtypes[0])
-	return valid
+	if len(subtypes) != 1 {
+		return 0
+	}
+	if _, valid := basicLandTypeColor(subtypes[0]); !valid {
+		return 0
+	}
+	return context
 }
 
 // RevisePrintedStaticLandType replaces one present printed basic-land-type rule.
