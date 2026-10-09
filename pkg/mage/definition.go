@@ -402,6 +402,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if n.problem != "" {
 			fail(n.problem)
 		}
+		if choice, ok := value.(*wordPairChoice); ok && !nilDefinition(choice.binding) && assigned[choice.binding] {
+			fail("duplicate text word pair producer")
+		}
 		if source, ok := value.(*sourceCardCost); ok && !nilDefinition(source.result) && assigned[source.result] {
 			fail("duplicate paid source card binding")
 		}

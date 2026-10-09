@@ -17,6 +17,8 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	colorWords           *textWordChoicePlan
+	landWords            *textWordChoicePlan
 	sourceCardPayment    *sourceCardPaymentPlan
 	groupedExile         *groupedExilePlan
 	exileLink            *mage.ExileLink
@@ -110,6 +112,7 @@ func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBinding
 
 func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
+	bindings.textWords = make(map[*textWordChoicePlan]textWordBindings)
 	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
 	bindings.libraryReveals = make(map[*libraryRevealPlan]*mage.CardBinding)
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
@@ -1532,7 +1535,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n.Args[1], ctx)
 	case "DiscardTheCardDrawnThisWay":
 		return compileDrawnCardDiscard(n, ctx)
-	case "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -1578,6 +1581,13 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "ChooseTwoColorWords" || n.Name == "ChooseTwoBasicLandTypes" {
+		build, _, err := compileTextWordChoice(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType" || n.Name == "RevealHandAndDiscardACardOfTypeAtRandom" {
 		return compileRandomHandDiscard(n, ctx)
 	}

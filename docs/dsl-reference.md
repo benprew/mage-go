@@ -10062,3 +10062,29 @@ The engine checks source identity, payment rollback and saved visits; RON owns
 spelling and lexical binding. Tests are `TestSourceCardPayment*` and
 `TestRONSourceCard*`. This establishes a prerequisite, with no newly accepted
 complete card or complete-card gameplay mapping.
+
+### Paired text-word choices at resolution
+
+RON accepts `ChooseTwoColorWords` and `ChooseTwoBasicLandTypes` as symbols in
+resolving action lists and explicit player bodies. Each operation saves two
+different words using the selected action player and two `Player.ChooseMode`
+decisions. It does not run during announcement or cost payment.
+
+The engine APIs are `ChooseColorWordPair(PlayerRef, *ColorWordPairBinding)` and
+`ChooseBasicLandWordPair(PlayerRef, *BasicLandWordPairBinding)`, both returning
+`ResolvingEffect`. Declare results with `BindColorWordPair(string)` or
+`BindBasicLandWordPair(string)`. `FirstColorWord` and `SecondColorWord` return
+`ColorWordRef`; `FirstBasicLandWord` and `SecondBasicLandWord` return
+`BasicLandWordRef`. Each typed `Resolve` returns its value and a presence flag.
+The supported colors exclude colorless. Basic land words exclude nonbasic types.
+The second decision excludes the first word. Invalid answers use the first legal
+option. Missing choosers clear results. Bindings and saved frames remain separate
+across factory instances, copies, clones, loops and delayed execution.
+
+RON lexical operands are `TheFirstChosenColorWord`, `TheSecondChosenColorWord`,
+`TheFirstChosenLandType` and `TheSecondChosenLandType`. They require the matching
+prior producer in the same supported lexical context. They cannot be amounts,
+card names or ordinary entry choices. Pair producers inside player bodies remain
+local to those bodies. The compiler adapters retain typed operands for subsequent
+text-effect work; `CreateSpellEffect` and color/land text modifications remain
+unsupported. No complete-card support gain is claimed for this prerequisite.

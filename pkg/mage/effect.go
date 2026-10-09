@@ -163,6 +163,9 @@ func applyEffectWithCardSetCaptures(g *Game, e Effect, sourceID, controller uuid
 	savedSpells := g.resolution.spellBindings
 	g.resolution.spellBindings = nil
 	defer func() { g.resolution.spellBindings = savedSpells }()
+	savedWords := g.resolution.wordPairBindings
+	g.resolution.wordPairBindings = nil
+	defer func() { g.resolution.wordPairBindings = savedWords }()
 	savedNames := g.resolution.cardNameBindings
 	g.resolution.cardNameBindings = nil
 	defer func() { g.resolution.cardNameBindings = savedNames }()

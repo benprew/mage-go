@@ -9,6 +9,15 @@
 // ThisPermanent after one source payment or one singular source exile group.
 // This reference does not permit movement from anywhere.
 //
+// Use [ChooseColorWordPair] or [ChooseBasicLandWordPair] for two different words.
+// The selected player makes both choices at resolution. Typed first and second
+// references read one saved pair. Missing choosers clear the result.
+// The second choice excludes the first. Invalid answers use a legal default.
+// Resolution frames, copies, clones, loops and delays keep separate results.
+// Waiting queries retain typed chooser source reads without making choices.
+// RON supports paired choice symbols in resolving action and player bodies.
+// Text changes require separate consumers and layer contracts.
+//
 // Use [PlayerManaPaymentThisTurn] for a repeatable player payment at instant timing.
 // The player and source references are saved when the permission starts.
 // [Game.GetPlayerPayments] lists affordable permissions without making choices.

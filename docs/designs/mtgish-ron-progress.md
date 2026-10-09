@@ -7,13 +7,13 @@ names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`EXACT-SOURCE-CARD-RESULTS` saves source-card visits from sacrifice/exile
-payments for resolving ownership exchanges, with exact source locking,
-replacement outcomes, payment rollback and separate factory/frame storage.
-Grouped source exile reuses its existing singular result. **+0 unique names /
-+0 records**, as estimated for this prerequisite. Full-card gameplay counts stay
-unchanged. All required checks pass; the strict loader still rejects remaining
-unsupported records. Tempest Efreet now reports its hand-transfer blocker.
+`RESOLUTION-TEXT-WORD-PAIRS` saves distinct color/basic-land word pairs at
+resolution, with typed first/second operands and separate factory/frame storage.
+Copies, clones, loops, delays and pending sources retain their own results.
+This shared prerequisite serves Magical Hack and Sleight of Mind. **+0 unique
+names / +0 records**, as estimated. Complete-card gameplay counts stay unchanged.
+All required checks pass; loader counts and diagnostics remain unchanged.
+Both complete records still need general target-union bodies and text effects.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -57489,3 +57489,157 @@ Ranked next candidates:
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Stop after EXACT-SOURCE-CARD-RESULTS. Migration incomplete.
+
+## Run 2026-10-09: RESOLUTION-TEXT-WORD-PAIRS
+
+Status: complete shared choice prerequisite. Stop after this slice.
+
+### Environment and selection
+
+The initial working tree had user changes in `.gitignore`, the execution design,
+and this ledger, plus an untracked completed-entry archive. Those changes are
+preserved. The commit stages only this slice's summary change and appended entry
+in the ledger; it does not stage the user's archive reorganization. Fresh baseline
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict
+loader exit 1 was collection rejection, not a build or test failure:
+2,084 compiled / 361 rejected records; 807 accepted / 179 rejected unique names.
+
+The latest ranked candidate #1 was evaluated first. Complete records, both nested
+spell/permanent branches and all six identical reprints of each selected card
+were inspected. Local `data/LEA.json`, `ATQ.json`, `LEG.json` and CR 105.1,
+305.6, 608.2b–d and 612.1–3 supply the relevant rule requirements.
+
+| Candidate | Distinct names / estimated complete unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Paired resolution text-word choices, selected | Magical Hack, Sleight of Mind / 0 | Both need typed first/second choices for spell and permanent text changes. `Targeted_Modal` currently folds only matching single Lace color actions; general target-union bodies and text layers are additional blockers. Concrete shared prerequisite for two names and twelve records. | Moderate, bounded: one shared engine decision/result service, two typed domains, lexical adapters and frame/decision tests. |
+| Independent ownership assignment | Bronze Tablet / at most 1 after adapter/data repair | Existing grouped exile and acquisition can support explicit assignments. The RON owner swap conflicts with Oracle when Tablet's owner differs from its controller. Its paid exile-to-graveyard branch also needs fidelity checks. Downstream ante assignment reuse, currently one inventory consumer. | Moderate: assignment lowering, evidence-backed source repair, both payment branches and owner/controller/visit tests. |
+| Hand transfer and physical-source transport | Tempest Efreet / at most 1 after both services | Exact paid-source and random-reveal results exist. Hand transfer and transport from anywhere are separate missing zone/permission contracts. Downstream reusable transport, one immediate consumer. | High for one slice: multiple zone contracts and original-card identity across later visits. |
+
+The first candidate wins because it is dependency-ready as an independent
+resolution service and enables two concrete consumers. First-error frequency was
+not used as an unlock estimate. A later real-branch test confirmed the previously
+hidden target-union adapter restriction: the unchanged full-card first errors
+are `supply one color action for this target category (ActionList)`, before the
+choices. The independent choice prerequisite still requires no target-union or
+text-layer contract. No single-card completion was started.
+
+### Contract, signatures and reuse boundary
+
+Supported RON producers are exactly the symbols `ChooseTwoColorWords` and
+`ChooseTwoBasicLandTypes` in resolving action sequences and player bodies.
+Tuple, cost, entry and static uses reject. The action player chooses at resolution;
+announcement and failed payment do not choose. Each first list contains the five
+legal values. The second list excludes the first because Oracle says “with
+another.” Invalid responses select the first remaining legal option. Missing
+choosers clear prior results; both decisions finish before publication.
+
+Native signatures:
+
+- `BindColorWordPair(string) *ColorWordPairBinding` and
+  `BindBasicLandWordPair(string) *BasicLandWordPairBinding`.
+- `ChooseColorWordPair(PlayerRef, *ColorWordPairBinding) ResolvingEffect` and
+  `ChooseBasicLandWordPair(PlayerRef, *BasicLandWordPairBinding) ResolvingEffect`.
+- `FirstColorWord` / `SecondColorWord` accept the color binding and return
+  `ColorWordRef`, with `Resolve(*EffectContext) (core.Color, bool)`.
+- `FirstBasicLandWord` / `SecondBasicLandWord` accept the land binding and return
+  `BasicLandWordRef`, with `Resolve(*EffectContext) (core.BasicLandType, bool)`.
+
+RON `compileColorWordRef` and `compileLandWordRef` lower the exact symbols
+`TheFirstChosenColorWord`, `TheSecondChosenColorWord`,
+`TheFirstChosenLandType`, `TheSecondChosenLandType` from matching lexical plans.
+Typed domains cannot substitute for one another or for amounts/names. Factory
+maps give each producer and its operands one independent declaration. Producers
+in branches/modes stay local; a player body's producer is not exported to the
+outer sequence. Actual text consumers stay rejected until their own slice.
+
+Mage owns legal domains, decisions, result storage, definition checks and frame
+lifecycle. RON owns spelling, contexts, scope and lowering. Reuse: typed player
+references and LKI, `Player.ChooseMode`, resolution state, clone/clear, nested
+application, existing permanent/card/damage-result loops, delayed frame capture
+and restore, source waiting queries, stack copies, target legality and existing
+payment rollback. A dedicated immutable-pair map follows all existing frame
+boundaries. No global last-action slot, Go-card fallback, card-name branch,
+game-time declaration panic or partial production registry is introduced.
+No movement, replacement ordering, simultaneous zone action or text layer is
+part of the choice operation.
+
+### Failing-first tests and card mapping
+
+Before implementation, focused RON gameplay failed on unsupported
+`ChooseTwoColorWords`; native tests failed compilation on the new API names.
+A new duplicate-producer assertion then exposed missing validation and led to a
+specific pair-producer check. Fixture syntax/API errors were corrected without
+weakening assertions. The real full-wrapper gameplay attempt exposed the Lace
+restriction; final tests execute real targeted branches and explicitly retain
+that full-card rejection boundary.
+
+| Evidence | Card mapping / behavior |
+| --- | --- |
+| `TestTextWordChoiceResults` | Native legal lists, distinct answers, typed first/second results, missing results, absent chooser, invalid answers, list mutation protection and clone clear isolation. |
+| `TestTextWordChoiceDeclarations`, `ReadDeclarations` | Nil/empty declarations, duplicate producers, nil references and read-before-producer rejection; valid ordered typed consumer. |
+| `TestTextWordChoiceSavedFrames` | Prior pair survives in delayed frames despite later outer choices; clones run separately; nested application and permanent loops restore outer pairs. |
+| `TestTextWordChoiceWaitingSource` | Waiting queries make no choices; source phasing and departure/return keep original source LKI and original chooser. |
+| `TestRONTextWordChoiceGameplay` | Both resolving symbols execute through cast/stack resolution at the correct time. |
+| `TestRONTextWordChoiceDeclarations` | Malformed symbols/roles and incompatible amount operands reject; unmodified complete Magical Hack and Sleight of Mind records still reject. |
+| `TestRONTextWordChoiceRealOperands` | Both actual records' spell/permanent branches: real choice AST and both typed operands execute with separate factory bindings. |
+| `TestRONTextWordChoiceRealGameplay` | Both cards and both real targeted branches cast and resolve through the engine. Test copies omit the unsupported text consumer and select the branch instead of the unsupported target-union wrapper. Explicit partial-card evidence. |
+| `TestRONTextWordChoiceCopyPaymentAndSource` | Failed mana payment makes no choices; pending source departure/phasing, copied controller and cloned games decide separately. |
+| `TestRONTextWordChoiceTargetLegality` | Explicit target controller chooses; a phased illegal target prevents the pair choice. |
+
+Affected names: **Magical Hack**, **Sleight of Mind**, each present in LEA, LEB,
+2ED, 3ED, CED and CEI. Two unique names, twelve records, twenty-four producers.
+No complete-card gameplay mapping is added; existing accepted records and
+complete-card mappings remain intact.
+
+### Source defects, gates and validation
+
+No RON source changes. Vocabulary hashes and the source snapshot need no refresh.
+The two selected records' word choices agree with local Oracle. Bronze Tablet's
+existing assignment defect and Tempest Efreet's missing transports remain
+separate from this compiler/engine prerequisite. No environment failure or
+pre-existing test failure blocks the slice. No Go card definition, generator or
+DSL function is removed; full loading, startup and removal gates remain unmet.
+
+Required checks passed in fast-fail order, repeated after the final gameplay test
+was added and lint formatting was reviewed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextWordChoice -count=1`.
+- `go test ./pkg/mage -run TestTextWordChoice -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; automatic changes only formatted the new imports.
+- `git diff --check`; staged patch check.
+- `go run ./cmd/loadcards -json`: expected strict collection rejection, exit 1.
+
+Final loader: **2,084 compiled / 361 rejected records; 807 accepted / 179 rejected
+unique names**, totals 2,445 records / 986 names. Actual **+0 unique names / +0
+records** equals the prerequisite estimate. No newly accepted/rejected record
+and no changed loader diagnostic. Both full cards still hit the target-union
+restriction before text-word execution. Compilation progress and complete-card
+gameplay counts stay unchanged; shared choice/operand coverage increases.
+
+Changed files: new native/RON `text_word_choice.go` and tests; engine
+`resolution_state.go`, `effect.go`, `composable_actions.go`,
+`composable_conditions.go`, `definition.go`, `doc.go`; RON `compiler.go`,
+`player_scope.go`, `optional_payment.go`, `player_actions.go`; API/rules-contract
+references and this ledger. Commit message:
+`feat(ron): implement resolution text word pairs`.
+
+Ranked next candidates:
+
+1. General spell-or-permanent target-union resolving bodies for Magical Hack
+   and Sleight of Mind. Reuse the existing union target service while preserving
+   a single target choice, exact stack/permanent identity and Lace behavior.
+   Choice results are now ready; text effects remain downstream. Estimate zero
+   immediate full-card unlocks as another prerequisite for two unique cards.
+2. Shared semantic text-word substitution and text-layer installation for those
+   two cards, after target-union bodies. Cover color/land words in the correct
+   roles (CR 612.2), printed versus granted abilities, timestamps, spell-to-entry
+   continuation and copy isolation. Scope a bounded dependency-ready prerequisite
+   if the complete text-effect contract cannot fit one run.
+3. Bronze Tablet's explicit owner assignment and documented source repair, then
+   Tempest Efreet's remaining transports. Reassess multi-card prerequisites before
+   selecting either single-card completion.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete.

@@ -36,7 +36,7 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	actions := make([]effectFactory, 0, len(parts))
 	for _, part := range parts {
 		switch part.Name {
-		case "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
+		case "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:
 			return nil, nil, nil, unsupported(part, "scoped player action")
 		}
@@ -51,6 +51,19 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 			}
 			ctx.libraryReveal = result
 			ctx.handReveal = nil
+			actions = append(actions, build)
+			continue
+		}
+		if part.Name == "ChooseTwoColorWords" || part.Name == "ChooseTwoBasicLandTypes" {
+			build, result, choiceErr := compileTextWordChoice(part, ctx)
+			if choiceErr != nil {
+				return nil, nil, nil, choiceErr
+			}
+			if result.color {
+				ctx.colorWords = result
+			} else {
+				ctx.landWords = result
+			}
 			actions = append(actions, build)
 			continue
 		}

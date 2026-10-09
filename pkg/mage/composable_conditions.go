@@ -325,6 +325,7 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
+		words:             maps.Clone(ctx.Game.resolution.wordPairBindings),
 		names:             maps.Clone(ctx.Game.resolution.cardNameBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
 		manaTypes:         cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),
@@ -374,6 +375,7 @@ type capturedDelayedBody struct {
 	permanents        map[*PermanentBinding]capturedPermanent
 	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
 	players           map[*PlayerBinding]uuid.UUID
+	words             map[*wordPairBinding]wordPairResult
 	names             map[*CardNameBinding]string
 	numbers           map[*NumberBinding]int
 	manaTypes         map[*ManaTypesBinding][]Color
@@ -409,6 +411,9 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	outerManaTypes := state.manaTypesBindings
 	state.manaTypesBindings = cloneManaTypesBindings(e.manaTypes)
 	defer func() { state.manaTypesBindings = outerManaTypes }()
+	outerWords := state.wordPairBindings
+	state.wordPairBindings = maps.Clone(e.words)
+	defer func() { state.wordPairBindings = outerWords }()
 	outerNames := state.cardNameBindings
 	state.cardNameBindings = maps.Clone(e.names)
 	defer func() { state.cardNameBindings = outerNames }()
@@ -499,6 +504,7 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		damageSources:     cloneDamageSourceBindings(ctx.Game.resolution.damageSourceBindings),
 		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
+		words:             maps.Clone(ctx.Game.resolution.wordPairBindings),
 		names:             maps.Clone(ctx.Game.resolution.cardNameBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
 		manaTypes:         cloneManaTypesBindings(ctx.Game.resolution.manaTypesBindings),

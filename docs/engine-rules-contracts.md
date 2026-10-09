@@ -13430,3 +13430,53 @@ Tempest Efreet requirement fragment with its actual tap/sacrifice, life payment,
 random reveal and ownership exchange. Its two later unsupported transports are
 omitted only in that explicitly partial test; the complete record still rejects.
 Bronze Tablet's existing ownership-assignment source defect remains unresolved.
+
+### Resolution text-word pairs
+
+`ChooseColorWordPair(PlayerRef, *ColorWordPairBinding) ResolvingEffect` and
+`ChooseBasicLandWordPair(PlayerRef, *BasicLandWordPairBinding) ResolvingEffect`
+make two required decisions in order at resolution (CR 608.2c–d). The first
+options are White, Blue, Black, Red, Green or Plains, Island, Swamp, Mountain,
+Forest (CR 105.1, 305.6). The second options omit the first answer: the local
+Oracle text of Sleight of Mind and Magical Hack requires replacement “with
+another.” No occurrence of the chosen word on a subject is required to choose
+it. These operations select words; they do not change a subject's text.
+
+`BindColorWordPair(string)` and `BindBasicLandWordPair(string)` declare typed
+results. `FirstColorWord`/`SecondColorWord` return `ColorWordRef`, whose
+`Resolve(*EffectContext) (core.Color, bool)` reads the saved result.
+`FirstBasicLandWord`/`SecondBasicLandWord` return `BasicLandWordRef`, whose
+`Resolve(*EffectContext) (core.BasicLandType, bool)` keeps land words separate
+from colors. Missing results return zero and false. Both decisions finish
+before the pair is published. An absent chooser clears a prior result without
+making decisions. Invalid responses select the first remaining legal option.
+Decision lists have separate storage, so player code cannot change the domain.
+
+The resolution subsystem owns one per-binding map of immutable integer pairs.
+Clear, clone, nested application, permanent/card/damage-result loops and saved
+delayed bodies follow the existing frame contracts. Copies decide separately
+with their own controller. Source departure or phasing does not cancel a
+pending choice. Typed chooser source reads remain available to waiting delayed
+queries without making decisions; exact source LKI cannot follow a return.
+Definition validation rejects nil players/results, empty names, duplicate pair
+producers on one path, and reads without a producer on every path. Distinct
+color and land reference interfaces prevent a consumer from mixing domains.
+
+RON supports the exact symbols `ChooseTwoColorWords` and
+`ChooseTwoBasicLandTypes` in resolving action sequences and player action
+bodies. Tuple, cost, entry and static declarations reject. The compiler retains
+separate lexical color and land plans and lowers the exact first/second symbols
+to typed references. A producer in a nested player scope stays in that scope;
+this slice does not export its pair to an outer action sequence. Branches and
+modes retain their own plans. Actual text-effect consumers remain unsupported.
+
+Evidence: native `TestTextWordChoiceResults`, `Declarations`, `ReadDeclarations`,
+`SavedFrames`, `WaitingSource`; RON `TestRONTextWordChoiceGameplay`,
+`Declarations`, `RealOperands`, `RealGameplay`, `CopyPaymentAndSource`,
+`TargetLegality`.
+RealOperands executes the choice and both saved operands from both complete
+records' spell/permanent branches. RealGameplay casts each selected real targeted
+branch through the engine with its text consumer omitted. The full target-union
+wrapper is also omitted because `Targeted_Modal` only accepts Lace color actions. This is prerequisite evidence, not complete
+Magical Hack or Sleight of Mind gameplay validation. No replacement ordering,
+zone transport, layer installation or simultaneous object action is introduced.

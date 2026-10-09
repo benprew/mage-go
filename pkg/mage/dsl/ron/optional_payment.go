@@ -40,6 +40,19 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			return append(effects, effect), ctx.chosenName, nil
 		}
 
+		if part.Name == "ChooseTwoColorWords" || part.Name == "ChooseTwoBasicLandTypes" {
+			effect, result, err := compileTextWordChoice(part, ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			if result.color {
+				ctx.colorWords = result
+			} else {
+				ctx.landWords = result
+			}
+			effects = append(effects, effect)
+			continue
+		}
 		if part.Name == "ChooseACardName" {
 			effect, result, err := compileCardNameChoiceWithResult(part, ctx)
 			if err != nil {
