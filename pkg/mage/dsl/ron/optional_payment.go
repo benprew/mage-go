@@ -14,6 +14,17 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		action, player, err := drawnCardAction(part, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		if action.Name == "DrawACard" || action.Name == "RevealTheCardDrawnThisWay" {
+			effect, err := compileDrawnCardProducer(action, player, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, effect), ctx.chosenName, nil
+		}
 		if isRandomHandReveal(part) {
 			effect, err := compileRandomHandReveal(part, parts[i+1:], ctx)
 			if err != nil {

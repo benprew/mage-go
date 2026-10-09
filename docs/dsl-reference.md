@@ -9591,3 +9591,21 @@ Wand's second predicate is corrected to `IsNonCardtype(Land)` using retained
 Petra Sphinx needs library results and Sindbad needs drawn-card results. No full
 card is newly accepted. Earlier statements that reveal predicates are unsupported
 are superseded only for this singular hand context.
+
+### Saved hand reveal from a single draw
+
+Use `DrawFor(player, Fixed(1), DrawCardInto(drawn))`, then
+`RevealHandCardInto(FromCard(drawn), revealed)` to retain a reveal result.
+`IfRevealedCardMatches` reads saved name/type facts from `revealed`.
+`DiscardCardFromHandFor(player, FromCard(drawn))` keeps the explicit player
+and original hand visit. A replacement draw produces no original result.
+Reveal moves nothing; departure/return invalidates actions but cannot rewrite
+historical facts. Each declaration must have a dominating producer.
+
+RON resolving action lists support `DrawACard`, `RevealTheCardDrawnThisWay`
+and `DiscardTheCardDrawnThisWay` with separate lexical bindings. Draw and
+discard permit explicit `PlayerAction` subjects. Draw results stay local to
+branches and PlayerActions bodies; only the supported outer action-list
+continuation can read them. Cost/static/entry/replacement and plural/library
+producers remain separate contexts. Sindbad's complete ARN record supplies
+end-to-end gameplay evidence in `TestRONDrawnCardRevealSindbad`.

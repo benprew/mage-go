@@ -157,8 +157,8 @@ func TestRONRevealResultRealOperands(t *testing.T) {
 					t.Fatal("real predicate selected the wrong branch")
 				}
 			}
-			if _, err := Compile(record); err == nil {
-				t.Fatal("incomplete full card accepted")
+			if _, err := Compile(record); (err == nil) != (tc.name == "Sindbad") {
+				t.Fatalf("unexpected complete record support for %s: %v", tc.name, err)
 			}
 		})
 	}

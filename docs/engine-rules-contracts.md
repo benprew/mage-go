@@ -12635,3 +12635,45 @@ players, source departure/return/phasing, independent clones and producers,
 spell/trigger/delayed contexts, interchangeable names and real Wand land-payment
 outcomes. Complete inventory-card coverage is unchanged. Library/drawn/plural
 producers, generic boolean reveal filters and dynamic life payment remain gaps.
+
+## Saved drawn-card reveal and result dispatch
+
+`RevealHandCardInto(card CardRef, result *CardBinding) ResolvingEffect` reveals
+only a currently valid hand card. It records public history and saves an exact
+hand visit with immutable name/type facts in a separate result. It moves no
+card and makes no choice or random selection. Missing input, an invalidated
+visit, or an input outside a hand clears the result without publication.
+Definitions require valid input/result declarations and producer dominance.
+A historical matcher can still inspect saved facts after departure; `FromCard`
+cannot act on a returned visit. Separate clone and nested-resolution maps retain
+independent results. The existing reveal API remains available.
+
+RON resolving action lists lower `DrawACard` (also
+`PlayerAction(player, DrawACard)`) to existing `DrawFor(player, Fixed(1),
+DrawCardInto(binding))`. `RevealTheCardDrawnThisWay` reads that lexical draw
+binding and writes a separate lexical reveal binding for existing predicates.
+`DiscardTheCardDrawnThisWay`, optionally in `PlayerAction`, uses the draw
+binding with `DiscardCardFromHandFor`. Branches and delays retain their input
+bindings; a conditional producer cannot escape its body. Separate producers
+shadow only their continuations. PlayerActions does not export draw results.
+Plural draws, costs, static declarations, entry/replacement bodies and library
+reveal producers remain separate contexts. Explicit-player reveal wrappers
+remain rejected; the supported reveal operand is the singular drawn result.
+
+The native draw service retains CR 121.6c: a replaced draw supplies no original
+result, including when its replacement draws a card. This adapter does not use
+the turn's last-drawn slot. Shared discard prevention, destination replacement
+and events remain in force. CR 121.1–6, 400.7 and 701.20a–c establish the draw,
+visit and reveal boundaries. No replacement priority or simultaneous operation
+contract changes.
+
+Evidence: `TestSavedHandRevealIdentityAndHistory`, `Declarations`,
+`ReplacementDraw`, `NestedFrames`; existing `TestDrawCardResult*`,
+`TestRevealSavedHandCard*`, `TestRandomHandRevealReplacements`.
+`TestRONDrawnCardRevealSindbad` executes the complete repository record with
+land/nonland/empty/replaced draws, summoning sickness, source departure/return/
+phasing and cloned stacks. `Contexts`, `DistinctProducers` and `Invalid` cover
+spell/trigger/delayed resolution, explicit players, saved historical facts,
+returned-visit rejection, lexical shadowing and independent factories/clones.
+Sindbad gains complete RON gameplay evidence; Petra Sphinx remains blocked by
+its library producer and movements, and Wand by dynamic life payment.

@@ -137,8 +137,18 @@
 // The name filter uses the shared chosen-name matcher and its saved binding.
 // Frames, delays and clones keep separate result maps with immutable facts.
 // Waiting queries retain source reads from both bodies without checking a match.
-// Library and drawn-card producers and current mana-value reads need separate
+// Library producers and current mana-value reads need separate
 // contracts. This operation supplies resolving predicates, not static conditions.
+//
+// Use [RevealHandCardInto] for a public reveal of a typed, saved hand card.
+// [DrawFor] with [DrawCardInto] saves the original successful draw.
+// Replacement draws cannot supply this result. The reveal saves separate facts
+// and an exact hand visit without movement, choices or random selection.
+// An absent or returned input clears the result. Historical predicates retain
+// facts after departure; [FromCard] still requires the saved visit for an action.
+// RON DrawACard, RevealTheCardDrawnThisWay and DiscardTheCardDrawnThisWay
+// use separate lexical draw and reveal bindings in resolving action lists.
+// Branch-local producers cannot supply results to an outer continuation.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
