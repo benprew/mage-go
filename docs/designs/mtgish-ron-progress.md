@@ -7,12 +7,13 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-DEFINITION-ABILITY-CORRESPONDENCE` lowers stable RON declaration groups
-and checks fresh text revisions against their original ability identities.
-Prototype gameplay covers protection, activations, land triggers and count CDAs;
-copy omissions and token IDs retain correspondence. Live text installation
-remains unsupported. **+0 unique names / +0 records**, as estimated.
-All required checks pass; fresh loader JSON and diagnostics are unchanged.
+`TEXT-ACTIVATION-STATE` lowers an opt-in for printed activated actions and
+rebinds fresh rules with the same active identity, limits and history lineage.
+RON gameplay covers four accepted history cards, queued targets/results, modal
+choices, copies, clones, cleanup, phasing and returned-source rejection.
+Full text-layer and spell installation remain unsupported. **+0 unique names /
++0 records**, as estimated. All required checks pass; loader diagnostics agree
+with the fresh baseline.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -58243,6 +58244,149 @@ Ranked next candidates:
    keep Bronze Tablet's independent source-fidelity repair separate.
 3. Private inspected-hand choice and controlled-player decisions for Word of
    Command; choice alone remains zero unlocks.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: printed activated-action text state
+
+Status: complete `TEXT-ACTIVATION-STATE` prerequisite slice. Stop after this
+slice. Full text-changing spell execution and collection cutover remain open.
+
+### Fresh baseline and selection
+
+The working tree began with unstaged `.gitignore`, execution-design and progress
+ledger changes, plus an untracked completed-entry archive. Preserve that archive
+move and all unrelated changes. Read the ledger status and latest entry only.
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The completed
+baseline loader exited 1 for collection rejection: **2,090 compiled / 355 rejected
+records; 808 accepted / 178 rejected unique names**, 2,445 records / 986 names.
+An early read of the temporary loader output showed an older 2,084 count before
+the baseline command completed; the completed baseline agrees with the ledger.
+This was neither a build failure nor a source acceptance regression.
+
+| Compared candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Latest ranked #1, bounded active action/state installation | Magical Hack; Sleight of Mind (12 records), with history contracts exercised by Dragon Whelp, Nalathni Dragon, Farrelite Priest and Initiates of the Ebon Hand | 0 | Checked definition correspondence and ordinary runtime COW are ready. Preserve active identity, limits and history before a layer owner can rebuild actions. Other active kinds, layer order/lifetime, restoration after ability removal, spell text and entry continuation remain. Enables both text-changing names. | One bounded engine state service, compiler opt-in, history identity and focused native/RON tests; fits this run. |
+| Latest ranked #2, physical-card transport | Tempest Efreet; Bronze Tablet | At most 1 for both transport forms; 0 for just one | Efreet needs exact hand transfer and saved paid-source destination movement. Tablet's independent owner-assignment source defect remains. | Two zone destination contracts and full ante interactions; larger than the selected state bridge. |
+| Execution phase 11, repeated resolving procedures | Eureka; Mana Clash | 1 for a complete optional-entry repeat shape; 0 for only a loop prerequisite | Eureka needs ordered optional player rounds and action-result termination. Mana Clash also needs per-player coin outcomes, recipient filtering and all-heads termination. Shared repeat scope would enable both. | Several new round-result/decision contracts, broader than the ready ranked #1 prerequisite. |
+
+Read complete records and nested forms for every name in this comparison, all
+Magical Hack/Sleight reprints, and the four history fixtures. Targeted vocabulary
+lookups covered `ActivatedWithModifiers`, both word-substitution constructors and
+repeated-procedure signatures. No first-error count was used as an unlock estimate.
+Select the dependency-ready bounded portion of ranked #1 for its concrete two-card
+downstream benefit. This completes active action rebinding, not the whole live
+text subsystem. **Actual gain 0 unique names / 0 records**, matching the estimate.
+
+### Contract, signatures, contexts and reuse
+
+- `WithTextRevisionActivationState() ActionOption` permits checked state transfer
+  on a printed `ActionDefinition` activation. Spell declarations reject the option.
+- `(*Game).RevisePrintedActivatedAbility(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks the saved source incarnation against the
+  present face-up source, printed group/member, retained builder and live action.
+  It validates fresh rules before changing the runtime ability slice.
+- RON lowers the option for ordinary and modal `Activated` / `ActivatedWithModifiers`
+  declarations produced by `compileActivatedRule`. The separate conditional-mana
+  path, other active ability types and the text-effect consumers remain unsupported
+  by this service. No RON grammar or spelling changes.
+- The replacement keeps the active UUID, source, current controller, once/max
+  activation state and history lineage. Fresh targets, costs, choices and result
+  declarations do not inherit runtime choices. Repeated revisions retain each
+  action's own ordered changes, without affecting sibling actions.
+- `ActivationHistoryBinding` has an independent UUID at construction. Checked
+  runtime rebinding gives only the fresh declaration its original lineage UUID.
+  Tracker keys pair that identity with the source incarnation. Original queued
+  bodies retain history reads; copies do not add activations. Countered activations
+  count. Existing cleanup clears flags and histories. Clone maps stay separate.
+- Absent, returned, phased and face-down sources reject. Unknown, removed, granted,
+  unmarked or incompatible actions reject without live changes. An existing revision
+  survives a phase cycle. Source departure keeps queued bodies, but later entry
+  uses the physical card's existing printed-origin restoration.
+
+RON owns lowering and lexical declaration construction. Mage owns state transfer
+and runtime replacement. Reuse: checked text correspondence, semantic private AST
+builder, definition plans and validation, source incarnations, COW permanents,
+cost transactions, queued frames/copies, turn trackers, cleanup and entry-copy
+provenance. CR 602.2a, 602.5b and 612.3 establish pending text, persistent limits
+and granted-ability exclusion. No new LKI, batch movement, replacement order or
+payment rule. No reflection, global action slot, name branch or Go-card fallback.
+
+The caller must supply layer-3 order and lifetime. This service does not replace
+the physical card's printed/copiable rules, static registrations, other ability
+kinds or spell text. Restoration of revised text after layer-driven ability
+removal needs the future layer owner. All twelve full text spell records still
+reject; a partial target-domain adapter was not published.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON tests failed compilation on the absent `RevisePrintedActivatedAbility`
+API. Native declaration/source tests also failed on that API and the missing
+opt-in. A native fixture's nonexistent `Game.Players()` helper was corrected to
+its existing package-local player storage. The later copy/result fixture used a
+nonexistent reveal-history helper; corrected it to `PublicReveals` before passing.
+The modal fixture first used direct target IDs instead of the existing modal
+player-choice interface. Corrected the fixture to exercise the actual modal
+target choice, retaining the illegal-target assertion. No assertion was weakened.
+
+| Tests | Card mapping and contract evidence |
+| --- | --- |
+| `TestRONTextActivationStateHistory` | Complete Dragon Whelp, Nalathni Dragon, Farrelite Priest and Initiates of the Ebon Hand records: pump/mana, keywords and fourth-activation delayed sacrifice after rebinding. |
+| `QueuedAndRepeated` | Synthetic complete RON targeted activation: red-to-green-to-blue filters, legality, unchanged queued bodies and separate cloned resolution. |
+| `LimitsAndIdentity` | Synthetic once/max activations: failed payment, retained limits, control changes, source phasing, cleanup and returned-source rejection. |
+| `HistoryQueueAndClone` | Complete Dragon Whelp record: countered activations count, copies retain history without activation increments, queued revision and clone isolation. |
+| `IndependentHistoriesAndCleanup` | Two synthetic RON actions with the same history name: separate declaration lineage, revision order, cloned counts and cleanup of a surviving revised source. |
+| `CopiedDefinitionAndResults` | Synthetic RON draw/reveal/discard/target action plus complete Wall of Wood physical origin: copiable values exclude runtime text, entry-copy revisions keep separate rules/results, departure restores origin. |
+| `Modal` | Synthetic complete RON modal activation: original and revised target filters, independent queued choices and both mode bodies. |
+| `Eligibility` | Unknown/other-instance IDs, invalid words, removed actions and unprinted grants reject; complete records for all twelve Magical Hack/Sleight reprints still reject. |
+| Native `TestTextActivationStateDeclaration`, `MissingSource`, `ContractMismatch` | Invalid spell option, nil/absent sources, changed history contract, unmarked actions, grant wrappers and face-down sources reject without mutation. |
+
+These tests extend active-state gameplay evidence for four accepted unique cards
+and provide synthetic harder contracts. They do not establish complete gameplay
+for Magical Hack or Sleight of Mind. Compiler acceptance is unchanged.
+
+### Verification and loader
+
+All required checks passed in fast-fail order with the final tests included:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextActivationState -count=1`.
+- `go test ./pkg/mage -run TestTextActivationState -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+
+Reviewed automatic lint changes. Final review added a missing modal acceptance
+case, then reran the full fast-fail verification sequence. Final loader JSON, including every diagnostic,
+is exactly equal to the completed baseline: **2,090 compiled / 355 rejected
+records; 808 accepted / 178 rejected unique names**. No acceptance regression,
+partial production registry, new source defect or hidden unsupported shape.
+No RON source change; vocabulary source snapshot remains valid.
+
+### Files, preserved work and next candidates
+
+New engine service and native tests: `pkg/mage/text_activation_state.go` and
+`text_activation_state_test.go`. Updated engine action/history/definition code,
+RON activation lowering and new RON state tests. Updated `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+No Go definitions, generation tools or DSL functions were removed: cutover gates
+remain unmet. The user's ledger/archive move is preserved outside this commit.
+Stage only the summary replacement and this appended entry against the tracked
+original ledger, along with this slice's engine/compiler/tests/API documentation.
+Commit message: `feat(ron): implement printed activation text state`.
+
+Ranked next candidates:
+
+1. Checked active trigger/static declaration installation and registration
+   lifecycle for text revisions, before a coordinated layer-3 owner. Magical Hack
+   and Sleight of Mind: zero immediate unlocks, two names / twelve records downstream.
+   Preserve pending trigger snapshots, static identity and ability-restoration state.
+2. Shared repeated-procedure round/result scope for Eureka and Mana Clash. Compare
+   a bounded optional-entry shape with the complete coin-round dependencies.
+3. Exact physical-card transport for Tempest Efreet; retain Bronze Tablet's
+   independent source-fidelity correction as a separate concern.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

@@ -132,6 +132,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.textRevisionState && e.kind != ActionActivated {
+			n.problem = "text revision state requires an activated action"
+		}
 		if e.activationManaXOptions > 0 {
 			hasX := false
 			for _, cost := range e.costs {

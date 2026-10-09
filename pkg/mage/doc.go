@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithTextRevisionActivationState] for a printed activated action.
+// [Game.RevisePrintedActivatedAbility] checks its declaration and source visit.
+// It keeps the active ID, limits and activation history with fresh rules.
+// Queued bodies keep their earlier targets and result bindings. Cleanup resets
+// limits and history; phasing keeps the revised action. Returned sources cannot
+// inherit it. RON lowers this option on its ActionDefinition activation path.
+// The caller must supply text-layer order and lifetime. Other active ability
+// kinds, spell text and full source text installation need separate services.
+//
 // Use [BuildTextDefinitionRevision] for checked ability correspondence.
 // [WithDefinitionAbilityGroup] keeps declaration groups across fresh builds.
 // [TextDefinitionRevision.ReplacementAbility] pairs original ability IDs with

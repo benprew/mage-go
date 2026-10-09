@@ -1,5 +1,40 @@
 # DSL reference
 
+## Printed activated-action text state
+
+`mage.WithTextRevisionActivationState() ActionOption` opts a printed activated
+`ActionDefinition` into checked runtime rebinding. Declaration validation rejects
+this option on spell actions. RON lowers it on ordinary and modal `Activated`
+and `ActivatedWithModifiers` actions produced by `compileActivatedRule`.
+The separate conditional-mana compiler path is outside this contract.
+
+`(*mage.Game).RevisePrintedActivatedAbility(source *Permanent,
+abilityID uuid.UUID, changes ...TextChange) error` checks the saved source
+incarnation against the present face-up permanent, its retained definition,
+declaration group and active printed action. It builds and validates fresh rules
+before replacing that one runtime action. Removed, granted, unmarked, phased,
+absent and returned sources/declarations reject without changing game state.
+
+The replacement keeps the ability UUID, current source/controller, once-per-turn
+flag, activation count and history lineage. Fresh targets, costs, choices and
+result bindings belong to the rebuilt declaration. Queued original abilities and
+copies retain their old bodies and frames. Repeated revisions use the ordered
+changes of that action's prior revision. Other actions remain separate. History
+uses a declaration lineage UUID plus source incarnation; clones keep separate
+counts. Existing cleanup resets the rebuilt action's flags and history.
+
+This service replaces one active action. It does not change the physical card's
+printed or copiable definition, install layer 3, schedule a duration, restore
+revised rules after ability removal, revise other ability kinds or change spell
+text. A future text-layer owner must coordinate those services. Magical Hack
+and Sleight of Mind still reject as complete records.
+
+Evidence: `TestRONTextActivationStateHistory`, `QueuedAndRepeated`,
+`LimitsAndIdentity`, `HistoryQueueAndClone`, `Eligibility`,
+`IndependentHistoriesAndCleanup`, `CopiedDefinitionAndResults`, `Modal`; native
+`TestTextActivationStateDeclaration`,
+`MissingSource` and `ContractMismatch`.
+
 ## Text definition ability correspondence
 
 `mage.WithDefinitionAbilityGroup(group int, option CardOption) CardOption`

@@ -13628,3 +13628,52 @@ and `MembersAndCopy` check group validity, context isolation and copy storage.
 `CountDefinition` covers combined Keldon Warlord CDAs; native
 `CopyOmissionsAndTokens` covers copy omissions and token ID remapping.
 No complete-card or collection acceptance gain is claimed.
+
+
+### Printed activated-action state under text revision
+
+`Game.RevisePrintedActivatedAbility(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` establishes the bounded activated-action part of
+active text installation. `WithTextRevisionActivationState` opts declarations
+into this service; it is invalid on a spell action. RON adds it on its ordinary
+and modal ActionDefinition activation path. Separate conditional mana actions
+and other ability categories remain outside the supported context.
+
+Before movement of runtime state, the service checks the source incarnation,
+face-up presence, printed group/member correspondence and active action. It
+reuses `BuildTextDefinitionRevision` and the retained semantic AST builder.
+Unknown, removed, granted and unmarked declarations reject. Invalid words,
+missing provenance, incompatible history contracts and failed builders leave
+the live runtime slice unchanged. Phased sources cannot be revised; a phase
+cycle keeps an existing revision. Leave-and-return cannot inherit it.
+
+The active ability UUID, source, current controller, activation limits and paid
+activation counts remain. A history binding has a fresh lineage UUID on ordinary
+construction. Only a checked runtime revision gives its new declaration the old
+lineage. Tracker keys combine that UUID with the source incarnation. Pending
+old bodies therefore retain history reads without sharing new targets or result
+bindings. Countered activations count; copies do not add counts. Cost payments,
+clone isolation and cleanup use the existing shared services. Two declarations
+with identical history names cannot share counts.
+
+CR 602.2a fixes a queued activation's text; CR 602.5b keeps restrictions through
+control changes. CR 612.3 excludes granted abilities. This service handles one
+printed activated action, not a complete continuous text effect. It does not
+modify the physical card's printed/copiable rules, static registration, layer
+order, expiry or spell entry. Reapplication after layer-driven ability restoration
+requires the future layer owner. There is no new replacement, LKI, simultaneous
+movement or cost transaction contract.
+
+Evidence: RON `TestRONTextActivationStateHistory` executes all rules of Dragon
+Whelp, Nalathni Dragon, Farrelite Priest and Initiates of the Ebon Hand with a
+runtime revision before the fourth activation. `QueuedAndRepeated` covers changed
+target filters, successive transformations, pending bodies and cloned resolution.
+`LimitsAndIdentity` covers failed payments, once/max limits, control changes,
+cleanup, phasing and returned sources. `HistoryQueueAndClone` covers countered
+activations, copies and queued history. `IndependentHistoriesAndCleanup` covers
+separate declarations and cleanup of a surviving revised source. `Eligibility`
+and native `Declaration`, `MissingSource`, `ContractMismatch` establish rejection.
+`CopiedDefinitionAndResults` checks independent entry-copy rules, draw/reveal/
+discard results and printed-origin restoration after departure. Complete Magical
+Hack/Sleight of Mind loading remains unsupported. `Modal` executes independently
+queued mode targets and choices across a checked runtime revision.

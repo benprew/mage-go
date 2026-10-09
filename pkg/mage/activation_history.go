@@ -7,16 +7,19 @@ import (
 )
 
 // ActivationHistoryBinding keeps each ability's history separate.
-type ActivationHistoryBinding struct{ name string }
+type ActivationHistoryBinding struct {
+	name     string
+	identity uuid.UUID
+}
 
 // BindActivationHistory names the history of one activated ability.
 func BindActivationHistory(name string) *ActivationHistoryBinding {
-	return &ActivationHistoryBinding{name: name}
+	return &ActivationHistoryBinding{name: name, identity: uuid.New()}
 }
 func (b *ActivationHistoryBinding) bindingName() string { return b.name }
 func (b *ActivationHistoryBinding) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "activation-history", Text: b.name, bindingDeclaration: b}
-	if b.name == "" {
+	if b.name == "" || b.identity == uuid.Nil {
 		n.problem = "supply an activation history name"
 	}
 	return n
@@ -28,7 +31,7 @@ func WithActivationHistory(binding *ActivationHistoryBinding) ActionOption {
 }
 
 type activationHistoryKey struct {
-	binding     *ActivationHistoryBinding
+	identity    uuid.UUID
 	incarnation uuid.UUID
 }
 
@@ -59,7 +62,7 @@ func (e *activationHistoryBranch) Properties() EffectProperties {
 	return e.body.Properties()
 }
 func (e *activationHistoryBranch) Apply(ctx *EffectContext) error {
-	key := activationHistoryKey{binding: e.binding, incarnation: ctx.sourceIncarnation}
+	key := activationHistoryKey{identity: e.binding.identity, incarnation: ctx.sourceIncarnation}
 	if ctx.Game.trackers.Turn.abilityActivations[key] >= e.minimum {
 		return e.body.Apply(ctx)
 	}
