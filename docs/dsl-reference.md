@@ -1,5 +1,56 @@
 # DSL reference
 
+## Printed Aura ability-layer text revision
+
+`StaticAbilityHolder.WithAbilityTextRevision() *StaticAbilityHolder` opts in a
+printed static declaration with nonempty layer-6 effects and
+`WhileOnBattlefield` duration. Definition validation rejects nil, empty, other
+layers and other durations. `Game.RevisePrintedStaticAbility(source *Permanent,
+abilityID uuid.UUID, changes ...TextChange) error` checks exact face-up source
+incarnation, active printed declaration, retained semantic builder, declaration
+correspondence and complete registrations before any mutation. Fresh effects
+must keep the marker, layer, duration and count.
+
+RON lowers this marker for unconditional
+`PermanentLayerEffect(HostPermanent, [AddAbility(abilities)])` on the basic
+`compileStaticLayer` path: validated keyword symbols, fixed Landwalk filters,
+and Ward protection with `SinglePermanent(ThisPermanent)` as its exception.
+The source must be an Aura. Mixed parts, global grants, conditional statics,
+granted triggered/activated abilities and other layers do not opt in.
+
+The shared static installer retains active UUID and registration positions
+without changing timestamps (CR 613.7a). Each declaration keeps ordered changes
+separately. Existing layer-6 grants read the current exact host, with phasing,
+source-removal dependencies and current attachment timestamps. The Ward exception
+exempts only its physical granting Aura, even when revised to white protection.
+This implements semantic-word selection under CR 612.2 and grant execution under
+CR 613.1f; it does not modify granted abilities on the recipient (CR 612.3).
+
+Phasing suspends execution; restoration after ability removal keeps the revised
+holder. Departure ends registrations and saves revised protection in LKI.
+Return restores printed rules. Clone effect replacement and grant storage are
+independent. The layer reset now allocates separate ability storage before
+removing grants: shortening a shared slice must not permit later append to
+replace a sibling game's granted ability.
+
+Absent, phased, returned, face-down, unknown-ID, granted, removed, unmarked and
+incomplete declarations reject without mutation. Invalid changes, builder errors
+and changed contracts also reject. The caller supplies layer-3 order, expiry and
+restoration of original text. Magical Hack and Sleight of Mind still reject their
+unfinished full consumers. Payment, targeting, replacement choice and simultaneous
+damage retain their shared services.
+
+Evidence: RON `TestRONTextStaticAbilityWards` (five Wards, ordered changes, exact
+exception, clones, phasing, reattachment, removal/restoration and returned source),
+`Landwalk` (Burrowing/Fishliver Oil and defending-land phasing), `Keywords` (Fear,
+Flight, Lance, Eternal Warrior, Consecrate Land), `Boundaries`,
+`IndependentDeclarations` and `DamageAndLKI` (cast White Ward, resolution timing,
+simultaneous prevention and departure snapshot). Native
+`TestTextStaticAbilityDeclaration`, `Rejects`, `RegistrationOrder` and
+`GrantCloneIsolation` cover definition contracts, transactional rejection,
+multi-effect replacement and the shared grant-storage regression.
+
+
 ## Printed static P/T text revision
 
 `StaticAbilityHolder.WithPTTextRevision() *StaticAbilityHolder` opts in a printed

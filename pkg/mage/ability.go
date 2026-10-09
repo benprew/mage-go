@@ -166,6 +166,7 @@ func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
 type StaticAbilityHolder struct {
 	BaseAbility
 	ptTextRevision         bool
+	abilityTextRevision    bool
 	textRevisionDefinition Card
 	Effects                []ContinuousEffect
 }

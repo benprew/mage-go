@@ -123,6 +123,9 @@ func describeDefinition(v any) definitionNode {
 			n.children = append(n.children, definitionEdge{"conditional", e.conditional})
 		}
 	case *StaticAbilityHolder:
+		if e.abilityTextRevision && !e.supportsAbilityTextRevision() {
+			n.problem = "text ability revision requires nonempty battlefield ability-layer effects"
+		}
 		if e.ptTextRevision && !e.supportsPTTextRevision() {
 			n.problem = "text P/T revision requires nonempty battlefield P/T modifications"
 		}

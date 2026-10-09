@@ -231,6 +231,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			values[i] = build()
 		}
 		holder := mage.StaticAbility(values...)
+		if !global && len(parts) == 1 && parts[0].Name == "AddAbility" {
+			holder.WithAbilityTextRevision()
+		}
 		if global && !general && len(parts) == 1 && parts[0].Name == "AdjustPT" {
 			holder.WithPTTextRevision()
 		}

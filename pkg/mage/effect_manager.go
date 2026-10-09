@@ -689,7 +689,8 @@ func (em *EffectManager) Apply(g *Game) {
 			p.RuntimeAbilities = append(restored, p.RuntimeAbilities...)
 			p.printedAbilitiesSuppressed = false
 		}
-		base := p.RuntimeAbilities[:0]
+		// A clone can share this storage. Keep later grants in a separate slice.
+		base := make([]Ability, 0, len(p.RuntimeAbilities))
 		for _, a := range p.RuntimeAbilities {
 			if _, ok := a.(*grantedByEffect); !ok {
 				base = append(base, a)

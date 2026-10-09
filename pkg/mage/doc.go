@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [StaticAbilityHolder.WithAbilityTextRevision] for a printed ability-layer rule.
+// [Game.RevisePrintedStaticAbility] checks its declaration and source visit.
+// It replaces fresh effects with the same active ID and registration positions.
+// Each effect must use layer 6 with battlefield duration. Clones stay separate.
+// RON opts in unconditional Aura-host keyword, landwalk and Ward grants.
+// The exact granting Aura keeps its protection exception after each revision.
+// Phasing suspends the grant. Removal and restoration keep revised rules.
+// Return restores printed rules. The caller must supply text-layer order and
+// lifetime. Mixed layers, conditional rules and full text consumers need
+// separate services.
+//
 // Use [StaticAbilityHolder.WithPTTextRevision] for a printed static P/T rule.
 // [Game.RevisePrintedStaticPTAbility] checks its declaration and source visit.
 // It keeps the active ID and registration order with fresh validated effects.

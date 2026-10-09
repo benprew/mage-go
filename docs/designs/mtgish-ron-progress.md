@@ -7,12 +7,13 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-STATIC-PT` lowers an opt-in for unconditional global creature AdjustPT
-rules and installs checked fresh P/T effects with stable active IDs and registration
-order. RON revision gameplay covers eleven accepted unique names / 31 records,
-independent declarations, clones, live control/membership, phasing, removal and
-restoration, return identity and departure LKI. Other static layers, remaining
-trigger kinds, spell installation and the layer-3 owner remain unsupported.
+`TEXT-AURA-ABILITY` lowers an opt-in for unconditional basic Aura-host ability
+rules and installs fresh checked layer-6 effects with stable IDs and registration
+order. Revision evidence covers 12 accepted unique names / 61 records, including
+Ward exceptions, landwalk, independent declarations, clones, phasing, attachment
+changes, removal/restoration, returned identities, simultaneous prevention and LKI.
+A shared runtime-grant reset now keeps clone storage separate. Mixed/global rules,
+remaining triggers, spell installation and the layer-3 owner remain unsupported.
 **+0 unique names / +0 records**, as estimated. All required checks pass; loader
 diagnostics exactly match the fresh baseline.
 
@@ -58676,6 +58677,158 @@ Ranked next candidates:
 3. Shared repeated-procedure round/result scope for Eureka and Mana Clash;
    compare full optional-entry and coin/damage consumers. Exact Tempest Efreet
    transports remain a one-card fallback if shared candidates are not ready.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: checked printed Aura ability-layer text revision
+
+Status: completed implementation slice `TEXT-AURA-ABILITY`. Stop after this slice.
+Initial user changes in `.gitignore`, the execution design and this ledger, plus
+untracked `mtgish-ron-completed.md`, are preserved. Only this run's summary change
+and appended entry are staged; the user's archive/reorganization is not staged.
+
+### Fresh evidence and candidate comparison
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for strict collection rejection, with
+2,090 compiled / 355 rejected records and 808 accepted / 178 rejected unique
+names. Collection rejection is separate from build/test failure. Read the design,
+latest ledger entry, engine API, selected code, targeted vocabulary signatures
+(AddAbility/1, Landwalk/1, ProtectionAndDoesntRemovePermanents/2), complete RON
+records and local Oracle data in LEA/ARN/LEG/DRK. Rules: CR 400.7, 612.2–3,
+613.1f, 613.7a, 702.14c and 702.16b/c/e. No source correction was needed.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, printed static grants; selected bounded Aura context | Black Ward, Blue Ward, Green Ward, Red Ward, White Ward, Burrowing, Fishliver Oil, Fear, Flight, Lance, Eternal Warrior, Consecrate Land: **0 new compiled names**, all already accepted. | Live protection/landwalk grant installation is a shared prerequisite for Magical Hack and Sleight of Mind. Those two full records still require complete spell/permanent text installation, layer-3 ordering and lifetime. Mixed global P/T-and-grant rules require a separate contract. Consecrate Land retains its independent Aura restriction. | Small: existing semantic builder, shared static installer and attachment lifecycle; declaration, rejection and gameplay tests. |
+| Printed land-tap trigger revision | Lifetap, Lifeblood: **0 new compiled names**. | Their complete records contain opponent-controlled Forest/Mountain tap events and controller life gain. Enables more permanent text installation, but needs separate typed event revision, detection and queued-body contracts; layer-3 owner and spell installation remain. | Medium: bounded event opt-in, fresh trigger installation and identity/queue tests. |
+| Repeated procedures | Eureka, Mana Clash: **2 possible full-card unlocks** for the complete consumers. | Eureka needs ordered optional hand entry and a no-action round result. Mana Clash needs distinct per-player coin results, tails-only damage and all-heads termination. A shared round/result scope alone unlocks zero; both nested consumer families remain. | Large: loop scope, decisions, entry/coin consumers, round termination and simultaneous damage tests. |
+
+The first candidate is dependency-ready and has concrete multi-card downstream
+value. Scope was stated before edits: unconditional basic Aura-host AddAbility
+rules only. This avoids coupling mixed layers or grant bodies to an unproved
+installation contract. The implement-engine skill supplied the reusable-engine
+workflow. No removed card/set skill, Go constructor fallback or delegation.
+
+### Exact contracts, dependencies and reuse
+
+- `(*StaticAbilityHolder).WithAbilityTextRevision() *StaticAbilityHolder` marks
+  printed static declarations. Nonempty effects must all use `LayerAbility`
+  and `WhileOnBattlefield`; nil effects, other layers and durations reject
+  through definition validation before gameplay.
+- `(*Game).RevisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks exact present face-up source incarnation,
+  printed group/member, active eligible declaration and complete registrations.
+  Its fresh replacement must retain the opt-in, layer, duration and effect count.
+- RON `compileStaticLayer` marks
+  `PermanentLayerEffect(HostPermanent, [AddAbility(abilities)])` only on its basic
+  Aura path. The validated list supports keyword symbols, fixed Landwalk forms
+  and `ProtectionAndDoesntRemovePermanents(FromColor(Colors(colors)),
+  SinglePermanent(ThisPermanent))`. Existing arity, filter and binding checks
+  remain. Global, mixed, conditional, granted activation/trigger and other-layer
+  declarations do not acquire this marker.
+- Shared private `revisePrintedStaticAbility(source *Permanent, abilityID
+  uuid.UUID, eligible func(*StaticAbilityHolder) bool, changes ...TextChange)
+  serves both this API and the preserved `RevisePrintedStaticPTAbility` caller.
+  `printedStaticEffect` now retains eligible layer-6 declarations as well as
+  layer-7c declarations. No parallel registry or layer service.
+- `BuildTextDefinitionRevision`, retained AST builders and printed declaration
+  keys supply fresh effects. Each sibling and source instance keeps its own
+  ordered prototype. Current controller/source and active UUID remain correct;
+  every effect retains its registration position and static timestamp.
+- Existing attachment effects follow the exact current host and attachment
+  timestamp. Ward protection exempts only the granting Aura's physical identity,
+  including after white-word substitution. Recipient-granted abilities do not
+  become editable printed declarations (CR 612.3).
+- Phasing suspends the grant and prevents revision. Ability removal suspends
+  registration; restoration uses its revised declaration. Departure ends the
+  grant and saves revised recipient protection in LKI. Return restores printed
+  origin and cannot satisfy an old source reference. Clones retain independent
+  declarations, registrations and runtime grant storage.
+- Unknown, foreign, granted, removed, unmarked, absent, phased, returned or
+  face-down declarations; missing groups/builders/registrations; invalid changes;
+  builder failures; and changed contracts reject before any runtime mutation.
+  Native tests cover the engine rejection classes; RON tests cover unsupported
+  syntax and contexts.
+
+RON owns spelling, validated context and opt-in lowering. Mage owns checked
+installation, registration and restoration. Existing source incarnation, layers,
+copy-on-write, attachment, protection/prevention, simultaneous damage, LKI and
+printed-origin services execute the rules. Payment rollback and replacement
+ordering are unchanged. The caller must still supply layer-3 order, expiry and
+original-text restoration; this is a complete installation prerequisite, not
+complete production support for Magical Hack or Sleight of Mind.
+
+### Failing-first tests and card-to-test mapping
+
+Before implementation, focused RON tests failed compilation on missing
+`RevisePrintedStaticAbility`; native tests failed on that API and missing
+`WithAbilityTextRevision`. The APIs were implemented against these tests.
+The Ward clone assertion then exposed shared runtime grant storage: shortening
+an ability slice before append let a clone replace its sibling's protection.
+The shared layer reset now builds separate storage. Native and RON clone tests
+preserve this contract without changing protection semantics.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestRONTextStaticAbilityWards` | Five complete Ward records: changed membership, repeated ordered changes, stable declaration ID, exact granting-Aura exception, clone isolation, indirect phasing, reattachment, source ability removal/restoration, departure and printed return. |
+| `TestRONTextStaticAbilityLandwalk` | Complete Burrowing and Fishliver Oil: actual replacement of mountainwalk/islandwalk by forestwalk, defending-player evasion and phased defending-land exclusion/restoration. |
+| `TestRONTextStaticAbilityKeywords` | Complete Fear, Flight, Lance, Eternal Warrior and Consecrate Land: no-matching-word revision keeps each keyword and declaration identity; source departure removes it. Consecrate Land's separate restriction retains `TestRONAuraRestrictionCards` coverage. |
+| `TestRONTextStaticAbilityDamageAndLKI` | Cast complete White Ward with real payment/target/resolution timing; revise protection; one shared simultaneous damage batch prevents only the protected recipient's packet; departure LKI retains revised protection independently of clone departure. |
+| `TestRONTextStaticAbilityIndependentDeclarations` | Synthetic two-declaration Aura based on a full parsed Red Ward record: separate sibling revisions grant green and blue protection without retaining red or sharing prototypes. |
+| `TestRONTextStaticAbilityBoundaries` | Unsupported global/mixed/conditional/PT/triggered declarations remain unmarked; invalid land filters, exceptions, references, list forms and keyword arguments reject. Both full text-change spells still reject. |
+| `TestRONTextStaticAbilityRecords` | Parser walk and full compilation of all eligible reprints: **12 unique names / 61 records**. Every record exercises checked installation, including unattached but present eligible sources. |
+| Native `TestTextStaticAbilityDeclaration`, `Rejects`, `RegistrationOrder`, `GrantCloneIsolation` | Invalid opt-ins, declaration and transaction rejection classes, unchanged state on rejection, multiple effects at their original positions, replacement without old keyword retention, and ordinary protection grants across clone reset. Preserved native static P/T tests also pass. |
+
+Compilation gain is **+0 names / +0 records**, exactly the estimate. New bounded
+revision gameplay evidence covers **12 accepted unique names / 61 records**.
+This is capability coverage, not a new global full-card-gameplay total. It does
+not claim the two text-change spells or all independent card rules are complete.
+
+### Validation and files
+
+Final required checks pass in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticAbility -count=1`.
+- `go test ./pkg/mage -run 'TestTextStatic(Ability|PT)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for strict collection rejection.
+
+An added native clone fixture initially omitted its Aura subtype, so attachment
+was rejected and its assertion failed. Corrected the fixture and reran focused
+checks and the complete required build/vet/engine/full sequence. No check was
+weakened. No pre-existing environment failure. The first lint run reported three new uses of the deprecated `core.Keyword`
+alias. Changed those test declarations to `core.Attr`; focused suites passed,
+then `make lint` passed with **0 issues**. Reviewed automatic formatting: import
+grouping only in the new RON test file. Reran focused RON and native static
+ability/P/T tests after formatting; all passed. No unrelated automatic edits.
+
+Final loader JSON, including every diagnostic message, exactly equals the fresh
+baseline: **2,090 compiled / 355 rejected records; 808 accepted / 178 rejected
+unique names**. Exit 1 is expected; strict loading publishes no partial registry.
+No acceptance regression. `git diff --check` passes. Commit message:
+`feat(ron): implement printed Aura ability text revision`.
+
+Files: `pkg/mage/text_static_ability.go`, native and RON
+`text_static_ability_test.go`, `ability.go`, `definition.go`, `text_static_pt.go`,
+`effect_manager.go`, RON `layers.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No RON source change, source-data
+defect or vocabulary refresh. No Go cards, generators or broad DSL services
+removed; no caller cutover occurred, and their removal gates remain unmet.
+
+Ranked next candidates:
+
+1. Checked printed global/mixed P/T-and-ability declarations: Goblin King,
+   Lord of Atlantis, Fortified Area and Kobold Drill Sergeant provide concrete
+   shared text-installation consumers. Compare ability-only global grants and
+   intrinsic keyword/protection installation; preserve cross-layer dependencies.
+2. Printed typed land-tap trigger installation: Lifetap and Lifeblood, with
+   event-time facts and detected/queued trigger isolation.
+3. Shared repeated-procedure round/result scope for Eureka and Mana Clash;
+   retain separate optional-entry and coin/damage consumers until fully ready.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

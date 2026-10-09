@@ -44,7 +44,7 @@ func (g *Game) registeredPrintedStaticAbility(source *Permanent, ability Ability
 
 func printedStaticEffect(effect ContinuousEffect, source *Permanent, declaration *StaticAbilityHolder) ContinuousEffect {
 	registered := &printedAbilityContinuousEffect{ContinuousEffect: effect}
-	if declaration.ptTextRevision {
+	if declaration.ptTextRevision || declaration.abilityTextRevision {
 		registered.declaration = declaration
 		registered.incarnation = source.incarnationID
 	}
@@ -54,6 +54,12 @@ func printedStaticEffect(effect ContinuousEffect, source *Permanent, declaration
 // RevisePrintedStaticPTAbility replaces one present printed static P/T rule.
 // The caller must supply text-layer order and lifetime separately.
 func (g *Game) RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	return g.revisePrintedStaticAbility(source, abilityID, func(a *StaticAbilityHolder) bool {
+		return a.ptTextRevision && a.supportsPTTextRevision()
+	}, changes...)
+}
+
+func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID, eligible func(*StaticAbilityHolder) bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text static revision requires a present source")
 	}
@@ -76,8 +82,8 @@ func (g *Game) RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UU
 			continue
 		}
 		active, ok = ability.(*StaticAbilityHolder)
-		if !ok || !active.ptTextRevision || !active.supportsPTTextRevision() {
-			return fmt.Errorf("text static revision requires an eligible printed P/T rule")
+		if !ok || !eligible(active) {
+			return fmt.Errorf("text static revision requires an eligible printed static rule")
 		}
 		index = i
 		break
@@ -115,8 +121,8 @@ func (g *Game) RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UU
 		return fmt.Errorf("text static revision lost its replacement")
 	}
 	fresh, ok := replacement.(*StaticAbilityHolder)
-	if !ok || !fresh.ptTextRevision || !fresh.supportsPTTextRevision() || len(fresh.Effects) != len(active.Effects) {
-		return fmt.Errorf("text static revision changed the P/T contract")
+	if !ok || !eligible(fresh) || len(fresh.Effects) != len(active.Effects) {
+		return fmt.Errorf("text static revision changed the static contract")
 	}
 	rebuilt := *fresh
 	rebuilt.id = active.id
