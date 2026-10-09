@@ -1,8 +1,6 @@
 package mage
 
 import (
-	"slices"
-
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -37,7 +35,7 @@ func (e *savedHandRevealEffect) Apply(ctx *EffectContext) error {
 	if ctx.Game.resolution.cardBindings == nil {
 		ctx.Game.resolution.cardBindings = make(map[*CardBinding]capturedCard)
 	}
-	ctx.Game.resolution.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visit, zone: core.ZoneHand, revealed: &revealedCardFacts{name: card.Name(), types: slices.Clone(card.Types())}}
+	ctx.Game.resolution.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visit, zone: core.ZoneHand, revealed: captureRevealedCardFacts(card)}
 	ctx.Game.recordPublicReveal(card)
 	return nil
 }

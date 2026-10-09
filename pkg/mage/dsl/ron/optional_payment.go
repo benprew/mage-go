@@ -224,6 +224,7 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 	}
 	var sacrifice *permanentReferencePlan
 	var dynamic valueFactory
+	var life valueFactory
 	var mana core.ManaCost
 	var costs []costFactory
 	var err error
@@ -248,6 +249,11 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		costs = []costFactory{func() mage.Cost { return mage.MillCost(amount) }}
 	} else if cost.Name == "PayManaX" {
 		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
+	} else if cost.Name == "PayLife" && len(cost.Args) == 1 && cost.Args[0].Name == "ManaValueOfTheCardRevealedThisWay" {
+		if err := arity(cost, 1); err != nil {
+			return nil, err
+		}
+		life, err = compileRevealedManaValue(cost.Args[0], ctx)
 	} else if cost.Name == "Or" || cost.Name == "PayLife" {
 		var build costFactory
 		build, err = compileFixedResolutionAlternative(cost)
@@ -314,6 +320,12 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 				return mage.IfManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
 			}
 			return mage.UnlessManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
+		}
+		if life != nil {
+			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
+				return mage.IfLifePaid(player.build(bindings), life(bindings), mage.Sequence(effects...))
+			}
+			return mage.UnlessLifePaid(player.build(bindings), life(bindings), mage.Sequence(effects...))
 		}
 		if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
 			return mage.IfPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))

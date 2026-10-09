@@ -157,6 +157,17 @@
 // with [IfRevealedCardMatches] to check facts saved by a reveal operation.
 // [RevealRandomHandCardInto] saves an immutable name and card-type snapshot.
 // Missing results cannot match, including a negative card-type filter.
+// [RevealedCardManaValue] reads the mana value saved by each singular reveal.
+// Missing facts supply zero. X in a revealed hand or library card supplies zero.
+// This value keeps historical facts after departure, return or later changes.
+// [IfLifePaid] and [UnlessLifePaid] read a typed amount once before the choice.
+// Nonpositive amounts require acceptance of a zero payment. The shared cost
+// transaction checks affordability again and pays the selected player's life.
+// Each result stays local. Delayed queries retain explicit source reads in the
+// payer, amount and body without reading amounts or offering payments.
+// RON optional resolution PayLife(ManaValueOfTheCardRevealedThisWay) uses the
+// current lexical reveal with an adjacent If or Unless payment continuation.
+// Activation, mandatory and alternative payments require separate adapters.
 // These history reads keep reveal facts after departure or return; they do not
 // permit an action on an absent card. [FromCard] keeps exact-visit checks.
 // The name filter uses the shared chosen-name matcher and its saved binding.

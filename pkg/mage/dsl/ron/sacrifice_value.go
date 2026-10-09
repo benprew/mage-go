@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "ManaValueOfTheCardRevealedThisWay" {
+		return compileRevealedManaValue(n, ctx)
+	}
 	if n.Name == "ValueX" && ctx.createdValue != nil {
 		if _, err := symbol(n); err != nil {
 			return nil, err

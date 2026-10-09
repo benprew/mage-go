@@ -2,19 +2,19 @@
 
 ## Current status
 
-The latest recorded inventory reports **803 accepted / 183 rejected unique card
-names** (986 total), and **2,075 compiled / 370 rejected records** (2,445 total).
+The latest recorded inventory reports **804 accepted / 182 rejected unique card
+names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LINKED-EXILE-OWNER-BATTLEFIELD-ENTRY` adds exact-visit batch entry under current
-owners' control. Safe Haven's complete RON record now has gameplay evidence.
-Entry replacements, Aura legality, failure destinations and source identity use
-shared engine services. **+1 unique name / +1 record**, matching the estimate.
-Tawnos's Coffin still needs result, counter and explicit attachment capabilities.
+`SAVED-REVEAL-LIFE-PAYMENT` adds saved reveal mana value and typed optional life
+payment through the shared transaction. Wand of Ith's complete RON record now
+has gameplay evidence. Reveal facts, exact visits, delayed frames and clone
+choices remain separate. **+1 unique name / +1 record**, matching the estimate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Dynamic reveal-value payments, turn-skip replacements and other gaps remain.
+Plural exile results, turn-skip replacements and other gaps remain.
+
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -56024,3 +56024,162 @@ Ranked next candidates:
    compare other result-bound consumers before selecting its counter/attachment chain.
 
 Stop after LINKED-EXILE-OWNER-BATTLEFIELD-ENTRY. Migration incomplete.
+
+## 2026-10-09: saved reveal mana value and optional life payment
+
+Status: completed implementation slice `SAVED-REVEAL-LIFE-PAYMENT`.
+This run stops after this slice. Existing user changes to `.gitignore`, the
+execution design, ledger reorganization and untracked completed-history file
+are preserved. Only this slice's status update and appended entry are staged.
+
+### Fresh baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+strict loader returned expected exit 1: **2,075 compiled / 370 rejected records;
+803 accepted / 183 rejected unique names**. Collection rejection is not a build
+or test failure. The complete records and nested forms were inspected for Wand
+of Ith, Time Vault's five identical reprints, Tawnos's Coffin and Bronze Tablet.
+All PayLife occurrences were inspected: Book of Rass, Cleansing, Erosion,
+Season of the Witch, Standing Stones, Bronze Tablet, Greed, Sylvan Library,
+Tempest Efreet and Wand of Ith. Only Wand uses a dynamic life amount. Channel
+uses a separate life-to-mana rule. Existing singular reveal consumers Sindbad,
+Petra Sphinx and Tempest Efreet were also checked. Reprints count once.
+Targeted vocabulary inspection confirmed PayLife tuple/1 and
+ManaValueOfTheCardRevealedThisWay symbol/0 with one occurrence.
+
+| Compared candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: saved reveal mana value and dynamic resolution life payment, selected | Wand of Ith; 1 name / 1 record | Reveal predicates, fixed land payment, exact discard and controller-turn restriction already work. Other life consumers use fixed amounts and gain no complete-card unlock from this slice. Saved facts and typed payment provide reusable numeric and delayed resolution contracts. | Medium: shared reveal snapshot, payment transaction adapter, declaration checks and full-record gameplay. |
+| Ranked #2: optional begin-turn skip replacement | Time Vault; 1 name / 5 records | Requires normal/extra/skipped-turn scheduling and affected-player replacement ordering. Entry, untap restriction and extra-turn action are available. | Large: shared turn lifecycle, replacement ordering, optional skip payment and history. |
+| Ranked #3: result-bound plural permanent exile | Tawnos's Coffin, Bronze Tablet; 0 immediate unlocks | Exact per-resolution visit groups enable both downstream chains. Coffin also needs counter notes, untap/departure delays, mandatory return and explicit attachments. Tablet needs source-exile movement, ownership exchange and payment branches. | Large: simultaneous exile, replacements, typed grouped results and exact-visit consumers. |
+
+Candidate #1 has all prerequisites and completes a card at moderate effort.
+It gives the largest credible full-card gain for this run's scope. Plural exile
+has concrete shared value, but its grouped result and simultaneous-operation
+contract plus remaining consumer chains cost more and do not yet complete a
+card. Time Vault needs a larger scheduling subsystem. No single-card engine
+branch or shortcut is used to obtain Wand's gain.
+
+### Exact signatures, contexts and reuse
+
+Native APIs:
+
+- `RevealedCardManaValue(result *CardBinding) ResolutionValue`.
+- `IfLifePaid(player PlayerRef, amount ResolutionValue, effect ResolvingEffect) ResolvingEffect`.
+- `UnlessLifePaid(player PlayerRef, amount ResolutionValue, effect ResolvingEffect) ResolvingEffect`.
+
+RON supports the bare `ManaValueOfTheCardRevealedThisWay` symbol in existing
+resolving numeric operands and arithmetic. It uses the current lexical random
+hand, revealed drawn-card or library-top result. Producers must dominate reads;
+branch-local results cannot escape. Each factory has independent declarations.
+Missing reveal facts supply zero, while a source with no reveal producer rejects.
+
+Optional resolving `MayCost(PayLife(ManaValueOfTheCardRevealedThisWay))` and
+`PlayerMayCost(player, PayLife(ManaValueOfTheCardRevealedThisWay))` require an
+adjacent nonempty If/Unless body and symbol CostWasPaid/CostWasntPaid. Supported
+spell, activated, triggered and delayed action lists use the same adapter.
+Activation/additional/mandatory costs, dynamic alternatives, tuple spelling,
+wrong arities, unbound values and escaped branch results reject before execution.
+Two-branch dynamic life payments and other dynamic life operands remain gaps.
+Fixed payments preserve their existing grammar and behavior.
+
+RON owns spelling, scope and lowering. The engine owns immutable reveal facts
+and optional payment. All three singular reveal producers use one snapshot
+helper for name, types and mana value. Nonstack X is zero even with enclosing X.
+Departure, return or later changes cannot rewrite historical facts; FromCard
+still requires its original visit for an action. Empty production clears the
+result. Existing nested, delayed and clone frame maps keep separate state.
+
+Life amount is read once before payment choices. Nonpositive values become zero
+and still require acceptance. Existing LifePayCost, unlessPaidEffect and the
+shared action-payment transaction enforce affordability and recheck after choice.
+An absent payer runs no body. Failed payment spends no life; exact available life
+can pay. Each result controls only its local continuation. No activation cost
+reduction, damage/prevention simulation or new replacement ordering is introduced.
+Life payment continues through the shared life-loss service.
+
+Explicit source reads in payer, amount and body supply waiting delayed references.
+Queries do not evaluate amounts, resolve players, offer payment, reveal or move
+cards. Original incarnation, controller LKI, phasing and saved delays retain
+existing behavior. Returned sources cannot replace the original reference.
+No Go caller is removed. Runtime cutover, Go-card deletion and DSL removal gates
+remain unmet. No fallback, global last-action state, declaration panic or partial
+production registry is introduced.
+
+Rules evidence: local CR 107.1b, 118.3b/5/10/11, 202.3a/e, 400.7,
+608.2c/d/h/i and 701.20a–c. Local data/DRK.json Oracle text confirms the full
+unchanged Wand record. No source defect was corrected; RON files did not change,
+so the vocabulary snapshot does not require a refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+The complete Wand record first failed at DRK.lines.ron:112:610 with unsupported
+fixed life cost amount ManaValueOfTheCardRevealedThisWay. Native tests first
+failed compilation on undefined UnlessLifePaid, IfLifePaid and
+RevealedCardManaValue. A test helper was corrected before confirming that missing
+API failure. Clone decision fixtures were corrected to the existing SearchPlayer
+representation. Expected inventory counts and old incomplete-Wand assertions
+were updated only after measured acceptance; gameplay assertions were retained.
+The returned-source fixture removes its graveyard visit before re-entry.
+
+| Test | Card mapping and established contracts |
+| --- | --- |
+| TestRONResolutionLifeWand | Complete unchanged DRK record: cast cost and entry, mana/tap activation, failed payment, controller-turn restriction, land/nonland pay/decline, insufficient and zero payments, empty hand, explicit target including self, source departure/return/control/phasing, copied ability and independent cloned stacks. |
+| TestRONResolutionLifeContexts | Synthetic spell/trigger/delayed contexts with all three singular reveal producers, library result export through PlayerActions, saved values after card/source departure, arithmetic numeric consumption and independent clone payment choices. |
+| TestRONResolutionLifeDistinctProducers | Two lexical producers and separate factory instances retain distinct amounts and local outcomes. |
+| TestRONResolutionLifeInvalid | Wrong scope/order/arity/value spelling, missing reveal, branch escape, dynamic activation/mandatory/alternative costs and empty continuations reject. |
+| TestResolutionLifePayment | Both branch senses; accepted, declined, insufficient, exact, zero and negative amounts. Zero payment is offered even at nonpositive life. |
+| TestResolutionLifePaymentFixedBeforeChoice | Exactly one amount read before choice; changed life does not change the amount; failed affordability recheck pays nothing and runs the unpaid body. |
+| TestResolutionLifePaymentDeclarations | Nil operands/bodies, missing bindings and reads before production fail definition validation; valid reveal/payment declarations pass. |
+| TestRevealedCardManaValue | All three producers, nonstack X, immutable characteristics, returned-visit rejection, clearing and cloned frame isolation. |
+| TestResolutionLifePaymentWaitingAndFrames | Explicit source declarations in payer/amount/body, waiting-query purity, original controller LKI, source departure/return/phasing/cycle, captured reveal after return, and separate delayed clone decisions. |
+| TestResolutionLifePaymentAbsentAndIndependent | Separate saved amounts and payment results, absent payer behavior and nested-frame isolation. |
+
+Existing TestRandomHandRevealReplacements retains discard prevention, redirected
+destination and discard-event evidence. Existing Sindbad/Petra full-record tests
+and accepted-definition reconstruction continue to pass. Their coverage is not
+counted as new unlocks. Bronze Tablet, Tempest Efreet and Coffin are not claimed
+as complete. Compilation and full-record gameplay coverage remain separate.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONResolutionLife -count=1`: PASS.
+- `go test ./pkg/mage -run 'TestResolutionLifePayment|TestRevealedCardManaValue' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `go test ./... -short -count=1` (engine skill check): PASS.
+- `make lint`: PASS, 0 issues. The first lint pass found one unnecessary
+  interface conversion in a new test. It was removed and required checks were
+  rerun. Automatic formatting was reviewed; no unrelated source changes were made.
+- Focused RON life/reveal and native life/reveal/identity/payment-boundary checks passed after formatting and fixture review.
+- `git diff --check`: PASS, including the final ledger and staged patch.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict rejection.
+
+No environmental or required-validation blocker remains. Final counts:
+**2,076 compiled / 369 rejected records; 804 accepted / 182 rejected unique names**,
+totals 2,445 records / 986 names. Actual gain is **+1 name / +1 record**, matching
+the estimate. Only Wand's diagnostic is removed; every other diagnostic remains
+unchanged. The strict loader still rejects and installs no partial registry.
+
+Changed files: native resolution_life.go and tests; reveal_result.go and the
+three singular reveal producers; RON revealed_mana_value.go, optional_payment.go,
+sacrifice_value.go and resolution_life_test.go; definition-plan/inventory/numeric
+count tests and existing real-reveal support assertions; pkg/mage/doc.go;
+API/rules-contract docs; this ledger. User reorganization and unrelated files
+are excluded from the commit.
+Commit message: `feat(ron): implement saved reveal value life payment`.
+
+Ranked next candidates:
+
+1. Result-bound plural permanent exile for Bronze Tablet and Tawnos's Coffin:
+   shared simultaneous movement and exact per-resolution visit groups before
+   separate ownership/counter/return/attachment consumers. Compare estimated
+   downstream gain with other multi-card prerequisites before selection.
+2. Optional begin-turn skip replacement for Time Vault, with normal/extra/skipped
+   scheduling and affected-player replacement ordering in one complete contract.
+3. Two-card ownership exchange for Bronze Tablet and Tempest Efreet; first
+   establish the grouped exile/result and cross-zone card-subject prerequisites.
+
+Stop after SAVED-REVEAL-LIFE-PAYMENT. Migration incomplete.

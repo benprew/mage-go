@@ -39,7 +39,7 @@ func (e *libraryTopRevealEffect) Apply(ctx *EffectContext) error {
 	if ctx.Game.resolution.cardBindings == nil {
 		ctx.Game.resolution.cardBindings = make(map[*CardBinding]capturedCard)
 	}
-	ctx.Game.resolution.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visitor.libraryVisit(card.ID()), zone: core.ZoneLibrary, revealed: &revealedCardFacts{name: card.Name(), types: slices.Clone(card.Types())}}
+	ctx.Game.resolution.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visitor.libraryVisit(card.ID()), zone: core.ZoneLibrary, revealed: captureRevealedCardFacts(card)}
 	ctx.Game.recordPublicReveal(card)
 	return nil
 }

@@ -8,8 +8,32 @@ import (
 
 // Saved frames share this private snapshot because its fields do not change.
 type revealedCardFacts struct {
-	name  string
-	types []core.CardType
+	name      string
+	types     []core.CardType
+	manaValue int
+}
+
+func captureRevealedCardFacts(card Card) *revealedCardFacts {
+	return &revealedCardFacts{name: card.Name(), types: slices.Clone(card.Types()), manaValue: card.ManaCost().CMC()}
+}
+
+type revealedCardManaValue struct{ result *CardBinding }
+
+// RevealedCardManaValue reads the mana value saved by a reveal operation.
+// Missing reveal facts supply zero and give no permission to act on a card.
+func RevealedCardManaValue(result *CardBinding) ResolutionValue {
+	return revealedCardManaValue{result: result}
+}
+func (revealedCardManaValue) Text() string { return "mana value of the saved reveal" }
+func (v revealedCardManaValue) resolveValue(ctx *EffectContext) int {
+	facts := ctx.Game.resolution.cardBindings[v.result].revealed
+	if facts == nil {
+		return 0
+	}
+	return facts.manaValue
+}
+func (v revealedCardManaValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text(), bindingRead: v.result, children: []definitionEdge{{"result", v.result}}}
 }
 
 // RevealedCardMatcher checks the facts saved by a reveal operation.

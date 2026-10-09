@@ -9820,3 +9820,37 @@ one-producer association and source-reference checks apply. `ref` is
 rules, entry declarations, other sets and other entry options reject. Safe Haven
 has complete-record gameplay evidence. Tawnos's Coffin still needs result-bound
 exile, counter notes, explicit attachments and conditional return payments.
+
+## RON saved reveal mana value and resolution life payment
+
+`ManaValueOfTheCardRevealedThisWay` is a symbol in resolving numeric operands.
+It reads the current lexical singular reveal: random hand, revealed drawn card,
+or library top. It lowers to `RevealedCardManaValue(result *CardBinding)
+ResolutionValue`. Each reveal saves mana value with its immutable name/type
+facts. X contributes zero outside the stack. Missing reveal facts supply zero;
+a saved value cannot authorize an action on an absent or returned card.
+
+Optional resolution payments support exactly
+`MayCost(PayLife(ManaValueOfTheCardRevealedThisWay))` and
+`PlayerMayCost(player, PayLife(ManaValueOfTheCardRevealedThisWay))`, followed by
+an adjacent nonempty `If` or `Unless` body using `CostWasPaid` or `CostWasntPaid`.
+These forms work in supported spell, activated, triggered and delayed action
+lists. Fixed payments retain their existing behavior. Unbound results, reads
+before production, branch-local results used outside their branch, tuple value
+spelling, activation/additional costs, mandatory payments and dynamic alternatives
+reject before execution. Two-branch dynamic payments and other dynamic life
+operands remain separate adapters.
+
+`IfLifePaid(player PlayerRef, amount ResolutionValue, effect ResolvingEffect)`
+and `UnlessLifePaid` read the amount once before offering payment. The shared
+life cost and payment transaction enforce affordability, recheck after the choice
+and subtract the saved amount. Nonpositive amounts become zero; zero still
+requires acceptance. An absent payer runs no body. Payment results stay local.
+Delays and clones retain separate result maps and choices. Explicit source reads
+in payer, amount and body supply waiting references without reading amounts,
+choosing payment, revealing cards or executing the continuation.
+
+Evidence: `TestRONResolutionLifeWand` executes the complete DRK record;
+`TestRONResolutionLifeContexts`, `DistinctProducers` and `Invalid` cover the
+reusable shape and its scope. Native `TestResolutionLifePayment*` and
+`TestRevealedCardManaValue` establish payment, reveal identity and frame contracts.

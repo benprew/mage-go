@@ -124,8 +124,8 @@ func TestRONRandomHandRevealRealOperands(t *testing.T) {
 		if len(g.PublicReveals()) != 1 || g.PublicReveals()[0].CardID != hand[1].ID() || len(b.Hand()) != 2 {
 			t.Fatal("real producer used wrong player or moved card")
 		}
-		if _, err := Compile(record); err == nil {
-			t.Fatal("incomplete card accepted")
+		if _, err := Compile(record); (err == nil) != (tc.name == "Wand of Ith") {
+			t.Fatalf("unexpected complete record support for %s: %v", tc.name, err)
 		}
 	}
 }

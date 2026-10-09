@@ -13026,3 +13026,49 @@ and cover successful/declined sacrifice, control loss, departure/return, phasing
 stack copies, independent sources, illegal targets, tokens and pending clones.
 The complete Coffin record remains unsupported; no counter-note or explicit
 attachment semantics are inferred from this entry service.
+
+## Saved reveal mana value and typed resolution life payment
+
+`RevealedCardManaValue(result *CardBinding) ResolutionValue` reads immutable
+mana-value facts saved by `RevealRandomHandCardInto`, `RevealHandCardInto` and
+`RevealLibraryTopInto`. The producers use the shared mana-cost value with X zero
+for these nonstack zones. A missing result or a card capture without reveal facts
+supplies zero. Definition validation requires a named result and a dominating
+producer. The numeric read is historical information, not a live card reference
+or action permission. Departure, return and later characteristic changes cannot
+change the snapshot; `FromCard` still checks its exact visit. Clearing a result,
+nested resolution and clone execution cannot clear another frame's facts.
+
+`IfLifePaid(player PlayerRef, amount ResolutionValue, effect ResolvingEffect)
+ResolvingEffect` and `UnlessLifePaid` read the amount once before the choice,
+clamp nonpositive amounts to zero, then use `LifePayCost` and the existing
+`unlessPaidEffect` payment transaction. Insufficient resources cause no offer
+and run only the unpaid body. Acceptance triggers a fresh affordability check;
+a failed transaction spends no life. Exact available life can be paid. Zero
+payment requires acceptance, including at nonpositive life. An absent payer runs
+no body. Each payment controls only its own continuation. Nil payer, amount or
+body and undominated reveal reads fail definition validation.
+
+The typed payer, amount and body declare explicit source reads to waiting delayed
+queries. Queries do not resolve operands, evaluate amounts, select payment or
+execute bodies. Saved source identity, controller LKI, phasing and delay frames
+use their existing services; returned sources cannot substitute. Clones keep
+independent decisions, resources and result maps. No new replacement priority,
+simultaneous batch or general dynamic activation-cost contract is introduced.
+Life payment is life loss through the shared service, not damage.
+
+Rules evidence: local CR 107.1b, 118.3b/5/10/11, 202.3a/e, 400.7,
+608.2c/d/h/i and 701.20a–c. The repository DRK Oracle text confirms Wand of Ith's
+land payment of one life, nonland payment of mana value, exact discard and
+controller-turn activation restriction; no source correction is required.
+
+Evidence: `TestResolutionLifePayment` covers accepted, declined, short, exact,
+zero and negative amounts for both branches. `FixedBeforeChoice` checks one read
+and failed rechecks; `Declarations` checks invalid definitions;
+`WaitingAndFrames` checks typed source declarations, LKI, phasing, delays and
+clone choices; `AbsentAndIndependent` checks separate payments and nested frames.
+`TestRevealedCardManaValue` checks all three producers, nonstack X, immutable facts,
+returned visits, empty production and clone isolation. Existing
+`TestRandomHandRevealReplacements` retains discard prevention, destination
+redirection and events. RON `TestRONResolutionLifeWand` maps the complete card;
+`Contexts`, `DistinctProducers` and `Invalid` map compiler scope and timing.
