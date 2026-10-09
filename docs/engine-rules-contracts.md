@@ -13136,3 +13136,39 @@ RON `TestRONGroupedExileSubjects`, `Results`, `Invalid`, `CardReferences`,
 exile nodes run in test-only action probes. This evidence establishes their exile
 prerequisite, not complete-card behavior. Counter notes, departure-or-untap return
 subscriptions, noted-counter/attachment entry and ownership exchange remain gaps.
+
+## Two-card ownership exchange (CR 108.3, 400.7, 407.3, 701.12a)
+
+`ExchangeCardOwnership(first CardRef, second CardRef) ResolvingEffect` resolves
+both operands before changing either owner. Missing or stale visits, tokens,
+missing owners, disabled ante and settled games prevent the entire exchange.
+Same-card and same-owner pairs make no change. Current owners are read at
+resolution; a prior ownership change keeps a visit and changes the swap inputs.
+LKI cannot authorize an action on an absent card. Source phasing and return do
+not change saved nonbattlefield references. A phased permanent cannot supply a
+new grouped-exile result.
+
+Ownership changes use the existing `Game.ChangeOwner` service. No choices,
+replacement callbacks or events run between its two checked updates. The service
+keeps physical IDs, exact visits, zones, controllers and attachments. Ownership
+change does not cause a zone event. Copy-on-write storage isolates clones, and
+`AnteResult` reports both net changes. No zone movement or destination permission
+is implied. Ante-library zone exchange retains its separate contract.
+
+Existing resolution frames and delayed captures retain typed card bindings.
+Waiting queries do not resolve these operands or infer a permanent source from a
+saved card. Frame restoration keeps outer binding storage separate.
+`TestCardOwnershipExchange*` covers hand/graveyard and exile/ante pairs, original
+and current owners, same-owner/card pairs, absent and returned visits, hidden
+exile, tokens, disabled/settled games, invalid owners, no zone events, retained
+visits, settlement, declaration validation, delayed frames and clone isolation.
+RON tests cover independent factory bindings, announcement timing, failed payment,
+source phasing/return, illegal targets, supported action contexts and rejection.
+
+Source defect: ATQ Bronze Tablet's RON unpaid branch swaps the two card owners.
+Local `data/ATQ.json` instead assigns the Tablet to the targeted permanent's owner
+and the other card to the ability controller. A Tablet owned by someone other
+than its controller distinguishes these instructions. This slice leaves that
+source correction and its owner/controller evidence to the independent assignment
+adapter; it does not claim Oracle fidelity for the complete card. No RON assets
+or vocabulary source hashes changed.

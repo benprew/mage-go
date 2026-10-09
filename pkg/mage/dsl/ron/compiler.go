@@ -1120,6 +1120,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "ExchangeOwnershipOfTwoCards":
+		build, err := compileCardOwnershipExchange(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary":
 		build, err := compileAnteExchangeAction(n, ctx)
 		if err != nil {

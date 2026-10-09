@@ -74,6 +74,14 @@
 // Clones keep separate ante storage and target state. No LKI permits an
 // action on an absent card. Ante movement and exchange need separate services.
 //
+// Use [ExchangeCardOwnership] for two present typed cards in an ante game.
+// Both nontoken cards and their current owners are checked before either change.
+// The exchange keeps zones, visits and controllers. It sends no zone events.
+// Two cards with one owner make no change. Returned visits cannot qualify.
+// Existing ownership storage keeps clones and final settlement separate.
+// RON accepts bound singular exile, hand reveal, graveyard and ante operands.
+// Physical source references and explicit destination moves need separate adapters.
+//
 // Use [AcquireCardOwnership] for a present typed card in an ante game.
 // Ownership uses [Game.ChangeOwner] and does not move the card or change its
 // visit. Graveyard ownership updates keep visits of all stored cards.

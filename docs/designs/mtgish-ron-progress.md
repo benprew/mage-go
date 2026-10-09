@@ -7,13 +7,14 @@ names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`GROUPED-PERMANENT-EXILE-RESULTS` adds simultaneous permanent exile with
-per-declaration exact-visit results and lexical RON references. Bronze Tablet
-and Tawnos's Coffin have exile-prerequisite gameplay evidence; complete records
-still reject later blockers. **+0 unique names / +0 records**, as estimated.
+`TWO-CARD-OWNERSHIP-EXCHANGE` adds atomic ownership exchange for present typed
+cards and RON lowering for bound exile/reveal/graveyard/ante references.
+Bronze Tablet and Tempest Efreet have prerequisite gameplay evidence; complete
+records still reject other adapters. **+0 unique names / +0 records**, as estimated.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Ownership exchange, counter-note/return entry, turn-skip replacements and other gaps remain.
+Physical source transport, Tablet owner-assignment fidelity, counter-note/return
+entry, turn-skip replacements and other gaps remain.
 
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -56334,3 +56335,136 @@ Ranked next candidates:
    skipped scheduling and affected-player replacement ordering.
 
 Stop after GROUPED-PERMANENT-EXILE-RESULTS. Migration incomplete.
+
+## 2026-10-09: two-card ownership exchange
+
+Status: completed implementation slice `TWO-CARD-OWNERSHIP-EXCHANGE`.
+This run stops after this slice. Initial changes to `.gitignore`, the execution
+plan and ledger/history reorganization, including the untracked completed-history
+file, are preserved and excluded from the commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -short -count=1` passed.
+The fresh strict loader exited 1 for collection rejection, not build failure:
+2,076 compiled / 369 rejected records; 804 accepted / 182 rejected unique names.
+Complete records and nested forms were read from ATQ Bronze Tablet and Tawnos's
+Coffin, LEG Tempest Efreet and all five Time Vault records. Targeted vocabulary
+entries confirmed two ownership-exchange occurrences and Efreet's destinations.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers / downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Two-card ownership exchange | Bronze Tablet; Tempest Efreet | 0 | Tablet: nontoken/owner target filters, OwnerOfPermanent resolving payer, two-branch life payment and independent ownership-assignment source defect. Efreet: physical source-card references and hand/anywhere destinations. Supplies the shared ownership operation for both. | Small: reuse exact visits, ownership storage and frames; add adapter and contract tests. |
+| Counter-note capture and return entry | Tawnos's Coffin | 0 for a capture prerequisite | Needs original target counter information after exile, delayed leave/untap subscription, noted-counter entry results and Aura attachments. Enables Coffin's retained-state return. | Large: several identity and entry contracts; complete Coffin is too large for one slice. |
+| Optional begin-turn skip replacement | Time Vault | 1, five records | Existing extra-turn scheduling is ready, but begin-turn replacement lifecycle, choices and ordering must work for normal/extra/skipped turns. Enables later turn replacements. | Large: scheduling and replacement integration plus ordering regressions. |
+
+Candidate #1 wins as a small shared prerequisite for two distinct ownership paths.
+Grouped exile and random hand reveal already supply exact-visit results. Physical
+source transport is not included; it stays an explicit compiler error. No full
+card unlock was estimated. Compiler adapters, missing engine operation, source
+defect and loader rejection were assessed separately; no environment gap occurred.
+
+### Contract, signatures, dependencies and reuse
+
+Engine: `ExchangeCardOwnership(first CardRef, second CardRef) ResolvingEffect`.
+It resolves both present nontoken cards and validates both current owners before
+changing either. Active unsettled ante is required. Same card/owner pairs make
+no change. Missing/returned visits, tokens or missing owners prevent both changes.
+It reads current owners at resolution, preserves physical IDs, zones, visits,
+controllers and attachments, and emits no zone events. It reuses `Game.ChangeOwner`
+copy-on-write replacement and original-owner settlement history. No choices,
+replacement callbacks or events run between the two checked updates.
+
+RON: `ExchangeOwnershipOfTwoCards(cardRef, cardRef)` in resolving spell,
+activation, trigger, conditional and delayed action sequences. Supported operands
+are bound singular grouped-exile results, `TheCardRevealedFromHandThisWay`,
+graveyard targets/death results and ante targets. Existing per-instance builders
+and definition validation enforce lexical binding and dominance. RON owns spelling,
+arity, role diagnostics and lowering; the engine owns all ownership mutations.
+No new state slots, target mechanism, fallback registry or card-name branch exists.
+
+Existing exact-visit references reject departure/return and hidden exile inspection.
+LKI does not authorize absent actions. Grouped producers select current unphased
+incarnations. Frame/delay/clone services retain separate saved bindings; waiting
+queries do not resolve card operands or infer a permanent source. Shared activation
+payment and target legality provide rollback, announcement timing and fizzle.
+Explicit destinations and physical-source references remain unsupported.
+
+Rules evidence: local CR 108.3, 400.7, 407.3 and 701.12a; local `data/ATQ.json`
+and `data/LEG.json` supplied the Oracle text. Bronze Tablet's unpaid RON branch
+swaps owners, whereas Oracle assigns the other card to the ability controller.
+These differ when the Tablet's owner is not its controller. Only ATQ contains this
+record. This defect remains explicit for the independent assignment adapter and
+complete-card test; this slice does not correct RON or claim Tablet Oracle fidelity.
+RON assets and vocabulary source hashes are unchanged. Runtime cutover, Go-card
+removal and DSL deletion gates remain unmet; no functions were removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the new `ExchangeCardOwnership` API.
+The first RON probe hit an unsupported test-only nontoken target filter; after
+correcting the probe and withholding the new adapter, every gameplay case failed
+at ATQ:15:619 `unsupported action (ExchangeOwnershipOfTwoCards)`. Native fixtures
+were corrected to store cards before changing owners for invalid/same-owner cases.
+Mixed target groups and an unsupported Opponent player reference in test probes
+were replaced with an explicit player and a graveyard target. Expectations for
+exchange, identity, timing and invalid declarations were retained.
+
+| Tests | Card mapping / contract evidence |
+| --- | --- |
+| TestRONCardOwnershipExchangeGameplay | Bronze Tablet's exact exile and exchange nodes in a test-only activation probe: resolution timing, failed payment, source phasing/return, illegal target and pending clone isolation. Target filters and payment continuation are omitted, so this is prerequisite evidence only. |
+| TestRONCardOwnershipExchangeRevealContexts | Tempest Efreet's reveal/exchange forms with an explicit player and graveyard target instead of the unsupported physical source. Spell, activation, trigger and delayed gameplay retain reveal identity and zones. Full Efreet still rejects its physical source operand. |
+| TestRONCardOwnershipExchangeInstancesAndCopy | Separate factory instances and copied pending abilities keep result bindings separate. A completed copy cannot make an original action exchange again through departed subjects. |
+| TestRONCardOwnershipExchangeInvalid / Roles | Arity/kind, read-before-producer, branch escape, incompatible/unbound operands, role rejection and semantic inventory card-reference roles. |
+| TestCardOwnershipExchange / Declarations | Hand/graveyard exchange, stale visits, token/invalid-owner/disabled/settled rejection, same-owner/card pairs, no zone events, preserved visits, clone isolation, settlement and nil/unbound definition rejection. |
+| TestCardOwnershipExchangeExileAndAnte | Exile/ante references, visibility, departure/return, current-owner changes, retained visits and zones, clone isolation. |
+| TestCardOwnershipExchangeDelayedFrames | Saved delayed card bindings, pure waiting queries, source phasing, frame restoration and independent clone state. |
+
+Compilation coverage and prerequisite gameplay evidence remain separate. No
+complete-card behavior mapping was added for either affected card.
+
+### Verification and measured outcome
+
+Required checks passed in fast-fail order on the final implementation:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCardOwnershipExchange -count=1`: PASS.
+- `go test ./pkg/mage -run TestCardOwnershipExchange -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `go test ./... -short -count=1` (engine skill check): PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only formatted new test imports;
+  they were reviewed, and final focused/build/vet/engine/full/lint checks passed.
+  A review also removed duplicated unreachable fixture setup and strengthened
+  the failed-payment assertion to check retained mana.
+- `git diff --check`: PASS; staged changes were checked before commit.
+- `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+- `go run ./cmd/loadcards -inventory`: expected exit 1; fresh inventory confirms
+  12 files, 2,445 records and 986 distinct names. Gameplay/engine-validation report
+  fields remain unclaimed rather than inferred from compilation.
+
+Final counts: **2,076 compiled / 369 rejected records; 804 accepted / 182 rejected
+unique names**, totals 2,445 records / 986 names. Actual gain **+0 names / +0
+records** matches the estimate. Tempest Efreet's diagnostic advances from
+LEG:259:492 unsupported exchange to LEG:259:552 unbound/incompatible physical
+`ThisPermanent` card reference. Every other loader diagnostic is unchanged.
+No accepted record regressed. No environment or required-check blocker remains.
+
+Changed files: new native and RON card_ownership_exchange.go/test files; compiler
+and semantic inventory adapters; pkg/mage/doc.go; API/rules-contract docs; summary
+status and this appended ledger entry. Commit message:
+`feat(ron): implement two-card ownership exchange`.
+
+Ranked next candidates:
+
+1. Evaluate physical source-card references and exact hand/anywhere destination
+   prerequisites for Tempest Efreet against shared source-card consumers; the
+   exchange operation and random reveal are now ready. Preserve pending source
+   identity and do not conflate ThisPermanent with a live battlefield reference.
+2. Bronze Tablet's nontoken/owner target filters and resolving owner information;
+   compare shared filter value before adding its life-payment branch and correcting
+   independent owner assignment with owner/controller gameplay evidence.
+3. Time Vault's optional begin-turn skip replacement, with normal/extra/skipped
+   scheduling and affected-player replacement ordering.
+
+Stop after TWO-CARD-OWNERSHIP-EXCHANGE. Migration incomplete.

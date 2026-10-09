@@ -831,6 +831,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"hand_entry_filter", "entry_operation"}[index]
 			}
+		case "ExchangeOwnershipOfTwoCards":
+			if len(n.Args) == 2 {
+				return "card_reference"
+			}
 		case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary":
 			if len(n.Args) == 2 {
 				return []string{"card_reference", "player_reference"}[index]

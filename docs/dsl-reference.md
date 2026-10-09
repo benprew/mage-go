@@ -9888,3 +9888,30 @@ replacement rules or linked accumulation across separate activations.
 
 See the grouped permanent exile contract in `engine-rules-contracts.md` and
 `TestGroupedExile*`/`TestRONGroupedExile*` for identity and gameplay evidence.
+
+### Two-card ownership exchange
+
+`ExchangeCardOwnership(first CardRef, second CardRef) ResolvingEffect` exchanges
+the current owners of two present nontoken cards in an active, unsettled ante
+game. Both references and both owners must be valid before either change.
+The same card or the same owner on both operands makes no change. The operation
+keeps zones, zone visits, controllers and attachments, and sends no zone events.
+It uses `Game.ChangeOwner` for copy-on-write storage and settlement history.
+
+RON accepts `ExchangeOwnershipOfTwoCards(cardRef, cardRef)` in resolving action
+sequences, including spell, activated, triggered, conditional and delayed bodies.
+Operands support bound singular grouped-exile results, the lexical
+`TheCardRevealedFromHandThisWay`, graveyard targets/death results, and ante targets.
+Factory instances build separate references and bindings. Producers must dominate
+reads. Unknown symbols, wrong arity, unbound results, branch escape, plural exile
+results, permanent operands and cost/static/entry contexts reject during compile.
+`ThisPermanent` and `ThisCard` do not become physical source-card references.
+Explicit destinations and physical source transport remain separate capabilities.
+
+`TestRONCardOwnershipExchangeGameplay` executes Bronze Tablet's actual grouped
+exile and exchange nodes in a test-only activation probe. Its target filter and
+payment continuation are not included. `TestRONCardOwnershipExchangeRevealContexts`
+uses Tempest Efreet's actual reveal/exchange forms with an explicit player and a
+graveyard target in place of its unsupported physical source. It covers spell,
+activation, trigger and delayed execution. These tests establish prerequisites,
+not complete-card gameplay. The complete records still reject.
