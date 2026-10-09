@@ -185,7 +185,7 @@ func TestRONWaitingDelayedExileInvalid(t *testing.T) {
 		`Exile([EachPermanent(SinglePermanent(Ref_TargetPlayer))],[])`,
 		`Exile([EachPermanent(And([]))],[])`, `Exile([EachPermanent(Or([]))],[])`,
 		`Exile([EachPermanent(Ref_TargetPermanents)],[])`, `Exile([EachPermanent(SinglePermanent(ThisPermanent))],[ExilesFaceDown])`,
-		`Exile([Permanent(ThisPermanent),Permanent(ThisPermanent)],[])`,
+		`Exile([Permanent(ThisPermanent),Permanent(You)],[])`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[Activated(PayMana([]),ActionList([CreateFutureTrigger(AtTheBeginningOfTheNextEndStep,ActionList([`+action+`]))]))])`), "invalid.ron")
 		if err != nil {

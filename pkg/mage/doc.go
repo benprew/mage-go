@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ExilePermanentGroupsInto] with distinct [PermanentExileGroup] results.
+// All groups select their current subjects before one simultaneous exile batch.
+// Overlapping subjects move once and supply the same visit to each group.
+// Results use [CardsBinding] in the resolution frame. Empty groups clear results.
+// [ExiledCardsFrom] permits transport of the saved current exile visits.
+// [SingleExiledCardFrom] requires one original result and public card visibility.
+// A plural result cannot become a singular reference after a member leaves.
+// Returned and phased permanents cannot supply a move. Tokens leave the
+// battlefield but supply no retained exile card. Results are saved before events.
+// Delays and clones retain separate result storage. Waiting queries declare
+// explicit source reads without selecting subjects or moving permanents.
+// RON supports plural permanent subject groups and lexical result references.
+// Counter notes, ownership exchange and return attachments need separate adapters.
+//
 // Use [NewExileLink] for a distinct group of linked exile declarations.
 // [ExilePermanentLinked] and [ExileLibraryTopLinked] save that declaration
 // with the exact source incarnation on the new exile visit before zone events.

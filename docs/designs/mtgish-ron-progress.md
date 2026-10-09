@@ -7,13 +7,13 @@ names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`SAVED-REVEAL-LIFE-PAYMENT` adds saved reveal mana value and typed optional life
-payment through the shared transaction. Wand of Ith's complete RON record now
-has gameplay evidence. Reveal facts, exact visits, delayed frames and clone
-choices remain separate. **+1 unique name / +1 record**, matching the estimate.
+`GROUPED-PERMANENT-EXILE-RESULTS` adds simultaneous permanent exile with
+per-declaration exact-visit results and lexical RON references. Bronze Tablet
+and Tawnos's Coffin have exile-prerequisite gameplay evidence; complete records
+still reject later blockers. **+0 unique names / +0 records**, as estimated.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Plural exile results, turn-skip replacements and other gaps remain.
+Ownership exchange, counter-note/return entry, turn-skip replacements and other gaps remain.
 
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -56183,3 +56183,154 @@ Ranked next candidates:
    establish the grouped exile/result and cross-zone card-subject prerequisites.
 
 Stop after SAVED-REVEAL-LIFE-PAYMENT. Migration incomplete.
+
+## 2026-10-09: grouped permanent exile results
+
+Status: completed implementation slice `GROUPED-PERMANENT-EXILE-RESULTS`.
+This run stops after this slice. User changes to `.gitignore`, the execution
+plan, the ledger reorganization and untracked completed-history file are
+preserved and excluded from the slice commit.
+
+### Baseline, candidate comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The strict
+loader exited 1 for collection rejection, not a build failure: 2,076 compiled /
+369 rejected records; 804 accepted / 182 rejected unique names. An early read of
+a stale temporary report was corrected after the baseline process completed.
+Complete RON records, nested forms, targeted vocabulary entries and local Oracle
+records were inspected for all four distinct candidate cards. Reprints count once.
+
+| Candidate | Distinct cards; estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Ranked #1: result-bound plural permanent exile | Bronze Tablet, Tawnos's Coffin; **0** immediate | Tablet still needs nontoken/owner target filters, owner-after-departure payment operands and two-card ownership exchange. Coffin needs counter notes, leave-or-untap subscriptions, required return results, noted-counter and attached-Aura entry. Exact grouped visits supply both cards' later consumers. | Small/medium: one shared producer, typed readers, lexical lowering, simultaneous and identity tests. |
+| Ranked #2: optional begin-turn skip replacement | Time Vault; **1** if the entire replacement contract is implemented | Entry tapped, untap restriction and extra turns already exist. Needs proposed-turn replacement, affected-player ordering, normal/extra/skipped scheduling, rechecks and optional untap. No second distinct inventory card uses this form. | Large: scheduler/replacement integration and scheduling matrix. |
+| Ranked #3: two-card ownership exchange | Bronze Tablet, Tempest Efreet; **0** for the exchange service alone | Tablet first needs grouped exile and its owner/filter adapters. Efreet needs exact revealed-hand and physical departed-source card operands, explicit hand/graveyard destinations. A shared atomic ownership exchange would serve both. | Medium/large, after operand prerequisites. |
+
+Candidate #1 is dependency-ready and supplies concrete shared prerequisites for
+two unique cards. It wins over a larger single-card turn contract and an exchange
+adapter whose operands are not ready. The contract and acceptance cases were
+stated before editing. No Go card definition supplied requirements.
+
+### Supported signatures, scope and engine boundary
+
+Native APIs:
+
+- `PermanentExileGroup{Subjects PermanentSet, Result *CardsBinding}`.
+- `ExilePermanentGroupsInto(groups ...PermanentExileGroup) ResolvingEffect`.
+- `ExiledCardsFrom(binding *CardsBinding) ExiledCardSet`.
+- `SingleExiledCardFrom(binding *CardsBinding) CardRef`.
+
+RON supports direct resolving action-sequence `Exile([Permanent(ref), ...
+EachPermanent(filter) ...], [])` with two or more groups. Existing spell,
+activated, triggered, conditional and delayed sequence contexts reuse this plan.
+`AttachedToPermanent(ref)` lowers through singleton/attachment selection and
+existing intersection/Aura filtering. All groups select before movement.
+
+Two singular declarations supply symbol `TheFirstCardExiledThisWay` and
+`TheSecondCardExiledThisWay` in declaration order. One singular plus one
+collection supplies `TheSinglePermanentExiledThisWay` and
+`TheOtherPermanentsExiledThisWay`. One explicit source group supplies
+`ThisExiledCard`. Failed movement cannot promote a later group. Producers must
+dominate reads; conditional producers cannot supply outer results. Fresh factories
+build distinct group bindings. RON owns spelling, scope and shape checks.
+
+`PutExiledCardIntoOwnersGraveyard(ref)` lowers singular groups through the shared
+exile transport service. Existing plural hand/graveyard/owner-entry consumers
+accept the other group; owner entry still permits only `[EntersUnderOwnersControl]`.
+Typed singular card operands lower to `SingleExiledCardFrom` for later consumers.
+Graveyard and ante consumers reject incompatible exile operands. Unknown
+modifiers, wrong arities/symbol spellings, mixed card/library/spell groups,
+unbound/ambiguous references, cost/static/entry producers and unsupported return
+options remain errors. Existing singular/link producers retain their callers.
+
+The engine reuses `Game.ExilePermanents`, `withZoneChangeBatch`, existing departure,
+LKI, printed-card restoration, exile-history and zone-visit storage. Overlapping
+subjects move once and supply the same visit to each declared group. Current,
+unphased incarnations qualify. Tokens leave and emit the existing event/history,
+but supply no retained exile card. Empty production clears results. All writes
+precede batch events. No new replacement priority or exile replacement rule is
+introduced. Existing cost transactions and target legality supply announcement,
+rollback and fizzle behavior without changes to payment mechanics.
+
+Readers require saved current visits; departure or re-exile ends them. The singular
+reader also requires public visibility and exactly one original result; a plural
+result cannot become singular after one member leaves. Transport uses current
+owners. Existing frame, delayed/stack capture and clone services copy maps/slices.
+Nested execution restores outer results. Waiting queries retain explicit source
+reads in all groups without selecting, filtering, choosing or moving objects.
+
+Rules evidence: local CR 400.7j, 406.2/3/5/7, 603.6c/d, 608.2b/c and 702.26b.
+Local `data/ATQ.json`, `data/LEG.json` and `data/LEA.json` supplied Oracle text.
+No source defect was corrected; RON assets and vocabulary hashes are unchanged.
+Runtime cutover, Go-card deletion and DSL removal gates remain unmet. No fallback,
+card-name executor, declaration panic or partial production registry was added.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the four new API declarations. After a
+parser-helper fixture correction, RON tests failed at both actual card exile nodes
+with `exile requires one subject`. The other-group transport and typed card
+adapter tests also failed at their missing adapters before implementation.
+A test-only delayed-step spelling was corrected to the existing supported symbol.
+The token-history expectation was corrected: tokens emit a move event but retain
+no exile card. Gameplay checks were retained.
+
+| Test | Mapping and contracts |
+| --- | --- |
+| TestRONGroupedExileSubjects | Actual complete-record exile nodes from Bronze Tablet and Tawnos's Coffin execute in test-only action probes. Source+target versus host+attached Auras; selection before movement, resolution timing, ownership and Aura state actions. These are prerequisite tests, not complete-card tests. |
+| TestRONGroupedExileResults / OtherTransport | Synthetic first/second/source/single/other result consumers; owner graveyards, hands and owner battlefield entry; pending clone isolation. |
+| TestRONGroupedExileInvalid / CardReferences | Binding order, branch escape, ambiguity, symbol/arity/modifier/subject validation and typed card-reference lowering/definition validation. |
+| TestRONGroupedExileTimingAndLegality | Mana/tap payment rollback and timing, source phasing/return/control, target phasing/return, all-illegal fizzle, copied ability and cloned stacks. |
+| TestRONGroupedExileContexts / DuplicateSubjects | Spell, trigger and saved delayed gameplay; duplicate target/source groups move once and keep one waiting source identity. |
+| TestGroupedExileIdentity / OverlapAndLegality | Exact visits and owners, attachment selection, clearing, overlapping groups, phasing, returned incarnations, tokens, move history and clone storage. |
+| TestGroupedExileDeclarations / SingularDoesNotPromote | Invalid nil/empty/duplicate declarations and reads before production; original cardinality survives membership loss. |
+| TestGroupedExileSimultaneousEvents / Waiting / Frames | Completed movements and bindings before events, departure observer LKI, pure waiting queries, nested-frame restoration and independent delayed clone visits. |
+
+Two old negative tests rejected duplicate plural declarations solely because
+plural exile was unsupported. They now reject incompatible mixed/invalid operands;
+the newly valid forms moved to `TestRONGroupedExileDuplicateSubjects` gameplay.
+Accepted-definition reconstruction and existing RON scenarios still pass.
+
+### Verification and measured outcome
+
+Required checks passed in fast-fail order after the final implementation:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONGroupedExile -count=1`: PASS;
+  related existing invalid-declaration tests also passed.
+- `go test ./pkg/mage -run TestGroupedExile -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `go test ./... -short -count=1` (engine skill check): PASS.
+- `make lint`: PASS, 0 issues. The first pass required preallocation in the
+  new builder; it was fixed and required checks were repeated. Automatic
+  formatting was reviewed, and focused checks passed after the final lint pass.
+- `git diff --check`: PASS; staged changes were checked before commit.
+- `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+
+Final counts: **2,076 compiled / 369 rejected records; 804 accepted / 182 rejected
+unique names**, totals 2,445 records / 986 names. Actual gain **+0 names / +0
+records** matches the prerequisite estimate. No diagnostic was added or removed.
+Only Coffin's diagnostic changed: ATQ.lines.ron:67:351 `exile requires one subject`
+now advances to ATQ.lines.ron:67:479 `unsupported action (NoteCountersOnPermanent)`.
+Every other diagnostic is unchanged. Neither affected full card is claimed as
+accepted or fully behavior-verified. Compilation coverage and prerequisite
+behavior coverage remain separate. No environmental or validation blocker remains.
+Commit message: `feat(ron): implement grouped permanent exile results`.
+
+Changed files: new native and RON grouped_exile.go/test files; compiler scopes,
+action sequencing, contextual attachment collection, typed card operands and exile
+transport adapters; two existing declaration-rejection tests; pkg/mage/doc.go;
+API/rules-contract docs; status block and this appended ledger entry. The commit
+excludes the user's ledger/history reorganization and other initial changes.
+
+Ranked next candidates:
+
+1. Two-card ownership exchange for Bronze Tablet and Tempest Efreet, with their
+   remaining exact-card operands and explicit destinations. Grouped exile visits
+   are now ready; compare prerequisite scope with other shared multi-card work.
+2. Counter-note capture and return-result entry prerequisites for Tawnos's Coffin;
+   preserve noted counter types, host identity, delayed timing and Aura attachments.
+3. Optional begin-turn skip replacement for Time Vault, with full normal/extra/
+   skipped scheduling and affected-player replacement ordering.
+
+Stop after GROUPED-PERMANENT-EXILE-RESULTS. Migration incomplete.

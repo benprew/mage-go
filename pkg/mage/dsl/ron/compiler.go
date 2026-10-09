@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	groupedExile         *groupedExilePlan
 	exileLink            *mage.ExileLink
 	drawnCard            *handRevealPlan
 	handReveal           *handRevealPlan
@@ -1278,6 +1279,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "PutExiledCardIntoOwnersGraveyard":
+		effect, err := compileGroupedExileGraveyard(n, ctx)
+		return []effectFactory{effect}, err
 	case "ReturnEachExiledCardToOwnersHand", "PutExiledCardsIntoOwnersGraveyards", "PutEachExiledCardOntoTheBattlefield":
 		effect, err := compileLinkedExileTransport(n, ctx)
 		return []effectFactory{effect}, err

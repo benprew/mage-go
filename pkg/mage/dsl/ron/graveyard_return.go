@@ -15,11 +15,25 @@ type cardTargetPlan struct {
 type deathCardPlan struct{ name string }
 
 type cardReferencePlan struct {
-	target *cardTargetPlan
-	death  *deathCardPlan
+	exile      *groupedExilePlan
+	exileGroup int
+	target     *cardTargetPlan
+	death      *deathCardPlan
 }
 
 func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
+	switch n.Name {
+	case "TheFirstCardExiledThisWay", "TheSecondCardExiledThisWay", "TheSinglePermanentExiledThisWay", "ThisExiledCard":
+		index, err := groupedExileIndex(n, ctx)
+		if err != nil {
+			return cardReferencePlan{}, err
+		}
+		if !ctx.groupedExile.singular[index] {
+			return cardReferencePlan{}, problem(n, "card reference requires a singular exile group")
+		}
+		return cardReferencePlan{exile: ctx.groupedExile, exileGroup: index}, nil
+	}
+
 	if n.Kind == Symbol && ctx.deathCard != nil && n.Name == ctx.deathCard.name {
 		return cardReferencePlan{death: ctx.deathCard}, nil
 	}
@@ -30,6 +44,10 @@ func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
 }
 
 func (p cardReferencePlan) build(bindings instanceBindings) mage.CardRef {
+	if p.exile != nil {
+		return mage.SingleExiledCardFrom(bindings.groupedExiles[p.exile][p.exileGroup])
+	}
+
 	if p.death != nil {
 		return mage.FromCard(bindings.deathCards[p.death])
 	}
@@ -116,7 +134,7 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if card.target != nil && card.target.ante {
+	if card.exile != nil || (card.target != nil && card.target.ante) {
 		return nil, problem(n.Args[0], "graveyard return requires a graveyard card reference")
 	}
 	if count == 1 {

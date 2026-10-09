@@ -89,6 +89,17 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 			}
 			return mage.UnionPermanents(sets...)
 		}, nil
+	case "AttachedToPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		host, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.AttachmentsOn(mage.SingletonPermanent(host.build(bindings)))
+		}, nil
 	case "AttachedToAPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err

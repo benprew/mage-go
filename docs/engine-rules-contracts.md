@@ -13072,3 +13072,67 @@ returned visits, empty production and clone isolation. Existing
 `TestRandomHandRevealReplacements` retains discard prevention, destination
 redirection and events. RON `TestRONResolutionLifeWand` maps the complete card;
 `Contexts`, `DistinctProducers` and `Invalid` map compiler scope and timing.
+
+## Grouped permanent exile results (CR 400.7j, 406.2/5/7, 603.6, 608.2b/c)
+
+`PermanentExileGroup{Subjects PermanentSet, Result *CardsBinding}` declares one
+subject group. `ExilePermanentGroupsInto(groups ...PermanentExileGroup)
+ResolvingEffect` requires at least one group, valid sets and distinct named result
+bindings. Definition validation checks production before reads on every path.
+The constructor copies the group list; bindings hold no game state.
+
+All groups select before any movement. Current unphased incarnations qualify;
+returned objects cannot replace saved subjects. Overlapping members move once,
+but each declaring group receives that same exact exile visit. Each group's
+order follows its selected set. Empty selections clear previous results. Tokens
+leave and produce the shared zone event, but supply no retained exile card.
+
+The operation uses the existing `withZoneChangeBatch`, battlefield departure,
+printed-copy restoration, LKI, zone storage and exile-history services. All moves
+and result writes finish before batch events. Leaving observers see the former
+battlefield and completed movement. This adds no choice, payment, replacement
+priority, exile replacement registration or persistent source-local exile link.
+Existing singular exile and linked-exile callers retain their contracts.
+
+`ExiledCardsFrom(binding *CardsBinding) ExiledCardSet` selects only current saved
+exile visits without granting card inspection. `SingleExiledCardFrom(binding
+*CardsBinding) CardRef` requires exactly one original saved visit and current
+visibility. A plural result with only one remaining member is still plural.
+Departure and re-exile end a reference. Source departure and control changes do
+not alter saved visits. Transport uses current owners and the existing shared
+hand, graveyard ordering and battlefield-entry services.
+
+Existing resolution frames, stack/delayed captures and game cloning copy result
+maps and slices. Nested execution restores the outer frame. A producer cannot
+overwrite a different lexical declaration. Waiting delayed queries retain explicit
+source reads in every subject set without selecting members, running filters or
+moving cards. Implicit attachment references keep their existing behavior.
+
+RON supports `Exile([Permanent(ref), ... EachPermanent(filter) ...], [])` with two
+or more permanent groups in resolving action sequences, including supported
+spell, activated, triggered, conditional and delayed bodies. `AttachedToPermanent`
+lowers to `AttachmentsOn(SingletonPermanent(ref))`; existing intersections retain
+Aura filtering. It checks the original host and attachment incarnations.
+
+Two singular groups bind `TheFirstCardExiledThisWay` and
+`TheSecondCardExiledThisWay` by declaration order, regardless of failed movement.
+One singular and one collection group bind `TheSinglePermanentExiledThisWay` and
+`TheOtherPermanentsExiledThisWay`. `ThisExiledCard` requires one explicit source
+permanent group. Results require symbol spelling and lexical dominance. Branch
+producers do not escape their branch. Every factory builds fresh bindings.
+
+`PutExiledCardIntoOwnersGraveyard(ref)` accepts a singular grouped result.
+The existing plural hand/graveyard/owner-entry adapters accept the other group;
+owner entry still accepts only `[EntersUnderOwnersControl]`. Typed card-reference
+lowering supplies `SingleExiledCardFrom` for future consumers, while graveyard
+and ante operations reject these incompatible exile references. Unsupported
+modifiers, card/library/spell groups, cost/static/entry contexts, unbound or
+ambiguous results and attachment/counter return options still reject.
+
+Evidence: native `TestGroupedExileIdentity`, `Declarations`, `Waiting`,
+`OverlapAndLegality`, `SingularDoesNotPromote`, `SimultaneousEvents` and `Frames`;
+RON `TestRONGroupedExileSubjects`, `Results`, `Invalid`, `CardReferences`,
+`TimingAndLegality` and `Contexts`. The actual Bronze Tablet and Tawnos's Coffin
+exile nodes run in test-only action probes. This evidence establishes their exile
+prerequisite, not complete-card behavior. Counter notes, departure-or-untap return
+subscriptions, noted-counter/attachment entry and ownership exchange remain gaps.

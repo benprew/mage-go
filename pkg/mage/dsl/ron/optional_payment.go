@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "Exile" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[0].Kind == List && len(part.Args[0].Args) > 1 {
+			effect, err := compileGroupedExile(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, effect), ctx.chosenName, nil
+		}
 		action, player, err := drawnCardAction(part, ctx)
 		if err != nil {
 			return nil, nil, err

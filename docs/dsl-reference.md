@@ -9854,3 +9854,37 @@ Evidence: `TestRONResolutionLifeWand` executes the complete DRK record;
 `TestRONResolutionLifeContexts`, `DistinctProducers` and `Invalid` cover the
 reusable shape and its scope. Native `TestResolutionLifePayment*` and
 `TestRevealedCardManaValue` establish payment, reveal identity and frame contracts.
+
+## Grouped permanent exile results
+
+Native declarations:
+
+- `PermanentExileGroup{Subjects PermanentSet, Result *CardsBinding}`.
+- `ExilePermanentGroupsInto(groups ...PermanentExileGroup) ResolvingEffect`.
+- `ExiledCardsFrom(binding *CardsBinding) ExiledCardSet`.
+- `SingleExiledCardFrom(binding *CardsBinding) CardRef`.
+
+Select all groups before one exile batch. Use separate named bindings for each
+group. Overlapping members move once; every matching group saves the same visit.
+Empty results clear. Tokens supply no retained card. Only current unphased
+incarnations move. Result writes precede batch events. Saved visits expire on
+exit or re-exile; a plural result cannot become a singular reference when one
+member remains. Existing frames, delays and clones keep separate result storage.
+Transport sets do not grant inspection; singular card reads require visibility.
+
+RON resolving sequences accept two or more `Permanent(ref)`/`EachPermanent(filter)`
+subject groups with empty modifiers. `AttachedToPermanent(ref)` selects current
+attachments through the existing set service. Two singular declarations supply
+first/second card references; one singular plus one collection supplies
+single/other references. One explicit source group supplies `ThisExiledCard`.
+These symbol references are lexical and cannot escape conditional producers.
+
+Singular results can feed `PutExiledCardIntoOwnersGraveyard`. The other collection
+can feed the existing plural hand/graveyard/owner-entry adapters; owner entry
+permits only `[EntersUnderOwnersControl]`. `compileCardRef` lowers singular
+results for future card consumers and preserves zone restrictions. This contract
+does not supply noted counters, attachment entry, ownership exchange, exile
+replacement rules or linked accumulation across separate activations.
+
+See the grouped permanent exile contract in `engine-rules-contracts.md` and
+`TestGroupedExile*`/`TestRONGroupedExile*` for identity and gameplay evidence.

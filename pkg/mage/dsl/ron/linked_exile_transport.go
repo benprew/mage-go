@@ -56,6 +56,23 @@ func compileLinkedExileTransport(n Node, ctx scope) (effectFactory, error) {
 		}
 	}
 	set := n.Args[0]
+	if set.Kind == Symbol && set.Name == "TheOtherPermanentsExiledThisWay" {
+		index, err := groupedExileIndex(set, ctx)
+		if err != nil {
+			return nil, err
+		}
+		plan := ctx.groupedExile
+		return func(bindings instanceBindings) mage.Effect {
+			subjects := mage.ExiledCardsFrom(bindings.groupedExiles[plan][index])
+			if n.Name == "ReturnEachExiledCardToOwnersHand" {
+				return mage.ReturnExiledCardsToOwnersHands(subjects)
+			}
+			if n.Name == "PutEachExiledCardOntoTheBattlefield" {
+				return mage.PutExiledCardsOntoBattlefieldUnderOwnersControl(subjects)
+			}
+			return mage.PutExiledCardsInOwnersGraveyards(subjects)
+		}, nil
+	}
 	if set.Name != "WasExiledWithPermanent" {
 		return nil, unsupported(set, "exiled card set")
 	}

@@ -186,7 +186,7 @@ func TestRONPermanentInformationInvalid(t *testing.T) {
 		`PlayerAction(You, GainLife(PowerOfPermanent(Ref_TargetPlayer)))`,
 		`PlayerAction(You, GainLife(PowerOfPermanent()))`,
 		`Exile([Permanent(Ref_TargetPermanent)], [FaceDown])`,
-		`Exile([], [])`, `Exile([Permanent(Ref_TargetPermanent),Permanent(Ref_TargetPermanent)], [])`,
+		`Exile([], [])`, `Exile([Permanent(Ref_TargetPermanent),CardInGraveyards(Ref_TargetPermanent)], [])`,
 		`Exile([CardInGraveyards(Ref_TargetPermanent)], [])`,
 	} {
 		src := fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([TargetPermanent(AnyPermanent)],ActionList([%s])))])`, action)
