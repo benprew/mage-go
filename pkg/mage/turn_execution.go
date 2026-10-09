@@ -344,6 +344,7 @@ func (g *Game) doCleanupActions() bool {
 		p.ManaPool().Clear()
 	}
 	// Remove end-of-turn effects and clear turn-scoped state
+	g.playerPayments = nil
 	g.effects.RemoveEndOfTurn()
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()

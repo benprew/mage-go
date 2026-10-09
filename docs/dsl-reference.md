@@ -10009,3 +10009,34 @@ SinglePermanent(ThisPermanent)))`, also inside `And([...])`, with `PayManaX`.
 Bodies and targets that read `ValueX`, target-derived definitions and plural
 counter totals remain rejected. Voodoo Doll uses the supported shape; Reflecting
 Mirror needs a separate target-derived announcement contract and a source audit.
+
+## RON temporary player mana payments
+
+In resolving spell, activation and trigger action lists:
+
+```ron
+CreatePlayerEffectUntil(You,
+    [MayPayManaAnyTimeTheyCouldCastAnInstant([ManaCostGeneric(1)],
+        [CreateFuturePreventDamage(
+            NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(Integer(1), Ref_AnyTarget),
+            [PreventThatDamage])])],
+    UntilEndOfTurn)
+```
+
+The player reference and typed lexical environment are saved at installation.
+The body retains its original target visits and X; taking a payment selects no
+new target. Each payment uses fresh local result storage. Source departure,
+phasing and control changes do not revoke the permission. Cleanup revokes it.
+The selected player can repeat the fixed mana payment at instant timing. It
+uses the shared transaction, resolves immediately and creates no stack object.
+Unpaid attempts do not execute the body. Existing automatic mana production
+can supply payment. Activation taxes and reductions do not change this cost.
+
+Native APIs are `mage.PlayerManaPaymentThisTurn(player, mana, body)`,
+`Game.GetPlayerPayments(player)` and `Game.TakePlayerPayment(player, id)`.
+Priority handlers return `PriorityAction{Type: PriorityTakePlayerPayment,
+PlayerPaymentID: id}`. Direct callers supply a legal instant-timing opportunity;
+queries and execution reject use during stack resolution. Fixed nonnegative
+ordinary mana and nonempty operation/body lists are supported. X, hybrid mana,
+other durations, life-to-mana and one-use casting are separate capabilities.
+Guardian Angel is the complete collection card covered by this adapter.

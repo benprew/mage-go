@@ -2,18 +2,19 @@
 
 ## Current status
 
-The latest recorded inventory reports **806 accepted / 180 rejected unique card
-names** (986 total), and **2,078 compiled / 367 rejected records** (2,445 total).
+The latest recorded inventory reports **807 accepted / 179 rejected unique card
+names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`SOURCE-COUNTER-ACTIVATION-MANA-X` defines activation payment X from live source
-counters before targets and transactional payment. Voodoo Doll gains complete
-RON gameplay coverage. **+1 unique name / +1 record**, as estimated. Resolving
-counter amounts retain exact-source LKI; dynamic ValueX contexts remain rejected.
-Focused/native tests and all required repository checks pass. Existing complete
-card mappings remain. Reflecting Mirror still needs target-derived X and a
-source correction; temporary player-effect lifetime is the next shared candidate.
+`TEMPORARY-PLAYER-MANA-PAYMENT` installs repeatable fixed mana payments at instant
+timing, with saved player/source/target identity, separate execution frames and
+cleanup expiry. Guardian Angel gains complete RON gameplay coverage across six
+records. **+1 unique name / +6 records**, as estimated. Source LKI, payment
+rollback, copies, clones and native priority have contract tests. The shared
+priority coordinator now retains the acting player after a successful action.
+All required checks pass. Channel and North Star keep explicit nested-operation
+rejections. Shared physical source-card transport is the next ranked prerequisite.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -57132,3 +57133,185 @@ Ranked next candidates:
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Stop after SOURCE-COUNTER-ACTIVATION-MANA-X.
 Migration incomplete.
+
+## Run 2026-10-09: TEMPORARY-PLAYER-MANA-PAYMENT
+
+Status: complete one vertical slice. No second capability was started.
+
+### Fresh baseline and candidate comparison
+
+The working tree began with user edits to `.gitignore`, the execution design and
+this ledger, plus untracked `mtgish-ron-completed.md`. They are preserved. The
+user's history relocation is excluded from this commit; only this run's summary
+and appended entry are staged for the ledger.
+
+Fresh `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed. Strict
+`go run ./cmd/loadcards -json` exited 1 with **2,078 compiled / 367 rejected
+records; 806 accepted / 180 rejected unique names**, out of 2,445 records / 986
+names. This was collection rejection, not a build/test failure.
+
+The latest ranked candidate was evaluated first. Complete records and nested
+forms were read for Channel, Guardian Angel, North Star, Reflecting Mirror and
+City in a Bottle. Reprints count once. All uses of CreatePlayerEffectUntil were
+also inspected: Island Sanctuary, Firestorm Phoenix and Johan need other
+operations, durations and/or replacement contexts.
+
+| Candidate | Distinct names and estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Temporary player permissions plus fixed mana payments | Guardian Angel, Channel, North Star. Lifecycle alone: 0; supported fixed-mana operation: 1 unique name / 6 records. | Guardian's initial X shield and targeting are ready. Channel needs life-to-mana at mana opportunities; North Star needs one-use casting and mana spending permission. The shared player-owned state, captured frames, expiry and dispatch serve all three. | Medium: new native service and adapter, priority/clone/cleanup integration, native and RON gameplay tests. |
+| Target-derived activation X | Reflecting Mirror: at most 1 unique name / 1 record after all dependencies and correction. | Its ManaValueIs(EqualTo(ValueX)) condition contradicts twice-mana-value X, as recorded in the previous entry. Needs target-derived announcement constraints and spell retargeting contracts. Preserves source-counter X. | Large: coupled target selection/payment and source correction. |
+| Battlefield state-event collection | City in a Bottle: 0 immediate full-card gains. | Original-name filter and controller-sacrifice are ready. CantCastSpells and CantPlayLandsOfType still block the whole card. Adds exact collection capture and state-trigger arming/rearming. | Medium: event/subject capture and state-trigger lifecycle; little immediate multi-card value in this form. |
+
+Selection: ranked candidate #1 is dependency-ready and establishes the concrete
+shared lifetime prerequisite while finishing its fixed-mana operation. This has
+the largest credible gain for this run. Single-card Mirror and Bottle work stays
+deferred. The contract and acceptance cases were stated before implementation.
+
+### Exact supported shapes and engine boundary
+
+RON supports, in resolving spell, activation and trigger bodies:
+
+`CreatePlayerEffectUntil(playerRef,
+[MayPayManaAnyTimeTheyCouldCastAnInstant(manaList, actionList), ...], UntilEndOfTurn)`.
+
+Mana is fixed, nonnegative ordinary mana. Operation and body lists are nonempty.
+Each operation installs a separate repeatable permission. Existing supported
+resolving actions and typed references can appear in the body. Outer lexical
+bindings must dominate installation; body results cannot escape its scope.
+Invalid kinds, arity, player bindings, mana, X, empty lists, unsupported nested
+operations and other durations reject before publishing a registry. Spell,
+activation and trigger gameplay contexts have explicit tests. Static, cost,
+entry and replacement adapters are not added.
+
+Native APIs:
+
+- `PlayerManaPaymentThisTurn(player PlayerRef, mana core.ManaCost, body ResolvingEffect) ResolvingEffect`.
+- `Game.GetPlayerPayments(player uuid.UUID) []PlayerPaymentInfo`, with stable ID,
+  SourceID and Description.
+- `Game.TakePlayerPayment(player, id uuid.UUID) error`.
+- `PriorityTakePlayerPayment` and `PriorityAction.PlayerPaymentID`.
+
+The selected player is saved at installation. The original controller, exact
+source incarnation, target visits, X, event context and typed bindings remain in
+an immutable snapshot. Each payment copies the saved frame, executes its body
+immediately, then restores the ambient frame. Payment does not announce another
+target, create a permanent or stack object, or fire an activation event.
+
+The shared action payment transaction supplies automatic mana production,
+affordability and rollback. Activation modifiers do not apply. Queries do not
+make choices, tap, pay or execute bodies. Direct callers supply an instant-timing
+opportunity; both APIs reject stack-resolution use. Source departure, phasing,
+control change and ability removal do not revoke the permission. Cleanup removes
+it. Clones keep separate permission lists and immutable snapshots; each execution
+gets independent mutable frames and resources. Returned subjects cannot replace
+saved visits, and source information uses exact LKI.
+
+A failing opponent-payment priority test exposed the coordinator's unconditional
+active-player restart. It now retains the successful actor (CR 116.3, 117.3c)
+and returns priority to the active player after stack resolution (CR 117.3b).
+Existing priority regression tests pass. This is the required shared timing
+integration, not a separate card capability.
+
+Reuse: typed references and per-factory bindings, definition validation with
+isolated bindings, ResolutionState.Clone, exact source/target identity and LKI,
+shared action cost transactions and mana solver, clone services, priority loop,
+cleanup lifecycle, existing finite prevention, damage and replacement ordering.
+RON owns spelling, context, lexical scope and lowering; mage owns permission
+state, payment and execution. No Go-card fallback, card-name branch, game-time
+declaration panic, global last-action slot or partial production registry exists.
+
+### Failing-first evidence and gameplay mapping
+
+Native and RON tests first failed on missing payment APIs. Test setup API names
+were corrected before confirming the missing signatures alone. The inventory
+test subsequently failed on the missing player-reference role. The new priority
+retention test failed with `[0 1 0 1]` instead of `[0 1 1 0]`, then passed after
+the coordinator fix. An ambient-frame test explicitly seeds its outer binding
+after ApplyEffect's normal frame cleanup; no payment assertion was weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestRONPlayerPaymentGuardian` | All six complete Guardian Angel records: casting cost/X, no pre-resolution permission, initial X shield, two immediate {1} payments, original player recipient and combined shield consumption. |
+| `TestRONPlayerPaymentTargetIdentity` | Complete Guardian: permanent recipient, control change, shroud acquired after resolution, departure/return, phasing and phase cycle, clone resource independence. Payments do not retarget. |
+| `TestRONPlayerPaymentCopiesAndExpiry` | Complete Guardian: pending game clone, copied spell's own controller, retained X and recipient, independent permissions and shields, cleanup of permission/shields in one game only. |
+| `TestRONPlayerPaymentIllegalAndRollback` | Complete Guardian: unaffordable casting rollback, all-illegal resolution installs nothing, failed later payment installs no shield. |
+| `TestRONPlayerPaymentResolvingContexts` | Synthetic RON activations and entry triggers: explicit source-controller payer, exact source identity, departure/return, phasing and control changes. |
+| `TestRONPlayerPaymentInvalid`, `Inventory`, `MultipleOperations` | Strict atomic rejection of invalid declarations; semantic roles for player, operation, mana metadata, actions and duration; separate costs, bodies and identities for multiple operations. |
+| `TestPlayerPaymentLifetime`, `Declarations` | Native synthetic permissions: repeated payments, payer identity, source departure/return/phasing/control, pure affordability, clone isolation and cleanup, invalid body/player/mana/binding declarations. |
+| `TestPlayerPaymentFramesAndRollback` | Saved lexical values, fresh body results on each payment, ambient X and bindings, failed payment rollback, independent clones and producer dominance. |
+| `TestPlayerPaymentPriorityAndTiming`, `RetainsPriority` | Native priority execution, opponent retains priority, no stack action, rejection during stack resolution. |
+| `TestPlayerPaymentManaSources` | Pure repeated queries with an untapped colored mana source; automatic transaction taps it once; later unaffordable payment does nothing. |
+| `TestPlayerPaymentSourceLKIAndIndependentInstallations` | Two separate permission identities/controllers, exact source LKI despite a stronger returned source, independent execution in clones. |
+
+Guardian Angel gains one complete RON gameplay mapping, separately from its
+compilation gain. Existing mappings remain. The broader mana and prevention
+suites retain replacement ordering, simultaneous damage and allocation evidence;
+this slice adds no new damage batch or replacement order.
+
+### Source-data audit and removal gates
+
+`data/LEA.json` Guardian Angel Oracle matches the complete RON requirements:
+initial next-X prevention, then optional repeated {1} payments at instant timing
+for next-1 prevention to the same permanent or player. CR 116.2c, 117.1a,
+116.3/117.3b-c, 611.2a/d, 514.2 and 615.4/7 establish timing, lifetime and shields.
+No source defect was found in the selected record, and no RON was changed.
+Vocabulary source hashes/snapshot therefore need no refresh. Mirror's prior
+source defect remains explicit. No environment or pre-existing check failure
+blocks this slice.
+
+Complete collection gameplay/loading, application cutover, Go-definition
+removal and obsolete DSL removal gates remain unmet. No Go card definition,
+DSL function or generation tool is deleted; no new card stub is created.
+
+### Verification and measured outcome
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONPlayerPayment -count=1`.
+- `go test ./pkg/mage -run 'TestPlayerPayment|Test.*Priority' -count=1`.
+- Whole compiler package `go test ./pkg/mage/dsl/ron -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- Initial `make lint` flagged `deferInLoop` in payment execution. The restore
+  moved into a helper; the repeated `make lint` passed with 0 issues. Automatic
+  changes were reviewed, followed by focused
+  tests and the engine skill's `go test ./... -short -count=1`.
+- `git diff --check` and the staged patch check.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, strict collection
+  rejection; no partial production registry is installed.
+
+Final loader: **2,084 compiled / 361 rejected records; 807 accepted / 179 rejected
+unique names**, totals 2,445 records / 986 names. Actual **+1 unique name / +6
+records** equals the supported-operation estimate; lifetime alone was estimated
+at zero. The six Guardian Angel rejections are removed, with no new rejection
+or accepted-record regression. Channel now reports unsupported temporary player
+operation `MayPayLifeToProduceManaAsManaAbility` at its nested position, and North
+Star reports `MayActionOnce`; all other remaining diagnostics are unchanged.
+
+Changed files: new native and RON `player_payment.go` and test files;
+`pkg/mage/{game,clone,priority,turn_execution,doc}.go`; RON `compiler.go`,
+`inventory.go` and three collection-count test files; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger's summary/appended entry.
+Commit message: `feat(ron): implement temporary player mana payments`.
+
+Ranked next candidates:
+
+1. Shared physical source-card identity and transport prerequisite for Tempest
+   Efreet and Bronze Tablet. Require exact paid-source identity across sacrifice
+   or exile and keep Tablet's owner-assignment source defect explicit. Reassess
+   full-card gain from both records before implementation; transport alone does
+   not justify a full-card claim.
+2. Shared text-word choice and text-layer prerequisite for Magical Hack and
+   Sleight of Mind. Both complete records need choices and spell/permanent text
+   changes; compare a small prerequisite against other multi-card work, rather
+   than attempting both complete cards in one oversized slice.
+3. Channel life-to-mana permission at actual mana opportunities, reusing the
+   player-owned lifetime/frame service. Mana-payment opportunities and solver
+   integration must be explicit. This remains single-card work and should be
+   deferred while useful multi-card prerequisites remain. North Star's one-use
+   casting operation is separate.
+
+Mirror's constrained target-derived X and City in a Bottle's state collection
+remain lower-priority candidates with the recorded blockers. Complete RON
+execution, runtime cutover, Go-card deletion and unused DSL removal remain
+unfinished. Stop after TEMPORARY-PLAYER-MANA-PAYMENT. Migration incomplete.

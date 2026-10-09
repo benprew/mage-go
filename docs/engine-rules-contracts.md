@@ -13319,3 +13319,70 @@ RON record, including all triggers, casting, damage prevention, target legality,
 LKI, source return/phasing, destruction failure, payment rollback and native
 upkeep/end-step execution. Declaration and inventory tests cover atomic rejection
 and announcement-value roles. Reflecting Mirror remains unsupported.
+
+## Temporary player mana payments at instant timing
+
+`PlayerManaPaymentThisTurn(player PlayerRef, mana core.ManaCost, body ResolvingEffect)
+ResolvingEffect` installs a repeatable payment permission when its resolving
+instruction executes. It saves the selected payer, original controller, exact
+source incarnation, target visits, X, event context and typed lexical bindings.
+An absent payer installs nothing. The permission is independent of source
+presence, control, phasing and ability removal (CR 611.2a). Cleanup removes all
+these permissions with the other end-of-turn effects (CR 514.2).
+
+`Game.GetPlayerPayments(player uuid.UUID) []PlayerPaymentInfo` lists affordable
+permissions without choices, payment, tapping or body execution. Each result
+has a stable `ID`, `SourceID` and `Description`. `Game.TakePlayerPayment(player,
+id uuid.UUID) error` requires that payer and a current permission. It checks and
+commits through the existing action payment transaction, including automatic
+mana production. Failure leaves resources and the body unchanged. These are
+special actions under CR 116.2c, not activations on permanents: they create no
+stack object and no ability-activation event. Activation cost modifiers do not
+apply. No additional target is announced or selected when taking a payment.
+
+The caller must supply a time when the player could cast an instant (CR 117.1a).
+Both methods reject use while a stack object is resolving. The priority handler
+supports `PriorityTakePlayerPayment` with `PriorityAction.PlayerPaymentID`.
+The priority coordinator retains the acting player after a successful action
+(CR 116.3, 117.3c), and starts with the active player after stack resolution
+(CR 117.3b). This fixes its previous unconditional active-player restart.
+Each successful payment executes the body immediately in a fresh copy of the
+saved frame, then restores the ambient frame. A body result cannot escape into
+its installer or alter another payment. Saved references cannot follow a
+returned object; phasing and LKI follow the existing typed-reference services.
+Game clones share only immutable permission snapshots and have separate lists,
+resources and body execution frames. Copies of the installing spell independently
+save their controllers and references. A spell with all illegal targets cannot
+install its permission.
+
+Definition validation requires a non-nil player and body, fixed nonnegative
+ordinary mana, valid target declarations and producer-before-consumer binding
+paths. X and hybrid payments are outside this contract. Bodies have isolated
+result scopes, but can consume dominated outer bindings. Source reads participate
+in the existing waiting-delayed-source query without installation or payment.
+
+RON lowers `CreatePlayerEffectUntil(playerRef,
+[MayPayManaAnyTimeTheyCouldCastAnInstant(manaList, actionList), ...], UntilEndOfTurn)`
+in resolving spell, activation and trigger bodies. Each operation installs a
+separate permission. Empty operation/body lists, unsupported operations, X,
+invalid mana, wrong kinds/arity, other durations and unbound references reject
+at compilation. Nested bodies use existing resolving actions and instance
+bindings. Semantic inventory reports player references, temporary player
+operations, mana metadata, actions and duration separately.
+
+Complete Guardian Angel records in LEA, LEB, 2ED, 3ED, CED and CEI execute their
+initial X shield and repeated paid shields through the existing prevention
+pipeline (CR 615.4, 615.7). The local `data/LEA.json` Oracle text matches these
+records; no source correction was needed. Channel and North Star retain explicit
+rejections for their nested life-to-mana and one-use casting operations. This
+contract supplies their player-owned permission/lifetime prerequisite, not those
+operations or their timing rules.
+
+Evidence: `TestPlayerPaymentLifetime`, `Declarations`, `FramesAndRollback`,
+`PriorityAndTiming`, `RetainsPriority`, `ManaSources` and
+`SourceLKIAndIndependentInstallations`;
+`TestRONPlayerPaymentGuardian`, `TargetIdentity`, `CopiesAndExpiry`,
+`IllegalAndRollback`, `ResolvingContexts`, `Invalid`, `Inventory` and
+`MultipleOperations`. Shared
+prevention and mana suites retain replacement-order and simultaneous-damage
+coverage; this capability adds no new replacement order or damage-batch service.

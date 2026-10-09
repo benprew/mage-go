@@ -768,6 +768,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
 			return "value"
 		}
+	case "temporary_player_operation":
+		if n.Name == "MayPayManaAnyTimeTheyCouldCastAnInstant" && len(n.Args) == 2 {
+			return []string{"metadata", "action"}[index]
+		}
 	case "action":
 		if n.Name == "ChooseACardName" && len(n.Args) == 1 {
 			return "card_name_catalog"
@@ -861,6 +865,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateReplaceWouldProduceManaUntil":
 			if len(n.Args) == 3 {
 				return []string{"mana_replacement_event", "mana_replacement_operation", "duration"}[index]
+			}
+		case "CreatePlayerEffectUntil":
+			if len(n.Args) == 3 {
+				return []string{"player_reference", "temporary_player_operation", "duration"}[index]
 			}
 		case "CreateFuturePreventDamage":
 			if len(n.Args) == 2 {

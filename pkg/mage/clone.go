@@ -24,6 +24,8 @@ func (g *Game) Clone() *Game {
 		anteSettled: g.anteSettled,
 		stopped:     g.stopped,
 	}
+	// Saved payment frames do not change; each payment copies its frame.
+	c.playerPayments = slices.Clone(g.playerPayments)
 	c.turns = g.turns.Clone()
 	c.zones = g.zones.Clone()
 	c.resolution = g.resolution.Clone()

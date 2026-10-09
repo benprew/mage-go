@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [PlayerManaPaymentThisTurn] for a repeatable player payment at instant timing.
+// The player and source references are saved when the permission starts.
+// [Game.GetPlayerPayments] lists affordable permissions without making choices.
+// [Game.TakePlayerPayment] uses the shared cost transaction and no stack object.
+// Each payment uses a separate copy of the saved resolution frame.
+// Source departure and phasing do not end the permission. Cleanup ends it.
+// [PriorityTakePlayerPayment] permits use through the priority handler.
+// RON supports fixed mana payments and UntilEndOfTurn in resolving bodies.
+// Life-to-mana, one-use casting and other durations need separate adapters.
+//
 // Use [ExilePermanentGroupsInto] with distinct [PermanentExileGroup] results.
 // All groups select their current subjects before one simultaneous exile batch.
 // Overlapping subjects move once and supply the same visit to each group.

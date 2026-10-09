@@ -57,6 +57,7 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 // Game is the central game state and engine.
 type Game struct {
 	players           []Player
+	playerPayments    []installedPlayerPayment
 	publicReveals     []PublicCardReveal
 	libraryLooks      map[uuid.UUID][]PublicCardReveal
 	anteEnabled       bool

@@ -21,16 +21,18 @@ const (
 	PriorityCastSpell
 	PriorityActivateAbility
 	PriorityPlayLand
+	PriorityTakePlayerPayment
 )
 
 // PriorityAction is what a player wants to do when they have priority.
 type PriorityAction struct {
-	Type        PriorityActionType
-	CardID      uuid.UUID
-	Targets     []uuid.UUID
-	PermanentID uuid.UUID
-	AbilityIdx  int
-	XValue      int
+	Type            PriorityActionType
+	CardID          uuid.UUID
+	Targets         []uuid.UUID
+	PermanentID     uuid.UUID
+	AbilityIdx      int
+	XValue          int
+	PlayerPaymentID uuid.UUID
 }
 
 // PriorityHandler is called by the engine whenever a player receives priority.
@@ -45,6 +47,8 @@ type PriorityHandler func(g *Game, playerIdx int, mainPhase bool) PriorityAction
 func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool {
 	playerID := g.players[playerIdx].PlayerID()
 	switch action.Type {
+	case PriorityTakePlayerPayment:
+		return g.TakePlayerPayment(playerID, action.PlayerPaymentID) == nil
 	case PriorityPlayLand:
 		if err := g.playLandCore(playerID, action.CardID); err != nil {
 			if DebugPriority {
@@ -94,6 +98,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		addEnginePriorityRound()
 	}
 
+	priorityStart := g.turns.ActivePlayerIndex()
 	iterations := 0
 	for {
 		iterations++
@@ -135,10 +140,10 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 			addEngineTiming(&engineTimingTriggersNs, time.Since(phaseStart))
 		}
 
-		// 3. Cycle through players starting from active player
+		// A successful action keeps priority with its player.
 		allPassed := true
 		for i := 0; i < len(g.players); i++ {
-			playerIdx := (g.turns.ActivePlayerIndex() + i) % len(g.players)
+			playerIdx := (priorityStart + i) % len(g.players)
 			if timingEnabled {
 				phaseStart = time.Now()
 			}
@@ -151,6 +156,8 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 					actionName := "unknown"
 					cardName := ""
 					switch action.Type {
+					case PriorityTakePlayerPayment:
+						actionName = "PlayerPayment"
 					case PriorityPlayLand:
 						actionName = "PlayLand"
 					case PriorityCastSpell:
@@ -183,6 +190,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 					addEngineExecutedAction()
 				}
 				if executed {
+					priorityStart = playerIdx
 					if g.afterPriorityAction != nil {
 						if timingEnabled {
 							phaseStart = time.Now()
@@ -216,6 +224,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 			phaseStart = time.Now()
 		}
 		g.ResolveTopOfStack()
+		priorityStart = g.turns.ActivePlayerIndex()
 		if timingEnabled {
 			addEngineTiming(&engineTimingResolveNs, time.Since(phaseStart))
 		}
