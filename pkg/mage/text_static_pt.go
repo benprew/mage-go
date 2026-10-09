@@ -20,6 +20,18 @@ func (a *StaticAbilityHolder) supportsPTTextRevision() bool {
 	if len(a.Effects) == 0 {
 		return false
 	}
+	if a.conditionalSourcePTContext() {
+		if len(a.Effects) != 1 {
+			return false
+		}
+		effect := a.Effects[0].(*conditionalSourcePTEffect)
+		if effect == nil || effect.composedLayerEffect == nil {
+			return false
+		}
+		if _, valid := basicLandTypeColor(effect.landType); !valid {
+			return false
+		}
+	}
 	for _, effect := range a.Effects {
 		if nilDefinition(effect) || effect.GetLayer() != core.LayerPT || getEffectSublayer(effect) != core.SublayerPT_Modify || effect.GetDuration() != core.WhileOnBattlefield {
 			return false
@@ -126,6 +138,9 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 	}
 	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {
 		return fmt.Errorf("text static revision changed the land-type context")
+	}
+	if active.ptTextRevision && active.conditionalSourcePTContext() != fresh.conditionalSourcePTContext() {
+		return fmt.Errorf("text static revision changed the P/T context")
 	}
 	for i, effect := range active.Effects {
 		next := fresh.Effects[i]

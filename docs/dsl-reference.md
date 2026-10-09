@@ -416,9 +416,9 @@ for the original present face-up source and active printed declaration.
 
 RON opts in `EachPermanentLayerEffect(creatureFilter, [AdjustPT(integer,
 integer)])` through `compileStaticLayer`. The existing validated creature filter
-can include control, source exclusion, color, subtype and combat state. Other
-parts, general permanent filters, Aura hosts, conditional statics and CDAs do
-not opt in. Invalid syntax and out-of-scope references retain their errors.
+can include control, source exclusion, color, subtype and combat state. The
+conditional source context specified below also opts in. Other parts, general
+permanent filters, Aura hosts, other conditional statics and CDAs do not opt in. Invalid syntax and out-of-scope references retain their errors.
 
 The service retains the active UUID and each effect's registration position.
 It does not retimestamp a static rule when its text changes. Independent siblings
@@ -10719,3 +10719,47 @@ event players and source-controller reads. It is an action, not a cost, static
 modification or entry operation. Glasses of Urza has complete RON gameplay tests.
 Word of Command's combined inspection, selection and controlled play remains
 unsupported until its separate decision and player-control contracts are ready.
+
+## Printed conditional source P/T text revision
+
+`SourcePTWhileControllerControlsBasicLand(landType string, power, toughness int)
+ContinuousEffect` creates one typed source P/T modification. Definition validation
+requires a basic land subtype: Plains, Island, Swamp, Mountain or Forest.
+`StaticAbility(effect).WithPTTextRevision()` enables checked installation through
+`Game.RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error`. A conditional declaration must contain exactly
+one effect. Mixed or multiple conditional effects reject. Replacement cannot
+change between the existing global context and the conditional source context.
+
+RON opts in exactly `If(PlayerPassesFilter(You, ControlsA(IsLandType(type))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])])`, with a
+fixed basic subtype and fixed integer adjustments. Existing Unless, IfElse,
+ControlsNo, nonbasic subtype, collection, host and multiple-modification forms
+retain their existing execution without this opt-in. Malformed syntax and
+unbound references remain compilation errors.
+
+CR 611.3 and 613.4c use the existing `While`, `PlayerControls`, `You`,
+`HasSubType`, `ModifyPT`, `This` and `Fixed` services. Control is read after
+layer 2; land subtypes are read after layer 4. Opponent lands and phased lands
+do not satisfy the condition. Typed effects clone their installed state.
+CR 612.2 changes the land word in the retained semantic AST in order. Mana
+costs and the other printed declarations keep their separate contracts.
+
+The shared revision service keeps active identity, source visit, printed group
+and registration position. It validates the complete rebuilt definition and
+context before mutation. Siblings and clones keep independent changes. Phasing
+keeps revisions; ability removal suspends execution and restoration keeps the
+revised rule. Departure saves current P/T in LKI. Return uses the printed rule.
+The caller still supplies layer-3 order, lifetime and original-text restoration.
+This contract does not establish live Magical Hack execution.
+
+Evidence: `TestRONTextConditionalSourcePTRecords` covers all eight Sedge Troll
+and Kird Ape records, current controller, siblings, clones, phase cycles,
+removal/restoration, LKI, return and paid regeneration. `Boundaries` covers
+invalid declarations and unmarked contexts. `OrderedRevisions` covers foreign
+IDs, successive changes, land control and layer-4 subtype changes. Native
+`TestTextConditionalSourcePTDeclaration`, `Context`, `RegistrationOrder` cover
+five legal subtypes, invalid values, mixed effects, both context transitions,
+atomic rejection and unchanged registration position. Existing
+`TestRONConditionalStaticController` covers normal casting, entry timing and
+unpaid regeneration; `TestTextStaticPTRejects` retains common rejection evidence.

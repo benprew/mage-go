@@ -92,6 +92,9 @@
 // Phasing suspends the rule. Ability removal suspends it; restoration keeps
 // the revised declaration. A returned source uses its printed rules.
 // RON opts in global creature collections with one fixed AdjustPT action.
+// [SourcePTWhileControllerControlsBasicLand] adds one conditional source rule.
+// Its controller and basic land condition remain live at each layer pass.
+// Revision cannot change between global and conditional source contexts.
 // The caller must supply text-layer order and lifetime. Other static layers,
 // conditional rules, Aura rules and full text consumers need separate services.
 //

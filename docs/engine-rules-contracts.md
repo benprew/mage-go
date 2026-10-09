@@ -412,8 +412,9 @@ multi-effect replacement and the shared grant-storage regression.
 `Game.RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID,
 changes ...TextChange) error` establish checked installation for one printed
 static P/T modification declaration. Definition validation requires nonempty
-layer-7c effects with `WhileOnBattlefield` duration. RON opts in only its
-unconditional global creature collection with one fixed `AdjustPT` operation.
+layer-7c effects with `WhileOnBattlefield` duration. RON opts in its
+unconditional global creature collection with one fixed `AdjustPT` operation
+and the conditional source context specified below.
 
 CR 612.2 semantic word substitution and CR 612.3 printed/granted distinction use
 the retained text builder and declaration-group correspondence. The service
@@ -438,7 +439,7 @@ CR 400.7 return uses printed origin and cannot inherit the earlier revision.
 
 This is an installation service. The caller still supplies layer-3 ordering,
 expiry and restoration of original text when a text effect ends. Other static
-layers, conditional declarations, CDAs, Aura rules, other trigger kinds and
+layers, other conditional declarations, CDAs, Aura rules, other trigger kinds and
 spell text need separate contracts. No payment, replacement-order or simultaneous
 zone-operation contract changes.
 
@@ -14172,3 +14173,47 @@ covers detection versus placement text, ordered revisions, targets and clones.
 `EventBindings` covers independent spell/caster captures and copied payments;
 `IndependentDeclarations` covers sibling and source isolation plus pending bodies
 after departure. `Invalid` and native `Declaration`/`Rejects` cover rejection.
+
+## Printed conditional source P/T text revision
+
+`SourcePTWhileControllerControlsBasicLand(landType string, power, toughness int)
+ContinuousEffect` creates one typed source P/T modification. Definition validation
+requires a basic land subtype: Plains, Island, Swamp, Mountain or Forest.
+`StaticAbility(effect).WithPTTextRevision()` enables checked installation through
+`Game.RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error`. A conditional declaration must contain exactly
+one effect. Mixed or multiple conditional effects reject. Replacement cannot
+change between the existing global context and the conditional source context.
+
+RON opts in exactly `If(PlayerPassesFilter(You, ControlsA(IsLandType(type))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])])`, with a
+fixed basic subtype and fixed integer adjustments. Existing Unless, IfElse,
+ControlsNo, nonbasic subtype, collection, host and multiple-modification forms
+retain their existing execution without this opt-in. Malformed syntax and
+unbound references remain compilation errors.
+
+CR 611.3 and 613.4c use the existing `While`, `PlayerControls`, `You`,
+`HasSubType`, `ModifyPT`, `This` and `Fixed` services. Control is read after
+layer 2; land subtypes are read after layer 4. Opponent lands and phased lands
+do not satisfy the condition. Typed effects clone their installed state.
+CR 612.2 changes the land word in the retained semantic AST in order. Mana
+costs and the other printed declarations keep their separate contracts.
+
+The shared revision service keeps active identity, source visit, printed group
+and registration position. It validates the complete rebuilt definition and
+context before mutation. Siblings and clones keep independent changes. Phasing
+keeps revisions; ability removal suspends execution and restoration keeps the
+revised rule. Departure saves current P/T in LKI. Return uses the printed rule.
+The caller still supplies layer-3 order, lifetime and original-text restoration.
+This contract does not establish live Magical Hack execution.
+
+Evidence: `TestRONTextConditionalSourcePTRecords` covers all eight Sedge Troll
+and Kird Ape records, current controller, siblings, clones, phase cycles,
+removal/restoration, LKI, return and paid regeneration. `Boundaries` covers
+invalid declarations and unmarked contexts. `OrderedRevisions` covers foreign
+IDs, successive changes, land control and layer-4 subtype changes. Native
+`TestTextConditionalSourcePTDeclaration`, `Context`, `RegistrationOrder` cover
+five legal subtypes, invalid values, mixed effects, both context transitions,
+atomic rejection and unchanged registration position. Existing
+`TestRONConditionalStaticController` covers normal casting, entry timing and
+unpaid regeneration; `TestTextStaticPTRejects` retains common rejection evidence.

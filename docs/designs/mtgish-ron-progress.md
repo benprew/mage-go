@@ -8,11 +8,11 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-ATTACHED-LAND-TYPE` adds checked fixed/chosen Aura-host land rules.
-It preserves active IDs, registration order, attachments, saved entry choices,
-ordered changes, clones, phasing and revised restoration. Bounded revision
-evidence adds **2 accepted names / 12 records**. Acceptance gain is
-**+0 names / +0 records**. Live text installation is separate.
+`TEXT-PRINTED-CONDITIONAL-SOURCE-PT` adds checked controller-land conditions
+for source P/T revision. It preserves active IDs, registration order, live
+controller/type reads, ordered changes, clones, phasing and revised restoration.
+Bounded revision evidence adds **2 accepted names / 8 records**. Acceptance gain
+is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -60094,6 +60094,149 @@ Ranked next candidates:
    Audit their complete conditions and runtime registration contexts first.
 2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with native
    bonus/solver reuse and printed text revision. Reassess against shared work.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete RON gameplay, live text layers, runtime integration, Go-card deletion
+and unused DSL removal remain unfinished. Migration incomplete. Stop here.
+
+## 2026-10-09: checked conditional source P/T declaration revision
+
+Capability: `TEXT-PRINTED-CONDITIONAL-SOURCE-PT`. One complete supported
+shape and context. Live text-layer installation remains separate. Stop after
+this slice.
+
+### Baseline, candidates and selection
+
+The worktree started with unrelated entry-round changes, authoring documentation
+changes and a ledger reorganization. Preserved all of them; only this slice is
+staged. Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Fresh `go run ./cmd/loadcards -json` exited 1 for collection rejection:
+2,091 compiled / 354 rejected records, 809 accepted / 177 rejected names.
+This is not a build or test failure. Strict loading installs no partial registry.
+
+Evaluated the latest entry's leading candidate first. It is dependency-ready:
+semantic basic-land word rebuilding, declaration groups, printed static
+registration, restoration and conditional layer execution already exist.
+Compared the three listed candidates using their complete records and nested
+forms; reprints count once.
+
+| Candidate | Distinct affected names | Estimated new full-card compilation unlocks | Other blockers / downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Conditional source P/T revision | Sedge Troll, Kird Ape | 0; both already compile | No blocker for this bounded revision context. Shared land-condition prerequisite for Magical Hack's printed text execution on two names. Live text ordering, lifetime and original restoration remain separate. | Small: typed effect, checked context, compiler opt-in and lifecycle tests. |
+| Land-subtype mana-tap bonus | Gauntlet of Might | 1 | Its fixed global red-creature bonus already lowers. The nested land event must lower to a native mana bonus with event-controller binding, solver metadata, immediate production and printed revision. Enables mana bonus/filter text execution. | Medium: bonus/solver integration plus payment and revision tests. |
+| Per-player coin rounds | Mana Clash | 1 if the complete round capability is implemented | Targeted opponent and participant union are available. CoinCameUpTails, AllCoinsCameUpHeads, RepeatThisProcess, result isolation and simultaneous damage rounds need one complete contract. Shared repetition alone does not supply coin results. | Larger: decision/RNG results, round lifetime, repeat predicate and damage-batch tests. |
+
+Selected candidate #1 because it supplies the requested shared prerequisite for
+two unique cards with a small complete boundary. The alternatives each unlock
+one name. Expected compilation gain was zero; actual gain is zero. Bounded
+revision gameplay evidence adds two accepted names / eight records. Neither
+this evidence nor compilation acceptance proves complete Magical Hack gameplay.
+
+Read all eight complete Sedge Troll and Kird Ape records, all six Gauntlet of
+Might records and the Mana Clash record. Targeted vocabulary keys:
+PlayerPassesFilter tuple/2, ControlsA tuple/1, IsLandType tuple/1, AdjustPT tuple/2.
+Local authoritative `data/LEA.json` and `data/ARN.json` confirm both selected
+Oracle texts. CR 612.1–3, 613.1b/d/g, 613.4c, 613.5–7 and the existing static
+rules contract establish semantic words, controller/type layers and live P/T.
+No source defect was found or corrected. RON and vocabulary are unchanged.
+
+### Exact shape, contract and reuse boundary
+
+RON now opts in exactly:
+
+`If(PlayerPassesFilter(You, ControlsA(IsLandType(Plains|Island|Swamp|Mountain|Forest))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])])`.
+
+Native API:
+
+- `SourcePTWhileControllerControlsBasicLand(landType string, power, toughness int) ContinuousEffect`.
+- Existing `(*StaticAbilityHolder).WithPTTextRevision() *StaticAbilityHolder`.
+- Existing `(*Game).RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error`.
+
+The constructor returns a private typed `conditionalSourcePTEffect` with a
+cloned composed layer instance and immutable land subtype. Definition validation
+rejects invalid basic subtypes. A marked conditional source declaration must
+contain exactly one effect; mixtures and multiple conditional effects reject.
+Both global-to-conditional and conditional-to-global rebuilds reject before
+runtime mutation. Other marked global callers preserve their existing contract.
+
+RON owns exact spelling, fixed values, shape validation and opt-in. Existing
+Unless, IfElse, ControlsNo, host, global, nonbasic and multiple-adjustment
+contexts retain execution without the new opt-in. Invalid forms and unbound
+references still reject during compilation. There are no card-name branches,
+fallback registries, new game-time declaration panics or global result slots.
+
+The engine reuses `While`, `PlayerControls`, `You`, `HasSubType`, `ModifyPT`,
+`This`, `Fixed`, composed layer execution and cloning. The source's current
+controller and land subtypes are read after earlier control/type layers.
+Opponent and phased lands cannot satisfy the condition. No separate layer,
+zone, payment, regeneration or simultaneous-operation subsystem was added.
+
+Shared static revision retains active IDs, printed groups, exact source visits,
+registration positions, ordered semantic AST changes, independent siblings and
+clones. Phasing keeps revisions; removal suspends execution; restoration uses
+revised rules. LKI retains revised P/T. Return uses printed rules and cannot
+inherit the former visit. The caller still supplies text-layer order, lifetime
+and original-text restoration. Runtime loading/removal gates remain unmet; no
+Go definitions or DSL functions were removed. No caller audit authorizes a
+DSL removal in this slice.
+
+### Failing-first and card-to-test mapping
+
+New RON tests first failed the eligible printed-static assertion for every
+selected record. Native tests first failed compilation because the new
+constructor was missing. Fixed test fixture errors separately: TextChange uses
+core.BasicLandType constants; the generic permanent fixture uses Artifact to
+avoid missing creature CardPT; the land-layer test uses the existing target
+constructor. Production assertions and semantics were not weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Sedge Troll in LEA/LEB/2ED/3ED/CED/CEI; Kird Ape in ARN/3ED | `TestRONTextConditionalSourcePTRecords`: all eight complete records, stable IDs, current controller, original versus revised subtype, independent siblings, game clones, source/land phase cycles, removal/restoration, LKI, departed/returned source, and paid Sedge Troll regeneration. |
+| Kird Ape | `TestRONTextConditionalSourcePTOrderedRevisions`: foreign declaration ID rejection, two ordered changes, opponent land exclusion, land control change and a layer-4 land type change before layer-7c P/T; printed cost remains unchanged. |
+| Existing full base behavior | `TestRONConditionalStaticController`: normal casting, entry timing, current controller, phasing, unpaid/paid regeneration and failed-cost stack integrity for both names. Existing reprint/lifecycle tests remain. |
+| Invalid and unmarked RON contexts | `TestRONTextConditionalSourcePTBoundaries`: malformed AdjustPT, dynamic values, unbound player/permanent references, mixed layers, and rejection of revision for Unless/IfElse/ControlsNo/nonbasic/collection/multiple-adjustment contexts. |
+| Native declaration contract | `TestTextConditionalSourcePTDeclaration`: all five basic subtypes and empty/nonbasic/unknown rejection. `Context`: both context transitions reject atomically; mixed/multiple conditional effects reject. `RegistrationOrder`: neighboring registrations, source and ID stay in place. Existing `TestTextStaticPTRejects` retains nil, granted, face-down, missing builder/group/registration, changed-count/layer and failure-atomicity cases. |
+
+### Verification and collection status
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONTextConditionalSourcePT|TestRONConditionalStatic|TestRONTextStaticPT' -count=1`.
+- `go test ./pkg/mage -run 'TestText(ConditionalSourcePT|StaticPT)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, 2,091 compiled /
+  354 rejected records; 809 accepted / 177 rejected unique names.
+
+The final loader JSON equals the fresh baseline, including all diagnostics.
+Accepted records remain accepted. Strict collection loading still rejects the
+remaining gaps and publishes no partial registry. Estimated and actual gain:
++0 accepted names / +0 compiled records. New bounded revision gameplay mapping:
+2 names / 8 records. Compilation and gameplay evidence remain separate.
+
+Lint changed only import grouping in the two new test files. Reviewed those
+changes and reran both affected focused suites. No unrelated file was changed
+by lint. No environment or pre-existing check blocker was found.
+
+Changed files: engine `text_conditional_source_pt.go`,
+`text_conditional_source_pt_test.go`, `text_static_pt.go`, `doc.go`; compiler
+`conditional_source_pt_revision.go`, `conditional_static.go`,
+`text_conditional_source_pt_test.go`; DSL reference, engine rules contracts and
+progress ledger. Only this slice is staged; the prior ledger reorganization and
+entry-round work remain in the worktree.
+Commit: `feat(ron): implement conditional source P/T text revision`.
+
+Ranked next candidates:
+
+1. Checked opponent-conditioned source/global P/T revision for Water Wurm,
+   Beasts of Bogardan and Ivory Guardians. Their complete records use shared
+   opponent land/color conditions with source or named-creature recipients;
+   audit typed condition and recipient contexts before selecting. This enables
+   further Magical Hack and Sleight of Mind printed declaration coverage.
+2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with native bonus
+   and solver reuse plus printed revision; reassess against shared work.
 3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
 
 Complete RON gameplay, live text layers, runtime integration, Go-card deletion

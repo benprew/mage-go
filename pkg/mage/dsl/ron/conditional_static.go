@@ -20,6 +20,9 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 	if n.Name == "Unless" {
 		condition = mage.NotCondition(condition)
 	}
+	if revision := compileConditionalSourcePTRevision(n); revision != nil {
+		return revision, nil
+	}
 	first, err := compileConditionalStaticBody(n.Args[1], ctx, condition)
 	if err != nil || n.Name != "IfElse" {
 		return first, err
