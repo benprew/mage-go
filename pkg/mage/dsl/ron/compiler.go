@@ -1484,7 +1484,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n.Args[1], ctx)
 	case "DiscardTheCardDrawnThisWay":
 		return compileDrawnCardDiscard(n, ctx)
-	case "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -1530,6 +1530,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "PutTopOfLibraryInHand" || n.Name == "PutTopOfLibraryInGraveyard" {
+		return compileLibraryTopMove(n, ctx)
+	}
 	if n.Name == "TakeAnExtraTurn" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "TakeAnExtraTurn requires a symbol")

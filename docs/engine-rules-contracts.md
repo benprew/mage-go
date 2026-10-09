@@ -12772,6 +12772,58 @@ Evidence: native `TestLibraryTopRevealVisits`, `RemovalAndClone`,
 `TestRONLibraryTopRevealGameplay`, `Contexts`, `DistinctResults`, `Invalid`,
 `PetraPrerequisite`. The Petra test extracts the actual scoped producer and name
 predicate from its complete LEG record and executes them on the native stack.
-It is prerequisite coverage only. Complete Petra still rejects top-card movement;
-Knowledge Vault needs linked face-down exile; Aladdin's Lamp needs draw
-replacement and library selection. No complete-card gameplay gain is claimed.
+That test retains prerequisite coverage. Complete Petra now has native RON
+movement coverage in `TestRONLibraryTopMovePetra`. Knowledge Vault still needs
+linked face-down exile; Aladdin's Lamp needs draw replacement and library
+selection.
+
+
+## Resolving library-top movement without draw or mill
+
+`PutLibraryTopInHand(player PlayerRef) ResolvingEffect` and
+`PutLibraryTopInGraveyard(player PlayerRef) ResolvingEffect` use one shared engine
+implementation. A typed player resolves at action execution. The action selects
+the current top, checks the destination owner, removes the card with SetLibrary,
+and inserts it with AddToHand or AddToGraveyard. One EvtZoneChange follows all
+movement, with the physical card ID, destination owner, ZoneLibrary and the
+correct destination. There is no battlefield departure or death. An absent
+player or empty library has no effect. Invalid owner state returns an error
+before movement. Nil player declarations fail definition validation.
+
+CR 400.3 routes the destination to the owner; CR 400.7 ends the library visit.
+Retained suffix visits do not change. Destination services create their own
+visits. Reveal history remains immutable after departure. Clones use existing
+independent player zone/visit storage. The actions keep no mutable saved top.
+The top is read at resolution, even for delayed effects and changed library order.
+
+CR 121.5 separates hand movement from drawing. These actions do not use DrawCard,
+the draw action pipeline, last-drawn state or empty-library draw state. Petra's
+local Oracle text in data/LEG.json uses a graveyard movement instruction rather
+than the mill keyword. CR 701.17 defines mill as its own keyword action.
+Wizards' [Ravnica Remastered release notes](https://media.wizards.com/2023/downloads/RVR_Release_Notes_XrN0zlJaFn/EN_MTGRVR_ReleaseNotes_20231120.pdf)
+state that Bruvac does not apply when a graveyard instruction lacks that keyword.
+The graveyard service therefore bypasses mill modifiers; it does not change the
+existing mill service. Generic library-zone replacement declarations are not
+established by this slice.
+
+Both effects declare explicit source reads in typed players to the existing
+waiting delayed-source query. Queries do not resolve players, inspect tops or
+move cards. Saved source control uses exact LKI; a returned source cannot
+replace that incarnation. The same engine implementation covers both
+constructors. RON owns spelling and context checks, and lowers only bare symbols
+in resolving lists, explicit PlayerAction and nested PlayerActions bodies.
+Spell, activation, trigger and delayed contexts use the existing frame services.
+No action-result binding is produced or required. A reveal predicate in Petra
+uses its independently saved facts before its selected movement branch executes.
+
+Evidence: native `TestLibraryTopMoveHand` covers owner routing, completed-event
+state, retained/departed visits, current tops, clone isolation, empty/absent
+subjects and invalid declarations. `TestLibraryTopMoveGraveyard` proves zone
+events and exclusion of doubling mill rules, draw events and death events.
+`TestLibraryTopMoveWaiting` covers pure waiting queries, departure/return LKI,
+independent delayed execution and clones. RON `TestRONLibraryTopMovePetra`
+covers the complete LEG record, matching/nonmatching names, target player
+choice, source departure/return/phasing, empty libraries and resolution timing.
+`Scopes`, `Contexts` and `Invalid` cover player nesting, failed payment, cloned
+stack execution, spell/trigger/delayed timing, current resolution tops and
+rejected declaration shapes/contexts.

@@ -96,8 +96,8 @@ func TestRONLibraryTopRevealPetraPrerequisite(t *testing.T) {
 	if b.calls != 1 || a.Life() != 22 || len(g.PublicReveals()) != 1 {
 		t.Fatal("actual Petra producer or predicate failed")
 	}
-	if _, err := Compile(record); err == nil {
-		t.Fatal("incomplete Petra record accepted")
+	if _, err := Compile(record); err != nil {
+		t.Fatal("complete Petra record rejected", err)
 	}
 }
 

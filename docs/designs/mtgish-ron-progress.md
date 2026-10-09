@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **798 accepted / 188 rejected unique card
-names** (986 total), and **2,070 compiled / 375 rejected records** (2,445 total).
+The latest recorded inventory reports **799 accepted / 187 rejected unique card
+names** (986 total), and **2,071 compiled / 374 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LIBRARY-TOP-REVEAL-RESULTS` adds scoped public top-card reveals, saved facts,
-and exact library visits with reorder, shuffle and continuous visibility identity.
-Petra Sphinx gains native producer/predicate coverage; its movements still reject.
-**+0 unique names / +0 records**; complete-card gameplay coverage is unchanged.
-Shared library identity enables further Petra Sphinx, Knowledge Vault and
-Aladdin's Lamp work. Dynamic life payment and turn replacements remain gaps.
+`LIBRARY-TOP-MOVEMENT` adds typed current-top movement to hand or graveyard,
+with owner routing, zone visits and completed-movement events. The operations
+are neither draw nor mill. Petra Sphinx now has complete native RON gameplay.
+**+1 unique name / +1 record**, matching the estimated complete-card gain.
+Library transport supports further Knowledge Vault and Aladdin's Lamp work;
+linked exile, draw replacement and selection remain separate gaps.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -55081,3 +55081,159 @@ Ranked next candidates:
    lifecycle value with Wand of Ith's dynamic revealed-card life payment.
 
 This run stops after LIBRARY-TOP-REVEAL-RESULTS. Migration remains incomplete.
+
+
+## 2026-10-08: resolving library-top movement
+
+Status: completed implementation slice `LIBRARY-TOP-MOVEMENT`.
+
+### Environment, candidates and selection
+
+The working tree started with user changes in .gitignore, the execution design
+and the progress ledger, plus untracked mtgish-ron-completed.md. Those changes
+are preserved. The ledger's archive/reorganization is excluded from this commit;
+only this run's summary delta and appended entry are staged. No agent delegation,
+Go-card requirement lookup, stub generation or removed skill was used. The
+implement-engine skill supplied the reusable engine workflow.
+
+Fresh baseline: make build and the RON short suite passed. The loader exited 1
+for collection rejection, not a build failure: 2,070 compiled / 375 rejected
+records and 798 accepted / 188 rejected names. All totals remain 2,445 / 986.
+The top status block and latest ledger entry were read without loading the full
+archive. Targeted vocabulary keys and complete candidate RON records were read.
+
+| Candidate | Unique affected cards; estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: typed library-top transport | Petra Sphinx: 1 immediate name / 1 record. Knowledge Vault and Aladdin's Lamp: 0 immediate unlocks; complete LEG Vault and both ARN/3ED Lamp records inspected | Petra's name choice, scoped reveal, predicate, target and tap cost already exist. Vault needs face-down linked exile, sacrifice result and linked returns/departure movement. Lamp needs a future draw replacement, X-card inspection, required selection and random bottom ordering. Shared current-top transport, owner routing, visits and event execution form the next library-action foundation for these two cards | Small bounded transport service, two symbol adapters and native/RON tests; dependency-ready |
+| Ranked #2: bounded plural random reveal and named discard | Nebuchadnezzar: 1 likely name / 1 record after the complete operation | X, chosen names, own-turn restriction and target exist. Needs unique partial-hand random sampling, public plural reveal, name matching and one simultaneous discard batch. Enables plural reveal-result consumers beyond the existing singular hand producer | Medium: RNG/batch contract plus adapter and isolation/replacement tests |
+| Ranked #3: optional begin-turn skip replacement | Time Vault: 1 likely name / 5 identical reprints after the complete replacement | Complete records retain tapped entry, untap restriction, conditional static replacement, optional SkipThisTurn payment/paid untap, and extra-turn activation. Needs a proposed turn-start replacement, optional payment and skipped-turn lifecycle. Existing extra turns do not provide this contract. Wand of Ith's dynamic revealed-card life payment is a separate unresolved cost/value dependency | Large: shared turn scheduling, proposed-event and source-lifetime interactions |
+
+Selected #1: it is the latest ranked candidate, dependency-ready, and closes the
+existing reveal slice's final transport gap. Its bounded reusable service supplies
+concrete library transport groundwork for Vault and Lamp as well as one complete
+card now. This is one cohesive current-top movement capability, not linked exile,
+plural library selection or a second slice. The contract, reuse boundary and
+acceptance cases were stated before editing.
+
+### Exact shapes, engine mechanics and boundaries
+
+- New `PutLibraryTopInHand(player PlayerRef) ResolvingEffect` and
+  `PutLibraryTopInGraveyard(player PlayerRef) ResolvingEffect` share a private
+  libraryTopMoveEffect. The typed player and current top are read at execution.
+  Owner validation precedes removal. SetLibrary ends the departed visit;
+  AddToHand/AddToGraveyard create the destination visit. One EvtZoneChange follows
+  both moves and supplies the physical ID, owner and library/destination zones.
+- Empty libraries and absent player bindings do nothing. A missing destination
+  owner returns an error before mutation. Nil player definitions reject.
+  Retained library suffix visits survive. No saved reveal is required or consumed.
+- RON lowering accepts only bare `PutTopOfLibraryInHand` and
+  `PutTopOfLibraryInGraveyard` in resolving lists, explicit PlayerAction and nested
+  PlayerActions. Spell, activation, trigger and delayed contexts share the adapter.
+  Tuple/argument forms, unbound players, costs, static effects, entry operations
+  and replacement bodies reject. Each factory builds fresh typed operands.
+- Neither operation is draw or mill. The first implementation proposal reused
+  Mill for graveyard transport. Local Petra Oracle text in data/LEG.json and
+  Wizards' Ravnica Remastered release notes established that this was wrong:
+  mill modifiers require the mill keyword. A failing-first native test now proves
+  that a doubling mill rule cannot add a second card. The shared mill service
+  remains unchanged. CR 121.5 likewise excludes draw replacements, draw events,
+  last-drawn state and empty-library draw loss from the hand operation.
+- Rules evidence: local CR 400.3, 400.7, 401, 121.5, 608.2c and 701.17;
+  [Wizards release notes](https://media.wizards.com/2023/downloads/RVR_Release_Notes_XrN0zlJaFn/EN_MTGRVR_ReleaseNotes_20231120.pdf).
+  No source defect or RON change was needed. Source hashes and vocabulary are
+  unchanged. The RON instructions read current tops; Petra's native ordered
+  reveal/predicate/branch sequence has no intervening resolving action.
+- Explicit source reads participate in waiting delayed queries without reading
+  players or libraries. Existing exact LKI retains source control after departure;
+  a returned source cannot replace it. Clones and delayed/stack frames use the
+  existing independent state. Target legality and failed payment use the existing
+  announcement and cost transaction services. These single-card movements add
+  no simultaneous multi-card operation or new replacement-ordering contract.
+  General library-zone replacement declarations remain a separate capability.
+
+The compiler owns RON spelling, context checks, lexical scope and lowering. The
+engine owns movement, owner routing, visits and events. Reuse includes typed
+PlayerRef/instance bindings, player snapshots, name choices and historical reveal
+predicates, native stack resolution, source LKI, waiting declarations, clone
+storage and transactional costs. No fallback, card-name branch, last-action slot,
+game-time declaration panic, skipped rule or partial production registry exists.
+No callers or DSL exports were removed: full collection gameplay, loading,
+startup and removal gates remain unmet.
+
+### Failing-first evidence and card mapping
+
+Native tests first failed compilation on missing PutLibraryTopInHand. RON tests
+failed on Petra's unsupported PutTopOfLibraryInHand and the bare symbol adapter.
+After the rules correction, the graveyard contract first failed compilation on
+missing PutLibraryTopInGraveyard. Initial test fixture syntax/API mistakes were
+corrected before confirming the intended failures. The same gameplay assertions
+then passed. The retained Petra prerequisite test now requires complete record
+compilation instead of the obsolete rejection. Inventory expectations increase
+by exactly one record; no test or production loading rule was weakened.
+
+| Test | Card mapping and contract evidence |
+| --- | --- |
+| TestRONLibraryTopMovePetra | Complete LEG Petra Sphinx record: both chosen-name branches, target player choice, empty library, action timing, original source departure/return/phasing, exact moved card and hand movement without draw history |
+| TestRONLibraryTopMoveScopes | Bare/explicit/nested player forms, failed payment, independent cloned pending activations and absent clone library |
+| TestRONLibraryTopMoveContexts | Spell, triggered and delayed execution; no announcement movement, changed top read at resolution and selected destination/player |
+| TestRONLibraryTopMoveInvalid | Wrong shape/arity, unbound player and unsupported cost/static/entry contexts for both symbols |
+| TestLibraryTopMoveHand | Current top, owner routing, complete movement before zone event, no draw event/state, empty/absent subjects, departure and retained visits, clones and nil-player rejection |
+| TestLibraryTopMoveGraveyard | Graveyard zone event, exclusion of doubling mill modifiers, draw and death events |
+| TestLibraryTopMoveWaiting | Pure waiting references, delayed execution, departed-source LKI, returned-source exclusion and clone isolation |
+| Retained library reveal/collection tests | Existing Petra producer/predicate evidence and accepted-record rebuild/inventory remain checked |
+
+Estimated and actual complete-card gains agree: **+1 name / +1 record**.
+Petra gains full-record gameplay coverage; Vault and Lamp remain prerequisites
+only. Compilation and gameplay evidence remain separate.
+
+### Verification and measured outcome
+
+Required checks completed in fast-fail order on the final implementation:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONLibraryTopMove -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestLibraryTopMove -count=1`: PASS.
+- Combined retained library-reveal, chosen-name and reveal-predicate tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository and retained Go-card callers.
+- `make lint`: PASS, 0 issues. Reviewed automatic changes: import formatting
+  in the two new test files only; no production semantics changed.
+- Skill final `go test ./... -short -count=1`: PASS after lint, including all
+  new and affected tests.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,071 compiled /
+  374 rejected records; 799 accepted / 187 rejected unique names**. Totals remain
+  2,445 records / 986 names. Strict collection rejection remains intact.
+
+The final diagnostics remove only Petra Sphinx's rejection. All 374 remaining
+record diagnostics are identical to baseline; there are no new rejections or
+previously accepted records lost. No partial registry is installed. Complete
+collection gameplay, runtime startup, Go-card removal and unused DSL cleanup
+remain unfinished.
+
+The first engine short run found four older prerequisite assertions that still
+required Petra to reject. These were updated to require Petra acceptance while
+retaining Nebuchadnezzar and Wand of Ith rejection. Their gameplay assertions
+remain intact. Build, vet, engine short, full tests and final short tests passed
+on the corrected suite. No environment or pre-existing validation blocker remains.
+Native validation used Go 1.27.2 on darwin/arm64.
+
+Changed files: new pkg/mage/library_top_move.go and library_top_move_test.go;
+new pkg/mage/dsl/ron/library_top_move.go and library_top_move_test.go;
+pkg/mage/doc.go; RON compiler.go and player_actions.go; RON card_name_choice,
+card_name_match, card_name_scope, reveal_result, library_top_reveal,
+definition_plan, inventory and numeric_consumers test files;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Commit message: `feat(ron): implement library-top movement`.
+
+Ranked next candidates:
+
+1. Bounded plural random partial-hand reveal and named simultaneous discard for
+   Nebuchadnezzar; reuse X, chosen-name results, RNG and discard replacements.
+2. Shared linked face-down exile identity/transport prerequisites for Knowledge
+   Vault; compare linked-object consumers across the collection before selecting
+   a bounded service. Current-top transport alone does not establish linked exile.
+3. Optional begin-turn skip replacement for Time Vault; compare the turn lifecycle
+   cost against Wand of Ith's dynamic revealed-card life-payment prerequisite.
+
+Stop after LIBRARY-TOP-MOVEMENT. Migration remains incomplete.

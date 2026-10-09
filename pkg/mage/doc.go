@@ -1291,7 +1291,14 @@
 // Typed player operands declare source reads without revealing during queries.
 // RON supports RevealTopCardOfLibrary in resolving player action lists.
 // Unconditional PlayerActions producers retain their lexical result outside
-// that player scope. Top-card movement and linked exile need separate adapters.
+// that player scope. Linked exile needs separate adapters.
+// Use [PutLibraryTopInHand] or [PutLibraryTopInGraveyard] for a current top.
+// Both move to the owner's zone before the zone event. Empty libraries do
+// nothing. Neither action draws or mills; draw and mill replacements do not
+// apply. The shared library and destination services create the new visits.
+// Typed players declare source reads without movement during waiting queries.
+// RON supports PutTopOfLibraryInHand and PutTopOfLibraryInGraveyard as symbols
+// in resolving player actions. These actions do not read a saved reveal result.
 //
 // Use [LookAtLibraryTop] for private inspection and optional top ordering.
 // [LookAtLibraryTopNumber] reads a typed count once at resolution.

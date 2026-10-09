@@ -9649,7 +9649,31 @@ separate for each producer and factory. Conditional producers stay in their
 branch. Hand-discard operands cannot consume a library result. Cost/static/entry/
 replacement and tuple forms remain unsupported.
 
-`TestRONLibraryTopRevealPetraPrerequisite` executes Petra Sphinx's actual producer
-and chosen-name predicate. Its movement branches remain unsupported, so complete
-Petra is still rejected. This supersedes earlier library-producer gap statements
-only for the singular resolving top-reveal shape.
+`TestRONLibraryTopRevealPetraPrerequisite` retains producer/predicate evidence.
+`TestRONLibraryTopMovePetra` now executes the complete Petra Sphinx record.
+This supersedes earlier library-producer and Petra movement gap statements.
+
+
+### Resolving library-top movement
+
+Use `PutLibraryTopInHand(player PlayerRef) ResolvingEffect` or
+`PutLibraryTopInGraveyard(player PlayerRef) ResolvingEffect` to move the selected
+player's current library top. Each action reads the top when it resolves, routes
+it to its owner's corresponding zone, and sends one library-to-destination zone
+event after movement. Empty libraries and absent players have no effect. The
+hand action is not a draw; the graveyard action is not a mill. Draw replacements,
+draw history, empty-library draw loss, and mill count modifiers do not apply.
+
+RON supports the bare symbols `PutTopOfLibraryInHand` and
+`PutTopOfLibraryInGraveyard`, explicit `PlayerAction(playerRef, action)`, and
+nested `PlayerActions` bodies in spell, activation, trigger and delayed resolving
+lists. They need no reveal producer and do not consume a saved reveal binding.
+Tuple forms, arguments, unbound players, costs, static effects, entry operations
+and replacement bodies remain rejected. Typed source reads use the existing
+waiting delayed-source declaration service without inspecting or moving cards.
+
+Complete Petra Sphinx gameplay maps to `TestRONLibraryTopMovePetra`. Contexts,
+player scopes, rollback and clones map to `TestRONLibraryTopMoveScopes` and
+`TestRONLibraryTopMoveContexts`; declaration rejection maps to
+`TestRONLibraryTopMoveInvalid`. Native contracts map to `TestLibraryTopMove*`.
+Linked exile and plural library selection remain separate capabilities.
