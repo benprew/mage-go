@@ -431,18 +431,7 @@ func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 			}
 		}
 
-		if g.HasExtraTurns() {
-			extraPlayerID, _ := g.PopExtraTurn()
-			for i, p := range g.AllPlayers() {
-				if p.PlayerID() == extraPlayerID {
-					g.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			g.SetActivePlayerIndex((g.ActivePlayerIndex() + 1) % g.PlayerCount())
-		}
-		g.SetTurn(g.CurrentTurn() + 1)
+		g.AdvanceToNextTurn()
 	}
 	if !quiet {
 		fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)

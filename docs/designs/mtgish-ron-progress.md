@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest recorded inventory reports **797 accepted / 189 rejected unique card
-names** (986 total), and **2,065 compiled / 380 rejected records** (2,445 total).
+The latest recorded inventory reports **798 accepted / 188 rejected unique card
+names** (986 total), and **2,070 compiled / 375 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`DRAWN-CARD-REVEAL` adds a reusable exact saved-hand reveal result and lexical
-single-draw reveal/discard adapters. Sindbad's complete RON record now has
-native-stack gameplay coverage. Tests cover replacement draws, visit identity,
-historical facts, timing, invalid declarations, source lifecycle and clones.
-**+1 unique name / +1 record**; complete-card gameplay coverage gains Sindbad.
-Library/plural producers and dynamic life payment remain separate dependencies.
+`EXTRA-TURN-SCHEDULING` adds a typed resolving extra-turn action and shared
+newest-first scheduling with normal-turn resumption through nested extra turns.
+Time Walk's five complete records now have native-stack gameplay coverage.
+Time Vault gains activation prerequisite coverage; its full records still reject.
+**+1 unique name / +5 records**; complete-card gameplay coverage gains Time Walk.
+Library reveal results, dynamic life payment and turn replacements remain gaps.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -54761,3 +54761,164 @@ Ranked next candidates:
    needs amount timing, affordability/rollback, and zero/X/no-cost contracts.
 
 This run stops after DRAWN-CARD-REVEAL. Migration remains incomplete.
+
+## 2026-10-08: extra-turn scheduling
+
+Status: completed implementation slice `EXTRA-TURN-SCHEDULING`.
+
+### Environment and selection
+
+Initial user changes: .gitignore, execution-design edits, progress-ledger
+reorganization and untracked mtgish-ron-completed.md. These stay outside staging.
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` PASS;
+strict loader exit 1, 2,065 compiled / 380 rejected records and 797 accepted /
+189 rejected unique names. Totals: 2,445 records / 986 names. An initially read
+temporary loader report was stale; it was replaced by the completed fresh run.
+There was no baseline build/test failure or collection-registry publication.
+
+The latest entry's candidate #1 was evaluated first. Its producer depends on
+library-visit/reorder identity, lexical results across PlayerActions, and top
+movements. It offers one full-card unlock after those contracts, rather than a
+ready multi-card adapter. The other ranked candidates and a shared execution
+phase capability were compared after complete records and nested forms were read:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Library-top reveal / identity prerequisite | Petra Sphinx | 0 for identity alone; 1 for the complete producer/movement slice | Library identity, reorder invalidation, result export and both top movements; enables Petra's name predicate and future library result consumers | High for complete producer; medium for identity alone |
+| Bounded plural random reveal and chosen-name discard | Nebuchadnezzar | 1 | Needs selection without replacement and exact reveal-set lifetime; existing announced X, name choice and discard services can be reused; enables plural partial-hand consumers | Medium, roughly 300–400 lines including contracts/tests |
+| Dynamic resolution life payment and saved mana value | Wand of Ith | 1 after both contracts | Fixed life payments already work; dynamic amount timing, affordability/rollback and saved mana-value facts remain; enables later dynamic optional payments | Medium/high, two dependent contracts |
+| Extra turns after this turn | Time Walk, Time Vault | 1 (Time Walk, five records); Time Vault gains its activation prerequisite | Existing schedule has FIFO order and callers lose normal order after opponent extra turns; shared fix enables correct extra-turn execution and Time Vault's later begin-turn replacement | Small mechanics/adapter, medium contract tests and caller audit |
+
+Selected EXTRA-TURN-SCHEDULING for two-card shared value and the largest credible
+gain for its bounded effort. Time Vault remains blocked on
+ReplaceWouldBeginATurn with optional SkipThisTurn and conditional untapping.
+No single-card reveal/payment slice was started. Complete Time Walk and Time
+Vault records were read for all five reprints: LEA, LEB, 2ED, CED and CEI.
+Targeted vocabulary queries confirm ten TakeAnExtraTurn symbols for these two
+names. Local data/LEA.json supplies matching Oracle text for both cards.
+The implement-engine skill supplied the native contract workflow; removed card
+or set implementation skills were not invoked or recreated.
+
+### Supported contract and reuse boundary
+
+Native APIs:
+
+- `ExtraTurnFor(player PlayerRef) ResolvingEffect`: one present selected player
+  gets one extra turn after the current turn, at resolution. Missing players do
+  nothing. Definition inspection validates the typed player and its bindings.
+  Waiting delayed-source queries retain explicit player source reads without
+  granting turns. Legacy `ExtraTurn() Effect` keeps its controller behavior.
+- `(*Game).AdvanceToNextTurn()`: after the caller finishes the current turn,
+  select the newest pending extra turn and increment the turn number. Retain the
+  next normal player through extra turns and nested grants, then resume normal
+  order. This operation does not execute steps, cleanup or begin-turn replacements.
+- Existing GrantExtraTurn, PopExtraTurn and turn-state signatures stay available.
+  TurnSystem owns the ordered pending list and nextNormalPlayer; clones copy both.
+  GrantExtraTurn now inserts before pending turns, as required by CR 500.7.
+
+RON supports exactly the bare `TakeAnExtraTurn` symbol in resolving action
+lists. Default player scope, `PlayerAction(player, TakeAnExtraTurn)` and
+`PlayerActions(player, [TakeAnExtraTurn])` use existing typed per-instance player
+references. Spell, activation, trigger and delayed bodies share the adapter.
+Tuple spelling, unbound players, payment costs, static/entry operations and
+all-player grants remain unsupported. The compiler owns spelling/context checks;
+the engine owns player execution and turn state. No card-name dispatch, fallback,
+global action-result slot or new production registry is used.
+
+Reuse: existing PlayerRef resolution, saved player/target/event bindings,
+ControllerOfWithLKI, definition inspection, delayed capture and waiting source
+declarations, TurnSystem cloning, native turn skips, spell copying/countering,
+activation/casting costs and stack timing. CR 500.7 establishes newest-first
+order. The native runner, gametest, both interactive loops, scenario runners and
+heuristic simulation now share AdvanceToNextTurn. The whole-repository grant/pop
+caller audit found no other production loop that selects turns independently.
+Existing raw APIs remain available for manual callers.
+
+Source departure, return and phasing cannot cancel a pending activation. A
+delayed explicit controller read retains the original source's LKI rather than
+following its return. Saved stack controllers and event players stay independent.
+Turn skipping consumes the selected extra turn without consuming the saved next
+normal turn. Simultaneous multi-player grants/APNAP adapters and the optional
+begin-turn replacement are outside this single-player shape and remain rejected.
+
+The engine gaps were FIFO scheduling and lost normal-order continuation, not
+source-data defects. No RON source changed; vocabulary hashes need no refresh.
+No Go card definitions, broad DSL functions or generators were removed. Complete
+collection loading, gameplay, startup wiring and removal gates remain unmet.
+API/reference and rules-contract docs describe only the established contract.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on absent ExtraTurnFor and
+AdvanceToNextTurn signatures, after an invalid test-only Opponent operand was
+corrected to ActivePlayer. RON then failed with unsupported action
+TakeAnExtraTurn at LEA.lines.ron:248:165 and unsupported scoped player action.
+The existing scheduler test's FIFO expectation was corrected to CR 500.7's
+newest-first contract. Test fixtures were corrected for owner setup, an extra
+RON closing parenthesis and native Run's existing max-turn boundary; gameplay
+assertions were not weakened. Four existing compilation-count assertions now
+require the measured gain.
+
+| Test | Mapping and acceptance evidence |
+| --- | --- |
+| TestRONExtraTurnTimeWalk | All five complete Time Walk records: insufficient payment, no announcement execution, native stack resolution, graveyard destination, independent stack clones, extra turn and normal-order resumption |
+| TestRONExtraTurnTimeWalkCopyAndCounter | Complete LEA Time Walk: countering grants no turn; copied spell keeps its own controller, and the later-created original turn starts first |
+| TestRONExtraTurnTimeVaultActivationPrerequisite | All five actual Time Vault activation declarations: tap payment and opponent-turn activation; normal turn remains after the extra turn. Complete records still reject; this is subrule evidence only |
+| TestRONExtraTurnContexts | Synthetic explicit target player inside PlayerActions plus independent outer controller scope; activation announcement timing, source departure/return/phasing and ordered grants |
+| TestRONExtraTurnTriggeredAndDelayed | Synthetic upkeep event player, direct and delayed resolution, departed source and retained event-player binding |
+| TestRONExtraTurnInvalid | Tuple/argument forms, missing player target, cost, static and entry declaration rejection |
+| TestExtraTurnSchedulingOrderAndResume | Native newest-first order, nested grants during an extra turn, saved normal player and clone isolation |
+| TestExtraTurnSchedulingNativeRun | Real native runner executes opponent extra turn and then that opponent's normal turn before resuming alternation |
+| TestExtraTurnSchedulingSkippedTurn | Native skipped extra turn executes no draw and preserves the next normal turn |
+| TestExtraTurnTypedPlayerAndDeclarations | Bound selected player, missing binding, nil/unproduced declaration rejection, and legacy controller behavior |
+| TestExtraTurnDelayedPlayerSource | Waiting queries do not grant turns; exact source departure LKI, returned-source exclusion and cloned delayed resolution |
+| TestExtraTurnHarnessNormalResume | Actual gametest execution, newest-first order, field synchronization, native/harness agreement and cloned normal-order state |
+| TestTurnSystem_ExtraTurns | Existing scheduler assertion now checks the rules-correct order |
+
+Complete-card gameplay coverage gains Time Walk, one unique name. Time Vault
+gains activation prerequisite coverage only. Synthetic RON and native contracts
+remain separate from full-card gameplay and compilation counts.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONExtraTurn -count=1`: PASS.
+- `go test ./pkg/mage ./pkg/mage/gametest -run 'TestExtraTurn|TestTurnSystem_ExtraTurns' -count=1`: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS, including every accepted
+  record's rebuild validation and the updated inventory assertions.
+- `make test`: PASS, whole repository, including preserved Go-card callers.
+- `make lint`: PASS, 0 issues. Automatic changes were reviewed.
+- Skill final `go test ./... -short -count=1`: PASS.
+- `git diff --check` and staged diff check: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, 2,070 compiled /
+  375 rejected records; 798 accepted / 188 rejected unique names.
+  Strict loading continues to reject the collection without a partial registry.
+
+Estimated and actual gains match: +1 unique name / +5 records. Only Time Walk's
+five diagnostics disappear. Every remaining diagnostic is unchanged and no
+previously accepted record regresses. Totals remain 2,445 records / 986 names.
+No required check remains blocked.
+
+Changed files: new native extra_turn.go/tests, RON extra_turn_test.go and harness
+extra_turn_test.go; compiler/player-actions adapters and three existing count
+test files; turn_system.go/test, legacy effect_spells.go, turn_execution.go,
+gametest harness, interactive loops and heuristic simulation, cmd/gametest and
+cmd/scenariotest; doc.go, DSL reference, engine rules contracts and this ledger.
+Only this summary and appended entry are staged for the ledger, preserving
+committed history and the user's working-tree ledger reorganization/archive.
+Commit message: `feat(ron): implement extra-turn scheduling`.
+
+Ranked next candidates:
+
+1. Library visit/reorder identity and library-top reveal result: bound the
+   prerequisite before Petra Sphinx's producer and top-card movement adapters.
+2. Bounded plural random partial-hand reveal and chosen-name discard for
+   Nebuchadnezzar; reuse X, RNG, the name matcher and shared discard.
+3. Optional begin-turn skip replacement and source untapping for Time Vault,
+   now with rules-correct extra turns and normal-order continuation available.
+   Compare its shared replacement contracts with Wand of Ith's dynamic life
+   payment before selecting a single-card adapter.
+
+This run stops after EXTRA-TURN-SCHEDULING. Migration remains incomplete.

@@ -518,18 +518,8 @@ func (tg *TestGame) Execute() {
 }
 
 func (tg *TestGame) advanceToNextTurn() {
-	if extraPlayerID, ok := tg.PopExtraTurn(); ok {
-		for i, p := range tg.AllPlayers() {
-			if p.PlayerID() == extraPlayerID {
-				tg.ActivePlayer = i
-				break
-			}
-		}
-	} else {
-		tg.ActivePlayer = (tg.ActivePlayer + 1) % len(tg.AllPlayers())
-	}
-	tg.Turn++
 	tg.syncToGame()
+	tg.AdvanceToNextTurn()
 	tg.syncFromGame()
 }
 

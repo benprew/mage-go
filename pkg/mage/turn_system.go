@@ -22,6 +22,7 @@ type TurnSystem struct {
 	step                 PhaseStep
 	activePlayer         int // index into players
 	extraTurns           []uuid.UUID
+	nextNormalPlayer     uuid.UUID
 	schedule             *TurnSchedule
 	skipNextUntap        map[uuid.UUID]int
 	capturedUntap        map[capturedUntapKey]bool
@@ -51,6 +52,7 @@ func (ts TurnSystem) Clone() TurnSystem {
 		turnStarts:           ts.turnStarts,
 		step:                 ts.step,
 		activePlayer:         ts.activePlayer,
+		nextNormalPlayer:     ts.nextNormalPlayer,
 		skipNextUntap:        cloneUUIDMap(ts.skipNextUntap),
 		capturedUntap:        maps.Clone(ts.capturedUntap),
 	}
@@ -129,9 +131,9 @@ func (ts *TurnSystem) ExtraTurns() []uuid.UUID {
 	return ts.extraTurns
 }
 
-// GrantExtraTurn appends an extra turn for playerID to the schedule.
+// GrantExtraTurn adds an extra turn before all pending turns (CR 500.7).
 func (ts *TurnSystem) GrantExtraTurn(playerID uuid.UUID) {
-	ts.extraTurns = append(ts.extraTurns, playerID)
+	ts.extraTurns = slices.Insert(ts.extraTurns, 0, playerID)
 }
 
 // PopExtraTurn dequeues the next extra turn recipient, if any.

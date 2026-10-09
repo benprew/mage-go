@@ -87,18 +87,7 @@ func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []t
 				return 0
 			}
 		}
-		if g.HasExtraTurns() {
-			extraPlayerID, _ := g.PopExtraTurn()
-			for i, p := range g.AllPlayers() {
-				if p.PlayerID() == extraPlayerID {
-					g.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			g.SetActivePlayerIndex((g.ActivePlayerIndex() + 1) % g.PlayerCount())
-		}
-		g.SetTurn(g.CurrentTurn() + 1)
+		g.AdvanceToNextTurn()
 	}
 	return 0
 }

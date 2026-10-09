@@ -60,13 +60,13 @@ func TestTurnSystem_ExtraTurns(t *testing.T) {
 	}
 
 	p1, ok1 := ts.PopExtraTurn()
-	if !ok1 || p1 != pA {
-		t.Errorf("PopExtraTurn 1: got %s, want %s", p1, pA)
+	if !ok1 || p1 != pB {
+		t.Errorf("PopExtraTurn 1: got %s, want %s", p1, pB)
 	}
 
 	p2, ok2 := ts.PopExtraTurn()
-	if !ok2 || p2 != pB {
-		t.Errorf("PopExtraTurn 2: got %s, want %s", p2, pB)
+	if !ok2 || p2 != pA {
+		t.Errorf("PopExtraTurn 2: got %s, want %s", p2, pA)
 	}
 
 	_, ok3 := ts.PopExtraTurn()

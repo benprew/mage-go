@@ -537,6 +537,18 @@
 // A blocker across several groups divides one amount among its opponents.
 // The shared damage batch keeps each source and its own keywords separate.
 //
+// Use [ExtraTurnFor] for one selected player after the current turn.
+// Resolution adds the turn; announcement and waiting queries do not add it.
+// An absent player gets no turn. Typed players retain bindings and source reads.
+// [ExtraTurn] keeps its controller behavior through the same action.
+// [Game.AdvanceToNextTurn] selects the most recent extra turn first (CR 500.7).
+// It saves the next normal player through nested and skipped extra turns.
+// Native runners, application loops and gametest use this shared service.
+// Clones keep separate pending turns and the saved normal player.
+// The caller must finish the current turn before advancing. The service does
+// not execute steps, cleanup or turn replacements. Multiple-player grants and
+// turn-skip replacement declarations need separate adapters.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

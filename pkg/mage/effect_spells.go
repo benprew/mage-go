@@ -566,8 +566,7 @@ func (*attachToTargetEffect) Apply(ctx *EffectContext) error {
 }
 
 func (*extraTurnEffect) Apply(ctx *EffectContext) error {
-	ctx.Game.GrantExtraTurn(ctx.Controller)
-	return nil
+	return ExtraTurnFor(You).Apply(ctx)
 }
 
 func (e *changeColorEffect) Apply(ctx *EffectContext) error {

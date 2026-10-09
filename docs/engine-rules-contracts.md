@@ -1,5 +1,42 @@
 # Engine rules contracts
 
+## Extra turns after the current turn
+
+`ExtraTurnFor(player PlayerRef) ResolvingEffect` adds one turn for a present
+player at resolution. It declares its typed player read to definition validation
+and waiting delayed-source queries. These queries do not resolve the player or
+grant turns. A missing player makes no change. `ExtraTurn()` keeps its existing
+controller behavior through this service. Pending abilities keep their saved
+controller, event player or exact source information after departure and phasing.
+
+CR 500.7 requires the most recently created extra turn to start first.
+`TurnSystem.GrantExtraTurn` inserts before pending turns; `PopExtraTurn` returns
+the next recipient. `Game.AdvanceToNextTurn()` saves the next normal player,
+selects the newest pending extra turn and increases the turn number. It retains
+that normal player through further extra turns, including grants during an extra
+turn. After the extra turns end, normal order resumes from the saved player.
+Turn-system clones keep separate pending lists and the saved normal player.
+
+The native runner, gametest, interactive loops and scenario runners share this
+advance operation. Call it after the current turn finishes. It does not run
+cleanup, steps or a begin-turn replacement. The existing native runner consumes
+turn skips before steps; skipping an extra turn preserves the next normal turn.
+Existing grant, pop and turn-state APIs remain available. A caller that selects
+turns manually must preserve normal order itself or use the shared operation.
+This contract is for one player after the current turn; simultaneous grants to
+multiple players and optional turn-skip replacement declarations remain separate.
+
+RON accepts the bare symbol `TakeAnExtraTurn` in resolving action lists,
+including explicit `PlayerAction` and `PlayerActions` contexts, spell bodies,
+activations, triggers and delayed bodies. It rejects tuple spelling, costs,
+static/entry operations and unbound player references.
+
+Evidence: `TestExtraTurnSchedulingOrderAndResume`, `NativeRun`, `SkippedTurn`,
+`TestExtraTurnTypedPlayerAndDeclarations`, `TestExtraTurnDelayedPlayerSource`,
+`TestExtraTurnHarnessNormalResume`, and `TestRONExtraTurn*`. Time Walk's five
+complete records have gameplay coverage. Time Vault's five actual activation
+declarations have prerequisite coverage; its complete records still reject.
+
 ## Ante deck preparation
 
 `WithAnteDeckRestriction() CardOption` marks a physical card for the pregame

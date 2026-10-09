@@ -1,5 +1,24 @@
 # DSL reference
 
+## Extra turns at resolution
+
+Use `mage.ExtraTurnFor(player)` with a typed `mage.PlayerRef` to add one turn
+after the current turn. It returns a resolving effect. An absent player gets no
+turn. `mage.ExtraTurn()` keeps its existing controller behavior.
+
+RON accepts `TakeAnExtraTurn` as a symbol in resolving action lists. The current
+player scope supplies the recipient. `PlayerAction(player, TakeAnExtraTurn)`
+and `PlayerActions(player, [TakeAnExtraTurn])` use their explicit player and
+existing instance bindings. Spell, activation, trigger and delayed bodies use
+the same adapter. Tuple spelling, costs, static/entry contexts and all-player
+grants remain unsupported. Waiting queries declare typed source reads without
+granting a turn. This syntax does not implement Time Vault's turn replacement.
+
+After each completed turn, runners call `game.AdvanceToNextTurn()`. The shared
+service selects the newest extra turn first, saves the next normal player
+through nested extra turns, and increases the turn number. It does not execute
+steps or cleanup. Clones retain separate pending turns and normal-order state.
+
 ## Ante deck declarations
 
 RON supports `DeckConstruction(RemoveFromDeckIfNotPlayingForAnte)` once at the

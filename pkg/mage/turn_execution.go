@@ -392,19 +392,6 @@ func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
 		} else if g.RunTurn(stopTurn, stopStep) {
 			return
 		}
-		// Check for extra turns
-		if extraPlayerID, ok := g.turns.PopExtraTurn(); ok {
-			// Find the player index
-			for i, p := range g.players {
-				if p.PlayerID() == extraPlayerID {
-					g.turns.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			// Next turn: swap active player
-			g.turns.SetActivePlayerIndex((g.turns.ActivePlayerIndex() + 1) % len(g.players))
-		}
-		g.turns.IncrementTurn()
+		g.AdvanceToNextTurn()
 	}
 }
