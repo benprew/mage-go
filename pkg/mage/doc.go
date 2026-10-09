@@ -100,8 +100,11 @@
 // under either player. Each typed conditional rule must contain one effect.
 // Revision keeps its condition kind, recipient kind and fixed recipient name.
 // Land types and colors remain live after their earlier layers.
+// [CreaturesPTWhileAttachedToBasicLand] adds a current-host Basic condition
+// and a global creature-subtype collection. Revision keeps that subtype.
+// The host uses attachment identity; returned hosts cannot replace it.
 // The caller must supply text-layer order and lifetime. Other static layers,
-// conditional rules, Aura rules and full text consumers need separate services.
+// other conditional or Aura rules and full text consumers need separate services.
 //
 // Use [GenericTriggered.WithCombatPairTextRevision] for a printed pair trigger.
 // [Game.RevisePrintedCombatPairTrigger] checks its declaration and source visit.

@@ -21,6 +21,9 @@ func (a *StaticAbilityHolder) supportsPTTextRevision() bool {
 		return false
 	}
 	for _, effect := range a.Effects {
+		if typed, ok := effect.(*hostPTEffect); ok && (len(a.Effects) != 1 || !typed.validContext()) {
+			return false
+		}
 		if typed, ok := effect.(*opponentPTEffect); ok && (len(a.Effects) != 1 || !typed.validContext()) {
 			return false
 		}

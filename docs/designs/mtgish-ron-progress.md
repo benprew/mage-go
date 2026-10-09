@@ -8,10 +8,10 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-OPPONENT-CONDITIONAL-PT` adds checked opponent land/color
-conditions with source or named-creature P/T recipients. It preserves active
-IDs, registration order, live reads, clones, phasing and revised restoration.
-Bounded revision evidence adds **3 accepted names / 3 records**. Acceptance gain
+`TEXT-PRINTED-HOST-BASIC-LAND-PT` adds checked current-host Basic/land-type
+conditions with global creature-subtype P/T recipients. It preserves active
+IDs, registration order, attachment identity, clones, phasing and restoration.
+Bounded revision evidence adds **2 accepted names / 2 records**. Acceptance gain
 is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -60383,6 +60383,163 @@ Ranked next candidates:
    shared Magical Hack prerequisite for two names with zero immediate gain.
 2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with native solver,
    event and printed revision reuse; compare other shared prerequisites first.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished. Migration incomplete. Stop here.
+
+## 2026-10-09: checked Aura-host basic-land P/T text revision
+
+Capability `TEXT-PRINTED-HOST-BASIC-LAND-PT` is complete for the shape below.
+This run implements one bounded installation prerequisite for text changes.
+It does not establish full Magical Hack execution or start runtime cutover.
+
+### Baseline, candidate comparison and selection
+
+The initial worktree contained changes to the design, ledger archive, API docs,
+compiler inventory, definition validation and repeated optional hand entries,
+including untracked files. They remain separate from this slice. Baseline
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict
+`go run ./cmd/loadcards -json` exited 1: 2,091 compiled / 354 rejected records,
+809 accepted / 177 rejected unique names. This is collection rejection, not a
+build or test failure. The loader installs no partial production registry.
+
+Evaluated the latest entry's ranked candidates using their complete records:
+
+| Candidate | Distinct affected names / records | Estimated full-card acceptance gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Checked Aura-host Basic/land condition with global subtype P/T recipients | Goblin Caves, Goblin Shrine / 2 DRK records | 0; both already compile | Missing typed revision context and compiler opt-in; existing attachment, condition, P/T and revision services are ready. Enables Magical Hack revisions for two complete declarations. Full text installation/lifetime remains separate. | Small: one typed effect, adapter, declaration/context tests and two-card lifecycle tests. |
+| Typed land-subtype mana-tap bonus | Gauntlet of Might / 5 reprints | 1 unique name / 5 records | Existing red-creature bonus compiles; mana event's IsLandType subject needs a typed bonus adapter with solver, event and printed revision agreement. Enables future land-subtype bonuses, but this exact source shape serves one unique card. | Medium: production/payment consistency, source/land control, phasing and revision tests. |
+| Per-player coin results with simultaneous rounds | Mana Clash / 1 DRK record | 1 name / 1 record if the complete procedure is supported | EachPlayerAction coin producer, CoinCameUpTails recipients and AllCoinsCameUpHeads need scoped per-player results; repeat and damage batching can be reused. Enables future repeated coin consumers. | Larger: typed round bindings, RNG/clone isolation and simultaneous damage tests. |
+
+Selected candidate 1 as the dependency-ready shared prerequisite for two unique
+cards, ahead of the single-card alternatives. Its zero immediate unlock estimate
+is intentional. It needs no new layer, zone, payment or attachment subsystem.
+Read both selected complete records, all five Gauntlet records and Mana Clash.
+The fresh record audit corrects the prior entry's six-record Gauntlet count:
+there are five (LEA, LEB, 2ED, CED and CEI). Targeted vocabulary reads cover PermanentPassesFilter tuple/2, And tuple/1,
+IsSupertype tuple/1, IsLandType tuple/1, IsCreatureType tuple/1, IsCardtype tuple/1,
+EachPermanentLayerEffect tuple/2 and AdjustPT tuple/2. Local authoritative
+`data/DRK.json` agrees with both selected records. CR 604.2/4/7, 612.1–3,
+613.1d/f/g, 613.4c and 613.7a/e establish static presence, live attachment,
+semantic word roles, earlier layers and retained registration/timestamp order.
+No source defect was found or corrected. RON and vocabulary remain unchanged.
+
+### Contract, signatures and reuse boundary
+
+RON opts in exactly:
+
+```ron
+If(PermanentPassesFilter(HostPermanent,
+    And([IsSupertype(Basic), IsLandType(basic_type)])), [
+    EachPermanentLayerEffect(And([IsCreatureType(creature_type),
+        IsCardtype(Creature)]), [AdjustPT(integer, integer)])
+])
+```
+
+Both two-member conjunctions permit either order. The type arguments are fixed
+symbols; basic_type must be Plains, Island, Swamp, Mountain or Forest.
+HostPermanent requires Aura scope. There must be one body rule with one fixed
+adjustment. Unless, IfElse, nonbasic land subtypes, missing Basic, general
+collections and multiple adjustments keep existing execution without revision
+opt-in. Malformed syntax and unbound references remain declaration errors.
+
+Native signatures:
+
+- `CreaturesPTWhileAttachedToBasicLand(landType, creatureType string, power, toughness int) ContinuousEffect`.
+- Existing `(*StaticAbilityHolder).WithPTTextRevision() *StaticAbilityHolder`.
+- Existing `(*Game).RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error`.
+
+Private `hostPTEffect` retains immutable land/creature type metadata and a cloned
+composed P/T effect. Definition validation checks the basic type and creature
+subtype family. A revision-marked declaration must contain exactly one typed
+effect. Context correspondence retains the host-Basic condition and creature
+collection recipient kind plus the fixed recipient subtype. All transitions to
+other P/T contexts or a different recipient subtype reject before mutation.
+
+RON owns spelling, shape checks and opt-in. The engine reuses
+PermanentMatchesFilter, AttachedPermanent, While, MatchingPermanents, IsCreature,
+HasSubType, ModifyEachPT and Fixed. Its Basic filter uses the same supertype read
+as existing RON filters. The exact current host supplies the condition; no LKI
+can substitute an absent host. Earlier type layers supply land and creature
+subtypes. Recipients remain live under either player, including tokens and later
+entries. Control and ownership do not restrict the host or recipients.
+
+The shared revision service retains active IDs, printed groups, source visits
+and registration positions. Reattachment still gives the Aura its normal new
+timestamp. Independent declarations, sibling factories and clones keep separate
+histories. Phasing retains revisions; ability removal suspends the rule;
+restoration uses the revised rule. Recipient departure saves current P/T in LKI.
+A returned host cannot inherit an old attachment; returned sources use printed
+rules. Mana costs and Goblin Shrine's separate departure trigger remain separate.
+Layer-3 ordering, lifetime and original-text restoration belong to the caller.
+No card-name branches, fallback definitions, global result slots, declaration
+panics or partial production registry were added.
+
+Cutover/removal gates remain unmet. No Go card definitions, generators or DSL
+functions were removed. This run does not establish a caller audit that permits
+removal. API/rules-contract docs describe only this bounded installed rule.
+
+### Failing-first tests and card mapping
+
+Before implementation, `TestRONTextHostPTRecords` failed for both complete
+records with the missing eligible printed-static diagnostic; independent
+reversed declarations failed at the same gap. Native `TestTextHostPT*` tests
+failed compilation because the constructor did not exist. During verification,
+the native registration fixture needed an enchant-land target to attach legally,
+and its neighboring sentinel needed installation after attachment's normal
+retimestamping. The final test compares registration order before and after
+revision. No production assertion was weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Goblin Caves and Goblin Shrine (complete DRK records) | `TestRONTextHostPTRecords`: original/revised host conditions, fixed adjustments, active IDs, both players' recipients, Basic/nonbasic distinction, noncreature exclusion, reattachment, source control, ordered clone changes, source/host phasing, removal/restoration, type-layer reads, later/token recipients, departure and returned source, unchanged costs and Shrine's separate damage trigger. |
+| Goblin Caves | `TestRONTextHostPTVisitsAndLKI`: revised recipient departure P/T, host departure/return cannot restore an old attachment, legal new attachment, later recipient subtype change. |
+| Declaration isolation | `TestRONTextHostPTIndependentDeclarations`: reversed conjunctions, foreign ID rejection, independent declaration histories and sibling factories. |
+| Invalid and unmarked declarations | `TestRONTextHostPTBoundaries`: arity/value errors, malformed Basic, unbound targets, mixed layers; missing Basic, nonbasic subtype, general collection, multiple adjustments and Unless cannot opt in. Existing `TestRONPermanentFilterInvalid` retains non-Aura host rejection. |
+| Native contract | `TestTextHostPTDeclaration`: all five basic types, empty/nonbasic types, invalid creature subtypes and mixed effects. `Context`: all 22 new host/subtype transitions reject atomically. `RegistrationOrder`: active ID, source and neighboring registrations remain in place. |
+| Existing card mechanics | `TestRONPermanentFilter*`, `TestRONSourceLeaveShrine*`, `TestRONSourceLeaveCasting`: casting, timing, Aura legality, failed-cost rollback, controller/owner distinction, live membership, simultaneous damage, prevention, copied triggers, independent events and exact old-source information. Existing P/T revision tests retain other contexts. |
+
+### Verification and collection status
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONTextHostPT|TestRONPermanentFilter|TestRONSourceLeaveShrine|TestRONSourceLeaveCasting|TestRONTextOpponentPT|TestRONTextConditionalSourcePT|TestRONTextStaticPT' -count=1`.
+- `go test ./pkg/mage -run 'TestText(HostPT|OpponentPT|ConditionalSourcePT|StaticPT)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- First `make lint` found one gocritic unnamedResult issue in the new compiler
+  helper. Added result names and reran both focused commands above. Final
+  `make lint` passed with zero issues. Its only automatic edit was import spacing
+  in the new native test; no existing user file was changed by lint.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; 2,091 compiled /
+  354 rejected records; 809 accepted / 177 rejected unique names.
+
+The complete final loader JSON equals the fresh baseline, including all
+remaining diagnostics. Every accepted record remains accepted. Gauntlet still
+rejects IsLandType as a land mana event subject (five records); Mana Clash still
+rejects EachPlayerAction as a repeated round producer. Collection rejection
+publishes no partial registry. Estimated and actual acceptance gain are both
++0 names / +0 records. New bounded revision evidence covers two names / two
+records. Complete gameplay of Magical Hack and Sleight of Mind remains separate.
+No environment or pre-existing check blocker was found.
+
+Changed files: new engine `text_host_pt.go` / `text_host_pt_test.go`, engine
+`text_static_pt.go` / `text_opponent_pt.go` / `doc.go`; new compiler
+`host_pt_revision.go` / `text_host_pt_test.go`, compiler `conditional_static.go`;
+DSL reference, engine rules contracts and this ledger. Stage only this slice's
+changes; preserve the pre-existing ledger archive and other worktree changes.
+Commit message: `feat(ron): implement Aura-host basic-land P/T text revision`.
+
+Ranked next candidates:
+
+1. Shared layer-3 lifetime/expiry service for checked printed declarations,
+   a bounded native prerequisite for Magical Hack and Sleight of Mind. Audit
+   installation order and restoration across already checked declaration kinds
+   before adding production spell consumers.
+2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with shared solver,
+   event and printed revision agreement; compare other shared prerequisites first.
 3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card

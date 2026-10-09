@@ -10,6 +10,7 @@ const (
 	opponentBasicLandSourcePT
 	opponentNontokenColorSourcePT
 	opponentNontokenColorNamedPT
+	attachedBasicLandCreaturePT
 )
 
 type opponentPTEffect struct {
@@ -73,8 +74,9 @@ func (e *opponentPTEffect) inspectDefinition() definitionNode {
 }
 
 type ptRevisionContext struct {
-	kind ptRuleContext
-	name string
+	kind         ptRuleContext
+	name         string
+	creatureType string
 }
 
 func (a *StaticAbilityHolder) ptTextRevisionContext() ptRevisionContext {
@@ -82,6 +84,9 @@ func (a *StaticAbilityHolder) ptTextRevisionContext() ptRevisionContext {
 		return ptRevisionContext{kind: controllerBasicLandSourcePT}
 	}
 	for _, effect := range a.Effects {
+		if typed, ok := effect.(*hostPTEffect); ok && typed != nil {
+			return ptRevisionContext{kind: attachedBasicLandCreaturePT, creatureType: typed.creatureType}
+		}
 		if typed, ok := effect.(*opponentPTEffect); ok && typed != nil {
 			return ptRevisionContext{kind: typed.context, name: typed.name}
 		}

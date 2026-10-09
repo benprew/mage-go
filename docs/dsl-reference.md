@@ -10823,3 +10823,66 @@ rejection, and identity/registration preservation in all three new contexts.
 Existing `TestRONOpponentStatic*` retains casting, protection legality, failed
 cost rollback and collection loading evidence; common revision rejection tests
 remain in `TestTextStaticPTRejects`.
+
+
+## Printed Aura-host basic-land P/T text revision
+
+`CreaturesPTWhileAttachedToBasicLand(landType, creatureType string, power,
+toughness int) ContinuousEffect` creates one typed global creature-subtype
+P/T rule with a current Aura-host condition. The host must be Basic and have
+the supplied basic land subtype. `StaticAbility(effect).WithPTTextRevision()`
+opts in to `Game.RevisePrintedStaticPTAbility`. Definition validation requires
+one effect, one of the five basic land types, and a nonempty creature subtype
+that passes `ValidateSubtypeFamily(SubtypeCreature, ...)`. Revision must keep
+this condition/recipient context and the fixed creature subtype. Transitions
+from or to other P/T contexts reject before mutation.
+
+RON opts in exactly:
+
+```ron
+If(PermanentPassesFilter(HostPermanent,
+    And([IsSupertype(Basic), IsLandType(Mountain)])), [
+    EachPermanentLayerEffect(And([IsCreatureType(Goblin),
+        IsCardtype(Creature)]), [AdjustPT(0, 2)])
+])
+```
+
+Both conjunctions permit either order; the land and creature subtype are fixed
+symbols and adjustments are integers. `HostPermanent` requires Aura scope.
+Unless, IfElse, missing Basic, nonbasic land subtypes, general collections and
+multiple adjustments retain existing execution without revision opt-in. Invalid
+syntax and unbound references remain compilation errors.
+
+CR 604.2/4/7, 612.2–3 and 613.1d/f/g, 613.4c, 613.7a/e use the existing
+`PermanentMatchesFilter`, `AttachedPermanent`, `While`, `MatchingPermanents`,
+`ModifyEachPT`, `HasSubType`, `IsCreature` and fixed-value services. The Basic
+filter uses the same supertype read as existing RON filters. Reattachment reads
+the current host; an absent, phased or returned old host supplies no condition
+and no LKI substitute. Earlier type layers determine matching land/creature
+subtypes. Current recipients under either player, including tokens and later
+entries, receive the adjustment. Control and ownership do not restrict them.
+
+The shared checked revision service retains active IDs, declaration groups,
+source visits and registration order. Reattachment still receives its normal
+Aura timestamp; revision does not retimestamp it. Clones and sibling declarations
+keep independent histories. Phasing keeps revisions; ability removal suspends
+execution; restoration uses the revised rule. Recipient departure saves revised
+P/T in LKI. Returned sources use printed rules. Mana costs and Goblin Shrine's
+separate departure damage trigger keep their existing contracts. The caller
+supplies layer-3 ordering, lifetime and original-text restoration. Full Magical
+Hack execution remains separate.
+
+Evidence: `TestRONTextHostPTRecords` maps complete DRK Goblin Caves and Goblin
+Shrine records to ordered revisions, live hosts, Basic exclusion, both players,
+noncreature exclusion, control, clones, phase cycles, removal/restoration,
+earlier type layers, later/token recipients, departure damage and source return.
+`VisitsAndLKI` covers recipient LKI, host departure/return and changing recipient
+subtypes. `IndependentDeclarations` covers reversed conjunctions, foreign IDs,
+sibling factories and independent declarations. `Boundaries` covers invalid and
+unmarked shapes. Native `TestTextHostPTDeclaration`, `Context`,
+`RegistrationOrder` cover five legal types, invalid types/subtypes, mixed
+effects, all 22 new context/subtype transitions, atomic rejection and retained
+registration positions. Existing `TestRONPermanentFilter*`,
+`TestRONSourceLeaveShrine*` and `TestRONSourceLeaveCasting` retain normal casting,
+Aura legality, failed-cost rollback, simultaneous damage, prevention, copied
+triggers and old-source information evidence.
