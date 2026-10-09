@@ -9555,3 +9555,39 @@ engine-backed tests; both full records remain rejected. This is subrule coverage
 not complete-card gameplay coverage. Rules: local CR 400.2, 400.7, 608.2c,
 701.20a–c. Reveal itself causes no zone change; discard replacements remain in
 the shared pipeline.
+
+### RON reveal-result predicates
+
+Resolving `If`, `Unless` and `IfElse` accept
+`ACardWasRevealedThisWay(filter)` after the singular random hand producer.
+The condition has one operand. Supported filters are `IsCardtype(type)`,
+`IsNonCardtype(type)` and `IsNamed(TheChosenName)`, each with one operand.
+Types use the compiler's existing card-type vocabulary. The name requires a
+prior lexical name choice and uses the shared interchangeable-name matcher.
+Unsupported filters, missing producers or choices, wrong arities, empty explicit
+branches and branch-local results used outside their branch reject at compilation.
+Mana solver bodies remain unsupported.
+
+The predicate checks the name and card types saved when the card was revealed.
+A missing or empty reveal never matches, including `IsNonCardtype`. `Unless`
+then runs its body; `IfElse` runs its second body. The matcher runs once before
+its selected body. No predicate moves, reveals or chooses another card.
+`TheCardRevealedFromHandThisWay` retains its separate exact-visit permission.
+Historical facts cannot make a returned hand card available for discard.
+
+The engine owns `RevealedCardMatcher`, `RevealedCardHasType(CardType)`,
+`RevealedCardLacksType(CardType)`, `RevealedCardNamed(CardNameMatcher)` and
+`IfRevealedCardMatches(*CardBinding, RevealedCardMatcher, ResolvingEffect,
+ResolvingEffect)`. RON owns spelling, lexical scope and branch lowering.
+A nil native body makes no change; at least one body is required. These are
+resolving history predicates, not static or event-trigger conditions.
+
+Evidence: `TestRONRevealResultGameplay`, `Invalid`, `RealOperands`, `Contexts`,
+`DistinctProducers`, `WandLandBranch` and native `TestRevealResult*`. Actual Wand
+of Ith, Petra Sphinx and Sindbad predicates execute through a bounded hand
+producer in subrule tests. Wand's complete land-payment branch executes unchanged.
+Wand's second predicate is corrected to `IsNonCardtype(Land)` using retained
+`data/DRK.json` Oracle text. Complete Wand still needs dynamic life payment;
+Petra Sphinx needs library results and Sindbad needs drawn-card results. No full
+card is newly accepted. Earlier statements that reveal predicates are unsupported
+are superseded only for this singular hand context.

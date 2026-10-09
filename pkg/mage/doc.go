@@ -128,6 +128,18 @@
 // RON DiscardCards(IsNamed(TheChosenName)) uses this service at resolution.
 // Reveal results and their consumers need separate compiler adapters.
 //
+// Use [RevealedCardHasType], [RevealedCardLacksType] and [RevealedCardNamed]
+// with [IfRevealedCardMatches] to check facts saved by a reveal operation.
+// [RevealRandomHandCardInto] saves an immutable name and card-type snapshot.
+// Missing results cannot match, including a negative card-type filter.
+// These history reads keep reveal facts after departure or return; they do not
+// permit an action on an absent card. [FromCard] keeps exact-visit checks.
+// The name filter uses the shared chosen-name matcher and its saved binding.
+// Frames, delays and clones keep separate result maps with immutable facts.
+// Waiting queries retain source reads from both bodies without checking a match.
+// Library and drawn-card producers and current mana-value reads need separate
+// contracts. This operation supplies resolving predicates, not static conditions.
+//
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]
 // belongs to its resolution frame. An empty set or absent chooser clears it.

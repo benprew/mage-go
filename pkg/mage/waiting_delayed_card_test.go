@@ -26,7 +26,7 @@ func TestWaitingDelayedCardFrames(t *testing.T) {
 					visit = g.FindExiledCard(card.ID()).Visit
 				}
 				one, many := BindCard("one"), BindCards("many")
-				identity := capturedCard{card.ID(), visit, zone}
+				identity := capturedCard{id: card.ID(), visit: visit, zone: zone}
 				g.resolution.cardBindings = map[*CardBinding]capturedCard{one: identity}
 				g.resolution.cardsBindings = map[*CardsBinding][]capturedCard{many: {identity}}
 				calls := 0
@@ -127,7 +127,7 @@ func TestWaitingDelayedCardRestoration(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	one, many := BindCard("one"), BindCards("many")
-	identity := capturedCard{uuid.New(), uuid.New(), core.ZoneHand}
+	identity := capturedCard{id: uuid.New(), visit: uuid.New(), zone: core.ZoneHand}
 	g.resolution.cardBindings = map[*CardBinding]capturedCard{one: identity}
 	g.resolution.cardsBindings = map[*CardsBinding][]capturedCard{many: {identity}}
 	want := errors.New("body failure")
@@ -143,7 +143,7 @@ func TestWaitingDelayedCardRestoration(t *testing.T) {
 	if err := AtNext(EachEndStep, body).Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
-	outer := capturedCard{uuid.New(), uuid.New(), core.ZoneExile}
+	outer := capturedCard{id: uuid.New(), visit: uuid.New(), zone: core.ZoneExile}
 	g.resolution.cardBindings[one] = outer
 	g.resolution.cardsBindings[many][0] = outer
 	for range 2 {
@@ -166,9 +166,9 @@ func TestWaitingDelayedCardChoicesAndVisibility(t *testing.T) {
 	exile := NewArtifact("Exile", "{R}")
 	exile.SetOwner(a.PlayerID())
 	g.ExileCard(exile, uuid.New())
-	h := capturedCard{hand.ID(), g.handVisit(hand.ID()), core.ZoneHand}
-	x := capturedCard{exile.ID(), g.FindExiledCard(exile.ID()).Visit, core.ZoneExile}
-	g.resolution.cardBindings = map[*CardBinding]capturedCard{BindCard("hand"): h, BindCard("exile"): x, nil: h, BindCard("bad"): {uuid.New(), h.visit, core.ZoneHand}}
+	h := capturedCard{id: hand.ID(), visit: g.handVisit(hand.ID()), zone: core.ZoneHand}
+	x := capturedCard{id: exile.ID(), visit: g.FindExiledCard(exile.ID()).Visit, zone: core.ZoneExile}
+	g.resolution.cardBindings = map[*CardBinding]capturedCard{BindCard("hand"): h, BindCard("exile"): x, nil: h, BindCard("bad"): {id: uuid.New(), visit: h.visit, zone: core.ZoneHand}}
 	g.resolution.cardsBindings = map[*CardsBinding][]capturedCard{BindCards("both"): {h, x}, nil: {h}}
 	ctx := &EffectContext{Game: g, Controller: a.PlayerID()}
 	if err := AtNext(EachEndStep, GainLifeFor(You, Fixed(1))).Apply(ctx); err != nil {

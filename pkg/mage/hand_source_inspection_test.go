@@ -15,7 +15,7 @@ func inspectableHandFixture() (*Game, *sourceChoicePlayer, *BasePlayer, *BaseCar
 	card := NewCreature("Private source", "{R}", 1, 1)
 	a.AddToHand(card)
 	visit := a.handVisit(card.ID())
-	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("hand reference"): {card.ID(), visit, core.ZoneHand}}})
+	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("hand reference"): {id: card.ID(), visit: visit, zone: core.ZoneHand}}})
 	return g, a, b, card, visit
 }
 

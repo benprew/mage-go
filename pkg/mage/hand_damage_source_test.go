@@ -75,9 +75,9 @@ func TestHandDamageSourceStackReferences(t *testing.T) {
 		t.Fatal("unreferred hand card supplied a source")
 	}
 	object := &StackObject{ID: uuid.New(), IsAbility: true,
-		capturedCards:    map[*CardBinding]capturedCard{BindCard("card"): {card.ID(), visit, core.ZoneHand}},
-		capturedCardSets: map[*CardsBinding][]capturedCard{BindCards("cards"): {{card.ID(), visit, core.ZoneHand}}},
-		Effects:          []Effect{Sequence(Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{card.ID(), visit, core.ZoneHand}}))},
+		capturedCards:    map[*CardBinding]capturedCard{BindCard("card"): {id: card.ID(), visit: visit, zone: core.ZoneHand}},
+		capturedCardSets: map[*CardsBinding][]capturedCard{BindCards("cards"): {{id: card.ID(), visit: visit, zone: core.ZoneHand}}},
+		Effects:          []Effect{Sequence(Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{id: card.ID(), visit: visit, zone: core.ZoneHand}}))},
 	}
 	g.PushStack(object)
 	card.AddType(core.TypeCreature)
@@ -113,11 +113,11 @@ func TestHandDamageSourceInvalid(t *testing.T) {
 	a.AddToHand(card)
 	visit := g.handVisit(card.ID())
 	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{
-		nil:                    {card.ID(), visit, core.ZoneHand},
-		BindCard("wrong ID"):   {uuid.New(), visit, core.ZoneHand},
-		BindCard("wrong zone"): {card.ID(), visit, core.ZoneGraveyard},
-		BindCard("no visit"):   {card.ID(), uuid.Nil, core.ZoneHand},
-		BindCard("absent"):     {card.ID(), uuid.New(), core.ZoneHand},
+		nil:                    {id: card.ID(), visit: visit, zone: core.ZoneHand},
+		BindCard("wrong ID"):   {id: uuid.New(), visit: visit, zone: core.ZoneHand},
+		BindCard("wrong zone"): {id: card.ID(), visit: visit, zone: core.ZoneGraveyard},
+		BindCard("no visit"):   {id: card.ID(), visit: uuid.Nil, zone: core.ZoneHand},
+		BindCard("absent"):     {id: card.ID(), visit: uuid.New(), zone: core.ZoneHand},
 	}})
 	if len(g.StackHandSources()) != 0 || g.damageReferenceInformation(DamageSource{id: card.ID(), handVisit: visit, stackID: uuid.New()}).Valid() {
 		t.Fatal("invalid reference supplied a source")
@@ -222,7 +222,7 @@ func TestHandDamageSourceHiddenVisibility(t *testing.T) {
 			t.Fatal("reveal payment ended before stack departure")
 		}
 		g.GetStack().Pop()
-		g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{binding: {card.ID(), visit, core.ZoneHand}}})
+		g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{binding: {id: card.ID(), visit: visit, zone: core.ZoneHand}}})
 		checkHidden(g.StackHandSources()[0])
 		reveal := NewEnchantment("Public hand", "", WithAbility(Static(RevealAllHands())))
 		p := g.PutOnBattlefield(reveal, a.PlayerID())
@@ -332,7 +332,7 @@ func TestHandDamageSourceCastBoundary(t *testing.T) {
 	card := NewCreature("Hand subject", "{R}", 1, 1, WithKeyword(core.Flash))
 	a.AddToHand(card)
 	saved := g.CaptureHandDamageSource(a.handVisit(card.ID()))
-	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("reference"): {card.ID(), saved.HandVisit(), core.ZoneHand}}})
+	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("reference"): {id: card.ID(), visit: saved.HandVisit(), zone: core.ZoneHand}}})
 	binding := BindDamageSource("chosen")
 	body := Sequence(ChooseDamageSourceFromStackHandReferences(You, DamageSourceFilter{}, binding), PreventNextDamageFromSelectedSource(FromDamageSource(binding), You, DamageSourceFilter{}))
 	if err := ApplyEffect(g, body, uuid.Nil, b.PlayerID(), nil); err != nil {

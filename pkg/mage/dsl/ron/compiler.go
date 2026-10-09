@@ -1092,6 +1092,13 @@ func requireRef(n Node, name string, ctx scope) error {
 }
 
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if (n.Name == "If" || n.Name == "Unless" || n.Name == "IfElse") && len(n.Args) > 0 && n.Args[0].Name == "ACardWasRevealedThisWay" {
+		build, err := compileRevealResultBranch(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "CounterAbility" {
 		if err := arity(n, 1); err != nil {
 			return nil, err

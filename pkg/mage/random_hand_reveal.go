@@ -2,6 +2,7 @@ package mage
 
 import (
 	"errors"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -41,7 +42,7 @@ func (e *randomHandRevealEffect) Apply(ctx *EffectContext) error {
 	if state.cardBindings == nil {
 		state.cardBindings = make(map[*CardBinding]capturedCard)
 	}
-	state.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visit, zone: core.ZoneHand}
+	state.cardBindings[e.result] = capturedCard{id: card.ID(), visit: visit, zone: core.ZoneHand, revealed: &revealedCardFacts{name: card.Name(), types: slices.Clone(card.Types())}}
 	ctx.Game.recordPublicReveal(card)
 	return nil
 }

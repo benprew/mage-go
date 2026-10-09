@@ -119,7 +119,7 @@ func TestGeneralDamageSourceStackAndPrivacy(t *testing.T) {
 	a.AddToHand(card)
 	visit := a.handVisit(card.ID())
 	hand := g.CaptureHandDamageSourceFor(a.PlayerID(), visit)
-	object := &StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("hand"): {card.ID(), visit, core.ZoneHand}}}
+	object := &StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("hand"): {id: card.ID(), visit: visit, zone: core.ZoneHand}}}
 	g.PushStack(object)
 	for _, departed := range []bool{false, true} {
 		if departed {

@@ -19,7 +19,7 @@ func TestWaitingDelayedGraveyardFrames(t *testing.T) {
 			a.AddToGraveyard(card)
 			visit := g.graveyardVisit(card.ID())
 			one, many := BindCard("one"), BindCards("many")
-			identity := capturedCard{card.ID(), visit, zone}
+			identity := capturedCard{id: card.ID(), visit: visit, zone: zone}
 			g.resolution.cardBindings = map[*CardBinding]capturedCard{one: identity}
 			g.resolution.cardsBindings = map[*CardsBinding][]capturedCard{many: {identity}}
 			calls := 0
@@ -107,9 +107,9 @@ func TestWaitingDelayedGraveyardBoundaries(t *testing.T) {
 	card := NewArtifact("Public source", "{R}")
 	card.SetOwner(a.PlayerID())
 	a.AddToGraveyard(card)
-	identity := capturedCard{card.ID(), g.graveyardVisit(card.ID()), core.ZoneGraveyard}
+	identity := capturedCard{id: card.ID(), visit: g.graveyardVisit(card.ID()), zone: core.ZoneGraveyard}
 	one, many := BindCard("one"), BindCards("many")
-	g.resolution.cardBindings = map[*CardBinding]capturedCard{one: identity, nil: identity, BindCard("wrong ID"): {uuid.New(), identity.visit, identity.zone}, BindCard("no visit"): {card.ID(), uuid.Nil, identity.zone}, BindCard("wrong zone"): {card.ID(), identity.visit, core.ZoneHand}}
+	g.resolution.cardBindings = map[*CardBinding]capturedCard{one: identity, nil: identity, BindCard("wrong ID"): {id: uuid.New(), visit: identity.visit, zone: identity.zone}, BindCard("no visit"): {id: card.ID(), visit: uuid.Nil, zone: identity.zone}, BindCard("wrong zone"): {id: card.ID(), visit: identity.visit, zone: core.ZoneHand}}
 	g.resolution.cardsBindings = map[*CardsBinding][]capturedCard{many: {identity, identity}, nil: {identity}}
 	source := g.PutOnBattlefield(NewArtifact("Keeper", ""), a.PlayerID())
 	ctx := &EffectContext{Game: g, Controller: b.PlayerID(), SourceID: source.ID()}

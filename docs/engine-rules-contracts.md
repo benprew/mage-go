@@ -12594,3 +12594,44 @@ Evidence: `TestRandomHandRevealIdentity`, `Declarations`, `Frames`,
 reveal-result property snapshots/predicates, plural reveals, library visits and
 ownership exchange need separate contracts. No new simultaneous-operation or
 replacement-order service is introduced.
+
+## Reveal-result history predicates
+
+`RevealRandomHandCardInto` now saves an immutable name/card-type snapshot with
+its exact card visit in the existing resolution binding. Snapshot storage is
+private and is never mutated. Cloned, nested, loop and delayed frames reuse their
+existing independent card maps; sharing immutable facts cannot transfer choices
+or let one frame clear another's result. Empty or absent production clears both
+identity and facts. Existing payment/draw/card captures without reveal facts
+cannot satisfy a reveal predicate.
+
+`RevealedCardHasType`, `RevealedCardLacksType` and `RevealedCardNamed` build typed
+pure matchers. Names use `CardNameMatcher`, including interchangeable Oracle
+names and missing-choice behavior. `IfRevealedCardMatches(result, matcher,
+matched, unmatched)` checks the saved reveal once and executes one branch.
+No result always selects the unmatched branch, even for a negative type.
+A nil branch makes no change; at least one branch is required. Definition
+validation checks binding dominance, matcher/type validity, name-result dominance
+and each declared body. Branch writes do not become unconditional producers.
+
+These predicates inspect the historical reveal operation (local CR 608.2i),
+not current characteristics or generic object LKI. Departure, return, or a later
+characteristic change cannot rewrite the saved event facts. This does not
+establish current mana-value reads or general characteristic queries (608.2h).
+The exact `FromCard` visit remains required for an action on the card (400.7).
+Public revelation itself moves nothing (701.20a–c). No zone, payment, replacement
+ordering or simultaneous batch service is changed.
+
+Both bodies declare explicit source reads to waiting delayed queries. Queries
+never evaluate the matcher, choose a body, read hidden cards, consume randomness
+or execute either body. Captured reveal results survive delay creation and are
+retained by game clones; they do not expose another hand visit.
+
+Native evidence: `TestRevealResultSnapshots`, `Declarations`,
+`WaitingAndFrames`; neighboring `TestRandomHandReveal*` retains exact identity,
+clearing, replacements and frame contracts. RON evidence: `TestRONRevealResult*`
+covers invalid shapes/scope, stack timing, failed activation payments, explicit
+players, source departure/return/phasing, independent clones and producers,
+spell/trigger/delayed contexts, interchangeable names and real Wand land-payment
+outcomes. Complete inventory-card coverage is unchanged. Library/drawn/plural
+producers, generic boolean reveal filters and dynamic life payment remain gaps.

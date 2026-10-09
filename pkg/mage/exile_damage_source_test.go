@@ -116,7 +116,7 @@ func TestExileDamageSourceHiddenAndDeclarations(t *testing.T) {
 	if !source.hasExactIdentity() || source.Name() != "" || source.HasColor(core.Red) || source.HasType(core.TypeCreature) || source.HasSubType("Wizard") {
 		t.Fatal("private inspection exposed source characteristics")
 	}
-	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, Effects: []Effect{Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{card.ID(), visit, core.ZoneExile}})}})
+	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, Effects: []Effect{Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{id: card.ID(), visit: visit, zone: core.ZoneExile}})}})
 	if len(g.StackBoundExileSources()) != 1 {
 		t.Fatal("hidden referred object lost identity")
 	}
@@ -154,7 +154,7 @@ func TestExileDamageSourceCastBoundary(t *testing.T) {
 	visit := g.FindExiledCard(card.ID()).Visit
 	saved := g.CaptureExiledDamageSource(visit)
 	binding := BindDamageSource("chosen")
-	g.PushStack(&StackObject{ID: uuid.New(), Controller: b.PlayerID(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("reference"): {card.ID(), visit, core.ZoneExile}}})
+	g.PushStack(&StackObject{ID: uuid.New(), Controller: b.PlayerID(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{BindCard("reference"): {id: card.ID(), visit: visit, zone: core.ZoneExile}}})
 	body := Sequence(ChooseDamageSourceFromStackExileBindings(You, DamageSourceHasColor(core.Red), binding), PreventNextDamageFromSelectedSource(FromDamageSource(binding), You, DamageSourceHasColor(core.Red)))
 	if err := ApplyEffect(g, body, uuid.Nil, b.PlayerID(), nil); err != nil {
 		t.Fatal(err)
@@ -306,11 +306,11 @@ func TestExileDamageSourceInvalidReferences(t *testing.T) {
 	}
 	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true,
 		capturedCards: map[*CardBinding]capturedCard{
-			nil:                      {card.ID(), visit, core.ZoneExile},
-			BindCard("wrong ID"):     {uuid.New(), visit, core.ZoneExile},
-			BindCard("wrong zone"):   {card.ID(), visit, core.ZoneHand},
-			BindCard("no visit"):     {card.ID(), uuid.Nil, core.ZoneExile},
-			BindCard("absent visit"): {card.ID(), uuid.New(), core.ZoneExile},
+			nil:                      {id: card.ID(), visit: visit, zone: core.ZoneExile},
+			BindCard("wrong ID"):     {id: uuid.New(), visit: visit, zone: core.ZoneExile},
+			BindCard("wrong zone"):   {id: card.ID(), visit: visit, zone: core.ZoneHand},
+			BindCard("no visit"):     {id: card.ID(), visit: uuid.Nil, zone: core.ZoneExile},
+			BindCard("absent visit"): {id: card.ID(), visit: uuid.New(), zone: core.ZoneExile},
 		},
 	})
 	if len(g.StackBoundExileSources()) != 0 || g.damageReferenceInformation(DamageSource{id: card.ID(), exileVisit: visit, stackID: uuid.New()}).Valid() {

@@ -71,9 +71,9 @@ func TestGraveyardDamageSourceStackReferences(t *testing.T) {
 		t.Fatal("unreferred graveyard card supplied a source")
 	}
 	object := &StackObject{ID: uuid.New(), IsAbility: true, Targets: []uuid.UUID{card.ID(), card.ID()},
-		capturedCards:    map[*CardBinding]capturedCard{BindCard("card"): {card.ID(), visit, core.ZoneGraveyard}},
-		capturedCardSets: map[*CardsBinding][]capturedCard{BindCards("cards"): {{card.ID(), visit, core.ZoneGraveyard}}},
-		Effects:          []Effect{Sequence(Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{card.ID(), visit, core.ZoneGraveyard}}))},
+		capturedCards:    map[*CardBinding]capturedCard{BindCard("card"): {id: card.ID(), visit: visit, zone: core.ZoneGraveyard}},
+		capturedCardSets: map[*CardsBinding][]capturedCard{BindCards("cards"): {{id: card.ID(), visit: visit, zone: core.ZoneGraveyard}}},
+		Effects:          []Effect{Sequence(Sequence(&eventCardCapture{binding: BindCard("event"), value: capturedCard{id: card.ID(), visit: visit, zone: core.ZoneGraveyard}}))},
 	}
 	g.PushStack(object)
 	card.AddType(core.TypeCreature)
@@ -138,11 +138,11 @@ func TestGraveyardDamageSourceInvalid(t *testing.T) {
 	a.AddToGraveyard(card)
 	visit := g.graveyardVisit(card.ID())
 	g.PushStack(&StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{
-		nil:                    {card.ID(), visit, core.ZoneGraveyard},
-		BindCard("wrong ID"):   {uuid.New(), visit, core.ZoneGraveyard},
-		BindCard("wrong zone"): {card.ID(), visit, core.ZoneHand},
-		BindCard("no visit"):   {card.ID(), uuid.Nil, core.ZoneGraveyard},
-		BindCard("absent"):     {card.ID(), uuid.New(), core.ZoneGraveyard},
+		nil:                    {id: card.ID(), visit: visit, zone: core.ZoneGraveyard},
+		BindCard("wrong ID"):   {id: uuid.New(), visit: visit, zone: core.ZoneGraveyard},
+		BindCard("wrong zone"): {id: card.ID(), visit: visit, zone: core.ZoneHand},
+		BindCard("no visit"):   {id: card.ID(), visit: uuid.Nil, zone: core.ZoneGraveyard},
+		BindCard("absent"):     {id: card.ID(), visit: uuid.New(), zone: core.ZoneGraveyard},
 	}})
 	if len(g.StackGraveyardSources()) != 0 || g.damageReferenceInformation(DamageSource{id: card.ID(), graveyardVisit: visit, stackID: uuid.New()}).Valid() {
 		t.Fatal("invalid reference supplied a source")

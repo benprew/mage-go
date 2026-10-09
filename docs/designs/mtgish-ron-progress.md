@@ -7,13 +7,13 @@ names** (986 total), and **2,064 compiled / 381 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`RANDOM-HAND-REVEAL` adds a resolving random hand producer with a typed exact
-hand-visit result and explicit-player discard. Native permanent loops now
-isolate singular card bindings. Real producer ASTs from Wand of Ith and Tempest
-Efreet execute through the engine; both complete records remain rejected.
-**+0 unique names / +0 records**; synthetic and subrule gameplay coverage grew.
-Wand of Ith's second land predicate is a confirmed source defect, left unchanged.
-Prior full-card gameplay mappings and chosen-name contracts remain in force.
+`REVEAL-RESULT-PREDICATES` adds typed historical type/name predicates over the
+singular hand reveal result. Native and RON tests cover saved facts, exact action
+permission, branch scope, delayed references and independent clones. Actual
+Wand of Ith, Petra Sphinx and Sindbad predicates execute as subrules. Wand's
+nonland predicate is corrected and its entire land-payment branch is tested.
+**+0 unique names / +0 records**; complete-card coverage is unchanged.
+Library/drawn producers and dynamic life payment remain separate dependencies.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -54425,3 +54425,181 @@ Ranked next candidates:
    paid-player collection and rules-aware life setting remain a later alternative.
 
 This run stops after RANDOM-HAND-REVEAL. Migration remains incomplete.
+
+## 2026-10-08: REVEAL-RESULT-PREDICATES
+
+Status: complete bounded reveal-result history predicate slice. This run stops
+here. Complete collection gameplay, runtime cutover and removal gates remain
+unmet. The starting tree had user edits to `.gitignore`, the execution design
+and this ledger, plus an untracked completed-entry archive. These are preserved.
+Only this appended entry and the revised status summary are staged in the ledger;
+the user's archive/reorganization remains outside the slice commit.
+
+### Fresh evidence and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict
+`go run ./cmd/loadcards -json` exited 1: 2,064 compiled / 381 rejected records,
+796 accepted / 190 rejected unique names, from 2,445 records / 986 names.
+This is collection rejection, not an environment or build/test failure.
+
+Ranked candidate 1 was evaluated first. Complete RON records and nested forms
+were read for Wand of Ith, Petra Sphinx, Sindbad, Nebuchadnezzar and Tempest
+Efreet. Reprints count once. Targeted vocabulary reads covered
+ACardWasRevealedThisWay, ManaValueOfTheCardRevealedThisWay, RevealTopCardOfLibrary
+and plural random reveal. The candidate comparison and bounded contract were
+stated before editing.
+
+| Candidate | Distinct cards; estimated full-card unlocks | Blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Shared reveal-result predicates with an existing singular hand producer | Wand of Ith, Petra Sphinx, Sindbad; 0 immediate full cards | Wand still needs saved/current mana-value semantics and dynamic life payment. Petra needs exact library results and dispatch; Sindbad needs draw-result reveal/discard. The shared type/name consumers remove a prerequisite for all three. Hand visits, name choice and name matching are ready. | Moderate: immutable facts in existing frames, typed native matchers/branch, lexical lowering, real predicate/payment subrules and isolation tests. Fully bounded for one run. |
+| Bounded plural random hand reveal and chosen-name discard | Nebuchadnezzar; 1 only after the complete plural capability | Announced X, RNG, choice/matcher and shared discard batches exist. Selection without replacement, exact reveal-set identity, plural result lifetime and replacement/batch evidence remain needed. The singular producer alone cannot supply this contract. | Moderate to high: selection/result/batch operation and complete card gameplay. Less shared immediate benefit than the ranked prerequisite. |
+| Library-top identity/reveal and result dispatch | Petra Sphinx directly; shared reveal consumers also serve Sindbad, whose draw capture is separate; 0 for identity prerequisite alone | Name choice and matcher are ready. Library visit identity, shuffle/reorder invalidation, exact dispatch and empty-library behavior must precede acceptance. | High relative to this run: a new zone-identity service plus producer and movement integration. Not dependency-ready as a compiler-only adapter. |
+
+Selected the dependency-ready bounded context of ranked candidate 1. Its concrete
+three-card downstream benefit justifies zero immediate full-card unlocks. No
+first-error frequency was treated as an unlock estimate. The implementation
+adds one cohesive capability: predicates over a typed saved reveal event;
+it does not start library, draw, plural or dynamic-payment slices.
+
+### Exact contracts, signatures and contexts
+
+- `RevealedCardMatcher` is a native pure matcher with private snapshot access.
+- `RevealedCardHasType(core.CardType) RevealedCardMatcher` and
+  `RevealedCardLacksType(core.CardType) RevealedCardMatcher` check saved types.
+- `RevealedCardNamed(CardNameMatcher) RevealedCardMatcher` checks the saved name
+  through the shared interchangeable-name service and current lexical name result.
+- `IfRevealedCardMatches(*CardBinding, RevealedCardMatcher, ResolvingEffect,
+  ResolvingEffect) ResolvingEffect` evaluates once and selects one body. A nil
+  native body makes no change; at least one body is required. Missing/empty or
+  non-reveal captures select unmatched, including for negative type filters.
+- `RevealRandomHandCardInto` now saves a private immutable name/type snapshot
+  alongside the exact hand visit in `capturedCard`. No signature or prior
+  movement behavior changed. Exact-card actions still use `FromCard` visit checks.
+- Private `ron.compileRevealResultMatcher(Node, scope)
+  (func(instanceBindings) mage.RevealedCardMatcher, error)` accepts exact tuples
+  `IsCardtype(type)`, `IsNonCardtype(type)` and `IsNamed(TheChosenName)`.
+  Types use existing Creature/Artifact/Land/Enchantment/Instant/Sorcery lowering.
+- Private `ron.compileRevealResultBranch(Node, scope) (effectFactory, error)`
+  accepts `If(condition, actions)`, `Unless(condition, actions)` and
+  `IfElse(condition, matchedActions, unmatchedActions)`, where the condition is
+  exactly `ACardWasRevealedThisWay(filter)` and a singular hand result dominates.
+  Explicit branch lists must be nonempty. `Unless` reverses the selected body,
+  not the existence requirement inside the negative-type filter.
+
+RON owns syntax, lexical result identity, choice dominance and declaration errors.
+The engine owns reveal facts, pure matching and execution. Resolving spell,
+activation, trigger and delayed contexts share the adapter. Source and result
+bindings belong to each factory instance; later producers shadow only their
+continuations. Cost/static/entry/replacement predicates, unbound names/results,
+unsupported filter forms and conditional mana solver bodies remain rejected.
+
+Reuse: existing CardBinding and exact hand visits, resolution/clone/loop/delayed
+maps, public reveal recording, scripted RNG, Sequence and definition dominance,
+explicit players/targets, chosen-name matcher, source-read declarations, shared
+optional life payment and discard/replacement services. Private immutable facts
+can be shared by saved frames without mutable state transfer. The existing
+capturedCard field addition required converting positional fixtures in eight
+engine test files to named fields; their assertions and behavior are unchanged.
+No Go definitions, DSL functions or callers were removed. No fallback, partial
+production registry, card-name executor or alternate subsystem was introduced.
+
+### Rules evidence and source defect
+
+Local CR 400.2/400.7, 608.2c/h/i and 701.20a–e were read. This predicate refers to
+the historical reveal operation (608.2i): departure, return and later type changes
+cannot rewrite its saved name/types. It grants no current action permission.
+Current object characteristic reads and generic LKI (608.2h), including a future
+mana-value consumer, require their separate semantics. Reveal moves nothing;
+exact visits still govern discard. This slice does not alter simultaneous moves,
+replacement priorities, costs or hidden-zone membership.
+
+`cards/mtgish/DRK.lines.ron:112` had two land predicates. Retained authoritative
+`data/DRK.json` Oracle text requires one life for a land and life equal to mana
+value for a nonland. The second predicate is corrected to `IsNonCardtype(Land)`.
+A failing-first real-record assertion exposed the duplicate, and the actual
+corrected predicates are tested. All collection records were searched: Wand has
+one record and no identical reprints. No other source defect was corrected.
+The vocabulary snapshot was rebuilt from positioned parser ASTs: source hash,
+type-filter counts and shifted Wand examples were refreshed, and loader baseline
+was replaced with final fresh diagnostics.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the missing matcher/branch APIs.
+RON gameplay first failed on unsupported ACardWasRevealedThisWay. A focused native
+waiting-query test then failed because branch source reads were not declared;
+that integration was added and the assertion retained. Fixture API mistakes and
+a name-chooser wrapper without hand-visit methods were corrected by using the
+existing native loop/phase APIs and an explicit target's engine-managed hand.
+No gameplay assertion was weakened. One-sided branches now use an absent native
+body instead of an invalid empty Sequence; explicit empty RON branches reject.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| TestRONRevealResultRealOperands | Complete Wand, Petra and Sindbad records supply actual predicate ASTs, including Wand's corrected nonland filter and Petra's chosen-name filter. They execute through a singular hand producer with interchangeable names; complete records still reject. Subrule evidence only. |
+| TestRONRevealResultWandLandBranch | Actual Wand producer and entire land branch, including explicit-player optional one-life payment and exact discard on decline, execute unchanged through native stack activation. Offers/reveals occur only at resolution. |
+| TestRONRevealResultGameplay | Synthetic complete activation; all three branches, land/nonland/empty results, failed payment, explicit target, no announcement reads, source departure/return/phasing, cloned independent random selection and no predicate movement. |
+| TestRONRevealResultContexts | Synthetic spell, entry trigger and delayed activation gameplay; captured historical result survives hand departure/return and independent delayed clones. |
+| TestRONRevealResultDistinctProducers | Two factories and two producers per activation; lexical shadowing and independent instance state. |
+| TestRONRevealResultInvalid | Missing/use-before-producer results, wrong shape/arity/types, unsupported filters, undominated chosen names, empty branches and optional-result escape reject. |
+| TestRevealResultSnapshots | Native missing and empty results, positive/negative types, interchangeable names, immutable facts after departure/return/type mutation, separate action permission, clone isolation and nested-frame isolation. |
+| TestRevealResultDeclarations | Invalid native results/matchers/types/names/bodies and producer dominance; valid bounded definitions. |
+| TestRevealResultWaitingAndFrames | Both selected/unselected bodies retain exact source references while waiting, queries make no actions, phasing keeps references and loops restore outer reveal facts. |
+| Existing TestRandomHandReveal* / TestRONRandomHandReveal* | Exact visits, source lifecycle, empty clearing, independent producers, discard prevention/redirection and saved frame behavior retained. |
+
+Complete-card gameplay coverage is unchanged. Three cards gain real predicate
+subrule evidence; Wand also gains the complete land-payment branch. Synthetic
+RON gameplay and native result/history contracts grow. Estimated and actual
+full-card compilation gains are both **0 unique names / 0 records**.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONRevealResult -count=1`: PASS.
+- Native `go test ./pkg/mage -run TestRevealResult -count=1`: PASS.
+  Both suites with neighboring RandomHandReveal tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository.
+- `make lint`: PASS, 0 issues. Automatic compiler/import formatting was
+  reviewed; no unrelated Go file changed. Post-lint focused RON slice and
+  neighboring reveal tests: PASS.
+- Skill final `go test ./... -short -count=1`: PASS, after lint.
+- `git diff --check`: PASS, including final documentation and ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,064 compiled /
+  381 rejected records; 796 accepted / 190 rejected unique names**. Totals
+  remain 2,445 records / 986 names.
+
+No required check remains failed or blocked. The loader still rejects unsupported
+records and publishes no partial registry. Accepted/rejected record identity sets
+are unchanged. Exactly one first diagnostic advances: Wand of Ith now rejects at
+DRK.lines.ron:112:610, `unsupported fixed life cost amount
+(ManaValueOfTheCardRevealedThisWay)`, instead of the first reveal predicate. Petra,
+Sindbad, Nebuchadnezzar, Tempest Efreet and all other loader diagnostics remain
+unchanged. This matches the estimated zero full-card gain; successful predicate
+compilation and subrule gameplay are separate from complete-card execution.
+
+Changed files: native reveal_result.go/tests, random_hand_reveal.go,
+composable_target.go, doc.go and eight named-field test-fixture updates; RON
+reveal_result.go/tests and compiler.go; DRK RON source; vocabulary snapshot;
+DSL reference, engine rules contracts and this ledger's summary/appended entry.
+The user `.gitignore`, execution-design edits and archive/reorganization remain
+outside staging. The completed slice commit uses
+`feat(ron): implement reveal-result predicates`.
+
+Ranked next candidates:
+
+1. Shared exact saved-card reveal producer and result dispatch for the remaining
+   drawn/library contexts (Sindbad and Petra Sphinx). Compare native draw-result
+   capture with library visit identity before selecting one bounded context;
+   reuse these predicates and keep invalidated visits separate from saved facts.
+2. Nebuchadnezzar's bounded plural random partial-hand reveal and chosen-name
+   discard. Reuse announced X, RNG, name matching and the shared discard batch;
+   add selection without replacement and exact reveal-set lifetime.
+3. Reassess Wand's rules-aware dynamic life payment and mana-value result after
+   higher-value shared work. This is now its sole compiler blocker; it needs
+   amount timing, affordability/rollback, and zero/X/no-cost cases rather than
+   using raw life setters. Ante paid-player collection for Rebirth remains later.
+
+This run stops after REVEAL-RESULT-PREDICATES. Migration remains incomplete.

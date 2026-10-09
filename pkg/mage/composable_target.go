@@ -607,6 +607,7 @@ func BindCard(name string) *CardBinding { return &CardBinding{name: name} }
 type capturedCard struct {
 	id, visit uuid.UUID
 	zone      Zone
+	revealed  *revealedCardFacts
 }
 type savedCardRef struct{ binding *CardBinding }
 

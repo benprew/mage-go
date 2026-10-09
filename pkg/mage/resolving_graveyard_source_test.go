@@ -18,7 +18,7 @@ func TestResolvingGraveyardSourcesFrames(t *testing.T) {
 			a.AddToGraveyard(card)
 			visit := g.graveyardVisit(card.ID())
 			saved := g.CaptureGraveyardDamageSource(visit)
-			identity := capturedCard{card.ID(), visit, core.ZoneGraveyard}
+			identity := capturedCard{id: card.ID(), visit: visit, zone: core.ZoneGraveyard}
 			object := &StackObject{ID: uuid.New(), IsAbility: true, Controller: a.PlayerID()}
 			switch kind {
 			case "target":
@@ -76,8 +76,8 @@ func TestResolvingGraveyardSourcesInvalidReferences(t *testing.T) {
 	g := NewGame(a, b)
 	card := NewArtifact("Unreferenced", "{R}")
 	a.AddToGraveyard(card)
-	identity := capturedCard{card.ID(), g.graveyardVisit(card.ID()), core.ZoneGraveyard}
-	object := &StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{nil: identity, BindCard("wrong visit"): {card.ID(), uuid.New(), core.ZoneGraveyard}, BindCard("wrong zone"): {card.ID(), identity.visit, core.ZoneHand}}}
+	identity := capturedCard{id: card.ID(), visit: g.graveyardVisit(card.ID()), zone: core.ZoneGraveyard}
+	object := &StackObject{ID: uuid.New(), IsAbility: true, capturedCards: map[*CardBinding]capturedCard{nil: identity, BindCard("wrong visit"): {id: card.ID(), visit: uuid.New(), zone: core.ZoneGraveyard}, BindCard("wrong zone"): {id: card.ID(), visit: identity.visit, zone: core.ZoneHand}}}
 	object.Effects = []Effect{FuncEffect("Check absent references", EffectProperties{}, func(game *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
 		if len(game.StackGraveyardSources()) != 0 {
 			t.Fatal("invalid or unbound visit became available")
