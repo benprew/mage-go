@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.RevisePrintedManaTapTrigger] for a printed mana-tap declaration.
+// [GenericTriggered.WithManaTapTextRevision] opts in typed land mana events.
+// [ManaBonusAbility.WithManaTapTextRevision] opts in shared mana bonuses.
+// Fresh validated rules keep the active ID and declaration position.
+// Queued bodies keep prior text and event facts. Each declaration keeps its
+// ordered changes. Clones and sibling declarations keep separate revisions.
+// Shared mana services keep payment planning and production together.
+// Phasing keeps revisions; restoration uses them; return uses printed rules.
+// RON opts in its complete land mana event and bonus contexts.
+// Mana symbols keep their printed values. The caller must supply text-layer
+// order, lifetime and original-text restoration. Live text installation,
+// subtype event adapters and spell changes need separate services.
+//
 // Use [StaticAbilityHolder.WithLandTypeTextRevision] for a printed land rule.
 // [Game.RevisePrintedStaticLandType] checks its declaration and source visit.
 // Exactly one global effect must set one basic land type in layer 4.

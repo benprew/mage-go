@@ -8,11 +8,11 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-STATIC-LAND-TYPE` adds a checked printed global land-type bridge.
-It preserves active IDs, registration positions, semantic input/output changes,
-land dependencies, intrinsic mana, clones, phasing and revised restoration.
-Bounded revision evidence covers **2 accepted names / 7 records**.
-Acceptance gain is **+0 names / +0 records**. Live text installation is separate.
+`TEXT-PRINTED-MANA-TAP` adds checked printed mana-tap declaration revision.
+It preserves active IDs, queued event facts, bonus solver/production agreement,
+ordered changes, clones, phasing and revised restoration. Bounded revision
+evidence covers **3 accepted names / 18 records**. Acceptance gain is
+**+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -59802,6 +59802,151 @@ Ranked next candidates:
    ordering, expiry/restoration and separate spell lifecycle for Magical Hack
    and Sleight of Mind. Keep unsupported categories explicit; Aura-host fixed
    land types and chosen-type declarations still need checked bridges.
+3. Per-player coin results and simultaneous damage for Mana Clash; defer this
+   single-card producer while useful shared prerequisites remain.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: checked printed mana-tap declaration revision
+
+Status: completed implementation slice `TEXT-PRINTED-MANA-TAP`. Stop after this
+slice. The initial worktree contained Eureka/repeated-entry work, documentation
+changes, `.gitignore`, a compacted progress ledger and its untracked completed
+archive. Preserve all of it. Stage only this slice's additions and summary edit;
+the archive move and unrelated engine/compiler changes remain unstaged.
+
+### Fresh baseline and candidate comparison
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, not a build or
+test failure: 2,445 records, 2,091 compiled / 354 rejected; 986 unique names,
+809 accepted / 177 rejected. Read the top status and last entry only. Start
+with its ranked #1, inspect the complete records and all nested bodies, and
+count reprints once. Targeted vocabulary signatures are
+WhenAPlayerTapsAPermanentForMana/2, WhenAPermanentIsTappedForMana/1 and
+Trigger_AnyManaTypeProduced/0. Read CR 605.1b, 605.4a, 605.5a, 612.2–612.3 and
+613.1c with the existing land-mana and text-revision API contracts.
+
+| Candidate | Distinct affected names / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: checked printed mana-tap revision | Mana Flare, Wild Growth, Manabarbs; 0 new names, 3 accepted names / 18 records gain bounded revision evidence | Definition correspondence and native bonus/event services exist. Shared prerequisite for the two text spells. Gauntlet of Might still needs its separate typed land-subtype mana event; this slice does not unlock it. | Small: two engine representations, declaration checks, retained restoration, RON opt-in and lifecycle/solver tests |
+| Shared live text installation | Magical Hack, Sleight of Mind; eventual 2 names / 12 records, 0 credible unlocks in this small slice | Complete records include spell/permanent union targets, paired choices, ordered layer-3 installation and separate spell lifecycle. Declaration classification and Aura/chosen-type bridges remain. | Large: multiple declaration categories plus spell and restoration contracts |
+| Per-player coin rounds | Mana Clash; 1 name / 1 record | Target and repeated-resolution services exist; complete nested body needs local per-player coin results, tails selection, all-heads condition and simultaneous damage before repeating. | Medium: deterministic round results, local scopes and damage batching |
+
+Select ranked #1: dependency-ready shared prerequisite with concrete multi-card
+text-spell benefit. Preserve exact immediate mana behavior through the native
+bonus representation rather than converting bonuses to generic queued triggers.
+Estimated unlocks were zero; actual gains are zero, as estimated.
+
+### Exact supported contexts, signatures and engine boundary
+
+RON opts in its existing complete `TriggerA` land-mana paths:
+
+- `WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land))` with supported
+  non-mana resolving bodies, including targets and existing typed event reads.
+- The exact single `PlayerAction(Trigger_ThatPlayer,
+  AddMana(Trigger_AnyManaTypeProduced))` produced-type bonus body.
+- `WhenAPermanentIsTappedForMana(SinglePermanent(HostPermanent))` in Aura scope,
+  with the exact single concrete `PlayerAction(ControllerOfPermanent(
+  Trigger_ThatPermanent), AddMana(...))` bonus body.
+
+Existing validation, lexical scope, per-instance bindings and supported mana
+production shapes remain. Subtype events, other player filters, temporary rules,
+attached non-mana actions and other mana-producing bodies remain errors.
+
+New engine APIs:
+
+- `(*GenericTriggered).WithManaTapTextRevision() *GenericTriggered`.
+- `(*ManaBonusAbility).WithManaTapTextRevision() *ManaBonusAbility`.
+- `(*Game).RevisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error`.
+
+Generic declarations require typed `landTappedForManaPattern`, EvtTappedForMana,
+battlefield source, no additional zones and no state trigger. Native bonus
+declarations require their static representation and concrete color bounds;
+attached bonuses cannot also match produced mana or retain a global filter.
+The zero global filter keeps its all-permanents meaning. Fresh bonus definitions
+must retain attached/global and fixed/produced-type contexts. Unmarked callers
+retain their behavior.
+
+The trigger path reuses `revisePrintedTrigger`, immutable event captures, typed
+targets and the shared CR 605 timing service. Queued bodies and copies retain
+prior text, source information, targets and event player. Bonus revisions reuse
+`BuildTextDefinitionRevision`, printed declaration groups and
+`ManaSystem.ManaBonuses`; actual production and the payment solver read the same
+revised declaration. Fresh abilities retain active IDs, source/controller and
+runtime positions. Each declaration keeps an ordered prototype. The new
+copy-on-write permanent bonus map supplies revised ability restoration. Clones
+and siblings remain independent. Phasing retains changes; removal suspends them;
+restoration uses revised rules; return restores printed rules and rejects stale
+incarnations. Printed metadata and copiable origins remain unchanged.
+
+Mana symbols are not color words: all six Wild Growth records retain ManaProduceG
+through Green→Blue word changes. No card-name branch or Go-card fallback enters
+production. No new replacement-order, simultaneous-operation or LKI contract is
+introduced. The caller still supplies layer-3 order, lifetime and original-text
+restoration; this slice does not install live text layers or spell changes.
+
+No RON source defect was found or corrected. Sources and the vocabulary snapshot
+are unchanged. Runtime/removal gates remain unmet; keep Go definitions and DSL
+callers. No unused DSL removal is justified by this slice.
+
+### Failing-first evidence and card-to-test mapping
+
+New focused RON and native tests first failed compilation on the missing APIs.
+Corrected a RON fixture helper name and a native sibling-construction API error.
+A later attached clone fixture failed payment because its synthetic source lacked
+the Aura subtype; corrected the fixture to retain its attachment through layer
+checks. Assertions and production semantics were not weakened.
+
+| Cards / context | Evidence |
+| --- | --- |
+| Mana Flare, Wild Growth, Manabarbs in LEA/LEB/2ED/3ED/CED/CEI | `TestRONTextManaTapTriggerRecords`: all 18 complete records, stable active IDs, mana-symbol exclusion, actor, immediate bonus/queued damage timing and normal outcomes. Existing `TestRONLandManaRealCards` retains real casting and payment evidence. |
+| Wild Growth | `BonusLifecycle`: foreign-ID rejection, clone isolation, phasing, removed-declaration rejection, suspension, revised restoration and returned-source identity. `Payment`: revised solver/execution agreement and failed planning without leaked taps or pools. |
+| Mana Flare | `Payment`: revised produced-type solver/execution agreement, independent timing and failed planning without resource changes. |
+| Manabarbs | `ManabarbsFacts`: pending player survives revision, source control change/phasing, land departure/return and copies controlled by the other player. |
+| Synthetic RON target body | `QueuedTargets`: old Red and fresh Green targets, source departure, stack copies and independent cloned resolution. |
+| Native declarations | `TestTextManaTapTriggerDeclaration`, `Rejects`: both representations; wrong event/zones/state, malformed bonus contexts, missing marker/builder/group/source, granted/face-down/foreign abilities and invalid changes reject without mutation. |
+| Native mana execution | `Immediate`: revised generic mana trigger still executes immediately for the saved activating player. `BonusSemantics`: fixed, produced-type and attached bonuses, actual ordered filter/color changes, retained IDs and printed origin, sibling/clone isolation, failed planning, phasing, removal/restoration and return. |
+| Unsupported boundaries | `TestRONTextManaTapTriggerBoundaries`: other event bridges cannot opt in; Gauntlet of Might, Magical Hack and Sleight of Mind remain rejected. Existing `TestRONLandMana*` retains invalid shape/scope, attachment legality, payment rollback, LKI, prevention and lifelink evidence. |
+
+Bounded revision/gameplay coverage gain: **3 accepted names / 18 records**.
+Compilation gain: **+0 unique names / +0 records**. This does not establish
+complete gameplay for either text-changing spell.
+
+### Validation and final collection result
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextManaTapTrigger -count=1`.
+- `go test ./pkg/mage -run TestTextManaTapTrigger -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`.
+- Lint normalized import groups in the three new Go files; reran both focused
+  suites after formatting. No tracked production or unrelated file was rewritten
+  by lint. No environment or pre-existing check blocker was found.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+  Parsed report and every diagnostic equal the fresh baseline: **2,091 compiled
+  / 354 rejected records**, **809 accepted / 177 rejected unique names**.
+  All previously accepted records remain accepted; the strict loader installs
+  no partial registry.
+
+Changed files: engine `text_mana_tap_trigger.go` and tests, `triggered.go`,
+`mana_ability.go`, `definition.go`, `card.go`, `clone.go`, `effect_manager.go`,
+`doc.go`; RON `land_mana.go` and `text_mana_tap_trigger_test.go`; DSL reference,
+engine rules contracts and progress ledger. Only slice changes are staged.
+Commit: `feat(ron): implement printed mana-tap declaration text revision`.
+
+Ranked next candidates:
+
+1. Complete printed declaration classification for live text installation on
+   Magical Hack and Sleight of Mind; audit remaining Aura-host/fixed/chosen land
+   and conditional declaration contexts before selecting the next small bridge.
+2. Typed land-subtype tapped-for-mana event lowering for Gauntlet of Might,
+   sharing native mana bonus/solver behavior and the new checked revision path;
+   assess shared downstream value before selecting this single-card adapter.
 3. Per-player coin results and simultaneous damage for Mana Clash; defer this
    single-card producer while useful shared prerequisites remain.
 

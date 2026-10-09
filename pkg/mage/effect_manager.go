@@ -682,6 +682,8 @@ func (em *EffectManager) Apply(g *Game) {
 				if !existing[a.AbilityID()] {
 					if revised := p.revisedPrintedTriggers[a.AbilityID()]; revised != nil {
 						restored = append(restored, revised)
+					} else if bonus := p.revisedPrintedManaBonuses[a.AbilityID()]; bonus != nil {
+						restored = append(restored, bonus)
 					} else if landwalk := p.revisedPrintedLandwalks[a.AbilityID()]; landwalk != nil {
 						restored = append(restored, landwalk)
 					} else if protection := p.revisedPrintedProtections[a.AbilityID()]; protection != nil {

@@ -1,5 +1,51 @@
 # Engine rules contracts
 
+## Printed mana-tap declaration text revision
+
+`GenericTriggered.WithManaTapTextRevision() *GenericTriggered` opts in a typed
+`LandTappedForMana` event on the battlefield. State triggers, other event types,
+and extra source zones reject at definition validation. Existing typed event
+validation checks bindings and filters. Targets retain normal stack timing;
+untargeted mana bodies retain immediate execution (CR 605.1b, 605.4a, 605.5a).
+
+`ManaBonusAbility.WithManaTapTextRevision() *ManaBonusAbility` opts in the shared
+fixed, attached or produced-type bonus representation. Fixed colors must be
+concrete. Attached bonuses cannot also match produced types or carry a global
+filter. The zero global filter retains its all-permanents meaning. Existing
+unmarked callers retain their behavior.
+
+`Game.RevisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` checks the present face-up source incarnation,
+printed declaration group, active marker and validated fresh definition before
+mutation. Bonus revisions must retain attached/global and fixed/produced-type
+contexts. The active ID and ability position remain. Each declaration keeps its
+own ordered revision prototype; the printed card and copiable origin stay fixed.
+Foreign, granted, phased, removed and returned declarations reject.
+
+The trigger path reuses `revisePrintedTrigger` and its immutable event captures.
+Queued bodies, targets, copies and delays keep prior text and facts. Mana bonuses
+stay in `ManaSystem.ManaBonuses`, so current filters, actual production and payment
+planning agree. Each revision uses separate ability and map storage. Clones and
+sibling declarations remain independent. Phasing keeps revisions; ability removal
+suspends them; restoration uses revised rules; return uses printed rules.
+
+RON opts in its existing complete land-mana `TriggerA` contexts: AnyPlayer plus
+IsCardtype(Land) non-mana bodies, the exact produced-type bonus, and the exact
+Aura-host concrete bonus. Mana symbols are not color words (CR 612.2): Wild
+Growth's ManaProduceG remains green after a Green-to-Blue word substitution.
+Subtype events, temporary rules and other mana bodies remain compiler errors.
+The caller must supply layer-3 order, lifetime and original-text restoration.
+This bridge does not install a live text layer or change spell text.
+
+Evidence: `TestTextManaTapTrigger*` and `TestRONTextManaTapTrigger*` cover checked
+shapes, rejection without mutation, ordered changes, solver/production agreement,
+failed payment queries, immediate and queued timing, event players, targets,
+copies, clones, phasing, removal/restoration and returned sources. The real-record
+mapping covers Mana Flare, Wild Growth and Manabarbs in all six core reprints
+(three names / 18 records). Existing `TestRONLandMana*` retains full base-gameplay,
+casting rollback, attachment, LKI, prevention and lifelink evidence. No new
+replacement-order or simultaneous-operation service is established.
+
 ## Printed static basic-land-type text revision
 
 `StaticAbilityHolder.WithLandTypeTextRevision() *StaticAbilityHolder` permits

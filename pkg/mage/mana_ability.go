@@ -178,6 +178,8 @@ func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []Ma
 // If MatchProduced is true, the bonus mana color matches whatever color the land
 // produced (e.g. Mana Flare: "adds one mana of any type that land produced").
 type ManaBonusAbility struct {
+	manaTapTextRevision    bool
+	textRevisionDefinition Card
 	BaseAbility
 	Filter        PermanentFilter
 	BonusMana     Color

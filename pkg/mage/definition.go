@@ -266,7 +266,14 @@ func describeDefinition(v any) definitionNode {
 		} else {
 			addEffects(e.effects)
 		}
+	case *ManaBonusAbility:
+		if e.manaTapTextRevision && !e.supportsManaTapTextRevision() {
+			n.problem = "text revision requires a valid fixed, attached or produced-type mana bonus"
+		}
 	case *GenericTriggered:
+		if e.manaTapTextRevision && !e.supportsManaTapTextRevision() {
+			n.problem = "text revision requires a typed battlefield land mana trigger"
+		}
 		if e.combatPairTextRevision && !e.supportsCombatPairTextRevision() {
 			n.problem = "text revision requires a typed battlefield combat-pair trigger"
 		}

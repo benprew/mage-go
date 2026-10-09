@@ -47,6 +47,7 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
 // existing behavior is preserved.
 type GenericTriggered struct {
+	manaTapTextRevision    bool
 	spellCastTextRevision  bool
 	landTapTextRevision    bool
 	combatPairTextRevision bool

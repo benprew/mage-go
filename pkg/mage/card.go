@@ -674,6 +674,7 @@ type Permanent struct {
 	SubTypeAdditions           []string  // additive subtypes granted by continuous effects (CR 613 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
 	printedAbilitiesSuppressed bool
 	revisedPrintedTriggers     map[uuid.UUID]*GenericTriggered
+	revisedPrintedManaBonuses  map[uuid.UUID]*ManaBonusAbility
 	revisedPrintedProtections  map[uuid.UUID]*ProtectionAbility
 	revisedPrintedLandwalks    map[uuid.UUID]*PrintedBasicLandwalkAbility
 	subtypeFamilyOverrides     [subtypeFamilyCount][]string

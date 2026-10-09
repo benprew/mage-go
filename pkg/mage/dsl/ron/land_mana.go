@@ -79,7 +79,7 @@ func compileLandManaTrigger(event, body Node, ctx scope) (optionFactory, error) 
 		pattern := mage.LandTappedForMana().WithLand(land).WithPlayer(player).WithManaTypes(types)
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil
-		return mage.WithAbility(TriggerA(trigger, actions))
+		return mage.WithAbility(TriggerA(trigger.WithManaTapTextRevision(), actions))
 	}, nil
 }
 
@@ -97,13 +97,15 @@ func compileLandManaBonus(body Node, attached bool) (optionFactory, bool) {
 	}
 	production := mana.Args[0]
 	if !attached && player.Kind == Symbol && player.Name == "Trigger_ThatPlayer" && production.Kind == Symbol && production.Name == "Trigger_AnyManaTypeProduced" {
-		return func() mage.CardOption { return mage.WithAbility(mage.NewManaFlareAbility(mage.IsLand)) }, true
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.NewManaFlareAbility(mage.IsLand).WithManaTapTextRevision())
+		}, true
 	}
 	if attached && player.Name == "ControllerOfPermanent" && len(player.Args) == 1 && player.Args[0].Kind == Symbol && player.Args[0].Name == "Trigger_ThatPermanent" {
 		productions, err := compileMana(production)
 		if err == nil && len(productions) == 1 && productions[0].Color < core.AnyColor {
 			return func() mage.CardOption {
-				return mage.WithAbility(mage.NewAttachedManaBonusAbility(productions[0].Color))
+				return mage.WithAbility(mage.NewAttachedManaBonusAbility(productions[0].Color).WithManaTapTextRevision())
 			}, true
 		}
 	}
