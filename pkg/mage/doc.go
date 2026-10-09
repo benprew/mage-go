@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [BuildTextDefinitionRevision] for checked ability correspondence.
+// [WithDefinitionAbilityGroup] keeps declaration groups across fresh builds.
+// [TextDefinitionRevision.ReplacementAbility] pairs original ability IDs with
+// new declarations. Targets, choices, source and controller remain separate.
+// RON assigns groups by rule position; count definitions use a separate group.
+// Copy omissions keep the other members in their original groups.
+// This preparation does not install rules on a present object.
+//
 // Use [BuildTextChangedDefinition] for an independent text prototype.
 // [ReplaceColorWord] and [ReplaceBasicLandWord] require different legal words.
 // RON retains a private AST and changes only validated semantic word roles.

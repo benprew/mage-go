@@ -137,3 +137,7 @@ func compileTextSubstitution(n Node, ctx scope) (textSubstitutionFactory, error)
 		return nil, unsupported(n, "text substitution")
 	}
 }
+
+func definitionAbilityGroupOption(group int, build optionFactory) optionFactory {
+	return func() mage.CardOption { return mage.WithDefinitionAbilityGroup(group, build()) }
+}

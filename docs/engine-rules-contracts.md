@@ -13587,3 +13587,44 @@ Evidence: `TestHandInspectionPrivacyAndVisits`,
 `InstancesAndRetarget`, `DelayedReads`, and `SpellAndTrigger`. Glasses of Urza's
 six complete records are covered. Word of Command remains rejected; this service
 is a prerequisite for its inspection step, not evidence for controlled play.
+
+### Text definition ability correspondence prerequisite
+
+`WithDefinitionAbilityGroup` retains definition-local declaration identity as a
+nonnegative group and member. RON uses top-level rule position plus one, with
+zero reserved for combined count CDAs. Keywords that add no Ability still retain
+their group. Each factory builds independent key storage and fresh abilities.
+Grouped declaration validation rejects duplicate, nil, negative and stale keys.
+Existing callers can still add ungrouped abilities. Revision construction rejects
+a definition with any ungrouped ability; it does not silently include that ability
+in printed text. Existing definitions without groups retain their validation.
+
+`BuildTextDefinitionRevision` uses `BuildTextChangedDefinition` and checks an
+exact group/member and ability-category correspondence before returning a
+changed prototype. `TextDefinitionRevision.ReplacementAbility` supplies the fresh
+Ability for an original ability UUID. The changed definition does not inherit
+physical identity, owner, controller, source or saved choices. The map does not
+change the original ability ID. Successive transformations use the immediate
+input definition. Card copies have separate key maps; token copies remap fresh
+ability IDs to the same declaration keys. Legacy rule replacement clears keys.
+Retained-color copy exceptions remove omitted color-definition keys and preserve
+the other member numbers.
+
+CR 612.1–3 and 613.1c require text changes on the correct semantic words and in
+layer 3; CR 113.7a keeps a queued ability independent of its source. This slice
+prepares correspondence only. It does not implement live timestamps, layer
+installation, granted-ability exclusion, activation-history migration, source
+incarnation replacement, spell-entry continuation or departure restoration.
+There is no new payment, LKI, replacement-order or simultaneous-operation rule.
+Those existing services remain unchanged.
+
+Evidence: `TestRONTextAbilityCorrespondence` executes changed Black Knight
+protection and repeated transformations. `QueuedActivation` executes original
+and changed synthetic targeted activations, rejects the old target color and
+resolves cloned queues independently. `LandAndTrigger` executes changed Lifetap
+and an ability-free Tropical Island prototype, and checks that all twelve full
+Magical Hack/Sleight records still reject. Native `Contracts`, `InvalidGroups`
+and `MembersAndCopy` check group validity, context isolation and copy storage.
+`CountDefinition` covers combined Keldon Warlord CDAs; native
+`CopyOmissionsAndTokens` covers copy omissions and token ID remapping.
+No complete-card or collection acceptance gain is claimed.

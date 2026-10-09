@@ -42,6 +42,9 @@ type Card interface {
 
 // BaseCard provides the common card implementation.
 type BaseCard struct {
+	abilityKeys           map[uuid.UUID]definitionAbilityKey
+	abilityGroups         map[int]bool
+	abilityGroupProblem   string
 	requiresAnte          bool
 	id                    uuid.UUID
 	name                  string
@@ -195,6 +198,9 @@ func (c *BaseCard) AddAbility(a Ability) {
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
+	c.abilityKeys = nil
+	c.abilityGroups = nil
+	c.abilityGroupProblem = ""
 	c.definitionPlan = nil
 	c.textDefinition = nil
 	c.copiableValues = nil
@@ -234,6 +240,8 @@ func (c *BaseCard) CloneFrom(other Card) {
 
 func (c *BaseCard) Copy() Card {
 	cp := *c
+	cp.abilityKeys = maps.Clone(c.abilityKeys)
+	cp.abilityGroups = maps.Clone(c.abilityGroups)
 	cp.id = uuid.New()
 	if c.departureCard != nil {
 		cp.departureCard = c.departureCard.Copy()
@@ -252,6 +260,10 @@ func (c *BaseCard) Copy() Card {
 	if c.isToken {
 		for i, ability := range c.abilities {
 			cp.abilities[i] = cloneTokenAbility(ability)
+			if key, ok := cp.abilityKeys[ability.AbilityID()]; ok {
+				delete(cp.abilityKeys, ability.AbilityID())
+				cp.abilityKeys[cp.abilities[i].AbilityID()] = key
+			}
 		}
 	}
 	if len(c.modes) > 0 {

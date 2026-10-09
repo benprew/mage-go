@@ -1,5 +1,40 @@
 # DSL reference
 
+## Text definition ability correspondence
+
+`mage.WithDefinitionAbilityGroup(group int, option CardOption) CardOption`
+assigns a distinct nonnegative declaration group to the abilities added by one
+option. Revision construction requires each ability to have exactly one group
+and member. Definition validation rejects nil options/abilities, repeated or
+negative groups, duplicate members and stale declaration keys. Existing callers
+can still add ungrouped abilities, but such a definition cannot supply a revision.
+
+`mage.BuildTextDefinitionRevision(card Card, changes ...TextChange)
+(*TextDefinitionRevision, error)` uses the existing semantic text builder. The
+revision's `Definition() Card` is an independent ownerless changed prototype.
+`ReplacementAbility(id uuid.UUID) (Ability, bool)` maps an original definition's
+ability to its fresh declaration. It checks exact group/member membership and
+ability category; absent or incompatible correspondence returns an error.
+Unknown IDs and nil revision lookups return no result. Saved target choices,
+source/controller context and result bindings do not transfer. Successive
+revisions map the immediately preceding definition. Copies retain separate key
+storage; legacy `CloneFrom` clears provenance. Retained-color copy omissions
+remove only the omitted member's key, without renumbering other declarations.
+
+RON lowering assigns group zero to the combined count characteristic definition
+and group `ruleIndex + 1` to each other compiled top-level rule option. Empty
+options retain their group. This is independent of source locations and names.
+The AST and lexical binding grammar retain their current validation.
+
+This is preparation for active-rule installation. It does not assign the old
+ability UUID to the replacement, migrate activation-history bindings, install a
+live layer, update runtime abilities, or transfer spell text to battlefield entry.
+Magical Hack and Sleight of Mind remain rejected in both target domains.
+
+Evidence: `TestRONTextAbilityCorrespondence`, `QueuedActivation`,
+`LandAndTrigger`, `CountDefinition`; `TestTextAbilityCorrespondenceContracts`,
+`InvalidGroups`, `MembersAndCopy`, `CopyOmissionsAndTokens`.
+
 ## Semantic text definition prototypes
 
 `mage.ReplaceColorWord(from, to core.Color) (TextChange, error)` and

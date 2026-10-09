@@ -328,7 +328,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		if characteristic != nil {
-			options = append(options, characteristic)
+			options = append(options, definitionAbilityGroupOption(0, characteristic))
 		}
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
@@ -362,7 +362,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 				return nil, err
 			}
 		}
-		for _, rule := range rules {
+		for ruleIndex, rule := range rules {
 			if rule.Name == "CastEffect" || rule.Name == "CDA_Power" || rule.Name == "CDA_Toughness" {
 				continue
 			}
@@ -375,7 +375,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 				if err != nil {
 					return nil, err
 				}
-				options = append(options, option)
+				options = append(options, definitionAbilityGroupOption(ruleIndex+1, option))
 				continue
 			}
 			if rule.Name == "SpellActions" {
@@ -388,7 +388,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			if err != nil {
 				return nil, err
 			}
-			options = append(options, option)
+			options = append(options, definitionAbilityGroupOption(ruleIndex+1, option))
 		}
 	}
 	if !permanent && spellCount != 1 {

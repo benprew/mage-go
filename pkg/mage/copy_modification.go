@@ -54,6 +54,7 @@ func (m copyRetainedColors) applyCopyModification(card *BaseCard) {
 		}
 		for _, effect := range holder.Effects {
 			if definition, ok := effect.(ColorCharacteristicDefinition); ok && definition.DefinesColor() {
+				delete(card.abilityKeys, ability.AbilityID())
 				return true
 			}
 		}

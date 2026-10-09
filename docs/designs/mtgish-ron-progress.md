@@ -7,12 +7,12 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`PRIVATE-HAND-INSPECTION` implements resolving typed-player hand inspection,
-independent private snapshots, cloned history and native private UI delivery.
-Glasses of Urza has complete RON casting and activation gameplay coverage across
-all six reprints. Word of Command's controlled-play operation still rejects.
-**+1 unique name / +6 records**, as estimated; one complete-card gameplay gain.
-All required checks pass. Only the six Glasses diagnostics disappeared.
+`TEXT-DEFINITION-ABILITY-CORRESPONDENCE` lowers stable RON declaration groups
+and checks fresh text revisions against their original ability identities.
+Prototype gameplay covers protection, activations, land triggers and count CDAs;
+copy omissions and token IDs retain correspondence. Live text installation
+remains unsupported. **+0 unique names / +0 records**, as estimated.
+All required checks pass; fresh loader JSON and diagnostics are unchanged.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -58103,6 +58103,146 @@ Ranked next candidates:
 3. Private inspected-hand choice and controlled-player decision services for
    Word of Command after this observation contract. Estimate zero for choice
    alone; one name / five records only after the entire controlled-play contract.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: text definition ability correspondence
+
+Capability: `TEXT-DEFINITION-ABILITY-CORRESPONDENCE`. Complete bounded
+preparation slice; live text installation remains unsupported. No second slice.
+
+### Environment and fresh baseline
+
+Initial user changes: `.gitignore`, execution design, progress-ledger archive
+reorganization, and untracked `mtgish-ron-completed.md`. Preserve all of them.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+loader exited 1 for collection rejection, not compilation failure: **2,090
+compiled / 355 rejected records; 808 accepted / 178 rejected unique names**.
+The registry remained unpublished. Complete records, including all nested forms,
+were inspected for each compared candidate. Vocabulary queries were limited to
+relevant signatures; no source changes or vocabulary refresh.
+
+### Candidate comparison and selection
+
+| Candidate | Unique affected names | Estimated full-card unlocks | Other blockers / downstream value | Full implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1, bounded definition/active-ability identity prerequisite | Magical Hack; Sleight of Mind (12 reprints total) | 0 | Both target domains need checked correspondence before live rules can be rebuilt. Live layer 3, active-state/history migration, granted-ability exclusions, copy exceptions, spell-entry continuation and departure restoration still need contracts. | Bounded group lowering, checked revision preparation and isolated engine tests fit this run; full live installation is larger. |
+| Ranked #2, exact physical-card transport after ownership changes | Bronze Tablet; Tempest Efreet | 1 at most for both transport forms (Tempest Efreet); 0 for only one form | Efreet needs hand transfer plus paid-source movement from its saved visit. Tablet already has grouped exile transport and a distinct owner-assignment source defect; its full unlock is not a transport estimate. | Two destination services, source-visit/replacement handling and full ante gameplay; larger than selected preparation. |
+| Ranked #3, inspected-hand choice / controlled-player decisions | Word of Command (5 records) | 0 for choice alone; 1 only for complete controlled play | Choice must retain private hand identity. Player control, forced casting/land play, payment choices, legality and decision restoration remain. | Several engine lifecycle and decision contracts; does not fit one bounded run. |
+
+Select the dependency-ready bounded portion of #1. Its shared concrete downstream
+value is both text-changing spells across spell and permanent targets. This
+choice follows the zero-immediate-unlock prerequisite policy rather than first
+loader-error frequency. No claim that the whole live-identity subsystem is done.
+
+### Contract, lowering and reuse boundary
+
+- `WithDefinitionAbilityGroup(group int, option CardOption) CardOption` assigns
+  definition-local group/member keys to added abilities. Groups must be distinct
+  and nonnegative; nil declarations, duplicate membership and stale keys reject.
+  Ordinary validation preserves existing callers that add ungrouped abilities.
+- `BuildTextDefinitionRevision(card Card, changes ...TextChange)
+  (*TextDefinitionRevision, error)` builds an independent changed prototype and
+  checks exact group/member sets and ability categories. Any ungrouped ability
+  rejects revision construction rather than silently becoming printed text.
+- `TextDefinitionRevision.Definition() Card` returns the fresh prototype.
+  `ReplacementAbility(id uuid.UUID) (Ability, bool)` maps the original definition
+  UUID to the fresh declaration. Unknown IDs and nil revision lookup have no result.
+- RON lowers every existing compiled top-level rule option with its rule index
+  plus one. Zero identifies the combined count CDA option. Empty options retain
+  their group. This mapping is not based on card names or source line numbers.
+  Existing spelling, scopes and unsupported-expression errors remain unchanged.
+
+RON owns AST position and option lowering. Mage owns group validation, keyed
+correspondence and fresh semantic rebuilding. Reuse: `BuildTextChangedDefinition`,
+`CardDefinitionPlan`, retained private AST, `TextChange`, existing definition
+validation, `Ability`, `Card.Copy`, copy modifications, queued stack bodies,
+target validation and game cloning. No reflection dispatch or global action slot.
+
+Fresh declarations keep separate targets and result bindings; physical identity,
+owner, chosen target state, source and controller do not transfer. Repeated
+revisions pair with their immediate input. `Card.Copy` clones key maps and remaps
+token ability IDs. `CloneFrom` clears provenance. Retained-color copy omissions
+delete the omitted member key while preserving the remaining declaration numbers.
+CR 612.1–3, 613.1c and 113.7a motivate these boundaries. This service prepares
+rules only: no active UUID reassignment, history binding migration, live timestamp,
+layer installation, granted-ability text modification or spell-entry continuation.
+No new payment/rollback, LKI, phasing, replacement ordering or simultaneous rule.
+
+### Failing-first evidence and card-to-test mapping
+
+The initial RON test failed compilation on the absent
+`mage.BuildTextDefinitionRevision` API. Native fixtures used two incorrect action
+constructor names; those fixtures were corrected to the existing typed services.
+
+| Tests | Requirements / card mapping |
+| --- | --- |
+| `TestRONTextAbilityCorrespondence` | Complete Black Knight record; changed protection, fresh identities, repeated revisions, factory-instance exclusion and copied-definition preparation. |
+| `TestRONTextAbilityCorrespondenceQueuedActivation` | Synthetic full RON activation: changed target filter, unchanged original queued ability, independent target state and source/controller, legality and cloned queue resolution. |
+| `TestRONTextAbilityCorrespondenceLandAndTrigger` | Complete Lifetap and Tropical Island records; changed land-trigger execution, subtype deduplication with no Ability, and rejection of all twelve complete Magical Hack/Sleight records. |
+| `TestRONTextAbilityCorrespondenceCountDefinition` | Complete Keldon Warlord record; combined count CDA identity and engine P/T. |
+| `TestTextAbilityCorrespondenceCopyOmissionsAndTokens` | Color-definition omission retains other member keys; independent token IDs keep group keys; added-ability callers remain valid. |
+| `TestTextAbilityCorrespondenceContracts` | Matching and incompatible groups, missing metadata, independent context and unknown/nil lookup. |
+| `TestTextAbilityCorrespondenceInvalidGroups` | Negative/repeated groups and nil options reject without declaration panic. |
+| `TestTextAbilityCorrespondenceMembersAndCopy` | Multiple members retain order; copy metadata mutation cannot change original; legacy replacement cannot retain preparation provenance. |
+
+Prototype gameplay evidence is separate from complete live card execution.
+Magical Hack and Sleight of Mind gain neither compiler acceptance nor complete
+card gameplay coverage. **Actual gain 0 unique names / 0 records**, matching the
+estimate. Previously accepted records keep their diagnostics and acceptance.
+
+### Validation
+
+All required checks passed in fast-fail order after the documented fixes:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextAbilityCorrespondence -count=1`.
+- `go test ./pkg/mage -run TestTextAbilityCorrespondence -count=1`.
+- Focused existing entry-timing regression check after the caller fix.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+
+Lint initially rejected one test variable that shadowed built-in `copy`. Renamed
+it to `copied`, reran native focused tests, and reran lint successfully. Reviewed
+automatic lint output; no other source changes. The final loader JSON is exactly
+equal to the baseline, including every diagnostic: **2,090 compiled / 355
+rejected records; 808 accepted / 178 rejected unique names**. No acceptance
+regression, partial registry publication, count-fixture edit or hidden new gap.
+
+The first engine short run exposed one caller regression in
+`TestRONEntryTappedEventTiming`: it adds an ungrouped trigger to a RON definition.
+Ordinary validation now permits that caller; strict revision construction still
+rejects ungrouped abilities. The existing test and assertions are unchanged.
+Focused checks, build, vet and engine short checks were rerun after this fix.
+
+### Source data, docs and preserved callers
+
+No source-data changes or new defect. Bronze Tablet's owner-assignment issue
+remains separate. Documentation covers only this preparation contract in
+`pkg/mage/doc.go`, `docs/dsl-reference.md` and `docs/engine-rules-contracts.md`.
+No Go definitions, generators or DSL functions were removed: removal gates are
+not met. The user's ledger/archive move remains outside this commit; stage only
+the status replacement and appended entry against the tracked original ledger.
+
+Changed files: new `pkg/mage/text_ability_correspondence.go` and native tests;
+new `pkg/mage/dsl/ron/text_ability_correspondence_test.go`; mage card copy,
+copy modification, definition validation and package reference; RON compiler and
+text-definition lowering; API/rules-contract docs and this progress ledger.
+
+Commit message: `feat(ron): implement text definition ability correspondence`.
+
+Ranked next candidates:
+
+1. Bounded active-ability/state installation contract using this checked
+   correspondence, before layer-3 adapters. Magical Hack and Sleight of Mind:
+   zero immediate unlocks; two names / twelve records downstream. Include
+   activation-history/result-binding lifetime and copied-definition boundaries.
+2. Exact physical-card transports after ownership changes for Tempest Efreet;
+   keep Bronze Tablet's independent source-fidelity repair separate.
+3. Private inspected-hand choice and controlled-player decisions for Word of
+   Command; choice alone remains zero unlocks.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.
