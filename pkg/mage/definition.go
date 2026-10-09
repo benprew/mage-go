@@ -244,6 +244,9 @@ func describeDefinition(v any) definitionNode {
 			addEffects(e.effects)
 		}
 	case *GenericTriggered:
+		if e.spellCastTextRevision && !e.supportsSpellCastTextRevision() {
+			n.problem = "text revision requires a typed battlefield spell-cast trigger"
+		}
 		if e.eventDefinition != nil {
 			n.Role = "event-trigger"
 			n.children = append(n.children, definitionEdge{"event", e.eventDefinition})

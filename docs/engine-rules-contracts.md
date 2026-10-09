@@ -13677,3 +13677,49 @@ and native `Declaration`, `MissingSource`, `ContractMismatch` establish rejectio
 discard results and printed-origin restoration after departure. Complete Magical
 Hack/Sleight of Mind loading remains unsupported. `Modal` executes independently
 queued mode targets and choices across a checked runtime revision.
+
+### Printed battlefield spell-cast trigger text revision
+
+`GenericTriggered.WithSpellCastTextRevision() *GenericTriggered` and
+`Game.RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` establish checked runtime installation for one
+printed typed battlefield spell-cast trigger. Declaration validation rejects
+other event types, state triggers and non-battlefield or additional source zones.
+RON opts in its existing `WhenAPlayerCastsASpell(AnyPlayer | Opponent, filter)`
+path; unsupported filters and bindings still reject before factory publication.
+
+The service checks the saved source incarnation, face-up presence, retained
+builder, printed declaration group/member and active opt-in. It rebuilds and
+validates correspondence before replacing the runtime slice. Unknown, removed,
+granted, unmarked, absent, phased, returned and incompatible declarations reject
+without live changes. Replacement keeps the active UUID, source and current
+controller. Fresh event bindings, targets, choices and payment bodies belong to
+that declaration. Each sibling trigger keeps its own ordered text changes.
+
+CR 603.2 and 603.3 fix the detected ability's rules; CR 603.3a fixes its controller.
+Replacement does not modify the old declaration held by pending triggers. Target
+selection at placement therefore uses the earlier text even if revision occurs
+between detection and placement. Stacked abilities and copies keep earlier bodies
+and captured caster/spell identities. Copying with a new controller does not change
+an explicitly captured payment player. The existing event capture, cost, target,
+LKI, clone and stack services supply these contracts.
+
+Event detection scans the source's runtime abilities. No static registration is
+created or removed for this context. Phasing suspends detection without losing a
+revision. Departure keeps pending bodies; a new entry restores printed origin.
+Clones keep independent runtime replacement and resolution state. CR 612.3 excludes
+granted abilities. Printed/copiable definitions stay separate from runtime text.
+
+The caller must coordinate layer-3 order, expiry and restoration after ability
+removal. Other trigger kinds, state arming, cross-zone sources, static effect
+registration and spell text remain outside this contract. No collection unlock
+or complete Magical Hack/Sleight of Mind gameplay is claimed.
+
+Evidence: `TestRONTextSpellCastTriggerRealCards` covers all five color charms;
+`OtherRealCards` covers Citanul Druid, Urza's Chalice, Presence of the Master,
+Nether Void and In the Eye of Chaos; `IdentityAndLifetime` covers all Sol'kanar
+rules with revision, control change, phasing and return. `PendingTargetsAndClone`
+covers detection versus placement text, ordered revisions, targets and clones.
+`EventBindings` covers independent spell/caster captures and copied payments;
+`IndependentDeclarations` covers sibling and source isolation plus pending bodies
+after departure. `Invalid` and native `Declaration`/`Rejects` cover rejection.

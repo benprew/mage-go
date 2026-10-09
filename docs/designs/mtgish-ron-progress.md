@@ -7,13 +7,12 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-ACTIVATION-STATE` lowers an opt-in for printed activated actions and
-rebinds fresh rules with the same active identity, limits and history lineage.
-RON gameplay covers four accepted history cards, queued targets/results, modal
-choices, copies, clones, cleanup, phasing and returned-source rejection.
-Full text-layer and spell installation remain unsupported. **+0 unique names /
-+0 records**, as estimated. All required checks pass; loader diagnostics agree
-with the fresh baseline.
+`TEXT-SPELL-CAST-TRIGGER` lowers an opt-in for typed printed battlefield
+spell-cast triggers and installs checked fresh declarations with stable active IDs.
+RON revision gameplay covers eleven accepted unique cards, pending targets,
+captured players/spells, payments, copies, clones, control changes and phase/return
+identity. Static registration, other trigger kinds and the layer-3 owner remain
+unsupported. **+0 unique names / +0 records**, as estimated. All required checks pass; loader diagnostics match the fresh baseline.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -58387,6 +58386,147 @@ Ranked next candidates:
    a bounded optional-entry shape with the complete coin-round dependencies.
 3. Exact physical-card transport for Tempest Efreet; retain Bronze Tablet's
    independent source-fidelity correction as a separate concern.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: checked printed spell-cast trigger text revision
+
+Status: completed implementation slice `TEXT-SPELL-CAST-TRIGGER`.
+This run stops after this slice. The initial `.gitignore`, design and ledger/archive
+changes are preserved. Only this slice's summary replacement and appended entry
+are staged in the ledger, against its tracked original; the archive move remains
+outside the commit.
+
+### Fresh evidence, candidates and selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed (RON 32.440s).
+Baseline loader exited 1 for collection rejection, not a build/test failure:
+2,090 compiled / 355 rejected records; 808 accepted / 178 rejected unique names.
+Read `AGENTS.md`, engine reference, execution design, top ledger status and latest
+entry only. Read complete records and nested forms for the candidates below,
+every spell-cast-trigger record (including reprints), and all Magical Hack/Sleight
+reprints. Targeted vocabulary reads covered spell-cast events, substitutions,
+repeatable actions and hand transport. CR 603.2, 603.3, 603.3a and 612.3 supply the
+trigger-text, detection-controller and granted-ability boundaries.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | --- |
+| Ranked #1: bounded printed spell-cast trigger installation | Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere, Urza's Chalice, Citanul Druid, Sol'kanar the Swamp King, Presence of the Master, Nether Void, In the Eye of Chaos; 0 new unlocks. Invoke Prejudice has the same event family but still rejects its shared-color filter. | Dependency-ready correspondence, semantic text builder and runtime event scanning. One engine service, validation/opt-in lowering and seven RON test groups plus native rejection tests. Concrete prerequisite for Magical Hack and Sleight of Mind (2 names / 12 records); static registration, other trigger kinds, layer-3 order/restoration and spell installation remain. Small bounded effort. |
+| Ranked #2: repeated-procedure round/result scope | Eureka and Mana Clash; 0 unlocks for a scope prerequisite, up to 2 after both complete procedure contexts. | Eureka needs caster-first optional permanent entry and round-wide action results/termination. Mana Clash needs each player's round coin results, tails membership, simultaneous damage and all-heads termination. Shared round scope enables both, but full adapters need different consumers and decision contracts. Medium-to-large effort; no first-error frequency used as an unlock estimate. |
+| Ranked #3: physical-card transport | Tempest Efreet; 1 estimated unlock after exact hand-to-player-hand and saved paid-source card-to-current-owner-graveyard transport. Bronze Tablet remains a separate fidelity issue. | Existing paid source, random reveal, ownership exchange and payment services supply operands; movement still needs current-owner, exact-visit, zone-event and clone contracts. Enables further physical transport consumers but only one concrete immediate unique-card gain. Medium effort; deferred while useful shared multi-card prerequisites remain. |
+
+Select the dependency-ready spell-cast trigger portion of #1. The whole trigger/
+static subsystem is too broad for one slice. This bounded supported context has
+observable revised gameplay across eleven existing cards and concrete two-card
+text-layer benefit. Actual gain **0 unique names / 0 records**, matching the estimate.
+Invoke Prejudice was attempted as a fixture, then confirmed against the baseline
+loader to remain rejected by `ExceptFor(SharesAColorWithAPermanent(...))`; its filter
+is not implemented or simplified in this slice. Verduran Enchantress's player
+filter and Mana Vortex's FromStack context also remain outside this lowering path.
+
+### Contract, exact signatures, dependencies and reuse
+
+- `(*GenericTriggered).WithSpellCastTextRevision() *GenericTriggered` opts in a
+  printed typed battlefield spell-cast event. Definition validation rejects other
+  event types, state triggers and additional/non-battlefield source zones.
+- `(*Game).RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks the source incarnation, present face-up
+  source, retained builder, printed group/member, active opt-in and fresh validated
+  correspondence before replacing one runtime declaration.
+- RON lowers the opt-in only for its existing
+  `TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), actions)`
+  path in `compileTriggerRule`. Existing filters and resolving action scope checks
+  retain their exact behavior. No syntax spelling or RON source change.
+- The active UUID, source and current controller remain. Targets, choices, payment
+  bodies and event bindings are freshly built. Each active sibling trigger retains
+  its own ordered text revision prototype; another instance cannot supply its ID.
+- Detected triggers keep their earlier declaration through stack placement. Old
+  target filters therefore apply even when revision occurs before placement.
+  Stacked bodies and copies keep captured caster/spell identities and controllers.
+  Changing a copy's controller cannot change its explicitly captured payment payer.
+- Event detection scans runtime abilities; this context needs no static effect
+  registration. Phasing prevents revision/detection but retains an existing revision.
+  Departure preserves pending bodies. Return restores printed origin and cannot
+  inherit old revision state. Clones keep independent installation and resolution.
+- Unknown, removed, granted, unmarked, absent, phased, face-down, returned and
+  incompatible declarations reject without mutation. Invalid changes and failed
+  builders also leave runtime declarations intact.
+
+RON owns spelling, lowering and lexical binding construction. Mage owns checked
+installation and eligibility. Reuse: `BuildTextDefinitionRevision`, validated
+semantic AST text builders, definition plans/groups, source incarnations,
+copy-on-write permanents, runtime event detection, pending captures, stack copies,
+target legality, transactional payments, LKI, clone frames and printed-origin
+restoration. No new cost, replacement-order or simultaneous-zone-operation rule.
+No reflection, global last-action slot, card-name branch, Go fallback or partial
+registry. Tests use existing services for those unchanged contracts.
+
+The caller must coordinate layer-3 order, expiry and restoration after ability
+removal. Static registration, other trigger kinds, state arming, cross-zone sources,
+spell text and complete text-effect consumers remain separate capabilities.
+Printed/copiable rules are not replaced by this runtime service.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON tests failed compilation on missing `RevisePrintedSpellCastTrigger`.
+Native tests failed compilation on that API and `WithSpellCastTextRevision`.
+Fixture errors were corrected: `ronModalGame` returns a BasePlayer for B; colored
+creature cast probes were changed to instant probes for legal timing; Sol'kanar's
+landwalk is keyword metadata, not a second runtime ability. An event-copy fixture
+first assumed the copy controller paid; corrected it to require the captured
+caster to pay. Ordered stack placement was made explicit for independent event
+assertions. No production rule or assertion contract was weakened.
+
+| Test | Complete RON card mapping / contract evidence |
+| --- | --- |
+| `TestRONTextSpellCastTriggerRealCards` | Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere: changed color detection, stable identity, old pending payment, new decline and resource preservation. |
+| `OtherRealCards` | Citanul Druid: opponent artifact cast and counter; Urza's Chalice: artifact cast and controller payment/life; Presence of the Master: countering; Nether Void: captured caster payment; In the Eye of Chaos: mana-value payment and exact spell countering. |
+| `IdentityAndLifetime` | Sol'kanar the Swamp King: changed black-word trigger with preserved swampwalk, old event controller, live control changes, phase cycle, stale source rejection and printed return. |
+| `PendingTargetsAndClone` | Complete synthetic RON targeted cast trigger: pending old targets, successive red-to-green-to-blue transformations, queued legality and separate clone text/resolution. |
+| `EventBindings` | Complete synthetic RON spell-tax trigger: independent saved spells/casters, copied trigger with another controller, resolution payments and counter results. |
+| `IndependentDeclarations` | Complete two-trigger RON source and second source instance: sibling transformation independence, other-instance ID rejection and pending bodies after departure. |
+| `Invalid` | Invalid event/player declarations, wrong typed event reads, unbound target references; all 12 Magical Hack/Sleight records still reject. |
+| Native `TestTextSpellCastTriggerDeclaration`, `Rejects` | Invalid event/state/source-zone opt-ins; unmarked/granted/face-down declarations, missing marker, changed event, absent/nil source, unknown ID and missing builder reject without mutation. |
+
+New runtime revision evidence covers **11 accepted unique cards / 36 records**.
+Existing broader tests remain in the full suite, including charm payment rollback,
+Citanul opponent histories, Eye dynamic payments and exact counter-event visits.
+No new full-card acceptance or global complete-gameplay count is claimed.
+
+### Verification, loader, files and next candidates
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextSpellCastTrigger -count=1`.
+- Native `go test ./pkg/mage -run TestTextSpellCastTrigger -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for collection rejection.
+
+Reviewed lint changes: import grouping only in the new native files. Reran both
+focused packages after formatting, plus `git diff --check`. No semantic lint
+change or unrelated automatic edit. Final loader JSON, including all diagnostic
+messages, is exactly equal to the fresh baseline: **2,090 compiled / 355 rejected
+records; 808 accepted / 178 rejected unique names**. Collection rejection remains
+strict; no partial registry, acceptance regression or hidden supported shape.
+Commit message: `feat(ron): implement printed spell-cast trigger text revision`.
+
+Updated engine service/native tests, trigger declaration storage and validation,
+RON lowering/gameplay tests, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No new RON source defect or source change. The vocabulary source snapshot remains valid. No Go card definitions,
+generators or DSL functions were removed: cutover/removal gates remain unmet.
+
+Ranked next candidates:
+
+1. Checked printed static declaration installation and registration lifecycle for
+   text revision; coordinate later layer-3 restoration and remaining trigger kinds.
+   Zero immediate unlocks, Magical Hack/Sleight of Mind two-name downstream benefit.
+2. Shared repeated-procedure round/result scope for Eureka and Mana Clash; compare
+   the complete optional-entry and coin/damage consumers before selecting a context.
+3. Exact physical-card transport for Tempest Efreet; keep Bronze Tablet's source
+   owner-assignment fidelity correction separate.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

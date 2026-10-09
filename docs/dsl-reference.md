@@ -1,5 +1,41 @@
 # DSL reference
 
+## Printed spell-cast trigger text revision
+
+`(*mage.GenericTriggered).WithSpellCastTextRevision() *GenericTriggered` opts a
+printed typed battlefield spell-cast trigger into checked runtime replacement.
+Definition validation rejects other events, state triggers and additional or
+non-battlefield source zones. RON lowers this option for
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), actions)` on
+the existing `compileTriggerRule` path. Existing spell filters and resolving
+actions retain their validation and binding scopes.
+
+`(*mage.Game).RevisePrintedSpellCastTrigger(source *Permanent,
+abilityID uuid.UUID, changes ...TextChange) error` checks the source incarnation,
+face-up presence, printed group/member, active opt-in and retained builder. It
+validates fresh declarations before replacing one runtime trigger with the same
+ability ID and current source/controller. Each trigger keeps its own ordered
+changes. Fresh targets, choices, payments and event bindings remain independent.
+Detected triggers, stacked abilities and copies retain their earlier rules,
+captured controller, caster and spell. Event detection reads runtime abilities;
+this context needs no static effect registration.
+
+Phasing suspends detection and prevents revision; a phase cycle keeps an existing
+revision. Departure preserves pending bodies; return restores the physical
+card's printed origin. Removed, granted, unmarked, absent and incompatible
+declarations reject without mutation. Clones keep separate runtime replacement
+and resolution state. Printed/copiable definitions remain separate.
+
+The caller must supply layer-3 order, lifetime and restoration after ability
+removal. Other event kinds, state triggers, cross-zone triggers, static rules and
+spell text remain separate capabilities. Magical Hack and Sleight of Mind still
+reject. Invoke Prejudice still requires its unsupported shared-color filter.
+
+Evidence: RON `TestRONTextSpellCastTriggerRealCards`, `OtherRealCards`,
+`PendingTargetsAndClone`, `EventBindings`, `IdentityAndLifetime`,
+`IndependentDeclarations`, `Invalid`; native `TestTextSpellCastTriggerDeclaration`
+and `Rejects`.
+
 ## Printed activated-action text state
 
 `mage.WithTextRevisionActivationState() ActionOption` opts a printed activated

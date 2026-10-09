@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [GenericTriggered.WithSpellCastTextRevision] for a printed spell-cast trigger.
+// [Game.RevisePrintedSpellCastTrigger] checks its declaration and source visit.
+// It keeps the active ID with fresh rules, targets and event bindings.
+// Detected triggers and copies keep their earlier text and captured players.
+// Each active declaration keeps its own ordered changes. Clones stay separate.
+// Phasing keeps a revision; returned sources cannot inherit it.
+// RON lowers the option for its typed battlefield spell-cast trigger path.
+// The caller must supply text-layer order, lifetime and ability restoration.
+// Other trigger kinds, static registrations and spell text need separate services.
+//
 // Use [WithTextRevisionActivationState] for a printed activated action.
 // [Game.RevisePrintedActivatedAbility] checks its declaration and source visit.
 // It keeps the active ID, limits and activation history with fresh rules.
