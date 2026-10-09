@@ -329,6 +329,14 @@ func (p *BasePlayer) recordGraveyardVisit(id uuid.UUID) {
 
 func (p *BasePlayer) graveyardVisit(id uuid.UUID) uuid.UUID { return p.graveyardVisits[id] }
 
+func (p *BasePlayer) replaceGraveyardCard(id uuid.UUID, replacement Card) bool {
+	cards, ok := replaceCardInSlice(p.graveyard, id, replacement)
+	if ok {
+		p.graveyard = cards
+	}
+	return ok
+}
+
 func (p *BasePlayer) AddToGraveyard(c Card) {
 	p.assertOwner(c)
 	p.graveyard = append(p.graveyard, c)

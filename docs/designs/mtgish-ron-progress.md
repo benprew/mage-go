@@ -2,16 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **795 accepted / 191 rejected unique card
-names** (986 total), and **2,058 compiled / 387 rejected records** (2,445 total).
+The latest recorded inventory reports **796 accepted / 190 rejected unique card
+names** (986 total), and **2,064 compiled / 381 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ANTE-GRAVEYARD-MOVEMENT` adds typed current-owner ante selections, exact-visit
-departure, source exclusion, owner-controlled graveyard order and movement before
-zone events. Jeweled Bird has complete RON gameplay coverage: **+1 unique name /
-+1 record**. Darkpact's ownership acquisition/exchange and Rebirth's paid-player
-collections remain gaps. Prior complete ante gameplay mappings remain in force.
+`ANTE-OWNERSHIP-EXCHANGE` adds independent typed ownership acquisition and atomic
+ante/library-top exchange. All six Darkpact reprints include the missing Oracle
+ownership instruction and have complete RON gameplay coverage: **+1 unique name /
++6 records**. Empty libraries receive the ante card. Ownership persists when an
+ineligible top prevents exchange. Bronze Tablet and Tempest Efreet still need
+result/payment adapters; Rebirth still needs paid-player dispatch. Prior complete
+ante gameplay mappings remain in force.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -53578,3 +53580,166 @@ Ranked next candidates:
    Nebuchadnezzar and Petra Sphinx with separate reveal-result consumers.
 
 This run stops after ANTE-GRAVEYARD-MOVEMENT. Migration remains incomplete.
+
+
+## 2026-10-08: typed ante ownership and atomic library-top exchange
+
+Status: completed implementation slice `ANTE-OWNERSHIP-EXCHANGE`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and the progress/completed-ledger split are preserved. Only
+this slice's summary and appended entry are staged in the progress ledger;
+the user's history relocation remains outside the commit.
+
+### Fresh baseline and candidate comparison
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The initial strict loader exited 1 with **2,058 compiled / 387 rejected records;
+795 accepted / 191 rejected unique names**. This was collection rejection,
+not a build, test or environment failure. All complete affected RON records
+were read, including the six identical Darkpact reprints and nested operands
+of the other candidates. Reprints count once in the candidate comparison.
+
+| Candidate | Distinct names / estimated full unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: typed ownership and atomic ante/library exchange | Darkpact: 1 full name, 6 records. Shared ownership service also supports Bronze Tablet and Tempest Efreet: 0 full unlocks for those names. | Darkpact's targets, exact visits and departure helper are ready. Its source lacks the independent Oracle ownership instruction. Bronze Tablet still needs result-bound exile and payment continuation; Tempest Efreet needs revealed-card and paid/sacrificed-source results, payment and destination adapters. Stable ownership primitives preserve these downstream identities. | Moderate: two typed resolving operations, strict lowering, source correction and native/RON lifecycle tests. |
+| Ranked #2: scoped paid-player collection/dispatch | Rebirth: 1 full name, 1 record. | AnteTopCost exists. Needs APNAP optional decisions, per-payment results, a typed paid-player set and replacement-aware life-setting dispatch. Enables later multi-player payment consumers, but immediate collection use is one name. | Moderate, with a new result-scope contract. |
+| Ranked #3: independent legal Oracle name catalog | Nebuchadnezzar and Petra Sphinx: 0 immediate full unlocks; two downstream names. | Both require name choice and separate reveal-result consumers. Nebuchadnezzar needs random partial hand reveal/discard; Petra Sphinx needs reveal matching and exact-top hand/graveyard dispatch. An independent name catalog is required before choices. | Larger prerequisite and catalog validation, then separate consumer slices. |
+
+Selection: candidate #1 is dependency-ready, unlocks a complete card, and supplies
+ownership identity behavior for two other ante cards. It establishes the smallest
+complete pair of operations that faithfully executes Darkpact. No two-card
+ownership exchange, revealed/exiled result producer or paid-player collection
+is claimed. The local Oracle evidence makes the missing ownership instruction a
+source defect, not a compiler spelling convention or an implicit exchange rule.
+
+### Contract, supported contexts and reuse boundary
+
+Engine signatures:
+
+- `AcquireCardOwnership(card CardRef, owner PlayerRef) ResolvingEffect`:
+  requires a current nontoken typed card and an existing player in an enabled,
+  unsettled ante game. Reuses `Game.ChangeOwner`, copy-on-write card replacement
+  and original-owner settlement history. No zone move, controller change or
+  visit change occurs. Hand, graveyard, visible exile and ante references work.
+- `ExchangeAnteCardWithLibraryTop(card CardRef, player PlayerRef) ResolvingEffect`:
+  checks a current exact ante visit and current player. Both subjects must belong
+  to that player. A token or foreign-owned library top prevents the entire
+  exchange. An empty library receives the ante card. The top is read at
+  resolution; the tail keeps its order. Uses `removeAnteVisit`, player storage,
+  fresh ante arrivals and the shared zone-event service. Both moves precede events.
+
+The exchange does not acquire ownership. Ownership precedes exchange in the
+corrected RON sequence and remains when exchange cannot proceed. Neither action
+uses a global last-action result, registry fallback, card-name branch, runtime
+declaration panic or parallel zone/replacement system. Ante/library movement has
+no applicable battlefield, draw or mill replacement operation. No general zone
+replacement service is introduced. No choices or APNAP decisions are needed.
+
+`Game.ChangeOwner` exposed a missing engine contract: its graveyard replacement
+used `SetGraveyard`, which gives every card a new visit. New private
+`BasePlayer.replaceGraveyardCard(id uuid.UUID, replacement Card) bool` replaces
+only the card through copied slice storage. `replaceCardReference` uses it for
+players with modeled graveyard storage. Existing `SetGraveyard` semantics and
+legacy callers remain. The selected card and its neighbors keep visits; clones
+keep independent cards, visits and original-owner history.
+
+RON shapes:
+`AcquireOwnershipOfCard(anteCardRef, playerRef)` and
+`ExchangeAnteCardWithTopCardOfPlayersLibrary(anteCardRef, playerRef)`.
+The card operand is exactly the bound `Ref_TargetAnteCard` from
+`TargetAnteCard(AnyCard)`. Resolving spell, activation and trigger action contexts
+are supported. Player operands reuse typed player plans and instance bindings.
+Wrong kinds/arities, unbound/incompatible references, graveyard operands and
+cost/entry/static roles reject before gameplay. Inventory gives card/player
+reference roles to both operands and still descends into unsupported forms.
+
+Typed player source reads are declared to waiting delayed queries. Queries do
+not resolve cards/players or change ownership/zones. Departure and phasing retain
+the saved source; a returned source cannot replace it. Detection ends the waiting
+category, and clones keep independent lifetimes. The card action itself requires
+a live exact visit; LKI cannot move an absent or returned target. Pending abilities
+survive source departure/return and phasing through existing stack services.
+
+Rules evidence: local CR 407.3/4 (ante ownership and eligible ante subjects),
+701.12a/d (complete cross-zone exchange, same owner and empty-zone permission),
+400.7 (new objects on zone changes), and 608.2b/c (target legality and ordered
+instructions). The official 2024 rulebook's 701.10d has the same empty-zone
+permission: https://media.wizards.com/2024/downloads/MagicCompRules%2020240308.pdf.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial native tests failed compilation on the missing ownership/exchange APIs.
+After fixing a test fixture's invalid token setter, the missing signatures were
+confirmed as the compilation failures. Initial RON tests failed on the unsupported
+exchange action in all six full Darkpact records. A later ownership test failed
+with `ownership lost visit` in a graveyard, then passed after the visit-preserving
+replacement repair. A manually pushed native stack fixture lacked declaration
+bindings; it was corrected to use real casting and unchanged assertions. No
+production behavior assertion was weakened.
+
+| Tests | Mapping / evidence |
+| --- | --- |
+| `TestRONAnteExchangeDarkpact` | Complete Darkpact in LEA, LEB, 2ED, 3ED, CED and CEI: deck restriction, BBB payment/rollback, announcement versus resolution, foreign ownership acquisition, empty library, foreign-owned top, departed/returned target, spell copy controller and exact visit, clone isolation and final spell graveyard move. |
+| `TestRONAnteExchangeContextsAndInstances` | Synthetic full RON activation/trigger contexts, independent factory instances and targets, source phasing/return and pending trigger target identity. |
+| `TestRONAnteExchangeDeclarations`, `RolesAndInventory` | Wrong kinds/arities, reference kinds, missing player/card bindings, graveyard operands and cost/entry/static roles; correct semantic inventory. |
+| `TestAnteExchangeAtomicAndOwnership`, `RequiresSameOwner` | Complete event-visible exchange, independent acquisition, empty/foreign/token tops, disabled/settled/missing operands, returned visits and clone isolation. Exchange alone cannot acquire ownership. |
+| `TestAnteExchangeOwnershipOtherZonesAndSettlement` | Typed hand/graveyard/exile ownership, selected/neighbor visit preservation, no movement, cloned ownership and original-owner settlement history. Prerequisite evidence for result-bound ownership consumers, not complete Bronze Tablet or Tempest Efreet gameplay. |
+| `TestAnteExchangeReadsCurrentTop`, `Definition`, `WaitingPlayerReferences` | Resolution-time top, clone movement, invalid definitions, explicit player source reads, pure waiting queries, source phasing/departure/return and independent detection lifetimes. |
+| Existing `TestRONAnteReference*`, `TestRONAnteDeck*`, native ante/reference/ownership tests and collection factory/inventory tests | Keep target visit/copy/cost capture and deck behavior. Darkpact's prior target-only mapping remains subrule evidence; new tests establish the complete card. |
+
+### Validation, measured gains and source review
+
+- `go test ./pkg/mage/dsl/ron -run TestRONAnteExchange -count=1`: PASS.
+- Native `TestAnteExchange*` and ante reference/ownership/deck regressions: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- Initial `make lint` reported one redundant test variable type (revive).
+  The type declaration was removed; focused native and RON tests passed again.
+  Final `make lint`: PASS, 0 issues.
+- Final `git diff --check`: PASS, including the ledger..
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,064 compiled /
+  381 rejected records; 796 accepted / 190 rejected unique names**. Strict
+  collection rejection still prevents partial registry installation..
+- Automatic formatting changes reviewed; no unrelated Go file changed.
+  No environment or pre-existing validation failure blocks the slice.
+
+Estimated and measured complete-card gains agree: **1 unique name / 6 records**.
+Darkpact compiles, validates its factory and has complete RON gameplay coverage.
+Fresh inventory is **2,064 compiled / 381 rejected records; 796 accepted /
+190 rejected unique names**. Remaining diagnostics match the baseline exactly after
+removing only Darkpact's six diagnostics. No accepted record is lost. Compilation
+counts are separate from complete collection gameplay evidence.
+
+Five existing collection/deck expectation sites needed changes: four exact
+compiled/rejected count sites now expect 2,064/381, and the ante-deck support test
+now includes Darkpact. The former Darkpact target declaration test now asserts
+successful compilation while retaining its target/reference checks.
+
+Source defect: all six complete Darkpact records omitted the Oracle ownership
+instruction. `data/LEA.json` says the player owns the target before exchanging it.
+Every identical reprint now has explicit `AcquireOwnershipOfCard` before the
+existing exchange. No ownership side effect is hidden in exchange lowering.
+The vocabulary snapshot is refreshed from the positioned AST inventory: one new
+tuple signature (603 total), six ownership occurrences, updated operand counts
+and positions, six file hashes and fresh loader evidence. Bronze Tablet and
+Tempest Efreet sources are unchanged and still rejected at independent gaps.
+
+Changed files: new native/RON `ante_exchange.go` and tests; visit-preserving
+ownership replacement in `ante.go`/`player.go`; RON compiler/inventory; reference,
+deck and exact-count tests; six Darkpact RON records; vocabulary snapshot;
+`doc.go`, DSL/API rules-contract docs and this ledger. Go definitions, generators
+and legacy DSL functions remain because full gameplay/loading/runtime/removal
+gates are not met. No DSL API is removed, so no deletion audit is claimed.
+
+Ranked next candidates:
+
+1. Independent complete legal Oracle name catalog: a shared prerequisite for
+   Nebuchadnezzar and Petra Sphinx. Follow it with scoped name choices and
+   separate reveal-result consumers; do not infer full support from the catalog.
+2. Shared result-bound exile/reveal ownership operands for Bronze Tablet and
+   Tempest Efreet. Exact ownership changes now preserve visits. Compare the
+   remaining result/payment requirements before choosing a single bounded slice.
+3. Scoped paid-player collection and dispatch for Rebirth, with AnteTopCost,
+   APNAP decisions and replacement-aware life setting.
+
+This run stops after ANTE-OWNERSHIP-EXCHANGE. Migration remains incomplete.

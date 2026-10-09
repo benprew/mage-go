@@ -35,6 +35,19 @@
 // Clones keep separate ante storage and target state. No LKI permits an
 // action on an absent card. Ante movement and exchange need separate services.
 //
+// Use [AcquireCardOwnership] for a present typed card in an ante game.
+// Ownership uses [Game.ChangeOwner] and does not move the card or change its
+// visit. Graveyard ownership updates keep visits of all stored cards.
+// Use [ExchangeAnteCardWithLibraryTop] for a separate cross-zone exchange.
+// The ante card and library top must belong to the selected player.
+// An empty library receives the ante card. An ineligible top prevents both
+// moves, but cannot reverse a prior ownership action. Both moves finish before
+// zone events. Target departure and return end the saved reference.
+// Clones keep separate ownership and movement. The action reads the current
+// library top at resolution. It does not draw, reveal, shuffle or make choices.
+// Typed player operands declare explicit source reads to waiting delayed queries.
+// Two-card ownership exchanges and result-bound cards need separate adapters.
+//
 // Use [AnteCardsOwnedBy] for typed current-owner selection in shared ante.
 // [OtherAnteCards] excludes the physical source after its payment moves it.
 // [PutAnteCardsInGraveyards] saves exact visits and uses current owners.

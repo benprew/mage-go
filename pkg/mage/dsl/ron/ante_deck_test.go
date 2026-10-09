@@ -106,7 +106,7 @@ func TestRONAnteDeckCollectionDeclarations(t *testing.T) {
 			seen[name] = true
 			records++
 			_, compileErr := Compile(node)
-			complete := name == "Demonic Attorney" || name == "Contract from Below" || name == "Jeweled Bird"
+			complete := name == "Demonic Attorney" || name == "Contract from Below" || name == "Jeweled Bird" || name == "Darkpact"
 			if complete && compileErr != nil || !complete && (compileErr == nil || strings.Contains(compileErr.Error(), "DeckConstruction")) {
 				t.Fatalf("%s: independent behavior support: %v", name, compileErr)
 			}

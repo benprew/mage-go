@@ -9363,3 +9363,55 @@ multiple owners, APNAP decisions, invalid choices, return during a decision,
 clone storage and invalid definitions. Existing mill-order tests protect the
 shared helper's callers. Darkpact still rejects its ownership/exchange operation;
 the exact ante-departure helper is available for that later atomic operation.
+
+
+## Typed ante ownership and library exchange
+
+`AcquireCardOwnership(card CardRef, owner PlayerRef) ResolvingEffect` changes
+ownership through `Game.ChangeOwner`. It requires a present nontoken card and
+an existing player in an enabled, unsettled ante game (CR 407.3). It does not
+move the card, change its visit or alter a controller. Copy-on-write replacement
+keeps game clones separate and preserves original-owner settlement history.
+Graveyard replacement now keeps the selected and neighboring cards' visits;
+`SetGraveyard` retains its existing whole-zone replacement behavior.
+Hand, exile and ante replacement retain their existing visit preservation.
+Saved card references supply no LKI permission to act on departed objects.
+
+`ExchangeAnteCardWithLibraryTop(card CardRef, player PlayerRef) ResolvingEffect`
+requires a current exact ante visit owned by the selected player. A nonempty
+library must have a nontoken top owned by that same player (CR 701.12a/d).
+The action reads the top at resolution. It moves the ante card to the top of
+that library and the former top to ante, with both moves complete before zone
+events. An empty library receives the ante card (CR 701.12d). The library tail
+keeps its order. Ante departure ends its visit; the incoming top gets a fresh
+ante visit (CR 400.7). An invalid operand prevents the entire exchange.
+This operation does not acquire ownership. A preceding ownership instruction
+still succeeds if a foreign-owned or token library top prevents exchange.
+No draw, reveal, shuffle, payment or battlefield event is added.
+
+RON shapes are `AcquireOwnershipOfCard(anteCardRef, playerRef)` and
+`ExchangeAnteCardWithTopCardOfPlayersLibrary(anteCardRef, playerRef)` in resolving
+spell, activation and trigger actions. `anteCardRef` must be the bound
+`Ref_TargetAnteCard` from `TargetAnteCard(AnyCard)`. Player operands use the
+existing typed player grammar and per-instance bindings. Wrong arity, kind,
+zone, unbound references and cost, entry or static uses reject at compilation.
+Semantic inventory classifies both operands as card/player references.
+Explicit source reads in the player operand are declared to waiting delayed
+queries; the queries do not resolve operands or change ownership or zones.
+
+All six Darkpact records now contain the missing independent Oracle ownership
+instruction before exchange. Local `data/LEA.json` supplies the Oracle evidence.
+`TestRONAnteExchangeDarkpact` covers every reprint, payment rollback, timing,
+foreign ante ownership, empty and foreign-owned libraries, target departure and
+return, spell copies, clone isolation and the spell's final graveyard move.
+`TestRONAnteExchangeContextsAndInstances` covers independent activations,
+triggers, source phasing and source return; declaration/role tests reject invalid
+forms. `TestAnteExchange*` covers native atomic events, exact visits, current
+tops, disabled/settled games, missing players, token tops, independent ownership,
+other nonbattlefield zones, settlement and definition validation.
+
+This contract does not implement two-card ownership exchange, result-bound exile
+or reveal adapters, paid-player collections or general zone replacements.
+Bronze Tablet and Tempest Efreet remain rejected; Rebirth needs paid-player
+collection dispatch. Go definitions and the legacy DSL remain until the runtime
+and removal gates pass.

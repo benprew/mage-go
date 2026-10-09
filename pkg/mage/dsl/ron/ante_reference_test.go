@@ -83,8 +83,8 @@ func TestRONAnteReferenceDeclarations(t *testing.T) {
 	}
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		record := staticBaseRecord(t, set, "Darkpact")
-		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ExchangeAnteCardWithTopCardOfPlayersLibrary") {
-			t.Fatalf("wrong Darkpact blocker: %v", err)
+		if _, err := Compile(record); err != nil {
+			t.Fatalf("Darkpact rejected: %v", err)
 		}
 		target := record.Fields["Rules"].Args[1].Args[0].Args[0].Args[0]
 		_, binding, err := compileTarget(target, scope{})

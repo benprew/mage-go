@@ -5,18 +5,18 @@
   "records": 2445,
   "unique_card_names": 986,
   "top_level_rule_names": 51,
-  "constructor_signatures": 602,
+  "constructor_signatures": 603,
   "conflicting_reprints": [],
   "files": [
     {
       "path": "cards/mtgish/2ED.lines.ron",
       "records": 291,
-      "sha256": "a441c004833808a67241eb76aefbe91a6d71b6d13738998884bd1644252eeffb"
+      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
     },
     {
       "path": "cards/mtgish/3ED.lines.ron",
       "records": 296,
-      "sha256": "d0dbdecf58f2512b8d4cf8ad403d70a6bfa9cee1e228ff140e31d6e8b2f39e0b"
+      "sha256": "6681289e0e44e4b43ac3db61431c78a0041def83c9cc395667d416b4a09cc01d"
     },
     {
       "path": "cards/mtgish/ARN.lines.ron",
@@ -31,12 +31,12 @@
     {
       "path": "cards/mtgish/CED.lines.ron",
       "records": 291,
-      "sha256": "a441c004833808a67241eb76aefbe91a6d71b6d13738998884bd1644252eeffb"
+      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
     },
     {
       "path": "cards/mtgish/CEI.lines.ron",
       "records": 291,
-      "sha256": "a441c004833808a67241eb76aefbe91a6d71b6d13738998884bd1644252eeffb"
+      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
     },
     {
       "path": "cards/mtgish/DRK.lines.ron",
@@ -51,12 +51,12 @@
     {
       "path": "cards/mtgish/LEA.lines.ron",
       "records": 289,
-      "sha256": "4a6696df4a88080982e20e8ecfb15fcadd0ec7a72e9d6203a62c0a9d1b14767d"
+      "sha256": "662df505d23c4d3c299894ca5937b19c2105ce6dd0c949829d97b4485852f494"
     },
     {
       "path": "cards/mtgish/LEB.lines.ron",
       "records": 291,
-      "sha256": "a441c004833808a67241eb76aefbe91a6d71b6d13738998884bd1644252eeffb"
+      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
     },
     {
       "path": "cards/mtgish/LEG.lines.ron",
@@ -146,6 +146,7 @@
     {"name": "AbilityOfAPermanent", "kind": "tuple", "arity": 1, "occurrences": 9, "examples": ["Gloom (cards/mtgish/2ED.lines.ron:100:260)", "Gloom (cards/mtgish/3ED.lines.ron:105:260)", "Goblin Artisans (cards/mtgish/ATQ.lines.ron:34:297)"]},
     {"name": "AbilityOfASource", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Artifact Ward (cards/mtgish/ATQ.lines.ron:9:474)", "Raiding Party (cards/mtgish/FEM.lines.ron:71:252)", "Ayesha Tanaka (cards/mtgish/LEG.lines.ron:22:278)"]},
     {"name": "AbilityOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 3, "examples": ["Artifact Possession (cards/mtgish/ATQ.lines.ron:8:441)", "Power Artifact (cards/mtgish/ATQ.lines.ron:52:207)", "Imprison (cards/mtgish/LEG.lines.ron:129:222)"]},
+    {"name": "AcquireOwnershipOfCard", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:255)", "Darkpact (cards/mtgish/3ED.lines.ron:56:255)", "Darkpact (cards/mtgish/CED.lines.ron:56:255)"]},
     {"name": "ActionForEachPermanent", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Raging River (cards/mtgish/2ED.lines.ron:197:469)", "Raging River (cards/mtgish/CED.lines.ron:197:469)", "Raging River (cards/mtgish/CEI.lines.ron:197:469)"]},
     {"name": "ActionForEachPermanentThatDiedThisWay", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Glyph of Reincarnation (cards/mtgish/LEG.lines.ron:104:362)"]},
     {"name": "ActionList", "kind": "tuple", "arity": 1, "occurrences": 2080, "examples": ["Ancestral Recall (cards/mtgish/2ED.lines.ron:2:176)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:332)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:785)"]},
@@ -508,7 +509,7 @@
     {"name": "EntersWithNumberCounters", "kind": "tuple", "arity": 2, "occurrences": 19, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:185)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:183)", "Clockwork Beast (cards/mtgish/3ED.lines.ron:39:185)"]},
     {"name": "EqualTo", "kind": "tuple", "arity": 1, "occurrences": 14, "examples": ["Spell Blast (cards/mtgish/2ED.lines.ron:232:195)", "Spell Blast (cards/mtgish/3ED.lines.ron:240:195)", "Drop of Honey (cards/mtgish/ARN.lines.ron:23:260)"]},
     {"name": "ExceptFor", "kind": "tuple", "arity": 1, "occurrences": 11, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:565)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:565)", "Siren's Call (cards/mtgish/CED.lines.ron:227:565)"]},
-    {"name": "ExchangeAnteCardWithTopCardOfPlayersLibrary", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:255)", "Darkpact (cards/mtgish/3ED.lines.ron:56:255)", "Darkpact (cards/mtgish/CED.lines.ron:56:255)"]},
+    {"name": "ExchangeAnteCardWithTopCardOfPlayersLibrary", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:304)", "Darkpact (cards/mtgish/3ED.lines.ron:56:304)", "Darkpact (cards/mtgish/CED.lines.ron:56:304)"]},
     {"name": "ExchangeControl", "kind": "tuple", "arity": 2, "occurrences": 3, "examples": ["Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:530)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:490)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:889)"]},
     {"name": "ExchangeLifeTotalWithPlayer", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Mirror Universe (cards/mtgish/LEG.lines.ron:174:277)"]},
     {"name": "ExchangeOwnershipOfTwoCards", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["Bronze Tablet (cards/mtgish/ATQ.lines.ron:15:619)", "Tempest Efreet (cards/mtgish/LEG.lines.ron:259:492)"]},
@@ -881,7 +882,7 @@
     {"name": "Ref_AnyTarget2", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Cuombajj Witches (cards/mtgish/ARN.lines.ron:15:386)"]},
     {"name": "Ref_AnyTargets", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Fireball (cards/mtgish/2ED.lines.ron:84:351)", "Fireball (cards/mtgish/3ED.lines.ron:90:351)", "Fireball (cards/mtgish/CED.lines.ron:84:351)"]},
     {"name": "Ref_TargetAbility", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Ayesha Tanaka (cards/mtgish/LEG.lines.ron:22:368)", "Ayesha Tanaka (cards/mtgish/LEG.lines.ron:22:447)", "Rust (cards/mtgish/LEG.lines.ron:228:246)"]},
-    {"name": "Ref_TargetAnteCard", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:299)", "Darkpact (cards/mtgish/3ED.lines.ron:56:299)", "Darkpact (cards/mtgish/CED.lines.ron:56:299)"]},
+    {"name": "Ref_TargetAnteCard", "kind": "symbol", "arity": 0, "occurrences": 12, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:278)", "Darkpact (cards/mtgish/2ED.lines.ron:56:348)", "Darkpact (cards/mtgish/3ED.lines.ron:56:278)"]},
     {"name": "Ref_TargetGraveyardCard", "kind": "symbol", "arity": 0, "occurrences": 28, "examples": ["Raise Dead (cards/mtgish/2ED.lines.ron:198:272)", "Regrowth (cards/mtgish/2ED.lines.ron:202:261)", "Resurrection (cards/mtgish/2ED.lines.ron:203:312)"]},
     {"name": "Ref_TargetGraveyardCards", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Drafna's Restoration (cards/mtgish/ATQ.lines.ron:27:352)"]},
     {"name": "Ref_TargetPermanent", "kind": "symbol", "arity": 0, "occurrences": 519, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:281)", "Berserk (cards/mtgish/2ED.lines.ron:15:492)", "Berserk (cards/mtgish/2ED.lines.ron:15:550)"]},
@@ -1225,20 +1226,19 @@
     {"name": "XCantBeZero", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Aladdin's Lamp (cards/mtgish/3ED.lines.ron:2:457)", "Aladdin's Lamp (cards/mtgish/ARN.lines.ron:3:457)"]},
     {"name": "XIs", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Reflecting Mirror (cards/mtgish/DRK.lines.ron:85:454)", "Voodoo Doll (cards/mtgish/LEG.lines.ron:288:857)"]},
     {"name": "Yeti", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Mountain Yeti (cards/mtgish/LEG.lines.ron:179:90)"]},
-    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 754, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
+    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 760, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
     {"name": "Zero", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:343)", "Howl from Beyond (cards/mtgish/2ED.lines.ron:113:284)", "Howl from Beyond (cards/mtgish/3ED.lines.ron:118:284)"]},
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
     "records": 2445,
-    "compiled": 2058,
+    "compiled": 2064,
     "issues": [
       {"card": "Animate Dead", "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 4}},
       {"card": "Balance", "message": "2ED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 11}},
       {"card": "Camouflage", "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 28}},
       {"card": "Channel", "message": "2ED.lines.ron:31:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 31}},
       {"card": "Cyclopean Tomb", "message": "2ED.lines.ron:54:463: unsupported duration (ForAsLongAsPermanentHasACounterOfTypeOnIt)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 54}},
-      {"card": "Darkpact", "message": "2ED.lines.ron:56:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 56}},
       {"card": "Demonic Hordes", "message": "2ED.lines.ron:61:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 61}},
       {"card": "Disintegrate", "message": "2ED.lines.ron:65:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 65}},
       {"card": "Drain Life", "message": "2ED.lines.ron:68:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "2ED.lines.ron", "Line": 68}},
@@ -1277,7 +1277,6 @@
       {"card": "Animate Dead", "message": "3ED.lines.ron:5:151: unsupported rule (EnchantGraveyardCard)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 5}},
       {"card": "Balance", "message": "3ED.lines.ron:14:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 14}},
       {"card": "Channel", "message": "3ED.lines.ron:32:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 32}},
-      {"card": "Darkpact", "message": "3ED.lines.ron:56:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 56}},
       {"card": "Demonic Hordes", "message": "3ED.lines.ron:61:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 61}},
       {"card": "Disintegrate", "message": "3ED.lines.ron:66:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 66}},
       {"card": "Drain Life", "message": "3ED.lines.ron:70:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "3ED.lines.ron", "Line": 70}},
@@ -1351,7 +1350,6 @@
       {"card": "Camouflage", "message": "CED.lines.ron:28:233: unsupported action (CreateGameEffect)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 28}},
       {"card": "Channel", "message": "CED.lines.ron:31:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 31}},
       {"card": "Cyclopean Tomb", "message": "CED.lines.ron:54:463: unsupported duration (ForAsLongAsPermanentHasACounterOfTypeOnIt)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 54}},
-      {"card": "Darkpact", "message": "CED.lines.ron:56:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 56}},
       {"card": "Demonic Hordes", "message": "CED.lines.ron:61:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 61}},
       {"card": "Disintegrate", "message": "CED.lines.ron:65:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 65}},
       {"card": "Drain Life", "message": "CED.lines.ron:68:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "CED.lines.ron", "Line": 68}},
@@ -1391,7 +1389,6 @@
       {"card": "Camouflage", "message": "CEI.lines.ron:28:233: unsupported action (CreateGameEffect)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 28}},
       {"card": "Channel", "message": "CEI.lines.ron:31:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 31}},
       {"card": "Cyclopean Tomb", "message": "CEI.lines.ron:54:463: unsupported duration (ForAsLongAsPermanentHasACounterOfTypeOnIt)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 54}},
-      {"card": "Darkpact", "message": "CEI.lines.ron:56:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 56}},
       {"card": "Demonic Hordes", "message": "CEI.lines.ron:61:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 61}},
       {"card": "Disintegrate", "message": "CEI.lines.ron:65:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 65}},
       {"card": "Drain Life", "message": "CEI.lines.ron:68:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "CEI.lines.ron", "Line": 68}},
@@ -1477,7 +1474,6 @@
       {"card": "Camouflage", "message": "LEA.lines.ron:28:233: unsupported action (CreateGameEffect)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 28}},
       {"card": "Channel", "message": "LEA.lines.ron:31:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 31}},
       {"card": "Cyclopean Tomb", "message": "LEA.lines.ron:53:463: unsupported duration (ForAsLongAsPermanentHasACounterOfTypeOnIt)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 53}},
-      {"card": "Darkpact", "message": "LEA.lines.ron:55:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 55}},
       {"card": "Demonic Hordes", "message": "LEA.lines.ron:60:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 60}},
       {"card": "Disintegrate", "message": "LEA.lines.ron:64:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 64}},
       {"card": "Drain Life", "message": "LEA.lines.ron:67:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "LEA.lines.ron", "Line": 67}},
@@ -1517,7 +1513,6 @@
       {"card": "Camouflage", "message": "LEB.lines.ron:28:233: unsupported action (CreateGameEffect)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 28}},
       {"card": "Channel", "message": "LEB.lines.ron:31:154: unsupported action (CreatePlayerEffectUntil)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 31}},
       {"card": "Cyclopean Tomb", "message": "LEB.lines.ron:54:463: unsupported duration (ForAsLongAsPermanentHasACounterOfTypeOnIt)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 54}},
-      {"card": "Darkpact", "message": "LEB.lines.ron:56:255: unsupported action (ExchangeAnteCardWithTopCardOfPlayersLibrary)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 56}},
       {"card": "Demonic Hordes", "message": "LEB.lines.ron:61:488: unsupported action (SacrificeAPermanentOfAPlayersChoice)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 61}},
       {"card": "Disintegrate", "message": "LEB.lines.ron:65:258: unbound or incompatible permanent reference (AnyTargetAsAPermanent)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 65}},
       {"card": "Drain Life", "message": "LEB.lines.ron:68:163: unsupported casting restriction (SpendOnlyColorManaOnX)", "source": {"Column": 1, "File": "LEB.lines.ron", "Line": 68}},

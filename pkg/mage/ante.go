@@ -311,6 +311,9 @@ func (g *Game) replaceCardReference(cardID uuid.UUID, replacement Card) bool {
 			return true
 		}
 		if cards, ok := replaceCardInSlice(player.Graveyard(), cardID, replacement); ok {
+			if storage, supported := player.(interface{ replaceGraveyardCard(uuid.UUID, Card) bool }); supported {
+				return storage.replaceGraveyardCard(cardID, replacement)
+			}
 			player.SetGraveyard(cards)
 			return true
 		}
