@@ -7,17 +7,18 @@ names** (986 total), and **2,084 compiled / 361 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`RESOLUTION-TEXT-WORD-PAIRS` saves distinct color/basic-land word pairs at
-resolution, with typed first/second operands and separate factory/frame storage.
-Copies, clones, loops, delays and pending sources retain their own results.
-This shared prerequisite serves Magical Hack and Sleight of Mind. **+0 unique
-names / +0 records**, as estimated. Complete-card gameplay counts stay unchanged.
-All required checks pass; loader counts and diagnostics remain unchanged.
-Both complete records still need general target-union bodies and text effects.
+`UNION-TARGET-RESOLVING-BODIES` executes branch-local resolving actions through
+one spell-or-permanent target, with typed projections and exact saved identity.
+Copies can retarget across categories; clones and factories keep separate frames.
+Magical Hack and Sleight of Mind now execute their real union choice wrappers
+with unsupported text consumers omitted. Their complete records still reject.
+**+0 unique names / +0 records**, as estimated; complete-card gameplay counts
+stay unchanged. All required checks pass; counts stay unchanged. Their twelve
+loader diagnostics now reach the unsupported spell text consumer.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Physical source transport, Tablet owner-assignment fidelity, counter-note/return
-entry, turn-skip replacements and other gaps remain.
+Text substitution, Tablet owner-assignment fidelity, physical card transports,
+counter-note/return entry, turn-skip replacements and other gaps remain.
 
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -57640,6 +57641,160 @@ Ranked next candidates:
 3. Bronze Tablet's explicit owner assignment and documented source repair, then
    Tempest Efreet's remaining transports. Reassess multi-card prerequisites before
    selecting either single-card completion.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete.
+
+## Run 2026-10-09: UNION-TARGET-RESOLVING-BODIES
+
+Status: complete dependency-ready compiler/engine prerequisite slice. One slice
+only. Full text effects, collection gameplay, runtime cutover and removals remain
+unfinished.
+
+### Selection and complete-record evidence
+
+The latest ranked candidate #1 was dependency-ready and selected. Complete RON
+records were inspected for all seven union-target names and both ante alternatives.
+All 42 union records have identical reprints by name: six records each in LEA,
+LEB, 2ED, 3ED, CED and CEI. The vocabulary reports `Targeted_Modal` tuple/1 (42),
+`CreateSpellEffect` tuple/2 (42), and `CreatePermanentLayerEffect` tuple/2 (74).
+Nested word choices were ready; their actual text consumers were still absent.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| General spell/permanent union resolving bodies | Magical Hack, Sleight of Mind; preserve Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace | 0 | Both text consumers remain unsupported. Supplies one target and branch-local typed operands for two text-changing cards, across twelve records. | Small: compiler adapter, engine dispatch/projections, identity and gameplay tests. |
+| Shared semantic text substitution / installation | Magical Hack, Sleight of Mind | 0 while union bodies are missing; potentially 2 after all dependencies | CR 612.2 word roles, printed versus granted abilities, text layer, timestamps, spell-entry carry and copies require a separate engine contract. | Large: semantic declaration traversal and layer lifecycle. |
+| Owner assignment / physical card transports | Bronze Tablet, Tempest Efreet | 0 for a shared prerequisite alone; individual completion needs additional work | Tablet has unsupported opponent-owner filter and a documented ownership assignment source defect; Efreet still needs hand-to-hand and anywhere-to-graveyard transport after paid-source exchange. Separate operations and data review are needed. | Medium to large, with single-card destinations and source fidelity work. |
+
+Candidate #1 enables concrete two-card work and fits one run. Candidate #2 depends
+on it and exceeds this slice's bounded contract. Candidate #3 combines distinct
+operations and does not offer a larger credible gain for this run.
+
+### Exact shapes, signatures and boundaries
+
+RON supports `SpellActions(Targeted_Modal([Targeted([TargetSpell(AnySpell)],
+ActionList(actions)), Targeted([TargetPermanent(AnyPermanent)],
+ActionList(actions))]))` on nonpermanent spells. Branch order is free. Exactly
+one unfiltered target per category is required. Each body uses the existing
+resolving action compiler, with its category's lexical reference. Cross-category
+references, extra/missing/duplicate categories, filters, nested declarations,
+empty bodies, permanent contexts and casting modifiers reject. Unsupported
+body actions remain errors. The exact existing Lace color shape retains its
+adapter, including same-color restrictions. No text consumer is implemented.
+
+Engine signatures:
+
+- `ResolveObjectTarget(*SpellOrPermanentTargetBinding, ResolvingEffect,
+  ResolvingEffect) ResolvingEffect`, arguments in spell/permanent order.
+- `SpellFromObjectTarget(*SpellOrPermanentTargetBinding) *SpellTargetBinding`.
+- `PermanentFromObjectTarget(*SpellOrPermanentTargetBinding)
+  *PermanentTargetBinding`.
+
+Both projections share the one declaration; neither declares another target.
+The saved category selects one body at resolution, without a mode choice.
+The starting object must still have its stack ID or battlefield incarnation and
+be present/phased in. Return or recast cannot replace it. Union spell projections
+explicitly disable physical source-ID fallback. Once the body starts, existing
+LKI readers retain departure facts for later instructions. Definition validation
+keeps branch producers local. Independent factory builds use separate branch
+maps and target declarations; copies and game clones retain existing frames.
+Explicit source reads in both bodies stay available to waiting queries.
+
+RON owns branch spelling, shape, scope and lowering. Mage owns category dispatch,
+identity and typed reference behavior. Reuse: `DeclareSpellOrPermanentTarget`,
+`WithTargets`, existing target legality, retargeting, definition validation,
+permanent/spell LKI, `Sequence`, resolution frames and clone services. The shared
+`initializeActionBindings` function preserves existing action initialization and
+supplies the same storage to union bodies. Bodies retain existing transactional
+payment, zone, replacement and simultaneous batch services. Dispatch itself
+makes no movement or payment. No global action slot, fallback Go card, card-name
+branch, runtime declaration panic or partial production registry was added.
+
+### Failing-first tests and card mapping
+
+The new RON gameplay tests failed on “supply one color action for this target
+category”; native tests failed compilation on the three new APIs. Initial test
+fixture API/timing errors were corrected without changing assertions. The final
+focused tests cover body timing, explicit target controller, LKI after body-caused
+departure, illegal targets, failed payment, branch isolation and cross-category
+retargeted copies.
+
+| Test | Card mapping / acceptance evidence |
+| --- | --- |
+| `TestObjectTargetBodyDeclarations` | Valid declared projections; nil target, nil bodies and unbound target reject. |
+| `TestObjectTargetBodySavedIdentity` | Present, phased and returned permanent identities; body-caused departure retains controller LKI. |
+| `TestObjectTargetBodyProjectionIdentity` | Wrong-category reads fail; a later physical-card cast and a new stack ID cannot replace the saved object. |
+| `TestObjectTargetBodyBranchBindings` | Producer in one branch cannot supply the other branch or outer continuation; ordered local producer/consumer is valid; nil projections are safe. |
+| `TestRONObjectTargetBodyGameplay` | Typed spell/permanent branch actions, no announcement effects or mode choice, explicit controller and independent cloned resolution. |
+| `TestRONObjectTargetBodyRealChoices` | Magical Hack and Sleight of Mind: actual full target-union wrapper and both actual choice bodies, with only unsupported text consumers removed. Both unmodified complete cards still reject. |
+| `TestRONObjectTargetBodyInvalid` | Filters, duplicate categories, cross-category/unbound operands, nested targets, incompatible result domain and empty bodies reject. |
+| `TestRONObjectTargetBodyLegalityAndPayment` | Phased/returned permanent and countered spell prevent choices; failed mana payment preserves hand, stack and choice state. |
+| `TestRONObjectTargetBodyRetargetCopy` | Copies retarget spell-to-permanent and permanent-to-spell; original targets and bodies stay separate. |
+| `TestRONObjectTargetBodyDepartureInformation` | RON counter/bounce followed by saved controller information uses original LKI. |
+| Existing `TestRONLace*` | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace: unchanged complete-card behavior, all thirty records, color order/protection, identity, clones and cross-category copies. |
+
+Actual new full-card compilation and gameplay gains: **0 unique names / 0
+records**, equal to estimates. Partial-card gameplay coverage now runs both real
+union wrappers instead of extracting one targeted branch. Complete-card gameplay
+counts stay unchanged. All previously accepted records still compile.
+
+### Source defects, working tree and validation
+
+No RON source changes or new source defect was found. Vocabulary source hashes
+need no refresh. Text consumers remain explicit compiler gaps; Tablet's known
+source fidelity issue and Efreet's transport gaps are separate. No engine service,
+Go card, generator or DSL function was removed: the full loading, test migration
+and startup gates remain unmet.
+
+The working tree started with user changes to `.gitignore`, the execution design
+and ledger, plus an untracked completed-entry archive. Preserve those changes.
+The commit stages only this entry and its summary against the tracked ledger;
+the user's archive/reorganization remains unstaged.
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Baseline loader exited 1 for expected strict collection rejection: **2,084
+compiled / 361 rejected records; 807 accepted / 179 rejected unique names**,
+totals 2,445 records / 986 names. An initial in-flight read saw a stale report;
+the completed baseline output confirmed the ledger counts.
+
+Required final checks and loader comparison are recorded below after execution.
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONObjectTargetBody|TestRONLace' -count=1`.
+- `go test ./pkg/mage -run TestObjectTargetBody -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: final result 0 issues. The first run found one test variable
+  shadowing built-in `copy`; it was renamed to `copied`. Focused native/RON tests
+  and lint passed again. Automatic formatting only changed new test imports.
+- `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected strict collection rejection, exit 1.
+
+Final loader: **2,084 compiled / 361 rejected records; 807 accepted / 179 rejected
+unique names**, totals 2,445 records / 986 names. No new rejection or acceptance.
+Exactly twelve diagnostics changed, all six reprints each of Magical Hack and
+Sleight of Mind: formerly “supply one color action for this target category,” now
+“unsupported action (CreateSpellEffect).” This confirms the prerequisite moves
+both records to their remaining text consumers without accepting partial cards.
+No environmental or pre-existing failure blocks this slice.
+
+Changed files: new native/RON `object_target_body.go` and tests; engine
+`composable_actions.go`, `doc.go`; RON `compiler.go`; API/rules-contract references
+and this ledger. Commit message: `feat(ron): implement union target resolving bodies`.
+
+Ranked next candidates:
+
+1. Shared semantic color/basic-land word substitution for Magical Hack and
+   Sleight of Mind. Union bodies and typed choice pairs are now ready. Establish
+   correct CR 612.2 roles and printed-definition transformation as a bounded
+   prerequisite if complete text-layer installation does not fit one run.
+2. Text-layer installation, timestamps, spell-to-entry continuation and copy
+   isolation for those same two names, after semantic substitution. Estimate two
+   full-card unlocks only after both domains and all lifecycle contracts pass.
+3. Reassess shared owner/transport prerequisites for Bronze Tablet and Tempest
+   Efreet. Keep Tablet's source-fidelity repair distinct from compiler adapters;
+   Efreet needs its two remaining physical-card destinations.
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete.

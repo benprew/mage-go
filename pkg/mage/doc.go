@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ResolveObjectTarget] for two resolving bodies with one union target.
+// [SpellFromObjectTarget] and [PermanentFromObjectTarget] share its declaration.
+// The saved category selects one body at resolution, without a mode choice.
+// Each body keeps its own result declarations. The target must still be present
+// when the body starts. Later instructions can read its departure information.
+// Copies can choose a target in the other category. RON supports unfiltered
+// spell/permanent branches in nonpermanent spell actions. Text effects require
+// separate adapters. Existing Lace color forms keep their validated behavior.
+//
 // Use [SacrificeSourceCostWithCard] or [ExileSourceCostWithCard] for an
 // activated ability that needs its paid source card. The payment saves its
 // first new public-zone visit before zone events. Tokens supply no card.

@@ -4099,6 +4099,9 @@ func (b *SpellTargetBinding) resolveStackObject(ctx *EffectContext) (*StackObjec
 		return nil, false
 	}
 	obj := ctx.Game.stack.FindByID(value.id)
+	if _, union := b.spec.(*typedSpellOrPermanentTarget); union {
+		return obj, value.incarnation == uuid.Nil && obj != nil && !obj.IsAbility && obj.Card != nil
+	}
 	if obj == nil {
 		obj = ctx.Game.stack.FindBySourceID(value.id)
 	}

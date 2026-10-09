@@ -112,16 +112,7 @@ func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBinding
 
 func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
-	bindings.textWords = make(map[*textWordChoicePlan]textWordBindings)
-	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
-	bindings.libraryReveals = make(map[*libraryRevealPlan]*mage.CardBinding)
-	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
-	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
-	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)
-	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
-	bindings.abilities = make(map[*abilityTargetPlan]*mage.AbilityTargetBinding)
-	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
-	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
+	bindings = initializeActionBindings(bindings)
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget(bindings)
@@ -162,6 +153,20 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		targets = mage.Spell(mage.Sequence(effects...), mage.WithTargets(declared...)).Targets()
 	}
 	return Targeted(targets, ActionList(effects...))
+}
+
+func initializeActionBindings(bindings instanceBindings) instanceBindings {
+	bindings.textWords = make(map[*textWordChoicePlan]textWordBindings)
+	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
+	bindings.libraryReveals = make(map[*libraryRevealPlan]*mage.CardBinding)
+	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
+	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
+	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)
+	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
+	bindings.abilities = make(map[*abilityTargetPlan]*mage.AbilityTargetBinding)
+	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
+	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
+	return bindings
 }
 
 func problem(n Node, message string) error {
@@ -547,7 +552,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 		if n.Args[0].Name == "Targeted_Modal" {
-			return compileTargetedColor(n.Args[0], ctx)
+			return compileObjectTargetBody(n.Args[0], ctx)
 		}
 		if n.Args[0].Name == "Modal_ChooseOne" {
 			if ctx.castingCost != nil {

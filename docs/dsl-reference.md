@@ -3935,6 +3935,30 @@ through cleanup, control changes and phasing, and carries from a permanent
 spell to the permanent it becomes. Later zone changes end it. Color changes
 are not copiable values. Existing layer timestamps and protection checks apply.
 
+## RON spell-or-permanent resolving bodies
+
+`SpellActions(Targeted_Modal([Targeted([TargetSpell(AnySpell)], ActionList(actions)),
+Targeted([TargetPermanent(AnyPermanent)], ActionList(actions))]))` accepts two
+unfiltered branches in either order on a nonpermanent spell. Each body uses the
+existing resolving action compiler. Spell bodies bind `Ref_TargetSpell`;
+permanent bodies bind `Ref_TargetPermanent`. Cross-category references, duplicate
+categories, nested targets, empty bodies, filters, permanent contexts and casting
+modifiers reject. Unsupported actions remain errors. In particular, text changes
+remain unsupported. The existing exact Lace color form retains its contract.
+
+One union declaration supplies the target; this syntax makes no mode choice.
+`ResolveObjectTarget(target *SpellOrPermanentTargetBinding, spell, permanent
+ResolvingEffect) ResolvingEffect` selects the matching body at resolution.
+`SpellFromObjectTarget(target) *SpellTargetBinding` and
+`PermanentFromObjectTarget(target) *PermanentTargetBinding` read that declaration
+without adding a target. Results and typed references belong to each factory and
+branch. A copy can retarget across categories. The body requires a legal saved
+object at its start; information reads after its departure retain existing LKI.
+
+`TestRONObjectTargetBody*` covers these adapters and both actual word-choice
+bodies from Magical Hack and Sleight of Mind with their text consumers removed.
+This is partial-card evidence; neither complete card is accepted yet.
+
 ## RON activation history at resolution
 
 `BindActivationHistory(name string) *ActivationHistoryBinding` declares history

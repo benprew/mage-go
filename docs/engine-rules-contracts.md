@@ -13480,3 +13480,27 @@ branch through the engine with its text consumer omitted. The full target-union
 wrapper is also omitted because `Targeted_Modal` only accepts Lace color actions. This is prerequisite evidence, not complete
 Magical Hack or Sleight of Mind gameplay validation. No replacement ordering,
 zone transport, layer installation or simultaneous object action is introduced.
+
+## Union target resolving bodies
+
+`ResolveObjectTarget` uses the captured category of one
+`SpellOrPermanentTargetBinding`. Its spell and permanent projections share the
+same target declaration, so announcement saves one choice before payment.
+Resolution requires a current spell with that stack object ID or a phased-in
+permanent with that incarnation (CR 608.2b). It runs only the matching body and
+makes no mode choice. A returned permanent or later cast cannot replace the
+saved object. The spell projection does not use physical source-ID fallback.
+
+After body execution starts, existing typed LKI readers can read the departed
+object's information for later instructions (CR 608.2h). A target need not remain
+present for those information reads. Action references still require presence.
+Each branch's result producers stay local during definition validation. Each
+factory builds separate declarations; copies and clones use the existing target
+frames. Cross-category retargeting selects the new category's body. Both bodies
+retain explicit source reads for waiting queries without running an instruction.
+The body uses existing movement, replacement, batch and payment services.
+
+Evidence: native `TestObjectTargetBodyDeclarations`, `SavedIdentity`,
+`ProjectionIdentity`, `BranchBindings`; RON `TestRONObjectTargetBodyGameplay`,
+`Invalid`, `RealChoices`, `LegalityAndPayment`, `RetargetCopy`,
+`DepartureInformation`; and unchanged `TestRONLace*` coverage.
