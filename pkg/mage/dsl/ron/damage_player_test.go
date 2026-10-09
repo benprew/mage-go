@@ -142,7 +142,7 @@ func TestRONDamagePlayerInvalid(t *testing.T) {
 			t.Fatal("accepted", event)
 		}
 	}
-	for _, rules := range []string{`Activated(PayMana([]),ActionList([PlayerAction(Trigger_ThatPlayer,DiscardHand)]))`, `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent),ActionList([PlayerAction(Trigger_ThatPlayer(),DiscardHand)]))`, `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent),ActionList([PlayerAction(Trigger_ThatPlayer,DiscardHand())]))`, `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent),ActionList([GainLife(Trigger_AmountOfDamageDealt)]))`} {
+	for _, rules := range []string{`Activated(PayMana([]),ActionList([PlayerAction(Trigger_ThatPlayer,DiscardHand)]))`, `Activated(PayMana([]),ActionList([GainLife(Trigger_AmountOfDamageDealt)]))`, `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent),ActionList([PlayerAction(Trigger_ThatPlayer(),DiscardHand)]))`, `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent),ActionList([PlayerAction(Trigger_ThatPlayer,DiscardHand())]))`} {
 		src := `Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[` + rules + `])`
 		nodes, err := Parse(strings.NewReader(src), "bad.ron")
 		if err != nil {

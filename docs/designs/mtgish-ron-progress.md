@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest verified worktree inventory reports **812 accepted / 174 rejected
-unique card names** (986 total), and **2,098 compiled / 347 rejected records**
+The latest verified worktree inventory reports **813 accepted / 173 rejected
+unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 (2,445 total). The baseline includes pre-existing Eureka entry-round changes.
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`STATIC-ABILITY-SOURCE-TARGET-RESTRICTION` adds live source-filter restrictions
-on targets of abilities. Exact source/host identity, current and retained source
-facts, trigger placement, copies, phasing and restoration have contract tests.
-Acceptance gain is **+1 name / +1 record**: Artifact Ward. Raiding Party's exact
-static subrule works; its complete resolving procedure remains unsupported.
+`DAMAGE-PLAYER-SOURCE-PERMANENT` adds typed source/host damage-to-player capture.
+Actual amounts, exact source identity, current control and departure LKI,
+attachment changes, prevention, timing, copies and clones have contract tests.
+Acceptance gain is **+1 name / +1 record**: Backfire. Native staged coverage
+excludes pre-existing Eureka work: 812 accepted names / 2,098 compiled records.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished.
@@ -60890,6 +60890,163 @@ Ranked next candidates:
 3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
    Raiding Party's per-player tap results and chosen-Plains procedure remain a
    separate candidate; no full-card coverage is claimed for its static subrule.
+
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished. Stop after this slice.
+
+## 2026-10-09: typed damage-to-player source and Aura-host capture
+
+Status: completed implementation slice `DAMAGE-PLAYER-SOURCE-PERMANENT`.
+
+### Selection and dependency assessment
+
+The latest ranked candidates were evaluated from fresh loader evidence and
+complete records, including both text spell/permanent branches, Farrel's
+payment and combat-rule continuation, and Mana Clash's nested repeat round.
+Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: bounded live layer-3 installation/restoration | Magical Hack, Sleight of Mind | 0 for a bounded prerequisite | Typed text builders and declaration revisions exist, but there is no shared ordered installation/restoration service. Both cards also require spell changes and installation across all declaration kinds. Enables two cards after later contexts. | Multiple contract steps; too broad for this run's complete slice. |
+| Ranked #2: shared damage-to-player source/host context | Backfire, Hypnotic Specter, Nafs Asp, Nicol Bolas, Pit Scorpion, Serpent Generator, Marsh Viper | 1: Backfire | Existing six cards have complete accepted damage-event bodies. The host adapter and typed damaging-permanent capture are missing. Shared binding service and exact attachment predicate also serve future host events and existing Spirit Link damage events. Farrel's Mantle needs a separate host unblocked event, event identity and damage-payment context; Tourach's Gate still needs its written host tap cost. | Small adapter plus one native capture contract; one run. |
+| Ranked #3: per-player coin result rounds | Mana Clash | 1 | Needs a typed player/result collection, simultaneous coin round, termination condition, damage recipients and repeat lowering. Per-player result collections could later support Raiding Party and Rebirth, with separate producer and procedure contracts. | Larger new result/round subsystem; one substantial run. |
+
+Selected the shared damage event context because it extends a family already
+used by seven unique names and gives the same immediate gain as coin rounds
+with less new execution machinery. It establishes reusable event identity,
+not a card-specific executor. Layer-3 installation remains a missing engine
+contract; host spelling is a compiler gap; source capture is a native contract
+gap. No environment failure or source-data defect selected the work.
+
+### Exact supported contracts and reuse boundary
+
+RON: `TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent|HostPermanent),
+AnyPlayer|SinglePlayer(You)), body)` supports the existing resolving/targeted
+body compiler. HostPermanent requires Aura scope. These event bodies provide
+fresh `Trigger_ThatPlayer`, `Trigger_ThatPermanent`, and
+`Trigger_AmountOfDamageDealt` bindings. Source-to-Opponent events retain their
+prior filter and now expose the actual amount. Host-to-Opponent and native
+combat/opponent source-permanent captures remain explicit unsupported contexts.
+There are no new out-of-scope, malformed, unbound or arbitrary-player reads.
+
+Native: damageEventPattern.WithSourcePermanent(*PermanentBinding) is valid on
+DealsDamage and DealsDamageToPlayer, with a distinct nonempty source binding.
+Nil, unnamed, duplicate and source/recipient alias declarations fail definition
+validation. The existing event detection saves SourceID/SourceIncarnation into
+an eventPermanentCapture before pending placement. WithAmount retains actual
+post-prevention damage. The existing player capture retains the recipient.
+
+The shared EventSourceIsAttachedTo predicate now compares a supplied event
+incarnation with the saved attachment incarnation. A returned host cannot
+inherit damage from its former visit. Legacy events without incarnation data
+keep their prior identity check. ControllerOfWithLKI reads the saved damaging
+permanent at resolution, including current control or exact departure facts;
+reattachment cannot substitute a new host. CR 120.4b, 120.8–9, 603.2–3, 400.7
+and 608.2h establish amount, timing, identity and information contracts.
+
+Bindings, factory isolation, pending captures, resolution frames, copies,
+clones, phasing, LKI, damage replacements, prevention and simultaneous packets
+reuse engine services. No second damage, zone, payment or trigger system was
+added. Reflection is damage and gets its own prevention processing. Existing
+Aura casting handles affordability, rollback, target legality and attachment.
+No Go-card fallback, skipped rule, global last-result field, runtime declaration
+panic or partial production registry was added. No Go definitions, generators,
+or DSL functions were removed; their cutover/removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed to compile because WithSourcePermanent did not exist.
+The initial RON test fixture used the wrong casting target type; it was corrected
+before production changes. All complete Backfire gameplay cases then rejected
+HostPermanent, as expected. ReturnedDamageSource was added after the first
+implementation, failed because a returned host inherited old-source damage,
+and passed only after the exact attachment predicate fix.
+
+Existing rejection tests for SinglePlayer(You) and a token's own damage amount
+became obsolete. Positive SourceContexts and TokenAmountIsolation cover those
+newly supported declarations; malformed filters/amounts and unbound references
+remain rejected. The token test fixture changed from Sorcery to Instant so both
+players could cast on the same turn. No gameplay expectation was weakened.
+Inventory uses the existing `value` role for damage amounts; the first test's
+incorrect `numeric_value` expectation was corrected without production changes.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Backfire: full LEG record, every rule | TestRONHostDamagePlayerBackfire: unpaid/paid casting, no early entry, attachment, normal/partial/fully prevented and zero damage, player/source/creature filtering, life-loss exclusion, reattachment, departed/returned host LKI, current host control, host phasing, Aura departure/phasing/removal, repeated events, copies and pending clones. |
+| Backfire exact identity and batches | TestRONHostDamagePlayerReturnedDamageSource: old source versus new host visit. Simultaneous: distinct factories/amounts and ordinary reflection prevention. |
+| RON event forms and token isolation | TestRONHostDamagePlayerSourceContexts: AnyPlayer, Opponent and SinglePlayer(You), positive amount reads. TokenAmountIsolation: separate compiled token declarations/controllers/amounts. Invalid: arity, chooser shape, player filter and unbound source rejection. |
+| Complete record loading and semantic roles | TestRONHostDamagePlayerInventoryAndAtomicLoad: complete Backfire record, duplicate collapse, player/permanent/value roles, rejected collection preserves existing registry. Updated exact inventory/count and retained-definition tests retain all accepted records. |
+| Existing six damage-player users | TestRONDamagePlayer* (Hypnotic Specter, Nicol Bolas); TestRONPoison* (Pit Scorpion, Marsh Viper, Serpent Generator); Nafs Asp retains compilation/definition evidence and shared delay/payment service tests, but has no named RON gameplay test in this slice. Their complete RON records were inspected; no new full-card claims beyond Backfire. |
+| Native capture and information | TestDamageSourcePermanentValidation, Identity and DistinctRecipient: invalid declarations, current control, old-visit LKI, reattachment, phasing, cloned pending state and separate source/recipient bindings. Existing attached damage and damage-event incarnation tests retain amount, replacement and simultaneous contracts. |
+
+### Verification and collection status
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. Baseline `go run ./cmd/loadcards -json` exited 1 for collection
+rejection, with 2,098 compiled / 347 rejected records and 812 / 174 names.
+
+Required final worktree checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONHostDamagePlayer -count=1`.
+- Expanded focused RON damage-player, poison, definition-plan, numeric consumer
+  and collection checks; native source capture, attached damage and incarnation
+  tests.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: final zero issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for remaining unsupported
+  collection records. Fresh diagnostic comparison shows only Backfire removed.
+
+Initial short runs exposed the obsolete rejection expectations and the token
+sorcery-timing fixture described above. After their repair, fresh engine short
+and full tests passed. Lint changed the new RON test's import grouping and string iteration,
+and removed a redundant explicit EventPattern type in damage_player.go.
+First lint then reported a preallocation issue in the two-packet fixture. The capacity fix passed focused tests and final lint. Affected tests,
+collection assertions and vet checks were rerun after automatic changes.
+No remaining required-check, environment or pre-existing validation blocker
+remains.
+
+The isolated staged tree independently passes the expanded focused RON tests,
+exact collection/count/reconstruction checks, native tests, `make build` and
+`go vet ./...`. Final test-file formatting/capacity changes pass focused tests
+and vet again there. Its loader exits 1 with the precise counts below. Staged
+whitespace checks pass. Only this slice is staged.
+
+Estimated +1 unique full-card unlock matches actual +1 name / +1 record:
+Backfire. Worktree inventory is **813 accepted / 173 rejected unique names**,
+**2,099 compiled / 346 rejected records** (986 names, 2,445 records total).
+Backfire is the only removed rejection; every other diagnostic is unchanged.
+Every previously accepted record remains accepted. Compilation is separate from
+complete collection gameplay coverage. The strict collection loader still
+rejects and publishes no partial registry.
+
+The worktree includes pre-existing Eureka work. Slice staging excludes all
+prior work and retains the separate native baseline: **812 accepted / 174
+rejected names**, **2,098 compiled / 347 rejected records**. The staged count
+assertions use that baseline. The ledger archive/reorganization, existing
+compiler/Eureka changes and other user work remain separate and uncommitted.
+
+Local data/LEG.json confirms Backfire's full Oracle rules, including damage to
+you and the creature controller recipient. No source defect was found. No RON
+source changed; the vocabulary snapshot requires no refresh.
+
+Changed files: engine composable_events.go and trigger_condition_data.go; new
+native damage_source_permanent_test.go; RON damage_player.go, new
+host_damage_player_test.go, damage_player_test.go and poison_player_test.go;
+three exact collection-count test files; engine API reference, rules contracts
+and this ledger. No inventory role implementation change was necessary.
+
+Ranked next candidates:
+
+1. Bounded native layer-3 installation/restoration prerequisite for Magical Hack
+   and Sleight of Mind. First define one complete declaration context with
+   ordered expiry and original-text restoration; keep spell/cross-kind gaps.
+2. Host unblocked event identity for Farrel's Mantle. Reuse typed capture services;
+   verify the full Other filter, host damage payment and combat-rule continuation
+   before claiming a full unlock. Compare with Mana Clash effort before selection.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+   Raiding Party's tap result collection and chosen-Plains procedure remain
+   separate, as does Tourach's Gate's host tap payment.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished. Stop after this slice.

@@ -584,7 +584,7 @@ func (EventSourceIsAttachedTo) CheckTriggerCond(evt *GameEvent, g GameReader, so
 	if src == nil || !src.IsAttached() {
 		return false
 	}
-	return evt.SourceID == src.AttachedTo
+	return evt.SourceID == src.AttachedTo && (evt.SourceIncarnation == uuid.Nil || evt.SourceIncarnation == src.attachedIncarnation)
 }
 
 // ---------------------------------------------------------------------------

@@ -730,6 +730,9 @@ func (p controlledEnchantmentEntryPattern) captureDetectedEvent(event *GameEvent
 
 // --- from composable_event_player.go ---
 type damageEventPattern struct {
+	sourcePermanent           *PermanentBinding
+	captureSourcePermanent    bool
+	duplicateSourcePermanent  bool
 	source                    PermanentRef
 	player                    *PlayerBinding
 	opponentOnly              bool
@@ -803,6 +806,16 @@ func (p damageEventPattern) WithSource(binding *DamageSourceBinding) damageEvent
 		p.duplicateDamageSource = true
 	}
 	p.damageSource, p.captureDamageSource = binding, true
+	return p
+}
+
+// WithSourcePermanent saves the exact permanent that deals damage.
+// Later attachment changes cannot change this reference.
+func (p damageEventPattern) WithSourcePermanent(binding *PermanentBinding) damageEventPattern {
+	if p.captureSourcePermanent {
+		p.duplicateSourcePermanent = true
+	}
+	p.sourcePermanent, p.captureSourcePermanent = binding, true
 	return p
 }
 
@@ -914,6 +927,13 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 			n.children = append(n.children, definitionEdge{"permanent", &eventPermanentCapture{binding: p.permanent}})
 		}
 	}
+	if p.captureSourcePermanent {
+		if p.combatOnly || p.opponentOnly || p.sourcePermanent == nil || p.duplicateSourcePermanent || p.capturePermanent && p.sourcePermanent == p.permanent {
+			n.problem = "damage event requires one distinct source permanent binding on DealsDamage or DealsDamageToPlayer"
+		} else {
+			n.children = append(n.children, definitionEdge{"source permanent", &eventPermanentCapture{binding: p.sourcePermanent}})
+		}
+	}
 	if p.captureRecipientPlayer {
 		if !p.anyRecipient || p.recipientPlayer == nil || p.duplicateRecipientPlayer {
 			n.problem = "damage event requires one player recipient binding on DealsDamage"
@@ -929,6 +949,9 @@ func (p damageEventPattern) captureDetectedEvent(event *GameEvent, observer Game
 		return nil
 	}
 	var captures []Effect
+	if p.captureSourcePermanent && p.sourcePermanent != nil {
+		captures = append(captures, &eventPermanentCapture{binding: p.sourcePermanent, value: capturedPermanent{event.SourceID, event.SourceIncarnation}})
+	}
 	if p.captureDamageSource && p.damageSource != nil {
 		captures = append(captures, &eventDamageSourceCapture{binding: p.damageSource, source: cloneDamageSource(game.damageEventSource)})
 	}

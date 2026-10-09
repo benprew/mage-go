@@ -1822,6 +1822,16 @@
 // RON supports one source-counter XIs modifier with an X mana payment.
 // Dynamic ValueX reads in bodies and targets need a separate contract.
 //
+// Use damage event WithSourcePermanent to save the exact damaging permanent.
+// DealsDamage and DealsDamageToPlayer keep this reference separate from the
+// recipient and damage-source bindings. Detection saves its incarnation.
+// Reattachment and return cannot replace it. Current controller reads and LKI
+// use ControllerOfWithLKI. Pending triggers, copies and clones keep the result.
+// RON supports source or Aura-host damage to AnyPlayer or SinglePlayer(You).
+// These bodies can read Trigger_ThatPermanent and Trigger_AmountOfDamageDealt.
+// Existing source-to-Opponent bodies also support the captured damage amount.
+// Host-to-Opponent events and combat-only source captures remain unsupported.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

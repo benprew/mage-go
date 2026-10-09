@@ -136,7 +136,7 @@ func TestRONPoisonInvalid(t *testing.T) {
 			t.Fatal("accepted", action)
 		}
 	}
-	for _, filter := range []string{`AnyPlayer()`, `SinglePlayer(You)`, `You`} {
+	for _, filter := range []string{`AnyPlayer()`, `SinglePlayer(Opponent)`, `You`} {
 		text := fmt.Sprintf(`Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),CardPT:(Power:1,Toughness:1),Rules:[TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),%s),ActionList([PutCounters([ACounterOfTypeOnPlayer(PoisonCounter,Trigger_ThatPlayer)])]))])`, filter)
 		nodes, err := Parse(strings.NewReader(text), "bad.ron")
 		if err != nil {
@@ -271,7 +271,7 @@ func TestRONPoisonGeneratorPaymentAndCopies(t *testing.T) {
 }
 
 func TestRONPoisonTokenScope(t *testing.T) {
-	for _, action := range []string{`PutCounters([ACounterOfTypeOnPlayer(PoisonCounter,Ref_TargetPlayer)])`, `GainLife(ValueX)`, `GainLife(Trigger_AmountOfDamageDealt)`} {
+	for _, action := range []string{`PutCounters([ACounterOfTypeOnPlayer(PoisonCounter,Ref_TargetPlayer)])`, `GainLife(ValueX)`, `GainLife(Trigger_AmountOfDamageDealt())`} {
 		text := `Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Sorcery],Subtypes:[]),ManaCost:[ManaCostX],Rules:[SpellActions(Targeted([TargetPlayer(AnyPlayer)],ActionList([CreateTokens([TokenWithPT(PT(1,1),Colorless,[],[Creature],SubtypesList([Snake]),[TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),AnyPlayer),ActionList([` + action + `]))])],[])])))])`
 		nodes, err := Parse(strings.NewReader(text), "bad.ron")
 		if err != nil {

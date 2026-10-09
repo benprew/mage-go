@@ -14443,3 +14443,43 @@ registration positions. Existing `TestRONPermanentFilter*`,
 `TestRONSourceLeaveShrine*` and `TestRONSourceLeaveCasting` retain normal casting,
 Aura legality, failed-cost rollback, simultaneous damage, prevention, copied
 triggers and old-source information evidence.
+
+
+## Damage-to-player source permanent capture
+
+`DealsDamageToPlayer(This|AttachedPermanent, player).WithSourcePermanent(source)`
+and `DealsDamage(This|AttachedPermanent, amount).WithSourcePermanent(source)`
+save an exact permanent incarnation at detection. The recipient permanent,
+recipient player, damage-source and source-permanent bindings remain separate.
+Nil, unnamed, repeated, or aliased source/recipient permanent bindings fail
+native definition validation. Combat-only and opponent-only patterns do not
+accept this new source capture.
+
+RON supports `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent|HostPermanent),
+AnyPlayer|SinglePlayer(You))` with fresh per-factory bindings for
+`Trigger_ThatPlayer`, `Trigger_ThatPermanent`, and `Trigger_AmountOfDamageDealt`.
+The controller filter uses the trigger controller at detection. Existing source
+`Opponent` events retain their player filter and now expose the damage amount;
+their source-permanent capture and host `Opponent` forms remain unsupported.
+The Aura-host form requires Aura scope. Results remain local to the event body.
+
+Actual post-prevention damage supplies the amount (CR 120.4b, 120.8–9).
+Detection queues the ability; reflection waits for resolution (CR 603.2–3).
+Reattachment cannot change the saved source. Current controller information is
+read at resolution, with exact-incarnation LKI after departure (CR 608.2h).
+Returned objects cannot supply this information (CR 400.7). The shared attached
+source predicate now rejects an event from a prior incarnation even if its card
+ID matches the current host. Events without an incarnation retain legacy checks.
+Phasing, copied stack objects, independent factories and game clones use the
+existing binding and resolution services. Reflection uses ordinary damage,
+including its own prevention and replacement processing; it is not life loss.
+
+`TestRONHostDamagePlayerBackfire` covers the complete LEG Backfire record,
+casting payment, attachment, actual amount, filtering, timing, departure,
+reattachment, current control, phasing, ability removal, copies and clones.
+`ReturnedDamageSource`, `Simultaneous`, `SourceContexts`, `Invalid`, and
+`InventoryAndAtomicLoad` cover returned sources, independent batch amounts,
+source filters, declaration rejection, semantic inventory, reprints and strict
+atomic loading. `TestDamageSourcePermanentValidation` and `Identity` cover the
+native service. Existing damage-player and attached-damage tests retain prior
+contracts. No RON source data changed.
