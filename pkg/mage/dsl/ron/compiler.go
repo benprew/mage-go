@@ -893,6 +893,8 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 		switch n.Name {
 		case "AnyPermanent":
 			return mage.AnyPermanent, nil
+		case "IsNonToken":
+			return mage.Not(mage.IsToken), nil
 		case "IsEnchanted":
 			return mage.IsEnchanted, nil
 		case "IsntEnchanted":

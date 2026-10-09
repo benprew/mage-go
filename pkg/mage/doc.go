@@ -784,6 +784,10 @@
 // Use [OpponentControls] with [While] for a static condition that reads
 // the current opponent's permanents. Combine [Not] and [IsToken] to exclude
 // tokens. Control changes and phasing change this condition immediately.
+// RON IsNonToken uses the same filter for targets, collections, payments,
+// static selections and resolving property conditions. Copying characteristics
+// does not change physical token status. Targets keep their legality checks;
+// information reads can use LKI without permitting actions on absent objects.
 // Use [IfPermanentMatches] for a resolving property condition. It uses the
 // current object or information saved for its exact incarnation. An information
 // read does not make an absent object available for an action.

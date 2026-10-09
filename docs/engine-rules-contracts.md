@@ -13172,3 +13172,29 @@ than its controller distinguishes these instructions. This slice leaves that
 source correction and its owner/controller evidence to the independent assignment
 adapter; it does not claim Oracle fidelity for the complete card. No RON assets
 or vocabulary source hashes changed.
+
+## RON nontoken permanent selection
+
+`IsNonToken` is a symbol in permanent-filter roles and uses the existing
+`Not(IsToken)` predicate. CR 111.1 and 111.6 distinguish tokens from physical
+cards; copying characteristics does not transfer token status (CR 707.2).
+The shared adapter now supplies supported permanent targets, resolving
+collections, fixed matching sacrifice payments, static selections and resolving
+property conditions. Static condition selection retains the same behavior.
+
+The predicate does not select a zone or authorize an absent action. Target
+services retain announcement identity and legality rechecks (CR 608.2b).
+Collections omit phased permanents and read membership when the action resolves.
+Static selections read membership each pass. Property conditions use current
+or retained information for the original incarnation (CR 608.2h).
+
+`TestRONNontokenFilterCardTargets` uses real RON target nodes to check token
+rejection, cost preservation, target/source departure, phase cycles, control,
+clones and copies. `TestRONNontokenFilterSacrifice` checks the real Lich filter
+in a fixed-count creature payment probe; its complete dynamic mandatory payment
+remains unsupported. Collection and layer probes check late entries, phasing,
+physical token exclusion and source LKI. `TestNontokenFilterPhysicalCopyStatus`
+checks both directions of entry copying. `TestNontokenFilterSimultaneousExile`
+checks that all selected objects leave before live event observation and that
+leave-trigger detection retains the former battlefield. Existing batch,
+identity, payment, LKI and copy mechanics are reused without new state.

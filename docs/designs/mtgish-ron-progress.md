@@ -7,10 +7,11 @@ names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TWO-CARD-OWNERSHIP-EXCHANGE` adds atomic ownership exchange for present typed
-cards and RON lowering for bound exile/reveal/graveyard/ante references.
-Bronze Tablet and Tempest Efreet have prerequisite gameplay evidence; complete
-records still reject other adapters. **+0 unique names / +0 records**, as estimated.
+`NONTOKEN-PERMANENT-FILTERS` adds shared `IsNonToken` lowering for permanent
+targets, collections, sacrifice payments, static selections and resolving
+property conditions. Bronze Tablet, Dance of Many and Lich have new prerequisite
+gameplay evidence. **+0 unique names / +0 records**, as estimated; two loader
+diagnostics advance. Existing complete-card mappings remain unchanged.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -56468,3 +56469,148 @@ Ranked next candidates:
    scheduling and affected-player replacement ordering.
 
 Stop after TWO-CARD-OWNERSHIP-EXCHANGE. Migration incomplete.
+
+## 2026-10-09: shared nontoken permanent filters
+
+Status: completed implementation slice `NONTOKEN-PERMANENT-FILTERS`.
+This is one permanent-filter capability. Engine execution reuses the exact
+`Not(IsToken)` contract; no new token-status service or game state is needed.
+
+### Fresh environment and candidate comparison
+
+The initial tree contained user edits to `.gitignore`, the execution design and
+this progress file, plus untracked `mtgish-ron-completed.md`. The user's archive
+split and unrelated files were preserved. Only this run's summary changes and
+appended entry are staged from the progress file. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline loader exit 1 was strict
+collection rejection, not a build or test failure: 2,076 compiled / 369 rejected
+records, 804 accepted / 182 rejected names, totals 2,445 / 986.
+
+The latest ranked candidate #1 was evaluated first. Complete records and nested
+forms were read for Tempest Efreet, Psychic Purge, Bronze Tablet, all five Time
+Vault records and all eleven names with `IsNonToken`. Targeted vocabulary entries
+showed symbol `IsNonToken/0` with 16 occurrences and the exact ownership and
+source-destination shapes. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Remaining blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Physical source-card reference prerequisite | Tempest Efreet. Psychic Purge uses a separate `ThisCardInHand` event contract. | 0 | Efreet needs physical source identity after sacrifice, hand-to-hand transfer and an anywhere-to-graveyard destination. Purge needs FromAnyZone and discarded-card event capture. The same spelling cannot supply both contracts. | Medium to large: source continuation and zone-visit rules, frames and destination services. |
+| Shared nontoken permanent filter | Arboria; Beasts of Bogardan; Bronze Tablet; City in a Bottle; Dance of Many; Golgothian Sylex; Ivory Guardians; Jihad; Lich; Nameless Race; Psychic Allergy | 0 new names; Beasts and Guardians already compile through static conditions | Tablet needs opponent-owner targets, owner LKI, two-branch payment and owner-assignment fidelity. Dance needs token-copy creation and linked token lifecycle. Sylex needs controller sacrifices and set-origin filters. Bottle needs state triggers, set-origin and casting/land restrictions. Lich needs entry life loss, life replacements, dynamic mandatory sacrifice and loss actions. Jihad needs color/player choices and state conditions. Race needs bounded entry life payment and saved paid-life values. Allergy needs chosen color and dynamic selected-color filtering. Arboria needs prior-turn play history and attack restrictions. Removes one shared prerequisite from targets, payments and collections. | Small: reuse stateless engine predicate; add shared lowering and focused execution/invalid-declaration contracts. |
+| Optional begin-turn skip replacement | Time Vault, five records | 1 | Extra-turn scheduling exists. Needs begin-turn replacement lifecycle, optional skip payment, untap continuation, normal/extra/skipped turn integration and affected-player ordering. | Large: turn subsystem and replacement integration plus scheduling regressions. |
+
+Candidate #1 has no demonstrated shared physical-source consumer beyond Efreet;
+its two destination forms also occur only there. It is deferred while shared work
+remains. The nontoken prerequisite wins because its exact engine behavior is ready,
+its target/payment/collection consumers are concrete, and its full scope is small.
+Time Vault has a larger immediate gain but requires substantially more lifecycle
+work. First-error frequency was not used as an unlock estimate.
+
+### Contract, signatures, contexts and reuse
+
+RON supports the **symbol** `IsNonToken`, with no arguments, through
+`compileFilter(Node) (mage.PermanentFilter, error)`. Static condition filters now
+reuse this adapter. `compileResolvingPropertyFilter` also admits it. Existing
+supported `And`/`Or` composition retains its role-specific restrictions.
+Contexts include permanent targets, resolving permanent collections, fixed
+matching sacrifice costs/payments, live static selections and resolving property
+conditions. Unsupported enclosing actions remain errors; this does not add
+spell, player or card-in-zone filters, dynamic costs or new trigger families.
+Tuple forms and action/cost/player-filter role misuse reject before factory
+publication. Semantic inventory already assigns the permanent-filter role.
+
+Engine reuse: `Not(PermanentFilter) PermanentFilter`, `IsToken PermanentFilter`,
+`DeclarePermanentTarget` and its per-instance bindings, `MatchingPermanents`,
+`TapEach`, `ExileEach`, static layers, `IfPermanentMatches`, exact-incarnation
+information, `SacrificeNMatchingIncludingSourceCost`, payment transactions,
+zone batches and `BuildEntryCopy`. Token status is physical and independent of
+name, copied characteristics, ownership and control. CR 111.1, 111.6 and 707.2
+supply that distinction. CR 608.2b and 608.2h retain target legality and LKI timing.
+
+Targets keep announcement identity and resolution legality; departure/return
+cannot replace them. Phase cycles keep identity but phased targets cannot receive
+an action. Collections read current unphased membership at resolution; static
+layers read current membership each pass. Resolving property conditions retain
+LKI for the original source. Payment failure preserves live mana and objects.
+The filter creates no bindings, choices, replacement registrations or deferred
+state, so existing ordering and saved-frame boundaries remain with those services.
+RON owns spelling and role validation; the engine owns all selection and movement.
+No card-name branch, fallback registry, skipped rule or global result slot was added.
+
+### Failing-first evidence and card-to-test mappings
+
+Before implementation, focused RON tests failed on the expected unsupported
+`IsNonToken` permanent-filter and resolving-property diagnostics. Real positions
+included ATQ:15:345 and LEB:141:505. A fixture adjustment added a creature
+conjunction to the fixed sacrifice probe so the source could not supply the
+second payment subject; this is test scope, not a change to Lich's record.
+The tests were rerun failing before the adapter was added.
+
+The native tests exercise existing mechanics. A test-only `Game.Exile` typo was
+corrected to exact `FindExiledCard` checks. The batch test initially used the
+leave-trigger reader as the post-move game. That reader deliberately supplies
+the former battlefield; the final test independently checks the completed live
+batch and the former trigger battlefield. No engine semantics were changed to
+satisfy a fixture assumption. Invalid declaration fixtures use the proper card
+type and require diagnostics naming `IsNonToken`.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| `TestRONNontokenFilterCardTargets` | Bronze Tablet's nontoken target node, with its mana/tap activation costs, and Dance of Many's complete nontoken-creature target filter with its entry event. Test-only bodies tap the target while unsupported owner/payment/copy/lifecycle rules are omitted. Token rejection, rollback, resolution timing, return, phasing, control, departed source, pending clones and stack copies. Prerequisite evidence only. |
+| `TestRONNontokenFilterSacrifice` | Lich's exact nontoken filter in a fixed two-creature activation-payment probe. Tests owned-by-opponent/controlled-by-payer subjects, token/phase/control/mana failure, retained resources, cost versus effect timing and clone isolation. Does not claim Lich's dynamic mandatory damage payment. |
+| `TestRONNontokenFilterCollectionsAndLayers` | Synthetic supported contexts for current collection membership, late entries, phased exclusion, same-name tokens, static source phasing and resolving source LKI. Shared prerequisite evidence for the remaining collection/property consumers. |
+| `TestRONNontokenFilterDeclarations` | Invalid tuple arities, wrong roles, atomic loader rejection and compiled semantic inventory role. |
+| `TestNontokenFilterPhysicalCopyStatus` | Engine entry-copy contracts in both directions: a physical card that copies a token remains nontoken; a token that copies that card remains a token. Physical names/characteristics cannot substitute for token status. Phase queries and cloned selection stay separate. |
+| `TestNontokenFilterSimultaneousExile` | Engine filtered exile batch; both selected objects move before live event observation, tokens remain, leave-trigger detection keeps the former battlefield. |
+| Existing `TestRONOpponentStatic*` | Full Beasts of Bogardan and Ivory Guardians behavior coverage remains passing through the shared static adapter. Existing mappings are retained, not counted as new complete-card coverage. |
+
+The other affected records were inspected for blockers; they receive no new
+complete-card claim. No RON source or vocabulary source hash changed. No new
+source-data defect was established or corrected. Bronze Tablet's previously
+recorded owner/controller assignment defect remains. Runtime cutover, Go-card
+removal and unused-DSL removal gates remain unmet; no caller was removed.
+
+### Verification and measured outcome
+
+Required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONNontokenFilter -count=1`: PASS.
+- `go test ./pkg/mage/dsl/ron -run 'TestRON(NontokenFilter|OpponentStatic)' -count=1`: PASS, including after lint.
+- `go test ./pkg/mage -run TestNontokenFilter -count=1`: PASS, including after lint.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: PASS.
+- `make lint`: PASS, 0 issues. Automatic changes only formatted new test imports;
+  they were reviewed. A final focused/native run and `make test` also passed.
+- `git diff --check`: PASS; the staged patch was checked before commit.
+- `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+
+Final counts: **2,076 compiled / 369 rejected records; 804 accepted / 182 rejected
+unique names**, totals 2,445 records / 986 names. Actual gain **+0 names / +0
+records** matches the estimate. Bronze Tablet advances from ATQ:15:345 unsupported
+IsNonToken to ATQ:15:372 unsupported permanent target owner Opponent. Dance of
+Many advances from DRK:22:247 unsupported IsNonToken to DRK:22:311 unsupported
+creature token definition TokenCopyOfPermanent. All other diagnostics are
+unchanged; no accepted record regressed. Gameplay evidence expanded in the
+mapped prerequisite contexts; no new complete-card behavior claim was added.
+No environment or required-check blocker remains.
+
+Changed files: compiler.go, conditional_static.go, resolving_condition.go,
+new RON/native nontoken_filter_test.go files, pkg/mage/doc.go, API and rules-contract
+docs, and the progress summary/entry. Commit message:
+`feat(ron): implement nontoken permanent filters`.
+
+Ranked next candidates:
+
+1. Shared `ControllersSacrificeEachPermanent` resolving collection prerequisite
+   for Golgothian Sylex and City in a Bottle: exact current controllers, one batch,
+   choices/ordering and replacement behavior. Compare set-origin filter readiness
+   before estimating a full Sylex unlock; Bottle still needs state-trigger/player
+   restriction contracts.
+2. Shared set-origin permanent filters for those two cards, with authoritative
+   original-printing membership rather than current set or physical printing.
+3. Time Vault's optional begin-turn skip replacement with normal, extra and
+   skipped-turn scheduling and affected-player ordering. Reassess the effort
+   against any newly ready shared work before selecting it.
+
+Physical source transport for Efreet and Tablet's owner-target/LKI/payment/assignment
+path remain deferred single-card work. Stop after NONTOKEN-PERMANENT-FILTERS.
+Migration incomplete.

@@ -9915,3 +9915,24 @@ uses Tempest Efreet's actual reveal/exchange forms with an explicit player and a
 graveyard target in place of its unsupported physical source. It covers spell,
 activation, trigger and delayed execution. These tests establish prerequisites,
 not complete-card gameplay. The complete records still reject.
+
+## RON nontoken permanent filters
+
+The symbol `IsNonToken` lowers to `mage.Not(mage.IsToken)` through the shared
+permanent-filter compiler. It works in existing target, collection, fixed
+sacrifice-cost, static-selection and resolving-property contexts, including
+supported `And`/`Or` compositions. Static condition filters use this same adapter.
+It takes no arguments; tuple forms and use as an action, cost or player filter
+remain declaration errors. This adds no card-in-zone or spell filter.
+
+Token status belongs to the physical permanent, independently of its name,
+owner, controller or copied characteristics. Targets use the existing
+announcement and resolution checks. Collections select current unphased
+members; static layers select live members each pass. Resolving property reads
+retain exact-incarnation LKI. Payments keep the shared transaction and rollback.
+
+`TestRONNontokenFilter*` covers real Bronze Tablet and Dance of Many target
+nodes and Lich's filter in test-only probes, plus collections, layers, LKI,
+rollback and invalid declarations. These probes do not establish complete-card
+support. `TestNontokenFilter*` proves physical copy status, clone isolation and
+simultaneous exile with the existing engine services.

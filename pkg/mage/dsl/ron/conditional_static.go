@@ -315,11 +315,6 @@ func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 	switch n.Name {
 	case "HasACounterOfType", "HasNumberCountersOfType":
 		return compileStaticCounterFilter(n)
-	case "IsNonToken":
-		if n.Kind != Symbol {
-			return mage.PermanentFilter{}, unsupported(n, "static condition filter")
-		}
-		return mage.Not(mage.IsToken), nil
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, err
@@ -342,7 +337,7 @@ func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
-	case "AnyPermanent", "IsTapped", "IsUntapped", "IsAttacking", "IsntAttacking", "IsBlocking",
+	case "AnyPermanent", "IsNonToken", "IsTapped", "IsUntapped", "IsAttacking", "IsntAttacking", "IsBlocking",
 		"IsCardtype", "IsNonCardtype", "IsCreatureType", "IsNonCreatureType",
 		"IsLandType", "IsNonLandType", "IsEnchantmentType", "IsColor", "IsNonColor",
 		"IsSupertype", "IsNonSupertype":
