@@ -44,7 +44,7 @@ func (g *Game) registeredPrintedStaticAbility(source *Permanent, ability Ability
 
 func printedStaticEffect(effect ContinuousEffect, source *Permanent, declaration *StaticAbilityHolder) ContinuousEffect {
 	registered := &printedAbilityContinuousEffect{ContinuousEffect: effect}
-	if declaration.ptTextRevision || declaration.abilityTextRevision || declaration.grantTextRevision {
+	if declaration.ptTextRevision || declaration.abilityTextRevision || declaration.grantTextRevision || declaration.animationTextRevision {
 		registered.declaration = declaration
 		registered.incarnation = source.incarnationID
 	}

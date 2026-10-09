@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [StaticAbilityHolder.WithAnimationTextRevision] for a printed animation.
+// [Game.RevisePrintedStaticAnimation] checks its declaration and source visit.
+// All ordered effects must come from one [AnimateEach] rule. Fresh rules keep
+// the active ID, registration positions, layers and battlefield duration.
+// Each pass keeps the same subjects through type, color and base P/T layers.
+// Clones and sibling declarations keep separate changes. Phasing keeps them.
+// Ability restoration uses revised rules. Return restores printed rules.
+// RON opts in its complete unconditional static animation context.
+// The caller must supply text-layer order, lifetime and text restoration.
+// Sticky rules, live text layers and spell changes need separate services.
+//
 // Use [WithPrintedBasicLandwalk] for a printed basic-landwalk declaration.
 // [Game.RevisePrintedBasicLandwalk] checks its active identity and source visit.
 // It changes only that declaration's intrinsic attribute contribution.

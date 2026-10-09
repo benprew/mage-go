@@ -131,6 +131,9 @@ func describeDefinition(v any) definitionNode {
 			n.problem = "text protection revision requires nonempty color protection without an exception"
 		}
 	case *StaticAbilityHolder:
+		if e.animationTextRevision && !e.supportsAnimationTextRevision() {
+			n.problem = "text animation revision requires all layers from one battlefield animation rule"
+		}
 		if e.grantTextRevision && !e.supportsGrantTextRevision() {
 			n.problem = "text grant revision requires battlefield ability grants with optional P/T modifications"
 		}

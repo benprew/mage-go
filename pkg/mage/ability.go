@@ -170,6 +170,7 @@ type StaticAbilityHolder struct {
 	ptTextRevision         bool
 	abilityTextRevision    bool
 	grantTextRevision      bool
+	animationTextRevision  bool
 	textRevisionDefinition Card
 	Effects                []ContinuousEffect
 }

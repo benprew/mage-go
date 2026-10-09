@@ -79,6 +79,6 @@ func compileStaticAnimation(n Node, parts []Node, subjects staticPermanentFilter
 		return nil, problem(n, "static animation requires base values and creature type")
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.AnimateEach(subjects.build(), power, toughness, colors...)))
+		return mage.WithAbility(mage.Static(mage.AnimateEach(subjects.build(), power, toughness, colors...)).WithAnimationTextRevision())
 	}, nil
 }

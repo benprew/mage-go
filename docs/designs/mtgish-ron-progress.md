@@ -8,10 +8,10 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-COMBAT-PAIR-TRIGGER` adds a checked printed pair-trigger revision
-bridge. It preserves active IDs, fresh bindings, pending text, delayed opponent
-identity, clones, phasing, removal/restoration and printed-origin return.
-Bounded revision evidence covers **7 accepted names / 17 records**.
+`TEXT-PRINTED-STATIC-ANIMATION` adds a checked printed animation revision bridge.
+It preserves active IDs, registration order, exact per-pass membership, layers,
+clones, phasing, removal/restoration and printed-origin return.
+Bounded revision evidence covers **3 accepted names / 13 records**.
 Acceptance gain is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -59547,6 +59547,126 @@ Ranked next candidates:
    enables Sleight of Mind and Magical Hack rather than unchecked replacement.
 3. Per-player coin result rounds and simultaneous player damage for Mana Clash;
    defer this remaining single-card producer while shared prerequisites are useful.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: checked printed static animation text revision
+
+Capability: `TEXT-PRINTED-STATIC-ANIMATION`. Complete bounded declaration bridge;
+full live text installation and runtime cutover remain separate. Stop after this
+slice. The worktree began with unrelated entry-round changes, documentation edits
+and ledger relocation. Preserve all of them; commit only this slice's delta.
+
+### Fresh baseline and candidate selection
+
+Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. The strict
+loader exited 1 for collection rejection, with 2,091 compiled / 354 rejected
+records and 809 accepted / 177 rejected unique names (2,445 records / 986 names).
+This is a capability gap, not a build or environment failure.
+
+Read the design, engine reference, status and latest entry, targeted vocabulary
+signatures, complete RON records and nested forms. Reprints count once.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: printed static animation revision | Kormus Bell, Living Lands, Living Plane; 0 new names; 3 accepted names / 13 records gain bounded revision evidence | Existing semantic builders, typed static selection, complete animation and checked static installer are ready. Supplies land-selection and color-output revisions for future Magical Hack / Sleight of Mind. Titania's Song's sticky membership, other static kinds and live layer installation stay separate. | Small: one complete declaration adapter, native rejection/order tests and reprint gameplay |
+| Shared live text installer | Magical Hack, Sleight of Mind; eventual 2 names / 12 records, 0 credible unlocks for a small slice now | Both complete records require permanent and spell union-target bodies, ordered text installation and original-text restoration. Spell text and remaining printed declaration classification still block a complete card. The animation bridge is one shared prerequisite. | Large: several declaration categories and separate spell lifecycle contracts |
+| Per-player coin rounds | Mana Clash; 1 name / 1 record | Targeted opponent and repeated execution are available. Complete record still needs per-player coin results, tails selection, all-heads predicate and simultaneous damage before repeat. Benefits this one remaining producer. | Medium: round bindings, deterministic randomness and simultaneous damage tests |
+
+Select ranked candidate #1: it is dependency-ready and offers a small, concrete
+shared prerequisite for two text-changing cards. Do not pursue the single-card
+coin producer while useful shared work remains. Estimated unlocks were zero;
+actual acceptance gain is zero, exactly estimated.
+
+### Exact supported context and reuse boundary
+
+RON opts in its existing complete `EachPermanentLayerEffect(filter, list)`
+animation list with one `AddCardtype(Creature)`, one `SetPT(PT(integer, integer))`
+and optional `SetColor(SimpleColorList(colors))`. Existing typed static filters,
+color validation and duplicate rejection remain. No new source syntax or scope
+policy enters the engine. Conditional wrappers, sticky rules, temporary rules
+and other static effect kinds do not opt in.
+
+Engine signatures:
+
+- `(*StaticAbilityHolder).WithAnimationTextRevision() *StaticAbilityHolder`.
+- `(*Game).RevisePrintedStaticAnimation(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error`.
+
+Definition validation requires exactly the ordered effects from one shared
+`AnimateEach` rule: layer 4, optional layer 5, then layer 7b, with battlefield
+duration. Foreign, partial, duplicate, reordered and mixed-rule registrations
+reject. Reuse `revisePrintedStaticAbility`, semantic text definition builders,
+printed group correspondence and printed static registration restoration.
+Fresh declarations retain the active ID, exact source visit, current controller,
+registration positions, layers and durations. Each declaration retains its own
+ordered text prototype. Source-relative filters use current control.
+
+Reuse the animation service's per-pass exact-member capture, dependency probes,
+layer sorter and P/T sublayers. A rule that starts in layer 4 continues through
+later layers after layer-6 removal (CR 613.6). Each pass selects current subjects.
+Phasing suspends the rule and keeps revisions; restoration uses revised rules.
+Clones and siblings keep independent later changes. Departure LKI keeps revised
+characteristics. Returned sources use their printed rules; old visits cannot
+accept revision. Granted rules reject (CR 612.3). Semantic words change without
+changing names, mana symbols, color indicators or copiable origin (CR 612.2).
+The caller still supplies text-layer order, lifetime and original-text restoration.
+This service does not install a full layer-3 effect or revise spell declarations.
+
+No Go factory fallback, partial production registry, payment, replacement-order
+or simultaneous-operation service is introduced. Runtime/removal gates are unmet;
+retain Go definitions and existing DSL callers. No source defect was found or
+corrected. RON files and the vocabulary snapshot are unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+After correcting fixture API errors, focused native/RON tests failed compilation
+only on missing `WithAnimationTextRevision` / `RevisePrintedStaticAnimation`.
+Implementation then passed without removing or weakening assertions.
+
+| Cards / context | Evidence |
+| --- | --- |
+| Kormus Bell (LEA, LEB, 2ED, 3ED, CED, CEI) | `TestRONTextStaticAnimationRecords`: Swamp→Island and subsequent Island→Swamp, Black→Red output, unchanged printed metadata, all lifecycle cases below. |
+| Living Lands (same six sets) | `Records`: Forest→Island selection, current/later subjects, retained land types, mana ability summoning sickness, ordered subsequent change. |
+| Living Plane (LEG) | `Records`: complete World record, same revision API with no matching word; all-land animation stays active. This is bounded revision evidence, not a new claim of complete World-rule validation. |
+| All 13 records | Failed casting rollback, paid casting, no pre-entry animation, declaration ID, clone isolation, phasing source/subject, removed-declaration rejection with continued animation, restoration, departure LKI and printed-origin return. |
+| Synthetic declarations | `TestRONTextStaticAnimationBindings`: source-relative control and independent sibling revisions, later base-set timestamp precedence. `Boundaries`: malformed animation declarations and unrelated/static/dependent contexts reject; Titania's Song, Magical Hack and Sleight of Mind remain rejected. |
+| Native contracts | `TestTextStaticAnimationDeclaration`: complete rule identity and ordered layers; `Rejects`: unmarked/granted/face-down/absent/nil/foreign sources, no builder/group/registration, changed contract, invalid changes and builder failure reject without state mutation; `RegistrationOrder`: retained positions/source, no old or duplicate effects. |
+
+Bounded gameplay/revision coverage gain: **3 accepted names / 13 records**.
+Compilation gain: **+0 names / +0 records**. Complete-card gameplay coverage is
+not inferred from the compiler or from this bounded revision bridge.
+
+### Validation and final collection result
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticAnimation -count=1`.
+- `go test ./pkg/mage -run TestTextStaticAnimation -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; affected focused tests after lint; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1; final parsed report and all
+  diagnostics equal the fresh baseline: **2,091 compiled / 354 rejected records**,
+  **809 accepted / 177 rejected names**. All accepted records remain accepted.
+
+No environment blocker or source correction was needed. Reviewed lint changes.
+Changed files: engine `text_static_animation.go` and tests, `ability.go`,
+`definition.go`, `text_static_pt.go`, `doc.go`; RON `static_animation.go` and
+`text_static_animation_test.go`; DSL reference, engine rules contracts and ledger.
+Commit: `feat(ron): implement printed static animation text revision`.
+
+Ranked next candidates:
+
+1. Checked printed static basic-land-type revision for Conversion and Blood Moon;
+   inspect exact type/removal/intrinsic-mana contracts before opt-in. These shared
+   land-word declarations extend the prerequisite for Magical Hack.
+2. Shared live text installer with complete declaration classification, ordering,
+   expiry and restoration, plus the separate spell lifecycle needed by Magical
+   Hack and Sleight of Mind. Do not bypass unsupported declaration kinds.
+3. Per-player coin result rounds and simultaneous player damage for Mana Clash;
+   defer this single-card producer while shared prerequisites remain useful.
 
 Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
 remain unfinished. Migration incomplete. Stop after this slice.

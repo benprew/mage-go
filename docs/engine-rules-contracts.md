@@ -1,5 +1,45 @@
 # Engine rules contracts
 
+## Printed static animation text revision
+
+`StaticAbilityHolder.WithAnimationTextRevision()` marks a printed declaration
+for checked revision through `Game.RevisePrintedStaticAnimation(source, abilityID,
+changes ...TextChange) error`. The declaration must contain exactly the ordered
+layers from one `AnimateEach` rule: type (4), optional color (5), and base P/T
+(7b), all with battlefield duration. Missing, duplicate, reordered, foreign or
+mixed-rule effects fail definition validation.
+
+RON opts in its complete `EachPermanentLayerEffect(filter, modifications)`
+animation context: one `AddCardtype(Creature)`, one `SetPT(PT(integer, integer))`,
+and optional `SetColor(SimpleColorList(colors))`. Existing static permanent
+filter validation still applies. Other lists and sticky effects stay separate.
+The semantic definition builder changes validated basic-land and Magic color
+word roles; names, mana symbols, color indicators and copiable origin stay fixed.
+
+The shared printed-static installer preserves declaration ID, registration
+position, source visit and current controller, and installs fresh validated
+rules. Ordered changes belong to each declaration. Each new layer pass selects
+current subjects; all animation parts retain the same exact members within a
+pass, including after layer-6 ability removal (CR 613.6). The existing animation
+dependency detector, layer sorter and P/T sublayers remain in use.
+
+Phasing suspends the rule and retains its revision. Ability restoration uses
+revised rules. Clones and sibling declarations keep independent later changes.
+Departure information retains revised characteristics. A returned source uses
+printed rules and cannot accept an old visit. Granted, absent, phased,
+face-down, unmarked and foreign declarations reject without mutation (CR 612.3).
+The caller must still supply layer-3 order, duration and original-text
+restoration. This bridge does not install a live text layer or spell revision.
+
+Evidence: `TestRONTextStaticAnimationRecords` covers every Kormus Bell and Living
+Lands reprint and Living Plane (3 names / 13 records), with paid casting,
+rollback, entry timing, word changes, summoning sickness, clones, phasing,
+removal/restoration, LKI and printed-origin return. `Bindings` covers independent
+declarations, source-relative control and P/T timestamp order; `Boundaries`
+keeps invalid and dependent contexts rejected. Native
+`TestTextStaticAnimationDeclaration`, `Rejects` and `RegistrationOrder` check
+complete rule identity, failure atomicity and retained registration positions.
+
 ## Printed combat-pair trigger text revision
 
 `GenericTriggered.WithCombatPairTextRevision() *GenericTriggered` opts in
