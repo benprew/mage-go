@@ -1,5 +1,21 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [NewExileLink] for a distinct group of linked exile declarations.
+// [ExilePermanentLinked] and [ExileLibraryTopLinked] save that declaration
+// with the exact source incarnation on the new exile visit before zone events.
+// [CardsExiledWith] selects only current visits from that link and source.
+// [ExiledCardSet] permits transport without a card inspection interface.
+// [CountExiledCards] counts these visits without reading characteristics.
+// Source departure, control changes and phasing keep an announced instruction.
+// A returned source or re-exiled card cannot inherit an earlier link.
+// Face-down library exile grants no inspection permission. Engine transport
+// can select these cards without exposing their characteristics to players.
+// Clones keep the declaration but copy exile cards and visibility storage.
+// Waiting queries retain source reads without moving cards or reading a library.
+// RON supports library-top exile and singular permanent exile producers in
+// resolving permanent bodies. Cross-ability association and return consumers
+// need separate adapters; complete linked-exile cards remain unsupported.
+//
 // Use [WithAnteDeckRestriction] for a physical card that requires ante.
 // [PrepareCardsForAnte] separates these cards from non-ante decks and sideboards.
 // The results keep card identity, ownership and order, with separate slice storage.

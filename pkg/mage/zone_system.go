@@ -83,11 +83,13 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 			card := ec.Card.Copy()
 			card.SetID(ec.Card.ID())
 			clone.exile[i] = ExiledCard{
-				Card:       card,
-				ExiledBy:   ec.ExiledBy,
-				Visit:      ec.Visit,
-				FaceDown:   ec.FaceDown,
-				RevealedTo: append([]uuid.UUID(nil), ec.RevealedTo...),
+				link:         ec.link,
+				linkedSource: ec.linkedSource,
+				Card:         card,
+				ExiledBy:     ec.ExiledBy,
+				Visit:        ec.Visit,
+				FaceDown:     ec.FaceDown,
+				RevealedTo:   append([]uuid.UUID(nil), ec.RevealedTo...),
 			}
 		}
 	}

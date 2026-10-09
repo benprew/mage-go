@@ -7,11 +7,12 @@ names** (986 total), and **2,073 compiled / 372 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`RANDOM-HAND-REVEAL-DISCARD` adds distinct partial-hand random reveal with named
-discard and full-hand reveal with one filtered random discard. Shared discard
-batches now permit owner ordering of simultaneous graveyard arrivals. Delayed
-bodies retain chosen names. Nebuchadnezzar and Rag Man have complete native RON
-gameplay. **+2 unique names / +2 records**, matching the estimated gain.
+`LINKED-EXILE-PRODUCERS` adds exact source/declaration identity to singular
+permanent and face-down library-top exile. Clone and delayed-query contracts
+preserve source incarnations and exile visits. Knowledge Vault and Safe Haven
+have producer-rule gameplay evidence; complete records still reject. **+0 unique
+names / +0 records**, matching the prerequisite estimate. Knowledge Vault now
+reaches its mandatory source-sacrifice payment blocker.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Linked exile, turn-skip replacements and other unsupported capabilities remain gaps.
@@ -55404,3 +55405,176 @@ Ranked next candidates:
 Stop after RANDOM-HAND-REVEAL-DISCARD. Migration remains incomplete. Complete
 collection gameplay, runtime loading, Go-card deletion and DSL cleanup gates
 remain unmet; existing callers and production definitions are retained.
+
+## 2026-10-08: exact linked-exile producer identity and transport
+
+Status: completed prerequisite slice `LINKED-EXILE-PRODUCERS`.
+This run stops after one slice. Full-card unlock estimate: zero. Producer-rule
+behavior is established for Knowledge Vault and Safe Haven; their consumers and
+cross-ability RON association remain explicit unsupported declarations.
+
+### Environment, candidate comparison and selection
+
+Initial working tree: user modifications to .gitignore, the execution design and
+ledger history relocation; untracked docs/designs/mtgish-ron-completed.md. These
+changes are preserved and excluded from this commit. Fresh make build and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict loader exited 1:
+2,073 compiled / 372 rejected records; 801 accepted / 185 rejected names.
+Totals: 2,445 records / 986 unique names. This is collection rejection, not a
+build or test failure. Native environment: Go 1.27.2, darwin/arm64.
+
+Read the design, engine API, the ledger status and last entry, targeted vocabulary
+entries, complete records for all three candidates, and local Oracle data. The
+leading candidate from the previous ranked list is dependency-ready. Explicit
+source incarnations, announcement capture, library visits, exile visits, LKI,
+phasing, fresh definition plans and cloning already exist.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Exact linked-exile producer identity and transport | Knowledge Vault; Safe Haven | 0 now; both are concrete downstream consumers | Vault needs mandatory source-sacrifice payment, linked hand/graveyard returns and their leave-trigger interaction; Haven needs linked owner-controlled battlefield return and optional upkeep sacrifice. Typed producer identity prevents both from selecting unrelated or returned exile objects. | Small shared engine/adapter slice; medium identity, event, timing, visibility and clone tests |
+| Revealed mana-value reads plus dynamic life payment | Wand of Ith | 1 | Two reveal predicates and discard result reads are already supported; saved/current mana-value semantics and transactional typed dynamic life payment are missing. Shared numeric/payment API can support later revealed-card consumers, but no other complete-record unlock was demonstrated. | Medium engine/payment/adapter work; medium rollback and reveal-lifetime tests |
+| Optional begin-turn skip replacement | Time Vault (five reprints counted once) | 1 | Entry tapped, untap restriction, tapped condition and extra turns exist. The turn scheduler still needs an affected-player begin-turn replacement contract and ordering for normal, extra and skipped turns. | Larger lifecycle/replacement slice; extensive competing-rule and scheduling tests |
+
+Selected candidate 1: the shared dependency enables two unique cards with a
+bounded, testable producer contract. A zero immediate gain is intentional.
+Knowledge Vault's complete record has one face-down library producer and two
+linked return consumers; Safe Haven has one targeted creature producer and one
+upkeep battlefield consumer. No first-error count is used as an unlock estimate.
+Tawnos's Coffin has plural creature/Aura exile, noted counters and delayed entry
+requirements; it is a later subsystem consumer, not an unlock claimed here.
+
+### Exact established shapes, services and reuse boundary
+
+Engine signatures:
+
+- `NewExileLink() *ExileLink`: immutable identity for one group of declarations.
+- `ExilePermanentLinked(subject PermanentRef, link *ExileLink) ResolvingEffect`.
+- `ExileLibraryTopLinked(player PlayerRef, link *ExileLink, faceDown bool) ResolvingEffect`.
+- `CardsExiledWith(link *ExileLink, source PermanentRef) ExiledCardSet`.
+- `CountExiledCards(subjects ExiledCardSet) ResolutionValue`.
+
+Exile visits carry a private link declaration and captured source incarnation.
+The link is saved before the zone event. Current membership requires both the
+same declaration and source incarnation. Repeated instructions with a shared
+native link accumulate cards; another declaration on the same permanent or a
+legacy ExiledBy value cannot add members. Departure and re-exile end that visit.
+Source departure, cleanup, phasing and control changes keep an announced source;
+a returned source cannot inherit earlier links. Tokens leave through the existing
+service and supply no linked card. Clone storage preserves immutable declaration
+identity and exact visits, while copying cards and visibility permissions.
+
+RON lowering adds `Exile([TheTopCardOfLibrary], [])` and
+`Exile([TheTopCardOfLibrary], [ExilesFaceDown])` in resolving permanent-source
+bodies. Activated, triggered and delayed contexts are covered. Singular
+`Exile([Permanent(ref)], [])` in permanent bodies uses the same linked transport.
+Each constructed producer gets a fresh declaration. Ordinary spell permanent
+exile, collection exile, graveyard exile and exile costs retain existing services.
+Library-top exile reads the current top at resolution, makes no draw/reveal/mill,
+and gives no player permission to inspect face-down cards. Empty libraries do
+nothing. Invalid symbols, arity, modifiers, unbound subjects and unsupported
+cost/static/entry/spell-source contexts reject during declaration.
+
+RON owns spelling and context. The engine owns links, source/visit identity,
+movement, visibility and cloning. The native query returns exact typed exile visit references for transport,
+including face-down cards, without an inspection grant. Its separate ExiledCardSet
+type cannot feed general CardSet choosers or characteristic filters. Typed queries retain source reads
+without evaluating libraries or moving cards. CountExiledCards of a linked set retains
+its direct source declaration in waiting delayed queries.
+
+Reuse: permanent departure/LKI and self-leave events, restoration of printed
+rules on departure, library SetLibrary visit maintenance, exile storage/visits,
+visibility, turn tracking, typed permanent/player refs, announcement/target
+legality, mana/tap transactions, delayed capture and independent game clones.
+No Go-card fallback, card-name branch, partial production registry, global result
+slot, game-time declaration panic or parallel zone system was added.
+
+Not established: RON association of `WasExiledWithPermanent` consumers with the
+producer across abilities; linked hand/graveyard/battlefield returns; copied or
+acquired linked-pair adapters; plural exile, Aura/counter restoration and exile
+replacement producers. These remain rejected. No source records were changed.
+No vocabulary refresh or DSL removal is required; existing callers remain.
+
+### Failing-first evidence and card-to-test mapping
+
+RON producer tests first failed for Knowledge Vault's unsupported
+TheTopCardOfLibrary and Safe Haven's absent exile provenance. Native tests first
+failed compilation on the four new engine signatures. Fixture API mistakes were
+corrected before confirming those intended failures. A later waiting-count test
+failed its exact-source assertion before the CountExiledCards declaration adapter was
+added. Final API review narrowed the query from general CardSet to ExiledCardSet to
+prevent graveyard choosers from receiving hidden exile characteristics. Updated
+identity/count tests first failed compilation on the new typed-set/count contract
+before implementation. A subsequent native exile-history assertion failed because library transport
+counted the move both directly and through the zone event. The action now uses
+zone-event accounting and consumes its pending marker, as permanent exile does.
+The final tests retain and strengthen exact-visit and single-count assertions. A fixture's missing source owner
+was corrected; returned cards are removed from their prior graveyard first.
+
+| Test | Mapping and acceptance evidence |
+| --- | --- |
+| TestRONLinkedExileProducers | First actual rule from complete LEG Knowledge Vault and DRK Safe Haven records; failed/successful mana/tap payment, resolution timing, owner preservation, exact exile visit and source provenance, source departure/return/phasing/control changes, empty library/phased target, pending clone independence |
+| TestRONLinkedExileContexts | Synthetic permanent activated, ETB-triggered and delayed library exile; face-up/down forms, current top at resolution, original source/player after return, no public reveal/draw, waiting-source query and cloned pending resolutions |
+| TestRONLinkedExileInvalid | Wrong symbol shape, duplicate/unknown modifiers, plural subjects, unbound target, face-down permanent modifiers, unsupported cost/entry/static/spell-source contexts |
+| TestLinkedExileIdentity | Distinct links, source incarnation after departure/cleanup/return, exact exile visit after re-exile, face-down secrecy for both players, owner and clone isolation, empty library no-op |
+| TestLinkedExilePermanentAndEvents | Link exists before zone event; typed bound permanent, target phasing blocks movement, announced phased source retains link |
+| TestLinkedExileDeclarations | Nil links and permanent/player/query operands fail native declaration validation |
+| TestLinkedExileWaiting | Pure delayed queries retain source after return, including linked-card counts; library and exile remain unchanged |
+| TestLinkedExileRepeatedAndTokens | Repeated native producer shares a group; unrelated ExiledBy and fresh links excluded; cloned card characteristics isolated; tokens supply no linked card |
+
+These are producer-rule and engine contracts, not complete-card mappings.
+Both full records remain rejected. Local LEG and DRK Oracle text matches the
+producer semantics; no source defect was found. Rules evidence: CR 406.3,
+406.6–7, 607.1, 607.2a, 607.4–5 and 608.2b–c. RON source hashes are unchanged.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONLinkedExile -count=1`
+  and native `go test ./pkg/mage -run TestLinkedExile -count=1`: PASS.
+- `make build` and `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS across the repository, including retained Go-card callers.
+- `make lint`: PASS, 0 issues. Reviewed automatic fixes; no additional semantic
+  edits or unrelated file changes were introduced.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+
+The final lint run exposed an unused Boolean return on the existing private
+Game.consumePendingExileZoneChange facade after adding its second caller. A
+fresh repository-wide audit, including hidden files, found only the two engine
+callers; both ignore its result. Removed that facade return and retained the
+TurnTrackers method's Boolean result used by RecordCardPutIntoExile. This is a
+private signature cleanup, not a DSL export removal or an accounting change.
+Focused, build, vet, short, full and lint checks were repeated after this fix.
+
+Final counts remain **2,073 compiled / 372 rejected records; 801 accepted /
+185 rejected names**, totals 2,445 records / 986 names. Actual full-card gain is
+**0 names / 0 records**, matching the estimate. No accepted record regresses.
+Knowledge Vault's first diagnostic advances from LEG.lines.ron:149:232,
+unsupported exile subject TheTopCardOfLibrary, to LEG.lines.ron:149:338,
+unsupported mandatory sacrifice cost SacrificePermanent. This newly visible
+prerequisite is recorded before the linked consumers. Safe Haven's diagnostic
+remains DRK.lines.ron:88:463, unsupported PutEachExiledCardOntoTheBattlefield.
+All other diagnostics are identical to baseline. The strict loader rejects and
+installs no partial registry. No environment or validation blocker remains.
+
+Changed files: new pkg/mage/linked_exile.go and linked_exile_test.go; new
+pkg/mage/dsl/ron/linked_exile_test.go; RON permanent_exile.go; engine exile.go,
+game.go, zone_system.go, waiting_delayed_source.go, per_turn_trackers.go and doc.go; dsl-reference.md,
+engine-rules-contracts.md and this ledger. Existing user changes are preserved;
+only this slice's status summary and appended entry are staged from the ledger.
+Commit message: `feat(ron): implement linked exile producers`.
+
+Ranked next candidates:
+
+1. RON linked-pair association and typed linked-exile consumer transport. Start
+   with WasExiledWithPermanent and shared exact-visit movement; include the
+   mandatory source-sacrifice prerequisite when estimating Knowledge Vault. Compare
+   complete hand/graveyard consumers for Knowledge Vault with owner-controlled battlefield
+   return for Safe Haven. Reuse this slice's explicit link service.
+2. Shared saved reveal mana-value semantics and dynamic typed life-payment
+   amounts; compare other consumers before selecting Wand of Ith alone.
+3. Optional begin-turn skip replacement for Time Vault, including affected-player
+   ordering and normal/extra/skipped turn scheduling.
+
+Stop after LINKED-EXILE-PRODUCERS. Complete collection gameplay, runtime loading,
+Go-card deletion and unused DSL cleanup gates remain unmet. Migration incomplete.

@@ -9700,3 +9700,35 @@ These compound actions export no reveal result. Nebuchadnezzar and Rag Man use
 the shared engine operations; neither needs a card-specific branch.
 Evidence: `TestRONRandomHandDiscardRealCards`, `TestRONRandomHandDiscardCast`,
 `TestRONRandomHandDiscardContexts` and `TestRONRandomHandDiscardInvalid`.
+
+## Linked exile producer declarations
+
+`mage.NewExileLink() *mage.ExileLink` creates an immutable declaration identity.
+Supply the same declaration to linked native producer and query operations:
+
+- `ExilePermanentLinked(subject PermanentRef, link *ExileLink) ResolvingEffect`
+- `ExileLibraryTopLinked(player PlayerRef, link *ExileLink, faceDown bool) ResolvingEffect`
+- `CardsExiledWith(link *ExileLink, source PermanentRef) ExiledCardSet`
+- `CountExiledCards(subjects ExiledCardSet) ResolutionValue`
+
+The query selects current exile visits belonging to both the declaration and the
+exact source incarnation. It can supply engine transport of face-down cards; it
+does not grant inspection permission. A fresh acquired group must get a fresh
+link. Game clones retain immutable declarations and separate mutable exile cards.
+The separate ExiledCardSet type returns exact visit references internally and
+cannot feed general CardSet choosers or characteristic filters. Nil declarations
+and operands fail engine definition validation.
+
+RON supports `Exile([TheTopCardOfLibrary], [])` and
+`Exile([TheTopCardOfLibrary], [ExilesFaceDown])` in resolving permanent-source
+bodies, including activated, triggered and delayed bodies. The top is read at
+resolution. Empty libraries have no effect. This is neither a draw nor a reveal.
+`Exile([Permanent(ref)], [])` in these bodies uses linked transport with the
+existing typed subject and target legality. Each built producer has a fresh link.
+Spell-source permanent exile retains the existing ordinary exile operation.
+Costs, entry operations and static operations do not accept library-top exile.
+Plural subjects and face-down permanent exile remain unsupported.
+
+This is the producer prerequisite. RON `WasExiledWithPermanent` association and
+hand, graveyard and battlefield consumers still reject. Knowledge Vault and Safe
+Haven have producer-rule tests; neither has complete-card gameplay coverage yet.

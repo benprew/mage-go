@@ -35,11 +35,13 @@ var (
 // Other players see only that a face-down card is in exile.
 // Unauthorized players cannot inspect card characteristics.
 type ExiledCard struct {
-	Card       Card
-	ExiledBy   uuid.UUID // ID of the permanent/spell that caused the exile
-	Visit      uuid.UUID
-	FaceDown   bool
-	RevealedTo []uuid.UUID
+	link         *ExileLink
+	linkedSource capturedPermanent
+	Card         Card
+	ExiledBy     uuid.UUID // ID of the permanent/spell that caused the exile
+	Visit        uuid.UUID
+	FaceDown     bool
+	RevealedTo   []uuid.UUID
 }
 
 // VisibleTo reports whether the given player may inspect this exiled card's

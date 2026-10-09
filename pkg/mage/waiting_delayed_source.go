@@ -170,6 +170,11 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		return playerRefReadsSourcePermanent(v.player)
 	case graveyardCardCountValue:
 		return playerRefReadsSourcePermanent(v.player)
+	case exiledCardCountValue:
+		if set, ok := v.subjects.(linkedExileSet); ok {
+			return permanentRefReadsSourcePermanent(set.source)
+		}
+		return false
 	case permanentCounterTotal:
 		return permanentSetReadsSourcePermanent(v.subjects)
 	case permanentCountValue:

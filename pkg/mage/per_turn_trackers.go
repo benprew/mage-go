@@ -51,8 +51,8 @@ func (g *Game) recordCardPutIntoExile(card Card) {
 	g.trackers.Turn.RecordCardPutIntoExile(card)
 }
 
-func (g *Game) consumePendingExileZoneChange(cardID uuid.UUID) bool {
-	return g.trackers.Turn.consumePendingExileZoneChange(cardID)
+func (g *Game) consumePendingExileZoneChange(cardID uuid.UUID) {
+	g.trackers.Turn.consumePendingExileZoneChange(cardID)
 }
 
 // CardsPutIntoExileThisTurn returns the number of cards put into exile this turn.

@@ -12860,3 +12860,51 @@ waiting queries without hand inspection, name selection, reveal or RNG use.
 Rules: CR 101.3, 201.2, 404.3, 608.2c, 701.9 and 701.20. Evidence:
 `TestRandomHandDiscard*` and `TestRONRandomHandDiscard*`; complete RON records
 for Nebuchadnezzar and Rag Man cover their activation, target and timing rules.
+
+## Linked exile producer identity and transport (CR 406.3, 406.6–7, 607.2a)
+
+`NewExileLink() *ExileLink` declares one immutable ability group.
+`ExilePermanentLinked(PermanentRef, *ExileLink) ResolvingEffect` uses the existing
+battlefield departure, LKI, copied-card restoration and zone-event services.
+The subject must be its current unphased incarnation. Tokens leave but do not
+supply a linked card. `ExileLibraryTopLinked(PlayerRef, *ExileLink, bool)
+ResolvingEffect` reads the current library top, removes it through the library
+service and creates a new exact exile visit. A missing player or empty library
+makes no change. No draw, mill, reveal, randomness or choice occurs.
+
+Both save the declaration and original source incarnation before the zone event.
+An announced source remains usable after departure, phasing or control changes;
+a returned source cannot supply the earlier incarnation. Repeated instructions
+with the same native link accumulate visits. Different declarations on the same
+source remain separate, and legacy ExiledBy values cannot establish a link.
+
+`CardsExiledWith(*ExileLink, PermanentRef) ExiledCardSet` selects only current visits
+with the matching declaration and source identity. Departure and re-exile end
+membership even when physical card IDs are unchanged. The set can supply native
+transport of face-down cards without granting inspection to any player. The separate
+ExiledCardSet type cannot feed a general CardSet chooser or characteristic filter. Standard
+visibility and damage-source queries remain unchanged. The declaration has no
+mutable resolution state. Clones copy cards, visits, link metadata and visibility
+storage while retaining the immutable declaration identity.
+
+`CountExiledCards(ExiledCardSet) ResolutionValue` counts selected exact visits
+without characteristics or inspection.
+
+Delayed producer queries declare the original source without reading a library
+or moving a card. CountExiledCards of a linked set retains direct source reads as well.
+Nil links and typed operands fail declaration validation. Cross-ability RON
+association, return consumers, linked acquisition/copy adaptation, plural exile,
+replacement exile and token zone persistence are outside this contract.
+
+RON lowering supports `Exile([TheTopCardOfLibrary], [])`, the same form with one
+symbol `ExilesFaceDown`, and linked `Exile([Permanent(ref)], [])` in resolving
+permanent bodies. Each constructed producer gets its own declaration. Invalid
+arity, tuple spellings for symbols, duplicate or unknown modifiers, unbound
+subjects and unsupported cost/static/entry/spell-source contexts reject before
+execution. Ordinary spell exile and existing cost services retain their callers.
+
+Evidence: TestLinkedExileIdentity, PermanentAndEvents, Declarations, Waiting and
+RepeatedAndTokens; TestRONLinkedExileProducers, Contexts and Invalid. The producer
+mapping uses the first actual rule from complete Knowledge Vault and Safe Haven
+records. The omitted consumer rules remain rejected by strict loading, and this
+mapping does not establish complete-card gameplay support.

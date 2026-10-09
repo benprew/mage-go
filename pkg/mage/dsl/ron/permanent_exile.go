@@ -14,6 +14,25 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n.Args[0], "exile requires one subject")
 	}
 	subject := subjects[0]
+	if subject.Name == "TheTopCardOfLibrary" {
+		if subject.Kind != Symbol || !ctx.permanent {
+			return nil, problem(subject, "library-top linked exile requires a permanent source and a symbol")
+		}
+		modifiers, err := list(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		faceDown := false
+		if len(modifiers) != 0 {
+			if len(modifiers) != 1 || modifiers[0].Kind != Symbol || modifiers[0].Name != "ExilesFaceDown" {
+				return nil, unsupported(n.Args[1], "library-top exile modifiers")
+			}
+			faceDown = true
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.ExileLibraryTopLinked(ctx.player.build(bindings), mage.NewExileLink(), faceDown)
+		}, nil
+	}
 	if subject.Name == "CardInGraveyards" {
 		if err := arity(subject, 1); err != nil {
 			return nil, err
@@ -70,5 +89,10 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 	if len(modifiers) != 0 {
 		return nil, unsupported(n.Args[1], "exile modifiers")
 	}
-	return func(bindings instanceBindings) mage.Effect { return mage.Exile(ref.build(bindings)) }, nil
+	return func(bindings instanceBindings) mage.Effect {
+		if ctx.permanent {
+			return mage.ExilePermanentLinked(ref.build(bindings), mage.NewExileLink())
+		}
+		return mage.Exile(ref.build(bindings))
+	}, nil
 }

@@ -14,6 +14,10 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 }
 
 func (g *Game) exilePermanent(perm *Permanent, exiledBy uuid.UUID) {
+	g.exilePermanentWithLink(perm, exiledBy, nil, capturedPermanent{})
+}
+
+func (g *Game) exilePermanentWithLink(perm *Permanent, exiledBy uuid.UUID, link *ExileLink, source capturedPermanent) {
 	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := cardForBattlefieldDeparture(perm.Card)
@@ -22,6 +26,7 @@ func (g *Game) exilePermanent(perm *Permanent, exiledBy uuid.UUID) {
 	selfAbilities := g.LKIAbilities(permID)
 	if !isToken {
 		g.zones.ExileCard(card, exiledBy)
+		g.setExileLink(card.ID(), link, source)
 	}
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
