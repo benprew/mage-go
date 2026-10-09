@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ProtectionAbility.WithColorTextRevision] for printed color protection.
+// [Game.RevisePrintedProtection] checks its declaration and source visit.
+// It keeps the active ID with fresh rules and ordered semantic changes.
+// Granted protection and Aura exceptions cannot use this service.
+// Clones and sibling declarations keep separate changes. Phasing keeps them.
+// Ability restoration uses revised rules; return uses the printed origin.
+// Shared protection rules check targeting, damage, blocking and attachment.
+// RON opts in top-level Protection with a nonempty FromColor color list.
+// The caller must supply text-layer order, lifetime and original-text restoration.
+// Intrinsic keyword attributes and full text consumers need separate services.
+//
 // Use [StaticAbilityHolder.WithGrantTextRevision] for a printed static grant.
 // [Game.RevisePrintedStaticGrant] checks its source visit and declaration.
 // Effects must use layer 6, with optional P/T modifications in layer 7c.

@@ -7,14 +7,14 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAND-TAP-TRIGGER` adds checked printed opponent land-tap trigger revision.
-Lifetap and Lifeblood use revised land words for future events; detected bodies
-keep their earlier text, targets and controllers. Revision evidence covers
-**2 accepted unique names / 7 records**. Source visits, active IDs, ordered
-changes, event bindings, copies, clones, phasing and restored abilities stay
-separate. **+0 unique names / +0 records**, as estimated. Complete live text
-installation, remaining trigger kinds and intrinsic printed abilities remain gaps.
-All required build, vet, test and lint checks pass. Final loader diagnostics
+`TEXT-PRINTED-COLOR-PROTECTION` adds checked printed intrinsic color-protection
+revision. Active identity, ordered changes, source visits, sibling declarations,
+clones, phasing, ability restoration and printed-origin return stay separate.
+Revision gameplay evidence covers **12 accepted unique names / 22 records**.
+**+0 unique names / +0 records**, as estimated. Shared protection rules check
+new and queued targets, damage, blocking and attachment. Intrinsic keyword
+attributes and complete live text installation remain gaps.
+All required build, vet, test and final lint checks pass. Final loader diagnostics
 exactly match the fresh baseline; strict collection rejection remains expected.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -59128,6 +59128,145 @@ Ranked next candidates:
    separate optional-entry action results from coin outcome collections.
 3. Checked text installation for other typed trigger families: inventory shared
    subtype/color consumers and preserve detected bodies before live layer-3 work.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## Run 2026-10-09: TEXT-PRINTED-COLOR-PROTECTION
+
+### Candidate comparison and selection
+
+Evaluated latest ranked candidate #1 first. Printed intrinsic color protection
+is dependency-ready: semantic word transformations, retained definitions and
+ability-group correspondence exist. Intrinsic keyword attributes require a
+separate representation bridge. Selected the complete printed color-protection
+shape, with no keyword bridge or second slice.
+
+Compared these shared candidates after reading complete RON records and nested
+forms. Reprints count once; first-error frequency did not estimate acceptance.
+
+| Candidate | Distinct affected names | Estimated full-card acceptance gain | Other blockers, downstream benefit and effort |
+| --- | --- | --- | --- |
+| Printed color-protection revision | Black Knight; White Knight; Repentant Blacksmith; Knights of Thorn; Order of Leitbur; Order of the Ebon Hand; Beasts of Bogardan; Ivory Guardians; Mountain Yeti; Wall of Light; Wall of Putrid Flesh; Whirling Dervish (12 names, 22 records) | 0; all complete records already compile | Missing checked installation and restoration, with existing declaration identity. Establishes shared intrinsic protection installation needed by live Sleight of Mind. Small/medium: one installer, one retention map, compiler marker, validation, native boundaries and seven RON test families. |
+| Repeated procedure and round results | Eureka; Mana Clash | 0 for the shared scope prerequisite; potentially 2 after all dependent producers and adapters | Eureka needs successful optional-entry results and starting-player rounds; Mana Clash needs player-local coin results and all-heads/each-tails consumers. RepeatableActions alone cannot unlock either complete record. Shared result scope enables both procedures. Large: loop scope plus different result producers, termination and clone contracts. |
+| Printed intrinsic landwalk revision | Bog Wraith; Shanodin Dryads; Desert Nomads; Cat Warriors; Devouring Deep; Lost Soul; Mountain Yeti; Righteous Avengers; Segovian Leviathan; Sol'kanar the Swamp King; Goblins of the Flarg; Marsh Goblins; Scarwood Bandits; Goblin Flotilla (14 names) | 0 for a declaration bridge/revision prerequisite | Landwalk currently lowers to attributes without ability IDs. Needs declaration correspondence, effective-attribute integration and removal/restoration semantics. Remaining independent blockers include Goblin Flotilla's UntilEndOfCombat delayed-trigger duration, Goblins of the Flarg's state trigger, and Scarwood Bandits' AnyPlayerMayCost result. Nested forms were inspected; the bridge alone cannot repair these contracts. Enables printed basic-land keyword revision for Magical Hack. Medium/large, with greater representation and regression risk. |
+
+The first candidate provides concrete multi-card prerequisite value with existing
+engine representation. Contract, reuse boundary and acceptance cases were stated
+before edits. The broader landwalk inventory confirmed 14 intrinsic consumers;
+Aura, global, temporary grants and HasAbility readers are separate contexts.
+Goblin Wizard has only a nested protection grant and is excluded from this slice.
+No first-error frequency was used as a coverage claim.
+
+### Established signatures, context and dependencies
+
+- `(*ProtectionAbility).WithColorTextRevision() *ProtectionAbility` marks a
+  printed color-protection declaration. Definition validation requires nonempty
+  Magic colors and no exemption. Empty, colorless, non-color and exempt marked
+  declarations reject before gameplay.
+- `(*Game).RevisePrintedProtection(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks exact present face-up source incarnation,
+  printed group identity, active unwrapped eligible declaration, retained semantic
+  builder and eligible fresh replacement before mutation. It preserves active
+  UUID, runtime declaration position, source and current controller.
+- RON opts in only top-level `Protection(FromColor(Colors([...])))`. The list is nonempty and each member
+  uses existing validated color spelling. Nested grants retain their separate
+  adapters and do not acquire this marker.
+- Reused `BuildTextDefinitionRevision`, `definitionAbilitiesByKey`, semantic
+  prototypes, exact source-visit checks, shared targeting/attachment/protection
+  prevention/blocking rules, simultaneous damage, LKI and printed-origin return.
+  RON owns spelling/validation and opt-in; mage owns installation and retention.
+- Each active declaration retains its own ordered semantic definition. A
+  copy-on-write per-incarnation `revisedPrintedProtections` map restores the
+  revised rule after ability removal. Clones share immutable declarations but
+  retain independent later runtime slices/maps. Phasing keeps revisions; absent,
+  phased, returned, face-down, removed and granted declarations cannot install.
+- CR 612.2 and 612.3 separate semantic word roles and granted abilities.
+  CR 702.16b–f uses existing targeting, attachment, damage and blocking services.
+  CR 702.16n keeps a Ward's exemption local to that grant: a separate printed
+  protection declaration can make the Ward illegal.
+- Caller still supplies live layer-3 order, lifetime and original-text restoration.
+  This slice does not execute complete Sleight of Mind or Magical Hack. Intrinsic
+  keyword attributes remain a separate prerequisite. No new costs, replacement
+  ordering, simultaneous movement, result bindings or card-name branches.
+- No RON source change or source-data defect. Local Scryfall JSON Oracle text
+  confirms the selected printed protection qualities. Vocabulary snapshot stays
+  valid. No Go fallback, partial production registry or unused DSL removal.
+  Runtime cutover and deletion gates remain unmet; current callers are preserved.
+
+### Failing-first tests and card-to-test mapping
+
+Initial RON tests failed compilation on missing `RevisePrintedProtection`.
+The first fixture also called Parse with reversed arguments; corrected it and
+reran to confirm the missing installer was the only RON compilation failure.
+Native tests were written before implementation and failed on missing marker,
+installer and retention state, plus an incorrect creature constant corrected to
+`core.TypeCreature`. After implementation, fixed fixture assumptions: vanilla
+records can omit Rules, and the shared synthetic permanent helper requires an
+Artifact rather than a Creature without CardPT. No production rule or expected
+assertion was weakened. All final tests pass.
+
+| Tests | Card mapping and acceptance evidence |
+| --- | --- |
+| `TestRONTextProtectionRecords` | All 12 names / 22 complete records listed above: fresh revision preserves active ID, old color stops matching, blue starts matching, simultaneous damage protects only its proper recipient, matching targeting and blocking reject. Every reprint is parsed, compiled and executed. |
+| `TestRONTextProtectionLifetime` | Complete Black Knight: sibling isolation, ordered White-to-Red-to-Blue changes in clone, phasing suspension/restoration, removed declaration rejects, protection is absent while removed, original and cloned restoration retain Red independently, LKI retains revised protection, old source visit rejects and returned source uses White. |
+| `TestRONTextProtectionCastTiming` | Paid complete Black Knight and Unsummon: no early battlefield entry, existing queued target becomes illegal after White-to-Blue revision, resolution and cloned resolution retain the creature, first strike stays present, new illegal targeting does not spend mana. |
+| `TestRONTextProtectionAttachmentAndGrants` | Complete White Knight and White Ward: granted declaration cannot revise, revised printed White protection makes the already attached Ward illegal through shared state checks, Ward departure cannot remove printed protection. |
+| `TestRONTextProtectionIndependentDeclarations`, `ColorSet` | Synthetic validated RON: same-color sibling declarations keep independent histories; a multiple-color list retains the unchanged Red quality while White becomes Blue. |
+| `TestRONTextProtectionInvalid` | Missing/excess operands, empty list, Colorless and unsupported protection filter reject at compilation. |
+| Native `TestTextProtectionDeclaration`, `Rejects` | Marked declaration contract; unmarked/granted/face-down/absent/nil source, unknown ID, missing builder/group/marker, invalid change and changed ability kind reject without runtime or retention mutation. |
+
+Actual acceptance gain: **+0 unique names / +0 records**, exactly estimated.
+Bounded protection-revision gameplay evidence covers **12 accepted unique names /
+22 records**. This does not establish a new global complete-card gameplay total
+or validate every other rule on these cards. Compilation and gameplay stay separate.
+
+### Validation and files
+
+Fresh baseline: `make build` and existing
+`go test ./pkg/mage/dsl/ron -run TestRONTextLandTapTrigger -count=1` passed.
+Baseline `go run ./cmd/loadcards -json` exited 1 for collection rejection, not
+build/test failure: **2,090 compiled / 355 rejected records; 808 accepted /
+178 rejected unique names** (2,445 records; 986 names).
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextProtection -count=1`.
+- `go test ./pkg/mage -run TestTextProtection -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` (RON 34.238s).
+- `make test` (RON 34.464s; all repository packages passed).
+- `make lint`; `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Parsed JSON exactly
+  equals baseline, including all diagnostics: **2,090 compiled / 355 rejected
+  records; 808 accepted / 178 rejected unique names**. Strict collection
+  rejection installs no partial registry.
+
+First lint run rejected inconsistent receiver names (`a` versus the existing
+`pa` on ProtectionAbility). Corrected the new receivers; final lint reported
+**0 issues**. Reviewed automatic formatting: import ordering only
+in new files, with no unrelated or semantic changes. Reran focused RON/native
+protection tests after lint. The engine skill's final `go test ./... -short
+-count=1` also passed. Final diff checks passed. No environment or pre-existing
+failure blocked this slice.
+
+Files: new `pkg/mage/text_protection.go`, native `text_protection_test.go`, RON
+`text_protection_test.go`; `ability.go`, `card.go`, `clone.go`, `definition.go`,
+`effect_manager.go`, RON `compiler.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Preserve user's `.gitignore`,
+execution-design edits and history relocation. Stage only this entry and its
+status update from the ledger, without staging that relocation or its archive.
+Commit message: `feat(ron): implement printed color-protection text revision`.
+
+Ranked next candidates:
+
+1. Printed intrinsic basic-landwalk declaration bridge and checked revision:
+   14 concrete printed consumers above; preserve attribute removal, clones and
+   granted keyword separation before live Magical Hack installation.
+2. Repeated-procedure round/result scope prerequisite for Eureka and Mana Clash;
+   keep successful optional-entry results separate from coin outcome collections.
+3. Checked text installation for other typed trigger families: inventory shared
+   subtype/color consumers and retain detected bodies before live layer-3 work.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

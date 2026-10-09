@@ -122,6 +122,10 @@ func describeDefinition(v any) definitionNode {
 		if e.conditional != nil {
 			n.children = append(n.children, definitionEdge{"conditional", e.conditional})
 		}
+	case *ProtectionAbility:
+		if e.colorTextRevision && !e.supportsColorTextRevision() {
+			n.problem = "text protection revision requires nonempty color protection without an exception"
+		}
 	case *StaticAbilityHolder:
 		if e.grantTextRevision && !e.supportsGrantTextRevision() {
 			n.problem = "text grant revision requires battlefield ability grants with optional P/T modifications"

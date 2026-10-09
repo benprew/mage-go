@@ -682,6 +682,8 @@ func (em *EffectManager) Apply(g *Game) {
 				if !existing[a.AbilityID()] {
 					if revised := p.revisedPrintedTriggers[a.AbilityID()]; revised != nil {
 						restored = append(restored, revised)
+					} else if protection := p.revisedPrintedProtections[a.AbilityID()]; protection != nil {
+						restored = append(restored, protection)
 					} else {
 						restored = append(restored, g.registeredPrintedStaticAbility(p, a))
 					}

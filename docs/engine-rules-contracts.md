@@ -1,5 +1,43 @@
 # Engine rules contracts
 
+## Printed intrinsic color-protection text revision
+
+`ProtectionAbility.WithColorTextRevision() *ProtectionAbility` opts in printed
+color protection with a nonempty list of Magic colors and no Aura exception.
+Definition validation rejects marked empty, colorless, non-color and exempt
+protection. `Game.RevisePrintedProtection(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` checks the exact present face-up source incarnation,
+active printed declaration, retained semantic builder and fresh declaration-group
+correspondence before mutation. A replacement must retain its marker and supported
+protection contract. Failure leaves runtime declarations and retention unchanged.
+
+RON marks only top-level `Protection(FromColor(Colors([...])))` declarations;
+the list must be nonempty. Nested protection grants use existing adapters and
+remain outside this contract.
+The engine keeps the active UUID, position, source and controller with a fresh
+protection predicate. Each declaration retains its own ordered semantic prototype.
+It does not rewrite printed mana, colors, name or sibling declarations (CR 612.2).
+Granted abilities cannot qualify (CR 612.3).
+
+Shared targeting, attachment, prevention and blocking services read the revised
+runtime ability (CR 702.16b–f). Queued spells recheck protection at resolution;
+an illegal announcement does not spend mana. A Ward's exception cannot exempt
+it from a separate printed protection ability (CR 702.16n). Shared simultaneous
+damage and replacement ordering remain unchanged. The per-incarnation retention
+map changes by copy: sibling instances, successive changes and cloned games stay
+separate. Phasing keeps revisions but suspends source eligibility. Ability removal
+suspends protection; restoration retrieves its revised declaration. Departure
+saves revised protection in LKI, and return uses printed rules.
+
+Evidence: native `TestTextProtectionDeclaration` and `Rejects`; RON
+`TestRONTextProtectionRecords`, `Lifetime`, `IndependentDeclarations`, `Invalid`,
+`CastTiming`, `AttachmentAndGrants` and `ColorSet`. Complete records supply
+12 unique names / 22 records with bounded protection-revision evidence; this does
+not establish new complete-card gameplay totals. No collection acceptance gain.
+The caller still supplies layer-3 ordering, expiry and original-text restoration.
+Intrinsic keyword attributes and full live text consumers remain separate work.
+
+
 ## Printed opponent land-tap trigger text revision
 
 `GenericTriggered.WithLandTapTextRevision() *GenericTriggered` opts in a
