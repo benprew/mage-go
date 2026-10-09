@@ -9233,3 +9233,50 @@ service, so Contract from Below can discard, ante and draw in order.
 Engine services are `AnteTopFor`, `AnteTopEach` and `Game.AnteLibraryTops`.
 They keep typed player bindings and existing delayed source-reference contracts.
 See `TestRONAnteTop*` and the library-top ante engine contract.
+
+## Typed resolution ante payments
+
+`AnteTopCost() Cost` pays with the payer's current library top. The shared
+payment transaction locks each successive top on its validation game. It checks
+all locked payments on a separate game before spending live mana or other
+resources. Empty libraries, foreign-owned cards, tokens, disabled ante and
+settled games cannot pay. Affordability queries do not move cards or offer choices.
+Direct payment and transactional payment use `AnteLibraryTops` for movement.
+
+`PayPermanentAnteOrElse(player PlayerRef, subject PermanentRef, paid, unpaid
+ResolvingEffect) ResolvingEffect` offers a payment with one exact permanent.
+`AntePermanentOrElse` has the same signature and performs a mandatory payment
+without a may choice. The permanent is captured before an optional offer.
+The payer must own it, but need not control it (CR 407.4). Phased or departed
+subjects cannot pay. A returned card cannot replace the captured incarnation
+(CR 400.7). The transaction uses `MoveToAnte`, with existing departure/LKI,
+attachment and zone-event behavior. This is neither destruction nor sacrifice;
+regeneration and graveyard-destination replacements do not apply.
+
+Each result is local to its invocation and selects exactly one branch after
+payment (CR 118.3, 118.10–12). Missing players perform no branch. A nil branch
+performs no action; two nil branches are invalid. Definitions validate typed
+players, subjects and non-nil branch declarations. Delayed queries enumerate
+explicit source operands and bodies without resolving them or offering payment.
+Pending copies use their own payer, saved source and frame; clones keep separate
+zone storage and delayed lifetimes.
+
+RON supports `MayCost(AnteTopCardOfLibrary)` and
+`PlayerMayCost(playerRef, AnteTopCardOfLibrary)`; `MayCost`, `PlayerMayCost` and
+`MustCost` support `AnteAPermanent(SinglePermanent(permanentRef))`. These forms
+require an adjacent `If`, `Unless` or `IfElse` on bare `CostWasPaid` or
+`CostWasntPaid`, with nonempty action lists. Existing resolving spell, activation,
+trigger and delayed contexts use the same adapter. Per-factory references retain
+lexical bindings. No result is available outside its continuation. Activation
+costs, entry/static operations, mandatory top payments, arbitrary permanent
+collections and `EachPlayerMayCost` are not supported by this adapter.
+
+Evidence: native `TestAntePayment*` covers owner/control distinctions, token,
+phasing, return, offer-time return, disabled/settled games, exact physical IDs,
+transaction rollback and stale preflight. `TestRONAntePayment*` covers actual
+casting and activation, branch-local nested results, explicit target payers,
+permanent subjects, clone/copy behavior, delayed identity and invalid contexts.
+Jeweled Bird's retained real payment/activation subrule is executed with a draw
+continuation; its complete record still rejects owned-ante-card movement.
+Rebirth's complete record still rejects paid-player collection dispatch. These
+are prerequisite mappings, not complete-card gameplay claims.

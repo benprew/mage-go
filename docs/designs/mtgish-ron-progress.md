@@ -7,10 +7,11 @@ names** (986 total), and **2,057 compiled / 388 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ANTE-LIBRARY-TOP` lowers typed single-player and all-player ante actions.
-All eligible tops move before zone events. Complete RON gameplay tests cover
-Demonic Attorney and Contract from Below across all twelve reprint records.
-This adds two complete names / twelve records; optional ante payments remain gaps.
+`ANTE-RESOLUTION-PAYMENTS` adds transactional library-top costs and optional or
+mandatory exact-permanent ante payments with local result branches. Rebirth and
+Jeweled Bird share this prerequisite; neither has complete gameplay coverage.
+Complete-card gains are zero. Paid-player collections and owned-ante movement
+remain gaps. Prior complete ante gameplay mappings remain in force.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -53166,3 +53167,118 @@ Ranked next candidates:
    and reveal-result consumers are ready; retain all CR 201.4 face/name rules.
 
 This run stops after ANTE-LIBRARY-TOP.
+
+## 2026-10-08: typed transactional resolution ante payments
+
+Status: completed prerequisite slice `ANTE-RESOLUTION-PAYMENTS`. This run stops here. Existing `.gitignore`, execution-design and ledger-
+reorganization changes, plus untracked `mtgish-ron-completed.md`, are preserved and excluded from this slice's commit.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected for each named consumer; Darkpact's six identical reprints count as one name. Fresh baseline build
+and RON package tests passed. The baseline loader rejected the collection with 2,057 compiled / 388 rejected records and 794 accepted / 192 rejected
+names. This is collection rejection, not a build or test failure.
+
+| Candidate | Distinct affected names | Estimated complete gains for a bounded prerequisite | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: typed resolution ante payments | Rebirth; Jeweled Bird | 0 names / 0 records | Rebirth also needs a scoped paid-player collection and life-total dispatch. Jeweled Bird also needs movement of other owned ante cards. Both require ante-payment legality and independent results. | Medium: shared transaction integration, exact permanent references, optional/mandatory decisions, rollback and RON tests; fits one run. |
+| Ranked #2: typed ante-zone references and movement | Darkpact; Jeweled Bird; related Bronze Tablet and Tempest Efreet | 0 for references alone | Darkpact needs ownership acquisition and atomic top exchange. Jeweled Bird needs source exclusion and owned-ante movement. Bronze Tablet needs linked exile/ownership exchange; Tempest Efreet needs hand reveal visits and ownership/movement. References alone are a prerequisite for two concrete ante consumers. | Higher: new zone-visit identities, targeting, simultaneous exchange and ownership lifecycle contracts. |
+| Ranked #3: complete Oracle name catalog and scoped choices | Nebuchadnezzar; Petra Sphinx | 0 for the catalog/choice prerequisite | Nebuchadnezzar needs named random reveal/discard; Petra Sphinx needs scoped name propagation, reveal results and top movement. The existing per-set metadata catalog does not establish complete CR 201.4 names or face-name legality. | Higher: independent complete data, face/split/adventure name rules, name bindings, hidden-information consumers and clone tests. |
+
+The first ranked family wins as a bounded shared prerequisite for two unique cards. This slice supplies single-player payments, not the entire all-
+player payment family. No immediate complete-card gain was estimated. It reuses the ready library-top batch and existing total-cost service, rather
+than adding a second payment or movement system. The missing paid-player collection is left explicitly rejected. The contract, boundary and acceptance
+cases were stated before implementation.
+
+### Exact contracts, dependencies and reuse
+
+Engine APIs:
+
+- `AnteTopCost() Cost`
+- `PayPermanentAnteOrElse(player PlayerRef, subject PermanentRef, paid, unpaid ResolvingEffect) ResolvingEffect`
+- `AntePermanentOrElse(player PlayerRef, subject PermanentRef, paid, unpaid ResolvingEffect) ResolvingEffect`
+
+The first permanent constructor offers optional payment; the second performs a mandatory payment without an offer. Typed references capture the exact
+subject before the optional choice. The payer must own a nontoken, present, unphased permanent; control is not required. Departure and return cannot
+substitute a new incarnation. Missing players execute no branch. Nil individual branches do nothing; two nil branches reject. Each invocation keeps
+its own result.
+
+The shared transaction locks each successive library top on its validation game. Ante costs participate in commit preflight, including selected
+`EitherCost` alternatives. A stale top, stale permanent or impossible combined cost fails before live mana, taps or other payment resources are spent.
+Queries do not move cards or make decisions. `AnteLibraryTops` and `MoveToAnte` retain movement, physical identity, owners, departure LKI and event
+behavior. No destruction, sacrifice or new replacement ordering is introduced. Multiple sequential costs are sequential; this slice does not implement
+simultaneous all-player payments.
+
+RON supports `MayCost(AnteTopCardOfLibrary)` and `PlayerMayCost(playerRef, AnteTopCardOfLibrary)`. `MayCost`, `PlayerMayCost` and `MustCost` support
+`AnteAPermanent(SinglePermanent(permanentRef))`. Each payment requires an adjacent `If`, `Unless` or `IfElse` with bare `CostWasPaid` or
+`CostWasntPaid` and nonempty action-list branches. Ordinary resolving spells, activations, triggers and delayed bodies share the adapter. Per-factory
+typed bindings preserve target identity and payer scope. Results cannot escape their continuation. Activation costs, entry/static operations,
+mandatory top payments, arbitrary permanent collections and `EachPlayerMayCost` remain rejected.
+
+Explicit source operands and branch bodies supply waiting delayed references. Queries do not resolve subjects or pay costs. Delayed bodies keep
+original incarnations through departure, phasing and return; actual payment still requires presence. Pending copies use their own payer; clones retain
+separate zones and delayed lifetimes. There is no name-specific executor, global last-action state, Go-card fallback or partial production registry.
+
+Rules evidence: CR 118.3 and 118.10–12 establish complete payment and local resolution results; 400.7 establishes new zone-change objects; 407.4
+limits ante to the owner; 608.2c/f establishes ordered resolution and its payment choices. Local `data/ARN.json` and `data/LEG.json` match the
+selected payment instructions. No RON source was changed, so vocabulary source hashes remain unchanged.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests initially failed on missing `AnteTopCost`, `PayPermanentAnteOrElse` and `AntePermanentOrElse`. Corrected RON test fixtures then failed on
+unsupported `AnteAPermanent` and `AnteTopCardOfLibrary` payments. Fixture corrections used the existing four-argument activation API and existing end-
+step event service. A mixed player/permanent target fixture was replaced with supported singular target declarations; no target or player-reference
+capability was added to make the fixture pass. A missing-branch declaration failure led the adapter to use existing single-branch payment
+constructors.
+
+| Tests | Card / contract mapping |
+| --- | --- |
+| `TestRONAntePaymentRecordSubrules` | Complete Jeweled Bird record remains rejected at owned-ante movement. Its unchanged activation and mandatory payment subrule execute with a draw continuation. Rebirth's complete record and actual top-payment syntax are checked; it remains rejected at `EachPlayerMayCost`. Neither is claimed as complete gameplay coverage. |
+| `TestRONAntePaymentPermanent` | Synthetic RON activations with optional/mandatory exact source payment: real activation/tap timing, decline, foreign owner, phasing, departure, return and clone isolation. |
+| `TestRONAntePaymentTop`, `TestRONAntePaymentPayerAndSubject` | Synthetic RON spells: actual casting, nested independent top payments, explicit target payer and typed permanent target, current/retained controller after departure, separate results and physical IDs. |
+| `TestRONAntePaymentDelayedIdentity` | Synthetic RON activation and delayed body: exact waiting source, repeated pure queries, departure, return, phasing/cycle, clone isolation, delay consumption and copied payer. |
+| `TestRONAntePaymentInvalid`, `TestRONAntePaymentContextsAndInventory` | Wrong shape/arity, missing adjacent result, unbound subject, escaped result, wrong role/context and semantic inventory descent to the permanent reference. |
+| `TestAntePaymentPermanent`, `TestAntePaymentDefinition` | Native owner/control distinctions, token legality, offer-time return, disabled/settled ante, exact physical ID, mandatory absence of offers and invalid typed declarations. |
+| `TestAntePaymentTopTransaction`, `TestAntePaymentStaleTop`, `TestAntePaymentPermanentTransaction`, `TestAntePaymentTopLegality` | Native pure queries, repeated successive tops, combined-cost rollback, stale commit preflight before mana/taps, empty/foreign-owned/token tops, disabled/settled games and paid/unpaid branches. |
+
+### Validation, measured gain and remaining gaps
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONAntePayment -count=1`
+  and `go test ./pkg/mage -run TestAntePayment -count=1`: PASS.
+- `make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`
+  and `make test`: PASS, including a final rerun after lint fixes.
+- First `make lint` found two new style issues: a builtin-shadowing variable
+  and a redundant explicit test variable type. Both were fixed. Final
+  `make lint`: PASS. Automatic changes were reviewed; affected native/RON
+  focused checks were rerun and PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,057 compiled /
+  388 rejected records; 794 accepted / 192 rejected unique names**. The loader
+  still rejects the collection and installs no partial registry. This expected
+  nonzero status is not a failed build or required test.
+
+Estimated and actual complete-card gains match: **0 names / 0 records**. Compilation and complete-card gameplay totals remain unchanged. Jeweled
+Bird's first diagnostic advances from its mandatory ante cost to `PutEachCardFromAnteInGraveyard`; Rebirth still rejects `EachPlayerMayCost`. New
+prerequisite gameplay evidence covers exact permanent payment and equivalent single-player library-top payments; it does not establish either full
+card.
+
+Source review notes for later slices: Jeweled Bird's local Oracle text says “all other cards”; the current owned-ante movement operand does not
+visibly encode that exclusion. Darkpact's Oracle text says “You own target card in the ante” before the exchange; do not reuse the legacy own-card
+target restriction as its complete RON contract. Both need review in their movement/ownership slices. No source correction or unverified semantic
+shortcut was made here.
+
+Changed files: new engine `ante_payment.go` and tests; `payment_transaction.go`; new RON `ante_payment.go` and tests; `optional_payment.go`,
+`inventory.go`; `doc.go`, DSL/API rules-contract documentation and this ledger. No Go definitions, generators or DSL functions were removed: full
+loading, gameplay and runtime cutover have not met their removal gates. No whole-repository DSL deletion audit was needed because this slice deletes
+no DSL API.
+
+Ranked next candidates:
+
+1. Typed ante-zone card references and owned-ante movement: Darkpact and Jeweled Bird are concrete consumers. Exact source payment is now ready for Jeweled Bird. Establish source exclusion, ownership acquisition and atomic exchange dependencies before estimating complete gains.
+
+2. Scoped paid-player collection and result dispatch: Rebirth can now reuse `AnteTopCost`; inspect all-player choice order and life-total replacement contracts. Keep paid-player results private to their continuation.
+
+3. Independent complete Oracle name catalog, then scoped name choices for Nebuchadnezzar and Petra Sphinx. Retain all CR 201.4 name/face rules and separate reveal-result consumers before claiming full gameplay.
+
+This run stops after ANTE-RESOLUTION-PAYMENTS.

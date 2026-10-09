@@ -128,6 +128,12 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if len(payment.Args) > 0 {
+		cost := payment.Args[len(payment.Args)-1]
+		if cost.Name == "AnteAPermanent" || cost.Name == "AnteTopCardOfLibrary" {
+			return compileAntePayment(payment, continuation, ctx)
+		}
+	}
 	if isResolutionActionPayment(payment) {
 		return compileResolutionActionPayment(payment, continuation, ctx)
 	}

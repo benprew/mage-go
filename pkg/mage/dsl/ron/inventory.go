@@ -568,6 +568,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost", "resolution_cost":
+		if role == "resolution_cost" && n.Name == "AnteAPermanent" && len(n.Args) == 1 {
+			return "ante_payment_subject"
+		}
 		if role == "resolution_cost" && n.Name == "GainLife" && len(n.Args) == 1 {
 			return "value"
 		}
@@ -615,6 +618,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if (n.Name == "PayLife" || n.Name == "MillNumberCards") && len(n.Args) == 1 {
 			return "value"
+		}
+	case "ante_payment_subject":
+		if n.Name == "SinglePermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
 		}
 	case "exile_payment_object":
 		if n.Name == "Permanent" && len(n.Args) == 1 {

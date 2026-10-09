@@ -231,6 +231,16 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				validationCost = counter
 				tx.costs[i] = counter
 			}
+			if ante, ok := locked.options[locked.selected].(*anteCost); ok {
+				cost = ante
+				validationCost = ante
+				tx.costs[i] = ante
+			}
+		}
+		if ante, ok := cost.(*anteCost); ok {
+			locked := ante.lock(tx.controller, validation)
+			validationCost = locked
+			tx.costs[i] = locked
 		}
 		if reveal, ok := cost.(*revealFromHandCost); ok {
 			payer := tx.game.GetPlayer(tx.controller)
@@ -418,7 +428,8 @@ func (tx *costPaymentTransaction) Commit() error {
 		_, random := cost.(*discardRandomCost)
 		_, isSacrifice := cost.(*sacrificeMatchingCost)
 		_, isPlacement := cost.(*putCounterOnMatchingCost)
-		if random || isSacrifice || isPlacement {
+		_, isAnte := cost.(*anteCost)
+		if random || isSacrifice || isPlacement || isAnte {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)

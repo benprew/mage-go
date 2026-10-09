@@ -16,6 +16,17 @@
 // Typed player operands use the existing bindings, LKI and waiting declarations.
 // Legacy [AnteLibraryTop] uses the same batch service.
 //
+// Use [AnteTopCost] for a library-top payment through the cost transaction.
+// The transaction saves each top before payment and checks the full payment
+// before it spends live resources. Queries do not move cards or offer choices.
+// Use [PayPermanentAnteOrElse] for an optional exact-permanent payment.
+// Use [AntePermanentOrElse] for the same payment without an optional choice.
+// The payer must own the nontoken permanent; control is not required.
+// Departure, phasing and return cannot supply an available payment subject.
+// Each result selects one local branch. Typed operands and bodies declare
+// explicit source reads to waiting delayed queries without executing payment.
+// Paid-player collections and ante-to-graveyard actions need separate services.
+//
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.
