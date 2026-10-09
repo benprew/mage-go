@@ -13278,3 +13278,44 @@ synthetic resolving probe and remains rejected as a complete record. Existing
 controller-sacrifice native tests retain replacement ordering, departing
 replacement sources and graveyard-order evidence. No new movement, cost, LKI,
 result binding or replacement pipeline was introduced.
+
+## Source-counter X in activation mana payments
+
+`WithActivationManaXFromSourceCounters(core.CounterType)` is an `ActionOption`
+for an activated `ActionDefinition` with an X mana payment. Definition validation
+requires one declaration, a valid counter kind and an X mana cost. The live,
+unphased source supplies the counter count before target validation and payment
+(CR 107.3a/c/k, 602.1b, 602.2b). The player cannot choose a different payment X.
+`CanActivate` uses that count for affordability without changing the resolution
+frame. Activation scopes the count through the existing announcement pipeline
+and restores the outer X on success and failure.
+
+All X symbols use the same count. The shared cost transaction substitutes X
+before activation reductions and locks the amount before counter removal or
+source sacrifice. Stack copies retain the announced payment X and pay no new
+costs. Games and separate source instances retain separate counters and pending
+objects. Phasing or departure prevents a new announcement.
+
+This service defines mana announcement, not a dynamic resolving `ValueX`.
+Resolving source-counter instructions use `CountersOnWithLKI(This, counter)`;
+they read current counters or departure information for the exact original
+incarnation. A returned source cannot replace it. CR 107.3c permits a defined
+value to change while pending, so the RON adapter rejects `ValueX` reads in its
+body and target declarations until that distinct dynamic-X contract is ready.
+
+RON supports `XIs(TheTotalNumberOfCountersOfTypeAmongPermanents(counter,
+SinglePermanent(ThisPermanent)))` as one activation modifier, including a member
+of `And([...])`. An X mana payment is required. Other source subjects, plural
+collections, arithmetic, target-derived values, duplicate definitions and wrong
+roles remain errors. `activation_x_value` distinguishes the semantic inventory
+from resolving counter information.
+
+`TestActivationDefinedXPayment`, `TestActivationDefinedXDeclarations`,
+`TestActivationDefinedXLockedCostAndClones` and
+`TestActivationDefinedXReductionAndSacrifice` supply native contract evidence.
+`TestRONActivationDefinedXDoll`, `TestRONActivationDefinedXDollTriggers` and
+`TestRONActivationDefinedXDollCastAndRollback` execute the complete Voodoo Doll
+RON record, including all triggers, casting, damage prevention, target legality,
+LKI, source return/phasing, destruction failure, payment rollback and native
+upkeep/end-step execution. Declaration and inventory tests cover atomic rejection
+and announcement-value roles. Reflecting Mirror remains unsupported.

@@ -9992,3 +9992,20 @@ exact nested filter has a resolving prerequisite probe; its state trigger and
 spell/land restrictions remain rejected. This does not establish full Bottle
 execution. Source evidence and snapshot hashes are in
 `pkg/mage/original_printing_names_source.json`.
+
+## Defined source-counter activation mana X
+
+On an activated `ActionDefinition`, use
+`WithActivationManaXFromSourceCounters(counter)` with an X `ManaCostPayment`.
+The engine derives payment X from the live source before target checks and
+payment. Affordability queries use the same count without changing state.
+Substitution precedes cost reductions; counter payment and sacrifice cannot
+change the locked mana amount. Stack copies retain payment X without paying.
+
+Resolving counter amounts must use `CountersOnWithLKI(This, counter)` separately.
+This API does not supply dynamic resolving X. RON supports the exact modifier
+`XIs(TheTotalNumberOfCountersOfTypeAmongPermanents(counter,
+SinglePermanent(ThisPermanent)))`, also inside `And([...])`, with `PayManaX`.
+Bodies and targets that read `ValueX`, target-derived definitions and plural
+counter totals remain rejected. Voodoo Doll uses the supported shape; Reflecting
+Mirror needs a separate target-derived announcement contract and a source audit.

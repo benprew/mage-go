@@ -3179,6 +3179,15 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("activation target group announcement does not match declaration")
 	}
 	saa, isSAA := inner.(*SimpleActivatedAbility)
+	if isSAA && saa.activationManaX != nil {
+		x, valid := saa.activationManaX.value(g, permanentID)
+		if !valid {
+			return fmt.Errorf("activation X requires a present source")
+		}
+		previousX := g.resolution.X()
+		g.resolution.SetX(x)
+		defer g.resolution.SetX(previousX)
+	}
 	if perm.ControllerID() != playerID {
 		if !isSAA || !saa.IsAnyPlayerAbility() {
 			return fmt.Errorf("only the controller may activate this ability")

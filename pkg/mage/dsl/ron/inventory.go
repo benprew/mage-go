@@ -419,6 +419,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "activation_modifier":
+		if n.Name == "XIs" && len(n.Args) == 1 {
+			return "activation_x_value"
+		}
 		if n.Name == "OnlyPlayerMayActivate" && len(n.Args) == 1 {
 			return "player_reference"
 		}
@@ -433,6 +436,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "ActivateOnlyIf" && len(n.Args) == 1 {
 			return "activation_condition"
+		}
+	case "activation_x_value":
+		if n.Name == "TheTotalNumberOfCountersOfTypeAmongPermanents" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_filter"}[index]
 		}
 	case "activation_limit_value":
 		if n.Name == "Integer" && len(n.Args) == 1 {

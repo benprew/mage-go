@@ -184,6 +184,8 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
+	activationManaX          *activationManaX
+	activationManaXOptions   int
 	activationHistory        *ActivationHistoryBinding
 	activationHistoryOptions int
 	BaseAbility
@@ -283,6 +285,14 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
+	x := g.resolution.X()
+	if a.activationManaX != nil {
+		var ok bool
+		x, ok = a.activationManaX.value(g, a.source)
+		if !ok {
+			return false
+		}
+	}
 	if a.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}
@@ -328,7 +338,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		if payment, ok := c.(*ManaCostPayment); ok {
 			component := payment.MC
 			if component.HasX {
-				component.Generic += g.resolution.X() * max(1, component.XCount)
+				component.Generic += x * max(1, component.XCount)
 				component.HasX = false
 				component.XCount = 0
 			}

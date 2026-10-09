@@ -330,7 +330,7 @@ func TestRONEndStepStateRecords(t *testing.T) {
 			}
 			counts[name]++
 			factory, err := Compile(n)
-			if name == "Osai Vultures" || name == "Erg Raiders" {
+			if name == "Osai Vultures" || name == "Erg Raiders" || name == "Voodoo Doll" {
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -341,14 +341,8 @@ func TestRONEndStepStateRecords(t *testing.T) {
 				if err := mage.ValidateCardDefinition(name, first); err != nil {
 					t.Fatal(err)
 				}
-			} else {
-				want := "unsupported action (Unless)"
-				if name == "Voodoo Doll" {
-					want = "XIs"
-				}
-				if err == nil || !strings.Contains(err.Error(), want) {
-					t.Fatal("remaining blocker", name, err)
-				}
+			}
+			if name == "Voodoo Doll" {
 				rules := n.Fields["Rules"].Args
 				for _, rule := range rules {
 					if rule.Name != "TriggerI" {

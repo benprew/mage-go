@@ -2,17 +2,18 @@
 
 ## Current status
 
-The latest recorded inventory reports **805 accepted / 181 rejected unique card
-names** (986 total), and **2,077 compiled / 368 rejected records** (2,445 total).
+The latest recorded inventory reports **806 accepted / 180 rejected unique card
+names** (986 total), and **2,078 compiled / 367 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ORIGINAL-PRINTING-NAME-FILTERS` adds fixed CR 206.3a/b name membership through
-shared permanent-filter consumers. Golgothian Sylex gains complete RON gameplay
-coverage; City in a Bottle gains a shared prerequisite. **+1 unique name / +1
-record**, as estimated. Face-down name-based P/T effects now recheck correctly.
+`SOURCE-COUNTER-ACTIVATION-MANA-X` defines activation payment X from live source
+counters before targets and transactional payment. Voodoo Doll gains complete
+RON gameplay coverage. **+1 unique name / +1 record**, as estimated. Resolving
+counter amounts retain exact-source LKI; dynamic ValueX contexts remain rejected.
 Focused/native tests and all required repository checks pass. Existing complete
-card mappings remain; Bottle still needs its state trigger and player rules.
+card mappings remain. Reflecting Mirror still needs target-derived X and a
+source correction; temporary player-effect lifetime is the next shared candidate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -56955,4 +56956,179 @@ Ranked next candidates:
 Time Vault's begin-turn skip replacement remains a larger deferred candidate.
 Runtime integration, complete collection gameplay, Go-card deletion and unused
 DSL removal remain unfinished. Stop after ORIGINAL-PRINTING-NAME-FILTERS.
+Migration incomplete.
+
+## 2026-10-09: source-counter defined activation mana X
+
+Capability: `SOURCE-COUNTER-ACTIVATION-MANA-X`, complete for the supported
+shape. One vertical compiler/engine slice; no second slice was started.
+
+### Environment and candidate selection
+
+The working tree began with user edits to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`. Those changes are
+preserved. The commit stages only this entry and its summary change against the
+previous ledger, so it does not include the user's history move/compaction.
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -short -count=1`
+passed. The baseline loader exited 1 for collection rejection, with **2,077
+compiled / 368 rejected records; 805 accepted / 181 rejected unique names**.
+This is an unsupported-collection result, not a build or environment failure.
+
+The latest ranked candidates were evaluated first. Complete RON records,
+including nested forms and all identical temporary-player reprints, were read.
+The targeted vocabulary has two `XIs` tuples, one per unique affected card.
+
+| Candidate | Distinct affected cards | Estimated full-card gains | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Constrained activation mana X | Voodoo Doll; Reflecting Mirror | 1 name / 1 record for the source-counter shape | Doll's upkeep counter, end-step intervening condition, destruction, LKI damage and any-target action are ready. Mirror needs target-derived announcement values, single-target spell selection and retargeting. Its extra equal-X target filter conflicts with its twice-mana-value definition. The shared announcement integration is a prerequisite for the second card. | Small, one run for source counters: pure queries, payment lock, cost reductions, identity, copies/clones, complete-card trigger tests and declaration rejection. Both source/target variants plus Mirror correction/retargeting would be larger. |
+| Temporary player-effect lifetime | Channel; Guardian Angel; North Star | 0 for lifetime alone | A shared installed player-ability/lifetime service enables three cards. Channel needs life-paid mana abilities; Angel needs instant-speed paid prevention with saved recipient identity; Star needs one-use casting with mana-color permission. Existing next-damage prevention supplies only Angel's initial instruction. | Medium/large prerequisite with installation, cleanup, choice, priority and cloning contracts; distinct nested operations remain separate slices. |
+| State-event permanent collection capture | City in a Bottle | 0 for the state producer alone | Original-name filtering and controller-sacrifice batching are ready. Arming/rearming, exact captured subjects and source identity remain; spell/land prohibition adapters still prevent a full-card unlock. The current source inventory gives this shape one card. | Medium/large state-event service plus separate player restrictions. Lower shared benefit than the first two candidates. |
+
+Candidate #1 is dependency-ready and wins for its credible immediate unlock plus
+an announcement prerequisite reused by Mirror. The slice is deliberately the
+complete source-counter payment shape, not a partial target-derived adapter.
+The three-card temporary lifetime prerequisite remains a useful next candidate.
+
+### Exact shape, contracts and reuse boundary
+
+RON supports one
+`XIs(TheTotalNumberOfCountersOfTypeAmongPermanents(counter,
+SinglePermanent(ThisPermanent)))` in `ActivatedWithModifiers`, including inside
+`And([...])`, with `PayManaX` and one or more X mana symbols. The compiler checks
+arity, counter kind, exact source spelling, an X mana payment and uniqueness.
+Wrong roles, plural subjects, other references, arithmetic and target-derived
+values remain errors. Bodies/targets containing `ValueX` reject: CR 107.3c can
+make defined X change while pending, and a fixed announcement must not silently
+implement a dynamic resolving-X or dynamic target-legality contract.
+
+Engine API: `WithActivationManaXFromSourceCounters(core.CounterType) ActionOption`.
+It stores an immutable declaration on each `ActionDefinition`. Validation requires
+an activated action, exactly one declaration, a valid counter kind and an X mana
+cost. `CanActivate(controller, game)` reads the live source count for pure mana
+affordability without changing the resolution frame. Activation scopes this X
+before target checks, costs and stack construction, then restores the outer X on
+all returns. Disabled, absent or phased sources cannot activate.
+
+CR 107.3a/c/k and 602.1b/602.2b distinguish a defined payment X from a player
+choice and prohibit changing the locked announcement/payment. All X symbols
+share the same count. The existing transaction substitutes X before activation
+cost reductions, locks the amount before counter removal or sacrifice, and
+commits through the existing mana and zone/counter payment services. Stack
+copies save the payment X and pay nothing. Separate sources and cloned games
+retain independent counter state and pending objects. Resolution uses the
+existing `CountersOnWithLKI` for live or exact-departure counts. A returned source
+cannot replace the original. Phasing information remains available to pending
+source-information reads; it does not grant a new activation.
+
+Reuse: `ActionDefinition`, source identity/incarnations, scoped resolution X,
+`ManaCostPayment`, combined X mana costs, activation cost modification, target
+validation, transactional counter/sacrifice payment, stack copies and clone
+services, source counter LKI, damage/prevention, regeneration/destruction,
+upkeep and intervening-if end-step triggers. RON owns spelling, shape, context
+and semantic role; mage owns announcement and payment. No game-time declaration
+panic, card-name branch, global result slot, fallback registry, parallel payment
+service or new Go card definition was added.
+
+Inventory now assigns `XIs` operands to `activation_x_value` and source-counter
+children to the existing counter-type and permanent-subject roles. Unsupported
+nested forms remain visible. Existing accepted cards continue to compile.
+Obsolete Doll rejection assertions became positive compilation/validation tests;
+its previous end-step condition probe remains. Exact collection assertions and
+supported-card regression checks now include the new accepted record.
+
+### Failing-first evidence and gameplay mapping
+
+New RON gameplay tests first failed at LEG:288:857 on unsupported `XIs`. Native
+contract tests first failed on the missing API. Test-only parser/counter type
+names were corrected before confirming the missing-signature failure alone.
+The added inventory test then failed on the missing announcement-value role
+before the role adapter was added. Supplemental test setup was corrected for
+ambient X reset after resolution and for existing retained phasing information;
+no production assertion or payment contract was weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestRONActivationDefinedXDoll` | Complete unmodified LEG Voodoo Doll: exact {X}{X}/tap payment despite unrelated ambient X; separate later counter read; source departure/return LKI; source phasing/cycle; absent target; copies and independent pending game clones. |
+| `TestRONActivationDefinedXDollTriggers` | Complete Doll: your versus opponent upkeep/end step, repeated pin counters, tapped-state intervening checks at detection and resolution, later untapping cannot create a missed trigger, source control change, departure/return, phasing, indestructible/regeneration destruction failures, independent later damage and prevention. |
+| `TestRONActivationDefinedXDollCastAndRollback` | Complete Doll: {6} casting metadata, insufficient casting mana rollback, battlefield entry, free zero-counter activation, insufficient activation mana rollback, invalid-target rollback and native upkeep/end-step execution. |
+| `TestRONActivationDefinedXInvalid` | Invalid arity/kind, counter, subject, duplicate/no-payment definition, resolving ValueX and X-dependent targets reject atomically without publishing a registry. |
+| `TestRONActivationDefinedXInventory` | Complete Doll compiles in semantic inspection with an explicit activation-value role. |
+| `TestActivationDefinedXPayment` | Synthetic engine: zero/positive counts, multi-X total costs, pure affordable/unaffordable queries, ambient-frame preservation, insufficient-payment rollback and current resolution counts. |
+| `TestActivationDefinedXDeclarations` | Native rejection of spell context, invalid counter, duplicate definition and absent X mana cost. |
+| `TestActivationDefinedXLockedCostAndClones` | Native cost count locks before source-counter payment; independent sources and cloned counters/stack objects; copied ability uses its own controller and pays no new cost. |
+| `TestActivationDefinedXReductionAndSacrifice` | Native X substitution before reduction, locked payment before source sacrifice and exact-source LKI after payment. |
+
+Voodoo Doll gains complete RON gameplay coverage. Reflecting Mirror gains an
+engine prerequisite only; no full-card gameplay or compilation claim is made.
+Existing complete-card mappings remain. Broader engine suites cover reused
+replacement ordering and batch contracts; this slice adds no simultaneous zone
+operation or new replacement ordering rule.
+
+### Source-data audit and removal gates
+
+`data/LEG.json` supplies the exact Doll Oracle requirements, including the
+{X}{X} cost, source-counter X and independent destruction/damage instructions.
+`data/DRK.json` Reflecting Mirror Oracle requires a spell with a single target,
+then changes its target if that target is you, and defines X as twice the spell's
+mana value. The RON additionally filters `ManaValueIs(EqualTo(ValueX))`; together
+with `XIs(Twice(ManaValueOfSpell(Ref_TargetSpell)))`, that falsely excludes all
+positive-mana-value spells. This is a source-data defect, not a reason to invert
+or reinterpret a shared predicate. Mirror's correction is deferred with its
+full target-derived contract. No RON source was changed, so no vocabulary snapshot
+or asset-hash refresh is required. No new environment blocker was found.
+
+No DSL function was removed: runtime loading, complete collection gameplay,
+Go-card deletion, test migration and the final caller audit gates remain unmet.
+Existing authoring instructions remain until cutover. This slice updates only
+the established engine API and rules-contract documentation.
+
+### Verification and measured outcome
+
+Required checks passed in fast-fail order:
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONActivationDefinedX -count=1`
+  and `go test ./pkg/mage -run TestActivationDefinedX -count=1`.
+- Supplemental counter-information/end-step regression tests passed.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: PASS, 0 issues. The tracked patch was unchanged by automatic
+  lint fixes; all four new files were reviewed. Focused RON/native tests and
+  the engine skill's `go test ./... -short -count=1` passed afterwards.
+- `git diff --check`: PASS; the staged patch is checked before commit.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for strict collection
+  rejection. No partial production registry is installed.
+
+Final loader: **2,078 compiled / 367 rejected records; 806 accepted / 180 rejected
+unique names**, totals 2,445 records / 986 names. Actual **+1 unique name / +1
+record** equals the estimate. Voodoo Doll is the sole removed rejection; no new
+rejection occurred and every other diagnostic is unchanged except Reflecting
+Mirror, which now reports `DRK.lines.ron:85:458: unsupported source-counter
+activation X (Twice)`. No accepted record regressed. Compilation and complete
+Doll gameplay coverage increase separately; Mirror's complete gameplay remains
+unverified. No required check or environment failure blocks this slice.
+
+Changed files: new native and RON `activation_defined_x.go` and test files;
+`pkg/mage/activated.go`, `definition.go`, `game.go`, `doc.go`; RON
+`activation_timing.go`, `inventory.go`, counter-information/end-step tests and
+four collection-count assertions in definition-plan/inventory/numeric tests;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Commit message: `feat(ron): implement source-counter activation mana X`.
+
+Ranked next candidates:
+
+1. Shared temporary player-effect installed-ability/lifetime prerequisite for
+   Channel, Guardian Angel and North Star. Zero immediate full-card gains for
+   lifecycle alone; concrete three-card downstream value. Keep nested life-mana,
+   paid prevention and one-use casting operations separate and explicit.
+2. Target-derived constrained activation mana X for Reflecting Mirror, after
+   source/Oracle correction evidence and inspection of all spell targeting and
+   retargeting dependencies. Preserve the new source-counter announcement path;
+   do not use free X or resolution-time payment reads. Single-card work remains
+   lower priority while useful shared prerequisites remain.
+3. City in a Bottle state-event collection capture, with exact subjects and
+   arming/rearming. Original-name filtering and controller-sacrifice are ready;
+   player spell/land restrictions still block full-card execution.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Stop after SOURCE-COUNTER-ACTIVATION-MANA-X.
 Migration incomplete.

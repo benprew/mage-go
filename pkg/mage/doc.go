@@ -1579,6 +1579,15 @@
 // RON supports both original-printing symbols in permanent-filter contexts.
 // Spell and land restriction adapters need separate contracts.
 //
+// Use [WithActivationManaXFromSourceCounters] for source-counter mana X.
+// The live source defines payment X before target checks and payment.
+// Queries do not change the resolution frame. All X symbols share the count.
+// Cost reductions apply after X. Later counter payment cannot change the cost.
+// Copies retain the payment X; clones keep separate counters and stack objects.
+// Resolving counts use [CountersOnWithLKI] for the original incarnation.
+// RON supports one source-counter XIs modifier with an X mana payment.
+// Dynamic ValueX reads in bodies and targets need a separate contract.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

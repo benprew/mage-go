@@ -132,6 +132,18 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.activationManaXOptions > 0 {
+			hasX := false
+			for _, cost := range e.costs {
+				if mana, ok := cost.(*ManaCostPayment); ok && mana.MC.HasX {
+					hasX = true
+				}
+			}
+			if e.kind != ActionActivated || e.activationManaXOptions != 1 || !hasX {
+				n.problem = "supply one defined mana X on an activated action with an X mana cost"
+			}
+			n.children = append(n.children, definitionEdge{"activationManaX", e.activationManaX})
+		}
 		if e.activationHistoryOptions > 0 {
 			if e.kind != ActionActivated || e.activationHistory == nil || e.activationHistoryOptions != 1 {
 				n.problem = "supply one activation history binding on an activated ability"

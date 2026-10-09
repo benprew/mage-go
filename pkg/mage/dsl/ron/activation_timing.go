@@ -18,14 +18,6 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if conditionalManaBody(n.Args[1]) {
 		return compileConditionalMana(n)
 	}
-	var timing []mage.ActionOption
-	if count == 3 {
-		var err error
-		timing, err = compileActivationModifiers(n.Args[2], ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
 	paid, err := compileSacrificeValuePlan(n.Args[0], n.Args[1])
 	if err != nil {
 		return nil, err
@@ -46,6 +38,16 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	ctx.x = hasX
+	var timing []mage.ActionOption
+	if count == 3 {
+		timing, err = compileActivationModifiers(n.Args[2], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if containsDeclarationName(n.Args[2], "XIs") && containsDeclarationName(n.Args[1], "ValueX") {
+			return nil, problem(n.Args[1], "defined mana X does not support ValueX in targets or resolving bodies")
+		}
+	}
 	ctx.activation = true
 	ctx.activationHistory = &activationHistoryPlan{}
 	var plan actionPlan
@@ -115,6 +117,9 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 	seenMaximum := false
 	seenSorcery := false
 	seenPermission := false
+	if countDeclarationName(n, "XIs") > 1 {
+		return nil, problem(n, "multiple X definitions are not supported")
+	}
 	options, err := compileActivationModifier(n, ctx, &seenMaximum, &seenSorcery, &seenPermission)
 	if err != nil {
 		return nil, err
@@ -128,6 +133,8 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 
 func compileActivationModifier(n Node, ctx scope, seenMaximum, seenSorcery, seenPermission *bool) ([]mage.ActionOption, error) {
 	switch n.Name {
+	case "XIs":
+		return compileActivationManaX(n, ctx)
 	case "And":
 		if err := arity(n, 1); err != nil {
 			return nil, err
