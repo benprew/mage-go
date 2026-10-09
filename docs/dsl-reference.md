@@ -1,5 +1,41 @@
 # DSL reference
 
+## Printed intrinsic basic-landwalk text revision
+
+`WithPrintedBasicLandwalk(keyword core.Attr) CardOption` adds a distinct
+`PrintedBasicLandwalkAbility` and its intrinsic attribute seed. Definition
+validation accepts only Plainswalk, Islandwalk, Swampwalk, Mountainwalk and
+Forestwalk. RON uses this option only for top-level
+`Landwalk(IsLandType(<basic land type>))`. Desert and legendary landwalk retain
+their existing keyword representation. Nested grants use their existing adapters.
+
+`Game.RevisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID,
+changes ...TextChange) error` requires the exact present face-up source visit,
+an active unwrapped printed declaration, semantic builder and checked fresh
+declaration correspondence. It preserves the active ID, position, source and
+current controller. Each declaration retains its own ordered text prototype.
+Only its intrinsic attribute contribution changes; duplicate declarations,
+other base contributions and granted keywords remain separate (CR 612.2–3).
+Failure leaves runtime declarations, attributes and retention unchanged.
+
+The shared attribute, removal and combat services read the revised keyword
+(CR 702.14c–e). Block declaration rechecks current evasion. Specific keyword
+removal and complete ability removal suspend the contribution; restoration uses
+the revised keyword and declaration. Per-incarnation state changes by copy, so
+clones and sibling instances remain separate. Phasing keeps revisions but prevents
+installation. LKI retains revised attributes; return uses the printed origin.
+Printed card seeds and copiable definitions stay unchanged.
+
+Evidence: native `TestTextLandwalkDeclaration` and `Rejects`; RON
+`TestRONTextLandwalkRecords`, `Lifetime`, `DeclarationsAndGrants`, `Invalid`,
+`CastAndRemoval` and `BlockDeclaration`. Complete accepted records give bounded
+revision gameplay evidence for 10 unique names / 20 records. Three further
+basic-landwalk records still reject on unrelated rules. No collection acceptance
+gain. The caller still supplies layer-3 ordering, lifetime and original-text
+restoration. Other intrinsic keywords, nonbasic landwalk and full live text
+installation need separate contracts.
+
+
 ## Printed intrinsic color-protection text revision
 
 `ProtectionAbility.WithColorTextRevision() *ProtectionAbility` opts in printed
@@ -35,7 +71,7 @@ Evidence: native `TestTextProtectionDeclaration` and `Rejects`; RON
 12 unique names / 22 records with bounded protection-revision evidence; this does
 not establish new complete-card gameplay totals. No collection acceptance gain.
 The caller still supplies layer-3 ordering, expiry and original-text restoration.
-Intrinsic keyword attributes and full live text consumers remain separate work.
+Other intrinsic keyword attributes and full live text consumers remain separate work.
 
 
 ## Printed opponent land-tap trigger text revision

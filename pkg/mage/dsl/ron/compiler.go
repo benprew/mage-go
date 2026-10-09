@@ -619,7 +619,12 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
+		return func() mage.CardOption {
+			if kw == core.Desertwalk || kw == core.LegendaryLandwalk {
+				return mage.WithKeyword(kw)
+			}
+			return mage.WithPrintedBasicLandwalk(kw)
+		}, nil
 	default:
 		return nil, unsupported(n, "rule")
 	}

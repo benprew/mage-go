@@ -7,13 +7,13 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-COLOR-PROTECTION` adds checked printed intrinsic color-protection
-revision. Active identity, ordered changes, source visits, sibling declarations,
-clones, phasing, ability restoration and printed-origin return stay separate.
-Revision gameplay evidence covers **12 accepted unique names / 22 records**.
-**+0 unique names / +0 records**, as estimated. Shared protection rules check
-new and queued targets, damage, blocking and attachment. Intrinsic keyword
-attributes and complete live text installation remain gaps.
+`TEXT-PRINTED-BASIC-LANDWALK` adds checked printed basic-landwalk declarations
+and revision. Distinct IDs and intrinsic contributions preserve duplicate rules,
+grants, clones, phasing, removal/restoration, LKI and printed-origin return.
+Revision gameplay evidence covers **10 accepted unique names / 20 records**.
+The full basic-landwalk inventory has **13 names / 23 records**; three remain
+blocked by unrelated rules. **+0 unique names / +0 records**, as estimated.
+Full live text installation and other intrinsic keyword contracts remain gaps.
 All required build, vet, test and final lint checks pass. Final loader diagnostics
 exactly match the fresh baseline; strict collection rejection remains expected.
 
@@ -59270,3 +59270,146 @@ Ranked next candidates:
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## 2026-10-09: printed intrinsic basic-landwalk text revision
+
+Status: completed implementation slice `TEXT-PRINTED-BASIC-LANDWALK`.
+
+### Selection and measured inventory
+
+Evaluated ranked candidate #1 first and selected its dependency-ready basic-land
+context. It supplies a shared printed-keyword bridge before live Magical Hack
+installation. Fresh baseline build and `TestRONTextProtection` passed; loader
+exit 1 was strict collection rejection, not a build failure: 2,090 compiled /
+355 rejected records; 808 accepted / 178 rejected unique names.
+
+Read the architecture, current status and latest entry, engine API, targeted
+Landwalk/IsLandType vocabulary signatures, complete affected RON records and local
+Scryfall Oracle records. Landwalk has 88 total nested occurrences; this is not an
+unlock estimate. The previous candidate's 14-consumer estimate was not exact:
+there are 13 basic-landwalk names / 23 records plus Desert Nomads and Livonya
+Silone in separate nonbasic contexts. Bog Wraith and Shanodin Dryads each have
+six reprints. Initial commentary estimated 25 basic records; AST-backed tests
+established 23. No estimate changes the loader gain, which remains zero.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream value | Estimated complete effort |
+| --- | --- | --- | --- |
+| Selected printed basic-landwalk bridge | Bog Wraith, Shanodin Dryads, Cat Warriors, Devouring Deep, Lost Soul, Mountain Yeti, Righteous Avengers, Segovian Leviathan, Sol'kanar the Swamp King, Marsh Goblins, Goblins of the Flarg, Scarwood Bandits, Goblin Flotilla; 0 new full-card unlocks | First ten already accepted. Remaining three need state-trigger control, opponent optional-payment and end-of-combat delayed duration adapters respectively. Enables checked intrinsic text installation across all 13 consumers before Magical Hack. | Small engine declaration plus attribute integration, compiler opt-in and focused identity/lifecycle tests; completed in this run. |
+| Repeated-procedure round/result scope | Eureka, Mana Clash; 0 for a scope-only prerequisite | Complete records also need successful optional hand-entry rounds and per-player coin outcomes with simultaneous damage. Enables both repeated procedures without shared last-result state. | Medium to large; multiple distinct outcome/lifecycle contracts remain. |
+| Other typed trigger revision, combat-pair context | Cockatrice, Thicket Basilisk, Abomination; 0 new full-card unlocks | Complete records include paired block events and delayed destruction with saved opposing identities. Color-word substitution benefits Abomination; Wall subtype substitutions for the other two require a separate creature-word contract. Broader generic installation needs family-specific eligibility and detected-body retention. | Medium; less immediate shared word-consumer value in the supported color/basic-land vocabulary. |
+
+Candidate #1 wins as the smallest complete shared prerequisite. Contract, reuse
+boundary and acceptance cases were stated before edits. Other trigger contexts
+were inspected but not implemented. No Go definitions supplied requirements.
+
+### Established signatures, context and dependencies
+
+- `WithPrintedBasicLandwalk(keyword core.Attr) CardOption` adds one distinct
+  `PrintedBasicLandwalkAbility` and one intrinsic keyword seed. Definition
+  validation accepts only Plainswalk, Islandwalk, Swampwalk, Mountainwalk and
+  Forestwalk. Invalid, Desert, legendary and unrelated attributes reject.
+- RON lowers only top-level `Landwalk(IsLandType(<basic land type>))` through
+  that option. Desert/legendary declarations retain existing keyword behavior;
+  nested grants and HasAbility readers retain their existing adapters.
+- `(*Game).RevisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` checks the present face-up source incarnation,
+  active unwrapped printed declaration, semantic builder and fresh declaration
+  group correspondence before mutation. Fresh replacements must retain the
+  eligible basic-landwalk kind. Rejections leave attributes, runtime declarations
+  and retention unchanged.
+- Each declaration keeps ordered semantic prototypes, the active UUID, runtime
+  position, source and current controller. Only that declaration's contribution
+  moves between intrinsic and printed-ability attribute counts. Sibling and
+  duplicate declarations, other base contributions and ability-layer grants stay
+  independent. Printed card seeds and copy definitions remain unchanged.
+- Reused checked text-definition building, declaration groups, typed TextChange,
+  exact incarnation checks, attribute reads/removal, combat evasion and blocker
+  declaration. RON owns spelling and opt-in; mage owns state and mechanics.
+- Per-incarnation `revisedPrintedLandwalks` is copy-on-write, as are runtime
+  slices. Game clones keep separate later revisions. Phasing keeps revisions but
+  suspends installation. Complete ability removal suspends the declaration;
+  restoration retrieves it. Specific keyword removal suspends the revised
+  attribute. LKI retains revised attributes; leave-and-return restores printed
+  rules and rejects the earlier visit.
+- CR 612.2–3 limits semantic word roles and excludes granted abilities. Shared
+  evasion and redundant-instance behavior follows CR 702.14c–e. Local Oracle data
+  confirms all selected printed landwalk qualities. No RON source defect/change;
+  vocabulary snapshot remains valid.
+- Caller still supplies layer-3 order, lifetime and original-text restoration.
+  This is a completed declaration bridge, not complete Magical Hack execution.
+  Other intrinsic keywords/nonbasic landwalk need separate services. No new cost,
+  replacement ordering, simultaneous operation or action-result subsystem.
+  Existing engine and Go-card callers remain; no removal gate is met.
+
+### Failing-first and card-to-test evidence
+
+RON tests first failed compilation on the missing PrintedBasicLandwalkAbility and
+RevisePrintedBasicLandwalk APIs. Native tests first failed on missing constructor,
+installer and retention state. Corrected one generated fixture condition and
+reran native tests before implementation to confirm only missing APIs remained.
+After implementation, corrected the test's use of CanBlock: that function checks
+pair restrictions; HasLandwalkEvasion and block declaration check landwalk.
+No engine legality rule or expected gameplay result was weakened.
+
+Complete accepted-record tests cover **10 unique names / 20 records**. They parse
+and execute every accepted reprint in this shape. Complete remaining records
+explicitly assert their unrelated compilation blockers, rather than removing
+rules or publishing partial card definitions.
+
+| Tests | Card mapping and acceptance evidence |
+| --- | --- |
+| `TestRONTextLandwalkRecords` | Bog Wraith and Shanodin Dryads (six records each), Cat Warriors, Devouring Deep, Lost Soul, Mountain Yeti, Righteous Avengers, Segovian Leviathan, Sol'kanar the Swamp King and Marsh Goblins (one each): all five basic keyword forms, preserved active ID, removal of old contribution, gain of revised evasion, unchanged printed seeds. Goblins of the Flarg, Scarwood Bandits and Goblin Flotilla keep their exact unrelated rejection families. |
+| `TestRONTextLandwalkLifetime` | Complete Bog Wraith: sibling isolation, ordered Swamp-to-Mountain-to-Island clone changes, phased installation rejection, phase restoration, complete ability removal/rejection/restoration in two clones, LKI, old-visit rejection and printed-origin return. |
+| `TestRONTextLandwalkDeclarationsAndGrants` | Synthetic duplicate printed declarations keep independent contribution counts and ordered histories. Complete Bog Wraith with complete Fishliver Oil keeps the Aura's islandwalk separate during revision and after Aura departure. |
+| `TestRONTextLandwalkInvalid` | Missing/excess operands, unknown land and unbound chosen-land variable reject. Complete Desert Nomads and Livonya Silone retain nonbasic evasion attributes without acquiring the basic declaration marker. |
+| `TestRONTextLandwalkCastAndRemoval` | Complete paid Bog Wraith enters only on resolution; separate base contribution survives revision, specific revised-keyword removal and restoration preserve printed state. |
+| `TestRONTextLandwalkBlockDeclaration` | Complete attacking Bog Wraith, Grizzly Bears and basic land records: blocker assignment is accepted against an old Swamp and rejected against the revised Island. |
+| Native `TestTextLandwalkDeclaration`, `Rejects` | Constructor validation plus granted/face-down/absent/nil source, unknown ID, missing builder/group/declaration, invalid change and changed kind reject without attribute/runtime/retention mutation. |
+| Existing `TestRONTextSpellCastTriggerIdentityAndLifetime` | Complete Sol'kanar keeps all prior pending-event, control, phasing and printed-origin assertions. Fixture now finds its GenericTriggered declaration by type because landwalk also has an identity. |
+
+Actual acceptance gain: **+0 unique names / +0 records**, exactly estimated.
+Bounded revision gameplay evidence covers **10 accepted names / 20 records**,
+not a new complete-card gameplay total. Three basic-landwalk records remain
+rejected for other rules. No fallback or partial registry is introduced.
+
+### Validation and files
+
+Required final checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextLandwalk -count=1`.
+- `go test ./pkg/mage -run TestTextLandwalk -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`.
+- `make test`.
+- `make lint`; `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Parsed JSON exactly
+  matches baseline, including every diagnostic: **2,090 compiled / 355 rejected
+  records; 808 accepted / 178 rejected names** (2,445 records; 986 names).
+- Skill final `go test ./... -short -count=1` passed.
+
+The first engine suite exposed Sol'kanar's test assuming its trigger was runtime
+ability zero. Updated only identity selection to use GenericTriggered, retained
+all existing assertions, and reran focused regression/build/vet/engine checks.
+Final full validation passes. Formatting/lint changes were reviewed; affected
+checks were rerun. No environment or pre-existing failure blocks this slice.
+
+Files: new `pkg/mage/text_landwalk.go`, native `text_landwalk_test.go`, RON
+`text_landwalk_test.go`; `card.go`, `clone.go`, `definition.go`, `effect_manager.go`,
+RON `compiler.go` and `text_spell_cast_trigger_test.go`, `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Preserve user's `.gitignore`, execution-design edits, ledger history relocation
+and new archive. Stage only this status update and appended entry for the ledger,
+not the user's relocation. Commit message:
+`feat(ron): implement printed basic-landwalk text revision`.
+
+Ranked next candidates:
+
+1. Repeated-procedure round/result scope prerequisite for Eureka and Mana Clash;
+   separate successful optional-entry results from per-player coin outcomes.
+2. Shared checked intrinsic keyword declaration bridge for remaining printed
+   keywords; inventory word-bearing forms and full live text installation needs.
+3. Combat-pair trigger text revision: preserve event facts and delayed bodies;
+   separate color-word consumers from future creature-subtype substitutions.
+
+Complete RON gameplay, runtime cutover, Go-card deletion and unused DSL removal
+remain unfinished. Migration incomplete. Stop after this slice.

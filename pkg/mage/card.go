@@ -675,6 +675,7 @@ type Permanent struct {
 	printedAbilitiesSuppressed bool
 	revisedPrintedTriggers     map[uuid.UUID]*GenericTriggered
 	revisedPrintedProtections  map[uuid.UUID]*ProtectionAbility
+	revisedPrintedLandwalks    map[uuid.UUID]*PrintedBasicLandwalkAbility
 	subtypeFamilyOverrides     [subtypeFamilyCount][]string
 	subtypeFamilyOverrideSet   [subtypeFamilyCount]bool
 	subtypeFamilyAdditions     [subtypeFamilyCount][]string

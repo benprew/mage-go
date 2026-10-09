@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithPrintedBasicLandwalk] for a printed basic-landwalk declaration.
+// [Game.RevisePrintedBasicLandwalk] checks its active identity and source visit.
+// It changes only that declaration's intrinsic attribute contribution.
+// Duplicate declarations, granted keywords and other base attributes stay separate.
+// Clones keep separate changes. Phasing keeps them; removal suspends them.
+// Restoration uses revised rules. LKI keeps them; return uses the printed origin.
+// RON opts in top-level Landwalk with one fixed basic land type.
+// Desert and legendary landwalk keep their existing keyword representation.
+// The caller must supply text-layer order, lifetime and original-text restoration.
+// Other intrinsic keywords and full live text installation need separate services.
+//
 // Use [ProtectionAbility.WithColorTextRevision] for printed color protection.
 // [Game.RevisePrintedProtection] checks its declaration and source visit.
 // It keeps the active ID with fresh rules and ordered semantic changes.
@@ -9,7 +20,7 @@
 // Shared protection rules check targeting, damage, blocking and attachment.
 // RON opts in top-level Protection with a nonempty FromColor color list.
 // The caller must supply text-layer order, lifetime and original-text restoration.
-// Intrinsic keyword attributes and full text consumers need separate services.
+// Other intrinsic keywords and full text consumers need separate services.
 //
 // Use [StaticAbilityHolder.WithGrantTextRevision] for a printed static grant.
 // [Game.RevisePrintedStaticGrant] checks its source visit and declaration.

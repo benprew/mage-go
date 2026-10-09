@@ -130,7 +130,16 @@ func TestRONTextSpellCastTriggerIdentityAndLifetime(t *testing.T) {
 	g, a, b := ronGame()
 	card := repositoryCard(t, "LEG", "Sol'kanar the Swamp King")
 	p := g.PutOnBattlefield(card, a.PlayerID())
-	id := p.RuntimeAbilities[0].AbilityID()
+	var id uuid.UUID
+	for _, ability := range p.RuntimeAbilities {
+		if _, ok := ability.(*mage.GenericTriggered); ok {
+			id = ability.AbilityID()
+			break
+		}
+	}
+	if id == uuid.Nil {
+		t.Fatal("missing printed spell-cast trigger")
+	}
 	change, _ := mage.ReplaceColorWord(core.Black, core.Red)
 	if err := g.RevisePrintedSpellCastTrigger(p, id, change); err != nil {
 		t.Fatal(err)

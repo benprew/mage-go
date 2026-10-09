@@ -122,6 +122,10 @@ func describeDefinition(v any) definitionNode {
 		if e.conditional != nil {
 			n.children = append(n.children, definitionEdge{"conditional", e.conditional})
 		}
+	case *PrintedBasicLandwalkAbility:
+		if !isBasicLandwalk(e.keyword) {
+			n.problem = "printed landwalk requires a basic landwalk keyword"
+		}
 	case *ProtectionAbility:
 		if e.colorTextRevision && !e.supportsColorTextRevision() {
 			n.problem = "text protection revision requires nonempty color protection without an exception"
