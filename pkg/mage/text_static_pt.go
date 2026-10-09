@@ -44,7 +44,7 @@ func (g *Game) registeredPrintedStaticAbility(source *Permanent, ability Ability
 
 func printedStaticEffect(effect ContinuousEffect, source *Permanent, declaration *StaticAbilityHolder) ContinuousEffect {
 	registered := &printedAbilityContinuousEffect{ContinuousEffect: effect}
-	if declaration.ptTextRevision || declaration.abilityTextRevision {
+	if declaration.ptTextRevision || declaration.abilityTextRevision || declaration.grantTextRevision {
 		registered.declaration = declaration
 		registered.incarnation = source.incarnationID
 	}
@@ -123,6 +123,12 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 	fresh, ok := replacement.(*StaticAbilityHolder)
 	if !ok || !eligible(fresh) || len(fresh.Effects) != len(active.Effects) {
 		return fmt.Errorf("text static revision changed the static contract")
+	}
+	for i, effect := range active.Effects {
+		next := fresh.Effects[i]
+		if effect.GetLayer() != next.GetLayer() || getEffectSublayer(effect) != getEffectSublayer(next) || effect.GetDuration() != next.GetDuration() {
+			return fmt.Errorf("text static revision changed an effect layer or duration")
+		}
 	}
 	rebuilt := *fresh
 	rebuilt.id = active.id

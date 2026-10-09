@@ -36,19 +36,16 @@ type printedAbilityContinuousEffect struct {
 }
 
 func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
-	if e.declaration != nil {
-		source := g.FindPermanent(e.SourceID())
-		if source == nil || source.incarnationID != e.incarnation {
-			return false
-		}
-		if !slices.ContainsFunc(source.RuntimeAbilities, func(a Ability) bool { return a.AbilityID() == e.declaration.AbilityID() }) {
-			return false
-		}
+	source := g.FindPermanent(e.SourceID())
+	if e.declaration != nil && (source == nil || source.incarnationID != e.incarnation) {
+		return false
 	}
 	if continuation, ok := e.ContinuousEffect.(interface{ continuesAcrossLayers(*Game) bool }); ok && continuation.continuesAcrossLayers(g) {
 		return true
 	}
-	source := g.FindPermanent(e.SourceID())
+	if e.declaration != nil && !slices.ContainsFunc(source.RuntimeAbilities, func(a Ability) bool { return a.AbilityID() == e.declaration.AbilityID() }) {
+		return false
+	}
 	if source != nil && source.printedAbilitiesSuppressed {
 		return false
 	}

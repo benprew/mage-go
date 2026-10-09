@@ -37,12 +37,24 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	global := n.Name == "EachPermanentLayerEffect"
 	var subjects staticPermanentFilterPlan
 	var general bool
+	grantRevision := global && len(parts) > 0
+	hasGrant := false
+	for _, part := range parts {
+		switch part.Name {
+		case "AddAbility":
+			hasGrant = true
+		case "AdjustPT":
+		default:
+			grantRevision = false
+		}
+	}
+	grantRevision = grantRevision && hasGrant
 	if global {
 		subjects, err = compileStaticPermanentFilter(n.Args[0])
 		if err != nil {
 			return nil, err
 		}
-		general = !requiresCreature(n.Args[0])
+		general = !requiresCreature(n.Args[0]) || grantRevision
 	} else if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
 		return nil, unsupported(n.Args[0], "static layer reference")
 	}
@@ -156,6 +168,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			if err != nil {
 				return nil, err
 			}
+			if len(abilities) == 0 {
+				return nil, problem(part, "empty static ability grant")
+			}
 			for _, ability := range abilities {
 				keyword, ok := keywords[ability.Name]
 				ok = ok && ability.Kind == Symbol
@@ -222,7 +237,15 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 				values[i] = build()
 			}
 			condition := mage.StateConditionFunc("unconditional static layer", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
-			return mage.WithAbility(mage.Static(mage.While(condition, values...)))
+			rule := mage.While(condition, values...)
+			if grantRevision {
+				rule = mage.WhileWithSharedSubjects(condition, values...)
+			}
+			holder := mage.Static(rule)
+			if grantRevision {
+				holder.WithGrantTextRevision()
+			}
+			return mage.WithAbility(holder)
 		}, nil
 	}
 	return func() mage.CardOption {

@@ -7,15 +7,15 @@ names** (986 total), and **2,090 compiled / 355 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-AURA-ABILITY` lowers an opt-in for unconditional basic Aura-host ability
-rules and installs fresh checked layer-6 effects with stable IDs and registration
-order. Revision evidence covers 12 accepted unique names / 61 records, including
-Ward exceptions, landwalk, independent declarations, clones, phasing, attachment
-changes, removal/restoration, returned identities, simultaneous prevention and LKI.
-A shared runtime-grant reset now keeps clone storage separate. Mixed/global rules,
-remaining triggers, spell installation and the layer-3 owner remain unsupported.
-**+0 unique names / +0 records**, as estimated. All required checks pass; loader
-diagnostics exactly match the fresh baseline.
+`TEXT-GLOBAL-GRANT` adds checked printed global keyword/landwalk revision,
+including fixed P/T-and-ability declarations. Global grants keep selected subjects
+through all keyword grants and layers 6 and 7c, including after later ability removal in the same pass.
+Revision evidence covers **9 accepted unique names / 24 records**. Source visits,
+active IDs, registration order, clones, phasing, removal/restoration and LKI stay
+separate. **+0 unique names / +0 records**, as estimated. Complete live text
+installation, remaining trigger kinds and intrinsic printed abilities remain gaps.
+All required build, vet, test and lint checks pass. Final loader diagnostics
+exactly match the fresh baseline; strict collection rejection remains expected.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Live text layers, Tablet owner-assignment fidelity, physical card transports,
@@ -58829,6 +58829,166 @@ Ranked next candidates:
    event-time facts and detected/queued trigger isolation.
 3. Shared repeated-procedure round/result scope for Eureka and Mana Clash;
    retain separate optional-entry and coin/damage consumers until fully ready.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+removal remain unfinished. Migration incomplete. Stop after this slice.
+
+## Run 2026-10-09: TEXT-GLOBAL-GRANT
+
+Status: complete checked printed global keyword/landwalk and mixed P/T grant
+installation slice. This run stops after this capability. Full layer-3 text
+installation and the two text-change spells remain unsupported.
+
+### Environment and candidate selection
+
+The working tree began with user changes to `.gitignore`, the execution design
+and this ledger, plus untracked `mtgish-ron-completed.md`. These changes are
+preserved. The ledger summary and appended entry are staged separately from the
+user's history relocation; the completed-history file is not part of this slice.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed (RON 32.339s).
+The baseline strict loader exited 1: 2,090 compiled / 355 rejected records;
+808 accepted / 178 rejected unique names, out of 2,445 / 986 respectively.
+Collection rejection is an unsupported-record result, not a build failure.
+
+Evaluated ranked candidate #1 first. It is dependency-ready and supplies shared
+live-text installation prerequisites; no missing payment or event service is
+required. Read complete canonical records and their nested forms for all names
+below. The final AST test reads and compiles every affected reprint.
+
+| Candidate | Distinct affected cards | Estimated full-card compilation unlocks; other blockers | Downstream capabilities; effort |
+| --- | --- | --- | --- |
+| Printed global/mixed grants (selected) | Goblin King, Lord of Atlantis, Fortified Area, Kobold Drill Sergeant, Kobold Overlord, Concordant Crossroads, Hidden Path, Goblin War Drums, Zombie Master | 0; all already compile. Full text spells still need layer-3 ownership, intrinsic abilities and other declaration kinds. Zombie Master's separate regeneration grant is already supported. | Checked grant installation for nine concrete text consumers; moderate compiler/registration/layer contract and lifecycle testing. |
+| Printed land-tap trigger revision | Lifetap, Lifeblood | 0; both already compile. Active trigger replacement and preserved detected/queued event facts need their own opt-in and installer. | Two concrete land-word trigger consumers for Magical Hack; moderate event capture, clone and pending-trigger isolation testing. |
+| Repeated-procedure round/result scope | Eureka, Mana Clash | 0 for the scope prerequisite alone; eventual 2 full-card unlocks. Eureka also needs ordered starting-player optional entry rounds; Mana Clash needs per-round coin facts and repeat/stop damage consumers. | A shared round service for two unsupported spells; larger scope, decision, RNG, progress and termination test effort. |
+
+The selected prerequisite has the largest concrete consumer set with existing
+mechanics ready for reuse. Reprints count once. Intrinsic keyword/protection
+installation is a separate declaration representation; it is not folded into
+this global static slice. First-error counts did not select the work.
+
+### Contract, contexts and reuse boundary
+
+- `(*StaticAbilityHolder).WithGrantTextRevision() *StaticAbilityHolder` opts in
+  a nonempty printed declaration containing at least one layer-6 effect, with
+  optional layer-7c P/T modifications. All effects use `WhileOnBattlefield`.
+  Nil/empty, other layers, set-P/T and other durations reject during validation.
+- `(*Game).RevisePrintedStaticGrant(source *Permanent, abilityID uuid.UUID,
+  changes ...TextChange) error` uses the existing checked static installer.
+  It checks exact present face-up source incarnation, active printed group,
+  retained builder, marker and all registrations before mutation. The fresh
+  declaration must keep count and each registration's layer/sublayer/duration.
+  The latter check also preserves contracts for the two existing static APIs.
+- RON marks only basic unconditional
+  `EachPermanentLayerEffect(filter, [AddAbility(abilities), ...])` declarations
+  whose parts are nonempty grants and optional fixed `AdjustPT(integer, integer)`.
+  Order and repeated parts remain supported. Grants use validated keyword symbols
+  or fixed Landwalk filters. Existing static filters retain control, exclusion,
+  subtype, color and property semantics. Empty grant lists now reject explicitly.
+- Eligible globals use `Static(WhileWithSharedSubjects(...))`, retaining all
+  grants and optional P/T as one rule. Both creature-filter and general-collection
+  paths use it, including grant-only globals.
+  Conditional, Aura, BandsWithOthers, activated/triggered grants, animation,
+  dynamic P/T and other-layer paths do not acquire this marker.
+- Mixed subjects are saved before the first modification of each layer pass.
+  Granting Flying cannot remove a subject selected by `DoesntHaveAbility(Flying)`
+  before another keyword grant or its P/T part. A started shared rule continues after later ability
+  removal in the same pass (CR 613.6). Exact source identity is still required.
+  Removal that prevents the rule from starting suspends both parts.
+- Checked replacement retains active UUID, registration positions and the source
+  timestamp (CR 613.7a). Fresh semantic prototypes, printed group correspondence,
+  source incarnation, shared members, dependency ordering and clone services are
+  reused. RON owns spelling, scope and opt-in; mage owns execution and state.
+- Each source and sibling declaration keeps ordered changes separately. Live
+  control and membership remain dynamic (CR 611.3a). Clones stay independent.
+  Phasing suspends execution and preserves the revision. Ability restoration
+  uses the revised registered holder. Departure saves revised P/T and abilities
+  in LKI; a returned source restores printed origin and rejects the old visit.
+  Recipient-granted abilities remain outside printed-text revision (CR 612.3).
+- No new targets, cost transactions, replacement ordering or simultaneous zone
+  operations. Existing caller APIs and Go definitions remain; removal gates are
+  unmet. Full text lifetime, ordering and original-text restoration stay with the
+  future layer-3 owner. No source defect, RON edit or vocabulary refresh.
+
+### Failing-first tests and card-to-test mapping
+
+Initial native tests failed compilation on missing `WithGrantTextRevision` and
+`RevisePrintedStaticGrant`; initial RON tests failed on the missing installer.
+The first RON test draft used incorrect basic-land constant names; corrected
+those before confirming the expected missing-API failure. The implementation then
+passed those tests and the preserved Aura, static P/T and lord tests.
+
+A further native test failed with power 2 instead of 3 after a started mixed
+rule's source lost its abilities. The printed wrapper checked active declaration
+membership before the existing cross-layer continuation. Reordered these checks
+while keeping the source-incarnation check first. The regression now passes.
+Its first draft used a source-less removal with an earlier timestamp; corrected
+it to a later battlefield source before confirming the meaningful failure.
+A further failing-first multi-keyword test showed that granting Flying removed
+a subject before its Haste grant. All eligible globals now use shared selection,
+including single-layer grant lists. Additional fixtures used nonexistent color options; corrected them to real
+colored mana costs. No production behavior or test expectation was weakened.
+
+| Tests | Card mapping and evidence |
+| --- | --- |
+| `TestRONTextStaticGrantLords` | Complete Goblin King and Lord of Atlantis: actual basic-land substitution, both players' recipients, source exclusion, unchanged P/T, evasion and defending-land phasing, sequential clone revision, source phasing, removal/restoration, revised departure LKI and printed return. |
+| `TestRONTextStaticGrantCards` | Fortified Area, Kobold Drill Sergeant, Kobold Overlord, Concordant Crossroads, Goblin War Drums, Hidden Path and Zombie Master: fixed mixed bonuses or grant-only rules; controller-only/global membership, source control changes, color-filter substitution, changed swampwalk and preserved separate regeneration grant, and departure. Existing `TestRONActivatedGrantZombieMaster` retains full regeneration payment/resolution evidence. |
+| `TestRONTextStaticGrantCastTiming` | Cast complete Fortified Area with real payment: no bonus/grant before resolution, correct controlled Wall membership, unchanged fixed mixed rule after a no-matching-word revision. |
+| `TestRONTextStaticGrantMembership` | Synthetic validated global rule: a grant changes its own property filter; both layers retain selected subjects for one pass, subsequent passes recalculate and late entries join. |
+| `TestRONTextStaticGrantMultipleKeywords` | Synthetic validated grant-only global: granting Flying cannot remove a selected subject before Haste is granted; checked color revision retains the complete ability list. |
+| `TestRONTextStaticGrantIndependentDeclarations` | Synthetic two-rule global: sibling color changes select green and blue separately; a second factory instance stays red, and its foreign declaration ID rejects. |
+| `TestRONTextStaticGrantBoundaries` | Aura, P/T-only, conditional and BandsWithOthers declarations reject through the new installer; malformed/empty grants, illegal Landwalk, target reads and dynamic fixed-P/T syntax reject during compilation. |
+| `TestRONTextStaticGrantRecords` | Parser walk, full factory construction and checked revision of **9 unique names / 24 records**. No reprint-only card coverage credit. |
+| Native `TestTextStaticGrantDeclaration`, `Rejects`, `RegistrationOrder`, `CrossLayerContinuation` | Declaration shape validation; missing/foreign/unmarked/granted/absent/face-down/builder/group/registration and changed count/layer/order rejection without runtime mutation; mixed replacement in original registration positions; started-rule continuation after later source ability removal. |
+
+Actual compilation gain is **+0 unique names / +0 records**, exactly the estimate.
+Bounded revision gameplay evidence now covers nine accepted unique names / 24
+records. This is capability coverage, not a new global full-card-gameplay total.
+
+### Validation and files
+
+Required checks passed in fast-fail order after the complete supported shape:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticGrant -count=1`.
+- `go test ./pkg/mage -run 'TestTextStatic(Grant|PT|Ability)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` (RON 33.191s).
+- `make test` (RON 33.942s; all packages passed).
+- `make lint` (final run: **0 issues**); `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for remaining unsupported
+  records; parsed final JSON exactly equals the fresh baseline, including every
+  diagnostic. **2,090 compiled / 355 rejected records; 808 accepted / 178 rejected
+  unique names**. Strict loading installs no partial registry. No regression.
+
+The first lint run reported two `prealloc` issues in the native declaration
+fixture. Replaced its appended test slices with explicit two-effect literals;
+all rejection cases remain unchanged. Reran native static grant/P/T/Aura tests
+and lint successfully. Reviewed formatting and modernize output: no unrelated
+edits or semantic automatic changes. Final focused RON and native static suites
+also passed after lint. The additional multi-keyword regression was added during
+validation; after its fix, repeated the focused/build/vet/engine-short/full-test
+sequence before final lint and loader checks. No environment or pre-existing
+failure blocked completion. No tests were weakened.
+
+This entry and the status block are the only ledger content staged for this
+slice; the user's archive relocation remains unstaged. Commit message:
+`feat(ron): implement printed global grant text revision`.
+
+
+Files: `pkg/mage/text_static_grant.go`, native and RON `text_static_grant_test.go`,
+`ability.go`, `definition.go`, `effect_manager.go`, `text_static_pt.go`, RON
+`layers.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No other production card or DSL
+cleanup work is part of this slice.
+
+Ranked next candidates:
+
+1. Printed typed land-tap trigger installation: Lifetap and Lifeblood; preserve
+   event-time land/controller facts and detected/queued trigger bodies.
+2. Checked printed intrinsic keyword/protection text installation: bridge the
+   different declaration representation before full source text changes; compare
+   concrete color-protection consumers and preserve granted-ability exclusion.
+3. Shared repeated-procedure round/result scope for Eureka and Mana Clash; keep
+   ordered optional-entry and per-round coin/damage consumers explicit.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 removal remain unfinished. Migration incomplete. Stop after this slice.

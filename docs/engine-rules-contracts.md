@@ -1,5 +1,52 @@
 # Engine rules contracts
 
+## Printed global ability and P/T grant text revision
+
+`StaticAbilityHolder.WithGrantTextRevision() *StaticAbilityHolder` opts in a
+printed static declaration with at least one layer-6 effect. Each effect must
+use `WhileOnBattlefield`; additional effects can modify P/T in layer 7c.
+Empty, nil, other-layer, set-P/T and other-duration declarations reject during
+validation. `Game.RevisePrintedStaticGrant(source *Permanent, abilityID
+uuid.UUID, changes ...TextChange) error` uses the shared checked static installer.
+It requires the original present face-up source, an active printed declaration,
+a retained semantic builder and complete registrations. The replacement must
+keep its marker, effect count and each effect's layer, sublayer and duration.
+Rejection leaves registrations and runtime declarations unchanged.
+
+RON opts in unconditional `EachPermanentLayerEffect(filter, parts)` on the
+basic static path when every part is fixed `AdjustPT(integer, integer)` or
+`AddAbility(abilities)`, with at least one nonempty grant. Grants support validated
+keyword symbols and fixed `Landwalk` filters. Existing global filters retain
+control, exclusion, color, subtype and property validation. Conditional rules,
+Aura rules, triggered/activated grants, BandsWithOthers and other modifications
+use their separate contracts and do not acquire this marker.
+
+Global grants use `WhileWithSharedSubjects` within layer 6 and through optional
+layer 7c. Selection occurs
+before the first modification, so granting an ability cannot remove a recipient
+from another keyword grant or its later P/T part in that pass (CR 613.6). The printed registration checks
+source identity before allowing a started shared rule to continue after later
+ability removal. Each new pass reads current membership and controller; removal
+that prevents the rule from starting suspends both parts. Existing dependency
+and timestamp services retain their ordering (CR 613.7a, 613.8).
+
+The installer retains active UUID and registration positions. Ordered changes,
+sibling declarations, source instances and game clones remain separate. Phasing
+suspends the grant; restoration after ability removal uses its revised holder.
+Departure saves revised characteristics in LKI. Return uses printed origin and
+cannot satisfy an earlier source reference. Granted recipient abilities remain
+outside printed text revision (CR 612.3). The caller still supplies layer-3
+ordering, expiry and original-text restoration. Full Magical Hack and Sleight
+of Mind installation remains unfinished.
+
+Evidence: `TestRONTextStaticGrantLords`, `Cards`, `Membership`, `Boundaries`,
+`Records`, `CastTiming`, `MultipleKeywords` and `IndependentDeclarations`; native
+`TestTextStaticGrantDeclaration`, `Rejects`, `RegistrationOrder` and
+`CrossLayerContinuation`. Nine accepted unique cards / 24 records receive bounded
+revision evidence. There is no new collection acceptance or global complete-card
+coverage claim. Cost transactions, replacements and simultaneous movement use
+unchanged services.
+
 ## Printed Aura ability-layer text revision
 
 `StaticAbilityHolder.WithAbilityTextRevision() *StaticAbilityHolder` opts in a
