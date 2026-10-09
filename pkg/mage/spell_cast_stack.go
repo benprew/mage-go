@@ -19,6 +19,7 @@ type castStackObjectOptions struct {
 	RevealedHandCards      []capturedCard
 	HandTargetCards        map[uuid.UUID]capturedCard
 	ExileTargetCards       map[uuid.UUID]capturedCard
+	AnteTargetCards        map[uuid.UUID]capturedCard
 	CapturedCardSets       map[*CardsBinding][]capturedCard
 	CapturedPermanents     map[*PermanentBinding]capturedPermanent
 	Card                   Card
@@ -125,6 +126,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		capturedNumbers:    maps.Clone(opts.CapturedNumbers),
 		targetHandCards:    maps.Clone(opts.HandTargetCards),
 		targetExileCards:   maps.Clone(opts.ExileTargetCards),
+		targetAnteCards:    maps.Clone(opts.AnteTargetCards),
 		capturedCards:      maps.Clone(opts.CapturedCards),
 		revealedHandCards:  slices.Clone(opts.RevealedHandCards),
 		ownsHandReveals:    !opts.IsCopy && len(opts.RevealedHandCards) > 0,

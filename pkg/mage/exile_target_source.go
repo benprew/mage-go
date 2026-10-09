@@ -10,6 +10,9 @@ import (
 
 func (g *Game) captureExileTargetCards(object *StackObject) {
 	for _, id := range object.Targets {
+		if _, saved := object.targetAnteCards[id]; saved {
+			continue
+		}
 		if _, saved := object.targetHandCards[id]; saved {
 			continue
 		}

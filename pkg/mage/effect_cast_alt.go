@@ -243,6 +243,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 	handTargets := g.handTargetCards(targets)
 	exileTargets := g.exileTargetCards(targets)
+	anteTargets := g.anteTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -268,6 +269,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		RevealedHandCards:      payment.payment.revealedHandCards,
 		HandTargetCards:        handTargets,
 		ExileTargetCards:       exileTargets,
+		AnteTargetCards:        anteTargets,
 		CapturedCardSets:       payment.payment.paidCardSets,
 		CapturedPermanents:     payment.payment.paidPermanents,
 	})

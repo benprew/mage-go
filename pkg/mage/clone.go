@@ -130,6 +130,12 @@ func extractBasePlayer(p Player) *BasePlayer {
 	}
 	bp.library = cloneCardSlice(p.Library())
 	bp.ante = cloneCardSlice(p.Ante())
+	if visitor, ok := p.(interface{ anteVisit(uuid.UUID) uuid.UUID }); ok {
+		bp.anteVisits = make(map[uuid.UUID]uuid.UUID, len(bp.ante))
+		for _, card := range bp.ante {
+			bp.anteVisits[card.ID()] = visitor.anteVisit(card.ID())
+		}
+	}
 	// Copy mana pool.
 	bp.manaPool.RestorePool(p.ManaPool().SnapshotPool())
 	if len(p.ManaPool().ManaConversions) > 0 {
@@ -161,6 +167,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)
 	clone.ante = cloneCardSlice(bp.ante)
+	clone.anteVisits = bp.anteVisits
 	// Copy mana pool state.
 	clone.manaPool.RestorePool(bp.manaPool.SnapshotPool())
 	if len(bp.manaPool.ManaConversions) > 0 {
@@ -286,6 +293,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		targetGraveyardSources: obj.targetGraveyardSources,
 		targetHandCards:        obj.targetHandCards,
 		targetExileCards:       obj.targetExileCards,
+		targetAnteCards:        obj.targetAnteCards,
 		boundSpellSources:      obj.boundSpellSources,
 		sourceIncarnation:      obj.sourceIncarnation,
 		capturedNumbers:        maps.Clone(obj.capturedNumbers),

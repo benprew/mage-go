@@ -12302,3 +12302,39 @@ Jeweled Bird's retained real payment/activation subrule is executed with a draw
 continuation; its complete record still rejects owned-ante-card movement.
 Rebirth's complete record still rejects paid-player collection dispatch. These
 are prerequisite mappings, not complete-card gameplay claims.
+
+## Exact ante card targets
+
+`DeclareAnteCardTarget(name string) *CardTargetBinding` declares exactly one
+card in the shared, public ante zone. It has no ownership restriction. The
+existing `CardRef` and target declaration validation supply typed reads and
+per-instance identity. Disabled or settled ante games supply no candidates.
+
+Each ante arrival has a separate visit. `SetAnte` keeps visits of cards that
+remain in the zone, including copy-on-write ownership changes. Removing a card
+ends its visit; adding that physical card again creates a new visit. Existing
+initial ante, `MoveToAnte` and `AnteLibraryTops` use this same storage. Clones
+keep visits and separate subsequent mutations.
+
+Casting and activation save ante targets before payment. The existing stack,
+resolution and copy services retain the saved zone and visit. An absent or
+returned target is illegal (CR 400.7 and 608.2b). No LKI makes it available.
+An ownership change alone keeps it legal. Copies without new target choices
+retain the old visit. A legal new choice can select the current visit of the
+same physical card. Queries do not move cards, make choices or consume RNG.
+
+RON supports `TargetAnteCard(AnyCard)` in the existing singular `Targeted`
+spell, activation and trigger contexts. It declares local `Ref_TargetAnteCard`
+as a typed card reference with a fresh binding per factory instance. Other
+filter shapes and incompatible permanent/player/graveyard reads reject at
+compilation. Inventory descends into the still-unsupported exchange action.
+There is no ante movement or ownership-exchange adapter in this slice.
+
+Native `TestAnteReference*` covers visits, current ownership, typed reads,
+prepayment capture, zone changes during payment, clone isolation, copies,
+legal retargeting and all existing ante arrival paths. `TestRONAnteReference*`
+covers casting, failed payment, return illegality, independent activations,
+entry triggers, invalid declarations and semantic inventory. Darkpact's actual
+target subrule runs with a test-only life continuation; all six complete
+records still reject their exchange action. This is prerequisite gameplay
+coverage, not complete Darkpact or Jeweled Bird coverage.

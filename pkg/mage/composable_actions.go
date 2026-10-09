@@ -2520,7 +2520,7 @@ type CardRef interface {
 	resolveCard(*EffectContext) (Card, bool)
 }
 
-// CardTargetBinding declares one graveyard card target.
+// CardTargetBinding declares one card target in a supported zone.
 type CardTargetBinding struct{ *targetDeclaration }
 
 // GraveyardTargetOption restricts a graveyard card target.
@@ -2678,6 +2678,12 @@ func DeclareGraveyardCardTarget(name string, options ...GraveyardTargetOption) *
 func (*CardTargetBinding) cardRef() {}
 func (b *CardTargetBinding) resolveCard(ctx *EffectContext) (Card, bool) {
 	value, ok := firstTargetValue(ctx.targetBindings[b.targetDeclaration])
+	if _, ante := b.spec.(*anteCardTarget); ante {
+		if !ok {
+			return nil, false
+		}
+		return ctx.Game.resolveAnteCard(value.id, value.incarnation)
+	}
 	if !ok || value.incarnation == uuid.Nil || ctx.Game.graveyardVisit(value.id) != value.incarnation {
 		return nil, false
 	}

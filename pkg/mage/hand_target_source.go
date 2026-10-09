@@ -10,6 +10,9 @@ import (
 
 func (g *Game) captureHandTargetCards(object *StackObject) {
 	for _, id := range object.Targets {
+		if _, saved := object.targetAnteCards[id]; saved {
+			continue
+		}
 		if _, saved := object.targetExileCards[id]; saved {
 			continue
 		}
@@ -36,6 +39,9 @@ func (g *Game) cardTargetVisit(id uuid.UUID) uuid.UUID {
 		return visit
 	}
 	if visit := g.graveyardVisit(id); visit != uuid.Nil {
+		return visit
+	}
+	if visit := g.anteVisit(id); visit != uuid.Nil {
 		return visit
 	}
 	return g.exileTargetVisit(id)

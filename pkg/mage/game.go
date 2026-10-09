@@ -2746,6 +2746,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 	handTargets := g.handTargetCards(targets)
 	exileTargets := g.exileTargetCards(targets)
+	anteTargets := g.anteTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -2772,6 +2773,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		RevealedHandCards:      payment.payment.revealedHandCards,
 		HandTargetCards:        handTargets,
 		ExileTargetCards:       exileTargets,
+		AnteTargetCards:        anteTargets,
 		CapturedCardSets:       payment.payment.paidCardSets,
 		CapturedPermanents:     payment.payment.paidPermanents,
 	})
@@ -3302,6 +3304,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	handTargets := g.handTargetCards(targets)
 	exileTargets := g.exileTargetCards(targets)
+	anteTargets := g.anteTargetCards(targets)
 	if err := payment.Commit(); err != nil {
 		return err
 	}
@@ -3321,6 +3324,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.activatedAbility = true
 	obj.targetHandCards = handTargets
 	obj.targetExileCards = exileTargets
+	obj.targetAnteCards = anteTargets
 	obj.DamageDistribution = damageDistribution
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)

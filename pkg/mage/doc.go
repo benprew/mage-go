@@ -27,6 +27,14 @@
 // explicit source reads to waiting delayed queries without executing payment.
 // Paid-player collections and ante-to-graveyard actions need separate services.
 //
+// Use [DeclareAnteCardTarget] for one card in the shared ante zone.
+// Either player's card can qualify. The target keeps its exact zone visit
+// from announcement, before payment. Departure and return end its legality.
+// An ownership change keeps the visit and supplies the current owner.
+// Copies retain saved visits; legal new target choices save current visits.
+// Clones keep separate ante storage and target state. No LKI permits an
+// action on an absent card. Ante movement and exchange need separate services.
+//
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.

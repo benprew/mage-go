@@ -186,6 +186,7 @@ type BasePlayer struct {
 	departedGraveyardSources map[uuid.UUID]DamageSource
 	library                  []Card
 	ante                     []Card
+	anteVisits               map[uuid.UUID]uuid.UUID
 	manaPool                 *ManaPool
 	lastDrawnCardID          uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
 	poisonCounters           int
@@ -362,16 +363,36 @@ func (p *BasePlayer) ClearGraveyard() {
 
 func (p *BasePlayer) Ante() []Card { return p.ante }
 
-func (p *BasePlayer) SetAnte(cards []Card) { p.ante = cards }
+func (p *BasePlayer) SetAnte(cards []Card) {
+	visits := make(map[uuid.UUID]uuid.UUID, len(cards))
+	for _, card := range cards {
+		visit := p.anteVisits[card.ID()]
+		if visit == uuid.Nil {
+			visit = uuid.New()
+		}
+		visits[card.ID()] = visit
+	}
+	p.ante = cards
+	p.anteVisits = visits
+}
+
+func (p *BasePlayer) anteVisit(id uuid.UUID) uuid.UUID { return p.anteVisits[id] }
 
 func (p *BasePlayer) AddToAnte(c Card) {
 	p.ante = append(p.ante, c)
+	p.anteVisits = maps.Clone(p.anteVisits)
+	if p.anteVisits == nil {
+		p.anteVisits = make(map[uuid.UUID]uuid.UUID)
+	}
+	p.anteVisits[c.ID()] = uuid.New()
 }
 
 func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
 	for i, c := range p.ante {
 		if c.ID() == id {
 			p.ante = removeAt(p.ante, i)
+			p.anteVisits = maps.Clone(p.anteVisits)
+			delete(p.anteVisits, id)
 			return c, true
 		}
 	}

@@ -497,7 +497,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "permanent_filter"
 			case "TargetPlayer":
 				return "player_filter"
-			case "TargetGraveyardCard":
+			case "TargetGraveyardCard", "TargetAnteCard":
 				return "card_filter"
 			case "TargetAbility":
 				return "ability_filter"
@@ -820,6 +820,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "PutACardFromHandOnBattlefield":
 			if len(n.Args) == 2 {
 				return []string{"hand_entry_filter", "entry_operation"}[index]
+			}
+		case "ExchangeAnteCardWithTopCardOfPlayersLibrary":
+			if len(n.Args) == 2 {
+				return []string{"card_reference", "player_reference"}[index]
 			}
 		case "PutGraveyardCardIntoHand":
 			if len(n.Args) == 1 {

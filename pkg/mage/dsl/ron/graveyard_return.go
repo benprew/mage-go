@@ -9,6 +9,7 @@ import (
 type cardTargetPlan struct {
 	name         string
 	creatureOnly bool
+	ante         bool
 }
 
 type deathCardPlan struct{ name string }
@@ -114,6 +115,9 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 	card, err := compileCardRef(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
+	}
+	if card.target != nil && card.target.ante {
+		return nil, problem(n.Args[0], "graveyard return requires a graveyard card reference")
 	}
 	if count == 1 {
 		return func(bindings instanceBindings) mage.Effect { return mage.ReturnCardToHand(card.build(bindings)) }, nil

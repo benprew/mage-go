@@ -22,6 +22,9 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		if card.target != nil && card.target.ante {
+			return nil, problem(subject.Args[0], "graveyard exile requires a graveyard card reference")
+		}
 		modifiers, err := list(n.Args[1])
 		if err != nil {
 			return nil, err

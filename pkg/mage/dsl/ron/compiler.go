@@ -782,6 +782,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetPlayer" {
 			ctx.playerTarget = &playerTargetPlan{name: binding}
 		}
+		if binding == "Ref_TargetAnteCard" {
+			ctx.cardTarget = &cardTargetPlan{name: binding, ante: true}
+		}
 		if binding == "Ref_TargetGraveyardCard" {
 			ctx.cardTarget = &cardTargetPlan{name: binding, creatureOnly: graveyardFilterRequiresCreature(targets[0].Args[0])}
 		}
@@ -859,6 +862,8 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 			}
 			return mage.DeclarePlayerTarget(ctx.targetNamespace+"Ref_TargetPlayer", options...)
 		}, "Ref_TargetPlayer", nil
+	case "TargetAnteCard":
+		return compileAnteTarget(n, ctx)
 	case "TargetGraveyardCard":
 		return compileGraveyardTarget(n, ctx)
 	case "TargetAbility":

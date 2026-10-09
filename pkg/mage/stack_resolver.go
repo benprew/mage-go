@@ -94,10 +94,14 @@ func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
 	g.captureHandTargetCards(obj)
 	g.captureExileTargetCards(obj)
+	g.captureAnteTargetCards(obj)
 	for _, id := range obj.Targets {
 		identity, saved := obj.targetHandCards[id]
 		if !saved {
 			identity, saved = obj.targetExileCards[id]
+		}
+		if !saved {
+			identity, saved = obj.targetAnteCards[id]
 		}
 		if saved {
 			if _, captured := obj.targetIncarnations[id]; !captured {
@@ -153,6 +157,8 @@ func (g *Game) pushStack(obj *StackObject) {
 			obj.TargetZones[t] = ZoneHand
 		} else if _, saved := obj.targetExileCards[t]; saved {
 			obj.TargetZones[t] = ZoneExile
+		} else if _, saved := obj.targetAnteCards[t]; saved {
+			obj.TargetZones[t] = ZoneAnte
 		} else {
 			obj.TargetZones[t] = g.zoneOfTarget(t)
 		}
@@ -243,7 +249,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 			}
 			incarnationLegal := true
 			if incarnation, ok := obj.targetIncarnations[t]; ok {
-				if obj.TargetZones[t] == ZoneGraveyard || obj.TargetZones[t] == ZoneHand || obj.TargetZones[t] == ZoneExile {
+				if obj.TargetZones[t] == ZoneGraveyard || obj.TargetZones[t] == ZoneHand || obj.TargetZones[t] == ZoneExile || obj.TargetZones[t] == ZoneAnte {
 					incarnationLegal = g.cardTargetVisit(t) == incarnation
 				} else {
 					p := g.FindPermanent(t)
