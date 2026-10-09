@@ -1109,6 +1109,15 @@
 // control changes and copies do not change that player. [AttacksUnblocked]
 // with WithDefendingPlayer saves the player before target selection.
 //
+// Use [IfRequiredSacrificePaid] or [UnlessRequiredSacrificePaid] for mandatory
+// payment of one typed permanent at resolution. The payer must control the
+// exact present incarnation. Missing, phased and returned subjects cannot pay.
+// Payment has no optional offer. The shared transaction and replacement
+// pipeline determine success. Each invocation keeps its own payment result.
+// Waiting delayed queries retain explicit source reads without making payment.
+// RON MustCost(SacrificePermanent(ref)) supports an adjacent If or Unless
+// with CostWasPaid or CostWasntPaid in resolving action lists.
+//
 // Use [IfRequiredPaid] or [UnlessRequiredPaid] for a mandatory matching
 // sacrifice payment during resolution. The branch keeps its own result.
 // Source exclusion uses the original incarnation, so a returned source can pay.

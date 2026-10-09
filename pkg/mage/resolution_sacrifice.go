@@ -10,14 +10,30 @@ func UnlessSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingE
 	return &sacrificePaymentEffect{player: player, subject: subject, body: body}
 }
 
-type sacrificePaymentEffect struct {
-	player  PlayerRef
-	subject PermanentRef
-	body    ResolvingEffect
-	ifPaid  bool
+// IfRequiredSacrificePaid runs the body after mandatory payment of the subject.
+func IfRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &sacrificePaymentEffect{player: player, subject: subject, body: body, ifPaid: true, required: true}
 }
 
-func (e *sacrificePaymentEffect) Text() string { return "optional sacrifice payment" }
+// UnlessRequiredSacrificePaid runs the body when mandatory payment is unavailable.
+func UnlessRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &sacrificePaymentEffect{player: player, subject: subject, body: body, required: true}
+}
+
+type sacrificePaymentEffect struct {
+	player   PlayerRef
+	subject  PermanentRef
+	body     ResolvingEffect
+	ifPaid   bool
+	required bool
+}
+
+func (e *sacrificePaymentEffect) Text() string {
+	if e.required {
+		return "mandatory sacrifice payment"
+	}
+	return "optional sacrifice payment"
+}
 func (e *sacrificePaymentEffect) Properties() EffectProperties {
 	if nilDefinition(e.body) {
 		return EffectProperties{}
@@ -35,6 +51,6 @@ func (e *sacrificePaymentEffect) Apply(ctx *EffectContext) error {
 		// The transaction must not select a returned object with the same card ID.
 		filter = NewPermanentFilter("declared permanent", func(p *Permanent, _ *Game) bool { return p.ID() == id && p.incarnationID == incarnation })
 	}
-	payment := &unlessPaidEffect{player: e.player, costs: Costs(SacrificeMatchingIncludingSourceCost(filter, "Sacrifice the declared permanent")), effect: e.body, ifPaid: e.ifPaid}
+	payment := &unlessPaidEffect{player: e.player, costs: Costs(SacrificeMatchingIncludingSourceCost(filter, "Sacrifice the declared permanent")), effect: e.body, ifPaid: e.ifPaid, required: e.required}
 	return payment.Apply(ctx)
 }

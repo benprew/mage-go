@@ -7,12 +7,12 @@ names** (986 total), and **2,073 compiled / 372 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LINKED-EXILE-PRODUCERS` adds exact source/declaration identity to singular
-permanent and face-down library-top exile. Clone and delayed-query contracts
-preserve source incarnations and exile visits. Knowledge Vault and Safe Haven
-have producer-rule gameplay evidence; complete records still reject. **+0 unique
-names / +0 records**, matching the prerequisite estimate. Knowledge Vault now
-reaches its mandatory source-sacrifice payment blocker.
+`REQUIRED-TYPED-SACRIFICE` adds mandatory payment of one exact permanent at
+resolution. Typed subjects use existing transactions, replacement ordering,
+source identity, delayed queries and clone contracts. Knowledge Vault has
+payment-rule gameplay evidence; its complete record still rejects linked hand
+return. **+0 unique names / +0 records**, matching the prerequisite estimate.
+Linked-pair association and consumer transport remain the next shared work.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Linked exile, turn-skip replacements and other unsupported capabilities remain gaps.
@@ -55578,3 +55578,154 @@ Ranked next candidates:
 
 Stop after LINKED-EXILE-PRODUCERS. Complete collection gameplay, runtime loading,
 Go-card deletion and unused DSL cleanup gates remain unmet. Migration incomplete.
+
+## 2026-10-08: mandatory payment of one typed permanent
+
+Status: completed implementation slice `REQUIRED-TYPED-SACRIFICE`.
+This run stops after the exact-permanent payment prerequisite. Complete RON
+loading, complete-card gameplay, runtime cutover and removal gates remain unmet.
+
+### Baseline and candidate comparison
+
+The working tree began with user changes to .gitignore, the execution design
+and the progress ledger, plus an untracked mtgish-ron-completed.md history file.
+These changes are preserved. Only this slice's summary change and appended entry
+are staged from the ledger. Fresh baseline make build and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict collection loading
+exited 1: 2,073 compiled / 372 rejected records and 801 accepted / 185 rejected
+unique names, out of 2,445 records / 986 names. This was collection rejection,
+not a build or test failure.
+
+The latest ranked candidates were evaluated from complete RON records, including
+nested costs, branches, targets and modifiers. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Linked-pair association and consumer transport | Knowledge Vault, Safe Haven | 2 after dependencies; 0 for the payment prerequisite alone | Knowledge Vault requires mandatory exact-source sacrifice, linked hand return and leave-trigger graveyard movement. Safe Haven requires owner-controlled battlefield return. Cross-ability association is shared by both. Exact-visit transport must preserve hidden exile and entry/zone contracts. | High: payment prerequisite, association, and separate consumer services/tests; too large for one cohesive slice |
+| Saved reveal mana value and dynamic typed life payment | Wand of Ith | 1 | Random reveal, historical type tests, exact revealed-card discard and activation timing already compile. Dynamic life amount remains. Enables later reveal-value payment consumers, but no second unique collection card was identified. | Medium: saved value, life-cost adapter and lifecycle/payment tests; approximately one run |
+| Optional begin-turn skip replacement | Time Vault | 1 | Begin-turn replacement and skip payment are absent. Requires affected-player replacement order and normal/extra/skipped turn scheduling. Enables future turn replacements. | High: scheduler/replacement contracts and lifecycle tests; likely multiple slices |
+
+Selection: implement the mandatory typed sacrifice prerequisite exposed by
+candidate 1. Only Knowledge Vault uses this mandatory shape in the collection;
+zero immediate full-card unlocks were estimated. This single-card prerequisite
+is required for the concrete two-card linked-exile consumer work. It reuses
+already-tested optional typed sacrifice and mandatory matching sacrifice,
+fits one run, and avoids adding incomplete consumer transport. Safe Haven,
+Mindstab Thrull and Necrite use existing optional typed payment and receive no
+new full-card coverage claim. The candidate comparison does not count first-error
+frequency as a full-card estimate.
+
+Targeted vocabulary inspection found SacrificePermanent tuple/1 and
+WasExiledWithPermanent tuple/1. The complete Knowledge Vault record was checked
+against data/LEG.json Oracle text. Its zero-mana activation instructs mandatory
+sacrifice at resolution, followed by an if-paid continuation. No source defect
+was found or corrected. RON sources and vocabulary hashes are unchanged.
+Rules evidence: CR 118.3, 118.11–12, 400.7, 701.21a and existing phasing contracts.
+
+### Established signatures, contexts and reuse boundary
+
+New native signatures:
+
+- `IfRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect) ResolvingEffect`
+- `UnlessRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect) ResolvingEffect`
+
+RON adds `MustCost(SacrificePermanent(ref))` immediately followed by
+`If` or `Unless` with symbol `CostWasPaid` or `CostWasntPaid` and a nonempty action
+list. The existing typed permanent scope supplies source, target, event, chosen
+permanent or Aura host where declared. Activated, triggered and delayed resolving
+bodies are exercised. No new reference lifetime or spell-source permission is
+introduced. Invalid arity/symbols, unbound/incompatible refs, separated or missing
+continuations, empty bodies and unsupported entry/static contexts reject at
+compile time. Two-branch IfElse remains rejected.
+
+RON owns spelling, lexical scope, declaration errors and lowering. The engine
+extends sacrificePaymentEffect with mandatory mode. It reads the exact subject
+once and constructs the existing incarnation filter and matching sacrifice cost.
+The existing unlessPaidEffect supplies mandatory payment without an optional
+offer; the action-payment transaction handles affordability, selection,
+validation and commit. The payer must control the present unphased subject;
+ownership determines destination. Departure and return cannot supply the saved
+subject. Phase cycles retain it. An absent payer runs no body. Each invocation
+uses a local payment result; nested payment, stack copies and game clones share
+no result state. Invalid selection leaves both subject and other permanents
+unchanged.
+
+Existing sacrifice replacements, affected-controller ordering, rechecks, zone
+movement, LKI triggers and CR 118.11–12 payment success remain authoritative.
+A replacement that changes or prevents movement after payment starts does not
+undo success. Regeneration and indestructible do not prevent sacrifice. Waiting
+delayed queries reuse the existing typed sacrifice source-read declaration;
+they do not resolve operands, query affordability or make payment.
+
+No card-name branches, Go-card fallbacks, game-time declaration panics, partial
+production registries, global action results or parallel cost/zone systems were
+added. Existing optional typed sacrifice and mandatory matching-sacrifice callers
+retain their contracts. No DSL export removal or Go-card cutover was attempted.
+
+### Failing-first evidence and card-to-test mapping
+
+The native tests first failed compilation because both new signatures were
+undefined. RON gameplay tests first failed on Knowledge Vault's actual
+LEG.lines.ron:149:338 mandatory SacrificePermanent declaration. Both failures
+were confirmed before implementation. Later target type-change evidence exposed
+an inactive synthetic continuous-effect fixture with a nil source; its duration
+was corrected to EndOfTurn and the full focused suite passed. Tests were not
+weakened.
+
+| Test | Mapping and evidence |
+| --- | --- |
+| TestRONRequiredTypedSacrificeKnowledgeVault | Actual second activation/payment AST from the complete LEG record; an observable life-gain continuation replaces unsupported consumers only in the test. Announcement versus resolution timing, owner destination, departure/return, phasing/cycle, control changes, exile replacement, changed-controller stack copy and independent cloned pending resolution |
+| TestRONRequiredTypedSacrificeContexts | Synthetic activated, entry-triggered, delayed and targeted resolving bodies; all four If/Unless result polarities, exact payment subject and pure waiting-source queries |
+| TestRONRequiredTypedSacrificeLocalResults | Nested failed payment cannot overwrite successful outer payment or its later continuation |
+| TestRONRequiredTypedSacrificeTargetLegality | Opponent control prevents payment; returned, phased and changed-type targets prevent resolution; source cannot substitute for subject |
+| TestRONRequiredTypedSacrificeInvalid | Symbol/arity/type/scope errors, missing/separated continuations, non-symbol conditions, empty bodies, unsupported two-branch, spell-source, entry and static declarations |
+| TestRequiredTypedSacrificeIdentity | Exact bound permanent, both paid/unpaid bodies, control versus ownership, departure/return, phasing/cycle, regeneration, indestructible, exile replacement and prevented movement |
+| TestRequiredTypedSacrificeDefinition | Nil payer, subject and body, and unbound subject reject native definition validation |
+| TestRequiredTypedSacrificeReplacementOrdering | Competing replacements selected by affected controller; sacrifice triggers from source LKI, no death trigger after exile, regeneration exclusion |
+| TestRequiredTypedSacrificeRollback | Nil and invalid choices leave the subject and another permanent unchanged and select the failed body without an optional offer |
+
+These mappings establish payment-rule coverage, not complete Knowledge Vault
+coverage. Safe Haven's optional payment remains covered by existing contracts;
+its linked consumer remains unsupported.
+
+### Verification and measured outcome
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONRequiredTypedSacrifice -count=1`: PASS.
+- Native `go test ./pkg/mage -run 'TestRequiredTypedSacrifice|TestResolutionSacrifice' -count=1`: PASS.
+- `make build` and `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS. Native short tests were rerun after adding invalid-choice rollback coverage and passed.
+- `make test`: PASS across the repository; repeated after the final test addition.
+- `make lint`: PASS, 0 issues. Automatic changes only grouped imports in the new RON test file; focused RON and native tests were rerun and passed.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+
+No environment or required-validation blocker remains.
+
+Final counts remain **2,073 compiled / 372 rejected records; 801 accepted /
+185 rejected unique names**, totals 2,445 records / 986 names. Actual full-card
+gain is **0 names / 0 records**, matching the prerequisite estimate. No accepted
+record regresses. Knowledge Vault's diagnostic advances from unsupported
+mandatory sacrifice cost at LEG.lines.ron:149:338 to LEG.lines.ron:149:404, unsupported action
+ReturnEachExiledCardToOwnersHand.
+Safe Haven still rejects PutEachExiledCardOntoTheBattlefield. All other loader
+diagnostics are unchanged. Strict loading still rejects the collection and
+installs no partial registry. Compilation counts are separate from the new
+payment gameplay evidence.
+
+Changed files: pkg/mage/resolution_sacrifice.go and resolution_sacrifice_test.go;
+pkg/mage/dsl/ron/optional_payment.go and new required_typed_sacrifice_test.go;
+pkg/mage/doc.go; docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+User edits are preserved and excluded from the slice commit. Commit message:
+`feat(ron): implement mandatory typed sacrifice payment`.
+
+Ranked next candidates:
+
+1. Linked-pair association and exact-visit consumer transport for Knowledge Vault
+   and Safe Haven. Mandatory sacrifice is now available. Compare hand/graveyard
+   movement with owner-controlled battlefield entry before sizing the next slice.
+2. Shared saved reveal mana-value semantics and dynamic typed life-payment
+   amounts; Wand of Ith is the complete-card candidate, so compare wider consumers.
+3. Optional begin-turn skip replacement for Time Vault, with affected-player
+   ordering and normal/extra/skipped turn scheduling.
+
+Stop after REQUIRED-TYPED-SACRIFICE. Migration incomplete.

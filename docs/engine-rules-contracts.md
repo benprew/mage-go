@@ -12908,3 +12908,43 @@ RepeatedAndTokens; TestRONLinkedExileProducers, Contexts and Invalid. The produc
 mapping uses the first actual rule from complete Knowledge Vault and Safe Haven
 records. The omitted consumer rules remain rejected by strict loading, and this
 mapping does not establish complete-card gameplay support.
+
+
+## Mandatory payment of one typed permanent
+
+`IfRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect)`
+and `UnlessRequiredSacrificePaid(player PlayerRef, subject PermanentRef, body ResolvingEffect)`
+use the exact-subject sacrifice service with mandatory payment. The payer must
+control the present, unphased incarnation. A saved reference cannot select a
+returned card. Ownership controls the destination, not permission to sacrifice.
+An absent payer runs no body. Declaration validation rejects nil operands,
+nil bodies and unbound subjects.
+
+The service reads the subject once, then uses the existing exact-incarnation
+filter and matching sacrifice transaction. It makes no optional payment offer.
+The shared replacement pipeline can change or prevent movement after payment
+starts; this does not undo success (CR 118.11–12). Regeneration and indestructible
+cannot prevent sacrifice (CR 701.21a). Each invocation selects its own body;
+nested payments, stack copies and game clones do not share payment results.
+Waiting delayed queries retain explicit source reads in the subject, player and
+body without resolving operands, testing affordability or making payment.
+No new replacement order, zone storage or simultaneous-operation rule is added.
+
+RON supports `MustCost(SacrificePermanent(ref))` followed immediately by
+`If` or `Unless` with symbol `CostWasPaid` or `CostWasntPaid` and a nonempty
+action list. `ref` uses the existing typed permanent scope: source, declared
+target, event, choice or Aura host where available. Activated, triggered and
+delayed resolving bodies use their existing identity and legality rules.
+An unbound reference, invalid symbol/arity, separated continuation, empty body,
+static or entry operation rejects. Two-branch `IfElse` remains unsupported.
+Optional typed sacrifice and required matching sacrifice keep their contracts.
+
+Evidence: `TestRequiredTypedSacrificeIdentity`, `Definition` and
+`ReplacementOrdering` and `Rollback` cover legality, owner destination, phasing, return,
+control, native declaration errors, movement prevention, competing replacements,
+sacrifice LKI triggers, death exclusion and invalid-choice rollback. `TestRONRequiredTypedSacrifice*`
+covers Knowledge Vault's real payment rule with an observable test continuation,
+announcement/resolution timing, changed-controller copies, cloned pending
+resolution, branch polarity, independent nested results, resolving contexts,
+waiting-source queries and target legality. This is payment-rule evidence;
+Knowledge Vault still requires linked-exile consumers before complete-card coverage.
