@@ -12475,3 +12475,26 @@ Evidence: native `TestCardNameChoiceCatalog`, `Bindings`, `Declarations`,
 `RealDeclarations`. The last test executes the name-choice AST from the complete
 Nebuchadnezzar and Petra Sphinx records as subrule evidence. Both complete cards
 remain rejected because other adapters are missing.
+
+### Typed name-result reads
+
+`FromCardName(*CardNameBinding) CardNameRef` declares a pure read of a saved
+English name. `CardNameRef.Resolve(*EffectContext) (string, bool)` reads the
+current resolution frame, without a card lookup, decision or mutation. Missing
+results remain absent. The operand declares its binding read to definition
+validation; a nil binding, an unnamed binding or a read before its producer is
+invalid. The declaration plan inspector traverses that binding normally.
+
+The existing name-result map owns values. Clone, clear, nested resolution and
+loop-frame services remain the single storage and lifetime contract. A name
+has no zone or incarnation identity. Source departure or phasing does not erase
+a pending choice/read sequence. An absent chooser clears the result, so a read
+cannot reuse a prior choice. The read does not infer a waiting object reference.
+
+Native evidence: `TestCardNameRefContract`, `Declarations`, `Frames`,
+`PendingResolution`; existing `TestCardNameChoice*` contracts remain applicable.
+RON evidence: `TestRONCardNameScope*` establishes operand type, instance identity,
+unconditional PlayerActions export, independent subsequent choices and branch
+boundaries. The real Nebuchadnezzar and Petra Sphinx operands are covered only
+as subrules; both full records remain rejected. CR 201.3/201.4g name equivalence
+and reveal-result consumers remain prerequisites before name matching.

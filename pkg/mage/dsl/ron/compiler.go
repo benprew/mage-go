@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	chosenName           *cardNameChoicePlan
 	anteSourcePayment    bool
 	chosenPlayer         *playerChoicePlan
 	chosenPermanent      *permanentChoicePlan
@@ -103,6 +104,7 @@ func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBinding
 
 func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
+	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
 	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)

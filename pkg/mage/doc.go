@@ -118,7 +118,11 @@
 // [CardNameBinding]. An absent chooser clears the result. An invalid answer
 // uses the first legal name. Clones and resolution frames keep separate results.
 // RON supports ChooseACardName(AnyOracleCard) in resolving action contexts.
-// Chosen-name filters and reveal results need separate compiler adapters.
+// [FromCardName] supplies a typed [CardNameRef] for the current frame.
+// Definition checks require a producer before each read on every path.
+// RON name operands keep lexical choice identity through PlayerActions.
+// Conditional choices stay in their branch. Name matching and reveal results
+// need separate compiler adapters.
 //
 // Use [ChoosePlayer] for a required player choice at resolution.
 // The specified player chooses from a typed set. The saved [PlayerBinding]

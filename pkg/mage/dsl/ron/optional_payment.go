@@ -6,44 +6,68 @@ import (
 )
 
 func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
+	effects, _, err := compileActionSequenceWithName(parts, ctx)
+	return effects, err
+}
+
+func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *cardNameChoicePlan, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+
+		if part.Name == "ChooseACardName" {
+			effect, result, err := compileCardNameChoiceWithResult(part, ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			ctx.chosenName = result
+			effects = append(effects, effect)
+			continue
+		}
+		if part.Name == "PlayerActions" {
+			effect, result, err := compilePlayerActionsWithName(part, ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			ctx.chosenName = result
+			effects = append(effects, effect)
+			continue
+		}
 		if part.Name == "ChooseAPlayer" {
 			effect, err := compilePlayerChoice(part, parts[i+1:], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			return append(effects, effect), nil
+			return append(effects, effect), ctx.chosenName, nil
 		}
 		if part.Name == "ChooseAPermanent" {
 			effect, err := compilePermanentChoice(part, parts[i+1:], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			return append(effects, effect), nil
+			return append(effects, effect), ctx.chosenName, nil
 		}
 		if part.Name == "ChooseADamageSource" {
 			effect, err := compileGeneralDamageSource(part, parts[i+1:], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			return append(effects, effect), nil
+			return append(effects, effect), ctx.chosenName, nil
 		}
 		if part.Name == "CreateValueX" {
 			effect, err := compileCreatedValue(part, parts[i+1:], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			return append(effects, effect), nil
+			return append(effects, effect), ctx.chosenName, nil
 		}
 		if part.Name == "ChooseABasicLandType" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "basic land choice requires an adjacent landwalk continuation")
+				return nil, nil, problem(part, "basic land choice requires an adjacent landwalk continuation")
 			}
 			effect, err := compileBasicLandChoice(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -51,11 +75,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		if part.Name == "ChooseAColor" || part.Name == "ChooseColors" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "color choice requires an adjacent color-setting continuation")
+				return nil, nil, problem(part, "color choice requires an adjacent color-setting continuation")
 			}
 			effect, err := compileColorChoice(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -64,7 +88,7 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		if (part.Name == "DestroyEachPermanent" || part.Name == "DestroyEachPermanentNoRegen") && i+1 < len(parts) && hasDestructionCount(parts[i+1]) {
 			effect, err := compileDestructionCount(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -72,11 +96,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		if part.Name == "ChooseAnAbility" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "ability choice requires an adjacent layer continuation")
+				return nil, nil, problem(part, "ability choice requires an adjacent layer continuation")
 			}
 			effect, err := compileAbilityChoice(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -84,11 +108,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		if isPaidUntapChoice(part) {
 			if i+1 == len(parts) {
-				return nil, problem(part, "paid choice requires an adjacent untap of its result")
+				return nil, nil, problem(part, "paid choice requires an adjacent untap of its result")
 			}
 			effect, err := compilePaidUntap(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -96,11 +120,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		if part.Name == "EachPlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "ShuffleHandIntoLibrary" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "hand shuffle requires an adjacent all-player draw of its result")
+				return nil, nil, problem(part, "hand shuffle requires an adjacent all-player draw of its result")
 			}
 			effect, err := compileHandShuffleDraw(part, parts[i+1])
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -108,11 +132,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		if part.Name == "PlayerMayCost" || part.Name == "MayCost" || part.Name == "MustCost" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "payment requires an adjacent payment continuation")
+				return nil, nil, problem(part, "payment requires an adjacent payment continuation")
 			}
 			effect, err := compileResolutionPayment(part, parts[i+1], ctx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			effects = append(effects, effect)
 			i++
@@ -120,11 +144,11 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		}
 		compiled, err := compileEffect(part, ctx)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		effects = append(effects, compiled...)
 	}
-	return effects, nil
+	return effects, ctx.chosenName, nil
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {

@@ -92,3 +92,21 @@ func (e *cardNameChoice) inspectDefinition() definitionNode {
 func (e *cardNameChoice) refersToSourcePermanent() bool {
 	return playerRefReadsSourcePermanent(e.player)
 }
+
+// CardNameRef reads a name result without a choice or a card lookup.
+type CardNameRef interface {
+	Resolve(*EffectContext) (string, bool)
+	inspectDefinition() definitionNode
+}
+
+type savedCardNameRef struct{ binding *CardNameBinding }
+
+// FromCardName reads a saved name in the current resolution frame.
+func FromCardName(binding *CardNameBinding) CardNameRef { return savedCardNameRef{binding} }
+
+func (r savedCardNameRef) Resolve(ctx *EffectContext) (string, bool) {
+	return r.binding.Resolve(ctx)
+}
+func (r savedCardNameRef) inspectDefinition() definitionNode {
+	return definitionNode{Role: "card-name-ref", bindingRead: r.binding, children: []definitionEdge{{"binding", r.binding}}}
+}

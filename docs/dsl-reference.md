@@ -9443,7 +9443,41 @@ This is a required choice and has no decline branch. Frame cleanup, cloning,
 nested application and loops keep separate result storage.
 
 This establishes the catalog and choice prerequisite for Nebuchadnezzar and
-Petra Sphinx. `TheChosenName` consumers, including `IsNamed(TheChosenName)`,
+Petra Sphinx. Typed `TheChosenName` operand lowering and unconditional
+`PlayerActions` result scope are established below. `IsNamed(TheChosenName)`,
 result-bound reveal checks, interchangeable-name matching, and result capture
 across delayed bodies need separate typed compiler/engine consumers. Neither
 real card is accepted or claimed as complete gameplay by this prerequisite.
+
+### Typed chosen-name operands and lexical scope
+
+`mage.FromCardName(*mage.CardNameBinding) mage.CardNameRef` supplies a pure,
+typed operand. `CardNameRef.Resolve(*mage.EffectContext) (string, bool)` reads
+only the current frame. An unwritten or cleared result is absent. Native
+validation checks the operand's binding and requires a producer on every path.
+The existing binding API and name-choice behavior remain available.
+
+RON `compileCardNameRef(Node, scope)` lowers the exact symbol `TheChosenName`
+to an instance factory for this operand. A declaration requires a preceding
+choice in its lexical environment. Tuples, other reference types and unbound
+names reject. Choice plans and binding maps give each factory independent
+name declarations; the engine frame supplies each resolution's value.
+
+Action sequences retain the most recent unconditional choice. Nested
+`PlayerActions(player, [actions])` inherits the outer name environment and
+exports its final unconditional name choice to later outer actions. A scope
+with no new choice retains the outer choice. New choices keep separate
+bindings, so previously compiled reads keep their original producer. The
+scoped player does not replace the outer action player. Conditional branches
+receive the outer environment, but cannot export a choice from only one path.
+
+This is an operand/scope prerequisite for Nebuchadnezzar and Petra Sphinx.
+It does not accept their reveal/discard/filter consumers. No name comparison
+is implemented: CR 201.3 and 201.4g require interchangeable-name evidence before
+matching. Prior-name capture by delayed consumers, result export from a single
+`PlayerAction`, optional branches and loops remain separate contexts.
+
+Evidence: `TestRONCardNameScopeOperand`, `PlayerActions`, `Sequence`,
+`BranchBoundary`, `RealOperands`; native `TestCardNameRefContract`,
+`Declarations`, `Frames`, `PendingResolution`. Existing RON name-choice
+spell/activation/trigger/payment/copy gameplay tests remain in force.
