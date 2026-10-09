@@ -7,11 +7,12 @@ names** (986 total), and **2,076 compiled / 369 rejected records** (2,445 total)
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`NONTOKEN-PERMANENT-FILTERS` adds shared `IsNonToken` lowering for permanent
-targets, collections, sacrifice payments, static selections and resolving
-property conditions. Bronze Tablet, Dance of Many and Lich have new prerequisite
-gameplay evidence. **+0 unique names / +0 records**, as estimated; two loader
-diagnostics advance. Existing complete-card mappings remain unchanged.
+`CONTROLLER-COLLECTION-SACRIFICE` adds resolving collection sacrifice by each
+subject's current controller, with replacement preparation, owner ordering and
+simultaneous movement. Golgothian Sylex and City in a Bottle gain a shared
+prerequisite. **+0 unique names / +0 records**, as estimated; Sylex now reaches
+its missing original-printing filter. Existing complete-card mappings remain
+unchanged. Focused/native tests and all required repository checks pass.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Physical source transport, Tablet owner-assignment fidelity, counter-note/return
@@ -56614,3 +56615,162 @@ Ranked next candidates:
 Physical source transport for Efreet and Tablet's owner-target/LKI/payment/assignment
 path remain deferred single-card work. Stop after NONTOKEN-PERMANENT-FILTERS.
 Migration incomplete.
+
+## 2026-10-09: controller sacrifice of resolving permanent collections
+
+Capability: **CONTROLLER-COLLECTION-SACRIFICE**, complete for existing resolving
+permanent collections. This run stops after this slice.
+
+### Environment and candidate selection
+
+The working tree began with changes to `.gitignore`, the execution design and
+the progress ledger, plus untracked `mtgish-ron-completed.md`. The ledger history
+had been moved into that untracked file. These changes were preserved. Only this
+slice's summary replacement and appended entry are staged in the tracked ledger;
+the user's history reorganization is not included in the commit.
+
+Fresh baseline: `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, not a build
+failure: 2,076 compiled / 369 rejected records, 804 accepted / 182 rejected unique
+names. All three candidate records were read in full, including nested forms.
+Targeted vocabulary entries confirmed two controller-sacrifice occurrences,
+one Antiquities name-filter occurrence, and three Arabian Nights name-filter
+occurrences. Reprints are counted once for card estimates.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | ---: | --- | --- |
+| Ranked #1: controller collection sacrifice | Golgothian Sylex; City in a Bottle | 0 | Sylex needs the Antiquities original-printing name filter. Bottle needs the Arabian Nights filter, state-trigger subject capture and spell/land restrictions. Supplies one shared simultaneous sacrifice action for both. | Small to medium: typed action, shared replacements/batch, graveyard order, source-read declaration, compiler adapter and contract tests. |
+| Ranked #2: original-printing name filters | Golgothian Sylex; City in a Bottle | 0 alone | Sylex also needs the selected sacrifice action. Bottle still needs its state trigger and player restrictions. Enables permanent, spell and land membership checks based on authoritative original-printing names, not physical printing or current set. | Medium: authoritative membership source and cross-role name/filter evidence. |
+| Ranked #3: optional begin-turn skip replacement | Time Vault, five records | 1 | Entry tapped, untap restriction and extra-turn scheduling exist. Needs begin-turn replacement lifecycle, optional skip payment, untap continuation, normal/extra/skipped turn integration and affected-player ordering. | Large: new turn subsystem contract with scheduling regressions. |
+
+Candidate #1 is dependency-ready and has concrete shared value. Existing typed
+collections, sacrifice proposals, replacement ordering and zone batches are ready;
+a collection engine action is the missing contract. It wins over the larger turn
+slice and supplies a prerequisite for the next original-printing filter slice.
+Zero immediate full-card unlocks were predicted from complete records, not from
+first-error frequency. No second slice was begun.
+
+### Exact supported contract and boundaries
+
+RON `ControllersSacrificeEachPermanent(collection)` is a tuple with exactly one
+positional operand in supported resolving action contexts. It uses
+`compileContextualCollection(Node, scope) (permanentSetFactory, error)` and lowers
+to **`mage.ControllersSacrificeEach(subjects PermanentSet) ResolvingEffect`**.
+Supported operands retain the existing filters, unions/intersections, singleton
+references, plural targets, owner/controller sets and attachment/combat sets.
+Inventory assigns the operand the contextual permanent-collection role; simple
+filter operands retain their existing permanent-filter classification.
+
+The private engine service is
+`(*Game).controllersSacrificePermanents(subjects []*Permanent)` with
+`(*Game).orderSacrificeGraveyards(actions []*SacrificePermanentAction)`.
+Selection reads the current collection once at resolution. Each selected
+permanent's current controller sacrifices it regardless of the effect controller
+or owner. Current exact incarnations are checked; departed/returned or phased
+subjects cannot move. Duplicate subjects move once. No selection choice is
+needed for an instruction that selects all its subjects.
+
+All replacement proposals are prepared in active-player order before any move.
+This retains a replacement whose source leaves in the same instruction. Each
+owner orders their nontoken graveyard arrivals in active-player order before
+movement. Exile replacements and tokens do not contribute graveyard-order
+choices. The shared batch moves all successful proposals before events and state
+checks. Sacrifice events retain sacrificing controllers; destinations use owners.
+Indestructible and regeneration do not stop sacrifice. Token movement supplies
+no retained graveyard card. Source leave abilities and the former battlefield
+remain available to trigger checks.
+
+Reuse: `PermanentSet`, exact incarnations, target declarations and lexical
+instance bindings, `prepareSacrifice`, `SacrificePermanentAction`,
+`effects.ApplyReplacements`, `orderCardsForGraveyard`,
+`cardForBattlefieldDeparture`, `performSacrifice`, `withZoneChangeBatch`, LKI,
+and delayed resolution frames. `refersToSourcePermanent` delegates to
+`permanentSetReadsSourcePermanent`; queries do not select subjects, apply
+replacements, move objects or offer choices. Native rules evidence: CR 101.4,
+400.3, 400.6–7, 404.3, 701.21a; target legality remains CR 608.2b.
+
+RON owns spelling, arity, role and scope checks. Engine owns sacrifice, ordering,
+identity, replacements, movement and events. This establishes an effect, not a
+cost or static modification. It creates no new result binding or mutable shared
+factory state. There is no card-name branch, Go-card fallback, partial registry,
+game-time declaration panic or global result slot.
+
+`Trigger_ThosePermanents` stays unbound until its state-event producer is
+implemented. Both original-printing filters stay rejected. Enclosing unsupported
+rules remain errors. No existing callers, Go definitions, generator or DSL
+function was removed: runtime cutover and removal gates are not met.
+
+### Failing-first evidence and card-to-test mappings
+
+Before implementation, `TestRONControllersSacrificeGameplay` failed at
+ATQ:35:226 with unsupported `ControllersSacrificeEachPermanent`. Native tests
+failed to compile on the missing `ControllersSacrificeEach` signature. A test-only
+active-player return-type error was corrected and the native compilation failure
+was confirmed again before engine implementation. The later inventory assertion
+was corrected to respect the existing simple-filter role classification; the
+inventory's collection-role adapter remains tested. Tests were not weakened.
+
+| Test | Card mapping and evidence |
+| --- | --- |
+| `TestRONControllersSacrificeGameplay` | Golgothian Sylex's complete activation cost and exact controller-sacrifice action. Only the unsupported original-printing predicate is replaced with a supported nontoken-creature collection for this prerequisite probe. Mana/tap timing, current-controller/owner separation, late entrants, phased exclusion, token exclusion, source departure, stack copies and pending clone isolation. No complete Sylex claim. |
+| `TestRONControllersSacrificeTargets` | Synthetic resolving action through independent numbered targets and duplicate union members. Partial/all-illegal resolution, shroud, return, phasing/cycle and control changes retain original target identity and legality. |
+| `TestRONControllersSacrificeRollbackAndWaiting` | Synthetic paid activation and delayed singleton action. Failed payment retains mana, untapped source and empty stack; waiting queries are pure; delayed action uses the current controller after control changes. |
+| `TestRONControllersSacrificeDeclarations` | Invalid symbol/tuple arities, incompatible player collection, unbound event collection and unsupported set-origin predicate. Full City in a Bottle record still rejects its missing state-event declaration. The shared action is its prerequisite, not complete Bottle gameplay. |
+| `TestRONControllersSacrificeAtomicRoles` | Cost/static role misuse rejects atomically; semantic inventory reports the supported collection's filter operand correctly. |
+| `TestControllersSacrificeBatch` | Native cross-controller/cross-owner four-object batch, duplicate subject, owner ordering before movement, indestructible/regeneration, former/live event state, sacrificing-player identity, clone isolation and pending triggers. |
+| `TestControllersSacrificeIdentityAndDefinition` | Stale, phased and nil subjects cannot move; valid definitions and nil-set rejection. |
+| `TestControllersSacrificeReplacement` | Competing exile replacements use the subject controller's existing chooser, independently of the effect controller; another subject still reaches its owner's graveyard. |
+| `TestControllersSacrificeDepartingReplacementSource` | Replacement source is sacrificed with another controller's subject; both proposals see the replacement before either source leaves. |
+| `TestControllersSacrificePreparationOrderAndCancellation` | Both active-player orders, complete battlefield during preparation, and cancellation of one sacrifice without stopping the other. |
+| `TestControllersSacrificeWaitingPurity` | Explicit source declaration survives departure; repeated queries do not evaluate a filter, move cards or make choices. Cloned waiting lifetimes remain separate. |
+| `TestControllersSacrificeTokenAndSourceTriggers` | Token removal without retained graveyard card, departed-source leave LKI, and no state trigger from a partial batch. |
+
+Existing complete-card mappings remain unchanged. No source-data defect was
+established or corrected. RON files and vocabulary source hashes are unchanged;
+no vocabulary snapshot refresh is required.
+
+### Verification and measured outcome
+
+Required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONControllersSacrifice -count=1`.
+- `go test ./pkg/mage -run TestControllersSacrifice -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: the first run rejected a test helper variable named `copy`
+  (`revive` builtin shadowing). It was renamed to `cloned`; the rerun passed
+  with 0 issues. Automatic formatting affected only new test imports and was
+  reviewed; focused RON/native tests passed again afterwards.
+- `git diff --check`: PASS, including the staged patch before commit.
+- `go run ./cmd/loadcards -json`: expected exit 1, strict collection rejection.
+
+Final loader: **2,076 compiled / 369 rejected records; 804 accepted / 182 rejected
+unique names**, totals 2,445 records / 986 names. Actual gain **+0 names / +0
+records** matches the estimate. A before/after comparison of every diagnostic
+finds exactly one change: Golgothian Sylex advances from ATQ:35:226 unsupported
+controller-sacrifice action to ATQ:35:277 unsupported
+`SharesANameOriginallyPrintedInAntiquities`. All other rejection diagnostics are
+unchanged; no accepted record regressed. Gameplay prerequisite coverage expands
+in the mapped contexts; no new complete-card claim is added. No environment or
+required-check blocker remains.
+
+Changed files: `pkg/mage/controllers_sacrifice.go`, its native test,
+`pkg/mage/dsl/ron/compiler.go`, `inventory.go`, the new RON test,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this progress summary/entry. Commit message:
+`feat(ron): implement controller collection sacrifice`.
+
+Ranked next candidates:
+
+1. Shared original-printing name filters for Golgothian Sylex and City in a
+   Bottle. Sacrifice is now ready; estimate one Sylex unlock after authoritative
+   membership and nested filter evidence. Bottle still needs its state trigger
+   and player restrictions.
+2. State-event permanent collection capture for City in a Bottle, compared with
+   shared state-event consumers before selection. Requires arming/rearming,
+   source identity, exact captured subjects and resolution-time legality.
+3. Time Vault's optional begin-turn skip replacement with normal, extra and
+   skipped-turn scheduling and affected-player ordering. Reassess shared value
+   and implementation size before selecting it.
+
+Stop after CONTROLLER-COLLECTION-SACRIFICE. Migration incomplete.

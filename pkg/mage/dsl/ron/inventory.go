@@ -946,7 +946,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
-		case "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
+		case "ControllersSacrificeEachPermanent", "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 			if len(n.Args) == 1 {
 				return "permanent_collection"
 			}

@@ -1458,6 +1458,17 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ControllersSacrificeEachPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		set, err := compileContextualCollection(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(func(bindings instanceBindings) mage.Effect {
+			return mage.ControllersSacrificeEach(set(bindings))
+		})
 	case "TapEachPermanent", "UntapEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err

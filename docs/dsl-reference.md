@@ -9936,3 +9936,26 @@ nodes and Lich's filter in test-only probes, plus collections, layers, LKI,
 rollback and invalid declarations. These probes do not establish complete-card
 support. `TestNontokenFilter*` proves physical copy status, clone isolation and
 simultaneous exile with the existing engine services.
+
+## Controller sacrifice of resolving permanent collections
+
+RON `ControllersSacrificeEachPermanent(collection)` accepts one positional
+operand in resolving action lists. The operand uses the existing contextual
+permanent collection adapter: supported filters, union/intersection, singleton
+references, target sets, control/owner sets and attachment/combat collections.
+It lowers to `mage.ControllersSacrificeEach(subjects PermanentSet) ResolvingEffect`.
+Spelling and binding checks stay in RON; engine services select and move subjects.
+This is an effect, not a payment or static modification.
+
+Selection reads current membership once at resolution. Each current controller
+sacrifices their selected permanents, even when different from the effect
+controller or owner. Exact incarnations, target legality and phasing still apply.
+Duplicates move once. Replacement choices and owner graveyard ordering finish
+before all movements; the shared zone batch then sends events. Waiting delayed
+queries retain explicit source reads without evaluating the collection.
+
+Golgothian Sylex still requires its original-printing name filter. City in a
+Bottle still requires its state-trigger collection and player restrictions;
+`Trigger_ThosePermanents` remains unbound outside that missing event contract.
+No complete-card unlock is claimed. Evidence: `TestRONControllersSacrifice*`
+and native `TestControllersSacrifice*`.

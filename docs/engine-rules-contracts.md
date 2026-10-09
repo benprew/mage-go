@@ -13198,3 +13198,40 @@ checks both directions of entry copying. `TestNontokenFilterSimultaneousExile`
 checks that all selected objects leave before live event observation and that
 leave-trigger detection retains the former battlefield. Existing batch,
 identity, payment, LKI and copy mechanics are reused without new state.
+
+## Controller sacrifice of a simultaneous selected collection
+
+`ControllersSacrificeEach(subjects PermanentSet) ResolvingEffect` selects once
+at resolution. The private `Game.controllersSacrificePermanents([]*Permanent)`
+checks each current incarnation, excludes phased objects and removes duplicate
+identities. Each subject's current controller performs the sacrifice (CR 701.21a),
+independently of the resolving ability's controller. No subject-selection choice
+is needed when the instruction requires all selected subjects.
+
+All sacrifice replacement proposals use the existing `prepareSacrifice` pipeline
+in active-player order, before movement. The source of a replacement may itself
+be among the sacrificed subjects. Existing affected-controller replacement
+ordering remains in force. Each owner orders their nontoken graveyard arrivals
+with `orderCardsForGraveyard`, also in active-player order (CR 101.4, 404.3).
+Replaced exile arrivals and tokens do not supply graveyard-order choices.
+`performSacrifice` rechecks exact incarnations and executes prepared proposals
+inside `withZoneChangeBatch`. All moves precede event dispatch. Sacrifice events
+retain current controllers; destination ownership remains separate (CR 400.3).
+Indestructible and regeneration cannot stop sacrifice. Tokens leave without a
+retained graveyard card. Leave triggers retain source LKI and the former
+battlefield; state-trigger checks cannot observe partial movement.
+
+`refersToSourcePermanent` delegates to the existing typed set declaration walker.
+Waiting delayed queries do not select subjects, apply replacements or make
+choices. Frames and game clones retain existing independent storage. This action
+adds no result binding or cost transaction. Stale subjects have no action permission
+from LKI (CR 400.7); target legality stays with the original target declarations.
+
+Evidence: `TestControllersSacrificeBatch`, `IdentityAndDefinition`, `Replacement`,
+`DepartingReplacementSource`, `PreparationOrderAndCancellation`, `WaitingPurity`,
+`TokenAndSourceTriggers`, and
+`TestRONControllersSacrificeGameplay`, `Targets`, `RollbackAndWaiting`,
+`Declarations`, `AtomicRoles`. RON probes retain Golgothian Sylex's exact activation
+cost and action; only the unsupported original-printing predicate is replaced by
+a supported test collection. City in a Bottle remains rejected and has no new
+complete-card coverage claim.

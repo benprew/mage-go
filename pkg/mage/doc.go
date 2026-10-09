@@ -1556,6 +1556,19 @@
 // [Game.WaitingManaReplacementPermanentSources] supplies exact active subjects
 // to general damage-source choices. Phasing keeps references; departure ends them.
 //
+// Use [ControllersSacrificeEach] for a typed permanent collection at resolution.
+// Each present subject uses its current controller. The effect controller and
+// owner do not restrict selection. Subjects keep their exact incarnations.
+// Phased and returned subjects cannot supply a move. Duplicate subjects move once.
+// Replacement choices use active-player order before any movement. Owners order
+// their simultaneous graveyard arrivals before the shared zone batch moves cards.
+// Tokens supply no retained graveyard card. Events keep the sacrificing player.
+// Leave triggers retain the former battlefield and source abilities.
+// Waiting queries declare explicit source reads without selecting or moving.
+// RON supports ControllersSacrificeEachPermanent with existing resolving
+// permanent collections. State-trigger collections and set-origin filters need
+// separate compiler contracts.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
