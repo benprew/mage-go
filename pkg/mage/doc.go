@@ -94,7 +94,12 @@
 // RON opts in global creature collections with one fixed AdjustPT action.
 // [SourcePTWhileControllerControlsBasicLand] adds one conditional source rule.
 // Its controller and basic land condition remain live at each layer pass.
-// Revision cannot change between global and conditional source contexts.
+// [SourcePTWhileOpponentControlsBasicLand] uses the current opponent's lands.
+// [SourcePTWhileOpponentControlsNontokenColor] uses nontoken color membership.
+// [NamedCreaturesPTWhileOpponentControlsNontokenColor] affects named creatures
+// under either player. Each typed conditional rule must contain one effect.
+// Revision keeps its condition kind, recipient kind and fixed recipient name.
+// Land types and colors remain live after their earlier layers.
 // The caller must supply text-layer order and lifetime. Other static layers,
 // conditional rules, Aura rules and full text consumers need separate services.
 //

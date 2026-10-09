@@ -8,10 +8,10 @@ unique card names** (986 total), and **2,091 compiled / 354 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-PRINTED-CONDITIONAL-SOURCE-PT` adds checked controller-land conditions
-for source P/T revision. It preserves active IDs, registration order, live
-controller/type reads, ordered changes, clones, phasing and revised restoration.
-Bounded revision evidence adds **2 accepted names / 8 records**. Acceptance gain
+`TEXT-PRINTED-OPPONENT-CONDITIONAL-PT` adds checked opponent land/color
+conditions with source or named-creature P/T recipients. It preserves active
+IDs, registration order, live reads, clones, phasing and revised restoration.
+Bounded revision evidence adds **3 accepted names / 3 records**. Acceptance gain
 is **+0 names / +0 records**. Live text installation is separate.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
@@ -60241,3 +60241,149 @@ Ranked next candidates:
 
 Complete RON gameplay, live text layers, runtime integration, Go-card deletion
 and unused DSL removal remain unfinished. Migration incomplete. Stop here.
+
+## 2026-10-09: checked opponent-conditioned P/T text revision
+
+Capability ID: `TEXT-PRINTED-OPPONENT-CONDITIONAL-PT`. Complete bounded
+compiler/engine slice; no second slice started. The worktree began with entry
+round changes, optional-hand-entry fixes, documentation changes and a ledger
+reorganization. Those changes and all unrelated untracked files are preserved.
+
+### Fresh baseline and candidate selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 because of collection rejection:
+2,091 compiled / 354 rejected records; 809 accepted / 177 rejected unique names.
+The loader installed no partial registry. This was not a build or test failure.
+
+Evaluated the latest entry's ranked candidates using complete records and nested
+forms, with each reprinted name counted once:
+
+| Candidate | Distinct affected names | Estimated full-card acceptance gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Opponent-conditioned source/named-creature P/T revision | Water Wurm, Beasts of Bogardan, Ivory Guardians | 0; all three already compile | Current opponent, basic-land, nontoken color and named-creature execution services exist. Checked typed revision contexts are missing. Enables printed declaration execution for Magical Hack/Sleight of Mind across three names; live text-layer scheduling, lifetime and restoration remain separate. | Small/medium: three typed contexts, lowering and lifecycle/context tests. |
+| Land-subtype mana-tap bonus | Gauntlet of Might | 1 | Its global red-creature P/T body already compiles. IsLandType(Mountain) mana-event subject rejects. Requires native immediate bonus, solver metadata, event-controller binding, replacement integration and printed revision. Enables shared subtype-filter mana bonuses. | Medium: bonus/solver adapter and payment/revision tests. |
+| Per-player coin rounds | Mana Clash | 1 | Opponent target and participant union exist. EachPlayerAction coin producer, CoinCameUpTails, AllCoinsCameUpHeads and RepeatThisProcess need complete local round results and simultaneous damage. Existing repetition alone does not provide outcomes. | Larger: coin/RNG producer, frame lifetime, repetition and damage-batch tests. |
+
+Selected candidate #1: it is dependency-ready and supplies a concrete shared
+prerequisite for three names. Both alternatives unlock one name each with more
+new mechanics. Estimated and actual acceptance gains are both zero. New bounded
+revision evidence covers three names / three records. This is separate from
+complete gameplay coverage for either text-changing spell.
+
+Read all three selected complete records (DRK Water Wurm and LEG Beasts of
+Bogardan/Ivory Guardians), all six Gauntlet records and Mana Clash. Targeted
+vocabulary signatures: APlayerPassesFilter tuple/2, ControlsA tuple/1,
+IsLandType tuple/1, And tuple/1, IsNonToken symbol/0, IsColor tuple/1,
+IsCardtype tuple/1, IsNamed tuple/1, NamedCard tuple/1 and AdjustPT tuple/2.
+Local authoritative `data/DRK.json` and `data/LEG.json` match the selected
+Oracle text. CR 604.2/7, 612.1–3, 613.1b/d/e/g, 613.4c and 613.7 establish
+static presence, semantic words, earlier layers and retained registration order.
+No source defect was found or corrected. RON and vocabulary are unchanged.
+
+### Exact contract and reuse boundary
+
+RON opts in `If(APlayerPassesFilter(Opponent, ControlsA(filter)), [body])`:
+
+- `filter = IsLandType(Plains|Island|Swamp|Mountain|Forest)` with source body.
+- `filter = And([IsNonToken, IsColor(White|Blue|Black|Red|Green)])` with either body.
+- Source body: `PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])`.
+- Named body: `EachPermanentLayerEffect(And([IsCardtype(Creature), IsNamed(NamedCard(nonempty_string))]), [AdjustPT(integer, integer)])`.
+
+Both two-member conjunctions permit either order. Native signatures:
+
+- `SourcePTWhileOpponentControlsBasicLand(landType string, power, toughness int) ContinuousEffect`.
+- `SourcePTWhileOpponentControlsNontokenColor(color core.Color, power, toughness int) ContinuousEffect`.
+- `NamedCreaturesPTWhileOpponentControlsNontokenColor(name string, color core.Color, power, toughness int) ContinuousEffect`.
+- Existing `(*StaticAbilityHolder).WithPTTextRevision() *StaticAbilityHolder`.
+- Existing `(*Game).RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error`.
+
+The native private `opponentPTEffect` retains one typed condition/recipient
+context, immutable land/color/name metadata and a cloned composed effect.
+Definition validation rejects invalid basic types, colors, empty named recipients
+and mixed/multiple conditional effects. Checked revision now compares typed P/T
+contexts and fixed recipient names: global, controller-land source, opponent-land
+source, opponent-color source and opponent-color named collection cannot switch
+into each other. A different named collection also rejects before mutation.
+
+RON owns spelling, exact shape validation and opt-in. The engine reuses `While`,
+`OpponentControls`, `HasSubType`, `HasColorFilter`, `Not(IsToken)`, `ModifyPT`,
+`ModifyEachPT`, `MatchingPermanents`, `IsCreature`, `Named`, `This` and `Fixed`.
+The source's current controller determines the opponent after control layers;
+land types and colors are read after their layers. Phased condition subjects
+cannot qualify. Named creature membership is live under either player and can
+include tokens. Nontoken exclusion applies only to the condition. Conditions do
+not use LKI to replace absent permanents.
+
+Shared printed revision keeps active IDs, groups, source visits, registration
+positions and ordered semantic changes. Names and mana costs keep their printed
+values. Other declarations, including protection, keep separate histories.
+Clones and siblings remain independent. Phasing retains revisions; ability
+removal suspends them; restoration uses revised effects. Departure saves revised
+P/T in LKI; return restores printed rules. The caller supplies text-layer order,
+lifetime and original-text restoration. No parallel layer, payment or zone
+subsystem, card-name branch, fallback, result slot or runtime declaration panic
+was added. Unsupported revision contexts retain existing execution without opt-in.
+
+Runtime cutover/removal gates remain unmet. No Go card definitions, generators
+or DSL functions were removed. This slice establishes no whole-repository caller
+audit that would authorize removal. API/rules-contract docs describe only this
+bounded behavior.
+
+### Failing-first tests and card mapping
+
+Before implementation, `TestRONTextOpponentPTRecords` failed for all three
+records with an ineligible printed-static diagnostic; `NamedRecipients` failed
+at the same missing opt-in. Native tests first failed compilation because all
+three constructors were missing. Corrected fixture errors separately: use mana
+costs for colors, current P/T accessors, explicit creature type on a token, and
+braces on the native blue mana symbol. No production assertion was weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Water Wurm (DRK), Beasts of Bogardan and Ivory Guardians (LEG) | `TestRONTextOpponentPTRecords`: complete records, active IDs, original/revised conditions, independent clone changes, source/condition control changes, source and condition phasing, removal/restoration, departure LKI, returned source, unchanged costs and separate red protection. |
+| Ivory Guardians | `TestRONTextOpponentPTNamedRecipients`: foreign ID rejection, independent sibling rules, recipients under both players, nontoken condition exclusion, token creature recipients, noncreature exclusion and later entries. |
+| Water Wurm / Beasts of Bogardan | `TestRONTextOpponentPTLayers`: layer-4 subtype/layer-5 multicolor reads before layer-7c, then successive semantic revisions. |
+| Independent declarations | `TestRONTextOpponentPTIndependentDeclarations`: separate Red-to-Blue and Red-to-Green histories, fixed adjustments and reversed condition conjunction. |
+| Invalid and unmarked forms | `TestRONTextOpponentPTBoundaries`: arity/value errors, unbound players/subjects, empty name, mixed layers; Unless, IfElse, nonbasic types, missing nontoken exclusion, general collections and multiple adjustments cannot opt in. |
+| Native contracts | `TestTextOpponentPTDeclaration`: five basic types/five colors, invalid values, empty name, mixed/multiple conditional effects. `Context`: all 30 distinct ordered context/name transitions reject atomically. `RegistrationOrder`: all three new contexts retain neighboring registrations, source and active identity. |
+| Existing base/card contracts | `TestRONOpponentStatic*`: normal casting, timing, protection damage/target/block/Aura legality, failed-cost rollback, controller/owner distinction, token/color/type layers, factories, clones and strict collection loading. `TestRONTextConditionalSourcePT*`, `TestTextConditionalSourcePT*`, `TestRONTextStaticPT*`, `TestTextStaticPTRejects` retain prior contexts and common invalid source/declaration contracts. |
+
+### Verification and collection status
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run 'TestRONTextOpponentPT|TestRONOpponentStatic|TestRONTextConditionalSourcePT|TestRONTextStaticPT' -count=1`.
+- `go test ./pkg/mage -run 'TestText(OpponentPT|ConditionalSourcePT|StaticPT)' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: zero issues; no automatic file changes. `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; 2,091 compiled /
+  354 rejected records; 809 accepted / 177 rejected unique names.
+
+The complete final loader JSON equals the fresh baseline, including every
+remaining diagnostic. Accepted records remain accepted. Gauntlet of Might still
+rejects its IsLandType mana-event subject; Mana Clash still rejects its repeated
+EachPlayerAction producer. Collection rejection publishes no partial registry.
+Estimated and actual acceptance gain: +0 names / +0 records. New bounded revision
+mapping: 3 names / 3 records. No environment or pre-existing check blocker was
+found. Complete collection gameplay remains separate from compilation progress.
+
+Changed files: new engine `text_opponent_pt.go` and `text_opponent_pt_test.go`;
+engine `text_static_pt.go` and `doc.go`; new compiler `opponent_pt_revision.go`
+and `text_opponent_pt_test.go`; compiler `conditional_static.go`; DSL reference,
+engine rules contracts and this ledger. Stage only this slice's changes.
+Commit message: `feat(ron): implement opponent-conditioned P/T text revision`.
+
+Ranked next candidates:
+
+1. Checked Aura-host basic-land condition with global P/T recipients for Goblin
+   Caves and Goblin Shrine. Both complete records already compile; audit exact
+   host binding, basic-supertype/type condition and recipient contexts. Concrete
+   shared Magical Hack prerequisite for two names with zero immediate gain.
+2. Typed land-subtype mana-tap bonus for Gauntlet of Might, with native solver,
+   event and printed revision reuse; compare other shared prerequisites first.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished. Migration incomplete. Stop here.

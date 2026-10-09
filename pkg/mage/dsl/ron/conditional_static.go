@@ -23,6 +23,9 @@ func compileConditionalStatic(n Node, ctx scope) (optionFactory, error) {
 	if revision := compileConditionalSourcePTRevision(n); revision != nil {
 		return revision, nil
 	}
+	if revision := compileOpponentPTRevision(n); revision != nil {
+		return revision, nil
+	}
 	first, err := compileConditionalStaticBody(n.Args[1], ctx, condition)
 	if err != nil || n.Name != "IfElse" {
 		return first, err

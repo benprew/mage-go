@@ -14217,3 +14217,63 @@ five legal subtypes, invalid values, mixed effects, both context transitions,
 atomic rejection and unchanged registration position. Existing
 `TestRONConditionalStaticController` covers normal casting, entry timing and
 unpaid regeneration; `TestTextStaticPTRejects` retains common rejection evidence.
+
+
+## Printed opponent-conditioned P/T text revision
+
+Native constructors return `ContinuousEffect`:
+
+- `SourcePTWhileOpponentControlsBasicLand(landType string, power, toughness int)`.
+- `SourcePTWhileOpponentControlsNontokenColor(color core.Color, power, toughness int)`.
+- `NamedCreaturesPTWhileOpponentControlsNontokenColor(name string, color core.Color, power, toughness int)`.
+
+Use `StaticAbility(effect).WithPTTextRevision()` and the existing
+`Game.RevisePrintedStaticPTAbility` service. Definition validation requires one
+typed effect, a basic land subtype or one of the five colors, and a nonempty
+name for the named-creature context. A revision must keep its condition kind,
+source or collection recipient kind, and fixed recipient name. Invalid context
+changes reject before mutation. Unconditional global rules and controller-land
+source rules keep their existing contracts.
+
+RON opts in `If(APlayerPassesFilter(Opponent, ControlsA(filter)), [body])`:
+`filter` is `IsLandType(basic_type)` for a source recipient, or
+`And([IsNonToken, IsColor(color)])` for either supported recipient. `body` is
+`PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])` or
+`EachPermanentLayerEffect(And([IsCardtype(Creature),
+IsNamed(NamedCard(nonempty_string))]), [AdjustPT(integer, integer)])`.
+Both two-member conjunctions can use either order. Unless, IfElse, nonbasic
+land types, color conditions without nontoken exclusion, general collections,
+hosts and multiple adjustments keep existing execution without this opt-in.
+Malformed declarations and unbound references remain compilation errors.
+
+CR 604.2/7, 611.3 and 613.1b/d/e/g, 613.4c use existing `While`,
+`OpponentControls`, `HasSubType`, `HasColorFilter`, `Not(IsToken)`, `ModifyPT`,
+`ModifyEachPT`, `MatchingPermanents`, `IsCreature`, `Named` and `Fixed` services.
+The source's current controller determines the opponent; neither owner nor
+active player determines it. Conditions read current unphased permanents after
+control, type and color layers. Named recipients can belong to either player
+and can be tokens; nontoken exclusion applies only to the condition.
+Membership stays live on each layer pass. No condition uses departure LKI.
+
+CR 612.2 and 613.7 retain ordered semantic substitutions, fixed card names,
+active declaration IDs and registration positions. Sibling declarations and
+clones keep separate changes. Phasing keeps revisions; ability removal suspends
+execution; restoration uses the revised rule. Departure saves current P/T in
+LKI; CR 400.7 return uses printed rules. The caller still supplies layer-3
+ordering, lifetime and original-text restoration. This bounded installation
+contract does not establish complete Magical Hack or Sleight of Mind gameplay.
+
+Evidence: `TestRONTextOpponentPTRecords` covers all three complete Water Wurm,
+Beasts of Bogardan and Ivory Guardians records, ordered clone revisions,
+current source/condition controller, phasing, removal/restoration, LKI, return,
+printed costs and separate protection. `NamedRecipients` covers independent
+sources, foreign IDs, both players, token recipients, token condition exclusion,
+noncreature exclusion and later entries. `Layers` covers type/color order and
+successive changes; `IndependentDeclarations` covers separate rule histories
+and reversed condition order; `Boundaries` covers invalid and unmarked shapes.
+Native `TestTextOpponentPTDeclaration`, `Context`, `RegistrationOrder` cover
+legal and invalid values, mixed effects, all 30 context transitions with atomic
+rejection, and identity/registration preservation in all three new contexts.
+Existing `TestRONOpponentStatic*` retains casting, protection legality, failed
+cost rollback and collection loading evidence; common revision rejection tests
+remain in `TestTextStaticPTRejects`.

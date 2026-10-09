@@ -20,6 +20,11 @@ func (a *StaticAbilityHolder) supportsPTTextRevision() bool {
 	if len(a.Effects) == 0 {
 		return false
 	}
+	for _, effect := range a.Effects {
+		if typed, ok := effect.(*opponentPTEffect); ok && (len(a.Effects) != 1 || !typed.validContext()) {
+			return false
+		}
+	}
 	if a.conditionalSourcePTContext() {
 		if len(a.Effects) != 1 {
 			return false
@@ -139,7 +144,7 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {
 		return fmt.Errorf("text static revision changed the land-type context")
 	}
-	if active.ptTextRevision && active.conditionalSourcePTContext() != fresh.conditionalSourcePTContext() {
+	if active.ptTextRevision && active.ptTextRevisionContext() != fresh.ptTextRevisionContext() {
 		return fmt.Errorf("text static revision changed the P/T context")
 	}
 	for i, effect := range active.Effects {
