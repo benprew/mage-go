@@ -2089,7 +2089,7 @@ func (g *Game) PutTriggersOnStack() {
 		g.triggers.SetPending(ordered)
 	}
 	for _, pt := range g.triggers.Pending() {
-		targetSource := g.FindCardAnywhere(pt.sourceID)
+		targetSource := g.triggerTargetSource(pt)
 		obj := &StackObject{
 			stateKey:          pt.stateKey,
 			capturedPlayers:   capturedTriggerTargetPlayers(pt),
@@ -2343,7 +2343,7 @@ func (g *Game) PutTriggersOnStack() {
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, []Target, bool) {
 	query := g.targetPlayerQuery(capturedTriggerTargetPlayers(pt))
 	controller := g.GetPlayer(pt.controller)
-	sourceCard := g.FindCardAnywhere(pt.sourceID)
+	sourceCard := g.triggerTargetSource(pt)
 	var out []uuid.UUID
 	var aligned []Target
 	for _, t := range declared {

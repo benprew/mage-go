@@ -224,7 +224,7 @@ func TestRONStaticSourceTypePreventionStrictInventory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Compiled != 1 || len(report.Issues) != 1 || report.Issues[0].Card != "Artifact Ward" || !strings.Contains(report.Issues[0].Message, "unsupported self untap") {
+	if report.Compiled != 2 || len(report.Issues) != 0 {
 		t.Fatal("unexpected complete record support", report.Issues)
 	}
 	found := false
@@ -237,19 +237,18 @@ func TestRONStaticSourceTypePreventionStrictInventory(t *testing.T) {
 		t.Fatal("missing damage source role")
 	}
 	registry := mage.NewRegistry()
-	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 0 {
-		t.Fatal("partial registry installed")
+	if err := LoadInto(registry, files, "*.ron"); err != nil || len(registry.RegisteredCardNames()) != 2 {
+		t.Fatal("complete records did not load", err)
 	}
-	delete(files, "Artifact Ward.ron")
 	files["reprint.ron"] = files["Argothian Treefolk.ron"]
 	if err := LoadInto(registry, files, "*.ron"); err != nil {
 		t.Fatal(err)
 	}
-	if len(registry.RegisteredCardNames()) != 1 {
+	if len(registry.RegisteredCardNames()) != 2 {
 		t.Fatal("reprint count")
 	}
-	for range 2 {
-		card, err := registry.CreateCard("Argothian Treefolk")
+	for _, name := range []string{"Argothian Treefolk", "Artifact Ward"} {
+		card, err := registry.CreateCard(name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -258,7 +257,7 @@ func TestRONStaticSourceTypePreventionStrictInventory(t *testing.T) {
 		}
 	}
 	files["invalid.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[UnknownRule])`)}
-	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 1 {
+	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 2 {
 		t.Fatal("atomic registry changed")
 	}
 }

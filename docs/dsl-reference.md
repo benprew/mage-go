@@ -1,5 +1,45 @@
 # DSL reference
 
+## Targets of abilities from matching sources
+
+`CantBeTargetedByAbilities(subject PermanentRef, filter CardFilter) StaticRule`
+adds a live restriction through `Static` and the shared `EffectManager`.
+Definitions require a bound permanent reference, a battlefield source and a
+nonzero source filter. Source and Aura-host contexts use `This` and
+`AttachedPermanent`. Reattachment changes the current subject. Departure,
+phasing and removal of the granting ability suspend the rule; host ability
+removal does not remove an Aura's rule. Returned hosts cannot supply the former
+attachment. Clones retain independent registrations.
+
+The shared `Permanent.CanBeTargetedBy` query applies the restriction to ability
+sources at target selection and resolution. Spell queries retain their explicit
+`SpellTargetSource` category. Nontargeted actions and direct attachments do not
+use this restriction. Existing shroud, hexproof and protection checks still apply.
+Illegal activation targets fail before costs are spent. If targets become
+illegal after payment, costs stay paid. Legal members of a mixed target list
+remain eligible (CR 115.1c–d, 608.2b).
+
+Live ability sources supply current types and colors. Pending triggers, stack
+resolution and retargeted copies use the source's saved incarnation, with current
+or retained departure information (CR 113.7a, 608.2b). A returned card cannot
+supply the former source's characteristics. Trigger target selection now uses
+that same source view. Ability sources without a battlefield incarnation retain
+their supplied card snapshot without following a later battlefield object.
+
+RON supports `PermanentRuleEffect(ThisPermanent|HostPermanent,
+[CantBeTheTargetOfAbilities(AbilityOfASource(filter))])`. Filters are
+`IsCardtype(type)`, `IsColor(color)` for the five colors, and nonempty `And([…])`
+or `Or([…])` compositions. A two-operation rule can combine this restriction
+with `CantBeTheTargetOfSpells`. `CanTargetOnly`, unbound references, malformed
+operands and unsupported filters remain compile errors. Conditional restriction
+rules and target-declaration predicates need separate contracts.
+
+Artifact Ward's complete ATQ record now executes all three rules. Raiding Party's
+exact static rule has contract tests; its complete record remains rejected at
+`TapAnyNumberOfPermanents`, with later tapped-result, chosen-Plains and destruction
+exclusion work still required. Local `data/ATQ.json` and `data/FEM.json` confirm
+these semantics. No RON source record changed.
+
 ## Land-subtype mana bonuses
 
 `LandManaBonusThisTurn(filter PermanentFilter, color core.Color) ResolvingEffect`

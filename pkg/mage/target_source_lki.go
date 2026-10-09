@@ -29,7 +29,13 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 		}
 		return targetSourceLKI{Card: card, colors: colors, spell: true}
 	}
-	if card == nil || card.ID() != obj.SourceID || obj.sourceIncarnation == uuid.Nil {
+	if card == nil || card.ID() != obj.SourceID {
+		return card
+	}
+	if obj.sourceIncarnation == uuid.Nil {
+		if obj.IsAbility {
+			return targetSourceLKI{Card: card, colors: cardColors(card)}
+		}
 		return card
 	}
 	if p := g.FindPermanentIncludingPhased(obj.SourceID); p != nil && p.incarnationID == obj.sourceIncarnation {
@@ -40,7 +46,7 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 			}
 			return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors(), power: power, powerKnown: true, incarnation: obj.sourceIncarnation}
 		}
-		return targetSourceLKI{Card: card, colors: p.Colors(), incarnation: obj.sourceIncarnation}
+		return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors(), incarnation: obj.sourceIncarnation}
 	}
 	if lki := g.zones.LKIByIncarnation(obj.sourceIncarnation); lki != nil && lki.Snapshot != nil && lki.ID == obj.SourceID {
 		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors(), power: lki.Power, powerKnown: true, incarnation: obj.sourceIncarnation}
@@ -59,4 +65,14 @@ func SpellTargetSource(card Card) Card {
 		return view
 	}
 	return targetSourceLKI{Card: card, colors: cardColors(card), spell: true}
+}
+
+func (g *Game) triggerTargetSource(pt *pendingTrigger) Card {
+	card := g.FindCardAnywhere(pt.sourceID)
+	if card == nil && pt.sourceIncarnation != uuid.Nil {
+		if lki := g.zones.LKIByIncarnation(pt.sourceIncarnation); lki != nil && lki.Snapshot != nil {
+			card = lki.Snapshot.Card
+		}
+	}
+	return g.resolutionTargetSource(&StackObject{TargetSource: card, SourceID: pt.sourceID, sourceIncarnation: pt.sourceIncarnation, IsAbility: true})
 }

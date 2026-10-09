@@ -2,17 +2,17 @@
 
 ## Current status
 
-The latest verified worktree inventory reports **811 accepted / 175 rejected
-unique card names** (986 total), and **2,097 compiled / 348 rejected records**
+The latest verified worktree inventory reports **812 accepted / 174 rejected
+unique card names** (986 total), and **2,098 compiled / 347 rejected records**
 (2,445 total). The baseline includes pre-existing Eureka entry-round changes.
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LAND-SUBTYPE-MANA-BONUS` adds fixed persistent and end-of-turn bonuses for
-current land subtypes. It keeps planning and production together, distinguishes
-land-controller and activating-player recipients, and preserves printed
-revision identity, clone isolation and cleanup. Acceptance gain is
-**+2 names / +6 records**: Gauntlet of Might and High Tide.
+`STATIC-ABILITY-SOURCE-TARGET-RESTRICTION` adds live source-filter restrictions
+on targets of abilities. Exact source/host identity, current and retained source
+facts, trigger placement, copies, phasing and restoration have contract tests.
+Acceptance gain is **+1 name / +1 record**: Artifact Ward. Raiding Party's exact
+static subrule works; its complete resolving procedure remains unsupported.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished.
@@ -60714,6 +60714,182 @@ Ranked next candidates:
    Artifact Ward and Tourach's Gate by complete records before selecting one
    reusable capability. Their first diagnostics do not establish full unlocks.
 3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+
+Complete collection gameplay, live text layers, runtime integration, Go-card
+removal and unused DSL removal remain unfinished. Stop after this slice.
+
+## 2026-10-09: static targets of abilities from matching sources
+
+Status: completed implementation slice `STATIC-ABILITY-SOURCE-TARGET-RESTRICTION`.
+One slice only; runtime cutover and removal gates remain unmet.
+
+### Fresh baseline and selection
+
+The initial worktree contained unrelated tracked edits in the design, ledger,
+API documentation, definition validation, compiler, inventory and optional hand
+entry, plus an untracked completed-ledger archive and Eureka entry-round files.
+These changes are preserved and excluded from this slice's commit.
+Fresh `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Fresh loader exit 1 was collection rejection, not a build/test failure:
+2,097 compiled / 348 rejected records; 811 accepted / 175 rejected names.
+
+The latest ledger's ranked candidates were evaluated against complete records,
+including all Magical Hack and Sleight of Mind reprints and the full Backfire,
+Farrel's Mantle, Artifact Ward, Tourach's Gate and Mana Clash records. Targeted
+vocabulary reads covered PermanentRuleEffect, CantBeTheTargetOfAbilities,
+AbilityOfASource and their source-filter descendants. No Go card definitions
+were used as requirements.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: bounded native layer-3 installation/restoration | Magical Hack; Sleight of Mind | 0 for a bounded declaration context | Complete consumers still need spell text and cross-kind restoration, ordering and expiry contracts. Existing checked declaration revision is not live layer installation. A narrower prerequisite could enable both later. | High; not dependency-ready as a complete production consumer in this run. |
+| Shared typed source/host restrictions, from ranked #2 | Artifact Ward; Raiding Party | 1: Artifact Ward | Raiding Party still needs optional taps, per-player actual tap results, chosen Plains and destruction exclusion. Backfire instead needs host damage-event adapters and amount/permanent bindings; Farrel's Mantle needs host unblocked capture and event-paid damage; Tourach's Gate needs a transactional host tap cost. Those are separate contexts. | Moderate: one static engine rule, source views, two adapter contexts and lifecycle/legality tests. |
+| Ranked #3: per-player coin outcomes and simultaneous rounds | Mana Clash | 1 | Requires result scopes, simultaneous round damage and repeat termination. No second unique card unlock from this exact process. | High. |
+
+Selected the shared source-filter restriction: one complete card and a concrete
+second-card prerequisite for less effort than the coin process. Its subject
+contract reuses existing typed source/attachment readers. Its engine boundary is
+live target legality for abilities whose sources match a card filter. RON owns
+spelling, filter validation, source/host scope and combined static declarations.
+Acceptance cases were stated before edits: invalid declarations, real RON
+casting and all Artifact Ward rules, selection/resolution legality, cost
+rollback, LKI, returned identities, phasing, reattachment, ability removal and
+restoration, current types/colors, triggered abilities, copies and clones.
+
+### Signatures, contexts and dependencies
+
+New engine API:
+
+- `CantBeTargetedByAbilities(subject PermanentRef, filter CardFilter) StaticRule`.
+
+RON supports:
+
+- `PermanentRuleEffect(ThisPermanent|HostPermanent, [CantBeTheTargetOfAbilities(AbilityOfASource(filter))])`.
+- `filter = IsCardtype(type) | IsColor(color) | And([filter, ...]) | Or([filter, ...])`.
+- Card types use existing validated enums; colors are the five colors.
+  Colorless is not a color and is rejected in this context.
+- Nonempty filter compositions; one operation or two distinct operations with
+  `CantBeTheTargetOfSpells` in either order. The existing Aura restriction
+  spell/attachment composition remains available; duplicate operations and an
+  ability/attachment pair remain errors.
+- ThisPermanent requires a permanent definition. HostPermanent requires an Aura.
+  Target, event, unbound and malformed references remain compile errors.
+  AnyAbility, CanTargetOnly, unsupported source filters, conditional bodies and
+  resolving installations remain unsupported.
+
+The rule registers through Static, EffectManager and printed-ability lifecycle
+wrappers. The shared Permanent.CanBeTargetedBy query applies it at target
+selection and resolution, including copied abilities and triggered targets.
+SpellTargetSource keeps spell targeting separate. Nontargeted operations and
+direct attachments are unaffected. Legacy callers and attributes remain.
+No Go-card fallback, card-name execution branch or partial registry was added.
+
+The granting source must remain present, unphased and able to supply the rule.
+Its current attachment determines the subject. Removing host abilities does not
+remove a separate Aura's restriction. Reattachment, source departure, source
+return without attachment, host departure/return, control changes, clone
+isolation, phase restoration and ability restoration have tests.
+
+Current ability source types/colors use existing permanent characteristic and
+card-filter services. The shared resolutionTargetSource now supplies current
+card types as well as colors for live incarnations. Trigger target selection
+and modal eligibility now use the same exact-incarnation source view as
+resolution and retargeting. Pending source departure uses retained information;
+returned cards cannot substitute their new characteristics. Sources without a
+battlefield incarnation keep the supplied card snapshot without following a
+later battlefield object. CR 113.7a, 115.1c–d and 608.2b supply the contracts.
+
+Costs, bindings, target legality, mixed-target resolution, copies, retained LKI,
+static registration and cloning reuse existing services. Failed activation
+checks spend no mana; later illegal targets do not refund paid costs. No new
+payment, replacement ordering or simultaneous-operation service was introduced.
+Artifact Ward's existing prevention still uses the shared replacement pipeline.
+Its prevention batch, ordering and damage-source tests remain passing.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production changes, TestRONAbilityTargetRestrictionArtifactWard and
+Lifecycle rejected the complete ATQ record at unsupported self untap source
+(HostPermanent). RaidingParty's exact static rule rejected the combined ability
+restriction. Native definition/gameplay tests failed because
+CantBeTargetedByAbilities did not exist. Incorrect test-fixture payment and
+FireEvent signatures were repaired, then the expected missing-API failure was
+confirmed before production edits.
+
+After initial implementation, PendingSourceIdentity failed for source departure
+and return before trigger placement. The shared exact-incarnation trigger view
+fixed those assertion failures. The Colorless declaration test failed before
+adding its rejection. The ability/attachment pair test failed before limiting
+new combined declarations to the selected ability/spell context. Additional test fixtures needed an explicit duration for
+ModifyPT and a noncreature type where no CardPT was declared. Those fixture
+repairs changed no gameplay expectation. No test was weakened.
+
+| Card / contract | Tests |
+| --- | --- |
+| Artifact Ward, complete ATQ record, all rules | TestRONAbilityTargetRestrictionArtifactWard: unpaid/paid casting, no early attachment, artifact-creature blocking exclusion, ordinary blockers, artifact damage prevention, ordinary damage, ability restriction and artifact spell exemption. TestRONAbilityTargetRestrictionActivationAndResolution: real compiled activation rollback, artifact spell success, restriction acquired before resolution, independent copies/clones, no refund. |
+| Artifact Ward lifecycle | TestRONAbilityTargetRestrictionLifecycle: source/host phasing, reattachment, departure/return, source versus host ability removal, control changes, independent clones, phase and ability restoration. Existing TestRONStaticSourceTypePreventionHost, Ordering, SpellsAndActivations and Combat retain prevention contracts. |
+| Artifact Ward complete loader/definition | Updated TestRONStaticSourceTypePreventionStrictInventory loads both Artifact Ward and Argothian Treefolk, collapses a reprint and validates both factories. An invalid record still leaves the existing registry intact. Exact inventory and retained-definition reconstruction tests guard the newly accepted record. |
+| Raiding Party, exact RON static subrule only | TestRONAbilityTargetRestrictionRaidingParty reads the full FEM record, confirms full rejection at TapAnyNumberOfPermanents, then tests its exact first rule against white/red spell and ability sources. It also checks nested semantic inventory roles. This is not full-card gameplay coverage. |
+| Filter composition / fresh instances | TestRONAbilityTargetRestrictionIndependentAndFilters: type/color and nested And/Or filters, fresh factories, sibling ability removal isolation. Invalid covers arities, unknown symbols, Colorless, wrong role, source/host scope, duplicates, unsupported filters and action contexts. |
+| Native validation and identity | TestCantBeTargetedByAbilitiesDefinition; SourceFacts: live color/type changes at selection and resolution, failed-payment resources, departure LKI, returned source, phasing, copies and clones. PendingSourceIdentity: old source facts before trigger target selection. |
+| Native triggering, partial targets, retargeting and card sources | TriggeredAndPartial checks triggered abilities and legal members of a copied mixed target list. CopyTargetsAndCardSource checks departed-source retarget candidates, legal copy resolution, a card-source snapshot versus a later permanent, and a nontargeted operation. Existing TestTargetLegality* and spell-target restriction tests also pass. |
+
+### Verification and collection status
+
+Required worktree checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONAbilityTargetRestriction -count=1`.
+- Expanded focused run includes static source-type prevention, spell/Aura
+  restrictions, retained-definition collection and inventory count tests.
+- `go test ./pkg/mage -run 'TestCantBeTargetedByAbilities|TestTargetLegality|TestCantBeTargetedBySpells' -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`; staged whitespace check.
+- Final `go run ./cmd/loadcards -json`: expected exit 1.
+
+First lint changed only import grouping in the four new files and reported zero
+issues. Final lint reported zero issues with no file changes. The final narrow
+combined-context change was followed by focused tests, build, vet, engine short,
+full tests and lint. Worktree and staged whitespace checks pass.
+
+Final worktree counts: **2,098 compiled / 347 rejected records** and
+**812 accepted / 174 rejected unique names**. Estimated +1 full-card unlock
+matches actual +1 unique name / +1 record. Artifact Ward is the only removed
+rejection; Raiding Party's diagnostic advances to TapAnyNumberOfPermanents.
+There are no new rejected records and no other diagnostic changes. Every
+previously accepted record remains accepted. Compilation progress is distinct
+from complete collection gameplay coverage.
+
+The isolated staged tree excludes the pre-existing Eureka work and its +1/-1
+count changes. Its exact inventory is 2,097 compiled / 348 rejected records,
+811 accepted / 175 rejected names. Staged native and real-RON focused tests,
+collection count/reconstruction tests, build and vet pass independently.
+
+Local data/ATQ.json and data/FEM.json Oracle text confirms Artifact Ward's three
+rules and Raiding Party's distinct spell/source restrictions. No source defect
+was found. No RON source changed, so the vocabulary snapshot needs no refresh.
+No environment or pre-existing validation blocker remains. No Go definitions,
+generators or unused DSL functions were removed; their cutover gates are unmet.
+
+Changed files: new engine ability_target_restriction.go / test; shared card.go,
+game.go and target_source_lki.go; new RON ability_target_restriction.go / test;
+compiler filtered_blocking.go, aura_restriction.go and inventory.go; source-type
+prevention inventory test and three exact collection count test files; engine
+API reference, DSL reference, rules contracts and this progress ledger.
+Only this slice is staged. The ledger archive and all prior user work remain
+uncommitted and separate.
+
+Ranked next candidates:
+
+1. Bounded native layer-3 installation/restoration prerequisite for Magical Hack
+   and Sleight of Mind. Select one complete declaration context with order,
+   expiry and original-text restoration; keep cross-kind/spell gaps explicit.
+2. Shared typed host event contexts: compare Backfire's damage event capture and
+   Farrel's Mantle's unblocked event/payment bindings before choosing one shape.
+   Tourach's Gate's transactional written host tap cost remains separate.
+3. Per-player coin result bindings and simultaneous rounds for Mana Clash.
+   Raiding Party's per-player tap results and chosen-Plains procedure remain a
+   separate candidate; no full-card coverage is claimed for its static subrule.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished. Stop after this slice.

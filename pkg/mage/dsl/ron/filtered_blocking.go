@@ -36,6 +36,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		}, nil
 	case "CantBeEnchantedByAnEnchantment":
 		return compileAuraRestriction(n, operation, ctx)
+	case "CantBeTheTargetOfAbilities":
+		return compileAbilityTargetRestriction(n, operation, ctx)
 	case "CantBeTheTargetOfSpells":
 		return compileSpellTargetRestriction(n, operation, ctx)
 	case "CantAttack":

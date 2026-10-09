@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [CantBeTargetedByAbilities] with [Static] for a live target restriction.
+// Its filter reads the ability source. Spell targets use a separate rule.
+// [This] and [AttachedPermanent] keep source and host identity checks.
+// Source departure, phasing and ability removal stop the restriction.
+// Pending triggers, resolution and copies use current or retained information
+// for their exact source. Returned objects cannot supply earlier source facts.
+// RON supports card-type and color source filters with nonempty And or Or lists.
+// It permits one static restriction or a pair with a spell target restriction.
+// Target-declaration filters and conditional rules need separate contracts.
+//
 // Use [LandManaBonusThisTurn] for one fixed bonus from matching lands.
 // The shared mana query keeps planning and production in agreement.
 // Each positive tap-symbol mana activation adds one bonus to its player.

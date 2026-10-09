@@ -69,6 +69,8 @@ func compileCombinedAuraRestrictions(n Node, operations []Node, ctx scope) (opti
 		var option optionFactory
 		var err error
 		switch operation.Name {
+		case "CantBeTheTargetOfAbilities":
+			option, err = compileAbilityTargetRestriction(n, operation, ctx)
 		case "CantBeTheTargetOfSpells":
 			option, err = compileSpellTargetRestriction(n, operation, ctx)
 		case "CantBeEnchantedByAnEnchantment":
@@ -80,6 +82,9 @@ func compileCombinedAuraRestrictions(n Node, operations []Node, ctx scope) (opti
 			return nil, err
 		}
 		options = append(options, option)
+	}
+	if seen["CantBeTheTargetOfAbilities"] && !seen["CantBeTheTargetOfSpells"] {
+		return nil, unsupported(n.Args[1], "combined ability and Aura restrictions")
 	}
 	return func() mage.CardOption {
 		built := make([]mage.CardOption, len(options))

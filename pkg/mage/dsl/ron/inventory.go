@@ -1203,6 +1203,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantBeTheTargetOfAbilities" && len(n.Args) == 1 {
+			return "ability_filter"
+		}
 		if n.Name == "CantAttackUnlessCost" && len(n.Args) == 1 {
 			return "cost"
 		}
@@ -1419,6 +1422,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "ability_source_filter"
 		}
 	case "ability_source_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsColor" && len(n.Args) == 1 {
+			return "color"
+		}
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
