@@ -2,15 +2,15 @@
 
 ## Current status
 
-The latest recorded inventory reports **792 accepted / 194 rejected unique card
-names** (986 total), and **2,045 compiled / 400 rejected records** (2,445 total).
+The latest recorded inventory reports **794 accepted / 192 rejected unique card
+names** (986 total), and **2,057 compiled / 388 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ANTE-DECK-EXCLUSION` lowers pregame ante restrictions and removes marked
-cards from non-ante initial libraries. A pure service prepares decks and
-sideboards; physical copies retain eligibility. Tests cover all 22 actual
-declarations across seven names. No complete card or record is unlocked.
+`ANTE-LIBRARY-TOP` lowers typed single-player and all-player ante actions.
+All eligible tops move before zone events. Complete RON gameplay tests cover
+Demonic Attorney and Contract from Below across all twelve reprint records.
+This adds two complete names / twelve records; optional ante payments remain gaps.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
 Added abilities, live copies and other unsupported capabilities remain gaps.
@@ -53022,3 +53022,147 @@ Ranked next candidates:
    and interchangeable-name rules explicit.
 
 This run stops after ANTE-DECK-EXCLUSION.
+
+## 2026-10-08: typed library-top ante actions
+
+Status: completed implementation slice `ANTE-LIBRARY-TOP`. This run stops after
+this slice. Initial changes to `.gitignore`, the execution design and the ledger,
+plus untracked `mtgish-ron-completed.md`, are preserved and excluded from the
+slice commit. The ledger commit contains only this status update and new entry;
+the user's history relocation remains a separate working-tree change.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 was dependency-ready after ante deck exclusion.
+Complete records and nested forms were inspected for each candidate; reprints
+are counted once. The comparison was:
+
+| Candidate | Distinct names / records | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Typed library-top ante action | Demonic Attorney, Contract from Below: 2 / 12; Rebirth: 1 downstream record | Demonic Attorney: 1 / 6 directly; Contract: another 1 / 6 with existing hand-discard routing | Contract's bare ordinary `DiscardHand` lacked adapter dispatch; its engine service already exists. Rebirth needs optional ante payments, paid-player results and life-total dispatch. Shared top movement supplies that payment's zone operation. | Small: typed player adapters, simultaneous engine batch, identity/legality tests and real gameplay |
+| Optional ante payments and paid-player results | Rebirth, Jeweled Bird: 2 / 2 | 0 until their consumers are supported | Rebirth needs paid-player life-total actions. Jeweled Bird needs mandatory source ante and other owned ante-card return. Both need ante eligibility and scoped payment outcomes. | Larger: payment legality, optional decisions, transactional costs, paid paths and result consumers |
+| Complete Oracle name catalog and scoped name choices | Nebuchadnezzar, Petra Sphinx: 2 / 2 | 0 from catalog/choice prerequisite alone | Nebuchadnezzar needs named random reveal/discard. Petra needs top reveal result and destination branches. Enables both exact non-target name decisions, with CR 201.4 face/name rules. | Large: authoritative complete catalog, typed choices, per-instance storage and separate consumers |
+
+Select the top action because it supplies a shared multi-card engine contract
+and credible immediate gains with one small adapter dependency. The ordinary
+`DiscardHand` change routes to the existing engine behavior; it does not add a
+second mechanic. No optional ante payment is partially accepted.
+
+### Exact contracts and reuse boundary
+
+RON supports bare `AnteTopCardOfLibrary` in ordinary resolving action lists,
+`PlayerAction(playerRef, AnteTopCardOfLibrary)`, scoped
+`PlayerActions(playerRef, [AnteTopCardOfLibrary, ...])`, and
+`EachPlayerAction(AnyPlayer, AnteTopCardOfLibrary)`. Existing resolving trigger,
+modal, conditional and delayed bodies share the ordinary action adapter.
+The player reference uses existing scope and per-factory bindings. The all-player
+form requires bare `AnyPlayer` and creates no loop binding. Wrong arities,
+tuple spellings, unbound player references, cost, entry and static contexts reject.
+Bare ordinary `DiscardHand` now routes to the existing hand-operation adapter.
+
+Engine signatures:
+
+- `AnteTopFor(player PlayerRef) ResolvingEffect`
+- `AnteTopEach(subjects PlayerSet) ResolvingEffect`
+- `(*Game).AnteLibraryTops(players []uuid.UUID)`
+
+The engine owns library-to-ante movement. It selects current tops at resolution,
+preserves physical card IDs, owners and remaining library order, and commits all
+eligible moves before sending zone-change events. Duplicate player IDs contribute
+once. Missing players, empty libraries, tokens and tops owned by another player
+cannot contribute. Disabled or settled ante games move no cards. An ineligible
+player cannot prevent another player's action or later independent instructions.
+The action creates no draw, choice, payment, ownership change or random result.
+
+Legacy `AnteLibraryTop` retains its public signature and selector behavior and
+now uses this same batch service. Existing `MoveToAnte` contracts for other zones
+remain. Typed single-player sets reuse `libraryRecyclePlayer`, with existing
+player bindings, definition validation and explicit waiting-source declarations.
+Queries do not select a top or move cards. Source-controller reads keep exact
+incarnations and existing LKI; departure, phasing and return cannot replace the
+saved delayed source. Spell copies read their own players and current tops.
+Clones and pending frames keep separate mutable state. No global last action,
+card-name branch, fallback registry or declaration-time runtime panic is added.
+
+Rules evidence: CR 101.4 requires simultaneous actions; 407.2 establishes public
+ante; 407.4 permits only the owner to ante an object; 608.2c orders instructions;
+609.3 permits other instructions when one is impossible. Complete Oracle text
+in local `data/LEA.json` matches both selected RON cards. No source defect was
+found or corrected. All twelve complete RON records were inspected. Rebirth,
+Jeweled Bird, Nebuchadnezzar and Petra Sphinx were inspected for comparison.
+No RON source changed, so the vocabulary source snapshot is unchanged.
+Its loader examples remain historic evidence.
+
+### Failing-first evidence and card-to-test mappings
+
+Initial native tests failed on missing `AnteTopEach` and `AnteTopFor` signatures.
+Initial real RON tests rejected Demonic Attorney's all-player ante action and
+Contract from Below's ordinary `DiscardHand`. The first gameplay fixture lacked
+main-phase setup and was corrected; empty-library assertions use loss after
+state-based actions, which clear the transient failed-draw flag.
+
+| Tests | Cards / contract evidence |
+| --- | --- |
+| `TestRONAnteTopCards` | Complete Demonic Attorney and Contract from Below in LEA, LEB, 2ED, 3ED, CED and CEI, each with either player active/casting: definition validation, actual casting/payment, exact tops, discard/ante/draw, owners, spell destination, clone isolation; failed Demonic Attorney payment preserves state. |
+| `TestRONAnteTopSequenceEvents` | Complete Contract from Below: discard observers precede ante observers, which precede all seven draw events; exact top and library state. |
+| `TestRONAnteTopCopiesAndEmpty` | Complete cards copied with the other controller, empty libraries, independent current tops, and draws continuing after impossible ante. |
+| `TestRONAnteTopPlayerScopes` | Synthetic complete targeted RON spells: explicit target player and nested saved `ActionPlayer` scope; repeated top actions move distinct cards. |
+| `TestRONAnteTopDelayedIdentity` | Synthetic complete RON activation: typed source-controller operand; waiting queries, live/departed/returned/phased identity, LKI, saved player, clone isolation and delay consumption. |
+| `TestRONAnteTopInvalid`, `TestRONAnteTopInventory` | Declaration rejection and separate action/player-action semantic roles; report-only compilation. |
+| `TestAnteTopBatch`, `TestAnteTopLegality`, `TestAnteTopBatchIdentityAndClone`, `TestAnteTopDefinition` | Native simultaneous observer state, owner checks, empty and disabled games, tokens, duplicate/unknown players, physical identity, remaining order, settled games, clone isolation and nil-definition rejection. |
+| `TestAnteLibraryTopTargetsControllerOrEachPlayer` | Retained legacy controller and selector callers, including one ineligible player's independent outcome. |
+| `TestRONAnteDeckCollectionDeclarations` | All 22 actual ante deck restrictions retain their contract; the twelve newly complete records now must compile, while other records must reject at independent gaps. |
+| Definition-plan and inventory collection tests | Exact accepted/rejected totals updated, with independent definition rebuilding, existing gameplay and production registry isolation retained. |
+
+Adds complete RON gameplay mappings for **two unique names / twelve records**.
+Compilation and gameplay claims remain separate; unrelated accepted cards do not
+receive new behavior-verification claims.
+
+### Verification and measured results
+
+- Fresh baseline `make build` and full `go test ./pkg/mage/dsl/ron -count=1`: PASS.
+- Fresh baseline loader: expected exit 1, 2,045 compiled / 400 rejected records,
+  792 accepted / 194 rejected unique names; collection rejection, not build failure.
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONAnteTop -count=1`: PASS.
+- Native `go test ./pkg/mage -run 'TestAnteTop|TestAnteLibraryTop' -count=1`: PASS.
+- First engine short run found four prior inventory assertions fixed at old
+  counts. They were updated to exact measured 2,057 / 388 totals, without
+  removing rejection or registry checks. Their focused recheck: PASS.
+- Final `make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`
+  and `make test`: PASS.
+- `make lint`: PASS after automatic formatting was reviewed. Affected native
+  and RON focused checks were rerun after formatting and PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,057 compiled /
+  388 rejected records; 794 accepted / 192 rejected unique names**. Strict
+  collection loading still rejects and publishes no partial registry.
+
+Estimated and actual gains match: **two complete names / twelve records**.
+Only Demonic Attorney and Contract from Below leave the rejected collection.
+Rebirth still rejects `EachPlayerMayCost`; Jeweled Bird still rejects its
+mandatory `AnteAPermanent` cost. Runtime integration, outside-game ante
+admission, remaining ante actions, added abilities and live copies remain gaps.
+
+Changed files: new engine `ante_top.go` and test; legacy `effect_ante.go`;
+RON `compiler.go`, `each_player.go`, `player_actions.go`, new `ante_top_test.go`,
+`ante_deck_test.go`, `definition_plan_test.go`, `inventory_test.go` and
+`numeric_consumers_test.go`; `doc.go`, DSL/API contract docs and this ledger.
+No Go card definitions, DSL functions or generators are removed because complete
+loading, gameplay and runtime migration have not met the removal gates.
+
+Ranked next candidates:
+
+1. Typed optional ante payments and scoped paid-player results: Rebirth and
+   Jeweled Bird share ante legality/payment prerequisites. The library-top batch
+   is ready for Rebirth; evaluate required paid-player life-total dispatch before
+   estimating complete gains. Jeweled Bird also needs mandatory source ante and
+   return of other owned ante cards. Keep payment results private to paid paths.
+2. Typed owned-ante-card references and movement: Darkpact and Jeweled Bird are
+   concrete consumers; Bronze Tablet and Tempest Efreet need related ownership
+   and ante contracts. Inspect exact visits, simultaneous exchange and remaining
+   decisions before choosing a bounded prerequisite or estimating unlocks.
+3. Independent complete Oracle name catalog, then scoped name choices for
+   Nebuchadnezzar and Petra Sphinx. Zero immediate gains until named reveal/discard
+   and reveal-result consumers are ready; retain all CR 201.4 face/name rules.
+
+This run stops after ANTE-LIBRARY-TOP.

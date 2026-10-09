@@ -1451,7 +1451,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -1553,6 +1553,14 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	if n.Name == "LoseUnspentMana" {
 		return compileLoseUnspentMana(n, ctx)
+	}
+	if n.Name == "AnteTopCardOfLibrary" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "AnteTopCardOfLibrary requires a symbol")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.AnteTopFor(ctx.player.build(bindings))
+		}}, nil
 	}
 	if n.Name == "RevealHand" || n.Name == "DiscardCards" || n.Name == "DiscardHand" {
 		return compileHandPlayerAction(n, ctx)

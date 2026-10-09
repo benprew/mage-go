@@ -8,6 +8,14 @@
 // Copies of game characteristics do not change the physical deck restriction.
 // This pregame contract does not permit outside-game entry or execute ante actions.
 //
+// Use [AnteTopFor] or [AnteTopEach] for library-top ante actions.
+// [Game.AnteLibraryTops] moves all eligible tops before zone events.
+// Empty libraries, tokens and cards owned by another player cannot contribute.
+// Duplicate players contribute once. Disabled or settled ante games do not move
+// cards. Each action reads current tops at resolution and keeps physical identity.
+// Typed player operands use the existing bindings, LKI and waiting declarations.
+// Legacy [AnteLibraryTop] uses the same batch service.
+//
 // Use [NewCardDefinitionPlan] for a pure builder of printed definitions.
 // It checks separate builds for shared abilities, targets, costs and bindings.
 // [RebuildCardDefinition] creates new declarations without a registry lookup.

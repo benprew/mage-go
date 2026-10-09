@@ -12209,3 +12209,49 @@ Evidence: native `TestManaTypeReplacementProductionPaths`, `WhiteOnly`,
 `GnomesTargetPayment`, `CopyAndInstances`, and `Inventory`. Complete-record
 behavior mappings cover Deep Water and Quarum Trench Gnomes, two unique names
 and two records. They do not establish complete collection gameplay coverage.
+
+## Typed library-top ante actions
+
+`AnteTopFor(player PlayerRef) ResolvingEffect` and
+`AnteTopEach(subjects PlayerSet) ResolvingEffect` select players at resolution.
+`(*Game).AnteLibraryTops(players []uuid.UUID)` moves each eligible current top
+from that player's library to the shared public ante zone. It preserves card ID,
+owner and remaining library order. Duplicate player IDs contribute once;
+unknown players, empty libraries, tokens and tops owned by another player do
+not contribute. Ante-disabled and settled games perform no movement. An
+ineligible player does not prevent another player from performing the action.
+
+All moves finish before any library-to-ante zone event (CR 101.4). Each moved
+card supplies one `EvtZoneChange` with its ID and library player, from
+`ZoneLibrary` to `ZoneAnte`. No draw, reveal choice, payment, ownership change
+or random selection occurs. Existing `MoveToAnte` behavior for other zones is
+unchanged. Legacy `AnteLibraryTop().Targeting(...)` now shares this batch service.
+CR 407.2 establishes public ante; CR 407.4 restricts ante to the owner.
+CR 609.3 permits other instructions to continue when a library is empty.
+
+Typed operands retain existing per-instance player bindings, exact source
+incarnations, LKI and clone behavior. Explicit source reads qualify for waiting
+queries without executing the action. A delayed source-controller operand
+cannot follow a returned source. Each spell copy reads its own controller and
+current library top; no top-card result is saved globally.
+
+RON supports bare `AnteTopCardOfLibrary` in ordinary resolving actions,
+`PlayerAction(playerRef, AnteTopCardOfLibrary)`, scoped `PlayerActions` bodies,
+and `EachPlayerAction(AnyPlayer, AnteTopCardOfLibrary)`. Existing trigger, modal,
+conditional and delayed action contexts use the same adapter. Tuple spellings,
+cost, entry and static contexts reject. The all-player form permits only bare
+`AnyPlayer`; it does not create an `ActionPlayer` binding. Optional ante payments
+and paid-player results remain separate unsupported contracts.
+
+Contract from Below also routes bare ordinary `DiscardHand` into the existing
+`DiscardMatchingHand` adapter. Discard, ante and draw run in the printed order
+(CR 608.2c); hand discard retains its existing replacements and batch events.
+No new hand-discard rule is established here.
+
+Evidence: native `TestAnteTopBatch`, `Legality`, `BatchIdentityAndClone` and
+`Definition`, existing `TestAnteLibraryTopTargetsControllerOrEachPlayer`; RON
+`TestRONAnteTopCards`, `PlayerScopes`, `SequenceEvents`, `DelayedIdentity`,
+`CopiesAndEmpty` and `Invalid`. The complete real records for Demonic Attorney
+and Contract from Below run for all six reprints and both players. No source
+record changed. Ante payments, outside-game admission and ownership exchange
+are outside this contract.

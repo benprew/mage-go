@@ -18,6 +18,13 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 		return []effectFactory{func(instanceBindings) mage.Effect {
 			return mage.ShuffleHandsAndGraveyardsIntoLibraries(mage.EachPlayer)
 		}}, nil
+	case "AnteTopCardOfLibrary":
+		if action.Kind != Symbol {
+			return nil, problem(action, "AnteTopCardOfLibrary requires a symbol")
+		}
+		return []effectFactory{func(instanceBindings) mage.Effect {
+			return mage.AnteTopEach(mage.EachPlayer)
+		}}, nil
 	case "DiscardHand":
 		if action.Kind != Symbol {
 			return nil, problem(action, "DiscardHand requires a symbol")

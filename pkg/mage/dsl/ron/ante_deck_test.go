@@ -105,8 +105,10 @@ func TestRONAnteDeckCollectionDeclarations(t *testing.T) {
 			}
 			seen[name] = true
 			records++
-			if _, err := Compile(node); err == nil || strings.Contains(err.Error(), "DeckConstruction") {
-				t.Fatalf("%s: remaining behavior must reject independently: %v", name, err)
+			_, compileErr := Compile(node)
+			complete := name == "Demonic Attorney" || name == "Contract from Below"
+			if complete && compileErr != nil || !complete && (compileErr == nil || strings.Contains(compileErr.Error(), "DeckConstruction")) {
+				t.Fatalf("%s: independent behavior support: %v", name, compileErr)
 			}
 			option, err := compileDeckConstruction(*declaration)
 			if err != nil {
@@ -128,7 +130,7 @@ func TestRONAnteDeckCollectionDeclarations(t *testing.T) {
 	if len(seen) != len(expected) || records != 22 {
 		t.Fatalf("names=%d records=%d", len(seen), records)
 	}
-	t.Logf("%d unique names / %d real declarations; full records remain rejected", len(seen), records)
+	t.Logf("%d unique names / %d real declarations; full record support is checked separately", len(seen), records)
 }
 
 func TestRONAnteDeckInventory(t *testing.T) {

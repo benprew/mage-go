@@ -9213,3 +9213,23 @@ The exact permanent form supports `TappingPermanentWouldProduceMana(ref)`, one
 `UntilPermanentLeavesBattlefield(ref)` with the same reference. These shapes
 implement Deep Water and Quarum Trench Gnomes. The latter replaces only white
 mana, including when the Plains has an ability that also produces another type.
+
+## RON library-top ante actions
+
+Use bare `AnteTopCardOfLibrary` in a resolving action list to ante the action
+player's current library top. The default player is the action controller.
+`PlayerAction(playerRef, AnteTopCardOfLibrary)` supplies a typed explicit player;
+`PlayerActions(playerRef, [AnteTopCardOfLibrary, ...])` uses its saved scoped
+player. `EachPlayerAction(AnyPlayer, AnteTopCardOfLibrary)` performs one shared
+batch for all players. All eligible cards move before zone events.
+
+Empty libraries and ineligible tops do not stop later instructions. Disabled
+or settled ante games move no cards. The action does not reveal a choice, draw,
+pay a cost or change ownership. Tuple spellings and cost, entry or static uses
+reject. Optional ante payments and `PaidCost` players remain unsupported.
+Bare `DiscardHand` in an ordinary action uses the existing scoped hand-discard
+service, so Contract from Below can discard, ante and draw in order.
+
+Engine services are `AnteTopFor`, `AnteTopEach` and `Game.AnteLibraryTops`.
+They keep typed player bindings and existing delayed source-reference contracts.
+See `TestRONAnteTop*` and the library-top ante engine contract.

@@ -65,13 +65,7 @@ func (e *AnteLibraryTopEffect) Apply(ctx *EffectContext) error {
 	if selector == nil {
 		selector = SelectController()
 	}
-	for _, playerID := range selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets) {
-		player := ctx.Game.GetPlayer(playerID)
-		if player == nil || len(player.Library()) == 0 {
-			continue
-		}
-		_ = ctx.Game.MoveToAnte(playerID, player.Library()[0].ID())
-	}
+	ctx.Game.AnteLibraryTops(selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets))
 	return nil
 }
 
