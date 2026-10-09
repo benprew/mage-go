@@ -2,20 +2,19 @@
 
 ## Current status
 
-The latest recorded inventory reports **799 accepted / 187 rejected unique card
-names** (986 total), and **2,071 compiled / 374 rejected records** (2,445 total).
+The latest recorded inventory reports **801 accepted / 185 rejected unique card
+names** (986 total), and **2,073 compiled / 372 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LIBRARY-TOP-MOVEMENT` adds typed current-top movement to hand or graveyard,
-with owner routing, zone visits and completed-movement events. The operations
-are neither draw nor mill. Petra Sphinx now has complete native RON gameplay.
-**+1 unique name / +1 record**, matching the estimated complete-card gain.
-Library transport supports further Knowledge Vault and Aladdin's Lamp work;
-linked exile, draw replacement and selection remain separate gaps.
+`RANDOM-HAND-REVEAL-DISCARD` adds distinct partial-hand random reveal with named
+discard and full-hand reveal with one filtered random discard. Shared discard
+batches now permit owner ordering of simultaneous graveyard arrivals. Delayed
+bodies retain chosen names. Nebuchadnezzar and Rag Man have complete native RON
+gameplay. **+2 unique names / +2 records**, matching the estimated gain.
 
 Complete collection gameplay, runtime integration and removal remain unfinished.
-Added abilities, live copies and other unsupported capabilities remain gaps.
+Linked exile, turn-skip replacements and other unsupported capabilities remain gaps.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -55237,3 +55236,171 @@ Ranked next candidates:
    cost against Wand of Ith's dynamic revealed-card life-payment prerequisite.
 
 Stop after LIBRARY-TOP-MOVEMENT. Migration remains incomplete.
+
+## 2026-10-08: random hand reveal with matching discard
+
+Status: completed implementation slice `RANDOM-HAND-REVEAL-DISCARD`.
+
+### Selection and dependencies
+
+Started with the latest ledger's ranked candidates. Read complete RON records
+and nested forms for Nebuchadnezzar, Rag Man, Knowledge Vault, Safe Haven,
+Time Vault, Wand of Ith and Aladdin's Lamp. Counted each name once. Targeted
+vocabulary inspection confirmed one occurrence of each selected compound action
+and three linked-exile consumers across Vault and Haven.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: bounded random hand reveal/discard, with the closely related full-hand form | Nebuchadnezzar; Rag Man | 2 names / 2 records | No other full-record blockers; X, name choice, targets, own-turn restriction and costs already exist. Shared distinct random selection also serves existing random discard; no plural result consumer is required. | Small: two adapters, one shared executor/selector, roughly 100–150 production lines and 400–500 test lines; one run |
+| Ranked #2: exact linked face-down exile transport | Knowledge Vault; Safe Haven | 0 for a bounded identity prerequisite; up to 2 after dependent slices | Vault also needs linked hand/graveyard consumers and sacrifice continuation; Haven needs linked owner-controlled battlefield entry. Must establish ability links, source incarnations, exact exile visits, visibility and departure lifetime together. Library transport alone is insufficient. | Larger: new retained link state plus clone, departure and visibility contracts; multiple slices |
+| Ranked #3: optional begin-turn skip replacement | Time Vault | 1 if the entire replacement is completed / 5 reprint records | Requires pre-turn replacement choices, skipped normal/extra turn scheduling, tapped-source condition and exact untap continuation. Enables general turn skipping but no second complete record with this form. Wand of Ith separately needs current revealed-card mana value for life payment; Lamp needs draw replacement and library selection. | Medium/large: turn lifecycle and replacement integration, ordering and clone tests |
+
+Selected ranked #1 because it is dependency-ready and the same reveal/filtered
+random-discard capability also completes Rag Man. This yields two complete
+records with existing transactional payments and decision services. Linked exile
+is the next shared prerequisite; its larger identity contract is not started here.
+
+### Contract, contexts and engine boundary
+
+- New engine APIs:
+  `RevealRandomHandAndDiscardMatchingName(player PlayerRef, amount ResolutionValue,
+  matcher CardNameMatcher) ResolvingEffect` and
+  `RevealHandAndDiscardRandomMatching(player PlayerRef, filter CardFilter)
+  ResolvingEffect`.
+- Partial form reads the current hand and amount at resolution, selects distinct
+  cards uniformly without replacement, reveals them, and discards only selected
+  cards matching the saved name. Unrevealed matching cards remain in hand.
+  Full-hand form reveals every current hand card and discards one randomly
+  selected matching card. No matching card means no discard or RNG use.
+- Both share private `Game.selectRandomCards([]Card, int) []Card` with the existing
+  `DiscardAtRandom` executor. Its input storage is preserved. Each selection uses
+  one random value, including the last candidate; short hands clamp the amount.
+  Nonpositive amounts, empty selections and absent players use no randomness.
+- Public reveal snapshots precede shared effect-caused discard replacements.
+  All replacement preparation precedes movement; all movement precedes events.
+  Prevention does not select a replacement card. Library redirection remains
+  a discard. The shared discard pipeline retains replacement ordering and rechecks.
+  CR 404.3 requires owner choices for simultaneous graveyard arrivals. A new
+  failing native test established that the existing discard batch omitted them.
+  The batch now uses existing orderCardsForGraveyard after replacements, in
+  active-player order, before any movement. Hidden destinations do not offer
+  graveyard-order choices; prevention changes the set before ordering.
+- RON supports tuple
+  `RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType(value,
+  IsNamed(TheChosenName))` and tuple
+  `RevealHandAndDiscardACardOfTypeAtRandom(handCardFilter)`.
+  The partial form retains existing typed resolution-value grammar and X scope;
+  fixed integers must be nonnegative. The full-hand form retains existing type,
+  color, negative and nonempty And/Or hand-card filters. Other partial filters
+  and full-hand chosen-name filters remain explicit unsupported shapes.
+- Resolving spell, activated, triggered and delayed lists share the adapters.
+  Bare actions, explicit PlayerAction and nested PlayerActions use typed players.
+  Wrong arity/shape, unbound players/names/X, read-before-producer and unsupported
+  cost/static/entry/replacement-operation contexts reject at declaration time.
+- These compound operations expose no singular or plural card result. Selection
+  is local to one synchronous operation; it does not extend a hand visit or keep
+  a global last-action slot. Cards are not hand targets. Source departure,
+  return, control changes and phasing keep the already-announced ability's player.
+- A failing delayed-context test exposed omitted chosen-name capture in existing
+  `capturedDelayedBody`. Step and permanent-event delay creation now clone
+  cardNameBindings. Body execution clones the saved map and restores the outer
+  map with defer. Saved names remain independent of later choices and game clones.
+  This is an engine prerequisite for the accepted resolving shape, not RON state.
+- Typed player and amount source reads participate in waiting delayed queries.
+  Queries do not inspect hands, choose names, reveal, discard or consume RNG.
+
+Engine reuse: chosen-name equivalence matching, lexical per-instance bindings,
+announced X, opponent targets, native cast/activation/trigger resolution,
+transactional mana/tap payments, exact source LKI and phasing, immutable reveal
+history, deterministic RNG, shared discard batches/replacements/events, delayed
+frames and independent game clones. RON owns spelling, role and scope checks.
+No card-name branch, fallback, partial registry or game-time declaration panic.
+
+### Failing-first evidence and full-record gameplay mapping
+
+New native tests first failed compilation on both missing engine signatures.
+RON gameplay tests first failed on the unsupported compound action signatures.
+Fixture API calls were corrected before confirming the intended RON failures.
+The subsequent saved-name delayed test failed its gameplay assertion before
+adding name capture. These same assertions pass with the implementation.
+A fixture initially changed only the turn number; it now uses the native untap
+step to clear summoning sickness. A frame-restoration assertion now checks the
+captured body's direct execution; top-level stack completion correctly clears
+its resolution scratch state. The owner-order test then failed before shared discard ordering was added.
+No rule assertion was weakened.
+
+| Test | Card mapping and behavior |
+| --- | --- |
+| TestRONRandomHandDiscardRealCards | Complete LEG Nebuchadnezzar and DRK Rag Man: opponent targets, tap/mana payment, own-turn restriction, sickness, announced X, choice at resolution, partial/full reveal, zero and short hands, source departure/return/control/phasing, independent cloned pending activations |
+| TestRONRandomHandDiscardCast | Both complete records: failed and successful native creature casting, colored/generic cost, delayed entry and retained activated ability |
+| TestRONRandomHandDiscardContexts | Synthetic spell, ETB trigger, delayed and nested player scopes; correct player, action ordering, name lifetime, changed hand visit before execution and independently resolving clones |
+| TestRONRandomHandDiscardInvalid | Wrong shapes/arity/filter, negative fixed count, unbound name/player/X, read-before-choice, unsupported cost/static/entry contexts |
+| TestRandomHandDiscardNamedBatch | Shared name aliases, distinct short-hand sampling, all reveals/moves before events, normal/prevent/library discard replacement cases |
+| TestRandomHandDiscardOnlyRevealedNames | Only selected matching cards discard; unselected same-name card remains, exact reveal identities and RNG count |
+| TestRandomHandDiscardOwnerOrder | Reverse owner-chosen order for simultaneous named discards; all reveals precede choice, all choices precede moves; library replacements offer no graveyard order |
+| TestRandomHandDiscardFiltered | Full-hand reveal with empty, nonmatching and matching hands; no RNG for an empty candidate set |
+| TestRandomHandDiscardDeclarationsAndNoop | Native nil and unbound declarations; nonpositive amount and absent player do no work |
+| TestRandomHandDiscardWaitingAndCurrentHand | Pure waiting queries; current hand at delayed execution; departed/phased source LKI, returned source exclusion and clone isolation |
+| TestRandomHandDiscardDelayedNameFrame | Saved name survives a later choice, delayed execution and cloning; outer frame restored on body return |
+| Retained random-discard/name/definition/inventory tests | Existing callers and accepted-record rebuilds remain covered; stale Nebuchadnezzar rejection assertions now require acceptance |
+
+Estimated and actual gain: **+2 unique names / +2 records**, with complete-record
+RON gameplay for both cards. Compilation progress and behavior evidence remain
+separate. No source defect: local data/LEG.json and data/DRK.json Oracle text
+matches both complete records. Rules evidence: CR 101.3, 201.2, 608.2c, 701.9 and
+701.20, with 404.3 for graveyard ordering. RON sources and hashes are unchanged; no vocabulary refresh is required.
+
+### Verification and measured outcome
+
+- Focused uncached `TestRONRandomHandDiscard` and native `TestRandomHandDiscard`
+  tests: PASS; retained random/fixed discard and chosen-name tests: PASS.
+- `make build`; `go vet ./...`: PASS.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS, whole repository and retained Go-card callers.
+- `make lint`: PASS, 0 issues. Automatic formatting affected only imports in the
+  two new test files; no production semantics were changed automatically.
+- Post-lint affected focused checks: PASS.
+- `git diff --check`: PASS.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, collection rejection.
+
+The first lint run reported unparam on the existing private
+`discardActionsTogether` wrapper's requireAll argument. Fresh repository-wide
+caller inspection found only false arguments; discard costs call
+`discardActionsTogetherWithEvents(actions, true)` separately. Removed the
+constant argument from the wrapper and updated all engine callers. The boolean cleanup does not change
+the batch service or cost path. Repeated focused, build, vet, engine short,
+full and lint checks pass with this fix. No public DSL export was removed.
+
+Fresh initial baseline: make build and uncached RON package tests passed;
+loader exited 1 with 2,071 compiled / 374 rejected records and 799 accepted /
+187 rejected names. Final loader: **2,073 compiled / 372 rejected records;
+801 accepted / 185 rejected names**. Totals remain 2,445 records / 986 names.
+Only Nebuchadnezzar and Rag Man diagnostics disappear. Every remaining diagnostic
+is identical to baseline; no accepted record regresses. The loader still rejects
+the collection and publishes no partial registry. No environment blocker remains.
+Native validation: Go 1.27.2, darwin/arm64.
+
+Changed files: new engine random_hand_discard.go and random_hand_discard_test.go;
+new RON random_hand_discard.go and random_hand_discard_test.go; engine
+composable_actions.go, composable_conditions.go, discard_batch.go,
+effect_cards.go and doc.go; RON compiler.go,
+player_actions.go, card_name_choice/card_name_scope/card_name_match tests and
+definition_plan/inventory/numeric_consumers tests; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. Existing user edits to .gitignore,
+the execution design, ledger history relocation and the untracked completed
+history are preserved; only this slice's ledger summary and append are staged.
+Commit message: `feat(ron): implement random hand reveal and discard`.
+
+Ranked next candidates:
+
+1. Exact linked-exile identity and transport prerequisite shared by Knowledge
+   Vault and Safe Haven; preserve ability links, source incarnations, exact exile
+   visits, face-down visibility, departure and clone isolation before consumers.
+2. Shared reveal characteristic values and typed dynamic life-payment amount
+   for Wand of Ith; compare other consumers before selecting a one-card adapter.
+3. Optional begin-turn skip replacement for Time Vault, with normal/extra turn
+   lifecycle and affected-player replacement ordering.
+
+Stop after RANDOM-HAND-REVEAL-DISCARD. Migration remains incomplete. Complete
+collection gameplay, runtime loading, Go-card deletion and DSL cleanup gates
+remain unmet; existing callers and production definitions are retained.

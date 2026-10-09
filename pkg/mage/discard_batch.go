@@ -23,12 +23,12 @@ func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) int {
 			actions = append(actions, NewDiscardAction(sourceID, id, card.ID()))
 		}
 	}
-	return g.discardActionsTogether(actions, false)
+	return g.discardActionsTogether(actions)
 }
 
 // discardActionsTogether keeps each event after all card moves.
-func (g *Game) discardActionsTogether(actions []*DiscardAction, requireAll bool) int {
-	return len(g.discardActionsTogetherWithEvents(actions, requireAll))
+func (g *Game) discardActionsTogether(actions []*DiscardAction) int {
+	return len(g.discardActionsTogetherWithEvents(actions, false))
 }
 
 func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requireAll bool) []core.GameEvent {
@@ -46,6 +46,7 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 	if requireAll && len(prepared) != len(actions) {
 		return nil
 	}
+	g.orderDiscardGraveyards(prepared)
 	var events []core.GameEvent
 	for _, action := range prepared {
 		if card, ok := g.moveDiscardedCard(action); ok {
@@ -56,4 +57,32 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 		g.FireEvent(event)
 	}
 	return events
+}
+
+func (g *Game) orderDiscardGraveyards(actions []*DiscardAction) {
+	for offset := range len(g.players) {
+		player := g.players[(g.turns.ActivePlayerIndex()+offset)%len(g.players)]
+		var cards []Card
+		var positions []int
+		byID := make(map[uuid.UUID]*DiscardAction)
+		for index, action := range actions {
+			if action.PlayerID() != player.PlayerID() || action.Destination() != core.ZoneGraveyard {
+				continue
+			}
+			for _, card := range player.Hand() {
+				if card.ID() == action.CardID() {
+					cards = append(cards, card)
+					positions = append(positions, index)
+					byID[card.ID()] = action
+					break
+				}
+			}
+		}
+		if len(cards) < 2 {
+			continue
+		}
+		for index, card := range g.orderCardsForGraveyard(player, cards) {
+			actions[positions[index]] = byID[card.ID()]
+		}
+	}
 }

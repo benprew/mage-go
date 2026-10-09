@@ -1270,6 +1270,17 @@
 // [DiscardMatchingHand] moves all matching hand cards before discard events.
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
+// Use [RevealRandomHandAndDiscardMatchingName] for a partial random hand reveal.
+// It selects distinct cards, then discards only matching revealed cards.
+// Use [RevealHandAndDiscardRandomMatching] to reveal the whole hand and discard
+// one random matching card. Both operations read the current hand at resolution.
+// All reveals precede shared discard replacements, moves and batch events.
+// Owners can order simultaneous graveyard arrivals before any card moves.
+// Empty selections use no randomness. Clones keep separate hands and results.
+// These operations do not produce a saved card result. Delayed bodies retain
+// chosen-name bindings and restore the outer name frame after execution.
+// Typed players and amounts declare source reads without executing during queries.
+//
 // Use [RevealRandomHandCardInto] for a public random hand reveal at resolution.
 // [FromCard] keeps the exact saved hand visit. Departure and return end that
 // reference. Empty hands and absent players clear it without random selection.

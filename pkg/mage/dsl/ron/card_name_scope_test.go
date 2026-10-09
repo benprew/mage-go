@@ -128,7 +128,7 @@ func TestRONCardNameScopeRealOperands(t *testing.T) {
 		if got, ok := ref.Resolve(ctx); !ok || got != "Ice" || chooser.calls != 1 {
 			t.Fatal("real choice/read operands did not execute")
 		}
-		if _, err := Compile(record); (err == nil) != (name == "Petra Sphinx") {
+		if _, err := Compile(record); err != nil {
 			t.Fatalf("unexpected complete record support for %s: %v", name, err)
 		}
 	}

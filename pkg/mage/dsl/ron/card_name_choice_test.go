@@ -105,7 +105,7 @@ func TestRONCardNameChoiceDeclarations(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Nebuchadnezzar", "Petra Sphinx"} {
-		if _, err := Compile(staticBaseRecord(t, "LEG", name)); (err == nil) != (name == "Petra Sphinx") {
+		if _, err := Compile(staticBaseRecord(t, "LEG", name)); err != nil {
 			t.Fatalf("unexpected complete record support for %s: %v", name, err)
 		}
 	}

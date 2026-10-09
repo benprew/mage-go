@@ -3378,14 +3378,11 @@ func (e *randomDiscardSubjectEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	amount := e.amount.resolveValue(ctx)
-	hand := append([]Card(nil), player.Hand()...)
 	var actions []*DiscardAction
-	for range min(max(0, amount), len(hand)) {
-		index := ctx.Game.RandIntn(len(hand))
-		actions = append(actions, NewDiscardAction(ctx.SourceID, id, hand[index].ID()))
-		hand = append(hand[:index], hand[index+1:]...)
+	for _, card := range ctx.Game.selectRandomCards(player.Hand(), amount) {
+		actions = append(actions, NewDiscardAction(ctx.SourceID, id, card.ID()))
 	}
-	ctx.Game.discardActionsTogether(actions, false)
+	ctx.Game.discardActionsTogether(actions)
 	return nil
 }
 

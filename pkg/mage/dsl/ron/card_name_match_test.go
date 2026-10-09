@@ -68,7 +68,7 @@ func TestRONCardNameMatchRealOperands(t *testing.T) {
 		if build(other).Match([]string{"Cecily, Haunted Mage"}, ctx) {
 			t.Fatal("instances share results")
 		}
-		if _, err := Compile(record); (err == nil) != (name == "Petra Sphinx") {
+		if _, err := Compile(record); err != nil {
 			t.Fatalf("unexpected complete record support for %s: %v", name, err)
 		}
 	}

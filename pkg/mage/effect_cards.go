@@ -459,7 +459,7 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 			actions = append(actions, NewDiscardAction(ctx.SourceID, pid, card.ID()))
 		}
 	}
-	ctx.Game.discardActionsTogether(actions, false)
+	ctx.Game.discardActionsTogether(actions)
 	return nil
 }
 

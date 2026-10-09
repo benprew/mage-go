@@ -9677,3 +9677,26 @@ player scopes, rollback and clones map to `TestRONLibraryTopMoveScopes` and
 `TestRONLibraryTopMoveContexts`; declaration rejection maps to
 `TestRONLibraryTopMoveInvalid`. Native contracts map to `TestLibraryTopMove*`.
 Linked exile and plural library selection remain separate capabilities.
+
+### RON random hand reveal and matching discard
+
+Resolving player actions accept:
+
+- `RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType(value,
+  IsNamed(TheChosenName))`: reveal distinct random cards, then discard all
+  matching revealed cards. `TheChosenName` requires a dominating lexical choice;
+  `ValueX` requires its existing announcement or created-value scope. Fixed
+  `Integer(n)` declarations must be nonnegative. Existing typed resolution
+  values retain their value and scope checks.
+- `RevealHandAndDiscardACardOfTypeAtRandom(filter)`: reveal the whole hand,
+  then discard one random matching card. Filters use the existing hand-card
+  grammar: card type, color, their negative forms, and nonempty `And`/`Or` lists.
+
+Both work in spell, activation, trigger and delayed resolving lists, bare player
+scope, explicit `PlayerAction`, and nested `PlayerActions`. Each instance builds
+its own name binding. Unsupported filters, wrong shapes, unbound players or
+names, and cost, static, entry and replacement-operation contexts reject.
+These compound actions export no reveal result. Nebuchadnezzar and Rag Man use
+the shared engine operations; neither needs a card-specific branch.
+Evidence: `TestRONRandomHandDiscardRealCards`, `TestRONRandomHandDiscardCast`,
+`TestRONRandomHandDiscardContexts` and `TestRONRandomHandDiscardInvalid`.

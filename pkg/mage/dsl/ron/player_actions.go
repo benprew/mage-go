@@ -36,7 +36,7 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	actions := make([]effectFactory, 0, len(parts))
 	for _, part := range parts {
 		switch part.Name {
-		case "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
+		case "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:
 			return nil, nil, nil, unsupported(part, "scoped player action")
 		}

@@ -12827,3 +12827,36 @@ choice, source departure/return/phasing, empty libraries and resolution timing.
 `Scopes`, `Contexts` and `Invalid` cover player nesting, failed payment, cloned
 stack execution, spell/trigger/delayed timing, current resolution tops and
 rejected declaration shapes/contexts.
+
+## Random hand reveal with matching discard
+
+`RevealRandomHandAndDiscardMatchingName(PlayerRef, ResolutionValue,
+CardNameMatcher) ResolvingEffect` reads the player, amount and current hand at
+resolution. It selects distinct random cards before testing the saved name.
+Only matching selected cards are discarded. A short hand limits selection;
+nonpositive amounts and absent players make no reveal or random selection.
+`RevealHandAndDiscardRandomMatching(PlayerRef, CardFilter) ResolvingEffect`
+reveals the complete current hand and selects one random matching card. An empty
+matching set uses no randomness, even when other hand cards are revealed.
+
+Both operations share the random selection service with `DiscardAtRandom`.
+Each selected card consumes one random value, including a sole candidate.
+All public reveal snapshots precede the shared effect-caused discard replacement
+batch. Replacements are prepared before movement; all moves precede discard
+events. Prevention does not cause reselection. The selected cards are local to
+one synchronous operation, with no saved card result or extended hand visit.
+Graveyard destinations use the existing owner-order choice service after
+replacement preparation. Players choose in active-player order, and all order
+choices precede movement. Hidden destinations offer no graveyard-order choice.
+Neither operation draws or targets hand cards. Existing player targeting,
+payment transactions, source LKI and clone services retain their contracts.
+
+Delayed step and permanent-event bodies save a separate chosen-name map at
+creation. Execution uses a copy of that map and restores the outer map, including
+on error. This permits a saved name to drive a later resolving action without
+reading a later choice. Typed player and amount source reads remain available to
+waiting queries without hand inspection, name selection, reveal or RNG use.
+
+Rules: CR 101.3, 201.2, 404.3, 608.2c, 701.9 and 701.20. Evidence:
+`TestRandomHandDiscard*` and `TestRONRandomHandDiscard*`; complete RON records
+for Nebuchadnezzar and Rag Man cover their activation, target and timing rules.
