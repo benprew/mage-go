@@ -255,7 +255,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		}
 		holder := mage.StaticAbility(values...)
 		if len(parts) == 1 && parts[0].Name == "SetLandType" {
-			holder.WithLandTypeTextRevision()
+			holder.WithLayeredLandTypeTextRevision()
 		}
 		if !global && len(parts) == 1 && parts[0].Name == "AddAbility" {
 			holder.WithLayeredAbilityTextRevision()

@@ -1,5 +1,51 @@
 # Engine rules contracts
 
+## Printed static basic-land-type text layers
+
+`StaticAbilityHolder.WithLayeredLandTypeTextRevision() *StaticAbilityHolder`
+marks one printed global, fixed Aura-host or chosen Aura-host land-type rule.
+`Game.AddPrintedStaticLandTypeTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs ordered layer-3
+changes with `EndOfTurn` or `Indefinite` duration. The existing typed land-type
+declaration validation remains in force. Missing markers, invalid words, empty
+changes, other durations and changes of declaration context reject atomically.
+
+RON opts in unconditional `EachPermanentLayerEffect(filter, [SetLandType(basic)])`,
+Aura `PermanentLayerEffect(HostPermanent, [SetLandType(basic)])`, and Aura
+`PermanentLayerEffect(HostPermanent, [SetLandTypeVariable(TheChosenLandType)])`
+with a valid source entry-choice declaration. `basic` is Plains, Island, Swamp,
+Mountain or Forest. Existing filter and scope checks remain. Mixed, temporary,
+source-dependent global and other declarations do not opt in.
+
+Each layer pass restores the saved baseline, then applies surviving text changes
+in timestamp order. A prior direct revision can supply the baseline. Direct
+revision rejects a declaration with a layered result. Printed land selection and
+output words change; saved entry choices do not change or repeat (CR 612.2).
+Layer 4 uses the shared land-type, dependency, attachment and intrinsic-mana
+services (CR 305.7 and 613.8). Later lands and current hosts use live membership.
+Layer-6 ability removal cannot undo the earlier type layer. Restoration uses the
+registered rule. Phasing preserves the visit; expiry is recomputed on the next
+present pass. Clones keep separate rules, baselines, cleanup and controller
+contexts. Departure LKI retains final land types; returned sources and hosts
+cannot inherit a former visit. IDs and registration positions remain stable.
+This API changes one declaration. Whole-object text, spell text and copy-layer
+rebinding still need separate services. Existing direct-revision callers remain.
+
+Evidence: `TestRONTextStaticLandTypeLayerRecords` covers Blood Moon, Conversion,
+Evil Presence and Phantasmal Terrain (4 names / 19 complete records), with ordered
+changes, repeated passes, intrinsic mana, late entrants, attachment changes,
+source and host phasing, expiry, suppression/restoration, clones, LKI and return.
+`Dependencies` changes selection and output words in both source timestamp
+orders. `PriorRevisionAndDeclarations` checks prior direct baselines, sibling IDs
+and clone control. `Upkeep` retains Conversion's independent payment/sacrifice
+rule under layered text. `Boundaries` retains invalid declarations and scope
+checks. Native `TestTextStaticLandTypeLayerDeclaration`, `Rejects`, `Context`,
+`RestoredCloneContext` and `RegistrationOrder` cover definition validation,
+atomic rejection, all six cross-context changes, controller isolation and
+registration order through installation and expiry. Existing RON direct tests
+retain casting, legality, rollback and printed-ability suppression evidence.
+No new payment, replacement ordering or simultaneous-operation contract is added.
+
 ## Targets of abilities from matching sources
 
 `CantBeTargetedByAbilities(subject PermanentRef, filter CardFilter) StaticRule`
@@ -187,8 +233,9 @@ Layer-6 ability removal does not undo the earlier type layer. Restoration uses
 the revised registration; departure information retains revised types. Returned
 sources use printed rules and cannot accept an old visit. Granted, absent,
 phased, face-down, unmarked and foreign declarations reject without mutation.
-The caller must supply layer-3 order, duration and original-text restoration.
-Live text installation and spell revisions remain separate contracts.
+For layer-3 order, duration and original-text restoration, use
+`AddPrintedStaticLandTypeTextEffect` on opted-in layered declarations.
+Spell revisions remain a separate contract.
 
 Evidence: `TestRONTextStaticLandTypeRecords` covers Conversion's six reprints and
 Blood Moon (2 names / 7 records), with casting rollback, entry timing, revisions,

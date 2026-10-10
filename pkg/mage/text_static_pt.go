@@ -148,7 +148,7 @@ func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityI
 		return fmt.Errorf("text static revision lost its replacement")
 	}
 	fresh, ok := replacement.(*StaticAbilityHolder)
-	if !ok || !eligible(fresh) || (active.abilityTextLayer && !fresh.abilityTextLayer) || (active.grantTextLayer && !fresh.grantTextLayer) || (active.ptTextLayer && !fresh.ptTextLayer) || len(fresh.Effects) != len(active.Effects) {
+	if !ok || !eligible(fresh) || (active.abilityTextLayer && !fresh.abilityTextLayer) || (active.grantTextLayer && !fresh.grantTextLayer) || (active.ptTextLayer && !fresh.ptTextLayer) || (active.landTypeTextLayer && !fresh.landTypeTextLayer) || len(fresh.Effects) != len(active.Effects) {
 		return fmt.Errorf("text static revision changed the static contract")
 	}
 	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {

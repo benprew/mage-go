@@ -24,6 +24,7 @@ const (
 	staticAbilityTextContract staticTextContract = iota
 	staticGrantTextContract
 	staticPTTextContract
+	staticLandTypeTextContract
 )
 
 type printedStaticAbilityTextEffect struct {
@@ -51,6 +52,8 @@ func (e *printedStaticAbilityTextEffect) eligible(a *StaticAbilityHolder) bool {
 		return a.grantTextLayer && a.grantTextRevision && a.supportsGrantTextRevision()
 	case staticPTTextContract:
 		return a.ptTextLayer && a.ptTextRevision && a.supportsLayeredPTTextRevision()
+	case staticLandTypeTextContract:
+		return a.landTypeTextLayer && a.landTypeTextRevision && a.supportsLandTypeTextRevision()
 	}
 	return layeredStaticAbilityEligible(a)
 }
@@ -156,7 +159,7 @@ func (g *Game) isolatePrintedStaticAbilityContext(p *Permanent) *Permanent {
 	owned := false
 	for i, ability := range p.RuntimeAbilities {
 		rule, ok := ability.(*StaticAbilityHolder)
-		if !ok || (!rule.abilityTextLayer && !rule.grantTextLayer && !rule.ptTextLayer) || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
+		if !ok || (!rule.abilityTextLayer && !rule.grantTextLayer && !rule.ptTextLayer && !rule.landTypeTextLayer) || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
 			continue
 		}
 		if !owned {

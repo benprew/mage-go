@@ -8,16 +8,15 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-CONDITIONAL-PT` adds ordered layer-3 installation and
-baseline restoration for the typed controller, opponent and Aura-host P/T
-conditions. Seven unique cards (13 records) have new P/T lifecycle gameplay
-evidence. Acceptance gain is **0 names / 0 records**. Native coverage excludes
-pre-existing Eureka work: **812 accepted names / 2,098 compiled records**.
-Other conditional contexts and full text consumers remain unsupported.
+`TEXT-LAYER-PRINTED-LAND-TYPE` adds ordered layer-3 installation and baseline
+restoration for global, fixed Aura-host and chosen Aura-host basic-land-type
+rules. Four unique cards (19 records) have new lifecycle gameplay evidence.
+Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
+Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
+spell text and copy rebinding remain unsupported.
 
-Complete collection gameplay, live text layers, runtime integration, Go-card
-removal and unused DSL removal remain unfinished.
-
+Complete collection gameplay, runtime integration, Go-card removal and unused
+DSL removal remain unfinished.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -61987,3 +61986,127 @@ Ranked next candidates:
 
 Complete collection gameplay, full text consumers, runtime integration, Go-card
 removal and unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-09: printed static basic-land-type text layers
+
+Status: complete `TEXT-LAYER-PRINTED-LAND-TYPE` slice. No second slice started.
+
+### Selection and dependencies
+
+Fresh baseline: `make build` and focused RON land-type/P/T regressions passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection: 813 accepted /
+173 rejected names; 2,099 compiled / 346 rejected records. This is not a build
+failure. Existing Eureka entry-round changes and ledger archive reorganization
+were present at entry and are preserved, unstaged and excluded from this slice.
+Requirements came from every complete affected RON record, including reprints.
+Targeted vocabulary reads inspected SetLandType/1, SetLandTypeVariable/1,
+WhenACreatureAttacksAndIsntBlocked/1 and the two-word replacement signature.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: printed land-type layer installation | Blood Moon, Conversion, Evil Presence, Phantasmal Terrain; 0 new compile unlocks, 4 names / 19 records gain lifecycle evidence | Direct revision, typed contexts, semantic builders and shared layer-3 restoration are ready. Supplies land-rule consumers for Magical Hack; its choices, whole-object and spell text paths still block complete execution. | Small production extension; medium lifecycle/dependency tests. |
+| Ranked #2: host-unblocked event and complete continuation | Farrel's Mantle; estimated 1 name / 1 record unlock | Eight other event cards already compile: Merchant Ship, Murk Dwellers, Delif's Cone, Delif's Cube, Farrel's Zealot, Mindstab Thrull, Necrite, Floral Spuzzem. Complete Mantle record also needs Other(event), host event captures/aliases, explicit payer, dynamic damage and no-combat-damage continuation checked together. Reuses existing payment and combat services. | Medium event/target/payment tests; single-card gain. |
+| Bounded prerequisite within ranked #3: printed animation text layers | Kormus Bell, Living Lands, Living Plane; 0 new compile unlocks, 3 names / 13 records gain lifecycle evidence | Direct animation revision is ready; live installation must retain one selection through type/color/P/T. Advances Magical Hack and Sleight of Mind. Titania's Song additionally needs sticky duration and dynamic mana-value semantics; no full-card unlock is credited for it. | Medium multi-layer and dependency tests. |
+
+Candidate #1 is dependency-ready and supplies shared value for four cards with
+less production work than animation. It therefore wins over the single-card
+host event. Complete comparison records were read, including nested forms;
+first-error frequency is not used as an unlock estimate. This slice adds no
+source-data correction and does not implement the dependent text spells.
+
+### Contract and reuse boundary
+
+Engine signatures:
+`StaticAbilityHolder.WithLayeredLandTypeTextRevision() *StaticAbilityHolder`;
+`Game.AddPrintedStaticLandTypeTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error`.
+
+RON now opts in the existing complete contexts:
+
+- Unconditional `EachPermanentLayerEffect(filter, [SetLandType(basic)])`.
+- Aura `PermanentLayerEffect(HostPermanent, [SetLandType(basic)])`.
+- Aura `PermanentLayerEffect(HostPermanent,
+  [SetLandTypeVariable(TheChosenLandType)])` with a validated entry declaration.
+
+`basic` is Plains, Island, Swamp, Mountain or Forest. Existing filter/scope
+validation remains. Exactly one typed global, fixed-host or chosen-host effect
+is required. Mixed, source-dependent global and temporary forms do not opt in.
+Invalid syntax, unbound choices, unknown land types, missing markers, granted,
+absent, phased, face-down and foreign declarations reject. Empty changes,
+invalid words and durations other than EndOfTurn/Indefinite reject atomically.
+Fresh replacements cannot change context or discard the layer marker.
+
+RON retains spelling, semantic word roles and declaration groups. The engine
+reuses checked static revision, isolated validation probes, capturedPermanent,
+the shared layer-3 effect, ordered changes, saved baseline restoration and clone
+context isolation. No second text, attachment, land, mana or layer system is
+added. The baseline may include prior direct revision; direct revision cannot
+change a current layered result. IDs and registration positions remain stable.
+Layer 4 retains live membership, land dependencies, intrinsic mana and printed
+ability removal. Saved entry choices never change or repeat. Layer 6 cannot
+undo an earlier type change. Phasing retains the visit; expiry recomputes on the
+next present pass. Clones keep separate cleanup/baselines/controllers. LKI keeps
+final land types; source/host returns cannot replace old visits. CR 612.1–3,
+613.1c/d/f, 613.7–8, 305.7 and 400.7 support this boundary.
+
+No new cost, replacement ordering or simultaneous-operation contract is added.
+Existing callers remain. No Go factory fallback, card-name production branch,
+global action result, game-time declaration panic or partial registry is added.
+Whole-object text, spell text and copy-layer rebinding remain separate gaps.
+
+### Failing-first evidence and card-to-test mapping
+
+Native and RON tests first failed compilation at the missing marker/install API.
+Implementation then used the existing service. Initial test fixtures reused a
+physical land ID and expected a reinstalled effect to keep its earlier timestamp;
+those fixtures were corrected to separate cards and CR 613.7b timestamp order.
+No production behavior or supported boundary was weakened.
+
+| Cards/contract | Tests |
+| --- | --- |
+| Blood Moon (1), Conversion (6), Evil Presence (6), Phantasmal Terrain (6) | TestRONTextStaticLandTypeLayerRecords exercises every complete record, ordered changes, repeated passes, intrinsic mana, late entrants, attachment changes, source/host phasing, expiry, suppression/restoration, clone cleanup, stable IDs, LKI and printed-origin return. Phantasmal Terrain retains its choice through every text operation. |
+| Blood Moon + Conversion | TestRONTextStaticLandTypeLayerDependencies revises selection and output in both source timestamp orders, then expires only the selection change. Existing direct Records retains printed-ability suppression and failed activation/payment evidence. |
+| Evil Presence | TestRONTextStaticLandTypeLayerPriorRevisionAndDeclarations checks prior direct baseline, foreign IDs, sibling instances, clone control and expiry isolation. Existing attached Records retains native casting, legality, rollback and entry timing for both Auras. |
+| Conversion | TestRONTextStaticLandTypeLayerUpkeep retains opponent/upkeep restrictions, paid maintenance and unpaid sacrifice under layered text. |
+| Invalid declarations and atomic replacement | RON LayerBoundaries retains malformed syntax, unbound choices, mixed/unsupported contexts, durations and empty changes. Native TestTextStaticLandTypeLayerDeclaration, Rejects, Context, RestoredCloneContext and RegistrationOrder check invalid typed definitions, missing builder/group/registrations, granted/face-down/absent/foreign sources, invalid changes, all six cross-context changes without state mutation, controller isolation and retained registration positions through expiry. |
+
+### Verification and collection status
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticLandTypeLayer -count=1`; expanded direct RON land-type and native layer regressions also passed.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`. Lint only regrouped imports in the new native test file; affected native tests passed again.
+- `go run ./cmd/loadcards -json`: expected exit 1; 813 accepted / 173 rejected names, 2,099 compiled / 346 rejected records. The entire JSON report equals the fresh baseline.
+
+An isolated HEAD tree with only the slice passes expanded focused RON/native tests,
+`make build` and `go vet ./...`. Its loader exits 1: 812 accepted / 174 rejected
+names, 2,098 compiled / 347 rejected records. Eureka is the sole additional rejected
+name; Mana Clash's diagnostic changes from repeated EachPlayerAction to RepeatableActions.
+These are pre-existing entry-round differences, excluded from the slice. No validation blocker remains.
+
+Estimated and actual compilation gains agree: **0 names / 0 records**. Gameplay
+coverage expands for four existing names across 19 records; this is not complete
+collection gameplay. All accepted records remain accepted. Remaining diagnostics
+include Animate Dead's EnchantGraveyardCard, Balance's
+SacrificeAllPermanentsExceptForNum and Channel's temporary life-to-mana rule.
+
+Changed files: mage ability.go, doc.go, text_static_land_type.go,
+text_static_ability_layer.go, text_static_pt.go and new
+text_static_land_type_layer_test.go; RON layers.go, basic_land_choice.go and new
+text_static_land_type_layer_test.go; dsl-reference.md, engine-rules-contracts.md
+and this ledger. RON source and vocabulary hashes are unchanged. No unused DSL
+function was removed; runtime/caller migration and removal gates remain unmet.
+Pre-existing changes and unrelated untracked files are excluded from the commit.
+
+Ranked next candidates:
+
+1. Printed static animation layer installation/restoration for Kormus Bell,
+   Living Lands and Living Plane, with shared type/color/P/T selection.
+2. Printed mana-event text layer installation/restoration; assess Gauntlet of
+   Might and Mana Flare and preserve mana planning/production agreement.
+3. Host-unblocked event and complete Farrel's Mantle continuation.
+
+Complete collection gameplay, whole-object/spell text, runtime integration,
+Go-card deletion and unused DSL cleanup remain unfinished. Stop after this slice.

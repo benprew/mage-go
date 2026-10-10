@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [StaticAbilityHolder.WithLayeredLandTypeTextRevision] for a printed land rule.
+// [Game.AddPrintedStaticLandTypeTextEffect] changes one declaration in layer 3.
+// RON opts in its global, fixed-host and chosen-host basic-land-type contexts.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Saved entry choices do not change. Layer 4 keeps live subjects, dependencies
+// and intrinsic mana. Layer 6 cannot undo an earlier type change.
+// Expiry restores surviving changes. Direct revision cannot change a layered rule.
+// Clones keep separate baselines, cleanup and controller contexts.
+// Phasing keeps the visit. LKI keeps final types; return uses printed rules.
+// Whole-object text, spell text and copy rebinding need separate services.
+//
 // Use [ProtectionAbility.WithLayeredColorTextRevision] for printed protection.
 // [Game.AddPrintedProtectionTextEffect] changes one declaration in layer 3.
 // It accepts color word changes with EndOfTurn or Indefinite duration.
@@ -69,8 +80,8 @@
 // registration position. The shared land service keeps intrinsic mana, printed
 // ability removal and type dependencies. Clones and siblings stay separate.
 // Phasing keeps revisions; restoration uses revised rules. Return uses printed
-// rules. The caller must supply text-layer order and lifetime. Temporary rules
-// and live text installation need separate services.
+// rules. [Game.AddPrintedStaticLandTypeTextEffect] supplies layer installation
+// for marked declarations. Temporary rules and spell changes need separate services.
 //
 // Use [StaticAbilityHolder.WithAnimationTextRevision] for a printed animation.
 // [Game.RevisePrintedStaticAnimation] checks its declaration and source visit.

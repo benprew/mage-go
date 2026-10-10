@@ -43,7 +43,7 @@ func compileChosenLandTypeLayer(n Node, parts []Node, ctx scope) (optionFactory,
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.StaticAbility(mage.BecomesChosenBasicLandTypeAttachedEffect()).WithLandTypeTextRevision())
+		return mage.WithAbility(mage.StaticAbility(mage.BecomesChosenBasicLandTypeAttachedEffect()).WithLayeredLandTypeTextRevision())
 	}, nil
 }
 

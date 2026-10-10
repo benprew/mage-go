@@ -176,6 +176,7 @@ type StaticAbilityHolder struct {
 	grantTextLayer         bool
 	animationTextRevision  bool
 	landTypeTextRevision   bool
+	landTypeTextLayer      bool
 	textRevisionDefinition Card
 	Effects                []ContinuousEffect
 }

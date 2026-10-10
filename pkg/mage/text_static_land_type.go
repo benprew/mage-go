@@ -68,3 +68,17 @@ func (g *Game) RevisePrintedStaticLandType(source *Permanent, abilityID uuid.UUI
 		return a.landTypeTextRevision && a.supportsLandTypeTextRevision()
 	}, changes...)
 }
+
+// WithLayeredLandTypeTextRevision permits layer 3 changes to a printed land rule.
+// Land types and intrinsic mana use the changed rule in layer 4.
+func (a *StaticAbilityHolder) WithLayeredLandTypeTextRevision() *StaticAbilityHolder {
+	a.WithLandTypeTextRevision()
+	a.landTypeTextLayer = true
+	return a
+}
+
+// AddPrintedStaticLandTypeTextEffect changes one printed land rule in layer 3.
+// Each pass restores the saved rule before it applies ordered changes.
+func (g *Game) AddPrintedStaticLandTypeTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticLandTypeTextContract, changes...)
+}
