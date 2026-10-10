@@ -77,6 +77,7 @@ type BaseCard struct {
 	globalStaticSpellText int
 	landAuraSpellText     int
 	protectionPTSpellText int
+	staticActivationText  int
 	intrinsicCastText     int
 	intrinsicSpellText    int
 	copyEntrySpellText    int
@@ -214,6 +215,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 	c.globalStaticSpellText = 0
 	c.landAuraSpellText = 0
 	c.protectionPTSpellText = 0
+	c.staticActivationText = 0
 	c.intrinsicCastText = 0
 	c.intrinsicSpellText = 0
 	c.copyEntrySpellText = 0

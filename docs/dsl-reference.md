@@ -12014,3 +12014,41 @@ Evidence: `TestTextProtectionPTSpellDeclaration` and `RejectsAtomic`;
 and Ivory Guardians to these tests. This shared prerequisite adds two names of
 continuation coverage with zero collection acceptance gain. Whole-object text
 dispatch and complete Sleight of Mind execution remain separate work.
+
+## P/T static and activated spell text continuation
+
+`WithStaticActivationSpellTextContinuation() CardOption` marks a creature with
+exactly two printed declarations, in either order: one layered P/T static rule
+and one layered ordinary activated action. The static rule is an unconditional
+global P/T adjustment, or a source P/T adjustment while its controller or
+opponent controls a specified basic land type. The action has no modes,
+activation history, source-counter X, captures, state conditions or opaque
+restrictions. Other keywords, types, Auras, casting targets, additional and
+alternate casting costs, and conflicting continuation markers are excluded.
+
+RON selects `EachPermanentLayerEffect(creature_filter, [AdjustPT(p, t)])` or
+`If(PlayerPassesFilter(You, ControlsA(IsLandType(basic))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(p, t)])])`, including the existing
+opponent condition spelling, beside `Activated(cost, body)`. Adjustments are
+fixed integers. Existing action lists and ordinary targeted bodies keep their
+established typed lowering. `ActivatedWithModifiers` and modal bodies are not
+selected. Broader valid records retain ordinary compilation.
+
+`Game.RevisePrintedSpellText` validates both prior and fresh definitions,
+P/T condition and recipient context, subtypes, action timing, cost cardinality
+and target shapes, body cardinality and exact sibling declaration groups. Invalid changes
+reject without replacing the stack visit. Fresh entry retains physical identity,
+owner and printed departure rules, with independent activation bindings. Mana
+symbols stay fixed. Copies enter as tokens; game clones keep separate rules.
+Later declaration text layers restore this entry baseline. Phasing retains it;
+ability removal stops both declarations. LKI retains final rules and P/T.
+Returned physical cards use printed rules. Ordinary text changes do not enter
+copiable values. Added copy types clear the creature-only marker.
+
+Evidence: `TestTextStaticActivationSpellDeclaration`, `RejectsAtomic` and
+`TestRONTextStaticActivationSpellRecords`, `Inventory`, `Boundaries`,
+`Lifecycle`, `Copies`, `BothWords`, `ThrullLifecycle`, `CopyExceptions`.
+Sedge Troll maps six complete records to regeneration and conditional P/T
+coverage; Thrull Champion maps its complete FEM record to global Thrull P/T,
+targeted control and source-control duration coverage. This is a shared
+prerequisite for word-changing spells; whole-object dispatch remains separate.

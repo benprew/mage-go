@@ -15707,3 +15707,44 @@ Evidence: `TestTextProtectionPTSpellDeclaration` and `RejectsAtomic`;
 and Ivory Guardians to these tests. This shared prerequisite adds two names of
 continuation coverage with zero collection acceptance gain. Whole-object text
 dispatch and complete Sleight of Mind execution remain separate work.
+
+## P/T static and activated permanent-spell text continuation
+
+`WithStaticActivationSpellTextContinuation() CardOption` permits one checked
+creature context: one layered global P/T static rule, or one layered source P/T
+rule conditional on its controller/opponent controlling a basic land type,
+paired with one ordinary layered activated action. Exactly two declarations,
+in either order, keep distinct definition groups. Modal actions, activation
+history, source-counter X, captures, state conditions, opaque restrictions,
+extra keywords/types, Auras and casting costs/targets are excluded.
+
+`Game.RevisePrintedSpellText` uses the existing atomic intrinsic spell revision
+transaction. Both old and fresh contexts must validate. The P/T condition side
+and recipient context, subtypes, activation timing and limit context, cost and
+target cardinality, target shapes and body cardinality remain fixed. Exact
+sibling correspondence prevents a swapped declaration group from binding the
+wrong rule. Missing builders/groups, invalid words, foreign announcement state
+and departed stack visits reject without mutation.
+
+The existing intrinsic entry builder creates fresh rules and bindings with
+physical identity, owner and printed departure information (CR 400.7a).
+Color/basic land substitutions use semantic roles; mana symbols keep their
+values (CR 612.1–3). Static rules keep live recipients and controller conditions.
+Activated targets retain their own announcement and resolution legality checks.
+Copies enter as tokens; clones retain separate revisions and activation state.
+Layer 3 expiry restores the continued baseline; layer 6 removal suppresses both
+rules and restoration keeps their text (CR 613.1c, 613.1f, 613.4c). Phasing
+retains the visit. Pending activations retain their earlier bodies and targets.
+Departure keeps final LKI; recasts use printed rules. Ordinary word changes stay
+outside copiable values (CR 707.2). Copy-added types clear the creature-only
+marker while preserving independently rebuilt rules.
+
+No new cost transaction, control-duration, regeneration, replacement ordering,
+damage or simultaneous-operation service is introduced. These existing services
+execute the fresh activated body. Native `TestTextStaticActivationSpellDeclaration`
+and `RejectsAtomic` cover invalid declarations and checked transaction boundaries.
+RON `TestRONTextStaticActivationSpellRecords`, `Inventory`, `Boundaries`,
+`Lifecycle`, `Copies`, `BothWords`, `ThrullLifecycle`, `CopyExceptions` cover
+Sedge Troll (six complete records), Thrull Champion (one complete record) and
+synthetic paired color rules. Whole-object dispatch and the complete consumers
+Magical Hack and Sleight of Mind remain separate contracts.

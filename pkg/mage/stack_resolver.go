@@ -295,6 +295,14 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 				}
 				card = continued
 			}
+			if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.staticActivationText != 0 && base.textDefinition != nil && len(base.textDefinition.changes) != 0 {
+				continued, err := buildStaticActivationSpellEntry(obj)
+				if err != nil {
+					g.cleanupSpell(obj)
+					return
+				}
+				card = continued
+			}
 			if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.protectionPTSpellText != 0 && base.textDefinition != nil && len(base.textDefinition.changes) != 0 {
 				continued, err := buildProtectionPTSpellEntry(obj)
 				if err != nil {

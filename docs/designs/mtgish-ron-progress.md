@@ -8,14 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`PROTECTION-OPPONENT-COLOR-PT-SPELL-TEXT` carries paired printed color
-protection and opponent nontoken-color P/T rules through permanent-spell entry.
-New continuation evidence covers **2 names / 2 complete records**; acceptance
-gain is **0 names / 0 records**. Checked revision retains source/named recipient
-context and exact sibling declarations. Copies/clones, live control and color
-conditions, later layers, phasing, removal, copy exceptions, copiable values,
-LKI and printed recasts are covered. Whole-object dispatch, other mixed contexts
-and complete word-changing spell consumers remain incomplete.
+`STATIC-ACTIVATION-SPELL-TEXT` carries paired P/T static and ordinary activated
+rules through checked permanent-spell revision and fresh entry. New continuation
+evidence covers **2 names / 7 complete records** (Sedge Troll and Thrull Champion);
+acceptance gain is **0 names / 0 records**. Sibling groups, fresh activation
+bindings, printed costs, target legality, live P/T and control durations, copies,
+clones, later layers, phasing, removal, LKI and printed recasts are covered.
+Whole-object dispatch, static-grant/copy-added contexts and complete word-changing
+spell consumers remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -65140,6 +65140,170 @@ shared prerequisite gameplay coverage, not complete word-changing spell support.
 2. Shared conditional-static/activation spell continuation: inspect Sedge Troll
    together with other static/activation permanents before selecting a complete
    multi-card context. The existing activation-state and layer APIs are reusable.
+3. Copy-added ability text and live-copy rebinding for Vesuvan Doppelganger;
+   preserve KeepColor, nested upkeep targets and ThisAbility identity.
+
+Stopped after this slice. Complete RON gameplay, runtime loading, Go-card
+removal, unused DSL cleanup and native startup remain incomplete.
+
+## Run 2026-10-10: STATIC-ACTIVATION-SPELL-TEXT
+
+Status: complete shared permanent-spell continuation slice. This run adds one
+bounded mixed declaration context and stops. Whole-object consumers and runtime
+cutover remain separate work.
+
+### Environment and candidate comparison
+
+The worktree began with existing tracked edits in .gitignore, the migration
+and API documentation, definition/doc/compiler/inventory code and entry-round
+tests; completed-ledger and repeated-entry files were untracked. The initial
+diff and tracked file contents were saved before editing. Fresh make build and
+go test ./pkg/mage/dsl/ron -count=1 passed (35.480s). The baseline strict loader
+exited 1 for collection rejection: 813 accepted / 173 rejected unique names,
+2,099 compiled / 346 rejected records. This is collection rejection, not a
+build or test failure. All unrelated work remains outside the slice commit.
+
+The latest ranked candidates were evaluated from complete records and nested
+forms. A collection scan expanded candidate 2 beyond Sedge Troll to the complete
+shared Thrull Champion context. Reprints count once for unique-card estimates.
+
+| Candidate | Distinct names and records | Estimated full-card acceptance gain | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| 1. Whole-object printed dispatch/lifetime | Magical Hack, Sleight of Mind; 12 records | 2 after complete consumers; 0 for a bounded prerequisite | Both modal branches require CreateSpellEffect/CreatePermanentLayerEffect. Remaining mixed/static-grant and copy-added/live-copy contexts prevent a complete consumer. Enables both word-changing spells across the collection. | Large; not dependency-ready as a complete consumer slice |
+| 2. Static/activated spell continuation | Sedge Troll (6), Thrull Champion (1) | 0; both complete cards already compile | One basic-land source P/T condition or unconditional global P/T rule paired with an ordinary activation. Existing declaration revisions, activation layers and fresh entry services are reusable. Enables shared permanent-spell recipients for Magical Hack and Sleight of Mind. | Medium; dependency-ready, two-card prerequisite |
+| 3. Copy-added ability/live-copy rebinding | Vesuvan Doppelganger; 6 records | 1 after every nested form | KeepColor is established; AddAbility, AddAbilityVariable(ThisAbility), nested upkeep targets and IsACopyOfPermanent still need copied ability identity and live-copy services. | Large; unresolved dependencies and single-card value |
+
+Selected candidate 2: the shared P/T-static/ordinary-activation context. Expected
+acceptance gain was 0 names / 0 records, with new continuation evidence for
+2 names / 7 complete records. A first CreateSpellEffect or AddAbility diagnostic
+does not establish full-card unlocks for candidates 1 or 3.
+
+### Exact contract, dependencies and reuse boundary
+
+New engine API: WithStaticActivationSpellTextContinuation() CardOption.
+Existing Game.RevisePrintedSpellText(stackID uuid.UUID,
+changes ...TextChange) error dispatches the checked context. RON selects one
+creature with exactly two declarations, in either order:
+
+- EachPermanentLayerEffect(creature_filter, [AdjustPT(p, t)]), with integers.
+- Or If(PlayerPassesFilter(You, ControlsA(IsLandType(basic))),
+  [PermanentLayerEffect(ThisPermanent, [AdjustPT(p, t)])]), including the
+  existing opponent-condition spelling and typed lowering.
+- Beside Activated(cost, body), with ordinary ActionList/Targeted lowering.
+
+The static rule uses WithLayeredPTTextRevision; the activation uses
+WithLayeredTextRevisionActivationState. Modal, history and conditional-mana
+bodies and ActivatedWithModifiers do not receive the RON marker. Native rules
+exclude modes, activation history, source-counter X, captures, state conditions
+and opaque restrictions. Extra rules, keywords/types, Auras, casting targets,
+additional/alternate casting costs and conflicting markers are excluded.
+Broader valid RON declarations still compile through their established paths.
+
+Old and fresh contexts must validate before the stack changes. P/T condition
+side and recipient context, subtypes, activation timing/limit context, cost and
+target cardinality, target shapes and body cardinality stay fixed. Each sibling
+must retain its specific definition group and declaration position. Invalid
+words, missing builders/groups, swapped declarations and foreign announced
+state reject atomically. Fresh entry preserves physical card identity, owner
+and printed departure rules, with independent activation targets and results.
+Mana symbols stay fixed. CloneFrom and copy-added types clear an inapplicable
+creature-only marker.
+
+RON owns syntax selection and existing scoped lowering. mage owns validation,
+atomic replacement and fresh entry. Reused services include
+BuildTextDefinitionRevision, definition ability groups,
+reviseIntrinsicSpellTextWithContext, buildIntrinsicTextSpellEntry,
+sameActivatedTextContext, sameSpellTextTarget, typed conditional/global P/T,
+activation text layers, stack copies, game clones, control durations,
+regeneration shields, target legality, phasing, removal/restoration, LKI,
+copiable provenance and printed recasts. No parallel cost, replacement-order,
+damage or simultaneous-operation mechanism was added. CR 400.7a, 612.1–3,
+613.1c/f, 613.4c and 707.2 support these contracts.
+
+No source-data defect was found or corrected. All RON records and the vocabulary
+snapshot remain unchanged. Go-card deletion and unused-DSL removal gates remain
+unmet, so no production definitions or caller services were removed.
+
+### Failing-first tests and card-to-test mappings
+
+Before implementation, TestRONTextStaticActivationSpellRecords failed for all
+seven complete records with the unsupported ordinary instant/sorcery
+continuation diagnostic. Native tests then failed to compile solely for the
+missing WithStaticActivationSpellTextContinuation signature after test API
+fixtures were corrected. Expanded boundary testing exposed an overly broad
+compiler marker: a valid activation-history sibling failed compilation. That
+test failed before the selector was narrowed; it now retains compilation and
+rejects unsupported continuation atomically. Other fixture corrections used
+the engine's actual target/attribute APIs, 1/1 color fixtures, an explicit new
+controller mana payment, and the clone's Player interface instead of assuming
+BasePlayer. None required data changes or weaker assertions.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Sedge Troll, complete LEA/LEB/2ED/3ED/CED/CEI records | Records: paid casting, printed regeneration cost after color substitution, changed land condition with correct controller, fresh source binding and shield |
+| Sedge Troll lifecycle | Lifecycle: later P/T and activation layers, expiry while phased, stable sibling IDs, condition phasing, removal/restoration, live source control, printed copiable values, changed rules and P/T in LKI, printed recast and pending regeneration rejecting a returned source |
+| Sedge Troll copies | Copies: original, copied spell and cloned game use separate land conditions; copy enters as a token with independent ability IDs and regeneration source; clone does not share destruction or activation state |
+| Thrull Champion, complete FEM record | Records: global Thrull P/T and targeted theft; source control change ends theft. ThrullLifecycle: unrelated creature exclusion, illegal target cannot pay tap, phasing and ability removal/restoration, sibling IDs, cloned pending target bindings, independent control durations, departure LKI and printed recast |
+| Both cards and inventory | Inventory scans every RON record and maps exactly 2 names / 7 records. CopyExceptions checks copy-added artifact types and rebuilt paired rules |
+| Shared semantic text behavior | BothWords: one substitution changes global color selection and activation target filters together; invalid targets spend no mana; later layers preserve pending bodies; expiry restores the continued rules; resolution rechecks target legality |
+| Compiler boundaries and callers | Boundaries rejects malformed P/T, unbound static/action subjects and invalid mana. Extra keywords/rules, modifiers and activation history keep compilation but reject unsupported continuation. ConditionalPTSpellBoundaries now excludes the supported Sedge Troll and retains its Aura exclusions |
+| Native contracts | TestTextStaticActivationSpellDeclaration accepts controller/opponent conditions and reversed declaration order; rejects conflicting/duplicate markers, wrong types/keywords/casting costs/targets, nil/unmarked/wrong-kind/history actions. RejectsAtomic covers changed condition/recipient/subtype/keyword/cost count/timing/targets/body count, opt-ins, swapped groups, foreign results/targets/bodies, missing builder/group and countered visits |
+
+### Verification and collection evidence
+
+- Failing-first complete-record assertions and missing native API compilation
+  failures are recorded above. Final focused RON tests (including the existing
+  ConditionalPTSpell suite) and native tests passed. After the test-helper lint
+  fix, the native tests passed again in both worktree and isolated checkout
+  (0.520s / 0.525s).
+- Final worktree make build and go vet ./... passed. Engine short tests passed
+  (RON 46.768s), and make test passed (RON 40.750s).
+- Initial isolated make lint found one prealloc issue in the new native test
+  helper. The helper now reserves capacity for appended test options. No
+  assertions changed. Automatic formatting and lint changes were reviewed;
+  there were no automatic source changes. Final worktree and isolated make lint
+  passed with 0 issues. git diff --check and staged diff --check passed.
+- Final worktree go run ./cmd/loadcards -json exits 1 for strict collection
+  rejection. The entire parsed JSON equals the baseline: 813 accepted /
+  173 rejected names; 2,099 compiled / 346 rejected records. There is no accepted
+  record regression or partial production registry.
+- An isolated HEAD-plus-slice checkout excludes every pre-existing edit.
+  Focused RON/native tests, make build, go vet ./..., engine short tests
+  (RON 38.006s), make test (RON 41.784s), make lint (0 issues) and
+  git diff --check passed. After the lint helper fix, native focused tests passed
+  again. Its final strict loader exits 1: 812 accepted / 174 rejected names;
+  2,098 compiled / 347 rejected records. Only Eureka's additional
+  RepeatableActions rejection and Mana Clash's earlier RepeatableActions
+  diagnostic differ from the worktree, because the user's entry-round work is
+  excluded. All other diagnostics match. The slice has no dependency on that
+  work. Every staged source file was compared with the validated isolated tree.
+- The starting user diff and tracked contents were saved before changes. Files
+  outside the slice were compared with those contents and remain unchanged.
+  Shared source files are staged through the slice delta; a separate ledger blob
+  adds this entry and summary to HEAD without staging the user's reorganization.
+
+
+Changed files: mage card.go, copy_modification.go, definition.go, doc.go,
+stack_resolver.go, text_spell_continuation.go and new
+text_static_activation_spell.go/test; RON compiler.go,
+text_conditional_pt_spell_test.go and new text_static_activation_spell.go/test;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger (15 files).
+Shared files are staged from the starting contents to the final slice; the
+existing entry-round work and ledger reorganization remain unstaged.
+
+### Result and ranked next candidates
+
+Actual acceptance gain: 0 names / 0 records, matching the estimate. New mixed
+spell-continuation evidence covers 2 unique names / 7 complete records. This
+is prerequisite gameplay coverage, not complete word-changing spell execution.
+
+1. Shared whole-object printed dispatch and text-effect lifetime for established
+   contexts, with atomic boundaries for unsupported contexts. Magical Hack and
+   Sleight of Mind still require both complete modal consumers.
+2. Shared static ability-grant/P/T spell continuation: inspect Goblin King,
+   Lord of Atlantis and Zombie Master together. Their complete records have
+   landwalk grants, P/T grants or a granted regeneration action; established
+   donor text and grant-layer services can supply a multi-card prerequisite.
 3. Copy-added ability text and live-copy rebinding for Vesuvan Doppelganger;
    preserve KeepColor, nested upkeep targets and ThisAbility identity.
 
