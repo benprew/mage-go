@@ -122,8 +122,8 @@ func TestRONTextDefinitionRoles(t *testing.T) {
 		t.Fatal("unknown role accepted")
 	}
 	invalid := staticBaseRecord(t, "LEA", "Magical Hack")
-	if _, err := Compile(invalid); err == nil {
-		t.Fatal("incomplete card accepted")
+	if _, err := Compile(invalid); err != nil {
+		t.Fatal("complete text consumer failed", err)
 	}
 	if _, err := transformTextDefinition(invalid, []mage.TextChange{landChange}); err != nil {
 		t.Fatal(err)

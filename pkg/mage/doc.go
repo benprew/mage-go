@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ChangePrintedSpellText] to apply saved word pairs to a pending spell.
+// All pairs must resolve before the checked revision changes live rules.
+// The action makes no choices. An absent spell cannot use departure information
+// for this action. [Game.RevisePrintedSpellText] keeps declaration groups,
+// ordered words, targets, payment and printed departure rules. RON lowers
+// nonempty CreateSpellEffect lists with compatible lexical word references.
+// Complete word-changing consumers use separate spell and permanent branches.
+// General target contexts and live copy rules still need separate contracts.
+//
 // Use [Game.AddPrintedLandAuraObjectTextEffect] for one complete land-type Aura.
 // [LandEnchantTarget] keeps its enchant restriction fixed. Both definitions and
 // every declaration group pass checks before layer installation. Fixed rules

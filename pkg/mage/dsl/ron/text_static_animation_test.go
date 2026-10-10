@@ -196,7 +196,7 @@ func TestRONTextStaticAnimationBoundaries(t *testing.T) {
 			t.Fatal("unmarked context accepted", tc.name)
 		}
 	}
-	for _, tc := range []struct{ set, name string }{{"ATQ", "Titania's Song"}, {"LEA", "Magical Hack"}, {"LEA", "Sleight of Mind"}} {
+	for _, tc := range []struct{ set, name string }{{"ATQ", "Titania's Song"}} {
 		if _, err := Compile(staticBaseRecord(t, tc.set, tc.name)); err == nil {
 			t.Fatal("dependent context accepted", tc.name)
 		}

@@ -61,7 +61,7 @@ func TestRONTextWordChoiceDeclarations(t *testing.T) {
 	}
 	for _, name := range []string{"Magical Hack", "Sleight of Mind"} {
 		_, err := Compile(staticBaseRecord(t, "LEA", name))
-		if err == nil || strings.Contains(err.Error(), "unsupported action (ChooseTwo") {
+		if err != nil {
 			t.Fatalf("wrong complete-card boundary for %s: %v", name, err)
 		}
 	}

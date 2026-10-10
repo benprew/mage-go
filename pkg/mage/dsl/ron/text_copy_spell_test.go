@@ -398,7 +398,7 @@ func TestRONTextCopySpellBoundaries(t *testing.T) {
 	if err := g.RevisePrintedSpellText(before.ID, change); err == nil || g.StackPeek() != before {
 		t.Fatal("mixed unsupported context changed stack state")
 	}
-	for _, name := range []string{"Magical Hack", "Sleight of Mind", "Vesuvan Doppelganger"} {
+	for _, name := range []string{"Vesuvan Doppelganger"} {
 		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err == nil {
 			t.Fatal("incomplete dependent card accepted", name)
 		}

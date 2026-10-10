@@ -2,20 +2,19 @@
 
 ## Current status
 
-The latest verified isolated slice inventory reports **812 accepted / 174 rejected
-unique card names** (986 total), and **2,098 compiled / 347 rejected records**
-(2,445 total). The worktree separately includes uncommitted Eureka entry-round changes.
-Compilation does not establish complete gameplay validation. The strict loader
-rejects the collection and installs no partial registry.
+The latest verified isolated slice inventory reports **814 accepted / 172 rejected
+unique card names** (986 total), and **2,110 compiled / 335 rejected records**
+(2,445 total). The worktree includes pre-existing Eureka entry-round changes;
+the isolated slice excludes them. Compilation does not prove complete gameplay.
+The strict loader rejects the collection and installs no partial registry.
 
-`LAND-AURA-OBJECT-TEXT` adds complete battlefield text dispatch for Evil
-Presence and Phantasmal Terrain. New interaction evidence covers **2 names /
-12 complete records**; acceptance gain is **0 names / 0 records**. Both complete
-definitions and all sibling groups validate before ordered layer installation.
-Fixed enchant restrictions, saved entry choices, current attachment identity,
-intrinsic mana, expiry, clones, control, phasing, removal, LKI, printed copies
-and return use shared services. Spell-entry text remains the baseline. Complete
-word-changing consumers, mutable enchant filters and live-copy rules remain gaps.
+`SPELL-WORD-ACTION` adds a typed resolving CreateSpellEffect consumer for saved
+color and basic-land word pairs. Acceptance gain is **2 names / 12 records**:
+Magical Hack and Sleight of Mind. New real-record tests cover both target
+categories, resolution choices, ordering, copy/clone isolation, legality and
+printed return. Atomic spell revision and complete permanent dispatch use shared
+engine contracts. Exhaustive general target-context coverage, remaining mixed
+object text and live-copy rules remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -66889,5 +66888,161 @@ archive move and Eureka changes remain in the worktree.
    produced-type bonus and damage body already have typed layer/spell contracts.
    Check whole-object correspondence and shared mana planning before adapting
    dispatch. Wild Growth has an attached-host event and needs a separate context.
+
+Stopped after one complete capability slice. Migration remains incomplete.
+
+## Run 2026-10-10: SPELL-WORD-ACTION
+
+Status: complete resolving spell word-substitution slice. Compilation acceptance
+and general target-context gameplay remain separate. This run stops after this
+capability.
+
+### Baseline and candidate selection
+
+The starting worktree contained uncommitted Eureka entry-round source/tests,
+API documentation, vocabulary-role changes and a ledger archive move. Those
+changes and unrelated untracked files are preserved and excluded from this slice.
+Fresh starting make build passed. Fresh RON short tests passed (76.780s).
+Fresh go run ./cmd/loadcards -json exited 1 for strict collection rejection:
+813 accepted / 173 rejected unique names; 2,099 compiled / 346 rejected records.
+Build/test success is separate from that expected collection rejection.
+
+All complete records for the three ranked candidates were read, including nested
+forms and all six printings. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-record compilation / complete general gameplay unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Spell-target CreateSpellEffect | Magical Hack, Sleight of Mind | 2 names / 12 records; 0 newly exhaustive general-target gameplay mappings | Typed union bodies, word-pair choices and atomic spell revision are ready. Other complete object contexts and union spells as text subjects still need contracts. Enables real consumers of existing spell and permanent continuation contracts. | Small adapter/action; moderate timing, identity and copy test work |
+| Copy-entry AddAbility | Vesuvan Doppelganger | 0 complete names until live-copy prerequisites also exist | Nested IsACopyOfPermanent, AddAbilityVariable(ThisAbility), added upkeep identity and acquired live-copy rebinding remain. Enables one card and a reusable copy exception. | Large, dependent engine work |
+| Complete battlefield mana-event object text | Mana Flare, Manabarbs | 0 compilation gains; 2 additional complete target-context mappings | Both already compile. Typed spell/layer contracts exist; complete object correspondence and shared mana planning need preflight. Wild Growth has a separate attached-host context. Enables both word-changing consumers against two more permanent contexts. | Moderate engine preflight and lifecycle tests |
+
+Candidate #1 is dependency-ready and gives the largest credible compilation gain
+for this effort. It establishes one complete resolving syntax/context and uses
+existing supported subject contracts. It does not claim exhaustive behavior for
+every legal target of the two consumers. Acceptance cases were specified before
+editing: complete records, both categories, resolution-only choices, malformed
+bindings/lists, ordered changes, copy/clone independence, target legality and
+printed departure/return.
+
+### Supported shape, engine boundary and dependencies
+
+- RON compileSpellTextAction lowers exact
+  CreateSpellEffect(spell_ref, [substitution, ...]) in resolving actions.
+  The list must be nonempty. Each entry is one exact two-argument
+  ReplaceColorWordVariableWithNewColorWordVariable or
+  ReplaceLandTypeVariableWithNewLandTypeVariable with compatible distinct
+  first/second references from a preceding lexical word-pair producer.
+- Native ChangePrintedSpellText(subject StackObjectRef,
+  changes ...TextChangeRef) ResolvingEffect retains separate immutable input
+  storage. It resolves the exact current spell, reads every pair before any
+  mutation, and calls Game.RevisePrintedSpellText once with the ordered list.
+  An absent spell makes no change. Invalid/missing pairs reject atomically.
+  It makes no choices and cannot use LKI to act on an absent spell.
+- Definition inspection checks the subject, list and all binding reads before
+  gameplay. RON owns spelling, arity, lexical type/dominance and factory lowering.
+  Engine execution owns atomic state changes. No duration spelling, payment,
+  replacement priority or simultaneous batch service was introduced.
+- Reuse: compileSpellRef, compileTextSubstitution, typed per-instance bindings,
+  ResolveObjectTarget, SpellFromObjectTarget, DeclareSpellOrPermanentTarget,
+  saved color/land word pairs, TextChangeRef, checked semantic definition
+  rebuilding, RevisePrintedSpellText, existing spell/permanent continuation
+  services, target legality, copy retargeting, Clone and printed zone departure.
+  Existing Lace color forms retain their exact separate adapter.
+- Complete union consumer records now compile without extraction or altered
+  rules. Announcement selects a target category without a mode prompt. Each
+  resolution chooses words once in its own branch. Copy retargeting can change
+  categories. Current target legality, source visits and shared layer services
+  keep returned or phased objects separate.
+- General target contexts remain explicit gaps. Unmarked or unsupported spell
+  subjects and unsupported complete permanent contexts return errors. Compilation
+  is not a claim that all legal targets are supported. No Go-card fallback,
+  card-name branch, production partial registry, global result slot or silent
+  rule simplification was added.
+
+### Failing-first and card-to-test mappings
+
+Native tests first failed for the missing ChangePrintedSpellText signature.
+After correcting two test-harness method names, all 24 complete-record branch
+cases failed at the expected unsupported CreateSpellEffect adapter. Native
+atomic tests required explicit map initialization; the recast identity scenario
+was corrected to use the real instant Dark Ritual because a creature cannot be
+recast with a pending consumer. A synthetic mixed list was corrected to include
+CardPT and the actual Colors/IsLandType constructors. These corrections retain
+the behavior assertions. No invalid declaration or engine-context assertion was
+weakened.
+
+| Card / context | Test evidence |
+| --- | --- |
+| Magical Hack and Sleight of Mind: LEA, LEB, 2ED, 3ED, CED, CEI; 2 names / 12 complete records | TestRONTextSpellActionRecords: paid real casting, failed-payment nonmutation, zero announcement choices, both union categories, exactly two resolution word choices, intrinsic spell entry/permanent rules and clone results |
+| Same two consumers, White Knight subject | TestRONTextSpellActionCopyAndClone: both cross-category copy directions, independent original/copy word pairs and independently resolved pending clone with different pairs |
+| Magical Hack, Bog Wraith and Dark Ritual | TestRONTextSpellActionLegality: countered spell, new cast of the same card, permanent return, phasing, phase cycle and shroud; illegal targets make no choices |
+| Magical Hack, Flashfires and basic lands | TestRONTextSpellActionOrderAndDeparture: Plains-to-Forest then Forest-to-Island, clone retains the earlier spell rules, destruction uses current semantic words, printed physical recast restores Plains and makes no consumer choices |
+| Sleight of Mind and Terror | TestRONTextSpellActionRevisedTargetLegality: Black-to-Green changes the pending spell restriction; its previously legal green creature target survives |
+| Synthetic mixed color/land list and direct typed spell target | TestRONTextSpellActionMixedList: independent lexical producers, one ordered list and complete intrinsic creature entry |
+| Invalid RON declarations | TestRONTextSpellActionInvalid: missing producer, incompatible subject/pair, identical references, empty list, mixed nontext operations and bad arity |
+| Native contract | TestTextSpellActionDeclaration, Atomic, SavedList: nil/empty/unbound declarations, missing words, unsupported unmarked subject, exact saved stack identity, all-pair atomicity, caller slice isolation and valid no-match revision |
+
+Existing TestRONObjectTargetBody*, TestRONTextSpellContinuation*, modal, intrinsic,
+copy and permanent-object suites retain legality, per-instance targets, LKI,
+payment rollback and lifecycle evidence. Historical tests that required these
+consumers to remain uncompiled now assert acceptance. Unsupported Vesuvan,
+Titania's Song and Rohgahh boundaries and malformed declarations remain intact.
+Four collection-count assertions retain exact measured counts, including the
+separate worktree Eureka increment.
+
+### Validation and final collection status
+
+- Focused RON TestRONTextSpellAction and native TestTextSpellAction passed.
+  After the final lint cleanup, focused RON tests passed in the worktree (0.970s)
+  and isolated checkout (1.166s). make build and go vet ./... passed in both.
+- go test ./pkg/mage/... -short -count=1 passed in the worktree (RON 87.962s)
+  and isolated checkout (RON 64.933s). make test passed in both; after the lint
+  cleanup it passed again (RON 71.159s / 70.909s).
+- The implement-engine skill's go test ./... -short -count=1 passed in the
+  isolated checkout (RON 95.963s), then on the final worktree test source
+  (RON 42.673s). The final cleanup removed only a redundant setup assignment.
+- Fresh lint exposed one ineffectual fixture assignment. It was removed without
+  changing gameplay assertions. A parallel lint attempt also hit golangci-lint's
+  process lock. Final serial make lint passes in both checkouts with 0 issues.
+  Automatic source changes were reviewed; only the intentional fixture cleanup
+  and API evidence additions differ from the first validation snapshot.
+  Unrelated starting tracked diffs remain identical. git diff --check passes.
+- Final worktree go run ./cmd/loadcards -json exits 1 for expected strict
+  rejection: 815 accepted / 171 rejected unique names; 2,111 compiled / 334
+  rejected records. Exactly the twelve Magical Hack/Sleight of Mind diagnostics
+  disappear; all previous accepted records and remaining diagnostics persist.
+- Final isolated loader exits 1: 814 accepted / 172 rejected unique names;
+  2,110 compiled / 335 rejected records. The only worktree-only acceptance is
+  pre-existing Eureka. Examples of remaining errors are Animate Dead
+  EnchantGraveyardCard, Balance SacrificeAllPermanentsExceptForNum and Camouflage
+  CreateGameEffect. No partial registry is installed and no required check
+  remains failed.
+
+
+Actual compilation gain is **2 unique names / 12 records**, matching the estimate.
+New complete-record consumer scenarios cover both branches against the tested
+subject contexts. Newly exhaustive general-target gameplay mappings remain **0**,
+also matching the conservative estimate. No source-data defect was found or RON
+source changed; no vocabulary refresh is needed. Native runtime integration,
+Go-card deletion and unused DSL removal remain gated. No DSL function was removed.
+
+Changed files: new pkg/mage/text_spell_action.go and native tests; new
+pkg/mage/dsl/ron/text_spell_action.go and RON tests; compiler.go; collection-count
+and historical consumer-boundary tests; pkg/mage/doc.go; docs/dsl-reference.md;
+docs/engine-rules-contracts.md; this ledger. The isolated commit retains HEAD's
+ledger history; the user's archive move and Eureka changes remain in the worktree.
+
+### Ranked next candidates
+
+1. Complete battlefield land-mana-event object text for Mana Flare and Manabarbs.
+   Reuse typed layer/spell contracts; check all sibling groups and mana bonus
+   planning before complete dispatch. Wild Growth remains a distinct host context.
+2. Complete battlefield cast-event object text for Crystal Rod, Iron Star,
+   Ivory Cup, Throne of Bone and Wooden Sphere. Reuse typed cast-event/layer/spell
+   services and keep pending optional payment bodies fixed. Compare its five
+   contexts with the mana-event work before selecting the next run.
+3. Copy-entry AddAbility and acquired live-copy rebinding for Vesuvan Doppelganger.
+   Keep KeepColor, the added upkeep declaration and ThisAbility identity; select
+   a prerequisite-sized capability before implementing the dependent live copy.
 
 Stopped after one complete capability slice. Migration remains incomplete.

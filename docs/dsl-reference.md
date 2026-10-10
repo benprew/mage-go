@@ -12491,3 +12491,52 @@ identity, control, phasing, removal/restoration, clone isolation, LKI and printe
 copies/return. Complete Magical Hack/Sleight of Mind spell execution, mutable
 enchant restrictions, other mixed Aura contexts and live copy rebinding remain
 separate capabilities.
+
+## Resolving spell word substitutions
+
+`ChangePrintedSpellText(subject StackObjectRef, changes ...TextChangeRef)
+ResolvingEffect` reads a nonempty ordered list of saved word pairs when its body
+resolves. It resolves the subject's current exact stack visit and makes no new
+choices. An absent visit makes no change; LKI cannot restore a departed spell.
+Every pair must resolve before `Game.RevisePrintedSpellText` runs, so a missing
+later pair cannot install an earlier change. The caller's slice is copied.
+Definition validation checks the subject, nonempty list and all lexical reads.
+
+RON lowers `CreateSpellEffect(spell_ref, [substitution, ...])` in resolving action
+contexts. Supported substitutions are
+`ReplaceColorWordVariableWithNewColorWordVariable(first, second)` and
+`ReplaceLandTypeVariableWithNewLandTypeVariable(first, second)`. Each requires
+compatible distinct references to a preceding lexical word-pair choice. Empty
+lists, mixed nontext operations, unbound references and wrong arities reject.
+Existing Lace `SetColor` union forms keep their separate adapter.
+
+Complete `Targeted_Modal` records for Magical Hack and Sleight of Mind now compile.
+Their unfiltered spell/permanent union chooses the category by the announced
+object, without a mode choice. Each branch uses its own choice bindings. Copies
+can retarget to the other category and choose fresh words; clones keep independent
+stack changes and resolution frames. The engine revision service preserves
+announced targets, payment, X, declaration groups, semantic word roles and
+printed departure rules. Ordered changes accumulate on the same stack visit.
+Revised target rules participate in later resolution legality (CR 608.2b,
+612.1–3). Return creates another visit (CR 400.7). Phasing keeps a permanent's
+visit but makes it unavailable while phased (CR 702.26).
+
+Evidence: `TestRONTextSpellActionRecords` casts both complete consumers in all
+six printings against pending intrinsic creatures and battlefield intrinsic
+creatures. `CopyAndClone`, `Legality` and `OrderAndDeparture` cover independent
+choices, cross-category copy retargeting, exact visits, phasing, shroud, ordered
+land words, ordinary spell bodies and printed recasts. `MixedList` covers compatible color and land pairs in one list;
+`RevisedTargetLegality` checks the pending Terror restriction. `Invalid` covers lexical
+and shape rejection. Native `TestTextSpellActionDeclaration`, `Atomic` and
+`SavedList` cover declaration checks, missing pairs, unsupported unmarked
+subjects, atomic list validation, exact saved spell identity and valid no-match
+changes. Existing spell continuation tests retain payment/result/LKI and copy
+contracts. No payment, replacement or simultaneous-operation service changes.
+
+Compilation acceptance is separate from complete target-context gameplay.
+This action uses only the spell contexts supported by `RevisePrintedSpellText`.
+The permanent branch uses only the complete contexts supported by
+`ChangePrintedPermanentText`. Unsupported subjects still return explicit errors;
+remaining complete mana-event, other mixed permanent and live-copy contexts need
+separate contracts. These two cards do not yet have exhaustive general-target
+coverage, and runtime cutover and Go-card/DSL removal remain gated.

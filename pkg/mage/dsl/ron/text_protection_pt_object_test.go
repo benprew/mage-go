@@ -249,8 +249,8 @@ func TestRONTextProtectionPTObjectBoundaries(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Magical Hack", "Sleight of Mind"} {
-		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err == nil || !strings.Contains(err.Error(), "CreateSpellEffect") {
-			t.Fatal("complete consumer boundary changed", name, err)
+		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err != nil {
+			t.Fatal("complete text consumer failed", name, err)
 		}
 	}
 	for _, tc := range []struct{ set, name string }{{"LEA", "Evil Presence"}, {"LEA", "Phantasmal Terrain"}, {"LEA", "Shivan Dragon"}, {"LEA", "Sedge Troll"}} {

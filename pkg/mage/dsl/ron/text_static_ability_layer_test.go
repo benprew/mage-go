@@ -204,8 +204,8 @@ func TestRONTextStaticAbilityLayerBoundaries(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Magical Hack", "Sleight of Mind"} {
-		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err == nil {
-			t.Fatal("dependent consumer accepted", name)
+		if _, err := Compile(staticBaseRecord(t, "LEA", name)); err != nil {
+			t.Fatal("complete text consumer failed", name)
 		}
 	}
 }

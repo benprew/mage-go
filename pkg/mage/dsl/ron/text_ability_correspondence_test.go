@@ -131,8 +131,8 @@ func TestRONTextAbilityCorrespondenceLandAndTrigger(t *testing.T) {
 	}
 	for _, name := range []string{"Magical Hack", "Sleight of Mind"} {
 		for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
-			if _, err := Compile(staticBaseRecord(t, set, name)); err == nil {
-				t.Fatal("live text consumer accepted", set, name)
+			if _, err := Compile(staticBaseRecord(t, set, name)); err != nil {
+				t.Fatal("complete text consumer failed", set, name)
 			}
 		}
 	}

@@ -87,8 +87,8 @@ func TestRONObjectTargetBodyRealChoices(t *testing.T) {
 			}
 		}
 		_, err = Compile(staticBaseRecord(t, "LEA", name))
-		if err == nil || !strings.Contains(err.Error(), "Create") {
-			t.Fatalf("missing text boundary: %v", err)
+		if err != nil {
+			t.Fatalf("complete text consumer failed: %v", err)
 		}
 	}
 }
