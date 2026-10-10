@@ -585,6 +585,11 @@ func ValidateCardDefinition(name string, card Card) error {
 				}
 			}
 		}
+		if action, ok := a.(*ActionDefinition); ok && action.spellSacrificeContinuationOptions > 0 {
+			if _, err := spellTextAction(card); err != nil {
+				problems = append(problems, fmt.Errorf("%s: abilities[%d]: spell sacrifice text continuation: %w", name, i, err))
+			}
+		}
 		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool), false)
 	}
 	return errors.Join(problems...)

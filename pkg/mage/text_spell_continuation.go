@@ -10,25 +10,33 @@ import (
 )
 
 // WithSpellTextContinuation permits fresh rules for an ordinary pending spell.
-// Casting results need a separate binding transfer contract.
+// Use a separate marker for a supported saved casting payment.
 func WithSpellTextContinuation() ActionOption {
 	return func(action *ActionDefinition) { action.spellTextContinuation = true }
 }
 
 func (a *ActionDefinition) supportsSpellTextContinuation() bool {
 	return a.kind == ActionSpell && !a.staticGrant && len(a.costs) == 0 && len(a.modes) == 0 &&
-		len(a.dslCaptures) == 0 && a.activationHistory == nil && a.activationManaX == nil
+		len(a.dslCaptures) == 0 && a.activationHistory == nil && a.activationManaX == nil &&
+		(a.spellSacrificeContinuationOptions == 0 || (a.spellSacrificeContinuationOptions == 1 && a.spellSacrificeManaValue != nil))
 }
 
 func spellTextAction(card Card) (*ActionDefinition, error) {
 	base, ok := card.(*BaseCard)
 	if !ok || base == nil || (!base.HasType(core.TypeInstant) && !base.HasType(core.TypeSorcery)) ||
-		len(base.abilities) != 1 || len(base.additionalCosts) != 0 || len(base.alternateCosts) != 0 || len(base.castTargets) != 0 {
+		len(base.abilities) != 1 || len(base.alternateCosts) != 0 || len(base.castTargets) != 0 {
 		return nil, fmt.Errorf("spell text continuation requires one ordinary instant or sorcery declaration")
 	}
 	action, ok := base.abilities[0].(*ActionDefinition)
 	if !ok || !action.spellTextContinuation || !action.supportsSpellTextContinuation() {
 		return nil, fmt.Errorf("spell text continuation requires an eligible printed action")
+	}
+	if action.spellSacrificeContinuationOptions > 0 {
+		if _, err := spellSacrificeTextCost(base, action); err != nil {
+			return nil, err
+		}
+	} else if len(base.additionalCosts) != 0 {
+		return nil, fmt.Errorf("spell text continuation requires no additional costs without a payment marker")
 	}
 	return action, nil
 }
@@ -50,14 +58,15 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if err != nil {
 		return err
 	}
-	if len(obj.capturedNumbers)+len(obj.capturedPlayers)+len(obj.capturedCards)+len(obj.capturedCardSets)+len(obj.capturedPermanents) != 0 {
-		return fmt.Errorf("spell text continuation cannot transfer casting bindings")
-	}
 	revision, err := BuildTextDefinitionRevision(obj.spellTextDefinition, changes...)
 	if err != nil {
 		return err
 	}
 	fresh, err := spellTextAction(revision.Definition())
+	if err != nil {
+		return err
+	}
+	numbers, err := transferSpellTextNumbers(obj, old, fresh, revision.Definition())
 	if err != nil {
 		return err
 	}
@@ -85,6 +94,7 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	}
 	rebuilt := cloneStackObject(obj)
 	rebuilt.spellTextDefinition = revision.Definition()
+	rebuilt.capturedNumbers = numbers
 	rebuilt.Effects = slices.Clone(fresh.effects)
 	rebuilt.TargetSpecs = specs
 	for i, current := range g.stack.objects {

@@ -10,7 +10,11 @@
 // [ModalSpellAbility.WithTextContinuation] marks a choose-one spell.
 // Each revision checks all modes and keeps the selected mode and its targets.
 // Copies use current mode declarations. Results and clones keep separate state.
-// Permanent spells and casting-result transfer need separate services.
+// [WithSpellSacrificeManaValueContinuation] marks one saved sacrifice mana value.
+// The additional cost and spell body share its binding. Rebuilt rules use a
+// fresh binding with the paid value. Copies and clones keep separate maps.
+// Revision does not repeat payment or read a returned sacrificed card.
+// Permanent spells and other casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
 // Use [WithLayeredTextRevisionActivationState] for a printed activated action.

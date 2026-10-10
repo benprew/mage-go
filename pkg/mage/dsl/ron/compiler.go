@@ -587,6 +587,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			options := actionOptions(plan.buildWithBindings(bindings))
 			if ctx.castingCost == nil {
 				options = append(options, mage.WithSpellTextContinuation())
+			} else if ctx.sacrificeValue != nil && ctx.sacrificeValue.name == "ManaValueOfTheSacrificedPermanent" {
+				options = append(options, mage.WithSpellSacrificeManaValueContinuation(bindings.sacrifices[ctx.sacrificeValue].value))
 			}
 			if ctx.castingCondition != nil {
 				options = append(options, mage.WithCastingCondition(ctx.castingCondition))

@@ -15143,3 +15143,43 @@ markers, builders, groups, unchosen contexts, malformed mode state and atomic
 rejection. `EmptyGroupAndCopy` checks an empty early group and current copy
 declarations. Existing modal announcement rollback, destruction/regeneration,
 spell-copy and ordinary continuation tests remain in force.
+
+## Saved sacrifice mana-value spell continuation
+
+`WithSpellSacrificeManaValueContinuation(paid *NumberBinding) ActionOption`
+marks one ordinary printed instant/sorcery action with one card-level additional
+matching-sacrifice cost. The cost must capture only mana value, use the marked
+binding and select exactly one permanent. Definition validation rejects nil or
+duplicate markers, missing/foreign producers, stats captures, extra costs,
+alternate costs, activation/mode contexts and permanent spells. Existing
+unmarked callers retain their behavior.
+
+`Game.RevisePrintedSpellText` now accepts that marked context. The exact stack
+visit must contain exactly one number under its current producer binding,
+including zero, and no player/card/card-set/permanent captures. Checked semantic
+rebuilding keeps the producer kind/count/source permission/label, printed group,
+target context and effect shape. Atomic replacement installs fresh effects,
+targets and a new map keyed by the rebuilt producer binding. Invalid input or
+changed contexts leave the original stack object and payment unchanged.
+
+Costs are already paid (CR 601.2f–h); revision cannot repeat sacrifice, make a
+payment choice or read the departed object's current characteristics. A returned
+or phased payment card cannot replace the saved value (CR 400.7). Announced
+targets and exact visits, X, allocations, cast facts and source/controller stay
+fixed. New target legality controls resolution (CR 608.2b). Resolution choices
+and result frames keep their existing lifetime and restoration. The physical
+card keeps printed rules on departure. Mana symbols retain their values when
+color words change (CR 612.2).
+
+Spell copies retain the original paid value and use their own controller
+(CR 707.10). Copies made before or after revision keep the corresponding rules
+and number map. Later original/copy revisions and game clones do not overwrite
+sibling payment maps. The existing payment transaction, LKI, zone batches,
+replacement ordering, target services and stack cloning remain in use.
+No general capture-transfer or permanent-spell contract is established.
+
+Evidence: native `TestTextSacrificeSpellContinuationDeclaration`, `Context` and
+`Transfer`; RON `TestRONTextSacrificeSpellContinuationRecords`, `FreshResults`,
+`Legality` and `Instances`. Existing `TestRONAdditionalSacrifice*`,
+`TestRONSacrificeMana*` and ordinary/modal spell continuation checks retain
+rollback, mana restrictions, payment identity and other caller contracts.

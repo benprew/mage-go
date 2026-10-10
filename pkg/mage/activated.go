@@ -184,14 +184,16 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
-	spellTextContinuation    bool
-	activationTextLayer      bool
-	textRevisionState        bool
-	textRevisionDefinition   Card
-	activationManaX          *activationManaX
-	activationManaXOptions   int
-	activationHistory        *ActivationHistoryBinding
-	activationHistoryOptions int
+	spellSacrificeManaValue           *NumberBinding
+	spellSacrificeContinuationOptions int
+	spellTextContinuation             bool
+	activationTextLayer               bool
+	textRevisionState                 bool
+	textRevisionDefinition            Card
+	activationManaX                   *activationManaX
+	activationManaXOptions            int
+	activationHistory                 *ActivationHistoryBinding
+	activationHistoryOptions          int
 	BaseAbility
 	kind                ActionKind
 	effects             []Effect

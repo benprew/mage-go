@@ -8,15 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-SPELL-MODAL-CONTINUATION` adds checked rebuilding for printed choose-one
-instant/sorcery modes without captured casting results. Three unique cards / 18
-complete records have new representative continuation gameplay evidence.
-Announcement, payment and selected mode stay fixed; fresh mode bindings and
-current copy target declarations remain separate. Acceptance gain is
-**0 names / 0 records**. Isolated native compilation excludes Eureka:
-**812 accepted names / 2,098 compiled records**. Casting-result transfer,
-permanent-spell entry, whole-object dispatch and copy-layer rebinding remain
-incomplete.
+`TEXT-SPELL-SACRIFICE-MANA-CONTINUATION` transfers one saved additional
+sacrifice mana value into fresh printed pending-spell rules. Two unique cards /
+7 complete records have new representative continuation gameplay evidence.
+Payment, announcement and physical printed rules stay fixed; copies and clones
+keep separate number maps. Acceptance gain is **0 names / 0 records**.
+Isolated native compilation excludes Eureka: **812 accepted names / 2,098
+compiled records**. Other casting results, permanent-spell entry, whole-object
+dispatch and copy-layer rebinding remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -63250,5 +63249,143 @@ Ranked next candidates:
 3. Whole-object Magical Hack/Sleight of Mind dispatch after captured-result,
    permanent entry and copy contexts are complete. Keep rejecting each complete
    record until all branches work.
+
+Stop after this slice. Migration completion is not claimed.
+
+## Run 2026-10-09: TEXT-SPELL-SACRIFICE-MANA-CONTINUATION
+
+Status: complete for one ordinary pending instant/sorcery with one additional
+matching-sacrifice mana-value result. This is a shared text-execution
+prerequisite, not complete Magical Hack or Sleight of Mind execution.
+
+### Candidate comparison and selection
+
+Fresh build, RON tests and strict loader evidence preceded selection. The latest
+entry's first ranked candidate is dependency-ready. Complete RON records and
+nested forms were inspected for all seven comparison names; identical reprints
+were counted once. Local data/LEA.json and data/ARN.json Oracle text agrees.
+
+| Candidate | Distinct affected names; estimated new full-card unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- |
+| Saved sacrifice mana-value spell continuation | Sacrifice, Metamorphosis; 2 names / 7 records; 0 new compilation unlocks | Payment and resolving mana already work. Fresh semantic rebuilding needs an exact saved-number transfer. Removes a shared prerequisite for Magical Hack and Sleight of Mind; their permanent-entry and whole-object branches still block full records. | Small bounded engine producer contract, compiler marker, real-record and native binding/copy tests. |
+| Permanent-spell text entry continuation | Clone, Copy Artifact, Phantasmal Terrain; 3 names / 18 records; 0 new compilation unlocks | Optional creature/artifact entry copies, added Enchantment type, saved basic-land choice and Aura targets already have distinct entry contracts. Continuation must retain physical printed origin, copy provenance and host/entry choices. Enables the permanent-spell branch for both word-changing cards. | Larger shared entry/copy integration and identity, choice and attachment tests. |
+| Whole-object word-change dispatch | Magical Hack, Sleight of Mind; 2 names / 12 records; up to 2 eventual compilation unlocks, 0 dependency-ready now | Both Targeted_Modal branches must work: typed spell/permanent targets, two chosen words, CreateSpellEffect, and whole-object permanent text layers. Needs captured-result and permanent-entry/copy coverage before accepting full records. Enables actual casting of both cards. | Large cross-context dispatch and lifetime tests; not a complete bounded slice while prerequisites remain. |
+
+Selected the first candidate because its exact payment producer and copy services
+already exist, its effort fits one run, and it unblocks two multi-context cards.
+Estimated and actual acceptance gain are both **0 names / 0 records**. New
+representative continuation evidence covers **2 names / 7 complete records**.
+This does not add seven newly compiled records or establish complete collection
+behavior coverage.
+
+### Contract, signatures and boundaries
+
+`WithSpellSacrificeManaValueContinuation(paid *NumberBinding) ActionOption`
+marks one printed ordinary instant/sorcery action with exactly one additional
+matching-sacrifice cost that selects one permanent and captures only mana value.
+Cost and body use the same per-instance binding. RON lowers the complete
+`CastEffect(AdditionalCastingCost(SacrificeAPermanent(filter)))` plus ordinary
+`SpellActions(body)` context when the body consumes the symbol
+`ManaValueOfTheSacrificedPermanent`. Existing arithmetic, fixed/restricted mana,
+resolution choices and result bodies remain supported through their shared plans.
+Toughness results, modal additional costs, alternate/multiple costs, other
+capture types, permanent spells and whole-object dispatch remain separate.
+Unmarked callers retain their behavior.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+validates the exact retained stack visit, semantic builder and printed group.
+The saved map must contain exactly one entry under the old producer binding;
+zero is present, not absent. Rebuilding validates the new producer and preserves
+cost kind/count/source permission/label, target context and effect shape.
+Atomic replacement installs a new map under the fresh producer binding together
+with fresh effects and targets. Invalid markers, foreign/missing/extra captures,
+changed cost context and invalid changes leave live state unchanged.
+
+Payment is not repeated and does not read a returned or phased sacrifice card.
+Ordered semantic filters rebuild without changing announced targets, their
+visits, X, divisions, cast facts, source/controller or paid resources. Revised
+target legality controls resolution. Physical cards keep printed rules.
+Copies made before or after revision keep the original payment with their own
+controller. Later copy/original revisions and game clones keep separate maps.
+Resolution-result frames remain separate from saved casting numbers.
+
+Dependencies and reuse: existing CardDefinitionPlan/text builders and groups,
+instanceBindings, compileBoundCosts, sacrificeMatchingCost, payment_transaction
+paidNumbers, BuildTextDefinitionRevision, sameActivatedTextContext,
+sameSpellTextTarget, cloneStackObject, copyStackObject, LKI/target visit services,
+resolution frames, restricted mana and shared zone/replacement batches. No
+parallel payment, zone, replacement or event service was added. No RON spelling
+or source changed, so the vocabulary snapshot and source hashes need no refresh.
+No source defect or environment failure was found. Rules: local CR 400.7,
+601.2b–h, 608.2b, 612.1–3 and 707.10/c.
+
+### Failing-first and card-to-test evidence
+
+Before implementation, TestRONTextSacrificeSpellContinuationRecords and
+FreshResults failed at the expected ordinary-spell declaration rejection for
+additional costs. Native tests failed compilation at the missing marker API and
+fields. Fixture constructor signatures were corrected before confirming that
+API-only failure. New assertions preserve existing unsupported complete-record
+checks for Magical Hack and Sleight of Mind.
+
+| Card or contract | Tests |
+| --- | --- |
+| Sacrifice, all six reprints | TestRONTextSacrificeSpellContinuationRecords: full casting payment, zero/nonzero/X-card saved mana value, indestructible borrowed payment card, owner graveyard, return/phasing, repeated revisions, different copy controller, clones, unchanged black mana symbol and departed-stack rejection. Instances casts two factory instances with distinct payments and copies; both values survive revision. |
+| Metamorphosis, ARN | Records: saved value plus one, one chosen mana color, creature-only spending, zero paid mana value, payment owner, return/phasing, copy controller, repeated revisions and independent clones. Existing TestRONSacrificeManaMetamorphosis and Rollback retain native payment legality and rollback coverage. |
+| Fresh result/target contexts | FreshResults combines saved payment with draw/reveal/discard result frames. Legality changes both cost and target color filters; revised all-illegal targets, leave/return and phasing reject resolution, while phase return keeps the original visit. |
+| Native producer contracts | TestTextSacrificeSpellContinuationDeclaration rejects nil/duplicate markers, missing/foreign/stats/count producers, extra/alternate costs and activated/modal/permanent contexts. Context checks unsupported captures and changed payment source policy with atomic rejection. Transfer verifies fresh binding keys, retained X/source IDs and sibling copy maps. EarlierCopy verifies copies created before revision. |
+| Preserved callers | Expanded TestRONText.*SpellContinuation, TestRONAdditionalSacrifice*, TestRONSacrificeMana*, native TestText.*SpellContinuation and TestSpellCopy checks passed. Existing tests retain timing, rollback, target identity, regeneration, replacement and sequencing contracts. |
+
+### Verification and loader evidence
+
+- Baseline make build passed; go test ./pkg/mage/dsl/ron -count=1 passed
+  (34.587s). Baseline strict loader exited 1: **813 accepted / 173 rejected
+  unique names**, **2,099 compiled / 346 rejected records**.
+- Required focused go test ./pkg/mage/dsl/ron -run
+  TestRONTextSacrificeSpellContinuation -count=1 passed (0.484s). Expanded RON
+  continuation/sacrifice checks and native continuation/copy checks passed.
+- make build and go vet ./... passed. go test ./pkg/mage/... -short -count=1
+  passed (RON 38.791s). make test passed (RON 36.839s).
+- make lint initially found two preallocation warnings in the new native
+  fixture. Fixture capacity was corrected without changing assertions. Final
+  make lint passed with 0 issues. Automatic import grouping in the new
+  RON test was reviewed; no unrelated source changed.
+  Post-fix expanded native continuation/copy tests passed (0.523s), focused
+  RON tests passed (0.452s), and git diff --check/staged checks passed.
+- Isolated staged-index tree excludes all pre-existing work. make build,
+  go vet ./... and make test passed (RON 44.466s). Post-fixture-fix isolated
+  native continuation/copy checks passed (0.530s); post-format focused RON
+  checks passed (0.567s). Its strict loader exited 1:
+  **812 accepted / 174 rejected names**, **2,098 compiled / 347 rejected
+  records**. The difference is the pre-existing Eureka acceptance.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected names**, **2,099 compiled / 346 rejected records**, across
+  986 names / 2,445 records. Parsed JSON and every diagnostic equal the fresh
+  baseline exactly. Remaining errors include CreateSpellEffect,
+  EnchantGraveyardCard, SacrificeAllPermanentsExceptForNum and
+  MayPayLifeToProduceManaAsManaAbility. No partial registry is installed.
+  No unresolved build, test, lint or environment blocker remains.
+
+Changed files: pkg/mage/activated.go, definition.go, doc.go,
+text_spell_continuation.go; new text_sacrifice_spell_continuation.go and native
+test; pkg/mage/dsl/ron/compiler.go and new text_sacrifice_spell_continuation_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Only this slice is staged. The pre-existing Eureka files, compiler/inventory
+changes, archival ledger changes, documentation changes and .gitignore remain
+outside the commit. Go definitions and unused DSL APIs remain because the
+runtime/removal gates are not met.
+
+Ranked next candidates:
+
+1. Permanent-spell text entry continuation and copy rebinding: Clone,
+   Copy Artifact and Phantasmal Terrain, including saved choices, Aura targets,
+   added types and physical printed-origin restoration. The bounded paid
+   sacrifice mana-value continuation prerequisite is now complete.
+2. Whole-object permanent word-change dispatch/lifetime for Magical Hack and
+   Sleight of Mind after the entry/copy contexts are complete. Compose existing
+   checked printed-declaration services without partial whole-object changes.
+3. Complete CreateSpellEffect word-change adapter and spell/permanent target
+   union for both word-changing cards after every pending-spell and permanent
+   branch has its complete contract. Keep rejecting full records until then.
 
 Stop after this slice. Migration completion is not claimed.

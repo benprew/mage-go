@@ -11489,7 +11489,8 @@ clones keep separate revisions. The physical card retains printed text.
 
 Typed permanent, player, opponent, any-damage and spell target contexts are
 supported, including counted permanent groups. Permanent spells, other target
-kinds and captured casting results need separate services. Modal declarations
+kinds and other captured casting results need separate services. Saved sacrifice
+mana values use the checked contract below. Modal declarations
 use the checked contract below.
 This checked engine prerequisite does not lower the complete `CreateSpellEffect`
 or whole-object permanent text operations. Magical Hack and Sleight of Mind
@@ -11517,3 +11518,32 @@ Blast, Red Elemental Blast and Healing Salve in all six reprints, plus revised
 collections, partial legality, copies, clones and fresh mode-local results.
 `TestTextModalSpellContinuation*` covers declaration validation and atomic
 rejection, including incompatible unchosen modes.
+
+### Saved sacrifice mana values in pending spell text
+
+`mage.WithSpellSacrificeManaValueContinuation(paid *mage.NumberBinding)
+ActionOption` marks an ordinary instant/sorcery with exactly one additional
+matching-sacrifice cost that produces that binding's mana value. RON opts in
+`CastEffect(AdditionalCastingCost(SacrificeAPermanent(filter)))` with ordinary
+`SpellActions(body)` that reads symbol `ManaValueOfTheSacrificedPermanent`.
+Arithmetic, restricted resolving mana and resolution-result bodies retain their
+existing lowering. Each factory supplies one private cost/body binding.
+
+`Game.RevisePrintedSpellText` checks the marker, producer and exact saved map,
+then transfers the number to the rebuilt declaration's fresh binding. Cost kind,
+count, source permission and label stay fixed. Semantic filters rebuild, but
+payment is not repeated. Targets, X, cast facts and physical printed rules stay
+fixed. Copies keep the original payment with their own controller; later copy
+revisions and game clones have separate maps. Results created at resolution
+remain in fresh frames. Zero is a present saved value. Absent, foreign or extra
+numbers, other capture types, duplicate/nil markers, alternative/multiple costs
+and changed producer contexts reject atomically. Toughness captures, modal
+additional costs and permanent entry remain separate contracts.
+
+Evidence: `TestRONTextSacrificeSpellContinuationRecords` covers all six Sacrifice
+records and Metamorphosis, including restricted mana, zero values, returned and
+phased payment cards, repeated revisions, copies and clones. `FreshResults`,
+`Legality` and `Instances` check result frames, changed cost/target filters, exact
+visits and independent payments. Native `TestTextSacrificeSpellContinuation*`
+checks definition validation, exact binding transfer and atomic rejection.
+Complete Magical Hack and Sleight of Mind remain rejected.
