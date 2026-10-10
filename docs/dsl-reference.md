@@ -12911,3 +12911,37 @@ copy and clone rules, pending detection text, later layer expiry and printed
 copiable values. `Targets` checks pending filters and returned target illegality;
 `Payments` checks saved-event-player payment, fixed symbols and rollback. These
 are two additional complete text-context mappings, with zero compilation gain.
+
+
+## Resolving chosen sacrifice
+
+`SacrificeChosenBy(player, chooser PlayerRef, subjects PermanentSet) ResolvingEffect`
+keeps the sacrificing player separate from the chooser. At resolution it reads
+that player, restricts the typed collection to their current controlled objects,
+and uses `ChoosePermanent` for one required, non-target choice. No candidates or
+an absent player/chooser causes no movement. Invalid answers use the shared
+choice service's first legal candidate. A final exact-incarnation, phasing and
+control check precedes `controllersSacrificePermanents`. Ownership controls the
+destination; regeneration, indestructible and targeting restrictions cannot stop
+sacrifice (CR 701.21a). The existing preparation, replacement ordering, graveyard
+ordering, zone batch and LKI event services remain in use. No payment or optional
+offer occurs. Bindings belong to the current resolution frame; clones and copies
+keep separate results. Waiting queries retain explicit source reads without
+choices or movement. Definition validation rejects nil or unbound operands.
+
+RON supports `SacrificeAPermanent(collection)` and
+`SacrificeAPermanentOfAPlayersChoice(collection, chooser)` in resolving spell,
+activation, trigger, delayed and scoped player bodies. Existing typed permanent
+collections supply the selection; the sacrificing player is the current action
+player. The implicit chooser is that player. An explicit chooser uses an
+in-scope typed player reference or bare `Opponent`, selected from the sacrificing
+player's opponents with a fresh lexical player binding. Arity, malformed symbols,
+unbound references, empty collection expressions and non-resolving roles reject.
+Activation sacrifice costs retain their existing behavior. These actions do not
+produce `CostWasPaid` or `APermanentWasSacrificedThisWay` results.
+
+Evidence: native `TestChosenSacrificePlayers`, `Definition`, `Identity` and
+`Waiting`; RON `TestRONChosenSacrificeRecords`, `Declarations`, `SelfChoice`,
+`PlayerScope`, `Spell` and `Inventory`. Demonic Hordes has complete gameplay
+coverage for all six records, including its land destruction and upkeep payment.
+Serendib Djinn has action-only evidence; its result predicate remains unsupported.

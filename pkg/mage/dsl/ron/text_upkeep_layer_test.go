@@ -455,10 +455,10 @@ func TestRONTextUpkeepLayerInventory(t *testing.T) {
 			records++
 		}
 	}
-	if len(counts) != 52 || records != 108 {
+	if len(counts) != 53 || records != 114 {
 		t.Fatalf("declaration inventory: %d names / %d records", len(counts), records)
 	}
-	if counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
+	if counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
 		t.Fatal("real subject reprints missing")
 	}
 }

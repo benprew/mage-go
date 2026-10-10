@@ -965,6 +965,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
+		case "SacrificeAPermanent":
+			if len(n.Args) == 1 {
+				return "permanent_collection"
+			}
+		case "SacrificeAPermanentOfAPlayersChoice":
+			if len(n.Args) == 2 {
+				return []string{"permanent_collection", "player_reference"}[index]
+			}
 		case "ControllersSacrificeEachPermanent", "TapEachPermanent", "UntapEachPermanent", "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 			if len(n.Args) == 1 {
 				return "permanent_collection"

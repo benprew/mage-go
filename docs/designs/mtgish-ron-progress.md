@@ -2,22 +2,20 @@
 
 ## Current status
 
-The latest verified isolated inventory reports **814 accepted / 172 rejected
-unique card names** (986 total), and **2,110 compiled / 335 rejected records**
+The latest verified isolated inventory reports **815 accepted / 171 rejected
+unique card names** (986 total), and **2,116 compiled / 329 rejected records**
 (2,445 total). With the pre-existing Eureka changes, the verified worktree has
-**815 accepted / 171 rejected names**, **2,111 compiled / 334 rejected records**.
+**816 accepted / 170 rejected names**, **2,117 compiled / 328 rejected records**.
 Compilation does not prove complete gameplay. The strict loader rejects the
 collection and installs no partial registry.
 
-`UPKEEP-SPELL-CHOSEN` adds checked stack text revision and fresh entry for one
-opponent choice paired with a chosen-player upkeep rule. New gameplay mappings
-cover **2 names / 8 records**; complete upkeep spell text contexts now cover
-**19 names / 51 records**. Compilation gain is **0 names / 0 records**.
-Atomic preflight preserves both declaration groups, fixed keywords and targets.
-Each entry/copy has fresh bindings and chooses for its entry controller. Shared
-services keep clones, later layers, expiry, pending bodies, control, phasing,
-removal/restoration, LKI and printed return. Other entry rules, foreign siblings
-and live-copy rebinding remain separate contracts.
+`RESOLVING-CHOSEN-SACRIFICE` adds required non-target choices at resolution with
+separate sacrificing-player and chooser references. Demonic Hordes gains complete
+RON gameplay and acceptance for **1 name / 6 records**. Serendib Djinn gains its
+shared action prerequisite; its historical sacrificed-object predicate remains
+unsupported. Shared selection and sacrifice services retain exact visits,
+phasing, current control, owner destinations, replacement order and event LKI.
+Copies and clones keep separate resolving frames. No RON source changed.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -68524,5 +68522,165 @@ unstaged and preserved.
 3. Coin-round result scopes and simultaneous damage: Mana Clash (1 record).
    Distinct tail recipients and all-head termination remain unsupported by
    Eureka's entry rounds. Defer while dependency-ready shared work remains.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: RESOLVING-CHOSEN-SACRIFICE
+
+Status: complete resolving chosen-sacrifice slice. One capability, with implicit
+and explicit chooser forms; this run stops here.
+
+### Environment and candidate selection
+
+The initial worktree contained tracked Eureka/repeated-entry changes, unrelated
+`.gitignore` and design edits, and an untracked completed-ledger archive plus
+repeated-entry engine/compiler files. All were preserved. The ledger was read
+only at its top status and latest tail entry. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed (RON 41.765s).
+The fresh strict loader exited 1 for collection rejection, not build failure:
+**815 accepted / 171 rejected names**, **2,111 compiled / 334 rejected records**.
+
+The latest ranked candidate #1 was dependency-ready. Complete RON records and
+nested forms for all compared cards were inspected; reprints count once.
+
+| Candidate | Distinct affected cards | Estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Resolving chosen sacrifice, ranked #1 | Demonic Hordes (6 records), Serendib Djinn (1) | 1 name / 6 records | Hordes has no other blocker. Djinn needs a saved sacrificed-object property predicate. Shared selection, distinct chooser/player and sacrifice movement are its concrete prerequisite. | Small-to-medium: one reusable action, two adapters, native and RON contracts. |
+| Attached mana-event whole-object text | Wild Growth (6 records) | 0 compilation unlocks; 1 additional text-context gameplay mapping | Already compiles. Needs complete Aura declaration preflight and exact host continuation. No broader shared text context established by this candidate alone. | Medium: text preflight and lifecycle matrix. |
+| Coin-round results and simultaneous damage | Mana Clash (1 record) | 1 name / 1 record | Needs per-player tail results, all-head termination and simultaneous damage. Existing entry rounds supply neither coin results nor this termination contract. | Large relative to chosen sacrifice: several result and batch contracts. |
+
+Chosen sacrifice wins because it completes six reprints and supplies a concrete
+shared prerequisite for Djinn, at lower effort than the singleton coin capability.
+The selection contract and acceptance cases were stated before implementation.
+No card-name branch, Go-card fallback or production allowlist was added.
+
+### Signatures, contexts and ownership
+
+- Native API:
+  `SacrificeChosenBy(player, chooser PlayerRef, subjects PermanentSet) ResolvingEffect`.
+  The sacrificing player and chooser are separate typed operands. It reads the
+  player at resolution, limits current collection members to that player's
+  control, and makes one required non-target choice. Empty sets and absent
+  operands cause no movement. Invalid answers retain the shared first-candidate
+  policy. Only the selected present, unphased incarnation still controlled by
+  the sacrificing player can move. Return cannot replace its identity.
+- RON supports resolving `SacrificeAPermanent(collection)` and
+  `SacrificeAPermanentOfAPlayersChoice(collection, chooser)`. The collection uses
+  existing typed permanent collections. The implicit chooser is the current
+  action player. Explicit chooser accepts existing in-scope player references
+  or bare `Opponent`; opponent selection is relative to the sacrificing player.
+  Spell, activation, trigger, delayed and scoped `PlayerAction`/`PlayerActions`
+  bodies use the same adapter. Wrong roles, arity, tuple-shaped symbols, empty
+  collection expressions and unbound references reject at compilation.
+- RON owns spelling, scopes and fresh factory bindings. The opponent adapter
+  composes `ChoosePlayer`, `OpponentsOf`, `FromPlayer` and the new native action.
+  The engine owns current control and exact-visit action permission. Its private
+  permanent binding uses the current resolution frame, with independent copy
+  and clone storage. There is no global result slot or declaration-time panic.
+- The engine reuses `ChoosePermanent`, `FilterPermanentSet`, `ControlledBy`,
+  `From`, and `controllersSacrificePermanents`. Shared `prepareSacrifice`,
+  replacement ordering, owner graveyard ordering, `performSacrifice` and
+  `withZoneChangeBatch` retain their exact movement, event and LKI contracts.
+  Regeneration, indestructible and target restrictions do not stop sacrifice.
+  Waiting queries retain typed source reads without selection or movement.
+- This is an action, not a payment. Existing activation costs and optional
+  payments remain unchanged. Neither `CostWasPaid` nor
+  `APermanentWasSacrificedThisWay` is produced. Historical sacrifice property
+  predicates and activation-cost property captures remain a separate slice.
+- Rules evidence: CR 701.21a (control, owner destination, no destruction),
+  400.7 (new objects), 702.26 (phasing), and the established sacrifice batch's
+  101.4/404.3 replacement and graveyard order contracts. API and rules-contract
+  docs describe only this new resolving action. No replacement, simultaneous
+  batch or transaction subsystem was replaced.
+
+The missing compiler adapters were the resolving action forms and their scoped
+player dispatch. The missing native contract was required selection with separate
+chooser and sacrificing-player operands. No source defect or environment failure
+was found. No RON source changed, so the vocabulary snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+Native `TestChosenSacrifice*` first failed compilation on the new API signature.
+After correcting a test harness method name, the isolated intended failure was
+`undefined: SacrificeChosenBy`. RON record and action tests failed on unsupported
+`SacrificeAPermanentOfAPlayersChoice` and `SacrificeAPermanent` before adapters.
+The scoped-player tests then failed on unsupported scoped/value dispatch before
+that adapter was extended. All now pass. The old resolving-sacrifice rejection
+fixture was replaced by actual positive spell gameplay; its unrelated invalid
+payment and unsupported result assertions remain.
+
+| Card/context | Test mapping and evidence |
+| --- | --- |
+| Demonic Hordes: LEA, LEB, 2ED, 3ED, CED, CEI | `TestRONChosenSacrificeRecords` uses each complete unchanged record. Its tap activation destroys a targeted land. Only controller upkeep triggers. Payment and sacrifice occur at resolution; paid and wrong-color unpaid branches preserve their mana contracts. Opponent chooses from the captured controller's lands. Empty/phased sets, source control change/departure, differently controlled trigger copies and pending game clones retain their distinct semantics. Copies also sacrifice from their own controller's collection. |
+| Serendib Djinn: ARN | `TestRONChosenSacrificeSelfChoice` retains its exact resolving sacrifice action with a test-only body boundary. The controller sacrifices their own land. `Declarations` keeps the complete record rejected at its saved-result condition. This is prerequisite evidence, not complete-card gameplay. |
+| Native reusable action | `TestChosenSacrificePlayers`: separate chooser/player, foreign ownership, current control, phasing, empty sets, absent chooser, indestructible, regeneration, exile replacement and clone isolation. `Identity`: return/phasing/control change during choice, invalid/nil answers and no foreign sacrifice. `Definition`: nil/unbound operands. `Waiting`: pure source-reference queries and delayed resolution. |
+| RON supported resolving contexts | `PlayerScope`: singular and plural scoped-player bodies use the typed target controller as sacrificing player. `Spell`: non-target sacrifice ignores shroud/indestructible, waits for resolution and continues later actions. `Inventory`: chooser role and atomic rejection of invalid cost/entry/static roles. `Declarations`: malformed arity/symbols, empty collections and unbound/wrong-kind chooser references. |
+| Existing shared contracts | The full suites retain `TestControllersSacrifice*` evidence for exact incarnations, owner ordering, competing/cancelled replacements, source LKI, tokens and batch event timing. Existing cost transaction tests retain affordability/rollback; the new action does not perform a cost transaction. |
+
+### Verification and measured results
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONChosenSacrifice -count=1`
+  passes (0.508s before broader verification; 0.833s after lint; 0.534s after
+  adding explicit copy-player/timing assertions). Native
+  `go test ./pkg/mage -run TestChosenSacrifice -count=1` passes (0.481s).
+- `make build` and `go vet ./...` pass.
+- The first broader engine and full runs failed six exact inventory assertions
+  after acceptance increased by six records. No gameplay failure was reported.
+  Exact totals were updated, and the upkeep inventories now explicitly require
+  all six Hordes reprints. The six focused inventory tests pass (1.556s).
+- Final `go test ./pkg/mage/... -short -count=1` passes (RON 42.660s).
+  Final `make test` passes (RON 40.396s).
+- `make lint` passes with zero issues. Its only automatic slice change was import
+  grouping in the new RON test; it was reviewed and focused tests were rerun.
+  After the final test assertions, `make lint` passes again with zero issues.
+  Worktree and staged `git diff --check` pass.
+- A fresh isolated HEAD checkout plus only staged slice changes passes
+  `go test ./... -short -count=1` (RON 52.955s), `go build ./...` and
+  `go vet ./...`. It excludes all initial repeated-entry source and test changes.
+  Final new test assertions pass there again (RON 0.571s). Its strict loader
+  exits 1: **815 accepted / 171 rejected names**, **2,116 compiled / 329 rejected
+  records**. Eureka remains unsupported there, independently of this slice.
+- Final worktree `go run ./cmd/loadcards -json` exits 1 for expected strict
+  collection rejection: **816 accepted / 170 rejected names**, **2,117 compiled /
+  328 rejected records**, 2,445 total. Against the fresh baseline, exactly the
+  six Hordes rejection entries disappear. No rejection is added; all accepted
+  records remain accepted. Djinn's sole diagnostic advances from its sacrifice
+  action to the generic `If` adapter's activation-history context error at its
+  unsupported `APermanentWasSacrificedThisWay` condition. No partial registry is
+  published. Remaining examples include Animate Dead, Balance, Cyclopean Tomb,
+  Vesuvan Doppelganger, Mana Clash and the saved sacrifice predicates.
+- All unrelated initial tracked and untracked files retain their saved contents.
+  On shared files, staged changes exclude all initial edits. Staged inventory
+  assertions use the isolated totals; the worktree preserves Eureka's separate
+  one-record adjustment. No verification blocker remains.
+
+Estimated and actual complete-card compilation/gameplay gain: **1 name /
+6 records**, Demonic Hordes. Additional prerequisite action mapping:
+**1 name / 1 record**, Serendib Djinn. Compilation and gameplay totals remain
+separate; these tests do not establish complete collection gameplay.
+
+Changed files: native `chosen_sacrifice.go` and tests; RON
+`chosen_sacrifice.go` and tests, compiler, scoped-player dispatch, inventory
+roles, sacrifice boundary fixture and five inventory test files; engine package
+reference, DSL API and rules-contract docs, and this ledger. No Go definition,
+generator or DSL export was removed; runtime cutover and removal gates remain
+unsatisfied. The unrelated ledger archive/reorganization remains unstaged.
+
+### Ranked next candidates
+
+1. Shared saved sacrificed-object property predicates:
+   `APermanentWasSacrificedThisWay(filter)` in Serendib Djinn (1 record) and Ebon
+   Praetor (1). Their complete records were inspected. Djinn now has its resolving
+   action prerequisite; Praetor needs activation-cost facts. Evaluate one shared
+   typed historical-property contract with distinct action/cost producers,
+   successful sacrifice versus graveyard arrival, replacement outcomes and
+   lexical dominance. Estimated unlocks: up to 2 names / 2 records if both
+   producer contexts fit one bounded slice; retain independent blockers otherwise.
+2. Attached mana-event whole-object text: Wild Growth (1 name / 6 records).
+   Existing host mana-event services are ready; complete Aura preflight and exact
+   host continuation remain. Adds text-context gameplay, not compilation gain.
+3. Coin-round result scopes and simultaneous damage: Mana Clash (1 record).
+   Per-player tails, distinct recipients and all-head termination remain missing.
+   Defer while dependency-ready shared capabilities give greater value.
 
 Migration remains incomplete. This run stops after this one slice.

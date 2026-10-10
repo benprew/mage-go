@@ -1575,6 +1575,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice":
+		build, err := compileChosenSacrifice(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ControllersSacrificeEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
@@ -1684,6 +1690,13 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "SacrificeAPermanent" || n.Name == "SacrificeAPermanentOfAPlayersChoice" {
+		build, err := compileChosenSacrifice(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "ChooseTwoColorWords" || n.Name == "ChooseTwoBasicLandTypes" {
 		build, _, err := compileTextWordChoice(n, ctx)
 		if err != nil {

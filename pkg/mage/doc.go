@@ -2219,6 +2219,15 @@
 // [Game.WaitingManaReplacementPermanentSources] supplies exact active subjects
 // to general damage-source choices. Phasing keeps references; departure ends them.
 //
+// Use [SacrificeChosenBy] for a required sacrifice choice at resolution.
+// The sacrificing player and chooser have separate typed references.
+// The choice includes only present subjects controlled by that player.
+// Empty sets do nothing. Saved choices cannot follow returned objects.
+// Phased subjects cannot move. Shared services keep replacement order,
+// owner destinations, source information and sacrifice events.
+// RON supports resolving SacrificeAPermanent and the explicit chooser form.
+// Saved sacrifice results need a separate contract.
+//
 // Use [ControllersSacrificeEach] for a typed permanent collection at resolution.
 // Each present subject uses its current controller. The effect controller and
 // owner do not restrict selection. Subjects keep their exact incarnations.
