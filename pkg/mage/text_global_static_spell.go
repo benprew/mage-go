@@ -22,6 +22,9 @@ func globalStaticSpellTextContext(card Card) (staticTextContract, error) {
 		return 0, fmt.Errorf("global static spell text requires one marked permanent rule without casting costs or targets")
 	}
 	rule, ok := base.abilities[0].(*StaticAbilityHolder)
+	if ok && rule != nil && rule.grantTextLayer && rule.grantTextRevision && rule.supportsGrantTextRevision() {
+		return staticGrantTextContract, nil
+	}
 	if ok && rule != nil && len(rule.Effects) == 1 && rule.ptTextLayer && rule.ptTextRevision && rule.supportsPTTextRevision() {
 		kind := rule.ptTextRevisionContext().kind
 		if kind == controllerBasicLandSourcePT || kind == opponentBasicLandSourcePT {
@@ -69,7 +72,11 @@ func (g *Game) reviseGlobalStaticSpellText(obj *StackObject, changes []TextChang
 	if oldContext == staticPTTextContract && newContext == staticPTTextContract {
 		samePT = oldBase.abilities[0].(*StaticAbilityHolder).ptTextRevisionContext() == newBase.abilities[0].(*StaticAbilityHolder).ptTextRevisionContext()
 	}
-	if !samePT || newContext != oldContext || !slices.Equal(oldBase.subTypes, newBase.subTypes) || !paired || replacement != newBase.abilities[0] {
+	sameGrant := true
+	if oldContext == staticGrantTextContract && newContext == staticGrantTextContract {
+		sameGrant = sameGlobalGrantSpellEffects(oldBase.abilities[0].(*StaticAbilityHolder), newBase.abilities[0].(*StaticAbilityHolder))
+	}
+	if !samePT || !sameGrant || newContext != oldContext || !slices.Equal(oldBase.subTypes, newBase.subTypes) || !paired || replacement != newBase.abilities[0] {
 		return fmt.Errorf("global static spell text changed its declaration context")
 	}
 	rebuilt := cloneStackObject(obj)
@@ -81,6 +88,19 @@ func (g *Game) reviseGlobalStaticSpellText(obj *StackObject, changes []TextChang
 		}
 	}
 	return fmt.Errorf("global static spell text lost its stack visit")
+}
+
+func sameGlobalGrantSpellEffects(old, fresh *StaticAbilityHolder) bool {
+	if len(old.Effects) != len(fresh.Effects) {
+		return false
+	}
+	for i, effect := range old.Effects {
+		next := fresh.Effects[i]
+		if effect.GetLayer() != next.GetLayer() || getEffectSublayer(effect) != getEffectSublayer(next) || effect.GetDuration() != next.GetDuration() {
+			return false
+		}
+	}
+	return true
 }
 
 func buildGlobalStaticSpellEntry(obj *StackObject) (Card, error) {

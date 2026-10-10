@@ -8,14 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`STATIC-ACTIVATION-SPELL-TEXT` carries paired P/T static and ordinary activated
-rules through checked permanent-spell revision and fresh entry. New continuation
-evidence covers **2 names / 7 complete records** (Sedge Troll and Thrull Champion);
-acceptance gain is **0 names / 0 records**. Sibling groups, fresh activation
-bindings, printed costs, target legality, live P/T and control durations, copies,
-clones, later layers, phasing, removal, LKI and printed recasts are covered.
-Whole-object dispatch, static-grant/copy-added contexts and complete word-changing
-spell consumers remain incomplete.
+`GLOBAL-GRANT-SPELL-TEXT` carries one global ability grant and paired fixed P/T
+through checked spell revision and fresh permanent entry. New continuation
+evidence covers **7 names / 17 complete records**; acceptance gain is **0 names /
+0 records**. Shared live subjects, payment, copies, clones, later text layers,
+phasing, removal, LKI, copiable values and printed recasts are covered. Multiple
+grant/intrinsic-keyword siblings, copy-added contexts, whole-object dispatch and
+complete word-changing spell consumers remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -65309,3 +65308,163 @@ is prerequisite gameplay coverage, not complete word-changing spell execution.
 
 Stopped after this slice. Complete RON gameplay, runtime loading, Go-card
 removal, unused DSL cleanup and native startup remain incomplete.
+
+## Run 2026-10-10: GLOBAL-GRANT-SPELL-TEXT
+
+Status: complete single global ability-grant permanent-spell continuation slice.
+One supported declaration context is implemented end-to-end. Compilation and
+complete collection gameplay remain separate. Stopped after this slice.
+
+### Baseline, candidates and selection
+
+Starting changes were saved before edits. Fifteen unrelated starting files,
+including untracked entry-round work and the completed-ledger archive, remain
+byte-for-byte unchanged. Shared compiler, API docs and ledger changes are staged
+as this slice's delta from HEAD; the user's entry-round work and ledger
+reorganization remain unstaged. No production registry or Go card was changed.
+
+Fresh baseline make build and go test ./pkg/mage/dsl/ron -count=1 passed
+(RON 35.709s). Baseline strict go run ./cmd/loadcards -json exited 1 for collection
+rejection, rather than a build or test failure: 813 accepted / 173 rejected names,
+2,099 compiled / 346 rejected records, from 986 names / 2,445 records.
+
+The latest ranked candidates were evaluated from complete records and nested
+forms, with reprints counted once:
+
+| Candidate | Distinct affected names | Estimated full-card compilation unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: whole-object printed dispatch and text-effect lifetime | Magical Hack; Sleight of Mind (12 complete records) | 0 for dispatcher alone; 2 require both complete modal consumers | Their nested spell and permanent branches need atomic whole-object dispatch, supported declaration continuations and effect lifetime. Single grants and copy-added contexts still lacked entry contracts. Establishing all context/lifetime boundaries is broader than this run's bounded slice. | High across existing context families and consumers |
+| Ranked #2: static ability-grant/P/T spell continuation | Goblin King; Lord of Atlantis; Zombie Master; expanded inspection also found Fortified Area, Kobold Drill Sergeant, Concordant Crossroads, Goblin War Drums, Hidden Path and Kobold Overlord | 0; all nine names already compile | Seven names / 17 records have exactly one global keyword/landwalk grant, optionally paired with fixed P/T. This is a concrete shared prerequisite for both text consumers. Zombie Master's two separate grants include a granted regeneration action; Kobold Overlord adds an intrinsic keyword. Those contexts remain separate. | Moderate for the selected single-rule context; higher for mixed/granted actions |
+| Ranked #3: copy-added text and live-copy rebinding | Vesuvan Doppelganger (6 complete records) | 0 for isolated text rebinding | KeepColor, an added targeted upkeep trigger, nested copy effects and ThisAbility identity require linked copy-added declarations and live-copy lifetimes. Enables a distinct uncommon copy prerequisite. | High |
+
+Selected ranked #2's complete single-global-grant context. It supplies seven
+unique names of observable continuation evidence with existing layer and entry
+services. Ranked #1's complete consumers need broader contracts; ranked #3 has
+less shared value and more binding/lifecycle work. Estimated acceptance gain
+was zero; actual gain is zero. This adds prerequisite gameplay evidence, not
+complete Magical Hack or Sleight of Mind execution.
+
+### Contract, signatures and ownership
+
+Existing API extended:
+
+- WithGlobalStaticSpellTextContinuation() CardOption accepts one marked global
+  grant holder on a nonland, non-Aura permanent.
+- StaticAbilityHolder.WithLayeredGrantTextRevision() *StaticAbilityHolder supplies
+  the existing checked printed grant and layer-3 lifecycle contract.
+- Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error
+  validates and replaces the exact pending spell's retained semantic definition.
+- Game.AddPrintedStaticGrantTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error keeps its established
+  battlefield behavior and uses the continued donor as its later baseline.
+
+RON selects exactly one EachPermanentLayerEffect(filter, parts), where every
+part is fixed AdjustPT(integer, integer) or nonempty AddAbility([keyword, ...])
+including fixed basic Landwalk(IsLandType(basic)), and at least one grant exists.
+Existing lowering checks filter roles, lexical scope, subject references and
+arguments. Activated, triggered, BandsWithOthers and Aura grants keep their
+existing separate paths. Intrinsic keyword siblings, multiple declarations,
+modes, casting targets and additional/alternate casting costs are excluded.
+No valid declaration is rejected merely because it lacks this continuation.
+The new selector is separate from globalStaticSpellTextRules so paired
+static/event and static/activation contexts do not become implicitly broader.
+
+mage checks old and fresh eligible contexts, declaration group correspondence,
+subtypes, effect count, ordered layers, sublayers and battlefield durations.
+Missing builders/groups, invalid words, countered visits and foreign targets,
+bodies or saved casting results reject without changing the stack object.
+Fresh entry preserves physical identity, owner, token state and printed departure
+rules. Word changes leave mana symbols and paid resources unchanged.
+
+Reused services: BuildTextDefinitionRevision, global-static stack revision,
+buildGlobalStaticSpellEntry, definition ability groups, WhileWithSharedSubjects,
+layered grant text baselines, static registration, target-independent casting,
+spell copies, game clones, live control, phasing, ability removal/restoration,
+LKI, CaptureCopiableValues and printed departure/recast rules. Recipients are
+selected live in layer 6 and retained for sibling grants and paired layer-7c
+P/T. No parallel cost, replacement-order, damage or simultaneous-operation
+mechanism was added. Rules basis: CR 400.7, 612.1–3, 613.1c/f, 613.4c, 613.6
+and 707.2. The implement-engine skill guided the reusable engine contract.
+
+### Failing-first tests and card-to-test mappings
+
+Before implementation, TestRONTextGlobalGrantSpellRecords failed for all 17
+complete records with the ordinary instant/sorcery continuation diagnostic.
+Native TestTextGlobalGrantSpellDeclaration and RejectsAtomic then failed because
+the global-static marker required one static effect and did not accept mixed
+grant/P/T holders. Both expected assertion failures were observed and saved.
+No tests or production registry were weakened. Expanded tests pass with existing
+shared services; no source-data correction was needed.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Goblin King; Lord of Atlantis, all six reprints each | Records: paid casting, changed basic landwalk through fresh entry, both players' tribal recipients, paired +1/+1, source exclusion, physical identity and unchanged payment |
+| Fortified Area (LEG); Kobold Drill Sergeant (LEG) | Records: paired fixed P/T and Banding/Trample, controller restriction and source exclusion for the Sergeant |
+| Concordant Crossroads (LEG); Goblin War Drums (FEM) | Records: single Haste/Menace grants after checked spell revision, both-player versus controller-only recipient context |
+| Hidden Path (DRK) | Records: changed landwalk with the original green selector; CopiesAndMembership: green-to-blue/red substitutions, original/copy/clone separation, token entry, separate declaration IDs, token departure, late entrants and phased recipients |
+| Goblin King lifecycle | Lifecycle: pre-resolution absence, effective evasion and phased opposing lands, later text layers and repeated passes, clone-local expiry, removal and expiry while phased, direct source phasing, stable declaration ID, printed copiable values, recipient grant/P/T LKI, continued donor rules in source LKI, departed-source rejection and printed recast |
+| Shared native/RON contracts | SharedSubjects: multiple keyword grants plus P/T keep the same non-Flying subjects through layers; control changes switch live recipients. Records walks every AST and maps exactly seven names / 17 records to the selector |
+| Boundaries | RON rejects empty grants, invalid basic lands, unbound recipients and non-fixed P/T; valid Zombie Master/Kobold Overlord records still compile but reject the unsupported sibling continuation atomically |
+| Native declaration and revision | Declaration checks valid mixed holder, duplicate/conflicting markers, intrinsic keywords, casting costs/targets, Aura/sibling/unmarked/PT-only contexts. RejectsAtomic checks changed effect count/order/kind/marker/subtypes/groups, missing builder/group, invalid words, foreign results/targets/bodies and countered visits |
+
+### Verification and collection evidence
+
+- Focused TestRONTextGlobalGrantSpell and TestTextGlobalGrantSpell passed.
+  Related GlobalStaticSpell, StaticActivationSpell and MixedStaticEventSpell
+  suites passed in both compiler and engine. Final focused tests after the
+  test-style fix passed in worktree (RON 0.585s / mage 0.365s) and isolated
+  checkout (RON 0.566s / mage 0.468s).
+- Worktree make build and go vet ./... passed. Engine short tests passed
+  (RON 45.891s), and make test passed (RON 42.419s).
+- Isolated HEAD-plus-slice focused tests, make build, go vet ./..., engine short
+  tests (RON 43.222s) and make test (RON 42.011s) passed. This excludes every
+  starting user edit and proves that the slice does not depend on entry rounds.
+- Initial isolated lint found one new test style issue: power += 1 instead of
+  power++. The simultaneous worktree lint attempt hit golangci-lint's shared
+  process lock. The test line was corrected without changing its assertion;
+  both make lint runs then passed sequentially with 0 issues. Automatic lint
+  changes were reviewed: no additional source changes occurred. Final focused
+  checks passed after the fix. Worktree and isolated git diff --check passed.
+- Final worktree go run ./cmd/loadcards -json exits 1 for strict collection
+  rejection. Its entire JSON equals the fresh baseline: 813 accepted / 173
+  rejected names; 2,099 compiled / 346 rejected records. No accepted record
+  regressed and no partial production registry was installed. Magical Hack and
+  Sleight of Mind still reject CreateSpellEffect; Vesuvan Doppelganger rejects
+  entry-copy AddAbility; Animate Dead rejects EnchantGraveyardCard.
+- Final isolated strict loader also exits 1: 812 accepted / 174 rejected names;
+  2,098 compiled / 347 rejected records. Only Eureka's unsupported
+  RepeatableActions and Mana Clash's earlier RepeatableActions diagnostic differ
+  from the worktree. Both differences arise from excluding existing entry-round
+  work. Every staged source file matches the validated isolated slice.
+- All fifteen unrelated starting files remain unchanged. Shared compiler and API
+  files contain only the intended delta over their saved starting contents.
+  The staged ledger retains HEAD's existing history and adds this entry and its
+  summary; the user's archive/reorganization remains in the working tree.
+
+No source-data defect was found or corrected. RON records and the vocabulary
+snapshot remain unchanged. Go-card removal and unused-DSL removal gates remain
+unmet; no Go definitions or DSL/engine caller services were deleted.
+
+Changed files (10): pkg/mage/text_global_static_spell.go and new
+text_global_grant_spell_test.go; pkg/mage/dsl/ron/compiler.go and new
+text_global_grant_spell.go, text_global_grant_spell_test.go,
+text_global_grant_spell_lifecycle_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+
+### Result and ranked next candidates
+
+Actual compilation gain is 0 names / 0 records, as estimated. New spell-to-entry
+continuation evidence covers seven names / 17 complete records. Full collection
+gameplay, runtime loading, Go-card deletion and unused DSL cleanup remain open.
+
+1. Shared whole-object printed dispatch and text-effect lifetime for established
+   contexts, with atomic unsupported-context boundaries; complete modal consumers
+   for Magical Hack and Sleight of Mind remain dependent work.
+2. Remaining global grant sibling contexts: inspect Zombie Master's landwalk plus
+   granted regeneration and Kobold Overlord's intrinsic keyword together. Keep
+   donor groups and granted-action bindings distinct; do not broaden this run's
+   single-rule marker silently.
+3. Copy-added ability text and live-copy rebinding for Vesuvan Doppelganger,
+   including KeepColor, nested upkeep targets and ThisAbility identity.
+
+Stopped after one complete slice. Migration remains incomplete.

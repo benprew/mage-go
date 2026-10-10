@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithGlobalStaticSpellTextContinuation] for one global ability grant.
+// The holder must use [StaticAbilityHolder.WithLayeredGrantTextRevision].
+// Fixed grants and paired P/T keep changed words through checked spell entry.
+// Fresh rules keep declaration groups and ordered effect layers and durations.
+// Shared subjects remain live. Later text layers use the continued baseline.
+// Copies and clones keep separate rules. Phasing keeps the visit. Removal stops
+// the donor. LKI keeps final results; recasts use printed rules. Copy values
+// exclude ordinary word changes. Other mixed and whole-object rules stay separate.
+//
 // Use [WithStaticActivationSpellTextContinuation] for paired creature rules.
 // One global P/T rule or basic-land source P/T condition can share a spell
 // with one ordinary activated rule. Checked revision keeps both groups and
@@ -86,7 +95,7 @@
 //
 // Use [WithGlobalStaticSpellTextContinuation] for one global static spell rule.
 // [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
-// RON marks one unconditional fixed creature P/T or basic-land-type rule.
+// This context marks one fixed creature P/T or basic-land-type rule.
 // Casting targets, costs, modes and other rules need separate contracts.
 // Entry keeps physical identity, owner and printed departure rules.
 // Copies enter as tokens. Clones keep separate rules. Phasing keeps the visit.

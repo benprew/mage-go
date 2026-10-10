@@ -1,5 +1,48 @@
 # Engine rules contracts
 
+## Single global ability-grant spell text continuation
+
+`WithGlobalStaticSpellTextContinuation() CardOption` now also accepts one
+`StaticAbilityHolder.WithLayeredGrantTextRevision()` declaration on a nonland,
+non-Aura permanent. The holder has battlefield ability-layer effects and may
+include P/T modifications in layer 7c. Intrinsic keywords, sibling rules, modes,
+casting targets and additional or alternate casting costs remain excluded.
+
+RON selects exactly one `EachPermanentLayerEffect(filter, parts)` whose parts
+are fixed `AdjustPT(integer, integer)` and nonempty `AddAbility([keyword, ...])`
+or fixed basic `Landwalk` grants, with at least one grant. Existing lowering
+checks filters and lexical scope. Activated, triggered and other grant contexts
+keep their separate paths. The selector does not extend paired static/event or
+static/activation continuation contexts.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks the exact stack visit, retained builder and declaration correspondence.
+Fresh rules keep the grant context, effect count, ordered layers, sublayers,
+durations and subtype context. Invalid changes, missing builders/groups and
+foreign announced targets, bodies or casting results reject atomically.
+Payment and mana symbols retain their printed values. Fresh entry preserves
+physical identity, owner and printed departure rules.
+
+The existing shared-subject grant service selects current recipients in layer 6
+and keeps them through paired P/T in layer 7c. Control, color, source exclusions
+and late entrants remain live. Later grant text layers use the continued rule
+as their baseline; expiry restores it. Phasing keeps the visit and removal
+suspends the donor. Clones and copied spells retain separate rules; spell copies
+enter as tokens. Copiable values exclude ordinary word changes. LKI keeps final
+results, and physical recasts use printed rules (CR 400.7, 612.1–3, 613.1c/f,
+613.4c, 613.6 and 707.2).
+
+Evidence: `TestRONTextGlobalGrantSpellRecords` checks every complete record for
+seven names (17 records): Goblin King, Lord of Atlantis, Fortified Area, Kobold
+Drill Sergeant, Concordant Crossroads, Goblin War Drums and Hidden Path.
+`Lifecycle`, `CopiesAndMembership` and `SharedSubjects` cover layers, expiry,
+phasing, suppression, evasion, LKI, printed recasts, copies, clones and live
+membership. `Boundaries` retains unsupported sibling contexts and invalid
+syntax rejection. Native `TestTextGlobalGrantSpellDeclaration` and
+`RejectsAtomic` check definition and atomic revision boundaries.
+This is a prerequisite for word-changing spell consumers. Whole-object dispatch,
+multiple grants, intrinsic-keyword siblings and copy-added rules remain separate.
+
 ## Typed land-mana-event permanent-spell text continuation
 
 `WithManaTapSpellTextContinuation() CardOption` marks a nonland, non-Aura
@@ -15502,7 +15545,7 @@ rules, keywords, targets, casting costs, conditional rules and sticky rules
 remain outside this context.
 
 `mage.WithGlobalStaticSpellTextContinuation() CardOption` declares the engine
-contract. Definition validation requires one marked global static effect, no
+contract. For these shapes, validation requires one marked global static effect, no
 other abilities or intrinsic keywords, and no modes or casting costs/targets.
 The existing `Game.RevisePrintedSpellText(stackID, changes...)` checks the exact
 stack visit, fresh declaration correspondence, static context and subtype
