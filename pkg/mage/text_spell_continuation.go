@@ -51,6 +51,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if len(changes) == 0 {
 		return fmt.Errorf("spell text continuation requires word changes")
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.protectionPTSpellText != 0 {
+		return g.reviseIntrinsicSpellTextWithContext(obj, changes, protectionPTSpellTextContext, sameProtectionPTSpellContext)
+	}
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.intrinsicCastText != 0 {
 		return g.reviseIntrinsicSpellTextWithContext(obj, changes, intrinsicCastTextContext, sameIntrinsicCastSpellContext)
 	}

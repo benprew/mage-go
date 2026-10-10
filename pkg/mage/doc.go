@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithProtectionPTSpellTextContinuation] for paired creature rules.
+// One color protection rule and one opponent nontoken color P/T rule keep
+// changed words through checked stack revision and fresh permanent entry.
+// The P/T recipient is the source or creatures with one fixed name.
+// Declaration groups keep each sibling separate. Mana symbols stay fixed.
+// Copies and clones keep separate rules. Later text layers restore the entry
+// baseline. Phasing keeps the visit; removal suspends both rules.
+// Departure keeps final LKI. Recasts use printed rules. Ordinary changes stay
+// outside copiable values. Other mixed rules need separate contracts.
+//
 // Use [WithGlobalStaticSpellTextContinuation] for one conditional source P/T rule.
 // The condition must check the controller or opponent for one basic land type.
 // [Game.RevisePrintedSpellText] keeps that condition through fresh entry.

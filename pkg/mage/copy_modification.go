@@ -98,6 +98,7 @@ func (m copyTypeAddition) applyCopyModification(card *BaseCard) {
 	}
 	// Extra card types require a separate spell continuation contract.
 	if len(card.types) > 1 {
+		card.protectionPTSpellText = 0
 		card.intrinsicCastText = 0
 		card.intrinsicSpellText = 0
 		card.landAuraSpellText = 0

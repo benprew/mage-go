@@ -11966,3 +11966,51 @@ pairs. Native `TestTextConditionalPTSpellDeclaration` and
 `RejectsContextAtomic` cover allowed contexts, invalid types, and condition,
 recipient, opt-in and sibling changes. This is a prerequisite for whole-object
 text dispatch; it does not execute Magical Hack or Sleight of Mind.
+
+
+## Protection and conditional opponent-color P/T spell continuation
+
+`WithProtectionPTSpellTextContinuation() CardOption` marks a creature with
+exactly two printed declarations: nonempty color protection, marked with
+`WithLayeredColorTextRevision()`, and one fixed P/T rule, marked with
+`WithLayeredPTTextRevision()`. The P/T service is
+`SourcePTWhileOpponentControlsNontokenColor(color, power, toughness)` or
+`NamedCreaturesPTWhileOpponentControlsNontokenColor(name, color, power, toughness)`.
+The condition reads the current controller's opponent. Named recipients include
+matching creatures controlled by either player. Tokens cannot satisfy the
+condition. Other abilities, keywords, card types, Auras, casting targets,
+additional/alternate costs and conflicting continuation markers are excluded.
+
+RON selects `Protection(FromColor(Colors([color, ...])))` beside
+`If(APlayerPassesFilter(Opponent, ControlsA(And([IsNonToken, IsColor(color)]))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])])`, or the
+same condition with `EachPermanentLayerEffect(And([IsCardtype(Creature),
+IsNamed(NamedCard(name))]), [AdjustPT(power, toughness)])`. Adjustments are
+integers; colors are concrete. Existing protection and conditional P/T lowering
+build separate declarations and groups. Valid broader cards still compile
+without this marker; unsupported declarations remain errors.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks both old and fresh contexts before replacing the exact stack visit.
+Protection cardinality, P/T condition/recipient context, named recipient,
+subtypes, and specific sibling declaration pairing must stay fixed. Both rules
+have static ability type, so pairing checks their concrete sibling identity.
+Invalid changes, missing builders/groups and foreign announcement state reject
+atomically. Mana symbols and names retain their printed values (CR 612.1–3).
+
+The shared entry builder keeps physical identity, owner and printed departure
+rules (CR 400.7a). Copies enter as tokens; clones keep separate changes. Live
+control, condition colors, token status and recipients use existing layer
+services. Later declaration text layers restore the continued baseline on expiry;
+phasing keeps the visit. Ability removal suppresses both rules and restoration
+uses their continued text. Departure keeps final LKI; recasts use printed rules.
+Ordinary word changes stay outside copiable values (CR 707.2). Added copy types
+clear the creature-only marker while retaining independently rebuilt rules.
+No payment, damage, replacement-order or simultaneous-operation service changes.
+
+Evidence: `TestTextProtectionPTSpellDeclaration` and `RejectsAtomic`;
+`TestRONTextProtectionPTSpellRecords`, `Lifecycle`, `Copies`, `Inventory`,
+`Boundaries` and `CopyExceptions`. Complete LEG records map Beasts of Bogardan
+and Ivory Guardians to these tests. This shared prerequisite adds two names of
+continuation coverage with zero collection acceptance gain. Whole-object text
+dispatch and complete Sleight of Mind execution remain separate work.

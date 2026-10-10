@@ -136,7 +136,7 @@ func TestRONTextConditionalPTSpellRecords(t *testing.T) {
 
 func TestRONTextConditionalPTSpellBoundaries(t *testing.T) {
 	for _, tc := range []struct{ set, name string }{
-		{"LEA", "Sedge Troll"}, {"LEG", "Beasts of Bogardan"}, {"LEG", "Ivory Guardians"}, {"DRK", "Goblin Caves"}, {"DRK", "Goblin Shrine"},
+		{"LEA", "Sedge Troll"}, {"DRK", "Goblin Caves"}, {"DRK", "Goblin Shrine"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			g, a, _ := ronGame()
