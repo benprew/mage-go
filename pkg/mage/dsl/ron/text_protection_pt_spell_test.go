@@ -245,7 +245,7 @@ func TestRONTextProtectionPTSpellInventory(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, record := range records {
-			if !protectionPTSpellTextRules(record.Fields["Rules"].Args) {
+			if !protectionPTTextRules(record.Fields["Rules"].Args) {
 				continue
 			}
 			if _, err := Compile(record); err != nil {

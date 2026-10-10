@@ -338,7 +338,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		attachedObjectText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && attachedObjectTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
 		staticActivationSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && staticActivationTextRules(rules)
-		protectionPTSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && protectionPTSpellTextRules(rules)
+		protectionPTSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && protectionPTTextRules(rules)
 		intrinsicCastSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && intrinsicCastSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)

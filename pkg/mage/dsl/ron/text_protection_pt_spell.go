@@ -1,6 +1,6 @@
 package ron
 
-func protectionPTSpellTextRules(rules []Node) bool {
+func protectionPTTextRules(rules []Node) bool {
 	if len(rules) != 2 {
 		return false
 	}

@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedProtectionPTTextEffect] for complete paired creature rules.
+// One color protection rule shares text with one opponent nontoken color P/T rule.
+// The recipient is the source or creatures with one fixed name. Both declarations
+// pass checks before either layer is installed. Each keeps its baseline and ID.
+// Ordered changes, expiry, clones, control, phasing, removal and LKI use shared
+// services. Return and copy values use printed rules. Stack entry text stays
+// the layer baseline. [ChangePrintedPermanentText] selects this context.
+// Other mixed rules and live copy changes need separate contracts.
+//
 // Use [Game.AddPrintedStaticActivationTextEffect] for paired creature rules.
 // One global or basic-land source P/T rule shares text with one ordinary action.
 // Both declarations pass checks before either layer is installed. They keep

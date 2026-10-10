@@ -12055,8 +12055,9 @@ Evidence: `TestTextProtectionPTSpellDeclaration` and `RejectsAtomic`;
 `TestRONTextProtectionPTSpellRecords`, `Lifecycle`, `Copies`, `Inventory`,
 `Boundaries` and `CopyExceptions`. Complete LEG records map Beasts of Bogardan
 and Ivory Guardians to these tests. This shared prerequisite adds two names of
-continuation coverage with zero collection acceptance gain. Whole-object text
-dispatch and complete Sleight of Mind execution remain separate work.
+continuation coverage with zero collection acceptance gain. Complete battlefield
+dispatch uses the protection/P/T object text contract below. Complete Sleight of
+Mind execution remains separate work.
 
 ## P/T static and activated spell text continuation
 
@@ -12400,5 +12401,52 @@ and simultaneous-operation contracts are reused without changes. Evidence:
 and regeneration; Thrull Champion maps its FEM record to global Thrull P/T,
 targeted control and source-control duration. Extracted real Magical Hack and
 Sleight of Mind permanent branches supply interaction evidence. Their complete
-records still reject `CreateSpellEffect`; paired protection/P/T, attached land
-rules and live-copy rebinding require separate contracts.
+records still reject `CreateSpellEffect`; attached land rules and live-copy
+rebinding require separate contracts.
+
+## Complete protection/P/T object text
+
+`Game.AddPrintedProtectionPTTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` checks a complete creature with two printed rules:
+one marked color protection declaration and one marked P/T declaration conditional
+on the opponent controlling a nontoken permanent of a color. The recipient is
+this source or creatures with one fixed name under either player. Both rule
+orders are supported. Additional rules, keywords, types, casting costs/targets
+and Aura contexts are excluded by the existing protection/P/T continuation
+contract.
+
+`ChangePrintedPermanentText` dispatches this context at resolution. RON uses the
+shared `protectionPTTextRules` selector, position-based declaration groups and
+existing `compilePermanentObjectText` lowering. Its nonempty resolving
+`CreatePermanentLayerEffect(permanent_ref, [substitution, ...])` list contains
+only typed color/basic-land word substitutions. Compatible distinct saved word
+choices must dominate their uses. RON supplies Indefinite; native callers may
+also supply EndOfTurn. The compiler creates fresh references for each instance.
+
+The engine validates old and rebuilt complete contexts and exact sibling
+correspondence before checking live protection and registered P/T on an isolated
+game. Missing builders/groups, changed recipient names/contexts, typed nil
+runtime declarations, missing registrations, stale/phased visits, face-down
+sources, invalid durations and invalid words reject without live mutation.
+Basic-land substitutions have no matching words in this context, but still
+validate both live declarations. Color substitutions install two existing layer
+3 effects together, then run one layer pass. Each declaration keeps its active
+ID and baseline. Only semantic words change; mana symbols and card names retain
+their values (CR 612.1–3).
+
+The shared layers keep ordered changes and expiry, separate clones, live control,
+opponent nontoken conditions and named recipients. Phasing keeps the visit;
+layer 6 removal suppresses both rules and restoration keeps changed text.
+Departure LKI keeps final protection and P/T; return uses printed rules
+(CR 400.7, 613.1c/f/g, 613.4c). Copiable values exclude ordinary text changes
+(CR 707.2). Stack-changed entry text remains the later layer restoration baseline.
+No cost, replacement-order, damage-batch or simultaneous-operation service changes.
+
+Evidence: native `TestTextProtectionPTObjectAtomic`; RON
+`TestRONTextProtectionPTObjectRecords`, `OrderAndContinuation`, `TargetVisit`,
+`Boundaries`, `Inventory` and `PendingBindings`, with the existing protection/P/T
+spell declaration and lifecycle tests. The complete LEG records for Beasts of
+Bogardan and Ivory Guardians gain battlefield interaction coverage. Complete
+Sleight of Mind/Magical Hack records still reject `CreateSpellEffect`; tests use
+an explicitly extracted real permanent branch for that interaction. Attached
+land text, live-copy text and complete word-changing consumers remain separate.
