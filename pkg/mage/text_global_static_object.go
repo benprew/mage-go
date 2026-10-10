@@ -76,6 +76,9 @@ func (e *permanentObjectTextChange) Apply(ctx *EffectContext) error {
 	if _, err := attachedObjectTextContext(p.Card); err == nil {
 		return ctx.Game.AddPrintedAttachedObjectTextEffect(p, e.duration, changes...)
 	}
+	if _, err := landAuraObjectTextContext(p.Card); err == nil {
+		return ctx.Game.AddPrintedLandAuraObjectTextEffect(p, e.duration, changes...)
+	}
 	if intrinsicSpellTextContext(p.Card) == nil {
 		return ctx.Game.AddPrintedIntrinsicCreatureTextEffect(p, e.duration, changes...)
 	}

@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedLandAuraObjectTextEffect] for one complete land-type Aura.
+// [LandEnchantTarget] keeps its enchant restriction fixed. Both definitions and
+// every declaration group pass checks before layer installation. Fixed rules
+// change printed output words. Saved entry choices stay fixed. Shared services
+// keep ordered baselines, expiry, attachment identity, intrinsic mana, clones,
+// control, phasing, removal, LKI and printed return. Spell entry text stays the
+// baseline. Mutable enchant filters and live copy rules need separate contracts.
+//
 // Use [Game.AddPrintedProtectionPTTextEffect] for complete paired creature rules.
 // One color protection rule shares text with one opponent nontoken color P/T rule.
 // The recipient is the source or creatures with one fixed name. Both declarations

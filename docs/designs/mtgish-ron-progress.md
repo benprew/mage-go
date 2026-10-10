@@ -8,13 +8,14 @@ unique card names** (986 total), and **2,098 compiled / 347 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`PROTECTION-PT-OBJECT-TEXT` adds complete paired creature dispatch for color
-protection and one opponent nontoken color P/T rule. New battlefield interaction
-evidence covers **2 names / 2 complete records**; acceptance gain is **0 names /
-0 records**. Both declarations pass checks before either text layer is installed.
-Ordered baselines, expiry, identity, clones, phasing, removal, control, LKI,
-printed copies/return and stack entry text use shared services. Attached land
-rules, live-copy rules and complete word-changing consumers remain gaps.
+`LAND-AURA-OBJECT-TEXT` adds complete battlefield text dispatch for Evil
+Presence and Phantasmal Terrain. New interaction evidence covers **2 names /
+12 complete records**; acceptance gain is **0 names / 0 records**. Both complete
+definitions and all sibling groups validate before ordered layer installation.
+Fixed enchant restrictions, saved entry choices, current attachment identity,
+intrinsic mana, expiry, clones, control, phasing, removal, LKI, printed copies
+and return use shared services. Spell-entry text remains the baseline. Complete
+word-changing consumers, mutable enchant filters and live-copy rules remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -66739,3 +66740,154 @@ HEAD history; the user's archive move and Eureka work remain in the worktree.
    declaration contracts; do not silently drop the added upkeep ability.
 
 Stopped after one capability slice. Migration remains incomplete.
+
+## Run 2026-10-10: LAND-AURA-OBJECT-TEXT
+
+Status: complete attached land-type object text slice. No second slice started.
+Starting tracked and untracked user changes include Eureka entry rounds and the
+ledger archive. They remain separate from this slice's commit. Fresh worktree
+make build and go test ./pkg/mage/dsl/ron -count=1 passed (RON 38.623s).
+The starting loader exited 1 for strict collection rejection, not compilation
+failure: 813 accepted / 173 rejected names; 2,099 compiled / 346 rejected records.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected. Reprints count once for
+unique-card estimates. The ledger's first candidate is dependency-ready.
+
+| Candidate | Distinct affected names / estimated full-card acceptance gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Complete attached land-type object text | Evil Presence, Phantasmal Terrain: 2 names / 12 records; 0 acceptance gain because both already compile | Existing spell-entry marker, fixed/chosen host layers, saved choices and per-instance word pairs are ready. Adds complete battlefield text interaction for both and supplies Magical Hack's land-Aura dependency. Mutable enchant filters and live-copy rebinding remain separate. | Small: one checked engine transaction, typed fixed enchant target, compiler adapter and dispatcher; native rejection and RON lifecycle tests |
+| Complete spell-target word-change consumer | Magical Hack, Sleight of Mind: 2 names / 12 records; up to 2 acceptance unlocks, not yet complete gameplay unlocks | Full records contain Targeted_Modal with distinct spell/permanent targets, resolution-only word choices and CreateSpellEffect/CreatePermanentLayerEffect. Complete object coverage and the spell-target adapter are still prerequisites. Enables shared stack and battlefield word changes. | Medium/large: target-context adapter, full consumer execution, copy/retarget/legality and lifecycle evidence |
+| Copy-entry added ability and live-copy rebinding | Vesuvan Doppelganger: 1 name / 6 records; 0 from entry AddAbility alone, at most 1 from the complete dependent chain | Nested KeepColor, added controller-upkeep trigger, targeted optional live copy and AddAbilityVariable(ThisAbility) require added-declaration identity and acquired-rule rebinding. Concrete reuse is the shared copy/text subsystem; immediate gain is one card. | Large: entry exception, trigger identity, copy provenance, live layer, rebinding and text/clone interactions |
+
+The first candidate wins because its prerequisites already exist, it supplies a
+complete multi-card engine context, and it is small enough to finish this run.
+No source or environment defect was used to justify a simplified implementation.
+Local data/LEA.json gives Evil Presence “Enchant land / Enchanted land is a
+Swamp” and Phantasmal Terrain's entry choice and chosen-type host rule. All six
+identical reprints of each were read. CR 305.7, 400.7, 612.1–3, 613.1c/d/f and
+707.2 establish the land, identity, text, layer and copy contracts.
+
+### Supported signatures, contexts and reuse
+
+- New native LandEnchantTarget() Target marks a fixed land enchant restriction.
+  RON compileEnchantPermanent lowers exact EnchantPermanent(IsCardtype(Land))
+  to it. Target correspondence retains that marker through spell revision/copies.
+- New Game.AddPrintedLandAuraObjectTextEffect(source *Permanent,
+  duration core.Duration, changes ...TextChange) error checks a complete Aura
+  marked by WithLandTypeAuraSpellTextContinuation. It requires one layered
+  fixed attached land rule, or one chosen attached rule with exactly one entry
+  choice. Both retained and rebuilt contexts and every sibling declaration group
+  must correspond before installation. Native EndOfTurn and Indefinite work.
+- Existing compilePermanentObjectText lowers nonempty compatible distinct saved
+  color/basic-land word pairs in CreatePermanentLayerEffect(permanent_ref,
+  [substitution,...]) to ChangePrintedPermanentText with Indefinite duration.
+  Its dispatcher now selects this complete Aura context. Choices stay in typed
+  per-instance resolution frames. No second spelling adapter, card-name branch,
+  Go-card fallback or partial production registry was introduced.
+- Reuse: landAuraSpellTextContext, BuildTextDefinitionRevision,
+  ReplacementAbility, AddPrintedStaticLandTypeTextEffect, typed land contexts,
+  printedStaticAbilityTextEffect, registration checks, ordered baseline reset,
+  shared attachment/land/mana services, Clone, phasing, LKI, printed return and
+  CaptureCopiableValues. Missing compiler recognition and complete engine
+  preflight were implemented; existing rules mechanisms were retained.
+- Saved chosen types are not printed words and cannot change or repeat. Fixed
+  rules change output words in order; color-only and other valid no-match changes
+  still validate the complete declaration and live registration. Layer 4 uses
+  the current exact attachment and intrinsic mana. Layer 6 cannot reverse an
+  earlier type layer. Spell-entry text stays the baseline after object-layer
+  expiry. Copies exclude ordinary text; departure retains final LKI.
+- Empty/invalid changes, other durations, mutable enchant filters, changed groups,
+  lost markers/choices, missing builders/runtime rules/registrations and nil,
+  stale, phased or face-down sources reject without changing live state.
+  Other mixed Auras, general mutable enchant text and live-copy rules stay gaps.
+
+### Failing-first and card-to-test evidence
+
+Native tests first failed for missing LandEnchantTarget and
+AddPrintedLandAuraObjectTextEffect signatures. RON tests initially exposed two
+incorrect test-harness calls; those calls were corrected. A minimal rejecting
+native stub failed valid, chosen and no-match assertions. The old dispatcher
+failed real Magical Hack permanent-branch host assertions and phase-cycle
+resolution. Entry tests use an explicit ChooseString player so saved choices
+remain independent from ChooseMode word pairs. A host LKI assertion was corrected
+to use Snapshot.HasSubType. No gameplay assertion was weakened.
+
+| Mapping | Evidence |
+| --- | --- |
+| Evil Presence and Phantasmal Terrain: LEA, LEB, 2ED, 3ED, CED, CEI, 12 complete records | TestRONTextLandAuraObjectRecords: paid real casting, extracted real Magical Hack permanent branch, resolution-only choices, host type and intrinsic mana, stable declaration/choice/name/mana, ordered expiry, phasing without repeated choices, removal/restoration, control, clone isolation, printed copy values, departure and printed recast |
+| Full collection shape inventory | TestRONTextLandAuraObjectInventory parses all files and maps exactly 2 names / 12 records; both rule orders and color-only no-match transactions succeed |
+| Pending per-instance choices | TestRONTextLandAuraObjectPendingBindings: two pending real permanent branches and independent original/cloned pairs keep distinct host results |
+| Entry baseline, ordered layers and host visits | TestRONTextLandAuraObjectOrderAndAttachment: changed spell entry, composed object changes, earlier expiry, current reattachment, final host LKI and returned-host exclusion |
+| Target timing and declaration boundaries | TestRONTextLandAuraObjectTargetVisit: return, phasing, shroud and phase cycle; illegal targets make no choices. Boundaries rejects malformed/unbound/duplicate choices and excludes mutable or creature enchant contexts |
+| Native preflight | TestTextLandAuraObjectAtomic: 23 scenarios cover valid fixed/chosen/no-match, nil/empty/invalid/duration, face-down/phased/returned sources, missing builder/group/runtime/registration, typed nil runtime, changed group/target/context/choice correspondence, extra rules and lost layer/complete markers. Rejections preserve pointer and effect count |
+
+Existing TestRONTextLandAuraSpell*, TestTextLandAuraSpell* and
+TestTextStaticLandTypeLayer* retain spell legality, copy/retarget, entry choice,
+registration order, declaration validation and shared-layer evidence. Replacement
+ordering and simultaneous-operation services are reused without changes; this
+slice introduces no payment transaction or replacement operation.
+
+### Validation and final collection status
+
+- Focused go test ./pkg/mage/dsl/ron -run
+  'TestRONTextLandAura(Object|Spell)' -count=1 passed (0.745s). Native
+  TestTextLandAuraObjectAtomic passed (0.515s). make build and go vet ./...
+  passed after implementation.
+- go test ./pkg/mage/... -short -count=1 passed (RON 39.437s).
+  make test passed (RON 48.744s). The implement-engine skill's additional
+  go test ./... -short -count=1 passed (RON 104.771s).
+- make lint passed with 0 issues. Review found no automatic changes to staged
+  slice source or starting unrelated tracked files. git diff --check and staged
+  diff checks passed.
+- Fresh final worktree go run ./cmd/loadcards -json exited 1 for expected strict
+  collection rejection. JSON is byte-identical to the fresh starting report:
+  813 accepted / 173 rejected unique names; 2,099 compiled / 346 rejected records.
+  Every previously accepted record and diagnostic is preserved. Magical Hack and
+  Sleight of Mind still reject CreateSpellEffect; Vesuvan Doppelganger still
+  rejects entry-copy AddAbility.
+- Isolated HEAD plus only staged slice source passed focused RON/native tests
+  (0.632s / 0.378s), make build, go vet ./..., engine short tests
+  (RON 39.732s), make test (RON 73.644s), make lint (0 issues) and diff checks.
+  A first isolated test invocation overlapped source export and saw a missing-API
+  vet result; the complete validation above ran after export. Every staged source
+  and API documentation byte matches the validated checkout after lint.
+- Its fresh final strict loader exited 1: 812 accepted / 174 rejected unique names,
+  2,098 compiled / 347 rejected records. The worktree's additional Eureka name and
+  record are pre-existing and excluded from this commit. No required check remains
+  failed. No partial registry was installed.
+
+
+Actual acceptance gain is **0 unique names / 0 records**, matching the estimate.
+New complete battlefield text interaction evidence covers **2 names / 12
+records**. This is separate from compilation and complete consumer gameplay.
+No RON source defect was found or source edited; no vocabulary refresh is needed.
+Go-card definitions, generation and DSL exports remain until their removal gates.
+No unused function was deleted without a whole-repository caller audit.
+
+Changed files: pkg/mage/text_land_aura_object.go and native tests;
+pkg/mage/dsl/ron/text_land_aura_object_test.go and enchant_controller.go;
+pkg/mage/target.go; pkg/mage/text_global_static_object.go;
+pkg/mage/text_spell_continuation.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Only this slice is staged. The committed ledger retains HEAD history; the user's
+archive move and Eureka changes remain in the worktree.
+
+### Ranked next candidates
+
+1. Spell-target CreateSpellEffect and complete Targeted_Modal word-changing
+   consumers for Magical Hack and Sleight of Mind. Reuse saved pairs, typed spell
+   targets, RevisePrintedSpellText and complete permanent dispatch; retain target
+   category, clone/copy retargeting and independent resolution bindings. Audit
+   remaining object contexts explicitly before claiming general target coverage.
+2. Copy-entry AddAbility and acquired live-copy rebinding for Vesuvan Doppelganger.
+   Preserve the added upkeep declaration, identity, KeepColor and ThisAbility;
+   implement missing reusable prerequisites as their own complete slice.
+3. Complete battlefield land-mana event text for Mana Flare and Manabarbs.
+   Their complete LEA records each have one AnyPlayer land mana TriggerA; the
+   produced-type bonus and damage body already have typed layer/spell contracts.
+   Check whole-object correspondence and shared mana planning before adapting
+   dispatch. Wild Growth has an attached-host event and needs a separate context.
+
+Stopped after one complete capability slice. Migration remains incomplete.

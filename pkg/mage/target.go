@@ -811,6 +811,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	fixedCreatureEnchant         bool
+	fixedLandEnchant             bool
 	controllerRefs               []PlayerRef
 	combatRelations              []targetCombatRelation
 	manaValueEqualX              bool

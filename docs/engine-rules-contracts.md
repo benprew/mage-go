@@ -16161,3 +16161,44 @@ Bogardan and Ivory Guardians gain battlefield interaction coverage. Complete
 Sleight of Mind/Magical Hack records still reject `CreateSpellEffect`; tests use
 an explicitly extracted real permanent branch for that interaction. Attached
 land text, live-copy text and complete word-changing consumers remain separate.
+
+
+## Complete attached land-type object text
+
+`Game.AddPrintedLandAuraObjectTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` checks one complete land-type Aura before it installs
+ordered text changes in layer 3. `LandEnchantTarget() Target` marks a fixed
+“enchant land” restriction. The retained definition must use
+`WithLandTypeAuraSpellTextContinuation`, one layered attached land-type rule,
+and exactly the required entry-choice declaration. Both complete definitions and
+every declaration group must correspond. Changed contexts, mutable enchant
+filters, missing builders, runtime rules or registrations, invalid changes,
+unsupported durations and stale, phased or face-down sources reject atomically.
+
+RON lowers exact `EnchantPermanent(IsCardtype(Land))` to `LandEnchantTarget`.
+Complete fixed `PermanentLayerEffect(HostPermanent,[SetLandType(basic)])` and
+chosen `SetLandTypeVariable(TheChosenLandType)` contexts reuse the existing
+land-Aura marker. The chosen form requires exactly one
+`AsPermanentEnters(ThisPermanent,[ChooseABasicLandType])`. Existing
+`CreatePermanentLayerEffect(permanent_ref,[word_substitution,...])` lowering
+uses typed saved word pairs and `ChangePrintedPermanentText`; its dispatcher
+now selects this complete Aura context. No card names select execution.
+
+The transaction reuses `AddPrintedStaticLandTypeTextEffect`. Each layer pass
+restores its baseline and applies surviving substitutions in order. Saved entry
+choices are not printed words and never change or repeat (CR 612.2). Layer 4
+uses the current exact attachment, land-type dependencies and intrinsic mana
+(CR 305.7). Layer 6 removal cannot reverse that earlier type layer. Control,
+phasing, expiry and clones keep separate rule state; returned sources and hosts
+cannot inherit old visits. Spell-entry text remains the baseline. Copiable values
+exclude ordinary text changes; departure keeps final LKI and printed return
+(CR 400.7, 613.1c/d/f and 707.2).
+
+Evidence: `TestTextLandAuraObjectAtomic` and `TestRONTextLandAuraObject*` cover
+atomic rejection, all twelve Evil Presence/Phantasmal Terrain records, rule
+order, real Magical Hack permanent-branch resolution, payment, choice timing,
+independent pending results, mana, entry choices, ordered expiry, attachment
+identity, control, phasing, removal/restoration, clone isolation, LKI and printed
+copies/return. Complete Magical Hack/Sleight of Mind spell execution, mutable
+enchant restrictions, other mixed Aura contexts and live copy rebinding remain
+separate capabilities.
