@@ -8,11 +8,12 @@ Eureka work, the worktree reports **818 accepted / 168 rejected names** and
 **2,119 compiled / 326 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-REQUIRED-PLAYER-PAYMENT-CONTINUATION adds typed mandatory discard payment
-and local branches, with actual effect-caused discard inside draw replacements.
-It establishes shared payer/continuation scope for Chains and Takklemaggot.
-Their remaining operations stay rejected. Complete-card compilation and gameplay
-gains are **0 names / 0 records**. No RON changed.
+GENERAL-ACTION-CHOICE-BODIES lowers nonempty resolving action alternatives
+through the shared sequence compiler and ChooseAtResolution. Local results,
+lexical players, copies, clones, delays and draw ancestry retain their contracts.
+Armorer remains covered; Sanctuary reaches its unsupported next-turn duration.
+Complete-card compilation and gameplay gains are **0 names / 0 records**.
+No RON changed. All required native checks pass.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -69508,3 +69509,154 @@ function was removed; their cutover and fresh caller-audit gates are not met.
    Lamp's library selection and Ring's outside-game service remain later bodies.
 
 Migration remains incomplete. This run stops after one slice.
+
+
+## Run 2026-10-10: GENERAL-ACTION-CHOICE-BODIES
+
+Status: complete one dependency-ready vertical slice. No second slice started.
+
+### Selection and dependencies
+
+Fresh baseline build and RON short tests pass. The strict loader exits 1 for
+collection rejection: 818 accepted / 168 rejected names, 2,119 compiled /
+326 rejected records. Initial modified and untracked files include the ledger
+archive, repeated-entry/Eureka work, definition validation and authoring docs.
+They remain outside this slice's commit.
+
+The latest ranked candidate was evaluated first. All affected complete RON
+records were read: Dwarven Armorer (FEM) and the six identical Island Sanctuary
+records (LEA, LEB, 2ED, 3ED, CED, CEI). The other compared candidates' complete
+Chains of Mephistopheles (LEG) and Serendib Djinn (ARN) records were also read.
+Reprints count once. Nested bodies, not first-error counts, supply the estimates.
+
+| Candidate | Distinct names / records | Estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| General ChooseAnAction bodies | Dwarven Armorer, Island Sanctuary / 7 | 0 names / 0 records; Armorer already accepted | Removes Sanctuary's counter-only transport restriction. CantBeAttackedExceptBy and UntilPlayersNextTurn remain. Reuses local sequence results for ordinary, player, replacement and delayed bodies. | Moderate: compiler adapter plus scope, identity and replacement tests |
+| MillACard symbol adapter | Chains of Mephistopheles / 1 | 1 name / 1 record | Existing draw-event and actual-discard contracts leave this mill adapter as its remaining body gap. Reuse Mill; test multiple Chains and competing replacement order. | Small to moderate |
+| IsCardtype(Land) no-land state filter | Serendib Djinn / 1 | 1 name / 1 record | compileNoLandTrigger currently accepts land subtypes only. Its land sacrifice and saved Island result are supported. Reuse state-trigger arming and ControlsNone. | Small to moderate |
+
+Candidate 1 is dependency-ready and a shared prerequisite, so it takes priority
+under this run's selection rule. It preserves Armorer and enables Sanctuary's
+remaining body to use normal resolving actions. Neither the engine service nor
+branch transport must be recreated when the restriction and duration are added.
+This is a compiler-adapter gap. No missing engine, source-data or environmental
+contract was found for this transport. No RON source changed.
+
+### Exact supported shape and reuse boundary
+
+ChooseAnAction([[action, ...], ...]) requires at least two alternatives, each
+a nonempty list. Every branch uses compileActionSequence; unsupported nested
+operations still reject the entire record. compileActionChoice(Node, scope)
+(effectFactory, error) replaces the counter-only helper in both compileEffect
+and compilePlayerEffect. Fresh factories build Sequence bodies and typed
+ResolutionOption values through buildResolutionChoiceFor.
+
+Contexts include ordinary spell/activated/triggered resolving bodies, lexical
+PlayerAction/PlayerActions, immediate draw replacement bodies and created delayed
+bodies. The enclosing typed player chooses when the body executes. ActionPlayer
+requires its existing PlayerActions producer. Targets stay outside the choice.
+All branches inherit input bindings; local payment, draw, name and number
+producers cannot supply sibling or enclosing reads. Nested choices and sequences
+retain their lexical scope and normal execution context. All declarations pass
+normal definition validation before gameplay. No global choice/result slot,
+card-name branch, fallback registry or production substitution is introduced.
+
+Mage supplies the existing ChooseAtResolution(PlayerRef, ...ResolutionOption)
+ResolvingEffect and Sequence(...ResolvingEffect) ResolvingEffect mechanics.
+ResolutionOption.When retains the existing explicit availability policy. The
+native service needs no implementation change; its public contract and tests
+now record sequence inputs and branch-created delayed values. Shared services
+own current frames, saved bindings, targets, LKI, incarnation identity, source
+reads, waiting queries, copies, clones, costs, discard, draw ancestry and
+replacement order. No new payment, zone, replacement or scheduling system exists.
+Existing Go callers, definitions and strict loading remain. No DSL removal gate
+is met, so no public DSL function or engine service was removed.
+
+Rules evidence: CR 400.7, 608.2b-d, 608.2h and 614.5-6; local data/LEA.json and
+data/FEM.json Oracle text. Sanctuary may skip each controller draw during that
+player's draw step; its redraw choice must not repeat the same replacement.
+Armorer's announced target and paid activation still precede its counter choice.
+No source defect was found. The unchanged vocabulary snapshot still describes
+ChooseAnAction/1 (seven records) and MillACard symbol (one record).
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, the new gameplay tests fail with unsupported counter
+choice body. Harness corrections used core.Draw, explicit TargetPlayer bindings
+instead of the Opponent filter as a player reference, and a declared creature
+CardPT. These corrections do not relax gameplay assertions. Later replacement
+ancestry evidence initially counted only body choices. Its diagnostic proved
+one draw and three prompts: one affected-player replacement-order choice plus
+two body choices. The corrected test requires all three and six after two draws.
+The early short-suite run captured that test assertion failure; its final rerun
+passes. No engine rule or existing rejection test was weakened.
+
+| Card/context | Tests and exact coverage |
+| --- | --- |
+| Dwarven Armorer, unchanged complete FEM record | Existing TestRONResolutionChoiceArmorer passes in focused and full runs: both counter options, cast/activation payment, sickness and illegal-target rollback, resolution timing, shroud, phasing, return, source control/departure, copies and clones. Complete-card coverage is retained. |
+| Island Sanctuary, real LEA record context | TestRONActionChoiceSanctuaryContext keeps the complete draw event, choice structure and exact DrawACard branch. Only the unsupported restriction/duration action is replaced with GainLife(4). Both choices, other-player draws, upkeep draws and immediate nonrecursive redraws execute. All six unchanged full records remain rejected; no full Sanctuary gameplay is claimed. |
+| Complete synthetic resolving RON | TestRONActionChoiceSequence covers multiple instructions, nested choices, targeted lexical payer, inherited and local values, later outer reads and invalid decision indices. PaymentAndDraw covers failed activation payment, mandatory payment continuations, branch-local successful draw and discard results, and later instructions. Invalid checks empty/unimplemented branches, undeclared targets, branch-created targets and sibling/outer result escapes. |
+| Complete synthetic delayed RON | DelayedIdentity covers live/phased/returned/control-changed sources, LKI, unselected body source reads, pure waiting queries, delayed timing, distinct copied controllers and independent game clones. A returned source's larger power cannot replace the original saved visit. |
+| Complete synthetic replacement RON | ReplacementAncestry proves two independent source rules apply once each in affected-player order, make their own body choices, produce one actual draw and can both apply to a later event. |
+| Native mechanics | TestResolutionChoiceSequenceBindings proves inherited inputs and a branch-created delay's saved value despite a later local write and cloning. Existing TestResolutionChoice declarations/dispatch/availability and waiting-choice source tests remain green. |
+
+### Verification and measured results
+
+- Baseline make build passes. Fresh go test ./pkg/mage/dsl/ron -short
+  -count=1 passes (39.663s). Baseline go run ./cmd/loadcards -json exits 1
+  only for collection rejection: 818 accepted / 168 rejected names,
+  2,119 compiled / 326 rejected records, 2,445 total.
+- Final focused go test ./pkg/mage/dsl/ron -run
+  'TestRON(ActionChoice|ResolutionChoice|WaitingDelayedChoice)' -count=1 passes
+  (0.508s), including unchanged complete Armorer gameplay. Native
+  go test ./pkg/mage -run TestResolutionChoiceSequenceBindings -count=1 passes.
+- make build and go vet ./... pass. The final go test ./pkg/mage/... -short
+  -count=1 passes (RON 43.528s). make test passes (RON 54.442s).
+  make lint passes with 0 issues. A before/after content audit finds no
+  automatic lint changes, including unrelated files. git diff --check and
+  git diff --cached --check pass. No environmental or pre-existing blocker exists.
+- A separate checkout of HEAD plus only the staged slice passes focused RON
+  and native tests, make build, go vet ./... and go test ./pkg/mage/... -short
+  -count=1 (RON 62.978s). Its strict loader exits 1 only for collection rejection:
+  817 accepted / 169 rejected names, 2,118 compiled / 327 rejected records.
+  The difference from the worktree is the initial Eureka work, not this slice.
+- Final worktree go run ./cmd/loadcards -json exits 1 only for collection
+  rejection: 818 accepted / 168 rejected names, 2,119 compiled /
+  326 rejected records. Fresh baseline/final rejected-name comparisons show
+  no newly accepted or rejected names. Strict loading publishes no registry.
+  Sanctuary now reaches 2ED.lines.ron:127:379: unsupported player payment
+  duration (UntilPlayersNextTurn), identically in its other reprints. The
+  attack restriction remains another nested gap. This diagnostic progress
+  is adapter transport evidence, not a full-card unlock or build failure.
+- Only this slice's changes are staged for
+  git commit -m "feat(ron): implement general action choice bodies".
+  The initial ledger archive relocation, repeated-entry implementation,
+  definition/optional-entry edits, authoring docs and .gitignore remain unstaged.
+
+Estimated and actual full-card compilation/gameplay gains are 0 names /
+0 records. New Sanctuary context evidence is one distinct name; Armorer's
+complete-card evidence remains green. Compilation and full gameplay are separate.
+The source RON and vocabulary snapshot are unchanged. Runtime loading, complete
+collection gameplay, Go-card deletion and unused public DSL removal remain open.
+
+Changed files: RON resolution_choice.go, compiler.go and action_choice_test.go;
+native resolution_choice.go contract and action_choice_sequence_test.go;
+pkg/mage/doc.go; DSL reference and rules contracts; this ledger. Only this slice
+is staged. Initial unrelated changes and untracked files remain in the workspace.
+
+### Ranked next candidates
+
+1. MillACard symbol adapter for Chains of Mephistopheles. Existing Mill,
+   draw-event and effect-discard contracts are ready. Estimate one name / one
+   record; test the complete record, multiple Chains, actual discard/cancellation
+   and competing replacement order. Compare against useful shared prerequisites.
+2. IsCardtype(Land) no-land state filter for Serendib Djinn. Reuse existing
+   ControlsNone and state-trigger arming. Estimate one name / one record; test
+   land-loss detection, pending state triggers and its entire upkeep body.
+3. Sanctuary's CantBeAttackedExceptBy plus saved-player next-turn duration.
+   Its choice transport is now ready. Estimate one name / six records after
+   both remaining contracts. Check shared duration uses before sizing the slice.
+   Takklemaggot's mandatory creature selection and linked Aura lifecycle remain
+   separate larger prerequisites; Lamp and Ring still need their zone services.
+
+Migration remains incomplete. This run stops after this one slice.

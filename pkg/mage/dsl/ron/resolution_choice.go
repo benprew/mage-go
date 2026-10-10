@@ -2,7 +2,7 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileCounterChoice(n Node, ctx scope) (effectFactory, error) {
+func compileActionChoice(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
@@ -19,30 +19,19 @@ func compileCounterChoice(n Node, ctx scope) (effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		if len(parts) != 1 || parts[0].Name != "PutCounters" {
-			return nil, unsupported(option, "counter choice body")
+		if len(parts) == 0 {
+			return nil, problem(option, "action choice requires a nonempty body")
 		}
-		action := parts[0]
-		if err := arity(action, 1); err != nil {
-			return nil, err
-		}
-		instructions, err := list(action.Args[0])
+		body, err := compileActionSequence(parts, ctx)
 		if err != nil {
 			return nil, err
 		}
-		if len(instructions) != 1 || instructions[0].Name != "ACounterOfTypeOnPermanent" {
-			return nil, unsupported(action, "counter choice instruction")
-		}
-		instruction := instructions[0]
-		if err := arity(instruction, 2); err != nil {
-			return nil, err
-		}
-		if instruction.Args[0].Name != "PTCounter" || instruction.Args[1].Kind != Symbol || instruction.Args[1].Name != "Ref_TargetPermanent" {
-			return nil, unsupported(instruction, "target P/T counter choice")
-		}
-		plans[i], err = compileCounterPlacement(action, ctx)
-		if err != nil {
-			return nil, err
+		plans[i] = func(bindings instanceBindings) mage.Effect {
+			effects := make([]mage.Effect, len(body))
+			for j, build := range body {
+				effects[j] = build(bindings)
+			}
+			return mage.Sequence(effects...)
 		}
 	}
 	return buildResolutionChoiceFor(plans, nil, ctx.player), nil

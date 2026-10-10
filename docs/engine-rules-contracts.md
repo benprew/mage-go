@@ -16869,3 +16869,36 @@ replacement, and future versus delayed execution contexts. Original full records
 remain rejected; the tests explicitly replace unsupported operations and do not
 claim complete-card gameplay. Existing multi-card discard and sacrifice batch
 contracts continue to supply simultaneous-payment evidence.
+
+
+## General RON action-choice bodies
+
+RON `ChooseAnAction([[action, ...], ...])` requires at least two nonempty
+alternatives and lowers each through the shared action-sequence compiler.
+The engine reuses `ChooseAtResolution(PlayerRef, ...ResolutionOption)
+ResolvingEffect` and `Sequence(...ResolvingEffect) ResolvingEffect`; no new
+choice or frame service is required. Each option has fresh declarations and
+inherits the lexical player, targets, source incarnation and event context.
+Branch-local producers cannot supply sibling or outer reads. Targets remain
+announcement declarations; nested `Targeted` bodies are rejected.
+
+Choices run when their body executes (CR 608.2c-d). Branch actions retain
+normal payment, discard, draw, replacement and delayed-frame behavior. In a
+draw replacement, a generated draw keeps event ancestry (CR 614.5-6). This
+adapter does not change option-availability policy: callers must supply any
+legality restriction through the existing `ResolutionOption.When` contract.
+Source information follows CR 400.7 and 608.2h; phasing retains the visit.
+
+`TestResolutionChoiceSequenceBindings` proves inherited input reads and a
+branch-created delay's saved value after a later write and cloning.
+`TestRONActionChoiceSequence`, `PaymentAndDraw`, `DelayedIdentity` and `Invalid`
+prove nested scope, payment timing, draw results, pure waiting queries, LKI,
+source control and return, copies, clones and branch rejection. Existing
+`TestRONResolutionChoiceArmorer` keeps complete-card cost, target, phasing and
+copy evidence. `TestRONActionChoiceSanctuaryContext` retains the real draw event,
+choice and redraw branch, substituting a life action only for the unsupported
+attack restriction. Full Sanctuary gameplay and compilation remain gaps.
+
+`TestRONActionChoiceReplacementAncestry` adds two independent draw rules. It
+proves one affected-player order choice followed by two body choices produces
+one draw. A later event can use both rules again.

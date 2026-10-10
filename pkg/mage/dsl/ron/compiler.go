@@ -1267,7 +1267,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return nil, problem(n, "damage source choice requires an action sequence")
 	case "ChooseAnAction":
-		build, err := compileCounterChoice(n, ctx)
+		build, err := compileActionChoice(n, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1775,7 +1775,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return []effectFactory{build}, nil
 	}
 	if n.Name == "ChooseAnAction" {
-		build, err := compileCounterChoice(n, ctx)
+		build, err := compileActionChoice(n, ctx)
 		if err != nil {
 			return nil, err
 		}

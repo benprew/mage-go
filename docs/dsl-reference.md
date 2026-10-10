@@ -6170,12 +6170,25 @@ Other evidence: `TestRONChosenDiscardCostOptional`, `IndependentPayers`,
 
 ## RON choices during resolution
 
-`ChooseAnAction/1` accepts a list of at least two alternatives. Each alternative
-is a list containing exactly one `PutCounters([ACounterOfTypeOnPermanent(
-PTCounter(p, t), Ref_TargetPermanent)])` action. P/T coordinates use the existing
-counter type grammar. The permanent target must be declared outside the choice.
-Choices that add targets, use another subject, use plural counters, or run other
-actions remain errors. This shape executes Dwarven Armorer's complete record.
+`ChooseAnAction/1` accepts at least two nonempty lists of resolving actions.
+Each list uses the shared action-sequence compiler. Nested choices, local
+payment continuations, draw results and created values retain their existing
+contracts. All branches inherit the enclosing typed references and execution
+context. Producers stay inside their branch; no result escapes to a sibling or
+the enclosing continuation. Targets must be declared outside the choice.
+Every branch must compile, even when a player would select another branch.
+The lexical player chooses when the body runs, including immediate draw
+replacements and created delayed bodies. Actions use their normal replacement,
+batch and transaction services. No selected index is saved on a permanent.
+
+Dwarven Armorer retains complete-record gameplay coverage. Island Sanctuary's
+choice transport has focused evidence in `TestRONActionChoiceSanctuaryContext`,
+with its unsupported attack restriction replaced by a life action. Its unchanged
+complete record remains rejected until the restriction and duration are supported.
+`TestRONActionChoiceSequence`, `PaymentAndDraw`, `DelayedIdentity`,
+`ReplacementAncestry` and `Invalid`
+cover general bodies, nested player scope, branch results, timing, identity,
+LKI, copies, clones and invalid declarations.
 
 `ChooseAnAbility/1` accepts at least two distinct keywords supported by the
 existing temporary keyword adapter. It must be followed immediately by
@@ -9751,11 +9764,12 @@ Evidence: `TestWaitingDelayedBranchOperands`, `TestWaitingDelayedBranchPurity`,
 The seven protection names gain subrule evidence only. General source aggregation
 still rejects their complete RON records.
 
-### Waiting resolution choices and scoped counter choices
+### Waiting resolution choices and scoped action choices
 
 RON `ChooseAnAction([[PutCounters([ACounterOfTypeOnPermanent(PTCounter(p,t),
-Ref_TargetPermanent)])], ...])` retains its existing counter-only body contract
-and requires at least two alternatives. It also works inside `PlayerAction`
+Ref_TargetPermanent)])], ...])` remains supported by the general nonempty
+action-list body contract and requires at least two alternatives. It works inside
+`PlayerAction`
 and `PlayerActions`, including already-created delayed trigger bodies. The
 lexical player chooses at resolution; `ActionPlayer` is declared only by
 `PlayerActions`. Targets remain typed, bound and captured by the existing delay.
@@ -9769,7 +9783,8 @@ The shared helper for color and basic-land choices keeps its current callers.
 Mage declares source reads in every option body and condition, plus the chooser,
 for waiting delayed source enumeration. The query does not make a choice or
 check option availability. Unselected options retain explicit source references.
-This does not accept general `ChooseADamageSource` or arbitrary choice bodies.
+General `ChooseAnAction` bodies use the shared sequence compiler.
+General `ChooseADamageSource` retains its separate supported contexts.
 
 ### Created resolution values
 

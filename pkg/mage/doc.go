@@ -2194,6 +2194,9 @@
 // effect resolves. Each option runs in the existing resolution frame.
 // Supply a pure When condition if an option has a legality restriction.
 // Costs and targets are selected before this choice. Copies choose separately.
+// RON ChooseAnAction lowers nonempty action lists with the shared sequence
+// compiler. Each branch keeps local payment, draw and number results.
+// Draw replacements and delayed bodies keep their execution context.
 //
 // Automatic mana payment can use fixed mana-only conversions without a tap.
 // The reduced cost must consume at least the produced mana count. Repeated

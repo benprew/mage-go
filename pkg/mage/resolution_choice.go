@@ -15,6 +15,8 @@ type ResolutionOption struct {
 
 // ChooseAtResolution asks the selected player to choose one available action.
 // The choice belongs to this invocation and uses the current resolution frame.
+// Sequence bodies keep their saved inputs. Local results cannot supply another
+// option or a later instruction outside the choice.
 func ChooseAtResolution(player PlayerRef, options ...ResolutionOption) ResolvingEffect {
 	return &resolutionChoice{player: player, options: slices.Clone(options)}
 }
