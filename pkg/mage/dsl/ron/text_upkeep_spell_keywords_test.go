@@ -108,11 +108,7 @@ func TestRONTextUpkeepSpellKeywordsBoundaries(t *testing.T) {
 	g, a, _ := ronGame()
 	word, _ := mage.ReplaceColorWord(core.Red, core.Blue)
 	for _, sibling := range []string{`Landwalk(IsLandType(Swamp))`, `Protection(FromColor(Colors([Red])))`, `Activated(PayMana([]),ActionList([GainLife(Integer(1))]))`, `AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])`} {
-		eventPlayer := "You"
-		if sibling == `AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])` {
-			eventPlayer = "TheChosenPlayer"
-		}
-		card := textCopyFactory(t, "Foreign spell sibling", sibling+`,Flying,TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(`+eventPlayer+`)),ActionList([GainLife(Integer(1))]))`)()
+		card := textCopyFactory(t, "Foreign spell sibling", sibling+`,Flying,TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),ActionList([GainLife(Integer(1))]))`)()
 		obj := castRONSpell(t, g, a, card)
 		if err := g.RevisePrintedSpellText(obj.ID, word); err == nil {
 			t.Fatal("unsupported spell sibling accepted", sibling)

@@ -9,14 +9,15 @@ unique card names** (986 total), and **2,110 compiled / 335 rejected records**
 Compilation does not prove complete gameplay. The strict loader rejects the
 collection and installs no partial registry.
 
-`UPKEEP-SPELL-FIXED-KEYWORDS` adds checked stack text revision and fresh entry
-with fixed intrinsic keyword contributions. New gameplay mappings cover
-**9 names / 25 records**; ordinary and fixed-keyword upkeep spell contexts now
-cover **17 names / 43 records**. Compilation gain is **0 names / 0 records**.
-Atomic preflight preserves keyword counts and every declaration group. Shared
-services keep copies, clones, later layers, expiry, pending bodies, control,
-phasing, removal/restoration, LKI and printed return. Chosen-player spell entry,
-foreign sibling rules and live-copy rebinding remain separate contracts.
+`UPKEEP-SPELL-CHOSEN` adds checked stack text revision and fresh entry for one
+opponent choice paired with a chosen-player upkeep rule. New gameplay mappings
+cover **2 names / 8 records**; complete upkeep spell text contexts now cover
+**19 names / 51 records**. Compilation gain is **0 names / 0 records**.
+Atomic preflight preserves both declaration groups, fixed keywords and targets.
+Each entry/copy has fresh bindings and chooses for its entry controller. Shared
+services keep clones, later layers, expiry, pending bodies, control, phasing,
+removal/restoration, LKI and printed return. Other entry rules, foreign siblings
+and live-copy rebinding remain separate contracts.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -68336,5 +68337,192 @@ unstaged, including the user's archive/reorganization and Eureka implementation.
 2. Attached mana-event whole-object text: Wild Growth (1 name / 6 records).
    Check the complete Aura definition, exact host incarnation and shared mana
    planning/production. Defer while useful shared multi-card work remains.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: UPKEEP-SPELL-CHOSEN
+
+Status: complete for one opponent entry choice paired with one ordinary
+chosen-player upkeep rule, including existing fixed intrinsic keywords.
+This run implements one slice and stops. Collection migration remains incomplete.
+
+### Fresh baseline and candidate selection
+
+Read `AGENTS.md`, the engine reference, execution design, only the ledger's top
+status block and latest entry, targeted vocabulary keys, relevant API and rules
+contracts, selected engine/compiler code, and all complete affected RON records.
+The working tree already contained Eureka repeated-entry/compiler/inventory
+changes and a ledger archive/reorganization. Those changes and unrelated
+untracked files were preserved. No sub-agents were used.
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -run TestRONTextUpkeep
+-count=1` passed (RON 2.374s). Baseline strict loader exited 1 for collection
+rejection: 2,445 records, 2,111 compiled / 334 rejected; 815 accepted / 171
+rejected unique names. Collection rejection was not a build or test failure.
+
+Candidate #1 in the prior ranked list was dependency-ready and had shared value.
+Complete records and nested bodies supported this comparison; reprints count once.
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Chosen-player upkeep spell continuation | Black Vise (6 records), The Rack (2); 0 new compiled cards, 2 complete continuation mappings | Existing opponent entry, chosen-player battlefield text, ordinary spell entry and declaration groups are ready. No remaining body blocker for either card. Enables both word consumers with fresh choice/trigger bindings through permanent spell copies. Mixed siblings and live-copy rebinding stay separate. | Small implementation; medium lifecycle/atomicity tests; complete this run. |
+| Attached mana-event whole-object text | Wild Growth (6); 0 new compiled cards, 1 complete object-text mapping | Requires complete Aura definition preflight and exact host context; existing mana planner/producer can be reused. Enables later attached mana-event spell continuation. | Medium contract and lifecycle tests. Defer single-card work while shared work remains. |
+| Repeated coin rounds | Mana Clash (1); estimated 1 newly compiled card after the complete coin-round context | Nested forms require round-local `CoinCameUpTails`/`AllCoinsCameUpHeads`, recipient selection and simultaneous damage. Eureka's pre-existing entry-round implementation does not supply coin results. Enables later shared repeated coin procedures. | Larger result/loop contract and deterministic gameplay tests; defer. |
+
+Selected the first candidate because its prerequisites were ready, its complete
+shape is shared by two names, and its entry/copy contract can be proved without
+adding a decision, zone, cost, replacement or event pipeline. Vocabulary checks
+covered `AsPermanentEnters` (arity 2), `ChooseAPlayer` (arity 1),
+`AtTheBeginningOfAPlayersUpkeep` (arity 1) and `RepeatableActions` (arity 1).
+
+### Supported shape, ownership and reusable engine contract
+
+- RON supports exactly one
+  `AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])` paired with one
+  `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(TheChosenPlayer)),actions)`
+  in a nonland, non-Aura permanent's complete rules. Existing fixed intrinsic
+  keyword symbols can stay in any position. Existing action/target/payment
+  validation remains mandatory. Entry declarations establish lexical scope
+  before body lowering, even when the consumer is written first.
+- Private RON `upkeepSpellTextRules(rules []Node) bool` now reuses the complete
+  `upkeepObjectTextRules` shape check. Existing compiler lowering adds
+  `mage.WithUpkeepSpellTextContinuation() CardOption`, the complete object
+  marker and layered trigger marker. No card-name branch or Go factory is used.
+- Native `upkeepSpellTextContext(card Card) (*GenericTriggered, error)` delegates
+  the complete ability count/context check to `upkeepObjectTextContext`. That
+  shared service requires exactly one marked trigger and exactly one opponent
+  entry ability for chosen-player timing; unmatched, duplicated, nil, foreign
+  or unsupported declarations cannot acquire this context. Ordinary and
+  fixed-keyword callers keep their prior support.
+- `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+  preflights both complete definitions, equal keyword seed maps and subtypes,
+  event/capture context, target group shapes, ability counts, every declaration
+  group and ability order before replacing the exact visit. Changed, lost,
+  added or ungrouped choices reject atomically. Existing casting-result,
+  announced-target/body, invalid-word and countered-visit checks remain.
+- Existing `BuildTextDefinitionRevision` supplies checked correspondence.
+  `buildUpkeepSpellEntry` and `BuildTextChangedDefinition` rebuild independent
+  event/target/payment bindings while retaining physical ID, owner, token status
+  and printed departure rules. No new exported API was needed.
+- Existing `ChooseOpponentAsEnters() AsEntersBattlefieldAbility` saves the entry
+  controller's unique opponent before registration (CR 614.12a). This is an
+  entry operation, not a trigger or payment. Spell copies enter as tokens and
+  choose for their own controller. `ChosenPlayerUpkeep(player *PlayerBinding)
+  EventPattern` captures that chosen event player at detection. Each trigger,
+  copy and clone keeps independent context. Control changes and phasing keep
+  the permanent's choice. A new entry makes a fresh choice.
+- Shared text layers keep ordered baselines, expiry, active declaration IDs,
+  clones, ability removal/restoration and phasing. Pending triggers keep their
+  detection text and event player, including after source departure/return.
+  Damage uses the existing source LKI and prevention services. Departure keeps
+  final LKI and the physical printed card. Reentry uses printed rules.
+  Copiable values exclude ordinary word changes and saved choices.
+- Rules evidence: CR 400.7/400.7a, 603.3/603.3a, 612.2/612.3, 613.1c/f,
+  614.12a and 707.10/707.10f. API and rules-contract docs describe only this
+  extension. RON spelling and scopes stay in `ron`; runtime rules stay in mage.
+
+The missing compiler adapter was the marker exclusion for entry choices. The
+missing engine contract was complete spell preflight with both declarations.
+Existing entry/detection/zone mechanics were reused exactly. No parallel state,
+global last-action slot, declaration panic, fallback, skipped rule or partial
+production registry was introduced. Replacement ordering and simultaneous entry
+retain the shared pipeline; no new replacement or simultaneous-operation
+contract was required.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `TestTextUpkeepSpellChosenDeclarations/valid` failed
+native validation because the spell context required a single ability. All
+`ChosenAtomic` cases failed while constructing their valid original definition.
+RON `TestRONTextUpkeepSpellChosenRecords` failed checked stack revision for all
+eight records; `Lifecycle` failed its changing-word revision. The unsupported
+marker exclusions were changed only after these failures. Existing boundary
+fixtures now assert the newly supported real cards and retain rejection for
+an unused entry choice beside controller timing. No gameplay assertion was
+weakened.
+
+| Card/context | Evidence |
+| --- | --- |
+| Black Vise, 6 records: LEA, LEB, 2ED, 3ED, CED, CEI | `TestRONTextUpkeepSpellChosenRecords`: both real word consumers on the stack, checked fresh entry, current hand-size damage at resolution, copy entry controller, clone isolation, chosen/unchosen upkeep timing, later object text, control, phasing, removal/restoration, prevention, departure LKI and returned fresh choice. |
+| The Rack, 2 records: ATQ, 3ED | The same `Records` matrix checks its distinct subtraction body, changed hand size after detection, two damage before prevention and one after prevention, and all shared lifecycle cases. |
+| Synthetic changing land words | `Lifecycle`: real Magical Hack, ordered copy/clone stack changes, fresh choices, prior pending detection text, trigger copies retaining event player, continued later layer baseline, repeated passes, expiry while phased, declaration restoration, printed copiable values, final departure and printed return. |
+| Declaration order and fixed keywords | `RuleOrder`: chosen trigger before entry declaration and duplicate Flying contributions beside the paired rules; checked revision, fresh entry and event-player body. |
+| Targets | `Targets`: prior pending Red target versus revised Green target, independent declarations and clone actions, and leave/return target illegality. |
+| Payment | `Payments`: saved-event-player payer rather than source controller; resolution-only offers; paid, declined, wrong-color and insufficient fixed green mana; rollback and clone resource isolation. |
+| Native reusable service | `TestTextUpkeepSpellChosenEntry`: checked revision, entry/copy controller choices, token identity, fresh event bindings across stack/entry/copies, independent cloned detection and resolving captures. |
+| Invalid declarations and atomicity | Native `ChosenDeclarations` rejects lost/duplicate/foreign choices. `ChosenAtomic` rejects added/lost/foreign/changed-context/changed-group/ungrouped choices without changing the stack object. RON `Boundaries` rejects unbound/duplicate/malformed/source-mismatched choices and complete text contexts with foreign activation/protection siblings. Existing ordinary and keyword tests retain invalid keywords, targets, casting results, groups and departed visits. |
+
+### Verification and measured results
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONTextUpkeepSpellChosen
+  -count=1` passes (0.586s). Native chosen tests pass (0.484s), and pass again
+  after lint style corrections (0.534s). Broader `TestRONTextUpkeep` (2.333s)
+  and native `TestTextUpkeep` (0.407s) pass.
+- `make build` and `go vet ./...` pass.
+- `go test ./pkg/mage/... -short -count=1` passes (RON 40.790s).
+  `make test` passes (RON 51.058s).
+- An isolated checkout of HEAD plus only this slice's source passes the focused
+  RON tests (0.551s), native chosen tests (0.449s), `make build`, `go vet ./...`
+  and skill-required `go test ./... -short -count=1` (RON 102.822s). It excludes
+  all pre-existing Eureka/compiler/inventory changes. Native chosen tests pass
+  again after the test-only style corrections (0.440s). Staged, worktree and
+  isolated executable slice source are identical.
+- First `make lint` rejected two new-test style issues: a redundant interface
+  type and a local named `copy`. It also skipped conflicting automatic boolean
+  simplifications. The type, name and predicate were corrected; affected native
+  tests were rerun. Final `make lint` passes with zero issues. No unrelated
+  automatic edits remain. Worktree and staged `git diff --check` pass.
+- Final `go run ./cmd/loadcards -json` exits 1 for expected strict rejection:
+  **815 accepted / 171 rejected names**, **2,111 compiled / 334 rejected records**,
+  2,445 total. The entire report, including every diagnostic, equals the fresh
+  worktree baseline. No accepted record regressed and no partial registry is
+  installed. Retained gaps include Animate Dead's graveyard enchantment,
+  Balance's sacrifice batch, Cyclopean Tomb's counter-bound duration, Vesuvan
+  Doppelganger's added copy ability and Mishra's War Machine's damage condition.
+- The fresh isolated loader exits 1: **814 accepted / 172 rejected names**,
+  **2,110 compiled / 335 rejected records**. Eureka is its one extra rejected
+  name/record because the user's repeated-entry slice is excluded. Mana Clash
+  remains rejected in both: the worktree reports unsupported repeated-round
+  `EachPlayerAction`, while the isolated checkout reports `RepeatableActions`.
+  This diagnostic difference comes from the excluded pre-existing loop adapter.
+- All unrelated initial tracked and untracked files match their saved originals.
+  No environmental or pre-existing verification blocker remains.
+
+Estimated and actual compilation gain: **0 names / 0 records**.
+Estimated and actual additional complete text-continuation gameplay mappings:
+**2 names / 8 records**. Combined ordinary, fixed-keyword and chosen-player
+upkeep spell contexts now map **19 names / 51 records**. These new mappings do
+not establish complete collection gameplay or new accepted-name coverage.
+
+No source defect was found; no RON source changed, so the vocabulary snapshot
+needs no refresh. Other entry operations, foreign siblings and live-copy
+rebinding remain separate contracts. Complete collection loading, native runtime
+cutover, Go-card deletion and unused DSL removal remain gated. No Go card,
+generator or DSL export was removed.
+
+Changed files: mage `text_upkeep_spell.go` and new
+`text_upkeep_spell_chosen_test.go`; RON `text_upkeep_spell.go`, existing spell
+and keyword boundary tests, and new `text_upkeep_spell_chosen_test.go`;
+`pkg/mage/doc.go`, API/rules-contract docs and this ledger. Staging includes only
+this slice; the user's ledger archive/reorganization and Eureka work remain
+unstaged and preserved.
+
+### Ranked next candidates
+
+1. Shared resolving chosen-sacrifice operations: Demonic Hordes (6 records)
+   and Serendib Djinn (1). Reuse typed selection and the sacrifice batch, with
+   separate chooser and sacrificing player. Demonic Hordes has no other observed
+   body blocker; Serendib Djinn additionally needs the local sacrificed-object
+   property result used by `APermanentWasSacrificedThisWay(IsLandType(Island))`.
+   Assess one complete shared prerequisite rather than silently lowering that
+   result as a payment condition. Their complete records were inspected; these
+   are candidates for the next run, not claimed unlocks.
+2. Attached mana-event whole-object text: Wild Growth (1 name / 6 records).
+   Existing land enchant and mana producer services are ready; complete Aura
+   preflight and exact host incarnation remain the contract. Defer while useful
+   shared multi-card work remains.
+3. Coin-round result scopes and simultaneous damage: Mana Clash (1 record).
+   Distinct tail recipients and all-head termination remain unsupported by
+   Eureka's entry rounds. Defer while dependency-ready shared work remains.
 
 Migration remains incomplete. This run stops after this one slice.

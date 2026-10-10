@@ -8,14 +8,14 @@ import (
 
 // WithUpkeepSpellTextContinuation permits one upkeep rule at entry.
 // Fixed intrinsic keywords keep their contributions through entry.
-// Entry choices and casting results require separate contracts.
+// One opponent entry choice can supply the chosen-player event context.
 func WithUpkeepSpellTextContinuation() CardOption {
 	return func(card *BaseCard) { card.upkeepSpellText++ }
 }
 
 func upkeepSpellTextContext(card Card) (*GenericTriggered, error) {
 	base, ok := card.(*BaseCard)
-	if !ok || base == nil || base.upkeepSpellText != 1 || len(base.abilities) != 1 ||
+	if !ok || base == nil || base.upkeepSpellText != 1 ||
 		base.spellCastSpellText != 0 || base.manaTapSpellText != 0 || base.staticEventSpellText != 0 ||
 		base.globalStaticSpellText != 0 || base.intrinsicSpellText != 0 || base.intrinsicCastText != 0 ||
 		base.landAuraSpellText != 0 || base.copyEntrySpellText != 0 || base.staticActivationText != 0 || base.protectionPTSpellText != 0 {
@@ -24,10 +24,6 @@ func upkeepSpellTextContext(card Card) (*GenericTriggered, error) {
 	rule, err := upkeepObjectTextContext(card)
 	if err != nil {
 		return nil, err
-	}
-	context, _ := rule.upkeepTextContext()
-	if context.chosen {
-		return nil, fmt.Errorf("upkeep spell text does not permit entry choices")
 	}
 	return rule, nil
 }
@@ -51,9 +47,15 @@ func (g *Game) reviseUpkeepSpellText(obj *StackObject, changes []TextChange) err
 	}
 	oldBase, newBase := obj.spellTextDefinition.(*BaseCard), revision.Definition().(*BaseCard)
 	replacement, paired := revision.ReplacementAbility(old.AbilityID())
-	if !paired || replacement != fresh || !maps.Equal(oldBase.attrSeeds, newBase.attrSeeds) || !slices.Equal(oldBase.subTypes, newBase.subTypes) ||
+	if !paired || replacement != fresh || len(oldBase.abilities) != len(newBase.abilities) || !maps.Equal(oldBase.attrSeeds, newBase.attrSeeds) || !slices.Equal(oldBase.subTypes, newBase.subTypes) ||
 		!sameUpkeepObjectTextContext(old, fresh) {
 		return fmt.Errorf("upkeep spell text changed its declaration context")
+	}
+	for i, ability := range oldBase.abilities {
+		replacement, paired := revision.ReplacementAbility(ability.AbilityID())
+		if !paired || replacement != newBase.abilities[i] {
+			return fmt.Errorf("upkeep spell text changed its declaration group")
+		}
 	}
 	rebuilt := cloneStackObject(obj)
 	rebuilt.spellTextDefinition = revision.Definition()

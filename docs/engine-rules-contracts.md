@@ -16491,8 +16491,9 @@ four names / 16 records. Compilation coverage is unchanged.
 `WithUpkeepSpellTextContinuation() CardOption` permits exactly one ordinary
 battlefield upkeep trigger on a nonland, non-Aura permanent. It requires the
 complete object marker and `WithLayeredUpkeepTextRevision`. Typed event-player
-capture must use any-player or controller timing. Fixed intrinsic keywords can
-stay. Entry choices, foreign sibling rules, modes, casting costs/targets and
+capture must use any-player, controller or chosen-player timing. Chosen-player
+timing requires exactly one opponent entry declaration. Fixed intrinsic keywords
+can stay. Other entry rules, foreign siblings, modes, casting costs/targets and
 other continuation markers reject during definition validation.
 
 `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
@@ -16565,7 +16566,8 @@ Compilation counts do not increase.
 `WithUpkeepSpellTextContinuation() CardOption` now permits the fixed intrinsic
 keywords listed above beside its single ordinary upkeep trigger. RON
 `upkeepSpellTextRules([]Node) bool` accepts those symbols in any rule position;
-it retains the complete object-context check and rejects entry choices.
+it retains the complete object-context check and permits one paired opponent
+entry choice. Other entry rules stay separate.
 Unknown or parameterized keywords and foreign sibling rules remain errors.
 
 `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
@@ -16583,8 +16585,9 @@ Later object text layers use the continued baseline and restore it on expiry.
 Phasing keeps the visit, layer-6 removal suppresses keywords and detection,
 and restoration keeps the continued rule (CR 613.1c/f). Pending triggers keep
 their detection text and controller. Departure retains final LKI and the
-physical printed card; a new entry uses printed rules. Entry choices, mixed
-siblings and live-copy rebinding require separate contracts.
+physical printed card; a new entry uses printed rules and makes a fresh opponent
+choice when declared. Other entry rules, mixed siblings and live-copy rebinding
+require separate contracts.
 
 Evidence: native `TestTextUpkeepSpellKeywordsAtomic` and `Declarations`; RON
 `TestRONTextUpkeepSpellKeywordsRecords`, `Wall`, `Inventory`, `Payments`,
@@ -16594,3 +16597,48 @@ Sleight of Mind and Magical Hack on the stack, fresh entry, and subsequent
 battlefield text changes. Shared gameplay helpers also retain the earlier
 object and ordinary-spell checks. Mishra's War Machine remains rejected for
 its nested damage-result condition. Compilation gains are zero.
+
+
+### Chosen-player upkeep spell continuation
+
+`WithUpkeepSpellTextContinuation() CardOption` also permits one
+`ChooseOpponentAsEnters() AsEntersBattlefieldAbility` paired with
+`ChosenPlayerUpkeep(player *PlayerBinding) EventPattern`. The complete upkeep
+object and layered trigger markers remain required. RON accepts exactly
+`AsPermanentEnters(ThisPermanent,[ChooseAPlayer(Opponent)])` with one
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(TheChosenPlayer)),actions)`.
+Existing fixed intrinsic keywords can stay in any rule position. The compiler
+validates the entry declaration before body lowering, regardless of rule order.
+Malformed, duplicate and unbound choices reject. Other entry operations and
+foreign siblings do not acquire this complete text context.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks both complete definitions, every ability's declaration group and order,
+fixed keyword counts, target shapes and event-player context before atomic
+replacement. Added, removed or changed choice groups cannot replace a pending
+spell. Announced targets, bodies and casting results remain forbidden in this
+permanent spell context. No new exported API is needed.
+
+Checked entry rebuilds fresh rules and event bindings. The shared entry service
+saves the entry controller's opponent before registration (CR 614.12a). In this
+two-player engine that opponent is unique; no prompt, target, payment or trigger
+is added. Copies enter as tokens and choose for their own controller; game
+clones keep independent state (CR 707.10/707.10f). Ordinary word changes and
+saved choices remain outside copiable values. Control changes and phasing keep
+the choice; later layers use the continued text baseline. Expiry and ability
+restoration keep that baseline and declaration identity. Removal and phasing
+stop new detection. Pending triggers and trigger copies keep the event player
+and detection text, even after source departure or return (CR 603.3/603.3a).
+Departure retains final LKI and the physical printed card. A new entry uses
+printed words and makes a fresh opponent choice (CR 400.7/400.7a).
+
+Evidence: native `TestTextUpkeepSpellChosenDeclarations`, `Atomic` and `Entry`;
+RON `TestRONTextUpkeepSpellChosenRecords`, `Lifecycle`, `RuleOrder`, `Payments`,
+`Targets` and `Boundaries`. `Records` covers all six Black Vise and two The Rack
+records through real Sleight of Mind and Magical Hack, copies, clone isolation,
+resolution hand-size changes, prevention, control, phasing, removal and return.
+`Lifecycle` uses actual changing land words to distinguish ordered stack changes,
+copy and clone rules, pending detection text, later layer expiry and printed
+copiable values. `Targets` checks pending filters and returned target illegality;
+`Payments` checks saved-event-player payment, fixed symbols and rollback. These
+are two additional complete text-context mappings, with zero compilation gain.

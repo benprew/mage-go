@@ -338,8 +338,8 @@ func TestRONTextUpkeepSpellBoundaries(t *testing.T) {
 	word, _ := mage.ReplaceColorWord(core.Red, core.Green)
 	for _, tc := range []struct{ set, name string }{{"LEA", "Black Vise"}, {"ATQ", "The Rack"}} {
 		obj := castRONSpell(t, g, a, repositoryCard(t, tc.set, tc.name))
-		if err := g.RevisePrintedSpellText(obj.ID, word); err == nil {
-			t.Fatal("foreign spell context accepted", tc.name)
+		if err := g.RevisePrintedSpellText(obj.ID, word); err != nil {
+			t.Fatal("chosen-player spell context rejected", tc.name, err)
 		}
 		g.CounterSpellOnStack(obj.SourceID)
 	}

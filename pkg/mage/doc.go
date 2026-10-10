@@ -2,13 +2,13 @@
 //
 // Use [WithUpkeepSpellTextContinuation] for one ordinary upkeep spell rule.
 // The complete object marker and trigger layer marker must also be present.
-// Any-player and controller events keep fresh bindings through checked entry.
+// Any-player, controller and chosen-player events keep fresh entry bindings.
 // Targets and fixed mana symbols keep their declarations. Copies enter as tokens;
 // clones keep separate changes. Later text layers use the entry baseline.
 // Phasing keeps the visit. Removal stops detection; pending bodies keep facts.
 // Departure keeps final LKI and the physical printed card. Return uses printed
 // rules. Fixed intrinsic keywords keep their counts and declaration groups.
-// Entry choices and mixed rules need separate contracts.
+// One opponent choice runs at entry. Other entry rules and mixed rules stay separate.
 //
 // Use [WithUpkeepObjectTextRevision] for one complete ordinary upkeep rule.
 // [Game.AddPrintedUpkeepObjectTextEffect] checks all printed declarations.
