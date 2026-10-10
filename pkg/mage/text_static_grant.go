@@ -40,3 +40,17 @@ func (g *Game) RevisePrintedStaticGrant(source *Permanent, abilityID uuid.UUID, 
 		return a.grantTextRevision && a.supportsGrantTextRevision()
 	}, changes...)
 }
+
+// WithLayeredGrantTextRevision permits layer 3 changes to a printed global grant.
+// The same subjects receive its ability and P/T parts in each layer pass.
+func (a *StaticAbilityHolder) WithLayeredGrantTextRevision() *StaticAbilityHolder {
+	a.WithGrantTextRevision()
+	a.grantTextLayer = true
+	return a
+}
+
+// AddPrintedStaticGrantTextEffect changes one printed global grant in layer 3.
+// Each pass restores the saved rule before it applies ordered changes.
+func (g *Game) AddPrintedStaticGrantTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, true, changes...)
+}

@@ -11057,3 +11057,48 @@ Evidence: `TestRONTextStaticAbilityLayerWards`, `Landwalk`, `Keywords`,
 `InvalidInstallation`; native `TestTextStaticAbilityLayerDeclaration`, `Rejects`
 and `RestoredCloneContext`. These tests cover twelve unique donor cards and all
 61 records. Compilation gain is zero; full card gameplay is tracked separately.
+
+
+## Printed global static-grant text layers
+
+`StaticAbilityHolder.WithLayeredGrantTextRevision() *StaticAbilityHolder` opts
+in a printed global grant for layer-3 installation. It includes the checked
+`WithGrantTextRevision` contract: nonempty battlefield ability-layer effects,
+with optional P/T modifications in layer 7c. RON uses this marker for unconditional
+`EachPermanentLayerEffect(filter, parts)` on the basic static path, where each
+part is fixed `AdjustPT(integer, integer)` or nonempty `AddAbility(abilities)`
+and at least one grant is present. Grants accept keyword symbols and fixed
+landwalk filters. Conditional, activated, triggered and BandsWithOthers grants
+retain their separate contracts. Aura grants keep their separate layer marker.
+
+`Game.AddPrintedStaticGrantTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+and basic-land substitutions with `Indefinite` or `EndOfTurn` duration. It checks
+the exact present face-up source visit, active opted-in printed declaration,
+retained semantic builder, declaration group and complete registrations on an
+isolated probe before registration. The replacement keeps the marker, count,
+ordered layers, sublayers, durations and registration positions. Rejection does
+not change the live declaration, baseline or effects.
+
+The shared static text service restores a saved baseline on each pass, then
+applies text effects in timestamp order in layer 3. Each grant selects current
+subjects in layer 6 and keeps them through its optional layer-7c modification
+(CR 613.6). Current control, color and other filter properties remain live.
+Expiry recomputes surviving substitutions from the baseline; this can be a prior
+direct revision. Direct revision cannot overwrite the layered result. Printed
+copy information, independent declarations and granted recipient abilities stay
+separate (CR 612.2–3). Clones keep separate effects, baselines and controllers,
+including clones after expiry. Phasing retains the visit and checks expiry on
+the next present pass. Removal suspends the grant; restoration keeps the saved
+text. Departure LKI retains recipient results; a new source visit uses printed
+rules. Full-object/spell text and copy-layer rebinding remain separate.
+
+Evidence: `TestRONTextStaticGrantLayerRecords` covers nine unique names and all
+24 complete RON records with recipient grants, P/T, control, repeated passes,
+expiry and departure. `Lords`, `Membership`, `SuppressedExpiry`, `PriorRevision`,
+`IndependentDeclarations`, `CastTiming` and `Boundaries` cover ordered changes,
+clones, identity, LKI, evasion, phasing, removal/restoration, shared membership,
+payment timing and invalid declarations. Native `TestTextStaticGrantLayer*`
+covers definition validation, atomic rejection, registration order, expiry and
+clone controller isolation. This is bounded donor lifecycle evidence; it does
+not establish complete Magical Hack or Sleight of Mind execution.

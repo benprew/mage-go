@@ -117,6 +117,17 @@
 // The caller must supply text-layer order, lifetime and original-text restoration.
 // Conditional rules, other layers and full text consumers need separate services.
 //
+// Use [StaticAbilityHolder.WithLayeredGrantTextRevision] for a printed global grant.
+// [Game.AddPrintedStaticGrantTextEffect] changes one declaration in layer 3.
+// RON opts in unconditional keyword and landwalk grants with optional fixed P/T.
+// Each pass restores its saved rule before ordered color or basic land changes.
+// Expiry restores the prior rule. Direct revision cannot change a layered result.
+// Shared subjects keep each grant and its P/T part together in layers 6 and 7c.
+// Control and membership remain live. Clones and declarations stay separate.
+// Phasing keeps the visit; removal suspends the grant; restoration keeps its text.
+// LKI keeps the final grant. Return uses printed rules. Other text consumers and
+// copy-layer replacement need separate services.
+//
 // Use [StaticAbilityHolder.WithLayeredAbilityTextRevision] for a printed donor rule.
 // [Game.AddPrintedStaticAbilityTextEffect] installs one declaration in layer 3.
 // RON opts in unconditional Aura-host keyword, landwalk and Ward grants.

@@ -8,9 +8,9 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-AURA-ABILITY-GRANT` adds ordered layer-3 installation and
-baseline restoration for printed Aura keyword, landwalk and Ward donor rules.
-Twelve unique cards (61 records) have new donor lifecycle gameplay evidence.
+`TEXT-LAYER-PRINTED-GLOBAL-GRANT` adds ordered layer-3 installation and
+baseline restoration for printed global keyword/landwalk and optional P/T grants.
+Nine unique cards (24 records) have new donor lifecycle gameplay evidence.
 Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
 Eureka work: **812 accepted names / 2,098 compiled records**. Full text consumers
 remain unsupported.
@@ -61519,4 +61519,159 @@ Ranked next candidates:
 3. Per-player coin bindings and simultaneous Mana Clash repeated rounds.
 
 Complete collection gameplay, full text consumers, runtime loading, Go-card
+removal and unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-09: printed global static-grant text layer
+
+Status: completed slice `TEXT-LAYER-PRINTED-GLOBAL-GRANT`.
+
+### Candidate comparison and selection
+
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before
+editing. The strict loader exited 1 for unsupported collection records, rather
+than a build or test failure: 813 accepted / 173 rejected unique names and
+2,099 compiled / 346 rejected records (986 / 2,445 total).
+Pre-existing entry-round/compiler changes, documentation edits, ledger archive
+reorganization and unrelated untracked files remain outside this slice.
+
+The latest ledger ranked global static-grant text installation first. Complete
+RON records, all 24 affected reprints, nested continuations for the other two
+candidates and both dependent text spells were inspected. Vocabulary checks
+confirm EachPermanentLayerEffect/2, AddAbility/1 and AdjustPT/2. Reprints count
+once when comparing full-card benefit.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Printed global static-grant text layer (#1) | Goblin King, Lord of Atlantis, Zombie Master, Hidden Path, Fortified Area, Kobold Drill Sergeant, Kobold Overlord, Concordant Crossroads, Goblin War Drums; 0 | Provides live donor text for nine subjects of Magical Hack/Sleight of Mind. Full object/spell consumers and other declaration families remain separate. Zombie Master's regeneration donor remains a separate declaration. | Moderate: reuse checked static replacement, shared subjects and Aura text baseline service; add global installation and lifecycle tests. |
+| Host unblocked event and full continuation | Farrel's Mantle; 1 if complete | Host event identity, Other(Trigger_ThatCreature), current power/controller, HavePermanentDealDamage payment and AssignsNoCombatDamage must agree. Enables future granted host combat triggers. | Higher: new event/payment/combat contracts. |
+| Per-player coins and repeated rounds | Mana Clash; 1 if complete | EachPlayerAction, CoinCameUpTails collection, AllCoinsCameUpHeads, round-local outcomes and simultaneous damage. Existing entry-round results cannot supply coin outcomes. Enables repeated coin procedures. | Higher: new scoped outcomes, RNG and simultaneous rounds. |
+
+Selected dependency-ready #1 for its concrete nine-card shared prerequisite
+benefit and reuse. Expected acceptance gain was zero. The contract, reuse
+boundary and acceptance cases were stated before implementation.
+
+### Exact supported shape and engine contract
+
+RON `compileStaticLayer` uses
+`StaticAbilityHolder.WithLayeredGrantTextRevision() *StaticAbilityHolder` for
+unconditional `EachPermanentLayerEffect(filter, parts)` on its basic static
+path. Each part must be fixed `AdjustPT(integer, integer)` or a nonempty
+`AddAbility(abilities)`, and a grant must be present. Eligible abilities are
+validated keyword symbols and fixed Landwalk filters. Existing static filter
+control, source exclusion, color, subtype and property contracts remain intact.
+Empty/malformed grants, unbound references and unsupported numeric forms reject.
+Conditional, Aura, BandsWithOthers and granted activated/triggered declarations
+retain separate contracts. No RON spelling or source file changed.
+
+`Game.AddPrintedStaticGrantTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+and basic-land substitutions with Indefinite or EndOfTurn duration. It requires
+the original present face-up source visit, active opted-in printed declaration,
+retained semantic definition, declaration group and complete registrations.
+An isolated probe validates the replacement before live registration. The
+replacement keeps its marker, effect count, layers, sublayers, durations, active
+UUID and registration positions. Rejection preserves runtime state.
+
+The existing static donor text effect now has a separate global-grant contract.
+It shares baseline restoration, captured source identity, ordered layer-3
+application, expiry and clone handling with the Aura path. Existing Aura callers
+retain their own eligibility boundary. Each pass restores its saved baseline,
+then applies surviving substitutions in timestamp order. A prior direct revision
+can be the baseline; direct revision cannot overwrite an installed layered result.
+Shared subjects are selected in layer 6 and retained through optional layer 7c.
+Control and membership remain live. Each new pass selects current recipients.
+Sibling declarations, independent sources, recipient grants and printed copy
+information remain separate. A source that loses abilities before the grant
+starts cannot supply it; the existing started-rule continuation contract remains.
+
+Phasing keeps the visit; the next present pass handles expiry. Removal suspends
+the donor; restoration uses saved text, including expiry while suppressed.
+Clones keep separate effects, baselines and holder/controller contexts, including
+clones after expiry. Recipient departure LKI saves the final grant. A returned
+source uses printed rules and cannot satisfy an earlier visit reference.
+Copy-layer replacement and full-object/spell text remain separate services.
+
+Reuse: semantic AST text rebuilding, BuildTextDefinitionRevision, declaration
+groups, checked static installer, printedAbilityContinuousEffect registrations,
+WhileWithSharedSubjects, capturedPermanent, EffectManager layers/cleanup,
+Game.Clone, ability restoration, control layers, Aura text baseline reset and
+landwalk evasion. CR 612.1–3, 613.1c/f/g, 613.4c, 613.6, 400.7 and phasing
+establish the boundary. No new costs, decisions, damage batches or replacement
+ordering were introduced. Existing payment rollback and simultaneous-operation
+services remain in use. There is no card-name branch, Go-card fallback, runtime
+declaration panic, global result slot or partial production registry.
+
+### Failing-first tests and gameplay mapping
+
+Initial focused RON tests failed to compile for missing
+AddPrintedStaticGrantTextEffect. Native tests failed for that method and
+WithLayeredGrantTextRevision. Later registration-order test development exposed
+a stale fixture pointer after the isolated validation clone; it now reads the
+current permanent, without changing the expected grant or expiry behavior.
+
+| Cards or contract | Evidence |
+| --- | --- |
+| All nine names and 24 complete reprint records | TestRONTextStaticGrantLayerRecords creates both players' recipients and checks keyword/landwalk grants, optional P/T, repeated passes, current controller changes, expiry, identity and donor departure. No-match substitutions preserve fixed keywords. |
+| Goblin King, Lord of Atlantis | Lords: ordered temporary/indefinite substitutions, clone expiry isolation, source exclusion, phasing, expiry while phased, removal/restoration, recipient LKI, returned-source identity and original text. |
+| Zombie Master | Records checks its landwalk substitution and expiry while preserving the separate regeneration donor; donor departure removes both grants. Existing granted-activation tests retain full regeneration behavior coverage. |
+| Hidden Path | Records checks the printed color-filter membership and landwalk grant. SuppressedExpiry tests color-word changes, expiry during removal and expiry during phasing. |
+| Fortified Area | Records checks controlled Walls' +1/+0 and banding, controller changes and expiry. CastTiming uses real RON casting/payment/resolution and proves grants start only after resolution. |
+| Kobold Drill Sergeant, Kobold Overlord | Records checks controlled subtype recipients, fixed Trample/FirstStrike, optional +0/+1, controller changes, no-match text changes, expiry and departure. |
+| Concordant Crossroads, Goblin War Drums | Records checks global Haste and controlled Menace, no-match changes, control membership, expiry and departure. |
+| Global cross-layer membership | Membership uses a color/creature/DoesntHaveAbility filter with Flying, Haste and P/T. Earlier grants cannot remove subjects from later parts; later entrants, ordered substitutions and earlier-effect expiry remain correct. Existing TestTextStaticGrantCrossLayerContinuation checks a started rule across later ability removal. |
+| Prior baseline and evasion | PriorRevision restores a direct land-word revision after temporary layer expiry; defending land phasing changes actual landwalk evasion. |
+| Declarations and clones | IndependentDeclarations checks two mixed declarations, foreign IDs, independent source instances, independent clone substitutions and one declaration's expiry. Native RestoredCloneContext checks active/suppressed expiry and controller isolation in clones created before and after expiry. |
+| Rejection and registration preservation | Boundaries checks invalid RON declarations, unsupported contexts/durations and empty changes. Native Declaration, Rejects and RegistrationOrder check invalid layers/durations/counts/order, marker changes, absent/face-down/granted sources, missing builder/groups/registrations, invalid changes, atomic rejection and stable registration positions through installation/expiry. |
+
+### Validation and coverage
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticGrantLayer -count=1`
+  and native `go test ./pkg/mage -run TestTextStaticGrantLayer -count=1`.
+  Expanded global grant and Aura text-layer regression tests also passed.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: zero issues, no automatic source changes; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected unsupported collection rejection,
+  exit 1. The complete report exactly matches the fresh baseline: 813 accepted /
+  173 rejected names and 2,099 compiled / 346 rejected records. The loader
+  retains atomic collection rejection and does not publish accepted subsets.
+
+Remaining diagnostics include Magical Hack and Sleight of Mind / CreateSpellEffect,
+Farrel's Mantle / HostPermanent combat reference, and Mana Clash / EachPlayerAction.
+Native coverage still excludes the pre-existing Eureka work: 812 accepted names /
+2,098 compiled records. Compilation and complete gameplay coverage remain
+separate.
+
+Acceptance gain is 0 names / 0 records, matching the estimate. This adds bounded
+global donor lifecycle gameplay evidence for nine names / 24 records. It does
+not claim complete text-spell execution. No accepted record regressed.
+
+Changed files: pkg/mage/ability.go, text_static_grant.go,
+text_static_ability_layer.go, text_static_pt.go and new native
+text_static_grant_layer_test.go; RON layers.go and new
+text_static_grant_layer_test.go; doc.go, dsl-reference.md,
+engine-rules-contracts.md and this ledger. No source defect was found or
+corrected. RON sources and the vocabulary snapshot are unchanged. Runtime
+loading, Go-card deletion and unused DSL removal gates remain unmet; no callers
+or Go definitions were removed. Only this slice is staged.
+
+The isolated staged tree excludes the user entry-round changes and ledger
+reorganization. Expanded RON global-grant/Aura text-layer tests, corresponding
+native engine tests, `make build` and `go vet ./...` pass there. Its strict loader
+exits 1 with 812 accepted / 174 rejected names and 2,098 compiled / 347 rejected
+records. Eureka is the sole additional rejected name/record; Mana Clash stops at
+RepeatableActions rather than the worktree's EachPlayerAction. All other
+collection diagnostics agree. No environment or validation blocker remains.
+
+Ranked next candidates:
+
+1. Printed static P/T text layer installation/restoration, including global
+   Bad Moon and Crusade declarations; compare supported conditional contexts
+   and multi-card prerequisite value before selecting.
+2. Host unblocked event and complete Farrel's Mantle continuation.
+3. Per-player coin bindings and simultaneous Mana Clash repeated rounds.
+
+Complete collection gameplay, full text consumers, runtime integration, Go-card
 removal and unused DSL cleanup remain unfinished. Stop after this slice.

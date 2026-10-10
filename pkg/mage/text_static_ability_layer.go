@@ -24,6 +24,7 @@ type printedStaticAbilityTextEffect struct {
 	abilityID uuid.UUID
 	duration  core.Duration
 	changes   []TextChange
+	grant     bool
 }
 
 func layeredStaticAbilityEligible(a *StaticAbilityHolder) bool {
@@ -33,6 +34,18 @@ func layeredStaticAbilityEligible(a *StaticAbilityHolder) bool {
 // AddPrintedStaticAbilityTextEffect changes one printed donor rule in layer 3.
 // Each pass starts with a saved baseline so expiry removes earlier changes.
 func (g *Game) AddPrintedStaticAbilityTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, false, changes...)
+}
+
+func (e *printedStaticAbilityTextEffect) eligible(a *StaticAbilityHolder) bool {
+	if e.grant {
+		return a.grantTextLayer && a.grantTextRevision && a.supportsGrantTextRevision()
+	}
+	return layeredStaticAbilityEligible(a)
+}
+
+func (g *Game) addPrintedStaticTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, grant bool, changes ...TextChange) error {
+	contract := &printedStaticAbilityTextEffect{grant: grant}
 	if source == nil || (duration != core.Indefinite && duration != core.EndOfTurn) || len(changes) == 0 {
 		return fmt.Errorf("static ability text layer requires a source, changes and indefinite or end-of-turn duration")
 	}
@@ -46,12 +59,12 @@ func (g *Game) AddPrintedStaticAbilityTextEffect(source *Permanent, abilityID uu
 		}
 	}
 	probe := g.Clone()
-	if err := probe.revisePrintedStaticAbilityWithRefresh(probe.FindPermanent(source.ID()), abilityID, layeredStaticAbilityEligible, false, changes...); err != nil {
+	if err := probe.revisePrintedStaticAbilityWithRefresh(probe.FindPermanent(source.ID()), abilityID, contract.eligible, false, changes...); err != nil {
 		return err
 	}
 	effect := &printedStaticAbilityTextEffect{
 		subject:   capturedPermanent{id: current.ID(), incarnation: current.incarnationID},
-		abilityID: abilityID, duration: duration, changes: slices.Clone(changes),
+		abilityID: abilityID, duration: duration, changes: slices.Clone(changes), grant: grant,
 	}
 	effect.SetSourceID(current.ID())
 	g.AddContinuousEffect(effect)
@@ -66,7 +79,7 @@ func (e *printedStaticAbilityTextEffect) IsActive(g *Game) bool {
 	p := g.FindPermanent(e.subject.id)
 	return p != nil && p.incarnationID == e.subject.incarnation && !p.FaceDown && slices.ContainsFunc(p.RuntimeAbilities, func(a Ability) bool {
 		rule, ok := a.(*StaticAbilityHolder)
-		return ok && rule.AbilityID() == e.abilityID && layeredStaticAbilityEligible(rule)
+		return ok && rule.AbilityID() == e.abilityID && e.eligible(rule)
 	})
 }
 func (e *printedStaticAbilityTextEffect) ApplyContinuous(ctx *EffectContext) error {
@@ -86,7 +99,7 @@ func (e *printedStaticAbilityTextEffect) ApplyContinuous(ctx *EffectContext) err
 			}
 		}
 	}
-	return g.revisePrintedStaticAbilityWithRefresh(p, e.abilityID, layeredStaticAbilityEligible, false, e.changes...)
+	return g.revisePrintedStaticAbilityWithRefresh(p, e.abilityID, e.eligible, false, e.changes...)
 }
 func (e *printedStaticAbilityTextEffect) cloneEffect() ContinuousEffect {
 	clone := *e
@@ -132,7 +145,7 @@ func (g *Game) isolatePrintedStaticAbilityContext(p *Permanent) *Permanent {
 	owned := false
 	for i, ability := range p.RuntimeAbilities {
 		rule, ok := ability.(*StaticAbilityHolder)
-		if !ok || !rule.abilityTextLayer || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
+		if !ok || (!rule.abilityTextLayer && !rule.grantTextLayer) || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
 			continue
 		}
 		if !owned {

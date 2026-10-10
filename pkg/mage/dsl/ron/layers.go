@@ -243,7 +243,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			}
 			holder := mage.Static(rule)
 			if grantRevision {
-				holder.WithGrantTextRevision()
+				holder.WithLayeredGrantTextRevision()
 			}
 			return mage.WithAbility(holder)
 		}, nil
