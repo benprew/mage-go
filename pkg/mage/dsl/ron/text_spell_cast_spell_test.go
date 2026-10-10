@@ -305,7 +305,7 @@ func TestRONTextSpellCastSpellBoundaries(t *testing.T) {
 			t.Fatal("invalid declaration accepted", rule)
 		}
 	}
-	for _, tc := range []struct{ set, name string }{{"LEG", "Sol'kanar the Swamp King"}, {"LEA", "Gauntlet of Might"}} {
+	for _, tc := range []struct{ set, name string }{{"LEG", "Sol'kanar the Swamp King"}} {
 		g, a, _ := ronGame()
 		card := repositoryCard(t, tc.set, tc.name)
 		obj := castRONSpell(t, g, a, card)

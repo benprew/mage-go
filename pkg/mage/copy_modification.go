@@ -91,6 +91,7 @@ func (m copyTypeAddition) applyCopyModification(card *BaseCard) {
 		}
 	}
 	if card.HasType(core.TypeLand) {
+		card.staticEventSpellText = 0
 		card.manaTapSpellText = 0
 		card.spellCastSpellText = 0
 		card.globalStaticSpellText = 0

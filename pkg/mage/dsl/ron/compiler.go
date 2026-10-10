@@ -316,6 +316,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	landAuraSpellText := false
 	intrinsicCreatureSpellText := false
 	copyEntrySpellText := false
+	mixedStaticEventSpellText := false
 	globalStaticSpellText := false
 	manaTapSpellText := false
 	spellCastSpellText := false
@@ -325,6 +326,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		mixedStaticEventSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && mixedStaticEventSpellTextRules(rules)
 		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapSpellTextRules(rules)
 		spellCastSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && spellCastSpellTextRules(rules)
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && globalStaticSpellTextRules(rules)
@@ -428,6 +430,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		for _, buildOption := range options {
 			opts = append(opts, buildOption())
+		}
+		if mixedStaticEventSpellText {
+			opts = append(opts, mage.WithMixedStaticEventSpellTextContinuation())
 		}
 		if manaTapSpellText {
 			opts = append(opts, mage.WithManaTapSpellTextContinuation())

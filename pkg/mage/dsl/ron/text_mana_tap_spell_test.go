@@ -128,7 +128,7 @@ func TestRONTextManaTapSpellBoundaries(t *testing.T) {
 			t.Fatal("invalid declaration accepted", rule)
 		}
 	}
-	for _, name := range []string{"Gauntlet of Might", "Wild Growth", "Conversion"} {
+	for _, name := range []string{"Wild Growth"} {
 		g, a, _ := ronGame()
 		card := repositoryCard(t, "LEA", name)
 		var obj *mage.StackObject

@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithMixedStaticEventSpellTextContinuation] for paired permanent rules.
+// It permits one global static rule with a controller mana bonus or a fixed
+// controller-upkeep mana payment and unpaid self-sacrifice. Both declarations
+// keep their groups through checked stack revision and fresh entry builds.
+// Mana symbols keep their values. Copies and clones keep separate rules.
+// Later layers start from the continued baseline. Phasing keeps the visit.
+// Departure keeps LKI; the physical card returns to its printed rules.
+// Other mixed rules and whole-object text require separate contracts.
+//
 // Use [WithManaTapSpellTextContinuation] for one global land mana event rule.
 // [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
 // RON marks one AnyPlayer TriggerA land event or its produced-type bonus.

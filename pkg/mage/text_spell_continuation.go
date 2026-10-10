@@ -51,6 +51,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if len(changes) == 0 {
 		return fmt.Errorf("spell text continuation requires word changes")
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.staticEventSpellText != 0 {
+		return g.reviseMixedStaticEventSpellText(obj, changes)
+	}
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.copyEntrySpellText != 0 {
 		return g.reviseCopyEntrySpellText(obj, changes)
 	}

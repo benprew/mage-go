@@ -8,13 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LAND-MANA-SPELL-TEXT` carries one complete typed global land-mana-event
-rule through permanent-spell entry. Continuation evidence covers **2 names / 12
-complete records**; acceptance gain is **0 names / 0 records**. Immediate mana
-bonuses and stacked event-player damage keep their existing timing. Fresh event
-bindings, revised targets, copies/clones, later text layers, control, phasing,
-copiable values, LKI and printed recasts are covered. Mixed and Aura spell
-contexts, whole-object dispatch and word-changing spells remain incomplete.
+`MIXED-STATIC-EVENT-SPELL-TEXT` carries one complete global static/event pair
+through permanent-spell entry. Continuation evidence covers **3 names / 12
+complete records**; acceptance gain is **0 names / 0 records**. Paired declaration
+checks preserve static context, mana bonus recipient and upkeep payment symbols.
+Copies/clones, later layers, phasing, ability removal, copiable values, LKI and
+printed recasts are covered. Other mixed contexts, whole-object dispatch and
+word-changing spells remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -64543,3 +64543,156 @@ Ranked next candidates:
 
 Stop after this slice. Complete collection gameplay, runtime loading, Go-card
 removal, unused DSL cleanup and native startup validation remain unfinished.
+
+## 2026-10-09: MIXED-STATIC-EVENT-SPELL-TEXT
+
+Completed one dependency-ready permanent-spell continuation slice. No runtime
+cutover or removal gate is met; no Go definitions or DSL functions were removed.
+The initial worktree contained unrelated changes, including repeated entry and
+ledger archival. These remain outside this slice's commit.
+
+### Candidate comparison and selection
+
+Started with the latest ledger's ranked candidate #1 and inspected full records
+and nested forms. The same supported pairing also occurs on Sunken City.
+
+| Candidate | Distinct affected names | Estimated compiler unlocks | Other blockers / downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Mixed global static/event permanent-spell continuation | Gauntlet of Might, Conversion, Sunken City (12 complete records: 5/6/1) | 0 names / 0 records; all already compile | No prerequisite missing for this exact pair. Enables continued P/T, land types, mana bonus and upkeep payment for whole-object word dispatch. Other mixed forms remain separate. | Moderate; one entry/revision contract, AST recognizer, paired-group rejection and lifecycle/payment tests; one run. |
+| Intrinsic plus cast-event permanent-spell continuation | Sol'kanar the Swamp King (1 LEG record) | 0; already compiles | Supported landwalk and cast-event services need a combined entry contract. Another prerequisite for full-object word dispatch. | Similar lifecycle effort for one name; defer while a useful shared pair is ready. |
+| Whole-object word dispatch/lifetime and word-changing spell consumers | Magical Hack, Sleight of Mind (6 reprints each) | 0 credible immediate unlocks before all applicable contexts work | Both records have spell and permanent branches, paired word choices and effect consumers. Mixed/intrinsic contexts, relational filters, sticky layers and copy-added ability text still block complete dispatch. Shared dispatch enables both names. | Large; not a complete dependency-ready single-run consumer slice. |
+
+Selected candidate #1: the highest credible multi-card continuation coverage
+for bounded effort. Compiler acceptance and gameplay continuation are separate.
+The initial two-name candidate gained a third name through complete-record
+inspection, before editing. Actual gains match the revised estimate: **0 newly
+accepted names / 0 records**, with continuation evidence for **3 names / 12
+complete records**.
+
+### Contract, contexts and reuse
+
+New API: `WithMixedStaticEventSpellTextContinuation() CardOption`.
+Existing API extended: `Game.RevisePrintedSpellText(stackID uuid.UUID,
+changes ...TextChange) error`.
+
+RON recognizes exactly two rules on a nonland, non-Aura permanent: one existing
+unconditional global `EachPermanentLayerEffect` with one fixed creature
+`AdjustPT` or basic `SetLandType`, paired with either:
+
+- `TriggerA(WhenAPermanentIsTappedForMana(IsLandType(subtype)), ActionList(
+  [PlayerAction(ControllerOfPermanent(Trigger_ThatPermanent),
+  AddMana(oneConcreteMana))]))`; existing lowering validates this shape.
+- `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList(
+  [MayCost(PayMana(fixedSymbols)), Unless(CostWasPaid,
+  [SacrificePermanent(ThisPermanent)])]))`.
+
+Either rule order is supported. Additional rules/keywords, modes, casting
+costs/targets/results and other payment/event contexts are not marked.
+Definition validation checks one marked global static rule and one fixed
+controller mana bonus or typed battlefield controller-upkeep payment.
+The payment must be optional fixed mana, with the original controller payer
+and a self-sacrifice body without result captures. X, other payers/costs/bodies,
+extra zones, targets and state/intervening conditions reject.
+
+Stack revision checks exact visit, both printed declaration groups/order,
+static context, bonus production/recipient, upkeep capture presence, unchanged
+payment symbols and subtype context before mutation. Entry rebuilds independent
+rules with physical identity, owner/token status and printed departure card.
+Mana symbols retain their printed values. Bonus production stays immediate;
+upkeep decisions stay on the stack and use the pending controller and source
+incarnation. Copies and cloned games retain independent rules/resources.
+Later text layers use continued baselines; phasing, removal/restoration,
+copiable values, LKI and printed return use existing lifecycle services.
+Added Land copy types clear the spell eligibility marker but retain both rules.
+
+Reuse: extracted `globalStaticSpellRuleContext` from the existing single-rule
+validator; CardDefinitionPlan, BuildTextDefinitionRevision and group pairing;
+stack cloning, text entry, permanent-spell token copies; static P/T and land-type
+layers; mana query/planning/production; transactional optional payment and
+incarnation-safe sacrifice; text-layer restoration, phasing, ability removal,
+copiable provenance, printed departure and LKI. RON owns spelling and shape;
+mage owns validation, continuation and execution. No parallel payment, zone,
+replacement-order or simultaneous-operation system was added.
+
+Relevant local rules: CR 400.7a, 605.1b/4a, 608.3a/e, 612.1–3,
+613.1c/d/f/g, 707.2 and 707.10f. API/rules-contract documentation now records
+only this established mixed context. No source-data defect was found or changed;
+RON sources and vocabulary hashes remain unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+Native Declaration/RejectsAtomic tests first failed compilation on the absent
+marker API. With a minimal no-op marker, RON Records then failed all 12 complete
+records at the ordinary instant/sorcery continuation boundary. Both expected
+failures preceded implementation. Later test development corrected a main-step
+fixture and stale permanent reads after cloning; no production rules were
+weakened to satisfy those tests.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Gauntlet of Might (LEA/LEB/2ED/CED/CEI; 5 complete records) | TestRONTextMixedStaticEventSpellRecords changes both red creature words and Mountain membership, checks both players' P/T, unchanged red mana symbol, actual land-controller recipient and immediate bonus timing in original and cloned games. |
+| Conversion (LEA/LEB/2ED/3ED/CED/CEI; 6 complete records) | Records changes Mountain to Island, checks resulting Plains mana/type and unaffected Mountains, controller-only upkeep timing, unpaid sacrifice and LKI in original and cloned games. |
+| Sunken City (DRK; 1 complete record) | Records changes blue creature words to green while keeping casting/upkeep blue mana symbols, global P/T, controller-only upkeep timing, unpaid sacrifice and LKI. |
+| Conversion and Sunken City payment context | Payments covers accepted/declined/insufficient payments, unchanged colored symbols, no leaked mana or taps on failure, pending controller change, returned/phased source, copied trigger controller and clone resource isolation. Existing TestRONUpkeepPayment* retains full ordinary payment/identity evidence. |
+| Mixed lifecycle | Lifecycle uses complete Gauntlet: independent token copies and cloned revisions, printed copiable rules, later independent P/T and mana text layers, phased expiry, removal/restoration of both rules, departure/LKI gameplay and printed recast. CopyExceptions proves an added Land retains both rules and checked builders. |
+| Exact coverage and rejection | Inventory maps exactly 3 names / 12 records. Boundaries rejects invalid syntax/bindings/X and atomically rejects unmarked broader contexts. Native Declaration/RejectsAtomic/UpkeepDeclaration/UpkeepRejectsAtomic reject missing/duplicate/conflicting markers, nil/unmarked/attached/wrong rules, extra costs/targets/keywords, changed static/event kind, recipient/production, capture presence, payment symbols, subtypes, groups/order, foreign stack state, invalid words, absent builders and countered visits. |
+
+Prior global-static, mana-tap and cast-event boundary tests were updated only for
+the newly supported pair; Wild Growth, Sol'kanar and sticky Titania boundaries
+remain enforced. No accepted record was removed or weakened.
+
+### Verification and fresh collection evidence
+
+- Baseline focused TestRONTextManaTapSpell passed (0.620s); make build passed.
+  Baseline loader exited 1 for collection rejection, not a build/test failure.
+- Failing-first native tests failed on the absent marker; with a no-op marker,
+  RON Records rejected all 12 complete records at the existing continuation
+  boundary. Production implementation followed these failures.
+- Final focused go test ./pkg/mage/dsl/ron -run
+  TestRONTextMixedStaticEventSpell -count=1 passed (0.647s); native
+  TestTextMixedStaticEventSpell passed (0.476s). Broader old/new spell-boundary
+  tests also passed (0.825s).
+- Worktree make build; go vet ./...; go test ./pkg/mage/... -short -count=1
+  (RON 36.869s); make test; make lint (0 issues); git diff --check all passed.
+  An initial lint run found one test preallocation issue. It was fixed; the
+  required checks were rerun. Automatic formatting changes were reviewed.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected unique names**, **2,099 compiled / 346 rejected records**.
+  Parsed JSON, including every diagnostic, exactly equals the fresh baseline.
+  The collection remains rejected, with no partial registry installation.
+- An isolated HEAD-plus-slice index excludes all pre-existing user edits and
+  retains HEAD ledger history. Focused RON/native tests, make build,
+  go vet ./..., engine short tests (RON 36.109s), make test (RON 37.435s)
+  and make lint (0 issues) passed. All isolated files match the staged blobs
+  after automatic lint; previously clean slice files match the worktree.
+- The isolated final loader exits 1: **812 accepted / 174 rejected names**,
+  **2,098 compiled / 347 rejected records**. The only additional rejection is
+  Eureka at LEG.lines.ron:79:173: unsupported action (RepeatableActions).
+  Mana Clash's existing first error moves from DRK.lines.ron:64:200:
+  unsupported repeated round producer (EachPlayerAction), to :64:181:
+  unsupported action (RepeatableActions), because repeated-entry user edits
+  are excluded. Every other diagnostic is unchanged. This slice has no
+  dependency on those user edits.
+- No unresolved build, test, lint, data or environment blocker remains.
+  Unrelated tracked edits and untracked files remain unchanged.
+
+
+Changed files: engine card.go, copy_modification.go, definition.go, doc.go,
+stack_resolver.go, text_global_static_spell.go, text_spell_continuation.go;
+new text_mixed_static_event_spell.go/test; RON compiler.go, three prior spell
+boundary tests, new text_mixed_static_event_spell.go/test; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger (18 files).
+
+Ranked next candidates:
+
+1. Shared whole-object printed-declaration dispatch and text-effect lifetime for
+   the completed contexts. This is a native prerequisite for both Magical Hack
+   and Sleight of Mind; keep unsupported contexts explicit before RON consumers.
+2. Intrinsic-plus-cast-event permanent-spell continuation for Sol'kanar the Swamp
+   King, if required by complete object dispatch. Reuse landwalk/cast contracts.
+3. Remaining relational/static and copy-added ability text contexts, then complete
+   both modes of the two word-changing spells. Reassess complete records and
+   unlock estimates before choosing a bounded slice.
+
+Stopped after this slice. Full RON gameplay, whole-object text, runtime loading,
+Go-card deletion, unused DSL cleanup and native startup remain incomplete.

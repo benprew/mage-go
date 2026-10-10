@@ -21,7 +21,11 @@ func globalStaticSpellTextContext(card Card) (staticTextContract, error) {
 		base.intrinsicSpellText != 0 || base.landAuraSpellText != 0 || base.copyEntrySpellText != 0 {
 		return 0, fmt.Errorf("global static spell text requires one marked permanent rule without casting costs or targets")
 	}
-	rule, ok := base.abilities[0].(*StaticAbilityHolder)
+	return globalStaticSpellRuleContext(base.abilities[0])
+}
+
+func globalStaticSpellRuleContext(ability Ability) (staticTextContract, error) {
+	rule, ok := ability.(*StaticAbilityHolder)
 	if !ok || rule == nil || len(rule.Effects) != 1 {
 		return 0, fmt.Errorf("global static spell text requires one static effect")
 	}

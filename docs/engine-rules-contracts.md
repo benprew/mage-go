@@ -15532,7 +15532,54 @@ Kobold Taskmaster, Mightstone and Weakstone. `PTLifecycle`, `LandLifecycle`,
 values, later text layers, phasing, LKI, printed recasts, live control, invalid
 syntax and exact record mappings. Native `TestTextGlobalStaticSpellDeclaration`
 and `RejectsAtomic` cover invalid markers, builders, groups and stack state.
-Gauntlet of Might and Conversion retain their unsupported mixed continuation
-contexts; Titania's Song still fails compilation at its sticky rule. This adds
+Gauntlet of Might, Conversion and Sunken City use the mixed continuation
+contract below. Titania's Song still fails compilation at its sticky rule. This adds
 no full-card compiler unlocks. Whole-object word dispatch, remaining spell
 contexts and both word-changing spells require further capabilities.
+
+
+### Mixed global-static/event permanent-spell text continuation
+
+`mage.WithMixedStaticEventSpellTextContinuation() CardOption` permits exactly
+one marked global fixed P/T or basic-land-type rule paired with either a marked
+fixed controller-recipient land mana bonus or a typed controller-upkeep fixed
+mana payment with unpaid self-sacrifice. Either declaration order is permitted.
+The permanent must be nonland and non-Aura, with no other rules, intrinsic
+keywords, modes, casting costs or casting targets.
+
+RON recognizes the existing global `EachPermanentLayerEffect` shape together
+with `TriggerA(WhenAPermanentIsTappedForMana(IsLandType(subtype)), body)` or
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+ActionList([MayCost(PayMana(symbols)), Unless(CostWasPaid,
+[SacrificePermanent(ThisPermanent)])]))`. Existing adapters validate filters,
+bonus recipient/amount and lexical payment scope. No card-name dispatch occurs.
+
+`Game.RevisePrintedSpellText(stackID, changes...)` checks both retained
+printed groups, their order, static context, bonus recipient/production context,
+upkeep event capture presence, unchanged fixed payment and subtype context.
+Foreign casting targets, results and bodies, invalid words, missing builders or
+groups and departed stack visits reject atomically. Independent entry builds
+retain physical identity, owner, controller, token status and printed departure
+rules. The shared static layers, mana query/production and transactional payment
+services execute both rules. Mana symbols remain unchanged. Upkeep uses the
+pending trigger controller and exact source incarnation; returned cards cannot
+supply that sacrifice. Copies of triggers use their own controller.
+
+Spell copies enter as independent tokens; cloned stack revisions and payment
+resources stay separate. Later text layers start from the continued baseline.
+Phasing and layer-6 removal/restoration use existing rule lifecycles. Ordinary
+word changes stay outside copiable values; LKI keeps continued rules and physical
+recasts use printed rules. A Land copy exception clears the spell marker while
+retaining both rules and the text builder. CR 400.7a, 605.1b/4a, 608.3a/e,
+612.1–3, 613.1c/d/f/g, 707.2 and 707.10f supply the applicable rules.
+
+Evidence: `TestRONTextMixedStaticEventSpellRecords` and `Inventory` map all
+12 complete records: Gauntlet of Might (5), Conversion (6), Sunken City (1).
+`Payments`, `Lifecycle`, `CopyExceptions` and `Boundaries` cover both rules,
+recipient and timing, payment/decline/rollback, pending control and return,
+trigger copies, spell copies/clones, later layers, phased expiry, ability
+removal, copiable values, LKI, printed recasts and invalid contexts. Native
+`TestTextMixedStaticEventSpellDeclaration`, `RejectsAtomic`,
+`UpkeepDeclaration` and `UpkeepRejectsAtomic` check marked shapes and atomic
+context rejection. This adds continuation coverage, with no compiler unlocks.
+Other mixed declarations and whole-object word dispatch remain separate.

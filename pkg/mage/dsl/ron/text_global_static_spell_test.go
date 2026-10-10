@@ -368,8 +368,8 @@ func TestRONTextGlobalStaticSpellBoundaries(t *testing.T) {
 		}
 		before := g.StackPeek()
 		change, _ := mage.ReplaceColorWord(core.Red, core.Blue)
-		if err := g.RevisePrintedSpellText(before.ID, change); err == nil || before != g.StackPeek() {
-			t.Fatal("mixed or sticky context passed the boundary", tc.name)
+		if err := g.RevisePrintedSpellText(before.ID, change); err != nil || before == g.StackPeek() {
+			t.Fatal("supported mixed context rejected", tc.name)
 		}
 	}
 }
