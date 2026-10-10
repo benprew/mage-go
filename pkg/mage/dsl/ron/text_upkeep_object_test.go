@@ -427,7 +427,7 @@ func TestRONTextUpkeepObjectInventory(t *testing.T) {
 func TestRONTextUpkeepObjectBoundaries(t *testing.T) {
 	g, a, _ := ronGame()
 	change, _ := mage.ReplaceColorWord(core.Red, core.Blue)
-	for _, name := range []string{"Wild Growth", "Conversion", "Force of Nature", "Bog Wraith", "Mana Flare"} {
+	for _, name := range []string{"Wild Growth", "Conversion", "Bog Wraith", "Mana Flare"} {
 		p := g.PutOnBattlefield(repositoryCard(t, "LEA", name), a.PlayerID())
 		if err := g.AddPrintedUpkeepObjectTextEffect(p, core.Indefinite, change); err == nil {
 			t.Fatalf("accepted foreign context %s", name)

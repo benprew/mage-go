@@ -16450,8 +16450,9 @@ basic-land word changes with `EndOfTurn` or `Indefinite` duration. The definitio
 must be a nonland, non-Aura permanent with one marked ordinary battlefield
 upkeep trigger. A chosen-player trigger requires exactly one
 `ChooseOpponentAsEnters()` declaration; the other contexts require none.
-Keywords, sibling rules, casting costs/targets, modal/optional/intervening/state
-triggers and other source zones are outside this contract.
+Fixed intrinsic keyword symbols can accompany the upkeep trigger. Other
+sibling rules, casting costs/targets, modal/optional/intervening/state triggers
+and other source zones are outside this contract.
 
 RON selects this complete context for `TriggerA(AtTheBeginningOfAPlayersUpkeep(
 AnyPlayer | SinglePlayer(You) | SinglePlayer(TheChosenPlayer)), actions)`, with
@@ -16520,3 +16521,41 @@ wrong-color and insufficient fixed mana with separate clone state. Native
 `TestTextUpkeepSpellDeclaration` and `RejectsAtomic` check invalid declarations
 and revision atomicity. Existing replacement, simultaneous entry, target and
 optional-payment services retain their contracts; no new pipeline is added.
+
+### Fixed intrinsic keywords beside an upkeep trigger
+
+The complete upkeep object context also permits the fixed symbols `Flying`,
+`FirstStrike`, `Trample`, `Vigilance`, `Haste`, `Reach`, `Banding`, `Defender`,
+`Fear`, `Deathtouch`, `Lifelink`, `Shroud`, `Hexproof`, `Menace` and
+`Indestructible`. RON retains each rule position and uses the existing keyword
+lowering. Parameterized keywords, protection, landwalk, extra events and other
+sibling rules require separate complete contexts. All action bodies must still
+pass their existing lexical and engine validation.
+
+`Game.AddPrintedUpkeepObjectTextEffect` validates both complete definitions and
+all declaration groups before installing its layer. Intrinsic keyword seed maps,
+including duplicate contribution counts, must be equal. Added, removed, changed
+or invalid contributions reject without installing an effect or changing live
+rules. Ordinary color and basic-land word substitutions cannot change these
+fixed keywords (CR 612.2). Layer 6 can still remove them; text layers cannot
+restore an ability removed in that layer (CR 613.1c/f). Granted abilities keep
+their separate rules (CR 612.3).
+
+The existing upkeep declaration layer handles ordered changes, expiry, pending
+bodies, exact visits, control, phasing, clones, removal/restoration, final LKI and
+printed return. Payments retain their mana symbols and use the existing cost
+transaction. This adds no payment, event, zone, replacement or combat pipeline.
+`WithUpkeepSpellTextContinuation` still rejects intrinsic keywords explicitly;
+this extension establishes battlefield object text only.
+
+Evidence: native `TestTextUpkeepKeywordsAtomic` and `Declarations`; RON
+`TestRONTextUpkeepKeywordsRecords`, `Wall`, `Inventory`, `Lifecycle`, `Payments`
+and `Boundaries`. Real word consumers cover Force of Nature (6), Phantasmal
+Forces (6), Serendib Efreet (2), Lord of the Pit (6), Junún Efreet (1),
+Palladia-Mors (1), Cosmic Horror (1), Yawgmoth Demon (1) and Wall of Tombstones
+(1): nine names / 25 records. Paid/unpaid branches, mandatory and optional
+sacrifice, fixed mana, toughness updates, flying legality and trample damage
+retain their engine behavior. Mishra's War Machine remains rejected for its
+unsupported damage-result condition; keyword eligibility cannot bypass it.
+These are new text-context gameplay mappings for already compiled cards.
+Compilation counts do not increase.

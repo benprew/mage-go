@@ -13,7 +13,7 @@ func WithUpkeepSpellTextContinuation() CardOption {
 
 func upkeepSpellTextContext(card Card) (*GenericTriggered, error) {
 	base, ok := card.(*BaseCard)
-	if !ok || base == nil || base.upkeepSpellText != 1 || len(base.abilities) != 1 ||
+	if !ok || base == nil || base.upkeepSpellText != 1 || len(base.abilities) != 1 || len(base.attrSeeds) != 0 ||
 		base.spellCastSpellText != 0 || base.manaTapSpellText != 0 || base.staticEventSpellText != 0 ||
 		base.globalStaticSpellText != 0 || base.intrinsicSpellText != 0 || base.intrinsicCastText != 0 ||
 		base.landAuraSpellText != 0 || base.copyEntrySpellText != 0 || base.staticActivationText != 0 || base.protectionPTSpellText != 0 {

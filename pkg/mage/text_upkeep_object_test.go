@@ -159,7 +159,7 @@ func TestTextUpkeepObjectDeclarations(t *testing.T) {
 			}
 			card := NewArtifact("Declaration", "", opts...)
 			_, err := upkeepObjectTextContext(card)
-			valid := scenario == "valid" || scenario == "choice"
+			valid := scenario == "valid" || scenario == "choice" || scenario == "keyword"
 			if (err == nil) != valid {
 				t.Fatalf("context: %v", err)
 			}

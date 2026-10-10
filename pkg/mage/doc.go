@@ -16,7 +16,8 @@
 // keep ordered baselines, expiry, clones, control, phasing, removal and LKI.
 // Pending bodies keep detection facts; returned cards use printed rules.
 // [ChangePrintedPermanentText] selects this context at resolution.
-// Mixed rules, keywords, spell entry and live copy need separate contracts.
+// Fixed intrinsic keywords keep their counts and declaration groups.
+// Mixed rules, spell entry with keywords and live copy need separate contracts.
 //
 // Use [GenericTriggered.WithLayeredUpkeepTextRevision] for printed upkeep rules.
 // [Game.AddPrintedUpkeepTextEffect] changes one declaration in layer 3.

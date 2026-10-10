@@ -2,13 +2,14 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // WithUpkeepObjectTextRevision permits complete ordinary upkeep text changes.
-// Spell entry with choices and mixed rules need separate contracts.
+// Fixed intrinsic keywords keep their contributions through each text layer.
 func WithUpkeepObjectTextRevision() CardOption {
 	return func(card *BaseCard) { card.upkeepObjectText++ }
 }
@@ -16,9 +17,14 @@ func WithUpkeepObjectTextRevision() CardOption {
 func upkeepObjectTextContext(card Card) (*GenericTriggered, error) {
 	base, ok := card.(*BaseCard)
 	if !ok || base == nil || base.upkeepObjectText != 1 || !isEntryCopyPermanent(base) || base.HasType(core.TypeLand) ||
-		base.HasType(core.TypeInstant) || base.HasType(core.TypeSorcery) || base.HasSubType("Aura") || len(base.attrSeeds) != 0 ||
+		base.HasType(core.TypeInstant) || base.HasType(core.TypeSorcery) || base.HasSubType("Aura") ||
 		len(base.modes) != 0 || len(base.additionalCosts) != 0 || len(base.alternateCosts) != 0 || len(base.castTargets) != 0 {
-		return nil, fmt.Errorf("upkeep object text requires a marked nonland permanent without casting costs, targets or keywords")
+		return nil, fmt.Errorf("upkeep object text requires a marked nonland permanent without casting costs or targets")
+	}
+	for keyword, count := range base.attrSeeds {
+		if count < 1 || !slices.Contains([]core.Attr{core.Flying, core.FirstStrike, core.Trample, core.Vigilance, core.Haste, core.Reach, core.Banding, core.Defender, core.Fear, core.Deathtouch, core.Lifelink, core.Shroud, core.Hexproof, core.Menace, core.Indestructible}, keyword) {
+			return nil, fmt.Errorf("upkeep object text requires fixed intrinsic keywords")
+		}
 	}
 	var trigger *GenericTriggered
 	choice := false
@@ -95,7 +101,7 @@ func (g *Game) AddPrintedUpkeepObjectTextEffect(source *Permanent, duration core
 		return err
 	}
 	oldBase, newBase := current.Card.(*BaseCard), revision.Definition().(*BaseCard)
-	if !slices.Equal(oldBase.subTypes, newBase.subTypes) || len(oldBase.abilities) != len(newBase.abilities) || !sameUpkeepObjectTextContext(old, fresh) {
+	if !maps.Equal(oldBase.attrSeeds, newBase.attrSeeds) || !slices.Equal(oldBase.subTypes, newBase.subTypes) || len(oldBase.abilities) != len(newBase.abilities) || !sameUpkeepObjectTextContext(old, fresh) {
 		return fmt.Errorf("upkeep object text changed its declaration context")
 	}
 	for i, ability := range oldBase.abilities {

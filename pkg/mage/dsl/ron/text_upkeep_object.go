@@ -3,6 +3,12 @@ package ron
 func upkeepObjectTextRules(rules []Node) bool {
 	trigger, choice, chosen := false, false, false
 	for _, rule := range rules {
+		if rule.Kind == Symbol {
+			if _, fixed := keywords[rule.Name]; fixed {
+				continue
+			}
+			return false
+		}
 		if rule.Name == "AsPermanentEnters" {
 			if choice || validateOpponentEntryChoice(rule) != nil {
 				return false
