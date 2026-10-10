@@ -158,6 +158,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.spellTextContinuation && !e.supportsSpellTextContinuation() {
+			n.problem = "spell text continuation requires an ordinary spell without casting bindings"
+		}
 		if e.textRevisionState && e.kind != ActionActivated {
 			n.problem = "text revision state requires an activated action"
 		}

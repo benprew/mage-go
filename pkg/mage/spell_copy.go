@@ -51,6 +51,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp := &StackObject{
+		spellTextDefinition:    original.spellTextDefinition,
 		ID:                     uuid.New(),
 		Card:                   copiedCard,
 		Controller:             controller,
@@ -191,6 +192,9 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 	}
 
 	if declarations := card.CastTargets(); len(declarations) > 0 {
+		if copyObj.spellTextDefinition != nil {
+			declarations = copyObj.spellTextDefinition.CastTargets()
+		}
 		copyObj.Targets = g.retargetCopyGroups(copyObj, card, declarations)
 	}
 }

@@ -80,6 +80,22 @@ func transformTextWords(n Node, role string, change mage.TextChange) (Node, erro
 }
 
 func textArgumentRole(n Node, role string, index int) string {
+	if role == "permanent_collection" && n.Kind != List {
+		switch n.Name {
+		case "Ref_TargetPermanents":
+			role = "permanent_collection_reference"
+		case "And", "Or", "AttachedToAPermanent", "IsBlockingAttacker", "IsBlockedByDefender", "WasBlockedByDefenderThisTurn", "SinglePermanent":
+		default:
+			role = "permanent_filter"
+		}
+	}
+	if role == "damage_permanent_collection" && n.Kind != List {
+		if n.Name == "Ref_TargetPermanents" {
+			role = "permanent_collection_reference"
+		} else if n.Name != "And" {
+			role = "permanent_filter"
+		}
+	}
 	if role == "spell_filter" && n.Kind == Tuple {
 		if (n.Name == "IsColor" || n.Name == "IsNonColor") && len(n.Args) == 1 {
 			return "color"

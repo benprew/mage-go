@@ -585,6 +585,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 				bindings.sacrifices[ctx.sacrificeValue] = sacrificeValueBindings{power: mage.BindNumber("paid sacrifice power"), value: mage.BindNumber("paid sacrifice value")}
 			}
 			options := actionOptions(plan.buildWithBindings(bindings))
+			if ctx.castingCost == nil {
+				options = append(options, mage.WithSpellTextContinuation())
+			}
 			if ctx.castingCondition != nil {
 				options = append(options, mage.WithCastingCondition(ctx.castingCondition))
 			}

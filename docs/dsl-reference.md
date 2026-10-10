@@ -11476,3 +11476,20 @@ Evidence: `TestRONTextActivationLayerTargets`, `Limits`, `History`, `Choices`,
 `Boosts`, `OrderingLifetime`, `Boundaries`, `BaselineControllerAndLKI`,
 `TimingAndResults`, `Modal` and `LandWords`; native `TestTextActivationLayerDeclaration`
 and `Rejects`. Whole-object dispatch and spell continuation stay separate.
+
+### Ordinary pending spell text
+
+RON's ordinary `SpellActions(body)` path without an additional casting cost
+marks `WithSpellTextContinuation`. `Game.RevisePrintedSpellText` rebuilds that
+pending instant or sorcery's semantic rules while retaining announced targets,
+X and cast facts. New target declarations use the same saved groups; revised
+restrictions control resolution legality. Resolution choices and results use
+fresh per-instance bindings. Copies retain current target declarations, and
+clones keep separate revisions. The physical card retains printed text.
+
+Typed permanent, player, opponent, any-damage and spell target contexts are
+supported, including counted permanent groups. Modal declarations, permanent
+spells, other target kinds and captured casting results need separate services.
+This checked engine prerequisite does not lower the complete `CreateSpellEffect`
+or whole-object permanent text operations. Magical Hack and Sleight of Mind
+remain rejected as complete records.

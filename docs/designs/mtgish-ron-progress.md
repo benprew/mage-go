@@ -8,13 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-ACTIVATED-ACTION` adds ordered layer-3 installation and
-baseline restoration for printed activated actions. Nine unique cards / 39
-records have new representative layer lifecycle gameplay evidence. Costs,
-limits, history, pending bodies and clone isolation keep their engine contracts.
-Acceptance gain is **0 names / 0 records**. Isolated native compilation excludes
-pre-existing Eureka work: **812 accepted names / 2,098 compiled records**.
-Whole-object text, spell continuation and copy rebinding remain unsupported.
+`TEXT-SPELL-ORDINARY-CONTINUATION` adds checked rule rebuilding for ordinary
+pending instant/sorcery actions without captured casting results. Five unique
+cards / 30 complete records have new representative continuation gameplay
+evidence. Targets, exact visits, X, payment and cast facts stay fixed; resolution
+results use fresh bindings. Acceptance gain is **0 names / 0 records**.
+Isolated native compilation excludes pre-existing Eureka work:
+**812 accepted names / 2,098 compiled records**. Modal/casting-result transfer,
+permanent-spell entry, whole-object dispatch and copy rebinding remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -62963,5 +62964,149 @@ Ranked next candidates:
 3. Whole-object Magical Hack/Sleight of Mind dispatch once remaining declaration,
    spell continuation and copy prerequisites are ready. Neither complete record
    may be accepted through a partial mode.
+
+Stop after this slice. Migration completion is not claimed.
+
+## 2026-10-09: ordinary printed spell text continuation
+
+Capability: `TEXT-SPELL-ORDINARY-CONTINUATION`. One bounded prerequisite slice;
+complete text-spell dispatch is not claimed.
+
+### Candidate comparison and selection
+
+The prior ranked candidate #1 was evaluated first. Its ordinary pending-spell
+context is dependency-ready; modal/casting-result and permanent-entry contexts
+still lack checked transfer contracts. Complete records and nested branches of
+Magical Hack, Sleight of Mind and Fork were inspected, including identical
+reprints. Vocabulary inspection covered SpellActions, CreateSpellEffect,
+DestroyEachPermanent and both variable word substitutions.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Blockers, downstream value and effort |
+| --- | --- | --- |
+| Ordinary spell text continuation, selected | Magical Hack, Sleight of Mind; 0 unlocks. New recipient witnesses: Terror, Flashfires, Tsunami, Swords to Plowshares, Hurricane. | Shared prerequisite for both text spells and their recipients. Modal continuation, casting-result transfer, permanent-entry continuation and whole-object dispatch remain. Medium effort: fresh definitions, exact target-group transfer, gameplay and rejection tests; bounded to this run. |
+| Spell copy rebinding and permanent-spell entry continuation | Magical Hack, Sleight of Mind, Fork; 0 immediate unlocks. | Requires current spell continuation plus casting-result correspondence, copy exceptions and entry transfer. Large effort with copy, entry, LKI and lifecycle tests; not dependency-ready as a full context. |
+| Whole-object text dispatch | Magical Hack, Sleight of Mind; 0 immediate unlocks, 2 eventual unlocks. | Requires every target declaration context, modal/casting-result/copy and permanent-entry contracts. Large effort across all donor categories and both nested branches; cannot accept a partial mode. |
+
+Selected the ordinary part of #1 as the missing reusable prerequisite. The two
+text-spell names represent twelve records, not twelve independent card unlocks.
+No single-card adapter was preferred over this concrete shared dependency.
+
+### Established contract and boundaries
+
+`WithSpellTextContinuation() ActionOption` marks one ordinary printed ActionSpell.
+RON lowers its nonmodal `SpellActions(body)` path to this marker only without an
+additional casting cost. `Game.RevisePrintedSpellText(stackID uuid.UUID,
+changes ...TextChange) error` requires the exact pending instant/sorcery visit,
+retained semantic builder, printed declaration group and eligible action.
+Supported targets are typed permanent, player, opponent, any-damage and spell
+references, including counted permanent groups. Other target kinds reject.
+
+The context has one spell action and no card-level additional/alternate costs,
+modes, permanent entry, action costs, activation history or captured casting
+bindings. Rebuilds keep declaration context, group names/categories/counts and
+non-word target restrictions. Empty/invalid changes, missing builders/groups,
+foreign/absent stack IDs, lost markers and incompatible declarations reject
+before live mutation. The full CreateSpellEffect adapter remains unsupported.
+
+Ordered semantic substitutions rebuild fresh effects and target/result bindings.
+Each saved target spec maps to its replacement by declaration index; empty early
+groups do not shift later groups. Announcement targets and incarnations, X,
+allocations, cast facts, source/controller and payment stay fixed. Revised target
+legality applies at resolution, including partly illegal groups. Phased targets
+are absent; phasing back retains the visit. Return cannot supply the old target.
+Swords retains its pre-departure power/controller through existing LKI services.
+Resolution-produced draws/reveals/discards use independent fresh result frames.
+
+Each game update replaces its own stack object. Clones keep separate revisions.
+Existing copies retain the current semantic definition and retarget from current
+declarations. This preserves ordinary callers; it does not establish modal or
+casting-result copy rebinding. The physical card keeps its printed definition
+on stack departure, with unchanged name and mana symbols.
+
+Engine reuse: BuildTextDefinitionRevision, printed ability groups, pure retained
+RON builders, target declarations and exact visits, resolution frames, LKI,
+stack cloning/copying, casting snapshots, cost transactions, zone/damage batches
+and existing legality checks. No parallel payment, replacement-order, event or
+simultaneous-operation service was introduced. RON text rebuilding now uses the
+existing permanent/damage collection filter roles for land and color words.
+
+Local rules evidence: CR 601.2b–h (fixed announcement/payment), 608.2b/d (legality
+and resolution choices), 612.1–3 (semantic text), 400.7 (zone visits), 707.10/c
+(existing copy choices). No source-data defect was found or corrected. RON
+records, vocabulary snapshot and source hashes stay unchanged.
+
+### Failing-first evidence and card-to-test mappings
+
+The initial RON tests failed compilation at the missing RevisePrintedSpellText
+API after correcting PhaseIn's slice argument. Native tests failed at that API
+and marker, with test cost API names corrected. Implementation followed those
+failures. Record assertions then exposed missing resolving collection land-word
+roles; that lowering correction followed the failures. A new native changed-
+controller-restriction assertion failed before the target-context guard was added.
+
+| Complete RON records or contract | Tests and behavior |
+| --- | --- |
+| Terror, all six records | Records and Legality: fresh target binding, ordered color substitutions, unchanged payment, fizzle, clone isolation, phasing, phase return and departed/returned target visits. |
+| Flashfires and Tsunami, six records each | Records: semantic basic-land substitution, changed resolving collection, destruction and independent cloned resolution. |
+| Swords to Plowshares, all six records | Records: target exile followed by power/controller LKI life gain, independent clone and physical card preservation. |
+| Hurricane, all six records | Records: announced X and paid mana survive revision; simultaneous player damage uses the existing batch. |
+| Synthetic ordinary spells | PartialLegality and SpellTarget: numbered groups and revised stack-spell color legality. Results: two independent draw/reveal/discard producers, fresh frames and cloned resolution. |
+| Rejection and caller compatibility | RON Boundaries; native Declaration, Rejects and ContextRejection: absent/foreign IDs, unsupported modal/cost contexts, invalid markers/words/builders/groups and changed target name/kind/count/controller/timing/effect count, without live mutation. EmptyGroupAndCopy: empty first group, retained copy restrictions and retargeted second group. |
+
+Representative new continuation gameplay evidence is **5 unique names / 30
+complete records**. Shared compiler marking is not a per-card allowlist or a
+claim of new gameplay coverage for every ordinary spell. Full Magical Hack and
+Sleight of Mind still reject. Compilation and gameplay coverage remain separate.
+
+### Verification and actual gain
+
+- Fresh baseline make build and go test ./pkg/mage/dsl/ron -count=1 passed
+  (RON 45.374s). Baseline strict loader exited 1: 813 accepted / 173 rejected
+  names, 2,099 compiled / 346 rejected records (986 names / 2,445 records).
+- Focused TestRONTextSpellContinuation and native TestTextSpellContinuation
+  passed. Expanded post-format TextDefinition, SpellTargetGroups and SpellCopy
+  checks passed. Required make build and go vet ./... passed.
+- go test ./pkg/mage/... -short -count=1 passed (RON 34.799s).
+  make test passed (RON 43.739s). Accepted-record regressions remain in force.
+- Isolated staged-index checkout, excluding all pre-existing changes: focused
+  RON/native/copy/group tests, make build and go vet ./... passed. Its loader
+  exited 1: 812 accepted / 174 rejected names, 2,098 compiled / 347 rejected
+  records. Pre-existing Eureka acceptance is excluded from this slice.
+- Initial make lint found one preallocation issue in the new native test.
+  Corrected fixture capacity; final make lint passed with 0 issues. Automatic
+  import grouping was reviewed; no unrelated file was changed by lint. Expanded
+  focused RON/native/copy/group tests and final make test passed after formatting
+  and fixture correction (RON 50.042s). git diff --check and staged checks passed.
+- Final go run ./cmd/loadcards -json exited 1 as expected: 813 accepted / 173
+  rejected names, 2,099 compiled / 346 rejected records. Parsed JSON and every
+  rejection diagnostic match the fresh baseline exactly. Diagnostics still
+  include CreateSpellEffect, EnchantGraveyardCard, SacrificeAllPermanentsExceptForNum
+  and MayPayLifeToProduceManaAsManaAbility. No build/test/environment blocker
+  remains; collection rejection still installs no partial registry.
+
+Estimated and actual compilation gain: **0 unique names / 0 records**. The zero
+estimate was accurate; the shared ordinary continuation prerequisite is complete.
+New representative continuation gameplay evidence: **5 names / 30 records**.
+No removal gate was crossed. Complete RON gameplay, native startup integration,
+Go-card deletion and unused DSL cleanup remain unfinished.
+
+Changed files: pkg/mage/activated.go, clone.go, definition.go, doc.go, stack.go,
+spell_cast_stack.go, spell_copy.go; new text_spell_continuation.go and its native
+test; pkg/mage/dsl/ron/compiler.go, text_definition.go and new continuation test;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger. Stage only
+these changes. Pre-existing Eureka/entry/compiler/documentation edits and the
+untracked ledger archive remain outside the commit. The staged ledger preserves
+its existing committed history; worktree archival changes remain unstaged.
+
+Ranked next candidates:
+
+1. Shared modal printed spell continuation plus typed casting-result transfer:
+   retain chosen mode and paid-result identities for Magical Hack/Sleight of Mind
+   and recipient spells; compare a bounded complete subcontext before editing.
+2. Permanent-spell text entry continuation and copy rebinding for those two cards,
+   after the exact transfer contracts are ready.
+3. Whole-object Magical Hack/Sleight of Mind dispatch after all declaration,
+   spell continuation and copy contexts are complete. Neither record may be
+   accepted through a partial branch.
 
 Stop after this slice. Migration completion is not claimed.

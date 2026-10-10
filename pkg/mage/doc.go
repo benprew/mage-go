@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithSpellTextContinuation] for one ordinary instant or sorcery action.
+// [Game.RevisePrintedSpellText] changes its rules during the exact stack visit.
+// RON marks its ordinary SpellActions path without additional casting costs.
+// Fresh effects keep announced target groups, X, payment and cast facts.
+// Revised targets can become illegal. Resolution results use fresh bindings.
+// Copies use the retained target declarations. Clones keep separate revisions.
+// The physical card keeps printed rules on departure. Invalid changes are atomic.
+// Modal actions, permanent spells and casting-result transfer need separate services.
+// Whole-object text dispatch and layer installation need separate services.
+//
 // Use [WithLayeredTextRevisionActivationState] for a printed activated action.
 // [Game.AddPrintedActivatedTextEffect] changes one declaration in layer 3.
 // Each pass restores its baseline before ordered color or basic land changes.

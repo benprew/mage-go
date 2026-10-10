@@ -15049,3 +15049,50 @@ Hand records. Synthetic tests cover modal targets, timing, saved results, ordere
 expiry, limits through suppression and cleanup, prior direct baselines, cloned
 control, departure LKI and basic land word target changes (including nonbasic
 lands). Existing activation-state tests remain in force.
+
+## Ordinary spell text continuation
+
+`WithSpellTextContinuation() ActionOption` marks one ordinary `ActionSpell`.
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+requires an exact pending instant or sorcery with a retained semantic definition,
+printed declaration groups and this marker. RON marks its nonmodal
+`SpellActions(body)` path when there is no additional casting cost. The checked
+service supports typed permanent, player, opponent, any-damage and spell targets,
+including count-bound permanent groups. Other target kinds remain errors.
+
+The action has no costs, modes, activation history or casting-result captures.
+Card-level additional/alternate costs, permanent spells, modal actions and
+captured casting bindings require separate continuation contracts. A builder
+must retain the declaration context, target names, categories, counts and
+non-word restrictions. Invalid words, empty changes, missing builders/groups,
+changed contexts and absent visits reject before any live update.
+
+Each successful call builds fresh rules and per-instance target/result bindings.
+Ordered substitutions accumulate in a separate semantic definition. Aligned
+saved target declarations map to the new declarations by group position;
+empty groups do not shift later groups. Targets, their incarnations, announced X,
+allocations, source/controller identity, cast context and paid costs stay fixed
+(CR 601.2b–h). Revised text participates in resolution legality, including partly
+illegal groups (CR 608.2b). Returned or phased targets cannot receive effects;
+phasing back keeps the saved incarnation. Results produced during resolution use
+fresh frames and retain the existing sequencing, LKI and zone services.
+
+The physical card retains its printed definition, so departure cannot put changed
+text in a graveyard or supply that text to a later cast (CR 400.7). Copies keep
+current immutable rules and target declarations; ordinary copy retargeting uses
+those declarations. This is compatibility with existing copying, not a contract
+for modal or casting-result rebinding. Game clones keep separate stack updates.
+Color words and basic-land words use semantic RON roles (CR 612.1–3); mana
+symbols and names stay unchanged. Collection filters now receive their existing
+inventory roles during text rebuilding. No payment, replacement-order or
+simultaneous-operation subsystem was added.
+
+Evidence: `TestRONTextSpellContinuationRecords` covers all 30 complete records
+of Terror, Flashfires, Tsunami, Swords to Plowshares and Hurricane.
+`Legality`, `PartialLegality`, `SpellTarget`, `Results` and `Boundaries` cover
+ordered substitutions, unchanged X/payment, LKI, exact visits, phasing, clones,
+fresh result frames and unsupported declaration rejection. Native
+`TestTextSpellContinuation*` covers markers, malformed builders, atomic rejection,
+empty target groups and copy retargeting. Complete Magical Hack and Sleight of
+Mind still reject; whole-object dispatch, modal continuation, captured casting
+results and permanent-spell entry continuation remain separate prerequisites.
