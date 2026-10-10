@@ -16439,3 +16439,48 @@ and `OrderAndExpiry`. Real gameplay maps Black Vise, The Rack and Ivory Tower
 (all ten records), Karma (six records), and Force of Nature (one record).
 The 52-name / 108-record inventory proves declaration-layer acceptance, not
 complete gameplay for every subject.
+
+
+## Complete ordinary upkeep object text
+
+`WithUpkeepObjectTextRevision() CardOption` marks one complete ordinary upkeep
+context. `Game.AddPrintedUpkeepObjectTextEffect(source *Permanent, duration
+core.Duration, changes ...TextChange) error` accepts validated nonempty color or
+basic-land word changes with `EndOfTurn` or `Indefinite` duration. The definition
+must be a nonland, non-Aura permanent with one marked ordinary battlefield
+upkeep trigger. A chosen-player trigger requires exactly one
+`ChooseOpponentAsEnters()` declaration; the other contexts require none.
+Keywords, sibling rules, casting costs/targets, modal/optional/intervening/state
+triggers and other source zones are outside this contract.
+
+RON selects this complete context for `TriggerA(AtTheBeginningOfAPlayersUpkeep(
+AnyPlayer | SinglePlayer(You) | SinglePlayer(TheChosenPlayer)), actions)`, with
+exactly `AsPermanentEnters(ThisPermanent, [ChooseAPlayer(Opponent)])` for the
+chosen-player form. `CreatePermanentLayerEffect` word lists keep their existing
+lexical pair validation and lower to `ChangePrintedPermanentText`. This service
+now dispatches to the upkeep context after resolving the saved word pairs.
+
+Both complete definitions and all declaration groups pass preflight before any
+layer is installed. The active printed trigger must keep its event-player role,
+context, target shape and declaration ID. Missing builders/groups, typed nil,
+granted wrappers, absent/phased/face-down/returned visits and invalid revisions
+reject atomically. The entry choice is checked but never repeated by a text
+change. Names and mana symbols stay fixed (CR 612.2); granted abilities keep
+their separate rules (CR 612.3).
+
+The existing upkeep declaration service supplies ordered layer-3 baselines,
+expiry, control and clone isolation (CR 613.1c, 613.3, 613.7). Pending triggers
+keep detection text, event players/controllers, targets and payment bindings
+(CR 603.2b, 603.3a). Shared services preserve target legality, payment rollback,
+damage prevention, phasing, ability removal/restoration, final LKI and printed
+return with a fresh entry choice. No new trigger or replacement pipeline is added.
+Upkeep spell continuation and live-copy rebinding remain separate capabilities.
+
+Evidence: native `TestTextUpkeepObjectRejectsAtomic` and `Declarations`; RON
+`TestRONTextUpkeepObjectRecords` (Black Vise, The Rack and Ivory Tower: all ten
+records, four hand sizes and both real word consumers), `Karma` (six reprints
+with pending old words), `PendingTargets`, `Identity`, `ChosenIdentity`,
+`OrderAndExpiry`, `Payments`, `Prevention`, `Boundaries` and `Inventory`.
+The inventory proves complete-context installation for 10 names / 26 records;
+it does not prove full gameplay for every subject. New consumer gameplay maps
+four names / 16 records. Compilation coverage is unchanged.

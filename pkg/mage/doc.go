@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithUpkeepObjectTextRevision] for one complete ordinary upkeep rule.
+// [Game.AddPrintedUpkeepObjectTextEffect] checks all printed declarations.
+// One opponent entry choice can supply the chosen-player context.
+// Saved choices, names and mana symbols keep their values. Existing layers
+// keep ordered baselines, expiry, clones, control, phasing, removal and LKI.
+// Pending bodies keep detection facts; returned cards use printed rules.
+// [ChangePrintedPermanentText] selects this context at resolution.
+// Mixed rules, keywords, spell entry and live copy need separate contracts.
+//
 // Use [GenericTriggered.WithLayeredUpkeepTextRevision] for printed upkeep rules.
 // [Game.AddPrintedUpkeepTextEffect] changes one declaration in layer 3.
 // Each pass restores its baseline before ordered color or basic land changes.

@@ -323,6 +323,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	mixedStaticEventSpellText := false
 	globalStaticSpellText := false
 	manaTapSpellText := false
+	upkeepObjectText := false
 	spellCastSpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
@@ -332,6 +333,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		mixedStaticEventSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && mixedStaticEventSpellTextRules(rules)
 		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapTextRules(rules)
+		upkeepObjectText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && upkeepObjectTextRules(rules)
 		spellCastSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && spellCastTextRules(rules)
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && (globalStaticSpellTextRules(rules) || globalGrantSpellTextRules(rules))
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
@@ -444,6 +446,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		if manaTapSpellText {
 			opts = append(opts, mage.WithManaTapSpellTextContinuation())
+		}
+		if upkeepObjectText {
+			opts = append(opts, mage.WithUpkeepObjectTextRevision())
 		}
 		if spellCastSpellText {
 			opts = append(opts, mage.WithSpellCastSpellTextContinuation())
