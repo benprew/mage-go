@@ -8,12 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`INTRINSIC-CREATURE-SPELL-TEXT-ENTRY` carries checked protection and basic
-landwalk from pending creature spells through entry and printed departure.
-Continuation evidence covers **14 names / 34 complete records**. Acceptance
-gain is **0 names / 0 records**. Printed copy values, later text-layer baselines,
-cloning, phasing and departure remain separate. Copy-entry, whole-object text
-and the complete word-changing spells remain incomplete.
+`COPY-ENTRY-SPELL-TEXT` carries ordered substitutions through optional donor
+acquisition, fresh donor rules and printed physical departure. Continuation
+evidence covers **2 names / 12 complete records**, with complete Bog Wraith and
+Gauntlet of Might donor gameplay. Acceptance gain is **0 names / 0 records**.
+Copy exceptions, independent bindings, token spell copies, cloning, phasing,
+LKI and later text-layer baselines have focused evidence. Noncopy permanent
+contexts, whole-object text and the complete word-changing spells remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -63853,6 +63854,197 @@ Ranked next candidates:
 3. Whole-object permanent word-change dispatch/lifetime and complete
    CreateSpellEffect lowering for Magical Hack and Sleight of Mind after their
    remaining spell/permanent and copy-entry contexts are dependency-ready.
+
+Stop after this slice. Complete collection gameplay, runtime integration,
+Go-card deletion and unused-DSL removal remain unfinished.
+
+
+## 2026-10-09: copy-entry spell text continuation
+
+Capability: `COPY-ENTRY-SPELL-TEXT`. Complete bounded copy-entry continuation
+prerequisite; no whole-object text installation or dependent card was added.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 was evaluated first. Complete Clone and Copy
+Artifact records in LEA/LEB/2ED/3ED/CED/CEI were read, including optional entry
+operations and copy exceptions. The compared complete records were Blood Moon
+(DRK), Titania's Song (ATQ/3ED), and Magical Hack/Sleight of Mind (all six core
+sets). Reprints are counted once for selection.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers | Downstream benefit | Effort |
+| --- | --- | --- | --- | --- | --- |
+| Copy-entry spell text | Clone, Copy Artifact | 0; both already accepted | Whole-object dispatch and other permanent-spell contexts still block the word-changing spells; AddAbility still blocks Vesuvan Doppelganger | Supplies continued donor rules for both Magical Hack and Sleight of Mind across two common copying spells | Moderate: reuse checked builders, identity, copy exceptions and replacement pipeline; add lifecycle and binding tests |
+| Noncopy static permanent-spell text | Blood Moon, Titania's Song | 0; both already accepted | Titania uses EachPermanentStickyLayerEffect, which cannot use the existing ordinary static animation continuation contract unchanged | Supplies further permanent-spell cases for both word-changing spells | Moderate to high: global land-type continuation plus a separate sticky-rule contract |
+| Complete word-changing spell dispatch | Magical Hack, Sleight of Mind | 2 only after prerequisites | Copy-entry, remaining noncopy permanent-spell contexts and whole-object permanent dispatch/lifetime | Direct gameplay for two spells, including both stack and permanent modes | High; too broad for this run |
+
+Selected candidate #1 because it is dependency-ready and concretely unblocks
+multi-card text work. Existing donor builders, definition groups, copy exception
+rebinding and entry replacement identities provide the reuse boundary. No new
+zone, target, payment, replacement-order or simultaneous-action subsystem was
+needed. Estimate and actual acceptance gain are both zero; this is additional
+continuation evidence for accepted cards, not a collection compilation gain.
+
+### Supported signatures, contexts and engine mechanics
+
+- RON marks exactly one permanent rule:
+  `AsPermanentEnters(ThisPermanent, [MayActions([EnterAsACopyOfAPermanent(filter, modifications)])])`.
+  The filter and modifications must pass existing compilation. Supported
+  modifications are `NoCopyEffects` or nonempty `CopyEffects` with existing
+  `AddCardtypes` and/or `KeepColor`, including ordered combinations.
+- `WithCopyEntrySpellTextContinuation() CardOption` validates one typed optional
+  entry-copy declaration without keywords, extra abilities, modes, cast targets,
+  additional costs or alternate costs. Nil declarations/filters, duplicate
+  markers and incompatible continuation markers reject at definition validation.
+- `Game.RevisePrintedSpellText(stackID, changes...)` checks the exact retained
+  stack visit, fresh declaration correspondence, unchanged copy modifications,
+  retained-color policy and subtype context. Captured casting results, targets,
+  resolving effects, changed contexts and countered visits reject atomically.
+  Ordered substitutions accumulate without choices or another payment.
+- `BuildEntryCopyWithText(original Card, values *CopiableValues, changes ...TextChange)
+  (Card, error)` builds an independent donor definition from saved copy values,
+  then checks fresh text and declaration groups through BuildTextDefinitionRevision.
+  Copy exceptions remain copiable; ordinary changes do not. Invalid donor builders,
+  missing/changed groups and protected metadata changes return errors. Face-down
+  copy values keep their textless provenance through repeated copy exceptions
+  and retain their face-up 2/2 result; invalid words
+  still reject before building.
+- The existing battlefield entry action keeps its own immutable ordered changes.
+  Each acquired donor starts from fresh copy values and receives those changes
+  once. Nested acquired copy rules keep the list and original replacement
+  identities. Acquired entry operations and ETB detection see the continued text.
+  Source incarnation rechecks, phasing exclusion and optional non-target choices
+  keep their existing service contracts.
+- Entry copy provenance accepts the same checked entry-characteristic snapshot
+  already used by CaptureCopiableValues. This permits changed intrinsic seeds
+  without permitting later untracked mutations. Permanent-spell copy wrappers
+  use the same copy-entry pipeline and keep token status, controller and owner.
+- Physical identity, printed departure, copy provenance, ante status and fresh
+  bindings remain separate. Pending actions survive departure. Clones keep
+  separate revisions and choices. Phasing does not repeat entry. Later layer 3
+  effects use the continued baseline; layer 6 removal and expiry restore it.
+  LKI retains final donor rules; physical recasts use printed copying rules.
+
+The typed role adapter was missing for entry-copy filter words. The resolving
+filter-revision test first rejected Red as an unknown semantic role. Inventory
+now assigns permanent_filter/copy_modification to EnterAsACopyOfAPermanent,
+copy_modification to CopyEffects children, and card_type to AddCardtypes children.
+Unsupported added-copy abilities retain unknown roles and compiler rejection.
+RON owns syntax and roles; mage owns entry, identity and continued execution.
+
+Reuse: existing semantic text transformation, checked CardDefinitionPlan and
+BuildTextDefinitionRevision, copy exception rebinding, BuildEntryCopy,
+CaptureCopiableValues, replacement priorities/applied identities, normal entry
+operations/ETB detection, transactional costs, stack cloning, permanent-spell
+copy wrappers, per-declaration text layers, phasing and LKI. Rules read locally:
+CR 400.7a, 608.3a/b/e/f, 612.1–4, 613.1a/c/f, 707.2–3, 707.5–6 and 707.10f.
+
+### Failing-first and card-to-test mappings
+
+Before production edits, TestRONTextCopySpellRecords failed all 12 complete
+records at the ordinary instant/sorcery continuation boundary. Native tests
+failed compilation because WithCopyEntrySpellTextContinuation and
+BuildEntryCopyWithText did not exist. Later tests exposed the missing filter
+semantic role before that adapter was implemented. Fixture-only corrections
+used the actual ability-removal API and isolated the donor's original pending
+ETB trigger before testing the acquired trigger; no engine rule was weakened.
+A final edge audit wrote failing FaceDownExceptions tests in both packages: copy
+modifications had lost the face-down values' textless provenance. The shared
+copy modification service now preserves that provenance through exception groups.
+A second copy-exception check confirmed that adding types to an intrinsic donor
+retained an incompatible spell eligibility marker and incorrectly rejected the
+copy. Failing IntrinsicDonorException/AddedTypes tests preceded the fix: copied
+prototypes clear incompatible intrinsic/Aura spell markers when a type is added,
+retain their full rules, and leave original definitions and validation strict.
+
+| Complete cards/contract | Evidence |
+| --- | --- |
+| Clone, each LEA/LEB/2ED/3ED/CED/CEI | Records casts each complete card, continues Swamp-to-Island into complete Bog Wraith donor rules, proves evasion, payment/timing, physical identity, independent game clone, printed copy values, phasing, LKI and printed recast. |
+| Copy Artifact, each same six sets | Records casts every complete card with a complete Gauntlet of Might donor. Continued Red-to-Green P/T and Mountain-to-Island mana events work together; red mana symbols and the copied independent donor rule retain their values. Enchantment exceptions, later copy values, identity, phasing, LKI and printed recasts remain separate. |
+| Bog Wraith and Gauntlet of Might, LEA donor records | Records uses the full landwalk rule and both full Gauntlet rules as acquired text. These are donor interaction evidence, not new full-card unlocks or new collection coverage claims. |
+| Gray Ogre / Grizzly Bears, LEA donor records | FilterRevision changes the copier's typed Red filter to Green before the non-targeted choice. The green donor has granted shroud; it remains selectable and that grant is not copied. |
+| Spell copies and clones | Copies retains successive substitutions with independent original, copied and cloned stack rules, token entry/controller, printed copy values and token departure. |
+| Bindings, costs and acquired entry | DonorBindings uses complete synthetic RON for an entry counter, activated counter payment with a colored target, and a land-filtered ETB trigger. Fresh bindings observe revised words, illegal targets pay no cost, the donor remains independent, and pending actions survive departure. |
+| Entry and replacement identity | EntryShapes covers decline, no candidates, phased sources, return before selection, return during selection, face-down values and a nested acquired optional copy. Existing replacement identities prevent repeated entry rules. |
+| Layers and copy exceptions | Layers checks repeated passes, layer 6 removal, expiry while phased and continued-baseline restoration. RetainedColors checks nonempty and empty retained colors with AddCardtypes, fresh activation bindings and printed later-copy targets. FaceDownExceptions proves modified face-down donors retain no text while keeping copied types/colors; native evidence composes repeated exception groups and retains invalid-word rejection. IntrinsicDonorException copies complete Bog Wraith after it becomes an artifact: Copy Artifact keeps the copied creature rules and its enchantment exception, excludes the ordinary artifact type change from copy values, and continues landwalk. Native AddedTypes also checks Aura eligibility without removing rules or changing original markers. |
+| Rejection and inventory | Boundaries rejects malformed declarations and unmarked mixed contexts; complete Magical Hack, Sleight of Mind and Vesuvan Doppelganger remain rejected. Inventory proves exactly 12 supported complete copier records have mappings. Native Declaration, DonorContract, RejectsAtomic and RejectsDonorGroups cover invalid markers/words, builders/groups, protected metadata, casting results, changed contexts, countered visits and untracked mutation. |
+
+Older intrinsic and land-Aura boundary tests assumed all Clone/Copy Artifact
+revisions were unsupported. They now add an extra Shroud declaration to their
+complete RON fixtures and retain their atomic rejection assertions. The new
+positive record tests verify the newly supported single copy-entry context.
+
+No source defect was found or corrected. RON sources, vocabulary snapshot and
+hashes are unchanged. No Go definition, generator or DSL function was removed;
+runtime cutover and removal gates remain unmet. The worktree began with unrelated
+Eureka/repeated-entry changes, shared compiler/docs edits and a ledger archive.
+Those changes and unrelated untracked files are preserved; only this slice's
+hunks are staged for the commit, retaining the tracked ledger history.
+
+Changed files: pkg/mage/card.go, copy_modification.go, definition.go, doc.go,
+entry_copy.go, entry_copy_identity.go, game.go, stack_resolver.go,
+text_spell_continuation.go; new native text_copy_spell.go and test;
+pkg/mage/dsl/ron/compiler.go, inventory.go, text_intrinsic_spell_test.go,
+text_land_aura_spell_test.go; new RON text_copy_spell.go and test;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger (20 files).
+
+### Verification and loader evidence
+
+- Fresh baseline make build passed. Baseline go test ./pkg/mage/dsl/ron
+  -short -count=1 passed (34.995s). The baseline strict loader exited 1 for
+  unsupported collection records, independently of successful build/tests.
+- Failing-first record tests rejected all 12 copier records; native signatures
+  were absent. FaceDownExceptions and IntrinsicDonorException/AddedTypes later
+  failed before their copy-exception fixes. No test was weakened.
+- Final focused go test ./pkg/mage/dsl/ron -run
+  'TestRONText(CopySpell|LandAuraSpellBoundaries|IntrinsicSpellBoundaries)'
+  -count=1 passed (0.574s), including every new copy-exception test. Native
+  go test ./pkg/mage -run
+  'Test(TextCopySpell|EntryCopyIdentity|CopyTextRebinding|CopyModif)' -count=1
+  passed (0.476s).
+- Final make build and go vet ./... passed.
+- The first engine-short pass exposed older all-copy-revision rejection
+  assumptions. Those fixtures now include an extra unsupported declaration
+  and preserve atomic rejection. Final go test ./pkg/mage/... -short -count=1
+  passed (RON 47.986s). Final make test passed (RON 39.349s).
+- Initial make lint found one prealloc warning in the new native test and one
+  builtin-shadow warning in the new shape adapter. Capacity was reserved and
+  the local variable renamed. Automatic changes were reviewed; no unrelated
+  source change was required. Final make lint passed with 0 issues after the
+  copy-exception fixes. git diff --check passed.
+- A clean HEAD-plus-slice export excludes all pre-existing tracked changes and
+  unrelated untracked files. Its final make build, go vet ./... and make test
+  passed (RON 39.199s). Its strict loader exited 1: **812 accepted / 174 rejected
+  names**, **2,098 compiled / 347 rejected records**. Eureka is its only extra
+  rejected card, from excluded repeated-entry work. Mana Clash differs only in
+  its first diagnostic because that unrelated adapter is excluded. No other
+  diagnostic differences exist. This slice has no dependency on that work.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected unique names**, **2,099 compiled / 346 rejected records**,
+  across 986 names / 2,445 records. Parsed JSON and every diagnostic exactly
+  equal the fresh worktree baseline. Unsupported collection loading remains
+  atomic. CreateSpellEffect still blocks Magical Hack/Sleight of Mind;
+  AddAbility in copy modifications blocks Vesuvan Doppelganger;
+  EnchantGraveyardCard blocks Animate Dead; SacrificeAllPermanentsExceptForNum
+  blocks Balance. These are collection gaps, not build or test failures.
+- Estimated acceptance gain was 0 names / 0 records; actual gain is 0 / 0.
+  New continuation evidence covers 2 already accepted unique names / 12 complete
+  records, with explicit donor and lifecycle contracts. Compilation gains and
+  gameplay evidence were not conflated. No unresolved native validation or
+  environment blocker remains. Runtime cutover and removal gates remain unmet.
+
+Ranked next candidates:
+
+1. Noncopy permanent-spell text continuation for complete shared static contexts.
+   Inspect Blood Moon and global P/T rules together. Titania's Song additionally
+   requires its sticky-rule continuation contract; do not treat it as ordinary
+   fixed-P/T animation. This supplies further contexts for both word-changing spells.
+2. Whole-object permanent word-change dispatch/lifetime, using the existing
+   per-declaration layer services. Compare complete multi-rule donors before
+   claiming a checked full-object boundary or lowered spell mode.
+3. Complete CreateSpellEffect lowering and both modes of Magical Hack/Sleight
+   of Mind once the remaining permanent contexts and dispatch are ready.
+   Vesuvan Doppelganger's added copy ability remains a separate dependency.
 
 Stop after this slice. Complete collection gameplay, runtime integration,
 Go-card deletion and unused-DSL removal remain unfinished.

@@ -292,6 +292,9 @@ func TestRONTextLandAuraSpellBoundaries(t *testing.T) {
 	for _, name := range []string{"Clone", "Copy Artifact", "Wild Growth"} {
 		g, a, b := ronGame()
 		card := repositoryCard(t, "LEA", name)
+		if name == "Clone" || name == "Copy Artifact" {
+			card = textCopyMixedRecord(t, "LEA", name)
+		}
 		card.SetOwner(a.PlayerID())
 		a.AddToHand(card)
 		a.ManaPool().Add(core.Colorless, 4)

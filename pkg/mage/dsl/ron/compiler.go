@@ -315,12 +315,14 @@ func Compile(n Node) (mage.CardFactory, error) {
 	var options []optionFactory
 	landAuraSpellText := false
 	intrinsicCreatureSpellText := false
+	copyEntrySpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
 		if err != nil {
 			return nil, err
 		}
+		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)
@@ -423,6 +425,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		if landAuraSpellText {
 			opts = append(opts, mage.WithLandTypeAuraSpellTextContinuation())
+		}
+		if copyEntrySpellText {
+			opts = append(opts, mage.WithCopyEntrySpellTextContinuation())
 		}
 		if intrinsicCreatureSpellText {
 			opts = append(opts, mage.WithIntrinsicCreatureSpellTextContinuation())

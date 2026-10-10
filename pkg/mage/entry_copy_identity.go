@@ -18,14 +18,22 @@ func WithPrintedCardDefinitionPlan(plan *CardDefinitionPlan) CardOption {
 // The caller must supply entry permission, copy choices and replacement order.
 // The original card must leave its former zone before the result enters.
 func BuildEntryCopy(original Card, values *CopiableValues) (Card, error) {
-	base, ok := original.(*BaseCard)
+	definition := original
+	if copied, ok := original.(permanentSpellCopyCard); ok {
+		definition = copied.Card
+	}
+	base, ok := definition.(*BaseCard)
 	if !ok || base == nil || base.printedDefinitionPlan == nil {
 		return nil, fmt.Errorf("entry copy requires a physical printed definition plan")
 	}
 	if original.ID() == uuid.Nil {
 		return nil, fmt.Errorf("entry copy requires a physical card identity")
 	}
-	if !isEntryCopyPermanent(original) || base.copiableValues == nil || !base.copiableValues.printed.matches(base) || base.definitionPlan != base.copiableValues.definition {
+	characteristics := base.textEntryValues
+	if characteristics == nil && base.copiableValues != nil {
+		characteristics = &base.copiableValues.printed
+	}
+	if !isEntryCopyPermanent(original) || base.copiableValues == nil || characteristics == nil || !characteristics.matches(base) || base.definitionPlan != base.copiableValues.definition {
 		return nil, fmt.Errorf("entry copy requires tracked permanent characteristics")
 	}
 	if base.departureCard == nil && base.printedDefinitionPlan != base.definitionPlan {

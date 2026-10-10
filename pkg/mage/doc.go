@@ -17,6 +17,16 @@
 // Other permanent spells and casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
+// Use [WithCopyEntrySpellTextContinuation] for one optional entry-copy spell.
+// [Game.RevisePrintedSpellText] retains ordered words through donor acquisition.
+// [BuildEntryCopyWithText] checks fresh donor rules and declaration groups.
+// Each entry keeps its own changes through nested choices and copy exceptions.
+// Acquired entry rules and triggers use the changed text. Copy values exclude it.
+// Missing donor builders and invalid groups return errors. Clones keep separate
+// rules. Spell copies enter as tokens. Phasing keeps the visit and its text.
+// Later text layers restore the continued baseline. Departure keeps printed
+// physical rules and final LKI. Other permanent rules need separate contracts.
+//
 // Use [WithIntrinsicCreatureSpellTextContinuation] for intrinsic creature rules.
 // [Game.RevisePrintedSpellText] carries fresh protection and basic landwalk
 // through entry. RON marks creature rules with these declarations and ordinary

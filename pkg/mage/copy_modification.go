@@ -90,6 +90,11 @@ func (m copyTypeAddition) applyCopyModification(card *BaseCard) {
 			card.types = append(card.types, kind)
 		}
 	}
+	// Extra card types require a separate spell continuation contract.
+	if len(card.types) > 1 {
+		card.intrinsicSpellText = 0
+		card.landAuraSpellText = 0
+	}
 }
 
 func validateCopyModifications(modifications []CopyModification) error {
@@ -137,5 +142,7 @@ func (v *CopiableValues) WithModifications(modifications ...CopyModification) (*
 	if plan.declarationOrigin != nil && plan.declarationOrigin.declarationOrigin != nil {
 		plan.declarationOrigin = plan.declarationOrigin.declarationOrigin
 	}
+	// Copy exceptions cannot add printed words to face-down values.
+	plan.copiableValues.faceDown = v.faceDown
 	return plan.CopiableValues(), nil
 }

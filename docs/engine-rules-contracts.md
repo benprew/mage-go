@@ -15321,3 +15321,71 @@ Native `TestTextIntrinsicSpellDeclaration`, `RejectsAtomic` and
 `CopyProvenance` cover marker validation, changed contexts, countered visits,
 foreign casting results and untracked mutations. Copy-entry and other permanent
 rules, whole-object text dispatch, Magical Hack and Sleight of Mind remain open.
+
+### Copy-entry spell text continuation
+
+`WithCopyEntrySpellTextContinuation() CardOption` declares one ordinary
+permanent spell with only an optional `entryCopyAbility`. The marker rejects
+nil rules and filters, duplicate markers, keywords, other abilities, modes,
+casting targets, additional costs and alternate costs. It cannot share the
+intrinsic-creature or land-Aura marker.
+
+`Game.RevisePrintedSpellText(stackID, changes...)` dispatches marked spells to
+a checked copy-entry revision. The stack object must have no resolving actions,
+announced targets or captured casting results. The builder must retain its
+copy declaration, group, copy modifications, retained-color policy and subtype
+context. Each ordered color/basic-land substitution is validated before
+mutation. Only the exact retained stack definition is replaced. The physical
+card, source identity, controller, owner, payment and cast facts remain.
+Countered visits and missing builders/groups return errors without mutation.
+
+`BuildEntryCopyWithText(original Card, values *CopiableValues, changes ...TextChange)
+(Card, error)` first uses the existing entry-copy identity/provenance checks.
+Then `BuildTextDefinitionRevision` constructs independent donor rules from
+saved copy values and verifies their declaration groups. The existing copy text
+builder checks donor output before applying copy exceptions. A missing builder,
+changed group or protected metadata defect returns an error without changing
+the physical card or saved values. Face-down values contain no text and retain
+their face-up 2/2 result. All supplied substitutions still require validation.
+Copy modifications retain face-down textless provenance through repeated
+exception groups. Added types and retained colors cannot add printed words.
+Adding a new card type clears incompatible intrinsic-creature and land-Aura
+spell eligibility markers on the copied prototype. It preserves all copied
+rules and leaves the original markers unchanged. Definition validation keeps
+rejecting those markers on authored declarations outside their exact contexts.
+The result retains physical identity, owner, token status, ante status, printed
+physical provenance and departure rules, separately from the donor definition.
+
+Each battlefield entry action saves its own immutable substitution list before
+copy choices. Every acquired donor starts from fresh copiable values; it does
+not inherit the prior donor's changed words. The same list applies after each
+acquisition. Acquired entry operations and ETB detection therefore see continued
+text. Shared replacement priorities, applied-rule identities and source-visit
+rechecks remain in effect. Returning during a choice cannot replace the selected
+incarnation. Returning before the choice permits a fresh current choice.
+Phased donors cannot be selected. Copy choices do not target.
+
+Spell-copy wrappers participate in the same entry pipeline and keep token
+status through donor acquisition. New rules use independent bindings. Pending
+copied actions survive source departure; failed target checks do not pay costs.
+Game clones keep separate stack revisions, rules and choices. Phasing keeps
+continued rules without repeating entry. Later layer 3 changes start from the
+continued baseline, layer 6 can remove abilities, and expiry restores the
+baseline. Departure LKI retains final rules; physical recasts use printed rules.
+
+`CaptureCopiableValues` continues to return donor values and copy exceptions
+without ordinary word changes (CR 707.2–3). The immutable checked entry snapshot
+permits changed intrinsic landwalk while still rejecting later untracked
+characteristic mutation. `BuildEntryCopy` now accepts that same checked snapshot
+and retained permanent-spell token wrappers. Existing callers retain their API.
+
+Rules: CR 400.7a, 608.3a/b/e/f, 612.1–4, 613.1a/c/f, 707.2–3, 707.5–6 and
+707.10f. Evidence: native `TestTextCopySpellDeclaration`, `DonorContract`,
+`RejectsAtomic` and `RejectsDonorGroups`; RON `TestRONTextCopySpellRecords`
+(complete Clone/Copy Artifact reprints), `Copies`, `DonorBindings`, `Layers`,
+`EntryShapes`, `RetainedColors`, `FilterRevision`, `FaceDownExceptions`,
+`IntrinsicDonorException`,
+`Boundaries` and `Inventory`.
+This establishes copy-entry continuation only. Whole-object word-change
+installation, other permanent-spell contexts and added copy abilities remain
+separate contracts. No runtime cutover or Go-card removal gate is met.

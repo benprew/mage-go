@@ -460,7 +460,7 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 	g.syncAbilityContext(perm)
 	g.zones.SetEnteringPermanent(perm)
 	defer g.zones.ClearEnteringPermanent()
-	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement)}
+	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement), textChanges: entryCopyTextChanges(card)}
 	if g.effects.ApplyReplacements(entry, g) == nil {
 		return nil, cardForBattlefieldDeparture(perm.Card)
 	}

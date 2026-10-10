@@ -11663,3 +11663,42 @@ Native `TestTextIntrinsicSpellDeclaration`, `RejectsAtomic` and
 `CopyProvenance` cover marker validation, changed contexts, countered visits,
 foreign casting results and untracked mutations. Copy-entry and other permanent
 rules, whole-object text dispatch, Magical Hack and Sleight of Mind remain open.
+
+### Copy-entry spell text continuation
+
+RON marks a permanent whose only rule is
+`AsPermanentEnters(ThisPermanent, [MayActions([EnterAsACopyOfAPermanent(filter, modifications)])])`.
+The existing compiler validates the permanent filter and `NoCopyEffects`, or
+nonempty `CopyEffects` containing `AddCardtypes` and/or `KeepColor`. Added copy
+abilities remain unsupported. The inventory supplies typed permanent-filter,
+copy-modification and card-type roles for these arguments.
+
+The marker lowers to `mage.WithCopyEntrySpellTextContinuation()`. The existing
+`Game.RevisePrintedSpellText` checks the exact stack visit and declaration
+correspondence before replacing its retained rules. Targets, casting results,
+extra abilities, keywords, modes and extra casting costs are outside this
+context. Revision retains payment and physical identity without making choices.
+
+At resolution, the entry replacement pipeline carries an immutable list of
+ordered substitutions through donor acquisition. Fresh donor text is built by
+`mage.BuildEntryCopyWithText(original, values, changes...)`. Each acquisition
+starts from its saved copy values, including copy exceptions; the continuing
+changes are applied once to that new definition before acquired entry operations
+and ETB detection. A donor requires a checked text builder and matching
+declaration groups. Invalid builders return errors. Face-down copy values have
+no words or rules to change. Nested copy choices keep the same continuing list
+and use the existing replacement identities and priorities.
+
+Continued words do not enter copiable values. Later text layers use the continued
+baseline, and expiry restores it. Clones, spell-copy token entry, phasing, LKI
+and physical printed departure retain their separate lifecycle contracts.
+
+Evidence: `TestRONTextCopySpellRecords` casts every Clone and Copy Artifact
+reprint (12 records), copies complete Bog Wraith and Gauntlet of Might rules,
+and checks payment, entry, copied mana events, landwalk, exceptions, copy values,
+phasing, LKI and printed recasts. Copies, DonorBindings, Layers, EntryShapes,
+RetainedColors, FaceDownExceptions and FilterRevision cover independent token/clone state, fresh
+cost/target/ETB bindings, nested acquisition, absent and returned donors,
+face-down values, later layers and typed selection. Boundaries and native
+`TestTextCopySpell*` tests cover declaration and atomic mutation failures.
+Magical Hack, Sleight of Mind and Vesuvan Doppelganger remain unsupported.

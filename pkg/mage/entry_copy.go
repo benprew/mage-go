@@ -49,15 +49,20 @@ type entryCopyKey struct {
 }
 
 type battlefieldEntryAction struct {
-	permanent *Permanent
-	copies    map[entryCopyKey]*entryCopyReplacement
+	permanent   *Permanent
+	copies      map[entryCopyKey]*entryCopyReplacement
+	textChanges []TextChange
 }
 
 func (a *battlefieldEntryAction) ActionSource() uuid.UUID { return a.permanent.ID() }
 func (a *battlefieldEntryAction) PlayerID() uuid.UUID     { return a.permanent.ControllerID() }
 
 func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
-	base, ok := a.permanent.Card.(*BaseCard)
+	definition := a.permanent.Card
+	if copied, ok := definition.(permanentSpellCopyCard); ok {
+		definition = copied.Card
+	}
+	base, ok := definition.(*BaseCard)
 	if !ok {
 		return nil
 	}
@@ -139,7 +144,7 @@ func (r *entryCopyReplacement) Replace(action Action, g *Game) Action {
 	if err != nil {
 		return nil
 	}
-	card, err := BuildEntryCopy(p.Card, values)
+	card, err := BuildEntryCopyWithText(p.Card, values, entry.textChanges...)
 	if err != nil {
 		return nil
 	}

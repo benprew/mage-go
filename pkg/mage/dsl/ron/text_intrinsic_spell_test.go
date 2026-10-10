@@ -336,6 +336,9 @@ func TestRONTextIntrinsicSpellBoundaries(t *testing.T) {
 		}
 		g, a, _ := ronGame()
 		card := repositoryCard(t, set, name)
+		if name == "Clone" {
+			card = textCopyMixedRecord(t, set, name)
+		}
 		card.SetOwner(a.PlayerID())
 		a.AddToHand(card)
 		for _, color := range []core.Color{core.Blue, core.Black, core.Red, core.Colorless} {

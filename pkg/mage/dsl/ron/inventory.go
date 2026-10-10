@@ -1077,7 +1077,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "mana_production"
 		}
+	case "copy_modification":
+		if n.Name == "CopyEffects" && len(n.Args) == 1 {
+			return "copy_modification"
+		}
+		if n.Name == "AddCardtypes" && len(n.Args) == 1 {
+			return "card_type"
+		}
 	case "entry_operation":
+		if n.Name == "EnterAsACopyOfAPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "copy_modification"}[index]
+		}
 		if n.Name == "MayActions" && len(n.Args) == 1 {
 			return "entry_operation"
 		}
