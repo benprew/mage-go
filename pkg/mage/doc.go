@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [GenericTriggered.WithLayeredCombatPairTextRevision] for printed pair events.
+// [Game.AddPrintedCombatPairTextEffect] changes one declaration in layer 3.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Expiry recomputes surviving changes. Direct revision cannot change a result.
+// RON opts in its complete source and Aura-host TriggerA combat-pair context.
+// Directions and captures stay fixed. Pending targets and delays keep prior text.
+// Clones keep separate baselines, cleanup and controller contexts.
+// Phasing keeps the visit. Removal stops detection; restoration keeps the text.
+// LKI keeps the final rule. Return uses printed rules.
+// Whole-object text, spell text and copy rebinding need separate services.
+//
 // Use [GenericTriggered.WithLayeredSpellCastTextRevision] for printed cast events.
 // [Game.AddPrintedSpellCastTextEffect] changes one declaration in layer 3.
 // Each pass restores its baseline before ordered color or basic land changes.

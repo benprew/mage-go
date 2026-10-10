@@ -53,6 +53,7 @@ type GenericTriggered struct {
 	spellCastTextLayer     bool
 	landTapTextRevision    bool
 	combatPairTextRevision bool
+	combatPairTextLayer    bool
 	textRevisionDefinition Card
 	eventDefinition        EventPattern
 	stepDefinition         TurnStepPattern

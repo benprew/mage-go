@@ -235,6 +235,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		layeredProtectionOrigins:    src.layeredProtectionOrigins,
 		layeredManaTapOrigins:       src.layeredManaTapOrigins,
 		layeredSpellCastOrigins:     src.layeredSpellCastOrigins,
+		layeredCombatPairOrigins:    src.layeredCombatPairOrigins,
 		layeredStaticAbilityOrigins: src.layeredStaticAbilityOrigins,
 		powerBonus:                  src.powerBonus,
 		toughBonus:                  src.toughBonus,

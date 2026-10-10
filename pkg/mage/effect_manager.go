@@ -601,6 +601,7 @@ func (em *EffectManager) Apply(g *Game) {
 	g.resetPrintedStaticAbilityTextLayers()
 	g.resetPrintedManaTapTextLayers()
 	g.resetPrintedSpellCastTextLayers()
+	g.resetPrintedCombatPairTextLayers()
 	// CR 613.6 keeps each animation selection for this layer cycle.
 	em.animationMembers = make(map[animationCycleKey][]capturedPermanent)
 	em.composedMembers = make(map[composedCycleKey]composedCycleSelection)

@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -29,10 +31,23 @@ func (t *GenericTriggered) supportsCombatPairTextRevision() bool {
 // RevisePrintedCombatPairTrigger replaces one present printed combat-pair trigger.
 // The caller must supply the text layer's order and lifetime separately.
 func (g *Game) RevisePrintedCombatPairTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	marked := false
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			for _, a := range current.RuntimeAbilities {
+				if a.AbilityID() == abilityID {
+					marked = layeredCombatPairEligible(a)
+				}
+			}
+			if _, exists := current.layeredCombatPairOrigins[abilityID]; exists {
+				return fmt.Errorf("direct combat-pair revision cannot change a layered result")
+			}
+		}
+	}
 	var kind core.EventType
 	checked := false
 	return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
-		if !t.combatPairTextRevision || !t.supportsCombatPairTextRevision() {
+		if !t.combatPairTextRevision || !t.supportsCombatPairTextRevision() || (marked && !t.combatPairTextLayer) {
 			return false
 		}
 		if !checked {

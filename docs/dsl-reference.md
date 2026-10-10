@@ -1,5 +1,51 @@
 # DSL reference
 
+## Printed combat-pair trigger text layers
+
+`GenericTriggered.WithLayeredCombatPairTextRevision() *GenericTriggered` marks
+one printed typed battlefield combat-pair declaration. It includes the existing
+checked revision opt-in and validation.
+`Game.AddPrintedCombatPairTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs ordered color or
+basic land word changes in layer 3 with `EndOfTurn` or `Indefinite` duration.
+
+RON marks its complete existing `TriggerA` pair context: two-argument
+`WhenACreatureBlocksACreature`, `WhenACreatureBecomesBlockedByACreature`, or
+their matching two-member `Or`. The subject is `SinglePermanent(ThisPermanent)`
+or `SinglePermanent(HostPermanent)`. No new filter, body, event or zone shape is
+accepted. RON keeps spelling, validation and fresh opponent/target bindings.
+
+Each pass restores one baseline per source visit and declaration before ordered
+changes (CR 612.1–3, 613.1c, 613.7). A prior direct revision can supply that
+baseline. Expiry recomputes surviving changes. Direct revision cannot overwrite
+a layer result. Rebuilds keep the active ID, declaration position, event
+direction, source/host context and opponent capture shape. Installation checks
+a cloned probe before registration. Invalid words/durations, empty changes,
+foreign/granted/unmarked/removed declarations, absent/phased/face-down/stale
+sources, missing builders/groups and incompatible rebuilds reject without
+changing live rules or layer state.
+
+Pending abilities keep detection-time text, targets and exact opponent
+incarnations through installation, expiry, source departure, copies and delayed
+end-of-combat bodies (CR 603.2–3, 400.7). Current source controller reads retain
+the existing LKI contract. Layer 6 removal suspends detection; restoration uses
+current text. Phasing keeps the visit, including expiry while phased. Clones
+keep independent baselines, cleanup and controller contexts. Departure LKI keeps
+the final rule; return uses printed rules. The existing definition rebuilder,
+trigger retention map, layer/timestamp, event capture, target, delay and clone
+services supply execution. No payment, replacement or simultaneous-operation
+contract changes. Whole-object text, spell text and copy rebinding remain
+separate capabilities.
+
+Evidence: native `TestTextCombatPairLayerDeclaration` and `Rejects`; RON
+`TestRONTextCombatPairLayerRecords`, `BodyAndLifetime`, `AuraAndRecords`,
+`Boundaries`, `PendingTargets`, `PaidCastAndNativeBlocks`, `ControlAndLKI`,
+`OrderingExpiry`, `BaselineController`, `DirectBaseline`, `BasicLandTargets`,
+`WallDirections` and `AuraReattachment`. Complete records cover Abomination, Aisling Leprechaun,
+Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram and Venom: seven
+unique names / 17 records. Wall restrictions, flying and the independent banding
+rule remain covered. Compilation acceptance is unchanged.
+
 ## Printed spell-cast trigger text layers
 
 `GenericTriggered.WithLayeredSpellCastTextRevision() *GenericTriggered` marks a
@@ -464,8 +510,9 @@ movement of absent subjects. Phasing keeps revisions and suspends detection.
 Ability removal suspends the declaration; restoration retrieves its revised
 rules. Clones and sibling declarations retain separate subsequent changes.
 A returned source uses printed rules. Granted abilities cannot qualify
-(CR 612.3). Layer-3 ordering, expiry and original-text restoration remain
-caller responsibilities; complete live text installation is separate work.
+(CR 612.3). Marked declarations use `Game.AddPrintedCombatPairTextEffect`
+for layer-3 ordering, expiry and baseline restoration. Unmarked direct callers
+must supply those services separately. Whole-object text remains separate.
 
 Evidence: native `TestTextCombatPairTriggerDeclaration` and `Rejects`; RON
 `TestRONTextCombatPairRecords`, `BodyAndLifetime`, `AuraAndRecords`,

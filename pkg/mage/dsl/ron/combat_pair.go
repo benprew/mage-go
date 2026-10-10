@@ -79,7 +79,7 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 			pattern = mage.BecomesBlockedByCreatureMatching(subject, filter).WithOpponent(opponent)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
-		trigger.WithCombatPairTextRevision()
+		trigger.WithLayeredCombatPairTextRevision()
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

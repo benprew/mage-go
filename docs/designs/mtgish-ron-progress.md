@@ -8,9 +8,9 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-SPELL-CAST` adds ordered layer-3 installation and baseline
-restoration for complete printed battlefield spell-cast triggers.
-Eleven unique cards (36 records) have new layer lifecycle gameplay evidence.
+`TEXT-LAYER-PRINTED-COMBAT-PAIR` adds ordered layer-3 installation and baseline
+restoration for complete printed battlefield source/host combat-pair triggers.
+Seven unique cards (17 records) have new layer lifecycle gameplay evidence.
 Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
 Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
 spell text and copy rebinding remain unsupported.
@@ -62533,3 +62533,138 @@ Ranked next candidates:
 
 Stop after this slice. Complete collection gameplay, runtime loading, Go-card
 removal and unused DSL cleanup remain unfinished.
+
+## 2026-10-09: printed combat-pair trigger text layers
+
+Capability: `TEXT-LAYER-PRINTED-COMBAT-PAIR`. Complete bounded source/host
+battlefield declaration lifecycle; no second slice is started.
+
+### Candidate comparison and selection
+
+| Candidate | Distinct affected names | Estimated full-card compilation gain | Other blockers / downstream value | Implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Printed combat-pair layer installation/restoration (ranked #1, selected) | Abomination, Aisling Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram, Venom | 0 names / 0 records; seven names / 17 records already compile | Direct typed adapters, fresh definition rebuilding, pair incarnations, targets and delayed bodies are ready. Completes shared layer lifecycle prerequisite for permanent text-changing effects. Whole-object dispatch, other declaration families and spell/copy text remain blockers | Small reusable layer service; moderate seven-card lifecycle/direction/delay tests |
+| Printed opponent-land-tap layer installation/restoration (ranked #2) | Lifetap, Lifeblood | 0 names; both already compile | Existing complete tap adapters are ready. Enables shared text lifecycle for two names, including queued tap snapshots and controller-relative filters | Small service and narrower two-card tests |
+| Whole-object color/basic-land text dispatch (comparison of ranked #3) | Magical Hack, Sleight of Mind | 0 for a dependency-ready bounded run; eventual two-card value after all prerequisites | Complete records have separate spell and permanent target branches, paired choices and text operations. Remaining printed families, spell installation/continuation and copy rebinding prevent a complete end-to-end slice now | Large cross-family work; unsuitable for this run |
+
+Ranked candidate #1 is dependency-ready and has the largest credible shared
+multi-card value for this bounded effort. The zero compile estimate is deliberate;
+this slice establishes execution contracts required by later text consumers.
+Complete RON records and nested forms were inspected, with reprints counted once.
+The full pair-syntax scan also found Giant Shark, Goblin Flotilla, Infinite
+Authority, Wall of Caltrops and Wall of Dust. They remain rejected respectively
+at WasDealtDamageThisTurn, UntilEndOfCombat temporary triggers, a delayed
+Trigger_ThatCreature binding, a TriggerI pair event and a temporary combat rule
+reference. None is counted as an unlock or as new complete-card gameplay coverage.
+No new source defect was identified; no RON record or vocabulary hash changed.
+
+### Signatures, supported context and reuse boundary
+
+- `GenericTriggered.WithLayeredCombatPairTextRevision() *GenericTriggered`
+- `Game.AddPrintedCombatPairTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error`
+
+RON opts in its complete existing two-argument
+`TriggerA(WhenACreatureBlocksACreature(...), body)` and
+`TriggerA(WhenACreatureBecomesBlockedByACreature(...), body)` contexts, plus the
+matching two-member `Or` union. Subjects remain
+`SinglePermanent(ThisPermanent)` or `SinglePermanent(HostPermanent)`.
+Existing checked filters and bodies remain unchanged. TriggerI, grouped events,
+temporary grants and unsupported bodies remain separate. RON owns spelling,
+validation, target declarations and fresh per-factory opponent/result bindings.
+
+The reusable engine layer service accepts validated color/basic-land changes
+and EndOfTurn or Indefinite duration. Each layer pass restores the baseline for
+that exact source visit and declaration before ordered changes. Expiry removes
+earlier changes and recomputes surviving changes from baseline. Prior direct
+revision can supply that baseline. Direct revision cannot overwrite a layered
+result. Rebuilds retain the active ability ID, declaration position, layer marker,
+event direction, source/host context and opponent capture shape. A cloned probe
+validates installation before live registration. Invalid declarations, words,
+durations, empty changes, absent/phased/face-down/stale sources, foreign/granted
+abilities, removed rules, missing builders/groups and incompatible rebuilds
+reject without live mutation.
+
+Shared engine definition rebuilding, trigger retention, timestamp/layer ordering,
+event capture, targets/copies, saved delays, LKI and clone services are reused.
+Pending rules retain their detection-time text and opponent incarnations through
+installation, expiry, departure, target placement, copies and delayed resolution.
+Aura reattachment changes later detection but cannot change pending opponents.
+Phasing keeps the visit, including expiry while phased. Layer 6 removal suspends
+detection; restoration uses current text. Clones retain separate baselines,
+cleanup and controller contexts. LKI retains final rules; return uses printed
+rules. Current source-controller reads retain existing LKI behavior. No cost,
+replacement-order or simultaneous-operation contract changes.
+
+Rules evidence: local CR 603.2–3/603.3a, 612.1–3, 613.1c, 613.7 and 400.7.
+Contract, selection and acceptance cases were stated before production edits.
+
+### Failing-first evidence and card-to-test mapping
+
+New RON tests failed compilation at the missing AddPrintedCombatPairTextEffect
+API. Native tests independently failed at the missing layer marker, API and
+baseline state. Production implementation followed these failures. Existing tests
+and unsupported-declaration gates were retained. Test fixture corrections added
+required CardPT and used the mutable live permanent to clear summoning sickness;
+the native combat assertion was retained and passed.
+
+| Cards / contract | RON-backed evidence |
+| --- | --- |
+| Abomination (LEG) | TestRONTextCombatPairLayerRecords executes both directions: ordered color filters, pending detection, copied stack bodies, exact delayed destruction, returned opponents and independent clones. |
+| Aisling Leprechaun (LEG) | BodyAndLifetime, PaidCastAndNativeBlocks, OrderingExpiry and DirectBaseline execute color bodies, payment failure and paid casting, native block declaration, sibling isolation, repeated layer passes, timestamp order, pending bodies, clone expiry, phased cleanup, suppression/restoration, final LKI, printed return and prior direct baselines. |
+| Cockatrice / Thicket Basilisk (LEA, LEB, 2ED, 3ED, CED, CEI; 12 records) | AuraAndRecords executes complete records through delayed destruction. WallDirections checks both directions and non-Wall exclusions, retaining Cockatrice flying. |
+| Infernal Medusa (LEG) | AuraAndRecords and WallDirections retain delayed opponent references, destroy a Wall it blocks, and exclude a Wall blocking it. |
+| Battering Ram (ATQ) | AuraAndRecords and WallDirections retain the Wall-only blocked-by trigger, exclude the reverse direction, and execute the independent begin-combat banding rule and its expiry. |
+| Venom (DRK) | AuraAndRecords, WallDirections and AuraReattachment execute the host union, non-Wall restriction, reattachment, queued opponents, expiry and source departure before delayed destruction. |
+| Scoped targets / source information | PendingTargets and BasicLandTargets retain color/basic-land target text across installation/expiry and separate groups. ControlAndLKI and BaselineController retain source-relative current-controller reads, departure LKI and independent clone control changes. |
+| Invalid declarations | Native TestTextCombatPairLayerDeclaration/Rejects covers event/zone/state restrictions, missing layer markers/builders/groups, changed direction/subject/capture, foreign/granted/absent/phased/face-down sources, invalid changes and durations with no mutation. RON Boundaries retains malformed filters, unbound/wrong refs and unrelated event rejection. |
+
+### Verification and coverage
+
+- Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: passed.
+  Baseline strict loader: expected exit 1, 2,099 compiled / 346 rejected records,
+  813 accepted / 173 rejected unique names.
+- `go test ./pkg/mage/dsl/ron -run TestRONTextCombatPairLayer -count=1`: passed.
+  Expanded `TestRON(TextCombatPair|CombatPair|BeginCombatBatteringRam)` and native
+  `Test(TextCombatPair|CombatPairMatching)` passed.
+- `make build`; `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: passed.
+- `make lint`: passed, 0 issues. Automatic formatting added an import separator
+  in text_combat_pair_trigger.go. Affected RON/native tests were rerun and passed.
+  `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1. Worktree remains
+  813 accepted / 173 rejected unique names and 2,099 compiled / 346 rejected
+  records (986 names / 2,445 records total). The complete report and all rejection
+  diagnostics match the fresh baseline byte-for-byte. Accepted records retain
+  their status; strict loading publishes no partial registry.
+- Isolated staged-index checkout, excluding all pre-existing work: expanded
+  focused RON/native tests, `make build` and `go vet ./...` passed. Its loader
+  exits 1 with 812 accepted / 174 rejected names and 2,098 compiled / 347 rejected
+  records. Eureka remains rejected at RepeatableActions; its pre-existing gain
+  is excluded from this slice and commit.
+
+Estimated and actual compilation gain: **0 names / 0 records**. New complete
+record layer lifecycle evidence: **seven unique names / 17 records**. Gameplay
+and compilation coverage remain separate. No environment failure or source
+correction occurred. No Go-card fallback, name branch, declaration panic, global
+last-action slot or partial production registry was introduced. Runtime loading,
+complete collection gameplay, Go-card deletion and unused DSL cleanup remain
+unfinished; their removal gates are unmet.
+
+Changed files: mage card.go, clone.go, triggered.go, effect_manager.go, game.go,
+text_combat_pair_trigger.go, new text_combat_pair_layer.go and native tests;
+RON combat_pair.go and two new layer test files; doc.go, dsl-reference.md,
+engine-rules-contracts.md and this ledger. Only this slice is staged, including
+its own documentation changes. Pre-existing Eureka, ledger archive, design,
+ignore and other documentation edits remain in the worktree.
+
+Ranked next candidates:
+
+1. Printed opponent-land-tap layer installation/restoration for Lifetap and
+   Lifeblood; preserve queued tap facts and live source-controller context.
+2. Reassess shared printed activated-declaration layer installation/restoration
+   against remaining complete RON adapters before whole-object text dispatch.
+3. Whole-object Magical Hack/Sleight of Mind dispatch after remaining declaration,
+   spell continuation and copy rebinding prerequisites are complete.
+
+Stop after this slice. Migration completion is not claimed.
