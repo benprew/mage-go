@@ -201,7 +201,6 @@ func TestRONTextSpellContinuationSpellTarget(t *testing.T) {
 
 func TestRONTextSpellContinuationBoundaries(t *testing.T) {
 	for _, rule := range []string{
-		`SpellActions(Modal_ChooseOne([ActionList([GainLife(Integer(1))]),ActionList([GainLife(Integer(2))])]))`,
 		`CastEffect(AdditionalCastingCost(SacrificeAPermanent(IsCardtype(Creature)))),SpellActions(ActionList([GainLife(Integer(1))]))`,
 	} {
 		g, a, _ := ronGame()

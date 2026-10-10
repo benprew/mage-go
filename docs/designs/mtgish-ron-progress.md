@@ -8,14 +8,15 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-SPELL-ORDINARY-CONTINUATION` adds checked rule rebuilding for ordinary
-pending instant/sorcery actions without captured casting results. Five unique
-cards / 30 complete records have new representative continuation gameplay
-evidence. Targets, exact visits, X, payment and cast facts stay fixed; resolution
-results use fresh bindings. Acceptance gain is **0 names / 0 records**.
-Isolated native compilation excludes pre-existing Eureka work:
-**812 accepted names / 2,098 compiled records**. Modal/casting-result transfer,
-permanent-spell entry, whole-object dispatch and copy rebinding remain incomplete.
+`TEXT-SPELL-MODAL-CONTINUATION` adds checked rebuilding for printed choose-one
+instant/sorcery modes without captured casting results. Three unique cards / 18
+complete records have new representative continuation gameplay evidence.
+Announcement, payment and selected mode stay fixed; fresh mode bindings and
+current copy target declarations remain separate. Acceptance gain is
+**0 names / 0 records**. Isolated native compilation excludes Eureka:
+**812 accepted names / 2,098 compiled records**. Casting-result transfer,
+permanent-spell entry, whole-object dispatch and copy-layer rebinding remain
+incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -63108,5 +63109,146 @@ Ranked next candidates:
 3. Whole-object Magical Hack/Sleight of Mind dispatch after all declaration,
    spell continuation and copy contexts are complete. Neither record may be
    accepted through a partial branch.
+
+Stop after this slice. Migration completion is not claimed.
+
+## Run 2026-10-09: TEXT-SPELL-MODAL-CONTINUATION
+
+Status: complete dependency-ready modal spell continuation slice. No second
+slice was started. Existing Eureka entry-round code, compiler/inventory/test
+changes, documentation changes, .gitignore and the untracked ledger archive
+were preserved. They are excluded from this commit. No removal gate was crossed.
+
+### Candidate comparison and selection
+
+The latest ledger's first candidate combined modal continuation with typed
+casting-result transfer. Its complete bounded modal context was dependency-ready.
+Full records and nested branches were inspected for all names below; identical
+reprints share one requirement. Targeted vocabulary entries were inspected for
+Modal_ChooseOne, SpellActions, Targeted_Modal, AdditionalCastingCost and
+CreateSpellEffect. Existing engine behavior was reused rather than recreated.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected: printed choose-one modal spell continuation without casting captures | Blue Elemental Blast, Red Elemental Blast, Healing Salve; 3 unique names / 18 records; 0 new full-card compilation unlocks | These records already compile. Completes the modal consumer prerequisite for Magical Hack and Sleight of Mind (2 names / 12 records). Those complete records still require captured casting-result transfer, permanent entry continuation, copy rebinding and whole-object dispatch. Targeted_Modal on those cards is a spell/permanent union, not a choose-one mode. | Small: checked marker, all-mode rebuilding, selected target remapping, copy retargeting and focused contracts. |
+| Typed casting-result continuation transfer | Sacrifice, Metamorphosis, Goblin Grenade; 3 names / 8 records; 0 new compilation unlocks | All already compile; new builders need a checked correspondence for paid number/object bindings and cost provenance. Sacrifice and Metamorphosis consume saved sacrifice mana value. Goblin Grenade has a subtype payment and target. This enables safe changes to paid spells for both word-changing cards and later recipient/cost contexts. | Medium: immutable paid facts, per-declaration transfer, clone/copy isolation, paid-object LKI and rollback evidence. |
+| Permanent-spell text entry continuation | Clone, Copy Artifact, Phantasmal Terrain; 3 representative names / 18 records; 0 new compilation unlocks | Existing entry rules work, but changed pending rules must retain physical printed origin, copy provenance, entry choices and attachment targets. Clone's optional creature copy, Copy Artifact's added Enchantment type and Terrain's saved basic-land choice need exact entry integration. Enables the permanent-spell branch for both word-changing cards. | Larger: shared entry and copy contracts, Aura announcement and printed-origin restoration. |
+
+Selection rationale: the first candidate's modal subcontext has the smallest
+complete implementation and direct three-card behavior evidence. It removes a
+concrete shared prerequisite for both word-changing cards. Combining binding
+transfer or permanent entry would exceed this slice's reusable contract.
+Estimated and actual compilation gain are both **0 names / 0 records**.
+New representative continuation gameplay evidence is **3 names / 18 records**;
+this is not a new claim that all collection cards have complete gameplay coverage.
+
+### Established contract, signatures and reuse boundary
+
+`(*ModalSpellAbility).WithTextContinuation() *ModalSpellAbility` opts in one
+printed choose-one instant/sorcery declaration. RON lowers the complete
+`SpellActions(Modal_ChooseOne([body, body, ...]))` context with at least two modes.
+Each body retains its existing mode-local target namespace and fresh instance
+bindings. Additional/alternate costs, captured casting results, casting windows,
+announcement options, shared action costs/targets/effects, permanent spells and
+union-target declarations are excluded. Unmarked existing callers are preserved.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+now accepts that marked modal context. It requires the exact retained stack
+visit, semantic builder and printed group; validates selected mode/target state;
+and checks every mode's declaration context before atomic replacement. Names,
+target categories/counts/non-word restrictions and effect counts stay fixed,
+including unchosen modes. Target support reuses the ordinary permanent, player,
+opponent, any-damage and spell contexts, including count-bound permanent groups.
+Invalid words, empty changes, missing builders/markers/groups, incompatible
+contexts, malformed mode snapshots and casting bindings reject without mutation.
+Definition validation rejects invalid marked modal structures before gameplay.
+
+All modes rebuild with ordered semantic changes and fresh bindings. Only the
+retained selected mode supplies the new stack effects. Announced targets and
+exact visits, X, allocations, source/controller, cast facts and payment stay fixed.
+Revised target legality applies at resolution. Phasing retains the visit;
+leave/return cannot supply the old target. Resolution results use fresh frames.
+The physical card retains printed rules on departure. Game clones keep separate
+revisions. Existing copies retain the selected mode and current semantic rules;
+retargeting reads that definition's selected mode, not the physical printed card.
+Later original/copy changes replace only their exact stack object.
+
+Dependencies and engine reuse: CardDefinitionPlan, retained RON text builders,
+BuildTextDefinitionRevision and printed groups, existing mode-local action plans,
+sameSpellTextTarget, target incarnation/LKI checks, cloneStackObject, casting
+snapshots, resolution frames, payment transactions, zone/damage batches and
+replacement ordering. No alternate payment, event, layer or batch system was
+introduced. Runtime cutover and unused DSL removal remain outside this slice.
+
+Rules evidence: local CR 601.2b–h, 608.2b/d, 612.1–3, 700.2a/c/f/g and 707.10/c.
+Local data/LEA.json Oracle text agrees with the three complete card requirements.
+No source-data defect was found or corrected. RON files, vocabulary and source
+hashes are unchanged; no vocabulary refresh was required.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial TestRONTextModalSpellContinuation tests failed with the expected
+"spell text continuation requires an eligible printed action" assertion.
+Native tests failed compilation at the missing WithTextContinuation method;
+an incorrect fixture capture API was removed before confirming that API failure.
+Native fixture labels were corrected to satisfy existing definition validation;
+invalid-marker assertions check the specific continuation diagnostic. The copy
+regression was also run with the old retargeting implementation: it failed
+"copy lost revised declarations or mode" before the shared retargeting fix.
+The obsolete modal rejection assertion was replaced by positive modal contracts;
+additional-cost and complete Magical Hack/Sleight rejection assertions remain.
+
+| Complete RON records or contract | Tests and behavior |
+| --- | --- |
+| Blue Elemental Blast, all six records | TestRONTextModalSpellContinuationRecords exercises both counter and destruction modes, ordered color changes, fixed payment/targets/mode, cloning and physical-card preservation. Legality adds revised color legality, exact leave/return, phasing and phase return; SpellLegality checks changed stack-spell restrictions. Copy checks current restrictions, retargeting, fixed mode and later original revision isolation. |
+| Red Elemental Blast, all six records | Records exercises both modes, blue/green/blue changes, correct typed target effects, retained announcement, clones and physical-card preservation. |
+| Healing Salve, all six records | Records exercises both explicit-player life gain and next-three-damage prevention after revision, with independent cloned results and fixed mode/recipient/payment. Existing prevention services keep their replacement and cleanup contracts. |
+| Synthetic modal bodies | Results checks both modes with independent draw/reveal/discard frames and retained X; PartialLegality checks numbered groups; LandWords checks changed destruction/tap collections in both modes. Native EmptyGroupAndCopy checks an empty first declaration and a nonempty second declaration through rebuilding, retargeting and resolution. |
+| Invalid contexts and compatibility | Native Declaration and ContextRejection cover malformed markers, missing builders/groups, changed unchosen targets, names/counts/controller restrictions, timing, effect counts, invalid mode snapshots, captured bindings and invalid/empty changes with no live replacement. Existing TestRONModal*, ordinary continuation, spell-copy and target-group tests preserve announcement rollback, regeneration, source identity, legality and other callers. |
+
+### Verification and loader evidence
+
+- Fresh baseline make build and go test ./pkg/mage/dsl/ron -count=1 passed
+  (RON 35.048s). Baseline loader exited 1 as expected: 813 accepted / 173 rejected
+  unique names, 2,099 compiled / 346 rejected records (986 names / 2,445 records).
+- Focused go test ./pkg/mage/dsl/ron -run TestRONTextModalSpellContinuation
+  -count=1 passed. Expanded RON modal/ordinary continuation and native modal/
+  ordinary continuation, SpellCopy and SpellTargetGroups checks passed.
+- Required make build and go vet ./... passed. go test ./pkg/mage/... -short
+  -count=1 passed (RON 36.341s). make test passed (RON 36.760s).
+- make lint passed with 0 issues. Automatic import grouping in the two new tests
+  was reviewed; no unrelated code changed. Post-format expanded RON tests passed
+  (0.846s), as did native continuation/copy/group tests (0.878s).
+  git diff --check and staged checks passed.
+- Isolated staged-index tree excludes every pre-existing change. Focused RON/
+  native checks, make build, go vet ./... and make test passed (RON 65.637s).
+  Its strict loader exited 1: 812 accepted / 174 rejected names, 2,098 compiled /
+  347 rejected records. Eureka's pre-existing acceptance is excluded.
+- Final go run ./cmd/loadcards -json exited 1 as expected: 813 accepted / 173
+  rejected names, 2,099 compiled / 346 rejected records. Parsed JSON and every
+  diagnostic equal the fresh baseline exactly. Remaining errors include
+  CreateSpellEffect, EnchantGraveyardCard, SacrificeAllPermanentsExceptForNum and
+  MayPayLifeToProduceManaAsManaAbility. The loader still installs no partial
+  production registry. No build/test/environment blocker remains.
+
+Changed files: pkg/mage/modal.go, definition.go, doc.go, spell_copy.go,
+text_spell_continuation.go; new text_modal_spell_continuation.go and native test;
+pkg/mage/dsl/ron/modal_spell.go, text_spell_continuation_test.go and new modal
+continuation test; docs/dsl-reference.md, docs/engine-rules-contracts.md and this
+ledger. Staging retains committed ledger history and excludes the user's archival
+and Eureka changes. Complete collection gameplay, runtime loading, Go-card
+removal and unused DSL cleanup remain incomplete.
+
+Ranked next candidates:
+
+1. Typed casting-result transfer for printed spell continuation. Compare a
+   bounded paid-sacrifice number context first: Sacrifice and Metamorphosis
+   consume independent saved mana values; extend only with exact binding and
+   copy correspondence. Modal continuation is now complete in its marked context.
+2. Permanent-spell text entry continuation and copy rebinding, including Clone,
+   Copy Artifact and Phantasmal Terrain, for both word-changing cards.
+3. Whole-object Magical Hack/Sleight of Mind dispatch after captured-result,
+   permanent entry and copy contexts are complete. Keep rejecting each complete
+   record until all branches work.
 
 Stop after this slice. Migration completion is not claimed.

@@ -176,7 +176,11 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 		return
 	}
 
-	if ms, ok := getModalSpellAbility(card); ok {
+	declaration := card
+	if copyObj.spellTextDefinition != nil {
+		declaration = copyObj.spellTextDefinition
+	}
+	if ms, ok := getModalSpellAbility(declaration); ok {
 		modeIdx := copyObj.ModeChoice
 		if modeIdx < 0 || modeIdx >= len(ms.Modes()) {
 			return

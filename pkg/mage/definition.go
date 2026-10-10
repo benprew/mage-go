@@ -153,6 +153,9 @@ func describeDefinition(v any) definitionNode {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("rules[%d]", i), effect})
 		}
 	case *ModalSpellAbility:
+		if e.textContinuation && !e.supportsTextContinuation() {
+			n.problem = "modal spell text continuation requires separate modes without casting bindings"
+		}
 		for i, option := range e.dslOptions {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("options[%d]", i), option})
 		}

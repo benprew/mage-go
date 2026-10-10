@@ -43,6 +43,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if len(changes) == 0 {
 		return fmt.Errorf("spell text continuation requires word changes")
 	}
+	if _, modal := getModalSpellAbility(obj.spellTextDefinition); modal {
+		return g.reviseModalSpellText(obj, changes)
+	}
 	old, err := spellTextAction(obj.spellTextDefinition)
 	if err != nil {
 		return err

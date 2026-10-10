@@ -19,7 +19,7 @@ func compileModalSpell(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.NewModalSpell(buildChooseOneModes(plans, instanceBindings{})))
+		return mage.WithAbility(mage.NewModalSpell(buildChooseOneModes(plans, instanceBindings{})).WithTextContinuation())
 	}, nil
 }
 

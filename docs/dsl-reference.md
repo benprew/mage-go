@@ -11488,8 +11488,32 @@ fresh per-instance bindings. Copies retain current target declarations, and
 clones keep separate revisions. The physical card retains printed text.
 
 Typed permanent, player, opponent, any-damage and spell target contexts are
-supported, including counted permanent groups. Modal declarations, permanent
-spells, other target kinds and captured casting results need separate services.
+supported, including counted permanent groups. Permanent spells, other target
+kinds and captured casting results need separate services. Modal declarations
+use the checked contract below.
 This checked engine prerequisite does not lower the complete `CreateSpellEffect`
 or whole-object permanent text operations. Magical Hack and Sleight of Mind
 remain rejected as complete records.
+
+### Modal pending spell text
+
+RON marks the complete `SpellActions(Modal_ChooseOne([body, body, ...]))` path
+with `(*ModalSpellAbility).WithTextContinuation() *ModalSpellAbility`.
+`Game.RevisePrintedSpellText` rebuilds every mode with independent bindings and
+checks each mode's declaration context. The announced mode and targets stay
+fixed; only that mode's fresh effects resolve. Typed target support matches the
+ordinary continuation contract. Revised legality, phasing and exact zone visits
+use existing target services. Results produced at resolution use fresh frames.
+
+Copies keep the selected mode and current semantic definition. New targets use
+that definition's mode declarations. Clones and subsequent revisions of either
+stack object stay separate. Physical cards keep their printed rules on departure.
+Additional/alternate costs, casting-result transfer, casting windows, permanent
+spells and union-target declarations require separate contracts. This marker
+does not lower complete Magical Hack or Sleight of Mind records.
+
+Evidence: `TestRONTextModalSpellContinuation*` covers both modes of Blue Elemental
+Blast, Red Elemental Blast and Healing Salve in all six reprints, plus revised
+collections, partial legality, copies, clones and fresh mode-local results.
+`TestTextModalSpellContinuation*` covers declaration validation and atomic
+rejection, including incompatible unchosen modes.

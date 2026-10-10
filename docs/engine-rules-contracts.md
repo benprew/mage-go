@@ -15061,9 +15061,10 @@ service supports typed permanent, player, opponent, any-damage and spell targets
 including count-bound permanent groups. Other target kinds remain errors.
 
 The action has no costs, modes, activation history or casting-result captures.
-Card-level additional/alternate costs, permanent spells, modal actions and
-captured casting bindings require separate continuation contracts. A builder
-must retain the declaration context, target names, categories, counts and
+Card-level additional/alternate costs, permanent spells and captured casting
+bindings require separate continuation contracts. Modal spells use the checked
+contract below. A builder must retain the declaration context, target names,
+categories, counts and
 non-word restrictions. Invalid words, empty changes, missing builders/groups,
 changed contexts and absent visits reject before any live update.
 
@@ -15080,8 +15081,8 @@ fresh frames and retain the existing sequencing, LKI and zone services.
 The physical card retains its printed definition, so departure cannot put changed
 text in a graveyard or supply that text to a later cast (CR 400.7). Copies keep
 current immutable rules and target declarations; ordinary copy retargeting uses
-those declarations. This is compatibility with existing copying, not a contract
-for modal or casting-result rebinding. Game clones keep separate stack updates.
+those declarations. Casting-result rebinding still requires a separate contract.
+Game clones keep separate stack updates.
 Color words and basic-land words use semantic RON roles (CR 612.1–3); mana
 symbols and names stay unchanged. Collection filters now receive their existing
 inventory roles during text rebuilding. No payment, replacement-order or
@@ -15094,5 +15095,51 @@ ordered substitutions, unchanged X/payment, LKI, exact visits, phasing, clones,
 fresh result frames and unsupported declaration rejection. Native
 `TestTextSpellContinuation*` covers markers, malformed builders, atomic rejection,
 empty target groups and copy retargeting. Complete Magical Hack and Sleight of
-Mind still reject; whole-object dispatch, modal continuation, captured casting
-results and permanent-spell entry continuation remain separate prerequisites.
+Mind still reject; whole-object dispatch, captured casting results and
+permanent-spell entry continuation remain separate prerequisites.
+
+## Modal spell text continuation
+
+`(*ModalSpellAbility).WithTextContinuation() *ModalSpellAbility` marks one
+choose-one printed instant or sorcery declaration. RON marks the complete
+`SpellActions(Modal_ChooseOne([body, body, ...]))` context. Each mode has its own
+fresh target and resolution-result bindings. Additional/alternate costs,
+casting-result captures, casting windows, announcement options, shared action
+costs/targets/effects, permanent spells and union-target declarations are outside
+this contract. Unmarked callers retain their existing behavior.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks the exact stack visit, builder, printed group, selected index and aligned
+mode targets before atomic replacement. Every mode must keep its target group
+names, categories, counts, non-word restrictions and effect count. Changes to an
+unchosen mode's declaration context also reject. Only the retained chosen mode's
+fresh effects enter the stack payload. Empty/invalid changes, missing markers or
+builders, unsupported targets, malformed mode snapshots and casting bindings
+reject without mutation. Definition validation rejects invalid marked modal
+structures before gameplay.
+
+Ordered semantic word changes rebuild all modes (CR 612.1–3). The selected mode,
+announced targets and exact visits, X, divisions, source/controller, payment and
+cast facts stay fixed (CR 601.2b–h, 700.2a/c/f). Current target legality controls
+resolution (CR 608.2b), including partially illegal groups, phased targets and
+leave/return. Resolution results use fresh frames. The physical card keeps its
+printed definition on departure. Game clones and later revisions stay separate.
+
+Copies retain the selected mode and current semantic definition (CR 700.2g,
+707.10). Retargeting reads that definition's chosen mode declarations, keeps
+unchosen modes empty and cannot select another mode (CR 707.10c). Subsequent
+original or copy revisions replace only that exact stack object. Existing
+payment, target/LKI, clone, zone, damage and replacement services remain in use;
+this change establishes no parallel service or full CreateSpellEffect adapter.
+
+Evidence: `TestRONTextModalSpellContinuationRecords` covers both modes in all
+18 complete records of Blue Elemental Blast, Red Elemental Blast and Healing
+Salve. `Legality`, `SpellLegality`, `Copy`, `Results`, `PartialLegality` and
+`LandWords` cover
+ordered color/land changes, exact visits/phasing, clone and copy isolation,
+retained announcement, fresh frames and revised collections. Native
+`TestTextModalSpellContinuationDeclaration` and `ContextRejection` cover invalid
+markers, builders, groups, unchosen contexts, malformed mode state and atomic
+rejection. `EmptyGroupAndCopy` checks an empty early group and current copy
+declarations. Existing modal announcement rollback, destruction/regeneration,
+spell-copy and ordinary continuation tests remain in force.

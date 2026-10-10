@@ -7,7 +7,10 @@
 // Revised targets can become illegal. Resolution results use fresh bindings.
 // Copies use the retained target declarations. Clones keep separate revisions.
 // The physical card keeps printed rules on departure. Invalid changes are atomic.
-// Modal actions, permanent spells and casting-result transfer need separate services.
+// [ModalSpellAbility.WithTextContinuation] marks a choose-one spell.
+// Each revision checks all modes and keeps the selected mode and its targets.
+// Copies use current mode declarations. Results and clones keep separate state.
+// Permanent spells and casting-result transfer need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
 // Use [WithLayeredTextRevisionActivationState] for a printed activated action.
