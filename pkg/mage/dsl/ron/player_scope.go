@@ -35,6 +35,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	sacrificeSubtypes    map[*sacrificeSubtypePlan]*mage.NumberBinding
 	textWords            map[*textWordChoicePlan]textWordBindings
 	sourceCards          map[*sourceCardPaymentPlan]*mage.CardBinding
 	groupedExiles        map[*groupedExilePlan][]*mage.CardsBinding

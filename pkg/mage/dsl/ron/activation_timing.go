@@ -23,6 +23,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	ctx.sacrificeValue = paid
+	ctx.sacrificeSubtype = activationSacrificeSubtypePlan(n.Args[0])
 	counters, err := compileCounterPaymentPlan(n.Args[0])
 	if err != nil {
 		return nil, err
@@ -61,6 +62,18 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if result := ctx.sacrificeSubtype; result != nil && result.subtype != "" {
+		if paid != nil {
+			return nil, problem(n, "combined sacrifice characteristic and subtype results need a separate contract")
+		}
+		if err := arity(*result.cost, 1); err != nil {
+			return nil, err
+		}
+		result.filter, err = compileSacrificeCostFilter(result.cost.Args[0])
+		if err != nil {
+			return nil, err
+		}
+	}
 	if ctx.activationHistory.used {
 		if modes != nil {
 			return nil, problem(n, "activation history in modes is not supported")
@@ -72,7 +85,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		}
 	}
 	return func() mage.CardOption {
-		bindings := instanceBindings{counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+		bindings := instanceBindings{sacrificeSubtypes: make(map[*sacrificeSubtypePlan]*mage.NumberBinding), counters: make(map[*counterPaymentPlan]*mage.NumberBinding), sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
 		if ctx.sourceCardPayment.used {
 			bindings.sourceCards = map[*sourceCardPaymentPlan]*mage.CardBinding{ctx.sourceCardPayment: mage.BindCard("paid source card")}
 		}

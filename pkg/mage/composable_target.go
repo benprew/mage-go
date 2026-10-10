@@ -1083,8 +1083,15 @@ func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {
-		matched := e.subtypeResult != nil && p.HasSubType(e.subtype)
-		ctx.Game.DoSacrifice(p)
+		action := ctx.Game.prepareSacrifice(p)
+		if action == nil {
+			return nil
+		}
+		current := ctx.Game.FindPermanent(action.permanentID)
+		matched := current != nil && current.incarnationID == action.incarnation && e.subtypeResult != nil && current.HasSubType(e.subtype)
+		if !ctx.Game.performSacrifice(action) {
+			return nil
+		}
 		if e.result != nil {
 			ctx.Game.resolution.numberBindings[e.result] = 1
 		}

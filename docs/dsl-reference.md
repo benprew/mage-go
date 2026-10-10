@@ -1,5 +1,42 @@
 # DSL reference
 
+## Saved sacrifice subtype results
+
+`SacrificeChosenBy(player, chooser PlayerRef, subjects PermanentSet,
+options ...SacrificeResultOption) ResolvingEffect` accepts
+`SacrificeSubtypeInto(subtype string, result *NumberBinding)`.
+`SacrificeMatchingIncludingSourceCostWithSubtype(filter PermanentFilter,
+text, subtype string, result *NumberBinding) Cost` supplies the same saved
+property through the existing activation payment transaction. The source is
+eligible when it matches the cost filter. Existing callers keep their signatures.
+
+Each output saves one for a completed sacrifice of a permanent with that subtype,
+or zero otherwise. The property is read after replacement checks and before
+departure. Replacement to exile still supplies a sacrifice; cancellation,
+absence, phasing, a returned visit or loss of required control does not. A modified
+cost can still be paid without supplying a successful sacrifice property
+(CR 118.11). Payment validation and rollback use the shared transaction. Saved
+numbers belong to the exact resolution or announced stack object; copies, clones
+and delayed bodies keep separate values. Later objects and characteristics cannot
+change the result. No historical result permits an action on an absent permanent.
+Selection, owner destinations, event LKI and replacement ordering use existing
+engine services. Waiting queries do not choose subjects or execute bodies.
+
+RON supports resolving
+`If(APermanentWasSacrificedThisWay(IsLandType(type)), [actions...])`
+for Plains, Island, Swamp, Mountain, Forest and Desert, and the corresponding
+`IsCreatureType(type)` form with subtype-family validation. A direct resolving
+`SacrificeAPermanent(collection)` or
+`SacrificeAPermanentOfAPlayersChoice(collection, chooser)` supplies the following
+local continuation. A single matching `SacrificeAPermanent(filter)` activation
+cost can instead supply its resolving body. Each producer supports one subtype;
+repeated reads of that subtype are allowed. A later direct producer starts a
+distinct result. Producers inside branches or scoped player bodies do not escape
+their local sequence. Reads before producers, ambiguous costs, wrong subtype
+families, additional casting-cost consumers, combined numeric characteristic and
+subtype captures, other property filters and alternative-condition forms reject
+at compilation. This is a resolving predicate, not a static condition.
+
 ## Complete global land-mana-event battlefield text
 
 `Game.AddPrintedManaTapObjectTextEffect(source *Permanent, duration core.Duration,

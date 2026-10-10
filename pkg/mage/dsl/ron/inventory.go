@@ -358,7 +358,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "CostReduceGeneric" && len(n.Args) == 1 {
 			return "integer_literal"
 		}
+	case "saved_sacrifice_subtype_filter":
+		if (n.Name == "IsLandType" || n.Name == "IsCreatureType") && len(n.Args) == 1 {
+			return "subtype"
+		}
 	case "condition":
+		if n.Name == "APermanentWasSacrificedThisWay" && len(n.Args) == 1 {
+			return "saved_sacrifice_subtype_filter"
+		}
 		if n.Name == "PermanentPassesFilter" && len(n.Args) == 2 {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}

@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sacrificeSubtype     *sacrificeSubtypePlan
 	colorWords           *textWordChoicePlan
 	landWords            *textWordChoicePlan
 	sourceCardPayment    *sourceCardPaymentPlan
@@ -156,6 +157,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 }
 
 func initializeActionBindings(bindings instanceBindings) instanceBindings {
+	if bindings.sacrificeSubtypes == nil {
+		bindings.sacrificeSubtypes = make(map[*sacrificeSubtypePlan]*mage.NumberBinding)
+	}
 	bindings.textWords = make(map[*textWordChoicePlan]textWordBindings)
 	bindings.chosenNames = make(map[*cardNameChoicePlan]*mage.CardNameBinding)
 	bindings.libraryReveals = make(map[*libraryRevealPlan]*mage.CardBinding)
@@ -1208,6 +1212,13 @@ func requireRef(n Node, name string, ctx scope) error {
 }
 
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "If" && len(n.Args) > 0 && n.Args[0].Name == "APermanentWasSacrificedThisWay" {
+		build, err := compileSacrificeSubtypeBranch(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if (n.Name == "If" || n.Name == "Unless" || n.Name == "IfElse") && len(n.Args) > 0 && n.Args[0].Name == "ACardWasRevealedThisWay" {
 		build, err := compileRevealResultBranch(n, ctx)
 		if err != nil {

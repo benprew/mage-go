@@ -2,23 +2,20 @@
 
 ## Current status
 
-The latest verified isolated inventory reports **815 accepted / 171 rejected
-unique card names** (986 total), and **2,116 compiled / 329 rejected records**
-(2,445 total). With the pre-existing Eureka changes, the verified worktree has
-**816 accepted / 170 rejected names**, **2,117 compiled / 328 rejected records**.
-Compilation does not prove complete gameplay. The strict loader rejects the
-collection and installs no partial registry.
+The isolated slice reports **816 accepted / 170 rejected names** (986 total),
+**2,117 compiled / 328 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **817 accepted / 169 rejected names** and
+**2,118 compiled / 327 rejected records**. The strict loader rejects the
+collection and publishes no partial registry. Compilation is not gameplay proof.
 
-`RESOLVING-CHOSEN-SACRIFICE` adds required non-target choices at resolution with
-separate sacrificing-player and chooser references. Demonic Hordes gains complete
-RON gameplay and acceptance for **1 name / 6 records**. Serendib Djinn gains its
-shared action prerequisite; its historical sacrificed-object predicate remains
-unsupported. Shared selection and sacrifice services retain exact visits,
-phasing, current control, owner destinations, replacement order and event LKI.
-Copies and clones keep separate resolving frames. No RON source changed.
+SAVED-SACRIFICE-SUBTYPE adds per-producer historical subtype results for resolving
+choices and activation costs. Ebon Praetor gains complete RON gameplay for
+**1 name / 1 record**. Serendib Djinn's upkeep rule gains its predicate; its
+separate no-land state filter remains unsupported. Copies, clones, exact visits,
+replacement outcomes and rollback use shared engine services. No RON changed.
 
-Complete collection gameplay, runtime integration, Go-card removal and unused
-DSL removal remain unfinished.
+Complete collection gameplay, runtime loading, Go-card removal and unused DSL
+removal remain unfinished.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -68682,5 +68679,166 @@ unsatisfied. The unrelated ledger archive/reorganization remains unstaged.
 3. Coin-round result scopes and simultaneous damage: Mana Clash (1 record).
    Per-player tails, distinct recipients and all-head termination remain missing.
    Defer while dependency-ready shared capabilities give greater value.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: SAVED-SACRIFICE-SUBTYPE
+
+Status: complete one bounded vertical capability. No second slice was started.
+
+### Environment, comparison and selection
+
+The initial tracked changes covered the execution design, ledger, API docs,
+definition validation, compiler/inventory, optional hand entry, inventory tests
+and .gitignore. Repeated-entry source/tests and the relocated ledger archive
+were untracked. These are preserved and excluded from the commit. Fresh baseline
+make build passed; go test ./pkg/mage/dsl/ron -short -count=1 passed (39.811s).
+The strict loader exited 1 for collection rejection, not a build failure:
+**816 accepted / 170 rejected names**, **2,117 compiled / 328 rejected records**.
+
+The latest ledger's three ranked candidates were evaluated from complete RON
+records and nested forms. Wild Growth's six identical records count once.
+
+| Candidate | Unique affected cards | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Saved sacrifice subtype properties | Serendib Djinn; Ebon Praetor | Initial upper bound 2 names / 2 records; revised bounded estimate 1 / 1 before production edits | Djinn's later no-land state event rejects IsCardtype(Land); its complete upkeep rule becomes ready. Praetor's counters, timing, keywords and cost are otherwise supported. Shared action/cost result storage serves both names. | Moderate: two producers, one predicate adapter, native cancellation semantics and contract/gameplay tests |
+| Attached mana-event whole-object text | Wild Growth | 0 compilation unlocks; more text-context gameplay for 1 name / 6 records | Ordinary Aura/mana rules already compile. Complete Aura preflight and exact host continuation remain. Enables attached word-change continuation. | Moderate layer/entry/attachment matrix |
+| Coin-round outcome scope and damage | Mana Clash | At most 1 / 1 with dependent services | Per-player tails, simultaneous distinct recipients, repeat termination and all-head tests remain. Enables multiplayer resolving outcomes. | High for a complete loop and damage slice |
+
+Candidate 1 wins because the prior resolving action and activation transaction
+are ready, with concrete shared benefit for two cards. Complete-record inspection
+exposed Djinn's later state-filter blocker. The declared contract therefore covers
+one historical subtype per producer, distinct action/cost producers, success
+versus destination, lexical dominance, exact visits, replacements, copies/clones
+and rollback. It does not add the independent state-event adapter.
+
+### Exact shapes, dependencies and reuse
+
+- RON resolving If(APermanentWasSacrificedThisWay(IsLandType(type)), [actions])
+  supports Plains, Island, Swamp, Mountain, Forest and Desert. The corresponding
+  IsCreatureType(type) form uses subtype-family validation. Bodies must contain
+  actions. Wrong kinds/arity, wrong families and other properties reject.
+- A direct resolving SacrificeAPermanent(collection) or
+  SacrificeAPermanentOfAPlayersChoice(collection, chooser) starts a fresh local
+  producer. Its following continuation can read the same subtype repeatedly.
+  Another direct sacrifice starts another result. Branch-local and scoped-player
+  producers do not escape their sequence. Earlier reads cannot use later producers.
+- Exactly one matching SacrificeAPermanent(filter) activation cost can supply its
+  body's result. Existing singular matching cost filters are retained. Ambiguous
+  costs, source-only/number payments, source exclusions, casting consumers,
+  combined numeric-characteristic/subtype outputs and alternative-condition
+  forms remain rejected in this context. This is not a static predicate.
+- Native SacrificeChosenBy(player, chooser PlayerRef, subjects PermanentSet,
+  options ...SacrificeResultOption) ResolvingEffect now accepts existing
+  SacrificeSubtypeInto(subtype string, result *NumberBinding). All existing
+  three-argument callers remain valid.
+- Native SacrificeMatchingIncludingSourceCostWithSubtype(filter PermanentFilter,
+  text, subtype string, result *NumberBinding) Cost supplies the activation
+  producer, including the source when legal. Existing
+  SacrificeCreatureCostWithSubtype keeps its signature.
+- Both producers save the subtype match after replacement checks, before
+  departure. Private Game.performSacrifice(*SacrificePermanentAction) bool now
+  reports completed sacrifice of the exact visit. Exile destinations supply
+  success; cancellation, absent/phased/returned subjects do not. Empty choices
+  clear results. Historical outputs do not query later objects or grant movement.
+- RON owns spelling, scope, subtype-family checks and fresh factory declarations.
+  Native selection reuses ChoosePermanent, typed references, controller filtering,
+  Sacrifice and SacrificeResultOption. Shared sacrifice replacements, owner
+  destinations, LKI, events and single-operation batches retain their services.
+  Costs retain CanPay, locked visits, transaction validation/rollback and
+  paidNumbers. NumberBinding maps already isolate resolutions, stack copies,
+  game clones and delayed bodies. No global result slot or Go fallback was added.
+  Existing creature-subtype costs also distinguish a cancelled proposal from
+  completed sacrifice. Waiting queries remain pure.
+- Rules evidence: CR 701.21a (control and owner destination), 118.11 (modified
+  payment stays paid), 400.7 (new objects), 608.2h (saved information), 702.26
+  (phasing), and existing replacement/batch contracts. A cancelled sacrifice
+  cost can remain paid while its historical sacrifice-property output is zero.
+
+Missing compiler adapters were local producers and the historical condition.
+Native gaps were resolving choice outputs and a generic matching subtype cost
+with cancellation-aware success. Djinn's state filter remains a separate missing
+adapter over existing state-trigger mechanics. No source defect or environment
+failure was found. No RON source changed; no vocabulary source refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests failed compilation on the variadic choice signature and missing
+matching subtype cost. Helper spelling was corrected, then intended API failures
+were reconfirmed before implementation. RON gameplay failed on unsupported
+APermanentWasSacrificedThisWay. The inventory-role test separately failed before
+its adapter. Later harness fixes used Praetor's actual activation index and two
+candidates where a one-candidate choice is automatic. Assertions were retained.
+
+| Card/context | Tests and evidence |
+| --- | --- |
+| Ebon Praetor, FEM | TestRONSavedSacrificeSubtypePraetor uses the complete unchanged record: first strike/trample, controller upkeep -2/-2, upkeep-only and once-per-turn activation, payment before resolution, counter removal, Thrull/non-Thrull +1/+0 branch, exile replacement, self-payment, differently controlled ability copies, pending clones, phasing and source departure/return. |
+| Serendib Djinn, ARN | TestRONSavedSacrificeSubtypeDjinn asserts full-record rejection at the later land-dependence filter. Its complete unchanged upkeep subrule sacrifices at resolution and deals exactly 3 for an Island, zero for a Swamp; opponent upkeep does not trigger. This is prerequisite gameplay, not full-card coverage. The prior chosen-sacrifice fixture now checks the separate state-filter diagnostic. |
+| Resolving bindings | TestRONSavedSacrificeSubtypeIsolation covers sequential producers, differently controlled spell copies and independent phased clone outcomes. PaymentIsolation covers separate factories/pending activations with different sacrificed subtypes, a returned paid card and pending clones. Declarations rejects missing/malformed producers, wrong families/properties and escaped conditional producers. Inventory checks the saved-property filter role. |
+| Native contracts | TestSavedSacrificeSubtypeAction: sacrifice, exile, cancellation, empty/phased sets, nonmatch, subtype change during replacement and clone isolation. Cost: payment timing, exile/cancellation, affordability, pending clones. Rollback: phased selected visit after preparation, no life spend/result. Identity: returned/phased/foreign-controlled choices. Definition: nil outputs, empty subtype and unbound reads. Waiting: pure delayed queries and separate sacrificing/effect players. |
+| Regression inventories | Collection totals advance by one record. Both ordinary upkeep revision inventories advance from 53 names / 114 records to 54 / 115 and explicitly require Praetor. The counter-removal fixture now requires its complete record to compile. Existing shared sacrifice/replacement, cost, clone, state and text suites remain. |
+
+### Verification and measured results
+
+- Focused go test ./pkg/mage/dsl/ron -run TestRONSavedSacrificeSubtype
+  -count=1 passes (0.530s after final formatting). Native
+  go test ./pkg/mage -run TestSavedSacrificeSubtype -count=1 passes (0.561s).
+  Prior chosen-sacrifice tests and the two adjusted upkeep inventories also pass.
+- make build and go vet ./... pass.
+- The first engine-short run failed only two exact upkeep inventory assertions
+  after Praetor became accepted (54 names / 115 records). Both expected totals
+  and explicit Praetor assertions were updated. Final
+  go test ./pkg/mage/... -short -count=1 passes (RON 40.671s).
+- make test passes (RON 41.421s). No gameplay failure remains.
+- make lint passes with 0 issues. Import formatting was reviewed and final
+  focused tests were rerun. Worktree and staged git diff --check pass.
+- A fresh isolated HEAD checkout plus the exact staged code passes
+  go test ./... -short -count=1 (RON 42.111s), go build ./... and go vet ./....
+  It excludes every initial repeated-entry change. Its loader exits 1 with
+  **816 accepted / 170 rejected names**, **2,117 compiled / 328 rejected records**.
+  Eureka remains rejected in that isolated checkout, independently of this slice.
+- Final worktree go run ./cmd/loadcards -json exits 1 as expected:
+  **817 accepted / 169 rejected names**, **2,118 compiled / 327 rejected records**,
+  2,445 total. Against the fresh baseline, only Ebon Praetor's rejection disappears.
+  No rejection is added; all previously accepted records remain accepted.
+  Djinn now reports ARN.lines.ron:68:464: unsupported land dependence filter
+  (IsCardtype). Other remaining examples include Animate Dead, Balance,
+  Cyclopean Tomb, Mana Clash and Vesuvan Doppelganger. No partial registry is
+  installed; complete-collection gameplay and runtime startup remain unverified.
+- All initially unrelated tracked and untracked contents retain their saved
+  bytes. Shared files are staged with only this slice's changes; test totals in
+  the commit use the isolated inventory. The worktree retains Eureka's separate
+  one-record adjustment. The ledger's original history stays in the commit;
+  the user's relocation and untracked archive stay outside it. No check blocker
+  remains.
+
+Bounded estimate and actual gain both equal **1 name / 1 record**, Ebon Praetor.
+The two-card upper bound was reduced because Djinn has the independent state
+filter blocker. Its diagnostic now advances past the historical predicate to
+that filter. Its complete upkeep mapping is additional prerequisite coverage.
+
+Changed files: native sacrifice action/choice/result/payment code and tests; RON
+subtype lowering, producer scopes, activation costs, instance bindings, semantic
+inventory and tests; admission fixtures and exact inventories; engine/API/rules
+docs and this ledger. No Go definition, generator or DSL export was removed.
+Runtime cutover and removal gates remain open. The commit excludes all initial
+repeated-entry work, fixture offsets, archive relocation and unrelated edits.
+
+### Ranked next candidates
+
+1. Shared per-player resolving-result storage. Mind Bomb's complete DRK record
+   needs discarded counts keyed by player; Mana Clash's complete DRK record
+   needs per-player coin tails. Evaluate a bounded typed collection prerequisite:
+   0 immediate unlocks, concrete downstream benefit for 2 names / 2 records.
+   Per-recipient variable damage and coin-loop termination remain consumers.
+   Compare other shared work before committing to this scope.
+2. No-permanents state-trigger IsCardtype(Land) filtering. Serendib Djinn now
+   needs this adapter for compilation (1 name / 1 record). Reuse ControlsNone and
+   state-trigger arming; verify full-card no-land timing, pending suppression,
+   control, phasing and returned source identity. Defer this single-card adapter
+   if a useful shared prerequisite is ready.
+3. Attached mana-event whole-object text for Wild Growth (1 name / 6 records).
+   Existing host mana services are ready. Complete Aura preflight and exact host
+   continuation add gameplay coverage, with no estimated compilation gain.
 
 Migration remains incomplete. This run stops after this one slice.

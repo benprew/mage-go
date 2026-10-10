@@ -54,13 +54,13 @@ func (g *Game) prepareSacrifice(perm *Permanent) *SacrificePermanentAction {
 	return result
 }
 
-func (g *Game) performSacrifice(result *SacrificePermanentAction) {
+func (g *Game) performSacrifice(result *SacrificePermanentAction) bool {
 	if result == nil {
-		return
+		return false
 	}
 	perm := g.FindPermanent(result.permanentID)
 	if perm == nil || perm.PhasedOut || perm.incarnationID != result.incarnation {
-		return
+		return false
 	}
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
@@ -112,6 +112,7 @@ func (g *Game) performSacrifice(result *SacrificePermanentAction) {
 	}
 	g.FireEvent(sacEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
+	return true
 }
 
 // sacrificePermanents sacrifices up to count permanents the player controls.
@@ -170,6 +171,8 @@ type sacrificeMatchingCost struct {
 	paidTotalPower    *NumberBinding
 	captureStats      bool
 	captureManaValue  bool
+	anySubtype        bool
+	sacrificedSubtype int
 	captureSubtype    bool
 	captureCard       bool
 	capturePermanent  bool
@@ -240,6 +243,13 @@ func SacrificeCreatureCostWithSubtype(subtype string, result *NumberBinding) Cos
 	}
 }
 
+// SacrificeMatchingIncludingSourceCostWithSubtype saves a successful subtype match.
+// The source can pay. Replacement destinations do not require a graveyard visit.
+func SacrificeMatchingIncludingSourceCostWithSubtype(filter PermanentFilter, text, subtype string, result *NumberBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, includeSource: true,
+		subtype: subtype, paidSubtype: result, captureSubtype: true, anySubtype: true}
+}
+
 // SacrificeMatchingCostWithManaValue saves the chosen permanent's mana value
 // when its controller pays this cost. The source is not a candidate.
 func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost {
@@ -300,8 +310,8 @@ func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	}
 	if c.captureSubtype {
 		if c.subtype == "" {
-			n.problem = "supply a creature subtype"
-		} else if family, known := knownSubtypeFamily(c.subtype); known && family != SubtypeCreature {
+			n.problem = "supply a subtype"
+		} else if family, known := knownSubtypeFamily(c.subtype); known && family != SubtypeCreature && !c.anySubtype {
 			n.problem = "subtype is not a creature subtype"
 		} else if c.paidSubtype == nil {
 			n.problem = "supply a non-nil paid subtype binding"
@@ -425,6 +435,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if c.selected != nil {
 		c.selected = selected
 	}
+	c.sacrificedSubtype = 0
 	g.withZoneChangeBatch(func() {
 		actions := make([]*SacrificePermanentAction, len(selected))
 		for i, choice := range selected {
@@ -432,7 +443,15 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 		}
 		for i, choice := range selected {
 			g.CaptureSacrificed(g.FindPermanent(choice.id))
-			g.performSacrifice(actions[i])
+			matched := false
+			if action := actions[i]; action != nil && c.captureSubtype {
+				if p := g.FindPermanent(action.permanentID); p != nil && p.incarnationID == action.incarnation {
+					matched = p.HasSubType(c.subtype)
+				}
+			}
+			if g.performSacrifice(actions[i]) && matched {
+				c.sacrificedSubtype = 1
+			}
 		}
 	})
 	return nil

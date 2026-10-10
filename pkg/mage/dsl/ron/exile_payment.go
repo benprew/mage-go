@@ -171,7 +171,12 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 		if err != nil {
 			return nil, false, err
 		}
-		return []boundCostFactory{func(instanceBindings) mage.Cost { return cost() }}, false, nil
+		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
+			if result := ctx.sacrificeSubtype; result != nil && result.subtype != "" {
+				return mage.SacrificeMatchingIncludingSourceCostWithSubtype(result.filter, "Sacrifice a matching permanent", result.subtype, sacrificeSubtypeBinding(bindings, result))
+			}
+			return cost()
+		}}, false, nil
 	}
 	return compileActivationCosts(n, ctx.sacrificeValue, ctx.counterPayment)
 }

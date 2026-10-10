@@ -117,8 +117,8 @@ func TestRONChosenSacrificeDeclarations(t *testing.T) {
 		})
 	}
 	n := staticBaseRecord(t, "ARN", "Serendib Djinn")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "activation history requires the resolving activated ability") {
-		t.Fatal("result predicate must stay unsupported", err)
+	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "land dependence filter") {
+		t.Fatal("separate state-event filter must stay unsupported", err)
 	}
 }
 

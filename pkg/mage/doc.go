@@ -2270,6 +2270,16 @@
 // Existing source-to-Opponent bodies also support the captured damage amount.
 // Host-to-Opponent events and combat-only source captures remain unsupported.
 //
+// Use [SacrificeChosenBy] with [SacrificeSubtypeInto] for a saved subtype result.
+// [SacrificeMatchingIncludingSourceCostWithSubtype] supplies the same cost result.
+// Each [NumberBinding] keeps a completed sacrifice match before departure.
+// Exile replacements keep the result. Cancellation and absent subjects clear it.
+// Copies, clones and delayed bodies keep separate saved numbers. Payment uses
+// the shared transaction. Returned objects cannot change historical results.
+// RON permits one subtype per local producer in resolving If branches.
+// Basic land types, Desert and creature subtypes use separate family checks.
+// Casting results, other properties and alternative branches stay separate.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
