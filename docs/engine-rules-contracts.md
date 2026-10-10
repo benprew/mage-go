@@ -15791,3 +15791,42 @@ RON `TestRONTextStaticActivationSpellRecords`, `Inventory`, `Boundaries`,
 Sedge Troll (six complete records), Thrull Champion (one complete record) and
 synthetic paired color rules. Whole-object dispatch and the complete consumers
 Magical Hack and Sleight of Mind remain separate contracts.
+
+## Whole-object text changes for printed intrinsic creatures
+
+`Game.AddPrintedIntrinsicCreatureTextEffect(source *Permanent, duration
+core.Duration, changes ...TextChange) error` checks one present, face-up creature
+incarnation. Its complete retained definition must satisfy the existing intrinsic
+creature continuation context: ordinary keywords plus marked color protection
+and/or basic landwalk. It requires a text builder and declaration groups.
+Unsupported sibling rules, stale visits, invalid words and invalid durations
+reject before any live effect is installed. The allowed durations are Indefinite
+and EndOfTurn. Unmatched words have no effect.
+
+The service validates fresh complete rules and declaration correspondence, then
+checks every matching declaration on an isolated game. It installs all validated
+parts before one layer pass. It uses the existing protection and landwalk text
+effect types, restoration baselines, timestamp order, cloning and incarnation
+checks. Color changes reach every printed protection declaration; basic land
+changes reach every printed landwalk declaration. Each declaration keeps its ID.
+Granted abilities are outside the printed text (CR 612.3). Names, mana symbols,
+color indicators and ordinary keywords keep their values (CR 612.2).
+
+`ChangePrintedIntrinsicCreatureText(subject PermanentRef, duration core.Duration,
+changes ...TextChangeRef) ResolvingEffect` supplies a typed resolving action.
+Definition inspection checks subjects and word producers. Resolution reads the
+saved words, then uses the same atomic installation service. Missing subjects do
+nothing; unsupported complete definitions return an error. Waiting-source
+queries retain direct source operands without reading words or installing layers.
+
+Expiry recomputes remaining changes from declaration baselines. Phasing keeps the
+visit; ability removal applies in layer 6 after text in layer 3 (CR 613.1c/f).
+Departure LKI retains the result; return uses printed rules (CR 400.7). Ordinary
+word changes remain outside copiable values (CR 707.2). Live copy rebinding and
+other permanent rule contexts require separate contracts.
+
+Evidence: native `TestTextIntrinsicObjectAtomic`, `BindingDeclarations` and
+`Preflight`; RON `TestRONTextIntrinsicObjectRecords`, `Lifecycle`, `Declarations`
+and `AtomicAndIsolation`. The record test uses actual permanent-target branches
+from Magical Hack and Sleight of Mind against every eligible complete creature
+record. Those consumers still reject their unsupported spell-target branches.

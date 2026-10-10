@@ -12095,3 +12095,28 @@ Sedge Troll maps six complete records to regeneration and conditional P/T
 coverage; Thrull Champion maps its complete FEM record to global Thrull P/T,
 targeted control and source-control duration coverage. This is a shared
 prerequisite for word-changing spells; whole-object dispatch remains separate.
+
+## RON intrinsic creature object-text actions
+
+Resolving `CreatePermanentLayerEffect(permanent_ref, [substitution, ...])` accepts
+a nonempty list containing only
+`ReplaceColorWordVariableWithNewColorWordVariable(from, to)` and/or
+`ReplaceLandTypeVariableWithNewLandTypeVariable(from, to)`. Each operand must have
+a matching earlier word-pair choice in its lexical scope. Mixed ordinary layer
+operations, missing choices, wrong operand roles and equal references reject at
+compilation. The compiler builds fresh typed references for each rule instance.
+This form has indefinite duration.
+
+The action calls `mage.ChangePrintedIntrinsicCreatureText`, which validates the
+complete target context before installation. Supported targets have only ordinary
+intrinsic keywords, marked color protection and/or basic landwalk, through the
+existing intrinsic creature continuation contract. The engine changes every
+matching printed declaration, preserves granted abilities, and rejects other
+contexts atomically. Native callers can use
+`Game.AddPrintedIntrinsicCreatureTextEffect` with Indefinite or EndOfTurn.
+The established declaration-level services supply layer order, restoration,
+cloning, phasing and exact-incarnation behavior.
+
+This supports a complete bounded target context, not the full consumers Magical
+Hack or Sleight of Mind. Their spell-target `CreateSpellEffect` branches, other
+permanent rule contexts and live-copy rebinding remain unsupported.

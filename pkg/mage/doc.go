@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedIntrinsicCreatureTextEffect] for complete intrinsic rules.
+// It checks all printed protection and basic landwalk rules before installation.
+// Ordinary keywords, names, mana symbols and grants keep their values.
+// Each declaration keeps its ID, ordered changes and restoration baseline.
+// Phasing keeps the visit. Clones keep separate layers. Removal applies in layer 6.
+// LKI keeps final rules; return uses printed rules. Copy values exclude changes.
+// [ChangePrintedIntrinsicCreatureText] reads typed word pairs at resolution.
+// RON lowers resolving CreatePermanentLayerEffect lists of word substitutions.
+// Other rule contexts and live copy changes require separate contracts.
+//
 // Use [WithGlobalStaticSpellTextContinuation] for one global ability grant.
 // The holder must use [StaticAbilityHolder.WithLayeredGrantTextRevision].
 // Fixed grants and paired P/T keep changed words through checked spell entry.
