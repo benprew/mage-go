@@ -8,9 +8,9 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-MANA-EVENT` adds ordered layer-3 installation and baseline
-restoration for complete printed land-mana events and shared mana bonuses.
-Four unique cards (23 records) have new layer lifecycle gameplay evidence.
+`TEXT-LAYER-PRINTED-SPELL-CAST` adds ordered layer-3 installation and baseline
+restoration for complete printed battlefield spell-cast triggers.
+Eleven unique cards (36 records) have new layer lifecycle gameplay evidence.
 Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
 Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
 spell text and copy rebinding remain unsupported.
@@ -62391,3 +62391,145 @@ Ranked next candidates:
 
 Farrel's Mantle remains a later single-card capability while useful shared
 multi-card work remains. Stop after this slice.
+
+
+## 2026-10-09: TEXT-LAYER-PRINTED-SPELL-CAST
+
+Status: one complete declaration-level layer capability. Runtime cutover and
+whole-object text remain separate. No second slice is started.
+
+### Fresh baseline and selection
+
+The worktree began with Eureka/repeated entry engine/compiler changes, inventory
+and test edits, documentation edits, a progress-ledger archive split, and an
+unrelated .gitignore edit. These changes remain outside this slice. Fresh
+`make build` and `go test ./pkg/mage/dsl/ron -count=1` passed before edits.
+The baseline loader exited 1 with 2,099 compiled / 346 rejected records and
+813 accepted / 173 rejected unique names. This is collection rejection, not a
+build or test failure. Strict loading publishes no partial registry.
+
+The latest entry's ranked candidates were evaluated first. Complete RON records,
+including nested bodies and sibling rules, were inspected; identical reprints
+were counted once. The vocabulary snapshot's WhenAPlayerCastsASpell/2,
+MayCost/1, CostWasPaid, If/2 and GainLife/1 forms agree with those records.
+
+| Candidate | Distinct affected names | Estimated new full-card compilation | Other blockers / downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Printed spell-cast layer installation/restoration (selected #1) | Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere; same complete adapter also covers Citanul Druid, Urza's Chalice, Sol'kanar the Swamp King, Presence of the Master, Nether Void, In the Eye of Chaos | 0 names; 11 already compile, 36 records | Typed events, scoped payments, definition rebuilding and text layers are ready. Adds one shared prerequisite for Magical Hack/Sleight of Mind; whole-object dispatch, other declaration families and spell/copy text remain blockers | Small engine lifecycle adapter; moderate tests for 11 names, queued captures, payments and clones |
+| Printed combat-pair layer installation/restoration (#2) | Abomination, Aisling Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram, Venom | 0 names; existing direct adapters compile | Adds shared text prerequisite for seven names. Must retain two-direction and Aura-host pairs, incarnations, Wall exclusions, delayed bodies and independent Battering Ram combat rule | Medium; broader pair/delay test matrix |
+| Printed opponent-land-tap layer installation/restoration (#3) | Lifetap, Lifeblood | 0 names; existing direct adapters compile | Adds shared text prerequisite for two names. Must keep tap snapshots, queued facts and source-relative current controller reads | Small; narrower two-card benefit |
+
+Candidate #1 is dependency-ready and has the largest credible shared lifecycle
+benefit for its effort. It wins without immediate compile unlocks. The new
+contract uses existing exact engine behavior rather than another event/payment
+system. No source defect or environment failure was found. RON sources and
+vocabulary hashes remain unchanged.
+
+### Signatures, context and reuse boundary
+
+- `GenericTriggered.WithLayeredSpellCastTextRevision() *GenericTriggered`
+- `Game.AddPrintedSpellCastTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error`
+
+RON opts in its complete existing
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), actions)`
+path. Spelling, filter validation, body scopes and per-factory event/target/payment
+bindings stay in RON. No filter, source zone or action shape is newly accepted.
+Engine declaration validation still requires a typed battlefield cast event,
+without additional source zones or state-trigger semantics.
+
+The engine retains one baseline per source visit and declaration. Each layer
+pass restores it before ordered color/basic-land word changes. EndOfTurn and
+Indefinite durations are supported. Prior direct revisions can supply the
+baseline. Direct revision cannot overwrite a layer result. Rebuilt declarations
+retain the active ID and position, opt-in marker, caster context and capture
+shape. Installation validates a cloned probe before live registration. Invalid
+words/durations, empty changes, foreign/granted/unmarked/removed declarations,
+missing builders/groups, incompatible rebuilds and absent/phased/face-down/stale
+sources reject without mutation.
+
+The shared definition rebuilder, trigger retention map, layer/timestamp pipeline,
+continuous-effect cloning, event capture, LKI, stack targets/copies and optional
+cost services are reused. Runtime/copiable definitions stay separate. Layer 6
+removal suspends detection; restoration keeps current text. Phasing retains the
+visit, including expiry while phased. Clones retain independent baseline, cleanup
+and controller context. Departure LKI retains the last rule; return uses printed
+rules. Pending triggers keep detection-time rules through installation, expiry,
+source departure, placement, copies and resolution. Payment results and explicit
+event payers stay independent. Mana symbols do not change. No replacement-order,
+cost or simultaneous-operation contract is changed.
+
+Rules evidence: local CR 603.2, 603.3/603.3a, 612.1–3, 613.1c, 613.7 and 400.7.
+Acceptance cases were stated before production edits: ordering/restoration,
+queued text, independent payments, invalid declaration rejection, instance/clone
+identity, phasing, ability suppression/restoration, LKI and returned objects.
+
+### Failing-first evidence and card-to-test mapping
+
+New RON tests failed compilation at the missing layer installation API. Native
+new tests independently failed at the missing marker/API/origin state. After
+removing a duplicate test helper, the RON failure was reconfirmed solely at the
+missing API before implementation. Existing tests and rejection gates were not
+weakened. Further tests exercise prior direct baselines and clone control changes.
+
+| Cards / contract | RON-backed evidence |
+| --- | --- |
+| Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere (LEA, LEB, 2ED, 3ED, CED, CEI; 30 records) | TestRONTextSpellCastLayerRecords executes every complete record: ordered changes, repeat passes, ID preservation, live detection, paid/declined choices, clone/phase expiry, layer-6 suppression/restoration, final LKI and printed return. RealCards additionally checks detection before installation and no premature choice. Existing TestRONSpellCastLife* retains affordability/rollback and multiple-payment coverage. |
+| Citanul Druid, Urza's Chalice (ATQ); Presence of the Master, Nether Void, In the Eye of Chaos (LEG; 5 records) | OtherRealCards executes complete records, counter addition, optional life payment, captured spell countering and fixed/dynamic event-player payments. |
+| Sol'kanar the Swamp King (LEG; 1 record) | IdentityAndLifetime executes its cast trigger and sibling swampwalk through control changes, phasing and printed return. |
+| Pending rules / captures | PendingTargetsAndClone checks queued target text through installation and expiry plus independent clone resolution. EventBindings checks separate spell/caster captures and copied payment players. IndependentDeclarations checks sibling/source isolation and departure. |
+| Baseline / source-relative context | BaselineController checks prior direct revision, cleanup restoration, clone-only control/expiry and original versus pending controller. BasicLandTargets checks basic-land word substitution in targets detected before installation and expiry. |
+| Rejection | Native TestTextSpellCastLayerDeclaration/Rejects covers invalid zones/events/state, missing markers/builders/groups, changed caster context, foreign/granted/face-down/absent/phased sources, invalid words, empty changes and durations with no mutation. RON Invalid retains malformed filters, wrong/unbound refs and dependent text-spell rejection. |
+
+### Verification and coverage
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextSpellCastLayer -count=1`: passed.
+  Expanded `TestRON(TextSpellCast|SpellCastLife|SpellCastReference)` and native
+  `TestTextSpellCast` passed, including after lint formatting.
+- `make build`; `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: passed.
+- `make lint`: passed, 0 issues. Formatting reordered imports in the new RON
+  lifecycle test file only; tracked source changes were unchanged. Expanded
+  affected tests were rerun and passed. `git diff --check`: passed.
+- `go run ./cmd/loadcards -json`: expected exit 1. Worktree status remains
+  813 accepted / 173 rejected names; 2,099 compiled / 346 rejected records.
+  The entire JSON report matches the baseline byte-for-byte, including all
+  rejection diagnostics. Remaining gaps include Animate Dead/EnchantGraveyardCard,
+  Balance/SacrificeAllPermanentsExceptForNum and
+  Channel/MayPayLifeToProduceManaAsManaAbility.
+
+An isolated checkout of the staged index, excluding all pre-existing work,
+passes the expanded RON/native focused tests, `make build` and `go vet ./...`.
+Its loader exits 1 with 812 accepted / 174 rejected names and 2,098 compiled /
+347 rejected records. Eureka remains rejected at RepeatableActions. Its
+pre-existing worktree gain is excluded from this slice and commit.
+
+
+Estimated and actual compilation gain: 0 unique names / 0 records. New layer
+lifecycle coverage: 11 unique existing names / 36 records. Compilation and
+behavior coverage remain separate; complete collection gameplay is not claimed.
+All accepted records retain their compile status. No Go-card fallback, name
+branch, declaration panic, global result slot or partial registry is introduced.
+No Go definition or unused DSL export is removed because runtime/removal gates
+remain unmet. Documentation describes only this established capability.
+
+Changed files: mage card.go, clone.go, triggered.go, effect_manager.go, game.go,
+text_spell_cast_trigger.go, doc.go and new text_spell_cast_layer.go /
+text_spell_cast_layer_test.go; RON triggers.go and new text_spell_cast_layer_test.go /
+text_spell_cast_layer_lifecycle_test.go; dsl-reference.md, engine-rules-contracts.md
+and this progress ledger. Only this slice's changes are staged, including only
+its hunks in already-dirty documentation. Existing archive/Eureka edits remain
+outside the commit.
+
+Ranked next candidates:
+
+1. Printed combat-pair trigger layer installation/restoration for Abomination,
+   Aisling Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram
+   and Venom; preserve pair incarnations, Aura hosts and delayed body snapshots.
+2. Printed opponent-land-tap trigger layer installation/restoration for Lifetap
+   and Lifeblood; preserve queued event facts and controller-relative filters.
+3. Reassess remaining printed declaration families for shared text-layer coverage
+   before whole-object Magical Hack/Sleight of Mind dispatch and copy rebinding.
+
+Stop after this slice. Complete collection gameplay, runtime loading, Go-card
+removal and unused DSL cleanup remain unfinished.

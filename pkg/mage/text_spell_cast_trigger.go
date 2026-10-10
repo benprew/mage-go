@@ -25,8 +25,21 @@ func (t *GenericTriggered) supportsSpellCastTextRevision() bool {
 // RevisePrintedSpellCastTrigger replaces one present printed spell-cast trigger.
 // The caller must supply the text layer's order and lifetime separately.
 func (g *Game) RevisePrintedSpellCastTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	marked := false
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			for _, a := range current.RuntimeAbilities {
+				if a.AbilityID() == abilityID {
+					marked = layeredSpellCastEligible(a)
+				}
+			}
+			if _, exists := current.layeredSpellCastOrigins[abilityID]; exists {
+				return fmt.Errorf("direct spell-cast revision cannot change a layered result")
+			}
+		}
+	}
 	return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
-		return t.spellCastTextRevision && t.supportsSpellCastTextRevision()
+		return t.spellCastTextRevision && t.supportsSpellCastTextRevision() && (!marked || t.spellCastTextLayer)
 	}, changes...)
 }
 

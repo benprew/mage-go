@@ -148,7 +148,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			}
 			trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 			trigger.AndConditionData(mage.SpellCastMatchesCardFilters{Filters: []mage.CardFilter{filter}})
-			trigger.WithSpellCastTextRevision()
+			trigger.WithLayeredSpellCastTextRevision()
 			actions.effects = nil
 			return mage.WithAbility(TriggerA(trigger, actions))
 		}, nil

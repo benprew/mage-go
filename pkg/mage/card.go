@@ -680,6 +680,7 @@ type Permanent struct {
 	layeredLandwalkOrigins      map[uuid.UUID]landwalkLayerOrigin
 	layeredProtectionOrigins    map[uuid.UUID]protectionLayerOrigin
 	layeredManaTapOrigins       map[uuid.UUID]manaTapLayerOrigin
+	layeredSpellCastOrigins     map[uuid.UUID]*GenericTriggered
 	layeredStaticAbilityOrigins map[uuid.UUID]*StaticAbilityHolder
 	subtypeFamilyOverrides      [subtypeFamilyCount][]string
 	subtypeFamilyOverrideSet    [subtypeFamilyCount]bool

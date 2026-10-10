@@ -1,5 +1,47 @@
 # DSL reference
 
+## Printed spell-cast trigger text layers
+
+`GenericTriggered.WithLayeredSpellCastTextRevision() *GenericTriggered` marks a
+printed typed battlefield spell-cast trigger. It includes the existing checked
+revision opt-in and declaration validation.
+`Game.AddPrintedSpellCastTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs color or basic
+land word changes in layer 3 with `EndOfTurn` or `Indefinite` duration.
+
+RON marks the complete existing
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), actions)`
+context. Existing filters, bodies, targets and event scopes keep their checks.
+No new trigger syntax or whole-object text spell is accepted.
+
+Each pass restores the declaration baseline before timestamp-ordered changes.
+A prior direct revision can supply the baseline. Expiry recomputes surviving
+changes; direct revision rejects a current layer result. Semantic word changes
+can affect event filters, body filters and targets; mana symbols retain their
+values. Printed/copiable definitions and sibling declarations remain separate.
+Installation probes a game clone before live registration. Missing source visits,
+face-down/phased sources, foreign/granted/removed/unmarked declarations, missing
+builders/groups, missing rebuilt markers, changed caster/capture contexts, invalid
+changes, empty changes and unsupported durations reject without live mutation.
+
+Detected triggers, placement targets, stack copies and optional payments retain
+their detection-time rules and exact event bindings (CR 603.2–3). Layer 6 removal
+suppresses detection; restoration uses retained text. Phasing keeps the visit,
+including expiry before phase-in. Clones keep separate baselines, registrations,
+cleanup and controller contexts. LKI keeps the final rule; return starts from
+printed rules (CR 400.7). Shared text rebuilding, layers and timestamps implement
+CR 612.1–3, 613.1c and 613.7. No cost, replacement or simultaneous-operation
+contract changes. Whole-object text, spell text and copy rebinding remain separate.
+
+Evidence: `TestRONTextSpellCastLayerRecords` executes all 30 charm records;
+`RealCards`, `OtherRealCards` and `IdentityAndLifetime` cover 11 unique names
+(36 records), including all six other records. `BaselineController`,
+`BasicLandTargets`, `PendingTargetsAndClone`, `EventBindings` and
+`IndependentDeclarations` cover baseline expiry, controllers, queued text,
+clones, copies and payments. Native `TestTextSpellCastLayerDeclaration` and
+`Rejects`, plus RON `Invalid`, cover declaration and atomic installation rejection.
+
+
 ## Printed static basic-land-type text layers
 
 `StaticAbilityHolder.WithLayeredLandTypeTextRevision() *StaticAbilityHolder`

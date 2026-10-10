@@ -50,6 +50,7 @@ type GenericTriggered struct {
 	manaTapTextRevision    bool
 	manaTapTextLayer       bool
 	spellCastTextRevision  bool
+	spellCastTextLayer     bool
 	landTapTextRevision    bool
 	combatPairTextRevision bool
 	textRevisionDefinition Card
