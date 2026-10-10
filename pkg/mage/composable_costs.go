@@ -800,13 +800,13 @@ func PayOrElse(player PlayerRef, costs CostGroup, paid, unpaid ResolvingEffect) 
 	return &unlessPaidEffect{player: player, costs: costs, effect: paid, otherwise: unpaid, ifPaid: true, twoBranches: true}
 }
 
-// IfRequiredPaid runs the body after a mandatory sacrifice payment succeeds.
+// IfRequiredPaid runs the body after a mandatory resolution payment succeeds.
 // The player does not receive an optional payment choice.
 func IfRequiredPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
 	return &unlessPaidEffect{player: player, costs: costs, effect: effect, ifPaid: true, required: true}
 }
 
-// UnlessRequiredPaid runs the body when a mandatory sacrifice payment fails.
+// UnlessRequiredPaid runs the body when a mandatory resolution payment fails.
 func UnlessRequiredPaid(player PlayerRef, costs CostGroup, effect ResolvingEffect) ResolvingEffect {
 	return &unlessPaidEffect{player: player, costs: costs, effect: effect, required: true}
 }
@@ -894,11 +894,14 @@ func (e *unlessPaidEffect) inspectDefinition() definitionNode {
 	}
 	if e.required {
 		if len(e.costs.costs) == 0 {
-			n.problem = "supply at least one mandatory sacrifice cost"
+			n.problem = "supply at least one mandatory cost"
 		}
 		for _, cost := range e.costs.costs {
+			if _, ok := cost.(*discardCost); ok {
+				continue
+			}
 			if _, ok := cost.(*sacrificeMatchingCost); !ok {
-				n.problem = "mandatory resolution payment requires matching sacrifice costs"
+				n.problem = "mandatory resolution payment requires discard or matching sacrifice costs"
 			}
 		}
 	}

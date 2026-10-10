@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [PayRequiredOrElse] for two mandatory resolution-payment branches.
+// [IfRequiredPaid] and [UnlessRequiredPaid] also accept uncaptured discard costs.
+// Required groups permit discard and matching sacrifice costs only.
+// The shared transaction keeps full-payment failure separate from live resources.
+// No optional payment offer is made. Each operation keeps its own result.
+// Use [DiscardOneOrElse] for an actual effect-caused discard outcome.
+// Library destinations count; cancellation and returned hand visits do not.
+// RON PlayerMustCost with DiscardACard uses this outcome in draw replacements.
+// Ordinary and delayed bodies use resolution payments. Saved player bindings
+// keep their values across that context change. Choices and Aura returns stay
+// separate. Copies, clones and waiting queries use the shared typed contracts.
+//
 // Use [ReplaceNextDrawThisTurn] for one saved player's next draw until cleanup.
 // The body keeps its resolution bindings, X, controller and source visit.
 // Source departure, phasing and ability removal do not end the rule.

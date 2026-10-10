@@ -24,6 +24,7 @@ func compileFutureDrawReplacement(n Node, ctx scope) (effectFactory, error) {
 	if len(parts) == 0 {
 		return nil, problem(n.Args[1], "supply a future draw replacement body")
 	}
+	ctx.drawReplacementBody = true
 	body, err := compileActionSequence(parts, ctx)
 	if err != nil {
 		return nil, err

@@ -47,6 +47,7 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(body, "delayed step requires at least one action")
 	}
 	ctx.delayedStep = true
+	ctx.drawReplacementBody = false
 	effects, err := compileActionSequence(parts, ctx)
 	if err != nil {
 		return nil, err

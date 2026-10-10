@@ -5220,8 +5220,8 @@ payment planning. Their complete RON gameplay is covered by `TestRONHistoryMana*
 `IfRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect)` and
 `UnlessRequiredPaid(player PlayerRef, costs CostGroup, body ResolvingEffect)`
 use the shared total-cost transaction without an optional payment choice.
-The supported group contains one or more matching sacrifice costs. Empty groups,
-other cost types, and captured payment values are rejected by definition
+The supported group contains one or more matching sacrifice or uncaptured discard
+costs. Empty groups, other cost types, and captured payment values are rejected by definition
 validation. This restriction does not require a player to activate mana abilities
 for a mandatory cost (CR 118.3c).
 
@@ -13034,3 +13034,37 @@ NextTimePlayerWouldDrawACardThisTurn(player), [actions])`. Supply a supported
 player reference and a nonempty supported action list. Body results stay local;
 this event does not supply a new lexical drawing-player reference. Library
 selection, outside-game entry and other future draw events remain separate gaps.
+
+
+## RON required player payments and draw replacement discards
+
+`PlayerMustCost(player, DiscardACard)` accepts one typed player reference and
+an adjacent `If`, `Unless`, or `IfElse`. The condition is the symbol
+`CostWasPaid` or `CostWasntPaid`. Every declared branch is a nonempty action
+list. The result belongs to that pair; it cannot be read by a later action,
+another payment, or a sibling branch. Existing player bindings and reference
+legality remain in force. `ChooseAPermanent` is a separate unsupported cost.
+
+Ordinary spell, activated, triggered and delayed bodies lower to
+`IfRequiredPaid`, `UnlessRequiredPaid`, or
+`PayRequiredOrElse(player PlayerRef, costs CostGroup, paid, unpaid ResolvingEffect)`.
+The native required-payment group now permits uncaptured discard costs as well
+as matching sacrifice costs. It remains nonempty and rejects other cost families
+and captured payment values. Existing optional payments keep their contracts.
+Payment occurs at resolution without an optional payment offer, through the
+shared transaction. Full-payment failure leaves resources unchanged.
+
+Inside a static or future draw replacement body, the same RON form denotes an
+instructed discard. It lowers to
+`DiscardOneOrElse(player PlayerRef, discarded, notDiscarded ResolvingEffect)`.
+That service uses an effect-caused discard and selects the branch from the
+actual discard result. Library destinations still count; cancellation does not.
+Library of Leng can replace that discard. A delayed trigger created in such a
+body retains its saved player binding but uses ordinary resolution-payment
+semantics when it runs. RON keeps the execution context separate from bindings.
+
+Neither service stores a global payment result or adds a stack object.
+Copies, clones and nested bodies keep independent outcomes. Complete Chains
+still rejects its `MillACard` body; Takklemaggot still rejects its distinct
+creature choice and linked Aura return. Tests cover these real contexts with
+explicit supported test bodies; this is prerequisite evidence only.

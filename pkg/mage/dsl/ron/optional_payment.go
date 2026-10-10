@@ -14,6 +14,18 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "PlayerMustCost" {
+			if i+1 == len(parts) {
+				return nil, nil, problem(part, "payment requires an adjacent payment continuation")
+			}
+			effect, err := compileRequiredPlayerPayment(part, parts[i+1], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			effects = append(effects, effect)
+			i++
+			continue
+		}
 		if part.Name == "EachPlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "DiscardUptoNumberCards" {
 			build, err := compilePlayerDiscardResults(part, parts[i+1:], ctx)
 			if err != nil {

@@ -8,10 +8,10 @@ Eureka work, the worktree reports **818 accepted / 168 rejected names** and
 **2,119 compiled / 326 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-FUTURE-ONE-SHOT-DRAW-REPLACEMENT adds a saved-player installation, immediate
-replacement bodies, one-shot consumption, cleanup expiry and independent clones.
-It establishes a shared prerequisite for Aladdin's Lamp and Ring of Ma'rûf.
-Their remaining bodies stay rejected. Complete-card compilation and gameplay
+REQUIRED-PLAYER-PAYMENT-CONTINUATION adds typed mandatory discard payment
+and local branches, with actual effect-caused discard inside draw replacements.
+It establishes shared payer/continuation scope for Chains and Takklemaggot.
+Their remaining operations stay rejected. Complete-card compilation and gameplay
 gains are **0 names / 0 records**. No RON changed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -69337,5 +69337,174 @@ remain open; no caller audit or code deletion was needed for this slice.
 3. Serendib Djinn's IsCardtype(Land) no-land state filter remains dependency-ready
    for one name / one record. Defer while useful shared work remains. Lamp's
    top-X selection and Ring's outside-game service remain separate later bodies.
+
+Migration remains incomplete. This run stops after one slice.
+
+## Run 2026-10-10: REQUIRED-PLAYER-PAYMENT-CONTINUATION
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Candidate comparison and selection
+
+The latest entry ranked shared required-payment/result scope first. It is
+dependency-ready: typed payer bindings, ordinary payments, selected discard
+transactions, draw replacement ancestry and saved host-death controllers exist.
+Complete RON records were inspected for all compared names, including all six
+Island Sanctuary records. Targeted vocabulary inspection finds PlayerMustCost
+in two records / two distinct names. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Required payment and local continuation, ranked 1 | Chains of Mephistopheles; Takklemaggot | 0 names / 0 records | Chains still needs MillACard. Takklemaggot needs its separate enchantable-creature choice, linked graveyard Aura return and non-Aura transformation. Shared payer and continuation checks enable both, with ordinary payment versus replacement-instruction execution kept distinct. | Medium: native mandatory two-branch contract, actual-discard branch, RON scope/context lowering, declaration and gameplay tests. |
+| General resolving action-list choice | Island Sanctuary; Dwarven Armorer | 0 additional names / records | Armorer's complete counter-only choice is already accepted. Sanctuary needs CantBeAttackedExceptBy and UntilPlayersNextTurn. Transport can reuse native ChooseAtResolution and retain the counter context. | Medium: general bodies, restrictions and branch binding isolation; separate restriction/duration prerequisites remain. |
+| No-land state filter IsCardtype(Land) | Serendib Djinn | 1 name / 1 record | The complete upkeep sacrifice and saved Island-result body already exist. The remaining land-state filter completes its state trigger, without a concrete shared multi-card prerequisite. | Small: one adapter and state-trigger lifecycle/gameplay tests. |
+
+Selected candidate 1 because it enables two real conditional procedures through
+shared payer/result handling. The slice supports the singular forced discard
+operation completely; it does not pretend that enchantable selection is discard.
+The estimate was zero full-card gains, so unsupported complete bodies stay errors.
+No Go card definition supplied a requirement. No card-name branch was added.
+
+### Exact contract, dependencies and reuse boundary
+
+RON accepts PlayerMustCost(player, DiscardACard) in supported resolving spell,
+activated, triggered and delayed action lists and static/future draw replacement
+bodies. It requires an adjacent If(condition, [actions]),
+Unless(condition, [actions]), or IfElse(condition, [actions], [actions]).
+The condition is exactly the symbol CostWasPaid or CostWasntPaid. Every declared
+body is nonempty. Malformed declarations, incompatible/unbound players, unsupported
+costs, nonadjacent continuations and escaped result reads reject before gameplay.
+Each pair lowers its own branches; no global last-payment value exists.
+
+Native APIs:
+
+- PayRequiredOrElse(player PlayerRef, costs CostGroup, paid, unpaid
+  ResolvingEffect) ResolvingEffect. It reuses unlessPaidEffect's required mode,
+  affordability queries and prepareActionPaymentTransaction/Commit. Existing
+  IfRequiredPaid and UnlessRequiredPaid now also permit uncaptured discard costs.
+  Required groups are nonempty and permit discard or matching sacrifice costs;
+  other families and captured cost results reject. There is no may-payment offer.
+  A failed full transaction leaves resources unchanged. An absent payer runs
+  neither continuation. Existing optional payment behavior remains.
+- DiscardOneOrElse(player PlayerRef, discarded, notDiscarded ResolvingEffect)
+  ResolvingEffect. An instructed replacement discard uses NewDiscardAction and
+  the existing shared discard/replacement batch, then branches on an actual
+  completed discard. Current hand visits are saved before selection. Invalid,
+  foreign, duplicate and returned choices cannot discard a different visit.
+  Changed destinations count as discarded; cancellation does not. Source reads
+  and both branch reads use the existing waiting-query contract without choices.
+
+The first implementation used a resolution cost in the draw replacement context.
+A new Library of Leng regression exposed that mistake. CR 118.12 applies the
+conditional-cost interpretation to spells and activated/triggered abilities,
+while Chains' discard is an instruction inside a replacement effect. Its Oracle
+text checks actual discard. The final compiler records draw replacement execution
+separately from the lexical drawing-player binding. Static and one-shot future
+replacement bodies use DiscardOneOrElse. A created delayed trigger keeps saved
+bindings but resets to ordinary resolution-payment execution. Library of Leng's
+existing effect-only replacement therefore applies to Chains' discard, while
+ordinary payment discards retain the existing cost contract.
+
+RON owns spelling, arity, lexical payer scope, adjacency and execution-context
+lowering. Mage owns payment, current hand visits, actual discard, replacement
+ordering, branch execution and typed waiting reads. Reused services include
+instanceBindings/playerReferencePlan, PlayerRef and source LKI, required payments,
+CostGroup validation, locked selected-discard transactions, discard batch/history,
+EffectManager replacement order, draw ancestry, delayed frames, stack copies,
+ResolutionState and game clones. No parallel zone, payment or replacement system
+was introduced. Existing callers, Go definitions and strict loading remain.
+
+Rules evidence: local data/LEG.json's full Oracle text for both affected names;
+CR 118.3, 118.10–12, 400.7, 614.5–6, 616.1 and 701.9. No source defect or
+RON text change was found. The source vocabulary snapshot needs no refresh.
+Semantic inventory now labels both PlayerMustCost operands as typed player and
+resolution-cost syntax; execution context decides the discard contract.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on the new PayRequiredOrElse signature.
+After correcting harness names, RON gameplay/nesting/Chains tests failed with
+unsupported action (PlayerMustCost), and inventory failed with an unknown cost
+role. New DiscardOneOrElse tests failed compilation before that service existed.
+The effect-only discard regression failed its redraw/destination assertion before
+the execution-context fix. Test setup corrections used explicit typed player
+targets, the engine's existing SnapshotNumber order and EndStep name, and a
+synthetic native effect-only discard fixture because full Library of Leng RON
+still rejects. No gameplay assertion or declaration rejection was weakened.
+
+| Card/context | Evidence |
+| --- | --- |
+| Chains of Mephistopheles, complete LEG record | TestRONRequiredPlayerPaymentChainsClause retains the original event, required discard and paid drawing-player draw, replacing only unsupported MillACard with a supported test body. It proves immediate discard/draw, no recursion, correct payer, no payment offer and the empty-hand branch. The unchanged full card remains rejected. |
+| Chains plus effect-only discard replacement | ReplacementDiscardIsEffect uses that same real clause and a synthetic native DiscardToLibraryReplacement fixture. It proves the paid branch redraws the card put atop the library, with one replacement offer and no may-payment offer. No complete Library of Leng RON gameplay is claimed. |
+| Takklemaggot, complete LEG record | TakklemaggotContext retains enchant and the real host-death event, explicitly substitutes DiscardACard for the unsupported enchantable-creature choice and supported life bodies for both linked-return bodies, and omits the independent upkeep rule from this focused fixture. It proves saved death-controller payment after host/Aura return, copied triggers, clones and an empty hand. This is shared payer/continuation evidence only, not its actual choice, upkeep or Aura-return gameplay. |
+| Complete synthetic RON activations | Gameplay covers all six branch polarities, payer targets, failed activation payment, resolution timing, invalid hand choices, empty hands, source control/phasing/departure and clones. Nested checks independent adjacent and nested results. CopyAndLKI covers copy controller, source departure/return with changed power and phasing cycles. |
+| Complete synthetic future/delayed RON bodies | FutureAndDelayedContext proves future replacement discard allows an effect-only replacement and a created delayed trigger instead uses a cost, without losing captured context or running early. |
+| RON declarations and inventory | Invalid rejects wrong arities, costs, references, empty branches, late continuations, escaped payment results and draw results without producers. Inventory checks the typed payer and cost operands. PermanentChoiceRecordsAndInventory now requires the precise remaining ChooseAPermanent cost rejection for Takklemaggot. |
+| Native contracts | TestRequiredPaymentBranches covers explicit payer, empty hand, required two-branch execution, nesting, rollback, replaced and prevented costs, replacement rechecks, cloning, invalid definitions and sibling binding dominance. EffectDiscard and DiscardVisit cover actual discard, library destinations, cancellation, foreign/nil/multiple/returned choices and clones. WaitingReads proves pure queries retain the exact departed source visit. Existing discard/sacrifice batch tests retain simultaneous-payment and replacement-order coverage. |
+
+### Verification and measured results
+
+- Fresh baseline make build and go test ./pkg/mage/dsl/ron -short -count=1
+  pass (RON 39.687s). Baseline go run ./cmd/loadcards -json exits 1 only for
+  collection rejection: 818 accepted / 168 rejected names, 2,119 compiled /
+  326 rejected records, 2,445 total. This includes the initial Eureka work.
+- Final go test ./pkg/mage/dsl/ron -run TestRONRequiredPlayerPayment -count=1
+  passes (0.666s), and go test ./pkg/mage -run TestRequiredPaymentBranches
+  -count=1 passes (1.093s), after lint formatting. A separate focused run also
+  includes TestRONPermanentChoiceRecordsAndInventory and passes (0.559s).
+- make build and go vet ./... pass. The first engine short run found only the
+  stale Takklemaggot blocker assertion. It still required rejection, and now
+  requires the more precise unsupported ChooseAPermanent cost diagnostic.
+  Fresh go test ./pkg/mage/... -short -count=1 passes (RON 41.735s).
+  make test passes (RON 61.414s). No other gameplay or declaration assertion
+  was changed. make lint passes with 0 issues; only the new RON test imports
+  were formatted. That diff was reviewed and focused checks rerun.
+  git diff --check and the staged diff check pass.
+- A separate checkout of the staged slice, excluding all initial user changes,
+  passes go build ./..., go vet ./... and go test ./... -short -count=1
+  (RON 45.027s). Its strict loader exits 1 only for collection rejection:
+  817 accepted / 169 rejected names, 2,118 compiled / 327 rejected records.
+  Lint changed only import grouping afterward; the tested implementation matches
+  the final staged code. There is no environmental or pre-existing check blocker.
+- Final worktree go run ./cmd/loadcards -json exits 1 only for collection
+  rejection: 818 accepted / 168 rejected names, 2,119 compiled / 326 rejected
+  records. Comparing fresh baseline and final rejected-name sets finds no gains
+  or regressions. Strict loading publishes no partial registry. Chains now
+  reaches LEG.lines.ron:44:401: expected 1 positional arguments (MillACard).
+  Takklemaggot reaches LEG.lines.ron:256:479: unsupported required player
+  payment cost (ChooseAPermanent). These are missing adapters/operations,
+  not build failures or newly accepted incomplete cards.
+- Estimated and actual full-card compilation/gameplay gains are both 0 names /
+  0 records. New real-record context evidence covers two distinct names / two
+  records with explicit unsupported-operation substitutions. Unchanged complete
+  card gameplay is not claimed. Runtime cutover and all removal gates stay open.
+  No RON changed; the source vocabulary snapshot remains valid.
+
+Changed files: native required_payment_branches.go and tests; native required-cost
+validation in composable_costs.go; RON required_player_payment.go and tests;
+RON sequence dispatch, replacement execution context and delayed context reset;
+semantic inventory; existing permanent-choice diagnostic test; API/rules docs;
+and this ledger. Only this slice's changes enter the commit. Initial Eureka
+implementation, declaration tests, authoring-doc edits, archive relocation,
+.gitignore and unrelated untracked files stay outside it. No Go card or DSL
+function was removed; their cutover and fresh caller-audit gates are not met.
+
+### Ranked next candidates
+
+1. Reassess shared general ChooseAnAction body transport for Island Sanctuary
+   and Dwarven Armorer. The counter-only Armorer context is accepted; preserve
+   it while adding general resolving bodies through ChooseAtResolution.
+   Sanctuary still needs CantBeAttackedExceptBy and UntilPlayersNextTurn.
+   Transport alone estimates zero full-card gains; six Sanctuary records are
+   one name. Compare its shared benefit with the now-small remaining Chains gap.
+2. Chains of Mephistopheles' MillACard symbol adapter can now use existing Mill
+   after the completed draw-event and forced-discard contracts. It estimates
+   one name / one record. Test complete gameplay, competing replacement order,
+   multiple Chains and actual discard versus cancellation. Do not recreate
+   MillNumberCards or MillCost. Compare the gain with shared prerequisites first.
+3. Serendib Djinn's IsCardtype(Land) no-land state filter remains ready for one
+   name / one record. Takklemaggot's mandatory enchantable-creature selection,
+   linked Aura return and non-Aura rules remain distinct, larger prerequisites.
+   Lamp's library selection and Ring's outside-game service remain later bodies.
 
 Migration remains incomplete. This run stops after one slice.

@@ -5582,7 +5582,7 @@ the synchronous execution contract below.
 ## Mandatory resolution sacrifices and replacement destinations
 
 `IfRequiredPaid` and `UnlessRequiredPaid` accept a nonempty group of matching
-sacrifice costs. They use the total-cost transaction at resolution and do not
+sacrifice or uncaptured discard costs. They use the total-cost transaction at resolution and do not
 offer a may choice. The branch remains local to its payment. Definition
 validation rejects other cost families and captured payment values. The service
 preserves current optional-payment callers.
@@ -16826,3 +16826,46 @@ and library selection remain unsupported. Ring's outside-game card selection
 remains unsupported. Tests retain their real event nodes and supported costs,
 with explicit synthetic bodies; no complete-card gameplay is claimed.
 Evidence: `TestFutureDrawReplacement*` and `TestRONFutureDrawReplacement*`.
+
+
+## Required player discard continuation and execution context
+
+`PayRequiredOrElse` extends the existing required resolution-payment service
+with two local branches. `IfRequiredPaid`, `UnlessRequiredPaid`, and the new
+operation accept nonempty groups of uncaptured discard and matching sacrifice
+costs. They retain the shared full-payment transaction, pure affordability
+checks, source-incarnation exclusions, replacement ordering and rollback.
+The payer does not receive a may-payment offer. Missing payers run neither
+branch; each successful or failed payment selects its own continuation.
+Captured cost values and all other cost families remain invalid declarations.
+
+Draw replacement instructions require a different discard contract. CR 118.12
+applies its resolution-cost interpretation to spells and activated or triggered
+abilities. Chains' discard is an instruction in a replacement effect; its
+Oracle text checks whether a card was discarded. `DiscardOneOrElse` uses the
+existing effect-caused `DiscardAction`, shared replacement pipeline and discard
+batch. It saves current hand visits before the choice. Missing, foreign and
+returned selections cannot discard a different visit. A library destination
+still supplies a completed discard. Cancellation supplies no discard. Both
+branches use the enclosing resolution frame, with no global result or new stack
+object. The source, payer and both bodies declare their existing typed reads;
+waiting queries do not make a choice or move cards.
+
+RON tracks draw replacement execution independently of its lexical player
+binding. Static and one-shot future bodies use actual discard outcomes. A
+nested delayed trigger retains bindings but restores ordinary payment context.
+No RON text changed. Local `data/LEG.json` confirms Chains and Takklemaggot's
+conditional clauses. CR 118.3, 118.10–12, 400.7, 614.5–6, 616.1 and 701.9
+supply the cost, identity, replacement and discard boundaries. Library of Leng's
+existing effect-only replacement distinguishes the two execution contracts.
+
+Evidence: `TestRequiredPaymentBranches*` covers branches, validation, nested
+results, transaction rollback, replacement cancellation and library destinations,
+clone isolation and sibling binding rejection. `TestRONRequiredPlayerPayment*`
+covers explicit player targets, all branch polarities, timing, invalid choices,
+source control/phasing/departure/return with LKI, copies/clones, original Chains
+payment/draw branches, saved Takklemaggot death controllers, effect-only discard
+replacement, and future versus delayed execution contexts. Original full records
+remain rejected; the tests explicitly replace unsupported operations and do not
+claim complete-card gameplay. Existing multi-card discard and sacrifice batch
+contracts continue to supply simultaneous-payment evidence.

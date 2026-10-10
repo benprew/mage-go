@@ -942,7 +942,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "resolution_cost"
 			}
-		case "PlayerMayCost":
+		case "PlayerMayCost", "PlayerMustCost":
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "resolution_cost"}[index]
 			}

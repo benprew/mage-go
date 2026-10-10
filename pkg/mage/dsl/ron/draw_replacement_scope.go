@@ -37,6 +37,7 @@ func compileDrawReplacement(n Node, ctx scope) (optionFactory, error) {
 	}
 	plan := &drawReplacementPlan{name: "drawing player " + event.Position.String()}
 	ctx.drawReplacement = plan
+	ctx.drawReplacementBody = true
 	actions, err := compileActionSequence(operations, ctx)
 	if err != nil {
 		return nil, err
