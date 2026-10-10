@@ -287,6 +287,14 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 		// Permanents go to the battlefield instead
 		if permanentSpell {
 			card := obj.Card
+			if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.landAuraSpellText != 0 && base.textDefinition != nil && len(base.textDefinition.changes) != 0 {
+				continued, err := buildLandAuraSpellEntry(obj)
+				if err != nil {
+					g.cleanupSpell(obj)
+					return
+				}
+				card = continued
+			}
 			colorsSpent := obj.CastContext.DistinctColorsSpent()
 			if obj.IsCopy {
 				card = newPermanentSpellCopyCard(card)

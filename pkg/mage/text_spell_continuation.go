@@ -51,6 +51,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if len(changes) == 0 {
 		return fmt.Errorf("spell text continuation requires word changes")
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.landAuraSpellText != 0 {
+		return g.reviseLandAuraSpellText(obj, changes)
+	}
 	if _, modal := getModalSpellAbility(obj.spellTextDefinition); modal {
 		return g.reviseModalSpellText(obj, changes)
 	}

@@ -313,12 +313,14 @@ func Compile(n Node) (mage.CardFactory, error) {
 	permanent := !slices.Contains(types, core.TypeInstant) && !slices.Contains(types, core.TypeSorcery)
 	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
 	var options []optionFactory
+	landAuraSpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
 		if err != nil {
 			return nil, err
 		}
+		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)
 		if err != nil {
 			return nil, err
@@ -416,6 +418,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		for _, buildOption := range options {
 			opts = append(opts, buildOption())
+		}
+		if landAuraSpellText {
+			opts = append(opts, mage.WithLandTypeAuraSpellTextContinuation())
 		}
 		var card *mage.BaseCard
 		switch types[0] {

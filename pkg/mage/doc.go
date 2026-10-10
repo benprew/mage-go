@@ -14,8 +14,19 @@
 // The additional cost and spell body share its binding. Rebuilt rules use a
 // fresh binding with the paid value. Copies and clones keep separate maps.
 // Revision does not repeat payment or read a returned sacrificed card.
-// Permanent spells and other casting results need separate services.
+// Other permanent spells and casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
+//
+// Use [WithLandTypeAuraSpellTextContinuation] for a land-type Aura spell.
+// [Game.RevisePrintedSpellText] keeps its announced target and cast payment.
+// RON marks one enchant rule and one fixed or chosen host land-type rule.
+// A chosen rule requires one basic-land-type entry choice. Entry uses fresh
+// revised rules with physical identity and printed departure information.
+// Choices happen at entry and are not printed words. Copies enter as tokens
+// and choose separately. Clones keep separate rules. Phasing keeps the visit.
+// Later text layers use the continued baseline. Departure keeps LKI and
+// restores physical printed rules. Ordinary changes stay outside copy values.
+// Copy-entry, other Aura rules and whole-object text need separate services.
 //
 // Use [WithLayeredTextRevisionActivationState] for a printed activated action.
 // [Game.AddPrintedActivatedTextEffect] changes one declaration in layer 3.

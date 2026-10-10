@@ -11572,3 +11572,50 @@ reprints, changes both copied Gauntlet of Might rules, and checks all six Clone
 reprints as later copies. `RetainedColors` exercises combined KeepColor and
 AddCardtypes with fresh activated target bindings. Existing copy declaration
 rejection tests retain their exact shape checks.
+
+
+### Land-type Aura spell text entry continuation
+
+`mage.WithLandTypeAuraSpellTextContinuation() CardOption` marks one ordinary
+Aura with one permanent enchant target and one attached basic-land-type rule.
+A fixed rule permits no entry choice. A chosen rule requires exactly one
+`ChooseBasicLandTypeAsEnters` declaration. Duplicate markers, additional or
+alternative costs, extra types/subtypes, keywords, modes, unrelated abilities,
+missing/nil targets and mismatched choices fail definition validation.
+
+RON marks complete `EnchantPermanent(filter)` plus
+`PermanentLayerEffect(HostPermanent, [SetLandType(basicType)])`, or the chosen
+variant with `AsPermanentEnters(ThisPermanent, [ChooseABasicLandType])` and
+`SetLandTypeVariable(TheChosenLandType)`. Filters keep their existing validated
+permanent/enchant roles. No new RON spelling or card-name dispatch is used.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks the retained marker, builder, ability groups and target context before
+atomic replacement. Ordered semantic word changes preserve the announced target,
+exact visit, X, controller, owner, payment and cast facts. Revised enchant filters
+control resolution legality and copy retargeting. Entry choices happen only when
+an eligible spell resolves; saved choices are not printed words (CR 612.2).
+
+Fresh revised definitions enter through the shared battlefield entry service
+(CR 400.7a, 608.3b/c). The physical card keeps its ID, owner and printed departure
+rules. Ordinary changes do not enter its copiable values. Spell copies enter as
+tokens (CR 608.3f, 707.10f), retain current revised rules, and choose independently
+at entry (CR 707.10). Clones keep separate revisions and source contexts.
+Phasing keeps text, attachment and choices without repeating entry. Later
+per-declaration text layers use the continued baseline, including after expiry.
+Layer 6 ability removal cannot undo an earlier layer 4 land-type change; restoring
+the ability keeps its continued text (CR 613.1d/f). Departure saves revised LKI
+and returns the physical printed definition (CR 400.7).
+
+This is a bounded entry prerequisite. Copy-entry, whole-object permanent word
+changes, other Aura rules, casting-result transfer and general spell text
+lifetime remain separate. It does not lower complete Magical Hack or Sleight
+of Mind. No replacement priority, cost transaction or batch operation changes.
+
+Evidence: `TestRONTextLandAuraSpellRecords` covers Evil Presence and Phantasmal
+Terrain in all six reprints (2 names, 12 records). `Legality`, `Retarget`,
+`CopiesAndLayers`, `ChoiceCopies` and `Boundaries` cover ordered target filters,
+exact visits, phasing, copy-controller choices, token copies, separate clones,
+layer expiry/removal/restoration, copiable values and invalid/unsupported forms.
+`TestTextLandAuraSpellDeclaration` and `RejectsAtomic` check native declaration
+validation and rejection without mutation. Compilation gain is zero.
