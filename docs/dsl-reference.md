@@ -13018,3 +13018,19 @@ Evidence: `TestRONPlayerDiscardResultsMindBomb`, `CopiesAndClones`,
 `TestPlayerDiscardResultsBatch`, `Declaration`, `Identity`,
 `CloneClearAndCancel`, `DelayedAndLoopFrames`, `WaitingReads`, and
 `OrderEmptyAndDuplicateSets`.
+
+## Future one-shot draw replacement
+
+Use `mage.ReplaceNextDrawThisTurn(player, body)` in a resolving body. The player
+is a typed PlayerRef and the body is a ResolvingEffect. The replacement saves
+its player, source visit, controller, X, bindings and targets until one use or
+cleanup. It survives source departure and phasing. It runs immediately through
+the shared replacement pipeline and restores the enclosing resolution frame.
+Consumption precedes body execution. Clones keep independent use and bindings.
+Returned objects cannot replace saved visits; information reads use existing LKI.
+
+RON lowers `CreateFutureReplaceWouldDraw(
+NextTimePlayerWouldDrawACardThisTurn(player), [actions])`. Supply a supported
+player reference and a nonempty supported action list. Body results stay local;
+this event does not supply a new lexical drawing-player reference. Library
+selection, outside-game entry and other future draw events remain separate gaps.

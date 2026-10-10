@@ -16784,3 +16784,45 @@ remain unsupported. This contract establishes their shared event prerequisite,
 not complete gameplay for either card. Future one-shot draw replacements remain
 outside this contract. Evidence: `TestDrawReplacementScope*` and
 `TestRONDrawReplacementScope*`; CR 121.2, 121.6, 614.5, 614.11 and 616.1.
+
+## RON future one-shot draw replacement
+
+`ReplaceNextDrawThisTurn(player PlayerRef, body ResolvingEffect) ResolvingEffect`
+installs one persistent replacement through `EffectManager.AddReplacement`.
+The selected player is saved at installation. The next proposed draw by that
+player is replaced, including an effect draw, a normal draw or a draw from an
+empty library. Other players and other action kinds do not consume the rule.
+Cleanup removes unused rules through the existing EndOfTurn duration service.
+
+The affected player chooses among competing replacements through the shared
+pipeline (CR 616.1). A selected rule checks its player and consumed state again.
+Consumption precedes execution, so a body-generated draw cannot use that rule
+again. Other rules can replace it. Draw ancestry comes from the proposed event,
+not the installation event; existing static exclusions remain in force. Each
+body finishes immediately before the enclosing draw sequence resumes
+(CR 121.2, 121.6, 614.5, 614.6 and 614.11). It uses no stack object. A generated
+draw cannot supply a card result to the original replaced draw instruction.
+
+Installation saves an independent resolution frame and effect context: typed
+bindings, target visits, X, controller, distributions and source incarnation.
+Body execution restores the complete outer frame. Target subjects retain their
+visits; departure and return cannot supply a new subject. Phased subjects cannot
+receive actions. Target restrictions are checked at the original resolution;
+the later body reads saved references without targeting again. Source control
+changes, phasing, departure and ability removal do not end the installed rule
+(CR 611.2a). Current and departure information use existing typed LKI services.
+Clones copy replacement consumption, context and frame storage separately.
+
+RON supports `CreateFutureReplaceWouldDraw(
+NextTimePlayerWouldDrawACardThisTurn(player), [actions])` in resolving action
+contexts. The player must be a supported typed reference; AnyPlayer is a filter,
+not a reference. The nonempty body must compile and pass definition validation.
+Existing lexical references are saved; body-produced results cannot escape the
+installation declaration. This event does not declare WouldDrawACard_ThatPlayer.
+Unknown events, malformed arguments and unsupported bodies remain errors.
+
+Aladdin's Lamp and Ring of Ma'rûf use this shared installation. Lamp's X minimum
+and library selection remain unsupported. Ring's outside-game card selection
+remains unsupported. Tests retain their real event nodes and supported costs,
+with explicit synthetic bodies; no complete-card gameplay is claimed.
+Evidence: `TestFutureDrawReplacement*` and `TestRONFutureDrawReplacement*`.

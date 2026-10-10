@@ -321,6 +321,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
 		}
+	case "future_draw_replacement_event":
+		if n.Name == "NextTimePlayerWouldDrawACardThisTurn" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 	case "draw_replacement_event":
 		if (n.Name == "PlayerWouldDrawDuringTheirDrawStep" || n.Name == "APlayerWouldDrawExceptFirstDrawStepDraw") && len(n.Args) == 1 {
 			return "player_filter"
@@ -844,6 +848,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 					return "delayed_combat_event"
 				}
 				return []string{"delayed_departure_event", "actions", "duration"}[index]
+			}
+		case "CreateFutureReplaceWouldDraw":
+			if len(n.Args) == 2 {
+				return []string{"future_draw_replacement_event", "action"}[index]
 			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {

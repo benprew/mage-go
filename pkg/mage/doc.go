@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ReplaceNextDrawThisTurn] for one saved player's next draw until cleanup.
+// The body keeps its resolution bindings, X, controller and source visit.
+// Source departure, phasing and ability removal do not end the rule.
+// Returned sources cannot replace the saved visit. Information reads use LKI.
+// The affected player chooses among rules through the shared replacement pipeline.
+// Each rule is consumed before its body runs. Generated draws keep event ancestry.
+// Bodies run immediately and restore the outer frame. Clones keep separate use.
+// RON lowers CreateFutureReplaceWouldDraw with a typed player and action list.
+// Library selection and outside-game entry need separate services.
+//
 // Use [ReplaceDraw] with [Static] for battlefield draw replacement rules.
 // [ControllerDrawStep] includes effect draws during the controller's draw step.
 // [ExceptFirstDrawStepDraw] exempts the first actual draw in a player's draw step.
