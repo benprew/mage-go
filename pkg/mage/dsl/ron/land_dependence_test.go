@@ -264,7 +264,7 @@ func TestRONLandDependenceInvalid(t *testing.T) {
 		strings.Replace(state, "SinglePlayer(You)", "SinglePlayer(You())", 1),
 		strings.Replace(state, "IsLandType(Island)", "IsLandType()", 1),
 		strings.Replace(state, "IsLandType(Island)", "IsLandType(Island,Swamp)", 1),
-		strings.Replace(state, "IsLandType(Island)", "IsCardtype(Land)", 1),
+		strings.Replace(state, "IsLandType(Island)", "IsCardtype(Land())", 1),
 		strings.Replace(attack, "ThisPermanent", "HostPermanent", 1),
 		strings.Replace(attack, "ThisPermanent", "ThisPermanent()", 1),
 		strings.Replace(attack, "DefendingPlayer,", "You,", 1),

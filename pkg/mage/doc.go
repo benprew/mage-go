@@ -1,5 +1,11 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON no-land state triggers use [ControlsNone] with a current land-type filter.
+// [WhenState] keeps one pending or active trigger per source visit and rule.
+// A new land does not cancel a pending trigger. Countering permits a new trigger.
+// Phasing and ability removal stop detection. Saved controllers and source visits
+// keep pending sacrifice rules separate. Copies and clones use shared services.
+//
 // Use [PayRequiredOrElse] for two mandatory resolution-payment branches.
 // [IfRequiredPaid] and [UnlessRequiredPaid] also accept uncaptured discard costs.
 // Required groups permit discard and matching sacrifice costs only.

@@ -72,7 +72,7 @@ func compileNoLandTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
 		return nil, unsupported(player.Args[0], "no-land trigger player reference")
 	}
-	filter, err := compileLandDependenceFilter(event.Args[1])
+	filter, err := compileNoLandStateFilter(event.Args[1])
 	if err != nil {
 		return nil, err
 	}
@@ -86,4 +86,17 @@ func compileNoLandTrigger(event, body Node, ctx scope) (optionFactory, error) {
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil
+}
+
+func compileNoLandStateFilter(n Node) (mage.PermanentFilter, error) {
+	if n.Name != "IsCardtype" {
+		return compileLandDependenceFilter(n)
+	}
+	if err := arity(n, 1); err != nil {
+		return mage.PermanentFilter{}, err
+	}
+	if n.Args[0].Kind != Symbol || n.Args[0].Name != "Land" {
+		return mage.PermanentFilter{}, unsupported(n.Args[0], "no-land state card type")
+	}
+	return compileFilter(n)
 }

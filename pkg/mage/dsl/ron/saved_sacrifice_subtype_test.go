@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -107,8 +106,8 @@ func TestRONSavedSacrificeSubtypePraetor(t *testing.T) {
 
 func TestRONSavedSacrificeSubtypeDjinn(t *testing.T) {
 	n := staticBaseRecord(t, "ARN", "Serendib Djinn")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "land dependence filter") {
-		t.Fatal("expected separate state-event blocker", err)
+	if _, err := Compile(n); err != nil {
+		t.Fatal(err)
 	}
 	rule := n.Fields["Rules"].Args[1]
 	factory := staticBaseSubrule(t, n, rule)

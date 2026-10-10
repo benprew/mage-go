@@ -16937,3 +16937,39 @@ and clones. RON `TestRONMillOneChains`, `ChainsDrawStep`, `ChainsDiscardResults`
 `ScopesAndTiming`, `DelayedSource` and `Invalid` cover the complete card and the
 shared action contexts. The existing draw-scope and required-payment tests keep
 their behavior assertions and now require complete Chains compilation.
+
+
+### RON controller no-land card-type state trigger
+
+`WhenAPlayerControlsNoPermanents(SinglePlayer(You), IsCardtype(Land))`
+lowers to `WhenState(ControlsNone(filter), body)`. The existing typed land filter
+reads current permanent types. The controller's lands need not be Islands,
+basic, nontoken, or owned by that controller. Other players' lands do not count.
+This context accepts only the bare `Land` card-type symbol. Other card types,
+composite filters and chosen/event player contexts remain rejected. Existing
+`IsLandType` state filters and defending-player attack restrictions retain their
+separate supported shapes.
+
+The engine owns state observation, pending/active arming, source incarnation,
+controller capture, shared sacrifice, replacement ordering and clone storage.
+A new land cannot cancel a pending trigger. Countering or resolving the ability
+permits it to trigger again if the condition still holds. A phased source or
+removed ability cannot detect the condition. A phased land does not count.
+A pending trigger cannot sacrifice a returned source or a source now controlled
+by another player. Copies use their own controller. No additional engine service
+is required (CR 603.8, 400.7, 701.21a).
+
+Serendib Djinn's complete unchanged ARN record uses the same stack services for
+its upkeep sacrifice and saved Island result. The sacrifice occurs at resolution;
+an Island dual land or token qualifies. An exile replacement retains a completed
+sacrifice result. Damage uses the original source's information after departure
+and the captured upkeep controller; prevention applies through shared damage.
+The last-land sacrifice can queue the state trigger, which resolves separately.
+
+Evidence: `TestRONNoLandTypeDjinnUpkeep`, `TestRONNoLandTypeDjinnState`,
+`TestRONNoLandTypeDjinnInactiveAndLastLand`, `TestRONNoLandTypeDjinnCasting`,
+`TestRONNoLandTypeInvalid`, `TestNoLandTypeStateContract` and
+`TestNoLandTypeStatePhaseCycle`. Existing land-dependent and saved-sacrifice
+subtype tests remain regression evidence, including canceled and altered
+replacement outcomes. Compilation and complete-record gameplay gain one name
+and one record. No RON or Oracle text changes.

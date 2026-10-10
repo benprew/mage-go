@@ -2,17 +2,18 @@
 
 ## Current status
 
-The isolated slice reports **818 accepted / 168 rejected names** (986 total),
-**2,119 compiled / 326 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **819 accepted / 167 rejected names** and
-**2,120 compiled / 325 rejected records**. The strict loader rejects the
+The isolated slice reports **819 accepted / 167 rejected names** (986 total),
+**2,120 compiled / 325 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **820 accepted / 166 rejected names** and
+**2,121 compiled / 324 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-SINGLE-CARD-MILL lowers MillACard through the typed player scope to shared Mill.
-The complete unchanged Chains of Mephistopheles record now executes both branches.
-Actual discard outcomes, draw ancestry, competing order, timing, source lifecycle,
-LKI, delayed reads and clones have tests. Compilation and complete-card gameplay
-gains are **1 name / 1 record**. No RON changed. All required native checks pass.
+CONTROLLER-NO-LAND-CARD-TYPE lowers IsCardtype(Land) in controller state triggers.
+The complete unchanged Serendib Djinn record now executes all three rules.
+Upkeep sacrifice, Island-result damage, state arming, timing, identity, phasing,
+replacements, copies, clones and casting rollback have tests. Compilation and
+complete-card gameplay gains are **1 name / 1 record**. No RON changed.
+All required native checks pass.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -69822,3 +69823,148 @@ definition edits, authoring docs and .gitignore remain outside the commit.
    selection/Aura lifecycle and Lamp/Ring zone choices remain larger gaps.
 
 Migration remains incomplete. This run stops after SINGLE-CARD-MILL.
+
+## Run 2026-10-10: CONTROLLER-NO-LAND-CARD-TYPE
+
+Status: complete one vertical adapter slice. No second capability was started.
+
+### Candidate comparison and selection
+
+Fresh complete records and targeted vocabulary keys were inspected before edits.
+Reprints count once. The latest ranked candidates were evaluated in order:
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Controller no-land state filter, IsCardtype(Land) | Serendib Djinn | 1 name / 1 record | No remaining blocker; shared state filter composition retains existing subtype callers. Full upkeep sacrifice/result damage is already supported. | Small adapter; complete-record upkeep, lifecycle, invalid-input and native service tests. |
+| Saved-player UntilPlayersNextTurn duration | Island Sanctuary; Firestorm Phoenix | 0 names / 0 records for the prerequisite | Enables both future player-rule lifetimes. Sanctuary still needs CantBeAttackedExceptBy; Phoenix still needs death replacement, exact returned hand visit, reveal and play restriction. | Medium/large: turn-start expiry, skipped/extra turns, saved identity and clone lifecycle across different rule services. |
+| CantBeAttackedExceptBy filter | Island Sanctuary | 0 until duration support; eventually 1 name / 6 records | Depends on saved-player next-turn lifetime and correct temporary player attack-rule service. | Medium after prerequisite: live attack legality, layer/ability independence, source departure and clone contracts. |
+
+Candidate #1 is dependency-ready. It offers the largest credible immediate gain
+for this bounded run. The two other candidates have concrete future value but
+need larger rule/lifetime contracts and unlock no complete records independently.
+This slice keeps the reusable engine boundary: it supplies a missing filter
+adapter rather than introducing new state observation or sacrifice mechanics.
+
+### Exact shapes, contexts and engine reuse
+
+RON supports:
+TriggerA(WhenAPlayerControlsNoPermanents(SinglePlayer(You), IsCardtype(Land)), body).
+`body` uses the existing complete action compiler. `Land` must be a bare symbol;
+wrong arity, tuple arguments, other card types, composite filters and unbound or
+incompatible players are rejected during compilation. Existing supported
+IsLandType state filters stay supported. The new shape does not expand the
+separate defending-player attack restriction context.
+
+Exact shared engine signatures remain:
+ControlsNone(PermanentFilter) StateCondition;
+WhenState(StateCondition, ResolvingEffect, ...TriggerOption) TriggeredAbility;
+Sacrifice(PermanentRef) ResolvingEffect;
+SacrificeChosenBy(PlayerRef, PlayerRef, PermanentSet, ...SacrificeResultOption) ResolvingEffect.
+No new exported engine function is needed. Native tests verify current card type,
+token lands, control, phasing, canceled sacrifice, batch completion, arming and
+clone behavior. RON supplies spelling checks and lowering to these mechanics.
+Fresh factories retain separate trigger IDs, source visits and local result
+bindings. No card-name branch, Go factory fallback, global result slot or partial
+production registry was added.
+
+Rules evidence: CR 603.8 (state triggers), 400.7 (new objects), 701.21a
+(sacrifice), and the existing land-dependence/saved-sacrifice contracts. Complete
+ARN Serendib Djinn RON was compared with local data/ARN.json Oracle text:
+Flying; controller upkeep land sacrifice with Island-result damage; controller
+no-lands state-trigger self-sacrifice. No source-data defect was found.
+No RON changed, so the vocabulary source/hash snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+Before adapter implementation, all complete-record gameplay cases and the
+upgraded saved-sacrifice test fail at ARN.ron:68:464: unsupported land dependence
+filter (IsCardtype). The first test build found fixture API mistakes (token
+construction and an unused import); these were corrected before confirming the
+expected missing-adapter assertion failure. No production code changed before
+that expected failure was confirmed.
+
+| Card/context | Evidence |
+| --- | --- |
+| Serendib Djinn, unchanged full ARN record | TestRONNoLandTypeDjinnUpkeep covers own/opponent upkeep timing, chosen Island/Swamp/dual/token land, foreign ownership, exile replacement, damage prevention, source departure/return and clone sacrifice isolation. Intrinsic flying and 5/6 characteristics are checked. |
+| Djinn no-land trigger and pending identities | TestRONNoLandTypeDjinnState covers a non-Island land satisfying the condition, foreign lands and own artifacts not satisfying it, pending-trigger suppression, acquired land, counter/rearm, control change, phase cycle, source return, copies, clones, independent instances and pending ability removal. |
+| Djinn detection and interaction between its rules | TestRONNoLandTypeDjinnInactiveAndLastLand covers phased source, phased land, removed abilities and last-Island upkeep sacrifice/damage followed by a separate state-trigger sacrifice. |
+| Djinn casting and payment | TestRONNoLandTypeDjinnCasting covers wrong mana, resource rollback, exact successful payment and permanent spell entry. |
+| Invalid declarations | TestRONNoLandTypeInvalid rejects malformed filters, unsupported card types, composites, wrong player context and unbound event/chosen players. Existing invalid land-dependence tests retain a malformed Land tuple rejection. |
+| Native state mechanics | TestNoLandTypeStateContract checks token lands, current type loss, control, phasing, canceled sacrifice/rearm, batch observation, acquired land and cloned pending triggers. TestNoLandTypeStatePhaseCycle checks absent source detection and restoration. Existing TestSavedSacrificeSubtypeAction covers cancellation and replacement-time characteristic changes. |
+| Existing callers | TestRONSavedSacrificeSubtypeDjinn now requires the complete record to compile before retaining its focused upkeep assertions. TestRONLandDependence* covers Dandân, Sea Serpent, Pirate Ship, Island Fish Jasconius and Vodalian Knights, with existing subtype/attack contracts unchanged. |
+
+The last-land fixture uses ResolveTopOfStack to observe the separate state
+trigger before resolving it; ResolveStack correctly drains newly queued triggers.
+The native phase fixture begins with a land because entry without a land already
+queues the state trigger before phasing. These fixture corrections preserve the
+engine's existing timing rather than changing it.
+
+### Verification and measured results
+
+Baseline make build passes. Fresh go test ./pkg/mage/dsl/ron -short -count=1
+passes (39.919s). Baseline strict loader exits 1 for collection rejection:
+819 accepted / 167 rejected names and 2,120 compiled / 325 rejected records.
+This is collection rejection, not a build or environment failure.
+
+Focused go test ./pkg/mage/dsl/ron -run
+'TestRON(NoLandType|SavedSacrificeSubtypeDjinn|LandDependence)' -count=1 passes.
+Native go test ./pkg/mage -run
+'Test(NoLandTypeState|SavedSacrificeSubtypeAction)' -count=1 passes.
+make build and go vet ./... pass.
+
+The first engine short run exposed three stale expectations: a former Djinn
+unsupported-card assertion and two upkeep-text inventories (54/115). They now
+require full compilation and 55 names / 116 records, with explicit Djinn membership.
+All behavior assertions stay in place. The subsequent engine short run passes
+(RON 45.414s). Full-suite and lint results are recorded below before commit.
+
+- Final engine short tests pass (RON 45.414s). make test passes (RON 48.941s).
+- make lint passes with zero issues. A file-content hash audit finds no automatic
+  lint changes. git diff --check and git diff --cached --check pass.
+- An isolated checkout containing HEAD plus only this staged slice passes focused
+  RON gameplay, upkeep inventory and collection-count tests (1.063s), make build,
+  go vet ./... and engine short tests (RON 44.915s). Its strict loader exits 1:
+  819 accepted / 167 rejected names; 2,120 compiled / 325 rejected records.
+- The final post-lint worktree loader exits 1 for unsupported collection records:
+  820 accepted / 166 rejected names; 2,121 compiled / 324 rejected records.
+- Only this completed slice is staged for
+  git commit -m "feat(ron): implement controller no-land state filter".
+
+Fresh loader compares exactly one newly accepted name, Serendib Djinn, and no
+newly rejected names. Worktree: **820 accepted / 166 rejected names**, **2,121
+compiled / 324 rejected records**, 986 names and 2,445 records total. Estimated
+and actual compilation gains agree: one name / one record. This run adds
+complete-record gameplay evidence for that same card; acceptance alone is not
+gameplay proof. Strict collection loading still exits 1 and publishes no registry.
+Remaining examples include Sanctuary's UntilPlayersNextTurn, Phoenix's
+ReplaceWouldPutIntoGraveyard and Jihad's unsupported chosen-color entry context.
+
+Initial unrelated changes remain outside the commit: repeated-entry engine/RON
+work and Eureka expectations, optional-hand-entry and definition changes,
+compiler/inventory edits, .gitignore, authoring/design docs and ledger archive
+relocation. The isolated commit has **819 accepted / 167 rejected names** and
+**2,120 compiled / 325 rejected records** because it excludes Eureka support.
+Only this slice's count delta, documentation additions, status update and appended
+ledger entry are staged. Go definitions and public DSL services remain: their
+runtime/test migration and removal gates are not met. No unused DSL removal is
+claimed. No environmental blocker or source correction exists.
+
+Changed files: pkg/mage/dsl/ron/land_dependence.go, no_land_type_test.go,
+chosen_sacrifice_test.go, text_upkeep_layer_test.go and text_upkeep_trigger_test.go,
+land_dependence_test.go, saved_sacrifice_subtype_test.go, definition_plan_test.go,
+inventory_test.go and numeric_consumers_test.go; pkg/mage/no_land_type_test.go
+and doc.go; docs/engine-rules-contracts.md and this ledger.
+
+### Ranked next candidates
+
+1. Saved-player UntilPlayersNextTurn lifetime prerequisite for Island Sanctuary
+   and Firestorm Phoenix. Zero immediate unlocks; concrete downstream two-card
+   benefit. Keep each player's actual next turn, skipped/extra turns and clones.
+2. Sanctuary CantBeAttackedExceptBy after that lifetime contract. One name /
+   six records when both services exist; test flying/islandwalk attack legality,
+   live subjects and source-independent temporary rules.
+3. Shared returned-hand card restriction/reveal lifetime services for Firestorm
+   Phoenix, followed by its death replacement adapter. Exact hand visits and
+   owner-bound expiration are required; no full-card gain until all rules work.
+
+Migration remains incomplete. This run stops after CONTROLLER-NO-LAND-CARD-TYPE.
