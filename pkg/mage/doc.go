@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithManaTapSpellTextContinuation] for one global land mana event rule.
+// [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
+// RON marks one AnyPlayer TriggerA land event or its produced-type bonus.
+// Each build has fresh event bindings and targets. Mana bonuses use the shared
+// planner and production service. Other triggers keep their stack timing.
+// Copies enter as tokens. Clones keep separate rules. Phasing keeps the visit.
+// Later text layers use the continued baseline. Removal stops the rule.
+// Pending triggers keep prior rules and event facts. Copy values exclude word
+// changes. LKI keeps final rules; returned cards use printed rules.
+// Mixed, attached and other spell rules require separate contracts.
+//
 // Use [WithSpellTextContinuation] for one ordinary instant or sorcery action.
 // [Game.RevisePrintedSpellText] changes its rules during the exact stack visit.
 // RON marks its ordinary SpellActions path without additional casting costs.

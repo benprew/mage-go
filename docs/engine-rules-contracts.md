@@ -1,5 +1,57 @@
 # Engine rules contracts
 
+## Typed land-mana-event permanent-spell text continuation
+
+`WithManaTapSpellTextContinuation() CardOption` marks a nonland, non-Aura
+permanent with one `GenericTriggered.WithLayeredManaTapTextRevision()` rule
+or one global `ManaBonusAbility.WithLayeredManaTapTextRevision()` rule.
+Intrinsic keywords, sibling abilities, modes, casting targets, additional or
+alternate costs and other continuation markers reject at definition validation.
+Attached events and bonuses require a separate entry contract.
+
+RON selects exactly one existing
+`TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)), body)`.
+The existing compiler validates all filters, actions, targets and lexical scopes.
+The exact produced-type bonus uses the shared mana planner and production
+service; other supported bodies use their typed trigger and normal stack timing.
+No unsupported body or declaration becomes accepted through this recognizer.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks the retained semantic builder, declaration group and exact stack visit.
+Fresh rules must retain the native ability kind, event capture flags, event
+attachment and type-filter context, target-group shape and body count. Bonuses
+retain fixed/produced-type and recipient context. Subtype context stays fixed.
+Empty or invalid changes, missing builders/groups, changed contexts, departed
+visits and foreign announcement bodies, targets or casting results reject
+atomically. Physical identity, owner, controller, payment and cast facts remain.
+Each fresh build has separate targets and player/permanent/mana-type bindings.
+
+Entry retains ordered changes with the physical card's identity and printed
+departure rules (CR 400.7a, 608.3a). Spell copies enter as tokens; game clones
+keep separate continued rules (CR 707.10f). Mana Flare retains immediate mana
+production, actual replaced types and planner agreement. Manabarbs retains stack
+timing and the exact saved event player (CR 605.1b, 605.4a, 605.5a).
+Later declaration text layers use the continued baseline. Expiry restores it;
+phasing retains the visit; ability removal suppresses the rule. Pending triggers
+and copied triggers keep prior targets, rules and event facts after departure.
+Copy values exclude ordinary word changes; departure LKI keeps final rules;
+recasts use printed rules (CR 612.1–3, 613.1c/f, 707.2). A copy exception that
+adds Land clears the spell-only marker while retaining its mana-event rule.
+
+Evidence: `TestRONTextManaTapSpellRecords` casts and revises all 12 complete
+records for Mana Flare and Manabarbs. Inventory maps exactly those two names.
+Lifecycle covers revised targets, ordered changes, token copies, independent
+stack/game clones, later layers, expiry while phased, removal/restoration,
+control, copiable values, LKI and printed recasts. ManaProduction covers replaced
+multi-type production, manual/planned agreement, cost rollback and clone/phasing
+isolation. PendingEvents covers separate saved players, trigger copies and
+source departure. IllegalTargets covers resolution legality. CopyExceptions
+covers an added Land type. Boundaries rejects invalid syntax/scopes and retains
+unsupported mixed and Aura contexts. `TestTextManaTapSpell*` covers native
+markers, nil rules, incompatible contexts and rejection without mutation.
+Mixed static/event rules, Aura mana events, whole-object dispatch and the text
+changing spell adapters remain separate gaps. No RON source changed.
+
 ## Typed cast-event permanent-spell text continuation
 
 `WithSpellCastSpellTextContinuation() CardOption` marks a permanent with one

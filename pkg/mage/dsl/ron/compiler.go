@@ -317,6 +317,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	intrinsicCreatureSpellText := false
 	copyEntrySpellText := false
 	globalStaticSpellText := false
+	manaTapSpellText := false
 	spellCastSpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
@@ -324,6 +325,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapSpellTextRules(rules)
 		spellCastSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && spellCastSpellTextRules(rules)
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && globalStaticSpellTextRules(rules)
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
@@ -426,6 +428,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		for _, buildOption := range options {
 			opts = append(opts, buildOption())
+		}
+		if manaTapSpellText {
+			opts = append(opts, mage.WithManaTapSpellTextContinuation())
 		}
 		if spellCastSpellText {
 			opts = append(opts, mage.WithSpellCastSpellTextContinuation())
