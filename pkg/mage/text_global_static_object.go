@@ -76,6 +76,9 @@ func (e *permanentObjectTextChange) Apply(ctx *EffectContext) error {
 	if intrinsicSpellTextContext(p.Card) == nil {
 		return ctx.Game.AddPrintedIntrinsicCreatureTextEffect(p, e.duration, changes...)
 	}
+	if activatedObjectTextContext(p.Card) == nil {
+		return ctx.Game.AddPrintedActivatedObjectTextEffect(p, e.duration, changes...)
+	}
 	if globalGrantObjectTextContext(p.Card) == nil {
 		return ctx.Game.AddPrintedGlobalGrantTextEffect(p, e.duration, changes...)
 	}

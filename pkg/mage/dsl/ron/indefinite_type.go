@@ -21,7 +21,7 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	}
 	for _, part := range parts {
 		if part.Name == "ReplaceColorWordVariableWithNewColorWordVariable" || part.Name == "ReplaceLandTypeVariableWithNewLandTypeVariable" {
-			return compileIntrinsicObjectText(n, ctx, subject, parts)
+			return compilePermanentObjectText(n, ctx, subject, parts)
 		}
 	}
 	if len(parts) != 1 {

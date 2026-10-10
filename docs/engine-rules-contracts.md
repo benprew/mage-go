@@ -15919,3 +15919,50 @@ Magical Hack and Sleight of Mind still reject `CreateSpellEffect`; this contract
 adds target interactions without claiming complete consumer gameplay or any
 new collection acceptance. The existing intrinsic and global P/T/land dispatch
 APIs retain their contracts.
+
+
+## Complete ordinary activated object text
+
+`Game.AddPrintedActivatedObjectTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` changes every printed ordinary activated declaration
+on one exact face-up battlefield visit. `ChangePrintedPermanentText(subject
+PermanentRef, duration core.Duration, changes ...TextChangeRef) ResolvingEffect`
+now dispatches this context as well as its existing intrinsic and global contexts.
+
+A complete definition must contain one or more `ActionActivated` declarations
+marked with `WithLayeredTextRevisionActivationState`, optionally with fixed
+intrinsic keywords. Land, Aura, instant/sorcery, mixed static/event definitions,
+casting targets/costs, unmarked/granted declarations and live copy rebinding are
+outside this context. Duration is `Indefinite` or `EndOfTurn`. A removed, phased,
+returned or face-down source cannot receive a new installation.
+
+Preflight checks the complete retained and rebuilt definitions, printed groups,
+fixed keywords, subtypes, activation shapes and all active runtime declarations.
+An isolated game probe runs the existing declaration-level service for each rule.
+Only after every check passes are the text layers installed and recomputed.
+A missing second runtime declaration leaves no partial first-declaration change.
+
+Each declaration reuses `printedActivatedTextEffect` and its ordered baseline.
+The existing activation service retains IDs, timing, limits, history, payment X,
+targets, choices and result bindings. Pending bodies retain their earlier rules,
+selected modes, targets and controller. Ability removal and restoration retain
+state; cleanup resets limits even while phased. Clones have separate rule state.
+Phasing keeps the visit. Departure retains final LKI; physical return and captured
+copy values use printed rules. The shared cost transaction checks legality before
+payment. No new payment, event, replacement or zone subsystem is introduced.
+
+RON keeps the existing resolving shape
+`CreatePermanentLayerEffect(permanentRef, [wordSubstitution, ...])`; typed preceding
+color/basic-land pair choices supply each substitution. `compilePermanentObjectText`
+lowers this shape through the complete-context dispatcher. Missing producers,
+wrong word roles, equal-word reads and mixed modifications still reject at compile
+time. Mana symbols and names stay fixed under CR 612.2; granted rules are excluded
+under CR 612.3. Layers, departure and copies use CR 613.1c, 400.7 and 707.2.
+
+Evidence: native `TestTextActivatedObjectAtomic`; RON
+`TestRONTextActivatedObjectRecords` (Frozen Shade, Granite Gargoyle, Shivan Dragon,
+Prodigal Sorcerer, Northern Paladin, Circle of Protection: Red; all 36 reprints),
+`Siblings`, `TimingRemovalAndControl`, `PendingChoices`, `LandWordsAndResults`,
+`Modal` and `Boundaries`. Complete Magical Hack and Sleight of Mind still reject
+`CreateSpellEffect`; their extracted permanent branches are explicit test fixtures.
+This contract establishes another shared prerequisite, not complete consumer play.

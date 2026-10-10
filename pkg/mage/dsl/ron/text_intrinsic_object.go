@@ -5,7 +5,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func compileIntrinsicObjectText(n Node, ctx scope, subject permanentReferencePlan, parts []Node) (effectFactory, error) {
+func compilePermanentObjectText(n Node, ctx scope, subject permanentReferencePlan, parts []Node) (effectFactory, error) {
 	if len(parts) == 0 {
 		return nil, problem(n, "supply text substitutions")
 	}

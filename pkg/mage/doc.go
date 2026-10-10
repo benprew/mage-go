@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedActivatedObjectTextEffect] for complete ordinary actions.
+// Every printed ability must permit layered activation text revision. Fixed
+// intrinsic keywords can stay. [ChangePrintedPermanentText] checks this context.
+// All declarations pass preflight before installation. Each keeps its baseline,
+// targets, payments, modes, limits, history and pending bodies. Shared services
+// keep ordered layers, expiry, clones, control, phasing, removal and LKI.
+// Return uses printed rules. Mixed, attached and live copy rules stay separate.
+//
 // Use [Game.AddPrintedGlobalGrantTextEffect] for complete global grants.
 // Every printed rule must be a marked grant. Fixed intrinsic keywords can stay.
 // [ChangePrintedPermanentText] checks this context before it installs layers.
