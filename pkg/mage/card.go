@@ -72,6 +72,8 @@ type BaseCard struct {
 	printedDefinitionPlan *CardDefinitionPlan
 	departureCard         Card
 	landAuraSpellText     int
+	intrinsicSpellText    int
+	textEntryValues       *copiableCharacteristics
 }
 
 // AuraAIProfile tells the AI how an aura affects the creature it enchants so
@@ -200,6 +202,8 @@ func (c *BaseCard) AddAbility(a Ability) {
 
 func (c *BaseCard) CloneFrom(other Card) {
 	c.landAuraSpellText = 0
+	c.intrinsicSpellText = 0
+	c.textEntryValues = nil
 	c.abilityKeys = nil
 	c.abilityGroups = nil
 	c.abilityGroupProblem = ""

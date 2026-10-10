@@ -8,11 +8,12 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`LAND-AURA-SPELL-TEXT-ENTRY` carries checked fixed/chosen host land-type rules
-from pending Aura spells through entry and physical printed departure. Evil
-Presence and Phantasmal Terrain have new continuation evidence across **2 names /
-12 complete records**. Acceptance gain is **0 names / 0 records**. Copy-entry,
-whole-object text and the complete word-changing spells remain incomplete.
+`INTRINSIC-CREATURE-SPELL-TEXT-ENTRY` carries checked protection and basic
+landwalk from pending creature spells through entry and printed departure.
+Continuation evidence covers **14 names / 34 complete records**. Acceptance
+gain is **0 names / 0 records**. Printed copy values, later text-layer baselines,
+cloning, phasing and departure remain separate. Copy-entry, whole-object text
+and the complete word-changing spells remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -63691,3 +63692,167 @@ Ranked next candidates:
    spell/permanent branch is ready.
 
 Stop after this slice. Migration completion is not claimed.
+
+## 2026-10-09: intrinsic creature spell text entry continuation
+
+Status: completed implementation slice `INTRINSIC-CREATURE-SPELL-TEXT-ENTRY`.
+This run stops after this slice. Migration completion is not claimed.
+
+### Candidate comparison and selection
+
+The latest entry ranked intrinsic noncopy entry first, copy entry second and
+whole-object text dispatch third. Complete RON records and nested forms were
+inspected; identical reprints were checked together. The first candidate is
+dependency-ready and was selected.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Intrinsic creature spell text entry | Black Knight, White Knight, Bog Wraith, Shanodin Dryads, Cat Warriors, Devouring Deep, Knights of Thorn, Lost Soul, Marsh Goblins, Mountain Yeti, Repentant Blacksmith, Righteous Avengers, Segovian Leviathan, Wall of Light: 14 names / 34 records; 0 new accepted names. | Existing intrinsic text/layer services and the prior Aura entry path are available. Landwalk entry needs checked copy provenance. Supplies a concrete prerequisite for the spell branches of Magical Hack and Sleight of Mind, including mixed protection/landwalk declarations. | Medium: one marker, checked dispatch/entry, provenance and lifecycle tests; completes in this run. |
+| Copy-entry spell text continuation | Clone and Copy Artifact: 2 names / 12 records; 0 new accepted names. | Optional entry acquires donor rules and Copy Artifact adds Enchantment. Continuing changes must apply to those rules after layer 1, preserve donor copiable values and reject unsupported declarations. A checked donor-rule continuation contract is still missing. Enables both word-changing spells against copy-entry spells. | Larger: donor rebinding, entry replacement order, copy exceptions and independent lifecycle tests. |
+| Whole-object word-change dispatch/lifetime | Magical Hack and Sleight of Mind: 2 names / 12 records; potentially 2 full-card unlocks after all prerequisites. | Complete Targeted_Modal records contain independent spell/permanent branches, paired choices, CreateSpellEffect and CreatePermanentLayerEffect. Spell lowering and whole-object permanent installation still lack complete dispatch across all declaration and entry kinds. Candidate 1 and donor continuation are concrete missing prerequisites. | Large: multiple pending/permanent branches and layer lifetime contracts; cannot credibly complete as one small slice now. |
+
+Candidate 1 gives shared value across more complete records at lower effort.
+The shape also covers Mountain Yeti's simultaneous landwalk and protection.
+Sol'kanar the Swamp King's extra cast trigger and Clone's optional copy entry
+remain outside this marker. Their existing ordinary compilation is preserved.
+This is an engine-contract and compiler-adapter change, not a source-data repair.
+
+### Supported signatures, context and engine boundary
+
+- `WithIntrinsicCreatureSpellTextContinuation() CardOption` marks exactly one
+  creature-only definition with nonempty intrinsic protection/basic landwalk
+  declarations and optional ordinary keyword seeds. Duplicate markers, extra
+  card types, casting targets, modes, additional/alternate costs, nil/unmarked
+  intrinsic declarations, unrelated abilities and unmatched landwalk seed counts
+  fail validation. Copy-entry and other entry operations require other contracts.
+- RON marks only complete top-level rule lists of
+  `Protection(FromColor(Colors([color, ...])))`,
+  `Landwalk(IsLandType(basicType))` and supported ordinary keyword symbols.
+  Color lists must be nonempty; basic landwalk uses a fixed basic land type.
+  Other rule lists continue through their existing compiler paths. Desert and
+  legendary landwalk do not receive this marker. RON owns spelling and context;
+  mage owns execution. No card-name branch or Go-card fallback was added.
+- `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+  gains checked intrinsic dispatch for an exact retained stack visit. Fresh
+  semantic definitions must retain declaration groups, intrinsic kinds, color
+  list cardinality, nonlandwalk keyword contributions and subtypes. Empty/invalid
+  changes, foreign casting results, missing builders/groups, changed contexts
+  and departed visits reject before mutation. Ordered substitutions accumulate.
+- Revision keeps the physical card, identity, controller, owner, announced X,
+  mana payment, cast facts and color override. Resolution builds fresh revised
+  intrinsic rules through the shared entry pipeline and retains the physical
+  printed departure card. External entry rules still apply. The battlefield
+  visit keeps separate intrinsic contributions and later text-layer baselines.
+- Spell copies enter as tokens with independent rules and controllers; clones
+  keep separate changes. Phasing keeps the visit. Layer 6 removal/restoration
+  and later layer 3 expiry restore continued rules. Departure LKI keeps final
+  rules; a physical recast uses printed rules.
+- `Game.CaptureCopiableValues(source *Permanent) (*CopiableValues, error)`
+  checks a private immutable snapshot of the validated entry characteristics
+  when landwalk text changed its intrinsic seeds. It still returns the printed
+  copiable definition and rejects later untracked changes. The permanent-spell
+  token wrapper now uses its retained definition for the same checked query.
+  This is required to keep ordinary text changes outside copy values.
+
+Reuse: BuildTextChangedDefinition, BuildTextDefinitionRevision, retained RON AST
+semantic roles, CardDefinitionPlan, declaration groups, cloneStackObject,
+permanent-spell entry and token wrappers, printed-departure cards, protection and
+landwalk rules, per-declaration text layers, phasing, LKI and copy provenance.
+No parallel zone, payment, event, replacement, layer or simultaneous-operation
+subsystem was added. Existing damage batches retain their replacement ordering;
+no new cost is paid by this slice. Local rules read: CR 400.6/7/a, 608.3a/b/f,
+612.1–4, 613.1a/c/f, 702.14a–e, 702.16a–n and 707.2/10f.
+
+### Failing-first and card-to-test mappings
+
+Before production edits, TestRONTextIntrinsicSpellRecords failed for all 34
+complete records at the existing ordinary instant/sorcery continuation boundary.
+The native Declaration test failed compilation because the new marker did not
+exist. Initial fixture method names were corrected before confirming the RON
+assertion failure. Copies later failed at retained copy provenance for the
+permanent-spell token wrapper, before that adapter was added.
+
+| Complete cards/contract | Evidence |
+| --- | --- |
+| Black Knight and White Knight, each LEA/LEB/2ED/3ED/CED/CEI | Records casts each complete card, revises protection, checks retained first strike, payment, entry identity/P/T, clone entry, printed copy values, phasing, departure and printed recast. ProtectionGameplay uses Black Knight for a shared damage batch, illegal blue targeting without payment, blocking, attachment refusal, an external entry rule and departure LKI. |
+| Bog Wraith and Shanodin Dryads, each same six sets | Records checks changed landwalk and evasion, former keyword removal, printed copy values, clone entry, phasing, LKI and printed recast. Copies uses Bog Wraith to prove ordered substitutions, separate original/copy/clone rules, copy-controller token entry and printed token copy values. |
+| Cat Warriors, Devouring Deep, Lost Soul, Righteous Avengers, Segovian Leviathan (LEG); Marsh Goblins (DRK) | Records casts every complete card and checks its changed basic-landwalk contribution, actual evasion, lifecycle and printed copy/recast behavior. |
+| Knights of Thorn (DRK), Repentant Blacksmith (ARN), Wall of Light (LEG) | Records casts complete cards, checks changed protection and retained independent banding/defender where present, then clone/copy/phasing/departure/recast behavior. |
+| Mountain Yeti (LEG) | Records changes both printed landwalk and protection in one pending spell and checks their independent entry/lifecycle/copy behavior. |
+| Intrinsic layer contracts | Layers uses complete synthetic RON with first strike, duplicate landwalk and a protection color set. Later effects change one landwalk contribution and one color; sibling keywords/colors remain. Repeated passes, clone isolation, layer 6 removal/restoration, expiry while phased and granted-rule rejection retain the continued baseline. |
+| Declaration and mutation boundaries | RON Boundaries rejects malformed forms and proves complete Clone and Sol'kanar retain atomic unsupported-revision errors; Magical Hack and Sleight of Mind still reject compilation. Native Declaration checks invalid markers/types/costs/targets/rules. RejectsAtomic checks invalid words, kinds, keywords, subtypes, foreign results, absent builders/groups and countered visits. CopyProvenance rejects an untracked keyword mutation after valid continuation. Inventory verifies that all 34 supported records have gameplay mappings. |
+
+Existing protection/landwalk layer, target-legality, combat, banding, first-strike
+and defender regressions also pass in the full suite. Continuation evidence and
+whole-collection gameplay completion remain separate. The new tests do not
+claim complete Magical Hack/Sleight of Mind gameplay.
+
+A proposed Kismet fixture failed because its ReplaceWouldEnter adapter remains
+unsupported. The fixture was replaced with the engine's existing external
+entry-rule service; Kismet was not implemented and no accepted behavior was
+weakened. Direct attachment is refused by protection, so the test asserts the
+unchanged attachment identity rather than assuming an unattached Aura has moved.
+No source defect was found or corrected. RON files, vocabulary and hashes are
+unchanged. Runtime cutover and removal gates remain unmet; no Go card definition,
+generator or DSL service was removed.
+
+### Verification and loader evidence
+
+- Fresh baseline make build passed; go test ./pkg/mage/dsl/ron -short -count=1
+  passed (35.124s). Baseline strict loader exited 1 for unsupported collection
+  records, independently of the successful build/tests.
+- Focused go test ./pkg/mage/dsl/ron -run TestRONTextIntrinsicSpell -count=1
+  passed; post-lint allocation fixes passed again (0.566s). Native
+  go test ./pkg/mage -run TestTextIntrinsicSpell -count=1 passed again (0.443s).
+- make build and go vet ./... passed.
+- go test ./pkg/mage/... -short -count=1 passed (RON 39.729s).
+  make test passed (RON 36.971s).
+- Initial make lint found two prealloc issues in the new tests. Both capacities
+  were corrected. Automatic changes were reviewed; no unrelated source change
+  was required. Final make lint passed with 0 issues; git diff --check passed.
+- A clean HEAD-plus-slice export excludes every pre-existing change. Its
+  make build, go vet ./... and make test passed (RON 43.964s). Post-fix focused
+  checks passed there (RON 0.933s, native 0.514s). Strict loader exited 1:
+  812 accepted / 174 rejected names and 2,098 compiled / 347 rejected records.
+  Its extra rejection is Eureka, from excluded repeated-entry work. Mana Clash's
+  diagnostic differs only because that unrelated adapter is excluded. No other
+  diagnostic differences exist. This slice is dependency-ready without that work.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected unique names**, **2,099 compiled / 346 rejected records**, across
+  986 names / 2,445 records. Parsed JSON and all diagnostics exactly equal the
+  fresh worktree baseline. Unsupported collection loading remains atomic.
+  Remaining gaps include CreateSpellEffect, EnchantGraveyardCard,
+  SacrificeAllPermanentsExceptForNum and AddAbility in copy modifications.
+- Estimated acceptance gain was 0 names / 0 records; actual gain is exactly
+  0 / 0. The new evidence covers intrinsic text continuation for 14 already
+  accepted unique names / 34 records. Compilation and gameplay counts were
+  not conflated. No unresolved build, test, lint or environment blocker remains.
+
+Changed files: pkg/mage/card.go, copiable_values.go, definition.go, doc.go,
+stack_resolver.go, text_spell_continuation.go; new text_intrinsic_spell.go and
+native test; pkg/mage/dsl/ron/compiler.go; new RON text_intrinsic_spell.go and
+test; docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+
+The worktree began with unrelated repeated-entry/Eureka changes, shared
+compiler/docs changes, and a ledger archive/reorganization. Only this slice's
+hunks are staged. The commit retains the existing tracked ledger history;
+the user's archive/reorganization, other changes and untracked files remain
+in the worktree. No Go-card or DSL-removal gate is satisfied yet.
+
+Ranked next candidates:
+
+1. Copy-entry spell text continuation for Clone and Copy Artifact. First supply
+   the checked donor-rule continuation contract, with continuing substitutions
+   after copy acquisition, independent copy values and explicit rejection of
+   unsupported declarations. The intrinsic and land-Aura entry paths now have
+   concrete reusable identity, departure and copy-provenance evidence.
+2. Noncopy permanent-spell continuation for complete static basic-land-type and
+   animation contexts: Blood Moon and Titania's Song. Reuse their existing
+   static text-layer services and the checked semantic entry/provenance path;
+   confirm all contained declarations before selecting this extension.
+3. Whole-object permanent word-change dispatch/lifetime and complete
+   CreateSpellEffect lowering for Magical Hack and Sleight of Mind after their
+   remaining spell/permanent and copy-entry contexts are dependency-ready.
+
+Stop after this slice. Complete collection gameplay, runtime integration,
+Go-card deletion and unused-DSL removal remain unfinished.

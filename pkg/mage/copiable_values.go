@@ -111,11 +111,19 @@ func (g *Game) CaptureCopiableValues(source *Permanent) (*CopiableValues, error)
 			return nil, fmt.Errorf("copiable values cannot read an untracked copy layer")
 		}
 	}
-	card, ok := current.Card.(*BaseCard)
+	definition := current.Card
+	if copied, ok := definition.(permanentSpellCopyCard); ok {
+		definition = copied.Card
+	}
+	card, ok := definition.(*BaseCard)
 	if !ok || card == nil || card.copiableValues == nil {
 		return nil, fmt.Errorf("copiable values require retained definition provenance")
 	}
-	if !card.copiableValues.printed.matches(card) {
+	characteristics := &card.copiableValues.printed
+	if card.textEntryValues != nil {
+		characteristics = card.textEntryValues
+	}
+	if !characteristics.matches(card) {
 		return nil, fmt.Errorf("copiable values cannot read untracked characteristic changes")
 	}
 	if card.definitionPlan != card.copiableValues.definition {

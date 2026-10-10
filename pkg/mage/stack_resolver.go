@@ -295,6 +295,14 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 				}
 				card = continued
 			}
+			if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.intrinsicSpellText != 0 && base.textDefinition != nil && len(base.textDefinition.changes) != 0 {
+				continued, err := buildIntrinsicCreatureSpellEntry(obj)
+				if err != nil {
+					g.cleanupSpell(obj)
+					return
+				}
+				card = continued
+			}
 			colorsSpent := obj.CastContext.DistinctColorsSpent()
 			if obj.IsCopy {
 				card = newPermanentSpellCopyCard(card)

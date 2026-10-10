@@ -17,6 +17,16 @@
 // Other permanent spells and casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
+// Use [WithIntrinsicCreatureSpellTextContinuation] for intrinsic creature rules.
+// [Game.RevisePrintedSpellText] carries fresh protection and basic landwalk
+// through entry. RON marks creature rules with these declarations and ordinary
+// keywords. Each declaration keeps its contribution. Copies enter as tokens.
+// Clones keep separate rules. Phasing keeps the visit. Later text layers restore
+// the continued baseline on expiry. Departure keeps LKI and printed rules.
+// [Game.CaptureCopiableValues] checks the saved entry characteristics, then
+// returns printed copy values. Ordinary word changes stay outside those values.
+// Copy entry, other rules and whole-object word changes need separate services.
+//
 // Use [WithLandTypeAuraSpellTextContinuation] for a land-type Aura spell.
 // [Game.RevisePrintedSpellText] keeps its announced target and cast payment.
 // RON marks one enchant rule and one fixed or chosen host land-type rule.

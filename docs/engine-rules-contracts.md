@@ -15277,3 +15277,47 @@ exact visits, phasing, copy-controller choices, token copies, separate clones,
 layer expiry/removal/restoration, copiable values and invalid/unsupported forms.
 `TestTextLandAuraSpellDeclaration` and `RejectsAtomic` check native declaration
 validation and rejection without mutation. Compilation gain is zero.
+
+
+### Intrinsic creature spell text entry continuation
+
+`WithIntrinsicCreatureSpellTextContinuation() CardOption` permits the checked
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+path for one creature-only definition. RON selects a nonempty intrinsic context
+with top-level `Protection(FromColor(Colors([color, ...])))` and/or
+`Landwalk(IsLandType(basicType))`, plus ordinary keyword symbols. The color list
+must be nonempty. Landwalk must use a fixed basic land type. Each declaration
+uses its existing definition group and layer-3 marker. Extra card types,
+targets, modes, costs, entry operations and other abilities require separate
+contracts. Invalid markers and malformed declarations fail definition validation.
+
+Ordered changes build fresh rules without changing the physical card, mana,
+announced X, cast facts, controller or owner. Declaration correspondence keeps
+protection and landwalk kinds and independent keyword contributions. Invalid
+words, empty changes, changed contexts and foreign saved casting results reject
+before any stack update. Entry uses the shared permanent-spell and entry paths
+(CR 400.7a, 608.3a/f). Spell copies enter as tokens with their own text; game
+clones keep separate changes. Ordinary layer-5 spell color remains independent.
+
+Protection uses existing target, damage, blocking and attachment services
+(CR 702.16); landwalk uses existing combat services (CR 702.14). Later text
+layers use the continued definition as their baseline. Ability removal and
+restoration, phasing and departure retain the existing lifecycle. Departure LKI
+keeps final rules; the physical card returns with printed rules (CR 400.7).
+
+A private immutable entry-characteristic snapshot lets
+`Game.CaptureCopiableValues(source *Permanent) (*CopiableValues, error)` check
+continued landwalk seeds without accepting later untracked mutations. The
+returned values keep the printed definition (CR 707.2). Permanent-spell token
+wrappers use the same checked provenance. No new payment, event, replacement
+ordering or simultaneous-operation service is introduced.
+
+Evidence: `TestRONTextIntrinsicSpellRecords` covers all 34 complete records of
+14 unique names; `Copies`, `Layers`, `ProtectionGameplay` and `Boundaries` cover
+spell-copy token entry/provenance, ordered substitutions, separate duplicate
+landwalk contributions, protection color sets, later layer expiry, phasing,
+ability restoration, grants, damage batches and illegal targeting/attachment.
+Native `TestTextIntrinsicSpellDeclaration`, `RejectsAtomic` and
+`CopyProvenance` cover marker validation, changed contexts, countered visits,
+foreign casting results and untracked mutations. Copy-entry and other permanent
+rules, whole-object text dispatch, Magical Hack and Sleight of Mind remain open.

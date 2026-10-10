@@ -314,6 +314,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
 	var options []optionFactory
 	landAuraSpellText := false
+	intrinsicCreatureSpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
@@ -321,6 +322,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
+		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)
 		if err != nil {
 			return nil, err
@@ -421,6 +423,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		if landAuraSpellText {
 			opts = append(opts, mage.WithLandTypeAuraSpellTextContinuation())
+		}
+		if intrinsicCreatureSpellText {
+			opts = append(opts, mage.WithIntrinsicCreatureSpellTextContinuation())
 		}
 		var card *mage.BaseCard
 		switch types[0] {
