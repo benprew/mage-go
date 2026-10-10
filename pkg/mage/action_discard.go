@@ -11,6 +11,7 @@ type DiscardAction struct {
 	source                  uuid.UUID
 	playerID                uuid.UUID
 	cardID                  uuid.UUID
+	handVisit               uuid.UUID
 	destination             Zone
 	effectCause             bool
 	requiresCharacteristics bool

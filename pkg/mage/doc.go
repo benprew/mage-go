@@ -2280,6 +2280,15 @@
 // Basic land types, Desert and creature subtypes use separate family checks.
 // Casting results, other properties and alternative branches stay separate.
 //
+// Use [BindPlayerNumbers] to declare separate results for the two players.
+// [PlayerNumber] reads one member by player identity. [DiscardUpToEach]
+// saves completed discards after one shared batch. All choices precede moves.
+// Saved hand visits cannot follow returned cards. Library replacements count;
+// cancellation clears the result. Existing number frames keep copies, clones,
+// delayed bodies, loop frames and cleanup separate. RON lowers all-player
+// fixed-maximum discard and lexical result reads. Mind Bomb uses the shared
+// per-recipient damage service. Coin producers need a separate adapter.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

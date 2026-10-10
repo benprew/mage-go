@@ -16713,3 +16713,41 @@ Evidence: native `TestChosenSacrificePlayers`, `Definition`, `Identity` and
 `PlayerScope`, `Spell` and `Inventory`. Demonic Hordes has complete gameplay
 coverage for all six records, including its land destruction and upkeep payment.
 Serendib Djinn has action-only evidence; its result predicate remains unsupported.
+
+## Per-player discard result collection
+
+`PlayerNumbersBinding` declares two separate saved-number members for the two
+player seats established by `NewGame(Player, Player)`. `BindPlayerNumbers(name)`
+creates immutable declarations. `PlayerNumber(binding, player)` reads the member
+for that player identity, independent of the active player and effect controller.
+Missing runtime results supply zero. Definition validation rejects nil operands,
+unnamed members and reads without a prior producer. Existing NumberBinding
+frames supply per-resolution isolation, clones, delayed capture, loop frames and
+cleanup; the collection adds no mutable declaration state.
+
+`DiscardUpToEach(subjects, maximum, result)` clears both members, reads the
+maximum once, and makes number and card choices in active-player order.
+Duplicate and absent subjects make no choices. Zero maximum and empty hands
+make no choices. Number choices are bounded by the maximum and hand size;
+card selections use distinct current hand members. Invalid or short selections
+are completed from the remaining current hand in hand order.
+
+All selected cards keep their hand visits before replacement processing. Shared
+discard replacement preparation and graveyard ordering precede one movement
+batch. A replaced discard keeps the original selected visit; cancellation and
+leave-and-return cannot supply a completed discard. Completed discard events
+supply separate historical counts by player, including library destinations.
+All card movement precedes discard events; the following instruction runs after
+the batch and result capture. Shared damage services then evaluate every
+recipient's amount before one damage batch. Prevention and redirection retain
+their existing ordering and source contracts.
+
+CR 101.4 and 608.2e establish active-player choices and simultaneous operations;
+701.9a–c establish player discard choice and changed destinations; 400.7 keeps
+returned visits separate. This is an effect at resolution, not a casting or
+activation payment. Existing cost and discard callers retain their signatures.
+Unspecified visits on legacy discard proposals retain their existing behavior.
+
+Evidence: `TestPlayerDiscardResults*` and `TestRONPlayerDiscardResults*`.
+Mind Bomb's unchanged complete DRK record supplies full-card gameplay evidence.
+Mana Clash remains rejected until its coin producer and repeat consumers exist.

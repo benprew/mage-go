@@ -2,17 +2,18 @@
 
 ## Current status
 
-The isolated slice reports **816 accepted / 170 rejected names** (986 total),
-**2,117 compiled / 328 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **817 accepted / 169 rejected names** and
-**2,118 compiled / 327 rejected records**. The strict loader rejects the
+The isolated slice reports **817 accepted / 169 rejected names** (986 total),
+**2,118 compiled / 327 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **818 accepted / 168 rejected names** and
+**2,119 compiled / 326 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-SAVED-SACRIFICE-SUBTYPE adds per-producer historical subtype results for resolving
-choices and activation costs. Ebon Praetor gains complete RON gameplay for
-**1 name / 1 record**. Serendib Djinn's upkeep rule gains its predicate; its
-separate no-land state filter remains unsupported. Copies, clones, exact visits,
-replacement outcomes and rollback use shared engine services. No RON changed.
+PER-PLAYER-DISCARD-RESULTS adds typed per-player historical discard counts,
+optional simultaneous discard and lexical result reads. Mind Bomb gains complete
+RON gameplay for **1 name / 1 record**. Existing recipient-relative damage,
+number frames, replacements, copies, clones and delayed bodies supply shared
+mechanics. Mana Clash's coin producer and repeat consumers remain unsupported.
+No RON changed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -68840,5 +68841,168 @@ repeated-entry work, fixture offsets, archive relocation and unrelated edits.
 3. Attached mana-event whole-object text for Wild Growth (1 name / 6 records).
    Existing host mana services are ready. Complete Aura preflight and exact host
    continuation add gameplay coverage, with no estimated compilation gain.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: PER-PLAYER-DISCARD-RESULTS
+
+Status: complete one vertical slice. No second capability was started.
+
+### Candidate comparison and selection
+
+The latest ranked candidate was per-player resolving-result storage. Complete
+records were read for Mind Bomb (DRK), Mana Clash (DRK), Serendib Djinn (ARN),
+and every Wild Growth reprint (LEA, LEB, 2ED, 3ED, CED, CEI). Targeted vocabulary
+entries confirmed the discard producer, count reader, coin producer and tails
+predicate. Reprints are counted once below.
+
+| Candidate | Affected distinct names; estimated complete-card unlocks | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Typed per-player results with optional discard producer | Mind Bomb and Mana Clash; 1 name / 1 record (Mind Bomb) | Recipient-relative damage already exists, so Mind Bomb needs only the producer and saved reader. Mana Clash still needs its selected-player coin producer, tails selection, all-heads termination and repeated-round adapter. The typed result collection supplies a shared storage contract for both names. | Medium: collection declarations over existing number frames, simultaneous optional discard, lexical lowering, invalid declarations and gameplay tests. |
+| No-land state-trigger filter | Serendib Djinn; 1 name / 1 record | Its upkeep rule is ready. IsCardtype(Land) in the no-permanents event remains a missing adapter over ControlsNone. No concrete second-card gain was found in this shape. | Small adapter; medium lifecycle evidence for detection, arming, pending suppression, control, phasing and return. |
+| Attached mana-event whole-object text | Wild Growth; 0 compilation gains, gameplay coverage for 1 name / 6 records | Host mana production is ready. Complete Aura preflight and host continuation remain; no other name is unlocked by this bounded context. | Medium text preflight and continuation work with attachment, layer, clone and LKI tests. |
+
+Select the first candidate: it is dependency-ready, supplies shared storage for
+two concrete consumers and can finish Mind Bomb using existing variable damage.
+The previous ledger estimated zero immediate gains for storage alone. Inspection
+of compilePlayerRecipientDamage and DealDamageEachPlayer raised the bounded
+estimate to 1 name / 1 record before edits. Actual gain matches that estimate.
+Mana Clash does not count as accepted or gameplay-complete.
+
+### Contract, signatures and reuse boundary
+
+- Resolving action sequences accept
+  EachPlayerAction(AnyPlayer, DiscardUptoNumberCards(Integer(n))) with a fixed,
+  nonnegative maximum. Malformed collections, actions and amounts remain errors.
+- TheNumberOfCardsDiscardedByPlayerThisWay(player-reference) reads the latest
+  unconditional producer in that lexical sequence. Reads before a producer and
+  branch escapes fail compilation. Independent producers retain separate plans
+  and fresh factory declarations. DealsDamage_ThatPlayer remains amount-local.
+- Native BindPlayerNumbers(name string) *PlayerNumbersBinding declares one
+  immutable NumberBinding for each of NewGame's two player seats.
+  PlayerNumber(binding *PlayerNumbersBinding, player PlayerRef) ResolutionValue
+  reads the member by player identity. The collection has no mutable chosen data.
+  Nil declarations, empty names, unbound members and nil players fail validation.
+- DiscardUpToEach(subjects PlayerSet, maximum ResolutionValue,
+  result *PlayerNumbersBinding) ResolvingEffect clears both results, reads the
+  maximum once, and makes number/card choices in active-player order. Number
+  bounds use current hand size. Distinct current cards supply the chosen count;
+  invalid or short player selections are completed from the remaining hand.
+  Duplicate/absent subjects, empty hands and zero maxima make no extra choices.
+- All choices precede shared discard replacement preparation, graveyard ordering
+  and movement. New proposals save exact hand visits. DiscardAction's private
+  handVisit survives replacement proposals, and moveDiscardedCard checks it.
+  A returned card cannot supply an old chosen visit. Existing unspecified-visit
+  discard callers keep their behavior and signatures.
+- Completed discard events supply separate historical counts. Library replacement
+  destinations count. Cancellation, stale visits and empty selections supply zero.
+  Later movement cannot change historical results. All card moves precede events.
+  Following instructions run after the complete batch and result capture.
+- RON owns spelling, scope, diagnostics and fresh factory bindings. Native rules
+  reuse PlayerSet/PlayerRef, ChooseNumber, ChooseCardsFromHand, NewDiscardAction,
+  discardActionsTogetherWithEvents, shared replacements and zone services.
+  DealDamageEachPlayer already evaluates all recipient amounts before shared
+  simultaneous damage, prevention and redirection. No duplicate damage system
+  or recipient adapter was added.
+- Existing NumberBinding services supply resolution cleanup, nested frames,
+  independent factories, stack copies, game clones, delayed captures and loop
+  isolation. No new resolution-state map, global result slot, card-name branch,
+  declaration-time gameplay, Go fallback or partial registry was added.
+  Waiting source queries inspect typed collection/value/player operands without
+  choices, movement or result writes. Source departure and phasing keep saved
+  delayed references; returned objects cannot replace them.
+- Rules evidence: CR 101.4 (APNAP choices), 608.2e–f (simultaneous operations),
+  701.9a–c (discard choice and replacement destinations), 400.7 (new zone visits),
+  and existing number-frame, discard-batch and damage contracts.
+
+The missing adapters were the optional collection producer and scoped count
+reader. The engine lacked the typed per-player collection and optional discard
+batch with visit-aware selection. Recipient-relative damage was already present.
+No source defect was found, no RON changed and no vocabulary refresh is needed.
+Runtime cutover and removal gates remain open; no Go definition, generator or
+DSL export was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, native tests failed compilation on BindPlayerNumbers,
+PlayerNumber and DiscardUpToEach. An incorrect test helper name was fixed and
+missing-API failures were reconfirmed. Real Mind Bomb gameplay failed on
+unsupported all-player action (DiscardUptoNumberCards). The hand-return test
+then failed its identity assertion before visit checks were added. The inventory
+role test failed on unknown before the value-role adapter was fixed. Harness
+corrections supplied sorcery timing, source ownership and existing SearchPlayer
+minimum-discard choices; gameplay assertions were retained.
+
+| Card/context | Test evidence |
+| --- | --- |
+| Mind Bomb, complete unchanged DRK record | TestRONPlayerDiscardResultsMindBomb covers zero, one, two, three and bounded choices, separate hands/counts and resolution timing. CopiesAndClones covers a differently controlled copy, independent original choices and clone simulation. TimingRollbackAndPrevention covers mana/timing failures, unchanged casting resources, empty hands, prevention, simultaneous damage and physical spell departure. |
+| Mana Clash, complete DRK record | Remains strictly rejected. The typed collection is its storage prerequisite only; no coin or full-card gameplay is claimed. |
+| RON scope and instances | IndependentProducers covers a new zero producer after a positive result. ActivationSources covers pending resolving choices with source phasing, departure and return under another controller. Invalid rejects absent/before-producer results, unsupported collections, malformed/negative maxima and escaped player/branch bindings. Inventory checks the result player's semantic role. |
+| Native batch and identity | TestPlayerDiscardResultsBatch covers both players' distinct counts, APNAP choices, library replacements and events after all moves. Identity rejects a returned hand visit during replacement. CloneClearAndCancel covers saved clone values, empty clearing, cleanup and cancelled moves. OrderEmptyAndDuplicateSets covers reversed active player, duplicate/absent members and empty sets. |
+| Native frames and waiting queries | DelayedAndLoopFrames preserves the outer result across a loop and delivers independent delayed values in live/clone games after source departure. WaitingReads checks pure exact-source enumeration for live, phased, departed and returned sources. Declaration rejects nil expressions, unnamed results and unbound reads. |
+| Existing collection regressions | Exact acceptance totals advance by one record, with an explicit Mind Bomb assertion. Shared discard, cost, replacement, damage, copy, clone, delayed and state tests remain intact. |
+
+### Verification and measured results
+
+- Fresh baseline make build passes. Baseline RON short tests pass (40.249s).
+  Baseline go run ./cmd/loadcards -json exits 1 for collection rejection:
+  817 accepted / 169 rejected names and 2,118 compiled / 327 rejected records.
+- Final focused go test ./pkg/mage/dsl/ron -run TestRONPlayerDiscardResults
+  -count=1 (0.446s) and native go test ./pkg/mage -run TestPlayerDiscardResults
+  -count=1 (0.406s) pass after final lint. make build and go vet ./... pass.
+- go test ./pkg/mage/... -short -count=1 passes (RON 42.490s).
+  make test passes (RON 46.932s). Additional source/waiting tests pass in the
+  focused runs and in the isolated whole-repository short suite.
+- The first make lint reported three new issues: effect-slice preallocation and
+  two variables that shadowed copy. These were fixed. Final make lint passes
+  with zero issues. Automatic changes only format imports in
+  this slice's new Go files. Those changes were reviewed and focused tests rerun.
+  Worktree and staged git diff --check pass.
+- A new isolated checkout of the exact staged tree excludes every initial
+  repeated-entry change. go test ./... -short -count=1, go build ./... and
+  go vet ./... pass. After lint fixes, the final isolated short suite also passes
+  (RON 83.839s). Loader exit 1 reports 817 accepted / 169 rejected names,
+  2,118 compiled / 327 rejected records. Mind Bomb is accepted; Eureka remains
+  rejected. A first attempted check used an existing temporary checkout and was
+  discarded after stale-file build errors; the new unique directory is the
+  evidence above.
+- Final worktree go run ./cmd/loadcards -json exits 1 as expected:
+  818 accepted / 168 rejected names, 2,119 compiled / 326 rejected records,
+  2,445 total. Compared with its fresh baseline, only Mind Bomb's rejection
+  disappears. No accepted record regresses. Serendib Djinn still reports the
+  no-land filter; Mana Clash still reports its unsupported coin-round producer.
+  Animate Dead, Balance and Vesuvan Doppelganger remain examples of other gaps.
+  The loader publishes no partial registry. Whole-collection gameplay and
+  runtime startup remain unverified.
+- Shared files are staged with only this slice's changes and isolated inventory
+  totals. Initial Eureka work, fixture offsets, unrelated edits, ledger relocation
+  and the untracked archive retain their contents outside the commit. The staged
+  ledger keeps its original history and appends this entry. No check blocker
+  remains.
+
+Changed files: new native player-result declarations/discard operation and tests;
+visit-aware discard action/batch/movement and waiting-read adapter; RON producer,
+value lowering, scope/bindings, semantic inventory and tests; exact admission
+fixtures; API/rules docs and this ledger. Coverage gains 1 complete unique card /
+1 record, Mind Bomb. Estimated and actual compilation gains are both 1 / 1.
+
+### Ranked next candidates
+
+1. Evaluate a bounded shared draw-replacement player/event scope for Island
+   Sanctuary and Chains of Mephistopheles. Both complete records use
+   ReplaceWouldDraw; distinct draw timing and typed WouldDrawACard_ThatPlayer
+   are prerequisites for two names. Storage/event transport alone gives zero
+   full-card gains. Sanctuary still needs its choice and attack restriction;
+   Chains needs required discard, paid branches and replacement-safe draw/mill.
+   Compare this shared prerequisite with other useful multi-card work first.
+2. Serendib Djinn's no-land state-trigger IsCardtype(Land) adapter remains
+   dependency-ready for 1 name / 1 record. Reuse ControlsNone and exact state
+   arming/pending suppression; test control, phasing and return. Defer it when a
+   useful multi-card prerequisite is ready.
+3. Mana Clash can reuse the new typed per-player results. Its selected-player
+   coin producer, tails filter and all-heads repeated-process termination remain
+   a bounded future candidate for 1 name / 1 record. RON's existing repeated
+   hand-entry context cannot substitute for the coin process. Reassess shared
+   candidates before choosing this single-card consumer.
 
 Migration remains incomplete. This run stops after this one slice.

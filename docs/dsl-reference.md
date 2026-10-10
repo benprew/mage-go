@@ -4630,11 +4630,12 @@ redirection operate through the existing replacement pipeline; changing a
 recipient there does not recalculate the original amount.
 
 Malformed player collections and unbound reads are compile errors. General
-player filters, permanent-recipient bindings, mixed collections and discard
-result values remain unsupported. `TestRONDamageRecipientValue*` covers both
+player filters, permanent-recipient bindings and mixed collections remain
+unsupported. Discard result values use the per-player contract below.
+`TestRONDamageRecipientValue*` covers both
 complete Legends records, Storm Seeker and Typhoon, plus declaration, scope,
 instance, activation, copy, clone, payment, timing and simultaneous contracts.
-Mind Bomb still requires optional discard and saved per-player results.
+Mind Bomb uses the per-player discard result contract below.
 
 ## Simultaneous allocation for finite recipient shields
 
@@ -12982,3 +12983,38 @@ Evidence: native `TestChosenSacrificePlayers`, `Definition`, `Identity` and
 `PlayerScope`, `Spell` and `Inventory`. Demonic Hordes has complete gameplay
 coverage for all six records, including its land destruction and upkeep payment.
 Serendib Djinn has action-only evidence; its result predicate remains unsupported.
+
+## RON per-player discard results
+
+Resolving action sequences accept
+`EachPlayerAction(AnyPlayer, DiscardUptoNumberCards(Integer(n)))`, with a
+nonnegative fixed maximum. Each player chooses a number from zero through the
+smaller of that maximum and their current hand size, then selects those cards.
+All choices follow active-player order before one shared discard batch.
+
+`TheNumberOfCardsDiscardedByPlayerThisWay(player-reference)` reads the latest
+unconditional producer in that lexical sequence. A branch-local producer cannot
+escape its branch; reads before a producer, malformed declarations and unbound
+player references fail compilation. `DealsDamage_ThatPlayer` remains local to
+the amount of a player damage instruction. Mind Bomb uses the existing
+recipient-relative damage batch to read a separate count for each player.
+
+Native services are `BindPlayerNumbers(string) *PlayerNumbersBinding`,
+`PlayerNumber(*PlayerNumbersBinding, PlayerRef) ResolutionValue`, and
+`DiscardUpToEach(PlayerSet, ResolutionValue, *PlayerNumbersBinding) ResolvingEffect`.
+The collection declares one immutable NumberBinding for each of the engine's
+two player seats. Existing saved-number frames supply clone, copy, delayed-body,
+loop and cleanup behavior without another runtime storage system.
+
+Counts include completed discards redirected to a library; cancelled moves and
+stale hand visits contribute zero. Later card movement does not change a saved
+count. Returned cards cannot replace the selected hand visit. Other discard
+shapes, general player loops, coin results and repeated coin processes need
+separate adapters. No RON source changed.
+
+Evidence: `TestRONPlayerDiscardResultsMindBomb`, `CopiesAndClones`,
+`TimingRollbackAndPrevention`, `IndependentProducers`, `ActivationSources`,
+`Invalid`, and `Inventory`;
+`TestPlayerDiscardResultsBatch`, `Declaration`, `Identity`,
+`CloneClearAndCancel`, `DelayedAndLoopFrames`, `WaitingReads`, and
+`OrderEmptyAndDuplicateSets`.

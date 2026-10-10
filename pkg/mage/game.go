@@ -1236,6 +1236,9 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 }
 
 func (g *Game) moveDiscardedCard(action *DiscardAction) (Card, bool) {
+	if action.handVisit != uuid.Nil && g.handVisit(action.CardID()) != action.handVisit {
+		return nil, false
+	}
 	p := g.GetPlayer(action.PlayerID())
 	if p == nil {
 		return nil, false

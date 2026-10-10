@@ -40,6 +40,11 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 			if action.requiresCharacteristics && discard.Destination() == core.ZoneLibrary {
 				return nil
 			}
+			if action.handVisit != uuid.Nil {
+				proposal := *discard
+				proposal.handVisit = action.handVisit
+				discard = &proposal
+			}
 			prepared = append(prepared, discard)
 		}
 	}
