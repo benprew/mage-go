@@ -1,6 +1,7 @@
 package ron
 
-func staticActivationSpellTextRules(rules []Node) bool {
+// Stack and battlefield text use the same complete declaration context.
+func staticActivationTextRules(rules []Node) bool {
 	if len(rules) != 2 {
 		return false
 	}

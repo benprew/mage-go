@@ -15789,8 +15789,9 @@ and `RejectsAtomic` cover invalid declarations and checked transaction boundarie
 RON `TestRONTextStaticActivationSpellRecords`, `Inventory`, `Boundaries`,
 `Lifecycle`, `Copies`, `BothWords`, `ThrullLifecycle`, `CopyExceptions` cover
 Sedge Troll (six complete records), Thrull Champion (one complete record) and
-synthetic paired color rules. Whole-object dispatch and the complete consumers
-Magical Hack and Sleight of Mind remain separate contracts.
+synthetic paired color rules. Complete battlefield dispatch uses the static P/T
+and activated object text contract below. The complete consumers Magical Hack
+and Sleight of Mind remain separate contracts.
 
 ## Whole-object text changes for printed intrinsic creatures
 
@@ -16066,3 +16067,49 @@ from actual Sleight of Mind and Magical Hack records are test fixtures; the
 complete consumer cards still reject. Existing single-declaration grant/activation
 contract tests retain damage, targeting, blocking, payment and lifecycle evidence.
 This adds no full-card compilation accepts or collection-wide gameplay claim.
+
+## Complete static P/T and activated object text
+
+`Game.AddPrintedStaticActivationTextEffect(source *Permanent, duration
+core.Duration, changes ...TextChange) error` accepts one complete marked creature:
+one layered global P/T adjustment, or a source P/T adjustment conditional on its
+controller/opponent controlling a basic land type, paired with one ordinary
+layered activated action. Either declaration order is valid. The existing
+`WithStaticActivationSpellTextContinuation` contract marks both stack and
+battlefield use. Modal actions, history, captures, source-counter X, extra rules,
+keywords, casting targets/costs and other types remain excluded.
+
+`ChangePrintedPermanentText` selects this context at resolution. RON retains its
+complete declaration selector, rule-position groups, fresh factory bindings and
+existing `CreatePermanentLayerEffect(ref, [substitution, ...])` lowering. Typed
+color/basic-land word choices must dominate their reads in the same lexical
+scope. No new spelling or card-name dispatch is required.
+
+The engine checks the old and fresh complete definitions, condition/recipient
+context, subtypes, activation timing/limits, cost/target/body cardinality, target
+shapes and exact sibling groups. Both existing declaration layer installers must
+succeed on an isolated game before either live layer is added. Missing builders,
+runtime declarations or static registrations, typed nil declarations, stale or
+phased visits, face-down sources, empty/invalid changes and unsupported durations
+reject without changing the live source or effect count. Durations are Indefinite
+and EndOfTurn. A valid no-match operation checks and installs both layers.
+
+Each declaration retains its baseline, ordered changes and ID. Expiry recomputes
+remaining changes, including a baseline continued from stack text. Static
+conditions and recipients stay live. Pending activated bodies retain prior text
+and targets; legality is checked again at resolution. Mana symbols and names stay
+fixed. Copies and clones retain independent declarations and effects. Phasing
+keeps the visit; layer 6 removal suppresses both rules. Departure keeps final LKI;
+returned cards and copiable values use printed text (CR 400.7, 612.1–3,
+613.1c/f/g, 613.4c, 707.2).
+
+Existing regeneration, control-duration, cost transaction, replacement ordering
+and simultaneous-operation contracts are reused without changes. Evidence:
+`TestTextStaticActivationObjectAtomic`; `TestRONTextStaticActivationObjectRecords`,
+`BothWords`, `Inventory`, `Boundaries`, `TargetVisit`, `PendingVisit` and
+`ContinuedBaseline`. Sedge Troll maps all six complete records to conditional P/T
+and regeneration; Thrull Champion maps its FEM record to global Thrull P/T,
+targeted control and source-control duration. Extracted real Magical Hack and
+Sleight of Mind permanent branches supply interaction evidence. Their complete
+records still reject `CreateSpellEffect`; paired protection/P/T, attached land
+rules and live-copy rebinding require separate contracts.

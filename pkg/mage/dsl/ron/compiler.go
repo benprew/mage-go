@@ -337,7 +337,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
 		attachedObjectText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && attachedObjectTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
-		staticActivationSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && staticActivationSpellTextRules(rules)
+		staticActivationSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && staticActivationTextRules(rules)
 		protectionPTSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && protectionPTSpellTextRules(rules)
 		intrinsicCastSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && intrinsicCastSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)

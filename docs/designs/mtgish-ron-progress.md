@@ -2,20 +2,20 @@
 
 ## Current status
 
-The latest verified worktree inventory reports **813 accepted / 173 rejected
-unique card names** (986 total), and **2,099 compiled / 346 rejected records**
-(2,445 total). The baseline includes pre-existing Eureka entry-round changes.
+The latest verified isolated slice inventory reports **812 accepted / 174 rejected
+unique card names** (986 total), and **2,098 compiled / 347 rejected records**
+(2,445 total). The worktree separately includes uncommitted Eureka entry-round changes.
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ATTACHED-OBJECT-TEXT` adds complete creature Aura dispatch for one host grant
-or fixed-mana host action with a fixed enchant restriction. New interaction
-evidence covers **14 names / 74 complete records**; acceptance gain is
-**0 names / 0 records**. Fresh complete declarations pass preflight before the
-existing text-layer installer runs. Ward exceptions, host/donor bindings, ordered
-baselines, expiry, copies, clones, control, phasing, removal, LKI and printed
-return use shared services. Mixed Auras, other paired contexts, live-copy rules
-and complete word-changing consumers remain gaps.
+`STATIC-ACTIVATION-OBJECT-TEXT` adds complete paired creature dispatch for one
+global or basic-land source P/T rule and one ordinary activated rule. New
+interaction evidence covers **2 names / 7 complete records**; acceptance gain is
+**0 names / 0 records**. Both declarations pass checks before either text layer
+is installed. Ordered baselines, expiry, targets, pending bodies, copies, clones,
+control, phasing, removal, LKI and printed return use shared services. Paired
+protection/P/T, attached land rules, live-copy rules and complete word-changing
+consumers remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -66420,5 +66420,158 @@ changes and untracked files remain in the worktree.
 3. Spell-target CreateSpellEffect and complete union/modal word-changing consumers
    after the remaining permanent contexts. Vesuvan Doppelganger's copy-added
    rule and live-copy rebinding stay explicit prerequisites.
+
+Stopped after one capability slice. Migration remains incomplete.
+
+## Run 2026-10-10: STATIC-ACTIVATION-OBJECT-TEXT
+
+Status: complete bounded battlefield text capability. Complete paired static P/T
+and ordinary activated creature rules now use atomic whole-object dispatch.
+
+### Baseline, candidates and selection
+
+Fresh starting worktree: make build and TestRONTextAttachedObject passed. Strict
+loadcards exited 1 for collection rejection, with 813 accepted / 173 rejected
+unique names and 2,099 compiled / 346 rejected records. Starting user changes
+include Eureka entry rounds, shared docs and the ledger archive move. These are
+preserved and excluded from this slice's staged changes.
+
+Complete RON records and nested forms were inspected for the first ranked
+candidate and two related alternatives; reprints count once:
+
+| Candidate | Unique names; records | Estimated new full-card acceptance | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Paired static P/T + activation object text (selected from rank 1) | Sedge Troll (6), Thrull Champion (1) | 0 names / 0 records; both already compile | Completes two more permanent target contexts for Magical Hack and Sleight of Mind; their spell-target CreateSpellEffect and remaining permanent contexts still block complete consumers | Low implementation, medium testing; shared checked sibling and layer services exist |
+| Paired protection/P/T object text (remaining rank 1) | Beasts of Bogardan (1), Ivory Guardians (1) | 0; both already compile | Shared consumer prerequisite for protection plus opponent nontoken color condition, source/named recipient; whole-object pairing still needed | Low implementation, medium testing; existing spell and protection/P/T layer contracts |
+| Attached land-type object text (rank 2) | Evil Presence (6), Phantasmal Terrain (6) | 0; both already compile | Shared Magical Hack target prerequisite; preserve enchant restriction, host binding and entry choice; live-copy and other paired rules remain gaps | Low/medium implementation, medium testing; existing land Aura spell and fixed/chosen-host layers |
+
+The selected pair is dependency-ready and follows the first ranked candidate.
+It provides multi-card value through one complete two-declaration contract.
+The protection/P/T sibling context is deferred to keep one cohesive slice.
+No first-error frequency is used as an unlock estimate. The actual gain is zero
+names/records, matching the estimate; new interaction evidence covers two unique
+names / seven complete records, not full consumer or collection gameplay.
+
+### Exact shape, lowering and engine boundary
+
+RON selects exactly two creature rules in either order: one
+EachPermanentLayerEffect(creature_filter, [AdjustPT(integer, integer)]), or
+If(PlayerPassesFilter(You, ControlsA(IsLandType(basic))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])]), including
+its existing opponent condition spelling, paired with Activated(cost, body).
+The shared selector is now named staticActivationTextRules. Existing lowering
+marks WithStaticActivationSpellTextContinuation and position-based declaration
+groups. Modal actions, activation history, source-counter X, captures, conditions,
+opaque restrictions, extra rules/keywords/types and casting targets/costs reject
+this complete context. Broader supported records keep ordinary compilation.
+
+Resolving CreatePermanentLayerEffect(permanent_ref, [substitution, ...]) reuses
+compilePermanentObjectText and ChangePrintedPermanentText. The nonempty list
+contains only ReplaceColorWordVariableWithNewColorWordVariable(from, to) and/or
+ReplaceLandTypeVariableWithNewLandTypeVariable(from, to). Word-pair choices must
+dominate compatible, distinct references in the same lexical scope. Factories
+build separate typed references and rule declarations. Indefinite is the RON
+action duration; the native installer also permits EndOfTurn.
+
+New engine signature:
+Game.AddPrintedStaticActivationTextEffect(source *Permanent, duration
+core.Duration, changes ...TextChange) error.
+
+The engine validates both complete definitions and exact sibling correspondence,
+P/T condition/recipient context, subtypes, action timing/limits, cost/target/body
+cardinality and target shapes. Both declaration installers must succeed on an
+isolated game before two live text layers are installed and one layer pass runs.
+Typed nil runtime declarations, missing actions/registrations/builders/groups,
+stale/phased visits, face-down sources and invalid durations/words reject without
+changing the source pointer or effect count. Valid no-match changes check both
+rules. This fills a missing engine dispatch contract, not a missing spelling
+adapter, source-data correction or environment repair.
+
+Reuse: staticActivationTextContext, sameStaticActivationSpellContext,
+BuildTextDefinitionRevision/ReplacementAbility, AddPrintedStaticPTTextEffect,
+AddPrintedActivatedTextEffect, existing ordered layer types, baseline reset and
+expiry, incarnation identity, printed return, LKI, CaptureCopiableValues, cloning,
+regeneration, GainControlWhileSourceControlled and transactional payments.
+Rules basis: CR 400.7, 612.1–3, 613.1c/f/g, 613.4c and 707.2. Replacement ordering
+and simultaneous operations retain their existing contracts. No RON source
+defect was found or corrected; no source change requires a vocabulary refresh.
+No Go definitions, generators or unused DSL functions are removed before gates.
+
+### Failing-first evidence and card-to-test mappings
+
+Initial tests failed on the missing native signature. A test helper's BasePlayer
+argument was corrected, then missing-signature failures were confirmed again.
+A minimal rejecting stub failed valid/reverse native cases and synthetic RON
+paired rules; extracted real Magical Hack branches failed Sedge Troll P/T
+assertions through the old dispatcher. The unpaid activation fixture was corrected
+to tap its legal Swamp mana source before checking unaffordability. Assertions
+were retained.
+
+| Card/contract | Tests and evidence |
+| --- | --- |
+| Sedge Troll, all LEA/LEB/2ED/3ED/CED/CEI complete records | TestRONTextStaticActivationObjectRecords: paid casting, extracted real Magical Hack permanent branch, resolution-only choices, controller-specific Island condition, unchanged black regeneration cost/body, stable sibling IDs, ordered expiry, clone isolation, phasing, removal, control, printed copies, final P/T LKI and printed return |
+| Thrull Champion, complete FEM record | Records: paid casting, extracted real Sleight permanent branch and checked no-match native installation, global Thrull P/T including source, non-Thrull exclusion, illegal target tap rollback, independent pending clone resolution and duration ending on source-control change |
+| Both sibling words and pending bodies | BothWords: synthetic complete RON declaration changes static color selection and activated target filter together; rejects old target without payment, keeps prior pending text, recomputes expiry and rechecks shroud at resolution |
+| Exact visits and copies | TargetVisit rejects a returned branch target without choices; PendingVisit prevents pending regeneration from protecting a returned source; ContinuedBaseline checks copied spell token identity and restoration to stack-changed entry text |
+| Complete shape and scope | Inventory parses every collection file and checks native no-match installation on exactly 2 names / 7 records; Boundaries rejects missing/incompatible/equal word bindings and mixed lists, excludes neighboring whole-object contexts, and retains complete consumer CreateSpellEffect rejection |
+| Atomic native context | TestTextStaticActivationObjectAtomic checks both orders; invalid words/durations, lost marker/group/pair, changed condition/body/cost/target/timing, extra rules/keyword, missing/typed nil runtime, missing registration/builder, face-down/phased/returned sources preserve live state |
+
+Existing TestRONTextStaticActivationSpell* and TestTextStaticActivationSpell*
+continue to cover declaration validation, fresh target correspondence, copying,
+control duration and stack-to-entry text contracts. New gameplay evidence is
+specific to the paired battlefield dispatch; compilation remains separate.
+
+### Verification and collection status
+
+- Focused RON tests: go test ./pkg/mage/dsl/ron -run
+  'TestRONTextStaticActivation(Object|Spell)' -count=1 passed. Native
+  TestTextStaticActivation(Object|Spell) passed. Post-lint runs passed again
+  (RON 1.086s, native 0.526s); only new test import formatting changed.
+- make build and go vet ./... passed. go test ./pkg/mage/... -short -count=1
+  passed (RON 40.877s). make test passed (RON 40.741s). make lint completed
+  with 0 issues; git diff --check passed.
+- Final go run ./cmd/loadcards -json exited 1 for expected collection rejection.
+  Its complete JSON is byte-identical to the fresh worktree baseline: 813 accepted
+  / 173 rejected unique names, 2,099 compiled / 346 rejected records. No accepted
+  record or diagnostic regressed. Remaining diagnostics include CreateSpellEffect
+  for Magical Hack/Sleight of Mind, EachPlayerAction for Mana Clash, and entry
+  copy AddAbility for Vesuvan Doppelganger.
+- Fresh isolated HEAD loader exited 1: 812 accepted / 174 rejected names,
+  2,098 compiled / 347 rejected records. The worktree's extra name/record is
+  starting Eureka work and is excluded from this slice's commit.
+- Isolated HEAD plus only this staged slice passed focused RON/native tests
+  (1.107s / 0.519s), make build, go vet ./..., engine short tests (RON 39.602s),
+  make test (RON 39.387s), make lint (0 issues) and git diff --check. Its final
+  strict loader exited 1 with JSON byte-identical to the isolated HEAD baseline.
+  All eight staged Go files match this validated checkout. Shared docs retain
+  user content in the worktree; the staged ledger retains HEAD history and
+  excludes the user's archive move. Unrelated tracked and untracked files retain
+  their starting bytes.
+
+Actual acceptance gain is 0 unique names / 0 records in both checkouts, matching
+the estimate. New paired-context gameplay evidence covers 2 names / 7 records.
+Complete collection gameplay, native runtime cutover, Go-card deletion and
+unused DSL removal remain gated. No required validation check failed; strict
+collection rejection is the expected remaining migration status.
+
+Changed files: pkg/mage/text_static_activation_object.go and native tests;
+pkg/mage/text_global_static_object.go; pkg/mage/dsl/ron/compiler.go;
+pkg/mage/dsl/ron/text_static_activation_spell.go and its inventory test;
+pkg/mage/dsl/ron/text_static_activation_object_test.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Shared files are staged with only this slice's edits. The starting archive move,
+Eureka code/docs and unrelated user changes remain in the worktree.
+
+### Ranked next candidates
+
+1. Complete paired protection/P/T object text for Beasts of Bogardan and Ivory
+   Guardians. Reuse checked sibling spell and protection/P/T layers; preserve
+   opponent nontoken condition and fixed source/named recipient context.
+2. Complete attached land-type object text for Evil Presence and Phantasmal
+   Terrain. Reuse landAuraSpellTextContext and fixed/chosen-host layers; retain
+   entry choices and atomic enchant/declaration correspondence.
+3. Spell-target CreateSpellEffect and complete union/modal word-changing consumers
+   after remaining permanent contexts. Vesuvan Doppelganger's copy-added rule
+   and acquired live-copy rebinding remain explicit prerequisites.
 
 Stopped after one capability slice. Migration remains incomplete.

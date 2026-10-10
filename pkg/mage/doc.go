@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedStaticActivationTextEffect] for paired creature rules.
+// One global or basic-land source P/T rule shares text with one ordinary action.
+// Both declarations pass checks before either layer is installed. They keep
+// separate baselines, IDs, targets, payments and pending bodies. RON uses the
+// same complete declaration marker for stack and battlefield text. Clones,
+// copies, expiry, phasing, removal, LKI and printed return use shared services.
+// Other paired rules and live copy changes need separate contracts.
+//
 // Use [Game.AddPrintedAttachedObjectTextEffect] for one complete creature Aura.
 // [CreatureEnchantTarget] keeps its enchant restriction fixed. RON marks one
 // host keyword, landwalk or Ward grant, or one fixed-mana host action.

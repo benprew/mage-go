@@ -85,6 +85,9 @@ func (e *permanentObjectTextChange) Apply(ctx *EffectContext) error {
 	if globalGrantObjectTextContext(p.Card) == nil {
 		return ctx.Game.AddPrintedGlobalGrantTextEffect(p, e.duration, changes...)
 	}
+	if staticActivationTextContext(p.Card) == nil {
+		return ctx.Game.AddPrintedStaticActivationTextEffect(p, e.duration, changes...)
+	}
 	if _, _, err := mixedStaticEventSpellTextContext(p.Card); err == nil {
 		return ctx.Game.AddPrintedMixedStaticEventTextEffect(p, e.duration, changes...)
 	}

@@ -29,7 +29,7 @@ func TestRONTextStaticActivationSpellInventory(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, record := range records {
-			if !staticActivationSpellTextRules(record.Fields["Rules"].Args) {
+			if !staticActivationTextRules(record.Fields["Rules"].Args) {
 				continue
 			}
 			if _, err := Compile(record); err != nil {
