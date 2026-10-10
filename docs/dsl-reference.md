@@ -12680,3 +12680,51 @@ records, four hand sizes), `Karma` (six complete reprints with changed land word
 `Payments` (Force of Nature), `PendingTargets`, `Identity`, `ChosenIdentity`,
 `IndependentDeclarations` and `Invalid`. Existing opponent-entry, hand-size,
 upkeep-payment and intervening-if tests retain their prior contracts.
+
+
+## Layered ordinary upkeep declaration text
+
+`GenericTriggered.WithLayeredUpkeepTextRevision() *GenericTriggered` opts in
+an ordinary printed battlefield upkeep declaration. It includes the existing
+checked revision marker. `Game.AddPrintedUpkeepTextEffect(source *Permanent,
+abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error`
+accepts nonempty validated color/basic-land word changes with `EndOfTurn` or
+`Indefinite` duration. The source must be the original present face-up visit,
+and the declaration must be active, printed, grouped and backed by a retained
+text builder. Invalid requests install no effects and change no declarations.
+Typed-nil rules, granted wrappers, foreign events, missing markers/builders,
+changed event context/capture/targets/body shape and other durations reject.
+
+RON opts in `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer |
+SinglePlayer(You) | SinglePlayer(TheChosenPlayer)), actions)` through its typed
+bound-step lowering. The chosen-player form still requires the opponent entry
+choice. Host-controller, intervening-if, optional/modal/state and source-zone
+contexts keep their separate services.
+
+Each layer pass restores a saved declaration baseline, then applies current
+changes in timestamp order (CR 613.1c, 613.3, 613.7). A prior direct revision can
+supply the baseline. Cleanup recomputes surviving effects from that baseline;
+it cannot retain a word introduced only by an expired effect. Direct revision
+rejects while a layered result is present. Sibling declarations and other source
+instances retain their own baselines and IDs. Names, mana symbols and saved
+entry choices remain fixed (CR 612.2). Granted rules are excluded (CR 612.3).
+
+Detection keeps earlier bodies and captured event players/controllers before
+stack placement. Targets, trigger copies, optional payment and live counts use
+the shared resolution services. Layer-6 removal stops detection; restoration
+uses current text. Phasing keeps the visit and baseline; expiry during phasing
+is recomputed on phase-in. Clones retain separate effects, cleanup, baselines
+and controller contexts. Departure retains the final rule in LKI and pending
+bodies. Return rebuilds printed rules and makes fresh entry choices.
+
+This is a declaration layer prerequisite. Whole-object dispatch, upkeep spell
+continuation and live-copy rebinding remain separate capabilities. No new
+replacement, payment, zone, simultaneous-operation or trigger subsystem is added.
+
+Evidence: native `TestTextUpkeepLayerDeclaration` and `Rejects`; RON
+`TestRONTextUpkeepLayerRecords`, `ChosenIdentity`, `Karma`, `Payments`,
+`PendingTargets`, `Identity`, `IndependentDeclarations`, `Invalid`, `Inventory`
+and `OrderAndExpiry`. Real gameplay maps Black Vise, The Rack and Ivory Tower
+(all ten records), Karma (six records), and Force of Nature (one record).
+The 52-name / 108-record inventory proves declaration-layer acceptance, not
+complete gameplay for every subject.

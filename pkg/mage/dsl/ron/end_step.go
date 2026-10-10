@@ -80,7 +80,7 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
 		if label == "upkeep" && !attached && condition == nil {
-			trigger.WithUpkeepTextRevision()
+			trigger.WithLayeredUpkeepTextRevision()
 		}
 		actions.effects = nil
 		return TriggerA(trigger, actions)

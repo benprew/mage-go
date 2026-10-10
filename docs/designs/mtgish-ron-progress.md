@@ -9,14 +9,14 @@ unique card names** (986 total), and **2,110 compiled / 335 rejected records**
 Compilation does not prove complete gameplay. The strict loader rejects the
 collection and installs no partial registry.
 
-`UPKEEP-DECLARATION-TEXT` adds checked ordinary battlefield upkeep revision
-with typed event-player and saved chosen-player identity. Declaration acceptance
-covers **52 unique names / 108 records**; new gameplay mapping covers **5 names /
-17 records**, including all ten Black Vise, The Rack and Ivory Tower records.
-Compilation gain is **0 names / 0 records**. Pending bodies, targets, payments,
-clones, phasing, control, removal/restoration, source LKI and printed return use
-shared services. Upkeep text layers, whole-object dispatch, spell continuation
-and live-copy rebinding remain separate capabilities.
+`UPKEEP-DECLARATION-TEXT-LAYER` adds ordered layer-3 changes with saved
+baselines, EndOfTurn/Indefinite duration and restoration for ordinary typed
+upkeep declarations. Acceptance covers **52 unique names / 108 records**;
+new layer gameplay mapping covers **5 names / 17 records**. Compilation gain
+is **0 names / 0 records**. Pending text/targets/payments, clones, phasing,
+control, removal/restoration, final LKI and printed return use shared services.
+Whole-object dispatch, spell continuation and live-copy rebinding remain
+separate capabilities.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -67519,3 +67519,163 @@ this entry.
    while useful shared multi-card prerequisites remain.
 
 Migration remains incomplete. No second slice was started.
+
+## Run 2026-10-10: UPKEEP-DECLARATION-TEXT-LAYER
+
+### Baseline and selection
+
+Fresh worktree `make build` and `go test ./pkg/mage/dsl/ron -run
+TestRONTextUpkeepTrigger -count=1` passed. The initial strict loader exited 1:
+815 accepted / 171 rejected unique names, 2,111 compiled / 334 rejected records.
+This is expected collection rejection, not a build or test failure. The existing
+Eureka/repeated-entry implementation, inventory changes, documentation edits,
+.gitignore changes, untracked files and ledger split were preserved.
+
+The latest ranked candidate #1 was dependency-ready. The completed typed upkeep
+revision contract already supplies event-player/chosen-player capture, fresh
+bindings, declaration correspondence and exact target shape checks. The missing
+contract was layer order, saved baselines, duration and restoration.
+
+| Compared candidate | Distinct affected names | Estimated full-card compilation gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Layered ordinary upkeep declaration text (selected, rank #1) | 52 names / 108 records, listed below | 0 names / 0 records; subjects already compile | Enables complete upkeep object/spell text for Black Vise, The Rack, Ivory Tower, Karma and shared upkeep bodies. Whole-object dispatch, spell continuation and live-copy rebinding remain separate. | Small engine layer service, compiler marker, definition checks and bounded lifecycle tests; feasible in one run |
+| Attached mana-event whole-object context (rank #2) | Wild Growth: 1 name / 6 records | 0; records already compile | Exact Aura-host visit and shared mana bonus planning; separate attached spell continuation remains. Enables whole-object changes on the attached mana context. | Medium whole-object preflight and host/planner lifecycle tests |
+| Copy-entry acquired AddAbility identity (rank #3) | Vesuvan Doppelganger: 1 name / 6 records | 0 for the bounded prerequisite; at most 1 after dependent live-copy work | Nested AddAbility trigger, AddAbilityVariable(ThisAbility) and IsACopyOfPermanent require acquired declaration identity and then live-copy installation/rebinding. | Large compared with this slice; acquisition can be bounded, but complete card needs further work |
+
+The selected shared prerequisite has the largest concrete downstream benefit for
+this effort. Full complete records and all nested forms were inspected, including
+Wild Growth and Vesuvan Doppelganger. For the 52 upkeep subjects, identical full
+record lines were grouped: 108 records have 52 distinct complete definitions.
+No unlock estimate came from first-error frequency alone.
+
+### Supported contract and reuse boundary
+
+- `GenericTriggered.WithLayeredUpkeepTextRevision() *GenericTriggered` includes
+  the existing checked upkeep marker and opts in declaration layer support.
+- `Game.AddPrintedUpkeepTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error` installs one printed
+  declaration in layer 3. It accepts nonempty validated color/basic-land word
+  substitutions and only EndOfTurn or Indefinite duration.
+- RON lowers `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer |
+  SinglePlayer(You) | SinglePlayer(TheChosenPlayer)), actions)` through the
+  existing bound-step adapter. Chosen-player syntax still requires the lexical
+  opponent entry choice. Each factory owns fresh event, target and payment
+  bindings. Host-controller and TriggerI retain their prior services. Granted
+  wrappers cannot become printed recipient declarations.
+- Preflight requires the original present face-up source, an active marked
+  printed declaration, stable declaration group and retained text builder.
+  Typed-nil rules, grants, malformed definitions, foreign events, changed event
+  context/capture/target/body shape, missing markers/builders and unsupported
+  durations reject without installing an effect or changing runtime rules.
+- Each effect-manager pass restores the declaration's saved baseline and applies
+  surviving text effects in timestamp order (CR 611.2a, 612.2–3, 613.1c, 613.3,
+  613.7). Prior direct revision can supply that baseline. Direct revision cannot
+  overwrite a current layered result. Each sibling and instance keeps its own
+  baseline, active ID and ordered definition. Names, mana symbols and saved
+  choices remain fixed.
+- Pending detection bodies keep prior text and captured players/controllers
+  before stack placement (CR 603.2b, 603.3–3a). Target legality, copies, payment
+  transactions, damage/life replacements, source LKI, phasing, cleanup and
+  physical return use existing engine services. Expiry during phasing is
+  recomputed on phase-in. Clone effects and baseline maps use the existing
+  copy-on-write discipline; controller changes isolate runtime declarations.
+- RON owns syntax, roles, scope and the adapter opt-in. Mage owns baseline
+  storage, layer installation, preflight, restoration and context isolation.
+  No parallel replacement/payment/zone/trigger service, card-name execution
+  branch, Go-card fallback, global last-action slot or partial registry was added.
+  Whole-object text, upkeep spell continuation and live-copy rules stay outside
+  this complete declaration-layer slice. No second slice was started.
+
+### Failing-first tests and card mappings
+
+RON tests first failed to compile for the missing AddPrintedUpkeepTextEffect.
+Native tests first failed for that method, WithLayeredUpkeepTextRevision and the
+missing per-declaration baseline storage. The phase-expiry fixture was corrected
+to retain PhaseOut's UUID slice for PhaseIn. No assertion was weakened.
+
+| Complete card / context | Test mapping |
+| --- | --- |
+| Black Vise (LEA, LEB, 2ED, 3ED, CED, CEI), The Rack and Ivory Tower (ATQ, 3ED) | `TestRONTextUpkeepLayerRecords`: paid casts, entry choices, no-match layer changes, four hand sizes, correct upkeep player, no early effects, source departure and independent clone; ten records / 40 cases |
+| Black Vise and The Rack | `ChosenIdentity`: layers preserve saved opponent through control, phase cycle, removal/restoration and departure/return; pending damage retains its source facts and chosen player |
+| Karma (all six reprints) | `Karma`: old pending Swamp body, new Forest body, current land counts and exact event player. `OrderAndExpiry`: chained baseline-to-Forest-to-Island changes, repeated passes, a prior direct baseline, temporary/indefinite effects, native cleanup, expiry during phasing, pending old body, clone expiry isolation and stable active ID |
+| Force of Nature (LEA) | `Payments`: color word revision preserves fixed four-green mana payment, no early offers/spending, paid/declined outcomes and independent clone resources |
+| Synthetic typed upkeep with targets | `PendingTargets`: detection versus placement text, changed color filter, trigger copy, separate event players, ordered layers, clone isolation and returned-target illegality with all-illegal cancellation |
+| Synthetic controller upkeep | `Identity`: captured controller, control change, phased rejection/suspended detection, retained visit, removal/restoration, exact final LKI rule, old-visit rejection and printed return |
+| Sibling declarations on separate factory instances | `IndependentDeclarations`: one layer changes only its declaration; eight pending triggers retain separate instances and event bindings |
+| Accepted top-level ordinary upkeep declarations | `Inventory`: complete RON parsing and layer installation for 52 unique names / 108 records; declaration acceptance, not full gameplay for each subject |
+| Native invalid declarations / requests | `TestTextUpkeepLayerDeclaration` (9 cases) and `Rejects` (19 cases): event/zone/state/optional/intervening/capture/marker boundaries, typed nil, grants, source/ID, builder/group, changes, duration, target/context compatibility and atomic rejection |
+| Invalid syntax and foreign contexts | `Invalid`: lexical chosen/event/payment binding, reference type and arity rejection; end-step and intervening-if upkeep cannot use this declaration layer |
+
+The declaration subjects are Arcades Sabboth, Armageddon Clock, Black Vise,
+Brass Man, Breeding Pit, Chromium, Cocoon, Conversion, Copper Tablet, Cosmic
+Horror, Deep Spawn, Elder Spawn, Elvish Farmer, Erhnam Djinn, Fasting, Feral
+Thallid, Force of Nature, Gabriel Angelfire, Halfdane, Homarid, Icatian Moneychanger,
+Island Fish Jasconius, Ivory Tower, Junún Efreet, Juzám Djinn, Karma, Leviathan,
+Living Artifact, Lord of the Pit, Magnetic Mountain, Mana Vault, Nicol Bolas,
+Palladia-Mors, Phantasmal Forces, Primordial Ooze, Safe Haven, Serendib Efreet,
+Spore Flower, Stasis, Storm World, Sunken City, Thallid, Thallid Devourer, The Rack,
+Thelon's Chant, Thelon's Curse, Thorn Thallid, Tourach's Chant, Vaevictis Asmadi,
+Voodoo Doll, Wall of Tombstones and Yawgmoth Demon.
+
+### Verification and measured results
+
+- Focused new and existing upkeep tests passed in the worktree and isolated
+  checkout. Post-format worktree tests passed (RON 1.545s / native 0.495s).
+  Post-lint isolated focused tests also passed (RON 0.890s / native 0.477s).
+- `make build` and `go vet ./...` passed in both checkouts.
+- `go test ./pkg/mage/... -short -count=1` passed in both checkouts
+  (RON 49.899s / 44.145s). `make test` passed in both
+  (RON 46.094s / 43.220s).
+- `make lint` passed with zero issues in the worktree and isolated checkout.
+  The first extra isolated run encountered golangci-lint's process-wide parallel
+  lock because worktree lint was still running. A serial retry passed. This was
+  a transient verification-tool collision, not an engine/build/test failure.
+  No automatic source changes were made; staged implementation files exactly
+  match the independently tested checkout. Unrelated source timestamps and
+  diffs retain their existing changes. `git diff --check` and staged checks pass.
+- Final worktree `go run ./cmd/loadcards -json` exited 1 as expected:
+  815 accepted / 171 rejected names, 2,111 compiled / 334 rejected records.
+  The complete JSON report equals the fresh baseline. Accepted records and all
+  remaining diagnostics are unchanged; strict loading installs no registry.
+- Final isolated loader also exited 1: 814 accepted / 172 rejected names,
+  2,110 compiled / 335 rejected records. Eureka remains rejected without the
+  pre-existing repeated-entry work. Mana Clash's worktree diagnostic remains
+  unsupported EachPlayerAction round producer; isolated HEAD rejects
+  RepeatableActions. Animate Dead still rejects EnchantGraveyardCard, Balance
+  rejects SacrificeAllPermanentsExceptForNum, and Vesuvan Doppelganger rejects
+  entry-copy AddAbility. No persistent environment or pre-existing check failure
+  blocked the run.
+
+Estimated compilation gain was **0 unique names / 0 records**; actual gain is
+**0 unique names / 0 records**. New layer gameplay mappings cover **5 names /
+17 records**, while declaration-layer acceptance covers **52 names / 108 records**.
+These subjects already had accepted records and earlier gameplay contracts;
+this does not count five newly complete collection cards.
+
+No source-data defect was found and no RON source changed. The vocabulary
+snapshot needs no refresh. Complete collection gameplay, runtime integration,
+Go-card deletion and DSL cleanup remain gated. No Go definition, generator or
+DSL export was removed. API/rules-contract documentation covers this layer only.
+
+Changed files: new `pkg/mage/text_upkeep_layer.go`, native tests and
+`pkg/mage/dsl/ron/text_upkeep_layer_test.go`; upkeep trigger checks, `triggered.go`,
+`card.go`, `clone.go`, `game.go`, `effect_manager.go`, `definition.go`, RON
+`end_step.go`, `pkg/mage/doc.go`, both API/rules-contract docs and this ledger.
+The commit contains only this slice. The existing ledger split and repeated-entry
+work remain outside it; the staged ledger preserves HEAD history and appends
+this entry while the working ledger retains the user's split structure.
+
+### Ranked next candidates
+
+1. Complete ordinary upkeep whole-object text context: preflight every rule and
+   reuse these declaration layers. Black Vise and The Rack need saved entry
+   choices; Ivory Tower and Karma supply single-rule hand/land bodies. Aim for
+   one complete multi-card context, before ordinary upkeep spell continuation.
+2. Ordinary upkeep spell-text continuation: fresh entry bindings and preserved
+   printed departure rules. Hand/land/count/payment consumers have concrete
+   multi-card value; saved entry choices need an explicit bounded context.
+3. Attached mana-event whole-object context for Wild Growth (1 name / 6 records):
+   exact host visit and shared bonus planning. Copy-entry AddAbility identity for
+   Vesuvan Doppelganger remains deferred behind useful shared multi-card work.
+
+Migration remains incomplete. This run stops after this one slice.

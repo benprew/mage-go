@@ -1048,6 +1048,7 @@ func (g *Game) syncAbilityContext(perm *Permanent) {
 	perm = g.isolatePrintedStaticAbilityContext(perm)
 	perm = g.isolatePrintedManaTapContext(perm)
 	perm = g.isolatePrintedSpellCastContext(perm)
+	perm = g.isolatePrintedUpkeepContext(perm)
 	perm = g.isolatePrintedCombatPairContext(perm)
 	perm = g.isolatePrintedLandTapContext(perm)
 	perm = g.isolatePrintedActivatedContext(perm)

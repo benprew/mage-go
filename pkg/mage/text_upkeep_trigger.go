@@ -64,6 +64,17 @@ func (t *GenericTriggered) supportsUpkeepTextRevision() bool {
 // RevisePrintedUpkeepTrigger replaces one present printed upkeep declaration.
 // The caller must supply text-layer order, duration and baseline restoration.
 func (g *Game) RevisePrintedUpkeepTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			if _, exists := current.layeredUpkeepOrigins[abilityID]; exists {
+				return fmt.Errorf("direct upkeep revision cannot change a layered result")
+			}
+		}
+	}
+	return g.revisePrintedUpkeepTrigger(source, abilityID, false, changes...)
+}
+
+func (g *Game) revisePrintedUpkeepTrigger(source *Permanent, abilityID uuid.UUID, layered bool, changes ...TextChange) error {
 	if len(changes) == 0 {
 		return fmt.Errorf("upkeep revision requires text changes")
 	}
@@ -79,13 +90,15 @@ func (g *Game) RevisePrintedUpkeepTrigger(source *Permanent, abilityID uuid.UUID
 	var context upkeepTextContext
 	var targets []Target
 	checked := false
+	marked := layered
 	return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
 		fresh, ok := t.upkeepTextContext()
-		if !ok || !t.upkeepTextRevision {
+		if !ok || !t.upkeepTextRevision || (marked && !t.upkeepTextLayer) {
 			return false
 		}
 		if !checked {
 			context, targets, checked = fresh, t.targets, true
+			marked = marked || t.upkeepTextLayer
 		}
 		if fresh != context || len(t.targets) != len(targets) {
 			return false

@@ -601,6 +601,7 @@ func (em *EffectManager) Apply(g *Game) {
 	g.resetPrintedStaticAbilityTextLayers()
 	g.resetPrintedManaTapTextLayers()
 	g.resetPrintedSpellCastTextLayers()
+	g.resetPrintedUpkeepTextLayers()
 	g.resetPrintedCombatPairTextLayers()
 	g.resetPrintedLandTapTextLayers()
 	g.resetPrintedActivatedTextLayers()

@@ -283,7 +283,7 @@ func describeDefinition(v any) definitionNode {
 			n.problem = "text revision requires a valid fixed, attached or produced-type mana bonus"
 		}
 	case *GenericTriggered:
-		if e.upkeepTextRevision && !e.supportsUpkeepTextRevision() {
+		if (e.upkeepTextRevision || e.upkeepTextLayer) && (!e.upkeepTextRevision || !e.supportsUpkeepTextRevision()) {
 			n.problem = "text revision requires a typed ordinary battlefield upkeep trigger"
 		}
 		if e.manaTapTextRevision && !e.supportsManaTapTextRevision() {
