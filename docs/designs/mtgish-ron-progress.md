@@ -9,13 +9,12 @@ unique card names** (986 total), and **2,110 compiled / 335 rejected records**
 Compilation does not prove complete gameplay. The strict loader rejects the
 collection and installs no partial registry.
 
-`UPKEEP-WHOLE-OBJECT-TEXT` adds checked complete-definition dispatch to the
-existing ordinary upkeep declaration layers. Acceptance covers **10 names /
-26 records**; new real consumer gameplay mappings cover **4 names / 16 records**.
-Compilation gain is **0 names / 0 records**. One ordinary trigger can include
-its exact opponent entry choice. Saved choices, pending facts, ordered expiry,
-clones, control, phasing, removal, LKI and printed return use shared services.
-Keywords, mixed rules, spell continuation and live-copy rebinding remain separate.
+`UPKEEP-SPELL-TEXT-CONTINUATION` adds checked ordinary upkeep spell entry.
+Acceptance covers **8 names / 18 records** with real consumer gameplay
+extensions for eight already compiled subjects. Compilation gain is **0 names /
+0 records**. Fresh bindings, copies/tokens, clones, later text layers, phasing,
+control, removal, pending bodies, LKI and printed return use shared services.
+Chosen entry, keyword siblings, mixed rules and live-copy rebinding remain separate.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -67840,5 +67839,168 @@ in the working tree; the staged ledger retains HEAD history plus this entry.
 3. Attached mana-event whole-object context for Wild Growth (1 name / 6 records):
    exact host visit and shared bonus planning. Defer entry-copy AddAbility for
    Vesuvan Doppelganger while useful shared work remains.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: UPKEEP-SPELL-TEXT-CONTINUATION
+
+Status: complete bounded ordinary upkeep spell-entry slice. This run stops after
+this capability. Collection gameplay, startup cutover and removal gates remain
+unfinished.
+
+### Environment and candidate selection
+
+The initial worktree had unstaged changes to `.gitignore`, design/progress/API
+and contract docs, engine definition/doc and optional-hand-entry code, RON
+compiler/inventory/definition/numeric/optional-entry tests, and untracked ledger
+archive and repeated-entry source/tests. All were preserved. The index was empty.
+Slice changes were staged against the initial file snapshots. Documentation
+staging retains HEAD history with this entry, while the user's ledger split and
+unrelated documentation additions remain in the worktree.
+
+Fresh baseline `TestRONTextUpkeepObject` passed (0.899s); `make build` passed.
+The strict loader exited 1 for collection rejection, not a build failure:
+**815 accepted / 171 rejected names**, **2,111 compiled / 334 rejected records**.
+The worktree's pre-existing repeated-entry changes account for Eureka compared
+with HEAD's **814 / 172 names**, **2,110 / 335 records**. The collection still has
+986 unique names and 2,445 records. No partial registry was published.
+
+The first ranked candidate was dependency-ready. Complete subject and consumer
+RON records were inspected, including all 18 subject reprints and nested target,
+choice, payment and duration forms. Targeted vocabulary queries inspected
+`AtTheBeginningOfAPlayersUpkeep` and `AsPermanentEnters`.
+
+| Candidate | Distinct subjects / records | Estimated new full-card compilation unlocks; blockers | Downstream value; effort |
+| --- | --- | --- | --- |
+| Ordinary upkeep spell text, bounded to no entry choice (selected) | Copper Tablet, Ivory Tower, Karma, Erhnam Djinn, Juzám Djinn, Gabriel Angelfire, Halfdane, Storm World: 8 / 18 | 0: all already compile. Missing checked continuation through permanent entry. Black Vise and The Rack remain outside this bounded context because they need saved opponent entry choices. | Both real word consumers can revise these pending permanent spells. Existing complete-object and trigger-layer checks, correspondence and entry services make this a bounded medium implementation/test effort. |
+| Complete upkeep object text with fixed intrinsic keywords | Force of Nature, Phantasmal Forces, Serendib Efreet, Lord of the Pit: 4 / 20 | 0: existing payment/damage bodies already compile. Complete-definition keyword/sibling checks are missing; separate spell continuation remains needed. | Both word consumers gain four creature subjects with fixed keyword groups and payment/damage bodies. Medium effort with wider whole-definition validation. |
+| Attached mana-event whole-object text | Wild Growth: 1 / 6 | 0: already compiles. Complete Aura/host declaration and mana-bonus checks are missing. | Exact host visit and shared mana planning; medium effort for one subject. Defer while shared multi-card work is available. |
+
+The first candidate supplies the largest credible shared gain with established
+prerequisites. This slice does not claim new complete collection cards from
+compilation or entry acceptance. Existing full-body mappings remain relevant;
+new evidence extends the supported spell-entry context.
+
+### Exact contract and reuse boundary
+
+- `WithUpkeepSpellTextContinuation() CardOption` marks exactly one ordinary
+  upkeep rule. It requires `WithUpkeepObjectTextRevision()` and a
+  `GenericTriggered.WithLayeredUpkeepTextRevision()` declaration. The complete
+  definition must be a nonland, non-Aura permanent without keywords, modes,
+  additional/alternate casting costs, cast targets, siblings or another
+  continuation marker. The event is typed AnyPlayer or controller upkeep.
+- RON recognizes a single
+  `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer | SinglePlayer(You)), actions)`.
+  Existing resolving action/target/payment/choice scopes remain authoritative.
+  RON spelling stays in `ron`; reusable entry behavior stays in mage. Chosen
+  player entry, keyword siblings, intervening-if, modal and mixed rules remain
+  separate supported contexts or explicit blockers.
+- `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+  dispatches the new marker. Preflight checks the retained stack visit, both
+  complete definitions, subtype context, typed capture name and event-player
+  timing, target shapes, ability groups and replacement correspondence. A
+  pending permanent spell cannot have resolving actions, announced targets or
+  captured casting results. Invalid words, missing builders/groups and changed
+  declarations reject atomically before stack replacement.
+- Resolution uses the existing text builder and battlefield entry pipeline to
+  construct fresh per-instance event, target, choice and payment bindings.
+  The physical card's ID, owner, token status and departure card are retained.
+  Stack copies enter as tokens; game clones keep independent revisions. Names
+  and mana symbols stay fixed. Ordinary text stays outside copiable values.
+- Existing upkeep object/declaration layers use the continued entry baseline
+  for later ordered changes and expiry. Phasing keeps the visit; removal stops
+  detection and restoration keeps the baseline. Pending bodies retain their
+  prior text, detection controller and event facts. Departure keeps final LKI;
+  return/recast uses physical printed rules.
+- Rules evidence: CR 400.7/400.7a, 603.3/603.3a, 612.2/612.3 and 707.10/707.10f.
+  Shared target legality, cost transactions, prevention, simultaneous entry and
+  replacement services retain their contracts. This slice adds no parallel
+  payment, zone, event or replacement pipeline, Go fallback, card-name executor,
+  global last-action slot, game-time declaration panic or partial registry.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation for the absent
+`WithUpkeepSpellTextContinuation` API. RON inventory tests failed because upkeep
+permanent spells could not use the ordinary instant/sorcery continuation.
+After correcting the consumer fixture's spell target from source ID to stack ID,
+Karma gameplay failed because its changed land word did not continue into entry.
+Implementation followed those failures. One unused import and two fixture
+sorcery-timing setup errors were corrected. No gameplay assertion was weakened.
+
+| Subject/context | New evidence |
+| --- | --- |
+| All 8 names / 18 records | `TestRONTextUpkeepSpellInventory`: complete record compilation, checked stack revision and permanent entry for every reprint. Entry acceptance, not standalone full gameplay proof. |
+| Karma, all 6 reprints | `TestRONTextUpkeepSpellKarma`: each real Magical Hack reprint changes Swamp to Forest on the pending spell; no announcement word choices or early subject entry; fresh upkeep event-player bindings, damage at resolution, printed departure and recast. |
+| Copper Tablet, Ivory Tower, Juzám Djinn, Storm World | `TestRONTextUpkeepSpellRecords`: real Sleight of Mind on pending spells, correct any-player/controller timing, resolution hand-size life/damage and independent clone outcomes. Reprints share earlier body contracts. |
+| Erhnam Djinn | `Records`: real Sleight of Mind and Magical Hack, continued Forest-to-Island target grant and next-upkeep expiry after source departure. Existing `TestRONNextUpkeepErhnam*` mappings retain combat and duration cases. |
+| Halfdane, Gabriel Angelfire | `Records`: continued target P/T capture and chosen Flying grant, correct trigger timing and independent clones. Existing `TestRONTemporaryCharacteristicHalfdane` and `TestRONTemporaryRampage*` retain all choice/duration/legality mappings. |
+| Karma | `Lifecycle`: ordered stack changes, copied token identity, independent copied spell/game-clone rules, exclusion from copiable values, later layer baseline, pending earlier text, removal/restoration, phasing/expiry, LKI and printed departure. |
+| Synthetic controller upkeep | `Identity`: continued rules, detection controller, control changes, phasing, removal/restoration, final LKI, rejected departed visit and physical printed return. |
+| Synthetic targeted upkeep | `PendingTargets`: fresh entry bindings, old pending target text, trigger copying, separate event players, later layers, game clones and returned-target all-illegal cancellation. |
+| Synthetic fixed two-green payment | `Payments`: color word revisions through stack and battlefield leave mana symbols fixed; paid, declined, wrong-color and insufficient paths preserve payment timing/resources and clone isolation. |
+| Invalid/foreign contexts | `Boundaries`: chosen entry cards and keyword siblings reject this spell context; malformed event, foreign player and unbound payment declarations reject in RON. Native `TestTextUpkeepSpellDeclaration` and `RejectsAtomic` cover duplicate/missing markers, incompatible rules, nil declarations, changed timing/capture/targets/keywords/subtypes, missing builders/groups, foreign stack results/bodies and countered visits. |
+
+### Verification and measured results
+
+- Focused `go test ./pkg/mage/dsl/ron -run TestRONTextUpkeepSpell -count=1`
+  and `go test ./pkg/mage -run TestTextUpkeepSpell -count=1` pass in the
+  worktree and isolated HEAD-plus-staged-slice checkout. Final runs after test
+  formatting/naming changes: RON 0.776s / 0.607s; native 0.370s / 0.443s.
+- `make build` and `go vet ./...` pass in both checkouts. Vet was also rerun
+  after the final test variable rename.
+- `go test ./pkg/mage/... -short -count=1` passes in both (RON 42.223s /
+  42.803s). `make test` passes in both (RON 50.247s / 43.091s).
+- Initial worktree `make lint` found one new test variable named `any` that
+  shadowed a built-in type (`revive`). It was renamed to `allUpkeeps`; no
+  assertion changed. Lint also grouped imports in the new RON test. Focused
+  tests and vet were rerun. Final `make lint` passes with zero issues in both
+  checkouts. The first concurrent isolated attempt hit golangci-lint's process
+  lock; the serialized retry passed. No environmental blocker remains.
+- Final worktree and staged `git diff --check` pass. The isolated diff check
+  passes. Every staged Go file exactly matches its isolated validated file.
+  No unrelated automatic source change was found in the tracked-file audit.
+- Final worktree `go run ./cmd/loadcards -json` exits 1 for expected strict
+  collection rejection: **815 accepted / 171 rejected names**, **2,111 compiled /
+  334 rejected records**. The entire JSON report, including diagnostics, equals
+  the fresh baseline. Accepted records remain accepted; no partial registry
+  is installed.
+- Final isolated loader exits 1: **814 accepted / 172 rejected names**,
+  **2,110 compiled / 335 rejected records**. Eureka and Mana Clash still reject
+  `RepeatableActions` without the user's unstaged repeated-entry work. In the
+  worktree, Mana Clash still rejects repeated `EachPlayerAction` round production.
+  Other retained diagnostics include Animate Dead `EnchantGraveyardCard`,
+  Balance `SacrificeAllPermanentsExceptForNum`, Cyclopean Tomb's counter-bound
+  duration and Vesuvan Doppelganger entry-copy `AddAbility`.
+
+Estimated compilation gain: **0 names / 0 records**. Actual gain: **0 names /
+0 records**. New spell-entry acceptance covers **8 names / 18 records**, with
+real consumer gameplay extensions for all eight unique subjects. These are
+context extensions for already compiled cards, not eight newly complete cards.
+The broader candidate's two chosen-entry subjects were deliberately excluded
+before editing to keep one complete supported shape within this run.
+
+No source defect was found, no RON source changed and the vocabulary snapshot
+needs no refresh. Missing chosen-entry and keyword-sibling spell contracts remain
+explicit boundaries. Complete collection gameplay, runtime loading, Go-card
+removal and unused DSL cleanup remain gated. No Go definitions, generators or
+DSL exports were removed. API/rules-contract docs describe only this new contract.
+
+Changed files: mage `text_upkeep_spell.go` and native tests; RON
+`text_upkeep_spell.go` and tests; `card.go`, `definition.go`, `stack_resolver.go`,
+`text_spell_continuation.go`, RON `compiler.go`, the existing upkeep object API
+comment, `pkg/mage/doc.go`, API/rules-contract docs and this ledger.
+
+### Ranked next candidates
+
+1. Complete upkeep object text with fixed intrinsic keywords: Force of Nature,
+   Phantasmal Forces, Serendib Efreet and Lord of the Pit (4 names / 20 records).
+   Preserve every fixed keyword group; preflight all declarations atomically.
+2. Chosen-player upkeep spell continuation: Black Vise and The Rack (2 names /
+   8 records). Fresh independent opponent choices at entry/copy, fixed saved
+   choice through control/phasing, and physical printed departure.
+3. Attached mana-event whole-object text: Wild Growth (1 name / 6 records),
+   exact host incarnation and shared bonus planning. Defer while shared
+   multi-card work remains.
 
 Migration remains incomplete. This run stops after this one slice.

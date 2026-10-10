@@ -8,7 +8,7 @@ import (
 )
 
 // WithUpkeepObjectTextRevision permits complete ordinary upkeep text changes.
-// Spell entry and mixed rules need separate contracts.
+// Spell entry with choices and mixed rules need separate contracts.
 func WithUpkeepObjectTextRevision() CardOption {
 	return func(card *BaseCard) { card.upkeepObjectText++ }
 }

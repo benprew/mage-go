@@ -78,6 +78,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.spellCastSpellText != 0 {
 		return g.reviseSpellCastSpellText(obj, changes)
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.upkeepSpellText != 0 {
+		return g.reviseUpkeepSpellText(obj, changes)
+	}
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.manaTapSpellText != 0 {
 		return g.reviseManaTapSpellText(obj, changes)
 	}

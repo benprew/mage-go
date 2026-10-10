@@ -12773,3 +12773,19 @@ with pending old words), `PendingTargets`, `Identity`, `ChosenIdentity`,
 The inventory proves complete-context installation for 10 names / 26 records;
 it does not prove full gameplay for every subject. New consumer gameplay maps
 four names / 16 records. Compilation coverage is unchanged.
+
+### Ordinary upkeep spell text continuation
+
+RON marks a nonland, non-Aura permanent whose complete rules are one
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer | SinglePlayer(You)), actions)`.
+The actions use existing validated action, target, choice and payment scopes.
+The compiler adds `mage.WithUpkeepSpellTextContinuation()` with the complete
+object marker and layered trigger marker. Keywords, entry choices and mixed
+rules require separate contexts.
+
+`Game.RevisePrintedSpellText` checks both retained definitions and declaration
+correspondence before replacement. Revised spells enter with fresh bindings;
+fixed mana symbols, physical identity and printed departure rules stay intact.
+Copies become tokens with independent rules. Later upkeep text layers start
+from the continued baseline. See `TestRONTextUpkeepSpell*` for real RON word
+consumers, all eight subject names, targets, payments and lifecycle evidence.

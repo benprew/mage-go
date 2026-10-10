@@ -16484,3 +16484,39 @@ with pending old words), `PendingTargets`, `Identity`, `ChosenIdentity`,
 The inventory proves complete-context installation for 10 names / 26 records;
 it does not prove full gameplay for every subject. New consumer gameplay maps
 four names / 16 records. Compilation coverage is unchanged.
+
+## Ordinary upkeep spell text continuation
+
+`WithUpkeepSpellTextContinuation() CardOption` permits exactly one ordinary
+battlefield upkeep trigger on a nonland, non-Aura permanent. It requires the
+complete object marker and `WithLayeredUpkeepTextRevision`. Typed event-player
+capture must use any-player or controller timing. Entry choices, intrinsic
+keywords, sibling rules, modes, casting costs/targets and other continuation
+markers reject during definition validation.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks the exact retained stack visit, both complete definitions, subtype and
+player-capture context, target group shapes and ability correspondence before
+atomic replacement. The pending permanent spell cannot contain resolving
+bodies, targets or captured casting results. Invalid words, missing builders
+or groups and countered visits return errors without mutation.
+
+The shared text builder and battlefield entry pipeline construct fresh event,
+target, choice and payment bindings (CR 400.7a). Ordered word changes leave
+names and mana symbols fixed (CR 612.2). Spell copies become independent tokens
+(CR 707.10f); game clones keep independent revisions. Ordinary word changes
+remain outside copiable values. Later layer-3 changes use the continued entry
+baseline and expiry restores it. Phasing keeps the visit; layer-6 removal
+stops detection and restoration keeps the continued rule. Pending triggers
+keep their detection text and controller (CR 603.3/603.3a). Departure retains
+final LKI and returns the physical printed card; a new cast uses printed rules.
+
+Evidence: `TestRONTextUpkeepSpellInventory` covers eight names / 18 records.
+`Karma` uses all six real Magical Hack reprints; `Records` uses real Sleight of
+Mind and Magical Hack with seven other subjects. `Lifecycle`, `Identity` and
+`PendingTargets` cover copies, clones, later layers, phasing, control, removal,
+LKI, exact visits and target legality. `Payments` covers paid, declined,
+wrong-color and insufficient fixed mana with separate clone state. Native
+`TestTextUpkeepSpellDeclaration` and `RejectsAtomic` check invalid declarations
+and revision atomicity. Existing replacement, simultaneous entry, target and
+optional-payment services retain their contracts; no new pipeline is added.

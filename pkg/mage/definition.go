@@ -395,6 +395,11 @@ func ValidateCardDefinition(name string, card Card) error {
 			return fmt.Errorf("%s: %w", name, err)
 		}
 	}
+	if base, ok := card.(*BaseCard); ok && base != nil && base.upkeepSpellText != 0 {
+		if _, err := upkeepSpellTextContext(card); err != nil {
+			return fmt.Errorf("%s: %w", name, err)
+		}
+	}
 	if base, ok := card.(*BaseCard); ok && base != nil && base.manaTapSpellText != 0 {
 		if _, err := manaTapSpellTextContext(card); err != nil {
 			return fmt.Errorf("%s: %w", name, err)

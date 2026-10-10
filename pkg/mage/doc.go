@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithUpkeepSpellTextContinuation] for one ordinary upkeep spell rule.
+// The complete object marker and trigger layer marker must also be present.
+// Any-player and controller events keep fresh bindings through checked entry.
+// Targets and fixed mana symbols keep their declarations. Copies enter as tokens;
+// clones keep separate changes. Later text layers use the entry baseline.
+// Phasing keeps the visit. Removal stops detection; pending bodies keep facts.
+// Departure keeps final LKI and the physical printed card. Return uses printed
+// rules. Entry choices, keywords and mixed rules need separate contracts.
+//
 // Use [WithUpkeepObjectTextRevision] for one complete ordinary upkeep rule.
 // [Game.AddPrintedUpkeepObjectTextEffect] checks all printed declarations.
 // One opponent entry choice can supply the chosen-player context.
