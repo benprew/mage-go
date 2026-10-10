@@ -65,6 +65,9 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 		player := mage.BindPlayer(ctx.stepEvent.playerName)
 		bindings := instanceBindings{steps: map[*stepEventPlan]*mage.PlayerBinding{ctx.stepEvent: player}}
 		var pattern mage.EventPattern = mage.TurnStepBegins(step, player)
+		if chosen {
+			pattern = mage.ChosenPlayerUpkeep(player)
+		}
 		if attached {
 			host := mage.BindPermanent(ctx.permanentEvent.name)
 			bindings.tapped = map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: host}
@@ -76,8 +79,8 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 			options = append(options, mage.WithInterveningIf(condition))
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
-		if chosen {
-			trigger.AndConditionData(mage.EventIsChosenPlayerUpkeep{})
+		if label == "upkeep" && !attached && condition == nil {
+			trigger.WithUpkeepTextRevision()
 		}
 		actions.effects = nil
 		return TriggerA(trigger, actions)

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [GenericTriggered.WithUpkeepTextRevision] for an ordinary upkeep rule.
+// [Game.RevisePrintedUpkeepTrigger] keeps its printed declaration identity.
+// The event must use typed player capture on the battlefield.
+// [ChosenPlayerUpkeep] keeps the source's saved entry choice at detection.
+// Fresh rules keep the player context, targets and independent bindings.
+// Pending bodies keep prior text and event facts. Phasing keeps the visit.
+// Removal stops detection; restoration keeps revisions. Clones stay separate.
+// Departure keeps pending bodies and LKI. Return uses printed rules.
+// The caller must supply layer order, duration and baseline restoration.
+// Other event contexts, spell text and whole-object text need separate services.
+//
 // Use [ChangePrintedSpellText] to apply saved word pairs to a pending spell.
 // All pairs must resolve before the checked revision changes live rules.
 // The action makes no choices. An absent spell cannot use departure information

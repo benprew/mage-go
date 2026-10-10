@@ -16341,3 +16341,53 @@ In the Eye of Chaos, Nether Void and Presence of the Master (10 names / 35 recor
 with both complete Sleight of Mind and Magical Hack consumers (70 cases).
 This establishes this subject context; general text subjects and live-copy
 rebinding remain incomplete.
+
+
+## Printed ordinary upkeep declaration text revision
+
+`GenericTriggered.WithUpkeepTextRevision() *GenericTriggered` marks an ordinary
+battlefield upkeep declaration. `Game.RevisePrintedUpkeepTrigger(source
+*Permanent, abilityID uuid.UUID, changes ...TextChange) error` replaces that
+printed declaration after checked definition rebuilding. It requires nonempty
+valid changes, the original present face-up source, its printed declaration
+group, an active marked rule, and a retained text builder. Invalid requests leave
+runtime declarations and revision state unchanged. Typed-nil runtime rules reject.
+
+RON lowers `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer |
+SinglePlayer(You) | SinglePlayer(TheChosenPlayer)), actions)` on its existing
+bound-step path. The chosen-player form requires the existing opponent entry
+choice in lexical scope and uses `ChosenPlayerUpkeep(player *PlayerBinding)
+EventPattern`. This typed event reads the saved entry choice at detection and
+captures the matching event player. It does not repeat the entry choice. Other
+upkeep forms retain their existing adapters. Host-controller, intervening-if,
+optional-trigger, modal, state and source-zone contexts cannot use this service.
+
+A revision keeps the any-player, controller or chosen-player context, one body,
+and target declaration kinds, counts and bindings. Target filters and semantic
+words can change. Each fresh body owns its event, target and payment bindings.
+The runtime declaration keeps its ability ID and current source/controller.
+Ordered revisions use the declaration's retained definition, independently of
+siblings and other instances. Names and mana symbols keep their printed values.
+
+Detection captures the event player and controller before stack placement
+(CR 603.2b, 603.3a). Pending bodies and trigger copies keep their prior rules and
+facts (CR 603.3, 113.7a). Choices and optional payments occur at resolution;
+current hand and land counts are read then. Returned targets remain illegal.
+Phasing suspends detection and revision, but preserves the visit and its revision.
+Ability removal stops detection; restoration uses the revised printed rule.
+Departure leaves pending bodies and exact source LKI available. Return rebuilds
+printed rules and makes a new entry choice. Game clones retain separate runtime
+rules, bindings, payments and actions. Shared trigger, target, payment, damage,
+life, zone and clone services retain APNAP and replacement ordering.
+
+This is a declaration prerequisite. The caller must provide layer-3 order,
+duration and baseline restoration. Whole-object text dispatch, spell text
+continuation and live-copy rebinding need separate contracts. Granted recipient
+abilities cannot be revised as printed declarations (CR 612.3).
+
+Evidence: native `TestTextUpkeepTriggerDeclaration` and `RejectsAtomic`; RON
+`TestRONTextUpkeepTriggerRecords` (all ten Black Vise, The Rack and Ivory Tower
+records, four hand sizes), `Karma` (six complete reprints with changed land words),
+`Payments` (Force of Nature), `PendingTargets`, `Identity`, `ChosenIdentity`,
+`IndependentDeclarations` and `Invalid`. Existing opponent-entry, hand-size,
+upkeep-payment and intervening-if tests retain their prior contracts.
