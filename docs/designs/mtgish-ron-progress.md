@@ -8,14 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`MIXED-STATIC-EVENT-OBJECT-TEXT` adds atomic whole-permanent dispatch for one
-global static rule paired with a controller mana bonus or fixed upkeep payment.
-New interaction evidence covers **3 names / 12 complete records**; acceptance
-gain is **0 names / 0 records**. Both declarations and registrations pass
-preflight before installation. Shared layers retain ordered baselines, mana
-symbols, IDs, payment rollback, pending upkeep bodies, clones, control, phasing,
-removal, LKI and printed return. Attached and other mixed contexts, live-copy
-rebinding and complete word-changing consumers remain gaps.
+`ATTACHED-OBJECT-TEXT` adds complete creature Aura dispatch for one host grant
+or fixed-mana host action with a fixed enchant restriction. New interaction
+evidence covers **14 names / 74 complete records**; acceptance gain is
+**0 names / 0 records**. Fresh complete declarations pass preflight before the
+existing text-layer installer runs. Ward exceptions, host/donor bindings, ordered
+baselines, expiry, copies, clones, control, phasing, removal, LKI and printed
+return use shared services. Mixed Auras, other paired contexts, live-copy rules
+and complete word-changing consumers remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -66242,5 +66242,183 @@ obsolete authoring cutover is claimed.
 3. Spell-target CreateSpellEffect and complete union/modal word-changing consumers,
    once permanent contexts are ready. Vesuvan Doppelganger's copy-added ability
    and live-copy rebinding remain explicit dependencies.
+
+Stopped after one capability slice. Migration remains incomplete.
+
+## Run 2026-10-10: ATTACHED-OBJECT-TEXT
+
+Status: complete bounded creature Aura object-text slice. This is implementation
+work, with failing-first tests and native engine execution. Compilation progress
+and gameplay evidence remain separate. Starting user changes, including Eureka
+entry-round work and the ledger archive move, are preserved.
+
+### Fresh baseline and candidate comparison
+
+Fresh make build and RON short tests passed. The strict loader exited 1 for
+collection rejection: 813 accepted / 173 rejected unique names (986 total),
+2,099 compiled / 346 rejected records (2,445 total). It published no partial
+registry. No build, test or environment failure selected this slice.
+
+The latest entry's first candidate, complete attached object text, is dependency
+ready. Complete RON records and nested forms were inspected; identical reprints
+are counted once in candidate value. The supported shape's complete collection
+inventory is checked by TestRONTextAttachedObjectInventory.
+
+| Candidate | Distinct affected names | Estimated full-card accepts | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Complete attached object text | Black Ward, Blue Ward, Green Ward, Red Ward, White Ward; Firebreathing, Blessing, Regeneration; Burrowing, Fishliver Oil, Flight, Fear, Lance, Eternal Warrior: 14 names / 74 records | 0: these donors already compile | Shared permanent-target prerequisite for both Sleight of Mind and Magical Hack. Complete consumers still reject CreateSpellEffect; mixed Auras and live-copy contexts stay separate. | Moderate: one context check, AST eligibility and existing single-declaration installers; native atomic and RON lifecycle tests |
+| Mixed static/activation and intrinsic/static creature object text | Sedge Troll, Thrull Champion, Beasts of Bogardan, Ivory Guardians: 4 names / 9 records | 0: these creatures already compile | Both consumers need atomic paired declarations. Existing sibling spell-continuation contexts supply reuse, but whole-permanent pairing remains missing. | Moderate: paired preflight and two existing layer services, with conditional membership and activation/protection interactions |
+| Complete spell-target text consumers | Sleight of Mind, Magical Hack: 2 names / 12 records | Up to 2, conditional on all nested contexts | CreateSpellEffect is only the first error. Remaining permanent contexts, complete union/modal installation and Vesuvan Doppelganger live-copy rebinding prevent a complete supported consumer contract. | Large and not bounded to this run |
+
+The first candidate wins through the largest concrete shared gain for similar
+effort. Its 14 donor contexts serve both consumer spells. Firebreathing was
+checked together with all five Wards; Blessing and Regeneration share its exact
+fixed-mana host-action context. Consecrate Land, Holy Armor, The Brute and Thrull
+Retainer have extra rules; Farmstead and Equinox grant event or activated rules.
+They do not enter this complete context. No first-error frequency was used as
+an unlock estimate, and no single-card feature was selected.
+
+### Supported signatures, contexts and reuse boundary
+
+New engine API:
+
+- CreatureEnchantTarget() Target
+- WithAttachedObjectText() CardOption
+- Game.AddPrintedAttachedObjectTextEffect(source *Permanent,
+  duration core.Duration, changes ...TextChange) error
+
+CreatureEnchantTarget records typed fixed-creature enchant provenance. The
+shared target-context comparison retains that marker across fresh definitions.
+The card marker survives normal copies; BaseCard.CloneFrom clears it when a
+legacy copy replaces construction provenance.
+
+RON owns attachedObjectTextRules and source spelling. It marks exactly two rules,
+in either order: EnchantPermanent(IsCardtype(Creature)) and one of:
+
+- PermanentLayerEffect(HostPermanent, [AddAbility(abilities)]), for nonempty
+  validated keyword symbols, fixed basic landwalk or
+  ProtectionAndDoesntRemovePermanents(FromColor(Colors([...])),
+  SinglePermanent(ThisPermanent)).
+- Activated(PayMana([fixedManaSymbol, ...]), ActionList([hostAction])), with a
+  nonempty fixed-symbol mana payment and one RegeneratePermanent(HostPermanent)
+  or CreatePermanentLayerEffectUntil(HostPermanent,
+  [AdjustPT(integer, integer)], UntilEndOfTurn).
+
+Only Enchantment with exactly the Aura subtype is marked. The engine checks one
+fixed creature enchant target, one eligible printed ability, no extra keywords,
+modes or casting costs, fresh complete context, matching declaration group and
+grant count or ordinary action declaration counts/timing/limits. It rejects typed nil runtime
+abilities before ID access. The existing single-declaration installer checks the
+active printed rule and complete static registrations on an isolated clone
+before live installation. Indefinite and EndOfTurn are supported; other durations
+fail atomically. No name branches, fallback factory, partial registry, source-data
+change or broad DSL export was added.
+
+ChangePrintedPermanentText now dispatches this complete Aura context. RON retains
+its lexical per-instance ChooseTwoColorWords/ChooseTwoBasicLandTypes bindings
+and CreatePermanentLayerEffect word-substitution lowering. The real consumer
+permanent branches are extracted only for tests; production complete consumer
+records remain strict errors.
+
+Reused engine services: BuildTextDefinitionRevision, ReplacementAbility,
+sameActivatedObjectTextContext, AddPrintedStaticAbilityTextEffect,
+AddPrintedActivatedTextEffect, ordered baseline reset and expiry, current-host
+attachedEffect and AttachedPermanent, shared grant/protection services, existing
+cost transaction, stack body copies, phasing and removal, exact incarnations,
+LKI, printed return and CaptureCopiableValues. Donor control stays separate from
+host control. A resolving action reads the current attachment, or its retained
+attachment after donor departure; a returned or phased host cannot receive it.
+No replacement ordering, simultaneous-operation or payment mechanics changed.
+
+Rules basis: CR 303.4a/c/e/m, 400.7, 612.1–3, 613.1c/f/g, 702.16b–f/n and 707.2.
+No source defect was corrected. No RON sources changed, so the vocabulary
+snapshot needs no refresh. Mixed Auras, changing enchant restrictions, Aura
+stack text, acquired live-copy rules and complete consumer cards stay separate.
+
+### Failing-first evidence and card-to-test mapping
+
+The first native test compilation failed on the missing marker and engine API;
+a fixture's core.AttachAura qualification was corrected before the next run.
+A minimal rejecting stub then failed both valid native grant/action cases.
+Before lowering/dispatch support, the real Ward and landwalk records failed their
+changed protection/evasion assertions. Tests were not weakened. New tests also
+require a successful no-match installation on every supported complete record,
+so fixed keyword and fixed-mana actions cannot pass through ignored engine errors.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Black Ward, Blue Ward, Green Ward, Red Ward, White Ward: 30 complete records across LEA/LEB/2ED/3ED/CED/CEI | TestRONTextAttachedObjectRecords casts each actual Aura and extracted Sleight permanent branch; checks changed host protection, unaffected other creature, stable IDs/mana symbols, exact donor exception and another white Aura's exclusion |
+| Burrowing: 6 records; Fishliver Oil: ARN, 1 record | Records casts extracted real Magical Hack permanent branch; checks Forestwalk and actual landwalk evasion |
+| Flight, Fear, Lance: 18 records; Eternal Warrior: LEG, 1 record | Records checks fixed grants after a no-match word operation, with correct host and unchanged declaration identity |
+| Firebreathing, Blessing, Regeneration: 18 records | Records checks donor/host controller separation, unaffordable activation, unchanged colored payment, stack timing, independent cloned resolution, full P/T adjustments and destruction consumed by the regeneration shield |
+| Ordered text and grant lifecycle | TestRONTextAttachedObjectLifecycle checks Red Ward layers, surviving-layer recomputation, printed/granted word separation on White Knight, clone expiry, reattachment, donor control, removal/phasing expiry, copied printed values, final host protection LKI and returned Aura visits |
+| Host identity and pending actions | TestRONTextAttachedObjectActivationBindings covers Firebreathing after reattachment, donor departure, host return, host phasing and donor control changes; pending stack identity/bodies and cloned outcomes remain independent |
+| Aura copies and legality | TestRONTextAttachedObjectCopiesAndLegality checks illegal noncreature target rollback, copied Aura token entry/attachment, independent original/copy grants, exact exceptions and state-based removal of only the other white Aura |
+| Complete source inventory | TestRONTextAttachedObjectInventory parses every collection file and verifies exactly 14 names / 74 complete records have this shape and permit native installation |
+| Declaration and context boundaries | TestRONTextAttachedObjectBoundaries rejects malformed/empty grants, incorrect Ward exception, unknown landwalk, unbound/incompatible/identical word bindings and mixed text/P/T parts; excluded complete card contexts reject native installation |
+| Atomic native preflight | TestTextAttachedObjectAtomic checks valid grant/action and changed action cost/body/limit, grant count/kind, lost rule/card marker, duplicate marker, changed group/target, extra rule/keyword/cost, missing builder/group/runtime/registration, typed nil runtime, empty/invalid words, duration, face-down, phasing and return; failure preserves live source and effect count |
+
+Existing printed single-declaration grant/activation tests retain their full
+protection targeting/damage/blocking, cost transaction and lifecycle contracts.
+This entry adds whole-Aura integration evidence for 14 names / 74 records. It
+does not assert full collection gameplay or complete consumer gameplay.
+
+### Verification and collection status
+
+- Fresh focused RON tests passed (0.785s); native atomic tests passed (0.419s).
+- make build and go vet ./... passed. Engine short tests and make test passed
+  (full RON package: 42.512s). make lint completed with 0 issues and
+  git diff --check passed. The sequence exited 1 only at the expected final
+  strict loader, which rejected the unsupported collection.
+- Lint import formatting was reviewed. Focused RON and native tests passed again
+  after formatting. Starting user files outside the shared slice files retain
+  their initial bytes, including all unrelated untracked files.
+- Final worktree loader JSON is byte-identical to the fresh baseline: 813 accepted
+  / 173 rejected names, 2,099 compiled / 346 rejected records. Accepted records
+  and remaining unsupported-record diagnostics are unchanged. Remaining gaps
+  include CreateSpellEffect for both word-changing consumers and EachPlayerAction
+  for Mana Clash.
+- Fresh isolated HEAD loader exited 1 with 812 accepted / 174 rejected names and
+  2,098 compiled / 347 rejected records. The worktree's one-name/one-record gain
+  is Eureka's starting entry-round work, not this slice.
+
+- Isolated HEAD plus only this staged slice passed focused RON/native tests
+  (0.877s / 0.470s), make build, go vet ./..., engine short tests (RON 53.806s),
+  make test (RON 42.832s), make lint (0 issues), and git diff --check.
+  Its final strict loader exited 1 with 812 accepted / 174 rejected names and
+  2,098 compiled / 347 rejected records. Its complete JSON is byte-identical to
+  the fresh isolated HEAD baseline; no accepted record or diagnostic regressed.
+- All eleven staged Go files match the validated isolated checkout after lint.
+  Shared documentation retains the starting user content; the staged ledger
+  retains HEAD history and excludes the user's archive move. Only this slice is
+  staged. No required check failed other than the expected collection rejection.
+
+Actual worktree acceptance gain: 0 unique names / 0 records, matching the
+estimate. The loader remains fail-closed on all unsupported records. Complete
+runtime loading, Go-card deletion, test/caller migration and unused DSL removal
+remain gated. No Go definitions, generators or DSL functions were removed, and
+no removal audit or authoring cutover is claimed.
+
+Changed files: pkg/mage/text_attached_object.go and native tests;
+pkg/mage/dsl/ron/text_attached_object.go and RON tests; pkg/mage/card.go;
+pkg/mage/target.go; pkg/mage/text_spell_continuation.go;
+pkg/mage/text_global_static_object.go; pkg/mage/dsl/ron/compiler.go;
+pkg/mage/dsl/ron/enchant_controller.go; pkg/mage/doc.go;
+docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Shared files are staged from HEAD plus only this slice's additions. Starting user
+changes and untracked files remain in the worktree.
+
+### Ranked next candidates
+
+1. Complete mixed static/activation and intrinsic/static creature object contexts.
+   Compare Sedge Troll, Thrull Champion, Beasts of Bogardan and Ivory Guardians
+   together; reuse their checked sibling spell-continuation and layer services.
+2. Complete attached land-type object text for Evil Presence and Phantasmal
+   Terrain. Reuse landAuraSpellTextContext and typed fixed/chosen-host layers;
+   retain entry choices and atomic enchant/declaration correspondence. Mixed
+   creature Auras and acquired copy rules remain independent dependencies.
+3. Spell-target CreateSpellEffect and complete union/modal word-changing consumers
+   after the remaining permanent contexts. Vesuvan Doppelganger's copy-added
+   rule and live-copy rebinding stay explicit prerequisites.
 
 Stopped after one capability slice. Migration remains incomplete.

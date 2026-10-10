@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedAttachedObjectTextEffect] for one complete creature Aura.
+// [CreatureEnchantTarget] keeps its enchant restriction fixed. RON marks one
+// host keyword, landwalk or Ward grant, or one fixed-mana host action.
+// The whole definition and declaration groups pass checks before installation.
+// Existing text layers keep ordered baselines, expiry and active declaration IDs.
+// Ward protection keeps the exact donor exception. Actions read the current host
+// at resolution, or its saved attachment after departure. Returned hosts cannot
+// replace that visit. Clones, copies, phasing, removal, LKI and printed return
+// use shared services. Mixed Auras and spell text need separate contracts.
+//
 // Use [Game.AddPrintedMixedStaticEventTextEffect] for complete paired rules.
 // One global static rule can share text with a controller mana bonus or a fixed
 // controller-upkeep payment and unpaid self-sacrifice. Both rules pass preflight

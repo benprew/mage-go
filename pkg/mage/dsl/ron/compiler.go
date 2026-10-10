@@ -313,6 +313,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	permanent := !slices.Contains(types, core.TypeInstant) && !slices.Contains(types, core.TypeSorcery)
 	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
 	var options []optionFactory
+	attachedObjectText := false
 	landAuraSpellText := false
 	staticActivationSpellText := false
 	protectionPTSpellText := false
@@ -334,6 +335,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		spellCastSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && spellCastSpellTextRules(rules)
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && (globalStaticSpellTextRules(rules) || globalGrantSpellTextRules(rules))
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
+		attachedObjectText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && attachedObjectTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
 		staticActivationSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && staticActivationSpellTextRules(rules)
 		protectionPTSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && protectionPTSpellTextRules(rules)
@@ -448,6 +450,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		if globalStaticSpellText {
 			opts = append(opts, mage.WithGlobalStaticSpellTextContinuation())
+		}
+		if attachedObjectText {
+			opts = append(opts, mage.WithAttachedObjectText())
 		}
 		if landAuraSpellText {
 			opts = append(opts, mage.WithLandTypeAuraSpellTextContinuation())

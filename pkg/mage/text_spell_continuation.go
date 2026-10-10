@@ -155,7 +155,7 @@ func sameSpellTextTargetSpec(a, b Target) bool {
 		return ok && first.count == second.count && first.usesX == second.usesX && first.upToX == second.upToX && first.oneToX == second.oneToX && sameSpellTextTargetSpec(first.inner, second.inner)
 	case *PermanentTarget:
 		second, ok := b.(*PermanentTarget)
-		return ok && first.manaValueEqualX == second.manaValueEqualX && first.excludeSource == second.excludeSource &&
+		return ok && first.fixedCreatureEnchant == second.fixedCreatureEnchant && first.manaValueEqualX == second.manaValueEqualX && first.excludeSource == second.excludeSource &&
 			first.attachedToControllerOnly == second.attachedToControllerOnly && first.toughnessLessThanSourcePower == second.toughnessLessThanSourcePower &&
 			first.controllerOnly == second.controllerOnly && first.controllerOwned == second.controllerOwned &&
 			first.opponentOnly == second.opponentOnly && first.opponentOwned == second.opponentOwned && first.opponentChooses == second.opponentChooses &&

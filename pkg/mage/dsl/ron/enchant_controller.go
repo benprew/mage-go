@@ -32,6 +32,9 @@ func compileEnchantPermanent(n Node, ctx scope) (optionFactory, error) {
 		default:
 			target = mage.TargetPermanent(filter)
 		}
+		if n.Args[0].Name == "IsCardtype" && len(n.Args[0].Args) == 1 && n.Args[0].Args[0].Kind == Symbol && n.Args[0].Args[0].Name == "Creature" {
+			target = mage.CreatureEnchantTarget()
+		}
 		return mage.WithCastTarget(target)
 	}, nil
 }

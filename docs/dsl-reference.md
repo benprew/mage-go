@@ -12299,3 +12299,60 @@ Conversion: six; Sunken City: one), `Payments`, `Lifecycle`, `Ordering` and
 `Boundaries`. Extracted consumer permanent branches are explicit test fixtures.
 This establishes a shared engine prerequisite with zero compilation unlocks.
 Attached contexts, other mixed contexts and live copy rebinding remain separate.
+
+## Complete creature Aura object text
+
+`mage.CreatureEnchantTarget() mage.Target` declares a fixed creature enchant
+restriction with typed provenance. `mage.WithAttachedObjectText() mage.CardOption`
+marks one complete Aura context. `Game.AddPrintedAttachedObjectTextEffect(source
+*Permanent, duration core.Duration, changes ...TextChange) error` checks the
+retained definition and fresh declaration correspondence before it installs the
+existing single-declaration text layer. `ChangePrintedPermanentText` selects this
+context at resolution. Only `Indefinite` and `EndOfTurn` durations are supported.
+
+RON marks exactly two rules, in either order: `EnchantPermanent(IsCardtype(Creature))`
+and either `PermanentLayerEffect(HostPermanent, [AddAbility(abilities)])`, or one
+`Activated(PayMana([fixedManaSymbol, ...]), ActionList([hostAction]))`. Grants accept
+validated keyword symbols, fixed basic landwalk, and
+`ProtectionAndDoesntRemovePermanents(FromColor(Colors([...])), SinglePermanent(ThisPermanent))`.
+The action is `RegeneratePermanent(HostPermanent)` or
+`CreatePermanentLayerEffectUntil(HostPermanent, [AdjustPT(power, toughness)], UntilEndOfTurn)`
+with fixed integer P/T. The card must be an Enchantment with only the Aura subtype.
+There are no other printed abilities, intrinsic keywords, modes or casting costs.
+Unbound word choices, wrong binding types, malformed grants and extra text-layer
+parts still fail compilation. Other complete Aura shapes do not acquire this marker.
+
+The engine checks the original present face-up Aura, the fixed enchant target,
+one eligible printed rule, fresh context, groups and effect counts. Native
+ordinary actions also retain cost declaration counts, body counts, modes, timing
+and limits.
+The underlying installer checks active runtime declarations and complete grant
+registrations on an isolated clone. Failure leaves live rules and layers intact.
+Typed nil runtime declarations reject before the installer reads their IDs.
+
+Existing layers apply ordered changes from each declaration's saved baseline.
+Ward grants keep only the exact donor exempt from protection; other matching
+Auras remain illegal. Grant subjects follow current attachment. Aura actions
+belong to the donor controller and read the host when they resolve; a departed
+donor uses its saved attachment, while returned or phased hosts cannot receive
+an action. Pending activations keep their earlier bodies and controller.
+Text on a recipient does not change granted rules. Copies and game clones keep
+separate state. Phasing preserves visits, removal suspends rules, expiry restores
+surviving layers, departure retains final LKI, and new entries use printed rules.
+Ordinary text changes stay outside copiable values.
+
+Rules: CR 303.4a/c/e/m, 400.7, 612.1–3, 613.1c/f/g, 702.16b–f/n and 707.2.
+Cost transactions, replacement order and simultaneous operations use existing
+services; this slice changes none of those contracts. Mixed Auras, changing
+enchant filters, stack Aura text, live-copy rebinding and complete word-changing
+consumer spells remain separate capabilities.
+
+Evidence: `TestRONTextAttachedObjectRecords`, `Lifecycle`, `ActivationBindings`,
+`CopiesAndLegality`, `Boundaries` and `Inventory`, plus native
+`TestTextAttachedObjectAtomic`. Interaction evidence covers 14 names / 74 complete
+records: five color Wards, Burrowing, Fishliver Oil, Flight, Fear, Lance, Eternal
+Warrior, Firebreathing, Blessing and Regeneration. The permanent branches extracted
+from actual Sleight of Mind and Magical Hack records are test fixtures; the
+complete consumer cards still reject. Existing single-declaration grant/activation
+contract tests retain damage, targeting, blocking, payment and lifecycle evidence.
+This adds no full-card compilation accepts or collection-wide gameplay claim.
