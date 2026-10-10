@@ -386,6 +386,8 @@ func TestRONTextGlobalStaticSpellInventory(t *testing.T) {
 	for _, name := range []string{"Bad Moon", "Castle", "Crusade", "Orcish Oriflamme"} {
 		expected[name] = 6
 	}
+	expected["Kird Ape"] = 2
+	expected["Water Wurm"] = 1
 	counts := map[string]int{}
 	for _, file := range files {
 		data, err := os.ReadFile(file)

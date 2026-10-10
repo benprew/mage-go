@@ -7,7 +7,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// WithGlobalStaticSpellTextContinuation permits one global static rule at entry.
+// WithGlobalStaticSpellTextContinuation permits one checked static rule at entry.
 // Casting costs, targets and other rules require separate contracts.
 func WithGlobalStaticSpellTextContinuation() CardOption {
 	return func(card *BaseCard) { card.globalStaticSpellText++ }
@@ -20,6 +20,13 @@ func globalStaticSpellTextContext(card Card) (staticTextContract, error) {
 		len(base.abilities) != 1 || len(base.modes) != 0 || len(base.additionalCosts) != 0 || len(base.alternateCosts) != 0 || len(base.castTargets) != 0 ||
 		base.intrinsicSpellText != 0 || base.landAuraSpellText != 0 || base.copyEntrySpellText != 0 {
 		return 0, fmt.Errorf("global static spell text requires one marked permanent rule without casting costs or targets")
+	}
+	rule, ok := base.abilities[0].(*StaticAbilityHolder)
+	if ok && rule != nil && len(rule.Effects) == 1 && rule.ptTextLayer && rule.ptTextRevision && rule.supportsPTTextRevision() {
+		kind := rule.ptTextRevisionContext().kind
+		if kind == controllerBasicLandSourcePT || kind == opponentBasicLandSourcePT {
+			return staticPTTextContract, nil
+		}
 	}
 	return globalStaticSpellRuleContext(base.abilities[0])
 }
@@ -58,7 +65,11 @@ func (g *Game) reviseGlobalStaticSpellText(obj *StackObject, changes []TextChang
 	}
 	oldBase, newBase := obj.spellTextDefinition.(*BaseCard), fresh.(*BaseCard)
 	replacement, paired := revision.ReplacementAbility(oldBase.abilities[0].AbilityID())
-	if newContext != oldContext || !slices.Equal(oldBase.subTypes, newBase.subTypes) || !paired || replacement != newBase.abilities[0] {
+	samePT := true
+	if oldContext == staticPTTextContract && newContext == staticPTTextContract {
+		samePT = oldBase.abilities[0].(*StaticAbilityHolder).ptTextRevisionContext() == newBase.abilities[0].(*StaticAbilityHolder).ptTextRevisionContext()
+	}
+	if !samePT || newContext != oldContext || !slices.Equal(oldBase.subTypes, newBase.subTypes) || !paired || replacement != newBase.abilities[0] {
 		return fmt.Errorf("global static spell text changed its declaration context")
 	}
 	rebuilt := cloneStackObject(obj)

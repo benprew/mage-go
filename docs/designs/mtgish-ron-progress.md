@@ -8,13 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`INTRINSIC-CAST-EVENT-SPELL-TEXT` carries intrinsic creature rules and one
-cast-event trigger through permanent-spell entry. New continuation evidence
-covers **1 name / 1 complete record**; acceptance gain is **0 names / 0 records**.
-Paired checks retain intrinsic contributions, cast captures, targets and mana
-symbols. Copies/clones, later layers, phasing, removal, copiable values, LKI and
-printed recasts are covered. Whole-object dispatch, other mixed contexts and
-word-changing spell consumers remain incomplete.
+`CONDITIONAL-LAND-SOURCE-PT-SPELL-TEXT` carries one controller/opponent
+basic-land source P/T rule through permanent-spell entry. New continuation
+evidence covers **2 names / 3 complete records**; acceptance gain is
+**0 names / 0 records**. Checked revision retains the condition side and source
+recipient. Copies/clones, live control and land conditions, later layers,
+phasing, removal, copiable values, LKI and printed recasts are covered.
+Whole-object dispatch, mixed contexts and word-changing spell consumers remain
+incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -64859,3 +64860,140 @@ are complete. All accepted records still pass strict compilation.
 Stopped after this slice. Complete RON gameplay, word-changing spell consumers,
 runtime registry loading, Go-card deletion, unused DSL cleanup and native
 startup remain incomplete.
+
+## 2026-10-09: CONDITIONAL-LAND-SOURCE-PT-SPELL-TEXT
+
+Status: complete single-rule continuation slice. This run stops after this slice.
+
+### Candidate comparison and selection
+
+The latest entry ranked whole-object dispatch first, remaining relational/static
+text contracts second, and copy-added/live-copy rebinding third. Complete records
+and nested forms were inspected rather than using first-error frequency.
+
+| Candidate | Distinct affected cards | Estimated full-card compilation unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Whole-object printed-declaration dispatch and lifetime | Magical Hack; Sleight of Mind | 0 for a bounded dispatch prerequisite; both modal spell/permanent consumers still require all eligible declaration contexts | Relational/static and mixed spell contracts, checked whole-object atomicity and lifetime remain; enables both shared word-change consumers | High; multiple declaration families and both object zones exceed a bounded slice |
+| Single conditional basic-land source P/T spell continuation (selected) | Kird Ape; Water Wurm | 0; both already compile | Completes stack-to-entry continuation for 2 names / 3 records and supplies Magical Hack's land-word continuation prerequisite; Sedge Troll has a sibling activation, Beasts of Bogardan and Ivory Guardians have protection/color conditions, Goblin Caves has enchant/host rules, Goblin Shrine adds a leave trigger | Small; two established typed contexts share one entry and revision service |
+| Copy-added ability text and live-copy rebinding | Vesuvan Doppelganger | 0 for a bounded prerequisite; 1 only with all nested rules | KeepColor, added upkeep trigger, nested target, live copy installation and ThisAbility identity remain; shared donor construction enables later copies but current collection benefit is one name | High; several dependent entry/live-copy contracts |
+
+Candidate 1 is not dependency-ready for its full consumer contract. Candidate 2
+is a bounded shared prerequisite with two unique cards and
+three complete printing records. Candidate 3 has lower immediate multi-card value and
+more unresolved nested prerequisites. Estimated acceptance gain: 0 names /
+0 records; expected new continuation evidence: 2 names / 3 records.
+
+### Supported contract and reuse boundary
+
+RON recognizes one complete rule, with fixed integer adjustments:
+
+- If(PlayerPassesFilter(You, ControlsA(IsLandType(type))),
+  [PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])]).
+- If(APlayerPassesFilter(Opponent, ControlsA(IsLandType(type))),
+  [PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])]).
+
+The subtype is Plains, Island, Swamp, Mountain or Forest. One nonland, non-Aura
+permanent rule uses the existing WithGlobalStaticSpellTextContinuation()
+CardOption. No casting targets, additional/alternate costs, keywords, modes or
+sibling abilities are permitted by this context. Color conditions, collections,
+host rules and mixed static/event contexts remain separate. The mixed selector
+explicitly excludes conditional rules so accepted ordinary mixed declarations
+do not acquire an unsupported continuation marker.
+
+Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error
+uses the existing declaration builder, checks the old and fresh P/T context,
+then replaces only the exact stack object. Controller/opponent condition side,
+source recipient, subtypes and paired declaration identity must remain fixed.
+Foreign targets, casting results, bodies, absent groups/builders and invalid
+changes keep the existing shared rejection contracts. The entry builder retains
+physical identity, owner, token status and printed departure rules. Copies enter
+as tokens; clones keep independent revisions. Land/control conditions stay live
+through the existing layers. Later layer-3 changes restore the continued
+baseline on expiry. Phasing keeps the visit; ability removal suspends the rule.
+Departure retains final LKI; a physical recast uses printed rules. Ordinary text
+changes remain outside copiable values.
+
+RON owns shape selection and existing typed lowering. mage owns validation,
+revision and entry. Reused APIs are SourcePTWhileControllerControlsBasicLand,
+SourcePTWhileOpponentControlsBasicLand, StaticAbility.WithLayeredPTTextRevision,
+BuildTextDefinitionRevision, BuildTextChangedDefinition, checked ability groups,
+stack copies/clones, layer baselines, control, phasing, removal, LKI and copiable
+provenance. No parallel payment, replacement-order or simultaneous-operation
+service was added. CR 400.7a, 611.3, 612.1–3, 613.4c and 707.2 support the
+contract. No source-data defect was found or corrected. RON source and the
+vocabulary snapshot are unchanged. Go removal and DSL cleanup gates remain
+unmet; no callers or production definitions were removed.
+
+### Failing-first tests and card mappings
+
+The real-record test first failed for ARN/3ED Kird Ape and DRK Water Wurm at
+"spell text continuation requires one ordinary instant or sorcery declaration".
+The native declaration and transaction fixtures separately failed before
+implementation with "global static spell text requires a marked global P/T or
+basic land rule". An initial test helper name was corrected before these
+expected assertion failures; this was a fixture issue, not an engine failure.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Kird Ape, complete ARN and 3ED records | TestRONTextConditionalPTSpellRecords retains the paid red mana and physical card, changes Forest to Plains before entry, checks old Forest exclusion, controller condition and 1/1 versus 2/3 behavior |
+| Water Wurm, complete DRK record | Same test retains paid blue mana and physical card, changes Island to Plains, checks the opposite player's live land condition and 1/1 versus 1/2 behavior |
+| Both supported cards' lifecycle | Records covers copied token spells, clone-specific word changes, unchanged original conditions, current controller changes, later text-layer expiry while phased, condition-land phasing, ability removal/restoration, stable declaration IDs, printed copy values, final LKI, departed-visit rejection and printed recasts |
+| Existing conditional/mixed boundaries | Boundaries casts complete Sedge Troll, Beasts of Bogardan, Ivory Guardians, Goblin Caves and Goblin Shrine records (including actual Aura casting targets), checks atomic rejection, and rejects malformed bodies/adjustments and unbound recipients; MixedBoundary compiles a valid conditional/upkeep pair without broadening its continuation |
+| Native checked boundaries | TestTextConditionalPTSpellDeclaration accepts controller/opponent basic-land contexts and rejects invalid/nonbasic, color, named and host contexts. RejectsContextAtomic rejects condition-side, recipient/global, color, unmarked and sibling changes without mutating the stack |
+| Existing single-static contract | TestRONTextGlobalStaticSpellInventory now maps exactly two additional names and three complete records. Existing global/mixed continuation suites retain their lifecycle and declaration rejection cases; the old native conditional rejection now uses the still-unsupported color condition |
+
+### Verification and collection evidence
+
+- Fresh baseline make build and TestRONTextIntrinsicCastSpell passed. Baseline
+  loader exited 1 for strict collection rejection, not a build/test failure.
+- Expected failing-first real-record and native assertions are recorded above.
+  Final focused TestRONTextConditionalPTSpell passed (0.495s). Broader RON
+  conditional/global/mixed tests passed after formatting (0.669s); native
+  conditional/global tests passed (0.451s).
+- Worktree make build, go vet ./..., go test ./pkg/mage/... -short -count=1
+  (RON 37.896s), make test (RON 37.085s), make lint (0 issues), and
+  git diff --check all passed. Lint only reordered imports in the two new
+  test files; those changes were reviewed and affected tests rerun.
+- Final go run ./cmd/loadcards -json exits 1 as expected. Parsed JSON and
+  every diagnostic exactly equal the fresh baseline: 813 accepted / 173
+  rejected unique names; 2,099 compiled / 346 rejected records. No accepted
+  record regressed. The collection remains rejected with no partial registry.
+- An isolated HEAD-plus-source-slice checkout excludes all pre-existing edits.
+  Focused tests, make build, go vet ./..., engine short tests (RON 76.271s),
+  make test (RON 59.865s) and make lint (0 issues) passed. After automatic
+  import formatting, affected RON/native tests passed again (0.682s/0.478s).
+  Isolated source files exactly equal their staged blobs. Its strict loader
+  exits 1: 812 accepted / 174 rejected names; 2,098 compiled / 347 rejected
+  records. The only differences from the worktree are Eureka's additional
+  RepeatableActions rejection and Mana Clash's earlier RepeatableActions
+  diagnostic instead of EachPlayerAction. These differences come from
+  excluding the user's entry-round work; all other diagnostics match. This
+  slice has no dependency on those changes.
+- Initial tracked edits were compared against a saved pre-slice diff. Shared
+  documentation retains those edits, and unrelated untracked artifacts remain
+  unstaged. Only this slice's additions to shared documentation and status
+  enter the index; the user's ledger reorganization is preserved separately.
+
+Changed files: mage text_global_static_spell.go/test, new
+text_conditional_pt_spell_test.go, doc.go; RON text_global_static_spell.go/test,
+text_mixed_static_event_spell.go, new text_conditional_pt_spell_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger (11 files).
+
+### Result and ranked next candidates
+
+Actual acceptance gain: 0 names / 0 records, matching the estimate. New
+conditional spell continuation evidence covers 2 unique names / 3 complete
+records. This is prerequisite coverage, not complete word-changing spell
+execution or a claim of complete collection gameplay.
+
+1. Shared whole-object printed-declaration dispatch and text-effect lifetime for
+   established contexts, with checked atomic boundaries for remaining contexts;
+   serves Magical Hack and Sleight of Mind.
+2. Remaining bounded conditional/mixed static spell text contracts: inspect
+   Sedge Troll, Beasts of Bogardan and Ivory Guardians before choosing a shared
+   continuation; their sibling activation/protection and color contexts differ.
+3. Copy-added ability text and live-copy rebinding for Vesuvan Doppelganger;
+   retain KeepColor, nested upkeep targets and ThisAbility identity.
+
+Stopped after this slice. Complete RON gameplay, runtime loading, Go-card
+removal, unused DSL cleanup and native startup remain incomplete.

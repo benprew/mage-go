@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithGlobalStaticSpellTextContinuation] for one conditional source P/T rule.
+// The condition must check the controller or opponent for one basic land type.
+// [Game.RevisePrintedSpellText] keeps that condition through fresh entry.
+// Changes must keep the condition side and source recipient. Costs stay fixed.
+// Copies and clones keep separate rules. Later text layers restore the entry
+// baseline. Phasing keeps the visit. Removal stops the rule. Departure keeps
+// LKI; return uses printed rules. Mixed rules need separate contracts.
+//
 // Use [WithIntrinsicCastEventSpellTextContinuation] for paired creature rules.
 // RON marks intrinsic protection/basic landwalk with one battlefield cast trigger.
 // [Game.RevisePrintedSpellText] checks both groups before fresh entry builds.

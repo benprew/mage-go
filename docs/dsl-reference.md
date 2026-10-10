@@ -11922,3 +11922,47 @@ Evidence: `TestRONTextIntrinsicCastSpellRecords`, `Lifecycle`, `Inventory`,
 `EventBindingsAndTargets`, `IntrinsicGroups`, `CopyExceptions`, `Boundaries`;
 `TestTextIntrinsicCastSpellDeclaration` and `RejectsAtomic`.
 Whole-object text dispatch and word-changing spell consumers remain separate.
+
+
+## Conditional source P/T spell text continuation
+
+`WithGlobalStaticSpellTextContinuation() CardOption` also accepts one marked
+`StaticAbility(effect).WithLayeredPTTextRevision()` whose sole effect is
+`SourcePTWhileControllerControlsBasicLand` or
+`SourcePTWhileOpponentControlsBasicLand`. `Game.RevisePrintedSpellText(stackID
+uuid.UUID, changes ...TextChange) error` retains this conditional rule through
+fresh permanent entry. The card must satisfy the existing single-static
+permanent contract: no Aura, land, casting targets, extra costs, keywords,
+modes or sibling abilities. Color-conditioned, named-recipient, host and
+mixed static/event contexts remain outside this extension.
+
+RON selects one complete rule:
+`If(PlayerPassesFilter(You, ControlsA(IsLandType(type))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])])`, or
+`If(APlayerPassesFilter(Opponent, ControlsA(IsLandType(type))),
+[PermanentLayerEffect(ThisPermanent, [AdjustPT(power, toughness)])])`.
+The subtype is fixed and basic; adjustments are fixed integers. Existing typed
+lowering supplies the effects. Native revision requires unchanged condition
+side, recipient context, subtypes and paired declaration identity. Invalid
+builders and context changes reject before stack mutation. The mixed-static
+selector continues to accept only its previous global contexts.
+
+CR 400.7a carries changed text through entry. CR 611.3 and 613.4c use live
+control and land types in the existing layer service. CR 612.1–3 keeps mana
+symbols and names separate. Copies enter as tokens; clones keep separate
+changes. Later text layers restore the continued baseline on expiry; phasing
+keeps it, and ability removal suspends it. CR 707.2 excludes ordinary word
+changes from copy values. Departure keeps final LKI and restores the physical
+card's printed rules for a later cast. No new cost, replacement or simultaneous
+operation service is introduced.
+
+Evidence: `TestRONTextConditionalPTSpellRecords` covers both Kird Ape records
+and Water Wurm, payment/timing/identity, old and new conditions, controller
+changes, copied spells, clone isolation, text-layer expiry while phased,
+ability removal, copiable values, LKI and printed recasts. `Boundaries` and
+`MixedBoundary` cover malformed declarations, Sedge Troll, Beasts of Bogardan,
+Ivory Guardians, Goblin Caves, Goblin Shrine and synthetic conditional/upkeep
+pairs. Native `TestTextConditionalPTSpellDeclaration` and
+`RejectsContextAtomic` cover allowed contexts, invalid types, and condition,
+recipient, opt-in and sibling changes. This is a prerequisite for whole-object
+text dispatch; it does not execute Magical Hack or Sleight of Mind.

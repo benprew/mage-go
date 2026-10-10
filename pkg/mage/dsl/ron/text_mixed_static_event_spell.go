@@ -5,7 +5,7 @@ func mixedStaticEventSpellTextRules(rules []Node) bool {
 		return false
 	}
 	for i, rule := range rules {
-		if !globalStaticSpellTextRules([]Node{rule}) {
+		if conditionalLandSourceSpellTextRule(rule) || !globalStaticSpellTextRules([]Node{rule}) {
 			continue
 		}
 		event := rules[1-i]

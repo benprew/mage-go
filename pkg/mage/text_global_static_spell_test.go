@@ -24,7 +24,7 @@ func TestTextGlobalStaticSpellDeclaration(t *testing.T) {
 		NewEnchantment("No rule", "", WithGlobalStaticSpellTextContinuation()),
 		NewEnchantment("Unmarked", "", WithGlobalStaticSpellTextContinuation(), WithAbility(StaticAbility(BoostAllCreaturesIncludingSelf(1, 1, IsCreature)))),
 		NewAura("Host", "", WithGlobalStaticSpellTextContinuation(), WithAbility(StaticAbility(BecomesBasicLandAttachedEffect("Swamp")).WithLayeredLandTypeTextRevision())),
-		NewEnchantment("Conditional", "", WithGlobalStaticSpellTextContinuation(), WithAbility(StaticAbility(SourcePTWhileOpponentControlsBasicLand("Swamp", 1, 1)).WithLayeredPTTextRevision())),
+		NewEnchantment("Conditional", "", WithGlobalStaticSpellTextContinuation(), WithAbility(StaticAbility(SourcePTWhileOpponentControlsNontokenColor(core.Red, 1, 1)).WithLayeredPTTextRevision())),
 	} {
 		if err := ValidateCardDefinition(card.Name(), card); err == nil {
 			t.Fatalf("accepted invalid marker on %s", card.Name())
