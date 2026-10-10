@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	drawReplacement     *drawReplacementPlan
 	choice              *playerChoicePlan
 	ability             *abilityTargetPlan
 	landEntry           *landEntryEventPlan
@@ -35,6 +36,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	drawReplacements     map[*drawReplacementPlan]*mage.PlayerBinding
 	playerDiscards       map[*playerDiscardPlan]*mage.PlayerNumbersBinding
 	sacrificeSubtypes    map[*sacrificeSubtypePlan]*mage.NumberBinding
 	textWords            map[*textWordChoicePlan]textWordBindings
@@ -100,6 +102,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "WouldDrawACard_ThatPlayer":
+			if ctx.drawReplacement != nil {
+				return playerReferencePlan{drawReplacement: ctx.drawReplacement}, nil
+			}
 		case "TheChosenPlayer":
 			if ctx.chosenPlayer != nil {
 				return playerReferencePlan{choice: ctx.chosenPlayer}, nil
@@ -169,6 +175,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.drawReplacement != nil {
+		return mage.FromPlayer(bindings.drawReplacements[p.drawReplacement])
+	}
 	if p.choice != nil {
 		return mage.FromPlayer(bindings.chosenPlayers[p.choice])
 	}

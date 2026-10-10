@@ -13,6 +13,7 @@ import (
 // extra turns queue, turn step scheduling and skips (CR 500.7–500.11), and
 // per-permanent untap skipping.
 type TurnSystem struct {
+	drawStepDraws        int
 	combatTiming         combatTimingHistory
 	stepTurn             int
 	firstUpkeepEnded     bool
@@ -44,6 +45,7 @@ func NewTurnSystem() TurnSystem {
 // Clone creates an independent deep copy of TurnSystem.
 func (ts TurnSystem) Clone() TurnSystem {
 	clone := TurnSystem{
+		drawStepDraws:        ts.drawStepDraws,
 		combatTiming:         ts.combatTiming,
 		stepTurn:             ts.stepTurn,
 		firstUpkeepEnded:     ts.firstUpkeepEnded,
@@ -74,6 +76,7 @@ func (ts *TurnSystem) Turn() int {
 // SetTurn overrides the current turn number.
 func (ts *TurnSystem) SetTurn(n int) {
 	if ts.turn != n {
+		ts.drawStepDraws = 0
 		ts.combatTiming = combatTimingHistory{}
 		if ts.schedule != nil {
 			ts.schedule.firstCombatSkipped = false
@@ -85,6 +88,7 @@ func (ts *TurnSystem) SetTurn(n int) {
 
 // IncrementTurn advances the turn number by 1.
 func (ts *TurnSystem) IncrementTurn() {
+	ts.drawStepDraws = 0
 	ts.combatTiming = combatTimingHistory{}
 	if ts.schedule != nil {
 		ts.schedule.firstCombatSkipped = false
@@ -100,6 +104,9 @@ func (ts *TurnSystem) Step() PhaseStep {
 
 // SetStep sets the current phase or step.
 func (ts *TurnSystem) SetStep(s PhaseStep) {
+	if ts.stepTurn != ts.turn || ts.step != s {
+		ts.drawStepDraws = 0
+	}
 	previous := ts.step
 	if ts.stepTurn != ts.turn {
 		previous = Untap

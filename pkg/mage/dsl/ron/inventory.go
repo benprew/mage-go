@@ -296,6 +296,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "permanent_rule_operation"}[index]
 			}
+		case "ReplaceWouldDraw":
+			if len(n.Args) == 2 {
+				return []string{"draw_replacement_event", "action"}[index]
+			}
 		case "TriggerI":
 			if len(n.Args) == 3 {
 				return []string{"event", "trigger_condition", "actions"}[index]
@@ -316,6 +320,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "draw_replacement_event":
+		if (n.Name == "PlayerWouldDrawDuringTheirDrawStep" || n.Name == "APlayerWouldDrawExceptFirstDrawStepDraw") && len(n.Args) == 1 {
+			return "player_filter"
 		}
 	case "activation_cost_subject":
 		if n.Name == "AbilityOfAPermanent" && len(n.Args) == 1 {

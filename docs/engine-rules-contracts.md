@@ -16751,3 +16751,36 @@ Unspecified visits on legacy discard proposals retain their existing behavior.
 Evidence: `TestPlayerDiscardResults*` and `TestRONPlayerDiscardResults*`.
 Mind Bomb's unchanged complete DRK record supplies full-card gameplay evidence.
 Mana Clash remains rejected until its coin producer and repeat consumers exist.
+
+## RON draw replacement event scope
+
+`ReplaceDraw(window DrawReplacementWindow, player *PlayerBinding, body Effect)
+StaticRule` installs one battlefield draw replacement. `ControllerDrawStep`
+includes each draw by the current controller during that player's draw step.
+`ExceptFirstDrawStepDraw` includes every player's draws except the first actual
+successful draw during that player's own draw step. Effect draws and the
+turn-based draw use the same history. Replaced proposals do not count. Each new
+draw step resets this history; game clones keep independent copies.
+
+The body runs immediately through the existing replacement pipeline. The affected
+player chooses among competing replacements. The event player has a local typed
+binding, separate from the source controller. The body restores the enclosing
+resolution state. A replacement-generated draw excludes the same source visit and
+printed declaration through its draw ancestry; other copies and declarations can
+still replace it. Exclusions end with the body. Replaced draws cannot supply a
+card result to the original draw instruction. The source follows control changes;
+phasing, departure and ability removal stop its rule. A new entry uses a new
+incarnation. A selected rule checks its source visit and live runtime ability again before
+its body runs.
+Existing draw events, card visits and empty-library handling remain
+shared engine operations.
+
+RON lowers `ReplaceWouldDraw(PlayerWouldDrawDuringTheirDrawStep(You), [actions])`
+and `ReplaceWouldDraw(APlayerWouldDrawExceptFirstDrawStepDraw(AnyPlayer),
+[actions])`. `WouldDrawACard_ThatPlayer` is available only inside that declaration.
+Bodies must compile and pass complete definition validation. Island Sanctuary's
+player restriction and Chains of Mephistopheles' required discard/payment branches
+remain unsupported. This contract establishes their shared event prerequisite,
+not complete gameplay for either card. Future one-shot draw replacements remain
+outside this contract. Evidence: `TestDrawReplacementScope*` and
+`TestRONDrawReplacementScope*`; CR 121.2, 121.6, 614.5, 614.11 and 616.1.

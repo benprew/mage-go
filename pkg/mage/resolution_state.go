@@ -11,6 +11,7 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
+	drawReplacementRules  map[drawReplacementKey]bool
 	wordPairBindings      map[*wordPairBinding]wordPairResult
 	cardNameBindings      map[*CardNameBinding]string
 	manaProduced          int
@@ -126,6 +127,7 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 
 // Clear resets all resolving state fields to zero values.
 func (s *ResolutionState) Clear() {
+	s.drawReplacementRules = nil
 	s.targetSpecs = nil
 	s.targetIncarnations = nil
 	s.permanentBindings = nil
@@ -203,6 +205,7 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
+		drawReplacementRules:   maps.Clone(s.drawReplacementRules),
 		manaProduced:           s.manaProduced,
 		manaColors:             append([]Color(nil), s.manaColors...),
 		manaTracking:           s.manaTracking,

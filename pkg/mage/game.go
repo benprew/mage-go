@@ -1435,7 +1435,7 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 	if p == nil {
 		return nil, false
 	}
-	action := NewDrawCardAction(uuid.Nil, p.PlayerID(), false)
+	action := g.drawAction(p.PlayerID(), false)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return nil, false
@@ -1451,6 +1451,9 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 func (g *Game) drawCardRaw(p Player) (Card, bool) {
 	c, ok := p.DrawCard()
 	if ok {
+		if g.turns.Step() == Draw && g.ActivePlayerObj().PlayerID() == p.PlayerID() {
+			g.turns.drawStepDraws++
+		}
 		var visit uuid.UUID
 		if visitor, hasVisit := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); hasVisit {
 			visit = visitor.handVisit(c.ID())

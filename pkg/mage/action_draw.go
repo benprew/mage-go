@@ -4,9 +4,10 @@ import "github.com/google/uuid"
 
 // DrawCardAction represents a player about to draw a card.
 type DrawCardAction struct {
-	source       uuid.UUID
-	playerID     uuid.UUID
-	isNormalDraw bool // true for the draw-step draw, false for effect draws
+	excludedRules map[drawReplacementKey]bool
+	source        uuid.UUID
+	playerID      uuid.UUID
+	isNormalDraw  bool // true for the draw-step draw, false for effect draws
 }
 
 func NewDrawCardAction(source, playerID uuid.UUID, isNormalDraw bool) *DrawCardAction {

@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	drawReplacement      *drawReplacementPlan
 	playerDiscard        *playerDiscardPlan
 	sacrificeSubtype     *sacrificeSubtypePlan
 	colorWords           *textWordChoicePlan
@@ -588,6 +589,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	}
 	switch n.Name {
+	case "ReplaceWouldDraw":
+		return compileDrawReplacement(n, ctx)
 	case "ReplaceWouldBeginDrawStep":
 		return compileDrawStepLifeReplacement(n)
 	case "ActivatedAbilityEffect":

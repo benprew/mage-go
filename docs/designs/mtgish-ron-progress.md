@@ -8,12 +8,11 @@ Eureka work, the worktree reports **818 accepted / 168 rejected names** and
 **2,119 compiled / 326 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-PER-PLAYER-DISCARD-RESULTS adds typed per-player historical discard counts,
-optional simultaneous discard and lexical result reads. Mind Bomb gains complete
-RON gameplay for **1 name / 1 record**. Existing recipient-relative damage,
-number frames, replacements, copies, clones and delayed bodies supply shared
-mechanics. Mana Clash's coin producer and repeat consumers remain unsupported.
-No RON changed.
+DRAW-REPLACEMENT-EVENT-SCOPE adds both battlefield draw events, a typed lexical
+drawing player, actual draw-step history and per-instance generated-draw ancestry.
+It establishes a shared prerequisite for Island Sanctuary and Chains of
+Mephistopheles. Their remaining bodies stay rejected. Complete-card compilation
+and gameplay gains are **0 names / 0 records**. No RON changed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -69004,5 +69003,174 @@ fixtures; API/rules docs and this ledger. Coverage gains 1 complete unique card 
    a bounded future candidate for 1 name / 1 record. RON's existing repeated
    hand-entry context cannot substitute for the coin process. Reassess shared
    candidates before choosing this single-card consumer.
+
+Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: DRAW-REPLACEMENT-EVENT-SCOPE
+
+Implemented one shared battlefield draw-replacement event and player-scope slice.
+This is a prerequisite, with zero complete-card admission or gameplay gains.
+Existing user changes, including repeated hand entry/Eureka and the ledger archive,
+remain outside this slice. No RON record changed.
+
+### Candidate comparison and selection
+
+The latest ledger ranked draw-replacement scope first. Complete Island Sanctuary
+records in LEA, LEB, 2ED, 3ED, CED and CEI and the complete LEG Chains of
+Mephistopheles record were inspected, including their nested bodies. Reprints
+count once. The other compared complete records were ARN Serendib Djinn and
+DRK Mana Clash.
+
+| Candidate | Distinct names; estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Draw-replacement event/player scope | Island Sanctuary, Chains of Mephistopheles; 0 names / 0 records | Sanctuary needs a general action choice and its player attack restriction/duration. Chains needs PlayerMustCost, payment result branches and replacement-safe draw/mill. Shared timing, event player and generated-draw transport enable both; future draw replacements can reuse the engine facts. | Medium: compiler scope, native replacement installation, draw-step history, ancestry and lifecycle tests. |
+| No-land state filter adapter | Serendib Djinn; 1 name / 1 record | Its other rules already compile. Reuse ControlsNone and state-trigger arming. Limited downstream value. | Small: adapter and lifecycle gameplay. |
+| Per-player coin rounds | Mana Clash; 1 name / 1 record | Coin producer, tails selection and all-heads termination are still absent. Typed player-number results alone do not implement these rules. | Larger: distinct RNG/result and repeated-process contracts. |
+
+Selected the first candidate as a dependency-ready prerequisite for two distinct
+cards. It has concrete multi-card downstream value and a bounded native contract.
+The estimated zero full-card gains match the actual zero gains. No single-card
+consumer or second slice was implemented.
+
+### Exact supported contract and reuse boundary
+
+- RON accepts ReplaceWouldDraw(PlayerWouldDrawDuringTheirDrawStep(You),
+  [actions]) and ReplaceWouldDraw(APlayerWouldDrawExceptFirstDrawStepDraw(
+  AnyPlayer), [actions]) on battlefield permanent definitions. Events have exactly
+  one argument, with the stated symbol and context. Bodies are nonempty lists of
+  already supported resolving actions and pass full definition validation.
+  Unsupported nested operations continue to reject the complete declaration.
+- WouldDrawACard_ThatPlayer is a singular typed PlayerRef only inside the matching
+  body. Trigger_ThatPlayer cannot substitute for it. A fresh PlayerBinding is
+  built for each factory and rule. Binding scope cannot escape to another rule.
+  RON owns names, AST validation, scope and inventory roles, not game mechanics.
+- Native API: ReplaceDraw(window DrawReplacementWindow, player *PlayerBinding,
+  body Effect) StaticRule. ControllerDrawStep includes all controller draws during
+  that player's own draw step, including effect draws. ExceptFirstDrawStepDraw
+  replaces all players' draws except the first actual successful draw in their
+  own draw step. A replaced proposal does not count. The first effect draw can be
+  the exempt draw before a turn-based draw. Nonactive players' draws are not exempt.
+- Successful raw draws update history before EvtCardDrawn. Step transitions, new
+  turns and actual draw-step entry reset history. Consecutive new draw steps also
+  reset it. Game clones copy the history independently. IsNormalDraw and the
+  existing NewDrawCardAction signature keep their contracts and callers.
+- Static rules install cycle replacements through LayerAbility and the existing
+  EffectManager. The affected player chooses between competing rules through
+  the shared replacement pipeline. There is no separate replacement system.
+  Bodies execute immediately, without a trigger or stack object.
+- Each body has a new resolution frame and captures the drawing player separately
+  from the source controller. It restores the caller's entire frame on completion.
+  Nested generated draws retain exclusions keyed by source ID, battlefield
+  incarnation and declaration ID. The same rule cannot replace its generated
+  draws again; other sources, copies and declarations remain eligible. Exclusions
+  end with that body. This is event ancestry, not a global last-action result.
+- Existing PlayerDrawCard, drawCardRaw, ApplyEffect, eventPlayerCapture, Sequence,
+  typed player refs, definition binding scopes, effect cloning, source LKI,
+  phasing, continuous-ability removal and zone operations supply shared behavior.
+  Replaced draws return no card result to their original instruction. Native
+  source control stays live; phasing/removal/departure stop the rule. Return uses
+  a new incarnation. Pending delayed bodies use existing binding capture services.
+- Rules evidence: CR 121.2 and 121.6, 614.5 and 614.11, and 616.1. These establish
+  one-at-a-time draws, completion of replacement operations, one application per
+  modified event and affected-player ordering. Source lifecycle uses existing
+  incarnation, phasing and layer contracts. No source defect was found or fixed.
+
+Missing compiler adapters were the two event forms and lexical replacement-player
+reference. Missing native contracts were generic static draw replacement, actual
+per-draw-step history and per-instance generated-draw ancestry. The old sanctuary
+helper only handles normal draws and is not an exact substitute. It remains for
+its callers. Future one-shot draw replacement installation, Sanctuary's remaining
+body and Chains' required payment remain explicit gaps. No Go fallback, card-name
+branch, skipped rule, partial registry, Go-card deletion or DSL removal was added.
+Removal gates remain open; no caller audit or deletion was needed in this slice.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation on ReplaceDraw, DrawReplacementWindow,
+ControllerDrawStep, ExceptFirstDrawStepDraw and the ancestry field. RON event
+execution first failed with unsupported rule (ReplaceWouldDraw). Definition tests
+then exposed missing sequential binding production in the first inspector; the
+inspector now uses the shared capture sequence within a binding scope. The later
+consecutive-step assertion failed before draw-step entry reset was added.
+The selected-source return assertion failed before replacement execution checked
+its source incarnation and event match again. SelectedAbilityRemoval also failed
+before IsActive checked the source runtime declaration, using the same typed
+holder inspection as the existing draw-step replacement.
+Test-harness corrections used the existing token-copy/PhaseIn APIs, the existing
+player_action inventory role, PowerOfPermanent spelling and a nonempty library
+when testing competition with an empty-library replacement. Assertions were kept.
+
+| Card/context | Evidence |
+| --- | --- |
+| Island Sanctuary, all 6 unchanged records | Complete records stay rejected. TestRONDrawReplacementScopeEvents uses the complete LEA record's real event AST with an explicit supported test body, and proves controller draw-step selection. This is event gameplay evidence, not complete unchanged-card gameplay. |
+| Chains of Mephistopheles, unchanged LEG record | Complete record stays rejected. The same event test uses its real event AST with a supported test body, proving the first successful own-step draw exemption and nonactive-player capture. No payment or complete-card gameplay is claimed. |
+| Complete synthetic RON declaration | TestRONDrawReplacementScopeGeneratedDraws casts and resolves a source, then exercises normal and effect draws, immediate timing, generated-draw exclusion and independent game clones. DepartureLKI checks self-sacrifice, source power from LKI, the event player and a fresh returned incarnation. |
+| RON declaration and inventory | Invalid rejects malformed rule/event shapes, wrong player symbols, incompatible/unbound event refs, empty bodies and unsupported operations. Inventory checks event, filter, action and player-reference roles. |
+| Native timing and results | TestDrawReplacementScopeTiming covers upkeep, effect-first draw-step draws, nonactive players, clone history and a new draw step. ReplacedFirstAndFrames covers replaced proposals, empty-library competition, preserved outer bindings and absence of replacement card output. ConsecutiveSteps proves each actual step resets its history. |
+| Native lifecycle and instance identity | Lifecycle covers control, phasing/phase-in, departure/return, ability removal and clones. GeneratedDraw checks bounded recursion and cleanup. OrderingAndInstances lets the affected player choose either copied rule first, then proves each source still applies once and later events remain independent. StaleSelectedVisit rejects a selected rule after source departure and return. SelectedAbilityRemoval rejects a removed live declaration. |
+| Native declaration validation | Invalid rejects unknown windows, nil/unnamed player bindings, nil bodies and unbound reads before gameplay. |
+
+### Verification and measured results
+
+- Fresh baseline make build passes. Baseline go test ./pkg/mage/dsl/ron -short
+  -count=1 passes (45.286s). Baseline loadcards -json exits 1 for collection
+  rejection, not build failure: 818 accepted / 168 rejected names and 2,119
+  compiled / 326 rejected records, including the user's existing Eureka work.
+- Final focused go test ./pkg/mage/dsl/ron -run TestRONDrawReplacementScope
+  -count=1 passes (0.563s). Native go test ./pkg/mage -run
+  TestDrawReplacementScope -count=1 passes (0.582s), including selected-source
+  return and selected-ability removal. make build and go vet ./... pass.
+- Final go test ./pkg/mage/... -short -count=1 passes (RON 71.472s).
+  Final make test passes (RON 44.263s). Final make lint passes with 0 issues.
+  The first lint run reported one gocritic typeDefFirst issue; the declaration
+  order was fixed. Automatic lint changes only format imports in new Go files.
+  They were reviewed, and the final focused and broad checks use that formatting.
+  Final worktree and staged git diff --check pass. No check blocker remains.
+- A fresh checkout of the exact staged code excludes every initial user change.
+  Its final go test ./... -short -count=1 passes (RON 46.856s); go build ./...
+  and go vet ./... pass. Its final loader exits 1 only for collection rejection:
+  817 accepted / 169 rejected names, 2,118 compiled / 327 rejected records.
+  A duplicate verification command ran from the worktree; that result is not
+  used as isolated evidence. The separate checkout results above are authoritative.
+- Final worktree loadcards -json exits 1 for the expected collection rejection,
+  with 818 accepted / 168 rejected names and 2,119 compiled / 326 rejected
+  records. The difference from isolated totals is the existing Eureka work.
+  The two rejection diagnostics change as described below; counts remain stable.
+- Shared files are staged with only this slice's changes. The committed ledger
+  retains its prior history and appends this entry; the user's archive relocation
+  remains unstaged. Initial Eureka code, fixture counts, docs and unrelated files
+  keep their contents outside the commit. No Go or RON source was removed.
+- Initial complete full suite passed before the added consecutive-step test.
+  Its failing assertion caused a native reset fix and fresh required checks.
+- Fresh worktree loader still reports 818 accepted / 168 rejected names,
+  2,119 compiled / 326 rejected records, 2,445 total. Estimated and actual gains
+  are both 0 / 0. No previously accepted record regresses. Island Sanctuary now
+  reports unsupported counter choice body () inside ChooseAnAction; Chains
+  reports unsupported action (PlayerMustCost). Strict loading publishes no
+  registry. Compilation and full-card gameplay totals do not increase.
+- No RON changed, so the source vocabulary snapshot does not need a refresh.
+  Semantic inventory adds roles for the newly supported event context.
+
+Changed files: native draw replacement and tests; draw action ancestry, resolution
+frame cloning/cleanup, raw draw history and turn/step resets; RON rule/player
+lowering, semantic inventory and tests; API/rules documentation and this ledger.
+
+### Ranked next candidates
+
+1. Compare shared future draw replacement installation for Aladdin's Lamp and
+   Ring of Ma'rûf: CreateFutureReplaceWouldDraw with
+   NextTimePlayerWouldDrawACardThisTurn(You). Reuse draw ancestry and typed player
+   transport, while establishing one-shot consumption, expiry and saved payer
+   after source departure. These two complete records still need distinct library
+   choices or outside-game services; a shared installation slice estimates zero
+   immediate full-card gains. Reassess against other multi-card prerequisites.
+2. Shared required-payment/result scope: inspect PlayerMustCost in Chains of
+   Mephistopheles and Takklemaggot. Their costs are distinct (discard versus an
+   enchantable creature choice). Reuse typed lexical bindings and shared payment
+   services, and keep the two costs separate. Chains also needs mill and safe
+   continuation; Takklemaggot still needs linked graveyard Aura entry operations.
+3. Serendib Djinn's IsCardtype(Land) no-land state filter remains dependency-ready
+   for 1 name / 1 record. Defer it while useful shared work remains. Mana Clash's
+   selected-player coin rounds remain another single-card candidate.
 
 Migration remains incomplete. This run stops after this one slice.

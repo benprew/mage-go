@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ReplaceDraw] with [Static] for battlefield draw replacement rules.
+// [ControllerDrawStep] includes effect draws during the controller's draw step.
+// [ExceptFirstDrawStepDraw] exempts the first actual draw in a player's draw step.
+// Replaced proposals do not count. New steps reset history; clones keep it separate.
+// The body keeps a local player binding and restores the enclosing resolution.
+// Generated draws exclude that source visit and declaration through their ancestry.
+// Copies can still replace them. Departure, phasing and removal stop the rule.
+// Replaced draws supply no card result to the original instruction.
+// RON lowers both ReplaceWouldDraw events and WouldDrawACard_ThatPlayer reads.
+// Complete Sanctuary and Chains bodies and future replacements need more contracts.
+//
 // Use [WithUpkeepSpellTextContinuation] for one ordinary upkeep spell rule.
 // The complete object marker and trigger layer marker must also be present.
 // Any-player, controller and chosen-player events keep fresh entry bindings.
