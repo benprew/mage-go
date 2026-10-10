@@ -1,6 +1,7 @@
 package ron
 
-func manaTapSpellTextRules(rules []Node) bool {
+// The same complete declaration permits stack entry and battlefield text changes.
+func manaTapTextRules(rules []Node) bool {
 	if len(rules) != 1 {
 		return false
 	}

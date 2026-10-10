@@ -331,7 +331,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		mixedStaticEventSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && mixedStaticEventSpellTextRules(rules)
-		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapSpellTextRules(rules)
+		manaTapSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && manaTapTextRules(rules)
 		spellCastSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && spellCastSpellTextRules(rules)
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && (globalStaticSpellTextRules(rules) || globalGrantSpellTextRules(rules))
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)

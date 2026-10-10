@@ -9,6 +9,15 @@
 // Complete word-changing consumers use separate spell and permanent branches.
 // General target contexts and live copy rules still need separate contracts.
 //
+// Use [Game.AddPrintedManaTapObjectTextEffect] for one complete global mana rule.
+// The definition and declaration group pass checks before layer installation.
+// The rule must have the shared mana-event spell marker and layer marker.
+// Fixed mana symbols and event capture context keep their values.
+// Pending triggers keep prior text and event facts. Shared services keep layer
+// order, expiry, control, phasing, clones, removal, LKI and printed return.
+// [ChangePrintedPermanentText] selects this context at resolution. Attached
+// and mixed mana rules keep their separate contracts.
+//
 // Use [Game.AddPrintedLandAuraObjectTextEffect] for one complete land-type Aura.
 // [LandEnchantTarget] keeps its enchant restriction fixed. Both definitions and
 // every declaration group pass checks before layer installation. Fixed rules

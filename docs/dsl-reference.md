@@ -1,5 +1,50 @@
 # DSL reference
 
+## Complete global land-mana-event battlefield text
+
+`Game.AddPrintedManaTapObjectTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` checks one complete global mana-event rule before
+installing layer 3. The card must satisfy the existing
+`WithManaTapSpellTextContinuation()` context: one marked battlefield
+`GenericTriggered` or global `ManaBonusAbility`, without keywords, sibling rules,
+casting targets, costs or modes. Attached and mixed rules use separate contracts.
+Duration is `Indefinite` or `EndOfTurn`; changes must be nonempty and validated.
+
+Preflight rebuilds the retained whole definition, checks its declaration group,
+native ability kind, subtype context, targets, effect count, event capture flags
+and bonus recipient/produced-type context, and checks the active runtime rule.
+Fixed bonus mana symbols cannot change. Missing builders/groups, changed
+contexts, absent or returned visits, face-down/phased sources and removed rules
+reject before any layer is installed. A valid no-match substitution installs a
+layer. `ChangePrintedPermanentText` now dispatches this complete context.
+
+RON uses the existing resolving
+`CreatePermanentLayerEffect(permanent_ref, [substitution, ...])` lowering and
+lexically saved color or basic-land word pairs. Its shared `manaTapTextRules`
+selector marks exactly one global
+`TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)), body)`;
+existing action and scope validation still rejects unsupported declarations.
+Stack continuation and battlefield dispatch use the same complete marker.
+
+The existing declaration layer restores ordered baselines on expiry. Mana
+bonuses keep the shared planner, actual replaced types and immediate production;
+ordinary triggers keep stack timing and detection facts. Control, phasing,
+cloning, pending copies, removal, LKI, printed return and copiable values use
+existing services (CR 400.7, 113.7a, 605.1b/4a/5a, 612.1–3, 613.1c/f, 707.2).
+No new cost, replacement-ordering or simultaneous-operation service is added.
+
+Evidence: `TestRONTextManaTapObjectRecords` covers all 12 complete subject records
+for Mana Flare and Manabarbs, with both real Magical Hack and Sleight of Mind
+consumers (24 cases). It checks choices, payment, no-match layer installation,
+IDs, mana symbols, timing, recipient, pending clones, LKI and recasts.
+`QueuedSnapshots`, `ProducedReplacement`, `PaymentRollback` and `Boundaries`
+cover revised pending target filters, copies/clones, replaced multi-type mana,
+manual/planned agreement, failed payment rollback, invalid lexical declarations
+and foreign object contexts. Native `TestTextManaTapObjectRejectsAtomic` covers
+malformed definitions and runtimes; `Lifecycle` covers observable ordered word
+changes, expiry while phased, control, removal/restoration and printed copies.
+Compilation acceptance is unchanged; general subject coverage remains incomplete.
+
 ## Single global ability-grant spell text continuation
 
 `WithGlobalStaticSpellTextContinuation() CardOption` now also accepts one
@@ -92,8 +137,8 @@ source departure. IllegalTargets covers resolution legality. CopyExceptions
 covers an added Land type. Boundaries rejects invalid syntax/scopes and retains
 unsupported mixed and Aura contexts. `TestTextManaTapSpell*` covers native
 markers, nil rules, incompatible contexts and rejection without mutation.
-Mixed static/event rules, Aura mana events, whole-object dispatch and the text
-changing spell adapters remain separate gaps. No RON source changed.
+Mixed and Aura contexts retain separate contracts. Whole-object land-mana-event
+dispatch uses AddPrintedManaTapObjectTextEffect. No RON source changed.
 
 ## Typed cast-event permanent-spell text continuation
 

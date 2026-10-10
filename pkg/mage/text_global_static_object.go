@@ -97,6 +97,9 @@ func (e *permanentObjectTextChange) Apply(ctx *EffectContext) error {
 	if _, _, err := mixedStaticEventSpellTextContext(p.Card); err == nil {
 		return ctx.Game.AddPrintedMixedStaticEventTextEffect(p, e.duration, changes...)
 	}
+	if _, err := manaTapSpellTextContext(p.Card); err == nil {
+		return ctx.Game.AddPrintedManaTapObjectTextEffect(p, e.duration, changes...)
+	}
 	return ctx.Game.AddPrintedGlobalStaticTextEffect(p, e.duration, changes...)
 }
 func (e *permanentObjectTextChange) inspectDefinition() definitionNode {

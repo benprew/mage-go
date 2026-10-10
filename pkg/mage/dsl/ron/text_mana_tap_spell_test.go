@@ -98,7 +98,7 @@ func TestRONTextManaTapSpellInventory(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, record := range records {
-			if !manaTapSpellTextRules(record.Fields["Rules"].Args) {
+			if !manaTapTextRules(record.Fields["Rules"].Args) {
 				continue
 			}
 			if _, err := Compile(record); err != nil {
