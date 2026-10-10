@@ -314,6 +314,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
 	var options []optionFactory
 	landAuraSpellText := false
+	intrinsicCastSpellText := false
 	intrinsicCreatureSpellText := false
 	copyEntrySpellText := false
 	mixedStaticEventSpellText := false
@@ -332,6 +333,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && globalStaticSpellTextRules(rules)
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
+		intrinsicCastSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && !ctx.aura && intrinsicCastSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
 		ctx.exileLink, err = compileExileAssociation(rules, permanent)
 		if err != nil {
@@ -448,6 +450,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		if copyEntrySpellText {
 			opts = append(opts, mage.WithCopyEntrySpellTextContinuation())
+		}
+		if intrinsicCastSpellText {
+			opts = append(opts, mage.WithIntrinsicCastEventSpellTextContinuation())
 		}
 		if intrinsicCreatureSpellText {
 			opts = append(opts, mage.WithIntrinsicCreatureSpellTextContinuation())

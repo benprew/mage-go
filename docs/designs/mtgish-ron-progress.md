@@ -8,13 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`MIXED-STATIC-EVENT-SPELL-TEXT` carries one complete global static/event pair
-through permanent-spell entry. Continuation evidence covers **3 names / 12
-complete records**; acceptance gain is **0 names / 0 records**. Paired declaration
-checks preserve static context, mana bonus recipient and upkeep payment symbols.
-Copies/clones, later layers, phasing, ability removal, copiable values, LKI and
-printed recasts are covered. Other mixed contexts, whole-object dispatch and
-word-changing spells remain incomplete.
+`INTRINSIC-CAST-EVENT-SPELL-TEXT` carries intrinsic creature rules and one
+cast-event trigger through permanent-spell entry. New continuation evidence
+covers **1 name / 1 complete record**; acceptance gain is **0 names / 0 records**.
+Paired checks retain intrinsic contributions, cast captures, targets and mana
+symbols. Copies/clones, later layers, phasing, removal, copiable values, LKI and
+printed recasts are covered. Whole-object dispatch, other mixed contexts and
+word-changing spell consumers remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -64696,3 +64696,166 @@ Ranked next candidates:
 
 Stopped after this slice. Full RON gameplay, whole-object text, runtime loading,
 Go-card deletion, unused DSL cleanup and native startup remain incomplete.
+
+## 2026-10-09: intrinsic creature and cast-event permanent-spell text continuation
+
+Status: complete `INTRINSIC-CAST-EVENT-SPELL-TEXT` prerequisite slice. Compilation
+and complete collection gameplay remain separate. No second slice was started.
+
+### Environment and candidate comparison
+
+The worktree started with tracked edits to .gitignore, the execution design,
+ledger, API/rules docs, definition/compiler/inventory and optional-hand-entry
+code/tests, plus untracked completed-ledger and repeated-entry code/tests.
+These changes were retained and excluded from the commit. Fresh baseline
+`make build` and `TestRONTextMixedStaticEventSpell` passed; strict collection
+loading exited 1 with 813 accepted / 173 rejected names and 2,099 compiled /
+346 rejected records. This is collection rejection, not a build failure.
+
+The latest ranked candidates were evaluated from complete records and nested
+forms, counting reprints once:
+
+| Candidate | Distinct affected names / records | Estimated full-card compilation gains | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Whole-object printed-declaration dispatch and lifetime | Magical Hack, Sleight of Mind / 12 | 0 for a checked native prerequisite; 2 only after both consumers and their contexts are complete | Missing intrinsic/cast pairing, copy-added and remaining relational/static contracts; both records have spell and permanent branches with separate typed word choices and substitutions. Enables both word-changing spells. | High: several declaration families, atomic object dispatch, layers and both target categories; exceeds a bounded single slice. |
+| Intrinsic plus cast-event spell continuation (selected) | Sol'kanar the Swamp King / 1 LEG record | 0: this record already compiles | Native intrinsic and cast-event services exist but whole-object spell revision rejects their combination. Closes that concrete prerequisite for both Magical Hack and Sleight of Mind. Consumers and broader dispatch remain blocked. | Moderate: one context recognizer, shared validator/entry reuse, paired revision checks and native/RON lifecycle evidence; fits one run. |
+| Sticky/static and copy-added text contexts | Titania's Song / 2; Vesuvan Doppelganger / 6 | Up to 2 only after separate complete contracts, not one adapter | Titania requires sticky animation lifetime and live mana-value P/T; Vesuvan nests added upkeep targets, live copying, KeepColor and AddAbilityVariable(ThisAbility). Required for broader object dispatch. | High: separate sticky and live-copy subsystems plus added-ability rebinding; not one cohesive bounded slice. |
+
+Candidate 1 is not dependency-ready as a complete bounded capability. Candidate
+2 is selected as its explicit prerequisite: one inventory name is involved,
+but downstream benefit is concrete for two distinct word-changing spells.
+Candidate 3 cannot be represented as one small adapter without skipped rules.
+All complete candidate records and identical reprints were inspected. No Go card
+definitions were used as requirements.
+
+### Supported contract and reuse boundary
+
+New API: `mage.WithIntrinsicCastEventSpellTextContinuation() mage.CardOption`.
+Existing execution API: `(*mage.Game).RevisePrintedSpellText(stackID uuid.UUID,
+changes ...mage.TextChange) error`.
+
+RON marks a creature-only, non-Aura definition with intrinsic protection/basic
+landwalk declarations, ordinary keywords, and exactly one
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer or Opponent, filter), body)`.
+Existing lowering validates every filter, body, target and lexical binding.
+Declaration order is unrestricted; multiple intrinsic contributions remain
+separate. Protection requires marked nonempty color protection without an Aura
+exception; landwalk requires marked fixed basic landwalk. The event is a marked
+nonoptional typed battlefield cast trigger without extra zones, modes or
+intervening/state conditions. Additional/alternate costs, casting targets,
+extra types, other abilities and conflicting continuation markers reject.
+
+Native validation separates intrinsic rules from the single cast trigger and
+uses `intrinsicCreatureTextRulesContext`, extracted from the existing validator.
+`sameIntrinsicCreatureSpellContext` and `sameSpellCastTextContext` check fresh
+rule context. Checked definition revision pairs every declaration in its
+original group and position, retaining target shapes, cast captures/player
+context, intrinsic counts, ordinary keywords, subtypes and body count.
+No mutation occurs on rejection. Empty/invalid substitutions, absent builders
+or groups, countered visits and foreign announced bodies/targets/results reject.
+
+The existing intrinsic revision transaction and fresh entry builder are shared
+through `reviseIntrinsicSpellTextWithContext` and `buildIntrinsicTextSpellEntry`.
+Entry keeps physical identity, owner, token status, printed departure rules and
+checked intrinsic entry characteristics. Mana symbols remain unchanged. New
+rules have fresh target/event/payment bindings. Spell copies enter as tokens;
+clones retain independent revisions. Existing declaration text layers use the
+continued baseline and restore it on expiry. Phasing preserves the visit;
+ability removal suppresses both rules. Pending triggers retain detection text,
+source and controller. Departure retains final LKI, while a physical recast uses
+printed rules. Ordinary word changes stay outside copiable values. Copy-added
+types retain the rules and clear this creature-only spell marker. Legacy
+CloneFrom clears the marker with its existing text construction state.
+
+RON owns spelling and context selection; mage owns validation and execution.
+Reused services: CardDefinitionPlan, BuildTextDefinitionRevision and paired
+ability groups; intrinsic protection/landwalk, typed cast events and targets;
+stack copies/cloning, fresh entry, layer baseline restoration, phasing, ability
+removal, controller changes, copiable provenance, departure/LKI and payments.
+No parallel cost, zone, replacement-order or simultaneous-operation subsystem
+was added. Go-card and unused DSL removal gates remain unmet; no definitions or
+services were removed. API and rules-contract docs describe only this context.
+Relevant local rules: CR 113.7a, 400.7a, 603.3, 608.2b/3a, 612.1–3 and 707.2.
+No source defect was found or corrected in the selected record. RON source and
+vocabulary hashes remain unchanged.
+
+### Failing-first tests and card mapping
+
+Before implementation, native Declaration failed compilation on the absent
+marker API. The real RON Records test separately failed with "spell text
+continuation requires one ordinary instant or sorcery declaration". Both
+expected failures preceded implementation. Later synthetic test fixtures used
+an incorrect entry-event spelling and protection shape; these fixtures were
+corrected to existing RON syntax without weakening production checks.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Sol'kanar the Swamp King, complete LEG record | TestRONTextIntrinsicCastSpellRecords changes Swamp to Island and Black to Blue before entry, checks unchanged payment/timing/physical card, both rules in original and cloned games, 5/5 identity, actual landwalk evasion, cast-trigger stack timing, controller life and exclusion of the old color. Inventory maps exactly 1 name / 1 complete record. Existing TestRONSpellCastLifeRealCards retains original-rule evidence. |
+| Combined lifecycle | Lifecycle covers separate token copies and cloned color revisions, controller life, printed copy values, later independent landwalk/cast text layers, detection-controller retention through control changes, live new-controller detection, removal, phased expiry, restored declaration IDs, departure pending triggers/LKI and printed recasts. |
+| Fresh target and event bindings | EventBindingsAndTargets uses the paired context with an Opponent cast event, revised target filter, destroy/payment/counter sequence, original caster and spell bindings, declined payment, all-illegal target resolution and controller exclusion. Shared payment rollback evidence remains in the existing optional-payment suite. |
+| Intrinsic contributions and copy exceptions | IntrinsicGroups checks reversed rule order, two distinct landwalk contributions, color protection, FirstStrike, unchanged mana symbols and cast detection. CopyExceptions checks an added Land type, retained changed intrinsic/event rules and cleared eligibility marker through validated copy builders. |
+| Declaration and atomic boundaries | Native Declaration and RejectsAtomic cover duplicate/conflicting markers, wrong/extra types, Aura, additional costs/targets, nil/extra/unmarked rules, missing intrinsic rules, changed event kind/captures/targets/keywords/subtypes, absent groups/builders, invalid/empty changes, foreign stack results/targets/bodies and countered visits. RON Boundaries rejects malformed events, incompatible references and unbound payment results; extra cast events or other event kinds retain atomic continuation rejection. |
+
+Prior single-intrinsic and single-cast boundary tests were updated only to remove
+the newly supported Sol'kanar rejection. Their remaining boundaries pass.
+No accepted record was removed or weakened.
+
+### Verification and collection evidence
+
+- Baseline make build and focused TestRONTextMixedStaticEventSpell passed;
+  baseline strict loader exited 1 for collection rejection.
+- Failing-first native compilation and real-record RON assertion failures are
+  recorded above. Final focused TestRONTextIntrinsicCastSpell passed (0.489s);
+  native TestTextIntrinsicCastSpell passed (0.481s). Broader existing/new
+  intrinsic and cast-spell tests passed (RON 0.763s; native 0.613s).
+- Worktree make build; go vet ./...; go test ./pkg/mage/... -short -count=1
+  (RON 36.973s); make test (RON 37.340s); make lint (0 issues);
+  git diff --check all passed. The first lint run reported one native test
+  preallocation issue. It was fixed; affected native/RON focused tests,
+  build/vet and lint were rerun. Automatic formatting changes were reviewed.
+- Final go run ./cmd/loadcards -json exits 1 as expected: 813 accepted /
+  173 rejected unique names; 2,099 compiled / 346 rejected records. Parsed
+  JSON, including every diagnostic, exactly equals the fresh worktree baseline.
+  The strict loader continues to reject the whole collection.
+- An isolated checkout of the staged HEAD-plus-slice index excludes pre-existing
+  edits and retains HEAD ledger history. Focused RON tests (0.526s), make build,
+  go vet ./..., engine short tests (RON 43.878s), make test (RON 37.879s) and
+  make lint (0 issues) passed. The final isolated files exactly equal their
+  staged blobs after automatic lint. The corrected native allocation fixture
+  was included in the isolated full suite.
+- The isolated strict loader exits 1 with 812 accepted / 174 rejected names,
+  2,098 compiled / 347 rejected records. Its only additional rejection versus
+  the worktree is Eureka at LEG.lines.ron:79:173: unsupported action
+  (RepeatableActions). Mana Clash's first diagnostic changes from
+  DRK.lines.ron:64:200: unsupported repeated round producer (EachPlayerAction)
+  to :64:181: unsupported action (RepeatableActions). Both differences come
+  from excluding the user's repeated-entry work; every other diagnostic is
+  unchanged. This slice has no dependency on those edits.
+- A temporary copy with this slice's patch reversed exactly matches every
+  initial tracked edit. Unrelated untracked artifacts remain unstaged.
+  No unresolved build, test, lint, source-data or environment blocker remains.
+
+Changed files: mage card.go, copy_modification.go, definition.go, doc.go,
+stack_resolver.go, text_spell_continuation.go, text_intrinsic_spell.go, new
+text_intrinsic_cast_spell.go/test; RON compiler.go, two prior boundary tests,
+new text_intrinsic_cast_spell.go/test; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger (17 files).
+
+### Result and ranked next candidates
+
+Estimated and actual compilation gain: 0 names / 0 records. New combined spell
+continuation evidence covers 1 unique name / 1 complete record; this is a
+prerequisite gain, not a claim that the collection's remaining text consumers
+are complete. All accepted records still pass strict compilation.
+
+1. Shared whole-object printed-declaration dispatch and text-effect lifetime for
+   completed contexts, with explicit checked boundaries for unestablished
+   contexts. This remains a prerequisite for Magical Hack and Sleight of Mind.
+2. Remaining relational/static text contracts needed by whole-object dispatch;
+   select a measured bounded context after inspecting complete records.
+3. Copy-added ability text and live-copy rebinding for Vesuvan Doppelganger;
+   preserve its nested upkeep targets, KeepColor and ThisAbility identity.
+
+Stopped after this slice. Complete RON gameplay, word-changing spell consumers,
+runtime registry loading, Go-card deletion, unused DSL cleanup and native
+startup remain incomplete.

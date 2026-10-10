@@ -15583,3 +15583,35 @@ removal, copiable values, LKI, printed recasts and invalid contexts. Native
 `UpkeepDeclaration` and `UpkeepRejectsAtomic` check marked shapes and atomic
 context rejection. This adds continuation coverage, with no compiler unlocks.
 Other mixed declarations and whole-object word dispatch remain separate.
+
+## Intrinsic creature and cast-event spell text continuation
+
+`WithIntrinsicCastEventSpellTextContinuation() CardOption` permits one creature
+with marked color protection/basic landwalk, ordinary keywords and exactly one
+marked typed battlefield spell-cast trigger. RON selects one AnyPlayer/Opponent
+`TriggerA` beside intrinsic rules. Casting costs/targets, modes, extra types,
+Aura contexts, other abilities and conflicting markers reject.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+uses the existing checked definition revision and declaration pairing. It checks
+intrinsic contributions, ordinary keywords, subtype context, cast-event capture
+and player context, target shapes, body count and ordered declaration groups.
+Invalid changes, absent builders/groups, countered visits and foreign announced
+state reject atomically. Each build has separate targets and event/payment
+bindings. Printed mana symbols retain their values (CR 612.1–3).
+
+Entry uses the existing intrinsic continuation builder, with physical identity,
+owner and printed departure rules (CR 400.7a, 608.3a). Spell copies enter as
+tokens; clones retain separate revisions. Later layer 3 changes use continued
+baselines, phasing retains the visit and ability removal suppresses both rules.
+Pending triggers keep detection text, source and controller (CR 603.3, 113.7a).
+Departure keeps final LKI and restores printed recasts. Ordinary word changes
+stay outside copiable values (CR 707.2); added copy types retain both rules and
+clear the creature-only continuation marker. No payment, replacement ordering,
+zone movement or simultaneous-operation service is replaced.
+
+Evidence: the native `TestTextIntrinsicCastSpellDeclaration` and `RejectsAtomic`;
+RON `TestRONTextIntrinsicCastSpellRecords`, `Lifecycle`, `Inventory`,
+`EventBindingsAndTargets`, `IntrinsicGroups`, `CopyExceptions`, `Boundaries`.
+Sol'kanar the Swamp King maps to its complete LEG record. Whole-object dispatch,
+other mixed rules and complete word-changing spell consumers remain separate.

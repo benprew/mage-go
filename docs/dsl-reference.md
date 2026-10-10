@@ -11896,3 +11896,29 @@ removal, copiable values, LKI, printed recasts and invalid contexts. Native
 `UpkeepDeclaration` and `UpkeepRejectsAtomic` check marked shapes and atomic
 context rejection. This adds continuation coverage, with no compiler unlocks.
 Other mixed declarations and whole-object word dispatch remain separate.
+
+## Intrinsic creature and cast-event spell text continuation
+
+`mage.WithIntrinsicCastEventSpellTextContinuation() mage.CardOption` permits
+one creature definition with marked intrinsic color protection/basic landwalk
+and one marked typed battlefield spell-cast trigger. Ordinary keywords remain.
+RON selects intrinsic rules plus one `TriggerA(WhenAPlayerCastsASpell(AnyPlayer
+or Opponent, filter), body)`. Existing lowering checks filters, targets, bodies
+and lexical bindings. Rule order and separate intrinsic contributions remain.
+Casting targets, additional/alternate costs, modes, Aura/extra types, other
+rules and conflicting continuation markers are outside this contract.
+
+`Game.RevisePrintedSpellText` retains declaration groups, trigger event context,
+target shapes, intrinsic contribution counts, subtype context and ordinary
+keywords. Invalid changes reject before stack mutation. Mana symbols retain
+printed values. Entry builds fresh rules with physical identity and printed
+departure rules. Copies enter as tokens; game clones keep separate rules.
+Later declaration text layers restore the continued baseline after expiry.
+Phasing keeps the visit. Pending triggers retain detection text and controller.
+LKI keeps final rules; a recast uses printed rules. Ordinary word changes stay
+outside copiable values. Added copy types retain rules and clear this marker.
+
+Evidence: `TestRONTextIntrinsicCastSpellRecords`, `Lifecycle`, `Inventory`,
+`EventBindingsAndTargets`, `IntrinsicGroups`, `CopyExceptions`, `Boundaries`;
+`TestTextIntrinsicCastSpellDeclaration` and `RejectsAtomic`.
+Whole-object text dispatch and word-changing spell consumers remain separate.

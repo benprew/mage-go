@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithIntrinsicCastEventSpellTextContinuation] for paired creature rules.
+// RON marks intrinsic protection/basic landwalk with one battlefield cast trigger.
+// [Game.RevisePrintedSpellText] checks both groups before fresh entry builds.
+// Mana symbols keep their values. Copies and clones keep separate rules.
+// Later text layers restore the continued baseline. Phasing keeps the visit.
+// Pending triggers keep detection text and controller. LKI keeps final rules;
+// return uses printed rules. Ordinary changes stay outside copiable values.
+// Other mixed rules and whole-object text require separate contracts.
+//
 // Use [WithMixedStaticEventSpellTextContinuation] for paired permanent rules.
 // It permits one global static rule with a controller mana bonus or a fixed
 // controller-upkeep mana payment and unpaid self-sacrifice. Both declarations

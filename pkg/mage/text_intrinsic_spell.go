@@ -20,6 +20,10 @@ func intrinsicSpellTextContext(card Card) error {
 		len(base.modes) != 0 || len(base.additionalCosts) != 0 || len(base.alternateCosts) != 0 || len(base.castTargets) != 0 || base.landAuraSpellText != 0 {
 		return fmt.Errorf("intrinsic spell text requires one marked creature without casting costs or targets")
 	}
+	return intrinsicCreatureTextRulesContext(base)
+}
+
+func intrinsicCreatureTextRulesContext(base *BaseCard) error {
 	landwalk := make(map[core.Attr]int)
 	for _, ability := range base.abilities {
 		if nilDefinition(ability) {
@@ -101,7 +105,11 @@ func sameIntrinsicCreatureSpellContext(old, fresh *BaseCard, revision *TextDefin
 }
 
 func (g *Game) reviseIntrinsicCreatureSpellText(obj *StackObject, changes []TextChange) error {
-	if err := intrinsicSpellTextContext(obj.spellTextDefinition); err != nil {
+	return g.reviseIntrinsicSpellTextWithContext(obj, changes, intrinsicSpellTextContext, sameIntrinsicCreatureSpellContext)
+}
+
+func (g *Game) reviseIntrinsicSpellTextWithContext(obj *StackObject, changes []TextChange, validate func(Card) error, sameContext func(*BaseCard, *BaseCard, *TextDefinitionRevision) bool) error {
+	if err := validate(obj.spellTextDefinition); err != nil {
 		return err
 	}
 	if len(obj.Effects) != 0 || len(obj.Targets) != 0 || len(obj.TargetSpecs) != 0 || len(obj.capturedNumbers) != 0 ||
@@ -113,10 +121,10 @@ func (g *Game) reviseIntrinsicCreatureSpellText(obj *StackObject, changes []Text
 		return err
 	}
 	fresh := revision.Definition()
-	if err := intrinsicSpellTextContext(fresh); err != nil {
+	if err := validate(fresh); err != nil {
 		return err
 	}
-	if !sameIntrinsicCreatureSpellContext(obj.spellTextDefinition.(*BaseCard), fresh.(*BaseCard), revision) {
+	if !sameContext(obj.spellTextDefinition.(*BaseCard), fresh.(*BaseCard), revision) {
 		return fmt.Errorf("intrinsic spell text changed its declaration context")
 	}
 	rebuilt := cloneStackObject(obj)
@@ -134,6 +142,10 @@ func buildIntrinsicCreatureSpellEntry(obj *StackObject) (Card, error) {
 	if err := intrinsicSpellTextContext(obj.spellTextDefinition); err != nil {
 		return nil, err
 	}
+	return buildIntrinsicTextSpellEntry(obj)
+}
+
+func buildIntrinsicTextSpellEntry(obj *StackObject) (Card, error) {
 	fresh, err := BuildTextChangedDefinition(obj.spellTextDefinition)
 	if err != nil {
 		return nil, err

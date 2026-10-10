@@ -329,11 +329,8 @@ func TestRONTextIntrinsicSpellBoundaries(t *testing.T) {
 			t.Fatal("invalid declaration accepted", rules)
 		}
 	}
-	for _, name := range []string{"Clone", "Sol'kanar the Swamp King"} {
+	for _, name := range []string{"Clone"} {
 		set := "LEA"
-		if name == "Sol'kanar the Swamp King" {
-			set = "LEG"
-		}
 		g, a, _ := ronGame()
 		card := repositoryCard(t, set, name)
 		if name == "Clone" {
