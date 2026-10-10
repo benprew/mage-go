@@ -91,7 +91,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 				primary = costs[0](bindings)
 			}
 			action := mage.NewModalActivated(primary, buildChooseOneModes(modes, bindings))
-			mage.WithTextRevisionActivationState()(action)
+			mage.WithLayeredTextRevisionActivationState()(action)
 			for i, build := range costs {
 				if i == 0 {
 					continue
@@ -107,7 +107,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			bindings.activationHistory = mage.BindActivationHistory("this activated ability")
 		}
 		options := actionOptions(plan.buildWithBindings(bindings))
-		options = append(options, mage.WithTextRevisionActivationState())
+		options = append(options, mage.WithLayeredTextRevisionActivationState())
 		if ctx.activationHistory.used {
 			options = append(options, mage.WithActivationHistory(bindings.activationHistory))
 		}

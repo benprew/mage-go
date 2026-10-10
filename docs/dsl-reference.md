@@ -881,6 +881,7 @@ and `Rejects`.
 this option on spell actions. RON lowers it on ordinary and modal `Activated`
 and `ActivatedWithModifiers` actions produced by `compileActivatedRule`.
 The separate conditional-mana compiler path is outside this contract.
+RON now uses `WithLayeredTextRevisionActivationState` to include layer lifetime.
 
 `(*mage.Game).RevisePrintedActivatedAbility(source *Permanent,
 abilityID uuid.UUID, changes ...TextChange) error` checks the saved source
@@ -897,11 +898,10 @@ changes of that action's prior revision. Other actions remain separate. History
 uses a declaration lineage UUID plus source incarnation; clones keep separate
 counts. Existing cleanup resets the rebuilt action's flags and history.
 
-This service replaces one active action. It does not change the physical card's
-printed or copiable definition, install layer 3, schedule a duration, restore
-revised rules after ability removal, revise other ability kinds or change spell
-text. A future text-layer owner must coordinate those services. Magical Hack
-and Sleight of Mind still reject as complete records.
+This direct service replaces one active action and rejects a declaration while
+its layered result is present. It keeps the physical card's printed and copiable
+definition. Other ability kinds and spell text have separate contracts.
+Magical Hack and Sleight of Mind still reject as complete records.
 
 Evidence: `TestRONTextActivationStateHistory`, `QueuedAndRepeated`,
 `LimitsAndIdentity`, `HistoryQueueAndClone`, `Eligibility`,
@@ -11444,3 +11444,35 @@ clones, phasing, suppression, LKI, source return and separate abilities.
 type/color layers, token exclusions, host identity, prior baselines, independent
 declarations and rejection. `TestTextConditionalPTLayer*` checks typed definition
 validation and atomic rejection of changed condition or recipient contexts.
+
+
+## Printed activated-action text layers
+
+`mage.WithLayeredTextRevisionActivationState() ActionOption` includes the checked
+activation-state contract. RON uses it on ordinary and modal `Activated` and
+`ActivatedWithModifiers` actions. The conditional-mana path stays separate.
+
+`(*mage.Game).AddPrintedActivatedTextEffect(source *Permanent,
+abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error`
+installs nonempty validated color/basic-land word changes with `EndOfTurn` or
+`Indefinite` duration. Installation checks the exact present face-up source,
+printed declaration, retained builder, layer marker and history shape on a clone
+before it adds an effect. Rebuilds keep timing, limits, permissions and declaration
+shape (costs, targets, modes, restrictions, captures and defined mana X).
+Granted, absent, removed, foreign and phased declarations
+reject without a live change. Each layer pass restores the saved baseline before
+ordered changes. Expiry recomputes from that baseline. A prior direct revision
+can supply the baseline; direct revision cannot replace a layered result.
+
+Active IDs, limits and history lineage stay fixed. Fresh cost, target, modal,
+choice and result declarations serve future activations. Pending activations and
+copies keep prior text and bindings. Mana symbols do not change. Ability removal
+stops activation. Restoration keeps current text and paid limits. Cleanup resets
+limits even while the ability is removed or phased out. Phasing keeps the visit;
+the next present layer pass restores expired text. Departure keeps final LKI;
+return uses printed rules. Clones keep separate state and controller contexts.
+
+Evidence: `TestRONTextActivationLayerTargets`, `Limits`, `History`, `Choices`,
+`Boosts`, `OrderingLifetime`, `Boundaries`, `BaselineControllerAndLKI`,
+`TimingAndResults`, `Modal` and `LandWords`; native `TestTextActivationLayerDeclaration`
+and `Rejects`. Whole-object dispatch and spell continuation stay separate.

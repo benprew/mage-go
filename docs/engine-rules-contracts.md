@@ -14513,8 +14513,8 @@ CR 602.2a fixes a queued activation's text; CR 602.5b keeps restrictions through
 control changes. CR 612.3 excludes granted abilities. This service handles one
 printed activated action, not a complete continuous text effect. It does not
 modify the physical card's printed/copiable rules, static registration, layer
-order, expiry or spell entry. Reapplication after layer-driven ability restoration
-requires the future layer owner. There is no new replacement, LKI, simultaneous
+order, expiry or spell entry. The activated-action layer service below now owns reapplication after
+layer-driven ability restoration. There is no new replacement, LKI, simultaneous
 movement or cost transaction contract.
 
 Evidence: RON `TestRONTextActivationStateHistory` executes all rules of Dragon
@@ -15000,3 +15000,52 @@ clones, phasing, suppression, LKI, source return and separate abilities.
 type/color layers, token exclusions, host identity, prior baselines, independent
 declarations and rejection. `TestTextConditionalPTLayer*` checks typed definition
 validation and atomic rejection of changed condition or recipient contexts.
+
+
+## Printed activated-action layer lifecycle
+
+`WithLayeredTextRevisionActivationState() ActionOption` and
+`Game.AddPrintedActivatedTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` extend the checked
+activated-action revision contract to ordered layer 3 installation.
+RON marks its complete ordinary and modal ActionDefinition activation path.
+The separate conditional-mana path is outside this contract.
+
+The service accepts nonempty validated color/basic-land substitutions and
+EndOfTurn or Indefinite duration. A cloned probe checks the present face-up
+incarnation, active printed group/member, retained builder, layer marker and
+history shape before registration. Rebuilds must also keep timing, limits,
+permissions and the cost, target, mode, restriction, capture and defined-mana-X
+declaration shape. Invalid installations leave live rules and
+effects unchanged. Each pass restores a saved baseline, then applies surviving
+changes in timestamp order. Expiry restores the baseline or earlier surviving
+changes. A prior direct revision can supply the baseline. Direct revision cannot
+replace an installed layer result. IDs and declaration positions remain fixed.
+
+The baseline contains rules, not frozen activation state. Current paid flags and
+counts transfer at each reset. Retained runtime actions keep those counts while
+layer 6 removes the ability. Shared cleanup resets present, removed and phased
+state. History lineage remains fixed for pending bodies and copies; its existing
+turn tracker resets at cleanup. Payment transactions, activation legality, mana
+planning, simultaneous operations and replacement ordering keep their existing
+services. No new cost or event subsystem is introduced.
+
+Targets, costs, modes, choices and result bindings are fresh per rebuilt action.
+Queued originals and copies retain prior declarations and frames (CR 602.2a).
+Mana symbols keep their printed values (CR 612.2). Granted abilities are excluded
+(CR 612.3). Control changes preserve restrictions (CR 602.5b). Clones use separate
+baseline/state maps and isolate mutable controller context. Phasing keeps the
+visit; expiry takes effect at the next present layer pass. Departure LKI retains
+final rules, while return supplies printed rules (CR 400.7). Layers use CR 613.1c
+and 613.7. Physical copiable definitions do not acquire text-layer results.
+Whole-object dispatch, spell continuation and copy-layer rebinding stay separate.
+
+Evidence: native `TestTextActivationLayerDeclaration` and `Rejects` check
+invalid kinds, missing groups/builders/markers, incompatible history, grants and
+removed declarations without mutation. RON `TestRONTextActivationLayer*` tests
+execute full Northern Paladin, Firebreathing, Shivan Dragon, Circle of Protection:
+Red/Blue, Dragon Whelp, Nalathni Dragon, Farrelite Priest and Initiates of the Ebon
+Hand records. Synthetic tests cover modal targets, timing, saved results, ordered
+expiry, limits through suppression and cleanup, prior direct baselines, cloned
+control, departure LKI and basic land word target changes (including nonbasic
+lands). Existing activation-state tests remain in force.

@@ -8,12 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-OPPONENT-LAND-TAP` adds ordered layer-3 installation and
-baseline restoration for complete printed opponent-land-tap triggers. Lifetap
-and Lifeblood (two unique cards / seven records) have new layer lifecycle gameplay
-evidence. Acceptance gain is **0 names / 0 records**. Native coverage excludes
+`TEXT-LAYER-PRINTED-ACTIVATED-ACTION` adds ordered layer-3 installation and
+baseline restoration for printed activated actions. Nine unique cards / 39
+records have new representative layer lifecycle gameplay evidence. Costs,
+limits, history, pending bodies and clone isolation keep their engine contracts.
+Acceptance gain is **0 names / 0 records**. Isolated native compilation excludes
 pre-existing Eureka work: **812 accepted names / 2,098 compiled records**.
-Whole-object text, spell text and copy rebinding remain unsupported.
+Whole-object text, spell continuation and copy rebinding remain unsupported.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -62806,5 +62807,161 @@ Ranked next candidates:
    Magical Hack/Sleight of Mind, scoped to one complete shared contract per run.
 3. Whole-object Magical Hack/Sleight of Mind dispatch when all remaining
    declaration, spell continuation and copy prerequisites are ready.
+
+Stop after this slice. Migration completion is not claimed.
+
+## 2026-10-09: TEXT-LAYER-PRINTED-ACTIVATED-ACTION
+
+Status: complete shared printed activated-action layer installation/restoration
+slice. Stop after this slice. Collection migration remains incomplete.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were inspected for all names below. Identical
+reprints were compared together and counted once. Targeted vocabulary queries
+covered Activated/2, ActivatedWithModifiers/3 and the two word-choice families.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: printed activated-action layers | Firebreathing, Shivan Dragon, Northern Paladin, Circle of Protection: Red, Circle of Protection: Blue; history witnesses Dragon Whelp, Nalathni Dragon, Farrelite Priest, Initiates of the Ebon Hand | 0; all nine already compile | Checked direct revision, semantic rebuild, costs, targets, history and shared layers exist. Installation/restoration is missing. Establishes declaration lifecycle for the eventual Magical Hack/Sleight of Mind dispatcher across boosts, colored targets, source choices, mana/history and modal actions. | Medium, bounded and dependency-ready: state retention, layer baselines, controller isolation and lifecycle tests. |
+| Spell text continuation and copy rebinding | Magical Hack, Sleight of Mind | 0 for a prerequisite alone; eventually 2 | Both complete records have targeted spell/permanent modes, two typed word choices and variable substitutions. Need pending spell continuation, fresh bindings, copies and permanent-spell entry. Declaration dispatch also remains. | Larger than the selected shared declaration lifecycle. |
+| Whole-object text dispatch | Magical Hack, Sleight of Mind | 0 dependency-ready; eventually 2 | Needs remaining declaration dispatch plus spell continuation/copy prerequisites. Word choices alone do not execute either complete card. | Large and blocked; unsuitable for this bounded run. |
+
+Candidate #1 wins as the dependency-ready shared prerequisite with concrete
+multi-card gameplay value. It does not claim a compilation unlock. RON owns
+syntax, scopes, semantic word substitution and fresh factory lowering. Mage owns
+ordered layer installation, identity, baseline/state retention and shared runtime
+services. The rationale, reuse boundary and acceptance cases were stated before
+production edits. No new card-specific executor or Go-card fallback was added.
+
+### Exact signatures, contexts and dependencies
+
+- `WithLayeredTextRevisionActivationState() ActionOption`
+- `Game.AddPrintedActivatedTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error`
+- Existing `Game.RevisePrintedActivatedAbility` remains for direct checked
+  revision, and now rejects a declaration while its layered result is present.
+
+`compileActivatedRule` marks its complete ordinary and modal ActionDefinition
+paths for Activated/2 and ActivatedWithModifiers/3. Existing cost, target, body,
+modifier and lexical binding validation stays in force. The separate conditional
+mana path and other ability categories are outside this contract. Factories and
+text rebuilds create independent targets, costs, modes, choices and results.
+
+Installation accepts nonempty validated color/basic-land word changes with
+EndOfTurn or Indefinite duration. A cloned probe checks exact face-up presence,
+source incarnation, active printed declaration, retained builder/group,
+correspondence, layer marker and history shape before live registration. Rebuilds
+also keep timing, limits, permissions and cost/target/mode/restriction/capture/
+defined-mana-X declaration shape. Missing,
+foreign, granted, phased, removed, unmarked and incompatible declarations reject
+without live mutation. Each pass restores its baseline, then applies surviving
+changes in timestamp order. Expiry recomputes the baseline or earlier surviving
+changes. Prior direct revision can supply that baseline. Active IDs and positions
+remain fixed. Mana symbols retain their values.
+
+Rules and activation state have separate lifetimes. Baseline restoration reads
+current paid counts and once flags. A retained runtime-action map preserves them
+through layer 6 removal. Cleanup resets removed and phased actions too. History
+keeps its existing declaration lineage plus incarnation tracker. Pending original
+and copied bodies retain prior text and bindings. LKI retains final runtime rules;
+a return uses printed rules. Phasing keeps the visit and the next present layer
+pass restores expired text. Clones keep separate baselines, state, cleanup and
+controller contexts. Initial context setup preserves printed-action query callers.
+
+Reuse: BuildTextDefinitionRevision and retained semantic AST builders, printed
+ability correspondence, checked action revision, activation/history services,
+cost transactions and rollback, mana planning/production, target legality,
+resolution/result frames, stack copies, source information/LKI, layer timestamps,
+ability restoration, cleanup and copy-on-write game cloning. No parallel payment,
+replacement, event, zone or simultaneous-operation system was introduced.
+
+Local rules evidence: CR 602.1–2 and 602.5 (costs, pending text, legality and
+restrictions), 113.7a (independent pending abilities), 612.1–3 (semantic text and
+grants), 613.1c/613.7 (layers and timestamps), 400.7 (new objects). No source-data
+defect was found or corrected. RON files, vocabulary and source hashes are
+unchanged. Runtime and deletion gates remain unmet; existing callers stay.
+
+### Failing-first evidence and card-to-test mappings
+
+New RON tests failed compilation solely at missing AddPrintedActivatedTextEffect
+after correcting test API names. Native tests independently failed at the missing
+layer option and API. Production implementation followed those failures. Final review added native
+assertion failures for removed limits, changed timing and changed cost shape;
+the checked context guard followed those failures.
+
+| Complete records / contracts | Gameplay evidence |
+| --- | --- |
+| Northern Paladin (six records) | TestRONTextActivationLayerTargets: tap/mana costs, old and revised target legality, pending text through expiry, cloned resolution and restored target filter. |
+| Circle of Protection: Red and Blue (six records each) | Choices: old queued and newly revised resolution choices, independent exact-source shields, consumption and actual damage prevention. |
+| Firebreathing and Shivan Dragon (six records each) | Boosts: Aura host/source subjects, unchanged mana symbols, failed payment, successful boosts, sibling flying and cleanup. |
+| Dragon Whelp (six records), Nalathni Dragon (one), Farrelite Priest (one), Initiates of the Ebon Hand (one) | History: repeated passes, pre/post-cleanup history, expiry while phased and fourth-activation delayed sacrifice. Existing TestRONTextActivationState* retains countered/copy history evidence. |
+| Limits, timing and state | Limits and TimingAndResults: once/max flags, unpaid activation, repeated passes, clone limits, removal/restoration, cleanup while removed, sorcery timing and draw/reveal/discard result frames. |
+| Layer lifetime and identity | OrderingLifetime, BaselineControllerAndLKI: ordered substitutions, copies, clone isolation, phased expiry, direct-revision guard, prior direct baseline, sibling declarations, independent cloned control, final LKI and printed return. |
+| Basic land words | LandWords: revised Forest-to-Island targeting, a nonbasic Island subject, exact tap identity and expiry restoration. |
+| Modal declarations | Modal: independent queued old/revised mode targets and untargeted mode through expiry. Existing direct-revision Modal and CopiedDefinitionAndResults tests stay in force. |
+| Rejection boundaries | RON Boundaries and native Declaration/Rejects: invalid kinds, changes/durations, foreign IDs, absent/phased/face-down/removed/granted declarations, missing groups/builders/markers and incompatible history/context without live mutation. Complete Magical Hack/Sleight of Mind still reject. |
+
+Representative new complete-record layer evidence covers **nine unique names /
+39 records**. The marker applies to the shared supported compiler path; the nine
+witnesses are not an allowlist or a claim that every marked card has new gameplay
+coverage. Compilation and gameplay evidence remain separate.
+
+### Verification and actual gain
+
+- Fresh baseline make build and go test ./pkg/mage/dsl/ron -count=1 passed.
+  Baseline strict loader exited 1: 813 accepted / 173 rejected names and 2,099
+  compiled / 346 rejected records (986 names / 2,445 records).
+- Focused TestRONTextActivationLayer and native TestTextActivationLayer passed.
+  Expanded TestRON(TextActivation|ActivationHistoryLibrary) and native
+  TestTextActivation passed after the compatibility correction below.
+- Initial broad engine/full tests found TestRONActivationHistoryLibrary/7 failing
+  because new context isolation detached the printed action at first entry.
+  Corrected initial setup without weakening that test; later cloned control
+  remains isolated. Final reruns below use the corrected code.
+- Isolated staged-index checkout excluding every pre-existing change: focused
+  expanded RON/native tests, make build and go vet ./... passed. Its strict
+  loader exited 1 with 812 accepted / 174 rejected names and 2,098 compiled /
+  347 rejected records. Eureka's pre-existing acceptance is excluded from the
+  slice and commit.
+- Final make build and go vet ./... passed. Final go test ./pkg/mage/... -short
+  -count=1 passed (RON 45.223s). make test passed, then the expanded land-word
+  focused suite and latest make test passed again. go test ./... -short -count=1
+  also passed (RON 36.259s).
+- Final make lint passed, 0 issues. Automatic import grouping in the new tests
+  was reviewed, and affected focused/full checks passed. git diff --check and
+  staged diff checks passed.
+- Final go run ./cmd/loadcards -json exited 1 as expected: 813 accepted / 173
+  rejected names and 2,099 compiled / 346 rejected records. Parsed JSON and every
+  rejection diagnostic match the baseline exactly. Accepted records stay working;
+  collection rejection installs no partial registry. Remaining diagnostics include
+  EnchantGraveyardCard, SacrificeAllPermanentsExceptForNum, CreateGameEffect and
+  MayPayLifeToProduceManaAsManaAbility. No environment blocker remains.
+
+Estimated and actual compilation gain: **0 unique names / 0 records**. New
+representative complete-record layer lifecycle evidence: **nine unique names /
+39 records**. The zero unlock estimate was accurate; a shared dispatcher
+prerequisite was completed, without claiming that dispatcher or spell support.
+Complete collection gameplay, runtime loading, Go-card deletion and unused DSL
+cleanup remain unfinished. No removal gate was crossed and no DSL API was deleted.
+
+Changed files: pkg/mage/activated.go, card.go, clone.go, effect_manager.go,
+game.go, turn_execution.go, text_activation_state.go, new text_activation_layer.go
+and text_activation_layer_test.go; pkg/mage/dsl/ron/activation_timing.go and new
+text_activation_layer_test.go; pkg/mage/doc.go, docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. Only this slice is staged. All
+pre-existing tracked changes and unrelated untracked files, including Eureka
+entry-round work and the ledger archive, remain outside this commit.
+
+Ranked next candidates:
+
+1. Shared printed spell text continuation: preserve announced targets, costs,
+   modes, X and resolution/result bindings for Magical Hack/Sleight of Mind.
+   Bound the supported spell context and reassess remaining declaration adapters.
+2. Spell text copy rebinding and permanent-spell entry continuation for those two
+   cards, after its exact continuation prerequisites are established.
+3. Whole-object Magical Hack/Sleight of Mind dispatch once remaining declaration,
+   spell continuation and copy prerequisites are ready. Neither complete record
+   may be accepted through a partial mode.
 
 Stop after this slice. Migration completion is not claimed.

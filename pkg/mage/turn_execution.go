@@ -371,10 +371,16 @@ func (g *Game) doCleanupActions() bool {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		p.Counters[Charge] = 0
 		// Cloned games can share abilities before this reset.
+		for _, action := range p.revisedPrintedActions {
+			fresh := *action
+			fresh.ResetActivation()
+			retainPrintedActionState(p, &fresh)
+		}
 		p.RuntimeAbilities = clonePaymentAbilities(p.RuntimeAbilities)
 		for _, a := range p.RuntimeAbilities {
 			if aa, ok := UnwrapAbility(a).(*SimpleActivatedAbility); ok {
 				aa.ResetActivation()
+				retainPrintedActionState(p, aa)
 			}
 		}
 	}

@@ -603,6 +603,7 @@ func (em *EffectManager) Apply(g *Game) {
 	g.resetPrintedSpellCastTextLayers()
 	g.resetPrintedCombatPairTextLayers()
 	g.resetPrintedLandTapTextLayers()
+	g.resetPrintedActivatedTextLayers()
 	// CR 613.6 keeps each animation selection for this layer cycle.
 	em.animationMembers = make(map[animationCycleKey][]capturedPermanent)
 	em.composedMembers = make(map[composedCycleKey]composedCycleSelection)
@@ -689,6 +690,8 @@ func (em *EffectManager) Apply(g *Game) {
 				if !existing[a.AbilityID()] {
 					if revised := p.revisedPrintedTriggers[a.AbilityID()]; revised != nil {
 						restored = append(restored, revised)
+					} else if action := p.revisedPrintedActions[a.AbilityID()]; action != nil {
+						restored = append(restored, action)
 					} else if bonus := p.revisedPrintedManaBonuses[a.AbilityID()]; bonus != nil {
 						restored = append(restored, bonus)
 					} else if landwalk := p.revisedPrintedLandwalks[a.AbilityID()]; landwalk != nil {

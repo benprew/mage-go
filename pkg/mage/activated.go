@@ -184,6 +184,7 @@ func WithActivationPermission(permission ActivationPermission) ActionOption {
 // ActionDefinition is the shared resolvable action model for spells and
 // non-mana activated abilities.
 type ActionDefinition struct {
+	activationTextLayer      bool
 	textRevisionState        bool
 	textRevisionDefinition   Card
 	activationManaX          *activationManaX
@@ -408,6 +409,7 @@ func (a *ActionDefinition) markActivatedInGame(g *Game, incarnation uuid.UUID) {
 		current, ok := UnwrapAbility(ability).(*ActionDefinition)
 		if ok && current.id == a.id {
 			current.MarkActivated()
+			retainPrintedActionState(source, current)
 			return
 		}
 	}

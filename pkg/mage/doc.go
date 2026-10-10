@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithLayeredTextRevisionActivationState] for a printed activated action.
+// [Game.AddPrintedActivatedTextEffect] changes one declaration in layer 3.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Expiry recomputes surviving changes. Mana symbols keep their printed values.
+// Costs, targets, choices and results use fresh declarations. Pending bodies keep
+// prior text. Limits and history keep the same declaration and source visit.
+// Cleanup resets limits even while an ability is removed or phased out.
+// Clones keep separate baselines, state and controller contexts.
+// Layer 6 removal stops activation; restoration keeps current text and limits.
+// LKI keeps the final rule. Return uses printed rules. RON marks its ordinary
+// and modal Activated and ActivatedWithModifiers action contexts.
+// Conditional mana, whole-object text and spell text need separate services.
+//
 // Use [GenericTriggered.WithLayeredLandTapTextRevision] for printed land events.
 // [Game.AddPrintedLandTapTextEffect] changes one declaration in layer 3.
 // Each pass restores its baseline before ordered color or basic land changes.
