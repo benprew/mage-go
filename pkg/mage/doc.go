@@ -1211,7 +1211,7 @@
 // empty collections keep the saved source. Queries do not install restrictions
 // or select members. [SkipNextUntapOf] also declares a source read in its player.
 // Resolution still requires present subjects and reads current collection members.
-// [Until], [UntilNextUpkeep], [UntilEndOfNextUpkeep], [UntilSourceLeaves]
+// [Until], [UntilNextTurn], [UntilNextUpkeep], [UntilEndOfNextUpkeep], [UntilSourceLeaves]
 // and [UntilSourceUntaps] declare explicit source reads in their layer subjects,
 // sets, values, control recipients and upkeep players to the same waiting query.
 // Source-bound durations declare their source even with another layer subject.
@@ -2003,6 +2003,14 @@
 // The permission keeps its subject incarnation with [Until] and reads the
 // current subject with [While]. Use [GrantKeywordModification] with
 // AttrCanAttack to permit attacks through defender.
+//
+// Use [UntilNextTurn] to save the duration player at resolution.
+// [BeginActiveTurn] ends the effects before that player's next turn actions.
+// Skipped turns do not end the duration. Extra turns do.
+// Source changes and phasing do not change the endpoint. Clones stay separate.
+// [NextTurnExpiration] gives installed layers and replacements the same endpoint.
+// RON lowers UntilPlayersNextTurn(player) in temporary permanent layer actions.
+// Temporary player operations still require their own checked consumers.
 //
 // Use [UntilNextUpkeep] to save the duration player at resolution.
 // The effect ends before that player's next upkeep triggers are detected.

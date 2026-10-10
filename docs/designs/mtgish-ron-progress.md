@@ -8,12 +8,12 @@ Eureka work, the worktree reports **820 accepted / 166 rejected names** and
 **2,121 compiled / 324 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-CONTROLLER-NO-LAND-CARD-TYPE lowers IsCardtype(Land) in controller state triggers.
-The complete unchanged Serendib Djinn record now executes all three rules.
-Upkeep sacrifice, Island-result damage, state arming, timing, identity, phasing,
-replacements, copies, clones and casting rollback have tests. Compilation and
-complete-card gameplay gains are **1 name / 1 record**. No RON changed.
-All required native checks pass.
+SAVED-PLAYER-NEXT-TURN-LIFETIME saves typed players at resolution and expires
+layers and replacements before the next actual turn's actions. Skipped turns,
+extra turns, bindings, identity, phasing, clones and harness entry have tests.
+Compilation and full-card gameplay gains are **0 names / 0 records**. This
+prerequisite serves Island Sanctuary and Firestorm Phoenix. No RON changed.
+All required native checks pass; lint reports 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -69968,3 +69968,175 @@ and doc.go; docs/engine-rules-contracts.md and this ledger.
    owner-bound expiration are required; no full-card gain until all rules work.
 
 Migration remains incomplete. This run stops after CONTROLLER-NO-LAND-CARD-TYPE.
+
+## Run 2026-10-10: SAVED-PLAYER-NEXT-TURN-LIFETIME
+
+Status: complete dependency slice. This run stops after the saved-player lifetime;
+no temporary player-rule consumer or death replacement adapter was started.
+
+### Candidate comparison and selection
+
+The latest ledger ranked the next-turn lifetime first. Complete RON records
+were read for Island Sanctuary (all six identical records: LEA, LEB, 2ED, 3ED,
+CED and CEI) and Firestorm Phoenix (LEG). The targeted vocabulary confirms
+seven UntilPlayersNextTurn(player) occurrences across these two unique names.
+Nested draw choices, attack filters, returned-hand results and player operations
+were checked; first diagnostics were not used as full-card unlock estimates.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Saved-player next-turn lifetime | Island Sanctuary; Firestorm Phoenix | 0 | Shared prerequisite for Sanctuary attack protection and Phoenix owner-bound reveal/play restrictions. The player-rule consumers and Phoenix death replacement remain missing. | Small–medium: capture, shared expiry, lowering and lifecycle tests. |
+| CantBeAttackedExceptBy temporary player rule | Island Sanctuary | 1 name / 6 records after lifetime support | Requires the selected lifetime first; draw replacement and choices already exist. Needs live flying/islandwalk attack checks and source-independent protection. | Medium. |
+| Returned-hand reveal/play rules | Firestorm Phoenix | 0 until death replacement also works | Requires exact returned hand-visit results and the selected lifetime. Enables complete Phoenix only after replacement integration. | Large. |
+
+Candidate #1 is dependency-ready and enables concrete downstream work for two
+cards. It takes priority over incomplete single-card consumers. Its estimated
+zero immediate unlocks match the actual zero name/record gain. New capability
+behavior coverage does not establish complete-card gameplay coverage.
+
+### Supported shape, engine contracts and reuse boundary
+
+RON supports:
+CreatePermanentLayerEffectUntil(subject, nonempty_modifications,
+UntilPlayersNextTurn(player)). This is a resolving temporary-layer context,
+including existing ordinary action, spell, trigger and replacement bodies that
+already permit that action. Both operands use existing typed reference plans.
+Duration construction now receives instanceBindings, so target, event, choice
+and other already-bound player references keep their per-factory declarations.
+Malformed arity, tuple You(), wrong reference types and unbound player reads are
+compile errors. No future returned-hand player reference is fabricated.
+
+Exact engine signatures:
+UntilNextTurn(PlayerRef, ...ContinuousModification) ResolvingEffect;
+NextTurnExpiration.NextTurnExpiry() (player uuid.UUID, afterTurn int);
+(*Game).BeginActiveTurn().
+The private duration adapter returns
+func(instanceBindings, []mage.ContinuousModification) mage.Effect.
+The inventory classifies the duration operand as player_reference.
+
+UntilNextTurn saves the player and installation turn at resolution. Existing
+layer capture saves subject incarnations and values, installs layers together,
+provides source-exit survival and source-read inspection, and validates references.
+The installed next-turn layers use Indefinite storage plus their explicit saved
+endpoint. Existing UntilNextUpkeep and UntilEndOfNextUpkeep remain separate.
+The shared manager expires persistent layers and replacements that implement
+NextTurnExpiration. It does not execute card rules, choose players, or replace
+events. Future consumers must preserve captured values in clones and implement
+their own complete player/hand-rule contract.
+
+BeginActiveTurn expires matching effects when the actual active player matches
+and the turn number is later than installation. RunTurn, RunStepWithPriority and
+the gametest Execute driver use it before turn actions. Drivers check turn skips
+first. Repeated calls are safe. Expiry reapplies layers before phasing, untap
+replacement queries and events; it has no trigger or priority window. Extra
+turns expire rules; skipped turns do not. Skipped untap and repeated/extra
+upkeep steps cannot change the endpoint. AdvanceToNextTurn selects a scheduled
+turn; it does not execute turn entry. Source departure/return, control changes,
+ability removal and phasing cannot redirect expiry. Subject return cannot inherit
+an old layer. Clones keep independent layers, replacements and saved players.
+
+Rules evidence: CR 500.4, 500.6–7, 500.11–12, 611.2a/c/d and 400.7.
+Local data/LEA.json confirms Sanctuary's until-your-next-turn attack protection;
+data/LEG.json confirms Phoenix's until-that-player's-next-turn hand rules.
+Both complete RON records agree with these endpoints. No source defect or RON
+change was found; the vocabulary source/hash snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+The RON gameplay tests fail before lowering with unsupported duration
+(UntilPlayersNextTurn) for You, Ref_TargetPlayer and ControllerOfPermanent.
+The native tests fail to compile with undefined UntilNextTurn. An initial RON
+fixture used an unavailable compileOne helper; it was changed to Parse/Compile
+before the expected adapter failure was confirmed. No production change preceded
+the expected failures.
+
+A later harness regression fails with turn entry retained duration before first
+step: StopAt returns before RunStepWithPriority. BeginActiveTurn and its harness
+call correct this timing gap. A replacement fixture initially used direct
+PlayerDiscard, which bypasses replacements; PlayerDiscardByEffect tests the
+actual shared replacement pipeline. No discard implementation was changed.
+
+| Card/context | Evidence and limits |
+| --- | --- |
+| Island Sanctuary, complete unchanged six records | Duration requirement inspected; full card remains rejected at its temporary-player consumer. TestRONNextTurnDuration exercises the same You lifetime through a supported RON layer action. No full Sanctuary gameplay gain is claimed. |
+| Firestorm Phoenix, complete unchanged LEG record | Owner-bound endpoint inspected. Returned-hand owner/card results, reveal/play operations and death replacement remain missing. TestRONNextTurnDurationInvalid rejects the unavailable returned-hand owner binding; native explicit-player tests establish the endpoint without inventing this producer. No full Phoenix gameplay gain is claimed. |
+| RON supported lifetime context | TestRONNextTurnDuration covers You, target player, source controller, announcement/resolution timing, insufficient mana, controller changes and cloned pending/installed effects. TestRONNextTurnDurationInstances proves separate target bindings for fresh factories. |
+| Declaration and semantic inventory | TestRONNextTurnDurationInvalid covers arity, malformed symbols, wrong reference types and unavailable target/event/choice/returned-hand bindings. TestRONNextTurnDurationInventory checks the player-reference role. |
+| Native lifecycle | TestUntilNextTurnLifetime covers source control/departure/return/phasing/ability removal, recipient return/phasing, layers and clone expiry. TestUntilNextTurnExpiresWhileSubjectPhased proves expiry while the recipient stays phased out. |
+| Turn timing and definitions | TestUntilNextTurnSkippedTurnAndUpkeep and TestUntilNextTurnNativeSkippedTurn cover native skips, skipped untap, extra turns/upkeeps. TestUntilNextTurnIndependentPlayersAndTiming separates players and upkeep endpoints. TestUntilNextTurnDeclarations covers absent players, missing bindings, empty/nil declarations and unsupported control durations. |
+| Shared replacement reuse | TestUntilNextTurnReplacementLifetime observes library versus graveyard outcomes before/after expiration, other-player turns, own extra turns and cloned replacement isolation. |
+| Harness boundary | TestNextTurnDurationBeforeFirstStep verifies expiry when StopAt returns before the first step of the selected player's next turn. |
+
+### Verification and measured results
+
+Baseline make build and go test ./pkg/mage/dsl/ron -short -count=1 pass
+(RON 40.820s). The baseline loader exits 1 for collection rejection, with
+820 accepted / 166 rejected names and 2,121 compiled / 324 rejected records.
+This is not a build/test or environment failure.
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONNextTurnDuration -count=1
+passes (0.518s before the final post-lint run). Focused native/harness
+ go test ./pkg/mage ./pkg/mage/gametest -run
+'Test(UntilNextTurn|UntilNextUpkeep|NextTurnDuration)' -count=1 passes.
+The revised make build and go vet ./... pass. The final
+ go test ./pkg/mage/... -short -count=1 passes (RON 40.909s).
+The final make test passes (RON 40.762s); the earlier full run also passed.
+
+An isolated checkout contains HEAD plus only this staged slice, excluding the
+pre-existing Eureka and other user changes. Focused RON/native/harness tests
+pass (RON 1.366s), make build and go vet ./... pass. Its strict loader exits 1:
+819 accepted / 167 rejected names and 2,120 compiled / 325 rejected records.
+These are the isolated commit's unchanged compilation counts.
+
+The first make lint reports unnamed results (gocritic) and a test variable
+that hides the copy builtin (revive). Named results and a cloned variable fix
+both. The final make lint passes with 0 issues. Automatic changes regroup
+imports in the three new test files and remove two redundant embedded Game
+qualifiers in the harness/test. The changes were reviewed; post-lint
+ go test ./pkg/mage/gametest -count=1 passes (0.513s), and the focused RON tests
+pass again (0.391s). Hash comparison shows no lint changes outside this slice.
+Both git diff --check and git diff --cached --check pass.
+
+The final go run ./cmd/loadcards -json exits 1 for unsupported collection
+records. Its JSON report is exactly identical to the baseline report:
+**820 accepted / 166 rejected names**, **2,121 compiled / 324 rejected records**,
+986 names and 2,445 records total. There are no newly accepted or newly rejected
+names. Sanctuary still reports unsupported player payment duration
+(UntilPlayersNextTurn); Phoenix reports unsupported rule
+(ReplaceWouldPutIntoGraveyard). The layer-duration adapter does not bypass either
+missing consumer. Strict loading publishes no partial production registry.
+Actual compilation and full-card gameplay gains are **0 names / 0 records**,
+as estimated. The two-card prerequisite now has RON-backed and native behavior
+evidence. Accepted records retain passing regression tests.
+
+No environment blocker remains. No production Go card definition, generator,
+DSL function or registry startup path was removed or changed: the design's
+cutover/removal gates remain unmet. No cleanup claim is made. Existing unrelated
+changes remain outside the commit, including Eureka/repeated entry, optional
+hand entry, compiler/inventory edits, .gitignore, authoring/design changes and
+the ledger archive relocation. The staged ledger changes contain only this
+status update and appended entry; the archive relocation stays in the worktree.
+
+Changed files: pkg/mage/composable_continuous.go, next_turn_duration.go,
+next_turn_duration_test.go, turn.go and doc.go; pkg/mage/dsl/ron/
+source_tapped_duration.go, temporary_layer.go, inventory.go and
+next_turn_duration_test.go; pkg/mage/gametest/harness.go and
+next_turn_duration_test.go; docs/engine-rules-contracts.md and this ledger.
+Only this slice is staged for
+ git commit -m "feat(ron): implement saved-player next-turn lifetime".
+
+### Ranked next candidates
+
+1. Sanctuary CantBeAttackedExceptBy temporary player-rule consumer. The selected
+   lifetime now exists. Estimated complete gain: one name / six records. Reuse
+   draw choices and typed You binding; test live flying/islandwalk attack legality,
+   multiple rules, source departure and clones through the next-turn hook.
+2. Shared returned-hand card reveal/play restriction services for Firestorm
+   Phoenix. The lifetime endpoint exists, but exact hand visits and owner-bound
+   result production are still required. No full-card gain until replacement
+   integration; reassess other multi-card prerequisites before selecting it.
+3. Phoenix death replacement adapter after returned-hand result/rule services.
+   Preserve replacement ordering, owner identity, successful movement and a
+   fresh hand visit. Estimated one name / one record only after all dependencies.
+
+Migration remains incomplete. This run stops after SAVED-PLAYER-NEXT-TURN-LIFETIME.

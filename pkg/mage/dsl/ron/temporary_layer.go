@@ -125,6 +125,6 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 		for i, build := range modifications {
 			values[i] = build(bindings)
 		}
-		return duration(values)
+		return duration(bindings, values)
 	}, nil
 }

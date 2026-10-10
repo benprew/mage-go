@@ -1233,7 +1233,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "duration":
-		if (n.Name == "UntilNextUpkeep" || n.Name == "UntilEndOfNextUpkeep") && len(n.Args) == 1 {
+		if (n.Name == "UntilNextUpkeep" || n.Name == "UntilEndOfNextUpkeep" || n.Name == "UntilPlayersNextTurn") && len(n.Args) == 1 {
 			return "player_reference"
 		}
 		if (n.Name == "ForAsLongAsPermanentRemainsTapped" || n.Name == "UntilPermanentLeavesBattlefield") && len(n.Args) == 1 {

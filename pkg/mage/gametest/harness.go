@@ -486,6 +486,7 @@ func (tg *TestGame) Execute() {
 			tg.advanceToNextTurn()
 			continue
 		}
+		tg.BeginActiveTurn()
 		if tg.Schedule == nil {
 			tg.Schedule = mage.NewTurnSchedule()
 		}

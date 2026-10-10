@@ -16973,3 +16973,53 @@ Evidence: `TestRONNoLandTypeDjinnUpkeep`, `TestRONNoLandTypeDjinnState`,
 subtype tests remain regression evidence, including canceled and altered
 replacement outcomes. Compilation and complete-record gameplay gain one name
 and one record. No RON or Oracle text changes.
+
+
+## Saved-player next-turn expiration
+
+`UntilNextTurn(PlayerRef, ...ContinuousModification)` saves the selected player,
+installation turn and exact subjects/values at resolution (CR 611.2a, 611.2c–d).
+Missing players install nothing. Definition validation rejects nil players,
+empty/nil modifications, unbound references and unsupported control durations.
+The existing layer capture and source-read inspection services remain in use.
+Source departure, return, control changes, ability removal and phasing do not
+redirect the saved endpoint. Subjects retain their captured incarnation; a
+returned object cannot inherit the effect. Clones retain independent lifetimes.
+
+`NextTurnExpiration.NextTurnExpiry() (uuid.UUID, int)` supplies the saved player
+and installation turn to the shared effect manager. A zero UUID supplies no
+endpoint. Persistent continuous effects and persistent replacement effects can
+use this interface. Consumers must save immutable values at installation and
+preserve them in clones; it does not select subjects, create player rules or
+replace events. Composed next-turn layers have `Indefinite` storage duration and
+this explicit endpoint, so the legacy upkeep hook cannot remove them early.
+
+`BeginActiveTurn` removes matching lifetimes before turn actions
+when the active player matches and the turn number exceeds the installation
+turn. `RunTurn`, `RunStepWithPriority` and the gametest driver use this hook.
+Drivers must check turn skips first; repeated calls in one turn are safe.
+Layers are reapplied before phasing, untap replacement checks and events.
+There is no trigger or priority window for expiry (CR 500.4, 500.6, 500.12).
+Skipped turns never enter this hook; extra turns do (CR 500.7, 500.11).
+A skipped untap cannot extend the duration. Repeated steps in the installation
+turn, including extra upkeeps, cannot end it. Merely selecting a scheduled turn
+with `AdvanceToNextTurn` does not run its actions or expire its effects.
+Existing saved next-upkeep and legacy source-controller policies remain separate.
+
+RON supports `UntilPlayersNextTurn(player)` in
+`CreatePermanentLayerEffectUntil(subject, nonempty_modifications, duration)`.
+The player uses the existing typed player-reference compiler and per-factory
+bindings. Wrong arity, malformed references and unbound player reads fail during
+compilation. Temporary player effects and returned-hand operations remain
+unsupported consumers; Island Sanctuary and Firestorm Phoenix remain rejected.
+
+`TestUntilNextTurn*` covers source/subject identity, control, departure, phasing,
+ability removal, absent players, definitions, native skipped turns/untap, extra
+turns/upkeeps, independent players, clone isolation and separate upkeep expiry.
+`TestUntilNextTurnReplacementLifetime` proves expiry with actual effect-discard
+replacement outcomes and cloned replacement rules. `TestRONNextTurnDuration*`
+covers typed controller/target players, resolution timing, failed payment,
+independent factory instances, clones, invalid declarations and inventory roles.
+`TestNextTurnDurationBeforeFirstStep` proves harness turn entry expires rules
+even when it stops before the first step. These are capability tests. No complete
+inventory card gains gameplay proof.
