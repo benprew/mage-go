@@ -18,13 +18,21 @@ func (a *StaticAbilityHolder) WithLayeredAbilityTextRevision() *StaticAbilityHol
 	return a
 }
 
+type staticTextContract uint8
+
+const (
+	staticAbilityTextContract staticTextContract = iota
+	staticGrantTextContract
+	staticPTTextContract
+)
+
 type printedStaticAbilityTextEffect struct {
 	effectSource
 	subject   capturedPermanent
 	abilityID uuid.UUID
 	duration  core.Duration
 	changes   []TextChange
-	grant     bool
+	contract  staticTextContract
 }
 
 func layeredStaticAbilityEligible(a *StaticAbilityHolder) bool {
@@ -34,18 +42,21 @@ func layeredStaticAbilityEligible(a *StaticAbilityHolder) bool {
 // AddPrintedStaticAbilityTextEffect changes one printed donor rule in layer 3.
 // Each pass starts with a saved baseline so expiry removes earlier changes.
 func (g *Game) AddPrintedStaticAbilityTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
-	return g.addPrintedStaticTextEffect(source, abilityID, duration, false, changes...)
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticAbilityTextContract, changes...)
 }
 
 func (e *printedStaticAbilityTextEffect) eligible(a *StaticAbilityHolder) bool {
-	if e.grant {
+	switch e.contract {
+	case staticGrantTextContract:
 		return a.grantTextLayer && a.grantTextRevision && a.supportsGrantTextRevision()
+	case staticPTTextContract:
+		return a.ptTextLayer && a.ptTextRevision && a.supportsLayeredPTTextRevision()
 	}
 	return layeredStaticAbilityEligible(a)
 }
 
-func (g *Game) addPrintedStaticTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, grant bool, changes ...TextChange) error {
-	contract := &printedStaticAbilityTextEffect{grant: grant}
+func (g *Game) addPrintedStaticTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, kind staticTextContract, changes ...TextChange) error {
+	contract := &printedStaticAbilityTextEffect{contract: kind}
 	if source == nil || (duration != core.Indefinite && duration != core.EndOfTurn) || len(changes) == 0 {
 		return fmt.Errorf("static ability text layer requires a source, changes and indefinite or end-of-turn duration")
 	}
@@ -64,7 +75,7 @@ func (g *Game) addPrintedStaticTextEffect(source *Permanent, abilityID uuid.UUID
 	}
 	effect := &printedStaticAbilityTextEffect{
 		subject:   capturedPermanent{id: current.ID(), incarnation: current.incarnationID},
-		abilityID: abilityID, duration: duration, changes: slices.Clone(changes), grant: grant,
+		abilityID: abilityID, duration: duration, changes: slices.Clone(changes), contract: kind,
 	}
 	effect.SetSourceID(current.ID())
 	g.AddContinuousEffect(effect)
@@ -145,7 +156,7 @@ func (g *Game) isolatePrintedStaticAbilityContext(p *Permanent) *Permanent {
 	owned := false
 	for i, ability := range p.RuntimeAbilities {
 		rule, ok := ability.(*StaticAbilityHolder)
-		if !ok || (!rule.abilityTextLayer && !rule.grantTextLayer) || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
+		if !ok || (!rule.abilityTextLayer && !rule.grantTextLayer && !rule.ptTextLayer) || (rule.Source() == p.ID() && rule.Controller() == p.ControllerID()) {
 			continue
 		}
 		if !owned {

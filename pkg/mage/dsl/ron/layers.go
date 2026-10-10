@@ -261,7 +261,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			holder.WithLayeredAbilityTextRevision()
 		}
 		if global && !general && len(parts) == 1 && parts[0].Name == "AdjustPT" {
-			holder.WithPTTextRevision()
+			holder.WithLayeredPTTextRevision()
 		}
 		return mage.WithAbility(holder)
 	}, nil

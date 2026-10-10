@@ -8,12 +8,12 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-GLOBAL-GRANT` adds ordered layer-3 installation and
-baseline restoration for printed global keyword/landwalk and optional P/T grants.
-Nine unique cards (24 records) have new donor lifecycle gameplay evidence.
-Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
-Eureka work: **812 accepted names / 2,098 compiled records**. Full text consumers
-remain unsupported.
+`TEXT-LAYER-PRINTED-GLOBAL-PT` adds ordered layer-3 installation and
+baseline restoration for printed global fixed P/T modifications. Twelve unique
+cards (36 records) have new P/T lifecycle gameplay evidence. Acceptance gain is
+**0 names / 0 records**. Native coverage excludes pre-existing Eureka work:
+**812 accepted names / 2,098 compiled records**. Conditional live P/T text and
+full text consumers remain unsupported.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished.
@@ -61672,6 +61672,156 @@ Ranked next candidates:
    and multi-card prerequisite value before selecting.
 2. Host unblocked event and complete Farrel's Mantle continuation.
 3. Per-player coin bindings and simultaneous Mana Clash repeated rounds.
+
+Complete collection gameplay, full text consumers, runtime integration, Go-card
+removal and unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-09: printed global P/T text layers
+
+Status: completed slice `TEXT-LAYER-PRINTED-GLOBAL-PT`.
+
+### Candidate comparison and selection
+
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, with 813
+accepted / 173 rejected names and 2,099 compiled / 346 rejected records.
+Pre-existing entry-round/compiler work, documentation edits, ledger archive
+reorganization and unrelated untracked files remain outside this slice.
+
+The latest entry ranked printed static P/T text installation first. Full RON
+records and nested forms were inspected for that candidate and both alternatives.
+The initial name list missed Gauntlet of Might. The exhaustive AST record test
+found all five reprints; their complete records were then inspected and the
+sibling mana declaration received an isolation test. Final scope is 12 accepted
+names / 36 records, plus the same P/T shape in rejected Rohgahh of Kher Keep.
+Vocabulary queries confirmed EachPermanentLayerEffect/2, AdjustPT/2 and
+ReplaceColorWordVariableWithNewColorWordVariable/2. Reprints count once.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Printed global P/T text installation (#1) | Bad Moon, Crusade, Castle, Orcish Oriflamme, Gauntlet of Might, Sunken City, Jacques le Vert, Arcades Sabboth, Kobold Taskmaster, Thrull Champion, Mightstone, Weakstone; Rohgahh of Kher Keep remains rejected; 0 | Shared P/T consumer for text spells across 12 accepted cards. Rohgahh still lacks CreatePermanentsList and its continuation; Magical Hack/Sleight of Mind still lack complete permanent/spell text consumers. | Moderate: checked P/T installer plus shared static baseline/layer service; new lifecycle and rejection tests. |
+| Host unblocked event and continuation | Farrel's Mantle; 1 if complete | Host incarnation, Other(event creature), controller/power reads, damage payment, AssignsNoCombatDamage and continuation must agree. Enables host combat triggers. | High: event, payment and combat contracts. |
+| Per-player coins and repeated rounds | Mana Clash; 1 if complete | EachPlayerAction, CoinCameUpTails, AllCoinsCameUpHeads, round-local outcomes and simultaneous damage need complete contracts. Existing entry-round results do not supply coin results. | High: scoped coin outcomes, RNG and simultaneous rounds. |
+
+Selected #1 for its dependency-ready shared prerequisite and concrete multi-card
+value. Conditional P/T source, opponent and Aura-host contexts already have
+separate typed direct-revision contracts. Extending those live layers is a
+subsequent bounded slice; this run implements the unconditional global context.
+The contract, reuse boundary and acceptance cases were stated before editing.
+Estimated acceptance gain was zero; actual gain is zero. The initial lifecycle
+estimate of 11 names / 35 records was corrected to 12 / 36 by the AST audit.
+
+### Supported shapes and engine boundary
+
+RON `compileStaticLayer` opts in unconditional
+`EachPermanentLayerEffect(filter, [AdjustPT(integer, integer)])` on its existing
+creature collection path with
+`StaticAbilityHolder.WithLayeredPTTextRevision() *StaticAbilityHolder`.
+Existing current controller, source exclusion, color, subtype, tap and combat
+filters stay intact. Invalid arity, dynamic values and unbound references reject.
+Conditional and Aura contexts retain their separate APIs. The reusable engine
+marker accepts nonempty unconditional battlefield layer-7c modifications; typed
+conditional source/opponent/host P/T effects reject definition validation.
+
+`Game.AddPrintedStaticPTTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+or basic-land changes with Indefinite or EndOfTurn duration. It requires the
+original present face-up source visit, active opted-in printed declaration,
+retained semantic builder, declaration group and complete registrations.
+An isolated probe checks the replacement before registration. Fresh rules keep
+the marker, count, layers, sublayers, durations, declaration ID and positions.
+Invalid input or an incompatible builder leaves runtime state unchanged.
+
+A typed static text contract now selects the existing Aura, global-grant or P/T
+boundary. The shared layer-3 effect restores saved baselines before ordered
+changes. Expiry recomputes surviving changes, including a prior direct revision
+as baseline. Direct revision cannot overwrite a layered result. P/T membership
+is read in layer 7c after earlier control/type/color/ability layers. Removal
+suppresses the P/T rule before it starts. Each pass reads current subjects.
+Sibling declarations, recipient rules and printed/copiable text stay separate.
+
+Phasing retains the visit; the next present pass handles expiry. Suppression
+and restoration retain the text baseline, including expiry while suppressed.
+Clones keep separate effects, baselines and controller contexts, including clones
+created after expiry. Departure LKI retains recipient P/T. Returned sources use
+printed text and cannot satisfy the former visit. Full-object/spell text,
+copy-layer rebinding and other conditional contexts remain separate contracts.
+
+Reuse: BuildTextDefinitionRevision and declaration groups; checked static
+replacement and printed registrations; existing P/T filters and layer effects;
+shared static baseline restoration, capturedPermanent, cleanup, Game.Clone and
+ability restoration. CR 612.1–3, 613.1c/f/g, 613.4c, 613.7 and 400.7 establish
+this boundary. No costs, decisions, replacement ordering or simultaneous moves
+were added. No production card-name branch, Go-card fallback, runtime declaration
+panic, global result slot or partial registry was introduced.
+
+### Failing-first evidence and card-to-test mapping
+
+New RON tests failed compilation for missing AddPrintedStaticPTTextEffect.
+Native tests failed for that method and WithLayeredPTTextRevision. An unrelated
+fixture constructor spelling was corrected, then the RON failure was confirmed
+again with only missing APIs. Initial gameplay development caught a timestamp
+expectation in the LKI fixture: the later Black-to-Red change applies after the
+older Red-to-Green effect, so Red receives the final boost. The assertion now
+checks the correct recipient and retains the ordered-expiry assertions.
+
+| Cards or contract | Evidence |
+| --- | --- |
+| All 12 accepted names and 36 reprint records | TestRONTextStaticPTLayerRecords compiles complete records and checks P/T, current controller membership, repeated passes, no-match substitutions, expiry and donor departure. Rohgahh's incomplete record must still reject. |
+| Bad Moon, Crusade | Records; OrderedExpiry uses real Bad Moon for chained changes, expiry of an earlier substitution, clones, phasing, expiry while phased/suppressed, restoration, active ID, LKI and returned visits. PriorRevisionAndCasting casts/pays/resolves Bad Moon and restores a prior direct baseline after expiry. |
+| Castle, Orcish Oriflamme, Mightstone, Weakstone | Records preserves controller and attacking membership. LiveMembership checks Castle tap state, later entrants and subject control changes. Existing TestRONTextStaticPTControlAndShapes covers combat removal and untapped filters. |
+| Jacques le Vert | Records checks color/control restriction across text change, controller change and expiry. Existing TestRONTextStaticPTControlAndShapes retains current-control evidence. |
+| Kobold Taskmaster, Thrull Champion | Records retains subtype membership and controller scope. TestRONTextStaticPTControlAndShapes retains source exclusion/self-inclusion. TestRONSourceControlCards and RollbackAndCasting retain Thrull Champion's separate control ability. |
+| Sunken City, Arcades Sabboth | Records covers their P/T rule. TestRONUpkeepPaymentRealCards and OtherRules retain upkeep/payment interactions; TestRONNonattackingArcadesCombat, Identity and Activation retain Arcades' separate combat/activation rules. |
+| Gauntlet of Might | Records covers all five P/T reprints; SiblingMana proves P/T-only land text installation does not rewrite the separate mana donor. TestRONSubtypeManaBonusRecords and PrintedRevision retain the mana contract. |
+| Identity and live layers | IndependentDeclarations checks separate declarations, foreign IDs, source instances, independent clone changes and expiry. LiveMembership checks layer-5 color before layer-7c selection and later entrants. |
+| Rejection and registration | RON Boundaries rejects malformed declarations, unsupported contexts/durations and empty changes. Native Declaration, Rejects, RegistrationOrder and RestoredCloneContext cover invalid layers/sublayers/durations, conditional contexts, missing markers/builders/groups/registrations, absent/face-down/granted sources, invalid changes, atomic rejection, stable positions and clone contexts through active/suppressed expiry. |
+
+### Verification and collection status
+
+Required checks passed in fast-fail order:
+
+- Focused TestRONTextStaticPTLayer and native TestTextStaticPTLayer tests;
+  expanded P/T direct, Aura text-layer and global-grant regressions, all with
+  `-count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: zero issues; no automatic file changes; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for unsupported collection,
+  813 accepted / 173 rejected names; 2,099 compiled / 346 rejected records.
+  The complete JSON report exactly matches the fresh baseline. No accepted
+  record regressed and no partial production registry was installed.
+
+The isolated slice tree, without user entry-round work or ledger reorganization,
+passes expanded focused native/RON tests, `make build` and `go vet ./...`.
+Its strict loader exits 1 with 812 accepted / 174 rejected names and 2,098
+compiled / 347 rejected records. Eureka is the sole additional rejected
+name/record; Mana Clash stops at RepeatableActions instead of EachPlayerAction.
+All other diagnostics match. These are pre-existing worktree/native differences,
+not failures caused by this slice. No environment or validation blocker remains.
+
+Actual acceptance gain is 0 names / 0 records, matching the estimate. This
+adds bounded P/T lifecycle evidence for 12 accepted names / 36 records.
+Compilation and full-card gameplay coverage remain separate. Existing additional
+rules retain their mapped tests; full text consumers remain unsupported.
+
+Changed files: pkg/mage/ability.go, definition.go, text_static_pt.go,
+text_static_ability_layer.go, text_static_grant.go and new
+text_static_pt_layer_test.go; RON layers.go and new text_static_pt_layer_test.go;
+doc.go, dsl-reference.md, engine-rules-contracts.md and this ledger.
+No RON source defect was found or corrected. RON sources and the vocabulary
+snapshot are unchanged. Runtime integration, Go-card deletion and unused DSL
+removal gates remain unmet. No callers or Go definitions were removed.
+Only this slice is staged; unrelated work and archive reorganization remain.
+
+Ranked next candidates:
+
+1. Printed conditional P/T text installation/restoration across controller,
+   opponent and Aura-host contracts: Kird Ape, Sedge Troll, Water Wurm,
+   Beasts of Bogardan, Ivory Guardians, Goblin Caves and Goblin Shrine.
+2. Printed static basic-land-type text installation/restoration; compare global
+   and Aura/entry-choice contexts before selecting a bounded shared context.
+3. Host unblocked event and complete Farrel's Mantle continuation.
 
 Complete collection gameplay, full text consumers, runtime integration, Go-card
 removal and unused DSL cleanup remain unfinished. Stop after this slice.

@@ -169,6 +169,7 @@ func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
 type StaticAbilityHolder struct {
 	BaseAbility
 	ptTextRevision         bool
+	ptTextLayer            bool
 	abilityTextRevision    bool
 	abilityTextLayer       bool
 	grantTextRevision      bool

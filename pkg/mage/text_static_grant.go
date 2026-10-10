@@ -52,5 +52,5 @@ func (a *StaticAbilityHolder) WithLayeredGrantTextRevision() *StaticAbilityHolde
 // AddPrintedStaticGrantTextEffect changes one printed global grant in layer 3.
 // Each pass restores the saved rule before it applies ordered changes.
 func (g *Game) AddPrintedStaticGrantTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
-	return g.addPrintedStaticTextEffect(source, abilityID, duration, true, changes...)
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticGrantTextContract, changes...)
 }

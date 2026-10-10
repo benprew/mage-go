@@ -148,7 +148,7 @@ func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityI
 		return fmt.Errorf("text static revision lost its replacement")
 	}
 	fresh, ok := replacement.(*StaticAbilityHolder)
-	if !ok || !eligible(fresh) || (active.abilityTextLayer && !fresh.abilityTextLayer) || (active.grantTextLayer && !fresh.grantTextLayer) || len(fresh.Effects) != len(active.Effects) {
+	if !ok || !eligible(fresh) || (active.abilityTextLayer && !fresh.abilityTextLayer) || (active.grantTextLayer && !fresh.grantTextLayer) || (active.ptTextLayer && !fresh.ptTextLayer) || len(fresh.Effects) != len(active.Effects) {
 		return fmt.Errorf("text static revision changed the static contract")
 	}
 	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {
@@ -182,4 +182,22 @@ func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityI
 		g.ApplyContinuousEffects()
 	}
 	return nil
+}
+
+// WithLayeredPTTextRevision permits layer 3 changes to a printed global P/T rule.
+// Its subjects use current characteristics when layer 7c applies.
+func (a *StaticAbilityHolder) WithLayeredPTTextRevision() *StaticAbilityHolder {
+	a.WithPTTextRevision()
+	a.ptTextLayer = true
+	return a
+}
+
+func (a *StaticAbilityHolder) supportsLayeredPTTextRevision() bool {
+	return a.supportsPTTextRevision() && a.ptTextRevisionContext() == (ptRevisionContext{})
+}
+
+// AddPrintedStaticPTTextEffect changes one printed global P/T rule in layer 3.
+// Each pass restores the saved rule before it applies ordered changes.
+func (g *Game) AddPrintedStaticPTTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticPTTextContract, changes...)
 }

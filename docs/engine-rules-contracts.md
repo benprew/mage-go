@@ -14658,3 +14658,49 @@ payment timing and invalid declarations. Native `TestTextStaticGrantLayer*`
 covers definition validation, atomic rejection, registration order, expiry and
 clone controller isolation. This is bounded donor lifecycle evidence; it does
 not establish complete Magical Hack or Sleight of Mind execution.
+
+## Printed global P/T text layers
+
+`StaticAbilityHolder.WithLayeredPTTextRevision() *StaticAbilityHolder` opts in
+an unconditional printed P/T declaration. It includes `WithPTTextRevision`:
+nonempty layer-7c modifications with `WhileOnBattlefield` duration. Typed
+controller-, opponent- and host-conditioned P/T declarations cannot use this
+marker. RON applies it to unconditional `EachPermanentLayerEffect(filter,
+[AdjustPT(integer, integer)])` on the creature collection path. Existing
+source exclusion, controller, color, subtype and property filters retain their
+contracts. Conditional and Aura declarations keep their existing direct APIs.
+
+`Game.AddPrintedStaticPTTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+and basic-land word changes with `Indefinite` or `EndOfTurn` duration. The exact
+present face-up source visit must have an active opted-in printed declaration,
+a retained semantic builder, declaration group and complete registrations.
+An isolated probe checks the replacement before live installation. Replacement
+preserves the marker, count, layers, sublayers, durations and registration order.
+Rejection leaves live effects, declarations and baseline maps unchanged.
+
+The shared static text-layer service restores its saved baseline before applying
+ordered substitutions in layer 3 (CR 612.2, 613.1c). A prior direct revision can
+be that baseline. Expiry recomputes surviving changes. Direct revision cannot
+replace a layered result. Subjects are selected from current characteristics in
+layer 7c, after control, type, color and ability layers (CR 613.1, 613.4c).
+Source ability removal suspends the rule before P/T applies. Later entrants,
+control changes, tap state and combat membership use existing live queries.
+Sibling declarations and printed/copiable information remain separate.
+
+Clones keep separate effects, baselines and holder/controller contexts, including
+a clone created after expiry. Phasing retains the visit and checks expiry on
+the next present pass. Removal/restoration retains the baseline, including expiry
+while suppressed. Departure LKI keeps the final recipient P/T. A returned source
+uses printed rules and cannot satisfy an earlier visit (CR 400.7).
+Full-object/spell text and copy-layer rebinding remain separate contracts.
+No new cost, replacement-order or simultaneous-operation service is introduced.
+
+Evidence: `TestRONTextStaticPTLayerRecords` covers all 36 accepted complete
+records across 12 names. `OrderedExpiry`, `IndependentDeclarations`,
+`PriorRevisionAndCasting`, `LiveMembership`, `SiblingMana` and `Boundaries`
+cover order, identity, expiry, phasing, suppression, LKI, clones, casting/payment,
+current membership, declaration isolation and rejection. Native
+`TestTextStaticPTLayer*` checks definition validation, atomic rejection,
+registration positions, expiry and clone controller isolation. This is P/T
+lifecycle evidence; it does not establish complete text-spell execution.

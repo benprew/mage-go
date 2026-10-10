@@ -151,6 +151,16 @@
 // lifetime. Other layers, conditional rules and full text consumers need
 // separate services.
 //
+// Use [StaticAbilityHolder.WithLayeredPTTextRevision] for a printed global P/T rule.
+// [Game.AddPrintedStaticPTTextEffect] changes one declaration in layer 3.
+// RON opts in unconditional creature collections with one fixed AdjustPT.
+// Each pass restores its saved baseline before ordered word changes.
+// Current subjects receive P/T in layer 7c. Expiry restores surviving changes.
+// Direct revision cannot change a layered result. Clones keep separate rules
+// and controller contexts. Phasing keeps the visit. Removal suspends the rule;
+// restoration keeps its text. LKI keeps final P/T. Return uses printed rules.
+// Conditional rules, other layers and full text consumers need separate services.
+//
 // Use [StaticAbilityHolder.WithPTTextRevision] for a printed static P/T rule.
 // [Game.RevisePrintedStaticPTAbility] checks its declaration and source visit.
 // It keeps the active ID and registration order with fresh validated effects.
