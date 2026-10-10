@@ -180,6 +180,7 @@ func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []Ma
 type ManaBonusAbility struct {
 	controllerRecipient    bool
 	manaTapTextRevision    bool
+	manaTapTextLayer       bool
 	textRevisionDefinition Card
 	BaseAbility
 	Filter        PermanentFilter

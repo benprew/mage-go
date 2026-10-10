@@ -38,6 +38,10 @@ func (a *ManaBonusAbility) supportsManaTapTextRevision() bool {
 // RevisePrintedManaTapTrigger replaces one present printed mana-tap declaration.
 // The caller must supply text-layer order and lifetime separately.
 func (g *Game) RevisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	return g.revisePrintedManaTapTrigger(source, abilityID, true, changes...)
+}
+
+func (g *Game) revisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUID, direct bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text mana-tap revision requires a present source")
 	}
@@ -45,13 +49,18 @@ func (g *Game) RevisePrintedManaTapTrigger(source *Permanent, abilityID uuid.UUI
 	if current == nil || current.incarnationID != source.incarnationID || current.FaceDown {
 		return fmt.Errorf("text mana-tap revision requires the original face-up source")
 	}
+	if direct {
+		if _, exists := current.layeredManaTapOrigins[abilityID]; exists {
+			return fmt.Errorf("direct mana-tap revision cannot change a layered declaration")
+		}
+	}
 	for _, ability := range current.RuntimeAbilities {
 		if ability.AbilityID() != abilityID {
 			continue
 		}
-		if _, ok := ability.(*GenericTriggered); ok {
+		if active, ok := ability.(*GenericTriggered); ok {
 			return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
-				return t.manaTapTextRevision && t.supportsManaTapTextRevision()
+				return t.manaTapTextRevision && t.supportsManaTapTextRevision() && (!active.manaTapTextLayer || t.manaTapTextLayer)
 			}, changes...)
 		}
 		active, ok := ability.(*ManaBonusAbility)
@@ -94,7 +103,7 @@ func (g *Game) revisePrintedManaBonus(current *Permanent, active *ManaBonusAbili
 	}
 	fresh, ok := replacement.(*ManaBonusAbility)
 	if !ok || !fresh.manaTapTextRevision || !fresh.supportsManaTapTextRevision() ||
-		fresh.AttachedOnly != active.AttachedOnly || fresh.MatchProduced != active.MatchProduced || fresh.controllerRecipient != active.controllerRecipient {
+		fresh.AttachedOnly != active.AttachedOnly || fresh.MatchProduced != active.MatchProduced || fresh.controllerRecipient != active.controllerRecipient || (active.manaTapTextLayer && !fresh.manaTapTextLayer) {
 		return fmt.Errorf("text mana-tap revision changed the bonus contract")
 	}
 	rebuilt := *fresh

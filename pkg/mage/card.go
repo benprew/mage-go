@@ -679,6 +679,7 @@ type Permanent struct {
 	revisedPrintedLandwalks     map[uuid.UUID]*PrintedBasicLandwalkAbility
 	layeredLandwalkOrigins      map[uuid.UUID]landwalkLayerOrigin
 	layeredProtectionOrigins    map[uuid.UUID]protectionLayerOrigin
+	layeredManaTapOrigins       map[uuid.UUID]manaTapLayerOrigin
 	layeredStaticAbilityOrigins map[uuid.UUID]*StaticAbilityHolder
 	subtypeFamilyOverrides      [subtypeFamilyCount][]string
 	subtypeFamilyOverrideSet    [subtypeFamilyCount]bool

@@ -63,7 +63,19 @@
 // RON supports one known land subtype, concrete mana type and UntilEndOfTurn.
 // Its printed subtype bonus uses [NewControllerManaBonusAbility].
 // That bonus pays the land controller and permits checked text revision.
-// General filtered events and live text layers need separate services.
+// General filtered events need separate adapters.
+//
+// Use [Game.AddPrintedManaTapTextEffect] for one printed mana event in layer 3.
+// [GenericTriggered.WithLayeredManaTapTextRevision] marks a typed land event.
+// [ManaBonusAbility.WithLayeredManaTapTextRevision] marks a shared mana bonus.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Expiry recomputes surviving changes. Direct revision cannot change a result.
+// Mana symbols keep their values. Planning and production use the same rule.
+// Pending triggers keep prior text and event facts. IDs and positions stay fixed.
+// Clones keep separate rules and controller contexts. Phasing keeps the visit.
+// Removal suspends the rule; restoration keeps its text. LKI keeps the result.
+// Return uses printed rules. RON opts in its complete land-mana event contexts.
+// Whole-object text, spell text and copy rebinding need separate services.
 //
 // Use [Game.RevisePrintedManaTapTrigger] for a printed mana-tap declaration.
 // [GenericTriggered.WithManaTapTextRevision] opts in typed land mana events.
@@ -74,9 +86,9 @@
 // Shared mana services keep payment planning and production together.
 // Phasing keeps revisions; restoration uses them; return uses printed rules.
 // RON opts in its complete land mana event and bonus contexts.
-// Mana symbols keep their printed values. The caller must supply text-layer
-// order, lifetime and original-text restoration. Live text installation,
-// subtype event adapters and spell changes need separate services.
+// Mana symbols keep their printed values. Marked declarations use
+// [Game.AddPrintedManaTapTextEffect] for layer order, lifetime and restoration.
+// Other event adapters and spell changes need separate services.
 //
 // Use [StaticAbilityHolder.WithLandTypeTextRevision] for a printed land rule.
 // [Game.RevisePrintedStaticLandType] checks its declaration and source visit.

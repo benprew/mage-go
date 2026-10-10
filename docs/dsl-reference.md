@@ -135,8 +135,8 @@ RON supports these complete contexts:
 Both forms require one known land subtype and one concrete mana unit. Other
 players, durations, body shapes, amounts and unbound references reject during
 compilation. RON owns spelling and shape checks; the engine owns production,
-payment planning and lifetime. General filtered mana events and live layer-3
-text installation remain separate capabilities.
+payment planning and lifetime. Printed declarations use the mana-event text
+layer service below. General filtered mana events remain a separate capability.
 
 Evidence: `TestRONSubtypeManaBonus*` maps complete Gauntlet of Might records in
 LEA, LEB, 2ED, CED and CEI, plus High Tide in FEM. It covers casting, both
@@ -147,6 +147,56 @@ phasing and ability restoration. `TestTemporaryManaBonus*` covers native
 validation, mixed production, zero/non-tap production, membership, source
 independence, cloning, replacement agreement and failed casting rollback.
 
+## Printed mana-event text layers
+
+`GenericTriggered.WithLayeredManaTapTextRevision() *GenericTriggered` and
+`ManaBonusAbility.WithLayeredManaTapTextRevision() *ManaBonusAbility` mark the
+complete declaration contexts of the direct mana-tap revision service.
+`Game.AddPrintedManaTapTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs ordered layer-3
+changes with EndOfTurn or Indefinite duration. It validates a cloned probe before
+installation. Invalid changes, empty changes, unsupported durations, missing
+builders/groups, foreign IDs, unmarked/granted declarations, missing markers in
+fresh definitions, changed contexts and absent/phased/face-down sources reject
+without mutation. Direct revision cannot change a current layered result.
+
+Each layer pass restores a separate baseline for each declaration, then applies
+active changes in timestamp order. A prior direct revision can supply that
+baseline. Expiry recomputes surviving changes from it. IDs and declaration
+positions remain stable. The printed card and copiable values stay unchanged.
+Color words and basic land words change; mana symbols retain their values
+(CR 612.1–3, 613.1c, 613.7). RON marks its existing complete subtype,
+produced-type, Aura-host and typed non-mana land-event TriggerA paths.
+No new filtered-event shape or temporary declaration context is accepted.
+
+The existing mana bonus service supplies both planning and actual production.
+Membership uses current land types. Produced-type bonuses use actual mana after
+replacements. Controller-recipient bonuses retain the tapped permanent's
+controller, while other bonuses retain their existing actor contract. Mana
+bonuses resolve immediately; non-mana events retain stack timing (CR 605.1b,
+605.4a, 605.5a). Queued triggers, target choices, copies and delays retain text
+and event bindings from detection, even after expiry or source departure.
+
+Clones keep separate baselines, registrations and controller contexts. Phasing
+keeps the visit; expiry is reflected on the next present layer pass. Layer-6
+removal suppresses the declaration; restoration uses its saved baseline and
+active text effects. Departure LKI retains the final declaration. A returned
+source uses printed rules and cannot accept the old visit (CR 400.7).
+Whole-object changes, spell text and copy-layer rebinding remain separate gaps.
+No cost transaction, replacement-order or simultaneous-operation rule changes.
+
+Evidence: TestRONTextManaTapLayerRecords covers all 23 complete records for
+Gauntlet of Might (5), Mana Flare (6), Wild Growth (6) and Manabarbs (6), plus
+independent P/T, ordered changes, symbols, immediate/stack timing, expiry,
+clones, phasing, removal/restoration and return. The QueuedSnapshots,
+PaymentRollback, InstancesAndLiveTypes and ProducedReplacement tests cover
+pending targets/copies, exact identities, source-relative recipients, nonbasic
+and changed types, mana payment rollback and replacement/production agreement.
+TestTextManaTapLayerDeclaration, Rejects and BaselineAndContext cover checked
+native contexts, atomic rejection, missing markers, a prior direct baseline,
+controller isolation, phased expiry, suppression/restoration and departure LKI.
+Existing TestRONLandMana*, TestRONSubtypeManaBonus* and TestTextManaTapTrigger*
+retain casting, malformed syntax, payment and event contract coverage.
 
 ## Printed mana-tap declaration text revision
 
@@ -183,8 +233,8 @@ Aura-host concrete bonus. Mana symbols are not color words (CR 612.2): Wild
 Growth's ManaProduceG remains green after a Green-to-Blue word substitution.
 The bounded subtype bonus forms above are also supported. Other filtered mana
 events and mana bodies remain compiler errors.
-The caller must supply layer-3 order, lifetime and original-text restoration.
-This bridge does not install a live text layer or change spell text.
+Marked declarations use the printed mana-event text layer service above for
+layer-3 order, lifetime and restoration. Spell text remains a separate gap.
 
 Evidence: `TestTextManaTapTrigger*` and `TestRONTextManaTapTrigger*` cover checked
 shapes, rejection without mutation, ordered changes, solver/production agreement,

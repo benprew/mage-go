@@ -8,9 +8,9 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-ANIMATION` adds ordered layer-3 installation and baseline
-restoration for complete static animation with shared type/color/P/T subjects.
-Three unique cards (13 records) have new lifecycle gameplay evidence.
+`TEXT-LAYER-PRINTED-MANA-EVENT` adds ordered layer-3 installation and baseline
+restoration for complete printed land-mana events and shared mana bonuses.
+Four unique cards (23 records) have new layer lifecycle gameplay evidence.
 Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
 Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
 spell text and copy rebinding remain unsupported.
@@ -62237,3 +62237,157 @@ Ranked next candidates:
 
 Complete collection gameplay, whole-object/spell text, runtime integration,
 Go-card deletion and unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-09: TEXT-LAYER-PRINTED-MANA-EVENT
+
+Fresh baseline: `make build` and focused RON mana/animation tests passed.
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, not a build or
+runtime failure: 813 accepted / 173 rejected names, 2,099 compiled / 346 rejected
+records. The strict collection installs no partial registry. The worktree had
+pre-existing Eureka entry-round work, ledger archiving, design/API edits and
+unrelated tracked/untracked changes. They are preserved and excluded from this
+slice's staged changes.
+
+### Candidate comparison and selection
+
+The latest entry's ranked candidates were evaluated first. Complete RON records
+and all reprints were read, including nested payment/target continuations.
+Targeted vocabulary queries covered WhenAPermanentIsTappedForMana/1,
+WhenAPlayerTapsAPermanentForMana/2, WhenAPlayerCastsASpell/2 and
+WhenACreatureAttacksAndIsntBlocked/1. Counts below use distinct names.
+
+| Candidate | Affected unique cards; estimated full-card compile unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: printed mana-event text layers | Gauntlet of Might, Mana Flare; the same complete service also covers Wild Growth and Manabarbs. 0 unlocks; 4 existing names / 23 records gain lifecycle evidence. | Direct checked revision, typed events and shared mana bonuses are ready. Supplies land-event consumers for Magical Hack and Sleight of Mind. Whole-object/spell text and copy rebinding still block those consumers. | Small compiler opt-in, medium engine lifecycle and solver/event tests. |
+| Ranked #2: printed spell-cast trigger text layers | Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere; 0 unlocks, 5 existing names / 30 records gain lifecycle evidence. | Direct revision and optional payments exist. Requires its own marker, baseline restoration and queued payment snapshots; advances the same text spells. | Medium lifecycle and independent payment tests. |
+| Ranked #3: complete host-unblocked event continuation | Farrel's Mantle; estimated 1 name / 1 record unlock. | Host capture and Trigger_ThatCreature/Trigger_ThatPermanent aliases, Other(event), explicit payer, dynamic damage payment and AssignsNoCombatDamage continuation are all required. Reuses combat/payment services. | Medium event, target and payment work; single-card gain. |
+
+Candidate #1 is dependency-ready and supplies concrete shared four-card value.
+It is selected under the ranked-first policy. The slice is one complete printed
+land-mana declaration layer context, including both the shared bonus and typed
+non-mana event representations. No dependent text spell or second slice is added.
+
+### Exact contract, dependencies and reuse boundary
+
+New public engine signatures:
+
+- `GenericTriggered.WithLayeredManaTapTextRevision() *GenericTriggered`
+- `ManaBonusAbility.WithLayeredManaTapTextRevision() *ManaBonusAbility`
+- `Game.AddPrintedManaTapTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error`
+
+RON marks its existing complete TriggerA lowering paths:
+
+- WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)) with a typed
+  non-mana body, or the exact Trigger_ThatPlayer/Trigger_AnyManaTypeProduced bonus.
+- WhenAPermanentIsTappedForMana(SinglePermanent(HostPermanent)) with the exact
+  ControllerOfPermanent(Trigger_ThatPermanent)/concrete AddMana bonus.
+- WhenAPermanentIsTappedForMana(IsLandType(known_subtype)) with the exact event
+  permanent controller and one concrete bonus mana unit.
+
+The temporary CreateTriggerUntil/High Tide declaration is not opted into this
+printed-source service. Existing spelling, action scopes, event bindings,
+semantic word substitution and malformed/unbound operand rejection remain in
+RON. No additional filtered event, source zone or mana-body shape is accepted.
+
+The engine reuses checked definition reconstruction, definition ability groups,
+printed identity, typed land-mana events, current-state filters, the continuous
+layer/timestamp pipeline, cost transactions and ManaSystem bonus discovery.
+Native declaration validation retains the direct revision constraints. The new
+service validates a cloned probe before installation and requires its layer
+marker to survive reconstruction. Fixed/produced/attached and controller/actor
+contexts cannot change. IDs and ability positions stay fixed.
+
+Each pass restores the saved declaration baseline before active layer-3 changes
+in timestamp order. A prior direct revision may supply that baseline. Expiry
+recomputes surviving changes; color words and basic-land words change while mana
+symbols remain fixed. Only EndOfTurn and Indefinite durations are supported.
+Empty/invalid changes, unsupported durations, missing builder/group, foreign or
+granted IDs, unmarked declarations, missing fresh markers, changed contexts and
+absent/phased/face-down sources reject without mutation. Direct revision cannot
+change a current layered result. Printed card and copiable origins remain fixed.
+
+Membership reads current land types. Produced-type bonuses read actual mana
+following replacement. Planning and execution use the same bonus service;
+failed payments do not tap lands or add mana. Fixed controller-recipient bonuses
+retain the event permanent's controller, separate from the activating player.
+Mana bonuses resolve immediately. Non-mana events keep normal stack timing.
+Queued triggers, targets, copies and delays keep detection-time text and facts.
+
+Clones keep separate baselines, revisions, effects and controller contexts.
+Phasing keeps the visit; phased expiry takes effect on the next present pass.
+Layer-6 removal suppresses the rule; restoration starts with the retained
+baseline and active text effects. Departure LKI keeps the final declaration.
+Return uses printed rules and cannot inherit an earlier visit.
+CR 605.1b, 605.4a, 605.5a, 612.1–3, 613.1c, 613.7 and 400.7 support this contract.
+No cost, replacement-order or simultaneous-operation contract changes.
+
+### Failing-first evidence and card-to-test mapping
+
+The new RON tests first failed compilation at the missing install API. New
+native tests independently failed at the missing marker/install APIs and origin
+storage. Implementation followed those failures. No accepted shape, existing
+test or collection rejection rule was weakened.
+
+| Cards / contracts | Evidence |
+| --- | --- |
+| Gauntlet of Might (LEA, LEB, 2ED, CED, CEI: 5 records); Mana Flare, Wild Growth, Manabarbs (LEA, LEB, 2ED, 3ED, CED, CEI: 6 records each) | TestRONTextManaTapLayerRecords executes every complete record; ordered land/color changes, repeated passes, mana symbols, independent Gauntlet P/T, declaration IDs, immediate/stack timing, event player, clone expiry, source phasing, ability removal/restoration and printed-origin return. Existing TestRONLandManaRealCards and TestRONSubtypeManaBonusRealCards retain paid casting, rollback and entry timing. |
+| Gauntlet of Might | TestRONTextManaTapLayerPaymentRollback checks failed/successful solver production and cleanup. InstancesAndLiveTypes checks foreign/static IDs, independent siblings, nonbasic Islands, changed current types, actor/controller separation and unavailable subjects. |
+| Mana Flare | TestRONTextManaTapLayerProducedReplacement checks mixed production with a mana-type replacement through manual activation and automatic planning; one bonus uses the actual replaced type. |
+| Typed non-mana land event | TestRONTextManaTapLayerQueuedSnapshots checks detection before installation, detection before expiry, later target selection, copies, clones and source departure. Pending rules retain earlier color filters. Existing TestRONTextManaTapTriggerManabarbsFacts retains event player and returned-land identity coverage. |
+| Declaration and atomic rejection | TestTextManaTapLayerDeclaration and Rejects cover both representations, invalid native contexts, unmarked/granted/foreign/face-down/missing sources, missing marker, changed context, missing builder/group and invalid changes without live mutation. TestRONTextManaTapLayerBoundaries retains duration, empty-change and dependent text-spell rejection; TestRONLandManaInvalid and TestRONSubtypeManaBonusInvalid retain malformed declarations and unbound operands. |
+| Baseline, controller and LKI | TestTextManaTapLayerBaselineAndContext checks a prior direct baseline, ordered effects, clone cleanup/control separation, source-relative trigger recipients, expiry while phased, suppression/restoration, direct-revision rejection and final departure LKI. |
+
+### Verification, coverage and source status
+
+Required checks:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextManaTapLayer -count=1`: passed.
+  Expanded TestRON(TextManaTap|SubtypeManaBonus|LandMana) and native
+  TestTextManaTap tests also passed.
+- `make build`; `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`; `make test`: passed.
+- `make lint`: 0 issues; `git diff --check`: passed. Automatic lint changes
+  only reordered imports in the three new Go files. Expanded RON/native focused
+  tests were rerun and passed.
+- `go run ./cmd/loadcards -json`: expected exit 1; 813 accepted / 173 rejected
+  names, 2,099 compiled / 346 rejected records. The full JSON report is identical
+  to the fresh baseline, including every rejection diagnostic. Remaining gaps
+  include Animate Dead/EnchantGraveyardCard, Balance/SacrificeAllPermanentsExceptForNum
+  and Channel/MayPayLifeToProduceManaAsManaAbility.
+
+An isolated HEAD checkout containing only the staged slice passes the expanded
+RON/native focused tests, `make build` and `go vet ./...`. Its loader exits 1:
+812 accepted / 174 rejected names, 2,098 compiled / 347 rejected records.
+Eureka remains rejected at RepeatableActions there. These pre-existing worktree
+gains are excluded from this slice and from its commit.
+
+Estimated and actual compile gains: 0 names / 0 records. New layer lifecycle
+coverage: 4 unique existing names / 23 records. Compilation and gameplay coverage
+remain separate; this does not verify the entire collection. Accepted records
+retain their compilation status. Whole-object/spell text, runtime loading,
+Go-card removal and unused DSL cleanup remain unfinished.
+
+Changed files: mage card.go, clone.go, effect_manager.go, game.go, mana_ability.go,
+triggered.go, text_mana_tap_trigger.go, doc.go and new text_mana_tap_layer.go /
+text_mana_tap_layer_test.go; RON land_mana.go, subtype_mana_bonus.go and new
+text_mana_tap_layer_test.go; dsl-reference.md, engine-rules-contracts.md and this
+ledger. Only this slice's hunks in already-dirty docs are staged. No source defect
+was found or corrected; RON sources and vocabulary snapshot remain unchanged.
+No unused DSL function is removed because caller/runtime removal gates are not
+met. No Go-card fallback, name-specific production branch, game-time declaration
+panic, global result slot or partial registry is added.
+
+Ranked next candidates:
+
+1. Printed spell-cast trigger layer installation/restoration for Crystal Rod,
+   Iron Star, Ivory Cup, Throne of Bone and Wooden Sphere; keep queued text
+   snapshots and independent optional payments.
+2. Printed combat-pair trigger layer installation/restoration for Abomination,
+   Aisling Leprechaun, Cockatrice, Thicket Basilisk, Infernal Medusa, Battering Ram
+   and Venom; keep pair incarnation bindings and delayed bodies.
+3. Printed opponent-land-tap trigger layer installation/restoration for Lifetap
+   and Lifeblood; keep queued event facts and source-relative controller reads.
+
+Farrel's Mantle remains a later single-card capability while useful shared
+multi-card work remains. Stop after this slice.

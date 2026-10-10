@@ -1046,6 +1046,7 @@ func (g *Game) syncAbilityContext(perm *Permanent) {
 	perm = g.isolatePrintedLandwalkContext(perm)
 	perm = g.isolatePrintedProtectionContext(perm)
 	perm = g.isolatePrintedStaticAbilityContext(perm)
+	perm = g.isolatePrintedManaTapContext(perm)
 	for _, ability := range perm.RuntimeAbilities {
 		unwrapped := UnwrapAbility(ability)
 		unwrapped.SetSource(perm.ID())

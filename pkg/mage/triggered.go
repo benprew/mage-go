@@ -48,6 +48,7 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // existing behavior is preserved.
 type GenericTriggered struct {
 	manaTapTextRevision    bool
+	manaTapTextLayer       bool
 	spellCastTextRevision  bool
 	landTapTextRevision    bool
 	combatPairTextRevision bool

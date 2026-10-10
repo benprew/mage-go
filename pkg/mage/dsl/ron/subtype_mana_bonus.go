@@ -93,7 +93,7 @@ func compileSubtypeManaTrigger(event, body Node) (optionFactory, error) {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.NewControllerManaBonusAbility(filter, color).WithManaTapTextRevision())
+		return mage.WithAbility(mage.NewControllerManaBonusAbility(filter, color).WithLayeredManaTapTextRevision())
 	}, nil
 }
 
