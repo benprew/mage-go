@@ -12256,3 +12256,46 @@ Prodigal Sorcerer, Northern Paladin, Circle of Protection: Red; all 36 reprints)
 `Modal` and `Boundaries`. Complete Magical Hack and Sleight of Mind still reject
 `CreateSpellEffect`; their extracted permanent branches are explicit test fixtures.
 This contract establishes another shared prerequisite, not complete consumer play.
+
+## Complete mixed static/event object text
+
+`Game.AddPrintedMixedStaticEventTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` applies color and basic-land word substitutions to
+one complete paired permanent context. `ChangePrintedPermanentText` dispatches
+this context at resolution through the existing RON typed word bindings.
+
+The definition must retain `WithMixedStaticEventSpellTextContinuation`, exactly
+one marked global fixed P/T or basic-land-type static rule, and one controller
+mana bonus or controller-upkeep fixed mana payment with unpaid self-sacrifice.
+The mana bonus must use its layered text marker and the tapped land's controller
+as recipient. No Aura, Land, extra keyword, mode, casting target/cost or other
+rule is permitted. Duration is `Indefinite` or `EndOfTurn`. The installation
+requires the original present face-up battlefield visit.
+
+Preflight checks the retained and fresh definitions, declaration groups, static
+kind, subtypes, event shape, fixed payment symbols and bonus mana symbol. Both
+runtime declarations must be present. An isolated game probe checks the existing
+static registrations and every required declaration layer before live changes.
+All layers are installed together, followed by one live recomputation. Failure
+leaves live declarations, registrations and effects intact. The supported upkeep
+rule has no replaceable words; it retains its original trigger and payment body.
+
+Static and mana-event layers keep independent ordered baselines, IDs and current
+subjects. Existing services retain mana planning/production, event recipients,
+upkeep timing and pending controller/source captures. Payment rollback, trigger
+copies, clones, phasing, removal/restoration, LKI, printed return and copiable
+values retain their shared contracts. No replacement or simultaneous-operation
+policy changes. Rules: CR 612.1–3, 613.1c/d/f/g, 400.7 and 707.2.
+
+RON retains `CreatePermanentLayerEffect(permanentRef, [wordSubstitution, ...])`
+with preceding typed color/basic-land choices. `compilePermanentObjectText`
+already lowers that shape through the dispatcher; no new spelling or alternate
+execution path is needed. Invalid producers still reject. Complete Magical Hack
+and Sleight of Mind retain their unsupported `CreateSpellEffect` branch.
+
+Evidence: `TestTextMixedStaticEventObjectAtomic`; RON
+`TestRONTextMixedStaticEventObjectRecords` (Gauntlet of Might: five records;
+Conversion: six; Sunken City: one), `Payments`, `Lifecycle`, `Ordering` and
+`Boundaries`. Extracted consumer permanent branches are explicit test fixtures.
+This establishes a shared engine prerequisite with zero compilation unlocks.
+Attached contexts, other mixed contexts and live copy rebinding remain separate.

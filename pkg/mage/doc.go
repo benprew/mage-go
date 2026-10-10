@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [Game.AddPrintedMixedStaticEventTextEffect] for complete paired rules.
+// One global static rule can share text with a controller mana bonus or a fixed
+// controller-upkeep payment and unpaid self-sacrifice. Both rules pass preflight
+// before any layer is installed. Mana symbols and pending upkeep bodies stay fixed.
+// Static and mana rules keep separate ordered baselines and declaration IDs.
+// Shared services keep expiry, clones, control, phasing, removal and final LKI.
+// Return and copy values use printed rules. [ChangePrintedPermanentText] selects
+// this context at resolution. Attached and other mixed contexts stay separate.
+//
 // Use [Game.AddPrintedActivatedObjectTextEffect] for complete ordinary actions.
 // Every printed ability must permit layered activation text revision. Fixed
 // intrinsic keywords can stay. [ChangePrintedPermanentText] checks this context.

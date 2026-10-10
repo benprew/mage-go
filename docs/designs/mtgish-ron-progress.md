@@ -8,15 +8,14 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`ACTIVATED-OBJECT-TEXT` adds checked whole-object dispatch for complete ordinary
-printed activated rules and fixed intrinsic keywords. New interaction evidence
-covers **6 names / 36 complete records**; acceptance gain is **0 names / 0 records**.
-Every declaration passes preflight before installation. Shared activation and
-layer services retain IDs, targets, payments, modes, limits, history and pending
-bodies through ordering, expiry, clones, control, phasing, removal and departure.
-A fresh context inventory passes preflight for **237 names / 487 records**; this
-is context support, not exhaustive gameplay evidence. Mixed and attached contexts,
-live-copy rebinding and complete word-changing consumers remain gaps.
+`MIXED-STATIC-EVENT-OBJECT-TEXT` adds atomic whole-permanent dispatch for one
+global static rule paired with a controller mana bonus or fixed upkeep payment.
+New interaction evidence covers **3 names / 12 complete records**; acceptance
+gain is **0 names / 0 records**. Both declarations and registrations pass
+preflight before installation. Shared layers retain ordered baselines, mana
+symbols, IDs, payment rollback, pending upkeep bodies, clones, control, phasing,
+removal, LKI and printed return. Attached and other mixed contexts, live-copy
+rebinding and complete word-changing consumers remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -66088,5 +66087,160 @@ docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
 ### Complete context preflight names (237 unique names / 487 records)
 
 Adun Oakenshield; Aeolipile; Al-abara's Carpet; Aladdin; Aladdin's Ring; Alchor's Tomb; Ali Baba; Amulet of Kroog; Angus Mackenzie; Apprentice Wizard; Argivian Archaeologist; Argivian Blacksmith; Armor Thrull; Ashnod's Altar; Ashnod's Transmogrant; Atog; Ayesha Tanaka; Balm of Restoration; Banshee; Barl's Cage; Basal Thrull; Birds of Paradise; Black Lotus; Black Mana Battery; Blue Mana Battery; Bone Flute; Book of Rass; Boris Devilboon; Bottle of Suleiman; Brothers of Fire; Candelabra of Tawnos; Carrion Ants; Celestial Prism; Circle of Protection: Artifacts; Circle of Protection: Black; Circle of Protection: Blue; Circle of Protection: Green; Circle of Protection: Red; Circle of Protection: White; Clay Statue; Coal Golem; Combat Medic; Conservator; Coral Helm; Crimson Manticore; D'Avenant Archer; Dark Heart of the Wood; Dark Sphere; Deathgrip; Deep Water; Delif's Cone; Delif's Cube; Diabolic Machine; Disrupting Scepter; Draconian Cylix; Dragon Engine; Dragon Whelp; Drowned; Drudge Skeletons; Dwarven Armorer; Dwarven Demolition Team; Dwarven Lieutenant; Dwarven Warriors; Dwarven Weaponsmith; Eater of the Dead; Ebony Horse; Elven Fortress; Elven Lyre; Elves of Deep Shadow; Elvish Hunter; Elvish Scout; Emerald Dragonfly; Exorcist; Fallen Angel; Farrelite Priest; Feldon's Cane; Fire Drake; Fire Sprites; Flood; Flying Carpet; Forcefield; Fountain of Youth; Frozen Shade; Fungal Bloom; Gaea's Touch; Gate to Phyrexia; Ghost Ship; Ghosts of the Damned; Giant Slug; Glasses of Urza; Goblin Balloon Brigade; Goblin Chirurgeon; Goblin Digging Team; Goblin Kites; Goblin Warrens; Goblin Wizard; Golgothian Sylex; Granite Gargoyle; Grapeshot Catapult; Grave Robbers; Greater Realm of Preservation; Greed; Green Mana Battery; Gwendlyn Di Corci; Hand of Justice; Hell's Caretaker; Helm of Chatzuk; Homarid Shaman; Homarid Spawning Bed; Homarid Warrior; Horn of Deafening; Horror of Horrors; Hurr Jackal; Hyperion Blacksmith; Icatian Infantry; Icatian Lieutenant; Icatian Priest; Icatian Scout; Icy Manipulator; Ifh-Bíff Efreet; Implements of Sacrifice; Initiates of the Ebon Hand; Jade Monolith; Jade Statue; Jalum Tome; Jandor's Saddlebags; Jayemdae Tome; Kei Takahashi; Killer Bees; King Suleiman; Lady Caleria; Lady Evangela; Lesser Werewolf; Ley Druid; Life Chisel; Life Matrix; Lifeforce; Living Armor; Living Wall; Llanowar Elves; Master of the Hunt; Merfolk Assassin; Millstone; Miracle Worker; Mox Emerald; Mox Jet; Mox Pearl; Mox Ruby; Mox Sapphire; Nalathni Dragon; Nebuchadnezzar; Necropolis; Niall Silvain; Northern Paladin; Obelisk of Undoing; Orc General; Orcish Artillery; Orcish Captain; Orcish Mechanics; Orcish Spy; Pavel Maliki; Petra Sphinx; Pixie Queen; Pradesh Gypsies; Priest of Yawgmoth; Princess Lucrezia; Prodigal Sorcerer; Psionic Entity; Quarum Trench Gnomes; Radjan Spirit; Rag Man; Ragnar; Rakalite; Ramses Overdark; Red Mana Battery; Relic Barrier; Ring of Immortals; Ring of Renewal; Riven Turnbull; River Merfolk; Rocket Launcher; Rod of Ruin; Royal Assassin; Sage of Lat-Nam; Samite Healer; Sandals of Abdallah; Savaen Elves; Scarecrow; Scarwood Hag; Scavenger Folk; Sentinel; Serpent Generator; Shelkin Brownie; Shimian Night Stalker; Shivan Dragon; Sindbad; Singing Tree; Sisters of the Flame; Skull of Orm; Sol Ring; Sorceress Queen; Spinal Villain; Staff of Zegon; Standing Stones; Stone Giant; Sunastian Falconer; Svyelunite Priest; Tawnos's Wand; The Hive; Thelonite Druid; Thelonite Monk; Thrull Wizard; Tor Wauki; Tower of Coireall; Tracker; Triassic Egg; Tuknir Deathlock; Urza's Avenger; Uthden Troll; Vampire Bats; Vodalian Mage; Walking Dead; Wall of Bone; Wall of Brambles; Wall of Fire; Wall of Opposition; Wall of Water; Wall of Wonder; Wand of Ith; War Barge; White Mana Battery; Will-o'-the-Wisp; Witch Hunter; Wormwood Treefolk; Wyluli Wolf; Xenic Poltergeist; Xira Arien.
+
+Stopped after one capability slice. Migration remains incomplete.
+
+## Run 2026-10-10: MIXED-STATIC-EVENT-OBJECT-TEXT
+
+Status: complete dependency-ready engine prerequisite for resolving RON text
+substitutions on complete mixed static/event permanents. Stop after this slice.
+
+### Environment, candidates and selection
+
+The worktree started with unrelated tracked entry-round changes, four untracked
+entry-round files, an untracked ledger archive, and documentation/archive changes.
+The initial binary diff and status are saved in /tmp/ron-mixed-object-20261010
+and /tmp/ron-slice-baseline.patch. These changes remain outside the commit.
+Fresh baseline RON short tests passed (36.680s), make build passed, and the
+strict loader exited 1 for collection rejection, not a build or test failure.
+Baseline: 813 accepted / 173 rejected unique names; 2,099 compiled / 346 rejected
+records out of 2,445. There are 986 unique names.
+
+The latest ledger ranked mixed static/event object text first. Complete records,
+nested consumer branches, compiler markers and engine layers were inspected.
+Comparison counts reprints once:
+
+| Candidate | Distinct affected target/consumer names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Mixed static/event object text | Gauntlet of Might, Conversion, Sunken City; consumers Magical Hack and Sleight of Mind | 0 | Three target names already compile. Completes both sibling rule groups for the two word-changing consumers; stack-target branch, attached/other mixed contexts and live-copy rebinding remain | Small complete slice: reuse existing spell context and declaration layers; atomic preflight and RON interaction tests |
+| Attached object text | Firebreathing; Black Ward, Blue Ward, Green Ward, Red Ward, White Ward; the two consumers | 0 | Completes six already accepted targets (36 records). Needs donor/host scope preservation, host activation and exact protection exceptions before mixed contexts | Medium: several distinct attached contracts and legality/lifecycle tests |
+| Spell-target CreateSpellEffect and union/modal consumers | Magical Hack, Sleight of Mind | Up to 2 after prerequisites; 0 credible complete unlocks today | Stack services exist, but whole-permanent attached/mixed/live-copy coverage is incomplete. Would unlock both complete consumer records (12 reprints) once dependencies pass | Larger/dependent: stack adapter, modal union, all target contexts and copy/retarget tests |
+
+Candidate #1 wins as a ready prerequisite with concrete shared benefit for two
+multi-target consumers. Sunken City shares the same exact payment/static context
+as Conversion. The selected scope was announced before implementation. No RON
+source defect, missing compiler adapter or environment failure was identified.
+The missing contract was atomic whole-permanent engine dispatch. Existing
+`compilePermanentObjectText` already lowers the selected AST shape correctly;
+it now reaches the added context through `ChangePrintedPermanentText`.
+
+### Supported contract and reuse boundary
+
+New API:
+`Game.AddPrintedMixedStaticEventTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error`.
+
+RON retains resolving
+`CreatePermanentLayerEffect(permanentRef, [wordSubstitution, ...])` with typed
+preceding `ChooseTwoColorWords` or `ChooseTwoBasicLandTypes`. Each substitution
+reads its lexical per-instance bindings at resolution. Spelling, producer
+validation and binding construction remain in ron; reusable mechanics remain
+in mage. No parallel adapter or card-name branch was added.
+
+The retained definition must have exactly one marked global fixed P/T or
+basic-land-type static rule and one layered controller mana bonus, or one
+controller-upkeep fixed mana payment followed by unpaid self-sacrifice. It must
+retain its existing mixed spell-continuation marker. Aura, Land, extra keywords,
+other rules, modes and casting costs/targets are excluded. The exact face-up
+source must be present and active. Indefinite and EndOfTurn are supported.
+
+All fresh declaration groups, static kind, subtypes, event context, fixed payment
+and bonus symbols are checked. Both runtime rules and the complete static
+registration must be present. An isolated cloned game checks both declaration
+layer services before the live engine installs all required layers together and
+recomputes once. Missing second runtime declarations, typed nil events, incomplete
+registrations and malformed builders cannot leave a partial static change.
+The supported upkeep trigger contains no replaceable words and remains intact;
+its pending body, payer, payment binding and captured source do not change.
+
+Reused services: mixedStaticEventSpellTextContext, BuildTextDefinitionRevision,
+ReplacementAbility, addPrintedStaticTextEffect, AddPrintedManaTapTextEffect,
+printedStaticAbilityTextEffect, printedManaTapTextEffect, ordered baseline resets,
+shared mana planner/production, optional payment transaction, stack trigger copies,
+current controllers, phasing, layer removal/restoration, LKI, printed return and
+copiable values. The local event-context check also protects BonusMana against
+malformed word builders. No replacement priority or simultaneous-operation
+contract changes. Rules basis: CR 612.1–3, 613.1c/d/f/g, 400.7 and 707.2.
+
+### Failing-first evidence and card mapping
+
+The first RON test compilation failed on the absent new API (red-signature.log).
+With a minimal rejecting stub, native valid bonus/upkeep cases failed
+(red-native.log). Real extracted consumer permanent branches failed every target
+record's P/T or land-type assertion (red-gameplay.log). An added typed nil runtime
+event test then found an early AbilityID dereference; preflight now checks the
+supported event context before reading its ID. Existing tests were not weakened.
+
+| Card or contract | RON/native evidence |
+| --- | --- |
+| Gauntlet of Might (LEA, LEB, 2ED, CED, CEI: five complete records) | TestRONTextMixedStaticEventObjectRecords casts extracted real Sleight and Hack permanent branches, checks changed creature color and matching land type, stable declaration IDs, both players' creatures, correct tapped-land controller, unchanged red mana symbol and immediate mana timing in original and cloned games |
+| Conversion (LEA, LEB, 2ED, 3ED, CED, CEI: six complete records) | Records checks changed input land type, unchanged Plains output, intrinsic mana and correct upkeep timing; Payments checks unchanged WW cost |
+| Sunken City (DRK: one complete record) | Records checks changed global color and correct upkeep timing; Payments checks unchanged UU cost |
+| Pending upkeep and transactional costs | TestRONTextMixedStaticEventObjectPayments checks paid, declined, unaffordable rollback, post-detection text installation without replacement of the pending stack object, control change, returned/phased source, copied trigger and cloned payment state for both upkeep cards |
+| Entry baseline, copies and lifecycle | TestRONTextMixedStaticEventObjectLifecycle continues earlier changed spell rules through entry, independent spell copies/clones, printed copy values, later whole-object text layers, repeated passes, phased expiry, removal/restoration, LKI and physical recast |
+| Ordered whole-object layers | TestRONTextMixedStaticEventObjectOrdering applies two ordered color/land changes to both rules, checks live production, expiry recomputation from baseline and clone isolation |
+| Invalid contexts and bindings | TestRONTextMixedStaticEventObjectBoundaries rejects unrelated Aura/global/activated contexts through the new API and an unbound word producer at compilation |
+| Atomic declaration preflight | TestTextMixedStaticEventObjectAtomic checks valid bonus/upkeep, missing first/second runtime, typed nil/wrong runtime event, missing static registration, changed kind/timing/payment/bonus/body count/keyword/group, lost marker/builder/group, invalid/empty words, duration, phasing, face-down and returned visits with no live mutation on failure |
+
+New gameplay interaction evidence covers three unique target names / 12 complete
+records. Magical Hack and Sleight of Mind are still rejected in their complete
+records at CreateSpellEffect. Their extracted permanent branches are explicit
+fixtures, never production factories or partial registries. Compilation support,
+context preflight and complete consumer gameplay remain separate measurements.
+
+### Verification and collection status
+
+- Fresh focused RON tests passed; final declaration-ID/pending-body assertions
+  passed again (1.397s). Native atomic tests passed (0.402s).
+- make build and go vet ./... passed. Engine short tests and make test passed
+  (full RON package: 41.901s). make lint completed with 0 issues; git diff --check
+  passed. Lint formatting was reviewed; initial user source-file hashes match.
+- The verification sequence exited 1 only at the expected final strict loader.
+- Final worktree build/vet and lint passed again after the final test assertions;
+  final lint reported 0 issues. Formatting preserved source/index parity.
+- Isolated HEAD plus only this staged slice passed focused RON/native tests
+  (0.681s / 0.437s), make build, go vet ./..., engine short tests (RON 47.666s),
+  make test (RON 39.646s), make lint (0 issues), and git diff --check.
+  Its strict loader exited 1 with 812 accepted / 174 rejected unique names and
+  2,098 compiled / 347 rejected records. Eureka and Mana Clash retain the
+  RepeatableActions diagnostic without the starting user entry-round changes.
+  The one-name/one-record worktree difference belongs to Eureka's pre-existing
+  work, not this slice. No unsupported record was accepted by this slice.
+- Source and test files are byte-identical across the final worktree, index and
+  isolated checkout. Shared documentation preserves all starting user edits.
+
+Actual acceptance gain: 0 unique names / 0 records, matching the estimate.
+The strict loader's final complete JSON is byte-identical to the fresh baseline:
+813 accepted / 173 rejected names and 2,099 compiled / 346 rejected records.
+All existing accepted records and unsupported-record diagnostics are unchanged.
+Remaining diagnostics include CreateSpellEffect for Magical Hack/Sleight of Mind,
+EachPlayerAction for Mana Clash, and the previously recorded unsupported families.
+The starting user entry-round work accounts for Eureka's acceptance.
+
+No RON sources changed; the vocabulary snapshot needs no refresh. No source
+defect was corrected. No Go definitions or DSL functions were removed: complete
+collection gameplay, runtime loading and caller migration gates remain unmet.
+API/rules documentation covers only the established complete paired context.
+
+Changed files (eight): pkg/mage/text_mixed_static_event_object.go and native tests;
+pkg/mage/text_global_static_object.go; pkg/mage/dsl/ron/text_mixed_static_event_object_test.go;
+pkg/mage/doc.go; docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+Shared documentation is staged from HEAD plus this slice's additions/status;
+historical ledger entries remain in the commit, and the user's archive move and
+entry-round documentation remain only in the worktree. Other initial user-file
+hashes are unchanged. No broad DSL function was removed, so no removal audit or
+obsolete authoring cutover is claimed.
+
+### Ranked next candidates
+
+1. Complete attached object text: evaluate Firebreathing and all five color Wards
+   together. Reuse existing host/donor services; preserve protection exceptions,
+   activated host bindings, attachment changes and atomic group checks.
+2. Complete mixed static/activation and intrinsic/static object contexts. Compare
+   the already supported sibling spell-continuation contexts before selecting one
+   bounded shared prerequisite for the two word-changing consumers.
+3. Spell-target CreateSpellEffect and complete union/modal word-changing consumers,
+   once permanent contexts are ready. Vesuvan Doppelganger's copy-added ability
+   and live-copy rebinding remain explicit dependencies.
 
 Stopped after one capability slice. Migration remains incomplete.
