@@ -18,7 +18,7 @@ func TestTextUpkeepSpellDeclaration(t *testing.T) {
 	for _, card := range []Card{
 		valid(WithUpkeepSpellTextContinuation(), WithUpkeepObjectTextRevision()), valid(WithAdditionalCost(LifePayCost(1))),
 		valid(WithManaTapSpellTextContinuation()), valid(WithMixedStaticEventSpellTextContinuation()),
-		valid(WithKeyword(core.Shroud)), valid(WithSubTypes("Aura")),
+		valid(WithKeyword(core.Islandwalk)), valid(WithSubTypes("Aura")),
 		valid(WithGlobalStaticSpellTextContinuation()), valid(WithIntrinsicCreatureSpellTextContinuation()),
 		valid(WithCastTarget(TargetPermanent(IsCreature))), valid(WithAbility((*StaticAbilityHolder)(nil))),
 		valid(WithAbility(NewActivated(TapCost(This), GainLifeFor(You, Fixed(1))))),

@@ -7,7 +7,8 @@
 // clones keep separate changes. Later text layers use the entry baseline.
 // Phasing keeps the visit. Removal stops detection; pending bodies keep facts.
 // Departure keeps final LKI and the physical printed card. Return uses printed
-// rules. Entry choices, keywords and mixed rules need separate contracts.
+// rules. Fixed intrinsic keywords keep their counts and declaration groups.
+// Entry choices and mixed rules need separate contracts.
 //
 // Use [WithUpkeepObjectTextRevision] for one complete ordinary upkeep rule.
 // [Game.AddPrintedUpkeepObjectTextEffect] checks all printed declarations.
@@ -17,7 +18,7 @@
 // Pending bodies keep detection facts; returned cards use printed rules.
 // [ChangePrintedPermanentText] selects this context at resolution.
 // Fixed intrinsic keywords keep their counts and declaration groups.
-// Mixed rules, spell entry with keywords and live copy need separate contracts.
+// Mixed rules and live copy need separate contracts.
 //
 // Use [GenericTriggered.WithLayeredUpkeepTextRevision] for printed upkeep rules.
 // [Game.AddPrintedUpkeepTextEffect] changes one declaration in layer 3.

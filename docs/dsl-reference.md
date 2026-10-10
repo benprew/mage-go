@@ -12781,8 +12781,8 @@ RON marks a nonland, non-Aura permanent whose complete rules are one
 `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer | SinglePlayer(You)), actions)`.
 The actions use existing validated action, target, choice and payment scopes.
 The compiler adds `mage.WithUpkeepSpellTextContinuation()` with the complete
-object marker and layered trigger marker. Keywords, entry choices and mixed
-rules require separate contexts.
+object marker and layered trigger marker. Fixed intrinsic keywords can stay.
+Entry choices and mixed rules require separate contexts.
 
 `Game.RevisePrintedSpellText` checks both retained definitions and declaration
 correspondence before replacement. Revised spells enter with fresh bindings;
@@ -12814,8 +12814,8 @@ The existing upkeep declaration layer handles ordered changes, expiry, pending
 bodies, exact visits, control, phasing, clones, removal/restoration, final LKI and
 printed return. Payments retain their mana symbols and use the existing cost
 transaction. This adds no payment, event, zone, replacement or combat pipeline.
-`WithUpkeepSpellTextContinuation` still rejects intrinsic keywords explicitly;
-this extension establishes battlefield object text only.
+`WithUpkeepSpellTextContinuation` also supports these fixed contributions;
+the spell extension below establishes that entry contract.
 
 Evidence: native `TestTextUpkeepKeywordsAtomic` and `Declarations`; RON
 `TestRONTextUpkeepKeywordsRecords`, `Wall`, `Inventory`, `Lifecycle`, `Payments`
@@ -12828,3 +12828,38 @@ retain their engine behavior. Mishra's War Machine remains rejected for its
 unsupported damage-result condition; keyword eligibility cannot bypass it.
 These are new text-context gameplay mappings for already compiled cards.
 Compilation counts do not increase.
+
+### Fixed-keyword upkeep spell continuation
+
+`WithUpkeepSpellTextContinuation() CardOption` now permits the fixed intrinsic
+keywords listed above beside its single ordinary upkeep trigger. RON
+`upkeepSpellTextRules([]Node) bool` accepts those symbols in any rule position;
+it retains the complete object-context check and rejects entry choices.
+Unknown or parameterized keywords and foreign sibling rules remain errors.
+
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+checks both complete definitions and requires equal intrinsic seed maps,
+including duplicate counts, before replacing the exact stack visit. Existing
+`BuildTextDefinitionRevision` checks every declaration group, including keyword
+groups without an ability member. Added, removed, changed or invalid keyword
+contributions reject atomically. The entry builder creates fresh trigger,
+target and payment bindings while retaining all fixed keyword contributions.
+Names and mana symbols remain fixed (CR 612.2).
+
+Existing stack-copy and clone services keep separate revisions. Copies enter as
+tokens (CR 707.10f); ordinary text changes remain outside copiable values.
+Later object text layers use the continued baseline and restore it on expiry.
+Phasing keeps the visit, layer-6 removal suppresses keywords and detection,
+and restoration keeps the continued rule (CR 613.1c/f). Pending triggers keep
+their detection text and controller. Departure retains final LKI and the
+physical printed card; a new entry uses printed rules. Entry choices, mixed
+siblings and live-copy rebinding require separate contracts.
+
+Evidence: native `TestTextUpkeepSpellKeywordsAtomic` and `Declarations`; RON
+`TestRONTextUpkeepSpellKeywordsRecords`, `Wall`, `Inventory`, `Payments`,
+`Targets`, `Lifecycle`, `Identity` and `Boundaries`. These cover all nine names /
+25 records in the fixed-keyword upkeep object mapping above through real
+Sleight of Mind and Magical Hack on the stack, fresh entry, and subsequent
+battlefield text changes. Shared gameplay helpers also retain the earlier
+object and ordinary-spell checks. Mishra's War Machine remains rejected for
+its nested damage-result condition. Compilation gains are zero.

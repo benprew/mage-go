@@ -20,6 +20,12 @@ type upkeepKeywordPaymentChooser struct {
 func (p *upkeepKeywordPaymentChooser) ChooseMayAbility(string) bool { return p.accept }
 
 func TestRONTextUpkeepKeywordsRecords(t *testing.T) {
+	testRONTextUpkeepKeywordRecords(t, func(t *testing.T, g *mage.Game, a *mage.BasePlayer, card mage.Card) *mage.Permanent {
+		return g.PutOnBattlefield(card, a.PlayerID())
+	})
+}
+
+func testRONTextUpkeepKeywordRecords(t *testing.T, enter func(*testing.T, *mage.Game, *mage.BasePlayer, mage.Card) *mage.Permanent) {
 	for _, tc := range []struct {
 		name     string
 		sets     []string
@@ -43,7 +49,7 @@ func TestRONTextUpkeepKeywordsRecords(t *testing.T) {
 					g.SetStep(core.PrecombatMain)
 					card := repositoryCard(t, set, tc.name)
 					card.SetOwner(a.PlayerID())
-					p := g.PutOnBattlefield(card, a.PlayerID())
+					p := enter(t, g, a.BasePlayer, card)
 					id := p.RuntimeAbilities[0].AbilityID()
 					consumerSet := set
 					if set == "ARN" || set == "LEG" || set == "ATQ" {
@@ -205,6 +211,10 @@ func TestRONTextUpkeepKeywordsPayments(t *testing.T) {
 }
 
 func TestRONTextUpkeepKeywordsInventory(t *testing.T) {
+	testRONTextUpkeepKeywordInventory(t, false)
+}
+
+func testRONTextUpkeepKeywordInventory(t *testing.T, spell bool) {
 	expected := map[string]int{"Force of Nature": 6, "Phantasmal Forces": 6, "Serendib Efreet": 2, "Lord of the Pit": 6, "Junún Efreet": 1, "Palladia-Mors": 1, "Cosmic Horror": 1, "Yawgmoth Demon": 1, "Wall of Tombstones": 1}
 	files, err := filepath.Glob("../../../../cards/mtgish/*.ron")
 	if err != nil {
@@ -243,7 +253,12 @@ func TestRONTextUpkeepKeywordsInventory(t *testing.T) {
 				continue
 			}
 			g, a, _ := ronGame()
-			p := g.PutOnBattlefield(factory(), a.PlayerID())
+			var p *mage.Permanent
+			if spell {
+				p = enterRONUpkeepKeywordSpell(t, g, a, factory())
+			} else {
+				p = g.PutOnBattlefield(factory(), a.PlayerID())
+			}
 			change, _ := mage.ReplaceColorWord(core.Red, core.Blue)
 			if err := g.AddPrintedUpkeepObjectTextEffect(p, core.EndOfTurn, change); err != nil {
 				t.Fatal(err)
@@ -260,8 +275,14 @@ func TestRONTextUpkeepKeywordsInventory(t *testing.T) {
 }
 
 func TestRONTextUpkeepKeywordsWall(t *testing.T) {
+	testRONTextUpkeepKeywordWall(t, func(t *testing.T, g *mage.Game, a *mage.BasePlayer, card mage.Card) *mage.Permanent {
+		return g.PutOnBattlefield(card, a.PlayerID())
+	})
+}
+
+func testRONTextUpkeepKeywordWall(t *testing.T, enter func(*testing.T, *mage.Game, *mage.BasePlayer, mage.Card) *mage.Permanent) {
 	g, a, b := ronGame()
-	p := g.PutOnBattlefield(repositoryCard(t, "LEG", "Wall of Tombstones"), a.PlayerID())
+	p := enter(t, g, a, repositoryCard(t, "LEG", "Wall of Tombstones"))
 	castManaTapObjectWords(t, g, a, p, "LEA", "Sleight of Mind", "Black", "Blue")
 	castManaTapObjectWords(t, g, a, p, "LEA", "Magical Hack", "Swamp", "Forest")
 	change, _ := mage.ReplaceColorWord(core.Red, core.Blue)

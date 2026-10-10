@@ -1,5 +1,13 @@
 package ron
 
 func upkeepSpellTextRules(rules []Node) bool {
-	return len(rules) == 1 && upkeepObjectTextRules(rules)
+	if !upkeepObjectTextRules(rules) {
+		return false
+	}
+	for _, rule := range rules {
+		if rule.Name == "AsPermanentEnters" {
+			return false
+		}
+	}
+	return true
 }

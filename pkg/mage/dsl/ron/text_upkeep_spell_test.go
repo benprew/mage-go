@@ -205,8 +205,11 @@ func TestRONTextUpkeepSpellRecords(t *testing.T) {
 }
 
 func TestRONTextUpkeepSpellLifecycle(t *testing.T) {
+	testRONTextUpkeepSpellLifecycle(t, repositoryCard(t, "LEA", "Karma"))
+}
+
+func testRONTextUpkeepSpellLifecycle(t *testing.T, card mage.Card, keywords ...core.Attr) {
 	g, a, b := ronGame()
-	card := repositoryCard(t, "LEA", "Karma")
 	obj := castRONSpell(t, g, a, card)
 	first, _ := mage.ReplaceBasicLandWord(core.SwampLandType, core.ForestLandType)
 	second, _ := mage.ReplaceBasicLandWord(core.ForestLandType, core.IslandLandType)
@@ -227,6 +230,19 @@ func TestRONTextUpkeepSpellLifecycle(t *testing.T) {
 	}
 	g.ResolveStack()
 	clone.ResolveStack()
+	for _, game := range []*mage.Game{g, clone} {
+		for _, id := range []uuid.UUID{card.ID(), copied.SourceID} {
+			p := game.FindPermanent(id)
+			if p == nil {
+				t.Fatal("continued permanent did not enter")
+			}
+			for _, keyword := range keywords {
+				if !p.HasKeyword(keyword) {
+					t.Fatal("continued entry lost fixed keyword")
+				}
+			}
+		}
+	}
 	token := g.FindPermanent(copied.SourceID)
 	if token == nil || !token.Card.IsToken() || token.ControllerID() != b.PlayerID() {
 		t.Fatal("copy entry identity lost")
@@ -278,6 +294,11 @@ func TestRONTextUpkeepSpellLifecycle(t *testing.T) {
 		t.Fatal("later text layer did not use continued baseline")
 	}
 	g.AddContinuousEffect(mage.RemoveAllAbilities(card.ID(), core.EndOfTurn))
+	for _, keyword := range keywords {
+		if g.FindPermanent(card.ID()).HasKeyword(keyword) {
+			t.Fatal("text layer restored a removed keyword")
+		}
+	}
 	queueRONUpkeep(g, a)
 	if g.StackSize() != 0 {
 		t.Fatal("removed rule detected event")
@@ -288,11 +309,21 @@ func TestRONTextUpkeepSpellLifecycle(t *testing.T) {
 	g.PhaseIn(phased)
 	g.ApplyContinuousEffects()
 	p = g.FindPermanent(card.ID())
+	for _, keyword := range keywords {
+		if !p.HasKeyword(keyword) {
+			t.Fatal("restoration lost fixed keyword")
+		}
+	}
 	if p.RuntimeAbilities[0].AbilityID() != id {
 		t.Fatal("restoration lost declaration identity")
 	}
 	queueRONUpkeep(g, a)
 	g.BouncePermanentToHand(p)
+	for _, keyword := range keywords {
+		if !g.LKI(card.ID()).Snapshot.HasKeyword(keyword) {
+			t.Fatal("departure lost keyword LKI")
+		}
+	}
 	g.ResolveStack()
 	if a.Life() != 9 || a.Hand()[0] != card || g.LKI(card.ID()) == nil {
 		t.Fatal("pending departure lost continued text or printed card")
@@ -305,7 +336,7 @@ func TestRONTextUpkeepSpellLifecycle(t *testing.T) {
 func TestRONTextUpkeepSpellBoundaries(t *testing.T) {
 	g, a, _ := ronGame()
 	word, _ := mage.ReplaceColorWord(core.Red, core.Green)
-	for _, tc := range []struct{ set, name string }{{"LEA", "Black Vise"}, {"ATQ", "The Rack"}, {"LEA", "Force of Nature"}, {"LEA", "Phantasmal Forces"}, {"ARN", "Serendib Efreet"}, {"LEA", "Lord of the Pit"}} {
+	for _, tc := range []struct{ set, name string }{{"LEA", "Black Vise"}, {"ATQ", "The Rack"}} {
 		obj := castRONSpell(t, g, a, repositoryCard(t, tc.set, tc.name))
 		if err := g.RevisePrintedSpellText(obj.ID, word); err == nil {
 			t.Fatal("foreign spell context accepted", tc.name)
@@ -328,7 +359,11 @@ func TestRONTextUpkeepSpellBoundaries(t *testing.T) {
 }
 
 func TestRONTextUpkeepSpellPendingTargets(t *testing.T) {
-	factory := permanentScopeFactory(t, "Artifact", `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer),Targeted([TargetPermanent(IsColor(Red))],ActionList([TapPermanent(Ref_TargetPermanent),PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))])))`)
+	testRONTextUpkeepSpellPendingTargets(t, "")
+}
+
+func testRONTextUpkeepSpellPendingTargets(t *testing.T, prefix string) {
+	factory := permanentScopeFactory(t, "Artifact", prefix+`TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer),Targeted([TargetPermanent(IsColor(Red))],ActionList([TapPermanent(Ref_TargetPermanent),PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))])))`)
 	g, a, b := ronModalGame(0)
 	g.SetActivePlayerIndex(0)
 	g.SetStep(core.PrecombatMain)
@@ -389,7 +424,11 @@ func TestRONTextUpkeepSpellPendingTargets(t *testing.T) {
 }
 
 func TestRONTextUpkeepSpellPayments(t *testing.T) {
-	rule := `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),ActionList([MayCost(PayMana([ManaCostG,ManaCostG])),Unless(CostWasPaid,[PermanentDealsDamage(ThisPermanent,Integer(3),Player(You))])]))`
+	testRONTextUpkeepSpellPayments(t, "")
+}
+
+func testRONTextUpkeepSpellPayments(t *testing.T, prefix string) {
+	rule := prefix + `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),ActionList([MayCost(PayMana([ManaCostG,ManaCostG])),Unless(CostWasPaid,[PermanentDealsDamage(ThisPermanent,Integer(3),Player(You))])]))`
 	for _, scenario := range []string{"paid", "declined", "wrong-color", "insufficient"} {
 		t.Run(scenario, func(t *testing.T) {
 			a := &ronPaymentPlayer{BasePlayer: mage.NewBasePlayer("A"), accept: scenario != "declined"}

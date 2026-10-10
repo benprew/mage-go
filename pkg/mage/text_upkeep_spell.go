@@ -2,18 +2,20 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 )
 
 // WithUpkeepSpellTextContinuation permits one upkeep rule at entry.
-// Other rules and casting results require separate contracts.
+// Fixed intrinsic keywords keep their contributions through entry.
+// Entry choices and casting results require separate contracts.
 func WithUpkeepSpellTextContinuation() CardOption {
 	return func(card *BaseCard) { card.upkeepSpellText++ }
 }
 
 func upkeepSpellTextContext(card Card) (*GenericTriggered, error) {
 	base, ok := card.(*BaseCard)
-	if !ok || base == nil || base.upkeepSpellText != 1 || len(base.abilities) != 1 || len(base.attrSeeds) != 0 ||
+	if !ok || base == nil || base.upkeepSpellText != 1 || len(base.abilities) != 1 ||
 		base.spellCastSpellText != 0 || base.manaTapSpellText != 0 || base.staticEventSpellText != 0 ||
 		base.globalStaticSpellText != 0 || base.intrinsicSpellText != 0 || base.intrinsicCastText != 0 ||
 		base.landAuraSpellText != 0 || base.copyEntrySpellText != 0 || base.staticActivationText != 0 || base.protectionPTSpellText != 0 {
@@ -49,7 +51,7 @@ func (g *Game) reviseUpkeepSpellText(obj *StackObject, changes []TextChange) err
 	}
 	oldBase, newBase := obj.spellTextDefinition.(*BaseCard), revision.Definition().(*BaseCard)
 	replacement, paired := revision.ReplacementAbility(old.AbilityID())
-	if !paired || replacement != fresh || !slices.Equal(oldBase.subTypes, newBase.subTypes) ||
+	if !paired || replacement != fresh || !maps.Equal(oldBase.attrSeeds, newBase.attrSeeds) || !slices.Equal(oldBase.subTypes, newBase.subTypes) ||
 		!sameUpkeepObjectTextContext(old, fresh) {
 		return fmt.Errorf("upkeep spell text changed its declaration context")
 	}
