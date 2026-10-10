@@ -175,6 +175,7 @@ type StaticAbilityHolder struct {
 	grantTextRevision      bool
 	grantTextLayer         bool
 	animationTextRevision  bool
+	animationTextLayer     bool
 	landTypeTextRevision   bool
 	landTypeTextLayer      bool
 	textRevisionDefinition Card

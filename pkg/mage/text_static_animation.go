@@ -44,3 +44,17 @@ func (g *Game) RevisePrintedStaticAnimation(source *Permanent, abilityID uuid.UU
 		return a.animationTextRevision && a.supportsAnimationTextRevision()
 	}, changes...)
 }
+
+// WithLayeredAnimationTextRevision permits layer 3 changes to a printed animation.
+// The changed rule keeps one subject set through its type, color and P/T layers.
+func (a *StaticAbilityHolder) WithLayeredAnimationTextRevision() *StaticAbilityHolder {
+	a.WithAnimationTextRevision()
+	a.animationTextLayer = true
+	return a
+}
+
+// AddPrintedStaticAnimationTextEffect changes one printed animation in layer 3.
+// Each pass restores the saved rule before it applies ordered changes.
+func (g *Game) AddPrintedStaticAnimationTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
+	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticAnimationTextContract, changes...)
+}

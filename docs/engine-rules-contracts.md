@@ -288,8 +288,9 @@ revised rules. Clones and sibling declarations keep independent later changes.
 Departure information retains revised characteristics. A returned source uses
 printed rules and cannot accept an old visit. Granted, absent, phased,
 face-down, unmarked and foreign declarations reject without mutation (CR 612.3).
-The caller must still supply layer-3 order, duration and original-text
-restoration. This bridge does not install a live text layer or spell revision.
+Direct revision alone does not install a live text layer. The marked layer
+service below supplies order, duration and baseline restoration. Spell revision
+needs a separate contract.
 
 Evidence: `TestRONTextStaticAnimationRecords` covers every Kormus Bell and Living
 Lands reprint and Living Plane (3 names / 13 records), with paid casting,
@@ -299,6 +300,44 @@ declarations, source-relative control and P/T timestamp order; `Boundaries`
 keeps invalid and dependent contexts rejected. Native
 `TestTextStaticAnimationDeclaration`, `Rejects` and `RegistrationOrder` check
 complete rule identity, failure atomicity and retained registration positions.
+
+## Printed static animation text layers
+
+`StaticAbilityHolder.WithLayeredAnimationTextRevision() *StaticAbilityHolder`
+marks a complete printed animation for layer 3. RON uses this marker for its
+existing unconditional `EachPermanentLayerEffect(filter, modifications)` shape:
+one `AddCardtype(Creature)`, one `SetPT(PT(integer, integer))`, and optional
+`SetColor(SimpleColorList(colors))`. Static filter and declaration checks remain.
+
+`Game.AddPrintedStaticAnimationTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs ordered color or
+basic land word changes with `EndOfTurn` or `Indefinite` duration. Each pass
+restores the saved baseline before applying surviving changes in layer 3.
+A prior direct revision can supply the baseline. Direct revision rejects a
+current layered result. Fresh replacements must retain the layer marker.
+Invalid changes, durations, contexts and missing or foreign declarations reject
+without state changes. Absent, phased, face-down and granted declarations reject.
+
+The shared static text service retains declaration IDs, registration positions,
+source incarnations and separate clone/controller contexts. The existing
+animation service selects current subjects in layer 4 and keeps those exact
+members through optional layer 5 and base P/T layer 7b, even after ability
+removal in layer 6. Land-type dependencies and P/T timestamps remain active.
+Phasing preserves the visit; expiry recomputes on the next present pass.
+Departure information retains final results. Returned sources use printed rules.
+Whole-object text, spell text, sticky animation and copy rebinding stay separate.
+CR 612.1–3, 613.1c–g, 613.4b, 613.6–8 and 400.7 support this contract.
+
+Evidence: `TestRONTextStaticAnimationLayerRecords` covers Kormus Bell (6),
+Living Lands (6) and Living Plane (1), including repeated passes, color output,
+late entrants, summoning sickness, phasing, removal/restoration, expiry, clones,
+LKI and return. `LayerDependencies` checks Blood Moon in both source orders.
+`LayerBindings` checks prior direct baselines, separate declarations, controller
+changes and clone expiry. `LayerBoundaries` retains syntax and dependent-form
+rejection. Native `TestTextStaticAnimationLayerDeclaration`, `LayerRejects`,
+`LayerRestoredCloneContext` and `LayerRegistrationOrder` check complete typed
+rules, failed replacement atomicity, marker retention and registration order.
+Existing direct animation records retain paid casting, rollback and entry timing.
 
 ## Printed combat-pair trigger text revision
 

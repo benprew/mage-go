@@ -8,9 +8,9 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-LAND-TYPE` adds ordered layer-3 installation and baseline
-restoration for global, fixed Aura-host and chosen Aura-host basic-land-type
-rules. Four unique cards (19 records) have new lifecycle gameplay evidence.
+`TEXT-LAYER-PRINTED-ANIMATION` adds ordered layer-3 installation and baseline
+restoration for complete static animation with shared type/color/P/T subjects.
+Three unique cards (13 records) have new lifecycle gameplay evidence.
 Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
 Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
 spell text and copy rebinding remain unsupported.
@@ -62106,6 +62106,133 @@ Ranked next candidates:
    Living Lands and Living Plane, with shared type/color/P/T selection.
 2. Printed mana-event text layer installation/restoration; assess Gauntlet of
    Might and Mana Flare and preserve mana planning/production agreement.
+3. Host-unblocked event and complete Farrel's Mantle continuation.
+
+Complete collection gameplay, whole-object/spell text, runtime integration,
+Go-card deletion and unused DSL cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-09: printed static animation text layers
+
+Status: `TEXT-LAYER-PRINTED-ANIMATION` complete. This run stops after this slice.
+
+### Selection and dependencies
+
+Fresh baseline: `make build` and focused RON direct animation/land-type tests
+passed. `go run ./cmd/loadcards -json` exited 1 for collection rejection:
+813 accepted / 173 rejected names, 2,099 compiled / 346 rejected records.
+The working tree already contained Eureka entry-round work, ledger archiving,
+design/doc edits and other migration changes. Those changes and unrelated
+untracked files are preserved and excluded from this commit.
+
+Every complete candidate RON record, including identical reprints, was read.
+Targeted vocabulary reads covered EachPermanentLayerEffect/2, SetPT/1, SetColor/1,
+SimpleColorList/1, AddCardtype/1 and the candidate event signatures. Counts below
+are distinct names, not first-error frequencies.
+
+| Candidate | Affected cards and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: printed animation layer installation | Kormus Bell, Living Lands, Living Plane; 0 new compile unlocks, 3 names / 13 records gain lifecycle evidence | Complete static animation, checked direct revision and shared text-layer restoration are ready. Supplies animation consumers for Magical Hack and Sleight of Mind; whole-object/spell text and choices still block those spells. Titania's Song also needs sticky lifetime and dynamic mana-value semantics, so it is excluded from unlock estimates. | Small engine/compiler extension; medium lifecycle/dependency tests. |
+| Ranked #2: printed mana-event layer installation | Gauntlet of Might, Mana Flare; 0 new compile unlocks, 2 names / 11 records gain lifecycle evidence | Direct mana-event revision and typed events exist. Gauntlet's separate P/T declaration must remain independent. Supplies text consumers for the same spells; mana planning, production, event snapshots and expiry must stay in agreement. | Medium lifecycle plus mana solver/event tests. |
+| Ranked #3: host-unblocked event and complete continuation | Farrel's Mantle; estimated 1 name / 1 record unlock | Complete record requires Other(event), host capture/aliases, an explicit payer, dynamic damage and the AssignsNoCombatDamage continuation. Reuses payment/combat services; advances the existing unblocked event family. | Medium event, target and payment tests; single-card gain. |
+
+Candidate #1 is dependency-ready and supplies shared three-card value with less
+production work than the mana path. It wins over the single-card host event.
+No dependent text spell or sticky animation is implemented in this run.
+
+### Contract and reuse boundary
+
+Engine signatures:
+`StaticAbilityHolder.WithLayeredAnimationTextRevision() *StaticAbilityHolder`;
+`Game.AddPrintedStaticAnimationTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error`.
+
+RON opts in its existing unconditional
+`EachPermanentLayerEffect(filter, modifications)` animation shape: exactly one
+`AddCardtype(Creature)`, one `SetPT(PT(integer, integer))`, and optional
+`SetColor(SimpleColorList(colors))`. Existing filter validation applies.
+The typed declaration must contain the ordered type, optional color and base
+P/T effects from one AnimateEach rule. Mixed, partial, duplicate, reordered and
+foreign rules reject at definition validation. Sticky forms remain unsupported.
+
+The engine reuses the shared printed-static layer-3 installer, validation probes,
+exact source capture, ordered semantic changes, saved baseline restoration,
+registration replacement and clone/controller isolation. RON keeps spelling,
+semantic word roles, declaration groups and fresh per-instance filters.
+A prior direct revision can supply the baseline. Fresh replacements must retain
+the layer marker. Direct revision cannot change a current layered result.
+
+Each pass restores its baseline before ordered color/basic-land-word changes.
+Only EndOfTurn and Indefinite durations are accepted. Empty or invalid changes,
+wrong contexts, foreign/missing IDs, missing builders/groups/registrations,
+granted, absent, phased and face-down sources reject without mutation.
+Declaration IDs and original registration positions remain stable.
+
+The existing animation service selects current subjects in layer 4 and keeps
+those exact members through optional layer 5 and base P/T layer 7b, even after
+layer-6 ability removal. Its land dependency detector, timestamp sorter, intrinsic
+mana and P/T sublayers remain in use. Clones and declarations keep separate
+baselines, cleanup and controllers. Phasing preserves the visit; expiry applies
+on the next present pass. LKI keeps final characteristics. Returned sources use
+printed rules and cannot accept old visits. CR 612.1–3, 613.1c–g, 613.4b,
+613.6–8, 702.26b–f and 400.7 support this boundary.
+
+No cost, replacement-order or simultaneous-operation contract changes.
+Existing callers remain. No fallback, name-specific production branch, global
+result slot, game-time declaration panic or partial registry is added.
+Whole-object text, spell text and copy rebinding remain separate gaps.
+
+### Failing-first evidence and card-to-test mapping
+
+New RON tests first failed compilation at the missing install API. Native tests
+also failed at the missing marker/install APIs. Two generated native fixture
+constant names were corrected before implementation. The implementation reused
+the shared service; no existing test or supported boundary was weakened.
+
+| Cards/contract | Tests |
+| --- | --- |
+| Kormus Bell (6), Living Lands (6), Living Plane (1) | TestRONTextStaticAnimationLayerRecords exercises every complete record, ordered changes and repeated passes, type/color/P/T results, expiry and clone isolation, late entrants, summoning sickness, source/subject phasing, ability removal/restoration, declaration identity, LKI and printed-origin return. Existing TestRONTextStaticAnimationRecords and TestRONStaticAnimationRealCards retain paid casting, failed-payment rollback and entry timing. |
+| Kormus Bell + Blood Moon | TestRONTextStaticAnimationLayerDependencies checks revised input/output land words and expiry in both source timestamp orders. |
+| Instance, binding and timestamp contracts | TestRONTextStaticAnimationLayerBindings checks a prior direct baseline, source-relative controllers, independent declarations, clone control/expiry, foreign IDs and restored P/T timestamp order. Existing TestStaticAnimationLayerContinuation proves noncreature membership retained through type/color/P/T and layer-6 suppression; TestStaticAnimationLayerOrder retains counters, modifications and switching. |
+| Invalid declarations and atomic failures | TestRONTextStaticAnimationLayerBoundaries retains malformed syntax, unknown/unbound operands, unsupported contexts/durations and dependent spell/sticky rejection. Native TestTextStaticAnimationLayerDeclaration, LayerRejects, LayerRestoredCloneContext and LayerRegistrationOrder check complete typed rules, missing/lost markers, builders, groups and registrations, invalid changes, rejection without mutation, suppressed/active clone restoration and stable registration positions through expiry. |
+
+### Verification and collection status
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextStaticAnimationLayer -count=1`; expanded direct/static animation and land-type RON tests plus native animation tests passed.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: 0 issues; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1; 813 accepted / 173 rejected names, 2,099 compiled / 346 rejected records. Its entire JSON report equals the fresh baseline.
+
+An isolated HEAD checkout with only this slice passes expanded RON/native tests,
+`make build` and `go vet ./...`. Its strict loader exits 1: 812 accepted /
+174 rejected names, 2,098 compiled / 347 rejected records. Eureka remains rejected
+there; Mana Clash's diagnostic also differs because of pre-existing repeated
+entry-round work. These are excluded from this slice. No validation blocker
+remains.
+
+Estimated and actual compilation gains agree: **0 names / 0 records**. Lifecycle
+coverage expands for **3 existing names / 13 records**. This does not establish
+complete collection gameplay. All previously accepted records remain accepted.
+Remaining diagnostics include Animate Dead's EnchantGraveyardCard, Balance's
+SacrificeAllPermanentsExceptForNum and Channel's temporary life-to-mana rule.
+
+Changed files: mage ability.go, doc.go, text_static_animation.go,
+text_static_ability_layer.go, text_static_pt.go and new
+text_static_animation_layer_test.go; RON static_animation.go and new
+text_static_animation_layer_test.go; dsl-reference.md, engine-rules-contracts.md
+and this ledger. No source defect was corrected. RON sources and vocabulary are
+unchanged. No unused DSL function was removed: runtime/caller migration and
+removal gates remain unmet. Pre-existing work is excluded from the commit.
+
+Ranked next candidates:
+
+1. Printed mana-event text layer installation/restoration for Gauntlet of Might
+   and Mana Flare; retain mana planning/production agreement and pending facts.
+2. Printed spell-cast trigger text layer installation/restoration for Crystal
+   Rod, Iron Star, Ivory Cup, Throne of Bone and Wooden Sphere; retain queued
+   text snapshots and independent optional payments.
 3. Host-unblocked event and complete Farrel's Mantle continuation.
 
 Complete collection gameplay, whole-object/spell text, runtime integration,
