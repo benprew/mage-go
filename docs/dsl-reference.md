@@ -12120,3 +12120,38 @@ cloning, phasing and exact-incarnation behavior.
 This supports a complete bounded target context, not the full consumers Magical
 Hack or Sleight of Mind. Their spell-target `CreateSpellEffect` branches, other
 permanent rule contexts and live-copy rebinding remain unsupported.
+
+## Complete global static object text dispatch
+
+`Game.AddPrintedGlobalStaticTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` accepts one complete marked global P/T or
+basic-land-type definition. `ChangePrintedPermanentText(subject PermanentRef,
+duration core.Duration, changes ...TextChangeRef) ResolvingEffect` reads saved
+words at resolution and dispatches to this contract or the existing complete
+intrinsic creature contract. A missing subject does nothing.
+
+RON lowers resolving `CreatePermanentLayerEffect(permanentRef, [substitution,
+...])` with preceding typed word-pair choices through this dispatcher. Scope,
+spelling and fresh bindings stay in RON. Complete Magical Hack and Sleight of
+Mind still reject their unsupported spell branch; extracted permanent branches
+are test fixtures only.
+
+The source must be the present face-up incarnation. The complete retained and
+rebuilt definitions must have one marked global static rule, matching declaration
+groups, subtypes and context, without other rules, keywords, casting costs or
+targets. Conditional source P/T, grants, attached rules and mixed contexts reject.
+The shared declaration service validates runtime registrations and words before
+installation. Indefinite and EndOfTurn durations are supported. Invalid calls
+install no effects. Layer 3 baselines, timestamp order, live recipients/control,
+layer 4 land types/intrinsic mana, layer 6 removal, layer 7c P/T, clone isolation,
+phasing, copiable values, LKI and printed return retain their existing contracts
+(CR 400.7, 612.1–3, 613.1c/d/f/g, 707.2).
+
+Evidence: `TestRONTextGlobalStaticObjectRecords` runs the real permanent consumer
+branches against all 29 complete records of Blood Moon, Bad Moon, Castle,
+Crusade, Orcish Oriflamme, Jacques le Vert, Kobold Taskmaster, Mightstone and
+Weakstone. `PTLifecycle`, `LandLifecycle`, `Control`, `PendingIsolation` and
+`Atomic` cover continued baselines, expiry, removal, clones, identity and scope.
+Existing `TestRONTextIntrinsicObjectDeclarations` covers invalid RON roles,
+producers and mixed operations. Native `TestTextGlobalStaticObjectRejectsAtomic`
+and `BindingDeclarations` cover complete-definition preflight and invalid bindings.

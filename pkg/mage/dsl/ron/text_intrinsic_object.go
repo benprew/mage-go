@@ -22,6 +22,6 @@ func compileIntrinsicObjectText(n Node, ctx scope, subject permanentReferencePla
 		for i, build := range changes {
 			refs[i] = build(bindings)
 		}
-		return mage.ChangePrintedIntrinsicCreatureText(subject.build(bindings), core.Indefinite, refs...)
+		return mage.ChangePrintedPermanentText(subject.build(bindings), core.Indefinite, refs...)
 	}, nil
 }
