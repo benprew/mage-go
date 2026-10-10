@@ -31,6 +31,17 @@ func (pa *ProtectionAbility) supportsColorTextRevision() bool {
 // RevisePrintedProtection replaces one present printed color-protection rule.
 // The caller must supply text-layer order and lifetime separately.
 func (g *Game) RevisePrintedProtection(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			if _, layered := current.layeredProtectionOrigins[abilityID]; layered {
+				return fmt.Errorf("direct protection revision cannot change a layered declaration")
+			}
+		}
+	}
+	return g.revisePrintedProtection(source, abilityID, true, changes...)
+}
+
+func (g *Game) revisePrintedProtection(source *Permanent, abilityID uuid.UUID, refresh bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text protection revision requires a present source")
 	}
@@ -83,7 +94,7 @@ func (g *Game) RevisePrintedProtection(source *Permanent, abilityID uuid.UUID, c
 		return fmt.Errorf("text protection revision lost its replacement")
 	}
 	fresh, ok := replacement.(*ProtectionAbility)
-	if !ok || !fresh.colorTextRevision || !fresh.supportsColorTextRevision() {
+	if !ok || !fresh.colorTextRevision || !fresh.supportsColorTextRevision() || (active.textLayerEligible && !fresh.textLayerEligible) {
 		return fmt.Errorf("text protection revision changed the protection contract")
 	}
 	rebuilt := *fresh
@@ -99,6 +110,8 @@ func (g *Game) RevisePrintedProtection(source *Permanent, abilityID uuid.UUID, c
 		mutable.revisedPrintedProtections = make(map[uuid.UUID]*ProtectionAbility)
 	}
 	mutable.revisedPrintedProtections[abilityID] = &rebuilt
-	g.ApplyContinuousEffects()
+	if refresh {
+		g.ApplyContinuousEffects()
+	}
 	return nil
 }

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ProtectionAbility.WithLayeredColorTextRevision] for printed protection.
+// [Game.AddPrintedProtectionTextEffect] changes one declaration in layer 3.
+// It accepts color word changes with EndOfTurn or Indefinite duration.
+// Each pass restores the baseline before ordered changes. Expiry removes them.
+// Layer 6 can remove protection. Restoration uses the saved declaration.
+// Clones keep separate effects and controller contexts. Phasing keeps the visit.
+// Departure LKI keeps the result. Return uses printed rules. Grants stay separate.
+// RON opts in top-level nonempty color protection without an Aura exception.
+// Direct revision cannot change a declaration while its layered result is present.
+// Whole-object text, spell text and Ward donor text need separate services.
+//
 // Use [WithLayeredPrintedBasicLandwalk] for checked layer 3 landwalk changes.
 // [Game.AddPrintedBasicLandwalkTextEffect] selects one printed declaration.
 // It accepts basic land word changes with EndOfTurn or Indefinite duration.

@@ -37,6 +37,7 @@ func (a *BaseAbility) Type() AbilityType          { return a.abilityType }
 // ProtectionAbility grants protection from specific colors.
 type ProtectionAbility struct {
 	colorTextRevision      bool
+	textLayerEligible      bool
 	textRevisionDefinition Card
 	BaseAbility
 	FromColors []Color

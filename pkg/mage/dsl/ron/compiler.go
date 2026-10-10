@@ -612,7 +612,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, problem(n, "printed protection requires at least one color")
 		}
 		return func() mage.CardOption {
-			return mage.WithAbility(mage.ProtectionFromColors(append([]core.Color(nil), colors...)...).WithColorTextRevision())
+			return mage.WithAbility(mage.ProtectionFromColors(append([]core.Color(nil), colors...)...).WithLayeredColorTextRevision())
 		}, nil
 	case "Landwalk":
 		kw, err := compileLandwalkKeyword(n)

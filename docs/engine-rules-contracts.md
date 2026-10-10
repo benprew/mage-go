@@ -336,6 +336,36 @@ restoration. Other intrinsic keywords, nonbasic landwalk and full live text
 installation need separate contracts.
 
 
+## Printed color-protection text layer
+
+`ProtectionAbility.WithLayeredColorTextRevision() *ProtectionAbility` opts in
+one printed, nonempty color-protection declaration without an Aura exception.
+RON uses it for top-level `Protection(FromColor(Colors([...])))` rules.
+`Game.AddPrintedProtectionTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+changes with `Indefinite` or `EndOfTurn` duration. It checks the present face-up
+incarnation, printed declaration, retained builder and replacement eligibility
+on an isolated probe before registration. Failed installation leaves no effect.
+
+The shared layer manager applies changes in layer 3 timestamp order (CR 612.1–3,
+613.1c/f, 613.3). Each pass restores the declaration's saved baseline before
+reapplication. Expiry therefore recomputes later changes from that baseline.
+Earlier direct revisions can supply the baseline; direct revision of a currently
+layered declaration is rejected. Each declaration keeps its UUID and position.
+Printed copy information, sibling rules and granted protection stay separate.
+
+Layer 6 can remove protection. Restoration uses the saved declaration and the
+next layer pass reapplies its text effects. Phasing keeps the incarnation and
+suspends application; the next present pass handles changes and expiry. Departure
+LKI keeps the last result. A returned object uses printed rules (CR 400.7).
+Clones keep independent registrations, baselines and controller contexts.
+The existing protection service supplies targeting, damage prevention, blocking
+and attachment checks (CR 702.16b–f). Printed protection has no Ward exception.
+
+This API changes one declaration only. Whole-object and spell text consumers,
+copy-layer rebinding, granted protection and Ward donor text require separate
+contracts. It makes no payment or choice and changes no replacement ordering.
+
 ## Printed intrinsic color-protection text revision
 
 `ProtectionAbility.WithColorTextRevision() *ProtectionAbility` opts in printed

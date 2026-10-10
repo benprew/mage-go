@@ -8,11 +8,12 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-BASIC-LANDWALK` adds ordered layer-3 installation and
-baseline restoration for one printed basic-landwalk declaration. Ten accepted
-unique cards have new lifecycle gameplay evidence. Acceptance gain is **0 names
-/ 0 records**. Native coverage excludes pre-existing Eureka work: **812 accepted
-names / 2,098 compiled records**. Full text consumers remain unsupported.
+`TEXT-LAYER-PRINTED-COLOR-PROTECTION` adds ordered layer-3 installation and
+baseline restoration for one printed color-protection declaration. Twelve unique
+cards (22 records) have new protection lifecycle gameplay evidence. Acceptance
+gain is **0 names / 0 records**. Native coverage excludes pre-existing Eureka
+work: **812 accepted names / 2,098 compiled records**. Full text consumers remain
+unsupported.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished.
@@ -61231,3 +61232,145 @@ Ranked next candidates:
 
 Full permanent/spell text consumers, complete collection gameplay, runtime
 loading, Go-card deletion and unused DSL cleanup remain unfinished. Stop here.
+
+
+## 2026-10-09: printed color-protection text layer
+
+Status: completed implementation slice `TEXT-LAYER-PRINTED-COLOR-PROTECTION`.
+One bounded prerequisite is complete; this run stops after it.
+
+### Candidate comparison and selection
+
+Fresh build and RON package tests passed before edits. Fresh strict loading
+exited 1 for collection rejection, not a build failure: 2,099 compiled / 346
+rejected records and 813 accepted / 173 rejected unique names. These counts
+include the pre-existing Eureka entry-round work. User changes, untracked files
+and the ledger archive/reorganization are preserved and excluded from staging.
+
+The latest ranked candidate #1 was dependency-ready. Complete canonical records
+and nested forms were inspected for all twelve printed-protection subjects,
+Sleight of Mind, the five Wards, Farrel's Mantle and Mana Clash. Reprints count
+once. The targeted vocabulary confirms Protection/1 and FromColor/1; production
+support remains role- and context-specific.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Printed color-protection layer 3 | Black Knight, White Knight, Repentant Blacksmith, Beasts of Bogardan, Ivory Guardians, Mountain Yeti, Wall of Light, Wall of Putrid Flesh, Whirling Dervish, Knights of Thorn, Order of Leitbur, Order of the Ebon Hand; 0 new accepted names | Shared prerequisite for Sleight of Mind on these twelve subjects. Its spell branch and arbitrary-object text remain missing. Black/Blue/Green/Red/White Ward donor text is a separate static-layer context. | Moderate: checked revision, semantic builds and layer lifecycle exist; new installation, restoration, clone integration and tests. |
+| Host unblocked event and continuation | Farrel's Mantle; estimated 1 | Requires host event capture, Other(Trigger_ThatCreature), current host power/controller, HavePermanentDealDamage payment and AssignsNoCombatDamage together. Host identity could later serve granted combat triggers. | Higher: several event/payment/combat contracts must agree. |
+| Per-player coin results and repeated rounds | Mana Clash; estimated 1 | EachPlayerAction coin outcomes, CoinCameUpTails recipient collection, AllCoinsCameUpHeads and simultaneous damage/repetition. Eureka's entry producer cannot supply coin results. Enables later repeated coin procedures. | Higher: bindings, round isolation, RNG and simultaneous damage evidence. |
+
+Selected #1 because it establishes a reusable lifecycle on twelve unique
+subjects using existing dependencies. Zero immediate unlocks were expected.
+It does not claim to implement full Sleight of Mind or change granted abilities.
+The complete contract and acceptance cases were stated before implementation.
+
+### Exact supported context and engine boundary
+
+RON lowers top-level `Protection(FromColor(Colors([...])))` with a nonempty
+Magic-color list to `ProtectionAbility.WithLayeredColorTextRevision()
+*ProtectionAbility`. Existing malformed/empty/colorless declarations remain
+errors. Nested grants do not receive the marker.
+
+`Game.AddPrintedProtectionTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts one active printed
+color-protection declaration, validated color changes and Indefinite or EndOfTurn.
+It requires the original present face-up incarnation, definition provenance,
+semantic builder and correspondence to an eligible fresh replacement. An
+isolated probe validates before registration, with no live mutation on failure.
+
+Engine ownership: the shared effect manager installs layer-3 effects in timestamp
+order. Each pass restores a separate baseline before applying all ordered text
+changes. Cleanup/expiry recomputes surviving changes; a later change cannot retain
+an expired earlier substitution. Each declaration keeps its active UUID and
+position. Earlier direct revisions can supply the baseline. Direct revision
+cannot bypass a currently installed layered result. Printed copy information,
+siblings and granted rules remain separate.
+
+Layer-6 ability removal suppresses protection. Restoration keeps an independently
+owned declaration and the next pass reapplies text. Phasing preserves incarnation
+and suspends application; the next present layer pass handles expiry. Departure
+LKI keeps the last result; returned objects use printed rules. Clone effects,
+baselines and changed controller contexts stay separate, including clones made
+after expiry. Copy-layer replacement of declaration IDs and whole-object/spell
+text need separate services.
+
+Reuse: BuildTextDefinitionRevision/BuildTextChangedDefinition, retained RON AST,
+validated definition groups, capturedPermanent, EffectManager ordering/cleanup,
+printed ability restoration, Game.Clone and existing protection targeting,
+damage, blocking and attachment services. No new zone/payment/replacement system.
+No payment or decision occurs; cost rollback and simultaneous damage keep their
+existing contracts. No Go-card fallback, card-name branch, runtime declaration
+panic, global last-action state or partial production registry was added.
+CR 612.1–3, 613.1c/f, 613.3, 400.7, 702.16b–f and phasing support this boundary.
+API/rules documentation covers only this established context.
+
+### Failing-first evidence and card-to-test mapping
+
+The initial RON test failed to compile because AddPrintedProtectionTextEffect
+was absent. The native tests also failed for the missing opt-in API, lifecycle
+map and installation method. Test fixture errors from adapting the existing
+landwalk contracts were corrected before implementation; the remaining failures
+were the intended missing signatures. The complete focused suites now pass.
+No gameplay expectation or declaration rejection was weakened.
+
+| Cards / contract | Test evidence |
+| --- | --- |
+| All twelve printed-protection names listed above, including every reprint | TestRONTextProtectionLayerRecords parses full repository records: 12 names / 22 records. It checks repeated layer passes, stable declaration ID, real simultaneous damage prevention, targeting, blocking and expiry to the original color. This is new protection lifecycle evidence, not a full-card gameplay claim. Existing complete-card rule mappings remain required for sibling rules. |
+| Black Knight: ordering, identity, baseline, suppression, phasing | TestRONTextProtectionLayerOrderingAndExpiry, IdentityAndBaseline, RemovalAndPhasing: chained temporary/indefinite changes, legal combat blocker declaration, independent cloned expiry, printed copy information, prior direct revision, direct-revision rejection, departure LKI, return identity, grants, suppression/restoration and phased expiry. |
+| Black Knight: actual casting and legality | TestRONTextProtectionLayerCastTiming: RON casting/entry, Unsummon on stack, protection changed before resolution, cloned target rechecks, subsequent illegal announcement and unchanged mana. First strike stays present. |
+| White Knight / White Ward | TestRONTextProtectionLayerAttachmentAndGrants: rejects granted declaration installation; printed white protection removes the Ward through shared state checks, without acquiring its exemption. Black Knight / Blue Ward removal/phasing fixture keeps a separate grant. |
+| Color lists and independent declarations | TestRONTextProtectionLayerColorSet and DuplicateDeclarations: preserves other colors and separate declaration lifetimes. |
+| Invalid declarations and atomic installation | TestRONTextProtectionLayerInvalid: malformed RON, nil/foreign/empty/invalid/land-change/duration/face-down/phased/departed/removed/granted inputs. TestTextProtectionLayerDeclaration: empty/colorless/type/exempt markers. TestTextProtectionLayerValidationIsAtomic: legacy eligibility, absent builder/group, replacement kind/marker, no change to abilities/attrs/effects/origins. |
+| Clone controller contexts | TestTextProtectionLayerRestoredCloneContext: active and suppressed expiry/restoration, different controllers in clones, clones created after expiry. |
+
+### Verification and collection status
+
+Required worktree checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextProtectionLayer -count=1`;
+  native `go test ./pkg/mage -run TestTextProtectionLayer -count=1`;
+  expanded existing RON protection and landwalk lifecycle tests.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1; the full report matches
+  the fresh baseline, including every remaining diagnostic.
+
+Actual acceptance gain is 0 names / 0 records, matching the estimate. Worktree
+counts remain 813 accepted / 173 rejected names, 2,099 compiled / 346 rejected
+records (986 / 2,445 total). Accepted records remain accepted. The independent
+native slice excludes user Eureka work: 812 accepted / 174 rejected names,
+2,098 compiled / 347 rejected records. Compilation and complete gameplay are
+separate; the strict loader still installs no partial registry.
+
+Changed files: engine ability.go, card.go, clone.go, effect_manager.go, game.go,
+text_protection.go, new text_protection_layer.go and text_protection_layer_test.go;
+RON compiler.go and new text_protection_layer_test.go; doc.go,
+engine-rules-contracts.md, dsl-reference.md and this ledger.
+No source defect was found or corrected. RON sources and the vocabulary snapshot
+are unchanged. Runtime/Go-card/DSL-removal gates remain unmet, so those callers
+and definitions stay in place. User work is excluded from this slice's commit.
+
+The isolated staged tree independently passes expanded RON protection/landwalk,
+accepted-collection reconstruction, inventory and numeric tests, native
+protection/landwalk lifecycle tests, make build and go vet ./.... Its fresh
+loader has the native counts above. Eureka is its sole additional rejected
+name/record. Mana Clash remains rejected in both trees; native stops at
+unsupported RepeatableActions, while the user entry-round adapter reaches
+unsupported EachPlayerAction. Every other diagnostic is identical. Final
+worktree loader evidence still exactly matches the fresh baseline. Lint reports
+zero issues; formatting changes were reviewed. Staged and worktree whitespace
+checks pass. No validation or environment blocker remains.
+
+Ranked next candidates:
+
+1. Printed static Aura ability-layer declaration text installation/restoration:
+   use the existing checked static revision service, including the five Ward
+   donor rules and their exact granting-Aura exemption. Compare shared
+   prerequisites against fresh loader evidence before selecting.
+2. Host unblocked event identity and complete Farrel's Mantle continuation,
+   including Other, host damage payment and combat-rule body.
+3. Per-player coin bindings and simultaneous Mana Clash repeated rounds.
+
+Full spell/permanent text consumers, complete gameplay, runtime loading,
+Go-card deletion and unused DSL cleanup remain unfinished. Stop after this slice.
