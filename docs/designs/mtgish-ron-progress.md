@@ -8,13 +8,15 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`GLOBAL-STATIC-OBJECT-TEXT` adds checked whole-object dispatch for one complete
-global P/T or basic-land-type rule. New text-interaction evidence covers
-**9 names / 29 complete target records**; acceptance gain is **0 names / 0 records**.
-RON word choices keep fresh typed bindings. Existing declaration layers retain
-ordered expiry, clones, phasing, removal, live control, LKI and printed return.
-Intrinsic creature dispatch remains supported. Global grants, mixed and attached
-contexts, live-copy rebinding and complete word-changing consumers remain gaps.
+`GLOBAL-GRANT-OBJECT-TEXT` adds checked whole-object dispatch for complete global
+grants, including activated siblings and fixed intrinsic keywords. New target
+interaction evidence covers **9 names / 24 complete records**; acceptance gain
+is **0 names / 0 records**. Every declaration passes preflight before installation.
+Recipient activation IDs, limits, payments and pending bodies retain their state.
+Ordered layers, expiry, clones, phasing, removal, control, LKI and printed return
+use shared services. Intrinsic and global P/T/land dispatch remain supported.
+Mixed and attached contexts, ordinary activated whole-object rules, live-copy
+rebinding and complete word-changing consumers remain gaps.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -65760,5 +65762,160 @@ pkg/mage/doc.go; docs/dsl-reference.md; docs/engine-rules-contracts.md; this led
    must keep explicit rejection until supported.
 3. Copy-added ability and live-copy rebinding prerequisites for Vesuvan
    Doppelganger, including acquired declarations, copy exceptions and new visits.
+
+Stopped after this single capability slice. Migration remains incomplete.
+
+## 2026-10-10: GLOBAL-GRANT-OBJECT-TEXT
+
+Status: complete bounded whole-object global-grant text slice. One slice only.
+Compilation and target-interaction coverage remain separate from full gameplay.
+
+### Environment and candidate comparison
+
+The starting tree contained tracked migration edits, an untracked completed-entry
+archive and untracked repeated-entry engine/compiler/tests. Those files remain
+uncommitted. Fresh baseline make build and RON short tests passed (35.774s).
+The strict loader exited 1: 813 accepted / 173 rejected unique names and
+2,099 compiled / 346 rejected records. This was collection rejection, not a
+build or test failure. The entry-round work explains the difference from HEAD.
+
+Compared the latest ranked candidates after reading complete records and nested
+forms; identical reprints count once:
+
+| Candidate | Distinct affected names | Estimated new full-card acceptances | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Complete global-grant object text | Goblin King, Lord of Atlantis, Zombie Master, Hidden Path, Fortified Area, Kobold Drill Sergeant, Kobold Overlord, Concordant Crossroads, Goblin War Drums | 0 names / 0 records; nine target contexts | Existing declaration layers are ready. Zombie Master needs its activated sibling marked and grant identity retained. Shared prerequisite for Magical Hack and Sleight of Mind permanent targets | Moderate: compiler opt-in, complete-definition preflight, shared identity repair, native and RON lifecycle tests |
+| Spell-target CreateSpellEffect and union/modal consumers | Magical Hack, Sleight of Mind | 0 safely now; two complete consumers after other permanent contexts are ready | Full records contain both spell and permanent branches. Remaining object contexts must reject explicitly; accepting only the spell branch is not a full-card unlock | Larger: typed spell adapter, complete consumer policy, target unions and copies |
+| Copy-added ability and live-copy rebinding | Vesuvan Doppelganger | 1 name / 6 records if completed | Entry CopyEffects AddAbility contains an upkeep trigger with a targeted optional live-copy action and AddAbilityVariable(ThisAbility). Requires acquired declaration/copy exception and new-visit contracts | Larger: multiple copy-lifecycle dependencies; a single-card capability |
+
+Selected candidate 1 because it is dependency-ready shared work with nine
+complete target definitions and concrete benefit to both word-changing consumers.
+No source-data correction or environment repair was required. Local Oracle data
+in LEA, LEG, DRK and FEM agrees with the selected records. In particular, Zombie
+Master's regeneration grant selects other Zombies without a creature restriction;
+its swampwalk grant selects other Zombie creatures. Kobold Overlord keeps its
+intrinsic first strike and grants only other controlled Kobold creatures.
+
+### Exact signatures, contexts, dependencies and reuse
+
+- Game.AddPrintedGlobalGrantTextEffect(source *Permanent, duration core.Duration,
+  changes ...TextChange) error
+- ChangePrintedPermanentText(subject PermanentRef, duration core.Duration,
+  changes ...TextChangeRef) ResolvingEffect now dispatches complete grant objects.
+- StaticAbilityHolder.WithLayeredGrantTextRevision remains the declaration opt-in.
+
+RON marks its complete global untargeted activated-grant path:
+EachPermanentLayerEffect(filter,
+[AddAbility([Activated(cost, ActionList(actions))])]). It retains existing cost,
+body and recipient-scope validation. X costs, targets, activation modifiers,
+combined activated-grant parts and unbound donor/host/event references still reject.
+Existing keyword/basic-landwalk grants with optional fixed AdjustPT remain marked.
+Resolving CreatePermanentLayerEffect(permanentRef, [wordSubstitution, ...]) keeps
+its existing typed preceding-pair-choice shape and lowers through the shared
+ChangePrintedPermanentText dispatcher. Spelling and lexical scope stay in RON.
+
+The complete engine context has one or more marked global grant holders plus
+optional fixed intrinsic keyword contributions. Other printed abilities,
+intrinsic protection/landwalk, attached rules, casting costs/targets and live
+copy rebinding require separate whole-object contracts. Retained and fresh
+builders must keep declaration groups, fixed keywords, subtypes, grant forms,
+ordered layers, sublayers and durations. The API requires a present face-up exact
+incarnation and Indefinite or EndOfTurn duration. An isolated game probe checks
+all runtime declarations and registrations before any live effect is installed.
+A missing second declaration cannot leave a first-declaration text layer behind.
+
+Reuse: BuildTextDefinitionRevision, ReplacementAbility, shared static declaration
+preflight, printedStaticAbilityTextEffect, layer baselines, continuous registration,
+recipient grants, ordinary cost transactions and pending resolution frames.
+Static text rebuilds now preserve grantedActivationEffect.grantID. Recipient
+ability IDs, limits and history survive repeated passes, overlapping changes and
+expiry. Pending bodies retain earlier words, recipient incarnation and controller.
+The whole-object service installs all validated layers before one recomputation.
+No parallel payment, zone, replacement, event or continuous subsystem was added.
+CR basis: 400.7, 612.1–3, 613.1c/f/g and 707.2. API/rules docs cover this boundary.
+
+### Failing-first tests and card mapping
+
+The native first run failed to compile on the absent
+Game.AddPrintedGlobalGrantTextEffect signature (/tmp/ron-grant-slice/red.log).
+With a minimal rejecting stub, real RON permanent-consumer tests failed revised
+recipient assertions (/tmp/ron-grant-slice/red-ron.log). A later malformed-builder
+test failed because an activated grant could become a keyword grant; preflight
+now rejects that change. Existing tests were preserved. Synthetic body fixtures
+use the supported temporary protection shape and printed-card protection query;
+unsupported temporary SetColor and absent live source cards are not requirements.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Goblin King, Lord of Atlantis (six reprints each) | TestRONTextGlobalGrantObjectRecords runs the real Magical Hack permanent branch: changed landwalk, paired P/T, both players, source exclusion and printed return |
+| Zombie Master (six reprints) | Records checks changed swampwalk and separate black regeneration activations; ZombieLifecycle checks creature/noncreature sibling filters, source exclusion, unchanged mana symbols, pending exact-incarnation bindings, clones, ordered expiry, suppression, phasing, recipient LKI and printed copy values |
+| Hidden Path (DRK) | Records changes forestwalk; PendingBindings uses two independent Sleight of Mind choices to change live color selection, cloned pending choices and returned-target illegality without new decisions |
+| Fortified Area, Kobold Drill Sergeant, Concordant Crossroads (LEG), Goblin War Drums (FEM) | Records checks fixed grants, exact P/T, controller membership, no-match color changes, phasing, clone isolation and physical return |
+| Kobold Overlord (LEG) | Records checks intrinsic and granted first strike; Control checks live selection after donor control change with separate clone contexts |
+| Every donor above | Records compiles all 24 complete target records and casts the real extracted permanent consumer branch; word choices occur at resolution. No Go card fallback or partial production registry |
+| Generic activated grant bodies | ActivatedBody checks fresh blue protection versus pending red protection with the same red mana payment, recipient identity and separate cloned resolutions after donor departure |
+| Complete-definition atomicity | TestTextGlobalGrantObjectAtomic checks missing second runtime/registration, changed grant kind/form/keyword/group, missing builder/group, empty/invalid changes, unsupported duration, phasing, face-down and returned visits without mutation |
+| Grant identity and limits | TestTextGlobalGrantObjectActivationIdentity checks stable recipient IDs, unchanged activation limits after text passes/expiry, saved pending controllers and cloned state |
+| Declaration and context rejection | Boundaries rejects Gauntlet of Might, Conversion, Kird Ape, Serra Angel and Green Ward. Existing TestRONActivatedGrantInvalid and TestRONTextIntrinsicObjectDeclarations reject invalid nested grant scopes, missing word producers, wrong roles, equal word reads, mixed operations and full unsupported consumers |
+
+Magical Hack and Sleight of Mind complete records still reject CreateSpellEffect.
+Extracted permanent branches are explicit fixtures, not production definitions.
+The nine donor records were already accepted; this slice adds interaction evidence.
+It does not establish complete word-changing consumer or collection gameplay.
+
+### Verification and collection evidence
+
+- Fresh focused RON and native runs passed, including invalid nested declarations
+  and the preserved intrinsic/global-static/activated-grant callers. Post-lint
+  focused runs passed again (RON 0.674s).
+- Final worktree make build, go vet ./..., engine short tests (RON 41.433s),
+  make test (RON 40.081s), make lint (0 issues), and git diff --check passed.
+  The earlier whole-repository short run also passed. No tests were weakened.
+- Isolated HEAD plus only this slice passed focused native/RON tests, make build,
+  go vet ./..., engine short tests (RON 40.104s) and make test (RON 40.623s).
+  Final serial make lint passed with 0 issues; diff check and post-lint
+  focused native/RON tests, build and vet passed again.
+- The first isolated lint attempt hit golangci-lint's global process lock while
+  worktree lint was running. Serial lint reruns resolved this environment-only
+  collision. Automatic formatting was reviewed; unrelated file hashes match.
+- Final worktree strict loader exited 1: 813 accepted / 173 rejected names;
+  2,099 compiled / 346 rejected records out of 2,445. Its complete JSON is byte
+  identical to the fresh baseline. Magical Hack/Sleight of Mind retain
+  CreateSpellEffect; Vesuvan Doppelganger retains copy-entry AddAbility.
+- Isolated strict loader exited 1: 812 accepted / 174 rejected names and
+  2,098 compiled / 347 rejected records. The excluded starting entry-round work
+  leaves Eureka at RepeatableActions and Mana Clash at its earlier repeat gap.
+  These are compiler gaps, not validation failures.
+- All six slice source/test files match the isolated validated versions.
+  Only slice source and documentation are staged; original tracked diffs outside
+  shared docs and all unrelated untracked file hashes match their saved state.
+
+Actual acceptance gain matches the estimate: 0 unique names / 0 records.
+New complete object-text interaction evidence covers nine names / 24 records.
+All accepted records retain their acceptance and diagnostics. RON source and
+vocabulary are unchanged; no source defect was corrected. Runtime loading,
+Go-card deletion and unused DSL removal gates remain unmet, so none was attempted.
+Starting user edits and unrelated untracked files are preserved. Documentation
+staging retains historical ledger entries and excludes the user's archive move.
+
+Changed files (10): pkg/mage/text_global_grant_object.go and native tests;
+pkg/mage/text_global_static_object.go; pkg/mage/text_static_pt.go;
+pkg/mage/dsl/ron/activated_grant.go and text_global_grant_object_test.go;
+pkg/mage/doc.go; docs/dsl-reference.md; docs/engine-rules-contracts.md; this ledger.
+
+### Ranked next candidates
+
+1. Complete whole-object printed ordinary activated rules with fixed intrinsic
+   keywords. Evaluate Frozen Shade, Granite Gargoyle, Prodigal Sorcerer and
+   Shivan Dragon first; their full records use existing activation text services.
+   This is another multi-card prerequisite for both word-changing consumers.
+2. Complete mixed static/event object contexts, including Gauntlet of Might and
+   Conversion. Reuse checked sibling spell continuation and declaration layers;
+   validate all groups atomically without losing pending event facts.
+3. Spell-target CreateSpellEffect lowering and the complete union/modal consumer
+   contract for Magical Hack and Sleight of Mind. Reassess remaining permanent
+   contexts first; keep unsupported complete objects explicit. Vesuvan
+   Doppelganger's copy-added ability/live-copy prerequisite remains deferred
+   while dependency-ready multi-card object-text work remains.
 
 Stopped after this single capability slice. Migration remains incomplete.

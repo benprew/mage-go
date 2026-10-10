@@ -168,9 +168,22 @@ func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityI
 	rebuilt.source = current.ID()
 	rebuilt.controller = current.ControllerID()
 	rebuilt.textRevisionDefinition = revision.Definition()
+	rebuilt.Effects = slices.Clone(fresh.Effects)
+	for i, effect := range rebuilt.Effects {
+		next, nextGrant := effect.(*grantedActivationEffect)
+		prior, priorGrant := active.Effects[i].(*grantedActivationEffect)
+		if nextGrant != priorGrant {
+			return fmt.Errorf("text static revision changed its activation grant context")
+		}
+		if nextGrant {
+			retained := *next
+			retained.grantID = prior.grantID
+			rebuilt.Effects[i] = &retained
+		}
+	}
 	registrations := slices.Clone(g.effects.effects)
 	for i, position := range positions {
-		effect := g.bindCharacteristicEffect(fresh.Effects[i], current)
+		effect := g.bindCharacteristicEffect(rebuilt.Effects[i], current)
 		g.setEffectSource(effect, current.ID())
 		registrations[position] = printedStaticEffect(effect, current, &rebuilt)
 	}

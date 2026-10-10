@@ -15865,3 +15865,57 @@ Weakstone. `PTLifecycle`, `LandLifecycle`, `Control`, `PendingIsolation` and
 Existing `TestRONTextIntrinsicObjectDeclarations` covers invalid RON roles,
 producers and mixed operations. Native `TestTextGlobalStaticObjectRejectsAtomic`
 and `BindingDeclarations` cover complete-definition preflight and invalid bindings.
+
+## Complete global grant object text dispatch
+
+`Game.AddPrintedGlobalGrantTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` checks a complete definition with one or more
+marked global grants and optional fixed intrinsic keywords. Each holder must
+use `WithLayeredGrantTextRevision`. Grants can supply keywords, fixed basic
+landwalk, paired fixed P/T modifications, or an untargeted activated ability.
+Intrinsic protection/landwalk, attached rules, other sibling rules, casting
+costs/targets and live copy rebinding require separate whole-object contracts.
+
+RON marks its existing complete global activated-grant shape:
+`EachPermanentLayerEffect(filter, [AddAbility([Activated(cost, ActionList(...))])])`.
+The existing cost and action adapters still reject X, targeting, modifiers and
+unbound donor/event/host references. The recipient owns the activation scope.
+Resolving `CreatePermanentLayerEffect(permanentRef, [wordSubstitution, ...])`
+uses `ChangePrintedPermanentText` to dispatch to this complete grant contract.
+Typed pair choices, spelling and lexical scopes remain in RON.
+
+The API requires the exact present face-up incarnation, saved builder and
+matching declaration groups, fixed keywords and subtypes. It validates every
+holder and runtime registration in an isolated probe before installing any
+layer. Invalid words, missing declarations or registrations, changed grant
+forms and unsupported durations leave the live game unchanged. Supported
+durations are `Indefinite` and `EndOfTurn`.
+
+Each donor rule retains its own baseline and applies ordered substitutions in
+layer 3. Its recipients stay live in layer 6, with paired P/T in layer 7c.
+Activated-grant effect identities survive rebuilds, repeated passes and expiry,
+so recipient activation limits keep their state. Pending activations retain
+their original recipient incarnation, controller and body. Mana symbols remain
+fixed. Granted words on the target stay outside printed text changes (CR 612.3).
+Phasing retains the visit; removal suspends the donor; clones isolate text and
+control. Expiry recomputes remaining substitutions. Recipient LKI retains final
+rules. Physical return and ordinary copy values use printed rules (CR 400.7,
+612.1–3, 613.1c/f/g, 707.2). No payment or replacement service was added.
+
+Evidence: `TestRONTextGlobalGrantObjectRecords` exercises the actual permanent
+branches of Magical Hack/Sleight of Mind against all 24 complete records of
+Goblin King, Lord of Atlantis, Zombie Master, Hidden Path, Fortified Area,
+Kobold Drill Sergeant, Kobold Overlord, Concordant Crossroads and Goblin War
+Drums. `ZombieLifecycle`, `Control`, `PendingBindings`, `ActivatedBody` and `Boundaries`
+cover sibling filters, fixed payments, changed and pending bodies, ordered expiry,
+grants, clones, returned targets,
+removal, phasing, LKI and copy values. Native `TestTextGlobalGrantObjectAtomic`
+checks all-or-nothing validation, including a missing second declaration or
+registration. `ActivationIdentity` checks recipient limits and pending bodies.
+Existing RON declaration tests retain producer/role/nested-binding rejection.
+
+The extracted permanent consumer branches are explicit test fixtures. Complete
+Magical Hack and Sleight of Mind still reject `CreateSpellEffect`; this contract
+adds target interactions without claiming complete consumer gameplay or any
+new collection acceptance. The existing intrinsic and global P/T/land dispatch
+APIs retain their contracts.

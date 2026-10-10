@@ -94,7 +94,7 @@ func compileStaticActivatedGrant(n Node, parts []Node, ctx scope) (optionFactory
 		}
 		return func() mage.CardOption {
 			costs, body := plan.build()
-			return mage.WithAbility(mage.Static(mage.GrantEachActivatedAbility(subjects.build(), costs, body)))
+			return mage.WithAbility(mage.Static(mage.GrantEachActivatedAbility(subjects.build(), costs, body)).WithLayeredGrantTextRevision())
 		}, nil
 	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
