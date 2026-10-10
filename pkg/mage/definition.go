@@ -144,7 +144,7 @@ func describeDefinition(v any) definitionNode {
 			n.problem = "text ability revision requires nonempty battlefield ability-layer effects"
 		}
 		if e.ptTextLayer && !e.supportsLayeredPTTextRevision() {
-			n.problem = "text P/T layer requires unconditional battlefield P/T modifications"
+			n.problem = "text P/T layer requires validated battlefield P/T modifications"
 		}
 		if e.ptTextRevision && !e.supportsPTTextRevision() {
 			n.problem = "text P/T revision requires nonempty battlefield P/T modifications"

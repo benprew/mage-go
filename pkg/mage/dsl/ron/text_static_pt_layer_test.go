@@ -262,7 +262,7 @@ func TestRONTextStaticPTLayerIndependentDeclarations(t *testing.T) {
 
 func TestRONTextStaticPTLayerBoundaries(t *testing.T) {
 	change, _ := mage.ReplaceColorWord(core.Black, core.Red)
-	for _, tc := range []struct{ set, name string }{{"LEA", "Holy Strength"}, {"LEA", "Goblin King"}, {"ARN", "Kird Ape"}, {"DRK", "Water Wurm"}, {"DRK", "Goblin Caves"}} {
+	for _, tc := range []struct{ set, name string }{{"LEA", "Holy Strength"}, {"LEA", "Goblin King"}} {
 		g, a, _ := ronGame()
 		source := g.PutOnBattlefield(repositoryCard(t, tc.set, tc.name), a.PlayerID())
 		if err := g.AddPrintedStaticPTTextEffect(source, textStaticID(t, source), core.EndOfTurn, change); err == nil {

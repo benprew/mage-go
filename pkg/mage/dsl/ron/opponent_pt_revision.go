@@ -99,6 +99,6 @@ func compileOpponentPTRevision(n Node) optionFactory {
 		default:
 			effect = mage.SourcePTWhileOpponentControlsNontokenColor(chosenColor, power, toughness)
 		}
-		return mage.WithAbility(mage.StaticAbility(effect).WithPTTextRevision())
+		return mage.WithAbility(mage.StaticAbility(effect).WithLayeredPTTextRevision())
 	}
 }

@@ -40,7 +40,7 @@ func compileHostPTRevision(n Node) optionFactory {
 		return nil
 	}
 	return func() mage.CardOption {
-		return mage.WithAbility(mage.StaticAbility(mage.CreaturesPTWhileAttachedToBasicLand(land, subtype, power, toughness)).WithPTTextRevision())
+		return mage.WithAbility(mage.StaticAbility(mage.CreaturesPTWhileAttachedToBasicLand(land, subtype, power, toughness)).WithLayeredPTTextRevision())
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func TestTextStaticPTLayerDeclaration(t *testing.T) {
-	for _, tc := range []string{"valid", "valid-mixed", "empty", "nil", "type", "duration", "pt", "conditional"} {
+	for _, tc := range []string{"valid", "valid-mixed", "empty", "nil", "type", "duration", "pt", "conditional-mixed"} {
 		t.Run(tc, func(t *testing.T) {
 			effects := []ContinuousEffect{BoostAllCreaturesIncludingSelf(1, 1, AnyPermanent)}
 			switch tc {
@@ -24,8 +24,8 @@ func TestTextStaticPTLayerDeclaration(t *testing.T) {
 				effects = []ContinuousEffect{FuncContinuousEffect(core.LayerType, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil })}
 			case "duration":
 				effects = []ContinuousEffect{FuncContinuousEffect(core.LayerPT, core.EndOfTurn, func(*Game, uuid.UUID) error { return nil })}
-			case "conditional":
-				effects = []ContinuousEffect{SourcePTWhileControllerControlsBasicLand("Forest", 1, 2)}
+			case "conditional-mixed":
+				effects = []ContinuousEffect{SourcePTWhileControllerControlsBasicLand("Forest", 1, 2), BoostAllCreaturesIncludingSelf(1, 1, AnyPermanent)}
 			case "pt":
 				effects = []ContinuousEffect{FuncContinuousEffectWithSublayer(core.LayerPT, core.SublayerPT_Set, core.WhileOnBattlefield, func(*Game, uuid.UUID) error { return nil })}
 			}

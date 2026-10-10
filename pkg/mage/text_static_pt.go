@@ -184,7 +184,7 @@ func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityI
 	return nil
 }
 
-// WithLayeredPTTextRevision permits layer 3 changes to a printed global P/T rule.
+// WithLayeredPTTextRevision permits layer 3 changes to a printed P/T rule.
 // Its subjects use current characteristics when layer 7c applies.
 func (a *StaticAbilityHolder) WithLayeredPTTextRevision() *StaticAbilityHolder {
 	a.WithPTTextRevision()
@@ -193,10 +193,10 @@ func (a *StaticAbilityHolder) WithLayeredPTTextRevision() *StaticAbilityHolder {
 }
 
 func (a *StaticAbilityHolder) supportsLayeredPTTextRevision() bool {
-	return a.supportsPTTextRevision() && a.ptTextRevisionContext() == (ptRevisionContext{})
+	return a.supportsPTTextRevision()
 }
 
-// AddPrintedStaticPTTextEffect changes one printed global P/T rule in layer 3.
+// AddPrintedStaticPTTextEffect changes one printed P/T rule in layer 3.
 // Each pass restores the saved rule before it applies ordered changes.
 func (g *Game) AddPrintedStaticPTTextEffect(source *Permanent, abilityID uuid.UUID, duration core.Duration, changes ...TextChange) error {
 	return g.addPrintedStaticTextEffect(source, abilityID, duration, staticPTTextContract, changes...)

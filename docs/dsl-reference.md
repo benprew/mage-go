@@ -11103,16 +11103,32 @@ covers definition validation, atomic rejection, registration order, expiry and
 clone controller isolation. This is bounded donor lifecycle evidence; it does
 not establish complete Magical Hack or Sleight of Mind execution.
 
-## Printed global P/T text layers
+## Printed P/T text layers
 
 `StaticAbilityHolder.WithLayeredPTTextRevision() *StaticAbilityHolder` opts in
-an unconditional printed P/T declaration. It includes `WithPTTextRevision`:
+a printed P/T declaration. It includes `WithPTTextRevision`:
 nonempty layer-7c modifications with `WhileOnBattlefield` duration. Typed
-controller-, opponent- and host-conditioned P/T declarations cannot use this
-marker. RON applies it to unconditional `EachPermanentLayerEffect(filter,
+controller-, opponent- and host-conditioned P/T declarations can use this
+marker when they satisfy their existing typed direct-revision contracts.
+RON applies it to unconditional `EachPermanentLayerEffect(filter,
 [AdjustPT(integer, integer)])` on the creature collection path. Existing
 source exclusion, controller, color, subtype and property filters retain their
-contracts. Conditional and Aura declarations keep their existing direct APIs.
+contracts. RON also opts in these complete conditional shapes:
+
+- `If(PlayerPassesFilter(You, ControlsA(IsLandType(basic))),
+  [PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])])`.
+- `If(APlayerPassesFilter(Opponent, ControlsA(IsLandType(basic))),
+  [PermanentLayerEffect(ThisPermanent, [AdjustPT(integer, integer)])])`.
+- The opponent condition can instead use `And([IsNonToken, IsColor(color)])`.
+  Its body can modify the source or creatures with one fixed `NamedCard` name.
+- An Aura condition can use `PermanentPassesFilter(HostPermanent,
+  And([IsSupertype(Basic), IsLandType(basic)]))` with one global creature-subtype
+  collection and one fixed `AdjustPT`.
+
+Each typed conditional declaration contains exactly one effect. Replacement
+keeps the condition kind, recipient kind, fixed name and creature subtype.
+Only color and basic-land words change. Other conditional shapes are not
+opted in. All existing direct APIs remain available before layered installation.
 
 `Game.AddPrintedStaticPTTextEffect(source *Permanent, abilityID uuid.UUID,
 duration core.Duration, changes ...TextChange) error` accepts validated color
@@ -11148,3 +11164,13 @@ current membership, declaration isolation and rejection. Native
 `TestTextStaticPTLayer*` checks definition validation, atomic rejection,
 registration positions, expiry and clone controller isolation. This is P/T
 lifecycle evidence; it does not establish complete text-spell execution.
+
+Conditional evidence: `TestRONTextConditionalPTLayerRecords` checks all 13
+complete records across Kird Ape, Sedge Troll, Water Wurm, Beasts of Bogardan,
+Ivory Guardians, Goblin Caves and Goblin Shrine. The tests cover ordered expiry,
+clones, phasing, suppression, LKI, source return and separate abilities.
+`LiveConditions`, `NamedRecipients`, `PriorRevisionAndVisits`,
+`IndependentDeclarations` and `Boundaries` cover current control, earlier
+type/color layers, token exclusions, host identity, prior baselines, independent
+declarations and rejection. `TestTextConditionalPTLayer*` checks typed definition
+validation and atomic rejection of changed condition or recipient contexts.

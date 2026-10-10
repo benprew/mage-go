@@ -42,6 +42,6 @@ func compileConditionalSourcePTRevision(n Node) optionFactory {
 	}
 	return func() mage.CardOption {
 		effect := mage.SourcePTWhileControllerControlsBasicLand(landType, power, toughness)
-		return mage.WithAbility(mage.StaticAbility(effect).WithPTTextRevision())
+		return mage.WithAbility(mage.StaticAbility(effect).WithLayeredPTTextRevision())
 	}
 }
