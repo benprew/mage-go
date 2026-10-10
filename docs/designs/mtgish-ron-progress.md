@@ -8,14 +8,12 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-SPELL-SACRIFICE-MANA-CONTINUATION` transfers one saved additional
-sacrifice mana value into fresh printed pending-spell rules. Two unique cards /
-7 complete records have new representative continuation gameplay evidence.
-Payment, announcement and physical printed rules stay fixed; copies and clones
-keep separate number maps. Acceptance gain is **0 names / 0 records**.
-Isolated native compilation excludes Eureka: **812 accepted names / 2,098
-compiled records**. Other casting results, permanent-spell entry, whole-object
-dispatch and copy-layer rebinding remain incomplete.
+`COPY-TEXT-REBINDING` preserves ordered added types, retained colors and omitted
+color definitions in fresh semantic text builders. Copy Artifact and Clone have
+new interaction evidence across **2 names / 12 complete records**. Acceptance
+gain is **0 names / 0 records**. Isolated native compilation excludes Eureka:
+**812 accepted names / 2,098 compiled records**. Permanent-spell entry,
+whole-object text, live copy layers and added copy abilities remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -63387,5 +63385,153 @@ Ranked next candidates:
 3. Complete CreateSpellEffect word-change adapter and spell/permanent target
    union for both word-changing cards after every pending-spell and permanent
    branch has its complete contract. Keep rejecting full records until then.
+
+Stop after this slice. Migration completion is not claimed.
+
+
+## Run 2026-10-09: COPY-TEXT-REBINDING
+
+Status: complete copy-exception semantic text-builder prerequisite. One bounded
+slice; permanent-spell entry continuation and whole-object dispatch remain
+unfinished. The worktree began with Eureka/repeated-entry changes, compiler and
+inventory changes, archival ledger changes, documentation changes and .gitignore
+changes. They are preserved outside this slice's commit.
+
+### Candidate comparison and selection
+
+The latest entry ranked permanent-spell entry continuation and copy rebinding
+first. Complete records and nested operations were inspected for Clone, Copy
+Artifact, Phantasmal Terrain, Vesuvan Doppelganger, Magical Hack and Sleight of
+Mind. All six reprints of each are identical. The Gauntlet of Might donor has
+five identical records; the new gameplay uses its full LEA record and both rules.
+
+| Candidate | Distinct cards and estimated full-card compilation unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Permanent-spell entry continuation / copy rebinding | Clone, Copy Artifact, Phantasmal Terrain; 3 names / 18 records, already accepted. Vesuvan Doppelganger adds 1 name / 6 records but has other gaps. Estimated 0 immediate unlocks. | Full continuation needs whole-object lifetime/dispatch and copy-rule rebinding. Inspection found a bounded missing engine prerequisite: semantic rebuilds of copy-modified definitions drop added types and retained colors. Completing this prerequisite enables Copy Artifact and the KeepColor branch of Doppelganger, plus later word-changing spell entry. Doppelganger still needs AddAbility, ThisAbility and live IsACopyOfPermanent. | Full candidate large; selected copy-exception builder prerequisite moderate and complete in this run. |
+| Whole-object permanent word-change dispatch/lifetime | Magical Hack, Sleight of Mind; 2 names / 12 records, 0 dependency-ready compilation unlocks. | Needs atomic dispatch across all eligible declarations, copied definitions and entry continuation; full records also need CreateSpellEffect and both union-target bodies. Enables actual casting of both word-changing cards. | Large cross-context installation and lifecycle suite. |
+| Complete CreateSpellEffect and spell/permanent target union | Magical Hack, Sleight of Mind; same 2 names / 12 records, up to 2 eventual unlocks, 0 now. | Union target and paired choices already exist, but complete spell/permanent text consumers and permanent entry are missing. A partial branch would wrongly accept complete records. | Adapter small only after prerequisites; complete current contract large. |
+
+Selected the copy-exception rebinding prerequisite within candidate #1. It has
+concrete multi-card downstream value and reuses the exact existing AST lowering
+rather than adding a second copy adapter. Estimated and actual acceptance gain
+are **0 names / 0 records**. New interaction gameplay evidence covers Copy
+Artifact and Clone, **2 names / 12 complete records**, with Gauntlet of Might as
+a real two-rule donor. This is not a new collection-wide behavior coverage count.
+
+### Exact contract and reuse boundary
+
+Existing public signatures stay unchanged:
+
+- `(*CopiableValues).WithModifications(...CopyModification) (*CopiableValues, error)`
+- `BuildTextChangedDefinition(Card, ...TextChange) (Card, error)`
+- `BuildTextDefinitionRevision(Card, ...TextChange) (*TextDefinitionRevision, error)`
+- `WithTextDefinitionBuilder(func([]TextChange) (CardFactory, error)) CardOption`
+
+`WithModifications` composes the retained semantic builder with ordered
+`CopyAddCardTypes` and `CopyRetainColors` operations. Internal text factories now
+return `(Card, error)` to preserve checked builder errors without a new panic.
+The underlying factory, independent declarations and protected printed values
+are checked before exceptions are applied, so exceptions cannot hide invalid
+type or color-indicator changes. Repeated exception groups and word changes
+retain their order. Retained colors include colorless; color-defining abilities
+remain omitted and remaining declaration groups stay aligned.
+
+RON spelling and scope stay in `ron`: the existing sole optional
+`AsPermanentEnters(ThisPermanent,[MayActions([EnterAsACopyOfAPermanent(filter,
+CopyEffects([...]))])])` lowering accepts nonempty `AddCardtypes` permanent type
+lists and the `KeepColor` symbol, including their combination. No compiler
+adapter was missing. Complete RON gameplay now proves this lowering through the
+new engine contract. No syntax expansion, card-name dispatch, fallback registry
+or source edit was needed. Existing invalid-form tests retain declaration checks.
+
+Each semantic rebuild has fresh abilities, targets, costs and bindings.
+Copy-modified snapshots remain immutable and retain the exceptions. Ordinary
+text changes remain outside copiable values. Existing printed plans supply
+physical departure; LKI and pending rules keep their own battlefield information.
+Per-declaration layer services retain timestamps, lifetime, live ability identity
+and phasing. This service does not install whole-object text or live copy layers,
+continue pending permanent spells into entry, transfer saved entry choices, or
+add copy abilities. Those unsupported contexts remain explicit gaps.
+
+Reuse: CardDefinitionPlan/newCardDefinitionPlan, copiable snapshots,
+BuildEntryCopy, semantic RON AST transformation, ability-group correspondence,
+checked static P/T and mana-tap layer installation, activation target bindings,
+shared entry replacements, zone moves, phasing, LKI and clone services.
+No parallel copy, layer, payment or zone subsystem was added. Rules read:
+CR 400.7/a, 608.2b, 612.1–3, 707.2–7 and 707.9/10.
+No source defect or environment failure was found. RON sources did not change;
+the vocabulary snapshot and hashes require no refresh. Go-card and DSL removal
+gates remain unmet, so definitions and current callers stay in place.
+
+### Failing-first and card-to-test evidence
+
+Before implementation, `TestRONCopyTextRebindingRecords` failed for all six
+Copy Artifact reprints at `text builder changed protected printed
+characteristics`; `RetainedColors` failed at the same boundary. Native
+`TestCopyTextRebindingSnapshot` failed at that assertion after fixture signatures
+were corrected. Both valid scenarios were confirmed red before implementation.
+
+| Card or contract | Tests |
+| --- | --- |
+| Copy Artifact, all six reprints | TestRONCopyTextRebindingRecords casts the full record and copies Gauntlet of Might. Both copied P/T and land-mana rules receive independent word changes while the added enchantment type remains. The mana symbol stays red. Ordered subsequent changes, expiry, phasing, separate clones, LKI and physical printed departure are checked. |
+| Clone, all six reprints | Records copies the animated Copy Artifact result, keeps its copiable enchantment type, excludes ordinary creature/P/T layers and text changes, and keeps independent rules after the donor's departure. |
+| Gauntlet of Might, LEA donor | Records executes its red-creature bonus and land-mana bonus alongside the independently revised copy. The donor remains unchanged. This supplies interaction evidence, not a new complete donor coverage claim. |
+| Supported KeepColor prerequisite for Vesuvan Doppelganger | RetainedColors uses complete synthetic RON with KeepColor plus AddCardtypes, colored/colorless cases and fresh activated target bindings. Doppelganger's full six records still reject at AddAbility; no full gameplay claim. |
+| Native prototypes and rejection | TestCopyTextRebindingSnapshot composes two exception groups, omits a color definition, preserves group correspondence, checks ordered changes and independent original/new target bindings, and captures a later copy without ordinary text changes. RejectsMaskedDefects rejects changed name/mana/type/indicator, nil/shared/error factories and invalid words without mutation; error identity is preserved. |
+| Preserved contracts | Existing TestRONCopyTypeModification*, CopyColor*, EntryCopy* and TextDefinition* retain malformed declarations, acquired counters/choices, rollback, nontarget choice, simultaneous batches and replacement priority. Native copy and text suites retain the same services. |
+
+### Verification and loader evidence
+
+- Fresh baseline make build passed; go test ./pkg/mage/dsl/ron -count=1
+  passed (34.886s). Strict loader exited 1 with **813 accepted / 173 rejected
+  names**, **2,099 compiled / 346 rejected records**.
+- Required focused go test ./pkg/mage/dsl/ron -run TestRONCopyTextRebinding
+  -count=1 passed. Expanded RON copy/type/color/entry/text-definition checks
+  passed. Native copy/text definition tests passed.
+- make build and go vet ./... passed. go test ./pkg/mage/... -short -count=1
+  passed (RON 36.906s). make test passed (RON 36.290s).
+- Initial make lint found one revive issue in the new native test: a variable
+  named copy shadowed the builtin. It was renamed to later. Post-fix native
+  copy/text checks passed (0.500s), focused RON checks passed (0.529s), and
+  final make lint passed with 0 issues. Automatic lint changes were reviewed;
+  no additional source changes were needed. git diff --check and staged
+  diff checks passed.
+- An isolated staged-index tree excludes all pre-existing work. make build,
+  go vet ./... and make test passed (RON 42.148s). The final native test fixture
+  rename was copied into that tree; affected native checks passed (0.652s).
+  Its strict loader exited 1: **812 accepted / 174 rejected names**, **2,098
+  compiled / 347 rejected records**. The extra rejection is Eureka, from the
+  omitted pre-existing repeated-entry work. That work also changes Mana Clash's
+  first diagnostic: isolated unsupported action (RepeatableActions) versus
+  worktree unsupported repeated round producer (EachPlayerAction). All other
+  diagnostics agree. No validation result depends on the unrelated changes.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected names**, **2,099 compiled / 346 rejected records**, across 986
+  names / 2,445 records. Parsed JSON and every diagnostic equal the fresh
+  worktree baseline exactly. Remaining errors include CreateSpellEffect,
+  EnchantGraveyardCard, SacrificeAllPermanentsExceptForNum and AddAbility in
+  copy modifications. The loader installs no partial registry.
+- No unresolved build, test, lint or environment blocker remains. Collection
+  rejection is the expected migration gap. Go definitions and unused DSL
+  APIs remain because runtime/removal gates are not met.
+
+Changed files: pkg/mage/copy_modification.go, text_definition.go, doc.go;
+new pkg/mage/copy_text_rebinding.go and native test;
+new pkg/mage/dsl/ron/copy_text_rebinding_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Existing RON lowering was reused without a production compiler change.
+
+Ranked next candidates:
+
+1. Permanent-spell text entry continuation: Clone, Copy Artifact and Phantasmal
+   Terrain. Copy-exception semantic builders now preserve types/colors and
+   declaration groups; spell-to-entry lifetime and copied-rule installation,
+   saved choices, Aura targets and physical printed restoration still need an
+   exact bounded contract.
+2. Whole-object permanent word-change dispatch/lifetime for Magical Hack and
+   Sleight of Mind after entry contexts are complete. Compose checked services
+   atomically, including copied definitions and unknown-role rejection.
+3. Complete CreateSpellEffect adapter for both word-changing cards after every
+   spell/permanent target branch is ready. Keep rejecting their full records.
 
 Stop after this slice. Migration completion is not claimed.

@@ -11547,3 +11547,28 @@ phased payment cards, repeated revisions, copies and clones. `FreshResults`,
 visits and independent payments. Native `TestTextSacrificeSpellContinuation*`
 checks definition validation, exact binding transfer and atomic rejection.
 Complete Magical Hack and Sleight of Mind remain rejected.
+
+
+### Text builders for copy exceptions
+
+The existing entry-copy lowering for `CopyEffects([AddCardtypes([...])])`
+and `CopyEffects([KeepColor])`, including their ordered combination, now keeps
+those exceptions when copied rules are rebuilt for word changes. No RON
+spelling or scope changes. `mage.CopiableValues.WithModifications` composes the
+saved exceptions with the source's checked semantic text builder.
+
+`BuildTextChangedDefinition` and `BuildTextDefinitionRevision` keep added types,
+retained colors (including colorless) and omitted color-defining abilities.
+Fresh target and result bindings still come from the RON definition plan.
+Later copies retain copy exceptions and exclude ordinary text changes.
+Unknown semantic word roles and invalid builders remain errors. Existing
+per-declaration text-layer services supply lifetime and active rule identity.
+Whole-object text dispatch, permanent-spell continuation and added copy abilities
+remain separate contracts; Magical Hack, Sleight of Mind and Vesuvan Doppelganger
+still reject as complete records.
+
+Evidence: `TestRONCopyTextRebindingRecords` casts each of the six Copy Artifact
+reprints, changes both copied Gauntlet of Might rules, and checks all six Clone
+reprints as later copies. `RetainedColors` exercises combined KeepColor and
+AddCardtypes with fresh activated target bindings. Existing copy declaration
+rejection tests retain their exact shape checks.

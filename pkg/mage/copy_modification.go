@@ -123,6 +123,7 @@ func (v *CopiableValues) WithModifications(modifications ...CopyModification) (*
 			return nil, err
 		}
 		base := card.(*BaseCard)
+		rebindCopyTextDefinition(base, saved)
 		for _, modification := range saved {
 			modification.applyCopyModification(base)
 		}

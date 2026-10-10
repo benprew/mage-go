@@ -527,6 +527,14 @@
 // Type additions keep abilities and the entry rules' original identities.
 // Color exceptions, added abilities and live copy layers need separate services.
 //
+// CopiableValues.WithModifications keeps copy exceptions in text builders.
+// BuildTextChangedDefinition and BuildTextDefinitionRevision use fresh rules.
+// Added types, retained colors and color-definition omissions stay in order.
+// Protected printed values are checked before copy exceptions are applied.
+// Ordinary word changes do not enter the retained copiable values.
+// RON uses its existing AddCardtypes and KeepColor entry-copy lowering.
+// Pending permanent spells and whole-object text still need separate services.
+//
 // Use [MayCopyAsEntersKeepingColors] to retain its copiable colors.
 // [CopyRetainColors] keeps a saved color set in an immutable copy snapshot.
 // Empty sets are colorless, even with a colored copied mana cost.

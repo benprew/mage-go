@@ -46,14 +46,26 @@ func (c TextChange) ApplyBasicLand(word core.BasicLandType) core.BasicLandType {
 }
 
 type textDefinition struct {
-	build   func([]TextChange) (CardFactory, error)
+	build   func([]TextChange) (func() (Card, error), error)
 	changes []TextChange
 }
 
 // WithTextDefinitionBuilder retains a pure builder for independent text prototypes.
 // The builder must keep names, mana symbols and color indicators unchanged.
 func WithTextDefinitionBuilder(build func([]TextChange) (CardFactory, error)) CardOption {
-	return func(card *BaseCard) { card.textDefinition = &textDefinition{build: build} }
+	return func(card *BaseCard) {
+		card.textDefinition = &textDefinition{}
+		if build == nil {
+			return
+		}
+		card.textDefinition.build = func(changes []TextChange) (func() (Card, error), error) {
+			factory, err := build(changes)
+			if err != nil || factory == nil {
+				return nil, err
+			}
+			return func() (Card, error) { return factory(), nil }, nil
+		}
+	}
 }
 
 // BuildTextChangedDefinition builds new rules without changing a game object.
@@ -74,7 +86,7 @@ func BuildTextChangedDefinition(card Card, changes ...TextChange) (Card, error) 
 	if err != nil {
 		return nil, err
 	}
-	plan, err := NewCardDefinitionPlan(factory)
+	plan, err := newCardDefinitionPlan(factory)
 	if err != nil {
 		return nil, err
 	}
@@ -87,14 +99,21 @@ func BuildTextChangedDefinition(card Card, changes ...TextChange) (Card, error) 
 	if err != nil {
 		return nil, err
 	}
-	if result.Name() != printed.Name() || result.ManaCost().String() != printed.ManaCost().String() || result.HasManaCost() != printed.(*BaseCard).HasManaCost() || !slices.Equal(result.colorOverride, printed.(*BaseCard).colorOverride) || (result.colorOverride == nil) != (printed.(*BaseCard).colorOverride == nil) || !slices.Equal(result.Types(), printed.Types()) || !slices.Equal(result.SuperTypes(), printed.SuperTypes()) || result.Power() != printed.Power() || result.Toughness() != printed.Toughness() {
-		return nil, fmt.Errorf("text builder changed protected printed characteristics")
+	if err := checkTextProtectedCharacteristics(result, printed.(*BaseCard)); err != nil {
+		return nil, err
 	}
 	result.definitionPlan = base.definitionPlan
 	result.printedDefinitionPlan = base.printedDefinitionPlan
 	result.copiableValues = base.copiableValues
 	result.textDefinition = &textDefinition{build: base.textDefinition.build, changes: ordered}
 	return result, nil
+}
+
+func checkTextProtectedCharacteristics(result, printed *BaseCard) error {
+	if result.Name() != printed.Name() || result.ManaCost().String() != printed.ManaCost().String() || result.HasManaCost() != printed.HasManaCost() || !slices.Equal(result.colorOverride, printed.colorOverride) || (result.colorOverride == nil) != (printed.colorOverride == nil) || !slices.Equal(result.Types(), printed.Types()) || !slices.Equal(result.SuperTypes(), printed.SuperTypes()) || result.Power() != printed.Power() || result.Toughness() != printed.Toughness() {
+		return fmt.Errorf("text builder changed protected printed characteristics")
+	}
+	return nil
 }
 
 // TextChangeRef reads a typed substitution from the current resolution frame.

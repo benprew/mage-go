@@ -15183,3 +15183,50 @@ Evidence: native `TestTextSacrificeSpellContinuationDeclaration`, `Context` and
 `Legality` and `Instances`. Existing `TestRONAdditionalSacrifice*`,
 `TestRONSacrificeMana*` and ordinary/modal spell continuation checks retain
 rollback, mana restrictions, payment identity and other caller contracts.
+
+
+## Copy-exception semantic text rebinding
+
+`(*CopiableValues).WithModifications(...CopyModification) (*CopiableValues, error)`
+now retains a composed text builder for `CopyAddCardTypes` and
+`CopyRetainColors`. Each build applies exceptions in their original order.
+`BuildTextChangedDefinition(Card, ...TextChange) (Card, error)` and
+`BuildTextDefinitionRevision(Card, ...TextChange) (*TextDefinitionRevision, error)`
+can then rebuild these copied definitions without losing the exceptions.
+The public builder and snapshot signatures stay unchanged.
+
+Each composed builder validates the underlying factory, independent declarations
+and protected printed characteristics before it applies exceptions. Added types
+and retained colors cannot mask an invalid underlying type or color-indicator
+change. Nil, shared and failing factories remain errors. Internal factories can
+return errors, so composition needs no new declaration panic. The original name,
+mana symbols, cost presence, supertypes and base P/T stay protected (CR 612.2).
+Color-defining abilities remain omitted for retained-color copies (CR 707.9d).
+Their empty declaration groups keep the identities of remaining rules.
+
+Snapshots retain the copy exceptions, not ordinary text changes (CR 707.2–3).
+Ordered subsequent word changes use the composed builder exactly once per
+saved change. Fresh targets, costs and result bindings use the existing definition
+plan and correspondence services. Original snapshots, copies and clones keep
+separate declarations. Source or physical card identity is not captured by the
+builder. Entry replacement identity and priority remain with the existing copy
+pipeline; rebinding does not repeat a copy choice.
+
+Existing checked per-declaration text services install changes in layer 3.
+They keep lifetime, ability identity, phasing and departure behavior. This slice
+supplies the copy-builder prerequisite only. It does not install whole-object
+text, rebind a live layer-1 replacement, continue a changed permanent spell into
+entry, or add copy abilities. Current callers and strict collection rejection
+remain in force.
+
+Evidence: `TestCopyTextRebindingSnapshot` composes two exception groups, omits
+a color definition, applies ordered word changes, tests fresh target bindings
+and reconstructs an independent copy without ordinary text changes.
+`RejectsMaskedDefects` checks protected values, nil/shared/error factories,
+invalid words, error identity and atomic rejection. `TestRONCopyTextRebindingRecords`
+casts all six Copy Artifact reprints and checks copied Gauntlet of Might P/T and
+land-mana rules, unchanged mana symbols, subsequent Clone copies, ordinary type
+exclusion, ordered expiry, phasing, clone isolation, LKI and printed departure.
+`RetainedColors` checks colored and colorless KeepColor plus added types through
+RON activated gameplay. Existing copy tests retain payment rollback, acquired
+entry choices/counters, simultaneous batches and replacement order.
