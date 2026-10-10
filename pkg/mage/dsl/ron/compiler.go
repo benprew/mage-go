@@ -1660,7 +1660,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n.Args[1], ctx)
 	case "DiscardTheCardDrawnThisWay":
 		return compileDrawnCardDiscard(n, ctx)
-	case "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
+	case "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
 		return compileRestrictedRepeatedMana(n, ctx)
@@ -1806,6 +1806,14 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	if n.Name == "MillNumberCards" {
 		return compileMillAction(n, ctx)
+	}
+	if n.Name == "MillACard" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "MillACard requires a symbol")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.Mill(ctx.player.build(bindings), mage.Fixed(1))
+		}}, nil
 	}
 	if n.Name == "LoseUnspentMana" {
 		return compileLoseUnspentMana(n, ctx)

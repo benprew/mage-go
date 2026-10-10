@@ -101,8 +101,8 @@ func TestRONRequiredPlayerPaymentNested(t *testing.T) {
 func TestRONRequiredPlayerPaymentChainsClause(t *testing.T) {
 	for _, empty := range []bool{false, true} {
 		record := staticBaseRecord(t, "LEG", "Chains of Mephistopheles")
-		if _, err := Compile(record); err == nil {
-			t.Fatal("unsupported mill must remain rejected")
+		if _, err := Compile(record); err != nil {
+			t.Fatal(err)
 		}
 		rule := record.Fields["Rules"].Args[0]
 		body, err := Parse(strings.NewReader(`PlayerAction(WouldDrawACard_ThatPlayer,GainLife(Integer(7)))`), "unpaid.ron")

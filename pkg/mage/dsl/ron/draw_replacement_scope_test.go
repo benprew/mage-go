@@ -12,8 +12,10 @@ func TestRONDrawReplacementScopeEvents(t *testing.T) {
 	for _, tc := range []struct{ set, name string }{{"LEA", "Island Sanctuary"}, {"LEG", "Chains of Mephistopheles"}} {
 		t.Run(tc.name, func(t *testing.T) {
 			record := staticBaseRecord(t, tc.set, tc.name)
-			if _, err := Compile(record); err == nil {
-				t.Fatal("complete card still has unsupported operations")
+			if _, err := Compile(record); tc.name == "Island Sanctuary" && err == nil {
+				t.Fatal("complete Sanctuary still has unsupported operations")
+			} else if tc.name == "Chains of Mephistopheles" && err != nil {
+				t.Fatal(err)
 			}
 			rule := record.Fields["Rules"].Args[0]
 			body, err := Parse(strings.NewReader(`PlayerAction(WouldDrawACard_ThatPlayer,GainLife(Integer(2)))`), "body.ron")

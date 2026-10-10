@@ -16902,3 +16902,38 @@ attack restriction. Full Sanctuary gameplay and compilation remain gaps.
 `TestRONActionChoiceReplacementAncestry` adds two independent draw rules. It
 proves one affected-player order choice followed by two body choices produces
 one draw. A later event can use both rules again.
+
+## RON single-card mill in draw replacement bodies
+
+`MillACard` is a symbol in resolving action and player-action lists. It lowers
+through `compilePlayerEffect(Node, scope)` to `Mill(PlayerRef, Fixed(1))`.
+The typed lexical player is built with each factory's bindings. Tuple forms,
+unbound players and use as a payment remain declaration errors. Ordinary,
+activated, triggered, choice, delayed and immediate replacement bodies use the
+same mill service. This adapter establishes no new cost or mill-result binding.
+
+The complete Chains of Mephistopheles record uses the existing
+`ReplaceDraw(ExceptFirstDrawStepDraw, binding, body)` and `DiscardOneOrElse`.
+An actual effect discard selects the generated draw; an absent, invalid or
+returned hand visit selects mill. A library destination still counts as a
+discard. Each source declaration applies once in the generated draw ancestry;
+another Chains can apply to that draw. The affected player chooses competing
+replacement order. Replacement execution restores the outer resolution frame.
+A replaced empty-library draw does not record a failed draw, even if mill moves
+no cards. Mill count modifiers and owner graveyard ordering keep their existing
+contracts. This adapter adds no replacement ordering for mill modifiers.
+
+CR 121.6a-b, 614.5-6, 614.11, 616.1 and 701.17a-b supply these rules.
+The local `data/LEG.json` Oracle text agrees with the complete unchanged RON
+record. No source defect was found. Source control changes do not change the
+drawing player. Departure, phasing and ability removal stop a live replacement;
+return creates a new source visit. Saved delayed controller reads use exact
+source information and LKI through the existing typed reference services.
+
+Evidence: native `TestMillDrawReplacementBranches` checks successful, canceled,
+library and absent discard, mill modifiers, empty libraries, frame restoration
+and clones. RON `TestRONMillOneChains`, `ChainsDrawStep`, `ChainsDiscardResults`,
+`ChainsLifecycle`, `ChainsReplacementOrder`, `EmptyAndModifiers`,
+`ScopesAndTiming`, `DelayedSource` and `Invalid` cover the complete card and the
+shared action contexts. The existing draw-scope and required-payment tests keep
+their behavior assertions and now require complete Chains compilation.

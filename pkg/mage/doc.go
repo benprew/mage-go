@@ -1678,6 +1678,9 @@
 // Use [Mill] for a player action and [MillCost] for a full payment.
 // The library owner can order cards that move together to the graveyard.
 // All order choices precede the moves. Payment queries make no choices.
+// RON MillACard uses the typed player scope and a fixed count of one.
+// A failed effect discard can select mill in a draw replacement body.
+// A replaced draw from an empty library does not cause a draw failure.
 //
 // Use [ExileGraveyardCard] with a typed card target or [FromCard] for exile
 // from a graveyard. A saved visit prevents the effect from moving a returned

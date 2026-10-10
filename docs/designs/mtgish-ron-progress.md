@@ -2,18 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **817 accepted / 169 rejected names** (986 total),
-**2,118 compiled / 327 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **818 accepted / 168 rejected names** and
-**2,119 compiled / 326 rejected records**. The strict loader rejects the
+The isolated slice reports **818 accepted / 168 rejected names** (986 total),
+**2,119 compiled / 326 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **819 accepted / 167 rejected names** and
+**2,120 compiled / 325 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-GENERAL-ACTION-CHOICE-BODIES lowers nonempty resolving action alternatives
-through the shared sequence compiler and ChooseAtResolution. Local results,
-lexical players, copies, clones, delays and draw ancestry retain their contracts.
-Armorer remains covered; Sanctuary reaches its unsupported next-turn duration.
-Complete-card compilation and gameplay gains are **0 names / 0 records**.
-No RON changed. All required native checks pass.
+SINGLE-CARD-MILL lowers MillACard through the typed player scope to shared Mill.
+The complete unchanged Chains of Mephistopheles record now executes both branches.
+Actual discard outcomes, draw ancestry, competing order, timing, source lifecycle,
+LKI, delayed reads and clones have tests. Compilation and complete-card gameplay
+gains are **1 name / 1 record**. No RON changed. All required native checks pass.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -69660,3 +69659,166 @@ is staged. Initial unrelated changes and untracked files remain in the workspace
    separate larger prerequisites; Lamp and Ring still need their zone services.
 
 Migration remains incomplete. This run stops after this one slice.
+
+## Run 2026-10-10: SINGLE-CARD-MILL
+
+Status: complete symbol adapter and native mechanics evidence. This run stops
+with one slice. Full-card compilation and gameplay gains are **one unique name /
+one record**: Chains of Mephistopheles. No RON source changed.
+
+### Candidate comparison and selection
+
+The latest entry ranked MillACard, the no-land state filter, and Sanctuary's
+attack restriction plus saved-player duration. The complete Chains, Serendib
+Djinn, all six Sanctuary reprints and Firestorm Phoenix records were inspected.
+Local data/LEG.json, data/ARN.json and data/LEA.json supplied Oracle text.
+Vocabulary queries covered MillACard symbol/0 (one occurrence),
+WhenAPlayerControlsNoPermanents/2 (21 occurrences), and
+UntilPlayersNextTurn/1 (seven occurrences). Reprints count once below.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| MillACard resolving symbol | Chains of Mephistopheles | 1 name / 1 record | No other nested gap: typed draw player, actual effect discard branches, draw ancestry and Mill already exist. Completes the replacement's failed-discard branch and supplies one-card mill in shared resolving player contexts. | Small adapter; moderate complete-card interaction tests. |
+| IsCardtype(Land) in controller no-permanents state trigger | Serendib Djinn; 21 existing subtype-filter records retain their current support | 1 name / 1 record | Its complete upkeep sacrifice/Island-result damage and flying already have services. Reuse ControlsNone and state-trigger arming. Does not enable a new multi-card family beyond the supported subtype path. | Small filter extension; moderate state-trigger lifecycle and complete upkeep tests. |
+| UntilPlayersNextTurn(saved player) prerequisite | Island Sanctuary, Firestorm Phoenix | 0 names / 0 records for duration alone | Sanctuary also needs CantBeAttackedExceptBy. Phoenix also needs its death replacement, saved returned-hand visit and reveal/play restriction. A saved turn-start expiry could serve both, but existing UntilNextUpkeep is a different endpoint; it cannot substitute for next-turn expiry. | Larger engine duration/lifecycle contract plus typed adapters and skipped/extra-turn tests; full cards require separate rule services. |
+
+Candidate #1 is dependency-ready. It wins this comparison on credible complete
+card gain for effort. No compared multi-card complete capability is ready;
+the two-card duration prerequisite requires a larger new contract and yields no
+immediate unlock. The selected scope is one cohesive syntax capability, not a
+bundle of Sanctuary or Phoenix services. Serendib remains next work.
+
+### Exact signatures, context and reuse boundary
+
+MillACard must be a Symbol. compilePlayerEffect(Node, scope)
+([]effectFactory, error) lowers it to mage.Mill(ctx.player.build(bindings),
+mage.Fixed(1)); compileEffect dispatches ordinary action lists to that same
+adapter. MillACard() and MillACard(Integer(1)) reject before factory execution.
+Unbound/incompatible lexical players and MillACard as a payment remain errors.
+No new result binding, optional payment form or static layer is introduced.
+
+Supported contexts are ordinary resolving action/player lists and their existing
+activated, spell, triggered, choice, delayed and immediate replacement bodies.
+Each fresh factory builds the typed player from its own instance bindings.
+The complete Chains body retains WouldDrawACard_ThatPlayer, PlayerMustCost,
+IfElse(CostWasPaid, ...) and the existing effect-discard context switch.
+
+Mage owns the unchanged reusable mechanics:
+Mill(PlayerRef, ResolutionValue) ResolvingEffect;
+DiscardOneOrElse(PlayerRef, ResolvingEffect, ResolvingEffect) ResolvingEffect;
+ReplaceDraw(DrawReplacementWindow, *PlayerBinding, Effect) StaticRule.
+Shared services retain library-top selection, owner graveyard ordering, mill
+modifiers, actual discard outcomes, exact hand visits, replacement choice,
+ancestry, live source identity, phasing, ability removal, frames, delays and clones.
+No duplicate engine service or card-name branch was needed. The native mechanics
+are exercised directly in pkg/mage/mill_draw_replacement_test.go.
+
+Rules evidence is CR 121.6a-b, 614.5-6, 614.11, 616.1 and 701.17a-b. A replaced
+draw does not record a draw failure, even when its mill branch finds no cards.
+Changed discard destinations still count; canceled discards and invalid/returned
+hand selections do not. Each Chains declaration can apply once in a generated
+draw's ancestry. Another Chains can apply to that generated draw. First actual
+draws in the drawing player's own draw step remain exempt.
+
+This is an adapter gap, not an engine or source-data defect. No Oracle or RON
+change was needed. The vocabulary snapshot remains valid. Existing callers,
+Go definitions and strict loading remain. Runtime and DSL removal gates are not
+met; no Go card or public DSL service was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, TestRONMillOneChains and the scope/gameplay tests fail
+at LEG.ron:44:401: expected 1 positional arguments (MillACard).
+The separate replacement-order and empty/modifier tests also fail at that exact
+adapter before implementation. Native composition tests pass on the reused
+engine service. No game rule was changed merely to make an existing test pass.
+
+| Card/context | Tests and evidence |
+| --- | --- |
+| Chains of Mephistopheles, full unchanged LEG record | TestRONMillOneChains tests both drawing players, one/two independent Chains and zero/one/three hand cards; it checks exact original library-top identity, discard/draw versus discard/mill, immediate timing and unaffected other player. |
+| Chains draw timing | TestRONMillOneChainsDrawStep checks the first effect draw during an own draw step, subsequent draws, the nonactive player's draw and a new draw-step history reset. Existing normal-draw scope tests remain green. |
+| Chains discard outcomes | TestRONMillOneChainsDiscardResults checks successful, foreign and returned hand selections and a synthetic native Library of Leng effect replacement. The unsupported full Library of Leng RON record is not claimed as covered. |
+| Chains live rule lifecycle | TestRONMillOneChainsLifecycle checks control, departure, return, phasing, phase cycle, removal and cloned-game isolation. |
+| Chains competing effects | TestRONMillOneChainsReplacementOrder tests both affected-player choices against a separate RON draw rule; choosing it first avoids discard, while choosing Chains first discards before the other rule replaces its generated draw. |
+| Chains empty library and modifiers | TestRONMillOneEmptyAndModifiers checks zero/one/three library cards and zero/double mill modifiers. A replaced empty-library draw cannot cause game loss. |
+| Shared resolving mill | TestRONMillOneScopesAndTiming checks lexical target versus enclosing controller, failed mana, illegal-target rollback, delayed action timing, spell-ability copies and cloned pending bindings. TestRONMillOneDelayedSource checks pure waiting queries, departed/phased/returned exact source information, controller LKI and clone execution. |
+| Invalid declarations | TestRONMillOneInvalid rejects tuple shapes, incompatible/unbound players and use as a resolution payment. |
+| Native mechanics | TestMillDrawReplacementBranches checks canceled discard replacement, absent/successful/library discard, zero mill modifier, empty library, resolution-frame restoration and clone isolation. |
+
+The existing TestRONDrawReplacementScopeEvents and
+TestRONRequiredPlayerPaymentChainsClause now require complete Chains compilation;
+their context-specific behavior assertions remain. Collection-count expectations
+are updated by exactly one compiled record and an explicit inventory assertion
+protects Chains acceptance. Initial unrelated Eureka expectations stay in the
+worktree and are excluded from this commit.
+
+### Verification and measured results
+
+- Baseline make build passes. Fresh go test ./pkg/mage/dsl/ron -short
+  -count=1 passes (40.115s). Baseline strict loader exits 1 for collection
+  rejection: 818 accepted / 168 rejected names, 2,119 compiled / 326 rejected
+  records, 2,445 total. No build or environment failure exists.
+- Before implementation, focused new RON tests fail at the missing MillACard
+  adapter. Native TestMillDrawReplacementBranches passes on existing services.
+  The first focused integration run also exposed an invalid fixture assumption:
+  Library of Leng's full RON still rejects ReplaceWouldDiscard. The test now
+  uses a native synthetic discard replacement and claims only Chains coverage.
+  Its chooser was corrected to the existing ChooseMayAbility interface.
+- Final pre-suite go test ./pkg/mage/dsl/ron -run
+  'TestRON(MillOne|RequiredPlayerPayment|DrawReplacementScope)' -count=1 passes
+  (0.882s). make build and go vet ./... pass. The first engine short run
+  reports four stale collection-count assertions (2,120 / 325 versus the
+  initial 2,119 / 326); these exact expectations were updated by one record.
+  No gameplay assertion was weakened.
+- The final go test ./pkg/mage/... -short -count=1 passes (RON 53.360s).
+  make test passes (RON 44.996s). make lint passes with 0 issues. The only
+  automatic changes are import order in the two new test files. A separate
+  intentional doc comment clarification is retained. A content audit finds
+  no lint changes to unrelated files.
+- After formatting, the focused RON command passes again (0.905s) and
+  go test ./pkg/mage -run TestMillDrawReplacementBranches -count=1 passes
+  (0.472s). git diff --check and git diff --cached --check pass.
+- A checkout containing HEAD plus only this staged slice passes the new RON
+  gameplay and collection-count tests (1.715s), native test (0.448s), make
+  build, go vet ./... and go test ./pkg/mage/... -short -count=1 (RON 48.002s).
+  Its strict loader exits 1 for collection rejection: 818 accepted / 168
+  rejected names, 2,119 compiled / 326 rejected records. The difference from
+  the worktree is initial unrelated Eureka support, which stays unstaged.
+- Final worktree go run ./cmd/loadcards -json exits 1 for collection rejection:
+  **819 accepted / 167 rejected names**, **2,120 compiled / 325 rejected
+  records**. Fresh before/after comparisons show only Chains newly accepted,
+  and no newly rejected names. Strict loading publishes no partial registry.
+  Remaining examples: Serendib Djinn rejects IsCardtype in the land dependence
+  filter at ARN.lines.ron:68:464; Sanctuary rejects UntilPlayersNextTurn at
+  2ED.lines.ron:127:379; Phoenix rejects ReplaceWouldPutIntoGraveyard at
+  LEG.lines.ron:85:175.
+- Only this validated slice is staged for
+  git commit -m "feat(ron): implement single-card mill".
+
+Estimated and actual compilation/gameplay gains agree: one unique name / one
+record. Other accepted records keep working. Complete collection gameplay,
+embedded runtime cutover, Go-card deletion and unused DSL cleanup remain open.
+No source defect or environment blocker was found.
+
+Changed files: pkg/mage/dsl/ron/compiler.go, mill_one_test.go,
+draw_replacement_scope_test.go, required_player_payment_test.go,
+definition_plan_test.go, inventory_test.go and numeric_consumers_test.go;
+pkg/mage/mill_draw_replacement_test.go and doc.go;
+docs/engine-rules-contracts.md and this ledger. Only this slice is staged.
+Initial repeated-entry work, ledger archive relocation, optional-entry and
+definition edits, authoring docs and .gitignore remain outside the commit.
+
+### Ranked next candidates
+
+1. IsCardtype(Land) controller no-permanents state filter for Serendib Djinn.
+   Its existing upkeep sacrifice/result damage services are ready. Estimate one
+   name / one record; test full upkeep and state-trigger arming/lifecycle.
+2. Saved-player UntilPlayersNextTurn duration prerequisite for Island Sanctuary
+   and Firestorm Phoenix. Estimate zero immediate unlocks for this prerequisite;
+   require turn-start, skipped/extra-turn and clone contracts. Both full records
+   retain their separate rule/zone blockers.
+3. Sanctuary's CantBeAttackedExceptBy after that duration contract. Estimate one
+   name / six records only when both services exist. Takklemaggot's creature
+   selection/Aura lifecycle and Lamp/Ring zone choices remain larger gaps.
+
+Migration remains incomplete. This run stops after SINGLE-CARD-MILL.
