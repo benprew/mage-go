@@ -316,12 +316,14 @@ func Compile(n Node) (mage.CardFactory, error) {
 	landAuraSpellText := false
 	intrinsicCreatureSpellText := false
 	copyEntrySpellText := false
+	globalStaticSpellText := false
 	spellCount, enchantCount, deckCount := 0, 0, 0
 	if rulesNode, ok := n.Fields["Rules"]; ok {
 		rules, err := list(rulesNode)
 		if err != nil {
 			return nil, err
 		}
+		globalStaticSpellText = permanent && !slices.Contains(types, core.TypeLand) && !ctx.aura && globalStaticSpellTextRules(rules)
 		copyEntrySpellText = permanent && copyEntrySpellTextRules(rules)
 		landAuraSpellText = slices.Equal(types, []core.CardType{core.TypeEnchantment}) && slices.Equal(subtypes, []string{"Aura"}) && landAuraSpellTextRules(rules)
 		intrinsicCreatureSpellText = slices.Equal(types, []core.CardType{core.TypeCreature}) && intrinsicCreatureSpellTextRules(rules)
@@ -422,6 +424,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 		}
 		for _, buildOption := range options {
 			opts = append(opts, buildOption())
+		}
+		if globalStaticSpellText {
+			opts = append(opts, mage.WithGlobalStaticSpellTextContinuation())
 		}
 		if landAuraSpellText {
 			opts = append(opts, mage.WithLandTypeAuraSpellTextContinuation())

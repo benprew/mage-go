@@ -17,6 +17,17 @@
 // Other permanent spells and casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
+// Use [WithGlobalStaticSpellTextContinuation] for one global static spell rule.
+// [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
+// RON marks one unconditional fixed creature P/T or basic-land-type rule.
+// Casting targets, costs, modes and other rules need separate contracts.
+// Entry keeps physical identity, owner and printed departure rules.
+// Copies enter as tokens. Clones keep separate rules. Phasing keeps the visit.
+// Control and subjects remain live. Later text layers use the continued baseline.
+// Expiry restores it. Ability removal keeps the existing layer order.
+// Copy values exclude ordinary word changes. LKI keeps the final rules.
+// Return uses printed rules. Mixed, sticky and whole-object rules remain separate.
+//
 // Use [WithCopyEntrySpellTextContinuation] for one optional entry-copy spell.
 // [Game.RevisePrintedSpellText] retains ordered words through donor acquisition.
 // [BuildEntryCopyWithText] checks fresh donor rules and declaration groups.

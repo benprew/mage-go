@@ -11702,3 +11702,49 @@ cost/target/ETB bindings, nested acquisition, absent and returned donors,
 face-down values, later layers and typed selection. Boundaries and native
 `TestTextCopySpell*` tests cover declaration and atomic mutation failures.
 Magical Hack, Sleight of Mind and Vesuvan Doppelganger remain unsupported.
+
+### Global static permanent-spell text continuation
+
+RON marks a nonland, non-Aura permanent whose sole rule is
+`EachPermanentLayerEffect(filter, [AdjustPT(integer, integer)])`, where the
+filter requires creatures, or `EachPermanentLayerEffect(filter,
+[SetLandType(basicLandType)])`. Existing static lowering validates each filter
+and operation. Controller and source-exclusion selectors remain live. Extra
+rules, keywords, targets, casting costs, conditional rules and sticky rules
+remain outside this context.
+
+`mage.WithGlobalStaticSpellTextContinuation() CardOption` declares the engine
+contract. Definition validation requires one marked global static effect, no
+other abilities or intrinsic keywords, and no modes or casting costs/targets.
+The existing `Game.RevisePrintedSpellText(stackID, changes...)` checks the exact
+stack visit, fresh declaration correspondence, static context and subtype
+context before replacing retained rules. It rejects resolving bodies and
+captured casting results. Missing builders/groups, invalid words, countered
+visits and changed contexts fail without mutation.
+
+Entry rebuilds independent continued rules through the existing text builder.
+It retains physical identity, owner, token status and printed departure rules.
+Existing static registration, type dependencies, intrinsic land mana and P/T
+layers execute the result. Later layer 3 effects start from the continued
+baseline; expiry restores it. Layer 6 removal retains the established ordering:
+P/T rules stop, while an earlier land-type rule keeps its layer 4 result.
+Adding a Land copy exception clears this spell eligibility marker on the copied
+prototype while retaining its rules and checked text builder. Original
+definitions keep their marker. Phasing keeps the visit and continued rules. Control and subject membership
+remain live. Copies of permanent spells enter as independent tokens; game
+clones keep separate stack revisions and layers. Ordinary text changes stay
+outside copiable values. Departure LKI retains continued rules, and physical
+recasts use printed rules (CR 400.7a, 608.3a/e/f, 612.1–3, 613.1c/d/f/g,
+707.2–3, 707.10f).
+
+Evidence: `TestRONTextGlobalStaticSpellRecords` covers all 29 complete records
+of Blood Moon, Bad Moon, Castle, Crusade, Orcish Oriflamme, Jacques le Vert,
+Kobold Taskmaster, Mightstone and Weakstone. `PTLifecycle`, `LandLifecycle`,
+`Control`, `CopyExceptions`, `Boundaries` and `Inventory` cover copies, clones, printed copy
+values, later text layers, phasing, LKI, printed recasts, live control, invalid
+syntax and exact record mappings. Native `TestTextGlobalStaticSpellDeclaration`
+and `RejectsAtomic` cover invalid markers, builders, groups and stack state.
+Gauntlet of Might and Conversion retain their unsupported mixed continuation
+contexts; Titania's Song still fails compilation at its sticky rule. This adds
+no full-card compiler unlocks. Whole-object word dispatch, remaining spell
+contexts and both word-changing spells require further capabilities.

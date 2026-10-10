@@ -60,6 +60,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.intrinsicSpellText != 0 {
 		return g.reviseIntrinsicCreatureSpellText(obj, changes)
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.globalStaticSpellText != 0 {
+		return g.reviseGlobalStaticSpellText(obj, changes)
+	}
 	if _, modal := getModalSpellAbility(obj.spellTextDefinition); modal {
 		return g.reviseModalSpellText(obj, changes)
 	}

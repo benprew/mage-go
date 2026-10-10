@@ -8,13 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`COPY-ENTRY-SPELL-TEXT` carries ordered substitutions through optional donor
-acquisition, fresh donor rules and printed physical departure. Continuation
-evidence covers **2 names / 12 complete records**, with complete Bog Wraith and
-Gauntlet of Might donor gameplay. Acceptance gain is **0 names / 0 records**.
-Copy exceptions, independent bindings, token spell copies, cloning, phasing,
-LKI and later text-layer baselines have focused evidence. Noncopy permanent
-contexts, whole-object text and the complete word-changing spells remain incomplete.
+`GLOBAL-STATIC-SPELL-TEXT` carries one complete global static rule through
+permanent-spell entry. Continuation evidence covers **9 names / 29 complete
+records**; acceptance gain is **0 names / 0 records**. Fixed creature P/T and
+basic-land-type rules retain live control/subjects, independent spell copies
+and clones, phasing, later text-layer baselines, printed copy values, LKI and
+printed recasts. Mixed/static-trigger, sticky and other spell contexts,
+whole-object word dispatch and the word-changing spells remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -64048,3 +64048,167 @@ Ranked next candidates:
 
 Stop after this slice. Complete collection gameplay, runtime integration,
 Go-card deletion and unused-DSL removal remain unfinished.
+
+## 2026-10-09: global static permanent-spell text continuation
+
+Status: complete `GLOBAL-STATIC-SPELL-TEXT` capability slice. This run stops
+here. Collection gameplay, runtime loading, Go-card removal and DSL cleanup
+remain incomplete.
+
+### Candidate comparison and selection
+
+Fresh baseline: make build passed; go test ./pkg/mage/dsl/ron -short -count=1
+passed (34.964s). The strict loader exited 1 for unsupported records, with
+813 accepted / 173 rejected unique names and 2,099 compiled / 346 rejected
+records. Build/test success and collection rejection are separate evidence.
+The initial worktree contained Eureka/repeated-entry work, shared compiler and
+API edits, an archive of ledger history and unrelated untracked files. These
+changes are preserved and excluded from this slice's commit.
+
+The latest ledger ranked noncopy permanent-spell static continuation first.
+The complete records and nested forms established these candidates:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | --- | --- |
+| Selected: one global static permanent-spell rule | Blood Moon, Bad Moon, Castle, Crusade, Orcish Oriflamme, Jacques le Vert, Kobold Taskmaster, Mightstone, Weakstone | 0 names / 0 records; all already compile | Ready: existing checked text builders and per-declaration land/P/T layers. Adds continuation for 9 names / 29 records, a shared prerequisite for both word-changing spells. Moderate adapter/lifecycle-test effort. |
+| Whole-object word-change dispatch/lifetime | Selected nine plus Gauntlet of Might and Titania's Song | 0 alone | Mixed declarations require atomic dispatch; Gauntlet also needs its mana-event spell continuation. Titania's Song needs sticky continuation and still fails compilation at EachPermanentStickyLayerEffect. Larger effort. |
+| Both modes of the word-changing spells | Magical Hack, Sleight of Mind | 2 eventual names / 12 records | Nested spell and permanent modes require remaining spell continuations and whole-object dispatch; CreateSpellEffect remains a gap. Larger effort and dependencies prevent a complete slice here. |
+
+Candidate #1 wins as a dependency-ready shared prerequisite with concrete
+multi-card downstream value. This is not a full-object dispatcher or a partial
+lowering of Magical Hack/Sleight of Mind. Before editing, the acceptance contract
+was stated as complete entry continuation, live membership/control, payment and
+timing, identity, copies/clones, phasing, later text layers, printed copy values,
+LKI/printed recasts and atomic invalid-context rejection.
+
+### Exact shape, contract and reuse boundary
+
+RON supports a nonland, non-Aura permanent with exactly one top-level rule:
+
+- EachPermanentLayerEffect(filter, [AdjustPT(integer, integer)]), where the
+  supported static filter requires creatures. Controller, state, combat,
+  creature-subtype and source-exclusion filters keep their existing semantics.
+- EachPermanentLayerEffect(filter, [SetLandType(basicLandType)]), using the
+  existing source-independent global basic-land adapter and filter validation.
+
+These lower to `mage.WithGlobalStaticSpellTextContinuation() CardOption`.
+RON owns shape recognition, operation/filter validation and marker selection.
+Mage owns definition validation, exact stack identity and continued execution.
+The existing `Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange)
+error` dispatches the marked context. The declaration must contain exactly one
+marked global static effect, no intrinsic keywords, modes, cast targets or
+additional/alternate costs, and no other spell-continuation marker.
+
+The native service builds fresh rules with BuildTextDefinitionRevision and
+checks ability-group correspondence, unchanged global land/P/T context and
+subtype context before replacing the retained stack definition. It rejects
+announced targets, resolving effects and captured casting results. Revision
+keeps physical card, source, controller, payment and cast facts. Missing builders,
+groups, invalid words, changed contexts and countered visits fail atomically.
+The entry builder uses BuildTextChangedDefinition, keeps physical ID, owner,
+token status and printed departure rules, and enters through the shared pipeline.
+
+Reuse: CardDefinitionPlan, semantic word roles and ordered substitutions,
+BuildTextDefinitionRevision/ReplacementAbility, checked static layer markers,
+static registrations, land-type dependencies and intrinsic mana, P/T layer 7c,
+layer 3 baselines/expiry, layer 6 removal, permanent-spell copy wrappers, game
+cloning, phasing, copiable provenance and LKI/departure services. No new zone,
+layer, cost or event system exists in RON. No registry fallback or card-name
+production branch was added. Rules read locally: CR 400.7a, 608.3a/e/f,
+612.1–3, 613.1c/d/f/g, 707.2–3 and 707.10f.
+
+A failing copy-exception audit showed that adding Land to an otherwise eligible
+copy kept a spell-only marker and rejected the copy. Copy type additions now
+clear this marker on Land prototypes; copied rules and checked text builders
+remain. The original definition is unchanged. Authored invalid markers still
+fail validation. Existing other copy-exception markers keep their behavior.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production edits, TestRONTextGlobalStaticSpellRecords failed all 29
+complete records at the ordinary instant/sorcery continuation boundary. Native
+Declaration/RejectsAtomic tests failed compilation because the marker signature
+was absent. Test fixture compilation mistakes were corrected before confirming
+the meaningful failures. After implementation, CopyExceptions failed because
+the copied Land definition retained the incompatible marker, before the fix.
+No engine assertion or invalid-context boundary was weakened.
+
+| Complete records/contract | Evidence |
+| --- | --- |
+| Blood Moon (DRK, 1 record) | Records casts the complete card, changes Mountain to Island, checks payment/timing, nonbasic versus basic subjects, entry/clone identity, phasing and printed recast. LandLifecycle proves repeated later layers, layer 4/6 ordering, expiry while phased, independent clones, restored printed land rules from copiable values and rejection after departure. |
+| Bad Moon and Crusade (each LEA/LEB/2ED/3ED/CED/CEI, 12 records) | Records checks the revised color collection under both players and printed recasts. PTLifecycle uses complete Bad Moon for independently revised token spell copies and clones, printed copied rule gameplay, repeated later text layers, ability removal/restoration, expiry while phased, exact declaration ID, departure LKI rule gameplay and printed recasts. |
+| Castle (same six sets, 6 records) | Records proves the complete untapped, creature and current-controller selection, +0/+2, tapping membership changes and preserved entry lifecycle. Word changes with no matching printed word still retain the rule. |
+| Orcish Oriflamme (same six sets, 6 records) | Records checks controller-limited attacking membership and +1/+0, then combat departure. |
+| Jacques le Vert (LEG, 1 record) | Records checks revised Green-to-Blue +0/+2 under the current controller; Control proves source control changes move the subject collection without changing printed colors/mana. |
+| Kobold Taskmaster (LEG, 1 record) | Records checks other controlled Kobolds, +1/+0 and source exclusion; opponents remain outside the collection. |
+| Mightstone and Weakstone (ATQ, 2 records) | Records checks both players' attacking creatures, +1/+0 or -1/+0, and loss of membership on combat departure. |
+| Syntax/context inventory and rejection | Inventory parses all complete collection records and requires exactly the nine mapped names / 29 records. Boundaries rejects malformed P/T and unknown basic-land types; Gauntlet of Might and Conversion reject mixed-rule spell continuation without mutation. Titania's Song retains strict sticky-rule compilation rejection. |
+| Native declarations and atomic revision | TestTextGlobalStaticSpellDeclaration rejects duplicate markers, extra costs/keywords/targets/rules, nil declarations, wrong types, unmarked rules, host land rules and conditional P/T contexts. RejectsAtomic covers missing builders/groups, changed kind/keywords/subtypes, foreign results/targets/bodies, invalid/empty words and countered stack visits. |
+| Copy exceptions | CopyExceptions proves adding Land retains the copied static rule and checked text builder, including actual revised and original color-rule gameplay, without mutating original definitions. |
+
+The source files, RON records and vocabulary hashes are unchanged. No source
+defect was identified or corrected. The vocabulary snapshot needs no refresh.
+This run adds no Go-card definitions, removes no callers, and does not cross a
+runtime or deletion gate. API and rules-contract docs describe only this slice.
+Changed files: pkg/mage/card.go, copy_modification.go, definition.go, doc.go,
+stack_resolver.go, text_spell_continuation.go; new text_global_static_spell.go
+and test; pkg/mage/dsl/ron/compiler.go; new text_global_static_spell.go and test;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger (14 files).
+
+### Verification and fresh loader evidence
+
+- Failing-first RON Records rejected all 29 complete records at the unsupported
+  ordinary-spell boundary. Native tests failed on the absent marker signature.
+  CopyExceptions later failed on the incompatible copied Land marker before
+  its fix. Test fixture mistakes were corrected without weakening contracts.
+- Final focused go test ./pkg/mage/dsl/ron -run
+  TestRONTextGlobalStaticSpell -count=1 passed (0.513s), including all record,
+  lifecycle, control, copy-exception, rejection and inventory evidence.
+  Native go test ./pkg/mage -run TestTextGlobalStaticSpell -count=1 passed;
+  after lint/test allocation fixes its affected rerun passed (0.504s).
+- Final make build and go vet ./... passed.
+- Final go test ./pkg/mage/... -short -count=1 passed (RON 37.969s).
+  Final make test passed (RON 37.136s).
+- The first make lint found one prealloc warning in the new native test.
+  Capacity was reserved, and the affected native tests passed again. Automatic
+  import-spacing changes were reviewed; no unrelated source change was made.
+  Final make lint passed with 0 issues. git diff --check passed.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected unique names**, **2,099 compiled / 346 rejected records**,
+  across 986 names / 2,445 records. Parsed JSON and every diagnostic exactly
+  equal the fresh worktree baseline. Unsupported loading remains strict and
+  atomic. Expected collection rejection is not a build/test failure.
+- A clean HEAD-plus-slice export excludes all pre-existing tracked changes and
+  unrelated untracked files. Its make build, go vet ./... and make test passed
+  (RON 68.047s while lint also ran). Its loader exited 1: **812 accepted /
+  174 rejected unique names**, **2,098 compiled / 347 rejected records**.
+  Eureka is its only additional rejection because the existing repeated-entry
+  work is excluded. Mana Clash differs only in its first diagnostic for that
+  same excluded adapter; all other diagnostics match. This slice has no
+  dependency on the pre-existing work. The staged ledger retains HEAD history
+  and adds only this summary/entry; the user's archive remains unstaged.
+- Estimated compiler gain was 0 names / 0 records; actual gain is 0 / 0.
+  New continuation evidence covers 9 already accepted names / 29 complete
+  records. Compilation acceptance and gameplay continuation evidence are
+  separate. No source-data defect, environment blocker or unresolved native
+  validation failure remains. The runtime/deletion gates remain unmet.
+
+Ranked next candidates:
+
+1. Typed spell-cast-trigger permanent-spell continuation. Crystal Rod, Iron
+   Star, Ivory Cup, Throne of Bone and Wooden Sphere share a complete colored
+   cast event with optional mana payment/life continuation (five unique names).
+   Their event text-layer services and payment scopes already exist. Inspect
+   announcement-to-entry binding and clone contracts before selecting the shape.
+2. Typed land-mana-event spell continuation and then mixed global-static/event
+   declarations. Mana Flare and Manabarbs have complete player-bound mana events;
+   Gauntlet of Might combines a global P/T rule with a subtype mana bonus.
+   Do not include Psychic Venom's attached tap event in that same contract.
+3. Whole-object word-change dispatch/lifetime after the remaining contexts are
+   ready, then both modes of Magical Hack/Sleight of Mind. Titania's Song still
+   needs sticky mechanics/continuation; Vesuvan Doppelganger's added copy ability
+   remains a separate dependency. No full-card unlock is promised from a
+   per-declaration or spell-context prerequisite alone.
+
+Stop after this completed slice. Runtime cutover, Go-card deletion, unused DSL
+removal and complete collection gameplay remain unfinished.

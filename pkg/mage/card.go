@@ -71,6 +71,7 @@ type BaseCard struct {
 	copiableValues        *CopiableValues
 	printedDefinitionPlan *CardDefinitionPlan
 	departureCard         Card
+	globalStaticSpellText int
 	landAuraSpellText     int
 	intrinsicSpellText    int
 	copyEntrySpellText    int
@@ -202,6 +203,7 @@ func (c *BaseCard) AddAbility(a Ability) {
 }
 
 func (c *BaseCard) CloneFrom(other Card) {
+	c.globalStaticSpellText = 0
 	c.landAuraSpellText = 0
 	c.intrinsicSpellText = 0
 	c.copyEntrySpellText = 0
