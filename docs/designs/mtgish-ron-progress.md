@@ -8,12 +8,12 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`TEXT-LAYER-PRINTED-COMBAT-PAIR` adds ordered layer-3 installation and baseline
-restoration for complete printed battlefield source/host combat-pair triggers.
-Seven unique cards (17 records) have new layer lifecycle gameplay evidence.
-Acceptance gain is **0 names / 0 records**. Native coverage excludes pre-existing
-Eureka work: **812 accepted names / 2,098 compiled records**. Whole-object text,
-spell text and copy rebinding remain unsupported.
+`TEXT-LAYER-PRINTED-OPPONENT-LAND-TAP` adds ordered layer-3 installation and
+baseline restoration for complete printed opponent-land-tap triggers. Lifetap
+and Lifeblood (two unique cards / seven records) have new layer lifecycle gameplay
+evidence. Acceptance gain is **0 names / 0 records**. Native coverage excludes
+pre-existing Eureka work: **812 accepted names / 2,098 compiled records**.
+Whole-object text, spell text and copy rebinding remain unsupported.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -62666,5 +62666,145 @@ Ranked next candidates:
    against remaining complete RON adapters before whole-object text dispatch.
 3. Whole-object Magical Hack/Sleight of Mind dispatch after remaining declaration,
    spell continuation and copy rebinding prerequisites are complete.
+
+Stop after this slice. Migration completion is not claimed.
+
+## 2026-10-09: printed opponent-land-tap trigger text layers
+
+Capability: `TEXT-LAYER-PRINTED-OPPONENT-LAND-TAP`. Complete bounded slice;
+no second slice started. Initial worktree changes in .gitignore, the execution
+plan, ledger archive, API/contracts, definition validation, compiler/inventory,
+optional hand entry and untracked Eureka entry-round files were preserved.
+Fresh baseline build and RON tests passed. Baseline strict loader exited 1:
+2,099 compiled / 346 rejected records, 813 accepted / 173 rejected unique names.
+Eureka's pre-existing acceptance is excluded from this slice's native gain.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were read for all compared names; reprints
+count once. Targeted vocabulary entries were checked for tap events and the
+color/basic-land substitutions. No first-error count was treated as an unlock.
+
+| Candidate | Distinct affected names inspected | Estimated full-card compilation unlocks | Other blockers / downstream capability | Estimated implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: printed opponent-land-tap layer lifecycle | Lifetap, Lifeblood | 0; both already compile. New complete-record layer evidence: 2 names / 7 records. | No missing prerequisite for this context. Supplies ordered installation, expiry and restoration for a further printed-declaration consumer needed by Magical Hack/Sleight of Mind dispatch. Full dispatch still needs other declaration, spell and copy contracts. | Small: one engine layer service, existing lifecycle hooks, one lowering marker and native/RON lifecycle suites. |
+| Printed activated-action layer lifecycle | Firebreathing, Shivan Dragon, Northern Paladin, Circle of Protection: Red, Circle of Protection: Blue | 0; these inspected records already compile. | Checked direct revision exists. Layer baseline/expiry must also preserve costs, tap timing, limits/history and pending choice/prevention/target bodies. Enables color target/source-choice text consumers and the same whole-object dispatch. | Medium: baseline and controller isolation plus payment, restriction, history, target and saved-result coverage across activation contexts. |
+| Whole-object text dispatch | Magical Hack, Sleight of Mind | 0 dependency-ready unlocks; eventual gain is 2 names after prerequisites. | Each complete record has separate targeted spell and permanent modes, two typed word choices and variable substitutions. Permanent dispatch needs remaining declaration adapters; spell mode needs continuation and copy rebinding. | Large, unsuitable for one bounded run before those prerequisites. |
+
+Candidate #1 is dependency-ready and establishes shared execution behavior for
+two unique cards at the smallest credible effort. The zero compilation estimate
+is deliberate. No unsupported card was claimed as unlocked. RON owns syntax,
+semantic word roles, scopes and fresh per-factory lowering; mage owns reusable
+layer order/lifetime, event detection, rebuilding, identity, LKI and cloning.
+The contract and acceptance cases were stated before production edits.
+
+### Signatures, shape and dependencies
+
+- `GenericTriggered.WithLayeredLandTapTextRevision() *GenericTriggered`
+- `Game.AddPrintedLandTapTextEffect(source *Permanent, abilityID uuid.UUID,
+  duration core.Duration, changes ...TextChange) error`
+
+RON marks its complete existing two-argument
+`TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+ControlledByAPlayer(Opponent)])), body)` context, in either filter order.
+The known land subtype validation and existing resolving bodies remain unchanged.
+Unsupported tap forms, malformed filters and unbound event references remain
+errors. Native typed event-land bindings retain their separate engine contract.
+
+Installation accepts nonempty validated color/basic-land word changes with
+EndOfTurn or Indefinite duration. It checks the exact present face-up source visit,
+active printed declaration, retained semantic builder and correspondence on a
+cloned probe before live registration. Rebuilds must preserve the layer marker,
+event type, subtype-filter shape and land-capture shape. Foreign/granted/removed
+abilities, missing builders/groups, invalid words/durations and incompatible
+rebuilds reject without mutation. Each layer pass restores its baseline before
+ordered surviving changes. Expiry recomputes from baseline. A prior direct
+revision can supply the baseline; direct revision cannot overwrite a layer result.
+Active IDs and declaration positions remain fixed.
+
+Engine reuse: `revisePrintedTrigger`, `BuildTextDefinitionRevision`, printed
+ability groups, revised-trigger retention, timestamp/layer ordering, native tap
+and mana-payment transactions, source information/LKI, pending triggers, targets,
+stack copies and clone copy-on-write services. New permanent baseline state and
+controller-context isolation follow the existing printed trigger layer lifecycle.
+No parallel event, cost, replacement or zone subsystem was added.
+
+Event-time land subtype/control facts stay fixed. Pending text, target declarations
+and exact event-land captures survive later layers, expiry, departure, copies and
+clones. Explicit source-controller reads retain live/LKI information semantics.
+Phasing keeps the visit and permits cleanup while phased. Layer 6 removal stops
+detection; restoration uses current text, including expired baselines. Departure
+LKI retains the final rule; a returned source uses printed rules. Clones keep
+separate baselines, rules, controller contexts, event bindings and cleanup.
+
+Rules evidence: local CR 603.2–3 (including 603.2e), 113.7a, 612.1–3, 613.1c,
+613.7 and 400.7. No source defect was found or corrected. RON files and vocabulary
+hashes are unchanged. Runtime cutover and removal gates remain unmet; no Go-card
+fallback, card-name branch, partial registry, declaration panic or global
+last-action slot was introduced. Existing Go callers are preserved.
+
+### Failing-first evidence and card-to-test mapping
+
+New focused RON tests first failed compilation at the missing
+AddPrintedLandTapTextEffect API. Native tests independently failed at the missing
+layer API, marker and baseline state. The expanded lifecycle suite also failed on
+the absent API before production implementation. Implementation followed these
+failures. Existing assertions and declaration rejection tests were retained.
+
+| Cards / contract | Evidence |
+| --- | --- |
+| Lifetap (LEA, LEB, 2ED, 3ED, CED, CEI; six records) | TestRONTextLandTapLayerRecords and OrderingExpiry execute complete records: printed/revised detection, ordered land changes, pending/copied bodies, independent clones, repeated passes, cleanup, phasing, suppression/restoration, final LKI and printed return. |
+| Lifeblood (LEG; one record) | The same complete-record tests execute Mountain substitutions and all lifecycle cases. PaymentAndBatch executes both unique cards under revised Island detection. |
+| Payment, timing and simultaneous taps | PaymentAndBatch checks direct mana production, successful casting payment, failed payment rollback, batched taps and separate instances. Unchanged TestRONOpponentLandTap* retains entry-tapped, nonland, dual-land, own-land, repeated tap and native event legality cases. |
+| Pending targets / declaration isolation | RemovalAndTargets, PendingTargets and ColorTargetsAndSibling cover revised land/color target declarations, queued targets across expiry/removal, target return, sibling declaration isolation and independent instances. |
+| Source and baseline lifetime | Lifetime, DirectBaseline and ControllerIsolation cover foreign/stale IDs, prior direct baseline, controller changes in clones, current and LKI source reads and printed return. |
+| Typed event identities | Native TestTextLandTapLayerBindings saves two event-land incarnations through layer expiry, copied bodies, departure/return and clone resolution. A returned land cannot replace the saved event land. |
+| Invalid declarations | Native TestTextLandTapLayerDeclaration and Rejects cover event/zone/state restrictions, missing layer markers/builders/groups, changed filter/capture shape, direct-only rebuilds, foreign/granted/absent/phased/face-down sources, bad changes and durations without live mutation. RON Boundaries and retained TestRONOpponentLandTapInvalidAndInventory keep unrelated events, malformed filters and unbound refs rejected. |
+
+### Verification and coverage
+
+- Baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1`: passed.
+- `go test ./pkg/mage/dsl/ron -run TestRONTextLandTapLayer -count=1`: passed.
+  Expanded `TestRON(TextLandTap|OpponentLandTap)` and native `TestTextLandTap`
+  passed, including reruns after lint's automatic import separator change.
+- `make build`; `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed (RON package 36.696s).
+- `make test`: passed (RON package 37.666s).
+- `make lint`: passed, 0 issues. Automatic formatting added an import separator
+  in text_land_tap_trigger.go; affected native/RON tests were rerun and passed.
+  The tracked diff was compared before/after lint. `git diff --check`: passed.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, 813 accepted / 173
+  rejected unique names and 2,099 compiled / 346 rejected records (986 names /
+  2,445 records total). All counts and every rejection diagnostic match the
+  baseline byte-for-byte. Accepted records keep working; strict loading publishes
+  no partial registry. Remaining diagnostics include EnchantGraveyardCard,
+  SacrificeAllPermanentsExceptForNum, CreateGameEffect and
+  MayPayLifeToProduceManaAsManaAbility. No build/test/environment blocker occurred.
+- Isolated staged-index checkout excluding all pre-existing changes: expanded
+  focused native/RON tests, `make build` and `go vet ./...` passed. Its loader
+  exits 1 with 812 accepted / 174 rejected names and 2,098 compiled / 347 rejected
+  records. Eureka remains rejected at RepeatableActions; its pre-existing gain
+  is excluded from this slice and commit.
+
+Estimated and actual compilation gain: **0 names / 0 records**. New complete
+record text-layer lifecycle evidence: **two unique names / seven records**.
+Compilation and gameplay coverage remain separate. Complete collection gameplay,
+runtime integration, Go-card removal and unused DSL cleanup remain unfinished.
+
+Changed files: mage card.go, clone.go, triggered.go, game.go, effect_manager.go,
+text_land_tap_trigger.go, new text_land_tap_layer.go and native tests; RON
+opponent_land_tap.go and two new layer test files; doc.go, dsl-reference.md,
+engine-rules-contracts.md and this ledger. Only this slice's changes are staged;
+pre-existing changes remain in the worktree, including the ledger archive.
+
+Ranked next candidates:
+
+1. Shared printed activated-action layer installation/restoration: preserve costs,
+   restrictions, history, pending targets/choices and typed results. Reassess its
+   bounded contexts against remaining multi-card adapters before selection.
+2. Remaining spell text continuation and copy-rebinding prerequisites for
+   Magical Hack/Sleight of Mind, scoped to one complete shared contract per run.
+3. Whole-object Magical Hack/Sleight of Mind dispatch when all remaining
+   declaration, spell continuation and copy prerequisites are ready.
 
 Stop after this slice. Migration completion is not claimed.

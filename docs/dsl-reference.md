@@ -1,5 +1,49 @@
 # DSL reference
 
+## Printed opponent-land-tap trigger text layers
+
+`GenericTriggered.WithLayeredLandTapTextRevision() *GenericTriggered` opts in
+one printed typed battlefield opponent-land-tap declaration.
+`Game.AddPrintedLandTapTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs validated color
+or basic-land word changes in layer 3. Duration must be `EndOfTurn` or
+`Indefinite`; at least one change is required. A cloned probe checks the retained
+semantic builder and printed group correspondence before live registration.
+Invalid sources, visits, words, durations, foreign or granted abilities, missing
+builders/groups, removed declarations and incompatible rebuilt contexts reject
+without changing live rules. Rebuilds keep the layer marker, subtype-filter shape,
+event-land capture shape, active UUID and declaration position.
+
+RON marks its complete existing
+`TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+ControlledByAPlayer(Opponent)])), body)` context. Either filter order works.
+Existing land subtype validation, resolving bodies, targets and lexical scopes
+remain in `ron`; each factory rebuild supplies fresh declarations and bindings.
+Other tap events and unbound event references retain their separate contracts.
+
+Each layer pass restores the saved baseline, then applies surviving changes in
+timestamp order (CR 612.1–3, 613.1c, 613.7). Expiry recomputes surviving changes
+from that baseline. A prior direct revision can supply it. Direct revision cannot
+change a layered result. Event-time land/control facts and pending rules keep
+their detection-time text, targets and identities through installation, expiry,
+copies and departure (CR 603.2–3, 113.7a). Current source-controller information
+reads retain live or LKI behavior. Clones keep separate rules, controller contexts,
+baselines and cleanup. Phasing keeps the visit, including expiry while phased.
+Layer 6 removal suppresses detection; restoration uses current text. Departure
+LKI keeps the final rule; returned objects use printed rules (CR 400.7).
+
+Evidence: `TestRONTextLandTapLayerRecords` and `OrderingExpiry` execute all
+six Lifetap records and Lifeblood. `Lifetime`, `RemovalAndTargets`,
+`PendingTargets`, `ColorTargetsAndSibling`, `DirectBaseline`,
+`ControllerIsolation`, `PaymentAndBatch` and `Boundaries` cover the remaining
+lifecycle and legality contracts. Native `TestTextLandTapLayerDeclaration`,
+`Rejects` and `Bindings` cover validation, atomic rejection and exact event-land
+captures. Existing `TestRONOpponentLandTap*` remains unchanged. This prerequisite
+adds layer gameplay coverage for two unique names / seven records, with zero
+collection acceptance gain. Whole-object text dispatch, spell text and copy
+rebinding remain separate capabilities.
+
+
 ## Printed combat-pair trigger text layers
 
 `GenericTriggered.WithLayeredCombatPairTextRevision() *GenericTriggered` marks
@@ -662,8 +706,9 @@ identity, control, phasing, clones, restored rules, queued targets and rejection
 Native `TestTextLandTapTriggerDeclaration`, `Rejects` and `Bindings` cover
 validation, rejection without mutation and per-event saved identities.
 Existing `TestRONOpponentLandTap*` retains payment rollback, batch, entry-tapped
-and subtype evidence. Collection acceptance does not change. Live layer-3 order,
-expiry, original-text restoration and complete text consumers remain separate.
+and subtype evidence. Collection acceptance does not change.
+`Game.AddPrintedLandTapTextEffect` supplies layer order, expiry and baseline
+restoration for marked declarations. Complete text consumers remain separate.
 
 
 ## Printed global ability and P/T grant text revision

@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [GenericTriggered.WithLayeredLandTapTextRevision] for printed land events.
+// [Game.AddPrintedLandTapTextEffect] changes one declaration in layer 3.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Expiry restores surviving changes. Direct revision cannot change a result.
+// RON marks its complete typed battlefield opponent land-tap trigger context.
+// Pending triggers keep earlier rules, targets and event facts.
+// Clones keep separate baselines, cleanup and controller contexts.
+// Phasing keeps the visit. Removal stops detection; restoration keeps the text.
+// LKI keeps the final rule. Return uses printed rules.
+// Whole-object text, spell text and copy rebinding need separate services.
+//
 // Use [GenericTriggered.WithLayeredCombatPairTextRevision] for printed pair events.
 // [Game.AddPrintedCombatPairTextEffect] changes one declaration in layer 3.
 // Each pass restores its baseline before ordered color or basic land changes.
@@ -257,7 +268,7 @@
 // Pending bodies keep earlier text, targets and captured event identities.
 // Phasing keeps revisions. Ability restoration uses the revised declaration.
 // Clones keep separate later changes. Return restores printed rules.
-// The caller must supply text-layer order, lifetime and original-text restoration.
+// [Game.AddPrintedLandTapTextEffect] supplies layer installation for marked rules.
 // Other event kinds and complete text consumers need separate services.
 //
 // Use [GenericTriggered.WithSpellCastTextRevision] for a printed spell-cast trigger.

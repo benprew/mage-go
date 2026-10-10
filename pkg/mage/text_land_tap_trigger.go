@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -21,7 +23,20 @@ func (t *GenericTriggered) supportsLandTapTextRevision() bool {
 // RevisePrintedLandTapTrigger replaces one present printed land-tap trigger.
 // The caller must supply the text layer's order and lifetime separately.
 func (g *Game) RevisePrintedLandTapTrigger(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	marked := false
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			for _, a := range current.RuntimeAbilities {
+				if a.AbilityID() == abilityID {
+					marked = layeredLandTapEligible(a)
+				}
+			}
+			if _, exists := current.layeredLandTapOrigins[abilityID]; exists {
+				return fmt.Errorf("direct land-tap revision cannot change a layered result")
+			}
+		}
+	}
 	return g.revisePrintedTrigger(source, abilityID, func(t *GenericTriggered) bool {
-		return t.landTapTextRevision && t.supportsLandTapTextRevision()
+		return t.landTapTextRevision && t.supportsLandTapTextRevision() && (!marked || t.landTapTextLayer)
 	}, changes...)
 }
