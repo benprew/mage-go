@@ -1043,6 +1043,7 @@ func (g *Game) syncAbilityContext(perm *Permanent) {
 	if perm == nil {
 		return
 	}
+	perm = g.isolatePrintedLandwalkContext(perm)
 	for _, ability := range perm.RuntimeAbilities {
 		unwrapped := UnwrapAbility(ability)
 		unwrapped.SetSource(perm.ID())

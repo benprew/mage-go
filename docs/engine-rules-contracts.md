@@ -14483,3 +14483,65 @@ source filters, declaration rejection, semantic inventory, reprints and strict
 atomic loading. `TestDamageSourcePermanentValidation` and `Identity` cover the
 native service. Existing damage-player and attached-damage tests retain prior
 contracts. No RON source data changed.
+
+
+## Printed basic-landwalk layer-3 lifecycle
+
+`WithLayeredPrintedBasicLandwalk(keyword core.Attr) CardOption` opts one printed
+basic-landwalk declaration into the bounded layer-3 service. The existing
+`WithPrintedBasicLandwalk` direct-revision API remains available to legacy callers.
+RON lowers top-level `Landwalk(IsLandType(Plains|Island|Swamp|Mountain|Forest))`
+to the new option. Desert and legendary landwalk, granted abilities and filter
+reads retain their existing lowering.
+
+`(*Game).AddPrintedBasicLandwalkTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` installs one checked
+printed-declaration change. It requires the original present face-up source,
+an active opted-in declaration, at least one validated basic-land substitution,
+and `EndOfTurn` or `Indefinite`. A pure definition probe checks retained builder,
+declaration correspondence and eligibility before any effect is installed.
+Foreign IDs, absent/phased/returned sources, ability grants, removed declarations,
+invalid changes and unsupported durations return errors without changed rules.
+
+Each layer pass restores the declaration's baseline before the copy layer, then
+uses the existing effect manager to apply substitutions in layer 3 and timestamp
+order. Separate temporary and indefinite effects can overlap. When an earlier
+effect expires, later effects read the baseline and remaining changes again;
+there is no cumulative last-action state. Separate intrinsic contributions,
+granted keywords and sibling declarations remain independent. The baseline can
+include an earlier direct revision. Direct revisions cannot bypass the baseline
+of that same declaration while its layered result is present; other declarations
+keep their direct-revision API.
+
+Layer 6 removal occurs after the text change and can remove the revised keyword.
+Restoration and later passes recompute current text. Game clones copy effect
+storage and use separate baseline maps through copy-on-write. Phasing keeps the
+incarnation and saved result. The normal layer pass after phase-in recomputes
+text, including effects that expired while phased out. Phase-out does not provide
+a mutable present subject. Departure LKI retains the final characteristic result;
+a returned card or independent printed copy cannot inherit the old effect.
+
+CR 612.1–3, 613.1c/f, 613.3, 613.5, 613.7b, 400.7 and 702.26 establish these
+text-role, layer, order and identity contracts. This API selects a declaration,
+not every word on an arbitrary object. Copy-layer replacement can replace the
+selected declaration; this service does not rebind to new declaration IDs.
+Full Magical Hack/Sleight of Mind permanent and spell consumers remain rejected.
+The reusable lifecycle is a prerequisite, not a full-card unlock.
+
+Evidence: `TestTextLandwalkLayerDeclarations` and `ValidationIsAtomic` check
+native declaration validation, legacy opt-in boundaries, missing builders/groups,
+changed declaration kind/marker and rejection without mutation.
+`TestTextLandwalkLayerRestoredCloneContext` checks that control changes and
+restoration in one game cannot change the restored declaration in another,
+including expiry while the printed ability is suppressed and control changes in
+a clone made after expiry. Context synchronization copies opted-in landwalk
+declarations when their source/controller changes, including before entry.
+`TestRONTextLandwalkLayerRecords` exercises ten complete accepted card records,
+including Mountain Yeti protection and Sol'kanar's black-spell trigger alongside
+the changed landwalk. `OrderingAndExpiry`, `RemovalAndPhasing`,
+`IdentityAndBaseline`, `DuplicateDeclarations` and `Invalid` cover combat legality,
+ordered overlap, clone expiry, original copy information, granted keywords,
+ability removal/restoration, phase expiry, departure LKI, returned identity,
+legacy baselines, sibling declarations and invalid RON declarations.
+Existing `TestRONTextLandwalkRecords` retains all twenty accepted reprint records
+and the three unrelated full-card blockers.

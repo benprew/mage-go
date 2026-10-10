@@ -8,11 +8,11 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`DAMAGE-PLAYER-SOURCE-PERMANENT` adds typed source/host damage-to-player capture.
-Actual amounts, exact source identity, current control and departure LKI,
-attachment changes, prevention, timing, copies and clones have contract tests.
-Acceptance gain is **+1 name / +1 record**: Backfire. Native staged coverage
-excludes pre-existing Eureka work: 812 accepted names / 2,098 compiled records.
+`TEXT-LAYER-PRINTED-BASIC-LANDWALK` adds ordered layer-3 installation and
+baseline restoration for one printed basic-landwalk declaration. Ten accepted
+unique cards have new lifecycle gameplay evidence. Acceptance gain is **0 names
+/ 0 records**. Native coverage excludes pre-existing Eureka work: **812 accepted
+names / 2,098 compiled records**. Full text consumers remain unsupported.
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished.
@@ -61050,3 +61050,184 @@ Ranked next candidates:
 
 Complete collection gameplay, live text layers, runtime integration, Go-card
 removal and unused DSL removal remain unfinished. Stop after this slice.
+
+## 2026-10-09: printed basic-landwalk layer-3 lifecycle
+
+Status: completed implementation slice `TEXT-LAYER-PRINTED-BASIC-LANDWALK`.
+This completes one declaration context of the ranked native layer-3 prerequisite.
+Compilation gain is **0 names / 0 records**, as estimated. Ten accepted unique
+cards gain layer installation/restoration gameplay evidence. Full Magical Hack,
+Sleight of Mind and the collection remain unsupported at their existing gaps.
+
+### Candidate comparison and selection
+
+The latest ledger ranked bounded layer-3 installation first. Complete canonical
+RON records and nested forms were inspected for Magical Hack, Sleight of Mind,
+Farrel's Mantle and Mana Clash; matching reprints have the same declarations.
+All 23 complete records with top-level fixed basic-landwalk declarations were
+also inspected: 13 distinct names, of which 10 already compile (20 records).
+Nested granted-landwalk forms were distinguished from printed declarations.
+Targeted vocabulary inspection covered Landwalk, both variable word substitution
+forms, RepeatableActions, FlipACoin, CoinCameUpTails and AllCoinsCameUpHeads.
+
+| Candidate | Distinct affected cards / estimated full-card unlocks | Other blockers / downstream value | Estimated implementation and test effort |
+| --- | --- | --- | --- |
+| Ranked #1: bounded layer-3 printed landwalk lifecycle | Magical Hack; ten accepted printed-landwalk cards listed below. Zero immediate full-card unlocks. Sleight of Mind needs a separate color context. | Existing typed words, retained AST builders, correspondence, per-declaration revision and layer manager make this context ready. Arbitrary permanent text, other declaration kinds, spell text and spell-to-entry continuation remain blocked. Establishes ordered installation, baseline reset and expiry as a tested prerequisite for whole-object text consumers. | Small-to-medium: one layer effect, reset integration, compiler opt-in and lifecycle tests. |
+| Ranked #2: host unblocked capture | Farrel's Mantle; at most one unlock. | Complete record needs exact HostPermanent event capture, Other(Trigger_ThatCreature), optional host damage payment, both trigger aliases and AssignsNoCombatDamage continuation. Shared unblocked/identity and payment services exist, but all adapters and alias contracts must be checked together. | Medium: event identity and the complete targeted/payment continuation. |
+| Ranked #3: per-player coin rounds | Mana Clash; one estimated unlock. | Complete record needs FlipACoin results local to each player, CoinCameUpTails selection, a simultaneous damage round, AllCoinsCameUpHeads and RepeatThisProcess. Existing Eureka repeated-entry work is a separate uncommitted capability. Bottle of Suleiman, Goblin Artisans, Mijae Djinn and Ydwen Efreet use already-supported win/lose forms, so they are not new unlocks. | Medium-to-large: typed per-player round outcomes, batch damage and deterministic repeat tests. |
+
+Selected #1 because its ready shared prerequisite supports many distinct printed
+subjects and enables later whole-object text work. The two alternatives each
+unlock at most one name. The supported context was stated before editing. This
+run implements only the bounded landwalk lifecycle and does not begin another
+slice or accept partially executed text spells.
+
+### Exact contract, lowering and dependencies
+
+RON lowers top-level `Landwalk(IsLandType(Plains|Island|Swamp|Mountain|Forest))`
+to `mage.WithLayeredPrintedBasicLandwalk(keyword core.Attr) CardOption`.
+Desert/legendary landwalk, keyword filters and granted landwalk keep their prior
+representations. Arity, invalid subtypes and unbound variable declarations reject.
+No RON spelling or source record changed; no vocabulary refresh is required.
+
+`(*mage.Game).AddPrintedBasicLandwalkTextEffect(source *mage.Permanent,
+abilityID uuid.UUID, duration core.Duration, changes ...mage.TextChange) error`
+installs one printed declaration in layer 3. The source must be the original
+present face-up incarnation with an active opted-in declaration. Changes must
+be a nonempty sequence of validated basic-land substitutions. Only EndOfTurn
+and Indefinite are supported. An isolated definition probe verifies the retained
+builder, declaration groups, replacement type and eligibility before installation.
+Invalid requests install no effect and change no characteristic or declaration.
+
+Each pass restores that declaration's baseline before layer 1, then uses the
+existing layer manager and timestamp order to apply the active text changes.
+An earlier temporary substitution can feed a later indefinite substitution.
+After expiry, remaining changes run against the baseline again; a later change
+cannot retain a word that only the expired effect supplied. Layer 6 removal can
+remove the revised keyword. Grants, separate base contributions and duplicate
+printed declarations keep independent contributions and lifetimes.
+
+Baseline maps use copy-on-write. Restored ability instances are separate in each
+game, including after controller changes. Phasing keeps identity and suspended
+state; the normal present layer pass after phase-in recomputes current text,
+including expiry while absent. Departure LKI keeps the final result; a return
+or independent printed copy cannot inherit the effect. Copiable information
+stays printed. Copy-layer replacement of declaration IDs is outside this bounded
+API; it does not rebind to an unrelated new declaration.
+
+The existing direct `RevisePrintedBasicLandwalk` caller path remains available.
+A direct revision can establish the baseline before layering. A direct revision
+of that same declaration is rejected while its layered result is present, so it
+cannot bypass layer order; unrelated declarations retain direct revision.
+
+Reuse: BuildTextDefinitionRevision/BuildTextChangedDefinition, semantic RON AST
+transformation, definition validation/groups, retained copy information, exact
+capturedPermanent identities, EffectManager layers/expiry, attribute counts,
+ability removal/restoration, phasing, LKI and Game.Clone. No new zone, payment,
+trigger or replacement system was added. This slice makes no decisions or
+payments; payment rollback and simultaneous operations retain their existing
+services and tests. No Go-card fallback, card-name branch, global last-action
+slot, runtime declaration panic or partial production registry was introduced.
+CR 612.1–3, 613.1c/f, 613.3/5/7b, 400.7 and 702.26 support this bounded contract.
+API and rules-contract docs describe only the established context.
+
+### Failing-first evidence and card-to-test mapping
+
+The initial RON tests failed to compile because AddPrintedBasicLandwalkTextEffect
+was absent. They then checked ordered changes, expiry, combat and grants/removal.
+The phasing case exposed a nil mutation of a phased-out subject; reset now waits
+for a present subject. The phase-in fixture runs the normal explicit layer pass,
+as the existing PhaseIn API does not itself run layers.
+
+The native validation fixture was corrected to build a retained definition plan,
+so failures checked their intended contracts rather than missing provenance.
+Its changed-marker case then failed because an opted-in declaration could become
+ineligible; replacement eligibility is now checked. A separate native
+RestoredCloneContext test failed because restoration reused a baseline ability
+pointer across games. Restoration now copies the declaration and updates only
+its game's context. The suppressed variant also failed because general ability
+restoration read a shared printed declaration after expiry; the independent
+restored declaration now stays available to that path. These contract failures
+pass after their fixes. Clone-after-expiry variants also failed on shared
+context writes. Context synchronization now copies opted-in landwalk declarations
+when their source/controller changes. Its first version assumed present
+battlefield storage; focused entry gameplay caught that assumption, and entering
+objects now keep their independently owned storage. These tests pass.
+No gameplay expectation or rejection requirement was weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Bog Wraith, Shanodin Dryads, Marsh Goblins, Cat Warriors, Devouring Deep, Lost Soul, Righteous Avengers, Segovian Leviathan | TestRONTextLandwalkLayerRecords: complete canonical RON, active word replacement, repeated passes, stable ability identity, landwalk evasion and expiry/restoration. Existing TestRONTextLandwalkRecords covers all accepted reprints (20 records across the ten names). |
+| Mountain Yeti | Same Records test: complete RON, revised landwalk and unchanged white protection. Existing landwalk and protection contract suites remain mapped. |
+| Sol'kanar the Swamp King | Same Records test: complete RON, revised landwalk and actual black spell casting/trigger placement/resolution for the separate life-gain rule. Existing TestRONTextSpellCastTriggerIdentityAndLifetime retains trigger revision evidence. |
+| Bog Wraith ordering and combat | TestRONTextLandwalkLayerOrderingAndExpiry: temporary Swamp-to-Island followed by indefinite Island-to-Forest, repeated passes, legal blocker declaration, cloned cleanup, recomputation and printed copy information. |
+| Grants, suppression, phasing | TestRONTextLandwalkLayerRemovalAndPhasing: Fishliver Oil grant, later RemoveAllAbilities, expiry during suppression, restoration and phase expiry. |
+| Identity and baseline | TestRONTextLandwalkLayerIdentityAndBaseline: earlier direct revision, cloned expiry, independent printed copy, layered direct-revision rejection, departure LKI and returned-incarnation rejection. DuplicateDeclarations checks separate printed members and lifetimes. |
+| Declarations and atomic validation | TestRONTextLandwalkLayerInvalid: nil/foreign/empty/invalid/color/duration/face-down/phased/departed/removed/granted inputs and malformed RON. TestTextLandwalkLayerDeclarations, ValidationIsAtomic and RestoredCloneContext: five basic keywords, invalid nonbasic keywords, legacy eligibility, missing builder/groups, changed kind/marker, no mutation on failure and separate restored control contexts, both active and suppressed, and in clones made after expiry. |
+| Unchanged blocked printed-landwalk records | Goblins of the Flarg: WhenAPlayerControlsAPermanent; Scarwood Bandits: AnyPlayerMayCost; Goblin Flotilla: UntilEndOfCombat. Existing complete-record tests retain these three rejections. No full-card claim is made for them. |
+
+### Verification and collection status
+
+Fresh baseline make build and go test ./pkg/mage/dsl/ron -count=1 passed.
+Baseline loader exited 1 for collection rejection: **2,099 compiled / 346 rejected
+records**, **813 accepted / 173 rejected unique names** (2,445 / 986 total).
+These worktree counts include the pre-existing Eureka entry-round changes.
+
+Required final worktree checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTextLandwalkLayer -count=1`.
+- Expanded RON landwalk, spell-cast trigger and correspondence tests; native
+  `go test ./pkg/mage -run TestTextLandwalk -count=1`.
+- `make build`; `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`; `make test`.
+- `make lint`: zero issues, no automatic changes; `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1 for remaining collection gaps.
+  The complete JSON report equals the fresh baseline, including every diagnostic.
+
+The later clone-context fix triggered a fresh focused/build/vet/short/full
+verification sequence. No required check or environment blocker remains.
+Actual zero-name/zero-record gain matches the estimate. Fresh worktree status is
+**813 accepted / 173 rejected names**, **2,099 compiled / 346 rejected records**.
+Every previously accepted record remains accepted. The strict loader publishes
+no partial registry. Complete collection gameplay is not established.
+
+Staging excludes the existing Eureka implementation, source/inventory/count
+changes, instruction edits and ledger archive/reorganization. Its separate native
+baseline is **812 accepted / 174 rejected names**, **2,098 compiled / 347 rejected
+records**. Only the lifecycle slice is staged. The user work remains uncommitted.
+
+The isolated staged tree independently passes the expanded RON/native landwalk
+and text suites, exact accepted-collection reconstruction, numeric-consumer and
+inventory checks, `make build` and `go vet ./...`. Its fresh loader exits 1 with
+the native counts above. Relative to the worktree, Eureka is the sole additional
+rejected record/name. Mana Clash remains rejected in both trees: native reports
+unsupported action RepeatableActions at DRK:64:181, while the pre-existing
+Eureka adapter reaches unsupported repeated round producer EachPlayerAction at
+DRK:64:200. Every other diagnostic is identical. The first comparison incorrectly
+expected byte-identical reports after removing Eureka; the precise pre-existing
+Mana Clash diagnostic difference was then inspected and verified. Final worktree
+report still equals this run's worktree baseline exactly. Final lint reports zero
+issues and makes no automatic changes. Staged and worktree whitespace checks pass.
+
+Changed files: RON compiler.go and text_landwalk_layer_test.go; engine card.go,
+clone.go, effect_manager.go, game.go, text_landwalk.go, text_landwalk_layer.go and
+text_landwalk_layer_test.go; engine doc.go, engine-rules-contracts.md and this ledger.
+
+No source defect was found or corrected. RON sources are unchanged. Compilation
+and full gameplay coverage remain separate. Go-card/runtime cutover and obsolete
+DSL removal gates are unmet, so definitions, generators and existing callers
+remain. Unrelated files and user changes are preserved.
+
+Ranked next candidates:
+
+1. Bounded printed color-protection layer-3 installation/restoration, using the
+   existing checked protection revision service. Establish the color context for
+   Sleight of Mind and its Knight/Ward subjects before arbitrary-object lowering.
+   Compare with other shared prerequisites from fresh inventory at selection.
+2. Host unblocked event identity and complete Farrel's Mantle continuation;
+   require the Other filter, host damage payment and combat-rule body together.
+3. Per-player coin bindings and simultaneous Mana Clash rounds. Keep its local
+   results/repeat procedure separate from Eureka entry rounds and tap collections.
+
+Full permanent/spell text consumers, complete collection gameplay, runtime
+loading, Go-card deletion and unused DSL cleanup remain unfinished. Stop here.

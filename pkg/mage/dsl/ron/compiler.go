@@ -623,7 +623,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			if kw == core.Desertwalk || kw == core.LegendaryLandwalk {
 				return mage.WithKeyword(kw)
 			}
-			return mage.WithPrintedBasicLandwalk(kw)
+			return mage.WithLayeredPrintedBasicLandwalk(kw)
 		}, nil
 	default:
 		return nil, unsupported(n, "rule")

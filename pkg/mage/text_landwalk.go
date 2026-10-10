@@ -15,6 +15,7 @@ import (
 type PrintedBasicLandwalkAbility struct {
 	BaseAbility
 	keyword                core.Attr
+	textLayerEligible      bool
 	textRevisionDefinition Card
 }
 
@@ -39,6 +40,17 @@ func isBasicLandwalk(keyword core.Attr) bool {
 // RevisePrintedBasicLandwalk replaces one present printed basic-landwalk rule.
 // The caller must supply text-layer order and lifetime separately.
 func (g *Game) RevisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID, changes ...TextChange) error {
+	if source != nil {
+		if current := g.FindPermanent(source.ID()); current != nil {
+			if _, layered := current.layeredLandwalkOrigins[abilityID]; layered {
+				return fmt.Errorf("direct landwalk revision cannot change a layered declaration")
+			}
+		}
+	}
+	return g.revisePrintedBasicLandwalk(source, abilityID, true, changes...)
+}
+
+func (g *Game) revisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID, refresh bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text landwalk revision requires a present source")
 	}
@@ -91,7 +103,7 @@ func (g *Game) RevisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID
 		return fmt.Errorf("text landwalk revision lost its replacement")
 	}
 	fresh, ok := replacement.(*PrintedBasicLandwalkAbility)
-	if !ok || !isBasicLandwalk(fresh.keyword) {
+	if !ok || !isBasicLandwalk(fresh.keyword) || (active.textLayerEligible && !fresh.textLayerEligible) {
 		return fmt.Errorf("text landwalk revision changed the landwalk contract")
 	}
 	rebuilt := *fresh
@@ -111,6 +123,8 @@ func (g *Game) RevisePrintedBasicLandwalk(source *Permanent, abilityID uuid.UUID
 		mutable.revisedPrintedLandwalks = make(map[uuid.UUID]*PrintedBasicLandwalkAbility)
 	}
 	mutable.revisedPrintedLandwalks[abilityID] = &rebuilt
-	g.ApplyContinuousEffects()
+	if refresh {
+		g.ApplyContinuousEffects()
+	}
 	return nil
 }

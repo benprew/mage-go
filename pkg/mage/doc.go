@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [WithLayeredPrintedBasicLandwalk] for checked layer 3 landwalk changes.
+// [Game.AddPrintedBasicLandwalkTextEffect] selects one printed declaration.
+// It accepts basic land word changes with EndOfTurn or Indefinite duration.
+// Each layer pass restores the baseline, then applies changes in timestamp order.
+// Expiry removes the change from later passes. Layer 6 can remove the keyword.
+// Granted keywords and sibling declarations stay separate. Clones keep separate
+// effects and baselines. Phasing keeps the visit; the next present layer pass
+// recomputes the text. Departure LKI keeps the last result. Return uses printed
+// rules. Direct revision of the layered declaration is rejected while its layer
+// result is present. RON opts in top-level fixed basic landwalk declarations.
+// Whole-object text changes, copy-layer rebinding and spell text are separate.
+//
 // Use [CantBeTargetedByAbilities] with [Static] for a live target restriction.
 // Its filter reads the ability source. Spell targets use a separate rule.
 // [This] and [AttachedPermanent] keep source and host identity checks.
