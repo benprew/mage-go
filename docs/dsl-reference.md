@@ -11019,3 +11019,41 @@ registration positions. Existing `TestRONPermanentFilter*`,
 `TestRONSourceLeaveShrine*` and `TestRONSourceLeaveCasting` retain normal casting,
 Aura legality, failed-cost rollback, simultaneous damage, prevention, copied
 triggers and old-source information evidence.
+
+## Printed Aura ability-grant text layer
+
+`StaticAbilityHolder.WithLayeredAbilityTextRevision() *StaticAbilityHolder` adds
+layer-3 installation to the checked printed static ability contract. RON uses
+this marker for unconditional `PermanentLayerEffect(HostPermanent,
+[AddAbility(abilities)])`: keyword symbols, fixed landwalk, and Ward protection
+with `SinglePermanent(ThisPermanent)` as the exact Aura exception. Mixed parts,
+global rules and grants of activated or triggered abilities do not opt in.
+
+`Game.AddPrintedStaticAbilityTextEffect(source *Permanent, abilityID uuid.UUID,
+duration core.Duration, changes ...TextChange) error` accepts validated color
+or basic-land word changes, and only `Indefinite` or `EndOfTurn` duration. It
+checks the present face-up source incarnation, active eligible printed holder,
+retained semantic builder, correspondence and complete registrations in an
+isolated probe before registration. Invalid input cannot change live rules.
+
+Each layer pass restores a separate baseline, then applies text changes in
+timestamp order before layer-6 grants. Expiry recomputes surviving changes from
+that baseline. Prior direct revision can supply the baseline; direct revision
+cannot overwrite a currently layered result. Holder UUIDs, declaration groups,
+effect positions, source context and grant timestamps stay intact. The donor
+changes; granted recipient abilities remain separate (CR 612.2–3, 613.1c/f).
+
+Ability removal suppresses the donor. Restoration uses the registered holder.
+Phasing preserves the incarnation and delays baseline reset until a present
+pass. Expiry during suppression or phasing restores the original grant on
+return. Departure LKI retains the last grant; a new battlefield visit uses
+printed rules. Clones keep separate baselines, registrations and controller
+contexts, including clones made after expiry. Copy-layer declaration replacement,
+whole-object text and spell text remain separate capabilities.
+
+Evidence: `TestRONTextStaticAbilityLayerWards`, `Landwalk`, `Keywords`,
+`Boundaries`, `IndependentDeclarations`, `DamageAndLKI`, `Records`, `Expiry`,
+`SuppressedAndPhasedExpiry`, `PriorRevisionAndLandExpiry`, and
+`InvalidInstallation`; native `TestTextStaticAbilityLayerDeclaration`, `Rejects`
+and `RestoredCloneContext`. These tests cover twelve unique donor cards and all
+61 records. Compilation gain is zero; full card gameplay is tracked separately.

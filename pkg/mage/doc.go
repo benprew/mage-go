@@ -117,6 +117,18 @@
 // The caller must supply text-layer order, lifetime and original-text restoration.
 // Conditional rules, other layers and full text consumers need separate services.
 //
+// Use [StaticAbilityHolder.WithLayeredAbilityTextRevision] for a printed donor rule.
+// [Game.AddPrintedStaticAbilityTextEffect] installs one declaration in layer 3.
+// RON opts in unconditional Aura-host keyword, landwalk and Ward grants.
+// Each pass restores its baseline before ordered color or basic land changes.
+// Expiry recomputes surviving changes. Prior direct revision can be the baseline.
+// Direct revision cannot change a layered result. Grants apply in layer 6.
+// Ward protection keeps its exact Aura exception. Ability removal suppresses
+// the donor; restoration uses its registered rule. Phasing keeps the visit.
+// Clones keep separate registrations, baselines and controller contexts.
+// Departure LKI keeps the last grant. Return uses printed rules.
+// Full object text, spell text and copy-layer replacement need separate services.
+//
 // Use [StaticAbilityHolder.WithAbilityTextRevision] for a printed ability-layer rule.
 // [Game.RevisePrintedStaticAbility] checks its declaration and source visit.
 // It replaces fresh effects with the same active ID and registration positions.

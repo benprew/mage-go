@@ -669,23 +669,24 @@ type Permanent struct {
 	AttachedTo  uuid.UUID   // what this permanent is attached to
 	Attachments []uuid.UUID // what's attached to this permanent
 
-	RuntimeAbilities           []Ability // base + granted by effects
-	SubTypeOverride            []string  // if set, replaces card's subtypes (from continuous effects)
-	SubTypeAdditions           []string  // additive subtypes granted by continuous effects (CR 613 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
-	printedAbilitiesSuppressed bool
-	revisedPrintedTriggers     map[uuid.UUID]*GenericTriggered
-	revisedPrintedManaBonuses  map[uuid.UUID]*ManaBonusAbility
-	revisedPrintedProtections  map[uuid.UUID]*ProtectionAbility
-	revisedPrintedLandwalks    map[uuid.UUID]*PrintedBasicLandwalkAbility
-	layeredLandwalkOrigins     map[uuid.UUID]landwalkLayerOrigin
-	layeredProtectionOrigins   map[uuid.UUID]protectionLayerOrigin
-	subtypeFamilyOverrides     [subtypeFamilyCount][]string
-	subtypeFamilyOverrideSet   [subtypeFamilyCount]bool
-	subtypeFamilyAdditions     [subtypeFamilyCount][]string
-	BasePTOverride             *[2]int  // if set, overrides base P/T (for animate effects)
-	ColorOverride              *[]Color // if set, replaces card's colors (from lace effects)
-	FaceDown                   bool     // true when face-down (e.g. Illusionary Mask)
-	IsToken                    bool     // true for token permanents (cease to exist outside battlefield)
+	RuntimeAbilities            []Ability // base + granted by effects
+	SubTypeOverride             []string  // if set, replaces card's subtypes (from continuous effects)
+	SubTypeAdditions            []string  // additive subtypes granted by continuous effects (CR 613 layer 4); kept alongside SubTypeOverride or card's intrinsic subtypes
+	printedAbilitiesSuppressed  bool
+	revisedPrintedTriggers      map[uuid.UUID]*GenericTriggered
+	revisedPrintedManaBonuses   map[uuid.UUID]*ManaBonusAbility
+	revisedPrintedProtections   map[uuid.UUID]*ProtectionAbility
+	revisedPrintedLandwalks     map[uuid.UUID]*PrintedBasicLandwalkAbility
+	layeredLandwalkOrigins      map[uuid.UUID]landwalkLayerOrigin
+	layeredProtectionOrigins    map[uuid.UUID]protectionLayerOrigin
+	layeredStaticAbilityOrigins map[uuid.UUID]*StaticAbilityHolder
+	subtypeFamilyOverrides      [subtypeFamilyCount][]string
+	subtypeFamilyOverrideSet    [subtypeFamilyCount]bool
+	subtypeFamilyAdditions      [subtypeFamilyCount][]string
+	BasePTOverride              *[2]int  // if set, overrides base P/T (for animate effects)
+	ColorOverride               *[]Color // if set, replaces card's colors (from lace effects)
+	FaceDown                    bool     // true when face-down (e.g. Illusionary Mask)
+	IsToken                     bool     // true for token permanents (cease to exist outside battlefield)
 
 	// Attr system: additive/subtractive attribute counts.
 	// baseAttrs holds intrinsic attrs (set at creation/ETB; persists until explicitly revoked).

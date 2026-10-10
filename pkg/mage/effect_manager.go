@@ -598,6 +598,7 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 func (em *EffectManager) Apply(g *Game) {
 	g.resetPrintedLandwalkTextLayers()
 	g.resetPrintedProtectionTextLayers()
+	g.resetPrintedStaticAbilityTextLayers()
 	// CR 613.6 keeps each animation selection for this layer cycle.
 	em.animationMembers = make(map[animationCycleKey][]capturedPermanent)
 	em.composedMembers = make(map[composedCycleKey]composedCycleSelection)

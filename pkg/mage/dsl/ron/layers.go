@@ -258,7 +258,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			holder.WithLandTypeTextRevision()
 		}
 		if !global && len(parts) == 1 && parts[0].Name == "AddAbility" {
-			holder.WithAbilityTextRevision()
+			holder.WithLayeredAbilityTextRevision()
 		}
 		if global && !general && len(parts) == 1 && parts[0].Name == "AdjustPT" {
 			holder.WithPTTextRevision()

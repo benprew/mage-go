@@ -170,6 +170,7 @@ type StaticAbilityHolder struct {
 	BaseAbility
 	ptTextRevision         bool
 	abilityTextRevision    bool
+	abilityTextLayer       bool
 	grantTextRevision      bool
 	animationTextRevision  bool
 	landTypeTextRevision   bool

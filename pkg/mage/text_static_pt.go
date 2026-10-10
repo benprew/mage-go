@@ -80,12 +80,19 @@ func (g *Game) RevisePrintedStaticPTAbility(source *Permanent, abilityID uuid.UU
 }
 
 func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID, eligible func(*StaticAbilityHolder) bool, changes ...TextChange) error {
+	return g.revisePrintedStaticAbilityWithRefresh(source, abilityID, eligible, true, changes...)
+}
+
+func (g *Game) revisePrintedStaticAbilityWithRefresh(source *Permanent, abilityID uuid.UUID, eligible func(*StaticAbilityHolder) bool, refresh bool, changes ...TextChange) error {
 	if source == nil {
 		return fmt.Errorf("text static revision requires a present source")
 	}
 	current := g.FindPermanent(source.ID())
 	if current == nil || current.incarnationID != source.incarnationID || current.FaceDown {
 		return fmt.Errorf("text static revision requires the original face-up source")
+	}
+	if refresh && current.layeredStaticAbilityOrigins[abilityID] != nil {
+		return fmt.Errorf("direct static revision cannot change a layered declaration")
 	}
 	base, ok := current.Card.(*BaseCard)
 	if !ok {
@@ -141,7 +148,7 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 		return fmt.Errorf("text static revision lost its replacement")
 	}
 	fresh, ok := replacement.(*StaticAbilityHolder)
-	if !ok || !eligible(fresh) || len(fresh.Effects) != len(active.Effects) {
+	if !ok || !eligible(fresh) || (active.abilityTextLayer && !fresh.abilityTextLayer) || len(fresh.Effects) != len(active.Effects) {
 		return fmt.Errorf("text static revision changed the static contract")
 	}
 	if active.landTypeTextRevision && active.landTypeTextRevisionContext() != fresh.landTypeTextRevisionContext() {
@@ -171,6 +178,8 @@ func (g *Game) revisePrintedStaticAbility(source *Permanent, abilityID uuid.UUID
 	mutable.RuntimeAbilities = slices.Clone(mutable.RuntimeAbilities)
 	mutable.RuntimeAbilities[index] = &rebuilt
 	g.effects.effects = registrations
-	g.ApplyContinuousEffects()
+	if refresh {
+		g.ApplyContinuousEffects()
+	}
 	return nil
 }
