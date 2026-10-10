@@ -8,13 +8,13 @@ unique card names** (986 total), and **2,099 compiled / 346 rejected records**
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
-`GLOBAL-STATIC-SPELL-TEXT` carries one complete global static rule through
-permanent-spell entry. Continuation evidence covers **9 names / 29 complete
-records**; acceptance gain is **0 names / 0 records**. Fixed creature P/T and
-basic-land-type rules retain live control/subjects, independent spell copies
-and clones, phasing, later text-layer baselines, printed copy values, LKI and
-printed recasts. Mixed/static-trigger, sticky and other spell contexts,
-whole-object word dispatch and the word-changing spells remain incomplete.
+`SPELL-CAST-SPELL-TEXT` carries one complete typed battlefield cast-event rule
+through permanent-spell entry. Continuation evidence covers **10 names / 35
+complete records**; acceptance gain is **0 names / 0 records**. Fresh event
+bindings, trigger targets and optional payments remain separate per instance.
+Copies, clones, phasing, later text layers, control, copiable values, LKI and
+printed recasts are covered. Mixed, intrinsic-plus-trigger and other spell
+contexts, whole-object dispatch and word-changing spells remain incomplete.
 
 Complete collection gameplay, runtime integration, Go-card removal and unused
 DSL removal remain unfinished.
@@ -64212,3 +64212,166 @@ Ranked next candidates:
 
 Stop after this completed slice. Runtime cutover, Go-card deletion, unused DSL
 removal and complete collection gameplay remain unfinished.
+
+## 2026-10-09: typed cast-event permanent-spell text continuation
+
+Capability: `SPELL-CAST-SPELL-TEXT` complete for one typed battlefield trigger
+on a nonland, non-Aura permanent spell. This is one continuation prerequisite;
+whole-object word-change dispatch and runtime cutover remain incomplete.
+
+### Environment and candidate selection
+
+The fresh worktree build and existing TestRONTextGlobalStaticSpell tests passed.
+The strict loader exited 1: 813 accepted / 173 rejected names and 2,099 compiled /
+346 rejected records, across 986 names / 2,445 records. Collection rejection is
+expected and distinct from a build failure. Pre-existing repeated-entry,
+compiler/inventory, optional-entry, documentation and ledger-archive changes
+were preserved. Only this slice is staged, with shared files reconstructed from
+HEAD plus this slice. The user's ledger archive and other changes stay unstaged.
+
+The latest ranked candidate #1 is dependency-ready. Complete RON records and
+nested forms were inspected for the following three candidates. All identical
+reprints were checked together and counted once by name.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Typed cast-event spell continuation (selected) | Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere, Citanul Druid, Urza's Chalice, In the Eye of Chaos, Nether Void, Presence of the Master: 10 names / 35 records | 0 new compiler acceptances; all ten already compile. One complete trigger context can gain continuation evidence. Invoke Prejudice still rejects its relational spell filter; Sol'kanar has an extra intrinsic rule. | Reuses complete cast-event, payment and layer contracts; supplies ten contexts for later whole-object text dispatch. Moderate implementation/test effort. |
+| Typed land-mana-event spell continuation, then mixed static/event rules | Mana Flare, Manabarbs, Gauntlet of Might: 3 names / 17 records | 0 new compiler acceptances. First two use complete single events; Gauntlet needs a distinct mixed P/T plus mana-bonus contract. Psychic Venom's host tap event stays separate. | Shared continuation for mana-trigger and bonus services; moderate-to-high effort across two native ability types, then mixed rules. |
+| Whole-object word-change dispatch and lifetime | Magical Hack, Sleight of Mind: 2 names / 12 records | Up to 2 only after the remaining permanent-spell contexts and complete object/lifetime dispatch are ready. No gain promised now. | Consumes all per-declaration markers and spell contexts. High effort with unresolved dependencies; not a bounded complete slice for this run. |
+
+The selected shape extends the first candidate's five charms to the other five
+already supported single cast-event rules, without adding another event family.
+It offers the largest concrete shared downstream value among these candidates.
+No first-error count was treated as an unlock estimate. Estimated compiler gain
+was 0 names / 0 records; actual gain is 0 / 0. Gameplay continuation evidence
+increases by 10 names / 35 complete records, independently of acceptance counts.
+
+### Exact contract and reuse boundary
+
+New native signature: `WithSpellCastSpellTextContinuation() CardOption`.
+Existing dispatch: `Game.RevisePrintedSpellText(stackID uuid.UUID,
+changes ...TextChange) error`. The marker requires exactly one
+GenericTriggered.WithLayeredSpellCastTextRevision declaration using a typed
+battlefield spellCastPattern, no intrinsic keywords, other abilities, modes,
+casting targets, additional/alternate costs or other continuation marker.
+The source must be a nonland, non-Aura permanent. Duplicate/nil/unmarked and
+incompatible declarations reject during definition validation.
+
+RON selects exactly one existing
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), body)`.
+It retains all existing filter, action, target and lexical scope validation.
+No unsupported relational filter, body or binding becomes accepted by this
+shape recognizer. Each rebuild creates fresh targets, spell/caster bindings
+and payment scopes. RON owns spelling and lowering; mage owns stack identity,
+declaration validation and continuation execution.
+
+Revision requires matching printed ability groups and a retained semantic
+builder. It checks caster/capture context, subtype context, target shape and
+body declaration counts before replacing the stack definition. Announced
+targets, bodies and casting result maps remain outside this contract. Empty or
+invalid words, missing builders/groups, incompatible replacements and departed
+stack visits fail atomically. Original physical card, controller, payment and
+cast facts remain. Resolving optional payments are not casting costs.
+
+Entry builds fresh continued rules with the physical ID, owner, token status
+and printed departure card. Spell copies become tokens; clone rules and payment
+results stay independent. Event controller and exact spell/caster captures are
+saved at detection. Targets use revised declaration filters at placement and
+recheck legality at resolution. Later text layers use the continued baseline;
+expiry restores it, removal stops detection and phasing retains the visit.
+Pending triggers keep prior rules. LKI keeps final continued rules; return uses
+printed rules. Copiable values exclude ordinary word changes. A Land copy type
+addition clears the spell-only marker while retaining the trigger and semantic
+builder; authored invalid Land markers still reject.
+
+Reuse: CardDefinitionPlan and ordered semantic word substitution,
+BuildTextDefinitionRevision/ReplacementAbility, typed cast-event context checks,
+trigger captures and targeting, transactional optional payments and result
+bindings, permanent entry and spell-copy wrappers, game cloning, layer-3
+baseline/expiry and layer-6 removal, phasing, copiable provenance and LKI.
+No replacement ordering, simultaneous-operation, cost or zone subsystem was
+changed. Local rules: CR 400.7a, 608.3a/e/f, 612.1–3, 613.1c/f, 707.2–3/10f.
+
+### Failing-first evidence and card-to-test mappings
+
+Before implementation, native Declaration/RejectsAtomic tests failed compilation
+on the absent marker signature. RON tests first failed on the absent shape
+helper; after a minimal false recognizer, Records failed all 35 complete records
+at the existing ordinary instant/sorcery spell-continuation boundary. Those
+meaningful failures were confirmed before production execution changes.
+
+| Cards/contract | RON/native evidence |
+| --- | --- |
+| Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere (each LEA/LEB/2ED/3ED/CED/CEI; 30 records) | TestRONTextSpellCastSpellRecords casts and revises every complete record, checks entry identity, unchanged casting payment, revised versus printed color membership, resolution-only optional mana/life, LKI and printed recasts. |
+| Citanul Druid (ATQ) | Records proves complete creature entry and opponent artifact-cast +1/+1 counter body. |
+| Urza's Chalice (ATQ) | Records proves artifact-cast optional mana/life with the continued declaration. |
+| In the Eye of Chaos, Nether Void (LEG) | Records proves instant/any-spell event, exact saved caster payment, refusal without spending, and counter of the exact event spell. IndependentPayments uses complete Nether Void for two pending casts, copied trigger payers, independent clone paid/refused paths and result maps. |
+| Presence of the Master (LEG) | Records proves enchantment-cast filtering and exact event-spell counter after continued entry. |
+| Complete Throne of Bone lifecycle | Lifecycle proves ordered spell changes, independently revised token copies and clones, copy values restoring printed rules, repeated later text layers, detection-time pending bodies, payment decline, layer-6 removal/restoration, expiry while phased, declaration identity, control changes, pending departure payment and LKI rule gameplay. |
+| Revised targets and event scopes | EventBindingsAndTargets uses synthetic RON to prove revised trigger targets, fresh caster/spell captures, correct optional payer and all-illegal target rejection before body/payment. |
+| Copy exceptions | CopyExceptions proves added Land types retain revised trigger gameplay without an incompatible spell marker. |
+| Inventory and unsupported contexts | Inventory parses the complete collection and requires exactly 10 compiled names / 35 records. Boundaries rejects malformed player filters, wrong reference types and unbound payment results; mixed/intrinsic and other event spells reject revision without mutation. Invoke Prejudice's relational filter remains unsupported. |
+| Native declarations and atomic rejection | TestTextSpellCastSpellDeclaration rejects duplicate markers, mixed markers, nil/absent/unmarked rules, extra costs/keywords/rules, casting targets, wrong types and Aura contexts. RejectsAtomic covers invalid/empty words, changed caster/capture/target/keyword/subtype contexts, missing builder/groups, foreign casting state and countered stack visits. |
+
+Existing TestRONSpellCastLife and TestRONTextSpellCastLayer suites retain the
+broader timing, affordability, rollback, LKI and battlefield layer evidence.
+No source-data defect was found or corrected. RON records and vocabulary hashes
+are unchanged, so no vocabulary refresh is needed. No Go definitions or unused
+DSL functions were removed; runtime and deletion gates remain unmet.
+
+Changed files: pkg/mage/card.go, copy_modification.go, definition.go, doc.go,
+stack_resolver.go, text_spell_continuation.go; new text_spell_cast_spell.go/test;
+pkg/mage/dsl/ron/compiler.go and new text_spell_cast_spell.go/test;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger (14 files).
+
+### Verification and fresh loader evidence
+
+- Fresh baseline make build and go test ./pkg/mage/dsl/ron -run
+  TestRONTextGlobalStaticSpell -count=1 passed (RON 0.738s). Baseline loader
+  exited 1 with 813 accepted / 173 rejected names, 2,099 / 346 records.
+- Failing-first TestTextSpellCastSpell tests failed on the absent marker API.
+  TestRONTextSpellCastSpellRecords then rejected all 35 records against the
+  minimal false recognizer at the unsupported permanent-spell boundary.
+- Final go test ./pkg/mage/dsl/ron -run TestRONTextSpellCastSpell -count=1
+  passed (0.629s). Native go test ./pkg/mage -run TestTextSpellCastSpell
+  -count=1 passed (0.475s), including expanded capture/target rejection cases.
+- Required fast-fail sequence passed: make build; go vet ./...;
+  go test ./pkg/mage/... -short -count=1 (RON 37.697s); make test
+  (RON 37.340s); make lint (0 issues); git diff --check.
+  Automatic lint formatting was reviewed; no slice source changed after tests.
+- Final go run ./cmd/loadcards -json exited 1 as expected: **813 accepted /
+  173 rejected unique names**, **2,099 compiled / 346 rejected records**.
+  Total remains 986 names / 2,445 records. Parsed JSON, including every
+  diagnostic, exactly equals the fresh worktree baseline. Loading stays strict.
+- A fresh clean index export contains HEAD plus only the 14 slice files,
+  retaining HEAD ledger history and excluding all pre-existing work. Its
+  make build, go vet ./..., go test ./pkg/mage/... -short -count=1
+  (RON 42.730s), make test (RON 39.474s) and make lint (0 issues) passed.
+  Its implementation files exactly equal the staged files after lint.
+  Its loader exited 1: **812 accepted / 174 rejected names**, **2,098 compiled /
+  347 rejected records**. Eureka is the one extra rejected name/record because
+  the user's repeated-entry work is excluded. Mana Clash's first diagnostic
+  changes from unsupported EachPlayerAction repeated producer to unsupported
+  RepeatableActions for that same excluded adapter. All other diagnostics match.
+  This slice has no dependency on the preserved worktree changes.
+- Estimated and actual compiler gains both equal 0 names / 0 records.
+  New continuation evidence covers 10 already accepted names / 35 records.
+  No source-data defect or unresolved build/test/lint blocker remains.
+  Runtime integration, deletion and complete gameplay gates remain unmet.
+
+Ranked next candidates:
+
+1. Typed land-mana-event permanent-spell continuation for complete Mana Flare
+   and Manabarbs. Reuse their typed event and mana-bonus text-layer services;
+   inspect clone/controller and entry contracts before selecting both native
+   ability types. Two names / 12 records; no compiler gain promised.
+2. Mixed global-static/event spell continuation for Gauntlet of Might and
+   Conversion. They combine already supported layers with mana or upkeep rules;
+   inspect complete records and shared context validation. Keep sticky Titania's
+   Song and intrinsic-plus-trigger Sol'kanar separate until contracts exist.
+3. Whole-object word dispatch/lifetime and both modes of Magical Hack/Sleight of
+   Mind after remaining contexts are ready. Relational spell filters, sticky
+   layers and added copy abilities remain independent capabilities.
+
+Stop after this slice. Complete collection gameplay, runtime loading, Go-card
+removal, unused DSL cleanup and final native startup validation remain incomplete.

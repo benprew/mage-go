@@ -1,5 +1,54 @@
 # Engine rules contracts
 
+## Typed cast-event permanent-spell text continuation
+
+`WithSpellCastSpellTextContinuation() CardOption` marks a permanent with one
+`GenericTriggered.WithLayeredSpellCastTextRevision()` declaration.
+`Game.RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) error`
+validates and retains fresh rules for that exact stack visit through entry.
+The card must be a nonland, non-Aura permanent with no intrinsic keywords,
+other abilities, modes, casting targets, additional or alternate costs, or
+other permanent-spell continuation marker. RON selects exactly one existing
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), body)`.
+Existing filter, action, target and lexical binding checks remain mandatory.
+
+Revisions require a retained semantic builder and matching printed declaration
+group. They preserve caster/capture context, subtype context and target-group
+shape. Announced targets, resolving bodies and saved casting results are outside
+this contract. Invalid words, empty changes, missing builders/groups, changed
+contexts and countered visits reject before mutation. The physical card,
+controller, payment and cast facts remain unchanged. Fresh trigger bindings and
+resolution payments are not read or paid at announcement.
+
+Entry uses the shared permanent-spell pipeline with physical ID, owner and
+printed departure rules (CR 400.7a, 608.3a/e/f). Spell copies enter as tokens;
+clones keep separate continued rules, event captures and payment results.
+Current control supplies the trigger controller at detection. Pending triggers
+keep detection-time rules and references through later revisions, copies,
+phasing and departure. Trigger targets use revised filters at placement and
+recheck legality at resolution. Later layer-3 changes use the continued
+baseline; expiry restores it, and layer-6 removal suppresses detection.
+Phasing retains the visit. LKI keeps continued rules, while return uses printed
+rules. Ordinary word changes stay outside copiable values (CR 612.1–3,
+613.1c/f, 707.2–3, 707.10f).
+
+The existing definition builder, typed cast event, transactional optional
+payment, targeting, layer, clone, copy provenance and LKI services supply these
+rules. No payment, replacement ordering or simultaneous-operation contract is
+changed. Copy type additions clear this spell-only marker on Land prototypes
+and retain their trigger and semantic builder. Authored invalid markers reject.
+Mixed rules, intrinsic-plus-trigger spells, other event contexts, whole-object
+word dispatch and the word-changing spells need separate contracts.
+
+Evidence: `TestRONTextSpellCastSpellRecords` executes all 35 complete records
+for Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere, Citanul
+Druid, Urza's Chalice, In the Eye of Chaos, Nether Void and Presence of the Master.
+`Lifecycle`, `EventBindingsAndTargets`, `IndependentPayments`, `CopyExceptions`,
+`Inventory` and `Boundaries` cover continued gameplay and context checks.
+Native `TestTextSpellCastSpellDeclaration` and `RejectsAtomic` cover malformed
+markers and atomic revision. Existing `TestRONSpellCastLife*` payment rollback
+and `TestRONTextSpellCastLayer*` contracts remain unchanged.
+
 ## Printed opponent-land-tap trigger text layers
 
 `GenericTriggered.WithLayeredLandTapTextRevision() *GenericTriggered` opts in

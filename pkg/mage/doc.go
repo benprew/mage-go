@@ -17,6 +17,18 @@
 // Other permanent spells and casting results need separate services.
 // Whole-object text dispatch and layer installation need separate services.
 //
+// Use [WithSpellCastSpellTextContinuation] for one typed cast-event spell rule.
+// [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
+// RON marks one battlefield TriggerA with an AnyPlayer or Opponent cast event.
+// Other rules, keywords and casting costs or targets need separate contracts.
+// Entry keeps physical identity, owner and printed departure rules.
+// Copies enter as tokens. Clones keep separate rules and payment results.
+// Event bindings and trigger targets belong to each fresh declaration.
+// Phasing keeps the visit. Later text layers use the continued baseline.
+// Removal stops detection. Pending triggers keep their rules and event facts.
+// Copy values exclude ordinary word changes. LKI keeps the final rules.
+// Return uses printed rules. Whole-object word changes need separate services.
+//
 // Use [WithGlobalStaticSpellTextContinuation] for one global static spell rule.
 // [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
 // RON marks one unconditional fixed creature P/T or basic-land-type rule.

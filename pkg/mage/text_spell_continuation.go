@@ -63,6 +63,9 @@ func (g *Game) RevisePrintedSpellText(stackID uuid.UUID, changes ...TextChange) 
 	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.globalStaticSpellText != 0 {
 		return g.reviseGlobalStaticSpellText(obj, changes)
 	}
+	if base, ok := obj.spellTextDefinition.(*BaseCard); ok && base.spellCastSpellText != 0 {
+		return g.reviseSpellCastSpellText(obj, changes)
+	}
 	if _, modal := getModalSpellAbility(obj.spellTextDefinition); modal {
 		return g.reviseModalSpellText(obj, changes)
 	}

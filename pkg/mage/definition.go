@@ -367,6 +367,11 @@ func InspectDefinition(value any) DefinitionMetadata {
 
 // ValidateCardDefinition checks the expression families that have DSL adapters.
 func ValidateCardDefinition(name string, card Card) error {
+	if base, ok := card.(*BaseCard); ok && base != nil && base.spellCastSpellText != 0 {
+		if _, err := spellCastSpellTextContext(card); err != nil {
+			return fmt.Errorf("%s: %w", name, err)
+		}
+	}
 	if base, ok := card.(*BaseCard); ok && base != nil && base.globalStaticSpellText != 0 {
 		if _, err := globalStaticSpellTextContext(card); err != nil {
 			return fmt.Errorf("%s: %w", name, err)

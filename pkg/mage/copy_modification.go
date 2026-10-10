@@ -91,6 +91,7 @@ func (m copyTypeAddition) applyCopyModification(card *BaseCard) {
 		}
 	}
 	if card.HasType(core.TypeLand) {
+		card.spellCastSpellText = 0
 		card.globalStaticSpellText = 0
 	}
 	// Extra card types require a separate spell continuation contract.
