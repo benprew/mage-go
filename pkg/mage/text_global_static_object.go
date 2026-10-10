@@ -100,6 +100,9 @@ func (e *permanentObjectTextChange) Apply(ctx *EffectContext) error {
 	if _, err := manaTapSpellTextContext(p.Card); err == nil {
 		return ctx.Game.AddPrintedManaTapObjectTextEffect(p, e.duration, changes...)
 	}
+	if _, err := spellCastObjectTextContext(p.Card); err == nil {
+		return ctx.Game.AddPrintedSpellCastObjectTextEffect(p, e.duration, changes...)
+	}
 	return ctx.Game.AddPrintedGlobalStaticTextEffect(p, e.duration, changes...)
 }
 func (e *permanentObjectTextChange) inspectDefinition() definitionNode {

@@ -134,7 +134,7 @@ func TestRONTextSpellCastSpellInventory(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, record := range records {
-			if !spellCastSpellTextRules(record.Fields["Rules"].Args) {
+			if !spellCastTextRules(record.Fields["Rules"].Args) {
 				continue
 			}
 			if _, err := Compile(record); err != nil {

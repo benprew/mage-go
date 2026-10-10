@@ -9,6 +9,15 @@
 // Complete word-changing consumers use separate spell and permanent branches.
 // General target contexts and live copy rules still need separate contracts.
 //
+// Use [Game.AddPrintedSpellCastObjectTextEffect] for one complete cast-event rule.
+// The shared spell marker and trigger layer marker identify this context.
+// Both definitions and the active declaration pass checks before installation.
+// The nonland, non-Aura permanent must have one ordinary nonmodal trigger.
+// Saved event facts, pending payments and fixed mana symbols keep their values.
+// Shared services keep ordered layers, expiry, control, phasing, clones,
+// removal, LKI and printed return. [ChangePrintedPermanentText] selects this
+// context at resolution. Mixed rules and live copy rules stay separate.
+//
 // Use [Game.AddPrintedManaTapObjectTextEffect] for one complete global mana rule.
 // The definition and declaration group pass checks before layer installation.
 // The rule must have the shared mana-event spell marker and layer marker.
@@ -187,7 +196,8 @@
 // Phasing keeps the visit. Later text layers use the continued baseline.
 // Removal stops detection. Pending triggers keep their rules and event facts.
 // Copy values exclude ordinary word changes. LKI keeps the final rules.
-// Return uses printed rules. Whole-object word changes need separate services.
+// Return uses printed rules. [Game.AddPrintedSpellCastObjectTextEffect] checks
+// complete battlefield rules. Mixed rules and live copy rules stay separate.
 //
 // Use [WithGlobalStaticSpellTextContinuation] for one global static spell rule.
 // [Game.RevisePrintedSpellText] keeps fresh rules through permanent entry.
@@ -275,7 +285,8 @@
 // Clones keep separate baselines, cleanup and controller contexts.
 // Phasing keeps the visit. Removal stops detection; restoration keeps the text.
 // LKI keeps the final rule. Return uses printed rules.
-// Whole-object text, spell text and copy rebinding need separate services.
+// Complete object text uses [Game.AddPrintedSpellCastObjectTextEffect].
+// Mixed rules and copy rebinding need separate services.
 //
 // Use [StaticAbilityHolder.WithLayeredAnimationTextRevision] for printed animation.
 // [Game.AddPrintedStaticAnimationTextEffect] changes one declaration in layer 3.

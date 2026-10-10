@@ -291,7 +291,8 @@ land word changes in layer 3 with `EndOfTurn` or `Indefinite` duration.
 RON marks the complete existing
 `TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), actions)`
 context. Existing filters, bodies, targets and event scopes keep their checks.
-No new trigger syntax or whole-object text spell is accepted.
+No new trigger syntax is added. Complete object text uses
+`Game.AddPrintedSpellCastObjectTextEffect`; mixed contexts stay separate.
 
 Each pass restores the declaration baseline before timestamp-ordered changes.
 A prior direct revision can supply the baseline. Expiry recomputes surviving
@@ -12585,3 +12586,47 @@ The permanent branch uses only the complete contexts supported by
 remaining complete mana-event, other mixed permanent and live-copy contexts need
 separate contracts. These two cards do not yet have exhaustive general-target
 coverage, and runtime cutover and Go-card/DSL removal remain gated.
+
+## Complete battlefield cast-event object text
+
+`Game.AddPrintedSpellCastObjectTextEffect(source *Permanent, duration core.Duration,
+changes ...TextChange) error` checks one complete printed cast-event rule before
+installing its existing layer-3 effect. The nonland, non-Aura permanent requires
+`WithSpellCastSpellTextContinuation` and one
+`GenericTriggered.WithLayeredSpellCastTextRevision` declaration. Intrinsic
+keywords, sibling rules, modes, optional trigger declarations, intervening-if
+conditions, casting targets and additional/alternate costs need separate contexts.
+Resolution-time optional payments in ordinary action bodies remain supported.
+
+Both retained definitions, declaration correspondence, subtype context, event
+capture flags, target shapes, body count and active runtime declaration pass
+preflight before installation. Empty/invalid changes, unsupported durations,
+missing builders/groups, removed rules and absent, phased, face-down or returned
+visits reject without installing a layer. Durations are `Indefinite` and
+`EndOfTurn`. Valid substitutions with no matching word still install a layer.
+
+`ChangePrintedPermanentText` selects this context at resolution. RON uses the
+shared `spellCastTextRules` selector for exactly one
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer | Opponent, spellFilter), body)`.
+Existing filter, target, action and lexical checks apply. Resolving nonempty
+`CreatePermanentLayerEffect` word lists use typed saved choices and instance
+bindings through `compilePermanentObjectText`; no new RON spelling is added.
+
+The service reuses `BuildTextDefinitionRevision`, declaration groups and
+`AddPrintedSpellCastTextEffect`. Ordered changes and expiry use the saved layer
+baseline, including prior spell text continuation. Pending triggers retain
+detection-time rules, targets, controllers and event captures. Optional payment
+choices occur at resolution and use the shared cost transaction. Clones and
+copies retain separate bindings. Phasing retains the visit; ability removal
+suspends detection. LKI retains final rules, return restores printed rules and
+ordinary changes stay outside copiable values (CR 113.7a, 603.2–3, 612.1–3,
+613.1c/f). No new replacement or simultaneous-operation service is introduced.
+
+Evidence: native `TestTextSpellCastObjectRejectsAtomic`; RON
+`TestRONTextSpellCastObjectRecords`, `Lifecycle`, `Targets`, `QueuedTargets`,
+`IndependentPayments` and `Boundaries`. Complete subjects cover Crystal Rod,
+Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere, Citanul Druid, Urza's Chalice,
+In the Eye of Chaos, Nether Void and Presence of the Master (10 names / 35 records),
+with both complete Sleight of Mind and Magical Hack consumers (70 cases).
+This establishes this subject context; general text subjects and live-copy
+rebinding remain incomplete.

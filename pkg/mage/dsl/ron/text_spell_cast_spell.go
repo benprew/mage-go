@@ -1,6 +1,6 @@
 package ron
 
-func spellCastSpellTextRules(rules []Node) bool {
+func spellCastTextRules(rules []Node) bool {
 	if len(rules) != 1 {
 		return false
 	}

@@ -4,7 +4,7 @@ func intrinsicCastSpellTextRules(rules []Node) bool {
 	intrinsic := make([]Node, 0, len(rules))
 	events := 0
 	for _, rule := range rules {
-		if spellCastSpellTextRules([]Node{rule}) {
+		if spellCastTextRules([]Node{rule}) {
 			events++
 		} else {
 			intrinsic = append(intrinsic, rule)
