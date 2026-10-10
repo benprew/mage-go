@@ -2,17 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **819 accepted / 167 rejected names** (986 total),
-**2,120 compiled / 325 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **820 accepted / 166 rejected names** and
-**2,121 compiled / 324 rejected records**. The strict loader rejects the
+The isolated slice reports **820 accepted / 166 rejected names** (986 total),
+**2,126 compiled / 319 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **821 accepted / 165 rejected names** and
+**2,127 compiled / 318 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-SAVED-PLAYER-NEXT-TURN-LIFETIME saves typed players at resolution and expires
-layers and replacements before the next actual turn's actions. Skipped turns,
-extra turns, bindings, identity, phasing, clones and harness entry have tests.
-Compilation and full-card gameplay gains are **0 names / 0 records**. This
-prerequisite serves Island Sanctuary and Firestorm Phoenix. No RON changed.
+TEMPORARY-PLAYER-ATTACK-PROTECTION saves protected and duration players at
+resolution and checks live attacker filters through the shared combat query.
+Source changes, phasing, ability changes, multiple rules, bindings and clones
+have tests. Compilation and full-card gameplay gains are **1 name / 6 records**:
+Island Sanctuary's complete records and both draw choices. No RON changed.
 All required native checks pass; lint reports 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -70140,3 +70140,179 @@ Only this slice is staged for
    fresh hand visit. Estimated one name / one record only after all dependencies.
 
 Migration remains incomplete. This run stops after SAVED-PLAYER-NEXT-TURN-LIFETIME.
+
+## Run 2026-10-10: TEMPORARY-PLAYER-ATTACK-PROTECTION
+
+Status: complete dependency-ready vertical slice. This run stops here.
+
+### Candidate comparison and selection
+
+The latest ranked candidate was Sanctuary's temporary player attack consumer.
+All six complete Sanctuary records, the complete LEG Phoenix record and all five
+Cyclopean Tomb records were inspected, including their nested bodies. Targeted
+vocabulary searches confirm CantBeAttackedExceptBy has arity one and six uses.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Temporary player attack protection, selected | Island Sanctuary | 1 name / 6 records | Draw replacement, resolution choice, typed players, live keyword filters and next-turn expiry already exist. Establishes reusable saved-player combat protection with independent live filters. | Small: one engine rule, adapter, declaration tests and complete card gameplay. |
+| Returned-hand reveal/play restriction | Firestorm Phoenix | 0 names / 0 records | Needs an exact returned-hand visit producer and owner capture, then death replacement integration. Enables Phoenix's two hand rules; duration alone is insufficient. | Medium to large: hand visibility, casting restrictions, visit identity, replacement integration. |
+| Counter-maintained layer lifetime | Cyclopean Tomb | 0 names / 0 records | EachablePermanent duration subject, per-source counter-placement/removal history and repeating post-departure upkeep removal remain. Enables Tomb's layer lifetime but cannot unlock the complete card. | Medium to large: saved subject lifetime, counter history and delayed operations. |
+
+Candidate one is dependency-ready and has the largest immediate gain for the
+estimated effort among these candidates. The other ranked Phoenix death adapter
+cannot precede its returned-hand contracts. A broader shared target capability
+remains useful, but complete records for Disintegrate, Cuombajj Witches and
+Pyrotechnics show separate projection, opponent-choice, replacement and announced
+allocation blockers. Their first errors do not establish complete unlocks.
+That prerequisite is ranked for the next run, without starting it here.
+
+Before editing, the stated contract was saved-player protection, a live attacker
+filter, expiry before the saved player's next actual turn, source independence,
+intersecting restrictions and independent clones. Acceptance included both draw
+choices, flying/islandwalk, changing abilities, source control/departure/phasing,
+typed instance bindings, actual declaration, expiry and invalid declarations.
+
+### Exact supported shape, engine contract and reuse boundary
+
+RON supports this resolving form:
+
+    CreatePlayerEffectUntil(player,
+      [CantBeAttackedExceptBy(permanent_filter), ...],
+      UntilPlayersNextTurn(player))
+
+The operation list is nonempty and homogeneous. Both player operands use
+compilePlayerRef and per-factory instanceBindings. Filters use compileFilter.
+Unbound, malformed and wrongly typed operands, wrong arity, mixed operation lists
+and other attack-protection durations fail at declaration. Fixed-mana temporary
+payments retain their existing end-of-turn shape. Ordinary resolving actions,
+draw-replacement bodies and existing delayed-body scopes use the same lowering.
+The semantic inventory identifies the operation argument as permanent_filter.
+
+The engine API is:
+
+    CantBeAttackedExceptByUntilNextTurn(PlayerRef, PermanentFilter, PlayerRef) ResolvingEffect
+
+The first player is protected; the last supplies the expiry endpoint. Each is
+read at resolution. Missing players install nothing; definitions reject nil and
+unbound references. The installed rule saves player IDs and installation turn.
+It implements NextTurnExpiration and uses BeginActiveTurn's existing skipped/
+extra-turn contract. It survives source exit, ignores source ability removal,
+and keeps independent cloned storage. Cleanup does not end it. Both player
+operands declare explicit source reads to existing waiting delayed queries.
+
+The shared restrictedFromAttacking query checks the opposing player in this
+two-player engine. Both native and explicit attacker declarations, requirements
+and AI queries use it. Current filters must pass every active restriction.
+Later entries and returned creatures remain subject to the player rule;
+control changes, flying/islandwalk grants and removals change legality. A later
+filter change does not remove an already declared attacker. No creature ability
+or AttrCanAttack is changed by protection. RON owns syntax and binding checks;
+mage owns combat legality, source independence, cloning and lifetime.
+
+Dependencies reused: typed player references and target bindings; validated
+resolving sequences; draw replacement ancestry and immediate body execution;
+ChooseAtResolution; PermanentFilter keyword queries; continuous-effect storage
+and clone service; NextTurnExpiration and BeginActiveTurn. No new payment,
+replacement, zone or global last-action mechanism was introduced.
+
+Rules evidence: CR 508.1a–c, 611.1, 611.2a/c and the existing CR 500 next-turn
+contract. data/LEA.json supplies Oracle text matching all six Sanctuary records:
+optional draw skipping during your draw step, then flying/islandwalk exceptions
+until your next turn. No source-data defect or RON change was found. Existing
+Gaea's Liege and Fastbond source-audit questions are outside this slice. The
+vocabulary source/hash snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, the complete-record gameplay tests failed at
+unsupported player payment duration (UntilPlayersNextTurn). The inventory test
+failed because HasAbility had the unknown role. Native tests failed to compile
+because CantBeAttackedExceptByUntilNextTurn did not exist. Initial test fixtures
+used unavailable AddKeyword, Battlefield and PlayerByID helpers; these were
+corrected before the expected adapter and new-signature failures were confirmed.
+
+| Card/context | Tests and evidence |
+| --- | --- |
+| Island Sanctuary: LEA, LEB, 2ED, 3ED, CED, CEI complete unchanged records | TestRONPlayerAttackRestrictionSanctuary executes both draw choices, unpaid/paid casting, draw-step/controller scope, immediate replacement timing, source departure, normal/flying/islandwalk/swampwalk attackers, actual declaration, next-turn expiry and independent clone expiry. This establishes full-card gameplay for one unique name. |
+| Independent target and duration bindings | TestRONPlayerAttackRestrictionBindings tests two fresh factories, failed activation payment, cloned pending bodies, separate target players, distinct saved duration players, multiple intersecting restrictions, source control changes, phasing and departure. |
+| Resolution timing and live membership | TestRONPlayerAttackRestrictionLiveFilter reads ControllerOfPermanent at resolution after a control change. Flying grant/removal, phasing and creature return change current legality; expiry follows the saved resolution player. |
+| Declaration validation and inventory | TestRONPlayerAttackRestrictionInvalid covers malformed arity, wrong reference types, unavailable target/event bindings, filters, empty/mixed lists and unsupported duration. TestRONPlayerAttackRestrictionInventory requires the attacker-filter semantic role. |
+| Native rule service | TestPlayerAttackRestrictionLifetime covers source exit, cleanup survival, later entry, current ability layers, phase cycles, other-player turn, exact expiry and clone independence. TestPlayerAttackRestrictionDeclarations covers nil/unbound definitions and absent runtime players. TestPlayerAttackRestrictionDeclarationPaths checks native and explicit declarations and retains declared attackers after later ability loss. |
+| Shared lifetime and draw pipeline | Existing TestUntilNextTurn* covers native skips, extra turns, skipped untap, repeated upkeeps and cloned expiry. Existing draw-replacement scope/choice tests retain their synthetic contracts and now require the complete Sanctuary record to compile. |
+| Accepted collection regression | Exact definition-plan, inventory and numeric-consumer record assertions increase by six. The new inventory assertion rejects a Sanctuary regression. Existing Eureka assertions stay only in the worktree. |
+
+### Validation and measured results
+
+Baseline make build and go test ./pkg/mage/dsl/ron -short -count=1 pass
+(RON 43.021s). Baseline go run ./cmd/loadcards -json exits 1 for collection
+rejection: 820 accepted / 166 rejected names, 2,121 compiled / 324 rejected records.
+This is not a build, test or environment failure.
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONPlayerAttackRestriction -count=1
+passes. Native go test ./pkg/mage -run TestPlayerAttackRestriction -count=1
+passes. The expanded focused run including collection assertions passes (1.453s).
+The first broad run found four stale exact-count assertions: 2,127/318 replaced
+2,121/324. No gameplay failure was hidden; the assertions retain exact counts.
+After correction, make build and go vet ./... pass;
+go test ./pkg/mage/... -short -count=1 passes (RON 52.448s);
+make test passes (RON 45.953s).
+
+An isolated checkout contains HEAD plus only this slice's staged changes. Its
+focused RON/native tests, make build, go vet ./... and the complete RON short
+suite pass (RON 46.694s). The strict loader exits 1 with
+820 accepted / 166 rejected names and 2,126 compiled / 319 rejected records.
+The isolated base had 819/167 names and 2,120/325 records. The pre-existing
+Eureka implementation, compiler changes, entry services and unrelated test
+updates are excluded from this commit.
+
+make lint passes with 0 issues. Automatic changes regroup imports only in the
+three new engine/RON source and test files; a whole tracked/untracked Go-file
+snapshot confirms no lint changes outside this slice. The post-lint focused RON
+run includes the shared draw-replacement and Sanctuary choice regressions and
+passes (0.605s). Focused native tests pass (0.487s); make build passes again.
+Both git diff --check and git diff --cached --check pass.
+
+The final go run ./cmd/loadcards -json exits 1 for unsupported collection records:
+**821 accepted / 165 rejected names**, **2,127 compiled / 318 rejected records**,
+986 names and 2,445 records total. The six-record increase matches the baseline
+estimate. Sanctuary no longer has a diagnostic. Phoenix still reports unsupported
+rule (ReplaceWouldPutIntoGraveyard); Tomb still reports unsupported duration
+(ForAsLongAsPermanentHasACounterOfTypeOnIt). This is deliberate collection
+rejection, not a build/test failure. No accepted record became rejected.
+
+Compilation and full-card gameplay gains are **1 unique name / 6 records**, as
+estimated. All six newly accepted records are Island Sanctuary; there are no
+newly rejected names. Strict loading still rejects the collection and publishes
+no partial registry. Complete collection gameplay, embedded runtime startup,
+Go-card removal and unused DSL cleanup remain unfinished. No Go card definition,
+generator, production startup path or DSL service was removed. Their gates are
+unmet. No environment blocker remains.
+
+Changed files: pkg/mage/player_attack_restriction.go and its test;
+pkg/mage/attack_matching.go and doc.go; pkg/mage/dsl/ron/
+player_attack_restriction.go and its test, player_payment.go, inventory.go,
+action_choice_test.go, draw_replacement_scope_test.go, definition_plan_test.go,
+inventory_test.go and numeric_consumers_test.go; docs/engine-rules-contracts.md
+and this ledger. Only this slice is staged for
+ git commit -m "feat(ron): implement temporary player attack protection".
+Unrelated changes, including the ledger archive relocation, stay in the worktree.
+
+### Ranked next candidates
+
+1. Shared union-target binding and permanent projection contracts. Complete
+   Disintegrate, Cuombajj Witches and Pyrotechnics records show concrete downstream
+   value. Estimate zero complete unlocks for projection alone: Disintegrate also
+   needs death replacement; Witches needs opponent-chosen numbered groups and
+   multiple damage; Pyrotechnics needs announcement allocation. Select one
+   dependency-ready shared prerequisite after checking current engine services.
+2. Shared intervening-if source entry/departure event contracts. Earthbind and
+   Urza's Miter retain distinct condition/body blockers: persistent host flying
+   removal and WasntSacrificed departure facts. Inspect complete nested forms
+   before claiming either unlock. Keep event snapshots and resolution checks exact.
+3. Phoenix returned-hand visit/result and reveal/play restriction services,
+   then its separate death replacement adapter. The next-turn lifetime exists;
+   the exact owner and hand visit producer is still required. No complete gain
+   until all Phoenix rules have gameplay evidence.
+
+Migration remains incomplete. This run stops after TEMPORARY-PLAYER-ATTACK-PROTECTION.

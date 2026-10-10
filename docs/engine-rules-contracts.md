@@ -17010,8 +17010,8 @@ RON supports `UntilPlayersNextTurn(player)` in
 `CreatePermanentLayerEffectUntil(subject, nonempty_modifications, duration)`.
 The player uses the existing typed player-reference compiler and per-factory
 bindings. Wrong arity, malformed references and unbound player reads fail during
-compilation. Temporary player effects and returned-hand operations remain
-unsupported consumers; Island Sanctuary and Firestorm Phoenix remain rejected.
+compilation. Temporary player attack protection now has the checked consumer
+below. Returned-hand operations remain unsupported; Firestorm Phoenix is rejected.
 
 `TestUntilNextTurn*` covers source/subject identity, control, departure, phasing,
 ability removal, absent players, definitions, native skipped turns/untap, extra
@@ -17023,3 +17023,36 @@ independent factory instances, clones, invalid declarations and inventory roles.
 `TestNextTurnDurationBeforeFirstStep` proves harness turn entry expires rules
 even when it stops before the first step. These are capability tests. No complete
 inventory card gains gameplay proof.
+
+
+## Temporary player attack protection
+
+`CantBeAttackedExceptByUntilNextTurn(PlayerRef, PermanentFilter, PlayerRef)`
+saves the protected player and duration player at resolution. Missing players
+install nothing. Definition validation rejects nil and unbound references.
+The filter reads current attackers at declaration (CR 508.1c, 611.2c).
+All active restrictions must permit an attacker. Later entries, returned
+creatures, control changes and flying or landwalk changes affect legality.
+The two-player engine declares attacks against the opposing player; this service
+checks that defender through the shared attack query used by both declaration
+paths and AI queries. It does not remove already declared attackers.
+
+Protection changes game rules and does not grant or remove creature abilities.
+Source departure, return, phasing, control changes and ability removal cannot
+end it or change its saved players. `NextTurnExpiration` and `BeginActiveTurn`
+expire it before the saved player's next actual turn actions (CR 611.2a).
+Skipped turns keep it; extra turns expire it. Cleanup does not end it.
+Clones copy installed rule storage and retain independent expiry. Explicit
+source reads in both player operands remain available to waiting delayed queries.
+
+RON supports nonempty `CreatePlayerEffectUntil(player,
+[CantBeAttackedExceptBy(permanent_filter), ...], UntilPlayersNextTurn(player))`
+in ordinary, delayed and draw-replacement resolving bodies. All list members
+must have this form. Existing fixed-mana temporary payments retain their separate
+end-of-turn contract. Static attack restrictions and hand rules stay separate.
+`TestRONPlayerAttackRestrictionSanctuary` executes all six complete records and
+both choices, checks draw-step scope and actual attacker declaration.
+`TestRONPlayerAttackRestrictionBindings` and `TestRONPlayerAttackRestrictionLiveFilter`
+cover typed bindings, timing, source changes, clones and live membership.
+`TestPlayerAttackRestrictionLifetime` covers native lifetime and ability layers;
+`TestPlayerAttackRestrictionDeclarations` covers definition and absent-player checks.

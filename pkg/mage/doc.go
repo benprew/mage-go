@@ -1299,6 +1299,14 @@
 // not execute steps, cleanup or turn replacements. Multiple-player grants and
 // turn-skip replacement declarations need separate adapters.
 //
+// Use [CantBeAttackedExceptByUntilNextTurn] for saved player protection.
+// Both players are read at resolution. Each attacker must pass the live filter.
+// Separate rules all apply. Later entries and ability changes affect legality.
+// Source changes do not end protection. Clones keep separate lifetimes.
+// [BeginActiveTurn] ends it before the saved player's next actual turn actions.
+// RON lowers CantBeAttackedExceptBy in resolving CreatePlayerEffectUntil
+// lists with UntilPlayersNextTurn and typed player references.
+//
 // # Subsystem Architecture and Ownership
 //
 // [Game] serves as the aggregate root and coordinator of the engine. Rather than

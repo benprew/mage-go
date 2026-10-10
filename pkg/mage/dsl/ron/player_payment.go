@@ -6,6 +6,9 @@ import (
 )
 
 func compilePlayerPayment(n Node, ctx scope) (effectFactory, error) {
+	if len(n.Args) == 3 && n.Args[1].Kind == List && len(n.Args[1].Args) > 0 && n.Args[1].Args[0].Name == "CantBeAttackedExceptBy" {
+		return compilePlayerAttackRestriction(n, ctx)
+	}
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}

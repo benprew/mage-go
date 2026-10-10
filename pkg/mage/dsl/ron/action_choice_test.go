@@ -66,8 +66,8 @@ func TestRONActionChoicePaymentAndDraw(t *testing.T) {
 func TestRONActionChoiceSanctuaryContext(t *testing.T) {
 	for _, mode := range []int{0, 1} {
 		record := staticBaseRecord(t, "LEA", "Island Sanctuary")
-		if _, err := Compile(record); err == nil {
-			t.Fatal("unsupported attack restriction must remain rejected")
+		if _, err := Compile(record); err != nil {
+			t.Fatal(err)
 		}
 		choice := record.Fields["Rules"].Args[0].Args[1].Args[0]
 		body, err := Parse(strings.NewReader(`GainLife(Integer(4))`), "restriction-substitute.ron")
