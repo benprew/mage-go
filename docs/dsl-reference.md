@@ -4404,8 +4404,8 @@ First-strike damage closes the combat-damage window. Tuple forms remain errors.
 `ActivateOnlyIf(IsBeforeCombatDamageStep)` uses the same first-combat history
 through the existing activation gate. It does not grant priority or remove other
 activation restrictions. Angus Mackenzie uses this form with its mana/tap cost
-and existing end-of-turn combat prevention. Other before/after activation
-predicates are not added in this slice.
+and existing end-of-turn combat prevention. Activation turn and combat window forms are documented in
+"RON activation turn and combat windows" below.
 
 Resolving `UntapEachPermanent(filter)` uses `UntapEach` and the existing typed
 collection services. Filters support the existing pure permanent filters and
@@ -13424,8 +13424,9 @@ including entries after announcement. Phasing preserves history; a returned
 permanent starts new history. Siren's Call has RON gameplay coverage for both
 same-turn end steps and a next end step on another player's turn. Its corrected
 records save the earlier active player in a scoped player binding.
-Nettling Imp's exact target clause is covered; its activation timing still
-rejects. Other exclusions and static contexts are not added by this adapter.
+Nettling Imp's exact target clause is covered; its complete records now use
+the activation windows documented below. Other exclusions and static contexts
+are not added by this adapter.
 
 ### RON saved active player in delayed bodies
 
@@ -13469,4 +13470,41 @@ Copies, clones and delayed frames keep separate reference state.
 
 Nettling Imp uses this rule in all six records. Its target, tap cost, requirement
 and delayed destruction have clause evidence in `TestRONSingularAttackRuleImpClauses`.
-Its full records still require the activation turn/combat-window adapter.
+Its complete records also have timing and lifecycle evidence in
+`TestRONActivationWindowImpGameplay`.
+
+## RON activation turn and combat windows
+
+`ActivatedWithModifiers` and its modal activation path accept
+`ActivateOnlyIf(IsAPlayersTurn(You|Opponent))` and the identical
+`IsPlayersTurn` spelling. They also accept bare `IsDuringCombat`,
+`IsBeforeAttackersDeclared`, `IsBeforeBlockersDeclared` and
+`IsBeforeCombatDamageStep`. Nonempty nested `And` condition lists can combine
+these window predicates. Other condition families keep their separate adapters.
+Modifier-level nested `And` lists can combine windows with existing costs,
+permissions, limits and sorcery timing.
+
+Lowering uses `WithActivationStateCondition(StateCondition)`, `IsYourTurn`,
+`NotCondition`, `AllConditions`, `IsDuringSteps` and
+`BeforeCombatStep(point PhaseStep, during bool)`. The acting player supplies
+`You`; ownership does not. A before window uses first-combat history unless
+any window in the same modifier conjunction contains `IsDuringCombat`.
+That conjunction uses current-combat history, including extra combats, regardless
+of operand order or nesting. Skipped steps close the existing engine windows;
+first-strike damage closes the damage window. New turns reset history.
+
+Queries are pure. Legality is checked before targets and payment. These conditions
+grant no priority or permission and cannot replace sorcery timing. A failed
+activation leaves resources and the stack unchanged. Once announced, the body,
+stack copies and pending clones do not repeat the timing check. Source departure,
+phasing and control changes cannot cancel an announced body. The shared target,
+payment, saved-reference, attack and delayed-trigger services retain their rules.
+Malformed tuples, empty conjunctions, unknown predicates, `Or` and unbound
+player references fail compilation. Strict loading remains atomic.
+
+Evidence: `TestRONActivationWindowTiming`, `ConjunctionHistory`,
+`CostsControlAndNativeSkip`, `ModalPermission`, `InvalidAndNative`, `Inventory`
+and `ImpGameplay`;
+engine `TestActivationWindowTypedContracts` and existing `TestCombatTiming*`.
+All six complete Nettling Imp records run without removing any rule. Existing
+Angus Mackenzie activation and spell casting-window regressions remain supported.

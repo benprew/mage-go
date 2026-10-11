@@ -209,8 +209,8 @@ func TestRONCurrentTurnControlImpClauses(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			record := hostUntapRecord(t, set, "Nettling Imp")
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "IsAPlayersTurn") {
-				t.Fatalf("remaining activation blocker: %v", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatalf("complete Imp record: %v", err)
 			}
 			filter := record.Fields["Rules"].Args[0].Args[1].Args[0].Args[0].Args[0]
 			n := activePlayerControlRecord(t, `Targeted([TargetPermanent(AnyPermanent)],ActionList([TapPermanent(Ref_TargetPermanent)]))`)

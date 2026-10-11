@@ -2,16 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **832 accepted / 154 rejected names** (986 total),
-**2,158 compiled / 287 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **833/153 names** and **2,159/286 records**. The strict
+The isolated slice reports **833 accepted / 153 rejected names** (986 total),
+**2,164 compiled / 281 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **834/152 names** and **2,165/280 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-SINGULAR-TEMPORARY-ATTACK-REQUIREMENT captures one permanent visit through
-cleanup and uses the shared attack planner. Compilation gains are **0 names /
-0 records**. All six Nettling Imp records gain clause evidence for their attack
-requirement and saved delayed destruction; full records still need activation
-turn/combat windows. No new complete-card gameplay coverage is claimed.
+ACTIVATION-TURN-COMBAT-WINDOWS lowers typed acting-player turn conditions and
+first/current combat windows with nested conjunctions. Compilation gains are
+**1 unique name / 6 records**. All six complete Nettling Imp records now have
+RON gameplay evidence for targets, timing, tap payment, attack requirements,
+saved delayed destruction, phasing, return, copies, clones and regeneration.
+Existing engine conditions and combat history supply the mechanics.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -72773,3 +72774,170 @@ No removal caller audit is required for this additive capability.
    engine contracts. Prefer useful multi-card work if fresh inventory finds it.
 
 This run stops after the singular temporary attack requirement. Migration is incomplete.
+
+## Run 2026-10-10: ACTIVATION-TURN-COMBAT-WINDOWS
+
+Status: complete one dependency-ready vertical slice. No second capability is
+started. Existing unrelated changes include Eureka entry execution and the
+ledger archival move. Both remain separate from this slice's staged blobs.
+
+### Candidate comparison and selection
+
+Complete records and nested forms were read for each candidate; counts below
+refer to distinct names, with identical reprints counted once.
+
+| Candidate | Distinct affected cards | Estimated full-card gains and other blockers | Downstream capabilities and effort |
+| --- | --- | --- | --- |
+| Ranked #1: activation turn/combat windows | Nettling Imp, six records; Angus Mackenzie already uses the damage window | 1 name / 6 records. Previous singular attack requirement, active-player target control, turn-control history and saved end-step destruction are now ready. | Shared activation conjunctions, typed turn references and first/current combat windows reuse ready engine mechanics. Small adapter and broad timing/lifecycle test work. |
+| Declaration-bound block-history targets | Glyph of Delusion, Glyph of Doom, Glyph of Reincarnation | 0 immediate names. Doom and Reincarnation already compile; Delusion also requires a conditional acquired untap rule. | Target-to-target history binding permits that subsequent acquired-rule slice. Medium scope/target work plus another capability for a full-card gain. |
+| Durable tap-payment history | Vodalian War Machine | 1 name / 1 record. Both tap payments and death capture are ready, but paid-visit history and its filter are absent. | Reusable per-source payment history needs transaction commit/rollback, departure capture, durable incarnation facts and cloning. More engine/lifecycle work than the selected adapter. |
+
+Candidate #1 is dependency-ready after its previously implemented shared
+prerequisite. Comparing three candidates finds no multi-card unlock among them.
+The gain is one unique name, not six different cards. The two alternatives do
+not supply a larger credible complete-card gain for this run's effort, so the
+smallest complete adapter wins the gain/effort comparison. Casting contexts
+already serve Siren's Call, Festival, Reset and the other combat-window spells;
+they are reused as semantic evidence, not counted as new unlocks.
+
+### Exact supported shape and reuse boundary
+
+RON `ActivatedWithModifiers(cost, body, modifier)` supports existing ordinary
+and modal bodies with `ActivateOnlyIf(condition)`. This slice adds:
+
+- `IsAPlayersTurn(You|Opponent)` and `IsPlayersTurn(You|Opponent)`;
+- bare `IsDuringCombat`, `IsBeforeAttackersDeclared`,
+  `IsBeforeBlockersDeclared` and `IsBeforeCombatDamageStep`;
+- nonempty nested `And([window conditions])`, and existing modifier-level
+  `And([modifiers])` conjunctions with permissions, limits and sorcery timing.
+
+Only these window predicates belong to the new condition conjunction. Other
+families retain separate adapters. Empty/malformed conjunctions, tuple combat
+symbols, `Or`, unknown predicates and unbound or unsupported player operands
+remain compilation errors. The inventory retains activation-condition roles
+through nested lists and types each turn operand as a player reference.
+
+RON owns spelling, operand checks and context propagation. One declaration's
+complete modifier conjunction is inspected before lowering. Any
+`ActivateOnlyIf` whose window condition tree includes `IsDuringCombat` selects
+current-combat history for all before conditions in that conjunction. Nesting
+and operand order cannot change this selection. Otherwise before conditions
+use first-combat history. Unrelated resolving bodies cannot supply this context.
+
+Exact existing engine signatures are reused:
+`WithActivationStateCondition(StateCondition) ActionOption`,
+`IsYourTurn() StateCondition`, `NotCondition(StateCondition) StateCondition`,
+`AllConditions(...StateCondition) StateCondition`,
+`IsDuringSteps(...PhaseStep) StateCondition`, and
+`BeforeCombatStep(PhaseStep, bool) StateCondition`.
+No missing engine contract, new combat store or production engine mechanic is
+needed. A new engine contract test proves this reuse. The earlier raw callbacks
+for activation combat/damage windows now use typed conditions.
+
+The acting player supplies turn context. Existing controller/other-player
+permissions remain distinct. Checks are pure and run before announcement and
+payment (CR 602.1b, 602.2, 602.5). Existing sorcery timing cannot be weakened.
+CR 506.7a–g supplies first/current combat and skipped-window semantics, including
+activation applicability. First-strike damage closes the damage window. New
+turns reset history. Native empty combat closes skipped blockers/damage windows.
+Pending bodies, ability copies and clones do not repeat timing checks.
+The existing target/payment/resolution services keep source and target visits,
+LKI, phasing, return, rollback, replacement ordering and simultaneous operations.
+Source departure or phasing does not stop an announced body (CR 113.7a).
+No Go fallback, name branch, partial registry or global action slot is added.
+
+### Failing-first evidence and card-to-test mappings
+
+Before production edits, `TestRONActivationWindowTiming`, `ConjunctionHistory`
+and `ImpGameplay` fail with unsupported activation timing condition
+`IsAPlayersTurn` or `And`. All six unchanged complete Imp records reject.
+After the inventory test is added it fails on missing activation-condition and
+player-reference roles before the inventory adapter is edited.
+Initial test-helper compile typos are corrected before the meaningful red run.
+Existing engine mechanics already pass; no stub or changed signature is needed.
+
+| Card or contract | Gameplay and declaration evidence |
+| --- | --- |
+| Nettling Imp, LEA/LEB/2ED/3ED/CED/CEI | `TestRONActivationWindowImpGameplay`: every complete record, tap payment, own-turn/late rejection, Wall and fresh-target exclusions, attack/no-attack, source departure/phasing, target phase/cycle/return/control, copied activation, delayed destruction, regeneration and separate cloned games. Unselected peers remain unaffected. |
+| Nettling Imp prior clauses | `TestRONSingularAttackRuleImpClauses` now runs the complete unchanged records with timing intact, including original and clone delayed destruction after source departure. `TestRONCurrentTurnControlImpClauses` confirms full compilation and retains exact-filter gameplay evidence. |
+| Engine reuse | `TestActivationWindowTypedContracts`: owner versus actor, turn gate, payment preservation, announced-body source departure, pending clones and first/current extra combat. Existing `TestActivationStateCondition` and `TestCombatTiming*` retain native skipped-phase, damage, turn reset and definition checks. |
+| Turn/step matrix | `TestRONActivationWindowTiming`: both active players, both player operands, all turn steps, all three before boundaries, repeated pure queries, payment/tap preservation, changed timing before resolution and pending clones. |
+| Context/history | `TestRONActivationWindowConjunctionHistory`: nested condition and modifier lists in both operand orders, current extra combat, first-combat closure, skipped combat/attackers, cloned history and new-turn reset. |
+| Costs/control/native steps | `TestRONActivationWindowCostsControlAndNativeSkip`: failed mana payment, sorcery timing conjunction, card ownership distinct from actor, changed controller and native skipped damage after an empty attackers step. |
+| Modal/permission/instances | `TestRONActivationWindowModalPermission`: other-player permission keeps actor-relative timing, two factory instances pay separately, modal bodies resolve after the window closes. |
+| Invalid declarations/loading | `TestRONActivationWindowInvalidAndNative`: malformed arities/symbols, empty/unknown/mixed-family conjunctions, `Or` and escaped reads reject. Valid native loading succeeds; invalid collection loading preserves the former registry. `Inventory` verifies typed descendant roles. |
+
+Estimated gain equals actual gain: **1 unique name / 6 records**. All six
+unchanged Nettling Imp records gain complete-record gameplay evidence. This is
+separate from proving complete collection gameplay. Existing accepted-card
+regressions, including Angus Mackenzie, continue to pass.
+No RON source bytes are changed. Fastbond and Gaea's Liege defects remain outside
+this slice. Source vocabulary hashes/signatures require no refresh.
+
+### Verification, loader evidence and preservation
+
+Both shared and isolated checkouts pass the required fast-fail sequence:
+focused RON tests with `-count=1`; `make build`; `go vet ./...`;
+`go test ./pkg/mage/... -short -count=1`; `make test`; `make lint`;
+`git diff --check`; then `go run ./cmd/loadcards -json`.
+Focused engine contracts also pass. Final post-lint focused RON times are
+shared 1.361s / isolated 0.816s, and engine 0.635s / 0.524s. Short RON times
+are 45.607s / 47.914s; full RON times are 48.204s / 47.106s.
+Both final lint runs report zero issues. An initial parallel isolated lint run
+fails on golangci-lint's process lock; its sequential rerun passes. Automatic
+changes affect only the three new files: import grouping and the equivalent
+`slices.ContainsFunc` context scan. Those changes are reviewed; focused tests,
+build and vet repeat afterward. No unresolved environment or validation failure
+remains.
+
+Fresh pre-run loaders exit 1: isolated 832 accepted / 154 rejected names and
+2,158 compiled / 287 rejected records; shared 833/153 names and 2,159/286
+records. Final loaders also exit 1 and publish no registry: isolated **833/153
+names, 2,164/281 records**; shared **834/152 names, 2,165/280 records**.
+JSON comparisons prove that removing exactly the six Nettling Imp issues from
+each pre-run report produces the final issue list byte-for-byte in structure.
+Every remaining diagnostic stays unchanged. Glyph of Delusion retains
+`WasBlockedByDefenderThisTurn` at LEG.lines.ron:100:233; Vodalian War Machine
+retains `WasTappedToPayForAbilitiesOfPermanent` at FEM.lines.ron:101:780;
+Blazing Effigy retains `DeadPermanentDealsDamage` at LEG.lines.ron:31:278.
+Eureka is accepted only in the pre-existing shared work. Native invalid-collection
+tests continue to prove atomic rejection. Full runtime/removal gates remain unmet.
+
+The first shared short-suite run exposes three exact inventory assertions still
+using the old compilation count. The six-record gain changes the expected totals;
+those assertions are updated and an explicit Nettling Imp acceptance assertion
+is added. A subsequent short run finds the same stale count in the printed
+definition-plan test and a prior clause test that still expects Imp rejection.
+Both are updated to the exact new counts and full-record acceptance; gameplay
+assertions remain. Tests are not relaxed. A test that rewound from combat to precombat is
+corrected to use independent cloned timing states, because leaving combat closes
+the first window by contract. No production workaround changes that behavior.
+
+Changed files: `pkg/mage/dsl/ron/activation_window.go`,
+`activation_window_test.go`, `activation_timing.go`, `inventory.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `current_turn_control_test.go`
+`singular_attack_rule_test.go`, `active_player_control_test.go` and
+`definition_plan_test.go`; `pkg/mage/activation_window_test.go` and
+`doc.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+No source card, Go card definition, generator or DSL export is removed. Full
+loading, runtime wiring, test migration and removal gates remain unmet. There
+is no deleted-function caller audit for this additive adapter.
+
+The isolated checkout contains only this slice. The shared checkout receives
+incremental changes while retaining the user's archive link, prior edits and
+untracked entry work. Commit blobs come from the validated isolated checkout,
+so no unrelated change or ledger archival deletion is staged.
+
+### Ranked next candidates
+
+1. Compare declaration-bound block-history targets for Glyph of Delusion with
+   fresh shared multi-card prerequisites. The target adapter alone estimates
+   zero complete-card gains; conditional acquired untap rules remain separate.
+2. Durable tap-payment history for Vodalian War Machine: estimated one complete
+   name/record after transaction-bound paid visits, death filtering and cloning.
+3. Filtered departed-source damage for Blazing Effigy: inspect captured source
+   information and historical damage amounts before selecting the exact shape.
+   Do not combine it with payment-history work. Prefer useful multi-card work
+   if fresh inventory identifies a better dependency-ready candidate.
+
+This run stops after activation windows. Migration is incomplete.

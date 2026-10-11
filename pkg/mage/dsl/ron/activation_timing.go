@@ -139,7 +139,7 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 	if countDeclarationName(n, "XIs") > 1 {
 		return nil, problem(n, "multiple X definitions are not supported")
 	}
-	options, err := compileActivationModifier(n, ctx, &seenMaximum, &seenSorcery, &seenPermission)
+	options, err := compileActivationModifier(n, ctx, activationDuringCombat(n), &seenMaximum, &seenSorcery, &seenPermission)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func compileActivationModifiers(n Node, ctx scope) ([]mage.ActionOption, error) 
 	return options, nil
 }
 
-func compileActivationModifier(n Node, ctx scope, seenMaximum, seenSorcery, seenPermission *bool) ([]mage.ActionOption, error) {
+func compileActivationModifier(n Node, ctx scope, during bool, seenMaximum, seenSorcery, seenPermission *bool) ([]mage.ActionOption, error) {
 	switch n.Name {
 	case "XIs":
 		return compileActivationManaX(n, ctx)
@@ -167,7 +167,7 @@ func compileActivationModifier(n Node, ctx scope, seenMaximum, seenSorcery, seen
 		}
 		var options []mage.ActionOption
 		for _, item := range items {
-			next, err := compileActivationModifier(item, ctx, seenMaximum, seenSorcery, seenPermission)
+			next, err := compileActivationModifier(item, ctx, during, seenMaximum, seenSorcery, seenPermission)
 			if err != nil {
 				return nil, err
 			}
@@ -232,11 +232,11 @@ func compileActivationModifier(n Node, ctx scope, seenMaximum, seenSorcery, seen
 		*seenMaximum = true
 		return []mage.ActionOption{mage.WithMaxActivationsPerTurn(count)}, nil
 	default:
-		return compileActivationTiming(n, ctx)
+		return compileActivationTiming(n, ctx, during)
 	}
 }
 
-func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
+func compileActivationTiming(n Node, ctx scope, during bool) ([]mage.ActionOption, error) {
 	if n.Name != "ActivateOnlyIf" {
 		return nil, unsupported(n, "activation modifier")
 	}
@@ -244,6 +244,14 @@ func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
 		return nil, err
 	}
 	filter := n.Args[0]
+	switch filter.Name {
+	case "And", "IsAPlayersTurn", "IsPlayersTurn", "IsDuringCombat", "IsBeforeAttackersDeclared", "IsBeforeBlockersDeclared", "IsBeforeCombatDamageStep":
+		condition, err := compileActivationWindow(filter, during)
+		if err != nil {
+			return nil, err
+		}
+		return []mage.ActionOption{mage.WithActivationStateCondition(condition)}, nil
+	}
 	if filter.Name == "PermanentPassesFilter" {
 		if err := arity(filter, 2); err != nil {
 			return nil, err
@@ -265,15 +273,8 @@ func compileActivationTiming(n Node, ctx scope) ([]mage.ActionOption, error) {
 		return []mage.ActionOption{mage.WithActivationStateCondition(mage.PermanentMatchesFilter(subject, property))}, nil
 	}
 	if filter.Kind == Symbol {
-		if filter.Name == "IsBeforeCombatDamageStep" {
-			return []mage.ActionOption{mage.WithActivationCondition(func(g *mage.Game, _ *mage.Permanent, _ uuid.UUID) bool {
-				return g.CombatWindowOpen(core.CombatDamage, false)
-			})}, nil
-		}
 		var steps []core.PhaseStep
 		switch filter.Name {
-		case "IsDuringCombat":
-			steps = []core.PhaseStep{core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat}
 		case "IsDuringEndOfCombatStep":
 			steps = []core.PhaseStep{core.EndCombat}
 		case "IsDuringDeclareBlockersStep":

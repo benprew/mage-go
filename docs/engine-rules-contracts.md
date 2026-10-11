@@ -17495,7 +17495,7 @@ contexts before gameplay. No control-history or activation-window semantics
 are established here. No replacement or simultaneous-operation service changes.
 
 Evidence: `TestTargetActivePlayerContract` and `TestRONActivePlayerControl*`.
-Nettling Imp retains its activation-window blocker. Siren's Call has complete
+Nettling Imp now uses the typed activation windows documented below. Siren's Call has complete
 record gameplay evidence in the control-history and saved-player sections below.
 
 ## Continuous control since the current turn began
@@ -17592,11 +17592,44 @@ RON supports `CreatePermanentRuleEffectUntil(ref, [MustAttack], UntilEndOfTurn)`
 with existing typed singular permanent references in resolving bodies. Numbered
 target groups remain separate. Empty, mixed or malformed operation lists,
 other durations and escaped references remain errors. The six full Nettling Imp
-records still reject their independent activation-window modifiers. The RON
-clause tests omit those modifiers explicitly and establish only the attack rule
-with its existing target filter, tap payment and saved delayed destruction.
+records now use the activation windows documented below. The RON tests retain
+those modifiers and exercise the attack rule with its target filter, tap payment
+and saved delayed destruction.
 
 Evidence: `TestSingularAttackRuleLifetime`, `DefinitionAndAbsent` and
 `DelayedSource`; `TestRONSingularAttackRuleGameplay`, `ImpClauses`,
 `InvalidAndNative` and `SourceAndGroups`. Existing `TestAttackRulesThisTurn`
 and RON collection-attack tests retain their separate collection contracts.
+
+## RON activation turn/combat window contract
+
+CR 506.7a–g applies the same combat-window rules to spells and activated
+abilities. RON activation windows use the existing typed engine conditions:
+`WithActivationStateCondition(StateCondition)`, `IsYourTurn`, `NotCondition`,
+`AllConditions`, `IsDuringSteps` and `BeforeCombatStep(PhaseStep, bool)`.
+No new engine mechanic or combat-history store is required.
+
+The compiler validates turn operands (`You` or `Opponent`), bare before/combat
+symbols and nonempty nested window conjunctions. It propagates current-combat
+context across all `ActivateOnlyIf` declarations in one modifier conjunction
+when any contains `IsDuringCombat`. Otherwise each before condition uses the
+first combat. Order and nesting do not change meaning. Existing combat history
+handles native skipped steps, extra combats, first-strike damage, turn resets
+and separate clones. CR 602.1b/602.2/602.5a and 506.7g govern activation timing,
+acting-player context, payment rollback and tap restrictions.
+
+Timing gates run before announcement/payment and are pure during legality
+queries. Existing permissions, sorcery timing and limits remain conjunctive.
+Pending bodies and stack copies keep their announced controller, source visit
+and targets and do not repeat timing checks (CR 113.7a). Shared target legality,
+phasing, LKI, replacement ordering, simultaneous operations and delayed bindings
+are reused. No declaration or engine service is removed.
+
+`TestActivationWindowTypedContracts` proves engine reuse with acting-player turn,
+payment preservation, source departure, pending clones and extra combats.
+`TestRONActivationWindow*` covers the compiler contexts, invalid declarations,
+atomic native loading, all steps and both players, native empty-combat skipping,
+sorcery timing, cost failure and control changes. Complete Nettling Imp records
+in LEA/LEB/2ED/3ED/CED/CEI cover target exclusions, source departure/phasing,
+attack requirements, delayed destruction, regeneration, target control changes,
+phasing, phase cycles, returned visits, copies and game clones.

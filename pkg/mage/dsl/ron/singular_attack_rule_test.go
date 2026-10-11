@@ -120,13 +120,6 @@ func TestRONSingularAttackRuleImpClauses(t *testing.T) {
 		for _, attacks := range []bool{false, true} {
 			t.Run(set+map[bool]string{true: "/attack", false: "/no-attack"}[attacks], func(t *testing.T) {
 				record := hostUntapRecord(t, set, "Nettling Imp")
-				if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "IsAPlayersTurn") {
-					t.Fatalf("remaining timing blocker: %v", err)
-				}
-				rule := record.Fields["Rules"].Args[0]
-				rule.Name = "Activated"
-				rule.Args = rule.Args[:2]
-				record.Fields["Rules"].Args[0] = rule
 				factory, err := Compile(record)
 				if err != nil {
 					t.Fatal(err)

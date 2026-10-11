@@ -475,6 +475,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "activation_condition":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "activation_condition"
+		}
+		if (n.Name == "IsAPlayersTurn" || n.Name == "IsPlayersTurn") && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "PermanentPassesFilter" && len(n.Args) == 2 {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}

@@ -182,7 +182,7 @@ func TestRONActivePlayerControlRepositoryClauses(t *testing.T) {
 		for _, name := range []string{"Nettling Imp", "Siren's Call"} {
 			t.Run(set+"/"+name, func(t *testing.T) {
 				record := hostUntapRecord(t, set, name)
-				if _, err := Compile(record); (err == nil) != (name == "Siren's Call") {
+				if _, err := Compile(record); err != nil {
 					t.Fatalf("complete record support: %v", err)
 				}
 				var predicate Node

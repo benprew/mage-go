@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON activation turn and combat windows use [WithActivationStateCondition].
+// [IsYourTurn] reads the acting player. [BeforeCombatStep] keeps history from
+// the first combat unless the same modifier conjunction requires combat. That
+// context uses history from the current combat, including extra combats. Nested
+// lists and their order keep the same meaning. Shared history closes skipped
+// windows and resets each turn. Queries make no changes. Payment and other
+// restrictions still apply. Pending bodies, copies and clones do not repeat
+// the timing check.
+//
 // [MustAttackThisTurn] saves one present permanent until cleanup.
 // The shared attack planner requires that exact visit to attack if able.
 // Control changes and a phase cycle keep the rule. A return cannot inherit it.
@@ -25,7 +34,7 @@
 // in collections. Target legality reads history again at resolution.
 // Collections read current members. Phasing keeps history but stops selection;
 // return starts new history. Shared batches keep destruction and regeneration.
-// Nettling Imp still needs its separate activation-window adapter.
+// Nettling Imp uses the shared typed activation windows.
 //
 // [TargetControlledBy] accepts [ActivePlayer] for current turn control.
 // Target selection and resolution read the active player each time.
