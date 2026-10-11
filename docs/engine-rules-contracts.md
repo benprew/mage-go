@@ -17563,3 +17563,40 @@ covers nested scope, copies, collection control, native atomic rejection,
 payment rollback and all six corrected Siren's Call records across turns.
 Existing `TestRONCurrentTurnControlSiren` retains same-turn attack requirements,
 attack history, current-turn control, casting windows and regeneration evidence.
+
+
+## Singular temporary attack requirements (RON migration slice)
+
+`MustAttackThisTurn(subject PermanentRef) ResolvingEffect` resolves its typed
+subject once and saves its physical ID and battlefield incarnation. Missing or
+phased subjects install no rule. Definition validation rejects nil or unbound
+references. The existing `turnAttackRule` gains an optional captured subject;
+its collection callers keep live membership and their saved-player behavior.
+
+The shared native and explicit attack paths require the exact subject to attack
+if able in each combat before cleanup (CR 508.1d). Current control selects the
+attacking player. Tapped, sick, phased and restricted subjects cannot attack.
+The requirement does not force an attack payment, even when mana is available.
+This is a rule, not an ability grant: ability removal cannot erase it. Source
+control changes, departure and phasing do not end it. A phase cycle keeps the
+subject; departure and return cannot transfer it (CR 400.7, 702.26b).
+
+The existing continuous-effect service owns source-exit survival, cleanup and
+clone isolation. Copies resolve with their own target frames. Delayed bodies
+retain their saved references. Explicit `This` reads declare the original source
+to `WaitingDelayedPermanentSources` without resolving it or installing a rule.
+Information retained after departure cannot permit an action on an absent visit.
+No damage, replacement ordering or simultaneous zone operation changes.
+
+RON supports `CreatePermanentRuleEffectUntil(ref, [MustAttack], UntilEndOfTurn)`
+with existing typed singular permanent references in resolving bodies. Numbered
+target groups remain separate. Empty, mixed or malformed operation lists,
+other durations and escaped references remain errors. The six full Nettling Imp
+records still reject their independent activation-window modifiers. The RON
+clause tests omit those modifiers explicitly and establish only the attack rule
+with its existing target filter, tap payment and saved delayed destruction.
+
+Evidence: `TestSingularAttackRuleLifetime`, `DefinitionAndAbsent` and
+`DelayedSource`; `TestRONSingularAttackRuleGameplay`, `ImpClauses`,
+`InvalidAndNative` and `SourceAndGroups`. Existing `TestAttackRulesThisTurn`
+and RON collection-attack tests retain their separate collection contracts.

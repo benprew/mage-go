@@ -13449,3 +13449,24 @@ end step can move that instruction to another turn; its permanent membership
 and current-turn control history are still read when the delay resolves.
 Evidence: `TestRONSavedActivePlayerScopes`, `Siren`, `Invalid`, `Native`,
 `TestSavedActivePlayerDelayedFrames` and existing `TestRONCurrentTurnControlSiren`.
+
+
+## RON singular temporary attack requirements
+
+Use `CreatePermanentRuleEffectUntil(ref, [MustAttack], UntilEndOfTurn)` in a
+resolving body. `ref` must be a bound typed singular permanent reference.
+Ordinary, numbered and union-derived permanent targets keep their declaration
+identity; source, attachment and saved references use their existing scopes.
+One bare `MustAttack` symbol and `UntilEndOfTurn` are required. Mixed lists and
+other durations need separate adapters.
+
+The engine service is `mage.MustAttackThisTurn(subject mage.PermanentRef)`.
+It captures a present subject once and requires that exact battlefield visit to
+attack if able through cleanup. Current control determines who attacks. A phase
+cycle keeps the rule; return cannot inherit it. Source departure and ability
+removal do not end it. Restrictions still apply and attack costs stay optional.
+Copies, clones and delayed frames keep separate reference state.
+
+Nettling Imp uses this rule in all six records. Its target, tap cost, requirement
+and delayed destruction have clause evidence in `TestRONSingularAttackRuleImpClauses`.
+Its full records still require the activation turn/combat-window adapter.

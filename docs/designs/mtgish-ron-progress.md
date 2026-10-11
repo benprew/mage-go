@@ -7,11 +7,11 @@ The isolated slice reports **832 accepted / 154 rejected names** (986 total),
 the worktree reports **833/153 names** and **2,159/286 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-SAVED-ACTIVE-PLAYER-DELAY lowers scoped active-player snapshots before delayed
-bodies. All six Siren's Call records now retain the earlier player if the next
-end step occurs on another player's turn. Compilation gains are **0 names /
-0 records**; the known saved-player gameplay gap closes for **1 unique card /
-6 records**. Nettling Imp still needs activation timing.
+SINGULAR-TEMPORARY-ATTACK-REQUIREMENT captures one permanent visit through
+cleanup and uses the shared attack planner. Compilation gains are **0 names /
+0 records**. All six Nettling Imp records gain clause evidence for their attack
+requirement and saved delayed destruction; full records still need activation
+turn/combat windows. No new complete-card gameplay coverage is claimed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -72634,3 +72634,142 @@ entry. The user's archival move and other original edits remain unstaged.
    identifies one. Do not combine the two capabilities into a single slice.
 
 This run stops after the saved active-player delay slice. Migration is incomplete.
+
+## Run 2026-10-10: SINGULAR-TEMPORARY-ATTACK-REQUIREMENT
+
+Status: complete one dependency prerequisite slice. No activation-window adapter
+is included. Complete RON execution and runtime/removal gates remain unfinished.
+
+### Environment, candidates and selection
+
+The shared tree started with 15 modified tracked files and five untracked files,
+including an archival ledger move and independent Eureka work. Their original
+bytes were saved. An isolated checkout of 4da7b994 establishes this slice's
+baseline without those edits. Fresh make build and complete RON package tests
+pass in both trees (shared 43.983s, isolated 41.482s). The strict loader exits 1:
+isolated 832 accepted / 154 rejected names, 2,158 compiled / 287 rejected records;
+shared 833/153 names, 2,159/286 records. Rejection is a collection gap, not a
+build or test failure. All totals remain 986 names and 2,445 records.
+
+The latest ranked candidates and complete nested records were inspected. Counts
+below count reprints once, including records hidden by an earlier diagnostic.
+
+| Candidate | Distinct affected cards | Estimated full-card gains and other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Activation turn/combat windows, ranked #1 | Nettling Imp (six records); casting-side reuse already serves Siren's Call, Festival and Reset | Initially estimated 1 name / 6 records. Failing-first full-record tests expose an additional singular temporary MustAttack adapter and engine contract. Revised gain for windows alone: 0. | Shared typed timing and combat-history services are ready. Adapter work is small, but full Imp execution first needs the singular requirement. |
+| Declaration-bound block-history targets | Glyph of Delusion, Glyph of Doom, Glyph of Reincarnation | 0 immediate names. Doom and Reincarnation already compile. Delusion also needs its conditional acquired untap rule. | Shared target/history binding is useful, but target lowering plus acquired-rule integration has greater effort. |
+| Durable tap-payment history | Vodalian War Machine | Estimated 1 name / 1 record. Its two tap payments and death event are ready; history of paid visits is absent. | Needs durable per-source payment facts, transaction rollback, death capture and history filtering. More engine and lifecycle work than the selected prerequisite. |
+
+The user requires a missing prerequisite to become this run's slice. Thus the
+selected capability is the singular temporary attack requirement, needed before
+ranked candidate #1 can execute Nettling Imp. Its distinct affected card is
+Nettling Imp, six identical reprints. It has 0 immediate full-card unlocks and
+makes the subsequent timing adapter dependency-ready. This is the permitted
+single-card prerequisite exception; reprints are not treated as multi-card value.
+Juggernaut and Primordial Ooze use an existing intrinsic source form; Siren's
+Call uses an existing live player-controlled collection form. Those contexts
+remain separate and do not count as gains. No second slice is retained.
+
+### Supported signature, contract and reuse boundary
+
+Engine: MustAttackThisTurn(subject PermanentRef) ResolvingEffect.
+RON: CreatePermanentRuleEffectUntil(ref, [MustAttack], UntilEndOfTurn), where
+ref is an existing valid typed singular permanent reference in a resolving body.
+The sole operation is a bare symbol. Mixed lists, other durations, malformed
+operands and unbound/escaped reads remain errors. Existing lexical scopes and
+per-factory bindings supply sources, targets, numbered groups and saved subjects.
+
+RON owns spelling, declaration checks and fresh binding lowering. The engine
+reads the subject once and saves its physical ID plus battlefield incarnation.
+An absent or phased subject installs no rule; nil/unbound declarations fail
+engine validation. turnAttackRule adds an optional captured subject while
+preserving existing collection membership and saved-player behavior. The shared
+continuous-effect service owns source-exit survival, cleanup and cloning. Both
+shared attack declaration paths apply requirements and restrictions (CR 508.1d).
+
+The exact subject attacks if able in each combat before cleanup. Current control
+determines who attacks. Ability removal, source departure and source phasing do
+not end the rule. Subject phasing prevents attack; a phase cycle keeps identity.
+Return cannot inherit a prior visit's requirement (CR 400.7, 702.26b). Costs stay
+optional even with available mana. Restrictions, tapping and sickness still
+prevent attacks. Copies resolve in their own target frame. Delays retain their
+saved reference; explicit source reads enter WaitingDelayedPermanentSources
+without installing rules or resolving subjects. Departure information cannot
+restore absent action subjects. There is no parallel combat or history subsystem,
+name branch, fallback registry, ability-grant shortcut or global result slot.
+Replacement ordering and simultaneous zone/damage operations are unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, TestRONSingularAttackRuleGameplay and ImpClauses fail
+on unsupported temporary blocking operation (MustAttack). The engine tests fail
+to compile at the new MustAttackThisTurn signature. The initial window tests
+also demonstrate the previously hidden nested blocker; their uncommitted work
+is deferred outside the repository, not included in this slice.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Nettling Imp, LEA/LEB/2ED/3ED/CED/CEI | TestRONSingularAttackRuleImpClauses first confirms each unchanged complete record still rejects IsAPlayersTurn. A clause harness removes only the unsupported timing modifiers. It compiles the remaining real target filter, tap cost, singular attack requirement and saved end-step destruction. Both attacking and tapped unable-to-attack cases run after source departure in the original and cloned game. This is clause evidence, not full-card verification. |
+| Singular engine lifecycle | TestSingularAttackRuleLifetime covers both native and explicit empty attack proposals, exactly one member, control changes, source departure/phasing, subject phase/return, ability removal, cleanup, restrictions, sickness, tapped status, extra combats and optional attack costs. Native cost checks count payment offers and account for normal phase/step mana clearing. Clones retain separate rules and combat. |
+| Declaration and absent subjects | TestSingularAttackRuleDefinitionAndAbsent rejects nil and undeclared references and verifies that an absent saved visit installs no rule. |
+| Delayed source identity and queries | TestSingularAttackRuleDelayedSource tests live, departed, returned, phased and phase-cycled sources, pure repeated waiting queries, consumption and separate cloned schedules. Absent and returned sources cannot receive a rule from retained information. |
+| RON targets, payments and copies | TestRONSingularAttackRuleGameplay covers phase/return/control, copied spells, pending clones, cleanup, target illegality, optional attack costs and failed casting-payment rollback. Factories have distinct declarations. |
+| RON source and group bindings | TestRONSingularAttackRuleSourceAndGroups covers a source activation and two concurrent factory instances with numbered independent target groups. The unselected groups receive their separate tap instruction. |
+| Declaration and strict native loading | TestRONSingularAttackRuleInvalidAndNative rejects tuple operations, mixed operations, unsupported durations and escaped references. Loading a valid synthetic record succeeds; a collection with an invalid record fails atomically and keeps the former registry. |
+
+Estimated versus actual gains: 0 compiled names / 0 records for the selected
+prerequisite. Six Imp records gain attack-requirement clause evidence but remain
+rejected at activation timing. No new fully verified card or collection-wide
+behavior count is claimed. Accepted records keep their existing regressions.
+No RON source defect is changed. Known Fastbond and Gaea's Liege defects remain
+separate. RON source bytes and vocabulary signatures are unchanged, so the
+vocabulary snapshot does not require a source refresh.
+
+### Validation and preservation
+
+Both checkouts pass all required checks in fast-fail order: focused RON tests
+with -count=1; make build; go vet ./...; go test ./pkg/mage/... -short -count=1;
+make test; make lint; git diff --check; then go run ./cmd/loadcards -json.
+Focused engine tests also pass. The final post-lint focused RON times are
+isolated 0.527s and shared 0.584s; engine 0.454s and 0.530s. Short RON times are
+45.366s / 71.035s; full RON times are 49.888s / 81.054s. Shared tests overlap
+isolated lint CPU use; the longer times are not failures. Both lint runs report
+0 issues. Automatic changes affect only import ordering in the two new test
+files; their diff is reviewed and focused tests repeat after formatting.
+
+Final loader commands both exit 1 and publish no registry. Isolated remains
+832 accepted / 154 rejected names and 2,158 compiled / 287 rejected records;
+shared remains 833/153 names and 2,159/286 records. Each final JSON report is
+identical to its fresh pre-run report, including every diagnostic. Nettling Imp
+retains IsAPlayersTurn at 2ED.lines.ron:172:645; Glyph of Delusion retains
+WasBlockedByDefenderThisTurn at LEG.lines.ron:100:233; Blazing Effigy retains
+DeadPermanentDealsDamage at LEG.lines.ron:31:278; Vodalian War Machine retains
+WasTappedToPayForAbilitiesOfPermanent at FEM.lines.ron:101:780. No build, vet,
+test, formatting or lint blocker remains. Native invalid-collection tests still
+prove atomic rejection. Full runtime loading and removal gates remain unmet.
+
+Changed files: pkg/mage/attack_rule_turn.go and singular_attack_rule_test.go;
+pkg/mage/dsl/ron/temporary_blocking.go and singular_attack_rule_test.go;
+pkg/mage/doc.go; docs/dsl-reference.md, engine-rules-contracts.md and this ledger.
+The shared tree receives only incremental documentation additions and this
+slice's code. Staged blobs come from the isolated checkout, so original ledger
+history remains committed while the user's archival move stays unstaged.
+Original unrelated tracked and untracked files remain intact. No Go definitions,
+generators or DSL functions are removed because their removal gates are unmet.
+No removal caller audit is required for this additive capability.
+
+### Ranked next candidates
+
+1. Activation turn/combat windows for Nettling Imp. All six records now compile
+   in the clause harness with only those modifiers omitted. Reuse typed
+   WithActivationStateCondition, IsYourTurn and BeforeCombatStep, including
+   first/current combat history, nested conjunctions, rollback and copies.
+   Estimated next gain: 1 unique name / 6 records.
+2. Declaration-bound block-history target filters for Glyph of Delusion. Its
+   subsequent conditional acquired untap rule stays a separate dependency.
+   Compare with fresh shared prerequisites; Doom and Reincarnation already work.
+3. Compare Vodalian War Machine's durable tap-payment history against filtered
+   departed-source damage for Blazing Effigy. Do not combine their independent
+   engine contracts. Prefer useful multi-card work if fresh inventory finds it.
+
+This run stops after the singular temporary attack requirement. Migration is incomplete.

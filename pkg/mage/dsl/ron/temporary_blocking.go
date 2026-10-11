@@ -48,6 +48,17 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(operations) == 1 && operations[0].Name == "MustAttack" {
+		if _, err := symbol(operations[0]); err != nil {
+			return nil, err
+		}
+		if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
+			return nil, unsupported(n.Args[2], "attack requirement duration")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.MustAttackThisTurn(subject.build(bindings))
+		}, nil
+	}
 	if len(operations) == 1 && operations[0].Name == "AssignsNoCombatDamage" {
 		if operations[0].Kind != Symbol {
 			return nil, unsupported(operations[0], "combat assignment rule")

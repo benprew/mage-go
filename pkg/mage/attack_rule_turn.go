@@ -18,6 +18,38 @@ func MustAttackControlledThisTurn(player PlayerRef, filter PermanentFilter) Reso
 	return &turnAttackRuleEffect{filter: filter, player: player, require: true}
 }
 
+// MustAttackThisTurn requires the saved permanent to attack if able until cleanup.
+// Control changes keep the rule. A returned permanent cannot inherit it.
+func MustAttackThisTurn(subject PermanentRef) ResolvingEffect {
+	return &singularTurnAttackRuleEffect{subject: subject}
+}
+
+type singularTurnAttackRuleEffect struct{ subject PermanentRef }
+
+func (*singularTurnAttackRuleEffect) Text() string {
+	return "the saved permanent attacks if able this turn"
+}
+func (*singularTurnAttackRuleEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *singularTurnAttackRuleEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+func (e *singularTurnAttackRuleEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject)
+}
+func (e *singularTurnAttackRuleEffect) Apply(ctx *EffectContext) error {
+	p, ok := e.subject.resolvePermanent(ctx)
+	if !ok {
+		return nil
+	}
+	rule := &turnAttackRule{
+		funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.EndOfTurn, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect),
+		filter:               IsCreature, require: true, subject: capturedPermanent{p.ID(), p.incarnationID},
+	}
+	rule.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(rule)
+	return nil
+}
+
 type turnAttackRuleEffect struct {
 	filter  PermanentFilter
 	player  PlayerRef
@@ -61,6 +93,7 @@ type turnAttackRule struct {
 	filter     PermanentFilter
 	controller uuid.UUID
 	require    bool
+	subject    capturedPermanent
 }
 
 func (*turnAttackRule) survivesSourceExit() bool { return true }
@@ -71,7 +104,7 @@ func (e *turnAttackRule) cloneEffect() ContinuousEffect {
 	return &clone
 }
 func (e *turnAttackRule) matches(g *Game, p *Permanent) bool {
-	return !p.PhasedOut && (e.controller == uuid.Nil || p.ControllerID() == e.controller) && e.filter.Match(p, g)
+	return !p.PhasedOut && (e.subject.id == uuid.Nil || e.subject.id == p.ID() && e.subject.incarnation == p.incarnationID) && (e.controller == uuid.Nil || p.ControllerID() == e.controller) && e.filter.Match(p, g)
 }
 func (g *Game) hasTurnAttackRule(p *Permanent, require bool) bool {
 	for _, effect := range g.effects.effects {

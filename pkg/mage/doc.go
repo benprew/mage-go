@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [MustAttackThisTurn] saves one present permanent until cleanup.
+// The shared attack planner requires that exact visit to attack if able.
+// Control changes and a phase cycle keep the rule. A return cannot inherit it.
+// Source departure and ability removal do not end it. Attack costs stay optional.
+// Copies, clones and delayed frames keep their separate subjects and lifetimes.
+// RON lowers one MustAttack symbol in CreatePermanentRuleEffectUntil with
+// a typed singular permanent reference and UntilEndOfTurn.
+//
 // RON PlayerActions can save [ActivePlayer] with [SnapshotPlayer] before a delay.
 // Each [AtNext] frame keeps its own saved player after source departure.
 // ActionPlayer reads that saved binding in the scoped body. Nested scopes keep
