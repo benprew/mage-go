@@ -2,17 +2,18 @@
 
 ## Current status
 
-The isolated slice reports **838 accepted / 148 rejected names** (986 total),
-**2,174 compiled / 271 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **839/147 names** and **2,175/270 records**. The strict
+The isolated slice reports **839 accepted / 147 rejected names** (986 total),
+**2,175 compiled / 270 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **840/146 names** and **2,176/269 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-CONTROLLER-CAST-TRIGGERS executes controller spell-cast events and their optional
-single-card draw body. Complete Verduran Enchantress has RON gameplay tests;
-all six reprints validate. Detection-time control, saved event identities,
-optional decisions, draw replacements, phasing, copies and clones use shared
-services. Compilation gain is **one name / six records**. Mana Vortex still
-needs stack-source contracts. Existing accepted records and unrelated work stay
+CONTROLLER-PERMANENT-PRESENCE executes current controller/permanent presence
+through the shared Controls/WhenState engine services. Complete Goblins of the
+Flarg has RON gameplay tests for its state sacrifice, casting and Mountainwalk.
+Current layers/control, tokens, arming, pending identity, phasing, targets,
+copies, clones and sacrifice replacements use shared services. Compilation gain
+is **one name / one record**. City in a Bottle still needs captured state members
+and global restrictions. Existing accepted records and unrelated work stay
 preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -73789,3 +73790,135 @@ contract docs and this ledger.
    Compare durable tap-payment history for Vodalian War Machine before selection.
 
 This run stops after controller-cast triggers. Migration is incomplete.
+
+## Run 2026-10-11: CONTROLLER-PERMANENT-PRESENCE
+
+Status: complete one controller-presence state-event slice. No second slice starts.
+
+### Candidate comparison and selection
+
+The latest ranked candidate #1 is dependency-ready. Full records and nested
+forms were read from DRK and ATQ; the City in a Bottle extension was read from
+ARN. Reprints count once. The targeted vocabulary entries each have one record.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Controller presence, latest #1 | Goblins of the Flarg; captured-state extension: City in a Bottle | One name / one record for controller presence; zero for City with this adapter | Goblins' Mountainwalk and source sacrifice already work. City needs captured members plus global casting/land restrictions. General context-free presence filters enable other typed state bodies. | Low implementation: one adapter and dispatcher/inventory cases; medium contract testing. |
+| Captured battlefield-member presence | City in a Bottle | Zero until its global restrictions are implemented; one eventual name | Needs fresh permanent-set event bindings at detection, saved visits, simultaneous controller sacrifices and source/name exclusion. Existing controller sacrifices and original-printing catalogs can be reused. No other current collection card uses this event. | Medium to high: captured-set engine contract, adapter and lifecycle/batch tests, then independent restrictions. |
+| Pending ability-target exclusion, latest #2 | Goblin Artisans | One potential name / record after exclusion and source audit | Own artifact targeting, tap cost and coin branches have adapters. Needs exact pending ability targets, source exclusion and legality rechecks. The RON ability-source filter may omit Oracle's creature restriction. Enables reusable spell-target predicates over stack abilities. | Medium: shared target query and typed filters, pending/copy/return/control tests, source audit. |
+
+The compared choices provide no dependency-ready multi-card full unlock.
+Controller presence has the lowest effort for a positive complete-record gain.
+City's captured-set extension is not silently included. Latest #3, Mana Vortex,
+is still blocked at FromStack and also needs global no-land detection. Its full
+record was read; controller presence cannot remove either blocker. Its existing controller-cast, upkeep and sacrifice services remain available.
+
+### Supported shape, contracts and reuse boundary
+
+Exactly `TriggerA(WhenAPlayerControlsAPermanent(SinglePlayer(You), filter),
+actions)` in ordinary battlefield rules. The player selector has one symbol
+You. The filter uses the existing context-free permanent-filter compiler;
+nested And/Or lists must be nonempty. Other players, contextual references,
+event-member captures and stack-source declarations remain rejected. This
+state event supplies no Trigger_ThatPlayer, Trigger_ThatPermanent or plural
+binding. Existing action/target shapes retain fresh per-factory declarations.
+
+Private signatures: `compileControllerPresenceTrigger(event, body Node,
+ctx scope) (optionFactory, error)` and `validatePresenceFilter(n Node) error`.
+RON owns syntax, diagnostics, scope checks and lowering. It lowers to existing
+`Controls(filter) StateCondition` and `WhenState(condition StateCondition,
+effect ResolvingEffect, options ...TriggerOption) TriggeredAbility`.
+No missing engine execution contract was found; no duplicate engine service or new public execution signature is added. Native tests establish the reused rules.
+
+Detection reads present, unphased members, current subtype layers and the
+current source controller. Tokens and a matching source qualify. Ability
+removal and source phasing stop new detection. The shared state arming key
+contains source, incarnation and ability identity, with one pending/active body.
+Countering or resolution permits a new trigger if the state still holds.
+Pending bodies keep detection controller and exact source visit; a false state
+does not cancel them. Return cannot supply the old sacrifice subject. Phasing
+blocks action while preserving identity. Copies use their own sacrifice
+permission. Clones keep separate pending frames, arming and zones.
+Shared sacrifice replacements preserve owner destinations and exile choices;
+indestructible and regeneration cannot prevent sacrifice. Targets are chosen
+at trigger placement and checked again at resolution. No payment, replacement ordering, simultaneous batch, LKI or binding service is replaced.
+CR 603.8, 603.3a, 113.7a, 400.7, 701.21a, 702.26 and 702.14c support these rules.
+
+### Card-to-test mapping and source evidence
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Goblins of the Flarg, unchanged DRK record | TestRONControllerPresenceDetection: own/opponent control, owner destination, tokens, non-Dwarves, current subtype changes, source self-match, phased members/source and ability removal. Pending: false condition after detection, counter/rearm, saved control, departure/return, phase cycle, phased resolution/rearm, ability removal, copies under both players, clones, independent sources, exile and regeneration. CastingAndMountainwalk: failed/successful payment, printed 1/1 Goblin Warrior, defender Mountain presence, phasing and ability removal. PhaseRestoration: source/member phase-in detection. |
+| Complete-record validation and strict loading | TestRONControllerPresenceRecords validates the real record and independent factory abilities, rejects malformed collections without partial publication, preserves the prior registry on failed LoadInto and retains Mana Vortex's FromStack diagnostic. Inventory verifies compilation and player/filter semantic roles. |
+| General filter/body/target context | TestRONControllerPresenceFilterComposition checks nested And/Or and token exclusion, resolving life gain and repeated arming. Targets checks placement-time choice and resolution legality for present, returned, phased and shrouded recipients. Invalid rejects wrong selectors/kinds/arities, empty nested groups, unbound event reads and FromStack. |
+| Native shared mechanics | TestControllerPresenceStateBatchAndReplacement checks two source instances, matching-member batch departure, canceled sacrifice/rearm, exile, indestructible, regeneration and independent clone resolution. |
+| Existing accepted records | Collection, definition-plan and numeric-consumer censuses advance by one record. TestRONTextLandwalkRecords now verifies Goblins' printed/revised Mountainwalk alongside the existing accepted records: 11 names / 21 records, two remaining blockers. |
+
+Local data/DRK.json Oracle agrees: Mountainwalk and “When you control a Dwarf,
+sacrifice this creature.” No selected-card source defect or RON change occurs.
+The vocabulary source snapshot is unchanged. Candidate source concern:
+ATQ Goblin Artisans uses AbilityOfAPermanent with Other and IsNamed only, while
+local data/ATQ.json says “another creature named Goblin Artisans.” The next
+slice must audit that missing creature restriction, including noncreature
+sources, before acceptance. No out-of-scope source correction is made here.
+
+### Validation, coverage and preservation
+
+Fresh shared baseline: make build and RON short tests pass (43.155s). Loader
+exits 1 with valid collection JSON: 2,175 compiled / 270 rejected records,
+839 accepted / 147 rejected names. Fresh isolated c7a4540a build/loader baseline:
+2,174/271 records, 838/148 names. Both have 2,445 records / 986 unique names.
+The shared difference is the pre-existing Eureka implementation.
+
+Failing-first: complete-record gameplay and composition tests fail at
+unsupported WhenAPlayerControlsAPermanent before the adapter. A test setup
+compile error for the duration constant is corrected before that evidence.
+Empty-group rejection fails against the first adapter, then passes after its
+recursive declaration check. Detection tests are corrected to phase/remove
+before a matching state first exists; entry can already queue the trigger.
+Mountainwalk uses the shared HasLandwalkEvasion query, as the block planner does.
+No test is weakened to conceal an engine or declaration failure.
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONControllerPresence -count=1`
+and native `go test ./pkg/mage -run TestControllerPresence -count=1` pass in
+both trees, including post-lint reruns. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make lint` and
+`git diff --check` pass in both trees. RON short/full package times are
+44.952s/42.536s isolated and 44.029s/43.868s shared. Both lint runs report zero
+issues. Lint updates only new test loops to strings.SplitSeq and import grouping;
+post-format focused checks pass. Shared lint changes no pre-existing source.
+The additional target test passes before both full-suite runs. No check is blocked.
+
+Final isolated loader: **2,175 compiled / 270 rejected records**,
+**839 accepted / 147 rejected names**. Final shared loader:
+**2,176 compiled / 269 rejected records**, **840 accepted / 146 rejected names**.
+Each diagnostic comparison removes only Goblins of the Flarg and adds no issue.
+Nonzero exits are expected collection rejection, not build/test/environment
+failure. Strict loading still publishes no partial production registry.
+Actual gain is **one unique name / one record**, matching the estimate; one
+complete printed-card gameplay mapping is added. Acceptance and gameplay
+coverage remain separate. City and Mana Vortex remain explicit compiler gaps.
+
+Changes: RON controller_presence.go and triggers.go; controller_presence_test.go
+in RON and mage; inventory role/census tests, definition-plan and numeric tests,
+existing text-landwalk record coverage; pkg/mage/doc.go, API/rules-contract docs
+and this appended ledger entry/current summary. All original user edits and
+untracked files are preserved. The slice is committed from an isolated checkout
+and applied to the shared workspace with the Eureka census difference retained.
+Go definitions, startup, generators and unused DSL functions remain untouched:
+the design's complete-loading, runtime/test migration and caller-audit removal
+gates are not met. No Go-card fallback or name-specific executor is added.
+
+### Ranked next candidates
+
+1. Goblin Artisans ability-target exclusion: one potential full name/record.
+   Audit the Oracle creature restriction first; reuse contextual spell filters,
+   tap payment and coin branches. Add exact stack-ability target/source queries.
+2. City in a Bottle captured-state members: zero immediate full names until
+   global restrictions follow. Reuse original-printing catalogs, typed saved
+   visits, state arming and simultaneous controller sacrifices.
+3. Mana Vortex stack-source self-cast event: one potential name after its
+   independent global no-land adapter. Reuse controller-cast captures and
+   optional sacrifice payment; keep detection on the spell's exact stack visit.
+
+This run stops after controller permanent presence. Migration is incomplete.

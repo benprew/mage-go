@@ -1709,7 +1709,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "WhenACreatureBlocksACreature" || n.Name == "WhenACreatureBecomesBlockedByACreature") && len(n.Args) == 2 {
 			return "permanent_filter"
 		}
-		if n.Name == "WhenAPlayerControlsNoPermanents" && len(n.Args) == 2 {
+		if (n.Name == "WhenAPlayerControlsNoPermanents" || n.Name == "WhenAPlayerControlsAPermanent") && len(n.Args) == 2 {
 			return []string{"player_filter", "permanent_filter"}[index]
 		}
 		if n.Name == "WhenAPlayerActivatesAnAbility" && len(n.Args) == 2 {

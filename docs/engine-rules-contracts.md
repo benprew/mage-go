@@ -17834,3 +17834,35 @@ independent player scope. Native `TestControllerCastDetectionAndBindings`,
 `Declarations` and `OptionalDraw` cover composition, saved event identities,
 copies, clones, typed validation, accept/decline, absence and draw replacement.
 Stack-source Mana Vortex and general optional action lists remain unsupported.
+
+### RON controller permanent-presence state trigger
+
+`WhenAPlayerControlsAPermanent(SinglePlayer(You), filter)` uses the existing
+`Controls(filter) StateCondition` and `WhenState(condition, body, options...)`
+services. No new engine execution API is needed. `CheckStateTriggers` reads
+current controller, subtype layers and unphased battlefield membership.
+Tokens and a matching source qualify. The source must have its active ability
+on the battlefield. There is no event-member capture or intervening-if check.
+
+Each declaration and source incarnation has one pending or active trigger
+(CR 603.8). Countering or resolving it permits another check. Detection saves
+controller and exact source incarnation (CR 603.3a, 113.7a). A false condition,
+source ability removal or departure cannot cancel that saved body. Phasing
+prevents sacrifice while preserving identity; return supplies a different visit
+(CR 702.26, 400.7). Copies use their own controller's sacrifice permission.
+Clones keep separate arming, pending frames and zone storage.
+
+The body uses shared sacrifice replacements and owner destinations
+(CR 701.21a). Indestructible and regeneration do not prevent sacrifice.
+Cancellation permits rearming; exile replacement changes the destination.
+Batched departure of matching permanents cannot cancel pending bodies.
+RON rejects malformed selectors, empty nested filter groups and unbound event
+reads at compilation. Strict collection loading stays atomic.
+
+Evidence: `TestRONControllerPresenceDetection`, `Pending`, `PhaseRestoration`,
+`FilterComposition`, `Targets`, `Invalid`, `Records` and `Inventory`. Complete Goblins of
+the Flarg also has `CastingAndMountainwalk`, which verifies payment, printed
+characteristics and defending-player Mountainwalk (CR 702.14c). Native
+`TestControllerPresenceStateBatchAndReplacement` checks canceled sacrifices,
+indestructible, regeneration, exile, matching-member batch departure and clones.
+Captured battlefield-member events and other player selectors remain separate.

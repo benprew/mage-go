@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON controller-presence state triggers use [Controls] and [WhenState].
+// The condition reads present permanents and the current source controller.
+// Tokens and the source can match. Phasing stops selection and detection.
+// Each source visit and rule keeps one pending or active trigger. A later
+// condition change does not cancel it. Pending bodies keep their controller
+// and source visit. Shared sacrifice services keep replacement choices,
+// owner destinations, copies and clones. Return cannot inherit an old body.
+//
 // RON controller-cast triggers use [SpellCast] with ByController. Detection
 // saves the source controller, caster and exact spell visit. Pending bodies
 // keep these facts after source control changes, departure or phasing.

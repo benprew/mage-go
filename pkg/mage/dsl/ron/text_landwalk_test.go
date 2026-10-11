@@ -31,7 +31,7 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 	}
 	names := map[string]bool{}
 	count := 0
-	rejected := map[string]string{"Goblins of the Flarg": "WhenAPlayerControlsAPermanent", "Scarwood Bandits": "AnyPlayerMayCost", "Goblin Flotilla": "UntilEndOfCombat"}
+	rejected := map[string]string{"Scarwood Bandits": "AnyPlayerMayCost", "Goblin Flotilla": "UntilEndOfCombat"}
 	blocked := 0
 	for _, file := range files {
 		data, err := os.ReadFile(file)
@@ -99,7 +99,7 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 			}
 		}
 	}
-	if len(names) != 10 || count != 20 || blocked != 3 {
+	if len(names) != 11 || count != 21 || blocked != 2 {
 		t.Fatalf("coverage: %d names / %d records / %d blocked", len(names), count, blocked)
 	}
 }

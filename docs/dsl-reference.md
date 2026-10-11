@@ -13662,3 +13662,21 @@ independent player scope. Native `TestControllerCastDetectionAndBindings`,
 `Declarations` and `OptionalDraw` cover composition, saved event identities,
 copies, clones, typed validation, accept/decline, absence and draw replacement.
 Stack-source Mana Vortex and general optional action lists remain unsupported.
+
+## RON controller permanent-presence state trigger
+
+`TriggerA(WhenAPlayerControlsAPermanent(SinglePlayer(You), filter), actions)`
+lowers to `mage.WhenState(mage.Controls(filter), body)` in ordinary battlefield
+rules. The player must be exactly `SinglePlayer(You)`. The permanent filter
+uses the existing context-free filter compiler. Nested `And` and `Or` groups
+must be nonempty. Source, target, chosen and event references in the filter
+remain unsupported. This event supplies no player or permanent bindings.
+The existing action compiler builds targets and bodies afresh per factory.
+
+The condition reads the source's current controller and present matching
+permanents, including tokens and the source. It uses current subtype layers.
+Phasing and ability removal stop detection. A pending body keeps its controller
+and source visit; a later false condition does not cancel it. The shared state
+trigger service prevents repetition while pending or on the stack, then permits
+another trigger if the state still holds. See `TestRONControllerPresence*` and
+native `TestControllerPresenceStateBatchAndReplacement`.
