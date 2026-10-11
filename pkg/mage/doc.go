@@ -2497,6 +2497,16 @@
 // RON lowers one fixed SetPT pair in CreateEachPermanentLayerEffect.
 // Source death rules keep separate permanent and graveyard-card bindings.
 //
+// Use [ReturnChosenGraveyardCard] for a required graveyard choice and return.
+// The effect controller chooses from the saved player's current graveyard.
+// [ReturnChosenGraveyardCardToOwner] uses the selected card's owner for entry.
+// Empty sets do nothing. Invalid answers use the first eligible card.
+// A changed graveyard visit cannot supply the return. Choices stay local.
+// Shared entry services keep replacement order, entry rules and new identity.
+// Typed player references keep source information and waiting queries.
+// RON supports one creature filter, one bound player and one entry operation.
+// Delayed death bindings and death-result loops need separate adapters.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -17633,3 +17633,44 @@ sorcery timing, cost failure and control changes. Complete Nettling Imp records
 in LEA/LEB/2ED/3ED/CED/CEI cover target exclusions, source departure/phasing,
 attack requirements, delayed destruction, regeneration, target control changes,
 phasing, phase cycles, returned visits, copies and game clones.
+
+## Required graveyard choice and battlefield return
+
+`ReturnChosenGraveyardCard(graveyard, controller PlayerRef, filter CardFilter)
+ResolvingEffect` makes a required non-target choice for the resolving effect
+controller. `ReturnChosenGraveyardCardToOwner(graveyard PlayerRef, filter CardFilter)
+ResolvingEffect` instead uses the selected card's owner as its entry controller.
+The graveyard and explicit controller references are read once before the choice.
+Candidates are current matching cards in that graveyard. Empty sets do nothing.
+One candidate needs no decision; multiple candidates use `ChooseCardFromGraveyard`
+without a `ChooseMayAbility` offer. Nil and foreign answers use the first eligible
+candidate, as with the shared required permanent-choice contract.
+
+Each candidate's graveyard visit is saved before the decision. The selected card
+must still occupy that exact visit in the same graveyard. Departure and return
+cannot supply the move. Choices are local to each operation. Shared
+`returnGraveyardCardToBattlefield` retains zone replacements, entry restrictions,
+entry operations, ownership and fresh battlefield identity. This is one move;
+it does not change simultaneous multi-card movement or payment transactions.
+Source-derived player references declare waiting reads without making a choice.
+Existing capture frames retain source LKI, phasing and departed visits for delayed
+bodies; copies and cloned games keep their frames separate.
+
+RON lowers
+`ReturnACardFromPlayersGraveyardToBattlefield(IsCardtype(Creature), player,
+[EntersUnderOwnersControl])` or one
+`EntersUnderPlayersControl(controller)` entry. Player operands use existing typed
+lexical references in ordinary resolving bodies and supported nested/delayed
+bodies. Other filters, entry lists and unbound operands reject at compilation.
+This slice supplies the shared return action for Reincarnation and Glyph of
+Reincarnation; their complete records remain unsupported. It does not supply
+owner-information reads, delayed death-event bindings or death-result loops.
+
+Evidence: `TestChosenGraveyardReturnContracts`, `Definition`, `WaitingSource`;
+`TestRONChosenGraveyardReturnGameplay`, `RealClauses`, `DelayedTiming`, `InvalidAndNative`,
+and `Inventory`. These cover chooser versus graveyard player, required-choice
+fallback, exact visits, owners and entry controllers, current resolution
+membership, delayed source LKI/phasing/departure, copies, clones, declaration
+errors, nested inventory and atomic collection rejection. Rules: CR 115.10,
+400.7, 603.7 and 608.2c/d/h. These are clause and engine contracts, not complete
+card gameplay claims.

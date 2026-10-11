@@ -604,6 +604,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "color"
 			}
 		}
+	case "graveyard_card_filter":
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
 	case "card_filter":
 		if n.Name == "IsColor" || n.Name == "IsNonColor" {
 			if len(n.Args) == 1 {
@@ -909,6 +913,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "AcquireOwnershipOfCard", "ExchangeAnteCardWithTopCardOfPlayersLibrary":
 			if len(n.Args) == 2 {
 				return []string{"card_reference", "player_reference"}[index]
+			}
+		case "ActionForEachPermanentThatDiedThisWay":
+			if len(n.Args) == 1 {
+				return "action"
+			}
+		case "ReturnACardFromPlayersGraveyardToBattlefield":
+			if len(n.Args) == 3 {
+				return []string{"graveyard_card_filter", "player_reference", "entry_operation"}[index]
 			}
 		case "PutGraveyardCardIntoHand":
 			if len(n.Args) == 1 {

@@ -1392,6 +1392,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ReturnACardFromPlayersGraveyardToBattlefield":
+		build, err := compileChosenGraveyardReturn(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutGraveyardCardIntoHand", "PutGraveyardCardOntoBattlefield":
 		build, err := compileGraveyardReturn(n, ctx)
 		if err != nil {

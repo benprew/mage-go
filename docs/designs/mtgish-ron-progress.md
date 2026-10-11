@@ -7,12 +7,11 @@ The isolated slice reports **833 accepted / 153 rejected names** (986 total),
 the worktree reports **834/152 names** and **2,165/280 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-ACTIVATION-TURN-COMBAT-WINDOWS lowers typed acting-player turn conditions and
-first/current combat windows with nested conjunctions. Compilation gains are
-**1 unique name / 6 records**. All six complete Nettling Imp records now have
-RON gameplay evidence for targets, timing, tap payment, attack requirements,
-saved delayed destruction, phasing, return, copies, clones and regeneration.
-Existing engine conditions and combat history supply the mechanics.
+REQUIRED-GRAVEYARD-CHOICE-RETURN adds required non-target creature-card choices
+and battlefield returns, with explicit-player or owner entry control. New engine
+and RON clause tests cover exact visits, delayed frames, copies and clones.
+Compilation gains are **0 names / 0 records**. Both Reincarnation cards retain
+separate death-binding, owner-reference or loop/casting blockers.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -72941,3 +72940,179 @@ so no unrelated change or ledger archival deletion is staged.
    if fresh inventory identifies a better dependency-ready candidate.
 
 This run stops after activation windows. Migration is incomplete.
+
+
+## Run 2026-10-10: REQUIRED-GRAVEYARD-CHOICE-RETURN
+
+Status: complete one dependency-ready prerequisite slice. No second capability
+is started. Whole-card compilation and collection gameplay remain incomplete.
+
+### Candidate comparison and selection
+
+The latest ranked candidate is evaluated first. Complete unchanged records are
+read for Glyph of Delusion, Glyph of Doom, Glyph of Reincarnation, Vodalian War
+Machine and Reincarnation. Reprints count once. Fresh loader diagnostics show
+that many remaining first errors are distinct single-card forms; they do not
+establish full-card unlock counts. Three candidates are compared:
+
+| Candidate | Affected unique cards and estimated full-card unlocks | Other blockers, downstream use and effort |
+| --- | --- | --- |
+| Declaration-bound block-history targets | Direct target context: Glyph of Delusion. Glyph of Doom and Glyph of Reincarnation already have the collection form. Zero complete-card unlocks. | Delusion still needs conditional acquired untap rules and its acquired upkeep rule. A general declaration dependency contract needs announcement, resolution legality, copies and retargeting tests. Medium to high effort for one direct consumer. |
+| Durable tap-payment history | Vodalian War Machine, one record; estimated one complete-card unlock. Its tap choices, defender bypass and P/T bodies already compile. | Must record exact paid visits only after transaction success, then keep turn history, departure, death filtering and clone isolation. Medium to high effort; one direct consumer in this collection. |
+| Required graveyard choice and return | Reincarnation and Glyph of Reincarnation, two records. Initial estimate: one complete-card unlock; corrected to zero before edits. | Full inspection finds unbound delayed death/owner references in Reincarnation, plus an Oracle mismatch. The Glyph still lacks after-combat casting, death-result loops and historical controller lowering. The return action is a concrete shared prerequisite for both bodies. Low to medium effort, with existing choice and entry services available. |
+
+Select the third candidate as a shared prerequisite. It supplies both cards'
+required return operation without combining delayed death capture, owner/LKI
+lowering, casting windows or result loops in this run. The corrected estimate
+is **zero complete names / zero records**, equal to the actual gain. This does
+not count synthetic or isolated clause tests as complete-card gameplay.
+The selected RON signatures occur twice in the targeted vocabulary snapshot.
+All RON records and the vocabulary snapshot remain byte-for-byte unchanged.
+
+### Contract, implementation and reuse boundary
+
+RON accepts this complete supported shape in ordinary resolving action sequences
+and supported nested/delayed bodies:
+
+`ReturnACardFromPlayersGraveyardToBattlefield(IsCardtype(Creature), player,
+[EntersUnderOwnersControl])`
+
+or one `EntersUnderPlayersControl(controller)` entry operation. Both player
+operands use existing typed lexical references. Arity, symbol kinds, creature
+filter, entry count and scope are checked before factory construction. Other
+filters, modifiers, entry lists and unbound references reject with source
+positions. The adapter creates no payment, target, action-result or loop binding.
+Factory-created player bindings retain their existing per-instance lifetimes.
+
+New engine APIs:
+
+- `ReturnChosenGraveyardCard(graveyard, controller PlayerRef, filter CardFilter) ResolvingEffect`
+- `ReturnChosenGraveyardCardToOwner(graveyard PlayerRef, filter CardFilter) ResolvingEffect`
+
+The resolving effect controller chooses a matching card from the specified
+player's current graveyard. This is a required non-target choice, with no optional
+offer. One candidate requires no decision. Multiple candidates use the existing
+`Player.ChooseCardFromGraveyard`. Nil or foreign answers use the first eligible
+candidate, following the existing `ChoosePermanent` required-choice contract.
+The specified graveyard and explicit entry controller are read once before the
+decision. Owner-controlled entry uses the selected card's owner.
+
+Every candidate's graveyard visit is recorded locally before the decision. A
+selected card must still be in that same graveyard visit; departure or return
+cannot replace it. No global result slot or mutable factory state is introduced.
+The existing `returnGraveyardCardToBattlefield` service supplies zone replacements,
+entry restrictions, entry rules, owner retention and new battlefield identity.
+This single-card operation does not introduce simultaneous batches or payment
+transactions. Typed source-derived player reads declare waiting references;
+existing captured frames provide LKI, phasing and exact departed source visits.
+Copies and cloned games reuse those shared frames without sharing choice state.
+
+RON inventory now records the action's filter, player and entry roles, including
+nested clauses under the still-unsupported death-result loop. This inventory
+annotation does not invent an executable loop binding or mark a card supported.
+No Go-card fallback, card-name production branch, declaration panic, skipped rule,
+partial production registry or duplicate engine zone service is added.
+Existing Go callers and card definitions remain. No DSL function is deleted, so
+no removal audit or runtime cutover is claimed. API and rules documentation only
+add the behavior established here. CR 115.10, 400.7, 603.7 and 608.2c/d/h supply
+the choice, identity, delayed-frame and resolution contracts.
+
+### Failing-first evidence and gameplay mappings
+
+Before production edits, `TestRONChosenGraveyardReturnGameplay` and the valid
+native-loader case fail with unsupported action
+`ReturnACardFromPlayersGraveyardToBattlefield`. Engine contract tests fail to
+compile because both new engine signatures are absent. A later inventory red
+run fails on missing descendant card-type and entry roles before those role
+adapters are added. Initial harness mistakes are corrected: graveyards require
+owner consistency, `TargetPlayer` needs its filter, and `ApplyEffect` replaces
+an outer resolution frame. The engine contract now supplies its saved binding
+in the explicit test resolution context. No production workaround is added.
+
+| Card or contract | Evidence and limits |
+| --- | --- |
+| Reincarnation, LEG:215 | `TestRONChosenGraveyardReturnRealClauses` lowers the unchanged source filter and entry operation with test-supplied player operands. Complete-record rejection remains in `InvalidAndNative`. The delayed death and owner-binding context is not claimed. |
+| Glyph of Reincarnation, LEG:104 | `RealClauses` isolates its exact creature filter and owner-entry clause with a test-supplied player. Complete-record rejection remains; historical controller and result-loop execution are not claimed. |
+| Required selection and identity | `TestChosenGraveyardReturnContracts`: effect controller differs from graveyard player; valid, nil and foreign choices; empty and excluded sets; departure and leave/return during the decision; explicit-player and owner entry. No optional offer is made. |
+| Definition contract | `TestChosenGraveyardReturnDefinition`: nil graveyard or explicit controller references reject. |
+| Source information and waiting queries | `TestChosenGraveyardReturnWaitingSource`: both player operands, owner entry, phasing, source departure/return, exact waiting-source identity, delayed LKI and cloned frames. |
+| RON execution | `TestRONChosenGraveyardReturnGameplay`: typed player target identifies the graveyard, the returned card is not targeted, two entry forms, empty sets, copies and clone isolation. |
+| Resolution timing | `TestRONChosenGraveyardReturnDelayedTiming`: cards added after installation are eligible at delayed resolution; source departure/phasing and cloned schedules keep saved controller information. |
+| Invalid and native loading | `TestRONChosenGraveyardReturnInvalidAndNative`: malformed arities and symbols, unsupported card types, unbound references, empty/duplicate/invalid entries and strict atomic loading. Both complete source records still reject. |
+| Semantic inventory | `TestRONChosenGraveyardReturnInventory`: both full source records retain nested filter, card-type, player and entry roles even under unsupported ancestors. |
+
+Acceptance concerns for target announcement, damage prevention, costs and
+simultaneous destruction are not newly implemented by this choice action.
+Shared regression suites retain those engine contracts. This run does not
+claim missing delayed death-event facts, acquired rules or death-result batches.
+
+### Source evidence and preserved work
+
+Local authoritative `data/LEG.json` gives Reincarnation's Oracle instruction:
+return the chosen creature under the dead creature's owner's control. Its RON
+entry operand is `ControllerOfPermanent(Trigger_ThatPermanent)`, which differs
+when an opponent controls that creature. Record this source defect without
+changing the unsupported declaration. The next death-owner capture slice must
+correct the entry operand with a complete opponent-controlled-creature test.
+The collection has one such record; there are no identical reprints to fix.
+Fastbond and Gaea's Liege observations remain outside this slice.
+
+The initial shared worktree contains tracked migration/design/doc edits, an
+archive link, and untracked repeated-entry work. An isolated checkout at
+`974a50d8` contains only this run's changes. Incremental compiler, inventory and
+API additions and new files are applied to the shared worktree. Existing user
+changes and unrelated untracked files remain. The commit uses only validated
+isolated file contents, preserving the shared ledger archive and prior edits
+as worktree changes. No prior Eureka or repeated-entry implementation is staged.
+
+### Verification and fresh loader evidence
+
+Both shared and isolated checkouts pass the required checks: focused RON tests
+with `-count=1`, focused engine contracts, `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make lint`,
+and `git diff --check`. Final post-lint focused tests pass again. RON short-suite
+times are isolated 54.206s / shared 57.490s; full-suite RON times are isolated
+51.766s / shared 45.129s. Final lint runs report zero issues. The first isolated
+lint reports one redundant explicit test-variable type; it is removed, and
+focused tests, build and vet pass again. An overlapping shared lint attempt
+hits the golangci-lint process lock; its sequential rerun passes. Automatic
+formatting only groups imports in the two new test files. Those changes are
+reviewed. No unrelated source file is changed by lint and no unresolved test,
+build, vet, lint or environment failure remains.
+
+Fresh loader runs before and after the slice exit 1 for collection rejection,
+not build or test failure. Isolated counts remain **833 accepted / 153 rejected
+names; 2,164 compiled / 281 rejected records**. Shared counts retain pre-existing
+Eureka: **834 accepted / 152 rejected names; 2,165 compiled / 280 rejected
+records**. Totals remain 986 names / 2,445 records. Strict loading publishes no
+partial registry. Both JSON comparisons prove every issue other than
+Reincarnation is unchanged. That record now reaches
+`LEG.lines.ron:215:386: unbound or incompatible player reference
+(OwnerOfPermanent)`, instead of the old unsupported return-action diagnostic
+at column 319. Glyph of Reincarnation retains its unsupported `IsAfterCombat`
+casting condition. This is adapter progress with **zero full-record gain**,
+matching the corrected pre-edit estimate. Neither complete card receives a
+whole-card gameplay claim. Native invalid-collection tests retain atomic
+rejection. Complete collection gameplay, runtime wiring, Go-card removal and
+unused DSL cleanup remain unmet.
+
+
+Changed files: `pkg/mage/chosen_graveyard_return.go` and its engine tests;
+`pkg/mage/dsl/ron/chosen_graveyard_return.go` and its RON tests; `compiler.go`,
+`inventory.go`, `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. Delayed death-owner capture for Reincarnation: expose the watched permanent's
+   exact death facts and owner, correct its entry controller with Oracle evidence,
+   and consume this return action. Estimate one complete unique name/record.
+2. Declaration-bound block-history targets for Glyph of Delusion: zero immediate
+   complete-card gains; conditional acquired untap/upkeep rules stay separate.
+   Compare fresh shared prerequisites before selecting this single direct consumer.
+3. Durable tap-payment history for Vodalian War Machine: one estimated complete
+   name/record, after successful transaction-bound paid visits, turn history,
+   death filtering and cloning. Glyph of Reincarnation still needs after-combat
+   casting and death-result loops before its return clause can execute.
+
+This run stops after required graveyard choice and return. Migration is incomplete.
