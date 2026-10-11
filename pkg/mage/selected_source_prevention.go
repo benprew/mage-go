@@ -1,5 +1,7 @@
 package mage
 
+import "github.com/google/uuid"
+
 // PreventNextDamageFromSelectedSource prevents one source event this turn.
 // A shield on a permanent spell also applies to the permanent it becomes.
 // Source enumeration remains the caller's responsibility.
@@ -21,7 +23,7 @@ func (g *Game) continueSpellDamageReplacements(spell DamageSource, permanent *Pe
 	}
 }
 
-func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, colorsSpent int) *Permanent {
+func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, colorsSpent int, hostID uuid.UUID) *Permanent {
 	permanent := g.prepareBattlefieldEntry(card, obj.Controller, obj.ColorOverride, colorsSpent, false)
 	if permanent == nil {
 		return nil
@@ -29,6 +31,9 @@ func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, color
 	g.registerBattlefieldEntry(permanent, obj.ColorOverride, obj.SourceID)
 	g.continueSpellDamageReplacements(damageSourceFromSpellObject(obj), permanent)
 	g.continueSpellExileReplacement(damageSourceFromSpellObject(obj), permanent)
+	if hostID != uuid.Nil {
+		g.Attach(permanent.ID(), hostID)
+	}
 	g.completeBattlefieldEntry(permanent, obj.Controller, obj.Controller, colorsSpent)
 	return permanent
 }

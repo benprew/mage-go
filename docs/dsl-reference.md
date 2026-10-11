@@ -13214,3 +13214,35 @@ All six complete Fireball records have RON gameplay evidence in
 `TestRONTargetSurchargeFireball`. Payment, timing, copies, independent instances,
 invalid declarations and inventory roles use the other `TestRONTargetSurcharge*`
 tests. Compilation acceptance and gameplay evidence remain separate measures.
+
+## Zone-event intervening conditions
+
+RON accepts `TriggerI(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),
+PermanentPassesFilter(ThisPermanent | HostPermanent, HasAbility(keyword)), body)`.
+The host reference requires an Aura declaration. The condition uses
+`PermanentMatchesFilterWithLKI(PermanentRef, PermanentFilter) StateCondition`
+with `WithInterveningIf` at detection and resolution. A live source reads its
+current attachment; a departed source reads its final attachment. Source and
+host incarnations remain exact through departure, return, phasing and cloning.
+Information does not permit actions on departed subjects.
+
+RON also accepts `TriggerI(WhenAPermanentIsPutIntoAPlayersGraveyard(filter, AnyPlayer),
+PermanentPutInGraveyardPassesFilter(WasntSacrificed), body)` with the existing
+Land/Artifact and optional `ControlledByAPlayer(SinglePlayer(You))` event filters.
+`WithDeathNotSacrificed() deathNotSacrificedOption (implements TriggerOption)` checks the historical death cause at
+both times. The engine retains immutable event facts per pending trigger and
+copied ability. Other event contexts, duplicate guards, modal or appended bodies, and combinations with
+another intervening condition fail definition validation. Existing event player
+bindings and optional payment bodies keep their shared services.
+
+Complete Urza's Miter is covered by `TestRONZoneInterveningMiter` and
+`TestRONZoneInterveningNativeLoadAndCast`. Earthbind's condition is covered as
+an explicit prerequisite; its nested acquired static ability remains rejected.
+
+Resolving Aura spells now attach through the shared spell-entry service before
+entry effects and the entry event (CR 303.4, 603.6a/b). This includes spell copies.
+Spell-to-permanent damage/exile replacement continuation still precedes entry
+notifications. Target legality uses the existing resolved-target service.
+`TestRONZoneInterveningNativeEntry` and `NativeAuraCopy` verify native casting,
+entry-time host checks, copied Auras and clone isolation. `SourceEntry` checks
+source keyword changes, departure, return and phasing.

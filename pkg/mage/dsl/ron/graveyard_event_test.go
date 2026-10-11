@@ -432,7 +432,7 @@ func TestRONGraveyardEventInventoryAndScopes(t *testing.T) {
 	for _, rule := range []string{
 		`SpellActions(ActionList([PlayerAction(Trigger_ThatPlayer, GainLife(Integer(1)))]))`,
 		`TriggerA(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)), ActionList([PlayerAction(Trigger_ThatPlayer, GainLife(Integer(1)))]))`,
-		`TriggerI(WhenAPermanentIsPutIntoAPlayersGraveyard(IsCardtype(Artifact), AnyPlayer), PermanentPutInGraveyardPassesFilter(WasntSacrificed), ActionList([GainLife(Integer(1))]))`,
+		`TriggerI(WhenAPermanentIsPutIntoAPlayersGraveyard(IsCardtype(Artifact), AnyPlayer), PermanentPutInGraveyardPassesFilter(WasntSacrificed()), ActionList([GainLife(Integer(1))]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, rule)), "invalid.ron")
 		if err != nil {

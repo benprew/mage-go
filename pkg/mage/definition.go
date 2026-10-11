@@ -301,6 +301,9 @@ func describeDefinition(v any) definitionNode {
 		if e.spellCastTextRevision && !e.supportsSpellCastTextRevision() {
 			n.problem = "text revision requires a typed battlefield spell-cast trigger"
 		}
+		if e.deathNotSacrificed && !validDeathCauseContext(e) {
+			n.problem = "death cause requires one typed permanent death event"
+		}
 		if e.eventDefinition != nil {
 			n.Role = "event-trigger"
 			n.children = append(n.children, definitionEdge{"event", e.eventDefinition})

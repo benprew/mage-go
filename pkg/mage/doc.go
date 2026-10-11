@@ -2394,6 +2394,18 @@
 // fixed-maximum discard and lexical result reads. Mind Bomb uses the shared
 // per-recipient damage service. Coin producers need a separate adapter.
 //
+// Use [PermanentMatchesFilterWithLKI] for a source or attachment condition.
+// It reads the exact current object or its saved departure or phase information.
+// [WithInterveningIf] checks this information at detection and resolution.
+// Saved source visits keep their last attachment after departure. Live sources
+// read their current attachment. Returned objects cannot replace saved visits.
+// Use [WithDeathNotSacrificed] for one typed permanent death event.
+// Each pending trigger keeps its own death cause for the resolution check.
+// Copies and clones keep those facts. Other event contexts, duplicate guards
+// and a second intervening condition fail definition validation.
+// RON supports source-entry keyword conditions and WasntSacrificed death guards.
+// Nested acquired static abilities need a separate adapter.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

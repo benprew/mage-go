@@ -8,6 +8,10 @@ import (
 type graveyardEventPlan struct{ ownerName, controllerName string }
 
 func compileGraveyardTrigger(event, body Node, ctx scope) (optionFactory, error) {
+	return compileGraveyardTriggerWithOptions(event, body, ctx)
+}
+
+func compileGraveyardTriggerWithOptions(event, body Node, ctx scope, options ...mage.TriggerOption) (optionFactory, error) {
 	if err := arity(event, 2); err != nil {
 		return nil, err
 	}
@@ -35,7 +39,7 @@ func compileGraveyardTrigger(event, body Node, ctx scope) (optionFactory, error)
 		if controlled {
 			pattern = pattern.YouControlled()
 		}
-		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

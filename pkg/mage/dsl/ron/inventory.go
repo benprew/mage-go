@@ -423,6 +423,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "combat_history_filter"
 		}
 	case "trigger_condition":
+		if n.Name == "PermanentPutInGraveyardPassesFilter" && len(n.Args) == 1 {
+			return "death_cause_filter"
+		}
 		if n.Name == "ACreatureOrPlaneswalkerDiedThisTurn" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

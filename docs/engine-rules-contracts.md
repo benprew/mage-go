@@ -17242,3 +17242,37 @@ Evidence: `TestActionTargetSurchargeContract`,
 `TestActionTargetSurchargeRejectsActivation`,
 `TestActionTargetSurchargeGroupsAndLockedCost`, existing `TestTargetSurcharge*`,
 and the complete Fireball and synthetic shape cases in `TestRONTargetSurcharge*`.
+
+## Zone-event intervening conditions and historical death cause
+
+`PermanentMatchesFilterWithLKI` is a pure source/attachment condition for
+`WithInterveningIf` (CR 603.4, 608.2h). It reuses the exact-incarnation
+information service. Present objects supply current facts; phased objects supply
+saved phase information; departed objects supply departure LKI. A departed
+source keeps its final attachment, while a present source reads its current host.
+Returned sources and hosts cannot replace saved incarnations (CR 400.7).
+Information reads grant no permission to act on an absent object.
+
+`WithDeathNotSacrificed` requires a typed permanent-death pattern, one guard,
+an ordinary guarded body, and no second intervening condition. The existing battlefield-to-graveyard
+zone event's sacrifice flag determines the historical fact. Detection checks
+that event. Stack placement stores a separate immutable event in the guarded
+body; resolution checks that same fact. Later deaths, sacrifice, source return,
+control changes, trigger copies and game clones cannot change it. No global
+last-action result is used. Simultaneous death detection retains the shared
+former-battlefield and APNAP contracts (CR 603.6c, 603.10).
+
+Mana payment, replacement order, phasing, trigger placement, drawing and cost
+rollback use existing engine services. The RON adapter enables complete Urza's
+Miter. Earthbind still requires a separate acquired-static-ability adapter.
+Evidence: `TestZoneIntervening*`, `TestRONZoneInterveningMiter`,
+`TestRONZoneInterveningEntry`, `TestRONZoneInterveningNativeLoadAndCast`,
+`TestRONZoneInterveningInvalid` and `TestRONZoneInterveningEarthbindPrerequisite`.
+
+Resolving Aura spells now attach through the shared spell-entry service before
+entry effects and the entry event (CR 303.4, 603.6a/b). This includes spell copies.
+Spell-to-permanent damage/exile replacement continuation still precedes entry
+notifications. Target legality uses the existing resolved-target service.
+`TestRONZoneInterveningNativeEntry` and `NativeAuraCopy` verify native casting,
+entry-time host checks, copied Auras and clone isolation. `SourceEntry` checks
+source keyword changes, departure, return and phasing.

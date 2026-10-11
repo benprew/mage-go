@@ -1001,6 +1001,9 @@ func (e *eventPlayerCapture) inspectDefinition() definitionNode {
 }
 
 func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
+	if pt.event != nil {
+		obj.Effects = captureDeathCause(obj.Effects, pt.event)
+	}
 	if pt.delayed != nil && pt.delayed.eventPlayerBinding != nil && pt.event != nil {
 		for i, effect := range obj.Effects {
 			captured, ok := effect.(*capturedDelayedBody)

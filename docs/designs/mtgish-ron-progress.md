@@ -2,16 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **825 accepted / 161 rejected names** (986 total),
-**2,141 compiled / 304 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **826/160 names** and **2,142/303 records**. The strict
+The isolated slice reports **826 accepted / 160 rejected names** (986 total),
+**2,142 compiled / 303 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **827/159 names** and **2,143/302 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-TARGET-COUNT-SPELL-SURCHARGE lowers one positive fixed generic announced-target
-payment on an ordinary nonmodal spell to the shared mage announcement cost.
-Compilation and complete RON gameplay gain **1 name / 6 records**: Fireball.
-Targets, X, cost locking, reductions, rollback, copies and clones use shared services.
-No RON changed. Required native checks pass in both trees; final lint has 0 issues.
+ZONE-EVENT-INTERVENING-IF lowers exact source/host entry keyword conditions and
+historical non-sacrifice death conditions. Complete RON gameplay and compilation
+gain **1 name / 1 record**: Urza's Miter. Earthbind's condition is supported;
+its nested acquired static ability remains rejected. Copies, clones and saved
+visits use shared services. No RON or vocabulary changed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71125,3 +71125,190 @@ the collection, gameplay and cutover gates remain unmet.
    simultaneous player coin results. Reassess other multi-card prerequisites first.
 
 Migration remains incomplete. This run stops after TARGET-COUNT-SPELL-SURCHARGE.
+
+## Run 2026-10-10: ZONE-EVENT-INTERVENING-IF
+
+Status: complete one dependency-ready vertical capability slice. No second
+capability was started. The selected supported context is an ordinary source
+entry keyword condition or a historical non-sacrifice permanent-death condition.
+Earthbind's nested acquired static ability remains a positioned compiler error.
+
+### Environment, candidates and selection
+
+The initial tree contained unstaged Eureka/repeated-entry implementation work,
+API documentation edits, ledger restructuring, a completed-ledger file and an
+ignore-file change. All were preserved. Fresh shared-tree make build and
+RON short tests passed (40.156s). The baseline strict loader exited 1 solely
+for collection rejection: 826 accepted / 160 rejected unique names,
+2,142 compiled / 303 rejected records. No partial registry was published.
+
+The latest ranked candidate was evaluated first. Complete Earthbind records in
+LEA:73, LEB:74, 2ED:74, 3ED:76, CED:74 and CEI:74 and Urza's Miter in ATQ:78
+were read, including their nested bodies. Complete DRK Mana Clash:64 and
+Runesword:87 records were also inspected. Reprints count once.
+
+| Candidate | Unique names; full-card estimate | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Zone-event intervening conditions | Earthbind, Urza's Miter; 1 full name / 1 record | Earthbind still needs AddAbility of a nested PermanentLayerEffect. Exact source/attachment information enables its entry guard; historical death facts complete Miter's otherwise supported payment/draw body. | Moderate: two related zone-event conditions, compiler scope validation, identity and historical-event tests. |
+| Live damage-history subjects | Runesword; 0 from history alone, potentially 1 with both consumers | Requires no-regeneration and death-exile consumers with live damage-history membership and replacement ordering. Enables both instructions without freezing a set too early. | Higher: live membership plus two consumer contracts. |
+| Coin-result rounds | Mana Clash; potentially 1 | Simultaneous per-player coin results, damage recipients and repeat continuation remain missing. Existing Eureka rounds supply no coin-result contract. | Higher: separate per-player results and loop continuation. |
+
+The first candidate is dependency-ready and has concrete benefit for two unique
+cards. The slice completes the reusable conditions rather than also introducing
+Earthbind's acquired-static-ability subsystem. One full-card unlock was estimated
+and achieved. Its historical death guard completes Miter immediately; its entry
+condition remains an explicit Earthbind prerequisite. No card-name dispatch,
+Go-card fallback, runtime declaration panic or global last-action slot was added.
+
+### Exact signatures, engine boundary and dependencies
+
+RON supports:
+
+- TriggerI(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),
+  PermanentPassesFilter(ThisPermanent | HostPermanent, HasAbility(keyword)), body).
+  HostPermanent requires the existing Aura context. Only a supported fixed
+  temporary keyword declaration is accepted; unbound references and malformed
+  keyword/subject declarations remain positioned errors.
+- TriggerI(WhenAPermanentIsPutIntoAPlayersGraveyard(filter, AnyPlayer),
+  PermanentPutInGraveyardPassesFilter(WasntSacrificed), body). The filter retains
+  existing Land/Artifact and optional ControlledByAPlayer(SinglePlayer(You))
+  contexts. WasntSacrificed is a symbol, not a tuple or a live permanent filter.
+  Owner/last-controller event bindings and action/payment bodies remain reusable.
+
+RON owns compileZoneIntervening(Node, scope), the private
+compileGraveyardTriggerWithOptions adapter, positioned syntax/context checks,
+and the death_cause_filter semantic inventory role. Every factory retains fresh
+existing ability, action and event bindings. Ordinary TriggerA callers remain.
+
+New reusable engine APIs:
+PermanentMatchesFilterWithLKI(subject PermanentRef, filter PermanentFilter)
+StateCondition and WithDeathNotSacrificed() deathNotSacrificedOption (implements TriggerOption).
+
+The information condition accepts This or AttachedPermanent. It reuses
+readPermanentInformation and exact phase/departure information. WithInterveningIf
+checks it at detection and resolution. A live source reads its current host; a
+departed source uses its final attachment. Returned sources and hosts cannot
+replace saved visits. Information reads grant no permission to act on absent
+objects. Static live-only conditions retain their current behavior.
+
+The historical death guard uses the existing zone event's sacrifice flag.
+Detection checks the exact battlefield-to-graveyard event. Stack placement
+copies that event into a fresh guarded effect before binding wrappers. Resolution
+checks the same historical fact. Copies and game clones retain immutable facts;
+independent deaths cannot replace each other's results. Definition validation
+rejects nondeath contexts, duplicate guards, another intervening condition, modal
+bodies and effects appended outside the guarded body. Those unsupported contexts
+are not accepted and silently executed without a guard.
+
+Shared death/LKI detection, former-battlefield simultaneous observations, APNAP,
+source incarnation capture, target legality, cost transactions, optional choices,
+drawing, phasing and replacement order supply mechanics. No replacement, zone,
+payment or lifecycle subsystem is duplicated in RON.
+
+A native Aura casting test exposed a missing engine entry contract: the spell
+resolver checked entry conditions before attaching the Aura. The private
+putPermanentSpellOnBattlefield(obj *StackObject, card Card, colorsSpent int,
+hostID uuid.UUID) now receives the resolved host and attaches before
+completeBattlefieldEntry. The sole caller in stack_resolver.go was audited and
+updated. Damage/exile spell continuations still precede attachment and entry
+notifications. Shared target legality, entry replacements, layers and attachment
+services remain in use. Other hand/exile Aura entry paths already attach before
+completion. CR 303.4 and 603.6a/b require the corrected order. No existing DSL functions,
+Go card definitions, generators or runtime wiring were removed; cutover gates
+remain unmet. Source RON and vocabulary snapshot did not change.
+
+Local authoritative data/LEA.json and data/ATQ.json confirm Earthbind's flying
+condition and Miter's historical non-sacrifice restriction and optional {3} draw.
+CR 603.4, 603.6a/c, 603.10, 608.2h and 400.7 support timing, historical checks
+and incarnation/LKI behavior. No source defect was found or corrected.
+Gaea's Liege and Fastbond remain separate source audits.
+
+### Failing-first evidence and card-to-test mapping
+
+The corrected initial RON red run fails at unsupported entry/departure
+intervening-if events. An initial fixture used a nonexistent entry event name;
+it was corrected to the existing zone-change event before the expected red run.
+The engine red run fails for the undefined information condition and death-guard
+APIs. Subsequent meaningful assertions verified both checks and historical cause.
+The native Aura-entry assertion also fails before the shared attachment-order
+repair, then passes for physical spells, spell copies and game clones.
+A separate declaration red test fails because appended effects bypass the guard;
+validation now rejects that shape. Its first Mode fixture used Text rather than
+the existing field shape and was corrected before the assertion red run.
+
+Additional fixture corrections preserve assertions: engine attachment needs an
+Aura, victims need owners, and cloned BasePlayers use their normal decline choice
+rather than retaining a custom payment-player policy. Clone payment decline is
+checked separately; clone historical guard execution uses nonpayment engine tests.
+
+| Card/context | Gameplay and declaration evidence |
+| --- | --- |
+| Complete Urza's Miter, ATQ | TestRONZoneInterveningMiter covers destruction/sacrifice, payment/decline/insufficient mana, source departure/return/phasing/control, victim return, self and simultaneous deaths, tokens, other controllers, removal, trigger copying, regeneration, exile replacement, bounce and phased victims. |
+| Native full-record loading and casting | TestRONZoneInterveningNativeLoadAndCast loads complete Miter into an explicit registry, verifies casting rollback and paid casting, then pays {3} and draws the exact library card. Invalid collection loading keeps the existing registry. It also verifies semantic inventory roles. |
+| Earthbind's entry condition, all six reprints | TestRONZoneInterveningEarthbindPrerequisite checks each complete record retains its separate nested-layer error, then validates that record's condition with a synthetic body. This is prerequisite coverage, not full-card gameplay. |
+| Native entry and source context | TestRONZoneInterveningNativeEntry checks Aura attachment before entry detection and casting rollback; NativeAuraCopy checks spell copies and clone isolation. SourceEntry checks current source keywords, departure, return and phasing. |
+| Source-entry host behavior | TestRONZoneInterveningEntry exercises flying at detection, later loss/gain, current reattachment, source departure/return, host return, phasing, copies and clones with a synthetic resolving body. |
+| Historical owner/controller scope | TestRONZoneInterveningDeathBindings retains event owner and last controller after victim return and source departure. |
+| Engine information contract | TestZoneInterveningInformation checks exact attachment/source visits, LKI, return, phase cycles, changed characteristics, unknown incarnations and cloned games. |
+| Engine historical contract | TestZoneInterveningHistoricalCause and IndependentEventsAndCopies check later sacrifice cannot overwrite an earlier death, independent sources/events, returned victim, copied trigger controller and clone isolation. |
+| Invalid shapes | TestRONZoneInterveningInvalid rejects malformed death filters, destination players, wrong condition families and host reads without Aura context. Engine InvalidDefinitions and RejectsModalAndUnguardedBodies reject wrong event contexts, duplicate/mixed conditions, unbound information references and unguarded bodies. |
+| Accepted records | Whole RON suites retain definition-plan reconstruction and accepted-card tests. Exact record-count assertions advance by one; an obsolete negative test now uses malformed WasntSacrificed() instead of rejecting the supported symbol. No gameplay assertion was weakened. |
+
+### Validation and coverage
+
+Final focused go test ./pkg/mage/dsl/ron -run TestRONZoneIntervening -count=1
+passes in both trees (shared 0.682s; isolated 0.487s). Native engine
+TestZoneIntervening and the selected-source/spell-continuation focus also pass.
+Both trees pass make build, go vet ./..., go test ./pkg/mage/... -short -count=1,
+and make test after the native Aura-entry repair. Final shared RON short/full
+runs take 50.071s/48.603s; isolated runs take 45.826s/49.094s. No required native
+check remains blocked. Existing Go-card and accepted RON regressions pass.
+
+Both final make lint runs report 0 issues. The first lint run found two local
+style issues in captureDeathCause (nesting and a variable named copy); both were
+fixed. Automatic formatting changed import grouping in new files only. Those
+edits were reviewed. The final isolated lint run makes no changes, verified
+against the staged-file snapshots. Focused RON checks pass after formatting;
+git diff --check and git diff --cached --check pass. No tests were weakened.
+
+Final go run ./cmd/loadcards -json exits 1 solely for collection rejection in
+both trees. Shared: 827 accepted / 159 rejected names and 2,143 compiled /
+302 rejected records. Isolated: 826 accepted / 160 rejected names and 2,142
+compiled / 303 rejected records. Both still cover 986 names / 2,445 records and
+publish no partial production registry. Urza's Miter has zero diagnostics.
+All six Earthbind records now reach the explicit unsupported temporary keyword
+(PermanentLayerEffect) error. Runesword and Mana Clash retain their separate
+unsupported collection-rule and repeat-action diagnostics.
+
+Actual compilation and complete RON gameplay gain is 1 unique name / 1 record,
+Urza's Miter, in both trees, matching the estimate. Earthbind's condition and
+native Aura-entry prerequisite gain contract evidence without full-card
+acceptance. The pre-existing Eureka difference remains one name / one record.
+Compiler acceptance and this gameplay gain do not establish complete collection
+coverage, runtime cutover or removal gates. RON source and vocabulary hashes
+are unchanged. No source defect or unresolved environment failure was found.
+
+Changed files: pkg/mage/zone_intervening.go and zone_intervening_test.go,
+composable_events.go, triggered.go, definition.go, selected_source_prevention.go,
+stack_resolver.go and doc.go;
+pkg/mage/dsl/ron/zone_intervening.go and zone_intervening_test.go,
+storage_land.go, graveyard_event.go and graveyard_event_test.go,
+inventory.go, inventory_test.go, definition_plan_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. The commit excludes the original unrelated edits, including
+the ledger's archival restructuring; those remain in the user's worktree.
+
+### Ranked next candidates
+
+1. Acquired static/rule ability context: Earthbind's nested PermanentLayerEffect
+   and Johan's nested PermanentRuleEffect. Reassess as a shared prerequisite for
+   two names. Earthbind has only this remaining adapter; Johan also needs its
+   optional layer-action payment and conditional attack-without-tap permission.
+   Preserve donor lifetime, host membership, removal, phasing and layer order.
+2. Live damage-history subjects for Runesword's no-regeneration and death-exile
+   consumers. History alone unlocks zero; complete both consumers with ordering
+   and saved incarnation evidence before accepting the card.
+3. Simultaneous coin-result bindings and repeat continuation for Mana Clash.
+   Existing repeated-entry work remains separate; do not infer coin support.
+
+Migration remains incomplete. This run stops after ZONE-EVENT-INTERVENING-IF.
