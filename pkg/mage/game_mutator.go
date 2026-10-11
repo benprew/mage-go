@@ -19,6 +19,7 @@ type PlayerReader interface {
 
 // BattlefieldReader provides read-only queries against permanents on the battlefield.
 type BattlefieldReader interface {
+	CanRegeneratePermanent(*Permanent) bool
 	FindPermanent(uuid.UUID) *Permanent
 	FindPermanentByName(string, uuid.UUID) *Permanent
 	FindPermanentIncludingPhased(uuid.UUID) *Permanent

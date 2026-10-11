@@ -17321,3 +17321,39 @@ context and invalid rules. `TestRONAcquiredStatic*` covers all six complete
 Earthbind records, native casting and rollback, trigger/spell copies, pending
 clones, prevention, entry/resolution timing, source and host returns, phasing,
 control, removal, reattachment, strict loading and semantic inventory.
+
+## Live turn damage-history rules
+
+`CantRegenerateDealtDamageByThisTurn(source PermanentRef, filter PermanentFilter)`
+and `ExileDealtDamageByThisTurn(source PermanentRef, filter PermanentFilter)`
+return resolving effects. They save one exact damaging source at installation.
+The filter reads current recipients. `CantRegenerateCreaturesDealtDamageByThisTurn(source PermanentRef)`
+instead retains creature status at actual damage, even after type changes.
+`PermanentsDealtDamageAsCreaturesByThisTurn(source DamageSourceRef, candidates PermanentSet)`
+exposes that history to resolving collection consumers.
+
+`Game.CanRegeneratePermanent(*Permanent) bool` checks present visits, existing
+keyword prohibitions and live history rules. Regeneration replacement matching
+uses this query before choices, without requiring a layer pass. These restrictions
+change rules rather than recipient abilities (CR 611.2c). Ability removal does
+not end them. Damage history records positive post-replacement damage only.
+
+Death replacement reuses the singleton service for destruction, sacrifice and
+other graveyard moves, including zero toughness. Membership is checked before
+movement. Shared replacement ordering and simultaneous batches remain in use
+(CR 614.8, 616.1). Indestructibility still stops destruction. Regeneration can
+compete with exile when no prohibition applies.
+
+Source departure, control changes, phasing and ability removal cannot end a
+resolved rule. Original damage sources can use retained information at installation.
+Recipient phasing suspends actions but preserves identity. Returned sources and
+recipients have new visits (CR 400.7). Cleanup ends rules and clears both general
+and creature-at-damage history. Clones copy each history map independently.
+`WaitingExileSources` includes the explicit saved history source, with departure
+information; it does not invent references to prospective recipients. Delayed
+collection queries retain declared source reads without selecting history members.
+
+Evidence: `TestLiveDamageHistory*` and `TestRONLiveDamageHistory*`, including the
+complete corrected Runesword record. The source correction follows local
+`data/DRK.json`: creature-at-damage is required for its regeneration restriction;
+its death replacement requires a current creature. There is one RON printing.

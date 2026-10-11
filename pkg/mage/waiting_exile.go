@@ -26,7 +26,7 @@ func (g *Game) WaitingExileSources() []DamageSource {
 			case *exileInsteadOfGraveyardReplacement:
 				subjects = []DamageSource{rule.subject, rule.continued}
 			case *temporaryDeathExileReplacement:
-				subjects = []DamageSource{rule.reference}
+				subjects = []DamageSource{rule.reference, rule.historySource}
 			default:
 				continue
 			}

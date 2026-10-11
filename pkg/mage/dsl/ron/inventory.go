@@ -226,6 +226,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	if role == "metadata" {
 		return role
 	}
+	if (role == "permanent_collection" || role == "permanent_filter") && n.Name == "WasDealtDamageByPermanentThisTurn" && len(n.Args) == 2 {
+		return []string{"permanent_reference", "permanent_filter"}[index]
+	}
 	if n.Kind != Tuple {
 		return "unknown"
 	}
@@ -990,7 +993,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "CreateEachPermanentRuleEffectUntil":
 			if len(n.Args) == 3 {
-				return []string{"permanent_filter", "permanent_rule_operation", "duration"}[index]
+				return []string{"permanent_collection", "permanent_rule_operation", "duration"}[index]
 			}
 		case "CreatePermanentRuleEffectUntil":
 			if len(n.Args) == 3 {

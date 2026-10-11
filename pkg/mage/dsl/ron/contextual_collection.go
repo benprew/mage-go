@@ -15,6 +15,17 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return func(bindings instanceBindings) mage.PermanentSet {
 			return mage.HighestManaValue(subjects(bindings))
 		}, nil
+	case "WasDealtDamageByPermanentThisTurn":
+		ref, err := compileDamageHistorySource(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			if ref.creaturesOnly {
+				return mage.PermanentsDealtDamageAsCreaturesByThisTurn(mage.DamageSourceOf(ref.build(bindings)), mage.MatchingPermanents(mage.AnyPermanent))
+			}
+			return mage.PermanentsDealtDamageByThisTurn(mage.DamageSourceOf(ref.build(bindings)), mage.MatchingPermanents(mage.AnyPermanent))
+		}, nil
 	case "WasBlockedByDefenderThisTurn":
 		if err := arity(n, 1); err != nil {
 			return nil, err

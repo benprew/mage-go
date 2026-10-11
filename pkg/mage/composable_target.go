@@ -1545,8 +1545,9 @@ func (s damageHistoryPermanents) inspectDefinition() definitionNode {
 }
 
 type turnDamageHistoryPermanents struct {
-	source     DamageSourceRef
-	candidates PermanentSet
+	creaturesOnly bool
+	source        DamageSourceRef
+	candidates    PermanentSet
 }
 
 // PermanentsDealtDamageByThisTurn selects current recipients of this source's turn damage.
@@ -1567,6 +1568,9 @@ func (s turnDamageHistoryPermanents) resolvePermanents(ctx *EffectContext) []*Pe
 	var selected []*Permanent
 	for _, permanent := range s.candidates.resolvePermanents(ctx) {
 		if permanent != nil && !permanent.PhasedOut && ctx.Game.damage.dealtDamageToPermanentThisTurn(source, capturedPermanent{permanent.ID(), permanent.incarnationID}) {
+			if s.creaturesOnly && !ctx.Game.damage.turnDamageToCreatures[capturedPermanent{source.ID(), source.Incarnation()}][capturedPermanent{permanent.ID(), permanent.incarnationID}] {
+				continue
+			}
 			selected = append(selected, permanent)
 		}
 	}
@@ -2090,4 +2094,10 @@ func (v counterResolutionValue) resolveValue(ctx *EffectContext) int {
 
 func (v counterResolutionValue) inspectDefinition() definitionNode {
 	return definitionNode{Role: "counter-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}
+
+// PermanentsDealtDamageAsCreaturesByThisTurn keeps recipient types at damage.
+// Selection still requires each original recipient to be present.
+func PermanentsDealtDamageAsCreaturesByThisTurn(source DamageSourceRef, candidates PermanentSet) PermanentSet {
+	return turnDamageHistoryPermanents{source: source, candidates: candidates, creaturesOnly: true}
 }

@@ -13291,3 +13291,27 @@ context and invalid rules. `TestRONAcquiredStatic*` covers all six complete
 Earthbind records, native casting and rollback, trigger/spell copies, pending
 clones, prevention, entry/resolution timing, source and host returns, phasing,
 control, removal, reattachment, strict loading and semantic inventory.
+
+## RON live turn damage-history rules
+
+Resolving permanent collections accept
+`WasDealtDamageByPermanentThisTurn(permanentRef)`. Selection uses actual damage
+this turn and both original battlefield visits. Collections can combine this
+subject with live filters through `And` and `Or`.
+
+The two-argument form
+`WasDealtDamageByPermanentThisTurn(permanentRef, IsCardtype(Creature))` selects
+recipients that were creatures when damage occurred. Later type changes keep
+that fact. No other damage-time filter is supported.
+
+`CreateEachPermanentRuleEffectUntil(subject, [CantBeRegenerated], UntilEndOfTurn)`
+accepts one history subject, or its one-argument form combined with live filters
+through `And`. The rule reads later damage until cleanup. It does not grant an
+ability. `APermanentWouldDie(subject)` with one `ExileItInstead` operation and
+`UntilEndOfTurn` accepts the one-argument history form and live-filter conjunctions.
+Damage-time filters in that replacement context remain rejected.
+
+Each action saves its own source visit at resolution. Factory instances, copies
+and clones do not share chosen source state. Existing singleton death replacements
+and collection attack rules keep their behavior. Runesword uses creature-at-damage
+history for regeneration and a current creature filter for death replacement.

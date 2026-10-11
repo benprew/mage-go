@@ -17,6 +17,7 @@ type DamageSystem struct {
 	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
 	damageToPlayersByIncarnation       map[capturedPermanent]map[uuid.UUID]bool
 	damageToPermanentsByIncarnation    map[capturedPermanent]map[capturedPermanent]bool
+	turnDamageToCreatures              map[capturedPermanent]map[capturedPermanent]bool
 	turnDamageToPermanents             map[capturedPermanent]map[capturedPermanent]bool
 	turnDamageToPlayers                map[capturedPermanent]map[uuid.UUID]bool
 	combatDamageThisStep               map[uuid.UUID]map[uuid.UUID]int
@@ -156,6 +157,12 @@ func (ds *DamageSystem) Clone() DamageSystem {
 			clone.damageToPermanentsByIncarnation[source] = maps.Clone(permanents)
 		}
 	}
+	if len(ds.turnDamageToCreatures) > 0 {
+		clone.turnDamageToCreatures = make(map[capturedPermanent]map[capturedPermanent]bool, len(ds.turnDamageToCreatures))
+		for source, recipients := range ds.turnDamageToCreatures {
+			clone.turnDamageToCreatures[source] = maps.Clone(recipients)
+		}
+	}
 	if len(ds.turnDamageToPermanents) > 0 {
 		clone.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool, len(ds.turnDamageToPermanents))
 		for source, permanents := range ds.turnDamageToPermanents {
@@ -211,6 +218,7 @@ func (ds *DamageSystem) ClearEndOfTurn() {
 	ds.expireEndOfTurnEffects()
 	ds.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	ds.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool)
+	ds.turnDamageToCreatures = nil
 	ds.turnDamageToPlayers = make(map[capturedPermanent]map[uuid.UUID]bool)
 }
 
@@ -706,6 +714,15 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 			ds.turnDamageToPermanents[key] = make(map[capturedPermanent]bool)
 		}
 		ds.turnDamageToPermanents[key][capturedPermanent{perm.ID(), perm.incarnationID}] = true
+		if perm.HasType(TypeCreature) {
+			if ds.turnDamageToCreatures == nil {
+				ds.turnDamageToCreatures = make(map[capturedPermanent]map[capturedPermanent]bool)
+			}
+			if ds.turnDamageToCreatures[key] == nil {
+				ds.turnDamageToCreatures[key] = make(map[capturedPermanent]bool)
+			}
+			ds.turnDamageToCreatures[key][capturedPermanent{perm.ID(), perm.incarnationID}] = true
+		}
 		if ds.damageToPermanentsByIncarnation == nil {
 			ds.damageToPermanentsByIncarnation = make(map[capturedPermanent]map[capturedPermanent]bool)
 		}

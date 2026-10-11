@@ -204,6 +204,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case combatOpponentsSet:
 		return permanentRefReadsSourcePermanent(s.subject)
+	case turnDamageHistoryPermanents:
+		return damageReadsSourcePermanent(s.source) || permanentSetReadsSourcePermanent(s.candidates)
 	case blockedThisTurnSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case excludedPermanentSet:

@@ -2,17 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **827 accepted / 159 rejected names** (986 total),
-**2,148 compiled / 297 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **828/158 names** and **2,149/296 records**. The strict
+The isolated slice reports **828 accepted / 158 rejected names** (986 total),
+**2,149 compiled / 296 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **829/157 names** and **2,150/295 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-ACQUIRED-LAYER6-STATIC-ABILITY executes one Aura acquiring a live host keyword
-removal rule. Complete RON gameplay and compilation gain **1 name / 6 records**:
-Earthbind, all six printings. The engine captures each recipient visit and gives
-it a fresh static declaration; shared layers preserve dependency order, removal,
-reattachment, phasing and clones. Johan's remaining adapters stay rejected.
-No RON or vocabulary changed.
+LIVE-TURN-DAMAGE-HISTORY-RULES executes resolving damage-history collections,
+live regeneration restrictions and live death-to-exile replacements. Complete
+RON gameplay and compilation gain **1 name / 1 record**: Runesword. Creature
+status at actual damage remains separate from live creature filters. Exact
+visits, later damage, replacements, phasing, clones and cleanup use shared engine
+services. The Runesword source defect and vocabulary snapshot are corrected.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71477,3 +71477,168 @@ definitions were removed.
    shows useful shared multi-card work.
 
 Migration remains incomplete. This run stops after ACQUIRED-LAYER6-STATIC-ABILITY.
+
+## Run 2026-10-10: LIVE-TURN-DAMAGE-HISTORY-RULES
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Candidate comparison and selection
+
+The latest ranked candidate was evaluated first. Complete records and nested
+forms were read from DRK and LEG, with unique names counted once.
+
+| Candidate | Distinct affected cards | Estimated complete unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Live damage-history subjects and both rule consumers | Runesword | 1 name / 1 record | Shared resolving history subject; live regeneration restriction and death replacement. Existing departure delay, target, payment and P/T contracts are ready. Brine Hag's reverse history and indefinite base-P/T consumer remain separate. | Moderate: live rule registration, saved identities, replacement integration, history and full-record tests. |
+| Simultaneous coin rounds and repeat continuation | Mana Clash | 1 name / 1 record | Needs per-player simultaneous coin results, tails recipients and all-heads continuation. Existing repeated entry does not supply coin outcomes. Enables other repeated decision procedures. | High: complete round scope, RNG, simultaneous damage, continuation and clone tests. |
+| Block-history target predicate prerequisite | Glyph of Delusion, Glyph of Doom, Glyph of Reincarnation | 0 immediate | Resolving block-history collections already exist. Delusion still needs indefinite acquired conditional untap and upkeep rules; Doom needs a turn-bounded next-combat event; Reincarnation needs postcombat timing, death-result iteration and return selection. Enables three complete downstream cards. | Moderate prerequisite; high for complete cards and their remaining lifecycle contracts. |
+
+Candidate 1 wins as the dependency-ready ranked prerequisite with two concrete
+consumers and one complete unlock. Candidate 2 has the same immediate gain with
+larger missing contracts. Candidate 3 has concrete multi-card value, but no
+complete unlock in this run's target-predicate scope. No unsupported adapter was
+accepted to increase counts. The estimate equals the actual gain.
+
+### Contract, contexts and reuse boundary
+
+RON owns spelling, declaration checks and scoped lowering. Resolving permanent
+collections now accept `WasDealtDamageByPermanentThisTurn(permanentRef)` and
+compositions through existing `And`/`Or`. References use existing source, host,
+target and saved permanent plans; every factory creates separate declarations.
+
+The two-argument form `WasDealtDamageByPermanentThisTurn(ref, IsCardtype(Creature))`
+means creature status at actual damage. Other damage-time filters reject.
+`CreateEachPermanentRuleEffectUntil(history, [CantBeRegenerated], UntilEndOfTurn)`
+accepts either history form. The one-argument form also permits an `And` with
+live permanent filters; mixing live filters with a damage-time filter rejects.
+`CreateReplaceWouldPutIntoGraveyardUntil(APermanentWouldDie(history),
+[ExileItInstead], UntilEndOfTurn)` accepts one-argument history and its live-filter
+conjunctions. Damage-time filters in death replacement contexts remain rejected.
+Invalid arity, symbols, subjects, durations, mixed operations, duplicate history
+sources, unsupported filters and unbound references reject before gameplay.
+
+Engine APIs established:
+
+- `CantRegenerateDealtDamageByThisTurn(PermanentRef, PermanentFilter) ResolvingEffect`
+- `CantRegenerateCreaturesDealtDamageByThisTurn(PermanentRef) ResolvingEffect`
+- `ExileDealtDamageByThisTurn(PermanentRef, PermanentFilter) ResolvingEffect`
+- `PermanentsDealtDamageAsCreaturesByThisTurn(DamageSourceRef, PermanentSet) PermanentSet`
+- `(*Game).CanRegeneratePermanent(*Permanent) bool`, also on BattlefieldReader.
+
+Each resolved rule saves the exact damaging source independently of later frames.
+Live membership includes later actual damage until cleanup. Prevented and zero
+damage do not qualify. Creature-at-damage facts remain after type changes.
+Regeneration reads restrictions before replacement choices and before another
+layer pass; the rule does not add a recipient ability. Death replacement extends
+the existing singleton service, including destruction, sacrifice, zero toughness,
+indestructibility and simultaneous replacement preparation. Shared damage history,
+LKI, source references, cost transactions, stack copies, P/T, departure delays,
+phasing, clone and cleanup services remain in use. No RON game subsystem, fallback,
+card-name branch, global result slot or partial production registry was added.
+
+Source departure, control changes, phasing and ability removal cannot end resolved
+rules. Original source and recipient visits remain distinct from returns. Clones
+copy history and rules independently. Waiting exile queries retain the explicit
+history source, not prospective recipients. Waiting delayed queries retain source
+reads without selecting members or executing bodies. Current callers remain.
+Runtime cutover, Go-card removal, generator retirement and unused DSL deletion
+remain gated; no broad DSL functions or Go definitions were removed.
+
+### Source defect and rules evidence
+
+Runesword's original DRK record applied both consumers to every damaged permanent.
+Local `data/DRK.json` requires creature recipients. Its regeneration restriction
+uses creature status at damage; its death replacement checks a current creature.
+The sole printing now uses the two-argument history form for no-regeneration and
+`And([IsCardtype(Creature), WasDealtDamageByPermanentThisTurn(ref)])` for exile.
+The original source fails the new planeswalker sacrifice test with `exile=true`;
+the corrected record passes. This is a source-data correction, not a global
+predicate inversion. No other card record changed. The vocabulary snapshot was
+refreshed from a fresh positioned AST walk, file hashes and loader inspection:
+604 constructor signatures, 51 top-level rules, 986 names and 2,445 records.
+
+CR 400.7, 611.1/2a/2c, 614.8, 616.1 and regeneration rules support the saved visits,
+live rule membership, duration and replacement ordering. Local rules sections
+were read; the Wizards 2026-04-17 rules PDF independently confirms regeneration
+as a destruction replacement. Gaea's Liege and Fastbond remain separate audits.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON red: the complete Runesword record rejects CantBeRegenerated in its
+collection context. Initial engine red: both proposed constructors are undefined.
+The creature-at-damage test later fails at its new undefined constructor. An
+initial engine fixture omitted an owner; the fixture was corrected before the
+passing gameplay run. The source-defect red used the complete original record
+and confirmed the expected planeswalker assertion failure, then restored the
+corrected record. No rules assertion was removed to obtain passing validation.
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Runesword, sole DRK printing | TestRONLiveDamageHistoryRunesword: unpaid rollback, paid activation, attacking target, +2/+0, later damage, no regeneration, exile without death, delayed sacrifice. |
+| Complete Runesword timing and identity | TestRONLiveDamageHistoryTiming: prior damage, zero/prevented/other-source damage, illegal/phased/returned targets, phase cycle, donor/source departure, recipient return, cleanup, clone, spell-ability copy, ability removal, sacrifice and planeswalker exclusion. |
+| Native loading and independent bindings | TestRONLiveDamageHistoryNativeAndBindings: explicit full-record registry, two fresh factories and queued independent targets, atomic invalid-collection rejection, semantic inventory. |
+| Shared history adapter | TestRONLiveDamageHistoryCollection: targeted source history lowers to a resolving collection action with the correct recipient. |
+| Invalid declarations | TestRONLiveDamageHistoryInvalid and TestLiveDamageHistoryInvalid: bad source scopes, arity, symbols, durations, duplicate subjects, mixed operations and unsupported damage-time filters; nil engine references reject. |
+| Engine live rules and lifecycle | TestLiveDamageHistoryRules, Lifecycle, CreatureAtDamage, CloneWrites: immediate matching, actual damage, original visits, departure/LKI, phasing, abilities, cleanup and independent nested history writes. |
+| Replacement and simultaneous contracts | TestLiveDamageHistoryReplacementOrder and SimultaneousAndWaiting: affected-player regeneration/exile order, mixed lethal/zero-toughness batch, exact waiting source, return and cloned lifetime. |
+| Waiting declaration purity | TestLiveDamageHistoryWaitingDeclarations: source reads survive departure/return without executing pending rules or selecting recipients. |
+
+### Validation and coverage
+
+Fresh shared baseline: make build and RON short tests pass (RON 41.555s).
+Strict loader exits 1 for collection rejection: 828/158 names and 2,149/296 records.
+Fresh isolated loader at HEAD: 827/159 names and 2,148/297 records. The preserved
+Eureka work accounts for the one-name/one-record difference.
+
+Focused RON and engine tests pass with -count=1. Isolated make build and go vet
+./... pass. Engine short tests pass (RON 52.679s), and make test passes (RON
+42.876s), preserving all accepted RON and existing Go-card regressions.
+Final make lint reports 0 issues in both trees. Automatic formatting changes
+were limited to import grouping in new files and were reviewed. Post-format
+RON history, collection-attack, death-exile and inventory tests pass (2.248s);
+engine history, death-exile and turn-history tests pass (0.673s). Shared focused
+history tests pass (RON 0.519s; engine 0.496s). Shared make build, go vet ./...,
+engine short tests (RON 41.118s) and make test (RON 43.174s) also pass after
+merging this slice with the original user work. No required check is blocked.
+Both git diff --check and the staged patch check pass.
+
+Final strict loaders exit 1 solely for collection rejection. Isolated: 828
+accepted / 158 rejected names, 2,149 compiled / 296 rejected records. Shared:
+829 accepted / 157 rejected names, 2,150 compiled / 295 rejected records.
+Both retain 986 unique names and 2,445 records; Runesword has no diagnostics.
+Isolated Mana Clash still rejects RepeatableActions, Johan rejects optional
+CreatePermanentLayerEffectUntil payment, Brine Hag rejects
+CreateEachPermanentLayerEffect, and Glyph of Doom rejects
+AtNextEndOfCombatThisTurn. The preserved Eureka adapter changes Mana Clash's
+shared diagnostic to its unsupported repeated process body; it remains rejected.
+No partial production registry is published.
+
+The commit is prepared from the independently validated isolated index, then
+applied only to the shared index. The shared worktree keeps the original Eureka,
+ledger archival, documentation and other edits. No unrelated change is staged.
+
+Actual compilation and complete-card gameplay gain: 1 unique name / 1 record,
+Runesword, matching the estimate. Compilation and the test mapping remain separate
+from collection-wide gameplay coverage. No complete migration criterion beyond
+this capability is claimed.
+
+Changed files: cards/mtgish/DRK.lines.ron; pkg/mage/live_damage_history.go and tests,
+composable_target.go, damage_system.go, game_mutator.go, replacement.go,
+temporary_death_exile.go, waiting_exile.go, waiting_delayed_source.go and doc.go;
+pkg/mage/dsl/ron/live_damage_history.go and tests, compiler.go,
+contextual_collection.go, temporary_death_exile.go, inventory.go and three
+collection-count fixtures; docs/dsl-reference.md, docs/engine-rules-contracts.md,
+the vocabulary snapshot and this ledger. Unrelated original edits are preserved.
+
+### Ranked next candidates
+
+1. Shared block-history target predicate and bounded delayed combat lifetimes.
+   Reassess Glyph of Doom's full record and the Delusion/Reincarnation prerequisites;
+   distinguish live resolving collections from announcement target conditions.
+2. Simultaneous per-player coin outcomes and complete Mana Clash repetition.
+   Reuse binding frames and shared damage; do not accept entry-only RepeatableActions.
+3. Reverse damage-history subjects and indefinite captured base-P/T effects for
+   Brine Hag. Reuse the existing reverse selector; compare fresh inventory for
+   additional users of CreateEachPermanentLayerEffect before selecting.
+
+Migration remains incomplete. This run stops after LIVE-TURN-DAMAGE-HISTORY-RULES.

@@ -1450,7 +1450,10 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "CreateEachPermanentRuleEffectUntil":
-		build, err := compileCollectionAttackTurn(n)
+		build, err := compileCollectionDamageHistoryRule(n, ctx)
+		if len(n.Args) == 3 && n.Args[1].Kind == List && len(n.Args[1].Args) == 1 && (n.Args[1].Args[0].Name == "CantAttack" || n.Args[1].Args[0].Name == "MustAttack") {
+			build, err = compileCollectionAttackTurn(n)
+		}
 		if err != nil {
 			return nil, err
 		}

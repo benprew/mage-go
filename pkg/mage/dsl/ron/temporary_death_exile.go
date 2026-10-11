@@ -14,15 +14,22 @@ func compileTemporaryDeathExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	subject := event.Args[0]
-	if subject.Name != "SinglePermanent" {
-		return nil, unsupported(subject, "temporary death replacement subject")
+	var ref damageHistorySourcePlan
+	filter := mage.AnyPermanent
+	var err error
+	history := subject.Name != "SinglePermanent"
+	if history {
+		ref, filter, err = compileDamageHistorySubjects(subject, ctx)
+	} else {
+		if err = arity(subject, 1); err == nil {
+			ref.permanentReferencePlan, err = compilePermanentRef(subject.Args[0], ctx)
+		}
 	}
-	if err := arity(subject, 1); err != nil {
-		return nil, err
-	}
-	ref, err := compilePermanentRef(subject.Args[0], ctx)
 	if err != nil {
 		return nil, err
+	}
+	if ref.creaturesOnly {
+		return nil, problem(subject, "death replacement requires a live recipient filter")
 	}
 	ops, err := list(n.Args[1])
 	if err != nil {
@@ -34,5 +41,10 @@ func compileTemporaryDeathExile(n Node, ctx scope) (effectFactory, error) {
 	if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
 		return nil, unsupported(n.Args[2], "temporary death replacement duration")
 	}
-	return func(bindings instanceBindings) mage.Effect { return mage.ExileIfWouldDieThisTurn(ref.build(bindings)) }, nil
+	return func(bindings instanceBindings) mage.Effect {
+		if history {
+			return mage.ExileDealtDamageByThisTurn(ref.build(bindings), filter)
+		}
+		return mage.ExileIfWouldDieThisTurn(ref.build(bindings))
+	}, nil
 }

@@ -32,7 +32,8 @@
 // the saved visit; return cannot replace it. Clones keep separate rules.
 // [Game.WaitingExileSources] retains its exact subject and departure facts.
 // RON lowers APermanentWouldDie with SinglePermanent and ExileItInstead.
-// Live damage-history sets and return-to-hand operations need separate services.
+// Live damage-history sets use [ExileDealtDamageByThisTurn].
+// Return-to-hand operations need separate services.
 //
 // Use [DeclareOpponentChosenDamageTarget] for an opponent target choice.
 // Target legality uses the action controller and source. Copies keep the
@@ -2415,6 +2416,16 @@
 // Explicit source recipients supply waiting references without rule execution.
 // RON lowers one Aura-host keyword removal in an acquired PermanentLayerEffect.
 // Other layers, nested grants and temporary acquisition need separate adapters.
+//
+// Use [CantRegenerateCreaturesDealtDamageByThisTurn] for creature damage history.
+// Recipient types are saved at actual damage. Later type changes keep the rule.
+// [CantRegenerateDealtDamageByThisTurn] uses a live recipient filter.
+// [ExileDealtDamageByThisTurn] uses live history through shared death replacements.
+// Both save the damaging source visit at resolution and end at cleanup.
+// [Game.CanRegeneratePermanent] checks restrictions before replacement choices.
+// Source departure, phasing and ability removal do not end resolved rules.
+// Returned objects cannot inherit them. Clones keep separate history and rules.
+// RON supports resolving history collections and the two Runesword consumers.
 //
 // # Further Documentation
 //

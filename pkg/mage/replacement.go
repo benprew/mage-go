@@ -32,7 +32,7 @@ func (r *regenerationReplacement) Matches(a Action, g GameReader) bool {
 	if perm == nil || perm.PhasedOut || perm.incarnationID != r.incarnation {
 		return false
 	}
-	return !perm.HasKeyword(CantRegenerate)
+	return g.CanRegeneratePermanent(perm)
 }
 
 func (r *regenerationReplacement) Replace(a Action, g *Game) Action {
