@@ -26,11 +26,15 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != "TheActivePlayer" {
+		if n.Args[0].Kind != Symbol || (n.Args[0].Name != "TheActivePlayer" && n.Args[0].Name != "ActionPlayer") {
 			return nil, unsupported(n.Args[0], "collection controller reference")
 		}
-		return func(instanceBindings) mage.PermanentSet {
-			return mage.PermanentsControlledBy(mage.ActivePlayer, mage.AnyPermanent)
+		player, err := compilePlayerRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.PermanentsControlledBy(player.build(bindings), mage.AnyPermanent)
 		}, nil
 	case "DealtDamageToPermanentThisTurn":
 		if err := arity(n, 1); err != nil {

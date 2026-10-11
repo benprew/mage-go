@@ -17495,7 +17495,8 @@ contexts before gameplay. No control-history or activation-window semantics
 are established here. No replacement or simultaneous-operation service changes.
 
 Evidence: `TestTargetActivePlayerContract` and `TestRONActivePlayerControl*`.
-Full Nettling Imp and Siren's Call records retain their other unsupported rules.
+Nettling Imp retains its activation-window blocker. Siren's Call has complete
+record gameplay evidence in the control-history and saved-player sections below.
 
 ## Continuous control since the current turn began
 
@@ -17520,9 +17521,45 @@ static contexts and activation timing remain separate. Malformed declarations
 reject before execution. Same-turn Siren's Call uses existing casting windows, live
 attack requirements and saved end-step triggers with this exclusion. Local
 Oracle evidence is `data/LEA.json` and `data/catalog/2ED.json`. The full record
-retains a separate source defect: the delayed controller predicate reads the
-live active player, while Oracle retains the earlier player. A saved player
-binding is required before full Oracle gameplay can be claimed.
+now saves the earlier active player before delay creation. The saved binding
+keeps that player if the next end step occurs on another player's turn.
+Current membership and current-turn history remain live at delayed resolution.
 
 Evidence: `TestCurrentTurnControlHistory`, `TestRONCurrentTurnControlTargets`,
 `Collections`, `Invalid`, `Native`, `ImpClauses`, and `Siren` (all six reprints).
+
+## Saved active-player scope across delayed execution
+
+Existing signatures establish this contract without a new engine export:
+`SnapshotPlayer(subject PlayerRef, binding *PlayerBinding) ResolvingEffect`,
+`FromPlayer(binding *PlayerBinding) PlayerRef`,
+`AtNext(pattern DelayedStepPattern, body ResolvingEffect) ResolvingEffect`, and
+`PermanentsControlledBy(controller PlayerRef, filter PermanentFilter) PermanentSet`.
+
+A snapshot reads the active player once during resolution. Delay creation saves
+that resolution frame, so later writes to the same binding in a separate
+resolution cannot change an earlier delay. Source departure or return does not
+change the saved player (CR 603.7d). One-shot detection uses the next actual event,
+even across cleanup or a skipped end step (CR 603.7b). Each body's completion
+restores the enclosing frame. Copies and game clones keep independent maps.
+Explicit ActivePlayer operands read each game's live turn state (CR 608.2h).
+
+Controlled collections use the saved player but select present current members
+at resolution. They retain the shared phasing, control history, destruction,
+regeneration and simultaneous zone movement contracts. Waiting queries do not
+read players or infer a permanent reference from a saved player alone.
+Announcement and cost failure install no snapshot or delay.
+
+RON permits CreateFutureTrigger in resolving PlayerActions, TheActivePlayer as
+a typed resolving player operand, and ControlledByPlayer(ActionPlayer) in a
+resolving collection with a dominating player scope. Unbound, escaped and
+malformed reads fail compilation. RON spelling stays in the compiler; no new
+engine state or parallel execution system is added.
+
+Evidence: `TestSavedActivePlayerDelayedFrames` reuses one declaration for two
+separate delays, tests source return, frame restoration, clone turn divergence,
+query purity and unbound declaration rejection. `TestRONSavedActivePlayer*`
+covers nested scope, copies, collection control, native atomic rejection,
+payment rollback and all six corrected Siren's Call records across turns.
+Existing `TestRONCurrentTurnControlSiren` retains same-turn attack requirements,
+attack history, current-turn control, casting windows and regeneration evidence.

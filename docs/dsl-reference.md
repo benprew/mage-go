@@ -13402,9 +13402,9 @@ operation captures the earlier active player or substitutes the action controlle
 The predicate has exactly one symbol operand. Malformed symbols, missing or
 extra operands and unsupported player references remain errors. This adapter
 does not establish control-since-turn-start predicates, activation timing,
-static control filters or plural target declarations. Nettling Imp and Siren's
-Call remain rejected as complete records. Their exact active-player clauses
-have synthetic RON gameplay evidence across all six reprints.
+static control filters or plural target declarations. Nettling Imp remains
+rejected as a complete record. Both cards have active-player clause evidence
+across all six reprints. Siren's Call also has complete-record evidence below.
 
 Evidence: `TestRONActivePlayerControlTargets`, `Collections`, `Invalid`,
 `Native`, `RepositoryClauses`, and `Inventory`; engine
@@ -13421,7 +13421,31 @@ controller's most recent own turn uses the separate existing condition.
 
 Targets recheck current history at resolution. Collections read current members,
 including entries after announcement. Phasing preserves history; a returned
-permanent starts new history. Same-turn Siren's Call has RON gameplay coverage. Its delayed player reference
-is a source defect when the next end step occurs on another player's turn.
+permanent starts new history. Siren's Call has RON gameplay coverage for both
+same-turn end steps and a next end step on another player's turn. Its corrected
+records save the earlier active player in a scoped player binding.
 Nettling Imp's exact target clause is covered; its activation timing still
 rejects. Other exclusions and static contexts are not added by this adapter.
+
+### RON saved active player in delayed bodies
+
+`PlayerActions(TheActivePlayer, [CreateFutureTrigger(event, ActionList(actions))])`
+saves the active player when the outer instruction resolves. `ActionPlayer` is
+bound only inside that player body, including its future delayed body. Nested
+player bodies have independent bindings; sibling actions retain their prior
+scope. `ControlledByPlayer(ActionPlayer)` is supported in resolving permanent
+collections, including existing intersections and unions. Explicit
+`ControlledByPlayer(TheActivePlayer)` continues to read the live active player.
+Target, static and entry `ActionPlayer` contexts remain separate adapters.
+
+The shared `SnapshotPlayer`, `FromPlayer`, `AtNext` and
+`PermanentsControlledBy` services supply execution. No new public engine API is
+needed. Step-event shapes, body validation and one-shot lifetimes retain the
+existing delayed adapter. Invalid or escaped bindings reject before loading.
+
+All six Siren's Call records save the player before creating their delay. Local
+Oracle in `data/LEA.json` says "that player" in the delayed instruction. A skipped
+end step can move that instruction to another turn; its permanent membership
+and current-turn control history are still read when the delay resolves.
+Evidence: `TestRONSavedActivePlayerScopes`, `Siren`, `Invalid`, `Native`,
+`TestSavedActivePlayerDelayedFrames` and existing `TestRONCurrentTurnControlSiren`.

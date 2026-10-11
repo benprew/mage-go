@@ -7,11 +7,11 @@ The isolated slice reports **832 accepted / 154 rejected names** (986 total),
 the worktree reports **833/153 names** and **2,159/286 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-CURRENT-TURN-CONTROL lowers continuous current-controller history in singular
-targets and resolving collections, including the exact Siren's Call exclusion.
-Same-turn Siren's Call gameplay is covered across all six reprints. The slice
-gains **1 compiled name / 6 records**. Its delayed saved-player source defect
-blocks full Oracle gameplay. Nettling Imp still needs activation timing.
+SAVED-ACTIVE-PLAYER-DELAY lowers scoped active-player snapshots before delayed
+bodies. All six Siren's Call records now retain the earlier player if the next
+end step occurs on another player's turn. Compilation gains are **0 names /
+0 records**; the known saved-player gameplay gap closes for **1 unique card /
+6 records**. Nettling Imp still needs activation timing.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -72480,3 +72480,157 @@ removed. Runtime cutover and removal gates remain unmet.
    contracts separate and select a concrete multi-card prerequisite if found.
 
 This run stops after this slice. Migration remains incomplete.
+
+## Run 2026-10-10: SAVED-ACTIVE-PLAYER-DELAY
+
+Status: complete one vertical capability slice. No second capability is started.
+
+### Fresh evidence, comparison and selection
+
+Initial shared status includes pre-existing Eureka/repeated-entry implementation,
+compiler/inventory/count edits, API documentation and ledger archival changes,
+plus unrelated .gitignore edits and untracked files. These are preserved. Fresh
+make build and TestRONCurrentTurnControl pass. The initial strict loader exits 1
+for collection rejection: 2,159 compiled / 286 rejected records, 833 accepted /
+153 rejected unique names. This is not a build or test failure. The isolated
+commit baseline omits Eureka: 2,158/287 records and 832/154 names.
+
+The first ranked candidate is dependency-ready and repairs a known required
+Oracle gameplay prerequisite. Complete records, including nested forms, are
+inspected for all compared candidates; identical reprints count once.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Saved active-player scope before a delay | Siren's Call, six reprints | 1 gameplay name; 0 compiled names/records | SnapshotPlayer and saved delayed frames already exist. The missing producer/body/collection adapters block a correct delayed saved-player consumer. The shared scope can carry existing draw/life/collection consumers across delayed contexts. | Small lowering change; medium binding, copy, timing and full-record tests. |
+| Opponent-turn preattack activation window | Nettling Imp, six reprints | 1 compiled name / 6 records, with complete gameplay tests required | Current-turn control is ready. Typed player-turn and combat-window engine services exist; ActivatedWithModifiers still rejects both conditions. Reusable activation-state lowering is downstream value. Festival and Reset already use separate casting contexts. | Small adapter; medium window, mana-planning and rollback tests. |
+| Declaration-bound block-history target | Glyph of Delusion; Glyph of Doom and Glyph of Reincarnation have resolving-history consumers | 0 immediate unlocks conservatively; at most 1 name / 1 record after granted conditional support | The target needs the first Wall declaration's saved identity; its complete body also grants a conditional untap rule and an upkeep counter trigger. Those contexts need separate assessment. Shared history-target declarations would enable cross-target selection. | Medium target adapter plus larger dependent grants and lifecycle tests. |
+
+Select the first candidate as the ledger's required gameplay prerequisite. It
+uses a small exact adapter with an observable cross-turn regression; it does
+not start a new timing, history or granted-ability capability. No missing engine
+mechanics are invented: the engine already owns the exact snapshot, delayed
+frame and collection services. New engine contract tests exercise that reuse.
+
+### Supported contract, dependencies and source correction
+
+RON now accepts TheActivePlayer as a typed resolving player operand,
+CreateFutureTrigger in PlayerActions(player, [actions]), and
+ControlledByPlayer(ActionPlayer) in resolving permanent collections with a
+valid lexical player scope. Existing And/Or collection composition applies.
+ActionPlayer inside a future delayed body reads its enclosing saved binding.
+Nested scopes have separate per-factory bindings; sibling actions retain their
+prior scope. TheActivePlayer in an explicit delayed consumer stays live. Target,
+static and entry ActionPlayer contexts are not added. Unsupported delayed event
+shapes, empty delayed bodies, malformed symbols and escaped reads still reject.
+
+Engine signatures reused without a new export or state subsystem:
+SnapshotPlayer(subject PlayerRef, binding *PlayerBinding) ResolvingEffect;
+FromPlayer(binding *PlayerBinding) PlayerRef;
+AtNext(pattern DelayedStepPattern, body ResolvingEffect) ResolvingEffect;
+PermanentsControlledBy(controller PlayerRef, filter PermanentFilter) PermanentSet.
+The existing Sequence, delayed capture/restore, cloning, spell copying, payment,
+phasing, current-turn control and destruction services remain authoritative.
+Saved binding maps survive source spell departure and cleanup. A live collection
+still reads current membership and control history on delayed resolution. LKI
+cannot restore absent action subjects. Waiting queries make no player choices
+and infer no permanent reference from a saved player. Copies save the active
+player at their own resolution, regardless of their controller.
+
+Source defect corrected identically in LEA/LEB/2ED/3ED/CED/CEI: Siren's Call
+previously read ControlledByPlayer(TheActivePlayer) in its delayed destruction.
+Local authoritative data/LEA.json says "that player" in that instruction. CR
+603.7b makes the delay wait for the next actual end-step event; a skipped end
+step can move it into another player's turn. CR 603.7d keeps the delay's source
+and controller separate from its affected player. CR 608.2h reads its current
+permanent membership when the body applies. Each corrected full record wraps
+only delay creation in PlayerActions(TheActivePlayer, [...]) and uses
+ControlledByPlayer(ActionPlayer) in that body's collection. The initial live
+MustAttack instruction and its current-turn duration retain their existing
+meaning. No global reinterpretation, name branch or Oracle shortcut is added.
+Known Fastbond and Gaea's Liege source defects remain separate.
+
+The vocabulary snapshot is refreshed from the positioned AST inventory. Only
+PlayerActions and ActionPlayer occurrence totals change (+6 each). File hashes
+and shifted source examples are refreshed. Constructor signatures remain 604,
+records 2,445 and unique names 986. Its earlier loader snapshot lagged behind
+prior slices; refreshed compiler totals do not count as gains for this slice.
+
+### Failing-first evidence and card-to-test mapping
+
+Before production edits, TestRONSavedActivePlayerScopes and Native fail at the
+unsupported TheActivePlayer player reference. TestRONSavedActivePlayerSiren
+fails gameplay in all six unchanged full records when an end step is deferred
+to another player's turn. These are the expected adapter and source-data
+failures, recorded before implementation. No engine signature change is needed.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Siren's Call, all six reprints | TestRONSavedActivePlayerSiren casts each corrected complete record, skips its end step through cleanup, switches active player/turn, then executes the next end step. Covers source-spell departure, own/Wall/new-entry exclusions, current control, phasing and phase cycle, return history, regeneration, copies with a different controller, payment rollback and game clones. |
+| Siren's Call, same-turn behavior | Existing TestRONCurrentTurnControlSiren retains full-record casting restrictions, mandatory able attacks, attacked exclusions, current-turn control loss/regain, new-entry/Wall/own exclusions, simultaneous destruction, regeneration, copies and clones across all six reprints. |
+| Saved and live player scopes | TestRONSavedActivePlayerScopes covers nested You scope, saved outer ActionPlayer, sibling scope, a live active-player collection in the same delay, changed copy controller and clone isolation. TestRONSavedActivePlayerResolution uses two independent factory instances and changes active player between announcement and resolution; delays retain each resolved player across divergent clone turns. |
+| Declaration and native rejection | TestRONSavedActivePlayerInvalid covers malformed operands/events, escaped and unbound ActionPlayer, empty delayed bodies and invalid delayed collection references. Native checks valid loading and atomic rejection of a collection with an invalid record. |
+| Shared engine frames | TestSavedActivePlayerDelayedFrames reuses one declaration/binding in two separate resolutions, then tests independent delayed snapshots, source departure/return, live active-player reads in different clone turns, resolution-frame restoration, pure waiting queries and unbound engine declaration rejection. |
+| Preserved live active-player clauses | TestRONActivePlayerControlRepositoryClauses now selects the explicit TheActivePlayer clause rather than accidentally selecting the corrected saved-player clause. Its live delayed-read assertions remain intact. |
+
+Estimated and actual gain: 0 compiled names / 0 records, and one named card's
+known saved-player gameplay gap closed across six complete records. Compilation
+and gameplay coverage remain separate; no collection-wide gameplay count is
+inferred from accepted factories. No test is weakened or skipped.
+
+### Validation and preservation
+
+Both checkouts pass focused RON saved-player/current-control/active-player/attack
+collection tests and TestSavedActivePlayerDelayedFrames with -count=1, make build,
+go vet ./..., go test ./pkg/mage/... -short -count=1, make test, make lint and
+git diff --check. RON short times: shared 40.579s, isolated 70.689s; full RON
+times: shared 45.582s, isolated 60.356s. The isolated tests share CPU with shared
+lint; the longer time is not a failure. Both lint runs finish with 0 issues.
+No automatic production or assertion changes occur. Final focused tests repeat
+after lint: RON shared 0.707s / isolated 0.683s; engine 0.490s / 0.485s.
+
+Final go run ./cmd/loadcards -json exits 1 in both checkouts for unsupported
+collection records and publishes no registry. Shared: 833 accepted / 153 rejected
+names and 2,159 compiled / 286 rejected records. Isolated: 832/154 names and
+2,158/287 records. These exactly match the fresh respective baselines; the
+six corrected Siren's Call records still compile and now pass the saved-player
+regression. Nettling Imp retains IsAPlayersTurn at 2ED.lines.ron:172:645;
+Glyph of Delusion retains WasBlockedByDefenderThisTurn at LEG.lines.ron:100:233;
+Blazing Effigy retains DeadPermanentDealsDamage at LEG.lines.ron:31:278;
+Vodalian War Machine retains WasTappedToPayForAbilitiesOfPermanent at
+FEM.lines.ron:101:780. No build, vet, test or lint blocker remains.
+
+The refreshed vocabulary loader baseline uses the isolated committed compiler
+(2,158/287). The ledger records the extra accepted Eureka record in the shared
+worktree separately. Source hashes and syntax counts are identical between
+checkouts. Original unrelated tracked bytes are checked against the saved
+pre-run copy. Original untracked files are retained.
+
+Changed files: pkg/mage/dsl/ron/player_scope.go, player_actions.go,
+contextual_collection.go, active_player_control_test.go and
+saved_active_player_test.go; pkg/mage/saved_active_player_test.go and doc.go;
+six Siren's Call RON files; docs/dsl-reference.md, engine-rules-contracts.md,
+mtgish-ron-vocabulary.json and this ledger. Engine execution reuses existing
+production services; it adds no duplicate service or public API. No Go card,
+generator or DSL function is removed; runtime and removal gates remain unmet.
+No removal caller audit is needed because nothing is removed.
+
+The isolated checkout contains only this slice over HEAD. Documentation changes
+are transferred as incremental patches against saved pre-run bytes. The committed
+ledger retains HEAD's existing history, updates its status block and appends this
+entry. The user's archival move and other original edits remain unstaged.
+
+### Ranked next candidates
+
+1. Reassess a shared activation-state turn/combat window adapter for Nettling
+   Imp. Its current-turn target, source rule and saved target delay are ready;
+   IsAPlayersTurn(Opponent) and IsBeforeAttackersDeclared are the remaining
+   activation modifiers. Compare against fresh multi-card prerequisite work.
+2. Declaration-bound block-history targets for Glyph of Delusion, then separately
+   assess its conditional acquired untap rule. Reuse the history substrate already
+   used by Glyph of Doom and Glyph of Reincarnation; keep target groups separate.
+3. Compare filtered departed-source damage for Blazing Effigy with durable
+   tap-payment history for Vodalian War Machine. Their engine contracts are
+   independent; prefer a concrete shared prerequisite if the fresh inventory
+   identifies one. Do not combine the two capabilities into a single slice.
+
+This run stops after the saved active-player delay slice. Migration is incomplete.

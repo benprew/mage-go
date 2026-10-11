@@ -11,12 +11,12 @@
     {
       "path": "cards/mtgish/2ED.lines.ron",
       "records": 291,
-      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
+      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
     },
     {
       "path": "cards/mtgish/3ED.lines.ron",
       "records": 296,
-      "sha256": "6681289e0e44e4b43ac3db61431c78a0041def83c9cc395667d416b4a09cc01d"
+      "sha256": "c6eefac1ab2ba2d3333ebebad97282de6095910875de6a32189aa929b64bc40b"
     },
     {
       "path": "cards/mtgish/ARN.lines.ron",
@@ -31,12 +31,12 @@
     {
       "path": "cards/mtgish/CED.lines.ron",
       "records": 291,
-      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
+      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
     },
     {
       "path": "cards/mtgish/CEI.lines.ron",
       "records": 291,
-      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
+      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
     },
     {
       "path": "cards/mtgish/DRK.lines.ron",
@@ -51,12 +51,12 @@
     {
       "path": "cards/mtgish/LEA.lines.ron",
       "records": 289,
-      "sha256": "662df505d23c4d3c299894ca5937b19c2105ce6dd0c949829d97b4485852f494"
+      "sha256": "df8c89821239c6c52671dd5e864106224dc49531dc56c0bca808b494a1b1a575"
     },
     {
       "path": "cards/mtgish/LEB.lines.ron",
       "records": 291,
-      "sha256": "e45b663301e1b19c61b19b4dcbc706740559eb496d96ba9466828455ac45149e"
+      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
     },
     {
       "path": "cards/mtgish/LEG.lines.ron",
@@ -151,7 +151,7 @@
     {"name": "ActionForEachPermanentThatDiedThisWay", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Glyph of Reincarnation (cards/mtgish/LEG.lines.ron:104:362)"]},
     {"name": "ActionList", "kind": "tuple", "arity": 1, "occurrences": 2080, "examples": ["Ancestral Recall (cards/mtgish/2ED.lines.ron:2:176)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:332)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:785)"]},
     {"name": "ActionPermanent", "kind": "symbol", "arity": 0, "occurrences": 8, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:366)", "Berserk (cards/mtgish/CED.lines.ron:15:366)", "Berserk (cards/mtgish/CEI.lines.ron:15:366)"]},
-    {"name": "ActionPlayer", "kind": "symbol", "arity": 0, "occurrences": 16, "examples": ["Drain Power (cards/mtgish/2ED.lines.ron:69:335)", "Power Sink (cards/mtgish/2ED.lines.ron:191:474)", "Drain Power (cards/mtgish/3ED.lines.ron:71:335)"]},
+    {"name": "ActionPlayer", "kind": "symbol", "arity": 0, "occurrences": 22, "examples": ["Drain Power (cards/mtgish/2ED.lines.ron:69:335)", "Power Sink (cards/mtgish/2ED.lines.ron:191:474)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:558)"]},
     {"name": "ActivateAManaAbilityOfEachPermanentAndLoseUnspentMana", "kind": "tuple", "arity": 1, "occurrences": 6, "examples": ["Drain Power (cards/mtgish/2ED.lines.ron:69:225)", "Drain Power (cards/mtgish/3ED.lines.ron:71:225)", "Drain Power (cards/mtgish/CED.lines.ron:69:225)"]},
     {"name": "ActivateNoMoreThanNumberTimesEachTurn", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Vampire Bats (cards/mtgish/LEG.lines.ron:285:278)"]},
     {"name": "ActivateOnlyAsASorcery", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Illusionary Mask (cards/mtgish/2ED.lines.ron:120:628)", "Illusionary Mask (cards/mtgish/CED.lines.ron:120:628)", "Illusionary Mask (cards/mtgish/CEI.lines.ron:120:628)"]},
@@ -435,7 +435,7 @@
     {"name": "DestroyPermanent", "kind": "tuple", "arity": 1, "occurrences": 152, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:533)", "Blue Elemental Blast (cards/mtgish/2ED.lines.ron:23:299)", "Cockatrice (cards/mtgish/2ED.lines.ron:40:362)"]},
     {"name": "DestroyPermanentNoRegen", "kind": "tuple", "arity": 1, "occurrences": 19, "examples": ["Terror (cards/mtgish/2ED.lines.ron:242:263)", "Tunnel (cards/mtgish/2ED.lines.ron:255:192)", "Crumble (cards/mtgish/3ED.lines.ron:50:193)"]},
     {"name": "Devil", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Stone-Throwing Devils (cards/mtgish/ARN.lines.ron:74:98)"]},
-    {"name": "DidntAttackThisTurn", "kind": "symbol", "arity": 0, "occurrences": 15, "examples": ["Nettling Imp (cards/mtgish/2ED.lines.ron:172:555)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:544)", "Erg Raiders (cards/mtgish/3ED.lines.ron:82:255)"]},
+    {"name": "DidntAttackThisTurn", "kind": "symbol", "arity": 0, "occurrences": 15, "examples": ["Nettling Imp (cards/mtgish/2ED.lines.ron:172:555)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:573)", "Erg Raiders (cards/mtgish/3ED.lines.ron:82:255)"]},
     {"name": "DidntWinTheSubgameThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Shahrazad (cards/mtgish/ARN.lines.ron:70:192)"]},
     {"name": "Dinosaur", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Fungusaur (cards/mtgish/2ED.lines.ron:94:94)", "Fungusaur (cards/mtgish/3ED.lines.ron:100:94)", "Fungusaur (cards/mtgish/CED.lines.ron:94:94)"]},
     {"name": "DiscardACard", "kind": "symbol", "arity": 0, "occurrences": 12, "examples": ["Disrupting Scepter (cards/mtgish/2ED.lines.ron:66:308)", "Disrupting Scepter (cards/mtgish/3ED.lines.ron:67:308)", "Mishra's War Machine (cards/mtgish/3ED.lines.ron:170:250)"]},
@@ -508,7 +508,7 @@
     {"name": "EntersWithNumberCombinationCountersOfChoice", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Frankenstein's Monster (cards/mtgish/DRK.lines.ron:43:342)"]},
     {"name": "EntersWithNumberCounters", "kind": "tuple", "arity": 2, "occurrences": 19, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:185)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:183)", "Clockwork Beast (cards/mtgish/3ED.lines.ron:39:185)"]},
     {"name": "EqualTo", "kind": "tuple", "arity": 1, "occurrences": 14, "examples": ["Spell Blast (cards/mtgish/2ED.lines.ron:232:195)", "Spell Blast (cards/mtgish/3ED.lines.ron:240:195)", "Drop of Honey (cards/mtgish/ARN.lines.ron:23:260)"]},
-    {"name": "ExceptFor", "kind": "tuple", "arity": 1, "occurrences": 11, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:565)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:565)", "Siren's Call (cards/mtgish/CED.lines.ron:227:565)"]},
+    {"name": "ExceptFor", "kind": "tuple", "arity": 1, "occurrences": 11, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:594)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:594)", "Siren's Call (cards/mtgish/CED.lines.ron:227:594)"]},
     {"name": "ExchangeAnteCardWithTopCardOfPlayersLibrary", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:304)", "Darkpact (cards/mtgish/3ED.lines.ron:56:304)", "Darkpact (cards/mtgish/CED.lines.ron:56:304)"]},
     {"name": "ExchangeControl", "kind": "tuple", "arity": 2, "occurrences": 3, "examples": ["Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:530)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:490)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:889)"]},
     {"name": "ExchangeLifeTotalWithPlayer", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Mirror Universe (cards/mtgish/LEG.lines.ron:174:277)"]},
@@ -518,7 +518,7 @@
     {"name": "ExiledCardPassesFilter", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["All Hallow's Eve (cards/mtgish/LEG.lines.ron:12:338)", "All Hallow's Eve (cards/mtgish/LEG.lines.ron:12:507)"]},
     {"name": "ExilesFaceDown", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Knowledge Vault (cards/mtgish/LEG.lines.ron:149:255)"]},
     {"name": "ExilesWithNumberCounters", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["All Hallow's Eve (cards/mtgish/LEG.lines.ron:12:210)"]},
-    {"name": "Eye", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Evil Eye of Orms-by-Gore (cards/mtgish/LEG.lines.ron:80:206)", "Evil Eye of Orms-by-Gore (cards/mtgish/LEG.lines.ron:80:101)"]},
+    {"name": "Eye", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Evil Eye of Orms-by-Gore (cards/mtgish/LEG.lines.ron:80:101)", "Evil Eye of Orms-by-Gore (cards/mtgish/LEG.lines.ron:80:206)"]},
     {"name": "Faerie", "kind": "symbol", "arity": 0, "occurrences": 11, "examples": ["Scryb Sprites (cards/mtgish/2ED.lines.ron:217:90)", "Scryb Sprites (cards/mtgish/3ED.lines.ron:223:90)", "Argothian Pixies (cards/mtgish/ATQ.lines.ron:4:93)"]},
     {"name": "Fear", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Fear (cards/mtgish/2ED.lines.ron:81:223)", "Fear (cards/mtgish/3ED.lines.ron:87:223)", "Fear (cards/mtgish/CED.lines.ron:81:223)"]},
     {"name": "Fight", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Arena (cards/mtgish/PROMOS.lines.ron:1:454)"]},
@@ -551,7 +551,7 @@
     {"name": "Giant", "kind": "symbol", "arity": 0, "occurrences": 24, "examples": ["Hill Giant (cards/mtgish/2ED.lines.ron:110:87)", "Stone Giant (cards/mtgish/2ED.lines.ron:235:88)", "Two-Headed Giant of Foriys (cards/mtgish/2ED.lines.ron:257:103)"]},
     {"name": "GlyphCounter", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Glyph of Delusion (cards/mtgish/LEG.lines.ron:100:386)", "Glyph of Delusion (cards/mtgish/LEG.lines.ron:100:545)", "Glyph of Delusion (cards/mtgish/LEG.lines.ron:100:767)"]},
     {"name": "Gnome", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Quarum Trench Gnomes (cards/mtgish/LEG.lines.ron:203:97)"]},
-    {"name": "Goblin", "kind": "symbol", "arity": 0, "occurrences": 45, "examples": ["Goblin Balloon Brigade (cards/mtgish/2ED.lines.ron:101:99)", "Goblin King (cards/mtgish/2ED.lines.ron:102:227)", "Goblin King (cards/mtgish/2ED.lines.ron:102:88)"]},
+    {"name": "Goblin", "kind": "symbol", "arity": 0, "occurrences": 45, "examples": ["Goblin Balloon Brigade (cards/mtgish/2ED.lines.ron:101:99)", "Goblin King (cards/mtgish/2ED.lines.ron:102:88)", "Goblin King (cards/mtgish/2ED.lines.ron:102:227)"]},
     {"name": "Golem", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Jade Statue (cards/mtgish/2ED.lines.ron:130:279)", "Obsianus Golem (cards/mtgish/2ED.lines.ron:176:101)", "Obsianus Golem (cards/mtgish/3ED.lines.ron:178:101)"]},
     {"name": "Gorgon", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Infernal Medusa (cards/mtgish/LEG.lines.ron:132:92)"]},
     {"name": "GreaterThanOrEqualTo", "kind": "tuple", "arity": 1, "occurrences": 40, "examples": ["Dragon Whelp (cards/mtgish/2ED.lines.ron:67:343)", "Ironclaw Orcs (cards/mtgish/2ED.lines.ron:124:238)", "Meekstone (cards/mtgish/2ED.lines.ron:159:189)"]},
@@ -641,7 +641,7 @@
     {"name": "KeepColor", "kind": "symbol", "arity": 0, "occurrences": 12, "examples": ["Vesuvan Doppelganger (cards/mtgish/2ED.lines.ron:263:281)", "Vesuvan Doppelganger (cards/mtgish/2ED.lines.ron:263:532)", "Vesuvan Doppelganger (cards/mtgish/3ED.lines.ron:269:281)"]},
     {"name": "Kithkin", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Amrou Kithkin (cards/mtgish/LEG.lines.ron:13:90)"]},
     {"name": "Knight", "kind": "symbol", "arity": 0, "occurrences": 27, "examples": ["Black Knight (cards/mtgish/2ED.lines.ron:17:96)", "Northern Paladin (cards/mtgish/2ED.lines.ron:175:100)", "White Knight (cards/mtgish/2ED.lines.ron:283:96)"]},
-    {"name": "Kobold", "kind": "symbol", "arity": 0, "occurrences": 10, "examples": ["Crimson Kobolds (cards/mtgish/LEG.lines.ron:53:92)", "Crookshank Kobolds (cards/mtgish/LEG.lines.ron:55:95)", "Kobold Drill Sergeant (cards/mtgish/LEG.lines.ron:150:240)"]},
+    {"name": "Kobold", "kind": "symbol", "arity": 0, "occurrences": 10, "examples": ["Crimson Kobolds (cards/mtgish/LEG.lines.ron:53:92)", "Crookshank Kobolds (cards/mtgish/LEG.lines.ron:55:95)", "Kobold Drill Sergeant (cards/mtgish/LEG.lines.ron:150:98)"]},
     {"name": "Land", "kind": "symbol", "arity": 0, "occurrences": 369, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:190)", "Armageddon (cards/mtgish/2ED.lines.ron:7:198)", "Badlands (cards/mtgish/2ED.lines.ron:10:63)"]},
     {"name": "Landwalk", "kind": "tuple", "arity": 1, "occurrences": 88, "examples": ["Bog Wraith (cards/mtgish/2ED.lines.ron:25:148)", "Burrowing (cards/mtgish/2ED.lines.ron:27:217)", "Goblin King (cards/mtgish/2ED.lines.ron:102:269)"]},
     {"name": "LeaveRemainingCardsOnTopOfLibraryInSameOrder", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Orcish Spy (cards/mtgish/FEM.lines.ron:66:290)", "Visions (cards/mtgish/LEG.lines.ron:287:250)"]},
@@ -697,7 +697,7 @@
     {"name": "MayPlayAnyNumberOfLandsDuringThierTurn", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Fastbond (cards/mtgish/2ED.lines.ron:80:142)", "Fastbond (cards/mtgish/3ED.lines.ron:86:142)", "Fastbond (cards/mtgish/CED.lines.ron:80:142)"]},
     {"name": "MaySpendColoredManaAsThoughItWereAnotherColor", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Sunglasses of Urza (cards/mtgish/2ED.lines.ron:238:158)", "Sunglasses of Urza (cards/mtgish/3ED.lines.ron:246:158)", "Sunglasses of Urza (cards/mtgish/CED.lines.ron:238:158)"]},
     {"name": "Menace", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Goblin War Drums (cards/mtgish/FEM.lines.ron:37:258)"]},
-    {"name": "Merfolk", "kind": "symbol", "arity": 0, "occurrences": 28, "examples": ["Lord of Atlantis (cards/mtgish/2ED.lines.ron:150:213)", "Lord of Atlantis (cards/mtgish/2ED.lines.ron:150:93)", "Merfolk of the Pearl Trident (cards/mtgish/2ED.lines.ron:160:105)"]},
+    {"name": "Merfolk", "kind": "symbol", "arity": 0, "occurrences": 28, "examples": ["Lord of Atlantis (cards/mtgish/2ED.lines.ron:150:93)", "Lord of Atlantis (cards/mtgish/2ED.lines.ron:150:213)", "Merfolk of the Pearl Trident (cards/mtgish/2ED.lines.ron:160:105)"]},
     {"name": "MillACard", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Chains of Mephistopheles (cards/mtgish/LEG.lines.ron:44:401)"]},
     {"name": "MillNumberCards", "kind": "tuple", "arity": 1, "occurrences": 3, "examples": ["Millstone (cards/mtgish/3ED.lines.ron:168:286)", "Millstone (cards/mtgish/ATQ.lines.ron:43:286)", "Deep Spawn (cards/mtgish/FEM.lines.ron:10:260)"]},
     {"name": "Mine", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Urza's Mine (cards/mtgish/ATQ.lines.ron:77:91)", "Urza's Power Plant (cards/mtgish/ATQ.lines.ron:79:252)", "Urza's Tower (cards/mtgish/ATQ.lines.ron:80:241)"]},
@@ -734,7 +734,7 @@
     {"name": "Nomad", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Desert Nomads (cards/mtgish/ARN.lines.ron:20:97)", "Pradesh Gypsies (cards/mtgish/LEG.lines.ron:194:99)"]},
     {"name": "NonManaAbility", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Imprison (cards/mtgish/LEG.lines.ron:129:275)"]},
     {"name": "NotChosenThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Raiding Party (cards/mtgish/FEM.lines.ron:71:720)"]},
-    {"name": "NotControlledSinceBeginningOfTurn", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:575)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:575)", "Siren's Call (cards/mtgish/CED.lines.ron:227:575)"]},
+    {"name": "NotControlledSinceBeginningOfTurn", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:604)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:604)", "Siren's Call (cards/mtgish/CED.lines.ron:227:604)"]},
     {"name": "NotEqualTo", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Ichneumon Druid (cards/mtgish/LEG.lines.ron:127:226)"]},
     {"name": "NoteCountersOnPermanent", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Tawnos's Coffin (cards/mtgish/ATQ.lines.ron:67:479)"]},
     {"name": "NumCardsDiscardedThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Recall (cards/mtgish/LEG.lines.ron:213:236)"]},
@@ -812,7 +812,7 @@
     {"name": "Player", "kind": "tuple", "arity": 1, "occurrences": 237, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:258)", "Black Vise (cards/mtgish/2ED.lines.ron:19:382)", "Circle of Protection: Black (cards/mtgish/2ED.lines.ron:33:355)"]},
     {"name": "PlayerAction", "kind": "tuple", "arity": 2, "occurrences": 140, "examples": ["Ancestral Recall (cards/mtgish/2ED.lines.ron:2:188)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:797)", "Braingeyser (cards/mtgish/2ED.lines.ron:26:205)"]},
     {"name": "PlayerAction_ThatPlayer", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Magnetic Mountain (cards/mtgish/3ED.lines.ron:158:487)", "Magnetic Mountain (cards/mtgish/ARN.lines.ron:51:487)", "Thelon's Curse (cards/mtgish/FEM.lines.ron:87:464)"]},
-    {"name": "PlayerActions", "kind": "tuple", "arity": 2, "occurrences": 7, "examples": ["Power Sink (cards/mtgish/2ED.lines.ron:191:325)", "Power Sink (cards/mtgish/3ED.lines.ron:195:325)", "Power Sink (cards/mtgish/CED.lines.ron:191:325)"]},
+    {"name": "PlayerActions", "kind": "tuple", "arity": 2, "occurrences": 13, "examples": ["Power Sink (cards/mtgish/2ED.lines.ron:191:325)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:370)", "Power Sink (cards/mtgish/3ED.lines.ron:195:325)"]},
     {"name": "PlayerEffect", "kind": "tuple", "arity": 2, "occurrences": 29, "examples": ["Fastbond (cards/mtgish/2ED.lines.ron:80:123)", "Library of Leng (cards/mtgish/2ED.lines.ron:140:136)", "Lich (cards/mtgish/2ED.lines.ron:141:222)"]},
     {"name": "PlayerMayAction", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Kudzu (cards/mtgish/2ED.lines.ron:137:306)", "Kudzu (cards/mtgish/3ED.lines.ron:142:306)", "Kudzu (cards/mtgish/CED.lines.ron:137:306)"]},
     {"name": "PlayerMayCost", "kind": "tuple", "arity": 2, "occurrences": 31, "examples": ["Paralyze (cards/mtgish/2ED.lines.ron:179:444)", "Power Sink (cards/mtgish/2ED.lines.ron:191:191)", "Paralyze (cards/mtgish/3ED.lines.ron:183:444)"]},
@@ -1035,7 +1035,7 @@
     {"name": "TargetsPlayer", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Reflecting Mirror (cards/mtgish/DRK.lines.ron:85:365)"]},
     {"name": "Tetravite", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Tetravus (cards/mtgish/ATQ.lines.ron:70:574)"]},
     {"name": "ThatEnteringPermanent", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Electric Eel (cards/mtgish/DRK.lines.ron:30:238)", "Icatian Moneychanger (cards/mtgish/FEM.lines.ron:52:336)", "Mold Demon (cards/mtgish/LEG.lines.ron:176:362)"]},
-    {"name": "TheActivePlayer", "kind": "symbol", "arity": 0, "occurrences": 18, "examples": ["Nettling Imp (cards/mtgish/2ED.lines.ron:172:296)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:319)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:526)"]},
+    {"name": "TheActivePlayer", "kind": "symbol", "arity": 0, "occurrences": 18, "examples": ["Nettling Imp (cards/mtgish/2ED.lines.ron:172:296)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:319)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:384)"]},
     {"name": "TheAmountOfDamageDealtThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Syphon Soul (cards/mtgish/LEG.lines.ron:255:241)"]},
     {"name": "TheAmountOfDamageDealtToPermanentThisTurnBySources", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Blazing Effigy (cards/mtgish/LEG.lines.ron:31:320)"]},
     {"name": "TheAmountOfDamagePreventedThisWay", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Reverse Damage (cards/mtgish/2ED.lines.ron:204:365)", "Reverse Damage (cards/mtgish/3ED.lines.ron:208:365)", "Reverse Damage (cards/mtgish/CED.lines.ron:204:365)"]},
@@ -1152,7 +1152,7 @@
     {"name": "UntilPermanentNoLongerPassesFilter", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Old Man of the Sea (cards/mtgish/ARN.lines.ron:59:508)"]},
     {"name": "UntilPlayersNextTurn", "kind": "tuple", "arity": 1, "occurrences": 7, "examples": ["Island Sanctuary (cards/mtgish/2ED.lines.ron:127:379)", "Island Sanctuary (cards/mtgish/3ED.lines.ron:129:379)", "Island Sanctuary (cards/mtgish/CED.lines.ron:127:379)"]},
     {"name": "UptoNumberCountersOfTypeOnPermanent", "kind": "tuple", "arity": 3, "occurrences": 7, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:587)", "Clockwork Beast (cards/mtgish/3ED.lines.ron:39:587)", "Clockwork Avian (cards/mtgish/ATQ.lines.ron:20:594)"]},
-    {"name": "Urzas", "kind": "symbol", "arity": 0, "occurrences": 9, "examples": ["Urza's Mine (cards/mtgish/ATQ.lines.ron:77:220)", "Urza's Mine (cards/mtgish/ATQ.lines.ron:77:281)", "Urza's Mine (cards/mtgish/ATQ.lines.ron:77:84)"]},
+    {"name": "Urzas", "kind": "symbol", "arity": 0, "occurrences": 9, "examples": ["Urza's Mine (cards/mtgish/ATQ.lines.ron:77:84)", "Urza's Mine (cards/mtgish/ATQ.lines.ron:77:220)", "Urza's Mine (cards/mtgish/ATQ.lines.ron:77:281)"]},
     {"name": "ValueX", "kind": "symbol", "arity": 0, "occurrences": 130, "examples": ["Braingeyser (cards/mtgish/2ED.lines.ron:26:252)", "Clockwork Beast (cards/mtgish/2ED.lines.ron:38:507)", "Clockwork Beast (cards/mtgish/2ED.lines.ron:38:623)"]},
     {"name": "Vampire", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Sengir Vampire (cards/mtgish/2ED.lines.ron:220:91)", "Sengir Vampire (cards/mtgish/3ED.lines.ron:226:91)", "Sengir Vampire (cards/mtgish/CED.lines.ron:220:91)"]},
     {"name": "Vigilance", "kind": "symbol", "arity": 0, "occurrences": 11, "examples": ["Serra Angel (cards/mtgish/2ED.lines.ron:221:167)", "Serra Angel (cards/mtgish/3ED.lines.ron:228:167)", "Yotian Soldier (cards/mtgish/ATQ.lines.ron:85:152)"]},
@@ -1229,10 +1229,10 @@
     {"name": "Yeti", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Mountain Yeti (cards/mtgish/LEG.lines.ron:179:90)"]},
     {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 760, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
     {"name": "Zero", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:343)", "Howl from Beyond (cards/mtgish/2ED.lines.ron:113:284)", "Howl from Beyond (cards/mtgish/3ED.lines.ron:118:284)"]},
-    {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:234)"]}
+    {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2149,
+    "compiled": 2158,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Balance", "source": {"File": "2ED.lines.ron", "Line": 11, "Column": 1}, "message": "2ED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
@@ -1256,7 +1256,6 @@
       {"card": "Power Surge", "source": {"File": "2ED.lines.ron", "Line": 192, "Column": 1}, "message": "2ED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "2ED.lines.ron", "Line": 197, "Column": 1}, "message": "2ED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Rock Hydra", "source": {"File": "2ED.lines.ron", "Line": 207, "Column": 1}, "message": "2ED.lines.ron:207:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "2ED.lines.ron", "Line": 227, "Column": 1}, "message": "2ED.lines.ron:227:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "2ED.lines.ron", "Line": 238, "Column": 1}, "message": "2ED.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "2ED.lines.ron", "Line": 248, "Column": 1}, "message": "2ED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Verduran Enchantress", "source": {"File": "2ED.lines.ron", "Line": 262, "Column": 1}, "message": "2ED.lines.ron:262:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1283,7 +1282,6 @@
       {"card": "Power Surge", "source": {"File": "3ED.lines.ron", "Line": 196, "Column": 1}, "message": "3ED.lines.ron:196:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Primal Clay", "source": {"File": "3ED.lines.ron", "Line": 197, "Column": 1}, "message": "3ED.lines.ron:197:188: unsupported entry operation (EntersWithLayerEffectOfChoice)"},
       {"card": "Rock Hydra", "source": {"File": "3ED.lines.ron", "Line": 212, "Column": 1}, "message": "3ED.lines.ron:212:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "3ED.lines.ron", "Line": 234, "Column": 1}, "message": "3ED.lines.ron:234:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "3ED.lines.ron", "Line": 246, "Column": 1}, "message": "3ED.lines.ron:246:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Titania's Song", "source": {"File": "3ED.lines.ron", "Line": 257, "Column": 1}, "message": "3ED.lines.ron:257:149: unsupported rule (EachPermanentStickyLayerEffect)"},
       {"card": "Verduran Enchantress", "source": {"File": "3ED.lines.ron", "Line": 268, "Column": 1}, "message": "3ED.lines.ron:268:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1341,7 +1339,6 @@
       {"card": "Power Surge", "source": {"File": "CED.lines.ron", "Line": 192, "Column": 1}, "message": "CED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "CED.lines.ron", "Line": 197, "Column": 1}, "message": "CED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Rock Hydra", "source": {"File": "CED.lines.ron", "Line": 207, "Column": 1}, "message": "CED.lines.ron:207:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "CED.lines.ron", "Line": 227, "Column": 1}, "message": "CED.lines.ron:227:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "CED.lines.ron", "Line": 238, "Column": 1}, "message": "CED.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "CED.lines.ron", "Line": 248, "Column": 1}, "message": "CED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Verduran Enchantress", "source": {"File": "CED.lines.ron", "Line": 262, "Column": 1}, "message": "CED.lines.ron:262:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1369,7 +1366,6 @@
       {"card": "Power Surge", "source": {"File": "CEI.lines.ron", "Line": 192, "Column": 1}, "message": "CEI.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "CEI.lines.ron", "Line": 197, "Column": 1}, "message": "CEI.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Rock Hydra", "source": {"File": "CEI.lines.ron", "Line": 207, "Column": 1}, "message": "CEI.lines.ron:207:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "CEI.lines.ron", "Line": 227, "Column": 1}, "message": "CEI.lines.ron:227:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "CEI.lines.ron", "Line": 238, "Column": 1}, "message": "CEI.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "CEI.lines.ron", "Line": 248, "Column": 1}, "message": "CEI.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Verduran Enchantress", "source": {"File": "CEI.lines.ron", "Line": 262, "Column": 1}, "message": "CEI.lines.ron:262:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1383,7 +1379,6 @@
       {"card": "Frankenstein's Monster", "source": {"File": "DRK.lines.ron", "Line": 43, "Column": 1}, "message": "DRK.lines.ron:43:162: entry requires one entry operation (AsPermanentEnters)"},
       {"card": "Giant Shark", "source": {"File": "DRK.lines.ron", "Line": 46, "Column": 1}, "message": "DRK.lines.ron:46:384: expected 1 positional arguments (WasDealtDamageThisTurn)"},
       {"card": "Goblins of the Flarg", "source": {"File": "DRK.lines.ron", "Line": 53, "Column": 1}, "message": "DRK.lines.ron:53:188: unsupported trigger (WhenAPlayerControlsAPermanent)"},
-      {"card": "Mana Clash", "source": {"File": "DRK.lines.ron", "Line": 64, "Column": 1}, "message": "DRK.lines.ron:64:181: unsupported action (RepeatableActions)"},
       {"card": "Mana Vortex", "source": {"File": "DRK.lines.ron", "Line": 65, "Column": 1}, "message": "DRK.lines.ron:65:157: unsupported rule (FromStack)"},
       {"card": "Martyr's Cry", "source": {"File": "DRK.lines.ron", "Line": 69, "Column": 1}, "message": "DRK.lines.ron:69:276: unsupported value (NumPermanentsOfTypeExiledThisWay)"},
       {"card": "Nameless Race", "source": {"File": "DRK.lines.ron", "Line": 76, "Column": 1}, "message": "DRK.lines.ron:76:188: unsupported entry operation (PayAnyAmountOfLifeUpto)"},
@@ -1391,7 +1386,7 @@
       {"card": "Psychic Allergy", "source": {"File": "DRK.lines.ron", "Line": 83, "Column": 1}, "message": "DRK.lines.ron:83:195: unsupported entry operation (ChooseAColor)"},
       {"card": "Reflecting Mirror", "source": {"File": "DRK.lines.ron", "Line": 85, "Column": 1}, "message": "DRK.lines.ron:85:458: unsupported source-counter activation X (Twice)"},
       {"card": "Scarwood Bandits", "source": {"File": "DRK.lines.ron", "Line": 91, "Column": 1}, "message": "DRK.lines.ron:91:351: unsupported action (AnyPlayerMayCost)"},
-      {"card": "Season of the Witch", "source": {"File": "DRK.lines.ron", "Line": 95, "Column": 1}, "message": "DRK.lines.ron:95:472: unsupported permanent filter (ExceptFor)"},
+      {"card": "Season of the Witch", "source": {"File": "DRK.lines.ron", "Line": 95, "Column": 1}, "message": "DRK.lines.ron:95:482: unsupported control history exclusion (And)"},
       {"card": "Sorrow's Path", "source": {"File": "DRK.lines.ron", "Line": 98, "Column": 1}, "message": "DRK.lines.ron:98:147: expected 1 positional arguments (NumberTargetGroupPermanents)"},
       {"card": "The Fallen", "source": {"File": "DRK.lines.ron", "Line": 105, "Column": 1}, "message": "DRK.lines.ron:105:321: unsupported damage player set filter (WasDealtDamageByPermanentThisGame)"},
       {"card": "Tormod's Crypt", "source": {"File": "DRK.lines.ron", "Line": 107, "Column": 1}, "message": "DRK.lines.ron:107:271: unsupported exile subject (EachCardInGraveyards)"},
@@ -1435,7 +1430,6 @@
       {"card": "Power Surge", "source": {"File": "LEA.lines.ron", "Line": 191, "Column": 1}, "message": "LEA.lines.ron:191:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "LEA.lines.ron", "Line": 196, "Column": 1}, "message": "LEA.lines.ron:196:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Rock Hydra", "source": {"File": "LEA.lines.ron", "Line": 206, "Column": 1}, "message": "LEA.lines.ron:206:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "LEA.lines.ron", "Line": 226, "Column": 1}, "message": "LEA.lines.ron:226:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "LEA.lines.ron", "Line": 237, "Column": 1}, "message": "LEA.lines.ron:237:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "LEA.lines.ron", "Line": 247, "Column": 1}, "message": "LEA.lines.ron:247:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Verduran Enchantress", "source": {"File": "LEA.lines.ron", "Line": 261, "Column": 1}, "message": "LEA.lines.ron:261:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1463,7 +1457,6 @@
       {"card": "Power Surge", "source": {"File": "LEB.lines.ron", "Line": 192, "Column": 1}, "message": "LEB.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "LEB.lines.ron", "Line": 197, "Column": 1}, "message": "LEB.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
       {"card": "Rock Hydra", "source": {"File": "LEB.lines.ron", "Line": 207, "Column": 1}, "message": "LEB.lines.ron:207:208: unsupported fixed entry counter amount (ValueX)"},
-      {"card": "Siren's Call", "source": {"File": "LEB.lines.ron", "Line": 227, "Column": 1}, "message": "LEB.lines.ron:227:507: unsupported permanent filter (ControlledByPlayer)"},
       {"card": "Sunglasses of Urza", "source": {"File": "LEB.lines.ron", "Line": 238, "Column": 1}, "message": "LEB.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "LEB.lines.ron", "Line": 248, "Column": 1}, "message": "LEB.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Verduran Enchantress", "source": {"File": "LEB.lines.ron", "Line": 262, "Column": 1}, "message": "LEB.lines.ron:262:207: unsupported spell-cast player filter (SinglePlayer)"},
@@ -1473,7 +1466,6 @@
       {"card": "Arboria", "source": {"File": "LEG.lines.ron", "Line": 17, "Column": 1}, "message": "LEG.lines.ron:17:205: unsupported global landwalk blocking operation (CantAttackAPlayer)"},
       {"card": "Backdraft", "source": {"File": "LEG.lines.ron", "Line": 24, "Column": 1}, "message": "LEG.lines.ron:24:221: unsupported action (ChooseASpellThatResolvedThisTurn)"},
       {"card": "Blazing Effigy", "source": {"File": "LEG.lines.ron", "Line": 31, "Column": 1}, "message": "LEG.lines.ron:31:278: unsupported action (DeadPermanentDealsDamage)"},
-      {"card": "Brine Hag", "source": {"File": "LEG.lines.ron", "Line": 37, "Column": 1}, "message": "LEG.lines.ron:37:228: unsupported action (CreateEachPermanentLayerEffect)"},
       {"card": "Bronze Horse", "source": {"File": "LEG.lines.ron", "Line": 38, "Column": 1}, "message": "LEG.lines.ron:38:199: unsupported static condition filter (Other)"},
       {"card": "Caverns of Despair", "source": {"File": "LEG.lines.ron", "Line": 42, "Column": 1}, "message": "LEG.lines.ron:42:169: unsupported rule (NoMoreThanNumberCreaturesCanAttack)"},
       {"card": "Chain Lightning", "source": {"File": "LEG.lines.ron", "Line": 43, "Column": 1}, "message": "LEG.lines.ron:43:243: unbound or incompatible player reference (PlayerOrControllerOfPermanent)"},
@@ -1488,7 +1480,6 @@
       {"card": "Forethought Amulet", "source": {"File": "LEG.lines.ron", "Line": 90, "Column": 1}, "message": "LEG.lines.ron:90:312: unsupported rule (ReplaceWouldDealDamage)"},
       {"card": "Gauntlets of Chaos", "source": {"File": "LEG.lines.ron", "Line": 95, "Column": 1}, "message": "LEG.lines.ron:95:416: expected 1 positional arguments (SharesACardtypeWithPermanentFromAmongCardtypes)"},
       {"card": "Glyph of Delusion", "source": {"File": "LEG.lines.ron", "Line": 100, "Column": 1}, "message": "LEG.lines.ron:100:233: unsupported permanent filter (WasBlockedByDefenderThisTurn)"},
-      {"card": "Glyph of Doom", "source": {"File": "LEG.lines.ron", "Line": 102, "Column": 1}, "message": "LEG.lines.ron:102:248: unsupported delayed step event (AtNextEndOfCombatThisTurn)"},
       {"card": "Glyph of Life", "source": {"File": "LEG.lines.ron", "Line": 103, "Column": 1}, "message": "LEG.lines.ron:103:247: unsupported delayed departure event (WhenAPermanentDealsDamageToAPermanent)"},
       {"card": "Glyph of Reincarnation", "source": {"File": "LEG.lines.ron", "Line": 104, "Column": 1}, "message": "LEG.lines.ron:104:161: unsupported casting window condition (IsAfterCombat)"},
       {"card": "Ichneumon Druid", "source": {"File": "LEG.lines.ron", "Line": 127, "Column": 1}, "message": "LEG.lines.ron:127:179: unsupported trigger (WhenAPlayerCastsTheirNthSpellInATurn)"},

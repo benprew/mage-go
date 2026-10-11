@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON PlayerActions can save [ActivePlayer] with [SnapshotPlayer] before a delay.
+// Each [AtNext] frame keeps its own saved player after source departure.
+// ActionPlayer reads that saved binding in the scoped body. Nested scopes keep
+// separate bindings. Explicit TheActivePlayer reads still use the current turn.
+// Resolving ControlledByPlayer(ActionPlayer) collections read current members
+// through [PermanentsControlledBy]. Phasing excludes members; return starts
+// new control history. Copies and clones keep separate saved frames.
+//
 // [ControlledSinceCurrentTurnStart] checks the current controller's continuous
 // control since the current turn began. Entry and control changes this turn
 // fail the check, including control loss and regain. This differs from

@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	active              bool
 	drawReplacement     *drawReplacementPlan
 	choice              *playerChoicePlan
 	ability             *abilityTargetPlan
@@ -103,6 +104,8 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "TheActivePlayer":
+			return playerReferencePlan{active: true}, nil
 		case "WouldDrawACard_ThatPlayer":
 			if ctx.drawReplacement != nil {
 				return playerReferencePlan{drawReplacement: ctx.drawReplacement}, nil
@@ -176,6 +179,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.active {
+		return mage.ActivePlayer
+	}
 	if p.drawReplacement != nil {
 		return mage.FromPlayer(bindings.drawReplacements[p.drawReplacement])
 	}

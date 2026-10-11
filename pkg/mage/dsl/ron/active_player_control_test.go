@@ -188,7 +188,7 @@ func TestRONActivePlayerControlRepositoryClauses(t *testing.T) {
 				var predicate Node
 				var find func(Node)
 				find = func(n Node) {
-					if n.Name == "ControlledByPlayer" {
+					if n.Name == "ControlledByPlayer" && len(n.Args) == 1 && n.Args[0].Name == "TheActivePlayer" {
 						predicate = n
 					}
 					for _, child := range n.Args {
