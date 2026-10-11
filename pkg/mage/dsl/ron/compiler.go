@@ -79,6 +79,7 @@ type scope struct {
 	deathCard         *deathCardPlan
 	hostDeath         *hostDeathPlan
 	damageTarget      *damageTargetPlan
+	damageGroups      map[string]*damageTargetPlan
 	castEvent         *castEventPlan
 	drawEvent         *drawEventPlan
 	stepEvent         *stepEventPlan
@@ -100,6 +101,7 @@ type actionPlan struct {
 	abilityTarget    *abilityTargetPlan
 	cardTarget       *cardTargetPlan
 	damageTarget     *damageTargetPlan
+	damageGroups     []*damageTargetPlan
 }
 
 func (p actionPlan) build() Actions {
@@ -143,7 +145,11 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 			bindings.spells[p.spellTarget] = target
 		}
 		if target, ok := targets[i].(*mage.DamageTargetBinding); ok {
-			bindings.recipients[p.damageTarget] = target
+			if len(p.damageGroups) != 0 {
+				bindings.recipients[p.damageGroups[i]] = target
+			} else {
+				bindings.recipients[p.damageTarget] = target
+			}
 		}
 		if target, ok := targets[i].(mage.TargetBinding); ok {
 			declared = append(declared, target)
@@ -876,6 +882,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 			return plan, err
 		}
 		if len(targets) > 1 {
+			if isUnionDamageTarget(targets[0]) {
+				return compileUnionDamageGroups(n, targets, ctx)
+			}
 			return compileSingularPermanentGroups(n, targets, ctx)
 		}
 		if len(targets) == 0 {
@@ -949,10 +958,9 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if n.Name == "NumberTargetPermanents" {
 		return compileNumberedPermanentTarget(n, ctx)
 	}
-	if n.Kind == Symbol && n.Name == "AnyTarget" {
-		return func(instanceBindings) mage.Target {
-			return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget")
-		}, "Ref_AnyTarget", nil
+	if isUnionDamageTarget(n) {
+		build, err := compileUnionDamageTarget(n, ctx, "Ref_AnyTarget")
+		return build, "Ref_AnyTarget", err
 	}
 	if isSingularPermanentTarget(n) {
 		build, err := compileSingularPermanentTarget(n, ctx, "Ref_TargetPermanent")
@@ -1457,7 +1465,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "SpellDealsDamage", "PermanentDealsDamage":
-		if n.Name == "PermanentDealsDamage" && len(n.Args) == 3 && (n.Args[2].Name == "Permanent" || n.Args[2].Name == "Player" || n.Args[2].Name == "Ref_AnyTarget" || n.Args[2].Name == "Ref_TargetPlayerOrPermanent") {
+		if n.Name == "PermanentDealsDamage" && len(n.Args) == 3 && (n.Args[2].Name == "Permanent" || n.Args[2].Name == "Player" || n.Args[2].Name == "Ref_AnyTarget" || n.Args[2].Name == "Ref_TargetPlayerOrPermanent" || ctx.damageGroups[n.Args[2].Name] != nil) {
 			build, err := compileReferencedPermanentDamage(n, ctx)
 			if err != nil {
 				return nil, err
@@ -1513,6 +1521,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
 				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], amount(bindings))
+			})
+		}
+		if ctx.damageGroups[n.Args[2].Name] != nil {
+			recipient, err := compileDamageTargetRef(n.Args[2], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageFrom(source(bindings), bindings.recipients[recipient], amount(bindings))
 			})
 		}
 		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {

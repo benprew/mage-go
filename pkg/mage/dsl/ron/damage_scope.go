@@ -5,6 +5,9 @@ import "github.com/benprew/mage-go/pkg/mage"
 type damageTargetPlan struct{ name string }
 
 func compileDamageTargetRef(n Node, ctx scope) (*damageTargetPlan, error) {
+	if n.Kind == Symbol && ctx.damageGroups[n.Name] != nil {
+		return ctx.damageGroups[n.Name], nil
+	}
 	if n.Kind == Symbol && ctx.damageTarget != nil && ctx.damageTarget.name == n.Name {
 		return ctx.damageTarget, nil
 	}

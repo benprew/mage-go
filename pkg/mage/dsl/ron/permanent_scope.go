@@ -15,6 +15,7 @@ const (
 	permanentEvent
 	permanentDeath
 	permanentChoice
+	permanentDamageTarget
 )
 
 type permanentReferencePlan struct {
@@ -23,6 +24,7 @@ type permanentReferencePlan struct {
 	event  *permanentEventPlan
 	death  *hostDeathPlan
 	choice *permanentChoicePlan
+	damage *damageTargetPlan
 }
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
@@ -37,6 +39,10 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.combatOpponent}, nil
 		}
 		switch n.Name {
+		case "AnyTargetAsAPermanent":
+			if ctx.damageTarget != nil && ctx.damageTarget.name == "Ref_AnyTarget" {
+				return permanentReferencePlan{kind: permanentDamageTarget, damage: ctx.damageTarget}, nil
+			}
 		case "TheChosenPermanent":
 			if ctx.chosenPermanent != nil {
 				return permanentReferencePlan{kind: permanentChoice, choice: ctx.chosenPermanent}, nil
@@ -82,6 +88,8 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 
 func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentRef {
 	switch p.kind {
+	case permanentDamageTarget:
+		return mage.PermanentFromDamageTarget(bindings.recipients[p.damage])
 	case permanentSource:
 		return mage.This
 	case permanentHost:

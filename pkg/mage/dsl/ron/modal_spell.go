@@ -46,6 +46,7 @@ func compileChooseOneModes(n Node, ctx scope) ([]actionPlan, error) {
 		local.spellTarget = nil
 		local.cardTarget = nil
 		local.damageTarget = nil
+		local.damageGroups = nil
 		plans[i], err = compileActions(body, local)
 		if err != nil {
 			return nil, err

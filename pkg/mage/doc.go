@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [DeclareOpponentChosenDamageTarget] for an opponent target choice.
+// Target legality uses the action controller and source. Copies keep the
+// controller's permission to choose new targets. Separate groups can share
+// one legal recipient. [PermanentFromDamageTarget] keeps the same declaration
+// and saved incarnation. Players supply no permanent or permanent information.
+// Phasing prevents actions; a return cannot replace the saved visit. Information
+// reads can use exact departure LKI. RON lowers singular and numbered AnyTarget
+// groups and AnyTargetOfAPlayersChoice(Opponent). AnyTargetAsAPermanent requires
+// one singular union binding. Damage and prevention use shared typed services.
+//
 // RON no-land state triggers use [ControlsNone] with a current land-type filter.
 // [WhenState] keeps one pending or active trigger per source visit and rule.
 // A new land does not cancel a pending trigger. Countering permits a new trigger.

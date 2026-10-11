@@ -24,14 +24,12 @@ func compileDamagePacketRecipient(n Node, ctx scope) (damageRecipientFactory, er
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.DamageRecipientRef { return ref.build(bindings) }, nil
-	case "Ref_AnyTarget", "Ref_TargetPlayerOrPermanent":
+	default:
 		ref, err := compileDamageTargetRef(n, ctx)
 		if err != nil {
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.DamageRecipientRef { return bindings.recipients[ref] }, nil
-	default:
-		return nil, unsupported(n, "damage packet recipient")
 	}
 }
 

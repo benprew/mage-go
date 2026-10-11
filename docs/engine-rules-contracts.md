@@ -17056,3 +17056,55 @@ both choices, checks draw-step scope and actual attacker declaration.
 cover typed bindings, timing, source changes, clones and live membership.
 `TestPlayerAttackRestrictionLifetime` covers native lifetime and ability layers;
 `TestPlayerAttackRestrictionDeclarations` covers definition and absent-player checks.
+
+## Singular and numbered damage union targets
+
+`DeclareOpponentChosenDamageTarget(name string) *DamageTargetBinding` uses
+`TargetOpponentChoice(TargetDamageAnyTarget())`. The opponent chooses at
+announcement or trigger placement. Candidate and resolution legality still use
+the action's controller and source: chooser changes do not bypass hexproof,
+protection, shroud or phasing. Copies retain their groups; permission to choose
+new targets belongs to the copy controller (CR 707.10c), without new payment.
+Separate instances of “target” can select one recipient (CR 601.2c, 602.2b).
+
+`PermanentFromDamageTarget(target *DamageTargetBinding) *PermanentTargetBinding`
+shares the union declaration instead of creating another target. Nil inputs
+return nil and definition validation rejects nil or undeclared reads. A player
+branch supplies neither a permanent nor permanent information. A permanent
+branch retains its saved incarnation. Phased and returned targets cannot receive
+actions; later instructions can read the exact departure LKI after an earlier
+instruction moves a legal target (CR 400.7, 608.2b/h, 702.26). Information reads
+do not permit actions on absent subjects. Existing clone and resolution frames
+retain independent target choices.
+
+RON supports singular `AnyTarget` and `AnyTargetOfAPlayersChoice(Opponent)` and
+homogeneous lists of two or more such declarations. One group supplies
+`Ref_AnyTarget`; multiple groups supply numbered `Ref_AnyTarget1`, etc. Unnumbered
+reads in multiple groups, unbound numbers, mixed target kinds, wrong arity and
+non-Opponent choosers reject. Modal target scopes stay separate.
+`AnyTargetAsAPermanent` is a symbol requiring one singular AnyTarget binding;
+player-or-planeswalker declarations and ambiguous numbered groups cannot supply
+it. Resolving property conditions, information reads, zone actions and existing
+temporary permanent rules use this projection. Numbered recipient reads use the
+shared damage and prevention services. Partial/all-illegal resolution and failed
+payments retain the existing target and transaction services.
+
+Cuombajj Witches uses the complete unchanged ARN record with two union groups
+and one `DealDamagePackets` batch. These are simultaneous packets, including two
+packets to the same recipient. No sequential damage adapter or alternate
+replacement pipeline is introduced. `TestRONUnionDamageTargetWitches` covers
+players, creatures, planeswalkers, shared and source recipients, shroud,
+source/target departure, return, phase cycles, source control, prevention,
+copies and clones. `WitchesCastingAndRetarget` covers its BB payment, printed
+1/3 values and copy-controller choices. `PaymentAndInstances` covers failed
+mana/tap payment, undeclared bindings and separate factory instances.
+`Projection`, `ProjectionRule`, `NumberedConsumers`, `Invalid`,
+`SingleChoiceAndInventory` and native `TestDamageTargetProjection*` cover typed
+branches, LKI, no-regeneration rule expiry, numbered damage/prevention,
+declaration validation and semantic roles. Existing `TestRONDamagePackets*`
+retains batch replacement and simultaneous-operation evidence.
+
+`RemainingRecords` checks all six Disintegrate records still reject at
+`CreateReplaceWouldPutIntoGraveyardUntil`, and Pyrotechnics still rejects at
+`TargetedDistributed`. Their complete gameplay remains unproved. No RON source
+changes or additional death-replacement/allocation contracts are established.

@@ -2,17 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **820 accepted / 166 rejected names** (986 total),
-**2,126 compiled / 319 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **821 accepted / 165 rejected names** and
-**2,127 compiled / 318 rejected records**. The strict loader rejects the
+The isolated slice reports **821 accepted / 165 rejected names** (986 total),
+**2,127 compiled / 318 rejected records** (2,445 total). With the pre-existing
+Eureka work, the worktree reports **822 accepted / 164 rejected names** and
+**2,128 compiled / 317 rejected records**. The strict loader rejects the
 collection and publishes no partial registry. Compilation is not gameplay proof.
 
-TEMPORARY-PLAYER-ATTACK-PROTECTION saves protected and duration players at
-resolution and checks live attacker filters through the shared combat query.
-Source changes, phasing, ability changes, multiple rules, bindings and clones
-have tests. Compilation and full-card gameplay gains are **1 name / 6 records**:
-Island Sanctuary's complete records and both draw choices. No RON changed.
+UNION-DAMAGE-TARGET-BINDINGS supplies singular/numbered union targets, opponent
+choice and exact permanent projection. Shared target, LKI, damage, prevention,
+transaction and clone services keep their contracts. Compilation and complete
+RON gameplay gains are **1 name / 1 record**: Cuombajj Witches. All six
+Disintegrate records still reject at death replacement. No RON changed.
 All required native checks pass; lint reports 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -70316,3 +70316,182 @@ Unrelated changes, including the ledger archive relocation, stay in the worktree
    until all Phoenix rules have gameplay evidence.
 
 Migration remains incomplete. This run stops after TEMPORARY-PLAYER-ATTACK-PROTECTION.
+
+## Run 2026-10-10: UNION-DAMAGE-TARGET-BINDINGS
+
+Status: complete dependency-ready target capability slice. RON syntax, typed
+engine projection/choice APIs, failing-first tests and documentation are complete.
+This run stops after this slice. No runtime cutover or removal gate is met.
+
+### Environment and candidate selection
+
+The initial tree contained changes to .gitignore, the execution design, ledger
+archive relocation, authoring/rules/API docs, definition validation, compiler and
+inventory, exact-count tests, optional-hand entry, and untracked Eureka repeated
+entry services/tests. All are preserved. Only this slice is staged. The ledger
+archive and its relocation are excluded from the commit. The isolated checkout
+uses HEAD plus this slice, without the existing Eureka implementation.
+
+Fresh baseline make build and go test ./pkg/mage/dsl/ron -short -count=1 pass
+(RON 40.155s). Baseline strict loader exits 1 for collection rejection:
+821 accepted / 165 rejected names; 2,127 compiled / 318 rejected records.
+This is unsupported collection data, not a build, test or environment failure.
+
+The ledger's first ranked candidate is dependency-ready. Complete records and
+nested forms were read for all compared cards, counting identical reprints once.
+The targeted vocabulary keys were AnyTargetAsAPermanent, numbered Ref_AnyTarget,
+AnyTargetOfAPlayersChoice and AnyNumberOfAnyTargets. Current engine/compiler
+inspection changes the initial zero-unlock estimate: simultaneous damage packets
+already exist, so the shared target contract completes Cuombajj Witches.
+
+| Candidate | Distinct cards and full-card estimate | Other blockers/downstream value | Effort |
+| --- | --- | --- | --- |
+| Selected union-target binding/projection | Disintegrate, Cuombajj Witches, Pyrotechnics; 1 unique complete unlock / 1 record | Witches' full body can reuse damage packets. Disintegrate needs temporary death replacement after projection/no-regeneration lowering. Pyrotechnics needs plural allocation and distributed damage. Prepares exact union identity for these consumers. | Moderate: two small engine APIs, typed target-plan groups/projection and consumer adapters; broad target/identity tests. |
+| Intervening-if source entry/departure events | Earthbind, Urza's Miter; 0 complete unlocks for events alone | Earthbind also needs persistent host flying removal granted to its Aura. Miter needs WasntSacrificed departure facts. Enables typed entry/departure conditions with detection and resolution checks. | Higher: two event snapshot/condition contracts plus later body services. |
+| Returned-hand result/owner visit | Firestorm Phoenix; 0 complete unlocks | PutItInOwnersHandInstead needs a producer; reveal and play restriction need the exact hand visit, and death replacement remains separate. Next-turn lifetime exists. | Higher: replacement result, hand visibility and play-permission consumers; narrower immediate card value. |
+
+Selection: the first candidate offers a complete card plus concrete shared
+identity prerequisites, with existing damage and choice services. The second
+requires separate event contexts before either complete body. The third is
+single-card work with several remaining contracts. No first-error frequency was
+used as an unlock count. Actual compilation/gameplay gain matches the revised
+estimate: 1 unique name / 1 record. The initial zero estimate was corrected
+before editing after finding the existing multiple-damage adapter.
+
+### Contract, supported shapes and reuse boundary
+
+Engine signatures:
+- DeclareOpponentChosenDamageTarget(name string) *DamageTargetBinding
+- PermanentFromDamageTarget(target *DamageTargetBinding) *PermanentTargetBinding
+
+The first uses TargetOpponentChoice(TargetDamageAnyTarget()). The opponent
+chooses at announcement or trigger placement; legality still uses the action
+controller and source. The second shares the same declaration and saved target
+incarnation. Nil inputs return nil; validation rejects nil/unbound reads. Players
+supply neither a permanent nor permanent information. Permanent branches use
+current presence for actions and exact departure LKI for later information reads.
+Phasing prevents actions, a phase cycle keeps identity, and a returned card
+cannot replace the saved visit. Copies keep group identities and use their
+controller's permission to choose new targets (CR 707.10c), without new payment.
+
+RON supports AnyTarget as a symbol and AnyTargetOfAPlayersChoice(Opponent)/1.
+One singular group binds Ref_AnyTarget. Homogeneous lists of two or more bind
+Ref_AnyTarget1, Ref_AnyTarget2, etc. Separate groups can select the same recipient.
+Each fresh factory creates independent declarations; mutable choices remain in
+existing per-stack/per-game frames. Modes cannot read another mode's groups.
+Unnumbered multiple-group reads, unbound numbers, mixed target kinds, wrong
+arities and non-Opponent choosers reject at compilation.
+
+AnyTargetAsAPermanent is a symbol available only with one singular union target.
+Player-or-planeswalker declarations and multiple groups do not supply it.
+Property conditions, information reads, zone actions and existing temporary
+permanent rules lower the typed projection. Numbered packet recipients,
+singular spell/permanent damage, and existing recipient prevention share the
+same typed recipient lookup. No global result slot, name branch, Go-card
+fallback, game-time declaration panic or partial production registry is added.
+
+RON owns spelling, arity, lexical scopes and lowering. mage owns target choice,
+legality, captured identity, definition validation, copy/clone frames, information
+and gameplay. Reuse: target declarations/WithTargets, TargetOpponentChoice,
+PermanentTargetBinding, ControllerOfWithLKI, IfPermanentMatches, ReturnToHand,
+Until/GrantKeywordModification, DealDamageFrom, DealDamagePackets and prevention,
+shared replacement ordering, transactional costs and copy retargeting. Witches
+uses one simultaneous damage packet batch, including duplicate recipients;
+this slice adds no sequential damage or competing replacement implementation.
+
+Rules evidence: local CR 601.2c/e/h, 602.2b, 608.2b/c/h, 400.7, 702.26 and
+707.10c. data/ARN.json Oracle text matches the complete unchanged Witches record:
+its tap ability deals one damage to each of two independently chosen any targets,
+with the opponent choosing the second. No source defect or RON edit was found.
+Existing Gaea's Liege/Fastbond source-audit questions remain outside this slice.
+No RON source/hash vocabulary refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, TestRONUnionDamageTargetWitches fails on unsupported
+singular permanent target group (AnyTarget). Projection and all six Disintegrate
+blocker tests fail on unbound AnyTargetAsAPermanent. Native tests fail to compile
+on the two missing public signatures. Test fixture API/field errors were corrected
+before confirming the intended failures. Later consumer tests fail first on
+unsupported temporary combat rule reference and unbound numbered singular damage.
+These tests then pass with the shared typed adapters. A copy test initially
+assumed the original opponent chooses again; local CR 707.10c and existing copy
+contracts establish that the copy controller chooses new targets. The corrected
+test requires two controller choices and preserves the original targets.
+
+| Card/context | Tests and evidence |
+| --- | --- |
+| Cuombajj Witches, complete ARN record | TestRONUnionDamageTargetWitches: players, creatures, planeswalker, same recipient twice, source recipient, summoning sickness, tap payment, illegal lands, hexproof/shroud/phased choice exclusions, partial/all-illegal targets, departure/return/phase cycles, source departure/return/phasing/control, prevention, copies and clone isolation. |
+| Witches casting and copy targets | TestRONUnionDamageTargetWitchesCastingAndRetarget: BB casting, failed payment, printed 1/3, pending ability copy controlled by the other player, new targets chosen by copy controller, original targets unchanged and independent packet results. Together these establish one complete-card gameplay gain. |
+| Disintegrate, all six LEA/LEB/2ED/3ED/CED/CEI records | TestRONUnionDamageTargetRemainingRecords reads complete unchanged records and requires the remaining CreateReplaceWouldPutIntoGraveyardUntil diagnostic. TestRONUnionDamageTargetProjection/ProjectionRule use synthetic RON gameplay for its exact projection/property/no-regeneration shape, player/noncreature branches, current control, departure LKI, absent/returned targets, phase cycles, clones and expiry. No complete Disintegrate gameplay claim. |
+| Pyrotechnics, complete LEG record | RemainingRecords retains TargetedDistributed rejection. Union binding is a prerequisite; allocation/plural groups are not implemented or claimed. |
+| Independent bindings and transactions | TestRONUnionDamageTargetPaymentAndInstances: separate factory declarations, undeclared-read rejection, failed mana/tap cost rollback, two pending abilities with opposite player assignments and independent resolution. |
+| Shared consumers and single opponent choice | NumberedConsumers tests single damage/packet damage with numbered finite prevention. SingleChoiceAndInventory tests singular opponent selection and the chooser semantic role. |
+| Declaration and mode scope | Invalid covers malformed arities, wrong choosers, missing/wrong typed bindings, ambiguous projection, unnumbered/unknown group reads, mixed groups and cross-mode projection reads. Exact collection assertions and a Witches inventory regression retain accepted records. |
+| Reusable engine APIs | TestDamageTargetProjectionDeclarations/Identity/OpponentChoice: definition validation, nil/unbound reads, player/permanent distinction, phase information, departure LKI, returned incarnations, duplicate recipients, routing, group identity and clone independence. |
+| Existing shared contracts | TestRONDamageScope*, TestRONDamagePackets*, TestRONOpponentTargets* and TestRONTemporaryRuleList* retain damage source/LKI, simultaneous batches, replacement order, target/copy legality and temporary-rule contracts. |
+
+### Validation and measured results
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONUnionDamageTarget -count=1
+passes, as does native go test ./pkg/mage -run TestDamageTargetProjection
+-count=1. The expanded focused run includes existing damage scope/packet,
+opponent-target and temporary-rule regressions plus collection assertions;
+its final post-lint run passes (1.467s). Exact collection assertions are updated
+to 2,128/317 in the worktree and 2,127/318 in the isolated commit, preserving the
+pre-existing one-record Eureka difference.
+
+make build and go vet ./... pass. go test ./pkg/mage/... -short -count=1
+passes (RON 44.926s). make test passes (RON 53.244s). The isolated HEAD-plus-slice
+checkout passes focused tests/collection assertions (final 1.176s), make build,
+go vet ./... and the complete engine short suite (RON 44.661s).
+
+The first make lint run rejects one new test variable named copy because it
+shadows a Go builtin (revive). It is renamed copied, without gameplay changes.
+The final make lint passes with 0 issues. A whole-tree Go-file snapshot shows
+automatic changes only to import grouping in the new RON test; no unrelated
+files changed. After the identifier/import fixes, focused RON/collection tests,
+native projection tests, make build and go vet pass again. Both worktree and
+staged git diff --check pass. Final go run ./cmd/loadcards -json exits 1 for
+remaining collection rejection, with the fresh counts and diagnostics below.
+
+
+Fresh final loader counts in the working tree: 822 accepted / 164 rejected
+names, 2,128 compiled / 317 rejected records. Isolated HEAD plus this slice:
+821 accepted / 165 rejected names, 2,127 compiled / 318 rejected records.
+The isolated baseline is 820/166 names and 2,126/319 records. Both loaders exit
+1 deliberately and publish no partial registry. No accepted record regresses.
+Witches no longer has a diagnostic. All six Disintegrate records now report
+unsupported action (CreateReplaceWouldPutIntoGraveyardUntil); Pyrotechnics still
+reports unsupported action list (TargetedDistributed). Compilation and complete
+RON gameplay gains are 1 unique name / 1 record, as estimated after inspection.
+
+Changed files: pkg/mage/damage_target_projection.go and its test; doc.go;
+pkg/mage/dsl/ron/union_damage_target.go and its test, compiler.go,
+damage_packets.go, damage_scope.go, permanent_scope.go, temporary_blocking.go,
+modal_spell.go, inventory.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/engine-rules-contracts.md, docs/dsl-reference.md
+and this ledger. Only this slice is staged for
+ git commit -m "feat(ron): implement union damage target bindings".
+Pre-existing Eureka changes, archive relocation and unrelated work remain.
+No Go definitions, startup paths, generators or unused DSL services are removed:
+complete RON support, gameplay mapping and runtime cutover gates remain unmet.
+
+### Ranked next candidates
+
+1. Shared temporary permanent death replacement: inspect exact
+   CreateReplaceWouldPutIntoGraveyardUntil/APermanentWouldDie/ExileItInstead
+   services and timing. Projection and no-regeneration now lower all six
+   Disintegrate records to this blocker. Estimate one complete unique unlock;
+   permanent death replacement also prepares Firestorm Phoenix, whose returned
+   hand visit/reveal/play restrictions remain separate blockers.
+2. Plural union allocation/announcement contracts for Pyrotechnics and Fireball.
+   Pyrotechnics needs TargetedDistributed/DistributeNumberAmongTargets and
+   distributed damage. Fireball also needs per-extra-target casting payment and
+   division/rounding. Existing damage batches and union identity can be reused;
+   inspect allocation and casting services before claiming complete unlocks.
+3. Shared intervening-if source entry/departure snapshots for Earthbind and
+   Urza's Miter. Persistent host flying removal and WasntSacrificed remain body
+   blockers; preserve event-time and resolution-time checks and LKI.
+
+Migration remains incomplete. This run stops after UNION-DAMAGE-TARGET-BINDINGS.

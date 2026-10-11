@@ -59,7 +59,7 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 			return mage.Until(core.EndOfTurn, mage.AssignsNoCombatDamage(subject.build(bindings)))
 		}, nil
 	}
-	if subject.kind != permanentTarget && subject.kind != permanentSource {
+	if subject.kind != permanentTarget && subject.kind != permanentDamageTarget && subject.kind != permanentSource {
 		return nil, unsupported(n.Args[0], "temporary combat rule reference")
 	}
 	for _, operation := range operations {
@@ -80,7 +80,7 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 		}
 		modification = mage.CantBlock
 	case "CantBeBlocked":
-		if operation.Kind != Symbol || subject.kind != permanentTarget {
+		if operation.Kind != Symbol || (subject.kind != permanentTarget && subject.kind != permanentDamageTarget) {
 			return nil, unsupported(operation, "temporary blocking operation")
 		}
 		modification = mage.CantBeBlocked

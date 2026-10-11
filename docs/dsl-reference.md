@@ -13083,3 +13083,28 @@ Copies, clones and nested bodies keep independent outcomes. Complete Chains
 still rejects its `MillACard` body; Takklemaggot still rejects its distinct
 creature choice and linked Aura return. Tests cover these real contexts with
 explicit supported test bodies; this is prerequisite evidence only.
+
+## RON damage union bindings
+
+`Targeted([AnyTarget], body)` and
+`Targeted([AnyTargetOfAPlayersChoice(Opponent)], body)` bind `Ref_AnyTarget`.
+A homogeneous list of these declarations binds `Ref_AnyTarget1`,
+`Ref_AnyTarget2`, etc. Each is a separate singular group and can select the
+same legal recipient. Opponent choices use the action controller's targeting
+permissions. Copy retargeting uses the copy controller (CR 707.10c).
+Damage packets, singular damage and existing resolving prevention actions share
+these typed recipient bindings. Mixed group kinds remain unsupported.
+
+`AnyTargetAsAPermanent` projects one singular union binding for resolving
+permanent operations and information reads. A player supplies no permanent.
+A permanent keeps its exact saved incarnation; information can use departure
+LKI, while actions require presence. Numbered groups cannot supply this
+unnumbered projection. Invalid arity, wrong choosers, unbound/ambiguous reads
+and cross-mode reads reject during compilation.
+
+Engine callers use `DeclareOpponentChosenDamageTarget(name)` with `WithTargets`
+and `PermanentFromDamageTarget(target)` with existing permanent actions.
+The projection shares the declaration; it does not declare another target.
+Evidence: native `TestDamageTargetProjection*` and RON
+`TestRONUnionDamageTarget*`, including complete Cuombajj Witches gameplay.
+Disintegrate death replacement and Pyrotechnics allocation remain unsupported.
