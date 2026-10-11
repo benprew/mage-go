@@ -4191,7 +4191,9 @@ func (r spellControllerRef) inspectDefinition() definitionNode {
 }
 
 type typedSpellTarget struct {
-	manaValueEqualX bool
+	contextualFilter SpellFilter
+	filterCount      int
+	manaValueEqualX  bool
 	BaseTarget
 	filters                    []CardFilter
 	targetsControlledPermanent bool
@@ -4201,6 +4203,9 @@ func (t *typedSpellTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uui
 	var result []uuid.UUID
 	for _, obj := range g.stack.Objects() {
 		if obj.IsAbility || obj.Card == nil {
+			continue
+		}
+		if t.filterCount > 0 && !t.contextualFilter.matches(g, controller, obj) {
 			continue
 		}
 		if t.manaValueEqualX && stackSpellManaValue(obj) != g.resolution.X() {

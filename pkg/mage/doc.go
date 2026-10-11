@@ -2529,6 +2529,19 @@
 // [TapAttachedPermanentCost]. Existing source tap-symbol costs stay unchanged.
 // Energy Tap reads [ManaValueOfWithLKI] for one fixed-color mana production.
 //
+// Use [SpellFilter] for immutable spell predicates shared by targets and events.
+// [SpellCardMatches] keeps current card information. [SpellControlledByYou]
+// reads the action controller, even after source departure or a control change.
+// [SpellSharesColorWithPermanents] selects present battlefield members at each
+// check. Returned members can qualify; phased members cannot. Only the five
+// colors can match. [AllSpellFilters], [AnySpellFilter] and [NotSpellFilter]
+// keep nested predicates. Zero filters and empty groups fail definition checks.
+// [SpellTargetBinding.WithFilter] keeps exact stack targets and checks current
+// legality. SpellCast().Matching checks only at cast detection. Queued
+// triggers keep their saved spell and caster. Copies and clones stay separate.
+// RON lowers contextual filters in spell targets and battlefield cast events.
+// Cost and ability-source filters keep their separate contexts.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

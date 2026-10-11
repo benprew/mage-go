@@ -122,7 +122,7 @@ func TestRONTextSpellCastSpellInventory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := map[string]int{"Crystal Rod": 6, "Iron Star": 6, "Ivory Cup": 6, "Throne of Bone": 6, "Wooden Sphere": 6, "Citanul Druid": 1, "Urza's Chalice": 1, "In the Eye of Chaos": 1, "Nether Void": 1, "Presence of the Master": 1}
+	expected := map[string]int{"Crystal Rod": 6, "Iron Star": 6, "Ivory Cup": 6, "Throne of Bone": 6, "Wooden Sphere": 6, "Citanul Druid": 1, "Urza's Chalice": 1, "In the Eye of Chaos": 1, "Nether Void": 1, "Presence of the Master": 1, "Invoke Prejudice": 1}
 	counts := map[string]int{}
 	for _, file := range files {
 		data, err := os.ReadFile(file)
@@ -138,9 +138,6 @@ func TestRONTextSpellCastSpellInventory(t *testing.T) {
 				continue
 			}
 			if _, err := Compile(record); err != nil {
-				if record.Fields["Name"].String == "Invoke Prejudice" {
-					continue
-				}
 				t.Fatal(err)
 			}
 			counts[record.Fields["Name"].String]++

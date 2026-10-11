@@ -1837,6 +1837,8 @@ func (sourceTargetedBySpellPattern) inspectDefinition() definitionNode {
 
 // --- from composable_spell_cast_event.go ---
 type spellCastPattern struct {
+	contextualFilter            *SpellFilter
+	filterCount                 int
 	color                       Color
 	filterColor                 bool
 	duplicateColor              bool
@@ -2055,11 +2057,20 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.notOwnedByCaster {
 		t.AndConditionData(spellCastNotOwnedByCaster{})
 	}
+	if p.filterCount > 0 {
+		t.AndConditionData(spellCastMatchesFilter{filter: *p.contextualFilter})
+	}
 	return t
 }
 
 func (p spellCastPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "a spell is cast", battlefieldSource: true}
+	if p.filterCount > 0 {
+		n.children = append(n.children, definitionEdge{"filter", p.contextualFilter})
+	}
+	if p.filterCount > 1 {
+		n.problem = "supply one contextual spell filter"
+	}
 	if p.filterColor {
 		n.Text = "a " + strings.ToLower(p.color.String()) + " spell is cast"
 		if p.duplicateColor || p.color < White || p.color > Green {

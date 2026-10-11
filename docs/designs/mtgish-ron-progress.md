@@ -2,19 +2,21 @@
 
 ## Current status
 
-The isolated slice reports **836 accepted / 150 rejected names** (986 total),
-**2,167 compiled / 278 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **837/149 names** and **2,168/277 records**. The strict
+The isolated slice reports **837 accepted / 149 rejected names** (986 total),
+**2,168 compiled / 277 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **838/148 names** and **2,169/276 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-SPECIFIC-PERMANENT-TAP-PAYMENTS implements mandatory typed resolution payment
-and Aura-host activation payment. Complete Energy Tap and Tourach's Gate records
-have RON gameplay tests. Exact visits, local outcomes, rollback, delayed queries,
-copies and clones reuse shared services. Compilation gains are **2 names /
-2 records**. Existing accepted records and unrelated work remain preserved.
+CONTEXTUAL-SPELL-FILTERS implements shared typed spell predicates in targets
+and cast events. Complete Invoke Prejudice has RON gameplay tests. Current
+control, effective colors, live membership, detection timing, exact stack visits,
+local payments, copies and clones use shared services. Compilation gain is **one
+name / one record**; Goblin Artisans still needs ability-target exclusion.
+Existing accepted records and unrelated work remain preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
+
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -73469,3 +73471,169 @@ mana production, affected rejection/census tests; API/rules docs and this ledger
    Reincarnation still needs death-result iteration and after-combat casting.
 
 This run stops after specific-permanent tap payments. Migration is incomplete.
+
+## Run 2026-10-10: CONTEXTUAL-SPELL-FILTERS
+
+Status: complete one vertical capability slice. No second slice is started.
+
+### Candidate comparison and selection
+
+Fresh complete records, nested forms and targeted vocabulary entries are read
+before editing. Names count once across reprints.
+
+| Candidate | Distinct affected names and estimated unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Ranked #1, durable tap-payment history | Vodalian War Machine; one name/record | Both tap activations and death capture already compile. A durable relation must retain exact source and paid Merfolk visits across control, departure and phasing, with independent clone state. It would complete this card but has no demonstrated second collection consumer. | Medium/high: transaction history, lifetime and death/LKI tests. |
+| Ranked #2, contextual spell filtering | Invoke Prejudice and Goblin Artisans; one full name/record, plus a shared prerequisite | Invoke Prejudice's complete opponent cast, variable optional payment and unpaid counter body are supported after the contextual color predicate. Goblin Artisans still needs `IsntTheTargetOfAnAbility(AbilityOfAPermanent(And([Other(ThisPermanent), IsNamed(NamedCard("Goblin Artisans"))])))`; its tap, coin and draw/counter branches already have adapters. This establishes a shared target/event predicate service for both records. Verduran Enchantress and Mana Vortex use a separate caster selector; their full records are also read. | Medium: immutable filter tree, target and event adapters, existing text-context correspondence, complete-card payment and identity tests. |
+| Ranked #3, declaration-bound block-history targets | Glyph of Delusion directly; Glyph of Doom and Glyph of Reincarnation use related resolving collections; zero full unlocks | Glyph of Delusion also needs captured conditional untap prevention and upkeep counter-removal grants. Doom's complete record already uses the resolving history service. Reincarnation still needs after-combat casting and death-result iteration with historical controllers. | High relative to immediate gain: target declaration relations and history scope tests, followed by separate acquired-rule slices. |
+
+Select contextual spell filtering because its one credible complete-card gain
+matches durable history while its shared service enables a second unique card.
+The chosen slice is one reusable context-aware spell predicate tree, from AST
+lowering through both existing spell-query consumers. The supported contract,
+engine/RON boundary and acceptance cases are stated before editing. It does not
+add Goblin Artisans' distinct stack-ability exclusion rule or the caster adapter.
+
+### Contract, exact shapes and dependencies
+
+New engine signatures:
+
+- `type SpellFilter struct` with private immutable operands.
+- `SpellCardMatches(CardFilter) SpellFilter`.
+- `SpellControlledByYou() SpellFilter`.
+- `SpellSharesColorWithPermanents(PermanentFilter, bool) SpellFilter`.
+- `AllSpellFilters(...SpellFilter) SpellFilter`,
+  `AnySpellFilter(...SpellFilter) SpellFilter`,
+  `NotSpellFilter(SpellFilter) SpellFilter`.
+- `(*SpellTargetBinding).WithFilter(SpellFilter) *SpellTargetBinding`.
+- `spellCastPattern.Matching(SpellFilter) spellCastPattern`, called through
+  `SpellCast()`.
+
+RON lowers `ControlledByAPlayer(SinglePlayer(You))`,
+`SharesAColorWithAPermanent(permanentFilter)`, and `ExceptFor(spellFilter)`.
+Nonempty recursive `And([spellFilter, ...])` and `Or([spellFilter, ...])` combine
+these with the existing pure card-type, Aura and color leaves. Contexts are
+singular `TargetSpell` declarations in already supported spell, activation and
+trigger bodies, and battlefield `WhenAPlayerCastsASpell(AnyPlayer|Opponent, f)`.
+The member filter reuses `compileAttachmentHostFilter`: supported stateless
+permanent predicates and at most one conjunctive
+`ControlledByAPlayer(SinglePlayer(You))`. Control inside a member disjunction,
+bound event/target/loop players, malformed wrappers and wrong-type references
+remain declaration errors. Existing mana-value-X and controlled-permanent target
+restrictions retain their supported top-level conjunction contexts. No other
+filter role is broadened; pure cost and ability-source filters keep their APIs.
+
+RON owns spelling, argument validation, lexical declaration roles and lowering.
+The engine owns current control, effective colors, battlefield membership and
+predicate composition. `You` reads the action controller, not card ownership or
+later source control. Spell targets check current facts at announcement and
+resolution. Cast events check their exact stack ID/source ID only at detection;
+the predicate is not an intervening-if condition. Later changes do not cancel
+pending bodies. Five-color intersection handles multicolor and excludes shared
+colorlessness. Phased members cannot match. Returned matching battlefield
+members can qualify in a later live query; this is not saved membership or LKI.
+
+Zero filters, empty compositions, invalid children, repeated filter installation
+and filtered union declarations fail engine definition validation. The union
+rejection has a separate failing-first test, so an unsupported declaration cannot
+silently ignore its filter. Operand lists have independent storage; filters have
+no mutable choices. Fresh card factories retain separate targets, ability IDs,
+spell/caster captures and resolution payments. Existing text rebuilding retains
+fresh filters and the same cast-pattern context; filter pointer identity does
+not define that context.
+
+Reused services: effective card/permanent color reads, current battlefield
+filters, typed spell target bindings and resolution legality, exact stack UUIDs,
+cast detection and captured caster/spell bindings, shared optional mana payments,
+mana value including X and departure LKI, countering, source lifetime, phasing,
+ability removal, clones, stack copies, definition plans, text rebuilding and
+strict atomic registry loading. CR 105.1–105.3, 112.2, 601.2c/601.2i, 603.2,
+608.2b and 702.26b support these contracts. No payment transaction, replacement
+ordering or simultaneous-operation mechanic changes. No Go-card fallback,
+card-name dispatch, global result slot or partial production registry is added.
+
+### Affected cards and gameplay mappings
+
+| Card or contract | Evidence |
+| --- | --- |
+| Invoke Prejudice, complete unchanged LEG:134 | `TestRONContextualSpellFilterInvokePrejudice`: empty battlefield, matching and nonmatching creatures, multicolor, colorless, opponent control, noncreature members, phasing and phase cycle, pay/decline/insufficient mana, source departure, detection before trigger placement, captured caster after spell control change, same-controller cast exclusion, failed casting, trigger copies and clone isolation. |
+| Complete Invoke Prejudice lifecycle | `TestRONContextualSpellFilterInvokeLifetimeAndManaValue`: source casting and entry, X creature spells, exact resolution payment, failed full payment preserving live resources, source phasing/return, ability removal, noncreature spells, departed spell mana value and no following a recast stack visit. `IndependentTriggers` checks two fresh sources with separate payment outcomes. Synthetic X victims test the complete real source rule. |
+| Goblin Artisans shared prerequisite | `TestRONContextualSpellFilterRemainingGoblinBlocker` compiles its entire unchanged ATQ:34 record and requires the next unsupported ability-exclusion diagnostic. This is no full-card gameplay claim. `Targets` executes the exact supported artifact/controller predicate in synthetic RON bodies; the exclusion is never skipped in production. |
+| Typed targets and controller scope | `TestRONContextualSpellFilterTargets`: supported nested Boolean forms, pure queries, fresh factory targets, source control/departure/phasing/return, live spell control, exact recast identity, differently controlled copies and clones. `TestContextualSpellFilterTargets` adds live color/member changes, donor departure/return, phase cycle and native current legality. |
+| Invalid declarations and engine validation | `TestRONContextualSpellFilterInvalid`, `TestContextualSpellFilterDeclarations`, `RejectsUnionDeclaration`: arity, malformed wrappers, incompatible players, unbound and event-local reads, member control disjunctions/duplicates, zero filters, empty groups, duplicate installation and union rejection. |
+| Native records, inventory and strict loading | `TestRONContextualSpellFilterNativeAndInventory`: complete real LEG record, accepted diagnostic, nested semantic roles, fresh ability IDs, fixture reprint deduplication, failed strict loading publishes no partial registry and retains the previous registry. No RON source is edited. |
+| Existing accepted records | Existing spell target, controlled-permanent target, cast-event, text rebuilding, definition plan, inventory, payment and whole-repository suites stay enabled. The old negative assertion for the now-supported controller predicate moves to positive gameplay coverage; collection censuses advance by exactly one record. |
+
+### Source data and validation
+
+Local `data/LEG.json` Oracle text matches the complete Invoke Prejudice RON rule,
+including opponent casting, color sharing, the captured paying player and spell
+mana value. No source defect is corrected. RON files remain unchanged, so the
+vocabulary source snapshot is not rewritten. Existing source defects and shared
+vocabulary edits remain preserved.
+
+Fresh shared baseline: `make build` passes; RON short tests pass (40.557s).
+The loader exits 1 for collection rejection with **2,168 compiled / 277 rejected
+records**, **837 accepted / 149 rejected unique names**. Fresh isolated HEAD
+baseline loader: **2,167/278 records**, **836/150 names**, exit 1. All snapshots
+contain 2,445 records and 986 unique names. Pre-existing Eureka is preserved and
+not credited to this slice.
+
+Failing-first evidence: the real-record RON test fails at unsupported `ExceptFor`
+in Invoke Prejudice; native tests fail to compile because the new filter APIs
+are absent. After implementation, the new union-declaration test fails because
+the unsupported modifier is ignored, then passes with explicit declaration
+rejection. Test development also catches and fixes condition composition order:
+the opponent caster restriction must not replace the contextual event predicate.
+The departed-spell test is aligned with the existing explicit mana-value LKI
+contract, retaining the original value rather than following a returned spell.
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONContextualSpellFilter -count=1`
+and native `go test ./pkg/mage -run TestContextualSpellFilter -count=1` pass.
+Isolated `make build`, `go vet ./...`, engine short tests, `make test`,
+`make lint` and `git diff --check` pass. Isolated RON short/full-suite times
+are 43.757s / 42.717s. Lint reports zero issues. Its only automatic changes
+are import grouping in new files; post-lint focused RON and native tests pass.
+Shared focused tests, build, vet, engine short tests and full tests also pass
+(41.469s / 42.991s for the RON short/full suites). Shared `make lint` and `git diff --check` pass, with zero lint issues and no
+automatic changes in the shared tree. Final loaders below exit 1 specifically
+for unsupported collection records, not a build, test or environment failure.
+No unresolved build, test, vet or lint failure remains.
+
+Final isolated loader: **2,168 compiled / 277 rejected records**, **837 accepted /
+149 rejected unique names**, exit 1. Final shared loader: **2,169/276 records**,
+**838/148 names**, exit 1, including pre-existing Eureka. Actual gain is **one
+name / one record**, matching the estimate. Before/after diagnostic comparison
+removes only Invoke Prejudice and advances Goblin Artisans from its controller
+filter to `IsntTheTargetOfAnAbility`. Every other diagnostic is unchanged. Strict
+loading still rejects the remaining collection and publishes no partial registry.
+One complete-card gameplay mapping is added; compiler acceptance is reported
+separately from gameplay coverage.
+
+Work uses an isolated checkout of `d4b45bd7`. Only this slice is committed.
+Incremental file merges preserve the shared migration edits, summary archive
+link and unrelated untracked files. No Go definitions, DSL functions, generators
+or startup wiring are removed because the design's removal gates remain unmet.
+
+Changed files: new engine `spell_filter.go` and `spell_filter_test.go`; existing
+spell target, event and target-definition inspection services and cast text
+context comparison; new RON `contextual_spell_filter.go` and its tests; spell
+target and trigger lowering, semantic inventory, affected declaration and census
+tests; `pkg/mage/doc.go`, API/rules docs and this ledger.
+
+### Ranked next candidates
+
+1. Shared controller caster adapter `SinglePlayer(You)`: Verduran Enchantress
+   estimates one full name/six records. Mana Vortex also uses the selector but
+   still needs `FromStack` and `SingleSpell(ThisSpell)` lifecycle contracts.
+   Compare shared state-trigger selectors for Goblins of the Flarg and City in
+   a Bottle before committing to a single-card consumer. City in a Bottle has
+   additional global cast/land restrictions and captured state-member contracts.
+2. Ability-target exclusion for Goblin Artisans: one estimated full name/record.
+   Its complete controller, tap and coin branches now have prerequisites.
+   Scope the exact source/name exclusion and saved pending ability incarnations.
+3. Durable tap-payment history for Vodalian War Machine: one estimated full
+   name/record. Its durable source/paid-visit relation remains separate from the
+   completed resolution-payment result service and contextual spell filters.
+
+This run stops after contextual spell filtering. Migration is incomplete.

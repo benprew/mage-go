@@ -17742,3 +17742,67 @@ simultaneous operation is established by this slice.
 coverage. `TestRONSpecificTapPayment*` supplies native real-record gameplay,
 declaration rejection, local nested outcomes, copies, clone isolation and
 atomic collection rejection.
+
+## Contextual spell filters in targets and cast events
+
+`SpellFilter` is an immutable predicate tree. `SpellCardMatches(CardFilter)`,
+`SpellControlledByYou()`, and
+`SpellSharesColorWithPermanents(PermanentFilter, controlled bool)` form leaves.
+`AllSpellFilters(...SpellFilter)`, `AnySpellFilter(...SpellFilter)` and
+`NotSpellFilter(SpellFilter)` compose them. The zero filter, empty conjunctions
+and disjunctions, and invalid children fail definition validation. Constructors
+retain separate operand lists. Queries do not make choices or change game state.
+
+`(*SpellTargetBinding).WithFilter(SpellFilter) *SpellTargetBinding` adds one
+contextual filter to a singular spell declaration. A duplicate addition or an
+addition to a union declaration fails validation. Existing card filters,
+announced-X mana-value restrictions and controlled-permanent target restrictions
+still apply. The action controller supplies `You`, independent of source or
+spell ownership and subsequent source control. The spell's current controller
+supplies controller matching (CR 112.2). Shared target selection and resolution
+legality checks apply the same predicate (CR 601.2c, 608.2b). Target bindings keep
+exact stack visits; returning or recasting the card cannot replace that visit.
+
+`SpellCast().Matching(SpellFilter)` adds one checked filter to a typed cast
+pattern. Detection resolves the event's exact stack ID and verifies its source
+ID before matching. The controller of the trigger source supplies `You` at
+that event. Existing caster restrictions compose with the new filter. The check
+runs at detection, after completed casting (CR 601.2i, 603.2), and is not an
+intervening-if condition. Later color, control or battlefield changes do not
+cancel a pending trigger. Copies of spells do not emit a cast event. Copies of
+triggers keep captured spell and caster bindings; clones keep independent state.
+Text rebuilding uses fresh filters and preserves the existing cast context.
+
+Color sharing reads effective spell colors and current permanent colors. It
+selects current battlefield members through the supplied filter. With
+`controlled=true`, only the action controller's members qualify. One common
+color is sufficient for multicolor objects; two colorless objects share no
+color (CR 105.1–105.3). Phased members are excluded (CR 702.26b). Departure ends
+membership, but a later returned matching permanent can qualify in a new query.
+No departure LKI or saved membership is used for this predicate.
+
+RON accepts `ControlledByAPlayer(SinglePlayer(You))`,
+`SharesAColorWithAPermanent(filter)`, and `ExceptFor(spellFilter)` with nonempty
+nested `And`/`Or` in `TargetSpell` and battlefield `WhenAPlayerCastsASpell`.
+The permanent member filter reuses the existing attachment-member filter
+contract: supported pure permanent filters and at most one conjunctive
+`ControlledByAPlayer(SinglePlayer(You))`; control inside a member disjunction
+remains rejected. Event-bound or target-bound player reads in these declaration
+filters remain rejected. Cost predicates and ability-source predicates retain
+their existing pure card-filter contexts. This slice does not add the
+`SinglePlayer(You)` caster adapter, ability-target exclusion, or stack-source
+triggers.
+
+Evidence: `TestContextualSpellFilter*` checks native target legality, current
+membership, cloning, definition errors and union rejection.
+`TestRONContextualSpellFilterTargets` checks controller scope, live target
+changes, returned source and target identity, queries, copies and clones.
+`TestRONContextualSpellFilterInvokePrejudice`, `InvokeLifetimeAndManaValue` and
+`IndependentTriggers` execute the complete unchanged Invoke Prejudice record,
+including casting the source, effective colors, phasing, ability removal,
+captured caster, optional payment, insufficient payment, X and departure mana
+value, source and spell return, trigger copies and independent pending payments.
+`Invalid`, `NativeAndInventory` and `RemainingGoblinBlocker` check declaration
+rejection, fresh factory declarations, semantic roles, strict atomic loading
+and Goblin Artisans' remaining exclusion rule. Existing payment, replacement
+and simultaneous-operation services are reused; none is changed by this slice.

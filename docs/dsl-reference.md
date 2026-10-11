@@ -13612,3 +13612,25 @@ payment itself requires a present object. Mana is added during resolution.
 Gate (FEM:97) gameplay. It covers announcement, payment, legality, upkeep,
 cleanup, attachments, independent instances, copies, clones, delayed bodies,
 invalid declarations, inventory and atomic loading. RON source is unchanged.
+
+### RON contextual spell filters
+
+Spell targets and battlefield cast events accept
+`ControlledByAPlayer(SinglePlayer(You))`,
+`SharesAColorWithAPermanent(permanentFilter)`, and `ExceptFor(spellFilter)`.
+Nonempty `And` and `Or` compose these predicates with existing spell card-type,
+Aura and color predicates. `You` is the action controller. A color-sharing
+member filter can include one conjunctive controller restriction and existing
+pure permanent filters. Unbound players and controller restrictions inside a
+member disjunction remain errors.
+
+Targets read current spell control, color and battlefield members both at
+announcement and resolution. Cast-event filters read those facts at detection
+only. Colorless objects cannot share a color, and phased members do not qualify.
+Pending bodies keep their exact spell, caster and independent payment bindings.
+Goblin Artisans still requires its separate ability-target exclusion rule.
+
+Engine adapters: `SpellFilter`, `SpellCardMatches`, `SpellControlledByYou`,
+`SpellSharesColorWithPermanents`, `AllSpellFilters`, `AnySpellFilter`,
+`NotSpellFilter`, `SpellTargetBinding.WithFilter` and `SpellCast().Matching`.
+Existing pure card filters and cost-filter APIs remain supported.

@@ -101,7 +101,7 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 	}
 	controlled := false
 	manaValueX := false
-	var filters []mage.CardFilter
+	var filters []mage.SpellFilter
 	for _, part := range parts {
 		if part.Name == "ManaValueIs" {
 			if manaValueX {
@@ -123,7 +123,7 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 			controlled = true
 			continue
 		}
-		filter, err := compileSpellFilter(part)
+		filter, err := compileContextualSpellFilter(part)
 		if err != nil {
 			return nil, "", err
 		}
@@ -132,15 +132,18 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if controlled && manaValueX {
 		return nil, "", problem(n, "combined spell mana value and permanent target restrictions are not supported")
 	}
+	if len(filters) == 0 {
+		filters = append(filters, mage.SpellCardMatches(mage.CardFilter{}))
+	}
 	return func(instanceBindings) mage.Target {
 		name := ctx.targetNamespace + "Ref_TargetSpell"
 		if manaValueX {
-			return mage.DeclareSpellTargetManaValueX(name, filters...)
+			return mage.DeclareSpellTargetManaValueX(name).WithFilter(mage.AllSpellFilters(filters...))
 		}
 		if controlled {
-			return mage.DeclareSpellTargetTargetingControlledPermanent(name, filters...)
+			return mage.DeclareSpellTargetTargetingControlledPermanent(name).WithFilter(mage.AllSpellFilters(filters...))
 		}
-		return mage.DeclareSpellTarget(name, filters...)
+		return mage.DeclareSpellTarget(name).WithFilter(mage.AllSpellFilters(filters...))
 	}, "Ref_TargetSpell", nil
 }
 

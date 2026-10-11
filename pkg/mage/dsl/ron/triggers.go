@@ -130,7 +130,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent") {
 			return nil, unsupported(players, "spell-cast player filter")
 		}
-		filter, err := compileSpellFilter(trigger.Args[1])
+		filter, err := compileContextualSpellFilter(trigger.Args[1])
 		if err != nil {
 			return nil, err
 		}
@@ -142,12 +142,11 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption {
 			bindings := castEventBindings{spell: mage.BindSpell(ctx.castEvent.spellName), caster: mage.BindPlayer(ctx.castEvent.casterName)}
 			actions := plan.buildWithEvents(map[*castEventPlan]castEventBindings{ctx.castEvent: bindings})
-			pattern := mage.SpellCast().WithSpell(bindings.spell).WithCaster(bindings.caster)
+			pattern := mage.SpellCast().WithSpell(bindings.spell).WithCaster(bindings.caster).Matching(filter)
 			if players.Name == "Opponent" {
 				pattern = pattern.ByOpponent()
 			}
 			trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
-			trigger.AndConditionData(mage.SpellCastMatchesCardFilters{Filters: []mage.CardFilter{filter}})
 			trigger.WithLayeredSpellCastTextRevision()
 			actions.effects = nil
 			return mage.WithAbility(TriggerA(trigger, actions))

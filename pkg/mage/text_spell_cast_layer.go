@@ -158,6 +158,7 @@ func (g *Game) revisePrintedSpellCastLayer(source *Permanent, id uuid.UUID, chan
 }
 
 func sameSpellCastTextContext(a, b spellCastPattern) bool {
+	a.contextualFilter, b.contextualFilter = nil, nil
 	a.color, b.color = core.Colorless, core.Colorless
 	a.spell, b.spell = nil, nil
 	a.caster, b.caster = nil, nil

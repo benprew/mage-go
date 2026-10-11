@@ -1563,7 +1563,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "TargetsAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
-		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+		if n.Name == "ControlledByAPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
+		if n.Name == "SharesAColorWithAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
+		if (n.Name == "And" || n.Name == "Or" || n.Name == "ExceptFor") && len(n.Args) == 1 {
 			return role
 		}
 	case "static_counter_comparison":

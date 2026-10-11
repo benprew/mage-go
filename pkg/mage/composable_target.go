@@ -21,6 +21,7 @@ type targetDeclaration struct {
 	name                   string
 	spec                   Target
 	optionalGraveyardCount int
+	invalidSpellFilter     bool
 }
 
 func (*targetDeclaration) targetBinding()       {}
@@ -207,6 +208,15 @@ func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if b.invalidSpellFilter {
+		n.problem = "contextual spell filters require a singular spell target"
+	}
+	if spec, ok := b.spec.(*typedSpellTarget); ok && spec.filterCount > 0 {
+		n.children = append(n.children, definitionEdge{"filter", spec.contextualFilter})
+		if spec.filterCount > 1 {
+			n.problem = "supply one contextual spell filter"
+		}
+	}
 	if spec, ok := b.spec.(*PermanentTarget); ok {
 		for i, relation := range spec.combatRelations {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("combatRelations[%d]", i), targetCombatRelationOption{relation}})

@@ -62,7 +62,6 @@ func TestRONSpellScopeInvalidDeclarations(t *testing.T) {
 		`SpellActions(Targeted([TargetSpell(IsColor(Purple))], ActionList([CounterSpell(Ref_TargetSpell)])))`,
 		`SpellActions(Targeted([TargetSpell(IsCardtype(Creature()))], ActionList([CounterSpell(Ref_TargetSpell)])))`,
 		`SpellActions(Targeted([TargetSpell(IsCardtype(Creature, Artifact))], ActionList([CounterSpell(Ref_TargetSpell)])))`,
-		`SpellActions(Targeted([TargetSpell(And([AnySpell, ControlledByAPlayer(SinglePlayer(You))]))], ActionList([CounterSpell(Ref_TargetSpell)])))`,
 	} {
 		nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Instant], Subtypes: []), Rules: [%s])`, rule)), "invalid-spell.ron")
 		if err != nil {
