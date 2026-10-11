@@ -7,10 +7,11 @@ The isolated slice reports **831 accepted / 155 rejected names** (986 total),
 the worktree reports **832/154 names** and **2,153/292 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-HEADS-OR-TAILS-DAMAGE-ROUNDS executes complete simultaneous coin and damage
-rounds until all participants flip heads. Complete RON gameplay and compilation
-gain **1 name / 1 record**: Mana Clash. Typed targets, payment rollback, source
-information, damage replacements, copies and clones use shared services.
+ACTIVE-PLAYER-CONTROL lowers current active-player control restrictions in
+singular targets and resolving collections. Exact clauses from Nettling Imp
+and Siren's Call have RON gameplay evidence across all six reprints. This shared
+prerequisite gains **0 complete names / 0 records**; control-history and
+activation-window adapters remain separate.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -72147,3 +72148,154 @@ caller audit applies to this slice.
    choose from fresh whole-record and loader evidence.
 
 This run stops after the one slice. Migration remains incomplete.
+
+## Run 2026-10-10: ACTIVE-PLAYER-CONTROL
+
+Status: complete one dependency-ready vertical prerequisite. No second slice.
+
+### Fresh baseline and candidate comparison
+
+The initial worktree contains unrelated .gitignore/design changes, a ledger
+archival move, Eureka implementation/tests, and original compiler/engine/docs
+changes. These are saved and preserved. A detached HEAD checkout validates the
+slice independently; the commit contains only this slice. No sub-agents run.
+Fresh shared baseline: make build and go test ./pkg/mage/dsl/ron -count=1 pass.
+The loader exits 1 for collection rejection, with 2,153/292 records and
+832/154 names. This is not a build or test failure. HEAD excludes the existing
+Eureka work and reports 2,152/293 records and 831/155 names.
+
+The latest ranked candidate is current active-player control for Nettling Imp
+and Siren's Call. Complete records and all nested forms are inspected, including
+all six identical reprints. Targeted vocabulary entries show 18 TheActivePlayer
+occurrences and six ControlledSinceBeginningOfTurn occurrences. No vocabulary
+or card source file changes in this run.
+
+| Candidate and distinct affected names | Estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Current active-player controller predicates: Nettling Imp, Siren's Call | 0 names / 0 records | Nettling Imp still needs opponent-turn/before-attack activation timing and continuous control history. Siren's Call still needs its end-step control-history exclusion. The predicate supplies target membership for one and delayed resolving collections for the other. | Low: two adapters, one checked engine reference context, identity/timing/clone/gameplay tests. |
+| Announcement block-history predicate: Glyph of Delusion | 0 names / 0 records | Its counter-dependent granted untap restriction and granted upkeep counter removal remain. Glyph of Doom already uses the resolving history service; Glyph of Reincarnation also needs after-combat casting, death-result iteration and historical controller return choices. Existing resolving collections do not establish cross-target announcement legality. | Medium: typed target-group relation and incarnation/history checks; complete Delusion grants exceed this slice. |
+| Filtered departed-source damage history: Blazing Effigy | Estimated 1 name / 1 record | DeadPermanentDealsDamage and its nested filtered history sum need adapters/contract evidence for other named sources and exact departed identity. Reuses death capture and simultaneous damage services; singleton immediate gain. Vodalian War Machine's tap-payment history is a separate durable-history capability, not interchangeable with damage history. | Medium to high: filtered actual-damage query, departed information and source attribution, replacement/clone tests. |
+
+Candidate 1 is dependency-ready and supplies a concrete shared prerequisite for
+two unique cards (12 records). It is selected under the ranked-candidate rule.
+Neither control history nor timing is silently dropped to claim a full unlock.
+Glyph of Doom, Glyph of Reincarnation, Blazing Effigy and Vodalian War Machine
+complete records are inspected for the comparison. No Go definitions are used
+as requirements. No card-specific branch or alternate production registry.
+
+### Exact contract, signatures and ownership
+
+RON supports ControlledByPlayer(TheActivePlayer), with exactly one symbol
+operand, in singular TargetPermanent filters, alone or in nested And filters.
+It also supports the same predicate in resolving permanent collections,
+including And intersections and Or unions. The predicate is not added to the
+context-free/static filter compiler, general player-reference compiler or
+plural target declarations. Other references retain their existing contexts.
+Malformed arity, tuple operands, unbound or incompatible references reject
+at compilation. Factory calls build fresh target declarations.
+
+Mage's existing signatures remain:
+TargetControlledBy(player PlayerRef) PermanentTargetOption;
+PermanentsControlledBy(controller PlayerRef, filter PermanentFilter) PermanentSet.
+The checked target context now permits the concrete ActivePlayer reference.
+Its shared resolver reads the current turn player. No new callback, mutable
+binding, reference type, history slot or replacement/zone service is added.
+RON owns spelling and context checks; mage owns current turn/player reads,
+control, target legality, collections, announcement and transactional payment.
+
+Selection and later target legality checks each read the current active player,
+independent of action/source/copy controller. Exact saved target visits retain
+ordinary legality: departure/return cannot restore one; phasing stops actions;
+a phase cycle retains identity. Pending actions survive source departure and
+use existing LKI services where required. Collections select current unphased
+members at resolution, including later entries and returned objects. Delayed
+bodies read the active player at body resolution, not at installation. Clones
+read their own turn state; copies keep their own declarations and controller.
+Queries make no changes and consume no RNG. Shared payment keeps rollback.
+CR 102.1, 115.1/7, 601.2c/h and 608.2b/h supply the timing/legality contract.
+This pure selection slice changes no replacement order or batch operation.
+Existing simultaneous consumers and their replacements retain shared behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Fixture-only API errors are corrected before production changes: ActionDefinition
+assertions, LoadInto's pattern argument, Registry.CreateCard, targetSpec, and
+ActivateAbilityByIndex. RON tests then fail with the expected unbound
+TheActivePlayer target reference and unsupported ControlledByPlayer collection.
+Engine tests fail with definition rejection of TargetControlledBy(ActivePlayer).
+Those assertion failures precede the production adapters and validator change.
+Later fixture corrections inspect phased objects with FindPermanentIncludingPhased
+and use the exact action-list AST path. No declaration panic or test weakening
+is added. Final tests strengthen inventory presence and target existence checks.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Nettling Imp: active controller predicate, six reprints | TestRONActivePlayerControlRepositoryClauses extracts the unchanged predicate from each complete record and executes it as a target restriction in a synthetic RON spell. Complete records still reject their independent blockers. |
+| Siren's Call: active controller predicate, six reprints | RepositoryClauses executes the unchanged predicate in a synthetic delayed RON collection; changes active player after installation and checks cloned delayed resolution. Existing TestRONCollectionAttackTurnSirenClause retains the MustAttack clause test. Complete destruction/control-history support is not claimed. |
+| Singular target contract | TestRONActivePlayerControlTargets: fresh declaration identity, controller separation, illegal target/payment rollback, control/active-player changes, phasing, phase cycle, return, copies and independent clone execution. |
+| Resolving collection contract | TestRONActivePlayerControlCollections: current control and active player, new entries, phasing, cycle, returned members, changed copy controller and cloned execution. |
+| Invalid/native/inventory declarations | TestRONActivePlayerControlInvalid, Native and Inventory: invalid arities, malformed/unbound/incompatible operands, strict atomic collection rejection and typed player-reference role. |
+| Shared engine target context | TestTargetActivePlayerContract: definition validation, pure candidate queries with unchanged RNG, activation target legality, source departure/return, returned target identity, phasing, copies and clones with independent active players. Existing TestTargetPlayerReference* retains nil/unbound/unsupported declaration and captured-event regressions. |
+
+Compilation gain and complete-card gameplay gain are both **0 names / 0 records**,
+exactly the estimate. Clause-level RON gameplay expands for two distinct cards;
+it does not establish either complete card. Accepted records retain broad-suite
+regression coverage. No source-data defect is corrected, and no source or
+vocabulary snapshot changes. Known Fastbond and Gaea's Liege issues stay separate.
+
+### Validation and loader status
+
+Focused RON tests pass with -count=1 after final lint (shared 0.456s;
+isolated 0.560s). Focused engine active-player and existing player-reference
+tests pass (shared 0.461s; isolated 0.514s). Both make build and go vet ./...
+pass. Both go test ./pkg/mage/... -short -count=1 suites pass (RON shared
+52.334s; isolated 57.281s). Both make test suites pass (RON shared 52.595s;
+isolated 44.308s). The final test-only assertion strengthening and equivalent
+lint rewrite are covered again by these final focused checks.
+
+Both final make lint commands pass with 0 issues. The first isolated attempt
+hits golangci-lint's process lock while shared lint runs; its sequential rerun
+passes. This transient environment failure is resolved, not counted as a pass.
+Automatic lint changes only the new engine test's boolean expression to its
+equivalent De Morgan form. No production behavior or assertion is weakened.
+The new engine/compiler/tests have identical bytes in both checkouts. No
+unrelated automatic changes remain. git diff --check passes in both trees.
+
+Final loader, after lint: shared **832 accepted / 154 rejected names**,
+**2,153 compiled / 292 rejected records**; isolated **831/155 names** and
+**2,152/293 records**. Totals remain 986 names and 2,445 records. Both exit 1
+for unsupported collection records and publish no partial production registry.
+Siren's Call advances from ControlledByPlayer to unsupported ExceptFor at
+2ED.lines.ron:227:565. Nettling Imp retains IsAPlayersTurn at 172:645.
+Glyph of Delusion retains WasBlockedByDefenderThisTurn; Blazing Effigy retains
+DeadPermanentDealsDamage; Vodalian War Machine retains its tap-payment-history
+filter. The actual gain is zero names and records in both checkouts, exactly
+the estimate. No native build, vet, lint or test blocker remains.
+
+### Preservation, files and ranked next candidates
+
+The commit keeps the original ledger layout and appends this entry; the user's
+archival move remains unstaged. Existing Eureka, compiler, engine and docs edits
+are excluded from the slice patch. Changed shared docs retain their original
+edits plus this slice's additions. Other original files retain exact bytes.
+
+Changed files: pkg/mage/target_player_reference.go, target_active_player_test.go
+and doc.go; pkg/mage/dsl/ron/player_relative_target.go, contextual_collection.go
+and active_player_control_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. No Go card definition, generator
+or DSL function is removed; their removal gates remain unmet. No caller-removal
+audit is required because nothing is removed. Runtime cutover does not begin.
+
+1. Shared continuous-control-since-current-turn predicates for Nettling Imp and
+   Siren's Call. Distinguish current turn start from the controller's most recent
+   turn start; lower the latter's exact ExceptFor(NotControlledSinceBeginningOfTurn)
+   resolving collection. Reassess complete Siren unlock with fresh records.
+2. Nettling Imp activation window: IsAPlayersTurn(Opponent) and
+   IsBeforeAttackersDeclared. Inspect all actual uses and reuse exact casting
+   and turn-window services without claiming control-history support.
+3. Reassess filtered departed-source damage history for Blazing Effigy against
+   announcement block history for Glyph of Delusion and durable tap-payment
+   history for Vodalian War Machine. Keep their contracts separate and prioritize
+   any concrete shared prerequisites from fresh full records.
+
+This run stops after this slice. Migration remains incomplete.

@@ -37,6 +37,11 @@ func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter,
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err
 		}
+		if n.Args[0].Kind == Symbol && n.Args[0].Name == "TheActivePlayer" {
+			return mage.AnyPermanent, func(instanceBindings) []mage.PermanentTargetOption {
+				return []mage.PermanentTargetOption{mage.TargetControlledBy(mage.ActivePlayer)}
+			}, nil
+		}
 		player, err := compilePlayerRef(n.Args[0], ctx)
 		if err != nil {
 			return mage.PermanentFilter{}, nil, err

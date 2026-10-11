@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetControlledBy] accepts [ActivePlayer] for current turn control.
+// Target selection and resolution read the active player each time.
+// The action controller and source controller do not change that player.
+// [PermanentsControlledBy] uses the same reference for live collections.
+// Saved targets keep their exact visits; collections read current members.
+// RON lowers ControlledByPlayer(TheActivePlayer) in singular target filters
+// and resolving collections. Control history needs a separate predicate.
+//
 // Use [RepeatHeadsOrTailsDamage] for complete heads-or-tails damage rounds.
 // Player references are read once. Duplicate and absent players are excluded.
 // Every player flips before one simultaneous tails-damage batch. Each round

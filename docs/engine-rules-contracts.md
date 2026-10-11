@@ -17468,3 +17468,31 @@ outcome pairs, casting payment rollback, illegal targets, prevention, repetition
 retargeted copies, illegal copied targets, clone randomness, independent factories,
 atomic loading, malformed declarations and nested inventory roles. Local
 `data/DRK.json` confirms the source record. No RON source correction is needed.
+
+## Current active player in control restrictions
+
+`TargetControlledBy(player PlayerRef) PermanentTargetOption` now also accepts
+`ActivePlayer`. `PermanentsControlledBy(controller PlayerRef, filter
+PermanentFilter) PermanentSet` already executes this reference. The active
+player is the player whose turn it is (CR 102.1), independent of the action,
+source or copy controller. Target selection and resolution read current turn
+control (CR 601.2c, 608.2b). Collections select current battlefield members at
+resolution (CR 608.2h). A delayed body does not save an earlier active player.
+
+Targets retain their original incarnation and ordinary legality. Departure and
+return cannot restore an old target. Phasing makes that target unavailable;
+a phase cycle keeps its identity. Collections can include new and returned
+members at resolution but exclude phased objects. Source departure does not
+cancel a pending action. Copies keep independent target declarations; changing
+a copy controller does not change the active-player restriction. Clones read
+their own turn state. Target queries do not mutate game state or consume RNG.
+Shared announcement and payment transactions retain failed-payment rollback.
+
+RON supplies the exact `ControlledByPlayer(TheActivePlayer)` spelling for
+singular targets and resolving collections, including nested intersections
+and resolving unions. It rejects malformed operands and unsupported reference
+contexts before gameplay. No control-history or activation-window semantics
+are established here. No replacement or simultaneous-operation service changes.
+
+Evidence: `TestTargetActivePlayerContract` and `TestRONActivePlayerControl*`.
+Full Nettling Imp and Siren's Call records retain their other unsupported rules.

@@ -13383,3 +13383,29 @@ Prevention changes damage, not coin results. Each invocation owns its local
 outcomes. Spell targeting, source information, payments, copies, clones and RNG
 use existing engine services. Mana Clash's complete DRK record is covered by
 `TestRONCoinRound*`; engine contracts are covered by `TestCoinRound*`.
+
+## Active player control predicates
+
+RON accepts `ControlledByPlayer(TheActivePlayer)` in singular
+`TargetPermanent` filters, alone or within nested `And` filters. The factory
+lowers it to `TargetControlledBy(ActivePlayer)` with fresh target declarations.
+The engine accepts this typed reference in definition validation. Existing
+restrictions, target legality and exact incarnation checks still apply.
+
+Resolving collections accept the same predicate and combine it with existing
+`And` and `Or` collection operands. It lowers to
+`PermanentsControlledBy(ActivePlayer, AnyPermanent)`. Delayed actions read the
+active player and current members when their body resolves. Target declarations
+read the active player at selection and each later legality check. Neither
+operation captures the earlier active player or substitutes the action controller.
+
+The predicate has exactly one symbol operand. Malformed symbols, missing or
+extra operands and unsupported player references remain errors. This adapter
+does not establish control-since-turn-start predicates, activation timing,
+static control filters or plural target declarations. Nettling Imp and Siren's
+Call remain rejected as complete records. Their exact active-player clauses
+have synthetic RON gameplay evidence across all six reprints.
+
+Evidence: `TestRONActivePlayerControlTargets`, `Collections`, `Invalid`,
+`Native`, `RepositoryClauses`, and `Inventory`; engine
+`TestTargetActivePlayerContract`. No full-card gameplay gain is claimed.

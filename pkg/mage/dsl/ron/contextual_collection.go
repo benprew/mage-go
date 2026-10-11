@@ -4,6 +4,16 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
 	switch n.Name {
+	case "ControlledByPlayer":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "TheActivePlayer" {
+			return nil, unsupported(n.Args[0], "collection controller reference")
+		}
+		return func(instanceBindings) mage.PermanentSet {
+			return mage.PermanentsControlledBy(mage.ActivePlayer, mage.AnyPermanent)
+		}, nil
 	case "DealtDamageToPermanentThisTurn":
 		if err := arity(n, 1); err != nil {
 			return nil, err

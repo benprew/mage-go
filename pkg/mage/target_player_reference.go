@@ -16,9 +16,9 @@ func (o targetControlledByOption) applyPermanentTarget(t *PermanentTarget) {
 func (o targetControlledByOption) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-controller-reference", children: []definitionEdge{{"player", o.player}}}
 	switch o.player.(type) {
-	case controllerRef, savedPlayerRef, combatDefendingPlayerRef:
+	case controllerRef, savedPlayerRef, combatDefendingPlayerRef, activePlayerRef:
 	default:
-		n.problem = "target controller: supply You, a saved event player, or the combat defending player"
+		n.problem = "target controller: supply You, a saved event player, the combat defending player, or the active player"
 	}
 	return n
 }
