@@ -17276,3 +17276,48 @@ notifications. Target legality uses the existing resolved-target service.
 `TestRONZoneInterveningNativeEntry` and `NativeAuraCopy` verify native casting,
 entry-time host checks, copied Auras and clone isolation. `SourceEntry` checks
 source keyword changes, departure, return and phasing.
+
+
+## Acquired layer 6 static abilities
+
+`AcquireStaticAbility(subject PermanentRef, rule StaticRule) ResolvingEffect`
+reads one live recipient at resolution and saves its exact battlefield visit.
+It accepts a `While` continuous rule with layer 6 modifications and no nested
+activated or triggered grants. Declaration validation gives the acquired rule
+a fresh binding scope and a battlefield source context. Unsupported rule kinds,
+empty rules, missing conditions, other layers and unbound outer bindings fail
+validation. Each acquisition has a separate static declaration identity.
+
+The recipient supplies the rule's live source and controller. Its attachments
+and set membership remain live. The independent acquisition effect grants the
+declaration in timestamp order; the declaration's own effects use shared
+dependency ordering and require that ability to remain present. An earlier
+removal can be followed by acquisition; a later removal stops the static rule.
+The layer scheduler retains inactive effects until an earlier grant can activate
+them in the same pass. Reattachment retimestamps the acquired static effect.
+Phasing suspends the rule and preserves acquisition. Departure ends that visit;
+returned recipients cannot inherit it. Donor departure does not end a different
+recipient's acquisition. Clones keep separate battlefield and layer state.
+Acquired rules do not enter printed or copiable card definitions. Explicit This recipients are declared to
+`Game.WaitingDelayedPermanentSources` without resolving them or executing the
+static rule. The nested rule has its own future recipient context; its reads and
+implicit attachments do not supply reads by the waiting action. Saved source
+visits and cloned waiting lifetimes use the shared delayed-reference service.
+
+RON accepts the exact resolving shape
+`CreatePermanentLayerEffect(ThisPermanent, [AddAbility([PermanentLayerEffect(HostPermanent, [LosesAbility(keyword)])])])`
+on an Aura, with one supported fixed keyword. The nested host is evaluated in
+the acquired static context, not saved as the host at acquisition. Other subjects,
+combined grants, nested rule effects and temporary acquisition remain rejected.
+Earthbind uses this adapter after its existing intervening-if entry condition
+and shared damage operation. Prevention does not prevent acquisition. Damage
+uses source LKI after departure, but acquisition requires the original live Aura.
+A copied trigger rechecks flying: an earlier resolution can make it fail.
+
+CR 400.7, 604.2/4/7, 611.2a/c, 611.3a, 613.1f, 613.7a/b/e and 613.8a-c
+supply identity, duration, live attachment, timestamp and dependency contracts.
+`TestAcquiredStatic*` covers engine lifecycle, declaration isolation, recipient
+context and invalid rules. `TestRONAcquiredStatic*` covers all six complete
+Earthbind records, native casting and rollback, trigger/spell copies, pending
+clones, prevention, entry/resolution timing, source and host returns, phasing,
+control, removal, reattachment, strict loading and semantic inventory.

@@ -1315,6 +1315,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "keyword":
+		if n.Name == "PermanentLayerEffect" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "static_modification"}[index]
+		}
 		if n.Name == "Activated" && len(n.Args) == 2 {
 			return []string{"cost", "actions"}[index]
 		}

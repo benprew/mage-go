@@ -32,6 +32,7 @@ type deepCloneableEffect interface {
 type printedAbilityContinuousEffect struct {
 	ContinuousEffect
 	declaration *StaticAbilityHolder
+	acquired    bool
 	incarnation uuid.UUID
 }
 
@@ -46,7 +47,7 @@ func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
 	if e.declaration != nil && !slices.ContainsFunc(source.RuntimeAbilities, func(a Ability) bool { return a.AbilityID() == e.declaration.AbilityID() }) {
 		return false
 	}
-	if source != nil && source.printedAbilitiesSuppressed {
+	if !e.acquired && source != nil && source.printedAbilitiesSuppressed {
 		return false
 	}
 	return e.ContinuousEffect.IsActive(g)
@@ -775,17 +776,24 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		var layerEffects []ContinuousEffect
 		for _, e := range em.effects {
-			if e.GetLayer() == layer && e.IsActive(g) {
+			if e.GetLayer() == layer {
 				layerEffects = append(layerEffects, e)
 			}
 		}
-		// An applied effect can change the order of the remaining effects.
+		// A granted ability can make an inactive effect active in this layer.
 		for len(layerEffects) > 0 {
-			layerEffects = slices.DeleteFunc(layerEffects, func(e ContinuousEffect) bool { return !e.IsActive(g) })
-			if len(layerEffects) == 0 {
+			var activeEffects []ContinuousEffect
+			var activeIndices []int
+			for i, effect := range layerEffects {
+				if effect.IsActive(g) {
+					activeEffects = append(activeEffects, effect)
+					activeIndices = append(activeIndices, i)
+				}
+			}
+			if len(activeEffects) == 0 {
 				break
 			}
-			next := effectDependencyOrder(layerEffects, g)[0]
+			next := activeIndices[effectDependencyOrder(activeEffects, g)[0]]
 			e := layerEffects[next]
 			layerEffects = slices.Delete(layerEffects, next, next+1)
 			if !e.IsActive(g) {

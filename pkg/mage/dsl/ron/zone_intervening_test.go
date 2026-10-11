@@ -300,8 +300,8 @@ func TestRONZoneInterveningEarthbindPrerequisite(t *testing.T) {
 				continue
 			}
 			found = true
-			if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "unsupported temporary keyword (PermanentLayerEffect)") {
-				t.Fatalf("remaining complete-card blocker: %v", err)
+			if _, err := Compile(node); err != nil {
+				t.Fatalf("complete Earthbind record: %v", err)
 			}
 			rules := node.Fields["Rules"]
 			trigger := rules.Args[1]

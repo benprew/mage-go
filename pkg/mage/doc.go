@@ -2404,7 +2404,17 @@
 // Copies and clones keep those facts. Other event contexts, duplicate guards
 // and a second intervening condition fail definition validation.
 // RON supports source-entry keyword conditions and WasntSacrificed death guards.
-// Nested acquired static abilities need a separate adapter.
+// Acquired host keyword removal uses [AcquireStaticAbility].
+//
+// Use [AcquireStaticAbility] for one captured layer 6 static ability.
+// The live recipient supplies its source, controller and attachment context.
+// Each acquisition keeps a separate declaration and original battlefield visit.
+// Shared layer order permits an earlier removal followed by acquisition.
+// Later removal stops the rule. Reattachment changes its static timestamp.
+// Phasing suspends the rule; return cannot inherit it. Clones stay separate.
+// Explicit source recipients supply waiting references without rule execution.
+// RON lowers one Aura-host keyword removal in an acquired PermanentLayerEffect.
+// Other layers, nested grants and temporary acquisition need separate adapters.
 //
 // # Further Documentation
 //

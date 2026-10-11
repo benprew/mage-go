@@ -454,7 +454,7 @@ func ValidateCardDefinition(name string, card Card) error {
 	visit = func(value any, path string, spell bool, active map[any]bool, allocationAllowed bool) {
 		previousCastBody := castBody
 		switch value.(type) {
-		case grantedTriggerDefinition, tokenAbilityDefinition:
+		case grantedTriggerDefinition, tokenAbilityDefinition, acquiredStaticDefinition:
 			spell, castBody = false, false
 		}
 		if action, ok := value.(*ActionDefinition); ok {

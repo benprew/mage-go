@@ -63,6 +63,11 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 				continue
 			}
 			for _, ability := range abilities {
+				if ability.Name == "PermanentLayerEffect" {
+					return compileAcquiredStatic(n, ctx)
+				}
+			}
+			for _, ability := range abilities {
 				keyword, err := compileTemporaryKeyword(ability)
 				if err != nil {
 					return nil, err

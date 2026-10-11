@@ -2,16 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **826 accepted / 160 rejected names** (986 total),
-**2,142 compiled / 303 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **827/159 names** and **2,143/302 records**. The strict
+The isolated slice reports **827 accepted / 159 rejected names** (986 total),
+**2,148 compiled / 297 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **828/158 names** and **2,149/296 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-ZONE-EVENT-INTERVENING-IF lowers exact source/host entry keyword conditions and
-historical non-sacrifice death conditions. Complete RON gameplay and compilation
-gain **1 name / 1 record**: Urza's Miter. Earthbind's condition is supported;
-its nested acquired static ability remains rejected. Copies, clones and saved
-visits use shared services. No RON or vocabulary changed.
+ACQUIRED-LAYER6-STATIC-ABILITY executes one Aura acquiring a live host keyword
+removal rule. Complete RON gameplay and compilation gain **1 name / 6 records**:
+Earthbind, all six printings. The engine captures each recipient visit and gives
+it a fresh static declaration; shared layers preserve dependency order, removal,
+reattachment, phasing and clones. Johan's remaining adapters stay rejected.
+No RON or vocabulary changed.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71312,3 +71313,167 @@ the ledger's archival restructuring; those remain in the user's worktree.
    Existing repeated-entry work remains separate; do not infer coin support.
 
 Migration remains incomplete. This run stops after ZONE-EVENT-INTERVENING-IF.
+
+## Run 2026-10-10: ACQUIRED-LAYER6-STATIC-ABILITY
+
+Status: complete one vertical slice. No second capability was started.
+
+### Selection and dependency evidence
+
+The latest entry ranked acquired static/rule contexts first. Complete records
+were read for Earthbind (LEA, LEB, 2ED, 3ED, CED, CEI), Johan (LEG), Runesword
+(DRK), and Mana Clash (DRK). The vocabulary's AddAbility(1),
+PermanentLayerEffect(2), and PermanentRuleEffect(2) signatures were inspected
+without dumping the snapshot. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Acquired layer 6 static declaration | Earthbind, Johan | 1 name / 6 records, Earthbind | Earthbind needs only this adapter. Johan additionally needs an optional layer-action payment, acquired CantAttack rule adapter and conditional attack-without-tap permission. A reusable acquired source/declaration/layer context supplies its prerequisite. | Small engine lifecycle and scheduler extension, narrow RON adapter, ordering and native Aura tests. |
+| Live damage-history collection plus both consumers | Runesword | 1 name / 1 record only after all consumers | Existing damage history must supply exact live subjects to both no-regeneration and death-exile rules; history alone unlocks zero. Shared live history enables subsequent damage-based collection operations. | Larger cross-subsystem history, replacement and regeneration ordering tests. |
+| Simultaneous coin outcomes and repeat continuation | Mana Clash | 1 name / 1 record only after the whole procedure | Per-player coin producer, CoinCameUpTails selection, AllCoinsCameUpHeads predicate and RepeatThisProcess must share each iteration. Existing repeated entry supplies no coin contract. Per-player results and bounded deterministic continuation are reusable. | Larger decision/RNG, simultaneous damage and continuation lifecycle tests. |
+
+Candidate #1 is dependency-ready and provides the first-ranked shared
+prerequisite with an immediate six-record gain. This slice implements one
+complete layer 6 acquired continuous-rule context. It does not broaden Johan's
+payment or combat adapter. The implementation separates a missing compiler
+adapter from the engine's missing acquired static declaration and same-pass
+activation contract. No source-data defect or baseline build/test failure was found.
+
+### Contract, signatures and reuse boundary
+
+Engine API:
+`AcquireStaticAbility(subject PermanentRef, rule StaticRule) ResolvingEffect`.
+The supported rule is While/WhileWithSharedSubjects with layer 6 modifications
+and no nested activated/triggered grants. Each resolution saves the recipient's
+exact battlefield visit and creates a fresh StaticAbilityHolder. The independent
+grant and the ability's own effects remain separate ordered layer entries.
+The acquired declaration is a fresh validation binding scope and battlefield
+source context, so outer resolving bindings cannot leak into a live static rule.
+Invalid rule kinds, empty/nil rules, other layers and unbound reads reject.
+
+The rule uses the recipient's live controller, source and attachment context.
+Earlier ability removal can be followed by acquisition. Later removal stops the
+static rule, even though the independent granting effect remains. Layer passes
+retain inactive effects and reconsider them after earlier effects: the acquired
+rule must run in the same pass as its grant. Shared dependency probing and
+ordering apply; attachment retimestamping includes acquired static declarations.
+Phasing suspends rules and preserves the saved visit. Departure/return cannot
+inherit acquisition. Donor departure cannot end a different recipient's rule.
+Independent acquisitions have distinct IDs without duplicate declarations on
+repeated layer passes. Game clones keep separate runtime state. Explicit source recipients declare
+waiting delayed references through refersToSourcePermanent without resolving
+the subject or executing the rule. The acquired rule has its own future source
+context, so its reads and implicit attachments do not leak into waiting queries.
+
+RON supported shape, in an Aura's resolving action context:
+`CreatePermanentLayerEffect(ThisPermanent, [AddAbility([PermanentLayerEffect(HostPermanent, [LosesAbility(keyword)])])])`.
+One fixed supported keyword is required. Other recipients, subjects, mixed
+grants and layers reject before gameplay. RON owns syntax and context checks;
+the engine owns acquisition, declarations and execution. Nested semantic
+inventory now identifies HostPermanent as a permanent reference and LosesAbility
+as a static modification rather than untyped descendants of a keyword.
+
+Shared source/host references, intervening-if checks, Aura entry ordering,
+source LKI, damage/prevention, casting transactions, stack copies, permanent
+incarnations, phasing, cloning, runtime granted wrappers and layer dependency
+services are reused. No zone, damage, replacement, payment or layer subsystem
+was duplicated in RON. No Go-card fallback or card-name branch was introduced.
+Existing callers and production Go definitions remain; removal gates are unmet.
+
+Local data/LEA.json confirms Earthbind's full conditional damage and acquired
+host removal. CR 400.7, 604.2/4/7, 611.2a/c, 611.3a, 613.1f, 613.7a/b/e and
+613.8a-c support the lifecycle and layer contract. No RON changed; identical
+reprints need no source correction and the vocabulary snapshot is unchanged.
+Gaea's Liege and Fastbond remain separate source audits.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial full-record RON tests fail at unsupported temporary keyword
+PermanentLayerEffect for each of the six Earthbind records. The corrected
+engine red run fails only at undefined AcquireStaticAbility signatures. Initial
+engine fixture mistakes (Aura constructor, PhaseIn slice and cost constructor)
+were corrected before that expected red run.
+
+A later contract-audit red test fails because delayed acquisitions omit their
+explicit source from WaitingDelayedPermanentSources. The engine adds the
+existing source-read declaration hook. The passing test checks original visits
+after return, query purity, clone waiting lifetime and implicit attachment exclusion.
+
+Later fixture corrections preserve rules assertions: a phased Aura alone does
+not phase its host, and its pending damage can use source LKI. A copied trigger
+rechecks flying after the first resolution removes it, so it does not deal damage
+twice. Attaching an Aura to its existing host is a no-op; timestamp evidence uses
+a move to another host and back. The recipient-context test uses a live attachment
+rather than an unannounced target binding. The inventory test reads Signatures,
+the existing report API. These are fixture corrections, not weakened behavior.
+
+| Card/context | Evidence |
+| --- | --- |
+| Complete Earthbind, all six reprints | TestRONAcquiredStaticEarthbind casts each full record, checks rollback before mana, then pays and verifies 2 damage and loss of flying. |
+| Complete Earthbind timing/lifecycle | TestRONAcquiredStaticTiming checks nonflying entry, flying gained/lost between detection and resolution, Aura departure/return, host return, Aura phasing, control, reattachment, copied trigger, prevention, ability removal, later flying and attachment retimestamping. Pending game clones preserve facts and isolate later changes. |
+| Native strict loading and spell copies | TestRONAcquiredStaticNativeLoadAndCopy loads the complete record into an explicit registry, casts physical and copied Aura spells, verifies both attachments and entry conditions in original/cloned games, rejects an invalid collection atomically, and checks typed inventory roles. |
+| Engine lifecycle | TestAcquiredStaticLifecycle covers current host, saved recipient return, donor/host departure, phasing, earlier/later removal, later keyword grants and clone isolation. |
+| Engine per-acquisition identity/context | TestAcquiredStaticIndependentDeclarations checks distinct IDs, stable repeated layer passes and clone lifetime. TestAcquiredStaticRecipientContext verifies a different recipient supplies source/controller, and donor departure does not end acquisition. |
+| Invalid declarations | TestRONAcquiredStaticInvalid rejects wrong subjects/recipients, malformed keywords, empty rules, mixed grants, wrong layers and missing Aura context. TestAcquiredStaticInvalid rejects nil/empty/wrong-layer rules, missing conditions and unbound static references. TestAcquiredStaticWaitingReferences checks exact saved sources and excludes nested static and implicit host reads. |
+| Existing accepted records | Updated exact collection-count assertions and changed the obsolete Earthbind rejection assertion to full-record success; retained its independent entry-condition fixture. Whole-repository tests retain accepted RON and Go-card regressions. |
+
+### Validation and coverage
+
+Final focused `go test ./pkg/mage/dsl/ron -run TestRONAcquiredStatic -count=1`
+and engine `go test ./pkg/mage -run TestAcquiredStatic -count=1` pass in both
+trees. Shared focused timings are 0.480s/0.378s; isolated 0.669s/0.445s.
+Both pass `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, and `make test` after the waiting-reference
+integration. Final RON short/full timings are shared 47.733s/45.564s and
+isolated 49.506s/46.654s. Accepted RON and existing Go-card regressions pass.
+
+Final `make lint` reports 0 issues in both trees. Automatic changes were limited
+to import grouping and a strings.SplitSeq loop in the new tests. These were
+reviewed; the final focused/short/full checks include the formatted code.
+A parallel final shared lint attempt hit golangci-lint's global process lock
+while isolated lint was active. Shared lint was rerun serially after isolated
+completion and passed. This transient tool-concurrency failure is resolved;
+no required check remains blocked. `git diff --check` passes in both trees,
+and the staged patch passes `git diff --cached --check`.
+
+Final `go run ./cmd/loadcards -json` exits 1 solely for collection rejection
+in both trees, with no partial production registry. Shared: 828 accepted /
+158 rejected names, 2,149 compiled / 296 rejected records. Isolated: 827 accepted /
+159 rejected names, 2,148 compiled / 297 rejected records. Both contain
+986 unique names / 2,445 records. Earthbind has zero diagnostics. Johan still
+rejects optional payment cost CreatePermanentLayerEffectUntil; Runesword still
+rejects collection attack operation CantBeRegenerated; Mana Clash still rejects
+RepeatableActions. None of these remaining declarations was partially enabled.
+
+Actual compilation and complete RON gameplay gain is **1 unique name / 6 records**,
+Earthbind, matching the estimate. The shared fresh baseline was 827/159 names
+and 2,143/302 records. The preserved Eureka work accounts for the one-name,
+one-record difference between shared and isolated results. Compilation and
+this gameplay mapping do not prove entire-collection coverage. Runtime startup,
+Go-card deletion, generator retirement and unused DSL removal remain gated.
+RON source and vocabulary are unchanged. No source defect was corrected.
+
+Changed files: pkg/mage/acquired_static.go and acquired_static_test.go,
+effect_manager.go, definition.go and doc.go;
+pkg/mage/dsl/ron/acquired_static.go and acquired_static_test.go,
+indefinite_type.go, inventory.go, inventory_test.go, definition_plan_test.go,
+numeric_consumers_test.go and zone_intervening_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+The commit contains only this slice. The isolated checkout excludes the original
+Eureka changes and the ledger archival restructuring; those unrelated edits and
+untracked files remain in the user's worktree. No broad DSL functions or Go card
+definitions were removed.
+
+### Ranked next candidates
+
+1. Shared live damage-history subjects and both Runesword consumers. Reassess
+   complete records before selection; history alone unlocks zero. Preserve
+   exact visits, cleanup, phasing, no-regeneration and exile replacement ordering.
+2. Simultaneous per-player coin outcomes and repeat continuation for Mana Clash.
+   Implement the complete iteration contract before accepting its full record.
+3. Johan's optional layer-action payment and acquired CantAttack restriction,
+   followed by conditional attack-without-tap permission. Reuse the acquired
+   declaration context. Defer these single-card adapters while a fresh inventory
+   shows useful shared multi-card work.
+
+Migration remains incomplete. This run stops after ACQUIRED-LAYER6-STATIC-ABILITY.
