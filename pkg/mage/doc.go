@@ -2617,6 +2617,17 @@
 // The group exports keyed history but does not change TheChosenPermanent.
 // Costs, static rules and arbitrary grouped actions need separate adapters.
 //
+// Use [SacrificeAllButEach] for required permanent choices in turn order.
+// Each player chooses the subjects to keep. Later players see earlier choices.
+// Counts and members are read before choices. The rest use shared simultaneous
+// sacrifice replacements, owner destinations and departure information.
+// [LeastControlledPermanentCount] counts present matching visits for each player.
+// Empty player sets supply zero. Duplicate, phased and old visits cannot count.
+// Copies and clones read their own battlefield at resolution. No result is saved.
+// RON lowers EachPlayerAction(AnyPlayer, SacrificeAllPermanentsExceptForNum)
+// with a fixed nonnegative count or an all-player least permanent count.
+// Hand counts, optional selection results and other player sets stay separate.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

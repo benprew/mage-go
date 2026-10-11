@@ -18119,3 +18119,48 @@ Evidence: `TestAPNAPPermanentChoices`, `Declarations`, `EmptyAndAliases`;
 existing `TestRONPlayerPermanentChoiceJuxtapose` and `MixedTypes` retain real
 RON payment, targets, empty rounds, ties, self-targeting, phasing, prohibited
 exchange, fresh factories and artifact-creature behavior.
+
+
+## Required permanent cardinality choices and simultaneous sacrifice
+
+`SacrificeAllButEach(players PlayerSet, subjects PermanentSet,
+keep ResolutionValue) ResolvingEffect` reads the kept count once and saves all
+present candidates by controller before choices. Counts below zero keep zero;
+counts above available members keep all. Each selected player chooses the
+permanents to **keep**, in APNAP order, with prior players' kept names and IDs
+visible in the prompt. Selection uses distinct exact visits. Invalid chooser
+responses receive a legal required-choice fallback. No choice moves a subject.
+
+`LeastControlledPermanentCount(players PlayerSet, subjects PermanentSet)
+ResolutionValue` supplies the minimum count, including zero-member players.
+Absent and duplicate player IDs are excluded. Empty player sets supply zero.
+Duplicate permanent visits, phased subjects and old incarnations cannot count.
+The private `choosePermanentSubset` helper uses the existing `ChoosePermanent`
+decision API for an exact bounded count; it can also supply future optional
+count adapters once those adapters choose and save their own count/results.
+
+Unkept visits still controlled by the choosing player enter the existing
+`controllersSacrificePermanents` batch. Replacement choices and owner graveyard
+ordering precede all moves. Indestructible and regeneration do not stop sacrifice.
+Cancellation and exile replacement do not cause new choices. Shared zone events
+retain departure LKI and the former battlefield. CR 101.4, 101.4b, 608.2d and
+701.21a supply the choice, ordering and sacrifice contracts. No persistent choice
+or last-action state is added. Copies, clones and delays use their own current
+resolution context. Waiting queries inspect declarations without making choices.
+
+RON accepts `EachPlayerAction(AnyPlayer,
+SacrificeAllPermanentsExceptForNum(collection, count))` in resolving action lists.
+`count` is `Integer(n)` with n >= 0, or
+`TheLowestNumberOfPermanentsControlledAmongPlayers(collection, AnyPlayer)`.
+Collections use existing typed resolving adapters, including saved singular
+targets. Target selection and resolution legality remain with their declarations.
+Other player sets, cost/static contexts, hand equalization, optional selections,
+and saved plural choice results remain unsupported. The least-count spelling
+is supported in this count context only.
+
+Evidence: `TestPermanentCardinalityChoicesAndBatch`, `LeastAndDeclaration`,
+`BoundsIdentityAndFallback`, `ReplacementsAndWaiting`; RON
+`TestRONPermanentCardinalityBalanceInstructions`, `Invalid`,
+`TargetsCopiesAndDelay`, `RolesAndInventory`. All six Balance reprints supply
+unchanged land and creature instructions. The full card remains rejected at
+`DiscardAllButNumberCards`; instruction coverage is not full-card gameplay.

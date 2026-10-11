@@ -2,16 +2,15 @@
 
 ## Current status
 
-The isolated slice reports **843 accepted / 143 rejected names** (986 total),
-**2,179 compiled / 266 rejected records** (2,445 total). With pre-existing Eureka,
-the shared worktree reports **844/142 names** and **2,180/265 records**.
-The strict loader rejects the collection and publishes no partial registry.
+The shared worktree reports **844 accepted / 142 rejected names** (986 total),
+**2,180 compiled / 265 rejected records** (2,445 total). HEAD plus this slice
+reports **843/143 names** and **2,179/266 records**; pre-existing Eureka explains
+that difference. The strict loader publishes no partial registry.
 
-APNAP-PERMANENT-CHOICE-GROUPS saves choosers before required choices in turn
-order. Separate frame bindings retain exact visits, LKI, copies and delays.
-Juxtapose now uses explicit groups in both exchange rounds, correcting its
-caster-first tie-choice source defect. Compilation gains **zero names/records**;
-complete Oracle gameplay gains **one card**, Juxtapose.
+PERMANENT-CARDINALITY-SACRIFICE adds required kept-count choices in APNAP order,
+a shared bounded subset selector and simultaneous sacrifice. Balance's exact
+land and creature instructions now execute in all six reprints. Its hand round
+remains unsupported. Compilation and complete-card gains are **zero**.
 Existing user work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -74924,3 +74923,155 @@ removal gates are unmet. No DSL function is removed in this slice.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain open. This run stops after grouped permanent choices.
+
+
+## Run 2026-10-11: PERMANENT-CARDINALITY-SACRIFICE
+
+Status: one complete required permanent cardinality slice. No next slice is started.
+
+### Candidate comparison and selection
+
+The latest entry ranks shared cardinality choices, state-member capture and
+shared-type target comparison. Full records and nested forms were read for
+Balance (six reprints: LEA, LEB, 2ED, 3ED, CED, CEI), Raiding Party (FEM),
+City in a Bottle (ARN) and Gauntlets of Chaos (LEG). Names count once.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers | Downstream capabilities | Effort |
+| --- | --- | --- | --- | --- | --- |
+| Required permanent cardinality choices and shared subset selector | Balance directly; Raiding Party can reuse the bounded selector | Zero compiled names and zero complete gameplay cards | Balance: mandatory hand equalization. Raiding Party: optional tapping, actual per-player tap counts, saved plural choices and NotChosenThisWay | Exact kept-count choices, optional bounded subset adapters, later shared result collection and batches | Moderate: one native operation/value, selector, RON adapter and lifecycle tests |
+| State-member capture | City in a Bottle | Zero | Global spell casting and land-play restrictions | State-event member bindings and simultaneous controller sacrifice | Moderate: new capture and detection contract; no complete card |
+| Dependent shared-type target comparison | Gauntlets of Chaos | Zero | Exact exchange-result binding/condition; missing Aura-only source restriction | Cross-target legality and outcome branches | Moderate: target dependency and recheck tests; no complete card |
+
+Candidate #1 is dependency-ready as a shared prerequisite. Existing singular
+choices and simultaneous sacrifice provide the decision and movement contracts;
+a bounded distinct-subset selector closes the missing cardinality contract.
+It supplies Balance's two permanent rounds and can be reused by Raiding Party
+once its optional count and typed results are implemented. Hand equalization
+and optional result capture are separate slices, so no complete card is promised.
+Targeted compiler inspection corrects the earlier Gauntlets estimate: attachment
+unions already have contextual collection adapters; its outcome condition is
+still missing. Its attachment expression also lacks the Oracle Aura restriction
+(see source evidence below). No card-name branches, Go fallback or production partial registry
+are added. Estimated and actual complete-card/compilation gains are both zero.
+
+### Signatures, contexts, dependencies and reuse
+
+`SacrificeAllButEach(players PlayerSet, subjects PermanentSet,
+keep ResolutionValue) ResolvingEffect` reads the kept count once and saves
+present candidates grouped by controller before any choice. Each selected player
+chooses the permanents to keep in APNAP order. Prior players' kept names and IDs
+are visible. Negative native counts keep zero; excessive counts keep all.
+Distinct required selections use the private `choosePermanentSubset` helper
+and the existing ChoosePermanent player API. Invalid responses get a legal
+required-choice fallback. There is no persistent selection binding or global slot.
+
+`LeastControlledPermanentCount(players PlayerSet, subjects PermanentSet)
+ResolutionValue` supplies the minimum present count, including players with zero
+members. Empty player sets supply zero. Unknown/duplicate players and duplicate,
+old or phased permanent visits cannot inflate the count. Both operations keep
+pure waiting declaration inspection; the numeric source walker now recognizes
+source reads through this value, including wrapped values.
+
+RON lowers `EachPlayerAction(AnyPlayer,
+SacrificeAllPermanentsExceptForNum(collection, count))` in resolving sequences.
+The count is `Integer(n)` with n >= 0, or
+`TheLowestNumberOfPermanentsControlledAmongPlayers(collection, AnyPlayer)`.
+Both collections use existing typed contextual adapters. The least-count syntax
+is supported in this kept-count context only. Malformed arities, negative fixed
+RON counts, unbound references, other player sets, costs/static declarations
+and singular PlayerAction use are rejected. Hand counts, optional cardinality
+and saved plural results remain separate. Fresh factories, copies, clones and
+delays retain existing execution contexts without new mutable definition state.
+
+Unkept exact visits use `controllersSacrificePermanents`. Its shared replacement
+preparation, owner graveyard order, simultaneous movement, LKI and sacrifice
+controller events are preserved. Indestructible and regeneration do not prevent
+sacrifice. Cancellation/exile replacement does not cause new choices. Source
+exit does not cancel an already resolving or saved delayed body. Target legality
+remains with the original declarations; a returned object cannot replace one.
+
+### Source evidence and card-to-test mappings
+
+Local data/LEA.json Oracle text requires each player to choose lands to keep equal
+to the smallest count, then sacrifice the rest; creatures use the same method.
+The unchanged six RON records encode these permanent instructions. CR 101.4 and
+101.4b establish APNAP and visible prior choices; CR 608.2c-d establish sequential
+instructions and required legal choices; CR 701.21a establishes sacrifice.
+Raiding Party's local data/FEM.json text confirms optional count/subset selection
+and later shared exclusions as concrete downstream work. Balance has no source
+change. Candidate review finds a separate Gauntlets of Chaos defect:
+LEG.lines.ron:95 destroys every AttachedToPermanent member without an Aura filter,
+while local data/LEG.json Oracle text says "destroy all Auras attached to them".
+CR 303.4 distinguishes Auras from other attached objects, including Equipment
+(CR 301.5). Existing attachment collections include those other objects. This
+remains a source defect for the Gauntlets slice; it is not silently narrowed in
+the engine or corrected as unrelated work here. RON sources and vocabulary source hashes stay
+unchanged; the user's existing vocabulary changes are preserved.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Balance land and creature instructions in all six reprints | TestRONPermanentCardinalityBalanceInstructions executes each exact source instruction with the original mana cost, failed payment, resolution and cloned games; the full record remains rejected at DiscardAllButNumberCards. This is two instruction mappings, not full-card coverage. |
+| Required kept choices, APNAP visibility and simultaneous events | TestPermanentCardinalityChoicesAndBatch tests both active players, visible prior choices, chosen-kept identities, indestructible subjects, former battlefield and simultaneous sacrifice events. |
+| Minimum counts and declarations | TestPermanentCardinalityLeastAndDeclaration tests current counts, phased exclusions and nil API fields. |
+| Bounds, identity and hostile choice responses | TestPermanentCardinalityBoundsIdentityAndFallback tests negative/zero/excessive counts, multiple kept members, duplicate/unknown players, duplicate subjects, returned visits, phasing and distinct legal fallbacks. |
+| Replacement preparation and waiting queries | TestPermanentCardinalityReplacementsAndWaiting tests APNAP replacement preparation, cancellation, no partial moves, pure numeric source dependencies, source departure and independent clone lifetimes. Existing TestControllersSacrifice* keeps exile ordering, owner destinations, tokens and departing replacement sources. |
+| Typed targets, copies, clones and delays | TestRONPermanentCardinalityTargetsCopiesAndDelay tests current controllers, illegal returned/phased targets, phase cycles, copied spells, independent clone legality, delayed current counts and departed sources. |
+| Invalid forms and strict collection publication | TestRONPermanentCardinalityInvalid and RolesAndInventory test invalid arities/counts/scopes/roles, nested inventory roles and atomic rejection beside a valid record. |
+
+### Validation and loader evidence
+
+Fresh shared baseline: make build passes; RON short tests pass (42.085s).
+Loader exits 1 with 2,180 compiled / 265 rejected records and 844 accepted /
+142 rejected names. Collection rejection is distinct from a build/test failure.
+HEAD is c8c7dfac. The initial 21 modified/untracked paths are preserved.
+
+Failing-first RON tests reject SacrificeAllPermanentsExceptForNum, while native
+tests fail compilation for the missing SacrificeAllButEach and minimum-count
+APIs. Implementation passes focused native and RON tests. An inventory test
+initially counts contextual signatures as names; it is corrected to check both
+required name/role pairs, retaining its strict declaration and atomic-load checks.
+
+Required shared validation passes: focused RON/native tests, make build,
+go vet ./..., go test ./pkg/mage/... -short -count=1 (RON 42.113s), make test
+(RON 42.616s), make lint and git diff --check. Lint modernizes one fallback to
+max and identifies two new test preallocations. Both are fixed; final lint reports
+zero issues. Affected focused tests pass again, and build/vet are repeated after
+the production modernization. No environment or pre-existing check failure is
+found. An isolated HEAD-plus-slice checkout also passes focused native/RON tests,
+build, vet and go test ./... -short -count=1, proving no dependency on user work.
+
+Final shared loader exits 1 with unchanged 2,180/265 records and 844/142 names.
+Only the six Balance first diagnostics advance to DiscardAllButNumberCards
+(line 11 or 14, column 354). All other diagnostics match the baseline; accepted
+records are retained. The isolated loader exits 1 with 2,179/266 records and
+843/143 names. Pre-existing Eureka accounts for the one-record/name difference.
+Neither loader publishes a partial registry. Actual complete-card and compiled
+name/record gains are zero, as estimated. Gameplay coverage gains Balance's two
+permanent instructions, with six-reprint evidence; its full-card mapping remains
+incomplete.
+
+
+No Go definitions, runtime consumers or broad DSL functions are removed: complete
+collection gameplay and runtime cutover gates remain unmet. No whole-repository
+caller removal audit is needed because this slice removes no authoring function.
+Changes cover four new engine/compiler/test files, each-player lowering, inventory
+roles, the numeric source walker, engine/API documentation and this ledger.
+Only these changes are staged; the pre-existing ledger split, Eureka work,
+execution design, vocabulary, unrelated tests and untracked files are preserved.
+
+### Ranked next candidates
+
+1. Reassess shared bounded optional permanent selection and plural result capture
+   for Raiding Party. This selector is available; actual tap outcomes and saved
+   exclusion unions still need their own contracts. Do not claim full-card gains
+   from a count adapter alone.
+2. Mandatory hand cardinality equalization for Balance. Its two permanent rounds
+   are now supported; an exact hand-choice and simultaneous discard contract can
+   complete its sole remaining instruction. Compare this single-card gain with
+   the current shared-capability inventory before selection.
+3. State-member capture for City in a Bottle and dependent shared-type target
+   comparison for Gauntlets of Chaos, with its documented Aura-only source defect. Each still estimates zero complete-card
+   gains without its additional restriction or outcome prerequisite.
+
+Complete collection gameplay, runtime loading, Go-card deletion and unused DSL
+cleanup remain open. This run stops after required permanent cardinality.
