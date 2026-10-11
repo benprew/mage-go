@@ -13702,3 +13702,26 @@ Goblin Artisans uses this adapter with a creature, fixed-name and other-source
 conjunction. The ATQ RON record includes the Oracle creature restriction.
 `TestRONSpellAbilityExclusion*` covers the complete record and declaration
 boundaries; `TestSpellAbilityExclusionIdentity` covers native identity queries.
+
+## RON global battlefield-absence state trigger
+
+`TriggerA(WhenNoPermanentsAreOnTheBattlefield(filter), actions)` lowers to
+`mage.WhenState(mage.BattlefieldHasNone(filter), body)` in ordinary battlefield
+rules. The filter uses the context-free permanent-filter compiler. Nested
+`And` and `Or` lists must be nonempty. Source, controller, target, choice and
+event references in the filter are rejected. The event supplies no bindings.
+Targets and body declarations are built afresh for each factory instance.
+
+The condition reads current unphased permanents under both players, including
+tokens and the source. Current layers determine membership. Source phasing,
+departure and ability removal stop detection. One trigger can be pending or
+stacked for each source visit and rule. A later matching entry does not cancel
+the body. Resolution and countering permit a new trigger if the state still
+holds. Pending bodies retain their controller and exact source visit. Shared
+target, sacrifice, replacement, copy and clone services retain their contracts.
+
+`TestRONBattlefieldAbsence*` covers the exact Mana Vortex and Drop of Honey
+subrules, declaration rejection, atomic loading, semantic inventory, membership,
+target legality and lifecycle. The full cards remain rejected for `FromStack`
+and `DestroyAPermanentNoRegen`, respectively. Native mechanics are covered by
+`TestBattlefieldAbsenceBatchAndReplacement`; no new engine API is needed.

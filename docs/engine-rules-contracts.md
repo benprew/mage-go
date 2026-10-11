@@ -17903,3 +17903,36 @@ clones, tap payment, sickness, multiple sources and exact return identity.
 `Invalid`, `Contexts` and `Records` check declaration rejection, fresh factories,
 semantic inventory and atomic collection loading. Local `data/ATQ.json` Oracle
 text requires another creature with the fixed name; the RON omission is corrected.
+
+### RON global battlefield-absence state trigger
+
+`WhenNoPermanentsAreOnTheBattlefield(filter)` uses the existing typed
+`BattlefieldHasNone(PermanentFilter) StateCondition` and
+`WhenState(StateCondition, ResolvingEffect, ...TriggerOption) TriggeredAbility`
+contracts. The pure query includes both players, tokens and the source when
+they match. Membership uses current layers and excludes phased permanents.
+No player or permanent event result is produced.
+
+CR 603.8 requires one pending or stacked instance per source incarnation and
+declaration. Countering or resolution permits another detection while the state
+holds. This is not an intervening-if clause: later matching permanents do not
+cancel a pending trigger. Source departure, phasing and ability removal stop
+new detection but do not remove pending bodies (CR 113.7a, 603.3a). Detection
+saves the controller and source visit; a return cannot supply that visit
+(CR 400.7). A controller change can prevent the old controller from sacrificing
+the source, then permit a new trigger under the current controller.
+
+Target announcement occurs at stack placement; legality is checked again at
+resolution (CR 603.3d, 608.2b). No legal target removes that instance and permits
+later detection. Phasing preserves the visit but prevents sacrifice while
+phased (CR 702.26). Copies keep the saved source; their controller must have
+permission to sacrifice it. Clones retain independent state and pending bodies.
+The existing zone batch defers state checks until all simultaneous moves finish.
+Sacrifice retains replacement choices and owner destinations; indestructible
+and regeneration cannot stop it (CR 701.21).
+
+Evidence: `TestRONBattlefieldAbsenceRealRules`, `Pending`, `Targets`,
+`PhaseAndLayers`, `Invalid`, `RecordsAndInventory`, and native
+`TestBattlefieldAbsenceBatchAndReplacement`. No cost, replacement-order or
+zone service is added. Complete Mana Vortex and Drop of Honey gameplay remains
+blocked by their other rules.

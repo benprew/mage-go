@@ -69,6 +69,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return compileControllerPresenceTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerControlsNoPermanents":
 		return compileNoLandTrigger(trigger, n.Args[1], ctx)
+	case "WhenNoPermanentsAreOnTheBattlefield":
+		return compileBattlefieldAbsenceTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentIsPutIntoAPlayersGraveyard":
 		return compileGraveyardTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerTapsAPermanentForMana", "WhenAPermanentIsTappedForMana":

@@ -7,15 +7,14 @@ The isolated slice reports **840 accepted / 146 rejected names** (986 total),
 the shared worktree reports **841/145 names** and **2,177/268 records**.
 The strict loader rejects the collection and publishes no partial registry.
 
-STACK-ABILITY-TARGET-EXCLUSION executes permanent activated spell target
-predicates through immutable spell filters and exact stack/source identities.
-Complete Goblin Artisans has RON gameplay tests for tap payment, sickness,
-coin outcomes, drawing, countering and source exclusion. Current characteristics,
-LKI, phasing, copies, clones, legality rechecks and return use shared services.
-The ATQ record now includes the missing Oracle creature restriction.
-Compilation gain is **one name / one record**. City in a Bottle still needs
-captured state members and global restrictions; Mana Vortex needs stack-source
-casting and global no-land detection. Existing work remains preserved.
+GLOBAL-BATTLEFIELD-ABSENCE executes ordinary battlefield state triggers with
+context-free filters and shared state arming. Mana Vortex and Drop of Honey
+have exact RON state-subrule gameplay tests for both players, tokens, layers,
+phasing, pending identity, targets, sacrifice replacements, copies and clones.
+Compilation gain is **zero names / zero records**, as estimated. Mana Vortex
+still needs stack-source self-cast detection; Drop of Honey needs minimum-power
+destruction choice. City in a Bottle still needs captured state members and
+global restrictions. Existing work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -74077,3 +74076,153 @@ are not met. No Go-card fallback or name-specific executor is introduced.
    payment; keep detection on the spell's exact stack visit.
 
 This run stops after stack ability target exclusion. Migration is incomplete.
+
+
+## Run 2026-10-11: GLOBAL-BATTLEFIELD-ABSENCE
+
+Status: complete supported battlefield state-trigger adapter. No full-card
+unlock is claimed. This run implements one capability and stops.
+
+### Candidate comparison and selection
+
+The latest ranked candidate was evaluated first. Full records and nested forms
+were read from ARN City in a Bottle and Drop of Honey, and DRK Mana Vortex.
+Targeted vocabulary evidence finds one captured-state occurrence and two global
+absence occurrences. Reprints count once; none of these three cards has a
+reprint in this collection.
+
+| Candidate | Distinct affected names | Estimated immediate full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: captured battlefield-state members | City in a Bottle | 0 | CantCastSpells and CantPlayLandsOfType still require adapters. Needs typed plural detection snapshots transported through pending bodies, stack copies and clones. Reuses name catalogs and controller sacrifice batches; no additional immediate card unlock is established. | New engine capture contract plus compiler scope and lifecycle tests; high relative to absence. |
+| Ranked #2 broadened to all collection occurrences: global battlefield absence | Mana Vortex; Drop of Honey | 0 | Mana Vortex still needs FromStack self-cast detection. Drop of Honey needs DestroyAPermanentNoRegen with a live minimum-power selection and controller choice. Enables both cards' exact state rules with existing shared mechanics. | Small compiler adapter plus declaration, gameplay, native batch and lifecycle tests. |
+| Ranked #3: stack-source self-cast | Mana Vortex | 0 before absence; 1 after it | SingleSpell(ThisSpell), stack-zone source lifecycle and captured spell identity need support. Optional matching-land sacrifice already has shared payment services. Enables the complete card once global absence is available. | New stack-source detection contract and timing/identity tests; medium. |
+
+Select global absence: the smallest dependency-ready shared prerequisite for
+two unique cards. City capture has no demonstrated second-card benefit and
+requires a new capture mechanism. Stack-source self-cast would address only
+one card and still leave the shared absence dependency. Selection follows
+complete nested requirements rather than first-error counts.
+
+### Supported signature, contexts and reuse boundary
+
+`TriggerA(WhenNoPermanentsAreOnTheBattlefield(filter), actions)` is supported
+in ordinary battlefield rules. Its event must be a tuple with exactly one
+context-free permanent filter. Nested And/Or lists must be nonempty. The
+existing filter compiler validates scalar kinds, arities and enum operands.
+Source-relative, controller, target, choice and event references remain rejected.
+This event creates no player, permanent or damage bindings. Action bodies and
+optional targets use the existing fresh per-factory declarations. Semantic
+inventory gives the event argument the permanent_filter role.
+
+Engine signatures reused without wrappers or production changes:
+`BattlefieldHasNone(f PermanentFilter) StateCondition` and
+`WhenState(condition StateCondition, effect ResolvingEffect,
+options ...TriggerOption) TriggeredAbility`. RON owns spelling and validation;
+the engine owns live membership, state arming, saved controller/source identity,
+targets, APNAP placement, zone batches, sacrifice replacements and cloning.
+No new engine API, global last-action slot, cost or replacement service is needed.
+
+Both players' present permanents can match, including tokens and the source.
+Current layers determine membership. Phasing excludes members and stops source
+detection. One trigger can be pending or active for each source visit and rule.
+A later matching entry does not cancel it; this is not an intervening-if guard.
+Countering and resolution permit another trigger while the state remains true.
+Departure and ability removal stop detection without canceling pending bodies.
+Return cannot supply a saved visit; phasing preserves it but prevents actions
+while phased. Copies keep the source and use their own controller's sacrifice
+permission. Clones keep independent battlefield state and pending bodies.
+Target choices occur at placement, then legality is checked again at resolution.
+No legal target removes that instance and allows later detection.
+
+The shared simultaneous zone batch defers state checks until movement finishes.
+Sacrifice retains replacement choices, owner destinations and cancellation;
+regeneration and indestructible cannot stop it. Native tests cover cancel/rearm,
+exile destinations, both controllers and clone isolation. Applicable contracts
+are CR 113.7a, 400.7, 603.3a/603.3d/603.8, 608.2b, 701.21 and 702.26.
+There is no cost to pay in this event adapter, no new LKI information read and
+no replacement ordering rule; existing services remain the reuse boundary.
+
+### Card-to-test mapping and coverage limits
+
+| Card or contract | Tests |
+| --- | --- |
+| Mana Vortex, exact DRK global no-land rule | TestRONBattlefieldAbsenceRealRules; Pending; PhaseAndLayers. Own/opponent/token/type/control membership, source matching, arming, late land, counter/rearm, removal before/after detection, saved controller, departure/return, phase cycles, copies, clones, owner destination and exile replacement. |
+| Drop of Honey, exact ARN global no-creature rule | TestRONBattlefieldAbsenceRealRules; RecordsAndInventory. Same global membership contract with creature operands and fresh definitions. Full upkeep minimum-power destruction is explicitly still rejected. |
+| Shared target and lifecycle service | TestRONBattlefieldAbsenceTargets: placement timing, return, phasing, shroud, wholly illegal bodies, no-target removal/rearm and a late land that does not cancel the trigger. PhaseAndLayers covers ability restoration, current type layers and nonempty nested groups. |
+| Native global state and simultaneous movement | TestBattlefieldAbsenceBatchAndReplacement: opposite-controller membership, independent sources, shared zone batch, cancellation/rearm, exile replacement, regeneration/indestructible, current owners, late matching entry and clone isolation. |
+| Declaration and collection safety | TestRONBattlefieldAbsenceInvalid and RecordsAndInventory: event/filter arity, enum and scalar kind errors, nested empty groups, unbound references, source-zone rejection, fresh ability IDs, semantic role and atomic LoadFS/LoadInto. |
+
+Tests extract exact subrules from complete real records as explicit test-only
+fixtures. Production still compiles every complete record and rejects remaining
+gaps. Complete Mana Vortex fails on FromStack; complete Drop of Honey fails on
+DestroyAPermanentNoRegen. Compilation gain is zero names/records as estimated;
+gameplay coverage adds two exact state subrules, not two complete cards.
+No source defect is found or corrected. RON source and vocabulary snapshot stay
+unchanged. Accepted records and their census assertions remain unchanged.
+
+### Validation and preservation
+
+Fresh shared baseline: make build and RON short tests pass (41.294s); strict
+loader exits 1 with 2,177 compiled / 268 rejected records and 841 accepted /
+145 rejected names. Fresh isolated cbe5a1fa baseline: make build passes; strict
+loader exits 1 with 2,176 compiled / 269 rejected records and 840 accepted /
+146 rejected names. The shared Eureka work explains the one-record difference.
+Both contain 2,445 records / 986 names; collection rejection is not build failure.
+
+Failing-first evidence: TestRONBattlefieldAbsenceRealRules, Pending and
+RecordsAndInventory fail on unsupported WhenNoPermanentsAreOnTheBattlefield
+before implementation, for both real records and the synthetic registry. Native
+tests confirm the existing mechanics already pass; no engine replacement is
+introduced. Extra test APIs that do not exist are corrected to existing
+RunStepWithPriority and AddCardType services. A member phase test now performs
+the explicit state check before stack placement. A controller-change test adds
+a matching land to isolate the old pending body's permission from a new
+controller's later state trigger. No production behavior assertion is weakened.
+
+Required checks pass in both isolated and shared trees, in fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONBattlefieldAbsence -count=1`,
+`go test ./pkg/mage -run TestBattlefieldAbsence -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+`make lint`, and `git diff --check`. Both lint runs report zero issues.
+No automatic lint edits change this slice or the existing overlapping edits.
+Post-lint RON/native focused tests pass in both trees. RON short/full times
+are 41.095s/51.133s isolated and 87.740s/71.830s shared. No validation check
+is blocked by the environment or a pre-existing failure.
+
+Final `go run ./cmd/loadcards -json` exits 1 in both trees because unsupported
+records remain. Isolated: 2,176 compiled / 269 rejected records, 840 accepted /
+146 rejected names. Shared: 2,177 compiled / 268 rejected records, 841 accepted /
+145 rejected names. Both complete JSON results are identical to their fresh
+baselines, including every diagnostic; no accepted record is lost. Actual
+compilation gain is zero, matching the estimate. Subrule gameplay advances for
+two unique cards; complete-card coverage does not advance. Strict collection
+loading continues to publish no partial production registry.
+
+The pre-existing contents of all five overlapping modified files are checked
+against saved snapshots after removing only this slice's additions. They match
+exactly. Unrelated modified and untracked files remain outside the commit.
+
+Changes: battlefield_absence.go and its RON tests; trigger dispatch and inventory
+role; native battlefield_absence_test.go; engine reference and API/rules contract
+sections; current summary and this appended ledger entry. No source definitions,
+startup wiring, generators or old DSL functions are removed: the complete loading,
+runtime/test migration and caller-audit removal gates are not met.
+
+Implementation and commit use an isolated checkout of cbe5a1fa. The shared
+workspace retains the existing Eureka/repeated-entry changes, ledger reorganization
+and unrelated untracked files. Only this slice is committed; equivalent changes
+are applied to the shared workspace and the same checks are run there.
+
+### Ranked next candidates
+
+1. Mana Vortex stack-source self-cast: now one potential complete name/record.
+   Reuse controller cast captures and optional sacrifice payments, but establish
+   detection and pending source identity on the exact stack visit first.
+2. Drop of Honey minimum-power destruction choice: one potential complete name.
+   Establish non-target controller choice from current minimum-power creatures,
+   shared no-regeneration destruction and empty/tied sets before lowering.
+3. City in a Bottle captured-state members: zero immediate names until global
+   name-based casting and land restrictions follow. Compare plural capture and
+   the restriction contracts against remaining multi-card capabilities.
+
+This run stops after global battlefield absence. Migration is incomplete.

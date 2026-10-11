@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON global absence state triggers use [BattlefieldHasNone] and [WhenState].
+// Present permanents under either player can match, including tokens and the
+// source. Current layers determine membership. Phasing stops selection and
+// source detection. Each source visit and rule keeps one pending or active
+// trigger. Later entries do not cancel it. Pending bodies keep their controller
+// and source visit. Shared services keep target legality, sacrifice replacements,
+// copies and clones. Return cannot supply an earlier source visit.
+//
 // Use [SpellNotTargetedByPermanentAbility] for current stack ability targets.
 // The source filter reads the exact permanent visit or its retained information.
 // Source exclusion keeps that visit through departure, phasing and return.
