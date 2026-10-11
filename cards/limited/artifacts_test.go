@@ -202,6 +202,30 @@ func TestMeekstone(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Hill Giant", true)
 	})
 
+	t.Run("untaps_when_an_aura_drops_power_below_3", func(t *testing.T) {
+		// Meekstone reads the creature's power *after* every layer has been
+		// applied. Weakness (-2/-1) turns a 3/3 Hill Giant into a 1/2, so
+		// Meekstone no longer applies to it and it untaps normally.
+		//
+		// Regression test: Meekstone's filter used to run in layer 6, where the
+		// layer 7 P/T modifications are not yet visible, so it still saw the
+		// printed power 3 and held the shrunken creature down.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Meekstone")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Weakness")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Weakness", "Hill Giant")
+		// Attack with Hill Giant to tap it.
+		g.Attack(1, gametest.PlayerA, "Hill Giant")
+		// Turn 3 is PlayerA's next untap step.
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 1, 2)
+		// Power 1 is below Meekstone's threshold, so the untap goes through.
+		g.AssertTapped(gametest.PlayerA, "Hill Giant", false)
+	})
+
 	t.Run("small_creatures_untap_normally", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Meekstone")
