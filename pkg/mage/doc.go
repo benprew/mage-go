@@ -2433,6 +2433,15 @@
 // Clones keep separate schedules. [AtNext] retains its unbounded lifetime.
 // RON lowers AtNextEndOfCombatThisTurn with the existing capture service.
 //
+// Use [PermanentsThatDealtDamageToThisTurn] with a saved recipient visit.
+// The query keeps history after departure or phasing without retained LKI.
+// Present candidates use current membership; returned visits cannot match.
+// [SetEachBasePowerToughness] with [Until] and Indefinite captures that set
+// at resolution. Base values use layer 7b before bonuses and counters.
+// Cleanup does not end this effect. Phasing keeps its saved subjects.
+// RON lowers one fixed SetPT pair in CreateEachPermanentLayerEffect.
+// Source death rules keep separate permanent and graveyard-card bindings.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

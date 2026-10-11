@@ -1593,6 +1593,7 @@ type reverseTurnDamageHistoryPermanents struct {
 }
 
 // PermanentsThatDealtDamageToThisTurn selects current sources of damage to one permanent.
+// Saved recipient visits keep their history after departure or phasing.
 func PermanentsThatDealtDamageToThisTurn(recipient PermanentRef, candidates PermanentSet) PermanentSet {
 	return reverseTurnDamageHistoryPermanents{recipient: recipient, candidates: candidates}
 }
@@ -1604,8 +1605,8 @@ func (s reverseTurnDamageHistoryPermanents) resolvePermanents(ctx *EffectContext
 		return nil
 	}
 	var recipient capturedPermanent
-	if _, ok := s.recipient.(sourceRef); ok && ctx.sourceCaptured {
-		recipient = capturedPermanent{ctx.SourceID, ctx.sourceIncarnation}
+	if ref, ok := s.recipient.(permanentInformationReference); ok {
+		recipient, _ = ref.informationIdentity(ctx)
 	} else if p, ok := s.recipient.resolvePermanent(ctx); ok {
 		recipient = capturedPermanent{p.ID(), p.incarnationID}
 	}

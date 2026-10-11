@@ -1026,6 +1026,13 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 	if g.triggers.zoneBatch != nil && isBattlefieldLeaveEvent(evt) {
 		return
 	}
+	if isBattlefieldLeaveEvent(evt) && evt.SourceIncarnation == uuid.Nil {
+		if lki := g.zones.LKI(evt.SourceID); lki != nil && lki.Snapshot != nil {
+			captured := *evt
+			captured.SourceIncarnation = lki.Snapshot.incarnationID
+			evt = &captured
+		}
+	}
 	for _, a := range abilities {
 		ta, ok := UnwrapAbility(a).(TriggeredAbility)
 		if !ok {

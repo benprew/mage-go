@@ -2,7 +2,10 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-type permanentEventPlan struct{ name string }
+type permanentEventPlan struct {
+	name       string
+	referenced bool
+}
 
 func compileHostTapTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err := arity(event, 1); err != nil {

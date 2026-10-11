@@ -168,7 +168,7 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 	if role == "permanent_collection" && n.Kind != List {
 		if n.Name == "Ref_TargetPermanents" {
 			role = "permanent_collection_reference"
-		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" {
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" && n.Name != "DealtDamageToPermanentThisTurn" {
 			role = "permanent_filter"
 		}
 	}
@@ -980,6 +980,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"condition", "action", "action"}[index]
 			}
+		case "CreateEachPermanentLayerEffect":
+			if len(n.Args) == 2 {
+				return []string{"permanent_collection", "resolving_modification"}[index]
+			}
 		case "CreateEachPermanentLayerEffectUntil":
 			if len(n.Args) == 3 {
 				if index == 0 && n.Args[0].Name == "Ref_TargetPermanents" {
@@ -1473,7 +1477,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
 			return role
 		}
-		if (n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasBlockedByDefenderThisTurn") && len(n.Args) == 1 {
+		if (n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "damage_permanent_collection":
@@ -1607,7 +1611,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DealtDamageToAnyPlayerThisTurn" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-		if (n.Name == "WasDealtDamageByPermanentThisTurn" || n.Name == "WasBlockedByDefenderThisTurn") && len(n.Args) == 1 {
+		if (n.Name == "WasDealtDamageByPermanentThisTurn" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if (n.Name == "IsSupertype" || n.Name == "IsNonSupertype") && len(n.Args) == 1 {

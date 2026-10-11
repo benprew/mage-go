@@ -13341,3 +13341,26 @@ returned and phased attackers are excluded. Shared batch destruction permits
 regeneration and respects indestructibility. Source departure does not cancel
 the schedule. Factories, spell copies and game clones keep separate frames.
 Target-history predicates and other Glyph card prerequisites remain unsupported.
+
+### Indefinite captured RON base P/T collections
+
+`CreateEachPermanentLayerEffect(collection, [SetPT(PT(power, toughness))])`
+accepts one fixed integer pair in resolving action lists. It lowers to
+`Until(Indefinite, SetEachBasePowerToughness(subjects, Fixed(power), Fixed(toughness)))`.
+The existing contextual collection compiler supplies typed members. Empty or
+compound modifications, dynamic pairs and unbound references reject at compile
+time. This shape does not add a static layer or animate noncreature members.
+
+`DealtDamageToPermanentThisTurn(permanent)` lowers to
+`PermanentsThatDealtDamageToThisTurn(permanent, MatchingPermanents(AnyPermanent))`.
+It can participate in existing collection intersections and unions. The source
+death event now binds `Trigger_ThatPermanent` to its exact departing visit,
+separately from `Trigger_ThatGraveyardCard`. Each factory owns its declarations.
+The history query reads identity after departure or phasing without permitting
+an absent permanent to perform an action. Current creature membership is read
+when Brine Hag's trigger resolves; its resulting set stays fixed indefinitely.
+Evidence: `TestRONCapturedBasePT*` and `TestCapturedBasePT*`.
+
+Reverse turn-damage collections also declare explicit source reads to the shared
+waiting-delay query. That query does not select members or resolve the effect.
+`TestCapturedBasePTDelayedSource` checks the declaration and saved departure.

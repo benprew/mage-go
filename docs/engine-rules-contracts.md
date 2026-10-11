@@ -17387,3 +17387,36 @@ uses a strict full-record registry and independent targets; `LiveHistory` covers
 resolution-time membership and indestructibility; `Invalid` rejects malformed
 events, bodies and references. All RON names have prefix
 `TestRONBoundedDelayedStep`. Runtime collection cutover remains gated.
+
+### Indefinite captured base P/T and departed damage recipients
+
+`PermanentsThatDealtDamageToThisTurn(recipient PermanentRef, candidates PermanentSet) PermanentSet`
+uses the existing typed information-reference identity for sources, attachments,
+saved permanents and singular targets. It does not require the recipient to
+remain present or retain LKI. A returned visit cannot replace the saved visit.
+Candidates must remain present and unphased and must match the current supplied
+set. Only actual positive damage contributes; prevention supplies no history.
+Direct departure self-trigger checks now fill missing event incarnation from
+the saved departure, as `FireEvent` already does. Source death RON declarations
+use `PermanentDies().WithCard(card).WithPermanent(permanent)` with separate
+per-instance bindings. Other movement and event contracts stay in shared services.
+
+`Until(Indefinite, SetEachBasePowerToughness(subjects, power, toughness))`
+captures members and values at resolution (CR 611.2c-d). Layer 7b applies the
+base values before bonuses and counters in layer 7c; later base-setting effects
+use timestamp order (CR 613.4b-c, 613.7b). No stated duration lasts through
+cleanup (CR 611.2a). Control, type or ability changes do not change captured
+membership. Phasing keeps the visit and resumes its effect; zone return cannot
+inherit it (CR 400.7, 702.26). Clones retain independent registrations.
+
+`TestCapturedBasePTDepartedBinding` covers identity after departure, cleared LKI
+and return. `TestCapturedBasePTLayersAndMembership` covers layer order, counters,
+later base settings, expiry, new members and clones. `TestRONCapturedBasePT*`
+covers full Brine Hag gameplay, death paths, prevention, regeneration, exile,
+ability removal, current creature membership, phasing, return, control, pending
+clones, independent simultaneous deaths, copied triggers, spell targets, strict
+loading, payment rollback and declaration errors.
+
+Reverse turn-damage collections also declare explicit source reads to the shared
+waiting-delay query. That query does not select members or resolve the effect.
+`TestCapturedBasePTDelayedSource` checks the declaration and saved departure.

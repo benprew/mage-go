@@ -2,15 +2,15 @@
 
 ## Current status
 
-The isolated slice reports **829 accepted / 157 rejected names** (986 total),
-**2,150 compiled / 295 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **830/156 names** and **2,151/294 records**. The strict
+The isolated slice reports **830 accepted / 156 rejected names** (986 total),
+**2,151 compiled / 294 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **831/155 names** and **2,152/293 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-BOUNDED-NEXT-COMBAT-SCHEDULE executes one next-combat trigger this turn with
-independent cleanup expiry. Complete RON gameplay and compilation gain
-**1 name / 1 record**: Glyph of Doom. Saved frames, exact blocker history,
-phasing, copies, clones and simultaneous destruction use shared engine services.
+INDEFINITE-CAPTURED-BASE-PT executes one fixed base-P/T collection modification
+with captured visits and indefinite lifetime. Complete RON gameplay and
+compilation gain **1 name / 1 record**: Brine Hag. Typed death bindings,
+actual damage history, layers, phasing, copies and clones use shared services.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71798,3 +71798,185 @@ No unused DSL deletion was attempted, so no removal caller audit was needed.
    Reincarnation return-control source defect independently.
 
 Migration remains incomplete. This run stops after BOUNDED-NEXT-COMBAT-SCHEDULE.
+
+## Run 2026-10-10: INDEFINITE-CAPTURED-BASE-PT
+
+Status: complete one vertical slice. No second capability was started.
+
+### Fresh baseline and candidate comparison
+
+The shared tree began with unrelated Eureka implementation, ledger archival,
+API documentation and engine edits. They remain unstaged and preserved. Fresh
+shared make build and RON short tests pass (40.258s). The strict loader exits 1
+for collection rejection, with 830 accepted / 156 rejected names and 2,151
+compiled / 294 rejected records. This is not a build failure. An isolated HEAD
+checkout at 7cbdb2bc supplies the commit baseline: 829/157 names and 2,150/295
+records. Both have 986 names and 2,445 records.
+
+The latest ranked candidates were evaluated from complete records and nested
+forms, counting reprints once. No compared candidate offers an immediate
+multi-card unlock. A broader controller-filter candidate was also checked;
+its distinct uses do not share one dependency-ready execution context.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Indefinite captured base P/T collections | Brine Hag | 1 name / 1 record | Reverse turn-history adapter and typed death-permanent capture; reusable resolution capture can serve other fixed base-P/T collections. Existing layers and history services are ready. | Small adapter plus focused identity, layer and lifecycle tests. |
+| Simultaneous per-player coins and repetition | Mana Clash | 1 name / 1 record | Needs per-player coin results, AllCoinsCameUpHeads, CoinCameUpTails selection and a repeated-round contract. Existing Eureka repetition accepts a different producer. Enables later lexical coin consumers. | Larger engine/result and deterministic RNG test work. |
+| Announcement history predicates and compound grants | Glyph of Delusion | 0 for the predicate alone; 1 for the complete dependent work | Target history must use another announced target; two acquired abilities and their counter-conditioned untap restriction remain. Enables broader dependent target declarations. | Multiple contracts; too broad for this slice. |
+
+The controller-filter cross-check found zero immediate unlocks for Gaea's Liege
+and Siren's Call. Gaea needs attacked-player information and a source-defect
+review; Siren needs turn-start control history and further predicates. Their
+static and resolving contexts require separate subsequent work.
+
+Selected the first ranked candidate after this comparison: one credible
+complete card for the smallest dependency-ready effort. Actual gain equals the
+estimate: Brine Hag, one name and its sole LEG record. The newly exposed own-death
+binding also supplies a prerequisite for Blazing Effigy and Vodalian War Machine;
+their damage-amount and payment-history consumers remain unsupported.
+
+### Contract, engine reuse and supported contexts
+
+Exact action shape:
+`CreateEachPermanentLayerEffect(collection, [SetPT(PT(power, toughness))])`.
+Both values are integer literals. Exactly one SetPT modification is required.
+Ordinary resolving spell, activated and trigger action contexts use the existing
+contextual collection compiler; nested delayed bodies retain its saved frame.
+Empty or compound modifications, dynamic pairs, wrong arities and unbound or
+incompatible references fail declaration validation. This slice adds no static
+layer, animation, other indefinite modification or duration spelling.
+
+Exact collection shape: `DealtDamageToPermanentThisTurn(permanentReference)`.
+It lowers to the existing typed engine service
+`PermanentsThatDealtDamageToThisTurn(recipient PermanentRef, candidates PermanentSet) PermanentSet`
+with MatchingPermanents(AnyPermanent). Intersections supply current creature
+membership. The query now uses permanentInformationReference.informationIdentity
+for sources, hosts, saved bindings and singular targets, rather than requiring a
+live saved recipient. Current candidates must remain present and unphased.
+Only actual damage contributes. Returned visits cannot inherit prior history.
+History needs identity, not retained characteristic LKI.
+
+Own-source death bodies declare Trigger_ThatPermanent through a fresh
+permanentEventPlan and PermanentBinding. The shared PermanentDies pattern adds
+WithPermanent only if the compiler actually reads that declaration. Its
+WithCard binding remains separate. Direct departure self-trigger checks now
+supply missing SourceIncarnation from departure LKI, matching FireEvent's
+existing policy. Shared batch detection already supplies the event identity.
+The reverse-history collection also declares explicit source reads to the shared
+waiting-delay query without selecting subjects or performing the action.
+
+The action lowers to the existing signature
+`Until(duration Duration, modifications ...ContinuousModification) ResolvingEffect`
+with Indefinite and
+`SetEachBasePowerToughness(subjects PermanentSet, power, toughness ResolutionValue) ContinuousModification`.
+No new continuous-effect implementation or public signature is needed.
+Subjects and values are captured once when the rule resolves. Layer 7b precedes
+bonuses and counters in 7c. Later base settings use timestamps. Cleanup does not
+end the rule. New members are excluded; control and type changes keep captured
+membership. Phasing keeps the saved visit; return loses it. Copies, pending
+triggers and game clones use existing frames and independent registrations.
+
+The reuse boundary includes typed references, actual damage, positive-history
+recording, source visits, definition validation, death replacements, simultaneous
+movement, layers, payment transactions, spell/ability copies and strict loading.
+There is no RON game-state service, name branch, fallback, skipped rule, global
+last-action slot, runtime declaration panic or partial production registry.
+
+Local data/LEG.json confirms Brine Hag's indefinite 0/2 Oracle requirement.
+CR 611.2a/c/d, 613.4b/c, 613.7b, 400.7, 603.6c/603.10a and 702.26b/e/f
+support the contracts.
+No source-data correction was required; no RON file changed, so the vocabulary
+snapshot stays unchanged. Existing Gaea's Liege, Fastbond and return-control
+source defects remain independent blockers.
+
+Complete records for all nine own-source death declarations were inspected:
+Brine Hag, Blazing Effigy, Personal Incarnation, Abu Ja'far, Rukh Egg, Onulet,
+Vodalian War Machine, Cyclopean Mummy and Su-Chi. The four previously accepted
+non-Hag names retain their existing bodies; the four rejected non-Hag names
+keep separate diagnostics. Their compilation is not claimed as new gameplay.
+
+### Failing-first evidence and card-to-test mapping
+
+Full Brine Hag RON initially fails at unsupported CreateEachPermanentLayerEffect.
+TestCapturedBasePTDepartedBinding initially fails its saved-recipient assertion.
+The new RON death-path test exposes missing self-departure event identity.
+TestCapturedBasePTDelayedSource fails before its waiting-query adapter is added.
+Initial test fixture errors (attribute/counter names and validation context) were
+corrected before confirming the intended failures. A stale permanent pointer
+after game cloning/batch snapshots was corrected to a live game lookup.
+
+The first engine-short run finds an actual Rukh Egg regression: unconditional
+capture adds an unused saved source to a constant-token delay. The compiler now
+records whether the death binding is read and captures it only when needed.
+The existing regression assertion is unchanged. A concurrent full-suite attempt
+sees the newly added delayed-query TDD failure before its fix. Final validation
+is rerun against the finished implementation; no assertion is weakened.
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Brine Hag, LEG | TestRONCapturedBasePTBrineHag: real record, prevented damage, current creature membership, source and dealer return, phasing before/after capture, control, cleanup, countered triggers and stack clones. |
+| Brine Hag death paths | TestRONCapturedBasePTDeathPaths: direct destruction, sacrifice, lethal damage, shared batch destruction, exile replacement, regeneration, ability removal, multiple sources and copied triggers. |
+| Brine Hag independent instances | TestRONCapturedBasePTIndependentDeaths: simultaneous deaths, separate dealer histories, one-at-a-time stack resolution and pending-trigger clones. |
+| Strict full-record loading and casting | TestRONCapturedBasePTNative: full-record registry, independent factories, printed 2/2 entry, failed payment rollback, paid cast and atomic invalid-collection rejection. |
+| Typed spell collection and copies | TestRONCapturedBasePTSpellTargets: plural target group, partial legality, phased target exclusion and spell copies. |
+| Invalid declarations and inventory | TestRONCapturedBasePTInvalid and TestRONCapturedBasePTInventory: arities, modifications, literal pairs, scope errors and nested semantic roles. |
+| Engine identity and indefinite mechanics | TestCapturedBasePTDepartedBinding: departed/returned saved recipient, cleared LKI and cleanup. TestCapturedBasePTLayersAndMembership: counters, bonuses, timestamps, expiry, new-member exclusion and clones. TestCapturedBasePTDelayedSource: waiting reads and delayed source departure. |
+| Existing accepted regressions | TestReverseTurnDamageSet*, TestRONDeathCard*, TestRONCyclopeanMummyDeathCard, TestRONDelayedStepRukhEgg*, TestRONWaitingDelayedTokenRukhEgg and TestRONHostDeath* pass. Whole suites retain Onulet, Su-Chi, replacement and simultaneous-operation regressions. |
+
+### Validation and final collection status
+
+Focused RON tests pass with -count=1 (isolated 0.505s; shared 0.492s).
+Focused engine identity/history/waiting tests pass (isolated 0.540s; shared 0.480s).
+Both make build and go vet ./... pass. Final go test ./pkg/mage/... -short -count=1
+passes (RON isolated 51.752s; shared 46.936s). Final make test passes in both
+checkouts (RON isolated 47.479s; shared 44.745s). These final runs include all
+finished production changes and the additional delayed-query acceptance test.
+
+Both make lint commands pass with 0 issues. Code comparisons confirm formatting
+made no further implementation changes. git diff --check passes in both trees.
+No native build, vet, lint or test blocker remains. The initial Rukh Egg and
+concurrent TDD failures described above are resolved without weakening assertions.
+
+Final go run ./cmd/loadcards -json exits 1 in both trees solely because the strict
+collection remains unsupported. Isolated: 830 accepted / 156 rejected names,
+2,151 compiled / 294 rejected records. Shared with preserved Eureka: 831 accepted /
+155 rejected names, 2,152 compiled / 293 rejected records. Both retain 986 names
+and 2,445 records. Brine Hag has no diagnostics. Compilation gain is exactly the
+estimated 1 unique name / 1 record; the full-record tests separately establish
+its gameplay. Mana Clash rejects RepeatableActions in the isolated tree and
+EachPlayerAction as a repeated-round producer in the shared tree. Glyph of
+Delusion still rejects its announcement history predicate; Blazing Effigy still
+rejects DeadPermanentDealsDamage; Vodalian War Machine still rejects its tapped
+payment-history filter. No partial production registry is published.
+
+The commit is staged from the independently validated isolated checkout and
+applied to the shared index. It contains only this slice. Eleven unrelated
+original files, including untracked Eureka and ledger archival files, pass byte
+comparison with the saved baseline. Overlapping files retain the original edits;
+shared count fixtures include both gains while the commit fixtures include only
+Brine Hag. The archival move is not staged. No RON source or vocabulary snapshot
+is changed. Runtime startup, Go-card deletion and DSL removal remain gated.
+
+Changed files: pkg/mage/composable_target.go, game.go, waiting_delayed_source.go,
+captured_base_pt_test.go and doc.go; pkg/mage/dsl/ron/captured_base_pt.go,
+captured_base_pt_test.go, compiler.go, contextual_collection.go, triggers.go,
+host_tap.go, permanent_scope.go, inventory.go, inventory_test.go,
+definition_plan_test.go and numeric_consumers_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+
+### Ranked next candidates
+
+1. Simultaneous per-player coin outcomes and complete Mana Clash repetition.
+   Compare fresh multi-card opportunities; reuse player frames, damage and RNG.
+2. Announcement block-history predicates as a prerequisite for Glyph of Delusion.
+   Keep target reads separate from resolving collections; compound grants remain.
+3. Captured death-source property and payment-history consumers for Blazing Effigy
+   and Vodalian War Machine. Compare distinct nested requirements before selection.
+   Abu Ja'far's dead-combat-opponent collection remains a separate contract.
+
+Complete-card compilation and gameplay gain: 1 unique name / 1 record.
+Full collection gameplay, embedded runtime loading, Go-card deletion, generator
+retirement and unused DSL cleanup remain gated. No caller or Go definition was
+removed, so no DSL removal audit was needed. This run stops after the one slice.
+Migration remains incomplete.

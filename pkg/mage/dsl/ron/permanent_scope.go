@@ -75,6 +75,7 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 				return permanentReferencePlan{kind: permanentSource}, nil
 			}
 			if ctx.permanentEvent != nil {
+				ctx.permanentEvent.referenced = true
 				return permanentReferencePlan{kind: permanentEvent, event: ctx.permanentEvent}, nil
 			}
 		case "Ref_TargetPermanent":

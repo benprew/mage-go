@@ -169,14 +169,23 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 
 func compileSourceDeathCardTrigger(body Node, ctx scope) (optionFactory, error) {
 	ctx.deathCard = &deathCardPlan{name: "Trigger_ThatGraveyardCard"}
+	ctx.permanentEvent = &permanentEventPlan{name: "Trigger_ThatPermanent"}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
 	}
 	return func() mage.CardOption {
 		card := mage.BindCard(ctx.deathCard.name)
-		actions := plan.buildWithBindings(instanceBindings{deathCards: map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card}})
-		trigger := mage.WhenEvent(mage.PermanentDies().WithCard(card), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		permanent := mage.BindPermanent(ctx.permanentEvent.name)
+		actions := plan.buildWithBindings(instanceBindings{
+			deathCards: map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card},
+			tapped:     map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: permanent},
+		})
+		pattern := mage.PermanentDies().WithCard(card)
+		if ctx.permanentEvent.referenced {
+			pattern = pattern.WithPermanent(permanent)
+		}
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		trigger.AndConditionData(mage.EventSourceIsSelf{})
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))

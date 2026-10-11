@@ -1731,6 +1731,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compileRestrictedRepeatedMana(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		return compileResolvingMana(n, ctx)
+	case "CreateEachPermanentLayerEffect":
+		build, err := compileCapturedBasePT(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateEachPermanentLayerEffectUntil":
 		if n.Kind == Tuple && len(n.Args) == 3 && n.Args[0].Name == "Ref_TargetPermanents" {
 			build, err := compilePluralColor(n, ctx)
