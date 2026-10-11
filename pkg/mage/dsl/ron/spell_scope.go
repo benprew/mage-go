@@ -123,7 +123,7 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 			controlled = true
 			continue
 		}
-		filter, err := compileContextualSpellFilter(part)
+		filter, err := compileContextualSpellFilter(part, ctx)
 		if err != nil {
 			return nil, "", err
 		}

@@ -418,7 +418,7 @@ func TestRONContextualSpellFilterIndependentTriggers(t *testing.T) {
 	}
 }
 
-func TestRONContextualSpellFilterRemainingGoblinBlocker(t *testing.T) {
+func TestRONContextualSpellFilterGoblinAbilityExclusion(t *testing.T) {
 	data, err := os.ReadFile("../../../../cards/mtgish/ATQ.lines.ron")
 	if err != nil {
 		t.Fatal(err)
@@ -431,8 +431,8 @@ func TestRONContextualSpellFilterRemainingGoblinBlocker(t *testing.T) {
 		if record.Fields["Name"].String != "Goblin Artisans" {
 			continue
 		}
-		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "IsntTheTargetOfAnAbility") {
-			t.Fatalf("expected independent ability exclusion gap: %v", err)
+		if _, err := Compile(record); err != nil {
+			t.Fatalf("complete ability exclusion record: %v", err)
 		}
 		return
 	}

@@ -17866,3 +17866,40 @@ characteristics and defending-player Mountainwalk (CR 702.14c). Native
 `TestControllerPresenceStateBatchAndReplacement` checks canceled sacrifices,
 indestructible, regeneration, exile, matching-member batch departure and clones.
 Captured battlefield-member events and other player selectors remain separate.
+
+## Stack abilities that target a spell
+
+`SpellNotTargetedByPermanentAbility(filter PermanentFilter, excludeSource bool)
+SpellFilter` composes with the existing immutable spell predicates. Each query
+checks current stack objects marked as abilities and their exact spell target
+IDs. Spells, resolved abilities, pending triggers not yet on the stack and
+missing source visits do not qualify. A target remains a reference even if it
+has become illegal (CR 115.9b). The candidate spell must still be on the stack.
+Copies retain their original ability source (CR 707.10b).
+
+Permanent source characteristics come from the original battlefield visit:
+current information when present, retained departure or phase information
+otherwise (CR 113.7, 113.7a, 400.7, 702.26). Source control, name and card-type
+changes apply when read. Return cannot supply new characteristics for the old
+source. An optional source exclusion compares both physical ID and incarnation.
+Announcement uses the live source; resolution uses the shared target-source
+information view so departure and return keep the original exclusion identity.
+
+The existing target selection and resolution pipeline checks the predicate
+at announcement and resolution (CR 602.2, 601.2c, 608.2b). Full illegality stops
+all instructions, including flips and winning draws. Failed activation preserves
+payment and random state. Each declaration and resolution frame remains separate.
+Shared stack copy, cloning, draw replacement and counter services are unchanged.
+No new payment, replacement ordering or simultaneous-operation service is added.
+
+RON supports this shape only in permanent activated spell targets. It reuses
+validated context-free permanent filters, fixed names and conjunctive source
+exclusion. Controller-dependent filters and other declaration contexts remain
+errors. `TestSpellAbilityExclusionIdentity` checks current and retained source
+information, phasing, missing visits, resolved objects and clone separation.
+`TestRONSpellAbilityExclusionGameplay`, `CastingAndInstances` and `SourceVisit`
+execute all Goblin Artisans rules, coin outcomes, legality rechecks, copies,
+clones, tap payment, sickness, multiple sources and exact return identity.
+`Invalid`, `Contexts` and `Records` check declaration rejection, fresh factories,
+semantic inventory and atomic collection loading. Local `data/ATQ.json` Oracle
+text requires another creature with the fixed name; the RON omission is corrected.

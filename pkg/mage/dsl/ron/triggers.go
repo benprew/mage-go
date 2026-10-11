@@ -141,7 +141,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		} else if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent") {
 			return nil, unsupported(players, "spell-cast player filter")
 		}
-		filter, err := compileContextualSpellFilter(trigger.Args[1])
+		filter, err := compileContextualSpellFilter(trigger.Args[1], ctx)
 		if err != nil {
 			return nil, err
 		}

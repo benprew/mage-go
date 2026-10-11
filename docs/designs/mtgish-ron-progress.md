@@ -2,19 +2,20 @@
 
 ## Current status
 
-The isolated slice reports **839 accepted / 147 rejected names** (986 total),
-**2,175 compiled / 270 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **840/146 names** and **2,176/269 records**. The strict
-loader rejects the collection and publishes no partial registry.
+The isolated slice reports **840 accepted / 146 rejected names** (986 total),
+**2,176 compiled / 269 rejected records** (2,445 total). With pre-existing Eureka,
+the shared worktree reports **841/145 names** and **2,177/268 records**.
+The strict loader rejects the collection and publishes no partial registry.
 
-CONTROLLER-PERMANENT-PRESENCE executes current controller/permanent presence
-through the shared Controls/WhenState engine services. Complete Goblins of the
-Flarg has RON gameplay tests for its state sacrifice, casting and Mountainwalk.
-Current layers/control, tokens, arming, pending identity, phasing, targets,
-copies, clones and sacrifice replacements use shared services. Compilation gain
-is **one name / one record**. City in a Bottle still needs captured state members
-and global restrictions. Existing accepted records and unrelated work stay
-preserved.
+STACK-ABILITY-TARGET-EXCLUSION executes permanent activated spell target
+predicates through immutable spell filters and exact stack/source identities.
+Complete Goblin Artisans has RON gameplay tests for tap payment, sickness,
+coin outcomes, drawing, countering and source exclusion. Current characteristics,
+LKI, phasing, copies, clones, legality rechecks and return use shared services.
+The ATQ record now includes the missing Oracle creature restriction.
+Compilation gain is **one name / one record**. City in a Bottle still needs
+captured state members and global restrictions; Mana Vortex needs stack-source
+casting and global no-land detection. Existing work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -73922,3 +73923,157 @@ gates are not met. No Go-card fallback or name-specific executor is added.
    optional sacrifice payment; keep detection on the spell's exact stack visit.
 
 This run stops after controller permanent presence. Migration is incomplete.
+
+## 2026-10-11 — STACK-ABILITY-TARGET-EXCLUSION
+
+### Candidate comparison and selection
+
+The latest ranked candidates were evaluated from their complete RON records:
+ATQ Goblin Artisans, ARN City in a Bottle and DRK Mana Vortex. Reprints count
+once. Targeted vocabulary inspection finds one ability-exclusion record.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Pending ability target exclusion, latest #1 | Goblin Artisans | One name / one record | Artifact and controller spell filters, tap cost and coin branches already work. The source creature omission needs correction. Shared exact stack-ability/source predicates enable future ability-target filters without a second identity system. | Small engine predicate and adapter; medium identity, legality and gameplay tests. |
+| Captured battlefield-member state trigger, latest #2 | City in a Bottle | Zero now; one eventual name | Needs fresh event-member sets and exact visits, controller sacrifice batches, source exclusion and independent global casting/land restrictions. Existing original-printing and sacrifice services remain usable. | Medium to high captured-set and lifecycle work, then restrictions. |
+| Stack-source self-cast event, latest #3 | Mana Vortex | Zero for this event alone; one after no-land detection | FromStack, SingleSpell(ThisSpell) and global no-land detection remain gaps. Controller cast captures, optional sacrifice payment and upkeep sacrifice already work. Enables exact stack-source trigger declarations. | Medium source-zone detection and capture tests plus a separate no-land adapter. |
+
+No compared candidate gives a dependency-ready multi-card full unlock. #1 is
+ready and has the largest complete-record gain for its bounded effort; the two
+other candidates remain dependent prerequisites with zero immediate gain.
+Neither dependent capability is started in this run.
+
+### Supported shape, signatures and reuse boundary
+
+Exactly `IsntTheTargetOfAnAbility(AbilityOfAPermanent(filter))` within
+`TargetSpell` in a permanent `Activated` or `ActivatedWithModifiers` body.
+The filter reuses context-free permanent predicates, fixed `IsNamed(NamedCard)`
+and nonempty nested And/Or lists. Conjunctive `Other(ThisPermanent)` supplies
+source exclusion. Source-dependent disjunctions, contextual controllers, empty
+nested groups, malformed selectors, unbound references, ordinary spell bodies
+and cast-event declaration filters remain errors. Other target groups and action
+bodies retain existing contracts.
+
+Private compiler signatures:
+`compileSpellAbilityExclusion(n Node, ctx scope) (mage.SpellFilter, error)`;
+`compileContextualSpellFilter(n Node, ctx scope) (mage.SpellFilter, error)`.
+RON owns spelling, source-selector validation, context restrictions and lowering.
+It reuses `compileStaticPermanentFilter` and adds semantic inventory roles for
+spell exclusion and stack ability selectors. Each factory still builds fresh
+ability and target declarations; predicates carry no mutable chosen state.
+
+Public engine signature:
+`SpellNotTargetedByPermanentAbility(filter PermanentFilter, excludeSource bool)
+SpellFilter`. The existing typed spell target now supplies its source Card to
+the shared immutable predicate evaluation. Existing contextual spell predicates
+and cast-event callers retain their behavior. The predicate checks abilities
+currently on the stack and exact target stack IDs before source matching.
+Spell objects, resolved objects, pending triggers not yet stacked and missing
+source visits cannot qualify. It does not use the broader reference-object list
+that includes resolving bodies.
+
+Source characteristics use current information for the exact permanent visit,
+or saved departure/phase information through `readPermanentIncarnationInformation`.
+Return cannot substitute a new visit. Source exclusion compares physical ID
+and incarnation through the shared target-source view at resolution. An old
+same-source ability stays excluded after return; an ability from the new visit
+counts as another source. Ability controller is independent of source matching.
+Source phasing and departure do not remove its already-stacked ability.
+Target illegality does not erase its target reference while it remains stacked.
+
+Shared target announcement and resolution recheck the predicate. Complete
+illegality stops all effects, including coin flips and winning draws. Failed
+activation preserves tap payment and random state. Copies keep the original
+source and their targets; clones keep independent stack and battlefield state.
+The predicate makes no choices, changes no state and adds no RNG calls.
+Existing tap transactions, coin branches, draws, draw replacements, countering,
+source LKI, copy and clone services are reused. No replacement ordering,
+simultaneous-operation, payment or global last-action service is introduced.
+CR 113.7/113.7a, 115.9b, 400.7, 601.2c, 602.2, 608.2b, 702.26 and 707.10b
+support these contracts.
+
+### Card-to-test mapping and source evidence
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Goblin Artisans, corrected ATQ record | TestRONSpellAbilityExclusionGameplay: both coin outcomes, actual drawing/countering, own/opponent/noncreature/wrong-name sources, self exclusion, departed/returned/phased sources, removed abilities, late blockers, spell control change, source return/phasing, copies and clones. |
+| All printed rules and independent declarations | TestRONSpellAbilityExclusionCastingAndInstances: casting payment, printed 1/1 Goblin Artificer, sickness, opponent spell rejection, tap payment, tapped-source rejection, two same-source activations, other-instance exclusion, independent flips and draws. TestRONSpellAbilityExclusionRecords: definition validation and fresh factory abilities. |
+| Exact source exclusion across return | TestRONSpellAbilityExclusionSourceVisit: old and new abilities from the same physical card use separate battlefield visits; legality recheck decides whether a flip runs. |
+| Native shared predicate | TestSpellAbilityExclusionIdentity: current creature/name changes, source control independence, departure LKI, returned source with different types, phasing/phase cycle, spells, other target IDs, missing visits, removed/resolving abilities and copy-on-write clone separation. |
+| Declaration and collection contracts | TestRONSpellAbilityExclusionInvalid and Contexts: malformed arity/kind, empty nested lists, wrong selectors, unbound reads, source-dependent disjunctions, contextual control, spell/cast-event rejection. Records: semantic roles, strict LoadFS rejection, atomic LoadInto preservation. TestRONContextualSpellFilterGoblinAbilityExclusion retains the former explicit blocker test as complete-record acceptance evidence. |
+| Existing accepted collection | Definition-plan, inventory and numeric-consumer censuses advance by one record. Existing contextual spell target/cast tests remain unchanged apart from the former Goblin gap assertion. |
+
+Source defect: `cards/mtgish/ATQ.lines.ron`, Goblin Artisans,
+`AbilityOfAPermanent(And([Other(ThisPermanent), IsNamed(...)]))` omitted
+`IsCardtype(Creature)`. Local `data/ATQ.json` Oracle requires another creature
+with the fixed name. A failing real-record noncreature-source case proves the
+omission changes gameplay. Add the creature conjunct; there is one record and
+no identical reprint to correct. No card-name executor branch is added.
+The vocabulary snapshot updates the ATQ hash, Creature and IsCardtype counts,
+the shifted coin example position and fresh strict loader diagnostics.
+
+### Validation and coverage
+
+Fresh shared baseline: make build and RON short tests pass (43.259s).
+Strict loader exits 1 with **2,176 compiled / 269 rejected records** and
+**840 accepted / 146 rejected names**. Fresh isolated HEAD 1b6c2b4d build
+passes; loader reports **2,175/270 records**, **839/147 names**. Both contain
+2,445 records / 986 names. The difference is the pre-existing Eureka work.
+
+Failing-first evidence: real-record gameplay and loading fail on unsupported
+IsntTheTargetOfAnAbility; native tests fail compilation because the engine
+signature does not exist. After lowering, the noncreature-source case fails
+against the uncorrected RON, then passes after the documented source correction.
+Test fixture field errors and an extra closing parenthesis in a rejection case
+are corrected. Clone tests use the mutable permanent service before synthetic
+characteristic changes; raw shared pointers do not satisfy the engine's
+copy-on-write test setup contract. No production behavior test is weakened.
+An intermediate full suite captured the malformed rejection fixture while it
+was being corrected; the final full suite is rerun on stable files.
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONSpellAbilityExclusion -count=1`
+and native `go test ./pkg/mage -run TestSpellAbilityExclusion -count=1` pass
+in both trees, including post-lint reruns. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make lint` and
+`git diff --check` pass in both trees. Final RON short/full times are
+41.606s/41.404s isolated and 62.619s/44.817s shared. Both lint runs report
+zero issues. Automatic formatting affects only new test iteration/import style;
+post-lint focused/native checks pass and no unrelated source changes are added.
+No environment or pre-existing check failure blocks the slice.
+
+Final isolated loader: **2,176 compiled / 269 rejected records**,
+**840 accepted / 146 rejected names**. Final shared loader:
+**2,177 compiled / 268 rejected records**, **841 accepted / 145 rejected names**.
+`go run ./cmd/loadcards -json` exits 1 in each tree because unsupported records
+remain. Each baseline comparison removes only Goblin Artisans and adds no issue.
+Collection rejection is separate from successful build/test validation; no partial
+production registry is published. Actual gain is **one name / one record**, as
+estimated, with one complete printed-card gameplay mapping. Compilation progress
+and collection gameplay coverage remain separate.
+
+Changes: new engine and RON spell_ability_exclusion.go/test files; immutable
+spell filter/source propagation and typed spell-target caller; contextual RON
+filter, target and trigger callers; inventory semantic roles and three census
+tests; prior explicit Goblin blocker test; corrected ATQ record; engine/API/rules
+contracts; vocabulary snapshot and this appended ledger/current summary.
+The slice is committed from an isolated checkout and applied to the shared
+workspace with its pre-existing Eureka census difference retained. Original
+user changes and unrelated untracked files remain preserved. Go definitions,
+startup wiring, generators and unused DSL functions remain untouched because
+the complete-loading, runtime/test migration and caller-audit removal gates
+are not met. No Go-card fallback or name-specific executor is introduced.
+
+### Ranked next candidates
+
+1. City in a Bottle captured-state members: zero immediate full names until
+   global restrictions follow. Reuse original-printing catalogs, typed saved
+   visits, state arming and simultaneous controller sacrifices. Compare this
+   shared prerequisite against the wider inventory before selecting it.
+2. Mana Vortex global no-land state detection: zero immediate names while
+   FromStack remains unsupported; one eventual complete card. Reuse pure
+   current battlefield filters and state arming, with global player scope.
+3. Mana Vortex stack-source self-cast event: one potential complete card after
+   global no-land support. Reuse controller cast captures and optional sacrifice
+   payment; keep detection on the spell's exact stack visit.
+
+This run stops after stack ability target exclusion. Migration is incomplete.

@@ -13680,3 +13680,25 @@ and source visit; a later false condition does not cancel it. The shared state
 trigger service prevents repetition while pending or on the stack, then permits
 another trigger if the state still holds. See `TestRONControllerPresence*` and
 native `TestControllerPresenceStateBatchAndReplacement`.
+
+## RON stack ability target exclusion
+
+Permanent activated `TargetSpell` declarations accept
+`IsntTheTargetOfAnAbility(AbilityOfAPermanent(filter))`. The source filter uses
+context-free permanent predicates, fixed names and nonempty `And`/`Or` lists.
+A conjunctive `Other(ThisPermanent)` excludes the activating source's exact
+battlefield visit. Contextual controller selection, source-dependent disjunctions,
+unbound references, spell actions and cast-event declarations remain rejected.
+
+`mage.SpellNotTargetedByPermanentAbility(filter mage.PermanentFilter,
+excludeSource bool) mage.SpellFilter` supplies the engine predicate. Target
+queries use abilities currently on the stack, including copies and triggered
+abilities. Matching reads the current source or its exact departure/phase
+information. Returned sources cannot replace saved visits. Resolution checks
+again; illegal targets stop the coin and draw instructions through shared
+resolution services. The predicate makes no choices or state changes.
+
+Goblin Artisans uses this adapter with a creature, fixed-name and other-source
+conjunction. The ATQ RON record includes the Oracle creature restriction.
+`TestRONSpellAbilityExclusion*` covers the complete record and declaration
+boundaries; `TestSpellAbilityExclusionIdentity` covers native identity queries.

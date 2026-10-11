@@ -2,7 +2,7 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileContextualSpellFilter(n Node) (mage.SpellFilter, error) {
+func compileContextualSpellFilter(n Node, ctx scope) (mage.SpellFilter, error) {
 	switch n.Name {
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
@@ -17,7 +17,7 @@ func compileContextualSpellFilter(n Node) (mage.SpellFilter, error) {
 		}
 		filters := make([]mage.SpellFilter, len(parts))
 		for i, part := range parts {
-			filters[i], err = compileContextualSpellFilter(part)
+			filters[i], err = compileContextualSpellFilter(part, ctx)
 			if err != nil {
 				return mage.SpellFilter{}, err
 			}
@@ -30,7 +30,7 @@ func compileContextualSpellFilter(n Node) (mage.SpellFilter, error) {
 		if err := arity(n, 1); err != nil {
 			return mage.SpellFilter{}, err
 		}
-		filter, err := compileContextualSpellFilter(n.Args[0])
+		filter, err := compileContextualSpellFilter(n.Args[0], ctx)
 		if err != nil {
 			return mage.SpellFilter{}, err
 		}
@@ -50,6 +50,8 @@ func compileContextualSpellFilter(n Node) (mage.SpellFilter, error) {
 			return mage.SpellFilter{}, unsupported(player.Args[0], "spell controller")
 		}
 		return mage.SpellControlledByYou(), nil
+	case "IsntTheTargetOfAnAbility":
+		return compileSpellAbilityExclusion(n, ctx)
 	case "SharesAColorWithAPermanent":
 		if err := arity(n, 1); err != nil {
 			return mage.SpellFilter{}, err

@@ -4199,13 +4199,13 @@ type typedSpellTarget struct {
 	targetsControlledPermanent bool
 }
 
-func (t *typedSpellTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *typedSpellTarget) Possible(controller uuid.UUID, source Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, obj := range g.stack.Objects() {
 		if obj.IsAbility || obj.Card == nil {
 			continue
 		}
-		if t.filterCount > 0 && !t.contextualFilter.matches(g, controller, obj) {
+		if t.filterCount > 0 && !t.contextualFilter.matches(g, controller, source, obj) {
 			continue
 		}
 		if t.manaValueEqualX && stackSpellManaValue(obj) != g.resolution.X() {

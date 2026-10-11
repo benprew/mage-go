@@ -1556,7 +1556,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}
+	case "stack_ability_filter":
+		if n.Name == "AbilityOfAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 	case "spell_filter":
+		if n.Name == "IsntTheTargetOfAnAbility" && len(n.Args) == 1 {
+			return "stack_ability_filter"
+		}
 		if n.Name == "ManaValueIs" && len(n.Args) == 1 {
 			return "mana_value_comparison"
 		}

@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [SpellNotTargetedByPermanentAbility] for current stack ability targets.
+// The source filter reads the exact permanent visit or its retained information.
+// Source exclusion keeps that visit through departure, phasing and return.
+// Shared targets check again at resolution. Copies keep the original source;
+// clones keep separate state. The query makes no choices or state changes.
+// RON accepts this predicate in permanent activated spell targets.
+// Other declaration contexts and source controller filters stay separate.
+//
 // RON controller-presence state triggers use [Controls] and [WhenState].
 // The condition reads present permanents and the current source controller.
 // Tokens and the source can match. Phasing stops selection and detection.

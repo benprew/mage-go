@@ -12,11 +12,12 @@ import (
 // SpellFilter keeps immutable spell predicates for targets and cast events.
 // Its zero value is invalid so a missing declaration cannot match all spells.
 type SpellFilter struct {
-	kind       string
-	card       CardFilter
-	permanents PermanentFilter
-	controlled bool
-	children   []SpellFilter
+	kind          string
+	card          CardFilter
+	permanents    PermanentFilter
+	controlled    bool
+	excludeSource bool
+	children      []SpellFilter
 }
 
 // SpellCardMatches uses current spell characteristics with an existing card filter.
@@ -46,7 +47,7 @@ func NotSpellFilter(filter SpellFilter) SpellFilter {
 	return SpellFilter{kind: "not", children: []SpellFilter{filter}}
 }
 
-func (f SpellFilter) matches(g *Game, controller uuid.UUID, spell *StackObject) bool {
+func (f SpellFilter) matches(g *Game, controller uuid.UUID, source Card, spell *StackObject) bool {
 	if spell == nil || spell.IsAbility || spell.Card == nil {
 		return false
 	}
@@ -67,12 +68,14 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, spell *StackObject) 
 			}
 		}
 		return false
+	case "ability-target-exclusion":
+		return !g.spellTargetedByPermanentAbility(spell.ID, source, f.permanents, f.excludeSource)
 	case "all":
-		return len(f.children) > 0 && !slices.ContainsFunc(f.children, func(child SpellFilter) bool { return !child.matches(g, controller, spell) })
+		return len(f.children) > 0 && !slices.ContainsFunc(f.children, func(child SpellFilter) bool { return !child.matches(g, controller, source, spell) })
 	case "any":
-		return slices.ContainsFunc(f.children, func(child SpellFilter) bool { return child.matches(g, controller, spell) })
+		return slices.ContainsFunc(f.children, func(child SpellFilter) bool { return child.matches(g, controller, source, spell) })
 	case "not":
-		return len(f.children) == 1 && !f.children[0].matches(g, controller, spell)
+		return len(f.children) == 1 && !f.children[0].matches(g, controller, source, spell)
 	default:
 		return false
 	}
@@ -81,7 +84,7 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, spell *StackObject) 
 func (f SpellFilter) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "spell-filter", Text: f.kind}
 	switch f.kind {
-	case "card", "controller", "shares-color":
+	case "card", "controller", "shares-color", "ability-target-exclusion":
 	case "all", "any":
 		if len(f.children) == 0 {
 			n.problem = "supply at least one spell filter"
@@ -121,11 +124,11 @@ func (p spellCastPattern) Matching(filter SpellFilter) spellCastPattern {
 
 type spellCastMatchesFilter struct{ filter SpellFilter }
 
-func (c spellCastMatchesFilter) CheckTriggerCond(event *core.GameEvent, reader GameReader, _, controller uuid.UUID) bool {
+func (c spellCastMatchesFilter) CheckTriggerCond(event *core.GameEvent, reader GameReader, sourceID, controller uuid.UUID) bool {
 	game, ok := reader.(*Game)
 	if !ok || event.TargetID == uuid.Nil {
 		return false
 	}
 	spell := game.stack.FindByID(event.TargetID)
-	return spell != nil && spell.SourceID == event.SourceID && c.filter.matches(game, controller, spell)
+	return spell != nil && spell.SourceID == event.SourceID && c.filter.matches(game, controller, game.FindCardAnywhere(sourceID), spell)
 }
