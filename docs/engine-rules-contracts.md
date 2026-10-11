@@ -17496,3 +17496,33 @@ are established here. No replacement or simultaneous-operation service changes.
 
 Evidence: `TestTargetActivePlayerContract` and `TestRONActivePlayerControl*`.
 Full Nettling Imp and Siren's Call records retain their other unsupported rules.
+
+## Continuous control since the current turn began
+
+`ControlledSinceCurrentTurnStart` is a `PermanentFilter`. It reads the current
+controller's most recent acquisition turn against `Game.CurrentTurn()`. Entry,
+control loss and regain during the current turn fail the check. A new turn,
+including an extra turn for either player, can make the check true. This differs
+from `Permanent.ControlledSinceTurnStart(GameReader) bool`, which compares
+against the controller's most recent own turn for CR 302.6.
+
+The filter uses shared entry/control-layer history and clone storage. Phasing
+excludes selection without erasing history (CR 702.26b/d). Return has new history
+(CR 400.7). Target legality reads history at announcement and resolution
+(CR 608.2b); resolving collections read current members (CR 608.2h). No LKI can
+restore an absent action subject. Queries make no choices and consume no RNG.
+Shared destruction batches retain simultaneous movement and regeneration.
+
+RON supports the positive and negative symbol forms in singular TargetPermanent
+filters and resolving collections. Collections additionally accept exactly
+`ExceptFor(NotControlledSinceBeginningOfTurn)`. General exclusion forms,
+static contexts and activation timing remain separate. Malformed declarations
+reject before execution. Same-turn Siren's Call uses existing casting windows, live
+attack requirements and saved end-step triggers with this exclusion. Local
+Oracle evidence is `data/LEA.json` and `data/catalog/2ED.json`. The full record
+retains a separate source defect: the delayed controller predicate reads the
+live active player, while Oracle retains the earlier player. A saved player
+binding is required before full Oracle gameplay can be claimed.
+
+Evidence: `TestCurrentTurnControlHistory`, `TestRONCurrentTurnControlTargets`,
+`Collections`, `Invalid`, `Native`, `ImpClauses`, and `Siren` (all six reprints).

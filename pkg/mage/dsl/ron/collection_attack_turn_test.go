@@ -94,8 +94,8 @@ func TestRONCollectionAttackTurnSirenClause(t *testing.T) {
 			break
 		}
 	}
-	if _, err := Compile(card); err == nil {
-		t.Fatal("full Siren record accepted without destruction support")
+	if _, err := Compile(card); err != nil {
+		t.Fatalf("full Siren record: %v", err)
 	}
 	rules := card.Fields["Rules"].Args
 	action := rules[1].Args[0].Args[0].Args[0]

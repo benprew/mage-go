@@ -5,6 +5,10 @@ import "github.com/benprew/mage-go/pkg/mage"
 type permanentTargetOptionsFactory func(instanceBindings) []mage.PermanentTargetOption
 
 func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter, permanentTargetOptionsFactory, error) {
+	if n.Name == "ControlledSinceBeginningOfTurn" || n.Name == "NotControlledSinceBeginningOfTurn" {
+		filter, err := compileCurrentTurnControlFilter(n)
+		return filter, func(instanceBindings) []mage.PermanentTargetOption { return nil }, err
+	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err

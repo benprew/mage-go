@@ -4,6 +4,24 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
 	switch n.Name {
+	case "ControlledSinceBeginningOfTurn", "NotControlledSinceBeginningOfTurn":
+		filter, err := compileCurrentTurnControlFilter(n)
+		if err != nil {
+			return nil, err
+		}
+		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(filter) }, nil
+	case "ExceptFor":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Args[0].Name != "NotControlledSinceBeginningOfTurn" {
+			return nil, unsupported(n.Args[0], "control history exclusion")
+		}
+		filter, err := compileCurrentTurnControlFilter(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(mage.Not(filter)) }, nil
 	case "ControlledByPlayer":
 		if err := arity(n, 1); err != nil {
 			return nil, err

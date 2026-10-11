@@ -13409,3 +13409,19 @@ have synthetic RON gameplay evidence across all six reprints.
 Evidence: `TestRONActivePlayerControlTargets`, `Collections`, `Invalid`,
 `Native`, `RepositoryClauses`, and `Inventory`; engine
 `TestTargetActivePlayerContract`. No full-card gameplay gain is claimed.
+
+### RON current-turn control history
+
+`ControlledSinceBeginningOfTurn` and `NotControlledSinceBeginningOfTurn` are
+symbols in singular target filters and resolving permanent collections. The
+collection form `ExceptFor(NotControlledSinceBeginningOfTurn)` selects subjects
+whose current controller has kept control continuously since this turn began.
+Use `mage.ControlledSinceCurrentTurnStart` for the shared predicate. The
+controller's most recent own turn uses the separate existing condition.
+
+Targets recheck current history at resolution. Collections read current members,
+including entries after announcement. Phasing preserves history; a returned
+permanent starts new history. Same-turn Siren's Call has RON gameplay coverage. Its delayed player reference
+is a source defect when the next end step occurs on another player's turn.
+Nettling Imp's exact target clause is covered; its activation timing still
+rejects. Other exclusions and static contexts are not added by this adapter.

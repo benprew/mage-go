@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ControlledSinceCurrentTurnStart] checks the current controller's continuous
+// control since the current turn began. Entry and control changes this turn
+// fail the check, including control loss and regain. This differs from
+// [Permanent.ControlledSinceTurnStart], which uses the controller's last turn.
+// RON lowers the positive and negative symbols in singular targets and
+// resolving collections, plus ExceptFor(NotControlledSinceBeginningOfTurn)
+// in collections. Target legality reads history again at resolution.
+// Collections read current members. Phasing keeps history but stops selection;
+// return starts new history. Shared batches keep destruction and regeneration.
+// Nettling Imp still needs its separate activation-window adapter.
+//
 // [TargetControlledBy] accepts [ActivePlayer] for current turn control.
 // Target selection and resolution read the active player each time.
 // The action controller and source controller do not change that player.
