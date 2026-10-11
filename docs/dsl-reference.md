@@ -13760,3 +13760,22 @@ Native `TestStackSelfCastExactVisit` places a copy beside the cast visit before
 an event check, then verifies the captured counter removes only the cast visit.
 Optional sacrifice transactions and replacement ordering retain the existing
 `TestRONOptionalSacrifice*` and native cost/zone-batch contracts.
+
+## RON minimum-power destruction choice
+
+`DestroyAPermanentNoRegen(collection)` makes a required non-target choice for
+its scoped player at resolution, then destroys that exact visit without
+regeneration. Ordinary spell, activated, triggered and explicit player action
+bodies use the shared action compiler. This operation has a private binding;
+it does not produce `TheChosenPermanent` for later instructions.
+
+Resolving collections accept
+`PowerIs(EqualTo(TheLeastPowerAmongPermanents(collection)))`, including within
+`And` and `Or`. The comparison collection is independent of the outer selection.
+An empty comparison collection matches nothing. Other comparisons, target and
+static predicate contexts remain unsupported for this dynamic value.
+
+`mage.PowerEqualToLeastOf(subjects, compared) PermanentSet` supplies the typed
+selector. Compose `ChoosePermanent` with `DestroyWithoutRegeneration` to execute
+the choice. The complete Drop of Honey record uses the controller upkeep trigger
+and the separate battlefield-absence trigger. See `TestRONLeastPowerChoice*`.

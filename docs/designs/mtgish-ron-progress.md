@@ -2,14 +2,14 @@
 
 ## Current status
 
-The isolated slice reports **841 accepted / 145 rejected names** (986 total),
-**2,177 compiled / 268 rejected records** (2,445 total). With pre-existing Eureka,
-the shared worktree reports **842/144 names** and **2,178/267 records**.
+The isolated slice reports **842 accepted / 144 rejected names** (986 total),
+**2,178 compiled / 267 rejected records** (2,445 total). With pre-existing Eureka,
+the shared worktree reports **843/143 names** and **2,179/266 records**.
 The strict loader rejects the collection and publishes no partial registry.
 
-STACK-SOURCE-SELF-CAST executes the exact FromStack self-cast trigger with
-stack-visit matching and typed detection captures. Complete Mana Vortex gameplay
-covers casting/payment, copies, departure, control, clones, upkeep and absence.
+MINIMUM-POWER-DESTRUCTION-CHOICE selects by current least power at resolution
+and destroys one chosen exact visit without regeneration. Complete Drop of Honey
+RON gameplay covers both rules, casting, choices, layers, copies and lifetimes.
 Compilation and complete-card gameplay gain **one name / one record**.
 Existing user work remains preserved.
 
@@ -74369,3 +74369,152 @@ No unresolved environment or pre-existing check failure blocks this slice.
    shared exact-zone-visit prerequisites against other multi-card gaps first.
 
 This run stops after stack-source self-cast. Migration is incomplete.
+
+## Run 2026-10-11: MINIMUM-POWER-DESTRUCTION-CHOICE
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Candidate comparison and selection
+
+The latest entry ranks Drop of Honey, City in a Bottle and graveyard-source
+triggers. Complete records were inspected for all three, including all six
+identical Nether Shadow reprints. Targeted vocabulary entries confirm one
+DestroyAPermanentNoRegen/1 and one TheLeastPowerAmongPermanents/1 record.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Minimum-power destruction choice | Drop of Honey | 1 name / 1 record | Absence and upkeep triggers already work; reusable independent-set power comparison and required destruction choice | Small: one typed selector, action adapter and focused lifecycle tests |
+| Captured state-trigger members | City in a Bottle | 0 | Requires Trigger_ThosePermanents capture, then controller sacrifices; CantCastSpells and CantPlayLandsOfType still block the complete record | Medium: typed event capture, state arming and membership snapshots |
+| Graveyard-source triggers | Nether Shadow | 0 | FromGraveyard source visit precedes ThisGraveyardCard, ordered-graveyard intervening condition and optional battlefield return | Larger: source-zone lifecycle, ordered visits and delayed facts |
+
+Candidate 1 is dependency-ready and gives the largest complete-record gain for
+these three efforts. Each alternative currently serves one distinct card with
+additional blockers; none supplies an immediate multi-card unlock. The chosen
+slice completes both Drop of Honey rules rather than treating the first loader
+error as complete-card evidence. Engine LowestPower, typed choices and destruction
+already provide its dependencies. The new comparison selector is reusable when
+the selected and comparison sets differ. No card-name executor is introduced.
+
+### Exact supported shapes and engine boundary
+
+RON supports DestroyAPermanentNoRegen(collection)/1 in ordinary resolving action
+bodies, including explicit PlayerAction, spells, activations and triggers. The
+operation chooses for the scoped player at resolution and uses a private binding;
+it does not export TheChosenPermanent to later instructions. Empty or sole-member
+sets require no choice prompt. Later instructions still execute after an empty
+choice or an unsuccessful destruction.
+
+Resolving collections support
+PowerIs(EqualTo(TheLeastPowerAmongPermanents(collection))) with exact tuple
+arities, including nested And/Or compositions. The comparison collection has its
+own existing typed scope and can differ from the outer selection. Empty comparison
+sets match nothing. Only EqualTo is supported for this value. Dynamic target,
+static-predicate and state-condition consumers remain separate adapters. Existing
+fixed PowerIs comparisons retain their prior support.
+
+Engine API: PowerEqualToLeastOf(subjects, compared PermanentSet) PermanentSet.
+It uses LowestPower for the comparison and keeps matching subjects in their
+existing order. Both sets use current membership and power at resolution.
+Negative power and ties are ordinary values. Layers, counters, control changes,
+phasing and new entries can change the result. Definition inspection traverses
+both sets. Waiting delayed-source queries traverse both declarations without
+selecting subjects, running filters or reading power.
+
+RON owns syntax, diagnostics and per-factory lowering. mage owns comparison,
+resolution frames, ChoosePermanent and DestroyWithoutRegeneration. BindPermanent
+keeps the selected exact battlefield visit. Control changes and a phase cycle
+keep it; return cannot replace it. The chooser is the saved action controller,
+including after trigger-source departure, phasing, control change or ability
+removal. Shroud does not prevent a non-target choice. Indestructibility does not
+exclude a minimum-power creature or permit destruction of another creature.
+Regeneration is forbidden; other death replacements still apply. Copies and
+clones make separate choices through existing frames. Cost transactions, LKI,
+state arming and replacement batches are reused without new parallel services.
+Rules consulted: CR 115.10, 400.7, 603.8, 608.2c/d, 701.8 and 702.26.
+
+### Card-to-test mapping and coverage
+
+| Card or contract | Evidence |
+| --- | --- |
+| Drop of Honey, complete ARN record and upkeep rule | TestRONLeastPowerChoiceDropOfHoney: both players' upkeep timing, tied and negative power, counters and layer changes, later and returned members, token membership, phasing, shroud, indestructibility, regeneration prohibition, exile replacement, source departure/control/phasing and pending ability removal. |
+| Drop of Honey casting, copies and clones | TestRONLeastPowerChoiceCopiesAndClones: failed and successful actual casting/payment, normal entry, copied trigger with another controller, source departure and independent cloned choices. |
+| Drop of Honey absence rule | TestRONLeastPowerChoiceAbsence: last creature destruction, empty entry, new creature after trigger placement, source phasing and phased creature exclusion. Existing TestRONBattlefieldAbsence* retains state arming, counterability, simultaneous movement, replacements, layers and saved source-visit evidence. |
+| Scoped choices, payment and continuation | TestRONLeastPowerChoicePlayerScope and ActivationAndEmpty: explicit targeted player scope, outer continuation, failed activation payment, separate pending activations, sole and empty sets. Existing typed choice/payment tests retain rollback and invalid-choice fallback contracts. |
+| Declaration rejection and collection safety | TestRONLeastPowerChoiceInvalid and RecordsAndInventory: malformed constructors, foreign comparisons, unbound permanent reads, private-choice scope, fresh factory declarations, semantic inventory roles and atomic loader rejection preserving a sentinel registry. |
+| Native reusable selector and identity | TestLeastPowerComparisonSelection, Declaration, WaitingSource and ChoiceIdentity: different selected/comparison sets, negative minima, current counters, phasing, independent clones, invalid dependencies, pure waiting queries on both sides and saved control/phase/return identity. |
+
+Compilation and complete-card gameplay each gain one unique name and one record,
+Drop of Honey, exactly as estimated. Ordinary upkeep text inventories gain its
+already-supported declaration: 58 names / 119 records instead of 57 / 118.
+Census assertions require exact new totals and explicit Drop of Honey acceptance;
+no rejection assertion is weakened. Compilation and gameplay evidence remain
+separate. Local data/ARN.json Oracle text agrees with both RON rules. No source
+defect is identified or corrected, and RON assets/vocabulary hashes are unchanged.
+Runtime cutover, complete collection gameplay, Go-card removal and DSL removal
+gates remain unmet. No definitions, generators or DSL APIs are deleted.
+
+### Validation and preservation
+
+Fresh shared baseline: make build and go test ./pkg/mage/dsl/ron -short -count=1
+pass. The strict loader exits 1 with 2,178 compiled / 267 rejected records and
+842 accepted / 144 rejected names, out of 2,445 records / 986 names. This includes
+pre-existing Eureka/repeated-entry work. Collection rejection is not a build or
+test failure. Implementation starts in an isolated checkout of 085bab44; the
+shared worktree's 21 modified/untracked files are saved before slice application.
+
+Failing-first: native selector tests fail to compile because PowerEqualToLeastOf
+is absent; complete Drop of Honey gameplay and inventory tests fail on unsupported
+DestroyAPermanentNoRegen. Test-only API errors are corrected before the RON red
+run: AddRegenerationShield takes one argument, and one invalid input had an extra
+parenthesis. Later token fixtures use NewToken and core.CardType. An explicit
+player test uses the existing targeted player binding because a bare Opponent
+is not a singular player reference. Production scope support is not broadened
+to conceal that fixture error.
+
+The first engine short run fails only old collection/upkeep-text census checks.
+An early full run encounters the same obsolete assertions. The counts are updated
+to require the new record and declaration, focused census checks pass, and both
+required suites are rerun successfully. No gameplay assertion is weakened.
+
+Required final checks pass in both the isolated and shared trees:
+`go test ./pkg/mage/dsl/ron -run TestRONLeastPowerChoice -count=1`,
+`go test ./pkg/mage -run TestLeastPowerComparison -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+`make lint` and `git diff --check`. Engine short RON times are 59.325s isolated
+and 49.171s shared; full-suite RON times are 49.006s isolated and 45.754s shared.
+Lint first reports SA4000 on comparing two direct factory-call expressions in a
+new test. The test now creates named first/second instances before comparing their
+ability IDs; it retains the same isolation assertion. Sequential final lint runs
+report zero issues. Automatic formatting only groups imports in the two new test
+files. Affected focused RON and native tests pass after the lint correction.
+
+Final strict loaders reject the remaining unsupported collection atomically.
+Isolated: 2,178 compiled / 267 rejected records, 842 accepted / 144 rejected names.
+Shared: 2,179 compiled / 266 rejected records, 843 accepted / 143 rejected names.
+Both have 2,445 records / 986 unique names. The shared final diagnostic list equals
+the fresh baseline with only Drop of Honey removed; every other diagnostic is
+unchanged, and no accepted record is lost. The additional shared name/record is
+pre-existing Eureka, which this commit does not include.
+
+Changed files: least_power_comparison.go and native tests; least_power_choice.go
+and RON tests; contextual_collection.go, compiler dispatch, inventory and waiting
+source traversal; collection, absence and upkeep-text census assertions; engine
+reference, API/rules contracts and this summary/entry. The isolated commit stages
+only this slice. Equivalent shared changes preserve all prior modified and
+untracked contents, including Eureka, ledger reorganization, vocabulary and
+unrelated files. A reverse-slice audit compares the restored pre-existing files
+with their saved SHA-256 hashes. No check or environment blocker remains.
+
+### Ranked next candidates
+
+1. Reassess the shared permanent-control exchange prerequisites for Juxtapose
+   and Gauntlets of Chaos: player-keyed choices and an exact exchange result are
+   concrete dependencies; the latter card also needs a contextual card-type
+   target comparison. Compare these complete records before estimating unlocks.
+2. City in a Bottle captured state-trigger members: zero immediate unlocks;
+   typed membership capture enables controller sacrifices, followed by its
+   global casting and land restrictions.
+3. Nether Shadow graveyard-source visit and scoped card reference: zero immediate
+   unlocks until ordered-graveyard conditions and optional return are complete.
+
+This run stops after minimum-power destruction choice. Migration is incomplete.

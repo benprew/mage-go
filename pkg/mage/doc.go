@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PowerEqualToLeastOf] compares two current permanent sets at resolution.
+// Empty comparison sets supply no power. Negative power and ties keep their
+// normal values. Selection does not exclude an indestructible subject.
+// Combine [ChoosePermanent] and [DestroyWithoutRegeneration] for a required
+// choice that keeps its exact visit. RON lowers DestroyAPermanentNoRegen with
+// resolving collections and PowerIs(EqualTo(TheLeastPowerAmongPermanents)).
+// Shared choices, destruction and waiting queries keep player and source facts.
+// Targets, static predicates and other comparisons need separate adapters.
+//
 // [SourceSpellCast] matches the source spell at its exact cast stack visit.
 // Stack detection saves typed event bindings before trigger placement. Copies
 // do not inherit another visit's event. Pending bodies keep the caster and

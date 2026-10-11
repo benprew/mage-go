@@ -354,7 +354,7 @@ func TestRONBattlefieldAbsenceInvalid(t *testing.T) {
 func TestRONBattlefieldAbsenceRecordsAndInventory(t *testing.T) {
 	for _, card := range []struct{ set, name, blocker string }{
 		{"DRK", "Mana Vortex", ""},
-		{"ARN", "Drop of Honey", "DestroyAPermanentNoRegen"},
+		{"ARN", "Drop of Honey", ""},
 	} {
 		t.Run(card.name, func(t *testing.T) {
 			record, rule := absenceCardRule(t, card.set, card.name)

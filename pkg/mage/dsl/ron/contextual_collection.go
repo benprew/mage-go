@@ -3,6 +3,9 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error) {
+	if isLeastPowerCollection(n) {
+		return compileLeastPowerCollection(n, ctx)
+	}
 	switch n.Name {
 	case "ControlledSinceBeginningOfTurn", "NotControlledSinceBeginningOfTurn":
 		filter, err := compileCurrentTurnControlFilter(n)

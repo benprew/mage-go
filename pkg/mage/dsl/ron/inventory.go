@@ -835,7 +835,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
+		if (n.Name == "ChooseAPermanent" || n.Name == "DestroyAPermanentNoRegen") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
 		if n.Name == "CreateValueX" && len(n.Args) == 1 {
@@ -1470,7 +1470,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ChooseAPlayer" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-		if n.Name == "ChooseAPermanent" && len(n.Args) == 1 {
+		if (n.Name == "ChooseAPermanent" || n.Name == "DestroyAPermanentNoRegen") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
 		if n.Name == "GainLifeForEach" && len(n.Args) == 2 {
@@ -1599,7 +1599,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if len(n.Args) == 1 {
 			return "value"
 		}
+	case "power_comparison_value":
+		if n.Name == "TheLeastPowerAmongPermanents" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 	case "power_comparison":
+		if n.Name == "EqualTo" && len(n.Args) == 1 && n.Args[0].Name == "TheLeastPowerAmongPermanents" {
+			return "power_comparison_value"
+		}
 		if len(n.Args) == 1 && (n.Name == "LessThanOrEqualTo" || n.Name == "GreaterThanOrEqualTo" || n.Name == "EqualTo") {
 			return "value"
 		}

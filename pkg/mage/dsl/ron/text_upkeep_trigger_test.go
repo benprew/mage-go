@@ -452,10 +452,10 @@ func TestRONTextUpkeepTriggerInventory(t *testing.T) {
 			records++
 		}
 	}
-	if len(counts) != 57 || records != 118 {
+	if len(counts) != 58 || records != 119 {
 		t.Fatalf("declaration inventory: %d names / %d records", len(counts), records)
 	}
-	if counts["Mana Vortex"] != 1 || counts["Tourach's Gate"] != 1 || counts["Serendib Djinn"] != 1 || counts["Ebon Praetor"] != 1 || counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
+	if counts["Drop of Honey"] != 1 || counts["Mana Vortex"] != 1 || counts["Tourach's Gate"] != 1 || counts["Serendib Djinn"] != 1 || counts["Ebon Praetor"] != 1 || counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
 		t.Fatal("real subject reprints missing")
 	}
 }

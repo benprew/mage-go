@@ -17971,3 +17971,38 @@ Native `TestStackSelfCastExactVisit` places a copy beside the cast visit before
 an event check, then verifies the captured counter removes only the cast visit.
 Optional sacrifice transactions and replacement ordering retain the existing
 `TestRONOptionalSacrifice*` and native cost/zone-batch contracts.
+
+### Minimum-power comparison and required destruction choice
+
+`PowerEqualToLeastOf(subjects, compared PermanentSet) PermanentSet` reads the
+comparison set at resolution through `LowestPower`, then keeps subjects with
+that current power in subject order. Sets can differ. Empty comparison sets
+supply no value and select nothing; zero and negative power are ordinary values.
+Current layers, counters, control and phasing determine membership and power.
+The selector has no mutable choice state. Definition checks traverse both sets,
+including target and binding dependencies. Waiting queries retain explicit source
+reads from either set without selecting members or reading power.
+
+RON `PowerIs(EqualTo(TheLeastPowerAmongPermanents(collection)))` lowers this
+selector only in resolving collections. `DestroyAPermanentNoRegen(collection)`
+composes the existing required non-target `ChoosePermanent` and
+`DestroyWithoutRegeneration` services with a fresh private binding. The scoped
+player chooses during resolution (CR 115.10, 608.2d). Shroud permits the choice.
+Indestructibility does not exclude a least-power creature or permit destruction
+of a different creature. Regeneration cannot replace this destruction, while
+other zone replacements still apply (CR 701.8). Empty choices do not stop later
+instructions. Saved choices keep exact visits through control and phasing;
+returned objects cannot replace them (CR 400.7, 702.26). Copies and clones keep
+separate resolution choices. Failed activation payment makes no choice.
+
+Drop of Honey's complete RON factory uses both rules. Controller upkeep queues
+its choice without targets; pending bodies keep their controller after source
+control changes, departure, phasing or ability removal. The independent absence
+state trigger uses the existing `BattlefieldHasNone`/`WhenState` contract
+(CR 603.8), including pending sacrifice after a later creature entry.
+
+Evidence: `TestLeastPowerComparisonSelection`, `Declaration`, `WaitingSource`,
+`ChoiceIdentity`; `TestRONLeastPowerChoiceDropOfHoney`, `Absence`,
+`CopiesAndClones`, `PlayerScope`, `ActivationAndEmpty`, `Invalid`,
+`RecordsAndInventory`. Existing destruction, sacrifice, replacement and state
+trigger tests retain batch ordering and exact departure contracts.
