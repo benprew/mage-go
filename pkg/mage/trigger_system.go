@@ -15,6 +15,7 @@ type DelayedTrigger struct {
 	interveningCondition StateCondition
 	targets              []Target
 	eventPlayerBinding   *PlayerBinding
+	deathCapture         *creatureDiesPattern
 	matchFlagFalse       bool
 	expiresAtCleanup     bool
 	sourceCaptured       bool

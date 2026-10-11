@@ -79,6 +79,7 @@ type scope struct {
 	cardTarget        *cardTargetPlan
 	deathCard         *deathCardPlan
 	hostDeath         *hostDeathPlan
+	delayedDeath      *hostDeathPlan
 	damageTarget      *damageTargetPlan
 	damageGroups      map[string]*damageTargetPlan
 	damageTargets     *damageTargetsPlan

@@ -68,6 +68,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 				return permanentReferencePlan{kind: permanentHost}, nil
 			}
 		case "Trigger_ThatPermanent":
+			if ctx.delayedDeath != nil {
+				return permanentReferencePlan{kind: permanentDeath, death: ctx.delayedDeath}, nil
+			}
 			if ctx.hostDeath != nil {
 				return permanentReferencePlan{kind: permanentDeath, death: ctx.hostDeath}, nil
 			}

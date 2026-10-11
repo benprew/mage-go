@@ -88,6 +88,17 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 		ability, err := compileAbilityRef(n.Args[0], ctx)
 		return playerReferencePlan{ability: ability}, err
 	}
+	if (n.Name == "ControllerOfPermanent" || n.Name == "OwnerOfPermanent") && ctx.delayedDeath != nil {
+		if err := arity(n, 1); err != nil {
+			return playerReferencePlan{}, err
+		}
+		if n.Args[0].Kind == Symbol && n.Args[0].Name == "Trigger_ThatPermanent" {
+			if n.Name == "OwnerOfPermanent" {
+				return playerReferencePlan{hostDeathOwner: ctx.delayedDeath}, nil
+			}
+			return playerReferencePlan{hostDeathController: ctx.delayedDeath}, nil
+		}
+	}
 	if n.Name == "ControllerOfPermanent" {
 		if err := arity(n, 1); err != nil {
 			return playerReferencePlan{}, err

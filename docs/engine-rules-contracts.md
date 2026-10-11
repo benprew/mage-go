@@ -17674,3 +17674,36 @@ membership, delayed source LKI/phasing/departure, copies, clones, declaration
 errors, nested inventory and atomic collection rejection. Rules: CR 115.10,
 400.7, 603.7 and 608.2c/d/h. These are clause and engine contracts, not complete
 card gameplay claims.
+
+
+## Delayed death facts in saved resolution frames
+
+`WhenDiesThisTurnWithBindings(subject PermanentRef, permanent *PermanentBinding,
+owner, controller *PlayerBinding, body ResolvingEffect) ResolvingEffect` extends
+the existing exact-incarnation death subscription through cleanup. Definition
+validation requires all operands, different player bindings, and a producer for
+any external saved subject. Event bindings are available only inside the body.
+The current `WhenDiesThisTurn` signature and behavior remain available.
+
+Detection reuses `PermanentDies().WithPermanent(...).WithOwner(...)` capture
+against the existing former-battlefield observer; controller capture uses the
+death event player. These immutable facts belong to each pending event. Stack
+placement copies the saved frame and adds its event facts before execution.
+The frame restores all outer binding maps when the body finishes. Captured
+permanent identities supply the shared stack-reference query (CR 609.7a).
+No new zone-change, replacement or simultaneous-movement service is introduced.
+
+CR 400.7, 603.6c, 603.7b–e, 603.10a and 608.2h establish identity, timing and
+LKI. Control changes before death affect the captured controller. Source
+departure, cleanup after detection and returned physical cards cannot change
+pending facts. Phasing preserves a watched visit but sends no death event.
+Exile replacement does not supply a death. Clone copies of waiting, pending
+and stacked triggers keep independent frames. A returned permanent cannot
+receive an action intended for the captured visit.
+
+`TestDelayedDeathCaptureFacts`, `Definition` and `IdentityAndFrames` prove
+these engine contracts. `TestRONDelayedDeathCapture*` proves full Reincarnation
+execution, separately saved owner/controller values, resolution-time non-target
+choice, target legality, copies, simultaneous watches and native atomic loading.
+Required costs, damage ordering and plural death-result loops are outside this
+new event-binding contract.

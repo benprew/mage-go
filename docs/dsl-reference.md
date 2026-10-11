@@ -6721,7 +6721,8 @@ ActionList(actions), UntilEndOfTurn)` and the corresponding
 and `WhenDiesThisTurn`. They use resolving spell, activation, trigger and nested
 supported delayed action scopes. `ref` must be a bound singular permanent
 reference. The body uses the existing delayed action restrictions, captures the
-outer bindings, and declares no new targets or departure-event bindings.
+outer bindings and declares no new targets. Delayed death-event bindings are
+described below. Leave-event bodies do not declare departure-event bindings.
 
 The duration is the bare `UntilEndOfTurn` symbol. Other events, durations,
 plural subjects, wrong arities, unbound reads, empty bodies, modes and new body
@@ -13549,3 +13550,31 @@ membership, delayed source LKI/phasing/departure, copies, clones, declaration
 errors, nested inventory and atomic collection rejection. Rules: CR 115.10,
 400.7, 603.7 and 608.2c/d/h. These are clause and engine contracts, not complete
 card gameplay claims.
+
+
+## RON delayed death-event bindings
+
+`CreateTriggerUntil(WhenAPermanentDies(SinglePermanent(ref)),
+ActionList(actions), UntilEndOfTurn)` declares `Trigger_ThatPermanent` inside
+its body. `ref` uses an existing singular permanent reference. The declaration
+works in ordinary spell, activation and supported nested delayed bodies.
+`OwnerOfPermanent(Trigger_ThatPermanent)` and
+`ControllerOfPermanent(Trigger_ThatPermanent)` read separate players saved at
+death detection. The permanent reference keeps the departed battlefield visit
+for existing LKI readers; actions cannot affect a returned visit.
+
+Each factory makes fresh bindings. The adapter uses
+`WhenDiesThisTurnWithBindings(subject PermanentRef, permanent *PermanentBinding,
+owner, controller *PlayerBinding, body ResolvingEffect) ResolvingEffect`.
+The three bindings belong only to the saved body frame. Both player bindings
+must be present and distinct. Death facts are saved before trigger placement,
+then installed in a separate copy of that frame. Waiting and stack queries keep
+the exact watched visit. Cleanup removes subscriptions but keeps pending bodies.
+Phasing sends no death; exile replacements do not trigger a death subscription.
+
+Reincarnation now uses its dead creature's owner for both the graveyard and
+entry controller. The source correction follows `data/LEG.json` Oracle text.
+`TestRONDelayedDeathCapture*` covers its complete record, resolution choices,
+legality, copies, simultaneous deaths, independent instances and cloned games.
+Leaves events, other owner operands, plural watched subjects, new targets,
+other durations and out-of-scope event reads remain separate contracts.

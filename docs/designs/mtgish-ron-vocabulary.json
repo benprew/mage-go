@@ -61,7 +61,7 @@
     {
       "path": "cards/mtgish/LEG.lines.ron",
       "records": 309,
-      "sha256": "c69fd44532cba9b6c72a07f79dff64307e2165b88194905de6ba98dab891f837"
+      "sha256": "5deaf71982a3c6c2c9d507793b68688b2fdf2989d3797c2d3ea0d443742f0b4d"
     },
     {
       "path": "cards/mtgish/PROMOS.lines.ron",
@@ -351,7 +351,7 @@
     {"name": "ControllerOfAbility", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Ayesha Tanaka (cards/mtgish/LEG.lines.ron:22:348)"]},
     {"name": "ControllerOfDeadPermanent", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Creature Bond (cards/mtgish/2ED.lines.ron:50:328)", "Dingus Egg (cards/mtgish/2ED.lines.ron:63:278)", "Creature Bond (cards/mtgish/3ED.lines.ron:49:328)"]},
     {"name": "ControllerOfLeavingPermanent", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:810)", "Animate Dead (cards/mtgish/3ED.lines.ron:5:810)", "Animate Dead (cards/mtgish/CED.lines.ron:4:810)"]},
-    {"name": "ControllerOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 48, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:265)", "Gauntlet of Might (cards/mtgish/2ED.lines.ron:96:314)", "Kudzu (cards/mtgish/2ED.lines.ron:137:322)"]},
+    {"name": "ControllerOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 47, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:265)", "Gauntlet of Might (cards/mtgish/2ED.lines.ron:96:314)", "Kudzu (cards/mtgish/2ED.lines.ron:137:322)"]},
     {"name": "ControllerOfPermanentTheLastTimeItWasBlockedByPermanentThisTurn", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Glyph of Reincarnation (cards/mtgish/LEG.lines.ron:104:468)"]},
     {"name": "ControllerOfSpell", "kind": "tuple", "arity": 1, "occurrences": 14, "examples": ["Power Sink (cards/mtgish/2ED.lines.ron:191:205)", "Power Sink (cards/mtgish/2ED.lines.ron:191:339)", "Power Sink (cards/mtgish/3ED.lines.ron:195:205)"]},
     {"name": "ControllerOfTargetSpell", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Vodalian Mage (cards/mtgish/FEM.lines.ron:99:288)"]},
@@ -770,7 +770,7 @@
     {"name": "Ouphe", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Niall Silvain (cards/mtgish/DRK.lines.ron:78:90)", "Shelkin Brownie (cards/mtgish/LEG.lines.ron:235:92)"]},
     {"name": "OwnedByAPlayer", "kind": "tuple", "arity": 1, "occurrences": 8, "examples": ["Hurkyl's Recall (cards/mtgish/3ED.lines.ron:120:268)", "Jeweled Bird (cards/mtgish/ARN.lines.ron:43:349)", "Bronze Tablet (cards/mtgish/ATQ.lines.ron:15:357)"]},
     {"name": "OwnerOfDeadPermanent", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Personal Incarnation (cards/mtgish/2ED.lines.ron:181:589)", "Personal Incarnation (cards/mtgish/3ED.lines.ron:185:589)", "Personal Incarnation (cards/mtgish/CED.lines.ron:181:589)"]},
-    {"name": "OwnerOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 14, "examples": ["Personal Incarnation (cards/mtgish/2ED.lines.ron:181:408)", "Personal Incarnation (cards/mtgish/2ED.lines.ron:181:468)", "Personal Incarnation (cards/mtgish/3ED.lines.ron:185:408)"]},
+    {"name": "OwnerOfPermanent", "kind": "tuple", "arity": 1, "occurrences": 15, "examples": ["Personal Incarnation (cards/mtgish/2ED.lines.ron:181:408)", "Personal Incarnation (cards/mtgish/2ED.lines.ron:181:468)", "Personal Incarnation (cards/mtgish/3ED.lines.ron:185:408)"]},
     {"name": "OwnerOfTheCardReturnedToHandThisWay", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Firestorm Phoenix (cards/mtgish/LEG.lines.ron:85:307)", "Firestorm Phoenix (cards/mtgish/LEG.lines.ron:85:476)"]},
     {"name": "Ox", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Raging Bull (cards/mtgish/LEG.lines.ron:206:88)"]},
     {"name": "PT", "kind": "tuple", "arity": 2, "occurrences": 58, "examples": ["Illusionary Mask (cards/mtgish/2ED.lines.ron:120:399)", "Jade Statue (cards/mtgish/2ED.lines.ron:130:252)", "Kormus Bell (cards/mtgish/2ED.lines.ron:136:183)"]},
@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2158,
+    "compiled": 2165,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Balance", "source": {"File": "2ED.lines.ron", "Line": 11, "Column": 1}, "message": "2ED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
@@ -1250,7 +1250,6 @@
       {"card": "Library of Leng", "source": {"File": "2ED.lines.ron", "Line": 140, "Column": 1}, "message": "2ED.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Lich", "source": {"File": "2ED.lines.ron", "Line": 141, "Column": 1}, "message": "2ED.lines.ron:141:186: unsupported entry operation (LoseLife)"},
       {"card": "Nether Shadow", "source": {"File": "2ED.lines.ron", "Line": 171, "Column": 1}, "message": "2ED.lines.ron:171:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "2ED.lines.ron", "Line": 172, "Column": 1}, "message": "2ED.lines.ron:172:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "2ED.lines.ron", "Line": 181, "Column": 1}, "message": "2ED.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "2ED.lines.ron", "Line": 190, "Column": 1}, "message": "2ED.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "2ED.lines.ron", "Line": 192, "Column": 1}, "message": "2ED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1276,7 +1275,6 @@
       {"card": "Library of Leng", "source": {"File": "3ED.lines.ron", "Line": 145, "Column": 1}, "message": "3ED.lines.ron:145:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Mishra's War Machine", "source": {"File": "3ED.lines.ron", "Line": 170, "Column": 1}, "message": "3ED.lines.ron:170:348: activation history requires the resolving activated ability (If)"},
       {"card": "Nether Shadow", "source": {"File": "3ED.lines.ron", "Line": 173, "Column": 1}, "message": "3ED.lines.ron:173:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "3ED.lines.ron", "Line": 174, "Column": 1}, "message": "3ED.lines.ron:174:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "3ED.lines.ron", "Line": 185, "Column": 1}, "message": "3ED.lines.ron:185:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "3ED.lines.ron", "Line": 194, "Column": 1}, "message": "3ED.lines.ron:194:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "3ED.lines.ron", "Line": 196, "Column": 1}, "message": "3ED.lines.ron:196:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1333,7 +1331,6 @@
       {"card": "Library of Leng", "source": {"File": "CED.lines.ron", "Line": 140, "Column": 1}, "message": "CED.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Lich", "source": {"File": "CED.lines.ron", "Line": 141, "Column": 1}, "message": "CED.lines.ron:141:186: unsupported entry operation (LoseLife)"},
       {"card": "Nether Shadow", "source": {"File": "CED.lines.ron", "Line": 171, "Column": 1}, "message": "CED.lines.ron:171:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "CED.lines.ron", "Line": 172, "Column": 1}, "message": "CED.lines.ron:172:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "CED.lines.ron", "Line": 181, "Column": 1}, "message": "CED.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "CED.lines.ron", "Line": 190, "Column": 1}, "message": "CED.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "CED.lines.ron", "Line": 192, "Column": 1}, "message": "CED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1360,7 +1357,6 @@
       {"card": "Library of Leng", "source": {"File": "CEI.lines.ron", "Line": 140, "Column": 1}, "message": "CEI.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Lich", "source": {"File": "CEI.lines.ron", "Line": 141, "Column": 1}, "message": "CEI.lines.ron:141:186: unsupported entry operation (LoseLife)"},
       {"card": "Nether Shadow", "source": {"File": "CEI.lines.ron", "Line": 171, "Column": 1}, "message": "CEI.lines.ron:171:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "CEI.lines.ron", "Line": 172, "Column": 1}, "message": "CEI.lines.ron:172:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "CEI.lines.ron", "Line": 181, "Column": 1}, "message": "CEI.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "CEI.lines.ron", "Line": 190, "Column": 1}, "message": "CEI.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "CEI.lines.ron", "Line": 192, "Column": 1}, "message": "CEI.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1424,7 +1420,6 @@
       {"card": "Library of Leng", "source": {"File": "LEA.lines.ron", "Line": 139, "Column": 1}, "message": "LEA.lines.ron:139:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Lich", "source": {"File": "LEA.lines.ron", "Line": 140, "Column": 1}, "message": "LEA.lines.ron:140:186: unsupported entry operation (LoseLife)"},
       {"card": "Nether Shadow", "source": {"File": "LEA.lines.ron", "Line": 170, "Column": 1}, "message": "LEA.lines.ron:170:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "LEA.lines.ron", "Line": 171, "Column": 1}, "message": "LEA.lines.ron:171:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "LEA.lines.ron", "Line": 180, "Column": 1}, "message": "LEA.lines.ron:180:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "LEA.lines.ron", "Line": 189, "Column": 1}, "message": "LEA.lines.ron:189:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "LEA.lines.ron", "Line": 191, "Column": 1}, "message": "LEA.lines.ron:191:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1451,7 +1446,6 @@
       {"card": "Library of Leng", "source": {"File": "LEB.lines.ron", "Line": 140, "Column": 1}, "message": "LEB.lines.ron:140:179: unsupported rule (ReplaceWouldDiscard)"},
       {"card": "Lich", "source": {"File": "LEB.lines.ron", "Line": 141, "Column": 1}, "message": "LEB.lines.ron:141:186: unsupported entry operation (LoseLife)"},
       {"card": "Nether Shadow", "source": {"File": "LEB.lines.ron", "Line": 171, "Column": 1}, "message": "LEB.lines.ron:171:149: unsupported rule (FromGraveyard)"},
-      {"card": "Nettling Imp", "source": {"File": "LEB.lines.ron", "Line": 172, "Column": 1}, "message": "LEB.lines.ron:172:645: unsupported activation timing condition (IsAPlayersTurn)"},
       {"card": "Personal Incarnation", "source": {"File": "LEB.lines.ron", "Line": 181, "Column": 1}, "message": "LEB.lines.ron:181:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "LEB.lines.ron", "Line": 190, "Column": 1}, "message": "LEB.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "LEB.lines.ron", "Line": 192, "Column": 1}, "message": "LEB.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
@@ -1502,7 +1496,6 @@
       {"card": "Rasputin Dreamweaver", "source": {"File": "LEG.lines.ron", "Line": 211, "Column": 1}, "message": "LEG.lines.ron:211:521: unsupported finite prevention event (NextAmountOfDamageThatWouldBeDealtThisTurnByPermanent)"},
       {"card": "Rebirth", "source": {"File": "LEG.lines.ron", "Line": 212, "Column": 1}, "message": "LEG.lines.ron:212:238: unsupported action (EachPlayerMayCost)"},
       {"card": "Recall", "source": {"File": "LEG.lines.ron", "Line": 213, "Column": 1}, "message": "LEG.lines.ron:213:183: unsupported fixed discard amount (ValueX)"},
-      {"card": "Reincarnation", "source": {"File": "LEG.lines.ron", "Line": 215, "Column": 1}, "message": "LEG.lines.ron:215:319: unsupported action (ReturnACardFromPlayersGraveyardToBattlefield)"},
       {"card": "Relic Bind", "source": {"File": "LEG.lines.ron", "Line": 217, "Column": 1}, "message": "LEG.lines.ron:217:297: unsupported action list (Modal_ChooseOne)"},
       {"card": "Reverberation", "source": {"File": "LEG.lines.ron", "Line": 222, "Column": 1}, "message": "LEG.lines.ron:222:259: unsupported temporary redirection event (DamageWouldBeDealtBySpell)"},
       {"card": "Rohgahh of Kher Keep", "source": {"File": "LEG.lines.ron", "Line": 226, "Column": 1}, "message": "LEG.lines.ron:226:342: unsupported action (CreatePermanentsList)"},

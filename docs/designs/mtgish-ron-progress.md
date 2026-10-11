@@ -2,16 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **833 accepted / 153 rejected names** (986 total),
-**2,164 compiled / 281 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **834/152 names** and **2,165/280 records**. The strict
+The isolated slice reports **834 accepted / 152 rejected names** (986 total),
+**2,165 compiled / 280 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **835/151 names** and **2,166/279 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-REQUIRED-GRAVEYARD-CHOICE-RETURN adds required non-target creature-card choices
-and battlefield returns, with explicit-player or owner entry control. New engine
-and RON clause tests cover exact visits, delayed frames, copies and clones.
-Compilation gains are **0 names / 0 records**. Both Reincarnation cards retain
-separate death-binding, owner-reference or loop/casting blockers.
+DELAYED-DEATH-EVENT-BINDINGS saves the watched permanent's exact death visit,
+owner and controller in each pending body's saved frame. Reincarnation now has
+complete RON gameplay tests and uses its dead creature's owner for entry.
+Compilation gains are **1 unique name / 1 record**. Existing accepted records
+and unrelated working-tree changes remain.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -73116,3 +73116,183 @@ Changed files: `pkg/mage/chosen_graveyard_return.go` and its engine tests;
    casting and death-result loops before its return clause can execute.
 
 This run stops after required graveyard choice and return. Migration is incomplete.
+
+## Run 2026-10-10: DELAYED-DEATH-EVENT-BINDINGS
+
+Status: complete one vertical capability slice. No second capability is started.
+
+### Selection and dependency evidence
+
+The latest ledger ranks delayed death-owner capture first, declaration-bound
+block-history targets second and durable tap-payment history third. Complete
+source records are inspected for Reincarnation (LEG:215), Glyph of Delusion
+(LEG:100), Glyph of Doom (LEG:102), Glyph of Reincarnation (LEG:104) and
+Vodalian War Machine (FEM:101). Reprints count once. Nested forms, current
+compiler adapters and engine services determine these estimates.
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers and downstream use | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Delayed death-event bindings | Reincarnation; existing death subscriptions on Sandals of Abdallah and Whippoorwill retain their behavior | 1 name / 1 record | The graveyard-choice/entry service is already implemented. Owner capture and a source-data correction complete Reincarnation. The reusable event contract also supplies exact permanent and controller facts to delayed bodies. | Small engine capture extension, lexical adapters, declaration rejection and lifecycle/gameplay tests; one run. |
+| Declaration-bound block-history targets | Glyph of Delusion; Glyph of Doom and Glyph of Reincarnation share the spelling in resolving collections | 0 names / 0 records | Doom is already accepted through the existing collection path. Delusion still needs acquired conditional untap and upkeep rules. Reincarnation's Glyph still needs after-combat casting and a death-result loop, independently of collection history. Target-context history is the missing contract. | Medium: declaration binding, announcement/resolution legality, returned visits and acquired-rule integration tests. |
+| Durable tap-payment history | Vodalian War Machine | 1 name / 1 record | Its other complete-record forms have adapters. The missing service must save successful transaction-paid visits, survive departure and control changes, reset at cleanup and select the correct dead source history. | Larger: transactional capture, durable turn history, historical filtering, rollback, copies and clone tests. |
+
+The first candidate is dependency-ready and gives the same credible immediate
+unique-card gain as payment history with a smaller engine change. It closes the
+previous run's explicitly deferred prerequisite. Block-history targeting gives
+no immediate full-card gain. The pre-edit comparison initially treats Glyph of
+Doom as otherwise ready; fresh loader evidence and the existing adapter confirm
+it is already supported, so it is excluded from the unlock estimate. There is
+no new multi-card compilation gain hidden in reprint counts.
+
+### Established signatures, contexts and reuse
+
+New engine signature:
+
+`WhenDiesThisTurnWithBindings(subject PermanentRef, permanent *PermanentBinding,
+owner, controller *PlayerBinding, body ResolvingEffect) ResolvingEffect`.
+
+All operands are required. Owner and controller bindings must be different.
+They and the saved permanent are available only within the delayed body.
+Existing `WhenDiesThisTurn`, `WhenLeavesThisTurn` and callers remain available.
+
+RON accepts the existing complete shape
+`CreateTriggerUntil(WhenAPermanentDies(SinglePermanent(ref)),
+ActionList(actions), UntilEndOfTurn)` with lexical `Trigger_ThatPermanent`,
+`OwnerOfPermanent(Trigger_ThatPermanent)` and
+`ControllerOfPermanent(Trigger_ThatPermanent)` inside the body. The last two
+read separately saved death-time facts. Ordinary spells, activations and nested
+supported delayed bodies use this context. New targets, plural watches, other
+durations, malformed arities and out-of-scope reads still reject. General owner
+references and leave-event fact declarations are not added.
+
+Each factory creates independent declarations. Diagnostic names use the RON
+declaration position, so sibling declarations in one body cannot collide.
+Nested builders copy the binding
+map before adding a local death declaration. A watched subject is built in its
+outer scope before the inner event declaration can shadow it. RON spelling and
+lexical scope remain in `ron`; event mechanics remain in `mage`.
+
+Detection reuses the existing `PermanentDies` owner/permanent capture and the
+shared former-battlefield observer. Controller capture uses the death event's
+player. Immutable facts are saved on each pending trigger before placement.
+Placement copies the existing saved resolution frame and inserts its facts.
+Execution restores the outer bindings. This also keeps death references visible
+to `StackBoundPermanentSources` without a new query subsystem. Waiting queries
+retain the watched visit through the existing delayed-query service.
+
+The zone batch, LKI, target legality, delayed timing, replacement order, cleanup,
+required graveyard choice and battlefield entry all use existing services.
+Source departure, phasing, control changes, pending cleanup, copies and clones
+retain their existing identities and lifetimes. A returned permanent cannot
+inherit a watch or receive an action on the old visit. Exile replacements do
+not cause deaths. This slice introduces no new payment or simultaneous-movement
+operation. CR 400.7, 603.6c, 603.7b–e, 603.10a, 608.2d/h and 609.7a supply the
+identity, detection, choice, information and referred-source contracts.
+
+### Source defect and full-card gameplay evidence
+
+Local authoritative `data/LEG.json` requires Reincarnation's return under the
+dead creature's owner's control. `LEG.lines.ron:215` instead uses
+`ControllerOfPermanent(Trigger_ThatPermanent)` for entry. This slice changes
+that one operand to `OwnerOfPermanent(Trigger_ThatPermanent)`. The collection
+has one record of this card and no identical reprints. The graveyard operand
+already uses the owner. Tests give control of the watched creature to a player
+other than its owner, so the correction cannot be masked by ordinary ownership.
+No other source record changes. Fastbond and Gaea's Liege observations remain
+outside this slice. The vocabulary is refreshed from positioned ASTs and file
+hashes; constructor/signature totals stay unchanged, while owner/controller
+occurrence totals change by one. Its prior loader snapshot is stale at 2,158
+records; refreshing it also removes six already-supported Nettling Imp records.
+Those six are not credited to this slice.
+
+| Card or contract | Test mapping and limits |
+| --- | --- |
+| Reincarnation, complete LEG:215 | `TestRONDelayedDeathCaptureReincarnation`: real unchanged outer record, corrected owner entry, ordinary cast/payment, target legality, phase cycle, leave/return, spell copies, clone isolation, cleanup before/after death, exile replacement and returned-object identity. |
+| Reincarnation required choice | `TestRONDelayedDeathCaptureChoiceAtResolution`: the effect controller chooses at resolution; a creature added to the owner's graveyard after detection is eligible; entry uses the dead creature's owner. |
+| Separate pending deaths | `TestRONDelayedDeathCaptureIndependentDeaths`: two real factory instances watch different owners; one simultaneous destruction produces separate pending bodies, including a stack clone. |
+| Death-time controller versus installation | `TestDelayedDeathCaptureFacts`: a control change before death supplies the new controller; waiting, pending and stacked clones, simultaneous source departure and pending cleanup retain facts. |
+| Exact identity, LKI and references | `TestDelayedDeathCaptureIdentityAndFrames`: waiting and stacked referred-source identities, returned physical card, LKI toughness, absent-object action and outer-frame isolation. Its first assertion failure detects hidden stacked death references before frame insertion is corrected. |
+| Sibling RON declarations | `TestRONDelayedDeathCaptureSiblingDeclarations`: two watches in one spell body have separate declarations and both execute with their captured owner. A failing-first declaration check detects duplicate diagnostic names before positioned names are added. |
+| Engine declaration validity | `TestDelayedDeathCaptureDefinition`: required operands, distinct player bindings, valid targeted spell and rejected binding reads after the delayed declaration. |
+| RON contexts and invalid forms | `TestRONDelayedDeathCaptureContextsAndInvalid`: spell, activation with departed source, nested step delay, different owner/controller values, malformed reads, wrong event, subject and duration, and event scope leakage. |
+| Native loader, instance plans and inventory | `TestRONDelayedDeathCaptureNativeAndInventory`: complete real record loading, separate targets, atomic invalid-collection rejection and both owner-reference roles. |
+| Accepted departure callers | Existing `TestRONDepartureDelay*`, `TestWhenDiesThisTurn*`, `TestDelayedDepartureReplacedDestruction` and whole-repository suites continue to pass. No additional whole-card claim for Whippoorwill is inferred from compilation. |
+
+Failing-first evidence: the real-record RON test rejects
+`OwnerOfPermanent` before lowering is implemented. Engine tests fail to compile
+because `WhenDiesThisTurnWithBindings` is absent. A test harness initially uses
+an unavailable controller setter; it is corrected to the shared control-layer
+service. The later exact stacked-source test fails by assertion before death
+facts are inserted in copied saved-frame maps. A final sibling-declaration red test finds duplicate diagnostic names in one
+valid action list; positioned diagnostic names correct that rejection without
+using names as runtime binding identity. Initial inventory testing assumes
+both owner reads share one signature context; the test is corrected to sum the
+two legitimate contexts. No production exception or weakened contract is added.
+
+### Validation, counts and preserved work
+
+Fresh initial shared evidence: `make build` passes; RON short tests pass
+(40.876s); strict loader exits 1 for collection rejection with 2,165 compiled /
+280 rejected records and 834 accepted / 152 rejected names. The isolated HEAD
+baseline is 2,164/281 records and 833/153 names. Both have 2,445 records and 986
+unique names. Pre-existing Eureka explains the one-record worktree difference.
+
+Final required checks pass in both shared and isolated checkouts: focused
+`go test ./pkg/mage/dsl/ron -run TestRONDelayedDeathCapture -count=1`, engine
+contract tests, `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make lint` and
+`git diff --check`. Final RON short-suite times are isolated 46.030s / shared
+47.957s; full-suite times are isolated 47.662s / shared 47.517s. Post-lint
+focused tests pass again. Both final lint checks report zero issues.
+The first isolated lint finds one nesting-style issue in new capture code;
+the branch is inverted, and affected tests, build and vet are rerun. The later
+sibling-name fix triggers a complete repeat of the required fast-fail sequence.
+An overlapping shared lint attempt hits golangci-lint's process lock; its
+sequential rerun passes. Import formatting is reviewed. No unrelated tracked
+shared file is changed by automatic lint fixes. No unresolved check, build,
+lint, test or environment failure remains.
+
+An initial engine
+short-suite run fails only on four hard-coded collection census assertions after
+the new card compiles; the expected census values are advanced by exactly one,
+and the full fast-fail sequence is rerun. Collection rejection is never treated
+as a build or test failure. Accepted-record definition rebuilding and inventory
+non-mutation remain checked.
+
+Fresh isolated loader: **2,165 compiled / 280 rejected records**, **834 accepted /
+152 rejected names**. Fresh shared loader: **2,166 compiled / 279 rejected
+records**, **835 accepted / 151 rejected names**. Both exit 1 and publish no
+partial registry. Before/after JSON comparisons show only Reincarnation's issue
+removed, with every other diagnostic unchanged. Actual gains are **1 name /
+1 record**, matching the corrected estimate. Complete-card gameplay gains are
+one new mapped Reincarnation record, separately from compilation counts.
+
+The worktree initially has tracked migration/design/doc edits and untracked
+repeated-entry work. Implementation and validation use an isolated checkout of
+`b5ecbd97`; only this slice's files are committed. Three-way incremental merges
+retain existing shared edits. Shared census assertions retain Eureka's separate
+one-record gain. The shared ledger's archive link and unrelated untracked files
+remain. Existing Go definitions and callers are preserved. No DSL function is
+removed; runtime cutover and removal gates remain unmet. API and rules docs
+only establish this death-event context.
+
+Changed files: engine `composable_conditions.go`, `composable_events.go`,
+`game.go`, `trigger_system.go`, `doc.go` and new `delayed_death_capture_test.go`;
+RON `compiler.go`, `departure_delay.go`, `permanent_scope.go`, `player_scope.go`
+and new `delayed_death_capture_test.go`; existing graveyard-return rejection
+expectations and definition/inventory census tests; `cards/mtgish/LEG.lines.ron`;
+API/rules docs, vocabulary snapshot and this ledger.
+
+### Ranked next candidates
+
+1. Durable tap-payment history for Vodalian War Machine: one estimated complete
+   name/record. Compare fresh multi-card prerequisites before selecting it; the
+   successful cost transaction must own the saved paid incarnations.
+2. Declaration-bound block-history targets for Glyph of Delusion: zero immediate
+   full-card gain. The acquired conditional untap/upkeep rule remains separate.
+   Glyph of Doom is already supported through resolving collections.
+3. Death-result iteration for Glyph of Reincarnation: zero immediate gain while
+   after-combat casting remains unsupported. Reuse simultaneous death outcomes,
+   saved historical controller reads and the established graveyard-return action.
+
+This run stops after delayed death-event bindings. Migration is incomplete.

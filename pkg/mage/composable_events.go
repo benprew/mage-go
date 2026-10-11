@@ -1020,7 +1020,34 @@ func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
 		}
 	}
 	if len(pt.eventCaptures) != 0 {
-		obj.Effects = []Effect{Sequence(Sequence(pt.eventCaptures...), Sequence(obj.Effects...))}
+		if pt.delayed != nil && pt.delayed.deathCapture != nil {
+			for i, effect := range obj.Effects {
+				captured, ok := effect.(*capturedDelayedBody)
+				if !ok {
+					continue
+				}
+				body := *captured
+				body.permanents = maps.Clone(captured.permanents)
+				if body.permanents == nil {
+					body.permanents = make(map[*PermanentBinding]capturedPermanent)
+				}
+				body.players = maps.Clone(captured.players)
+				if body.players == nil {
+					body.players = make(map[*PlayerBinding]uuid.UUID)
+				}
+				for _, capture := range pt.eventCaptures {
+					switch fact := capture.(type) {
+					case *eventPermanentCapture:
+						body.permanents[fact.binding] = fact.value
+					case *eventPlayerCapture:
+						body.players[fact.binding] = fact.player
+					}
+				}
+				obj.Effects[i] = &body
+			}
+		} else {
+			obj.Effects = []Effect{Sequence(Sequence(pt.eventCaptures...), Sequence(obj.Effects...))}
+		}
 	}
 	if pt.event == nil {
 		return

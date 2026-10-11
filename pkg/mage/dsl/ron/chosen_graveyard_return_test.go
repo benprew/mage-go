@@ -101,7 +101,7 @@ func TestRONChosenGraveyardReturnInvalidAndNative(t *testing.T) {
 			t.Fatal("accepted", action)
 		}
 	}
-	for _, name := range []string{"Reincarnation", "Glyph of Reincarnation"} {
+	for _, name := range []string{"Glyph of Reincarnation"} {
 		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err == nil {
 			t.Fatal("published incomplete record", name)
 		}

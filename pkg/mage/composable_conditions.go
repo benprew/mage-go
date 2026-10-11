@@ -457,15 +457,23 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 
 // --- from composable_delayed_death.go ---
 type delayedPermanentEventEffect struct {
-	subject   PermanentRef
-	body      ResolvingEffect
-	leaves    bool
-	unblocked bool
+	subject      PermanentRef
+	body         ResolvingEffect
+	leaves       bool
+	unblocked    bool
+	deathCapture *creatureDiesPattern
 }
 
 // WhenDiesThisTurn watches one battlefield object until this turn ends.
 func WhenDiesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
 	return &delayedPermanentEventEffect{subject: subject, body: body}
+}
+
+// WhenDiesThisTurnWithBindings saves the watched object's facts at death.
+// The body uses these bindings only within its saved resolution frame.
+func WhenDiesThisTurnWithBindings(subject PermanentRef, permanent *PermanentBinding, owner, controller *PlayerBinding, body ResolvingEffect) ResolvingEffect {
+	capture := PermanentDies().WithPermanent(permanent).WithOwner(owner).WithController(controller)
+	return &delayedPermanentEventEffect{subject: subject, body: body, deathCapture: &capture}
 }
 
 // WhenLeavesThisTurn watches one battlefield object until this turn ends.
@@ -500,6 +508,13 @@ func (e *delayedPermanentEventEffect) inspectDefinition() definitionNode {
 		children: []definitionEdge{{"subject", e.subject}, {"body", e.body}}}
 	if nilDefinition(e.subject) || nilDefinition(e.body) {
 		n.problem = "delayed permanent event: supply a subject and body"
+	}
+	if e.deathCapture != nil {
+		capture := e.deathCapture
+		if capture.permanent == nil || capture.owner == nil || capture.controller == nil || capture.owner == capture.controller {
+			n.problem = "delayed death: supply a permanent binding and separate owner and controller bindings"
+		}
+		n.children[1].value = Sequence(&eventPermanentCapture{binding: capture.permanent}, &eventPlayerCapture{binding: capture.owner}, &eventPlayerCapture{binding: capture.controller}, e.body)
 	}
 	return n
 }
@@ -542,6 +557,7 @@ func (e *delayedPermanentEventEffect) Apply(ctx *EffectContext) error {
 		sourceCaptured:    true,
 		sourceIncarnation: body.sourceIncarnation,
 		matchIncarnation:  permanent.incarnationID,
+		deathCapture:      e.deathCapture,
 		Persistent:        true,
 	}
 	if e.unblocked {

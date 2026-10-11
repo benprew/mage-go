@@ -1,6 +1,10 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"maps"
+
+	"github.com/benprew/mage-go/pkg/mage"
+)
 
 func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 3); err != nil {
@@ -52,18 +56,37 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(body, "delayed departure requires at least one action")
 	}
 	ctx.delayedStep = true
+	ctx.drawReplacementBody = false
+	ctx.delayedDeath = nil
+	if event.Name == "WhenAPermanentDies" {
+		ctx.delayedDeath = &hostDeathPlan{name: "Trigger_ThatPermanent"}
+	}
 	effects, err := compileActionSequence(parts, ctx)
 	if err != nil {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		watched := ref.build(bindings)
+		if ctx.delayedDeath != nil {
+			bindings.hostDeaths = maps.Clone(bindings.hostDeaths)
+			if bindings.hostDeaths == nil {
+				bindings.hostDeaths = make(map[*hostDeathPlan]hostDeathBindings)
+			}
+			label := "DelayedDeath@" + n.Position.String()
+			bindings.hostDeaths[ctx.delayedDeath] = hostDeathBindings{
+				permanent:  mage.BindPermanent(label + ".Permanent"),
+				owner:      mage.BindPlayer(label + ".Owner"),
+				controller: mage.BindPlayer(label + ".Controller"),
+			}
+		}
 		values := make([]mage.Effect, len(effects))
 		for i, build := range effects {
 			values[i] = build(bindings)
 		}
 		if event.Name == "WhenAPermanentDies" {
-			return mage.WhenDiesThisTurn(ref.build(bindings), mage.Sequence(values...))
+			death := bindings.hostDeaths[ctx.delayedDeath]
+			return mage.WhenDiesThisTurnWithBindings(watched, death.permanent, death.owner, death.controller, mage.Sequence(values...))
 		}
-		return mage.WhenLeavesThisTurn(ref.build(bindings), mage.Sequence(values...))
+		return mage.WhenLeavesThisTurn(watched, mage.Sequence(values...))
 	}, nil
 }

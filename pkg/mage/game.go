@@ -1997,7 +1997,13 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				remaining = append(remaining, dt)
 				continue
 			}
+			var captures []Effect
+			if dt.deathCapture != nil {
+				captures = dt.deathCapture.captureDetectedEvent(&evt, observer, dt.SourceID)
+				captures = append(captures, &eventPlayerCapture{binding: dt.deathCapture.controller, player: evt.PlayerID})
+			}
 			g.triggers.AddPending(&pendingTrigger{
+				eventCaptures:     captures,
 				delayed:           dt,
 				sourceID:          dt.SourceID,
 				sourceIncarnation: dt.sourceIncarnation,

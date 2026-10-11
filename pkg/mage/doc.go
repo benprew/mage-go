@@ -2507,6 +2507,17 @@
 // RON supports one creature filter, one bound player and one entry operation.
 // Delayed death bindings and death-result loops need separate adapters.
 //
+// Use [WhenDiesThisTurnWithBindings] to save one watched death event.
+// The body gets separate permanent, owner and controller bindings.
+// Detection saves the exact visit and player facts before trigger placement.
+// Shared death capture reads the former battlefield for simultaneous moves.
+// Each pending body keeps its facts through cleanup, source departure and clones.
+// Waiting and stack queries keep the exact watched visit. Returned objects
+// cannot replace it. Saved body frames restore outer bindings after execution.
+// RON lowers these reads in one UntilEndOfTurn delayed death ActionList.
+// OwnerOfPermanent and ControllerOfPermanent of Trigger_ThatPermanent read
+// the saved event players. Other owner contexts need separate adapters.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
