@@ -488,7 +488,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "casting_restriction":
-		if n.Name == "AdditionalCastingCost" && len(n.Args) == 1 {
+		if (n.Name == "AdditionalCastingCost" || n.Name == "AdditionalCastingCostForEachTargetBeyondTheFirst") && len(n.Args) == 1 {
 			return "cost"
 		}
 		if n.Name == "CantBeCastUnless" && len(n.Args) == 1 {

@@ -279,17 +279,11 @@ func TestRONEvenDamageCatapultPaymentAndInstances(t *testing.T) {
 func TestRONEvenDamageInventoryAndRemaining(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		record := staticBaseRecord(t, set, "Fireball")
-		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "AdditionalCastingCostForEachTargetBeyondTheFirst") {
-			t.Fatalf("remaining casting blocker: %v", err)
-		}
-		rules := record.Fields["Rules"]
-		rules.Args = rules.Args[1:]
-		record.Fields["Rules"] = rules
 		factory, err := Compile(record)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = mage.ValidateCardDefinition("Fireball damage prerequisite", factory()); err != nil {
+		if err = mage.ValidateCardDefinition("Fireball", factory()); err != nil {
 			t.Fatal(err)
 		}
 	}

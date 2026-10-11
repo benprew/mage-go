@@ -17211,3 +17211,34 @@ or repeated payment. Clones retain separate damage state.
 
 Evidence: `TestEvenCollectionDamageContract`, `TestEvenCollectionDamageSourceAndCapture`,
 existing `TestEvenDamage*`, and `TestRONEvenDamage*`.
+
+
+## Ordinary action target-count surcharge
+
+`WithAdditionalManaPerTargetBeyondFirst(amount int) ActionOption` uses the same
+`targetSurcharge` declaration as `AdditionalManaPerTargetBeyondFirst`. It requires
+a positive generic amount and an ActionSpell declaration. Definition validation
+rejects an activated action before gameplay. Existing spell and modal callers keep
+their APIs. No new payment transaction or target-count state is introduced.
+
+The existing action-cost service reads announced target occurrences after target
+selection (CR 601.2c), then adds `amount * max(0, count - 1)` to the total before
+increases, reductions and locking (CR 601.2f). Separate declarations can select
+the same subject. The cost is paid in the shared transaction (CR 601.2h).
+Invalid, phased, duplicate-within-group or unaffordable announcements cannot change
+live mana, hand, stack or events. Alternate casting still pays additional costs.
+Sacrificing a reducer during payment cannot change the locked total.
+
+Later illegality cannot refund the surcharge. Resolution keeps the legal saved
+visits, divides damage again among surviving recipients, and applies prevention
+after division (CR 608.2b/f/h). Returned targets cannot replace an announced visit;
+phasing preserves the visit but prevents resolution actions while absent.
+Spell copies retain X and can choose new targets without paying again. Game clones
+keep independent payments and results. Surcharged actions do not receive the
+ordinary no-cost spell-text continuation marker; that context needs a separate
+checked payment contract.
+
+Evidence: `TestActionTargetSurchargeContract`,
+`TestActionTargetSurchargeRejectsActivation`,
+`TestActionTargetSurchargeGroupsAndLockedCost`, existing `TestTargetSurcharge*`,
+and the complete Fireball and synthetic shape cases in `TestRONTargetSurcharge*`.

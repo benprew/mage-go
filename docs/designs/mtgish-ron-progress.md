@@ -2,15 +2,15 @@
 
 ## Current status
 
-The isolated slice reports **824 accepted / 162 rejected names** (986 total),
-**2,135 compiled / 310 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **825/161 names** and **2,136/309 records**. The strict
+The isolated slice reports **825 accepted / 161 rejected names** (986 total),
+**2,141 compiled / 304 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **826/160 names** and **2,142/303 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-ROUNDED-EQUAL-SPELL-DAMAGE lowers ordinary spell division among live permanent
-collections and a fresh plural union target binding to shared mage damage.
-Compilation and complete RON gameplay gain **1 name / 1 record**: Dwarven Catapult.
-Fireball's damage prerequisite is ready; its casting surcharge remains unsupported.
+TARGET-COUNT-SPELL-SURCHARGE lowers one positive fixed generic announced-target
+payment on an ordinary nonmodal spell to the shared mage announcement cost.
+Compilation and complete RON gameplay gain **1 name / 6 records**: Fireball.
+Targets, X, cost locking, reductions, rollback, copies and clones use shared services.
 No RON changed. Required native checks pass in both trees; final lint has 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
@@ -70957,3 +70957,171 @@ complete collection gameplay/loading and cutover/removal gates remain unmet.
    History alone unlocks zero; both consumers together could unlock one name.
 
 Migration remains incomplete. This run stops after ROUNDED-EQUAL-SPELL-DAMAGE.
+
+## Run 2026-10-10: TARGET-COUNT-SPELL-SURCHARGE
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Baseline, candidate comparison and selection
+
+The shared worktree began with tracked changes to migration documents, optional
+hand entry, compiler/inventory/definition code and tests, plus untracked repeated
+entry files and a completed-ledger archive. These changes were preserved. A clean
+checkout of 06201f16 isolates this slice for validation and staging. The shared
+baseline passes make build and go test ./pkg/mage/dsl/ron -count=1. Fresh loaders
+exit 1 for collection rejection, not compilation failure. Isolated baseline:
+824 accepted / 162 rejected names, 2,135 compiled / 310 rejected records. Shared
+baseline with existing Eureka: 825/161 names, 2,136/309 records. Both totals are
+986 names and 2,445 records. Strict loading publishes no partial registry.
+
+The latest ranked candidates were evaluated from complete records, including
+nested bodies. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Fixed generic announced-target surcharge | Fireball | 1 name / 6 records | No other blocker: plural targets, announced X and rounded damage are ready. Reuses the exact engine announcement cost; supplies an ordinary-action adapter for other target declarations. | Low implementation effort; one run with broad payment and gameplay tests. |
+| Entry/departure intervening-if snapshots | Earthbind; Urza's Miter | 0 for snapshots alone; 2 downstream names | Still needs distinct entry/host and graveyard-cause adapters. Earthbind also has a nested host Flying-removal layer body. Shared facts must support both detection and resolution without following returned objects. | Higher effort: two event environments, historical cause, host identity and persistent layer body. |
+| Live damage-history subjects | Runesword | 0 for the subject prerequisite alone; 1 downstream name | Both CantBeRegenerated and APermanentWouldDie consumers need live history sets. Existing single-permanent exile replacement is insufficient for the nested collection. | Higher effort: history lifetime, two consumers, replacements and incarnation tests. |
+
+Candidate #1 is dependency-ready. After comparing the shared prerequisites, it
+has the largest credible complete-card gain for this run's effort. This run
+completes the damage prerequisite from the previous slice without adding a new
+payment or damage system. The two-name snapshot prerequisite remains useful,
+but cannot produce complete gameplay with just its shared facts. No card-name
+branch, source correction, Go fallback or permissive registry is used.
+
+Before editing, the contract was stated as one positive fixed generic payment
+per announced target beyond the first, ordinary nonmodal spells only. Acceptance
+cases included complete Fireball records, zero/one/multiple targets, declaration
+rejection, payment rollback, target identity, phasing, copies, clones and prevention.
+
+### Exact shapes, ownership and engine reuse
+
+Supported declaration:
+CastEffect(AdditionalCastingCostForEachTargetBeyondTheFirst(PayMana([ManaCostGeneric(n)]))).
+The integer literal n must be positive. Exactly one generic symbol and one
+CastEffect are required. The declaration belongs to an ordinary instant or
+sorcery with one SpellActions body. Ordinary untargeted, singular, numbered-group,
+plural-union and fixed-distribution bodies retain their existing supported shapes.
+Wrong kinds/arity, empty/multiple mana symbols, colored/X/dynamic/nonpositive
+payments, duplicate declarations, permanents, resolving uses and modal bodies
+remain positioned errors. Nested target bindings retain their existing checks.
+
+RON owns compileTargetSurcharge(Node) (int, error), scope.targetSurcharge, AST
+validation and the casting_restriction -> cost inventory role. PayMana retains
+its existing metadata child role. Each factory installs a fresh action and its
+existing per-instance target and effect bindings.
+
+New engine API:
+WithAdditionalManaPerTargetBeyondFirst(amount int) ActionOption.
+It installs the existing targetSurcharge through WithCost. The existing
+AdditionalManaPerTargetBeyondFirst SpellOption/ModalSpellOption API is preserved.
+Definition inspection now rejects targetSurcharge on an ActionActivated. Positive
+amount validation, action-cost resolution, total-cost calculation, transactions,
+source information, damage batches, copies and game clones use existing services.
+No engine rule is reimplemented in RON.
+
+The cost uses announced target occurrences: amount * max(0, count - 1), before
+increases/reductions and locking. Independent declarations may select the same
+recipient and each occurrence counts. Zero or one target adds no cost. Later
+illegality cannot refund payment. Alternate casting still pays the surcharge.
+Failed payment/legality/timing keeps live mana, hand, stack and events unchanged.
+A reducer sacrificed during payment cannot change the locked cost. Copies keep
+X and can retarget without payment. Phasing keeps visits; returned targets cannot
+replace them. Resolution divides among currently legal recipients, then applies
+prevention; independent instances and clones keep separate choices and results.
+
+The existing WithSpellTextContinuation marker requires a no-cost action. This
+slice leaves that marker unset on surcharged actions. A checked spell-text payment
+continuation is a separate capability; no existing accepted record loses its marker.
+Source-LKI, replacement ordering and simultaneous damage remain the existing
+DealDamageEvenly contracts, covered by the retained EvenDamage/EvenCollectionDamage
+engine tests. No additional LKI or replacement subsystem is introduced.
+
+Local data/LEA.json confirms Fireball's surcharge and equal rounded damage.
+Rules evidence: CR 601.2b/c/f/h, 608.2b/f/h, 400.7 and 702.26. No source defect
+was found. All six complete RON records were read: LEA:83, LEB:84, 2ED:84,
+3ED:90, CED:84 and CEI:84. Source RON and vocabulary hashes are unchanged.
+Gaea's Liege and Fastbond remain independent source audits.
+
+### Failing-first evidence and card-to-test mapping
+
+The first RON test compile used mage.GameEvent instead of core.GameEvent. After
+correcting that fixture, the red run fails at the unsupported casting declaration
+for complete Fireball gameplay; inventory also lacks its child cost role. The
+engine red run fails for the undefined action-option signature. After lowering,
+a separate TestActionTargetSurchargeRejectsActivation first fails because an
+activation can accept the spell-only cost, then passes after definition validation.
+
+Two later fixtures were corrected without changing their assertions: concurrent
+casts of real Fireball correctly fail sorcery timing, so the independent-pending
+instance test uses the same RON rules with Instant metadata; and the ordinary
+NewAction target declarations use the flat announcement API rather than the
+separate grouped-announcement API. Complete real Fireball tests keep Sorcery
+metadata, and an invalid timing case now checks rollback explicitly.
+
+| Card/context | Tests |
+| --- | --- |
+| Complete Fireball, all six reprints | TestRONTargetSurchargeFireball validates definitions and paid X, zero/one/multiple targets, rounded shares, zero totals/shares, creature/player/planeswalker recipients, partial/all illegality, returned visits, phasing/cycles, prevention, copies, clones and no allocation prompts. |
+| Fireball payment and timing | TestRONTargetSurchargeRollback checks underpayment, duplicate recipients, absent/phased/shrouded targets and sorcery timing; live mana, hand identity, stack, life and observed events stay unchanged. |
+| Independent pending instances and retargeting | TestRONTargetSurchargeInstancesAndRetarget uses complete Fireball rules with Instant metadata to retain separate X, target counts, paid costs and copy target choices. |
+| General ordinary spell adapter | TestRONTargetSurchargeOrdinaryShapes checks positive n=3, untargeted/singular/grouped/distributed bodies, repeated recipient across declarations, allocation timing, and hand/alternate casting. |
+| Invalid declarations and inventory | TestRONTargetSurchargeInvalid and TestRONTargetSurchargeInventory check positioned errors, context boundaries and nested semantic roles. |
+| Shared engine adapter | TestActionTargetSurchargeContract covers zero through three targets, n=2, hand/alternate casting and invalid amounts; RejectsActivation covers the declaration boundary; GroupsAndLockedCost covers repeated recipient occurrences, cost increases/reductions and sacrifice of a reducer after locking. Existing TestTargetSurcharge* retains rollback, legality, cloning, copies and caller contracts. |
+| Prior damage prerequisite and accepted collection | TestRONEvenDamageInventoryAndRemaining now compiles each complete Fireball rather than extracting its damage rule. Exact repository counts in inventory, definition-plan and numeric-consumer tests advance by six. Whole suites retain accepted-card reconstruction evidence. |
+
+### Validation and actual gains
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONTargetSurcharge -count=1
+passes in both trees. The broader TestRONTargetSurcharge|TestRONEvenDamage run
+and native TestActionTargetSurcharge|TestTargetSurcharge tests also pass.
+Both trees pass make build, go vet ./..., go test ./pkg/mage/... -short -count=1,
+and make test. Isolated RON short/full durations are 46.244s/45.842s; shared
+RON short/full durations are 46.090s/71.448s. No tests were weakened.
+
+Both final make lint runs report 0 issues. The first shared lint run is rejected
+by golangci-lint's parallel-process lock while isolated lint is active; rerunning
+it sequentially passes. This is a resolved tool-environment failure, not a code
+or collection failure. Isolated lint changes only import grouping in the two new
+test files. Those edits are reviewed and applied to the shared tree. Go-file
+snapshots confirm no other isolated edits and no shared automatic edits. Focused
+RON/engine checks and build/vet pass after formatting; no semantic changes need
+broader retesting. git diff --check passes in both trees.
+
+Final go run ./cmd/loadcards -json exits 1 solely for remaining collection
+rejection in both trees. Fireball has zero issues. Earthbind retains
+unsupported intervening-if event (WhenAPermanentEntersTheBattlefield), Urza's
+Miter retains the graveyard intervening-if event, Runesword retains
+unsupported collection attack operation (CantBeRegenerated), and Mana Clash
+retains unsupported action (RepeatableActions). No accepted-card regression or
+unresolved native environment blocker is found.
+
+Actual isolated gain is 1 accepted unique name / 6 compiled records:
+825 accepted / 161 rejected names, 2,141 compiled / 304 rejected records.
+Actual shared-worktree gain is also 1 name / 6 records, to 826/160 names and
+2,142/303 records. The existing Eureka difference is preserved. Complete RON
+gameplay gains one unique name, Fireball, across all six reprints. Actual gains
+match the estimate. Neither compiler acceptance nor these tests claim complete
+collection gameplay. Both loaders retain collection rejection and atomic loading.
+
+Changed files: pkg/mage/composable_target_surcharge.go, action_target_surcharge_test.go,
+definition.go and doc.go; pkg/mage/dsl/ron/target_surcharge.go and its tests,
+compiler.go, inventory.go, even_damage_test.go, inventory_test.go,
+definition_plan_test.go and numeric_consumers_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. No RON source or vocabulary changed.
+No Go card definitions, runtime wiring, generators or DSL functions were removed:
+the collection, gameplay and cutover gates remain unmet.
+
+### Ranked next candidates
+
+1. Entry/departure intervening-if snapshots for Earthbind and Urza's Miter.
+   Reassess as a shared prerequisite for two unique names; snapshots alone unlock
+   zero. Preserve host Flying at both checks and historical sacrifice-cause facts.
+2. Live damage-history subjects for Runesword's two consumers. History alone
+   unlocks zero; both consumers could unlock one unique name. Preserve damage
+   history, no-regeneration behavior and death-replacement ordering together.
+3. Coin-result bindings and repeat continuation for Mana Clash. The shared
+   worktree's existing repeated-entry work is preserved; it does not establish
+   simultaneous player coin results. Reassess other multi-card prerequisites first.
+
+Migration remains incomplete. This run stops after TARGET-COUNT-SPELL-SURCHARGE.

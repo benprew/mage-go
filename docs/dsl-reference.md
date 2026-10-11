@@ -13187,7 +13187,30 @@ Modal, activated, triggered, delayed and replacement bodies and numbered plural
 union declarations remain unsupported contexts. `TargetedDistributed` retains its announcement allocation
 contract. Equal division never offers an allocation choice.
 
-The complete Dwarven Catapult record now executes. All six Fireball records
-still reject `AdditionalCastingCostForEachTargetBeyondTheFirst`; tests validate
-only their extracted damage prerequisite. This is not full Fireball coverage.
+The complete Dwarven Catapult record executes. The TARGET-COUNT-SPELL-SURCHARGE
+slice below also executes all six complete Fireball records.
 No RON data or vocabulary source hash changed.
+
+
+## RON target-count spell surcharge
+
+Ordinary nonmodal instant and sorcery records accept one
+`CastEffect(AdditionalCastingCostForEachTargetBeyondTheFirst(PayMana([ManaCostGeneric(n)])))`
+with a positive integer literal `n`. The payment must contain exactly one generic
+symbol. Wrong kinds, arities, colored or X payments, duplicate CastEffect rules,
+permanent declarations, and modal bodies fail at compilation with a source position.
+The form is a casting declaration; it is not a resolving action or activation cost.
+
+RON lowers the validated amount to
+`mage.WithAdditionalManaPerTargetBeyondFirst(n)` on its fresh spell action.
+The existing shared announcement service counts target occurrences before payment.
+Zero or one target adds no cost. Separate target groups can select the same subject
+and each occurrence counts. Targets, X and damage bindings remain per instance.
+Ordinary untargeted, singular, grouped and distributed spell bodies retain their
+existing action contracts. Modal adapters and spell text continuation with this
+cost remain separate capabilities.
+
+All six complete Fireball records have RON gameplay evidence in
+`TestRONTargetSurchargeFireball`. Payment, timing, copies, independent instances,
+invalid declarations and inventory roles use the other `TestRONTargetSurcharge*`
+tests. Compilation acceptance and gameplay evidence remain separate measures.

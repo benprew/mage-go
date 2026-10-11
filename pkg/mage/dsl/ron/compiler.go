@@ -49,6 +49,7 @@ type scope struct {
 	actionPlayer      *playerActionsPlan
 	damageRecipient   *playerReferencePlan
 	activation        bool
+	targetSurcharge   int
 	castingCondition  mage.StateCondition
 	castingCost       *Node
 	damagePlayer      *damagePlayerPlan
@@ -406,6 +407,13 @@ func Compile(n Node) (mage.CardFactory, error) {
 				}
 				continue
 			}
+			if rule.Kind == Tuple && len(rule.Args) == 1 && rule.Args[0].Name == "AdditionalCastingCostForEachTargetBeyondTheFirst" {
+				ctx.targetSurcharge, err = compileTargetSurcharge(rule.Args[0])
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
 			ctx.castingCondition, err = compileCastingWindow(rule)
 			if err != nil {
 				return nil, err
@@ -649,6 +657,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
+		if ctx.targetSurcharge > 0 && (n.Args[0].Name == "Targeted_Modal" || n.Args[0].Name == "Modal_ChooseOne") {
+			return nil, unsupported(n.Args[0], "target surcharge on a modal spell")
+		}
 		if n.Args[0].Name == "Targeted_Modal" {
 			return compileObjectTargetBody(n.Args[0], ctx)
 		}
@@ -681,10 +692,13 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 				bindings.sacrifices[ctx.sacrificeValue] = sacrificeValueBindings{power: mage.BindNumber("paid sacrifice power"), value: mage.BindNumber("paid sacrifice value")}
 			}
 			options := actionOptions(plan.buildWithBindings(bindings))
-			if ctx.castingCost == nil {
+			if ctx.castingCost == nil && ctx.targetSurcharge == 0 {
 				options = append(options, mage.WithSpellTextContinuation())
 			} else if ctx.sacrificeValue != nil && ctx.sacrificeValue.name == "ManaValueOfTheSacrificedPermanent" {
 				options = append(options, mage.WithSpellSacrificeManaValueContinuation(bindings.sacrifices[ctx.sacrificeValue].value))
+			}
+			if ctx.targetSurcharge > 0 {
+				options = append(options, mage.WithAdditionalManaPerTargetBeyondFirst(ctx.targetSurcharge))
 			}
 			if ctx.castingCondition != nil {
 				options = append(options, mage.WithCastingCondition(ctx.castingCondition))

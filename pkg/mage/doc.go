@@ -6,7 +6,15 @@
 // and nonpositive shares cause no damage. Source LKI and simultaneous outcomes
 // use the existing damage service. [DealDamageEvenly] keeps its target API.
 // RON lowers ordinary spell division among live permanent collections or one
-// plural union target binding. Casting surcharges need a separate adapter.
+// plural union target binding. Ordinary spells can use target surcharges.
+//
+// Use [WithAdditionalManaPerTargetBeyondFirst] for an ordinary spell action.
+// It uses the same announcement cost as [AdditionalManaPerTargetBeyondFirst].
+// The count includes each announced target occurrence, before cost reductions.
+// Shared payment keeps X, locked costs, rollback, copies and alternate casting.
+// Definition validation rejects this cost on an activated action.
+// RON accepts one positive fixed generic payment in a nonmodal CastEffect.
+// Modal forms and spell text continuation need separate adapters.
 //
 // RON fixed spell distributions use [DeclareAnyNumberDamageTargets] and
 // [DealAllocatedDamage]. Each factory makes a fresh declaration and effect.

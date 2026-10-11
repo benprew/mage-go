@@ -22,6 +22,12 @@ func AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption {
 	return targetSurcharge{amount: amount}
 }
 
+// WithAdditionalManaPerTargetBeyondFirst uses the shared announcement cost.
+// Target changes after announcement cannot change the locked payment.
+func WithAdditionalManaPerTargetBeyondFirst(amount int) ActionOption {
+	return WithCost(targetSurcharge{amount: amount})
+}
+
 func (targetSurcharge) modalSpellOption() {}
 func (o targetSurcharge) applyModalSpell(m *ModalSpellAbility) {
 	o.applySpell(&m.SpellAbility)

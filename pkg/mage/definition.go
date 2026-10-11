@@ -213,6 +213,9 @@ func describeDefinition(v any) definitionNode {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if _, ok := cost.(targetSurcharge); ok {
+				if e.kind != ActionSpell {
+					n.problem = "target surcharge requires spell announcement"
+				}
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if mill, ok := cost.(*millCost); ok && mill.capture {
