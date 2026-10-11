@@ -841,6 +841,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"value", "recipient"}[index]
 			}
+		case "RepeatableActions":
+			if len(n.Args) == 1 {
+				return "action"
+			}
 		case "GainControlOfPermanentUntil":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]
@@ -1711,6 +1715,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_filter":
+		if n.Name == "Or" && len(n.Args) == 1 {
+			return role
+		}
 		if n.Name == "CastASpellThisTurn" && len(n.Args) == 1 {
 			return "spell_filter"
 		}

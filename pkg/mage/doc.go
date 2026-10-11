@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [RepeatHeadsOrTailsDamage] for complete heads-or-tails damage rounds.
+// Player references are read once. Duplicate and absent players are excluded.
+// Every player flips before one simultaneous tails-damage batch. Each round
+// reads its amount and exact source once. All heads ends the process, even
+// when damage is prevented. Nonpositive damage does not stop repetition.
+// These flips have no winner or loser. Results remain local to each round.
+// Source LKI, replacement order, copies and clones use shared services.
+// RON supports a player union, fixed spell damage to CoinCameUpTails and an
+// adjacent AllCoinsCameUpHeads repeat condition in one ordinary spell body.
+// Other round actions and declaration contexts need separate adapters.
+//
 // Use [DealDamageEvenlyToRecipients] for an equal division at resolution.
 // It reads the total and selects the typed recipients once. Each gets a share
 // rounded down before shared damage replacements and prevention. Empty sets
@@ -2393,7 +2404,7 @@
 // cancellation clears the result. Existing number frames keep copies, clones,
 // delayed bodies, loop frames and cleanup separate. RON lowers all-player
 // fixed-maximum discard and lexical result reads. Mind Bomb uses the shared
-// per-recipient damage service. Coin producers need a separate adapter.
+// per-recipient damage service. Coin rounds use [RepeatHeadsOrTailsDamage].
 //
 // Use [PermanentMatchesFilterWithLKI] for a source or attachment condition.
 // It reads the exact current object or its saved departure or phase information.

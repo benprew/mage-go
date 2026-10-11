@@ -1284,6 +1284,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "RepeatableActions":
+		if !isRepeatedCoinDamage(n) {
+			return nil, unsupported(n, "action")
+		}
+		build, err := compileRepeatedCoinDamage(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ExchangeOwnershipOfTwoCards":
 		build, err := compileCardOwnershipExchange(n, ctx)
 		if err != nil {

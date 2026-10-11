@@ -2,15 +2,15 @@
 
 ## Current status
 
-The isolated slice reports **830 accepted / 156 rejected names** (986 total),
-**2,151 compiled / 294 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **831/155 names** and **2,152/293 records**. The strict
+The isolated slice reports **831 accepted / 155 rejected names** (986 total),
+**2,152 compiled / 293 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **832/154 names** and **2,153/292 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-INDEFINITE-CAPTURED-BASE-PT executes one fixed base-P/T collection modification
-with captured visits and indefinite lifetime. Complete RON gameplay and
-compilation gain **1 name / 1 record**: Brine Hag. Typed death bindings,
-actual damage history, layers, phasing, copies and clones use shared services.
+HEADS-OR-TAILS-DAMAGE-ROUNDS executes complete simultaneous coin and damage
+rounds until all participants flip heads. Complete RON gameplay and compilation
+gain **1 name / 1 record**: Mana Clash. Typed targets, payment rollback, source
+information, damage replacements, copies and clones use shared services.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71980,3 +71980,170 @@ Full collection gameplay, embedded runtime loading, Go-card deletion, generator
 retirement and unused DSL cleanup remain gated. No caller or Go definition was
 removed, so no DSL removal audit was needed. This run stops after the one slice.
 Migration remains incomplete.
+
+
+## Run 2026-10-10: HEADS-OR-TAILS-DAMAGE-ROUNDS
+
+Status: one complete vertical capability slice. No second slice was started.
+
+### Baseline, candidates and selection
+
+The working tree starts with 15 modified tracked files and five untracked files,
+including Eureka's repeated hand-entry implementation and a progress-ledger
+archival move. A fresh shared `make build` passes; fresh RON package tests pass
+(40.103s). The loader exits 1 only for unsupported collection records: 831
+accepted / 155 rejected names and 2,152 compiled / 293 rejected records.
+The HEAD baseline excludes Eureka and has 830/156 names and 2,151/294 records.
+An isolated checkout at b14ffac1 keeps this slice independent of those edits.
+
+The latest ranked candidates were evaluated from complete records and nested
+forms, not first-error counts. Reprints are counted once.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Complete coin rounds | Mana Clash | 1 name / 1 record | No missing prerequisite. Existing typed spell targets, RNG, damage batches, replacements and clones are ready. Establishes reusable raw-outcome repetition distinct from win/loss branches. | Moderate: one engine procedure, exact RON shape validation and gameplay/contract tests. |
+| Announcement block-history predicates | Glyph of Delusion, Glyph of Doom, Glyph of Reincarnation | 0 new names | Doom already compiles with resolving history. Delusion still needs its indefinite conditional untap rule and granted upkeep trigger. Reincarnation still needs IsAfterCombat and death-result return consumers. A dependent target predicate enables Delusion's later compound grant slice; it does not unlock all three names. | High: target-group dependency legality, identity, copies and announcement reads, then separate downstream contracts. |
+| Captured death-source consumers | Blazing Effigy, Vodalian War Machine | 1 per separate complete contract; no shared two-card unlock | Effigy requires DeadPermanentDealsDamage and a filtered actual-damage amount with exact departed source identities. War Machine requires WasTappedToPayForAbilitiesOfPermanent and durable tap-payment history. Existing death bindings alone cannot implement either body. These are separate damage and payment capabilities. | High combined; each needs its own history producer/consumer evidence. |
+
+Mana Clash gives the largest credible complete-card gain for this bounded run.
+The compared history prerequisite adds zero complete-card gains, and the two
+other death-source consumers do not share one dependency-ready capability.
+No card-name branch is introduced. Existing coin-branch records (Bottle of
+Suleiman, Mijae Djinn, Ydwen Efreet, Goblin Kites, Orcish Captain and Goblin
+Artisans) keep their separate win/loss declarations and existing test coverage.
+
+### Supported shape, engine contract and reuse
+
+RON accepts exactly this ordinary spell action shape:
+
+`RepeatableActions([EachPlayerAction(Or([SinglePlayer(reference), ...]), FlipACoin), SpellDealsDamage(ThisSpell, Integer(n), EachPlayer(CoinCameUpTails)), Unless(AllCoinsCameUpHeads, [RepeatThisProcess])])`.
+
+The player union is nonempty and all references pass lexical validation.
+Result/control symbols are bare and confined to this complete shape. Additional
+round actions, dynamic amounts, activated/modal/delayed/replacement contexts,
+wrong arities and unbound or incompatible operands reject at compilation.
+Each factory builds fresh typed targets and effect operands. Existing repeated
+forms retain their previous diagnostics; the shared tree routes Eureka to its
+preserved hand-entry adapter and coin producers to this adapter.
+
+New engine signature:
+`RepeatHeadsOrTailsDamage(source DamageSourceRef, amount ResolutionValue, players ...PlayerRef) ResolvingEffect`.
+The engine reads player identities once, excludes duplicates and absent players,
+and obtains all heads/tails outcomes before damage. Each non-heads round reads
+one amount and exact source, then submits tails recipients to one existing
+`DealSimultaneousDamage` batch. All heads ends the process. Prevention,
+redirection, missing sources and nonpositive damage do not change coin results.
+There is no arbitrary iteration cap or intervening state-based loss check.
+Source information remains current or uses the original incarnation's LKI.
+
+These raw flips have no call, winner or loser (CR 705.2). Existing Game/RandomSource
+queues supply deterministic outcomes; there is no OnWin/OnLoss branch.
+Outcome variables belong to the resolving invocation, not global slots or
+mutable declarations. Copies and clones retain independent target state, RNG
+queues and game actions. Outer resolution bindings are not overwritten.
+Definition validation rejects empty participant declarations, nil operands and
+unbound references. The effect declares explicit typed source reads to shared
+waiting queries without executing rounds.
+
+RON owns syntax, exact shape/context checks and scope lowering. Mage owns rounds
+and rules execution. Target legality, announcement, mana payment, rollback,
+source identity/LKI, damage replacement order, prevention, simultaneous events,
+stack copies and cloning retain their existing engine services. No Go factory
+fallback, partial production registry, skipped instruction or runtime declaration
+panic is introduced. Existing callers and Go card definitions remain in place.
+
+Local data/DRK.json confirms the complete Mana Clash Oracle requirement.
+CR 608.2b/c/e/f/h, 704.4 and 705.1-2 support legality, ordered instructions,
+simultaneous operations, source information, loss timing and raw flips.
+No source-data defect was found or corrected in this slice. Existing source
+problems remain independent. No RON source changes, so vocabulary hashes and
+the source vocabulary snapshot are unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+After correction of fixture-only errors (an existing boolInt helper and the mana
+pool method name), the real RON gameplay/native tests fail at unsupported
+RepeatableActions. New engine tests fail compilation with the undefined
+RepeatHeadsOrTailsDamage signature. These failures precede production changes.
+A new inventory assertion fails at unknown nested roles before the RepeatableActions
+and player-union inventory adapters are added.
+
+The first broader suite finds an existing Eureka diagnostic assertion failure
+in the isolated tree. Syntax dispatch is tightened to preserve that exact
+unsupported-form diagnostic; the assertion is not weakened. Fixture corrections
+also distinguish sorcery announcement timing from a changed active player at
+resolution, retarget a copy under its new controller, and resolve only the top
+stack object when testing intermediate copy results.
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Mana Clash, DRK | TestRONCoinRoundManaClash: all four initial outcome pairs, different active players at resolution, opponent targeting, casting payment failure/rollback, resolution timing, simultaneous callbacks, spell source and exact flip consumption. |
+| Repetition and prevention | TestRONCoinRoundPreventionAndMultipleRounds: consecutive rounds, finite shields, no result leakage and no damage-based early stop. |
+| Copies and clones | TestRONCoinRoundCopiesAndClones: changed controller with new legal opponent target, independent original/copy rounds and clone RNG. TestRONCoinRoundIllegalCopy: retained target becomes illegal under the copy controller; no flips occur. |
+| Native loading and instance plans | TestRONCoinRoundNative: unchanged full record, independent card/target factories and atomic rejection of a mixed invalid collection. |
+| Declaration and inventory contracts | TestRONCoinRoundInvalid and Inventory: malformed arities/symbols, unbound players, incompatible references, wrong source/amount/consumer/continuation, escaped result reads and semantic descendant roles. |
+| Engine rounds and definition checks | TestCoinRoundSimultaneousAndScope, Definition and EmptyAndNonpositive: simultaneous damage, duplicate/absent participants, outer bindings, nil/unbound operands and nonpositive amounts. |
+| Timing, source identity and replacements | TestCoinRoundLethalAndNoLimit: 1,001 complete rounds and lethal packets without early interruption. TestCoinRoundSourceIdentity: departure, return, control, phasing, phase cycle and pending clones. TestCoinRoundReplacementOrder: affected-player prevention/redirection choices preserve the repeat decision. |
+
+Compilation and complete-card gameplay gain are separately established:
+**1 unique name / 1 record**, exactly the estimate. Other accepted records retain
+whole-suite coverage; their compilation is not counted as new gameplay evidence.
+
+### Validation and collection status
+
+Focused RON tests pass with -count=1 (final isolated 0.472s; shared 0.566s).
+Focused engine tests pass (final isolated 0.511s; shared 0.451s). Shared Eureka
+compatibility tests also pass (RON 0.597s; engine 0.468s). Both make build and
+go vet ./... pass. Final production engine-short suites pass (RON isolated
+41.246s; shared 66.615s), and make test passes (RON isolated 51.540s; shared
+63.969s). Those broad suites precede the test-only lint corrections below;
+all affected new tests pass again after those corrections.
+
+The first isolated make lint finds three issues in new tests: slice capacity,
+a variable named copy, and two stateful RNG calls in one boolean expression.
+The test slice is preallocated, the variable is renamed, and both RNG calls
+are checked in a loop. No assertion is weakened and no production behavior
+changes. Automatic formatting only reorders one new test's imports. Both final
+make lint commands pass with 0 issues. Source comparisons confirm the new engine
+and RON implementation/tests are identical in both checkouts; no unrelated
+automatic lint change remains. git diff --check passes in both trees.
+Final loader runs after lint retain the counts below. No native build, vet,
+lint or test blocker remains.
+
+Final isolated loader: **831 accepted / 155 rejected names**,
+**2,152 compiled / 293 rejected records**. Final shared loader with preserved
+Eureka: **832/154 names**, **2,153/292 records**. Totals remain 986 names and
+2,445 records. Both loaders exit 1 for unsupported records and publish no partial
+registry. Mana Clash has no diagnostic. Glyph of Delusion still rejects its
+announcement history predicate; Blazing Effigy rejects DeadPermanentDealsDamage;
+Vodalian War Machine rejects its tap-payment-history filter. The actual gain is
+one name and one record in both environments.
+
+### Preservation, files and ranked next candidates
+
+The commit is staged from the independently validated isolated checkout's patch.
+The ledger archival move, Eureka production/tests, unrelated .gitignore/design
+changes and other original engine/compiler edits are not staged. Shared count
+fixtures include both gains; the commit fixtures include only Mana Clash.
+Ten unrelated original files retain their exact bytes. The shared Eureka test's
+obsolete Mana Clash rejection assertion now checks
+successful compilation; its strict invalid-collection and entry tests remain.
+
+Changed files: pkg/mage/coin_round.go, coin_round_test.go and doc.go;
+pkg/mage/dsl/ron/coin_round.go, coin_round_test.go, compiler.go, inventory.go,
+inventory_test.go, definition_plan_test.go and numeric_consumers_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+No production Go card or DSL function is removed. Runtime startup, Go-card
+removal, generator retirement and unused DSL cleanup remain gated, so no removal
+caller audit applies to this slice.
+
+1. Reassess shared active-player controller predicates for Nettling Imp and
+   Siren's Call. They share TheActivePlayer control reads; activation windows,
+   control-since-turn-start and delayed exclusions need separate dependency checks.
+2. Announcement block-history predicate for Glyph of Delusion. Keep target-group
+   legality separate from resolving collections; its compound grants still remain.
+3. Compare filtered departed-source damage history for Blazing Effigy with
+   durable tap-payment history for Vodalian War Machine. These are separate slices;
+   choose from fresh whole-record and loader evidence.
+
+This run stops after the one slice. Migration remains incomplete.

@@ -13026,8 +13026,8 @@ loop and cleanup behavior without another runtime storage system.
 Counts include completed discards redirected to a library; cancelled moves and
 stale hand visits contribute zero. Later card movement does not change a saved
 count. Returned cards cannot replace the selected hand visit. Other discard
-shapes, general player loops, coin results and repeated coin processes need
-separate adapters. No RON source changed.
+shapes and general player loops need separate adapters. Raw coin rounds use
+the heads-or-tails damage contract below. No RON source changed.
 
 Evidence: `TestRONPlayerDiscardResultsMindBomb`, `CopiesAndClones`,
 `TimingRollbackAndPrevention`, `IndependentProducers`, `ActivationSources`,
@@ -13364,3 +13364,22 @@ Evidence: `TestRONCapturedBasePT*` and `TestCapturedBasePT*`.
 Reverse turn-damage collections also declare explicit source reads to the shared
 waiting-delay query. That query does not select members or resolve the effect.
 `TestCapturedBasePTDelayedSource` checks the declaration and saved departure.
+
+
+### Complete RON heads-or-tails damage rounds
+
+Ordinary spell actions support
+`RepeatableActions([EachPlayerAction(Or([SinglePlayer(reference), ...]), FlipACoin),
+SpellDealsDamage(ThisSpell, Integer(n), EachPlayer(CoinCameUpTails)),
+Unless(AllCoinsCameUpHeads, [RepeatThisProcess])])`.
+The player union must be nonempty; every reference must be bound in the enclosing
+scope. The three instructions and bare result/control symbols must match this
+shape exactly. Dynamic amounts, other round actions, activated rules, modal
+bodies, delays and replacement contexts reject at compilation.
+
+The compiler lowers the complete procedure to `RepeatHeadsOrTailsDamage`.
+All flips precede one simultaneous tails-damage batch; all heads ends repetition.
+Prevention changes damage, not coin results. Each invocation owns its local
+outcomes. Spell targeting, source information, payments, copies, clones and RNG
+use existing engine services. Mana Clash's complete DRK record is covered by
+`TestRONCoinRound*`; engine contracts are covered by `TestCoinRound*`.

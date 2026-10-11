@@ -16750,7 +16750,7 @@ Unspecified visits on legacy discard proposals retain their existing behavior.
 
 Evidence: `TestPlayerDiscardResults*` and `TestRONPlayerDiscardResults*`.
 Mind Bomb's unchanged complete DRK record supplies full-card gameplay evidence.
-Mana Clash remains rejected until its coin producer and repeat consumers exist.
+Mana Clash uses the heads-or-tails round contract below.
 
 ## RON draw replacement event scope
 
@@ -17420,3 +17420,51 @@ loading, payment rollback and declaration errors.
 Reverse turn-damage collections also declare explicit source reads to the shared
 waiting-delay query. That query does not select members or resolve the effect.
 `TestCapturedBasePTDelayedSource` checks the declaration and saved departure.
+
+
+## Heads-or-tails damage rounds
+
+`RepeatHeadsOrTailsDamage(source DamageSourceRef, amount ResolutionValue,
+players ...PlayerRef) ResolvingEffect` captures the selected player identities
+once at resolution. It excludes duplicate and absent players, preserves operand
+order for deterministic random scripts, and does nothing for an empty result.
+Each round obtains every coin outcome before any damage. These are raw heads
+or tails (CR 705.2), with no winner, loser, or call decision. The existing
+`Game.FlipCoin` random queue supplies the outcomes without win/loss branches.
+
+A round with all heads ends the process. Otherwise the amount and exact damage
+source are read once for that round, and each tails player receives that amount
+in one `DealSimultaneousDamage` batch. Nonpositive amounts, an absent source,
+prevention and redirection do not change the coin-based repeat decision. No
+arbitrary round limit is imposed. Damage replacements, affected-player ordering,
+source keywords, current source facts and departure LKI retain their shared
+contracts (CR 608.2c/e/f/h). State-based loss does not interrupt spell resolution
+between damage packets or rounds (CR 704.4).
+
+The effect retains immutable player, amount and source declarations. Round
+outcomes are local variables in `Apply`, not resolution-frame slots. Separate
+invocations and nested callers cannot overwrite one another. Factories retain
+independent target declarations; stack copies retain or retarget those groups;
+clones retain independent random queues and game actions. Definition validation
+rejects empty participant declarations, nil operands and unbound references.
+Explicit source reads also remain visible to the existing delayed-source query.
+
+RON accepts exactly three instructions in `RepeatableActions([producer, damage,
+continuation])` in an ordinary spell action context: `EachPlayerAction` with a
+nonempty `Or([SinglePlayer(reference), ...])` and bare `FlipACoin`;
+`SpellDealsDamage(ThisSpell, Integer(n), EachPlayer(CoinCameUpTails))`; and
+`Unless(AllCoinsCameUpHeads, [RepeatThisProcess])`. Reference scope is validated
+before the factory builds. Coin consumers outside that complete shape reject.
+Activated, modal, delayed and replacement bodies, dynamic amounts and additional
+round operations remain unsupported. Existing spell targeting checks prevent
+an all-illegal spell from consuming randomness (CR 608.2b). No card-name dispatch
+or Go factory fallback is used.
+
+Evidence: `TestCoinRound*` for batches, duplicate/absent participants, frame
+isolation, definition rejection, nonpositive damage, 1,001 rounds, lethal damage,
+source departure/return/control/phasing, clones and replacement ordering;
+`TestRONCoinRound*` for the unchanged complete Mana Clash record, all four
+outcome pairs, casting payment rollback, illegal targets, prevention, repetition,
+retargeted copies, illegal copied targets, clone randomness, independent factories,
+atomic loading, malformed declarations and nested inventory roles. Local
+`data/DRK.json` confirms the source record. No RON source correction is needed.
