@@ -16,18 +16,34 @@ const (
 	permanentDeath
 	permanentChoice
 	permanentDamageTarget
+	permanentPlayerChoice
 )
 
 type permanentReferencePlan struct {
-	kind   permanentReferenceKind
-	target *permanentTargetPlan
-	event  *permanentEventPlan
-	death  *hostDeathPlan
-	choice *permanentChoicePlan
-	damage *damageTargetPlan
+	kind         permanentReferenceKind
+	target       *permanentTargetPlan
+	event        *permanentEventPlan
+	death        *hostDeathPlan
+	choice       *permanentChoicePlan
+	damage       *damageTargetPlan
+	keyed        *permanentChoiceHistoryPlan
+	choicePlayer playerReferencePlan
 }
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
+	if n.Name == "ThePermanentChosenByPlayerThisWay" {
+		if err := arity(n, 1); err != nil {
+			return permanentReferencePlan{}, err
+		}
+		player, err := compilePlayerRef(n.Args[0], ctx)
+		if err != nil {
+			return permanentReferencePlan{}, err
+		}
+		if ctx.permanentChoices == nil {
+			return permanentReferencePlan{}, problem(n, "player choice requires a preceding producer")
+		}
+		return permanentReferencePlan{kind: permanentPlayerChoice, keyed: ctx.permanentChoices, choicePlayer: player}, nil
+	}
 	if n.Kind == Symbol {
 		if ctx.unblockedCreature != nil && n.Name == ctx.unblockedCreature.name {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.unblockedCreature}, nil
@@ -103,7 +119,13 @@ func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentR
 	case permanentDeath:
 		return mage.From(bindings.hostDeaths[p.death].permanent)
 	case permanentChoice:
-		return mage.From(bindings.chosenPermanents[p.choice])
+		return mage.PermanentChosenIn(bindings.chosenPermanents[p.choice])
+	case permanentPlayerChoice:
+		choices := make([]*mage.PermanentChoiceBinding, 0, len(p.keyed.choices))
+		for _, choice := range p.keyed.choices {
+			choices = append(choices, bindings.chosenPermanents[choice])
+		}
+		return mage.PermanentChosenByPlayer(p.choicePlayer.build(bindings), choices...)
 	default:
 		return bindings.permanents[p.target]
 	}

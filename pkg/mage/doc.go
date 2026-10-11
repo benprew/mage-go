@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChoosePermanentForPlayer] saves a chooser and an exact permanent visit.
+// [PermanentChosenByPlayer] reads the latest preceding choice by that player.
+// Empty choices replace older results. Control changes do not change the chooser.
+// Phasing prevents actions but keeps the visit. Return cannot replace it.
+// Information reads use exact departure facts. Existing resolution frames keep
+// delayed bodies, copies and clones separate. Each factory has fresh bindings.
+// RON lowers ThePermanentChosenByPlayerThisWay(playerRef) after ChooseAPermanent
+// or a direct PlayerAction choice in one resolving action sequence.
+// Choices inside branches stay local. TheChosenPermanent keeps its local scope.
+// PlayerActions lists and required payment choices need separate adapters.
+//
 // [ExchangePermanentControl] exchanges current controllers of two typed visits.
 // Both subjects must be present and able to change control. Same controllers
 // cause no change. Shared layer 2 effects apply both changes in one pass.

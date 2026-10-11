@@ -1554,6 +1554,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
+	case "permanent_reference":
+		if n.Name == "ThePermanentChosenByPlayerThisWay" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 	case "player_reference":
 		if n.Name == "ControllerOfAbility" && len(n.Args) == 1 {
 			return "ability_reference"

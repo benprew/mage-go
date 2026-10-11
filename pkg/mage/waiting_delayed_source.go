@@ -382,6 +382,9 @@ func (e *removeAllCountersEffect) refersToSourcePermanent() bool {
 }
 
 func permanentRefReadsSourcePermanent(ref PermanentRef) bool {
+	if choice, ok := ref.(playerChosenPermanentRef); ok {
+		return playerRefReadsSourcePermanent(choice.player)
+	}
 	_, self := ref.(sourceRef)
 	return self
 }

@@ -48,7 +48,7 @@ type instanceBindings struct {
 	handReveals          map[*handRevealPlan]*mage.CardBinding
 	chosenNames          map[*cardNameChoicePlan]*mage.CardNameBinding
 	chosenPlayers        map[*playerChoicePlan]*mage.PlayerBinding
-	chosenPermanents     map[*permanentChoicePlan]*mage.PermanentBinding
+	chosenPermanents     map[*permanentChoicePlan]*mage.PermanentChoiceBinding
 	createdValues        map[*createdValuePlan]*mage.NumberBinding
 	chosenDamageSources  map[*chosenDamageSourcePlan]*mage.DamageSourceBinding
 	destructionCounts    map[*destructionCountPlan]*mage.NumberBinding

@@ -121,6 +121,28 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			}
 			return append(effects, effect), ctx.chosenName, nil
 		}
+		if part.Name == "PlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "ChooseAPermanent" {
+			player, err := compilePlayerRef(part.Args[0], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			choice := part.Args[1]
+			if err := arity(choice, 1); err != nil {
+				return nil, nil, err
+			}
+			choiceCtx := ctx
+			choiceCtx.player = player
+			subjects, err := compileContextualCollection(choice.Args[0], choiceCtx)
+			if err != nil {
+				return nil, nil, err
+			}
+			plan := &permanentChoicePlan{name: "chosen permanent " + choice.Position.String()}
+			effect, err := compilePermanentChoiceContinuation(parts[i+1:], ctx, plan, player, subjects)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, effect), ctx.chosenName, nil
+		}
 		if part.Name == "ChooseAPermanent" {
 			effect, err := compilePermanentChoice(part, parts[i+1:], ctx)
 			if err != nil {

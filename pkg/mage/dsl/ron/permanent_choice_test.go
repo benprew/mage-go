@@ -266,7 +266,9 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 			}
 			blocker := ""
 			if name == "Juxtapose" {
-				blocker = "unbound or incompatible permanent reference (ThePermanentChosenByPlayerThisWay)"
+				if err != nil {
+					t.Fatalf("Juxtapose: %v", err)
+				}
 				actions := n.Fields["Rules"].Args[0].Args[0].Args[1].Args[0].Args
 				if len(actions) != 6 {
 					t.Fatal("Juxtapose must choose and exchange creatures, then artifacts")
@@ -283,6 +285,7 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 						t.Fatal("Juxtapose omitted an exchange")
 					}
 				}
+				continue
 			}
 			if name == "Takklemaggot" {
 				blocker = "unsupported required player payment cost (ChooseAPermanent)"

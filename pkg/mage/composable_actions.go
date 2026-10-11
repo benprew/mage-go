@@ -1552,6 +1552,8 @@ func (r permanentDamageSource) resolveDamageSource(ctx *EffectContext) DamageSou
 		value, _ = firstTargetValue(ctx.targetBindings[subject.targetDeclaration])
 	case savedPermanentRef:
 		value = ctx.Game.resolution.permanentBindings[subject.binding]
+	case playerChosenPermanentRef:
+		value, _ = subject.informationIdentity(ctx)
 	case damageResultPermanent:
 		value = ctx.Game.resolution.damageResultBindings[subject.binding].permanent
 	default:

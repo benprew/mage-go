@@ -13795,3 +13795,21 @@ No result binding is produced. `ThePermanentChosenByPlayerThisWay` and
 Chaos therefore remain rejected as complete records. `TestRONControlExchange*`
 provides prerequisite gameplay evidence, including the actual Gauntlets exchange
 AST in a supported synthetic declaration.
+
+### Player-keyed permanent choices
+
+`BindPermanentChoice(name)` declares one result. Use
+`ChoosePermanentForPlayer(player, subjects, result)` during resolution.
+`PermanentChosenIn(result)` reads that exact choice.
+`PermanentChosenByPlayer(player, precedingChoices...)` reads the latest
+preceding choice made by the specified player. Supply the choices in instruction
+order. An empty latest choice gives no subject; it cannot reuse an older choice.
+The chooser is saved before the choice. Later control changes do not change it.
+All choices must precede the read in the same declared resolution path.
+
+RON accepts `ThePermanentChosenByPlayerThisWay(playerRef)` after
+`ChooseAPermanent(collection)` and direct
+`PlayerAction(playerRef, ChooseAPermanent(collection))` in resolving sequences.
+A direct player choice exports its keyed result without changing the enclosing
+`TheChosenPermanent`. Branch choices stay local. Delayed bodies keep the saved
+frame. `PlayerActions` list producers and payment choices remain unsupported.

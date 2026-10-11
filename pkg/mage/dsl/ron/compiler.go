@@ -33,6 +33,7 @@ type scope struct {
 	anteSourcePayment    bool
 	chosenPlayer         *playerChoicePlan
 	chosenPermanent      *permanentChoicePlan
+	permanentChoices     *permanentChoiceHistoryPlan
 	createdValue         *createdValuePlan
 	chosenDamageSource   *chosenDamageSourcePlan
 	spellTargets         bool

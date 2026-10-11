@@ -2,16 +2,17 @@
 
 ## Current status
 
-The isolated slice reports **842 accepted / 144 rejected names** (986 total),
-**2,178 compiled / 267 rejected records** (2,445 total). With pre-existing Eureka,
-the shared worktree reports **843/143 names** and **2,179/266 records**.
+The isolated slice reports **843 accepted / 143 rejected names** (986 total),
+**2,179 compiled / 266 rejected records** (2,445 total). With pre-existing Eureka,
+the shared worktree reports **844/142 names** and **2,180/265 records**.
 The strict loader rejects the collection and publishes no partial registry.
 
-TYPED-PERMANENT-CONTROL-EXCHANGE lowers two exact permanent references to the
-shared atomic exchange service. Exchange effects now survive source departure
-and cannot affect returned visits. Targets, choices, copies and delayed frames
-have prerequisite gameplay tests. Full-card compilation and gameplay gain
-**zero names / zero records**, as estimated. Existing user work remains preserved.
+PLAYER-KEYED-PERMANENT-CHOICES saves each chooser and exact permanent visit,
+then reads the latest preceding choice by player identity. Fresh declarations
+and existing frames keep copies, clones and delayed results separate.
+Compilation gains **one name / one record**: Juxtapose. Complete Oracle gameplay
+gains **zero** because its RON tie choices need an APNAP source correction.
+Existing user work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -74661,3 +74662,145 @@ and unused DSL removal remain unfinished. This run implements no second slice.
    restrictions. Nether Shadow source-zone visits remain another larger option.
 
 This run stops after typed permanent-control exchange. Migration is incomplete.
+
+## Run 2026-10-11: PLAYER-KEYED-PERMANENT-CHOICES
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Candidate comparison and selection
+
+Complete records inspected: LEG Juxtapose and Gauntlets of Chaos; ARN City in
+a Bottle. Vocabulary keys checked for player-keyed choices, shared-cardtype
+comparison and state-member capture. Each name occurs once in this collection.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: player-keyed permanent choices | Juxtapose | 1 compilation unlock; initially 1 complete gameplay unlock | Highest-value selection and atomic exchange already exist. Enables independent player histories and repeated creature/artifact rounds, with saved delayed results. Oracle audit later found a tie-choice source defect. | Small: paired existing bindings, sequence lowering, identity and gameplay tests. |
+| Contextual type comparison and exchange results | Gauntlets of Chaos | 0 for a comparison-only slice; 1 only after all prerequisites | Needs both announcement/resolution shared-type comparison and actual exchange-result binding. Its nested attachment union must also be checked in that context. Enables dependent target groups and conditional exchange consequences. | Medium to large: two result/target contracts and attachment legality. |
+| State-member capture | City in a Bottle | 0 for capture alone | Also needs global casting and land-play restrictions. Enables typed state-trigger collections consumed by the existing simultaneous sacrifice service. | Medium: event-time membership, state rearming, saved visits and layers; restrictions are separate. |
+
+Select the first ranked candidate because its compiler and exchange dependencies
+are ready, it has the only credible immediate record unlock, and one reusable
+choice-history contract covers both ordered rounds. No ready multi-card candidate
+was established among these three. No card-name dispatch or Go definition was
+used. Initial full-gameplay estimate is revised to zero because the Oracle audit
+found a source defect; compilation and prerequisite execution still gain one.
+
+### Exact signatures, contexts and reuse boundary
+
+Native additions in `player_permanent_choice.go`:
+`BindPermanentChoice(string) *PermanentChoiceBinding`;
+`ChoosePermanentForPlayer(PlayerRef, PermanentSet, *PermanentChoiceBinding)
+ResolvingEffect`; `PermanentChosenIn(*PermanentChoiceBinding) PermanentRef`;
+`PermanentChosenByPlayer(PlayerRef, ...*PermanentChoiceBinding) PermanentRef`.
+The last argument list is in instruction order. Reads use the latest preceding
+choice whose saved chooser matches the referenced player's current identity.
+An empty latest choice gives absence, never an earlier choice. Two player
+expressions that resolve to the same player share that player's history.
+
+RON accepts the one-argument tuple
+`ThePermanentChosenByPlayerThisWay(playerRef)` in resolving permanent-reference
+contexts after `ChooseAPermanent(collection)` or a direct
+`PlayerAction(playerRef, ChooseAPermanent(collection))` in the same sequence.
+Ordinary spell, activated, trigger, branch and delayed action bodies use the
+existing sequence compiler. Direct player choices export keyed history but do
+not replace the enclosing `TheChosenPermanent`. Choices inside branches remain
+local. Unbound reads, wrong arity/type, read-before-producer, ability escape,
+costs and static declarations remain errors. PlayerActions list producers and
+required payment choices are not added. Inventory marks the tuple operand as a
+player reference. Immutable history plans keep existing reference comparisons.
+
+RON owns syntax, scope and fresh factory declarations. The engine pairs existing
+PlayerBinding and PermanentBinding declarations, snapshots the chooser, and uses
+ChoosePermanent for selection. Existing frame maps own all values; no new global
+last-choice slot or parallel decision subsystem is added. Definition validation
+checks every preceding write. Delays, copies and clones reuse saved frames.
+Phasing excludes an action while retaining the visit. Return cannot supply the
+old visit. Control changes do not change the saved chooser. Information,
+damage-source and subtype-condition reads retain exact LKI. Waiting queries
+retain player-source declarations without making choices. Existing atomic
+ExchangePermanentControl supplies both exchanges and source-independent duration.
+Local rules evidence: CR 400.7, 608.2c-d, 701.12a-b and 702.26.
+
+### Source defect and coverage boundary
+
+`data/LEG.json` gives Juxtapose Oracle text as a shared creature exchange, then
+an artifact exchange, with each controller choosing among ties. CR 101.4 requires
+active-player order when multiple players choose at the same time. The complete
+LEG RON record instead has explicit caster-first and target-second choices in
+both rounds. If the target is active and both players have ties, this order is
+wrong and can disclose a different prior choice. The generic sequential adapter
+must not silently reorder instructions. No RON source is changed: correction
+needs a grouped choice producer with APNAP timing and player-keyed results.
+There are no identical collection reprints to correct together. Vocabulary assets
+stay unchanged. Juxtapose now compiles and its declared execution is tested,
+but complete Oracle gameplay is not claimed. Go definitions and broad DSL
+functions stay in place because runtime and removal gates are unmet.
+
+### Card-to-test mappings
+
+| Card or contract | Evidence |
+| --- | --- |
+| Juxtapose complete RON record execution | TestRONPlayerPermanentChoiceJuxtapose: real payment and player target, both rounds, ties, empty creature/artifact sets, same-player targeting, prohibited exchange and phased candidates. TestRONPlayerPermanentChoiceMixedTypes: artifact creatures exchange twice using current control after the first round. Full Oracle coverage has the source defect above. |
+| Player identity, order, copies and scope | TestRONPlayerPermanentChoiceAliasAndCopies: same-player reference aliases, separate players, copied spell bodies and saved delayed reads. Existing TestRONPermanentChoiceExplicitPlayer preserves unkeyed outer scope. |
+| Delay, cost failure, source exit and visits | TestRONPlayerPermanentChoiceDelay: failed payment queues no body, no early execution, source departure, subject phasing, phase cycle, returned visit and cloned saved frames. |
+| Native history and information | TestPlayerPermanentChoiceHistory and IdentityAndDeclarations: last matching player, empty replacement, earlier binding independence, control changes, phasing, exact departure LKI, damage-source facts, return and clone isolation. |
+| Invalid declarations and callers | TestRONPlayerPermanentChoiceInvalid plus native definition validation cover arity/type, missing producers, branch escape, nil results and undeclared reads. Existing TestRONPermanentChoice* retains fresh factories, non-target choices, fallback, pending activations and delayed visits. |
+
+### Validation, loader and preservation
+
+Fresh shared baseline: make build and RON short tests pass (41.644s).
+Strict loader exits 1: 2,179 compiled / 266 rejected records, 843 accepted /
+143 rejected names, out of 2,445 records / 986 names. Collection rejection is
+expected and separate from build/test failure. HEAD isolation starts from
+503e89cb; 21 pre-existing modified/untracked shared files are saved.
+
+Failing-first native tests report the absent binding APIs. After fixture signature
+repairs, real RON gameplay fails on the unbound player-keyed reference. Native
+and RON implementation tests then pass. The first engine short run finds four
+exact collection-count assertions still using the old totals. Their expected
+counts are increased by one compiled record and decreased by one rejection;
+no behavior assertion or rejection check is weakened. All four then pass.
+
+Required focused RON and native tests pass. Both isolated and shared trees pass
+make build, go vet ./..., engine short tests and make test. Isolated engine
+short/full RON times are 41.785s / 43.156s; shared times are 43.498s / 44.041s.
+Isolated make lint reports zero issues. Its automatic changes group imports and
+use slices.Backward in the new history reader; only those three new files change.
+Focused native/RON tests, build and vet pass after those changes. Shared final
+lint, formatting/preservation review and loader checks are recorded below.
+Shared make lint passes with zero issues and makes no additional changes.
+git diff --check passes in both trees. A reverse-patch hash audit preserves all
+21 original modified/untracked files, apart from the requested ledger summary
+and collection-count updates. The original ledger prefix and all prior entries
+remain intact. No environmental or required-check blocker remains.
+
+Final isolated loader exits 1: 2,179 compiled / 266 rejected records, 843 accepted
+/ 143 rejected names. Final shared loader exits 1: 2,180 compiled / 265 rejected
+records, 844 accepted / 142 rejected names. Neither publishes a partial registry.
+Compared with fresh shared baseline, only Juxtapose leaves the rejected set;
+no previously accepted record is lost. Actual compilation gain is one unique
+name / one record, matching the estimate. Complete Oracle gameplay gain is zero,
+against the initial estimate of one, because of the newly documented source
+ordering defect. Pre-existing Eureka explains the isolated/shared difference.
+
+The slice changes typed choice APIs and tests, permanent reference/lowering and
+inventory, the affected exact-count tests, engine reference/API/rules contracts
+and this ledger. Existing unrelated changes and untracked files are retained.
+The commit contains only the isolated slice changes, including count expectations
+for HEAD without the pre-existing Eureka implementation.
+
+### Ranked next candidates
+
+1. Reassess shared simultaneous permanent choice producers with APNAP order and
+   player-keyed results. This is the remaining Juxtapose source-correction
+   prerequisite; compare multi-card decision needs before selecting it.
+2. State-member capture for City in a Bottle, followed by global casting and
+   land-play restrictions. Existing original-printing predicates and batch
+   sacrifice services are ready; estimate zero full unlocks for capture alone.
+3. Gauntlets of Chaos dependent shared-type target comparison, then exact
+   exchange-result binding and attachment unions. Estimate zero for comparison
+   alone; reassess all nested forms before promising a full-card unlock.
+
+This run stops after player-keyed permanent choice history. Complete collection
+execution, runtime loading, Go-card deletion and unused DSL cleanup remain open.

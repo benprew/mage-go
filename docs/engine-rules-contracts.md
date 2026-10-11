@@ -18038,3 +18038,47 @@ Evidence: `TestReferencedControlExchangeIdentity`, `Declaration`, `WaitingSource
 `ActivationAndCopies`, `ChoiceAndRoles`, `TriggerAndDelay`, `Duration`. Existing
 `TestExchangeControlIsAtomicAndUsesSnapshotControllers` retains simultaneous
 layer application, control history, later timestamps and clone isolation.
+
+
+## Player-keyed permanent choice history
+
+`ChoosePermanentForPlayer(PlayerRef, PermanentSet, *PermanentChoiceBinding)`
+uses `SnapshotPlayer` followed by `ChoosePermanent`. The shared choice service
+selects current eligible members at resolution and keeps exact incarnations.
+No target is declared. Required choice fallback and empty-set behavior stay the
+same. Choices follow instruction order (CR 608.2c-d); this service does not add
+an all-player simultaneous choice operation.
+
+`PermanentChosenByPlayer(PlayerRef, ...*PermanentChoiceBinding) PermanentRef`
+reads the latest preceding result whose saved chooser matches the referenced
+player. An empty latest choice stops the search. Two reference expressions that
+resolve to the same player share that player's history. Different players keep
+separate results. A missing player or result supplies no permanent.
+`PermanentChosenIn` reads one exact choice independently of player history.
+
+Existing player and permanent binding maps own all state. Factory declarations
+are fresh. Resolution frame cloning, delayed capture and stack copies retain
+separate values. Current controllers do not replace saved choosers. Phasing stops
+actions while retaining identity; a zone return cannot inherit the visit (CR
+400.7, 702.26). Information and damage-source reads use exact departure LKI.
+Definition inspection checks every chooser and permanent binding for preceding
+writes, including nil results and reads in another ability. Waiting queries
+retain explicit player-source dependencies without making choices.
+
+RON accepts the one-argument tuple reference in resolving permanent-reference
+contexts following an unscoped `ChooseAPermanent` or direct `PlayerAction`
+choice in that sequence. Branches and abilities cannot export local producers.
+The existing unkeyed `TheChosenPermanent` scope is unchanged. `PlayerActions`
+list choice producers and required payment choices need separate adapters.
+
+Evidence: native `TestPlayerPermanentChoiceHistory` and
+`TestPlayerPermanentChoiceIdentityAndDeclarations`; RON
+`TestRONPlayerPermanentChoiceJuxtapose`, `MixedTypes`, `AliasAndCopies`, `Delay`
+and `Invalid`. Existing `TestRONPermanentChoice*` verifies caller preservation.
+Juxtapose record execution covers both highest-mana-value exchange rounds,
+including ties, empty rounds, same-player targeting and control prohibitions.
+Complete Oracle gameplay remains blocked by the record's caster-first tie
+choices when the target player is active. Oracle has a shared exchange; CR
+101.4 requires active-player order for simultaneous choices. The RON record
+uses two explicit sequential choices. A source correction needs a grouped
+choice producer; this adapter does not reorder sequential instructions.

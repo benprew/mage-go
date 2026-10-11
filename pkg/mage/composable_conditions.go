@@ -604,6 +604,8 @@ func (e *permanentEnchantmentSubtypeBranch) Apply(ctx *EffectContext) error {
 	switch ref := e.subject.(type) {
 	case savedPermanentRef:
 		captured = ctx.Game.resolution.permanentBindings[ref.binding]
+	case playerChosenPermanentRef:
+		captured, _ = ref.informationIdentity(ctx)
 	case sourceRef:
 		if ctx.sourceCaptured {
 			captured = capturedPermanent{id: ctx.SourceID, incarnation: ctx.sourceIncarnation}
