@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExchangePermanentControl] exchanges current controllers of two typed visits.
+// Both subjects must be present and able to change control. Same controllers
+// cause no change. Shared layer 2 effects apply both changes in one pass.
+// Source departure does not end the control effects. A phase cycle keeps them;
+// returned subjects cannot inherit them. Targets keep resolution legality.
+// RON lowers ExchangeControl in resolving bodies with singular permanent reads.
+// Player-keyed choices and exchange-result conditions need separate adapters.
+//
 // [PowerEqualToLeastOf] compares two current permanent sets at resolution.
 // Empty comparison sets supply no power. Negative power and ties keep their
 // normal values. Selection does not exclude an indestructible subject.

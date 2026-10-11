@@ -7,11 +7,11 @@ The isolated slice reports **842 accepted / 144 rejected names** (986 total),
 the shared worktree reports **843/143 names** and **2,179/266 records**.
 The strict loader rejects the collection and publishes no partial registry.
 
-MINIMUM-POWER-DESTRUCTION-CHOICE selects by current least power at resolution
-and destroys one chosen exact visit without regeneration. Complete Drop of Honey
-RON gameplay covers both rules, casting, choices, layers, copies and lifetimes.
-Compilation and complete-card gameplay gain **one name / one record**.
-Existing user work remains preserved.
+TYPED-PERMANENT-CONTROL-EXCHANGE lowers two exact permanent references to the
+shared atomic exchange service. Exchange effects now survive source departure
+and cannot affect returned visits. Targets, choices, copies and delayed frames
+have prerequisite gameplay tests. Full-card compilation and gameplay gain
+**zero names / zero records**, as estimated. Existing user work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -74518,3 +74518,146 @@ with their saved SHA-256 hashes. No check or environment blocker remains.
    unlocks until ordered-graveyard conditions and optional return are complete.
 
 This run stops after minimum-power destruction choice. Migration is incomplete.
+
+## Run 2026-10-11: TYPED-PERMANENT-CONTROL-EXCHANGE
+
+Status: one cohesive vertical prerequisite slice. No second capability started.
+
+### Candidate comparison and selection
+
+The previous entry ranks shared permanent-control exchange prerequisites first.
+The complete LEG records and nested declarations were inspected, together with
+all six identical Nether Shadow records and City in a Bottle's ARN record.
+Targeted vocabulary keys confirm three ExchangeControl operations across two
+unique cards; reprints are counted once.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Typed two-permanent control exchange | Juxtapose; Gauntlets of Chaos | 0 | Juxtapose needs player-keyed choice references. Gauntlets needs SharesACardtypeWithPermanentFromAmongCardtypes, PermanentsChangedControlThisWay; existing attachment collections can be reused. The exchange primitive is required by both complete bodies. | Small adapter and typed native wrapper, with identity, timing, clone and layer tests. Duration tests subsequently exposed two engine defects within this same contract. |
+| Captured battlefield-state members | City in a Bottle | 0 | Capture Trigger_ThosePermanents for ControllersSacrificeEachPermanent; global spell and land prohibitions still block the complete card. | Medium/large: state arming, member capture, controller sacrifice and collection lifetimes. |
+| Graveyard-source visit and reference | Nether Shadow | 0 | FromGraveyard, ThisGraveyardCard, ordered-graveyard intervening condition and optional normal return. Enables this card's six records and later graveyard source rules. | Medium/large: zone registration, order, both condition checks and source-visit lifetimes. |
+
+Candidate #1 is dependency-ready and supplies a concrete shared prerequisite for
+two unique cards. Its adapter is smaller than either alternate prerequisite and
+uses an existing simultaneous control service. Selection, contract, reuse boundary
+and acceptance cases were stated before edits. No full-card unlock was inferred
+from first-error frequency. The expected zero gain is distinct from supported
+instruction gameplay. No single-card feature was substituted for shared work.
+
+### Supported signatures and engine contract
+
+RON: `ExchangeControl(firstPermanentRef, secondPermanentRef)` in resolving
+ordinary spell, activated, triggered, delayed, player and choice action bodies.
+It requires exactly two bound singular references and uses the existing typed
+reference compiler. Numbered targets keep separate per-factory declarations;
+source, host, captured event and choice references retain their existing scopes.
+Players, collections, tuple forms of symbol references and unbound reads reject
+at declaration time. Costs, entry declarations and static modifiers reject this
+action. Player-keyed choice references and exchange-result predicates remain
+unsupported; no global last-exchange state or result shortcut is introduced.
+
+Native: `ExchangePermanentControl(first, second PermanentRef) ResolvingEffect`.
+Both exact present visits are resolved before `Game.ExchangeControl` is called.
+Missing or phased subjects, identical subjects, equal controllers or either
+control prohibition cause no exchange. Current controllers are snapshotted before
+both indefinite layer-2 effects are registered and applied in one shared pass.
+No LKI subject substitutes for an absent visit. Later instructions still run.
+Existing target legality, control history, timestamp ordering and payment services
+are reused; no parallel control, replacement or cost subsystem is added.
+
+The failing duration test exposed missing engine contracts in the existing raw
+exchange service: source exit removed exchange effects, and targets had no exact
+incarnation capture. Exchange-created `controlContinuousEffect` instances now
+capture each target incarnation and set `independentOfSource`; the existing
+survivesSourceExit lifecycle hook retains them after source departure. Other
+control effects keep their existing source-dependent behavior. A phase cycle
+keeps an exchange effect; a returned visit cannot inherit it. Struct cloning keeps
+the new immutable fields and separate expiration state. Definition inspection
+traverses both operands; waiting-source queries inspect either side without
+execution. CR 400.7, 701.12a/b and 702.26 supply the local rules evidence.
+
+This is a compiler adapter plus a typed engine composition contract and necessary
+exchange lifecycle repairs. It does not complete player-keyed choice history,
+exchange results or contextual target type comparison. No source-data defect was
+found or corrected; RON assets and vocabulary snapshot stay unchanged. Current
+callers, Go card definitions, generators and broad DSL APIs remain preserved
+because runtime and removal gates are unmet. No unused DSL removal is attempted.
+
+### Card-to-test mapping
+
+| Card or contract | Evidence |
+| --- | --- |
+| Gauntlets of Chaos exchange instruction | TestRONControlExchangeGauntletsProjection uses the actual complete record's exchange AST inside a supported synthetic declaration, executes a cross-type exchange, checks fresh factory targets and definition validation, and requires full-record rejection. This is prerequisite coverage, not complete Gauntlets gameplay. |
+| Juxtapose remaining prerequisites | TestRONPermanentChoiceRecordsAndInventory retains all six ordered creature/artifact choice-and-exchange instructions and now requires the remaining unbound permanent-reference diagnostic. The full record stays rejected. No complete Juxtapose gameplay is claimed. |
+| Resolution targets and legality | TestRONControlExchangeGameplay: live controllers, equal controllers, prohibited control changes, source-independent ordinary spells, phased/returned targets, phase cycles, shroud at resolution, continuation after failure and independent pending clones. |
+| Native binding/identity and declarations | TestReferencedControlExchangeIdentity and Declaration: saved bindings, control changes, phasing, return, atomic failure, nil operands and undeclared targets. |
+| Activations, cost failure, copies and choices | TestRONControlExchangeActivationAndCopies and ChoiceAndRoles: failed payment leaves no pending action, independent copied body exchanges with current controllers, source departure/return/phasing/ability removal, non-target choice of a shrouded creature, and role rejection. |
+| Triggers and delays | TestRONControlExchangeTriggerAndDelay: resolution choice, captured delayed choice, no early exchange, source/subject returns, semantic inventory operand roles. |
+| Effect duration and clones | TestRONControlExchangeDuration and TestReferencedControlExchangeNativeDuration: phase cycles, permanent source departure, returned source/target exclusion, independent clone expiration and survival of the other effect. |
+| Pure waiting queries and layers | TestReferencedControlExchangeWaitingSource: either operand's source dependency, exact departure facts, waiting queries and clone lifetimes. Existing TestExchangeControlIsAtomicAndUsesSnapshotControllers and TestChangeController* retain simultaneous layers, timestamps and continuous-control history. |
+
+### Validation and preservation
+
+Fresh shared baseline: `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` pass (RON 41.405s).
+`go run ./cmd/loadcards -json` exits 1 with 2,179 compiled / 266 rejected records,
+843 accepted / 143 rejected names, out of 2,445 records / 986 names. This expected
+collection rejection is distinct from a build or test failure. Work is isolated
+from cf881ef8; all 21 existing modified/untracked shared files are saved for a
+byte-preservation audit before slice application.
+
+Failing-first native tests reject the absent ExchangePermanentControl signature.
+Initial snapshot fixture calls used an unrelated legacy API; these are corrected
+to the existing typed Snapshot before the native red run. RON gameplay and the
+real exchange projection fail on unsupported ExchangeControl. Initial focused
+implementation tests pass. The additional duration assertion fails on the old
+source/visit lifecycle, then passes with the exchange-specific repair. Activation
+fixture calls are corrected to ActivateAbilityByIndex; no production API is
+broadened to conceal fixture errors. No test is weakened.
+
+Required final checks pass in both the isolated and shared trees:
+`go test ./pkg/mage/dsl/ron -run TestRONControlExchange -count=1`,
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`,
+`make test`, `make lint` and `git diff --check`. Native focused tests include
+`TestReferencedControlExchange`, existing exchange, controller-lifetime and
+source-controlled regressions. Additional exact Juxtapose blocker checks pass.
+Isolated engine short/full RON times are 48.551s / 53.279s; shared times are
+47.599s / 108.995s. Both final lint runs report zero issues. Initial automatic
+formatting groups imports in the two new test files; no unrelated source changes
+are retained. Focused RON and native tests pass after lint. No environment or
+check blocker remains.
+
+Final strict loaders exit 1 and publish no partial registry. Isolated totals:
+2,178 compiled / 267 rejected records, 842 accepted / 144 rejected names.
+Shared totals: 2,179 compiled / 266 rejected records, 843 accepted / 143 rejected
+names. Both have 2,445 records / 986 unique names. Compared with the fresh shared
+baseline, the rejected-record set is identical and no accepted record is lost.
+Only Juxtapose's diagnostic changes: unsupported ExchangeControl becomes an
+unbound ThePermanentChosenByPlayerThisWay reference. Gauntlets remains at its
+contextual type comparison. Compilation and complete-card gameplay each gain
+zero names / zero records, exactly as estimated; prerequisite instruction
+coverage increases for the shared exchange operation. Pre-existing Eureka
+accounts for the difference between isolated and shared counts.
+
+Changed files: control_exchange_refs.go and native tests, effect_control.go,
+RON control_exchange.go and tests, compiler dispatch and inventory roles,
+the exact permanent-choice rejection assertion, engine reference, API/rules
+contracts and this ledger. The commit stages only the isolated slice patch.
+A reverse-patch SHA-256 audit restores all 21 saved existing modified/untracked
+files byte-for-byte, including ledger reorganization, vocabulary, Eureka and
+unrelated work. Runtime cutover, complete collection gameplay, Go-card deletion
+and unused DSL removal remain unfinished. This run implements no second slice.
+
+### Ranked next candidates
+
+1. Player-keyed permanent choice bindings for Juxtapose. The typed exchange
+   primitive is now available; inspect scoped You/Ref_TargetPlayer choices and
+   sequential creature/artifact rounds. Estimated one full-card unlock if all
+   player-keyed history and scope contracts are completed.
+2. Gauntlets of Chaos contextual shared-type target comparison and exact exchange
+   result binding. Reassess attachment collection support before estimating the
+   full-card unlock; both target legality and the conditional body must be exact.
+3. City in a Bottle state-member capture, followed by global casting/land
+   restrictions. Nether Shadow source-zone visits remain another larger option.
+
+This run stops after typed permanent-control exchange. Migration is incomplete.

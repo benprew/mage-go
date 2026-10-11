@@ -1296,6 +1296,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "ExchangeControl":
+		build, err := compileControlExchange(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "ExchangeOwnershipOfTwoCards":
 		build, err := compileCardOwnershipExchange(n, ctx)
 		if err != nil {

@@ -18006,3 +18006,35 @@ Evidence: `TestLeastPowerComparisonSelection`, `Declaration`, `WaitingSource`,
 `CopiesAndClones`, `PlayerScope`, `ActivationAndEmpty`, `Invalid`,
 `RecordsAndInventory`. Existing destruction, sacrifice, replacement and state
 trigger tests retain batch ordering and exact departure contracts.
+
+## Typed permanent-control exchange (CR 400.7, 701.12a/b, 702.26)
+
+`ExchangePermanentControl(first, second PermanentRef) ResolvingEffect` reads both
+present exact visits at resolution. An absent or phased visit, identical subjects,
+equal controllers or either subject's control-change prohibition prevents the
+entire exchange. The existing `Game.ExchangeControl` service snapshots current
+controllers, creates two indefinite layer 2 effects and applies them together.
+Later timestamps and continuous-control history use the shared layer service.
+Exchange-created effects now capture each target incarnation and explicitly
+survive source exit. Other control effects retain their existing lifetimes.
+Source departure does not end these unconditional effects. Phasing keeps the
+subjects' visits and effects; a return starts a new visit. LKI does not supply an
+absent exchange subject. An unsuccessful exchange does not stop later actions.
+
+Definition inspection traverses both references. Waiting-source queries report
+explicit source reads on either side without executing the exchange. Factory
+bindings, target legality, copy retargeting, saved choices, delayed frames and
+clone state retain the existing typed services. This adapter neither implements
+replacement ordering nor creates new payments or parallel control mechanics.
+
+RON accepts `ExchangeControl` with exactly two singular permanent references in
+resolving contexts. It produces no changed-control result. Player-keyed choice
+history, contextual type comparison and result consumers are separate slices.
+Both Juxtapose and Gauntlets of Chaos remain unsupported complete cards.
+
+Evidence: `TestReferencedControlExchangeIdentity`, `Declaration`, `WaitingSource`,
+`NativeDuration`;
+`TestRONControlExchangeGameplay`, `Invalid`, `GauntletsProjection`,
+`ActivationAndCopies`, `ChoiceAndRoles`, `TriggerAndDelay`, `Duration`. Existing
+`TestExchangeControlIsAtomicAndUsesSnapshotControllers` retains simultaneous
+layer application, control history, later timestamps and clone isolation.

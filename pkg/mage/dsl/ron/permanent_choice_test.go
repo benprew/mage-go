@@ -266,7 +266,7 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 			}
 			blocker := ""
 			if name == "Juxtapose" {
-				blocker = "ExchangeControl"
+				blocker = "unbound or incompatible permanent reference (ThePermanentChosenByPlayerThisWay)"
 				actions := n.Fields["Rules"].Args[0].Args[0].Args[1].Args[0].Args
 				if len(actions) != 6 {
 					t.Fatal("Juxtapose must choose and exchange creatures, then artifacts")

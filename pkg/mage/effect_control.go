@@ -63,16 +63,21 @@ type ControlEffectSpec struct {
 }
 
 type controlContinuousEffect struct {
-	sourceIncarnation uuid.UUID
-	targetIncarnation uuid.UUID
-	sourceTapped      bool
-	targetID          uuid.UUID
-	controllerID      uuid.UUID
-	duration          Duration
-	conditions        []ControlConditionData
-	expired           bool
-	tapMaintained     bool
+	independentOfSource bool
+	sourceIncarnation   uuid.UUID
+	targetIncarnation   uuid.UUID
+	sourceTapped        bool
+	targetID            uuid.UUID
+	controllerID        uuid.UUID
+	duration            Duration
+	conditions          []ControlConditionData
+	expired             bool
+	tapMaintained       bool
 	effectSource
+}
+
+func (e *controlContinuousEffect) survivesSourceExit() bool {
+	return e.independentOfSource
 }
 
 func (e *controlContinuousEffect) Properties() EffectProperties {
@@ -200,12 +205,18 @@ func (g *Game) ExchangeControl(firstID, secondID, sourceID uuid.UUID) bool {
 	if firstController == secondController || first.HasAttr(AttrCantChangeControl) || second.HasAttr(AttrCantChangeControl) {
 		return false
 	}
-	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
+	firstEffect := newControlContinuousEffect(ControlEffectSpec{
 		SourceID: sourceID, TargetID: firstID, ControllerID: secondController, Duration: Indefinite,
-	}))
-	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
+	})
+	firstEffect.targetIncarnation = first.incarnationID
+	firstEffect.independentOfSource = true
+	secondEffect := newControlContinuousEffect(ControlEffectSpec{
 		SourceID: sourceID, TargetID: secondID, ControllerID: firstController, Duration: Indefinite,
-	}))
+	})
+	secondEffect.targetIncarnation = second.incarnationID
+	secondEffect.independentOfSource = true
+	g.effects.Add(firstEffect)
+	g.effects.Add(secondEffect)
 	g.effects.Apply(g)
 	return true
 }

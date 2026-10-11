@@ -13779,3 +13779,19 @@ static predicate contexts remain unsupported for this dynamic value.
 selector. Compose `ChoosePermanent` with `DestroyWithoutRegeneration` to execute
 the choice. The complete Drop of Honey record uses the controller upkeep trigger
 and the separate battlefield-absence trigger. See `TestRONLeastPowerChoice*`.
+
+## RON typed permanent-control exchange
+
+`ExchangeControl(firstPermanentRef, secondPermanentRef)` accepts exactly two
+bound singular permanent references in resolving action bodies. Spells,
+activations, triggers, delayed bodies and existing player/choice scopes use the
+same adapter. Numbered targets remain distinct. Tuple forms of symbol references,
+players, collections and unbound choices reject during compilation.
+
+`mage.ExchangePermanentControl(first, second PermanentRef) ResolvingEffect`
+resolves both exact visits and calls the existing `Game.ExchangeControl` service.
+No result binding is produced. `ThePermanentChosenByPlayerThisWay` and
+`PermanentsChangedControlThisWay` remain unsupported. Juxtapose and Gauntlets of
+Chaos therefore remain rejected as complete records. `TestRONControlExchange*`
+provides prerequisite gameplay evidence, including the actual Gauntlets exchange
+AST in a supported synthetic declaration.

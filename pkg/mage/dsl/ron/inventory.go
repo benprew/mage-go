@@ -910,6 +910,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"hand_entry_filter", "entry_operation"}[index]
 			}
+		case "ExchangeControl":
+			if len(n.Args) == 2 {
+				return "permanent_reference"
+			}
 		case "ExchangeOwnershipOfTwoCards":
 			if len(n.Args) == 2 {
 				return "card_reference"
