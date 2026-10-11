@@ -1410,6 +1410,12 @@ func DealDamageEach(source DamageSourceRef, recipients DamageRecipientSet, amoun
 // DealDamageEvenly divides the total at resolution, not at announcement.
 // Only surviving recipients in this target group receive a share.
 func DealDamageEvenly(source DamageSourceRef, recipients *DamageTargetsBinding, total ResolutionValue, options ...DamageEachResultOption) ResolvingEffect {
+	return DealDamageEvenlyToRecipients(source, recipients, total, options...)
+}
+
+// DealDamageEvenlyToRecipients selects recipients once before damage replacements.
+// Each selected recipient gets an equal share, rounded down.
+func DealDamageEvenlyToRecipients(source DamageSourceRef, recipients DamageRecipientSet, total ResolutionValue, options ...DamageEachResultOption) ResolvingEffect {
 	e := newDamageEachEffect(source, recipients, total, options)
 	e.evenDivision = true
 	return e

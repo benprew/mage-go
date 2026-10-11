@@ -247,7 +247,7 @@ func TestRONNumericConsumerInventory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Compiled != 2134 || len(report.Issues) != 311 {
+	if report.Compiled != 2135 || len(report.Issues) != 310 {
 		t.Fatalf("compiled/rejected %d/%d", report.Compiled, len(report.Issues))
 	}
 	for _, issue := range report.Issues {

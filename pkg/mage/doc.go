@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [DealDamageEvenlyToRecipients] for an equal division at resolution.
+// It reads the total and selects the typed recipients once. Each gets a share
+// rounded down before shared damage replacements and prevention. Empty sets
+// and nonpositive shares cause no damage. Source LKI and simultaneous outcomes
+// use the existing damage service. [DealDamageEvenly] keeps its target API.
+// RON lowers ordinary spell division among live permanent collections or one
+// plural union target binding. Casting surcharges need a separate adapter.
+//
 // RON fixed spell distributions use [DeclareAnyNumberDamageTargets] and
 // [DealAllocatedDamage]. Each factory makes a fresh declaration and effect.
 // Announcement fixes positive shares before payment. An empty group needs

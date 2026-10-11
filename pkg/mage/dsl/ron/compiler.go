@@ -80,6 +80,7 @@ type scope struct {
 	hostDeath         *hostDeathPlan
 	damageTarget      *damageTargetPlan
 	damageGroups      map[string]*damageTargetPlan
+	damageTargets     *damageTargetsPlan
 	castEvent         *castEventPlan
 	drawEvent         *drawEventPlan
 	stepEvent         *stepEventPlan
@@ -103,6 +104,7 @@ type actionPlan struct {
 	cardTarget       *cardTargetPlan
 	damageTarget     *damageTargetPlan
 	damageGroups     []*damageTargetPlan
+	damageTargets    *damageTargetsPlan
 }
 
 func (p actionPlan) build() Actions {
@@ -148,6 +150,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		if target, ok := targets[i].(*mage.SpellTargetBinding); ok {
 			bindings.spells[p.spellTarget] = target
 		}
+		if target, ok := targets[i].(*mage.DamageTargetsBinding); ok {
+			bindings.recipientSets[p.damageTargets] = target
+		}
 		if target, ok := targets[i].(*mage.DamageTargetBinding); ok {
 			if len(p.damageGroups) != 0 {
 				bindings.recipients[p.damageGroups[i]] = target
@@ -183,6 +188,7 @@ func initializeActionBindings(bindings instanceBindings) instanceBindings {
 	bindings.abilities = make(map[*abilityTargetPlan]*mage.AbilityTargetBinding)
 	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
+	bindings.recipientSets = make(map[*damageTargetsPlan]*mage.DamageTargetsBinding)
 	return bindings
 }
 
@@ -891,6 +897,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if err != nil {
 			return plan, err
 		}
+		if len(targets) == 1 && targets[0].Name == "AnyNumberOfAnyTargets" {
+			return compilePluralUnionDamage(n, targets[0], ctx)
+		}
 		if len(targets) > 1 {
 			if isUnionDamageTarget(targets[0]) {
 				return compileUnionDamageGroups(n, targets, ctx)
@@ -1464,6 +1473,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "PutCountersWithRestriction", "PutCounters", "RemoveCounters":
 		build, err := compileCounterAction(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "SpellDealsDamageDividedAmongRecipientsRoundedDown":
+		build, err := compileEvenSpellDamage(n, ctx)
 		if err != nil {
 			return nil, err
 		}

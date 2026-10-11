@@ -13168,3 +13168,26 @@ Rules: CR 601.2c–d/h, 608.2b/d, 400.7 and 702.26b/d.
 
 Pyrotechnics gains complete RON gameplay coverage. Fireball retains separate
 casting-surcharge and rounded-division adapters. No RON source changed.
+
+
+## RON ordinary spell equal damage
+
+`SpellDealsDamageDividedAmongRecipientsRoundedDown(ThisSpell, value, recipients)`
+accepts existing typed resolution values in ordinary instant/sorcery action lists.
+Recipients are either `EachPermanent(collection)` using the resolving permanent
+collection compiler, or the symbol `Ref_AnyTargets` produced by one
+`Targeted([AnyNumberOfAnyTargets], body)` declaration. Each factory constructs a
+fresh `DamageTargetsBinding`, shared only by its own target declaration and
+consumers. Empty target groups are legal. Singular and plural references are
+separate types; unbound reads and invalid kinds/arity fail compilation.
+
+The collection form calls `DealDamageEvenlyToRecipients`; the target form calls
+`DealDamageEvenly`. Both use the existing engine damage batch and resolution X.
+Modal, activated, triggered, delayed and replacement bodies and numbered plural
+union declarations remain unsupported contexts. `TargetedDistributed` retains its announcement allocation
+contract. Equal division never offers an allocation choice.
+
+The complete Dwarven Catapult record now executes. All six Fireball records
+still reject `AdditionalCastingCostForEachTargetBeyondTheFirst`; tests validate
+only their extracted damage prerequisite. This is not full Fireball coverage.
+No RON data or vocabulary source hash changed.

@@ -1080,6 +1080,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "damage_packet"}[index]
 			}
+		case "SpellDealsDamageDividedAmongRecipientsRoundedDown":
+			if len(n.Args) == 3 {
+				if index == 2 && n.Args[index].Name == "Ref_AnyTargets" {
+					return "recipient_collection_reference"
+				}
+				return []string{"spell_reference", "value", "recipient"}[index]
+			}
 		case "SpellDealsDamage":
 			if len(n.Args) == 3 {
 				return []string{"spell_reference", "value", "recipient"}[index]

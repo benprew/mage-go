@@ -36,6 +36,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	recipientSets        map[*damageTargetsPlan]*mage.DamageTargetsBinding
 	drawReplacements     map[*drawReplacementPlan]*mage.PlayerBinding
 	playerDiscards       map[*playerDiscardPlan]*mage.PlayerNumbersBinding
 	sacrificeSubtypes    map[*sacrificeSubtypePlan]*mage.NumberBinding

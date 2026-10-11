@@ -2,16 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **823 accepted / 163 rejected names** (986 total),
-**2,134 compiled / 311 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **824/162 names** and **2,135/310 records**. The strict
+The isolated slice reports **824 accepted / 162 rejected names** (986 total),
+**2,135 compiled / 310 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **825/161 names** and **2,136/309 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-FIXED-SPELL-DAMAGE-DISTRIBUTION lowers fixed positive ordinary spell allocations
-to fresh typed union targets and existing mage allocation/damage services.
-Compilation and complete RON gameplay gain **1 name / 1 record**: Pyrotechnics.
-Fireball retains its casting surcharge and rounded-division adapter blockers.
-No RON changed. Required native checks pass; final lint reports 0 issues.
+ROUNDED-EQUAL-SPELL-DAMAGE lowers ordinary spell division among live permanent
+collections and a fresh plural union target binding to shared mage damage.
+Compilation and complete RON gameplay gain **1 name / 1 record**: Dwarven Catapult.
+Fireball's damage prerequisite is ready; its casting surcharge remains unsupported.
+No RON changed. Required native checks pass in both trees; final lint has 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -70810,3 +70810,150 @@ the full-collection gameplay/loading/cutover gates remain unmet.
    facts. Estimate zero full unlocks for snapshots alone; two downstream names.
 
 Migration remains incomplete. This run stops after FIXED-SPELL-DAMAGE-DISTRIBUTION.
+
+## Run 2026-10-10: ROUNDED-EQUAL-SPELL-DAMAGE
+
+Status: complete one vertical capability slice. No second slice was started.
+
+### Environment and candidate comparison
+
+The initial worktree contains unrelated migration changes in .gitignore, design
+and progress docs, engine API/contracts, compiler/inventory/collection assertions,
+optional hand entry, and untracked repeated-entry engine/compiler/tests and a
+completed-entry archive. These changes are preserved. Implementation and native
+validation first use an isolated HEAD checkout; only this slice is committed.
+Fresh baseline make build and complete RON tests pass in both trees (worktree
+39.776s, isolated 40.220s). Both baseline loaders exit 1 for collection rejection,
+not build failure. Worktree: 824/162 names and 2,135/310 records; isolated:
+823/163 names and 2,134/311 records. Both retain 986 names and 2,445 records.
+
+| Candidate | Distinct affected cards | Estimated full unlocks and other blockers | Downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1, plural union targets and rounded equal spell damage, extended to the same collection consumer | Fireball (six records), Dwarven Catapult (one record) | One name/record, Dwarven Catapult. Fireball retains AdditionalCastingCostForEachTargetBeyondTheFirst. | Shared resolution division for live collections and legal target sets; completes Fireball's damage prerequisite. | Moderate: compiler bindings, generalize existing damage recipient contract, gameplay and rejection tests. |
+| Ranked #2, live damage-history permanent subjects | Runesword (one record) | Zero for the history prerequisite alone; one after both no-regeneration and death-replacement consumers. | Shared source/recipient incarnation history used by two consumers. | Larger: live history, cleanup, departure facts, two rule consumers. |
+| Ranked #3, entry/departure intervening-if snapshots | Earthbind (six records), Urza's Miter (one record) | Zero for snapshots alone. Earthbind also needs host Flying removal; Miter needs sacrifice-cause facts in graveyard events. | Two downstream names with distinct detection/resolution event contracts. | Larger: event snapshots and two separate remaining consumers. |
+
+Complete records and nested forms establish these estimates. Reprints count once.
+Candidate #1 is dependency-ready after one missing engine collection contract.
+Its shared rounded-damage signature gives multi-card value and one immediate
+complete-card gain. The other candidates need more independent contracts. The
+casting surcharge is deliberately a next slice; this run does not combine two
+capabilities just to accept Fireball.
+
+### Exact signatures, contexts, and ownership
+
+Ordinary instant/sorcery action lists now accept:
+SpellDealsDamageDividedAmongRecipientsRoundedDown(ThisSpell, value, recipients).
+The value uses the existing typed resolution value compiler, including announced
+ValueX. Recipients are either EachPermanent(collection), with the existing
+resolving collection compiler, or symbolic Ref_AnyTargets from exactly one
+Targeted([AnyNumberOfAnyTargets], body) declaration. This declaration requires a
+symbol. Singular and plural target types remain separate. Unbound references,
+wrong arity/kind/source, unsupported collections, nested declarations, multiple
+plural groups, modal, activated, triggered, delayed and draw-replacement contexts remain
+positioned errors.
+
+RON owns spelling, shape/context validation, and immutable damageTargetsPlan.
+Each factory builds a fresh DeclareAnyNumberDamageTargets("Ref_AnyTargets") and
+per-instance recipientSets binding shared by that instance's target/effects.
+The shared Spell target adapter retains declaration identity. Collection lowering
+uses PermanentDamageRecipients from existing typed permanent sets.
+
+New engine API:
+DealDamageEvenlyToRecipients(source DamageSourceRef, recipients DamageRecipientSet,
+total ResolutionValue, options ...DamageEachResultOption) ResolvingEffect.
+The existing DealDamageEvenly signature is preserved and delegates to it.
+Both use the existing damageEachEffect, source references, amount evaluation,
+recipient selection, replacement/prevention ordering, simultaneous damage,
+result writes, stack/copy and clone services. No parallel damage system is added.
+
+The total and recipient set are read once at resolution. Positive totals are
+divided by the selected count and rounded down before replacements. Empty sets,
+nonpositive totals and zero shares cause no damage proposals. Prevention cannot
+redistribute another share. Target sets keep legal saved visits; returned targets
+cannot substitute. Live collections read current membership, so returned or new
+creatures can join. Phased creatures are absent; phase cycles keep identity.
+Copies keep X, can retarget and do not choose allocations or pay again.
+Source LKI and per-instance/clone isolation remain shared engine rules.
+
+Local data/FEM.json confirms Dwarven Catapult's X damage divided evenly, rounded
+down, among all creatures target opponent controls. Local data/LEA.json confirms
+Fireball's separate surcharge and equal damage to any number of targets.
+Rules evidence: CR 601.2b/c/f/h, 608.2b/f/h, 400.7 and 702.26b/d.
+No source defect is found. RON data and vocabulary source hashes are unchanged.
+Gaea's Liege and Fastbond remain independent source audits.
+
+### Failing-first evidence and card-to-test mapping
+
+The first new RON test build uses a nonexistent Player.GrantAttr; it is corrected
+before the expected red run by using two permanent targets for all-illegal tests.
+Catapult then fails at the unsupported rounded-damage action and union scenarios
+fail at the unsupported declaration. The engine test initially uses nonexistent
+filter names; after correcting the fixture, it fails only for the new API's
+undefined signature. Implementation then makes the focused tests pass.
+Final boundary review finds inherited ordinary-spell flags in deferred contexts.
+TestRONEvenDamageDeferredContexts fails before explicit delayed/replacement
+guards, then passes. Complete checks are rerun after this correction.
+A later source-LKI test reads stale permanent pointers after game cloning and
+replacement entry; it is corrected to query the live game by ID. Damage, total
+read count, LKI and clone assertions stay unchanged.
+
+| Card/context | Tests |
+| --- | --- |
+| Complete Dwarven Catapult, FEM:16 | TestRONEvenDamageCatapult checks paid X, no allocation choices, live entry, control, return, phase cycles, empty sets, zero totals/shares, prevention, copies and clones; excludes own creatures, players and planeswalkers. |
+| Catapult payment/instances | TestRONEvenDamageCatapultPaymentAndInstances checks failed payment, opponent-only target legality, separate pending X values, and independent definitions. |
+| Fireball damage prerequisite, all six reprints | TestRONEvenDamageInventoryAndRemaining checks complete records retain their exact surcharge rejection, then compiles and engine-validates each extracted SpellActions rule. No complete Fireball gameplay gain is claimed. |
+| RON plural union contract | TestRONEvenDamageUnion checks creatures/players/planeswalkers, rounding, empty targets, partial/all illegality, return, phasing, prevention, copies and clones. TestRONEvenDamagePaymentAndRetarget checks invalid/unpaid rollback, retargeted copies, saved X and surviving-target redivision. |
+| Invalid declarations and inventory | TestRONEvenDamageInvalid checks binding, source, arity, kind, group and context errors. InventoryAndRemaining checks target, spell reference, value and plural recipient-reference roles. |
+| General engine contract | TestEvenCollectionDamageContract checks definition rejection, prevention after division, and observers seeing the full batch. TestEvenCollectionDamageSourceAndCapture checks one total read, one recipient selection before replacement entry, sacrifice-source LKI/lifelink, and clone isolation. Existing TestEvenDamage* retains legality, results, source LKI, copies and payment contracts. |
+| Previously accepted records | Exact inventory and definition-reconstruction expectations advance by one record; whole suites retain existing accepted definitions. |
+
+### Validation and measured results
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONEvenDamage -count=1 and native
+go test ./pkg/mage -run 'TestEvenCollectionDamage|TestEvenDamage' -count=1 pass.
+After the deferred-context correction, both trees again pass focused RON tests,
+make build, go vet ./..., go test ./pkg/mage/... -short -count=1, and make test.
+Final isolated RON durations: short 47.586s, full 44.286s; final worktree RON
+short 45.035s, full 44.725s. Both final make lint runs report 0 issues.
+The initial isolated lint changes only import grouping in even_damage_test.go;
+reconstructing the old import block reproduces its pre-lint file hash. Focused
+RON tests, build and vet pass after that edit. Full required checks are rerun
+for the later scope guard. Final whole-tree Go hashes show no automatic changes
+in either tree. git diff --check passes in both trees, including the final docs.
+Final go run ./cmd/loadcards -json exits 1 solely for remaining collection
+rejections in each tree. No tests are weakened and no unrelated lint edits remain.
+
+Actual isolated gain: 1 accepted name / 1 compiled record, from 823/163 names
+and 2,134/311 records to 824/162 names and 2,135/310 records. Actual worktree gain:
+1 name / 1 record, from 824/162 and 2,135/310 to 825/161 and 2,136/309.
+The Eureka difference is preserved. Totals stay 986 names / 2,445 records.
+Complete-card RON gameplay gains one unique name: Dwarven Catapult, exactly the
+estimate. Fireball gains prerequisite coverage but no complete-card acceptance.
+Both final loaders exit 1 and publish no partial registry. Catapult has no issue.
+Fireball retains AdditionalCastingCostForEachTargetBeyondTheFirst; Runesword
+retains CantBeRegenerated on its history collection; Earthbind and Urza's Miter
+retain their distinct intervening-if event diagnostics. No environment blocker
+or accepted-record regression is found.
+
+Changed files: pkg/mage/composable_actions.go, even_collection_test.go and doc.go;
+pkg/mage/dsl/ron/even_damage.go and its test, compiler.go, player_scope.go,
+inventory.go, inventory_test.go, definition_plan_test.go, numeric_consumers_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+No Go card definitions, generators, runtime paths or DSL functions are removed:
+complete collection gameplay/loading and cutover/removal gates remain unmet.
+
+### Ranked next candidates
+
+1. AdditionalCastingCostForEachTargetBeyondTheFirst(PayMana([ManaCostGeneric(n)]))
+   for ordinary spells. Existing AdditionalManaPerTargetBeyondFirst supplies the
+   exact announced-target surcharge. With this run's damage prerequisite, expect
+   one full unique-name unlock: Fireball, six records. Reassess other multi-card
+   candidates before selection; target/cost declaration checks and rollback matter.
+2. Entry/departure intervening-if snapshots for Earthbind and Urza's Miter.
+   Two downstream names; snapshots alone still unlock zero. Preserve host Flying
+   checks at both times and graveyard sacrifice-cause facts.
+3. Live damage-history permanent subjects for Runesword's two consumers.
+   History alone unlocks zero; both consumers together could unlock one name.
+
+Migration remains incomplete. This run stops after ROUNDED-EQUAL-SPELL-DAMAGE.

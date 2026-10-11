@@ -17184,3 +17184,30 @@ Rules: CR 601.2c–d/h, 608.2b/d, 400.7 and 702.26b/d.
 
 Pyrotechnics gains complete RON gameplay coverage. Fireball retains separate
 casting-surcharge and rounded-division adapters. No RON source changed.
+
+
+## Equal damage to typed recipient collections
+
+`DealDamageEvenlyToRecipients(source DamageSourceRef, recipients DamageRecipientSet,
+total ResolutionValue, options ...DamageEachResultOption) ResolvingEffect` extends
+the existing equal target division to typed recipient sets. `DealDamageEvenly`
+retains its original signature and delegates to this service.
+
+At resolution, the engine reads the total once and selects the recipient set
+once. The share is the positive total divided by that set's size, rounded down.
+Empty sets, nonpositive totals and zero shares make no damage proposals. The
+shared damage batch applies replacements and prevention after division; damage
+prevented for one recipient does not change another share. All moves and damage
+observers use the existing simultaneous batch. Source information uses exact
+incarnation and LKI through the existing damage source reference (CR 608.2f/h).
+
+Target sets retain only currently legal announced recipients (CR 608.2b).
+Live permanent sets read current membership at resolution, including entry,
+control changes and phase cycles. A returned creature can join a live set, but
+cannot replace an announced target visit (CR 400.7, 702.26). This distinction is
+covered by the complete Dwarven Catapult RON and synthetic plural target tests.
+Copies retain X and target count, can retarget, and require no allocation choice
+or repeated payment. Clones retain separate damage state.
+
+Evidence: `TestEvenCollectionDamageContract`, `TestEvenCollectionDamageSourceAndCapture`,
+existing `TestEvenDamage*`, and `TestRONEvenDamage*`.
