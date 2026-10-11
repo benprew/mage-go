@@ -17833,7 +17833,7 @@ atomic loading. `Invalid` and `ScopedOptionalDraw` cover declaration errors and
 independent player scope. Native `TestControllerCastDetectionAndBindings`,
 `Declarations` and `OptionalDraw` cover composition, saved event identities,
 copies, clones, typed validation, accept/decline, absence and draw replacement.
-Stack-source Mana Vortex and general optional action lists remain unsupported.
+Stack-source Mana Vortex uses the self-cast contract below; general optional action lists remain unsupported.
 
 ### RON controller permanent-presence state trigger
 
@@ -17936,3 +17936,38 @@ Evidence: `TestRONBattlefieldAbsenceRealRules`, `Pending`, `Targets`,
 `TestBattlefieldAbsenceBatchAndReplacement`. No cost, replacement-order or
 zone service is added. Complete Mana Vortex and Drop of Honey gameplay remains
 blocked by their other rules.
+
+## Stack-source self-cast triggers
+
+`SourceSpellCast() spellCastPattern` uses the stack as its source zone and
+matches only the exact source spell visit identified by the cast event.
+`WithSpell` and `WithCaster` keep the existing typed captures. Stack detection
+now saves those captures before queuing, using the same service as battlefield
+triggers. Copies on the stack cannot inherit another visit's cast event. Real
+spell copies and failed casting do not emit a cast event. Pending bodies keep
+the detected controller, caster and spell identity after source departure or
+control changes. Re-casting a physical card cannot replace the saved stack visit.
+The normal APNAP, counter, clone and resolution-payment services remain shared
+(CR 113.6k, 113.7a, 400.7, 601.2i, 603.2/3a, 707.10).
+
+RON accepts exactly
+`FromStack(TriggerA(WhenAPlayerCastsASpell(SinglePlayer(You), SingleSpell(ThisSpell)), actions))`
+on a permanent card definition. Every constructor has its exact tuple arity;
+`You` and `ThisSpell` must be symbols. This context supplies only the existing
+cast spell/caster bindings, not a battlefield source or Aura host. Bodies use
+the existing validated action compiler and fresh per-factory declarations.
+Other source-zone events, instant/sorcery declarations and other self-spell
+reference consumers remain separate. RON owns spelling and scope validation;
+the engine owns exact-visit matching, capture timing and execution.
+
+Evidence: `TestRONStackSelfCastManaVortex` executes the complete real record for
+payment, decline, absent payment, failed casting, copies, departure and controller
+changes. `ManaVortexBattlefield` covers both upkeep players, phasing and global
+absence. `CloneAndRecast` uses an explicit later stack visit to prove old captures
+cannot follow the physical card, and clone execution leaves original choices
+unchanged. `RecordsAndInventory` checks fresh declarations, semantic reference
+roles and strict atomic loading; `Invalid` checks malformed and foreign contexts.
+Native `TestStackSelfCastExactVisit` places a copy beside the cast visit before
+an event check, then verifies the captured counter removes only the cast visit.
+Optional sacrifice transactions and replacement ordering retain the existing
+`TestRONOptionalSacrifice*` and native cost/zone-batch contracts.

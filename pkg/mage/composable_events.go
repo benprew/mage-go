@@ -1837,6 +1837,7 @@ func (sourceTargetedBySpellPattern) inspectDefinition() definitionNode {
 
 // --- from composable_spell_cast_event.go ---
 type spellCastPattern struct {
+	sourceSpell                 bool
 	contextualFilter            *SpellFilter
 	filterCount                 int
 	color                       Color
@@ -1880,6 +1881,9 @@ type spellCastPattern struct {
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
 func SpellCast() spellCastPattern { return spellCastPattern{} }
+
+// SourceSpellCast matches the source spell when it becomes cast on the stack.
+func SourceSpellCast() spellCastPattern { return spellCastPattern{sourceSpell: true} }
 
 // NotOwnedByCaster matches a cast spell whose card belongs to another player.
 func (p spellCastPattern) NotOwnedByCaster() spellCastPattern {
@@ -2027,11 +2031,17 @@ func (spellCastPattern) eventPattern() {}
 
 func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
 	t := NewTriggered(EvtSpellCast, false, effect)
+	if p.sourceSpell {
+		t.sourceZone = ZoneStack
+	}
 	if p.opponentOnly {
 		t.SetConditionData(EventPlayerIsNotController{})
 	}
 	if p.controllerOnly {
 		t.SetConditionData(EventPlayerIsController{})
+	}
+	if p.sourceSpell {
+		t.AndConditionData(EventSourceIsSelf{})
 	}
 	if p.filterColor {
 		t.AndConditionData(spellCastHasEffectiveColor{color: p.color})
@@ -2064,7 +2074,7 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 }
 
 func (p spellCastPattern) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "event-pattern", Text: "a spell is cast", battlefieldSource: true}
+	n := definitionNode{Role: "event-pattern", Text: "a spell is cast", battlefieldSource: !p.sourceSpell}
 	if p.filterCount > 0 {
 		n.children = append(n.children, definitionEdge{"filter", p.contextualFilter})
 	}

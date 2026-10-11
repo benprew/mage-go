@@ -1923,16 +1923,20 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			if !gt.CheckEventType(evt.Type) {
 				continue
 			}
+			if pattern, ok := gt.eventDefinition.(spellCastPattern); ok && pattern.sourceSpell && obj.ID != evt.TargetID {
+				continue
+			}
 			gt.SetSource(obj.SourceID)
 			gt.SetController(obj.Controller)
 			if !gt.CheckTrigger(&evt, g) {
 				continue
 			}
 			g.queuePendingTrigger(&pendingTrigger{
-				ability:    gt,
-				event:      &evt,
-				sourceID:   obj.SourceID,
-				controller: obj.Controller,
+				ability:       gt,
+				event:         &evt,
+				eventCaptures: captureDetectedTriggerEvent(gt, &evt, g, g, obj.SourceID),
+				sourceID:      obj.SourceID,
+				controller:    obj.Controller,
 			})
 		}
 	}

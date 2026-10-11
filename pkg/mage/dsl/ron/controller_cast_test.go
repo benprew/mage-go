@@ -236,8 +236,8 @@ func TestRONControllerCastRecords(t *testing.T) {
 	for _, n := range nodes {
 		name := n.Fields["Name"].String
 		if name == "Mana Vortex" {
-			if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "FromStack") {
-				t.Fatalf("stack-source blocker changed: %v", err)
+			if _, err := Compile(n); err != nil {
+				t.Fatalf("self-cast record rejected: %v", err)
 			}
 		}
 	}

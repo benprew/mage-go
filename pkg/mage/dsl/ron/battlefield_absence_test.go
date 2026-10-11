@@ -353,12 +353,12 @@ func TestRONBattlefieldAbsenceInvalid(t *testing.T) {
 
 func TestRONBattlefieldAbsenceRecordsAndInventory(t *testing.T) {
 	for _, card := range []struct{ set, name, blocker string }{
-		{"DRK", "Mana Vortex", "FromStack"},
+		{"DRK", "Mana Vortex", ""},
 		{"ARN", "Drop of Honey", "DestroyAPermanentNoRegen"},
 	} {
 		t.Run(card.name, func(t *testing.T) {
 			record, rule := absenceCardRule(t, card.set, card.name)
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), card.blocker) {
+			if _, err := Compile(record); (card.blocker == "" && err != nil) || (card.blocker != "" && (err == nil || !strings.Contains(err.Error(), card.blocker))) {
 				t.Fatal("complete-card blocker changed", err)
 			}
 			factory := staticBaseSubrule(t, record, rule)

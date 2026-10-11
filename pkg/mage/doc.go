@@ -1,5 +1,11 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SourceSpellCast] matches the source spell at its exact cast stack visit.
+// Stack detection saves typed event bindings before trigger placement. Copies
+// do not inherit another visit's event. Pending bodies keep the caster and
+// spell identity after departure or control changes. A later cast cannot
+// supply the saved spell. RON accepts the explicit FromStack self-cast rule.
+//
 // RON global absence state triggers use [BattlefieldHasNone] and [WhenState].
 // Present permanents under either player can match, including tokens and the
 // source. Current layers determine membership. Phasing stops selection and

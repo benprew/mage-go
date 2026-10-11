@@ -2,19 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **840 accepted / 146 rejected names** (986 total),
-**2,176 compiled / 269 rejected records** (2,445 total). With pre-existing Eureka,
-the shared worktree reports **841/145 names** and **2,177/268 records**.
+The isolated slice reports **841 accepted / 145 rejected names** (986 total),
+**2,177 compiled / 268 rejected records** (2,445 total). With pre-existing Eureka,
+the shared worktree reports **842/144 names** and **2,178/267 records**.
 The strict loader rejects the collection and publishes no partial registry.
 
-GLOBAL-BATTLEFIELD-ABSENCE executes ordinary battlefield state triggers with
-context-free filters and shared state arming. Mana Vortex and Drop of Honey
-have exact RON state-subrule gameplay tests for both players, tokens, layers,
-phasing, pending identity, targets, sacrifice replacements, copies and clones.
-Compilation gain is **zero names / zero records**, as estimated. Mana Vortex
-still needs stack-source self-cast detection; Drop of Honey needs minimum-power
-destruction choice. City in a Bottle still needs captured state members and
-global restrictions. Existing work remains preserved.
+STACK-SOURCE-SELF-CAST executes the exact FromStack self-cast trigger with
+stack-visit matching and typed detection captures. Complete Mana Vortex gameplay
+covers casting/payment, copies, departure, control, clones, upkeep and absence.
+Compilation and complete-card gameplay gain **one name / one record**.
+Existing user work remains preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -74226,3 +74223,149 @@ are applied to the shared workspace and the same checks are run there.
    the restriction contracts against remaining multi-card capabilities.
 
 This run stops after global battlefield absence. Migration is incomplete.
+
+## 2026-10-11 — STACK-SOURCE-SELF-CAST
+
+### Candidate comparison and selection
+
+The latest ranked candidates were evaluated against complete DRK Mana Vortex,
+ARN Drop of Honey and ARN City in a Bottle records, including all nested forms.
+Reprints count once. Targeted vocabulary inspection confirms FromStack and
+SingleSpell each occur once; other ThisSpell uses have different roles.
+
+| Candidate | Unique affected cards | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Stack-source self-cast | Mana Vortex | 1 name / 1 record | Existing typed cast captures, optional matching sacrifice, countering, upkeep and global absence are ready. Exact stack-visit matching and detection-time captures enable safe stack-source bodies. | Small adapter plus two engine scanner contracts and lifecycle/gameplay tests. |
+| Minimum-power destruction choice | Drop of Honey | 1 name / 1 record | Needs PowerIs(EqualTo(TheLeastPowerAmongPermanents(...))) lowering and a non-target choice with no-regeneration destruction. Existing collection selection and destruction can be reused after a complete choice contract. Global absence is ready. | Medium: empty/tied sets, current layers, controller choice, phasing and destruction replacements. |
+| Captured plural state members | City in a Bottle | 0 | Also needs name-based global CantCastSpells and CantPlayLandsOfType. Saved state-member collections enable the sacrifice body and later complete City behavior. Existing original-printing catalog and simultaneous controller sacrifice are ready. | Medium to large: captured membership, state arming, exact visits, and two separate restriction adapters. |
+
+Candidate #1 is dependency-ready and is selected as instructed. Its complete
+record has no later unsupported form. The one-name estimate does not come from
+first-error frequency. No shared multi-card dependent is claimed for this exact
+self-cast shape; the engine detection capture service is shared with typed events.
+This run implements only the self-cast capability.
+
+### Signature, context and reuse boundary
+
+RON accepts exactly
+`FromStack(TriggerA(WhenAPlayerCastsASpell(SinglePlayer(You), SingleSpell(ThisSpell)), actions))`
+on a permanent card definition. Each constructor checks its exact tuple arity;
+You and ThisSpell must be symbols. The scoped body has the existing cast-event
+spell and caster producers for Trigger_ThatSpell and Trigger_ThatPlayer. It has
+no ThisPermanent or HostPermanent. Other stack events, source zones,
+instant/sorcery RON declarations and unrelated ThisSpell consumers still reject.
+Targets and payment results use existing action plans with fresh factory bindings.
+Semantic inventory traverses FromStack as a rule and SingleSpell as a spell
+reference producer. Production loading still validates every complete record.
+
+Engine API: `SourceSpellCast() spellCastPattern`, composed with
+`ByController().WithSpell(*SpellBinding).WithCaster(*PlayerBinding)` and
+`WhenEvent(EventPattern, ResolvingEffect) TriggeredAbility`.
+The new pattern uses ZoneStack and source identity. The stack scanner additionally
+requires the event's exact TargetID to equal the source StackObject.ID; a copy
+sharing the physical SourceID cannot inherit another visit's event. The scanner
+now calls the existing captureDetectedTriggerEvent before queueing, just as the
+battlefield scanner does. Existing typed captures retain exact spell information
+and caster before departure, control changes or delayed stack placement.
+
+RON owns syntax and scope; mage owns stack matching and detection snapshots.
+APNAP placement, copies, clone state, optional matching sacrifice transactions,
+owner destinations, replacements, counterability and battlefield entry use shared
+services. Failed casting has no cast event. Real copies have no cast event.
+Pending bodies survive departure and do not follow later casts of the same card.
+Independent copied triggers make independent payment choices. Battlefield
+self-cast declarations do not become active on the battlefield. The separate
+upkeep and global absence rules keep their existing phasing/layer contracts.
+There is no global action-result slot, fallback factory or partial registry.
+Rules consulted: CR 113.6k, 113.7a, 400.7, 601.2i, 603.2/3a and 707.10.
+No new LKI, simultaneous zone movement or replacement ordering API is required.
+
+### Card-to-test mapping and coverage
+
+| Card or contract | Evidence |
+| --- | --- |
+| Mana Vortex, complete DRK record | TestRONStackSelfCastManaVortex: actual casting, pay/decline, absent land, failed casting, copied spell, copied trigger, departure, saved controller and normal permanent entry. |
+| Mana Vortex, remaining battlefield rules | TestRONStackSelfCastManaVortexBattlefield: both players' upkeep sacrifices, phased source exclusion/restoration and global no-land self-sacrifice using the complete factory. Existing TestRONBattlefieldAbsence* adds layers, tokens, pending visits, replacements and state arming. |
+| Saved cast visit and clone isolation | TestRONStackSelfCastCloneAndRecast: actual initial cast/departure followed by an explicit test stack visit of the same card, with direct old-body resolution in original and clone. This does not claim a second sorcery-speed cast while a trigger is on the stack. TestStackSelfCastPendingCaster covers saved caster after control change/departure and independent clone execution. |
+| Native exact stack matching | TestStackSelfCastExactVisit: original cast and copied spell, then an event check while both visits are present. Only the cast visit triggers and its bound counter removes that visit, preserving the copy and card owner. |
+| Validation, fresh declarations and collection safety | TestRONStackSelfCastInvalid, RecordsAndInventory and TestStackSelfCastDeclaration: malformed/foreign shapes, unbound/duplicate references, source/host scope, separate ability IDs, semantic roles and atomic rejection without replacing a sentinel registry. |
+| Shared payment/replacement/rollback contracts | Existing TestRONOptionalSacrifice*, TestRequiredTypedSacrificeReplacementOrdering and native cost/zone-batch tests retain exact visits, phasing, cancellation/exile destinations, transactional failure and replacement order. No replacement or payment implementation is duplicated. |
+
+Compilation and complete-card gameplay each gain one unique card, Mana Vortex.
+The actual gain is one name / one record, matching the estimate. Upkeep text
+inventory gains its already-supported upkeep declaration: 57 names / 118 records
+instead of 56 / 117. Earlier explicit FromStack rejection tests now require
+Mana Vortex acceptance; Drop of Honey's independent blocker remains asserted.
+Collection census tests require the exact fresh totals. No assertion is weakened.
+No source defect is identified or corrected. RON assets and their vocabulary
+snapshot remain unchanged. Runtime cutover, Go-card removal and unused DSL
+removal gates remain unmet, so no definitions, generators or DSL APIs are removed.
+
+### Validation and preservation
+
+Fresh shared baseline: make build and `go test ./pkg/mage/dsl/ron -short -count=1`
+pass (RON 45.516s). `go run ./cmd/loadcards -json` exits 1 with 2,177 compiled /
+268 rejected records, 841 accepted / 145 rejected names, out of 2,445 records /
+986 names. Collection rejection is distinct from a build or test failure.
+Pre-existing Eureka/repeated-entry work contributes one additional name/record
+relative to committed HEAD. Implementation uses an isolated checkout of 33de1c4b;
+all original modified and untracked contents are preserved in the shared tree.
+
+Failing-first: every real Mana Vortex gameplay case initially fails on unsupported
+FromStack. The native test initially fails to compile because SourceSpellCast is
+undefined. Existing stack scanning is reused, then repaired for exact visit
+selection and immutable detection captures. During test development, nonexistent
+API spellings are corrected to core.GameEvent and Registry.CreateCard. A clone
+fixture uses its SearchPlayer rather than assuming custom chooser types survive
+cloning. The later-visit test uses an explicit test stack visit because a second
+enchantment cannot be cast at sorcery speed with a trigger on the stack.
+
+The first engine short run exposes only obsolete rejection/census assertions
+and the added upkeep declaration count. These are updated to require the newly
+supported record and exact fresh totals, then affected tests and required checks
+are rerun.
+
+Required final checks pass in the isolated and shared trees, in fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONStackSelfCast -count=1`,
+`go test ./pkg/mage -run TestStackSelfCast -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+`make lint` and `git diff --check`. Engine short RON times are 55.712s isolated
+and 46.088s shared; full-suite RON times are 43.427s isolated and 67.041s shared.
+The first shared lint attempt reports the process-wide parallel-lint lock while
+isolated lint is active. Sequential retry succeeds. Both final lint runs report
+zero issues. Automatic edits only group imports and modernize one new test loop
+to strings.SplitSeq. Post-lint focused RON and native tests pass in both trees.
+
+Final strict loaders both exit 1 for remaining unsupported records. Isolated:
+2,177 compiled / 268 rejected records and 841 accepted / 145 rejected names.
+Shared: 2,178 compiled / 267 rejected records and 842 accepted / 144 rejected
+names. Both have 2,445 records / 986 unique names. The shared final diagnostic
+list exactly equals the fresh baseline with only Mana Vortex removed; every
+other diagnostic is unchanged and no accepted record is lost. Actual compilation
+gain is one name / one record, matching the complete-record estimate. Gameplay
+coverage independently gains one complete Mana Vortex mapping. The collection
+still rejects atomically and publishes no partial production registry.
+
+Changed files: stack_self_cast.go and its RON/native tests; compiler dispatch,
+semantic inventory, composable_events.go and game.go; coverage/census assertions;
+engine reference and API/rules contracts; this summary and appended entry.
+The isolated commit contains only this slice. Equivalent shared edits preserve
+the existing Eureka/repeated-entry implementation, ledger archive/reorganization,
+vocabulary edits, unrelated files and all original modified/untracked contents.
+The preservation check reverses only this slice's patch, census increment and
+summary/entry, then compares every original file against saved SHA-256 hashes.
+No unresolved environment or pre-existing check failure blocks this slice.
+
+
+### Ranked next candidates
+
+1. Drop of Honey minimum-power destruction choice: one complete name/record.
+   Compare its exact non-target choice adapter and existing lowest-power sets
+   against other shared capabilities before selecting the next run.
+2. City in a Bottle captured-state members: zero immediate names; the concrete
+   dependents are controller sacrifice and global casting/land restrictions.
+3. Source-zone graveyard triggers: Nether Shadow remains blocked by FromGraveyard,
+   graveyard order condition, ThisGraveyardCard and optional return. Compare the
+   shared exact-zone-visit prerequisites against other multi-card gaps first.
+
+This run stops after stack-source self-cast. Migration is incomplete.

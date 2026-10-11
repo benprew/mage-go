@@ -297,8 +297,8 @@ func TestRONControllerPresenceRecords(t *testing.T) {
 	}
 	for _, node := range nodes {
 		if node.Fields["Name"].String == "Mana Vortex" {
-			if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "FromStack") {
-				t.Fatalf("unrelated blocker: %v", err)
+			if _, err := Compile(node); err != nil {
+				t.Fatalf("self-cast record rejected: %v", err)
 			}
 		}
 	}

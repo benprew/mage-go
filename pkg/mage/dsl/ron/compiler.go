@@ -615,6 +615,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	}
 	switch n.Name {
+	case "FromStack":
+		return compileStackSelfCast(n, ctx)
 	case "ReplaceWouldDraw":
 		return compileDrawReplacement(n, ctx)
 	case "ReplaceWouldBeginDrawStep":

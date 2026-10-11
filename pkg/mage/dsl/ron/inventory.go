@@ -307,6 +307,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"event", "trigger_condition", "actions"}[index]
 			}
+		case "FromStack":
+			if len(n.Args) == 1 {
+				return "rule"
+			}
 		case "TriggerA":
 			if len(n.Args) == 2 {
 				return []string{"event", "actions"}[index]
@@ -1755,6 +1759,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "SinglePlayer" && len(n.Args) == 1 {
 			return "player_reference"
 		}
+	}
+	if role == "spell_filter" && n.Name == "SingleSpell" && len(n.Args) == 1 {
+		return "spell_reference"
 	}
 	if role == "permanent_filter" && n.Name == "SinglePermanent" && len(n.Args) == 1 {
 		return "permanent_reference"
