@@ -91,6 +91,7 @@ type scope struct {
 }
 
 type actionPlan struct {
+	distribution     *distributedDamagePlan
 	effects          []effectFactory
 	targets          []targetFactory
 	playerTarget     *playerTargetPlan
@@ -117,6 +118,9 @@ func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBinding
 }
 
 func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
+	if p.distribution != nil {
+		return p.distribution.build()
+	}
 	targets := make([]mage.Target, len(p.targets))
 	bindings = initializeActionBindings(bindings)
 	var declared []mage.TargetBinding
@@ -648,7 +652,13 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			}
 			return compileModalSpell(n.Args[0], ctx)
 		}
-		plan, err := compileActions(n.Args[0], ctx)
+		var plan actionPlan
+		var err error
+		if n.Args[0].Name == "TargetedDistributed" {
+			plan, err = compileDistributedDamage(n.Args[0], ctx)
+		} else {
+			plan, err = compileActions(n.Args[0], ctx)
+		}
 		if err != nil {
 			return nil, err
 		}

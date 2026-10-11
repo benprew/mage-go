@@ -2,16 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **822 accepted / 164 rejected names** (986 total),
-**2,133 compiled / 312 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **823/163 names** and **2,134/311 records**. The strict
+The isolated slice reports **823 accepted / 163 rejected names** (986 total),
+**2,134 compiled / 311 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **824/162 names** and **2,135/310 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-TEMPORARY-PERMANENT-DEATH-EXILE supplies a saved singleton replacement until
-cleanup, shared graveyard proposals, mixed state batches and exact waiting
-references. Compilation and complete RON gameplay gain **1 name / 6 records**:
-Disintegrate. Runesword and Firestorm Phoenix retain separate blockers.
-No RON changed. All required native checks pass; lint reports 0 issues.
+FIXED-SPELL-DAMAGE-DISTRIBUTION lowers fixed positive ordinary spell allocations
+to fresh typed union targets and existing mage allocation/damage services.
+Compilation and complete RON gameplay gain **1 name / 1 record**: Pyrotechnics.
+Fireball retains its casting surcharge and rounded-division adapter blockers.
+No RON changed. Required native checks pass; final lint reports 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -70661,3 +70661,152 @@ the complete-loading, gameplay and runtime cutover gates remain unmet.
    host flying removal and WasntSacrificed remain independent body blockers.
 
 Migration remains incomplete. This run stops after TEMPORARY-PERMANENT-DEATH-EXILE.
+
+## Run 2026-10-10: FIXED-SPELL-DAMAGE-DISTRIBUTION
+
+Status: complete one vertical compiler capability, with existing engine mechanics.
+No second slice is started. The tree began with Eureka implementation changes,
+API/doc changes, a ledger reorganization and unrelated untracked files. All are
+preserved. The commit is constructed from an isolated HEAD-plus-slice checkout;
+its ledger retains the committed history rather than staging the user's move to
+mtgish-ron-completed.md. Collection assertions retain the one-record Eureka
+worktree difference without adding Eureka to this commit.
+
+### Candidate comparison and selection
+
+Complete RON records were read for Pyrotechnics, all six Fireball reprints,
+Runesword, all six Earthbind reprints and Urza's Miter. Targeted vocabulary keys:
+TargetedDistributed, AnyNumberOfAnyTargets, DistributeNumberAmongTargets,
+SpellDealsDistributedDamage, AdditionalCastingCostForEachTargetBeyondTheFirst,
+and WasntSacrificed. Reprints count once in this comparison.
+
+| Candidate | Distinct names | Estimated full unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- | --- |
+| Fixed plural union-target allocation | Pyrotechnics, Fireball | 1 name / 1 record | Fireball still needs target-surcharge and rounded-division adapters. Shared typed union targets and damage batches serve both. | Small: exact engine services already exist; compiler validation and gameplay tests. |
+| Live damage-history permanent subjects | Runesword | 0 for history alone; 1 after both consumers | No-regeneration and death replacement need a shared live source/recipient history. The existing departure-delay adapter accepts the saved target; no extra delay service is needed. | Larger: live history, both consumers, source/recipient visits, replacement ordering and cleanup. |
+| Entry/departure intervening-if snapshots | Earthbind, Urza's Miter | 0 for snapshots alone | Persistent host flying removal and WasntSacrificed remain independent body blockers. Shared attachment/departure LKI would enable both. | Larger: detection/resolution event facts plus separate body work. |
+
+Ranked candidate #1 is dependency-ready. It provides the largest credible
+immediate gain for this run's bounded effort and retains the plural-target
+engine foundation for Fireball. This is an adapter gap, not a missing damage or
+payment engine. The larger candidates need further contracts before full unlocks.
+
+### Exact shape, ownership and dependencies
+
+Ordinary instant/sorcery SpellActions accepts:
+TargetedDistributed([AnyNumberOfAnyTargets],
+DistributeNumberAmongTargets(Integer(n)),
+ActionList([SpellDealsDistributedDamage(ThisSpell)])), for positive fixed n.
+Exactly one target group and exactly one damage instruction are supported.
+Modal, nested, activated, triggered, variable-total and mixed-body shapes remain
+positioned declaration errors. SpellDealsDistributedDamage cannot escape its
+producer. No general Ref_AnyTargets consumer is added by this slice.
+
+ron.distributedDamagePlan retains immutable declaration data. Each build creates
+mage.DeclareAnyNumberDamageTargets("Ref_AnyTargets") and
+mage.DealAllocatedDamage(mage.This, recipients, n) with the same fresh typed
+binding. The ordinary engine Spell target adapter keeps declaration identity.
+RON owns spelling, shape/context validation and lowering. Existing mage services
+own target announcement, allocation, costs, stack/copy state and simultaneous
+damage. No new engine execution service, parallel damage system, global result,
+Go-card fallback, runtime declaration panic or partial registry is introduced.
+
+Shares are fixed before payment/publication and each target needs a positive
+share. Empty groups pay the spell cost but make no allocation choice. Invalid
+announcements spend no resources. Shared services preserve failed-payment
+rollback, partial legality, exact visits, phasing, copies and clone isolation.
+Illegal recipients lose their shares without redistribution. Copy retargeting
+preserves shares by target position and makes no new allocation choice.
+Damage and prevention use the shared batch, including planeswalker loyalty.
+
+Local data/LEG.json confirms: Pyrotechnics deals 4 damage divided as you choose
+among any number of targets. Rules evidence: CR 601.2c/d/h, 608.2b/d, 400.7 and
+702.26b/d. No source defect was found. No RON changed, so the vocabulary source
+snapshot/hash is unchanged. Gaea's Liege and Fastbond remain separate audits.
+
+### Failing-first evidence and card-to-test mapping
+
+The initial test fixture has two compile errors (a nonexistent player attribute
+method and an int/uint8 comparison); these are corrected before the expected red
+run. All complete Pyrotechnics gameplay scenarios then fail at unsupported
+TargetedDistributed. The focused tests pass after lowering. A native sorcery
+fixture needs explicit main-phase timing; a copy fixture must resolve a published
+copy once. Neither correction weakens gameplay expectations.
+
+| Card/context | Evidence |
+| --- | --- |
+| Pyrotechnics, LEG:201 | TestRONDistributedDamagePyrotechnics compiles the complete unchanged record and pays {4}{R}; checks creatures, players, planeswalkers, zero/four recipients, allocation before payment, response-map isolation, partial/all illegality, return, phasing and phase cycles, prevention, copies and pending clones. |
+| Announcement and payment | TestRONDistributedDamageAnnouncement rejects duplicate, land, phased, hexproof, absent and five-target announcements without choices or payment; unpaid legal casts retain their card and publish no stack object. |
+| Copies and independent instances | TestRONDistributedDamageRetargetAndInstances preserves positional shares in a retargeted copy without new allocation; reconstructed definitions use fresh bindings and independent later shares. |
+| Invalid declarations and inventory | TestRONDistributedDamageInvalid checks arities, kinds, empty/extra groups, wrong sources, totals, extra consumers and unsupported scopes. Inventory checks target, distribution, announcement-value, action and spell-reference roles. |
+| Shared engine mechanics | TestDistributedDamageUnionBatchContract validates the exact native target/effect shape and checks that all three damage callbacks observe the complete post-prevention creature/player/planeswalker batch. Existing TestAllocatedDamage* and TestAnyNumberDamageTargets* cover source LKI, replacements, admission/rollback, independent instances and copy legality. |
+| Previously accepted records | Updated exact collection assertions and full definition reconstruction tests retain accepted records. TestRONUnionDamageTargetRemainingRecords now requires Pyrotechnics acceptance. |
+| Fireball and other candidates | Remain rejected; no complete-card gameplay gain is claimed. |
+
+### Validation and measured results
+
+Fresh baseline make build and the complete RON package suite pass (40.800s).
+Baseline loader exits 1 for collection rejection: worktree 823/163 names,
+2,134/311 records. This is not a build or test failure.
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONDistributedDamage -count=1
+passes. The broader focused set includes remaining union records, collection
+inventory and definition reconstruction. Native go test ./pkg/mage -run
+'TestDistributedDamageUnionBatchContract|TestAnyNumberDamageTargets|TestAllocatedDamage'
+-count=1 passes. make build and go vet ./... pass.
+go test ./pkg/mage/... -short -count=1 passes (RON 48.048s).
+make test passes (RON 46.553s).
+
+The first make lint reports one new test variable shadowing the copy builtin.
+It is renamed to copied. The final make lint passes with 0 issues.
+The saved whole-tree Go-file hashes show no automatic changes. The only final
+hash difference is that manual variable rename. Post-correction focused tests,
+make build and go vet ./... pass again. git diff --check passes.
+No gameplay assertion is weakened, and no unrelated file is changed by lint.
+
+The isolated HEAD-plus-slice checkout passes broader focused RON tests,
+make build, go vet ./..., the entire engine short suite (RON 44.755s) and
+make test (RON 83.436s). The affected focused tests pass again after the rename.
+Its exact collection tests use 2,134/311 records, preserving the Eureka difference.
+
+Final go run ./cmd/loadcards -json exits 1 in both trees and publishes no partial
+registry. Worktree: 824 accepted / 162 rejected names, 2,135 compiled /
+310 rejected records. Isolated slice: 823 accepted / 163 rejected names,
+2,134 compiled / 311 rejected records. Totals stay 986 names / 2,445 records.
+Pyrotechnics has no diagnostic. Fresh remaining diagnostics include Fireball
+2ED:84:141 AdditionalCastingCostForEachTargetBeyondTheFirst; Runesword DRK:87:630
+unsupported collection attack operation (CantBeRegenerated); Earthbind
+2ED:74:177 unsupported intervening-if event (WhenAPermanentEntersTheBattlefield);
+Urza's Miter ATQ:78:142 unsupported intervening-if event
+(WhenAPermanentIsPutIntoAPlayersGraveyard). No environment or validation blocker
+remains. Checks distinguish compilation progress from complete gameplay coverage.
+
+
+Compilation gains exactly 1 unique name / 1 record in both trees, matching the
+estimate. Complete RON gameplay coverage gains 1 name: Pyrotechnics. Compilation
+and gameplay evidence remain separate. No accepted record regresses.
+
+Changed files: pkg/mage/dsl/ron/distributed_damage.go and its test, compiler.go,
+inventory.go, inventory_test.go, definition_plan_test.go,
+numeric_consumers_test.go and union_damage_target_test.go;
+pkg/mage/distributed_damage_contract_test.go and doc.go;
+docs/engine-rules-contracts.md, docs/dsl-reference.md and this ledger.
+The engine mechanics are reused; production mage rules are unchanged.
+No Go definitions, generators, startup paths or DSL functions are removed:
+the full-collection gameplay/loading/cutover gates remain unmet.
+
+### Ranked next candidates
+
+1. Shared plural union target references and rounded equal-damage consumer for
+   Fireball. Existing mage services already supply unrestricted targets and
+   even-division batches. Estimate zero full unlocks until its per-extra-target
+   casting-mana adapter is also present; six records share that one name.
+2. Live damage-history permanent subjects shared by Runesword's no-regeneration
+   and death replacement. Preserve source/recipient visits and include later
+   damage; the saved-target departure delay is already supported. Estimate one
+   full unlock only after both consumers use the shared history service.
+3. Entry/departure intervening-if snapshots for Earthbind and Urza's Miter.
+   Separate detection/resolution checks, host flying removal and sacrifice-cause
+   facts. Estimate zero full unlocks for snapshots alone; two downstream names.
+
+Migration remains incomplete. This run stops after FIXED-SPELL-DAMAGE-DISTRIBUTION.

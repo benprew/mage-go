@@ -234,7 +234,7 @@ func TestRONUnionDamageTargetInvalid(t *testing.T) {
 
 func TestRONUnionDamageTargetRemainingRecords(t *testing.T) {
 	for _, tc := range []struct{ set, name, diagnostic string }{
-		{"LEA", "Disintegrate", ""}, {"LEB", "Disintegrate", ""}, {"2ED", "Disintegrate", ""}, {"3ED", "Disintegrate", ""}, {"CED", "Disintegrate", ""}, {"CEI", "Disintegrate", ""}, {"LEG", "Pyrotechnics", "TargetedDistributed"},
+		{"LEA", "Disintegrate", ""}, {"LEB", "Disintegrate", ""}, {"2ED", "Disintegrate", ""}, {"3ED", "Disintegrate", ""}, {"CED", "Disintegrate", ""}, {"CEI", "Disintegrate", ""}, {"LEG", "Pyrotechnics", ""},
 	} {
 		t.Run(tc.set+"/"+tc.name, func(t *testing.T) {
 			f, err := os.Open(fmt.Sprintf("../../../../cards/mtgish/%s.lines.ron", tc.set))
@@ -249,7 +249,7 @@ func TestRONUnionDamageTargetRemainingRecords(t *testing.T) {
 			for _, n := range nodes {
 				if n.Fields["Name"].String == tc.name {
 					_, err := Compile(n)
-					if tc.name == "Disintegrate" {
+					if tc.diagnostic == "" {
 						if err != nil {
 							t.Fatal(err)
 						}

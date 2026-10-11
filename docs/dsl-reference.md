@@ -13127,3 +13127,44 @@ incarnation and uses shared replacement choice, graveyard proposals and zone
 batches. Disintegrate installs this rule even with zero or prevented damage when
 the target is still a creature. State-based actions run after the complete spell
 body, so lethal damage cannot move the recipient before this rule is installed.
+
+
+## RON fixed spell damage distribution
+
+The compiler accepts ordinary instant/sorcery
+`SpellActions(TargetedDistributed([AnyNumberOfAnyTargets],
+DistributeNumberAmongTargets(Integer(n)),
+ActionList([SpellDealsDistributedDamage(ThisSpell)])))`, where `n` is a positive
+integer. The body has exactly one instruction and one union target group.
+It rejects nested declarations, modal/activated/triggered contexts, variable or
+nonpositive totals, incompatible sources, extra operations and wrong arities
+with positioned errors. The implicit recipient set belongs only to this plan.
+
+A fresh `mage.DeclareAnyNumberDamageTargets("Ref_AnyTargets")` and
+`mage.DealAllocatedDamage(mage.This, recipients, n)` share one typed declaration
+per factory call. The existing engine chooses shares before payment and stack
+publication, requires at least one per chosen target, rejects duplicate and
+illegal targets without spending resources, and permits zero targets without an
+allocation prompt. Payment failure preserves the hand and leaves no stack object.
+No new engine execution or payment service is introduced.
+
+Shared stack services retain saved visits, legal-target rechecks, clone isolation
+and copy retargeting. Copies keep shares by target position and make no new
+allocation choice. Illegal, phased or returned targets lose their shares without
+redistribution. A phase-out/in cycle keeps the visit. Damage uses the shared
+simultaneous batch and prevention pipeline, including planeswalker loyalty.
+The native union-batch observer test checks that every callback sees all applied
+packets, after prevention. Existing allocation and damage replacement tests supply
+regression evidence for unchanged shared rules.
+
+`TestRONDistributedDamagePyrotechnics` covers the complete LEG RON record and
+real {4}{R} payment, empty and four-target groups, creatures/players/planeswalkers,
+partial/all illegality, return, phasing, prevention, direct copies and clones.
+`Announcement` checks invalid target choices, too many positive shares and failed
+payment. `RetargetAndInstances` checks retargeted spell copies and reconstructed
+factory bindings. `Invalid` and `Inventory` cover declarations and semantic roles.
+`TestDistributedDamageUnionBatchContract` checks the exact native engine shape.
+Rules: CR 601.2c–d/h, 608.2b/d, 400.7 and 702.26b/d.
+
+Pyrotechnics gains complete RON gameplay coverage. Fireball retains separate
+casting-surcharge and rounded-division adapters. No RON source changed.

@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON fixed spell distributions use [DeclareAnyNumberDamageTargets] and
+// [DealAllocatedDamage]. Each factory makes a fresh declaration and effect.
+// Announcement fixes positive shares before payment. An empty group needs
+// no shares. Copies keep shares by target position when targets change.
+// Shared services keep legality, saved visits, phasing, prevention and
+// simultaneous damage. Illegal recipients lose their shares; no new division
+// is made. Modal, activated and variable-total RON forms stay separate.
+//
 // Use [ExileIfWouldDieThisTurn] for one saved permanent until cleanup.
 // Destruction, sacrifice and other graveyard moves use shared replacements.
 // Zero toughness permits this rule but does not permit regeneration.

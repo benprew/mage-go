@@ -502,6 +502,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_reference"
 		}
 	case "actions":
+		if n.Name == "TargetedDistributed" && len(n.Args) == 3 {
+			return []string{"target", "target_distribution", "actions"}[index]
+		}
 		if (n.Name == "Modal_ChooseOne" || n.Name == "Targeted_Modal") && len(n.Args) == 1 {
 			return "actions"
 		}
@@ -541,6 +544,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "announcement_value":
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
+		}
+	case "target_distribution":
+		if n.Name == "DistributeNumberAmongTargets" && len(n.Args) == 1 {
+			return "announcement_value"
 		}
 	case "search_instruction":
 		if n.Name == "FindACardOfType" && len(n.Args) == 1 {
@@ -1076,6 +1083,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "SpellDealsDamage":
 			if len(n.Args) == 3 {
 				return []string{"spell_reference", "value", "recipient"}[index]
+			}
+		case "SpellDealsDistributedDamage":
+			if len(n.Args) == 1 {
+				return "spell_reference"
 			}
 		case "PermanentDealsDamage":
 			if len(n.Args) == 3 {
