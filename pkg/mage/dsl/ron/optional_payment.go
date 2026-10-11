@@ -143,6 +143,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			}
 			return append(effects, effect), ctx.chosenName, nil
 		}
+		if part.Name == "SimultaneousPermanentChoices" {
+			effect, err := compileAPNAPPermanentChoices(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, effect), ctx.chosenName, nil
+		}
 		if part.Name == "ChooseAPermanent" {
 			effect, err := compilePermanentChoice(part, parts[i+1:], ctx)
 			if err != nil {

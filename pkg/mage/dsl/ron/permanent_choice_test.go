@@ -270,18 +270,22 @@ func TestRONPermanentChoiceRecordsAndInventory(t *testing.T) {
 					t.Fatalf("Juxtapose: %v", err)
 				}
 				actions := n.Fields["Rules"].Args[0].Args[0].Args[1].Args[0].Args
-				if len(actions) != 6 {
+				if len(actions) != 4 {
 					t.Fatal("Juxtapose must choose and exchange creatures, then artifacts")
 				}
 				for i, category := range []string{"Creature", "Artifact"} {
-					choices := []Node{actions[3*i], actions[3*i+1].Args[1]}
+					group := actions[2*i]
+					if group.Name != "SimultaneousPermanentChoices" || len(group.Args) != 1 || len(group.Args[0].Args) != 2 {
+						t.Fatal("Juxtapose must group both players' choices")
+					}
+					choices := []Node{group.Args[0].Args[0].Args[1], group.Args[0].Args[1].Args[1]}
 					for _, choice := range choices {
 						filter := choice.Args[0].Args[0].Args[0].Args[0]
 						if filter.Name != "IsCardtype" || filter.Args[0].Name != category {
 							t.Fatal("Juxtapose has the wrong exchange category")
 						}
 					}
-					if actions[3*i+2].Name != "ExchangeControl" {
+					if actions[2*i+1].Name != "ExchangeControl" {
 						t.Fatal("Juxtapose omitted an exchange")
 					}
 				}

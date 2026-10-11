@@ -5,7 +5,7 @@
   "records": 2445,
   "unique_card_names": 986,
   "top_level_rule_names": 51,
-  "constructor_signatures": 604,
+  "constructor_signatures": 605,
   "conflicting_reprints": [],
   "files": [
     {
@@ -61,7 +61,7 @@
     {
       "path": "cards/mtgish/LEG.lines.ron",
       "records": 309,
-      "sha256": "5deaf71982a3c6c2c9d507793b68688b2fdf2989d3797c2d3ea0d443742f0b4d"
+      "sha256": "f52fa695b93c853fcf61ea0ee207ccc42725b24d63a1d6a7e015dda17215aecd"
     },
     {
       "path": "cards/mtgish/PROMOS.lines.ron",
@@ -136,7 +136,7 @@
     {"name": "APermanent", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Camel (cards/mtgish/ARN.lines.ron:12:263)", "Blood of the Martyr (cards/mtgish/DRK.lines.ron:9:242)", "City of Shadows (cards/mtgish/DRK.lines.ron:18:151)"]},
     {"name": "APermanentWasExiledThisWay", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Soul Exchange (cards/mtgish/FEM.lines.ron:78:469)"]},
     {"name": "APermanentWasSacrificedThisWay", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Serendib Djinn (cards/mtgish/ARN.lines.ron:68:284)", "Ebon Praetor (cards/mtgish/FEM.lines.ron:21:505)"]},
-    {"name": "APermanentWithTheHighestManaValue", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:218)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:371)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:617)"]},
+    {"name": "APermanentWithTheHighestManaValue", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:266)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:420)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:716)"]},
     {"name": "APermanentWouldDie", "kind": "tuple", "arity": 1, "occurrences": 8, "examples": ["Disintegrate (cards/mtgish/2ED.lines.ron:65:437)", "Disintegrate (cards/mtgish/3ED.lines.ron:66:437)", "Disintegrate (cards/mtgish/CED.lines.ron:65:437)"]},
     {"name": "APermanentWouldEnterTheBattlefield", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Kismet (cards/mtgish/LEG.lines.ron:148:159)"]},
     {"name": "APlayerPassesFilter", "kind": "tuple", "arity": 2, "occurrences": 5, "examples": ["Ghazbán Ogre (cards/mtgish/ARN.lines.ron:33:189)", "Water Wurm (cards/mtgish/DRK.lines.ron:114:129)", "Beasts of Bogardan (cards/mtgish/LEG.lines.ron:29:196)"]},
@@ -510,7 +510,7 @@
     {"name": "EqualTo", "kind": "tuple", "arity": 1, "occurrences": 14, "examples": ["Spell Blast (cards/mtgish/2ED.lines.ron:232:195)", "Spell Blast (cards/mtgish/3ED.lines.ron:240:195)", "Drop of Honey (cards/mtgish/ARN.lines.ron:23:260)"]},
     {"name": "ExceptFor", "kind": "tuple", "arity": 1, "occurrences": 11, "examples": ["Siren's Call (cards/mtgish/2ED.lines.ron:227:594)", "Siren's Call (cards/mtgish/3ED.lines.ron:234:594)", "Siren's Call (cards/mtgish/CED.lines.ron:227:594)"]},
     {"name": "ExchangeAnteCardWithTopCardOfPlayersLibrary", "kind": "tuple", "arity": 2, "occurrences": 6, "examples": ["Darkpact (cards/mtgish/2ED.lines.ron:56:304)", "Darkpact (cards/mtgish/3ED.lines.ron:56:304)", "Darkpact (cards/mtgish/CED.lines.ron:56:304)"]},
-    {"name": "ExchangeControl", "kind": "tuple", "arity": 2, "occurrences": 3, "examples": ["Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:530)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:490)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:889)"]},
+    {"name": "ExchangeControl", "kind": "tuple", "arity": 2, "occurrences": 3, "examples": ["Gauntlets of Chaos (cards/mtgish/LEG.lines.ron:95:530)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:541)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:991)"]},
     {"name": "ExchangeLifeTotalWithPlayer", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Mirror Universe (cards/mtgish/LEG.lines.ron:174:277)"]},
     {"name": "ExchangeOwnershipOfTwoCards", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["Bronze Tablet (cards/mtgish/ATQ.lines.ron:15:619)", "Tempest Efreet (cards/mtgish/LEG.lines.ron:259:492)"]},
     {"name": "Exile", "kind": "tuple", "arity": 2, "occurrences": 32, "examples": ["Swords to Plowshares (cards/mtgish/2ED.lines.ron:240:206)", "Swords to Plowshares (cards/mtgish/3ED.lines.ron:248:206)", "Ring of Ma'rûf (cards/mtgish/ARN.lines.ron:64:211)"]},
@@ -810,7 +810,7 @@
     {"name": "Plant", "kind": "symbol", "arity": 0, "occurrences": 8, "examples": ["Wall of Brambles (cards/mtgish/2ED.lines.ron:269:93)", "Wall of Brambles (cards/mtgish/3ED.lines.ron:275:93)", "Singing Tree (cards/mtgish/ARN.lines.ron:72:89)"]},
     {"name": "PlayAMagicSubgame", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Shahrazad (cards/mtgish/ARN.lines.ron:70:156)"]},
     {"name": "Player", "kind": "tuple", "arity": 1, "occurrences": 237, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:258)", "Black Vise (cards/mtgish/2ED.lines.ron:19:382)", "Circle of Protection: Black (cards/mtgish/2ED.lines.ron:33:355)"]},
-    {"name": "PlayerAction", "kind": "tuple", "arity": 2, "occurrences": 140, "examples": ["Ancestral Recall (cards/mtgish/2ED.lines.ron:2:188)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:797)", "Braingeyser (cards/mtgish/2ED.lines.ron:26:205)"]},
+    {"name": "PlayerAction", "kind": "tuple", "arity": 2, "occurrences": 142, "examples": ["Ancestral Recall (cards/mtgish/2ED.lines.ron:2:188)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:797)", "Braingeyser (cards/mtgish/2ED.lines.ron:26:205)"]},
     {"name": "PlayerAction_ThatPlayer", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Magnetic Mountain (cards/mtgish/3ED.lines.ron:158:487)", "Magnetic Mountain (cards/mtgish/ARN.lines.ron:51:487)", "Thelon's Curse (cards/mtgish/FEM.lines.ron:87:464)"]},
     {"name": "PlayerActions", "kind": "tuple", "arity": 2, "occurrences": 13, "examples": ["Power Sink (cards/mtgish/2ED.lines.ron:191:325)", "Siren's Call (cards/mtgish/2ED.lines.ron:227:370)", "Power Sink (cards/mtgish/3ED.lines.ron:195:325)"]},
     {"name": "PlayerEffect", "kind": "tuple", "arity": 2, "occurrences": 29, "examples": ["Fastbond (cards/mtgish/2ED.lines.ron:80:123)", "Library of Leng (cards/mtgish/2ED.lines.ron:140:136)", "Lich (cards/mtgish/2ED.lines.ron:141:222)"]},
@@ -973,6 +973,7 @@
     {"name": "ShuffleHandAndGraveyardIntoLibrary", "kind": "symbol", "arity": 0, "occurrences": 5, "examples": ["Timetwister (cards/mtgish/2ED.lines.ron:250:195)", "Timetwister (cards/mtgish/CED.lines.ron:250:195)", "Timetwister (cards/mtgish/CEI.lines.ron:250:195)"]},
     {"name": "ShuffleHandIntoLibrary", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Winds of Change (cards/mtgish/LEG.lines.ron:304:179)"]},
     {"name": "SimpleColorList", "kind": "tuple", "arity": 1, "occurrences": 79, "examples": ["Chaoslace (cards/mtgish/2ED.lines.ron:32:240)", "Chaoslace (cards/mtgish/2ED.lines.ron:32:382)", "Deathlace (cards/mtgish/2ED.lines.ron:59:240)"]},
+    {"name": "SimultaneousPermanentChoices", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:201)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:651)"]},
     {"name": "SingleCardInHand", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Psychic Purge (cards/mtgish/LEG.lines.ron:199:349)"]},
     {"name": "SinglePermanent", "kind": "tuple", "arity": 1, "occurrences": 239, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:250)", "Black Ward (cards/mtgish/2ED.lines.ron:20:282)", "Blue Ward (cards/mtgish/2ED.lines.ron:24:280)"]},
     {"name": "SinglePlayer", "kind": "tuple", "arity": 1, "occurrences": 496, "examples": ["Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:354)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:475)", "Black Vise (cards/mtgish/2ED.lines.ron:19:232)"]},
@@ -1076,7 +1077,7 @@
     {"name": "TheNumberOfPermanentsThatDiedThisWay", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Hellfire (cards/mtgish/LEG.lines.ron:120:289)"]},
     {"name": "TheNumberOfRepeatedCostsNotPaid", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Sylvan Library (cards/mtgish/LEG.lines.ron:253:360)"]},
     {"name": "TheOtherPermanentsExiledThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Tawnos's Coffin (cards/mtgish/ATQ.lines.ron:67:851)"]},
-    {"name": "ThePermanentChosenByPlayerThisWay", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:506)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:546)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:905)"]},
+    {"name": "ThePermanentChosenByPlayerThisWay", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Juxtapose (cards/mtgish/LEG.lines.ron:142:557)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:597)", "Juxtapose (cards/mtgish/LEG.lines.ron:142:1007)"]},
     {"name": "ThePermanentPutOnTheBattlefieldThisWay", "kind": "symbol", "arity": 0, "occurrences": 15, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:674)", "Animate Dead (cards/mtgish/2ED.lines.ron:4:859)", "Animate Dead (cards/mtgish/3ED.lines.ron:5:674)"]},
     {"name": "ThePermanentSpellResolvedThisWay", "kind": "symbol", "arity": 0, "occurrences": 10, "examples": ["Illusionary Mask (cards/mtgish/2ED.lines.ron:120:501)", "Illusionary Mask (cards/mtgish/2ED.lines.ron:120:588)", "Illusionary Mask (cards/mtgish/CED.lines.ron:120:501)"]},
     {"name": "ThePermanentTappedThisWay", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Phyrexian Gremlins (cards/mtgish/ATQ.lines.ron:51:405)"]},
@@ -1227,12 +1228,12 @@
     {"name": "XCantBeZero", "kind": "symbol", "arity": 0, "occurrences": 2, "examples": ["Aladdin's Lamp (cards/mtgish/3ED.lines.ron:2:457)", "Aladdin's Lamp (cards/mtgish/ARN.lines.ron:3:457)"]},
     {"name": "XIs", "kind": "tuple", "arity": 1, "occurrences": 2, "examples": ["Reflecting Mirror (cards/mtgish/DRK.lines.ron:85:454)", "Voodoo Doll (cards/mtgish/LEG.lines.ron:288:857)"]},
     {"name": "Yeti", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Mountain Yeti (cards/mtgish/LEG.lines.ron:179:90)"]},
-    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 760, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
+    {"name": "You", "kind": "symbol", "arity": 0, "occurrences": 762, "examples": ["Animate Dead (cards/mtgish/2ED.lines.ron:4:624)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:367)", "Aspect of Wolf (cards/mtgish/2ED.lines.ron:8:488)"]},
     {"name": "Zero", "kind": "symbol", "arity": 0, "occurrences": 14, "examples": ["Berserk (cards/mtgish/2ED.lines.ron:15:343)", "Howl from Beyond (cards/mtgish/2ED.lines.ron:113:284)", "Howl from Beyond (cards/mtgish/3ED.lines.ron:118:284)"]},
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2176,
+    "compiled": 2179,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Balance", "source": {"File": "2ED.lines.ron", "Line": 11, "Column": 1}, "message": "2ED.lines.ron:11:191: unsupported all-player action (SacrificeAllPermanentsExceptForNum)"},
@@ -1288,7 +1289,6 @@
       {"card": "Camel", "source": {"File": "ARN.lines.ron", "Line": 12, "Column": 1}, "message": "ARN.lines.ron:12:186: unsupported conditional static body (PreventDamage)"},
       {"card": "City in a Bottle", "source": {"File": "ARN.lines.ron", "Line": 13, "Column": 1}, "message": "ARN.lines.ron:13:146: unsupported trigger (WhenAnyNumberOfPermanentsAreOnTheBattlefield)"},
       {"card": "Cyclone", "source": {"File": "ARN.lines.ron", "Line": 16, "Column": 1}, "message": "ARN.lines.ron:16:303: unsupported two-branch payment cost (PayManaForEach)"},
-      {"card": "Drop of Honey", "source": {"File": "ARN.lines.ron", "Line": 23, "Column": 1}, "message": "ARN.lines.ron:23:200: unsupported action (DestroyAPermanentNoRegen)"},
       {"card": "Eye for an Eye", "source": {"File": "ARN.lines.ron", "Line": 29, "Column": 1}, "message": "ARN.lines.ron:29:311: unsupported selected-source redirection recipient (Player)"},
       {"card": "Ghazbán Ogre", "source": {"File": "ARN.lines.ron", "Line": 33, "Column": 1}, "message": "ARN.lines.ron:33:316: unsupported indefinite type modification (SetController)"},
       {"card": "Guardian Beast", "source": {"File": "ARN.lines.ron", "Line": 35, "Column": 1}, "message": "ARN.lines.ron:35:205: unsupported conditional static body (EachPermanentRuleEffect)"},
@@ -1369,7 +1369,6 @@
       {"card": "Fellwar Stone", "source": {"File": "DRK.lines.ron", "Line": 36, "Column": 1}, "message": "DRK.lines.ron:36:193: expected symbol (AnyManaColorAPermanentCouldProduce)"},
       {"card": "Frankenstein's Monster", "source": {"File": "DRK.lines.ron", "Line": 43, "Column": 1}, "message": "DRK.lines.ron:43:162: entry requires one entry operation (AsPermanentEnters)"},
       {"card": "Giant Shark", "source": {"File": "DRK.lines.ron", "Line": 46, "Column": 1}, "message": "DRK.lines.ron:46:384: expected 1 positional arguments (WasDealtDamageThisTurn)"},
-      {"card": "Mana Vortex", "source": {"File": "DRK.lines.ron", "Line": 65, "Column": 1}, "message": "DRK.lines.ron:65:157: unsupported rule (FromStack)"},
       {"card": "Martyr's Cry", "source": {"File": "DRK.lines.ron", "Line": 69, "Column": 1}, "message": "DRK.lines.ron:69:276: unsupported value (NumPermanentsOfTypeExiledThisWay)"},
       {"card": "Nameless Race", "source": {"File": "DRK.lines.ron", "Line": 76, "Column": 1}, "message": "DRK.lines.ron:76:188: unsupported entry operation (PayAnyAmountOfLifeUpto)"},
       {"card": "Preacher", "source": {"File": "DRK.lines.ron", "Line": 82, "Column": 1}, "message": "DRK.lines.ron:82:421: unsupported source control duration (ForAsLongAsPermanentRemainsTapped)"},
@@ -1470,7 +1469,6 @@
       {"card": "Imprison", "source": {"File": "LEG.lines.ron", "Line": 129, "Column": 1}, "message": "LEG.lines.ron:129:217: supply one artifact source and one non-tap cost filter (And)"},
       {"card": "Infinite Authority", "source": {"File": "LEG.lines.ron", "Line": 133, "Column": 1}, "message": "LEG.lines.ron:133:754: unbound or incompatible permanent reference (Trigger_ThatCreature)"},
       {"card": "Johan", "source": {"File": "LEG.lines.ron", "Line": 140, "Column": 1}, "message": "LEG.lines.ron:140:271: unsupported optional payment cost (CreatePermanentLayerEffectUntil)"},
-      {"card": "Juxtapose", "source": {"File": "LEG.lines.ron", "Line": 142, "Column": 1}, "message": "LEG.lines.ron:142:490: unsupported action (ExchangeControl)"},
       {"card": "Kismet", "source": {"File": "LEG.lines.ron", "Line": 148, "Column": 1}, "message": "LEG.lines.ron:148:141: unsupported rule (ReplaceWouldEnter)"},
       {"card": "Kry Shield", "source": {"File": "LEG.lines.ron", "Line": 154, "Column": 1}, "message": "LEG.lines.ron:154:342: unsupported combat prevention event (DamageWouldBeDealtByPermanent)"},
       {"card": "Land Equilibrium", "source": {"File": "LEG.lines.ron", "Line": 158, "Column": 1}, "message": "LEG.lines.ron:158:162: unsupported rule (ReplaceWouldPutAPermanentOnTheBattlefield)"},

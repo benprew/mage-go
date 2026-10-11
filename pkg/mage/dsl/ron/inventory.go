@@ -1104,6 +1104,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_filter", "player_action"}[index]
 			}
+		case "SimultaneousPermanentChoices":
+			if len(n.Args) == 1 {
+				return "action"
+			}
 		case "PlayerActions":
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "action"}[index]

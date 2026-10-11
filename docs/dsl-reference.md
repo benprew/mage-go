@@ -13813,3 +13813,25 @@ RON accepts `ThePermanentChosenByPlayerThisWay(playerRef)` after
 A direct player choice exports its keyed result without changing the enclosing
 `TheChosenPermanent`. Branch choices stay local. Delayed bodies keep the saved
 frame. `PlayerActions` list producers and payment choices remain unsupported.
+
+### Grouped permanent choices
+
+Use `ChoosePermanentsAPNAP(requests...)` with `PermanentChoiceRequest` values.
+Each request has a `Player`, a `Subjects` collection and a separate `Result`.
+Choosers are saved first. Required choices follow APNAP order and declaration
+order for one player. Read results with `PermanentChosenIn` or
+`PermanentChosenByPlayer` after the group. The group does not move subjects.
+
+RON action sequences accept:
+
+```ron
+SimultaneousPermanentChoices([
+    PlayerAction(You, ChooseAPermanent(collection)),
+    PlayerAction(Ref_TargetPlayer, ChooseAPermanent(collection)),
+])
+```
+
+Use `ThePermanentChosenByPlayerThisWay(playerRef)` in later instructions.
+The group does not assign `TheChosenPermanent`. Group-local output reads,
+empty groups, arbitrary actions, costs and static declarations are rejected.
+Existing sequential choices retain instruction order.

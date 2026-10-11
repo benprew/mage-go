@@ -18077,8 +18077,45 @@ Evidence: native `TestPlayerPermanentChoiceHistory` and
 and `Invalid`. Existing `TestRONPermanentChoice*` verifies caller preservation.
 Juxtapose record execution covers both highest-mana-value exchange rounds,
 including ties, empty rounds, same-player targeting and control prohibitions.
-Complete Oracle gameplay remains blocked by the record's caster-first tie
-choices when the target player is active. Oracle has a shared exchange; CR
-101.4 requires active-player order for simultaneous choices. The RON record
-uses two explicit sequential choices. A source correction needs a grouped
-choice producer; this adapter does not reorder sequential instructions.
+The grouped-choice contract below corrects the record's former caster-first
+tie choices. Sequential choice instructions retain their declared order.
+
+## Grouped permanent choices in APNAP order
+
+`ChoosePermanentsAPNAP(...PermanentChoiceRequest) ResolvingEffect` saves all
+choosers before the first choice. Requests contain `Player PlayerRef`,
+`Subjects PermanentSet` and `Result *PermanentChoiceBinding`. Required choices
+use `ChoosePermanent` in active-player, then nonactive-player order (CR 101.4).
+Requests for the same player retain declaration order (CR 101.4c). Later player prompts
+show each earlier chooser, permanent name and ID, including automatic singleton
+choices and empty results (CR 101.4b). Candidate collections are read at each
+choice; the group itself does not move objects or exchange control.
+
+All old permanent results are cleared before choices. An absent player or empty
+set supplies no permanent. Results use the existing frame maps and exact visits.
+Phasing prevents actions and retains the visit; return cannot inherit it.
+Information reads retain departure LKI. Copies, clones and delayed bodies use
+existing frame isolation. Waiting queries retain player and collection source
+reads without making a choice. Definition validation rejects empty groups, nil
+inputs, repeated result declarations and reads of another request's output
+within the group. Results become declared reads after the whole group.
+
+RON accepts `SimultaneousPermanentChoices([PlayerAction(playerRef,
+ChooseAPermanent(collection)), ...])` in resolving action sequences. Each
+factory creates fresh results. The group exports keyed history to its following
+instructions, without changing `TheChosenPermanent`. Branch results stay local.
+Costs, static declarations, arbitrary grouped actions and implicit reordering of
+sequential choices remain unsupported.
+
+The Juxtapose RON record now groups each exchange round's choices explicitly.
+Local `data/LEG.json` Oracle text requires a shared exchange and controller tie
+choices. CR 101.4 supplies APNAP ordering; CR 701.12a-b supplies atomic exchange.
+This corrects the previously recorded caster-first source defect. No other
+collection record has this name. Creature and artifact rounds remain separate,
+so the artifact round reads control after the creature exchange.
+
+Evidence: `TestAPNAPPermanentChoices`, `Declarations`, `EmptyAndAliases`;
+`TestRONAPNAPPermanentChoices`, `Juxtapose`, `Invalid`, `DelayAndCopies`;
+existing `TestRONPlayerPermanentChoiceJuxtapose` and `MixedTypes` retain real
+RON payment, targets, empty rounds, ties, self-targeting, phasing, prohibited
+exchange, fresh factories and artifact-creature behavior.

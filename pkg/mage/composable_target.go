@@ -1883,6 +1883,9 @@ func ChoosePermanent(player PlayerRef, subjects PermanentSet, binding *Permanent
 func (e *permanentChoice) Text() string                 { return "choose a permanent" }
 func (e *permanentChoice) Properties() EffectProperties { return EffectProperties{} }
 func (e *permanentChoice) Apply(ctx *EffectContext) error {
+	return e.applyWithReason(ctx, "")
+}
+func (e *permanentChoice) applyWithReason(ctx *EffectContext, reason string) error {
 	if ctx.Game.resolution.permanentBindings == nil {
 		ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)
 	}
@@ -1897,7 +1900,10 @@ func (e *permanentChoice) Apply(ctx *EffectContext) error {
 	}
 	selected := candidates[0]
 	if len(candidates) > 1 {
-		chosen := ctx.Game.GetPlayer(id).ChoosePermanent(candidates, "Choose "+e.binding.name, ctx.Game)
+		if reason == "" {
+			reason = "Choose " + e.binding.name
+		}
+		chosen := ctx.Game.GetPlayer(id).ChoosePermanent(candidates, reason, ctx.Game)
 		if chosen != nil {
 			for _, p := range candidates {
 				if p.ID() == chosen.ID() && p.incarnationID == chosen.incarnationID {

@@ -2606,6 +2606,17 @@
 // RON lowers contextual filters in spell targets and battlefield cast events.
 // Cost and ability-source filters keep their separate contexts.
 //
+// Use [ChoosePermanentsAPNAP] for grouped required permanent choices.
+// Each [PermanentChoiceRequest] has a player, collection and separate result.
+// Choosers are saved first. Choices use turn order, with declaration order for
+// one player. Later players can see prior choices. Old results are cleared.
+// The group makes no zone or control changes. Existing bindings keep visits,
+// departure LKI, copies, clones and delays. Definition checks reject output
+// reads within the group. Waiting queries keep player and collection sources.
+// RON lowers explicit SimultaneousPermanentChoices in resolving sequences.
+// The group exports keyed history but does not change TheChosenPermanent.
+// Costs, static rules and arbitrary grouped actions need separate adapters.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
