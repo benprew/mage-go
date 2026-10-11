@@ -177,7 +177,7 @@ func TestRONTapChoiceInvalid(t *testing.T) {
 		`MayAction(TapOrUntapPermanent(ThisPermanent))`,
 		`MayAction(TapOrUntapPermanent(HostPermanent))`,
 		`MayAction(TapOrUntapPermanent(Trigger_ThatPermanent))`,
-		`TapOrUntapPermanent(Ref_TargetPermanent)`, `MayAction(DrawACard)`,
+		`TapOrUntapPermanent(Ref_TargetPermanent)`, `MayAction(DrawACard())`,
 		`MayAction(ActionList([TapOrUntapPermanent(Ref_TargetPermanent)]))`,
 		`MayAction(MayAction(TapOrUntapPermanent(Ref_TargetPermanent)))`,
 	} {

@@ -2,17 +2,18 @@
 
 ## Current status
 
-The isolated slice reports **837 accepted / 149 rejected names** (986 total),
-**2,168 compiled / 277 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **838/148 names** and **2,169/276 records**. The strict
+The isolated slice reports **838 accepted / 148 rejected names** (986 total),
+**2,174 compiled / 271 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **839/147 names** and **2,175/270 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-CONTEXTUAL-SPELL-FILTERS implements shared typed spell predicates in targets
-and cast events. Complete Invoke Prejudice has RON gameplay tests. Current
-control, effective colors, live membership, detection timing, exact stack visits,
-local payments, copies and clones use shared services. Compilation gain is **one
-name / one record**; Goblin Artisans still needs ability-target exclusion.
-Existing accepted records and unrelated work remain preserved.
+CONTROLLER-CAST-TRIGGERS executes controller spell-cast events and their optional
+single-card draw body. Complete Verduran Enchantress has RON gameplay tests;
+all six reprints validate. Detection-time control, saved event identities,
+optional decisions, draw replacements, phasing, copies and clones use shared
+services. Compilation gain is **one name / six records**. Mana Vortex still
+needs stack-source contracts. Existing accepted records and unrelated work stay
+preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -73637,3 +73638,154 @@ tests; `pkg/mage/doc.go`, API/rules docs and this ledger.
    completed resolution-payment result service and contextual spell filters.
 
 This run stops after contextual spell filtering. Migration is incomplete.
+
+## Run 2026-10-10: CONTROLLER-CAST-TRIGGERS
+
+Status: complete battlefield controller-cast trigger slice, including its optional
+single-card draw body. No second slice is started.
+
+### Candidate comparison and selection
+
+Complete records inspected: Verduran Enchantress in LEA, LEB, 2ED, 3ED, CED and
+CEI; Mana Vortex and Goblins of the Flarg in DRK; City in a Bottle in ARN;
+Goblin Artisans in ATQ; and the previously ranked Vodalian War Machine in FEM.
+Targeted vocabulary queries confirm 44 cast-event instances, one controller
+state-event instance, one global member state-event instance and one ability
+exclusion instance. Reprints count once.
+
+| Candidate | Unique affected names | Estimated full unlocks | Other blockers, downstream benefit and effort |
+| --- | --- | --- | --- |
+| Ranked controller-caster adapter | Verduran Enchantress; Mana Vortex | Initially 1 name / 6 records | Mana Vortex needs FromStack and SingleSpell(ThisSpell). Small adapter reuses ByController and prepares its cast-event player selector. |
+| Shared state selectors | Goblins of the Flarg; City in a Bottle | 1 name / 1 record | City needs captured state-member batches, Arabian Nights name membership and global cast/land restrictions. Medium-to-large work for the complete shared context; enables subsequent state consumers. |
+| Ability-target exclusion | Goblin Artisans | 1 name / 1 record | Exact pending ability targets and source/name exclusion need their own contract. Existing tap, controller-filter and coin branches are ready. Medium effort. |
+
+The first candidate reuses exact detection and capture services and has six
+reprints plus a concrete second consumer prerequisite. No compared slice has a
+credible immediate multi-name unlock. The first failing real-record tests expose
+a missed nested blocker: MayAction(DrawACard). The caster adapter alone would
+unlock zero names. This slice therefore includes the typed optional draw body
+needed to execute the complete controller-cast trigger. This corrects the initial
+estimate instead of crediting a compiler-only selector as complete gameplay.
+
+### Contract, ownership and dependencies
+
+RON supports WhenAPlayerCastsASpell(SinglePlayer(You), supportedSpellFilter) in
+ordinary battlefield TriggerA declarations. SinglePlayer requires exactly the
+symbol You. AnyPlayer and Opponent keep their existing contexts. Wrong types,
+event/target/loop players, malformed wrappers and wrong arities remain errors.
+
+The adapter uses SpellCast().ByController().Matching(filter).WithSpell(binding)
+.WithCaster(binding). Existing predicate composition is preserved. Detection
+reads the current source controller, not the card owner. Pending triggers keep
+that controller and their separate exact spell/caster captures. Later source or
+spell control changes, countering the spell, departure, return and phasing do
+not cancel the pending body. Source absence, phasing and ability removal stop
+new detection. Failed casting and spell copies send no cast event. Trigger
+copies keep captures while ordinary You drawing uses the copy controller.
+
+New engine signature: MayDrawCard(player PlayerRef) ResolvingEffect. It resolves
+one typed player once, offers one local choice at resolution, and calls the
+existing Game.PlayerDrawCard service on acceptance. No result escapes. Missing
+players make no choice; an empty library still permits acceptance and preserves
+normal draw failure. Definition inspection checks the player, retains draw
+metadata and declares explicit source reads to waiting delayed queries.
+RON lowers exactly MayAction(DrawACard) in ordinary ActionList and PlayerActions
+lists. DrawACard must be a symbol; other optional action shapes keep their
+existing contracts or remain rejected. PlayerAction and EachPlayerAction do not
+acquire a general optional-action adapter in this slice.
+
+RON owns spelling, shape checks, player scope and fresh per-factory bindings.
+Mage owns detection, captures, pending controllers, resolution decisions, draw
+replacements/events, library failure and cloning. Reused services include typed
+spell filters, source incarnations/LKI, APNAP placement, stack copies, phasing,
+ability removal, text rebuilding, definition plans and atomic registry loading.
+CR 113.7a, 121.1, 601.2i, 603.2/3a/5, 400.7 and 702.26 support these contracts.
+No payment transaction, replacement ordering or simultaneous batch is changed.
+No card-name dispatch, Go-card fallback or partial production registry is added.
+
+### Gameplay mappings and declaration evidence
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Verduran Enchantress, all six unchanged records | TestRONControllerCastEnchantress: accepted/declined draw, own/opponent casts, nonenchantment, failed casting with no available mana source, source owner/controller distinction, phase cycle, phasing, ability removal, source departure/return and control before/after detection, spell control change, countered spell, spell copy, trigger copy, two fresh sources and independent clone resolution. TestRONControllerCastRecords validates all six reprints and fresh ability identities. |
+| Mana Vortex prerequisite | TestRONControllerCastRecords compiles the complete unchanged record and retains its FromStack rejection. This is no gameplay claim for Mana Vortex. |
+| Optional draw player scope and local choices | TestRONControllerCastScopedOptionalDraw: targeted PlayerActions player declines while outer controller accepts; neither choice changes the other scope. |
+| Native detection, filters and event identity | TestControllerCastDetectionAndBindings: own artifact/opponent enchantment exclusion, own enchantment match, saved caster and exact spell after spell control change/source return, differently controlled copies and independent clones. |
+| Native optional drawing | TestControllerCastOptionalDraw: accept/decline, replacement life gain, absent binding, empty-library draw failure, nil/unbound declaration rejection. TestControllerCastOptionalDrawWaiting checks pure waiting queries, phase/departure/return identity and clone lifetimes. |
+| Invalid declarations and collection safety | TestRONControllerCastInvalid rejects malformed selectors and draw forms. Records deduplicates six reprints, rejects an invalid collection without publishing a partial registry and preserves the prior registry on failed LoadInto. |
+| Existing accepted collection | Updated inventory, definition-plan and numeric-consumer censuses retain all existing records. Whole-repository tests remain enabled. |
+
+### Source evidence and validation
+
+Local data/LEA.json Oracle text is: “Whenever you cast an enchantment spell, you
+may draw a card.” It agrees with the complete RON record. No source defect is
+corrected and no RON source changes; the vocabulary source snapshot is retained.
+Unrelated source, engine, archive and vocabulary edits stay preserved.
+
+Fresh shared baseline: make build and RON short tests pass (40.678s). Loader
+exits 1 for unsupported collection records: 2,169 compiled / 276 rejected records,
+838 accepted / 148 rejected names. Isolated fbf8c160 baseline: 2,168/277 records,
+837/149 names. Both snapshots contain 2,445 records and 986 distinct names.
+
+Failing-first evidence: the complete real-record tests fail at unsupported
+SinglePlayer; after that adapter they fail at unsupported optional DrawACard.
+Native optional-draw tests fail against a minimal no-op Apply stub for accepted,
+declined, replacement and empty-library cases, then pass with shared execution.
+Test development fixes the failed-cast setup so its Forest cannot pay for the
+spell, and uses the existing supported PlayerActions scope for optional bodies.
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONControllerCast -count=1`
+and native `go test ./pkg/mage -run TestControllerCast -count=1` pass in both
+trees. The two updated negative suites also pass. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, `make lint` and
+`git diff --check` pass in both trees. Isolated RON short/full-suite times are
+46.471s / 48.023s; shared times are 50.965s / 46.640s. Native waiting-reference
+coverage is added after those full-suite runs and passes in the subsequent
+focused native checks in both trees. Lint reports zero issues; its only changes
+are import grouping in the new tests. Post-format focused RON/native checks pass.
+The initial concurrent shared lint attempt hits golangci-lint's process lock;
+a sequential retry passes. This temporary tool conflict leaves no blocker.
+The first short runs also catch two obsolete negative assertions for the now
+supported shapes; replacing them with malformed variants preserves rejection
+coverage while the new tests establish positive gameplay.
+
+Final isolated loader exits 1: **2,174 compiled / 271 rejected records**,
+**838 accepted / 148 rejected names**. Final shared loader exits 1:
+**2,175/270 records**, **839/147 names**, including pre-existing Eureka.
+The collection still has 2,445 records and 986 unique names. Each baseline/final
+diagnostic comparison removes only the six Verduran Enchantress records; no
+remaining diagnostic changes or new rejection appears. Mana Vortex remains
+rejected at FromStack. These nonzero exits are collection rejection, with valid
+JSON diagnostics, not build/test/environment failures. Strict loading continues
+to publish no partial production registry.
+
+The gain is one unique name / six records, matching the corrected complete-slice
+estimate. One complete-card gameplay mapping is added; compiler acceptance and
+gameplay evidence remain separate. Mana Vortex stays rejected at FromStack.
+No Go definitions, generators, startup wiring or DSL functions are removed:
+the design's complete-registry, runtime/test migration and caller-audit removal
+gates remain unmet. Only this slice is committed from an isolated checkout;
+shared pre-existing edits and untracked files remain outside that commit.
+The previous controller-selector and optional-draw negative cases now use
+malformed variants; the supported forms have positive gameplay evidence.
+
+Changed files: engine optional_draw.go, optional_draw_test.go and
+controller_cast_test.go; RON triggers.go, tap_choice.go, player_actions.go and
+controller_cast_test.go; collection census and previous negative-declaration tests; pkg/mage/doc.go, API/rules
+contract docs and this ledger.
+
+### Ranked next candidates
+
+1. Controller permanent-presence state event for Goblins of the Flarg: one
+   estimated full name/record. Reuse current controller/type queries and the
+   shared WhenState arming lifecycle. Compare the captured state-member service
+   for City in a Bottle before choosing scope; City still has global restrictions.
+2. Ability-target exclusion for Goblin Artisans: one estimated full name/record.
+   All other complete-record branches now have prerequisites. Establish exact
+   pending ability targets and the source/name exclusion at legality checks.
+3. Stack-source self-cast events for Mana Vortex: one potential full name/record,
+   but its global no-land state selector remains another blocker. Reuse the
+   completed controller-caster selector and captured spell/caster bindings.
+   Compare durable tap-payment history for Vodalian War Machine before selection.
+
+This run stops after controller-cast triggers. Migration is incomplete.

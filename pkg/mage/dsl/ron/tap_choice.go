@@ -7,6 +7,14 @@ func compileOptionalTapChoice(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	action := n.Args[0]
+	if action.Name == "DrawACard" {
+		if action.Kind != Symbol {
+			return nil, problem(action, "DrawACard requires a symbol")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.MayDrawCard(ctx.player.build(bindings))
+		}, nil
+	}
 	if action.Name == "PutACardFromHandOnBattlefield" {
 		return compileOptionalHandEntry(action)
 	}

@@ -35,6 +35,14 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	ctx.player = playerReferencePlan{action: plan}
 	actions := make([]effectFactory, 0, len(parts))
 	for _, part := range parts {
+		if part.Name == "MayAction" && len(part.Args) == 1 && part.Args[0].Name == "DrawACard" {
+			build, drawErr := compileOptionalTapChoice(part, ctx)
+			if drawErr != nil {
+				return nil, nil, nil, drawErr
+			}
+			actions = append(actions, build)
+			continue
+		}
 		switch part.Name {
 		case "CreateFutureTrigger":
 		case "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":

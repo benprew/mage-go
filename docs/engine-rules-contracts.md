@@ -17806,3 +17806,31 @@ value, source and spell return, trigger copies and independent pending payments.
 rejection, fresh factory declarations, semantic roles, strict atomic loading
 and Goblin Artisans' remaining exclusion rule. Existing payment, replacement
 and simultaneous-operation services are reused; none is changed by this slice.
+
+
+## RON controller-cast triggers and optional drawing
+
+`WhenAPlayerCastsASpell(SinglePlayer(You), filter)` lowers to
+`SpellCast().ByController().Matching(filter).WithSpell(...).WithCaster(...)`.
+The selector must contain the symbol `You`. Other singular player references
+remain declaration errors. Existing AnyPlayer and Opponent contexts stay valid.
+The source controller at detection supplies You (CR 603.2, 603.3a). Later source
+or spell control changes do not cancel a pending trigger or change its captured
+caster. Spell copies cause no cast event; failed casting causes no event.
+
+`MayDrawCard(player PlayerRef) ResolvingEffect` offers one choice to the selected
+player at resolution, then uses `Game.PlayerDrawCard` if accepted. An absent
+player makes no choice. An empty library still permits the choice and preserves
+normal draw failure. Draw replacements and events use the existing service
+(CR 121.1, 603.5). Player references retain explicit delayed source reads.
+RON lowers exactly `MayAction(DrawACard)` in resolving ActionList and PlayerActions bodies;
+argument-bearing DrawACard forms remain invalid. Each choice stays local and
+produces no payment or drawn-card result binding.
+
+Evidence: `TestRONControllerCastEnchantress` executes the complete unchanged
+Verduran Enchantress record. `Records` validates all six reprints and strict
+atomic loading. `Invalid` and `ScopedOptionalDraw` cover declaration errors and
+independent player scope. Native `TestControllerCastDetectionAndBindings`,
+`Declarations` and `OptionalDraw` cover composition, saved event identities,
+copies, clones, typed validation, accept/decline, absence and draw replacement.
+Stack-source Mana Vortex and general optional action lists remain unsupported.

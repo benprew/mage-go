@@ -1,5 +1,11 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON controller-cast triggers use [SpellCast] with ByController. Detection
+// saves the source controller, caster and exact spell visit. Pending bodies
+// keep these facts after source control changes, departure or phasing.
+// [MayDrawCard] offers one draw to its typed player at resolution. The shared
+// draw service keeps replacements, events and empty-library failure.
+//
 // RON activation turn and combat windows use [WithActivationStateCondition].
 // [IsYourTurn] reads the acting player. [BeforeCombatStep] keeps history from
 // the first combat unless the same modifier conjunction requires combat. That
