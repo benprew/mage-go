@@ -13108,3 +13108,22 @@ The projection shares the declaration; it does not declare another target.
 Evidence: native `TestDamageTargetProjection*` and RON
 `TestRONUnionDamageTarget*`, including complete Cuombajj Witches gameplay.
 Disintegrate death replacement and Pyrotechnics allocation remain unsupported.
+
+
+### RON temporary death replacement
+
+Resolving actions support exactly
+`CreateReplaceWouldPutIntoGraveyardUntil(APermanentWouldDie(SinglePermanent(ref)), [ExileItInstead], UntilEndOfTurn)`.
+`ref` must be a bound typed permanent reference in that action's lexical context.
+Ordinary, triggered and delayed action bodies use the same lowering. A singular
+AnyTarget declaration can supply `AnyTargetAsAPermanent`; player recipients
+supply no permanent. Each factory retains its own target declarations.
+Wrong arities, unbound references, unsupported events, operation lists and
+durations fail compilation. Damage-history collections and static graveyard
+replacement declarations remain unsupported.
+
+The adapter uses `mage.ExileIfWouldDieThisTurn`. The engine saves one present
+incarnation and uses shared replacement choice, graveyard proposals and zone
+batches. Disintegrate installs this rule even with zero or prevented damage when
+the target is still a creature. State-based actions run after the complete spell
+body, so lethal damage cannot move the recipient before this rule is installed.

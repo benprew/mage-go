@@ -17108,3 +17108,38 @@ retains batch replacement and simultaneous-operation evidence.
 `CreateReplaceWouldPutIntoGraveyardUntil`, and Pyrotechnics still rejects at
 `TargetedDistributed`. Their complete gameplay remains unproved. No RON source
 changes or additional death-replacement/allocation contracts are established.
+
+
+## Temporary death-to-exile replacement
+
+`ExileIfWouldDieThisTurn(subject PermanentRef) ResolvingEffect` saves the
+present subject's exact battlefield incarnation at resolution. It installs an
+EndOfTurn replacement through EffectManager. Source departure, control changes,
+phasing and ability removal do not remove the saved rule. Phased subjects cannot
+move. A phase cycle keeps identity; a returned subject cannot inherit the rule.
+Cleanup ends it. Clones retain independent replacement and reference information.
+`WaitingExileSources` includes the exact saved subject with current or departure
+facts, including after return. Queries do not move objects.
+
+The rule matches destruction, sacrifice to graveyard and nondestruction
+battlefield-to-graveyard proposals. It changes the destination before movement.
+Sacrifice keeps its sacrifice event and payment behavior. Exile creates a leave
+event and LKI, but no death event or creature-death count. Indestructible prevents
+destruction; it cannot prevent sacrifice or zero-toughness movement. Regeneration
+competes on destruction through the affected controller's shared replacement
+choice; it cannot replace a zero-toughness proposal. Replacement rechecks cannot
+apply the same death rule to an exile destination.
+
+Single destruction keeps its current caller behavior. Destruction batches and
+mixed lethal and zero-toughness state-based actions prepare all replacement choices before any
+new death-to-exile movement. Existing zone batches supply former-battlefield
+trigger checks and departure LKI. No new damage or payment system is added.
+Rules: CR 400.7, 614.1a/4/5/6/8, 616.1, 700.4, 702.26 and 704.5f–h.
+
+Evidence: native `TestTemporaryDeathExileRoutes`, `Declarations`, `Order`,
+`MixedStateBatch` and `WaitingIdentity`; RON `TestRONTemporaryDeathExile*` covers
+all six complete Disintegrate records, zero/nonlethal/prevented/lethal damage,
+player and planeswalker branches, no regeneration, legality, control,
+return/phasing, expiry, failed payment, copies, independent instances and clones.
+Live damage-history collections and permanent static return-to-hand replacements
+remain separate contracts. Runesword and Firestorm Phoenix remain rejected.

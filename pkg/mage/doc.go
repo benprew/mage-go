@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Use [ExileIfWouldDieThisTurn] for one saved permanent until cleanup.
+// Destruction, sacrifice and other graveyard moves use shared replacements.
+// Zero toughness permits this rule but does not permit regeneration.
+// Mixed lethal and zero-toughness batches make choices before departure.
+// Source departure and ability removal do not end the rule. Phasing keeps
+// the saved visit; return cannot replace it. Clones keep separate rules.
+// [Game.WaitingExileSources] retains its exact subject and departure facts.
+// RON lowers APermanentWouldDie with SinglePermanent and ExileItInstead.
+// Live damage-history sets and return-to-hand operations need separate services.
+//
 // Use [DeclareOpponentChosenDamageTarget] for an opponent target choice.
 // Target legality uses the action controller and source. Copies keep the
 // controller's permission to choose new targets. Separate groups can share

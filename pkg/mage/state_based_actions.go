@@ -29,14 +29,7 @@ func (g *Game) checkStateBasedActions() bool {
 		}
 		if len(toDestroy)+len(toGraveyard) > 0 {
 			actions = true
-			g.withZoneChangeBatch(func() {
-				g.DestroyPermanents(toDestroy)
-				for _, p := range toGraveyard {
-					if current := g.FindPermanent(p.ID()); current != nil && current.incarnationID == p.incarnationID {
-						g.PutPermanentIntoGraveyard(current)
-					}
-				}
-			})
+			g.moveGraveyardBatch(toDestroy, toGraveyard, false)
 		}
 
 		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation

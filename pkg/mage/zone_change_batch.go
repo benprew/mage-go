@@ -47,6 +47,17 @@ type destructionResult struct {
 }
 
 func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) destructionResult {
+	return g.moveGraveyardBatch(permanents, nil, cannotRegenerate)
+}
+
+func (g *Game) moveGraveyardBatch(destroyed, direct []*Permanent, cannotRegenerate bool) destructionResult {
+	permanents := append(append([]*Permanent(nil), destroyed...), direct...)
+	bypass := make(map[uuid.UUID]bool, len(direct))
+	for _, p := range direct {
+		if p != nil {
+			bypass[p.ID()] = true
+		}
+	}
 	if len(permanents) == 0 {
 		return destructionResult{}
 	}
@@ -55,6 +66,7 @@ func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool)
 		type candidate struct {
 			permanent *Permanent
 			creature  bool
+			move      *permanentGraveyardAction
 		}
 		var destroy []candidate
 		initialCreature := make(map[uuid.UUID]bool, len(permanents))
@@ -75,18 +87,37 @@ func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool)
 				continue
 			}
 			seen[p.ID()] = true
-			action := NewDestroyPermanentAction(uuid.Nil, p.ID())
-			action.cannotRegenerate = cannotRegenerate
-			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(action, g) != nil {
-				destroy = append(destroy, candidate{current, initialCreature[p.ID()]})
+			var action Action
+			if bypass[p.ID()] {
+				action = &permanentGraveyardAction{subject: p.ID(), incarnation: p.incarnationID, destination: ZoneGraveyard}
+			} else {
+				if current.HasKeyword(Indestructible) {
+					continue
+				}
+				proposal := NewDestroyPermanentAction(uuid.Nil, p.ID())
+				proposal.cannotRegenerate = cannotRegenerate
+				action = proposal
+			}
+			switch replaced := g.effects.ApplyReplacements(action, g).(type) {
+			case *DestroyPermanentAction:
+				destroy = append(destroy, candidate{permanent: current, creature: initialCreature[p.ID()]})
+			case *permanentGraveyardAction:
+				destroy = append(destroy, candidate{permanent: current, creature: initialCreature[p.ID()], move: replaced})
 			}
 		}
 		for _, item := range destroy {
 			if current := g.FindPermanent(item.permanent.ID()); current != nil && current.incarnationID == item.permanent.incarnationID {
+				if item.move != nil {
+					g.performPermanentGraveyardAction(item.move)
+					if item.move.destination == ZoneGraveyard && item.creature {
+						result.creatureDeaths++
+					}
+					continue
+				}
 				if item.creature {
 					result.creatureDeaths++
 				}
-				g.PutPermanentIntoGraveyard(current)
+				g.putPermanentIntoGraveyard(current)
 				result.destroyed++
 			}
 		}

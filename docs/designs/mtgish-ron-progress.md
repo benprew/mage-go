@@ -2,18 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **821 accepted / 165 rejected names** (986 total),
-**2,127 compiled / 318 rejected records** (2,445 total). With the pre-existing
-Eureka work, the worktree reports **822 accepted / 164 rejected names** and
-**2,128 compiled / 317 rejected records**. The strict loader rejects the
-collection and publishes no partial registry. Compilation is not gameplay proof.
+The isolated slice reports **822 accepted / 164 rejected names** (986 total),
+**2,133 compiled / 312 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **823/163 names** and **2,134/311 records**. The strict
+loader rejects the collection and publishes no partial registry.
 
-UNION-DAMAGE-TARGET-BINDINGS supplies singular/numbered union targets, opponent
-choice and exact permanent projection. Shared target, LKI, damage, prevention,
-transaction and clone services keep their contracts. Compilation and complete
-RON gameplay gains are **1 name / 1 record**: Cuombajj Witches. All six
-Disintegrate records still reject at death replacement. No RON changed.
-All required native checks pass; lint reports 0 issues.
+TEMPORARY-PERMANENT-DEATH-EXILE supplies a saved singleton replacement until
+cleanup, shared graveyard proposals, mixed state batches and exact waiting
+references. Compilation and complete RON gameplay gain **1 name / 6 records**:
+Disintegrate. Runesword and Firestorm Phoenix retain separate blockers.
+No RON changed. All required native checks pass; lint reports 0 issues.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -70495,3 +70493,171 @@ complete RON support, gameplay mapping and runtime cutover gates remain unmet.
    blockers; preserve event-time and resolution-time checks and LKI.
 
 Migration remains incomplete. This run stops after UNION-DAMAGE-TARGET-BINDINGS.
+
+## Run 2026-10-10: TEMPORARY-PERMANENT-DEATH-EXILE
+
+Status: complete singleton death-to-exile replacement slice. The initial working
+tree contained Eureka/repeated-entry work, an archive relocation, authoring-doc
+changes and unrelated .gitignore edits. These remain outside this commit.
+Fresh baseline make build and union-target/collection focused tests pass.
+Baseline strict loader exits 1: worktree 822/164 names and 2,128/317 records;
+isolated HEAD 821/165 names and 2,127/318 records. Rejection is collection status,
+not a build or environment failure. There are 986 names and 2,445 records.
+
+### Candidate comparison and selection
+
+Complete RON records and nested forms were read for every name below, including
+all identical reprints. Counts are unique names, not first-error frequencies.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: temporary permanent death replacement | Disintegrate, Runesword; shared graveyard proposal also prepares Firestorm Phoenix | 1 name / 6 records | Runesword needs live WasDealtDamageByPermanentThisTurn subjects and no-regeneration rules. Phoenix needs a permanent static replacement, saved returned hand visit, reveal/play restriction and next-player-turn lifetime. Exact proposals and replacement-before-movement are shared prerequisites for both. | Moderate: typed action/zone integration, singleton adapter, identity/order/batch tests. |
+| Ranked #2: plural union target announcement/allocation | Pyrotechnics, Fireball | 1 name if allocation and distributed damage are both included; 0 for plural declarations alone | Pyrotechnics requires TargetedDistributed, DistributeNumberAmongTargets and distributed packets. Fireball also requires per-extra-target casting payment and division/rounding. Enables two complete cards through later consumers. | High: announcement choices, legal distributions, copies, partial legality and casting totals. |
+| Ranked #3: intervening-if entry/departure snapshots | Earthbind, Urza's Miter | 0 for the snapshot prerequisite alone | Earthbind needs persistent host flying removal; Miter needs WasntSacrificed. Enables two consumers while keeping event-time and resolution-time checks separate. | Moderate: event LKI, attachment identity and both checks, followed by separate bodies. |
+
+Ranked #1 is dependency-ready and supplies both an immediate complete card and
+concrete shared zone prerequisites. It is smaller than allocation plus its damage
+consumer. This run establishes one complete singleton shape; it does not accept
+live history sets or permanent static replacement declarations.
+
+### Exact contract, boundaries and engine reuse
+
+RON action signature:
+CreateReplaceWouldPutIntoGraveyardUntil(
+ APermanentWouldDie(SinglePermanent(ref)), [ExileItInstead], UntilEndOfTurn).
+The action can occur in ordinary, activated, triggered and delayed action bodies.
+ref uses the existing typed permanent environment: source, host, declared target,
+event, choice or singular union projection as permitted by that lexical context.
+The event and wrapper each have arity 1; the action has arity 3. The operation list
+contains exactly one symbol. Other durations, events, collections, wrong arities,
+wrong operation shapes and unbound references reject before factory publication.
+Inventory descendants retain event, collection, permanent-reference, operation
+and duration roles even below unsupported records.
+
+Public engine signature:
+ExileIfWouldDieThisTurn(subject PermanentRef) ResolvingEffect.
+The definition inspector validates its operand. Each application saves one
+present battlefield incarnation until cleanup. Replacement choice, rechecks,
+source-exit retention and cloning use EffectManager. The engine owns the typed
+permanentGraveyardAction proposal and its destination; RON owns spelling, arity,
+lexical scope and lowering. No card-name branch, global last-action result,
+Go-card fallback, game-time declaration panic or partial registry is added.
+
+Destruction, sacrifice and nondestruction graveyard moves can become exile.
+Indestructible stops destruction, but not sacrifice or zero-toughness movement.
+Regeneration competes only on destruction. Existing sacrifice.WithExile keeps
+sacrifice events and payment outcomes. A replaced move supplies leave events and
+LKI but no death event/count. The rule is installed after damage instructions and
+before state-based actions. Zero or prevented damage does not prevent installation
+when Disintegrate's resolving target remains a creature.
+
+Single destruction preserves current callers and their permanent pointers.
+Destruction batches and mixed lethal/zero-toughness state-based actions prepare
+all new death-to-exile choices before departures. Shared zoneChangeBatch retains
+the former battlefield and event-time information. Returned objects cannot
+inherit rules; phase cycles retain identity. Source departure, control changes
+and ability removal do not end installed rules. WaitingExileSources retains the
+exact subject and departure facts. Cleanup ends it; clones keep separate data.
+Existing damage, target legality, announced X, no-regeneration layers, transaction,
+owner destinations and copy-retargeting services are reused without new payments.
+
+Rules evidence: local CR 400.7, 614.1a/4/5/6/8, 616.1, 700.4, 702.26b/d/f and
+704.5f–h. Local data/LEA.json Oracle text matches all six complete Disintegrate
+records. DRK/LEG Oracle records confirm Runesword's live damage history and
+Phoenix's hand restrictions. No RON source defect was found or corrected.
+Existing Gaea's Liege/Fastbond audit questions remain outside this slice.
+No RON source changed; no vocabulary source/hash refresh is needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, all six TestRONTemporaryDeathExileDisintegrate cases fail
+on unsupported CreateReplaceWouldPutIntoGraveyardUntil. Native tests fail to
+compile on ExileIfWouldDieThisTurn after a fixture cost-type error is corrected.
+The mixed state-batch probe then fails because replacement choices occur after a
+prior departure. WaitingIdentity fails because the new rule supplies no exact
+waiting reference. Inventory fails because SinglePermanent receives the wrong
+role. All now pass through their shared services.
+
+The initial full suite exposes three Astral caller regressions when single
+DestroyPermanent uses a cloned batch: Goblin Polka Band's surviving target,
+Orcish Catapult's frozen distribution and Power Struggle's pending exchange keep
+old permanent pointers. Single-action behavior is restored without changing those
+tests; the three regressions and the final full suite pass. New fixtures supply
+owners where the preserved single destruction API requires them. A two-sorcery
+instance test is corrected to resolve the first cast before the second. Delayed
+return assertions require the saved old source to remain separate, per CR 400.7.
+
+| Card/context | Evidence |
+| --- | --- |
+| Disintegrate, LEA/LEB/2ED/3ED/CED/CEI | TestRONTemporaryDeathExileDisintegrate compiles each complete unchanged record, pays XR with X=3, resolves lethal damage and verifies exile without a death count. |
+| Complete Disintegrate gameplay | Gameplay covers zero, nonlethal and prevented damage; player/planeswalker branches; illegal, phased and returned targets; control, cleanup, sacrifice, zero toughness, regeneration exclusion, saved X and spell copies. Instances covers two legal independent casts, pending clone resolution and simultaneous recipients. |
+| RON action contexts | ActionContext covers a source artifact and phase cycle. SourceLifetime covers declared targets, source departure/return/phasing/removal and a legally retargeted ability copy. DelayedContext covers entry-triggered delayed installation and returned-source exclusion. |
+| Invalid declarations and inventory | Invalid covers wrong arity, empty/wrong operations, unsupported duration, undeclared target and unsupported collection. Inventory checks event/subject/reference/operation/duration roles. Existing union-projection and mode-scope tests remain passing. |
+| Reusable engine contract | TestTemporaryDeathExileRoutes covers destruction, sacrifice, direct graveyard movement, zero toughness, indestructible destruction/sacrifice, tokens, phase cycles, return, expiry and clones. Declarations rejects a nil operand. Order checks both affected-controller regeneration/exile orders. MixedStateBatch checks choices before lethal and zero-toughness departures. WaitingIdentity checks exact LKI references, return, cleanup and clone independence. |
+| Runesword and Firestorm Phoenix | Complete records remain rejected; no complete gameplay gain is claimed. Loader diagnostics retain their independent blockers. |
+| Existing cards and callers | Exact collection assertions, full engine and card suites, existing union targets and the three unchanged Astral regressions preserve prior accepted records and callers. |
+
+### Validation and measured results
+
+Focused go test ./pkg/mage/dsl/ron -run TestRONTemporaryDeathExile -count=1
+passes. The final post-lint focused run also includes TestRONUnionDamageTarget,
+TestInventoryRepositoryCollection and TestRONDefinitionPlan (2.725s). Native
+post-lint go test ./pkg/mage -run 'TestTemporaryDeathExile|TestWaitingExile'
+-count=1 passes (0.715s). No gameplay assertions are weakened.
+
+make build and go vet ./... pass before and after lint. Final
+ go test ./pkg/mage/... -short -count=1 passes (RON 45.286s).
+Final make test passes (RON 51.490s), including all unchanged Astral tests.
+make lint passes with 0 issues. A whole-tree Go-file snapshot finds automatic
+changes only to import grouping in the three new files; no unrelated file is
+changed. The affected focused/native tests, build and vet pass again afterward.
+Both worktree and staged git diff --check pass.
+
+An isolated HEAD-plus-slice checkout passes focused RON tests (0.648s),
+make build, go vet ./..., the complete engine short suite (RON 56.731s) and
+make test (RON 69.468s). Its exact collection assertions use 2,133/312 rather
+than the worktree's 2,134/311, preserving the pre-existing Eureka difference.
+Final go run ./cmd/loadcards -json exits 1 in both trees, as required while gaps
+remain. Fresh diagnostics: Runesword DRK:87:630 unsupported collection attack
+operation (CantBeRegenerated); Firestorm Phoenix LEG:85:175 unsupported rule
+(ReplaceWouldPutIntoGraveyard); Pyrotechnics LEG:201:156 TargetedDistributed;
+Fireball 2ED:84:141 AdditionalCastingCostForEachTargetBeyondTheFirst.
+Disintegrate has no diagnostic. There is no environment or validation blocker.
+
+
+Fresh final loader: worktree 823 accepted / 163 rejected names, 2,134 compiled /
+311 rejected records. Isolated HEAD plus this slice: 822/164 names and 2,133/312
+records. Both exit 1 for collection rejection and publish no partial registry.
+Against their fresh baselines, both gain exactly 1 unique name / 6 records,
+matching the estimate. Complete RON gameplay gains 1 unique name: Disintegrate.
+No accepted record regresses. Runesword still rejects at its collection
+no-regeneration/history form; Phoenix still rejects its static death replacement.
+Pyrotechnics and Fireball retain their announcement/casting blockers.
+
+Changed files: pkg/mage/temporary_death_exile.go and its test, game.go,
+state_based_actions.go, zone_change_batch.go, waiting_exile.go, doc.go;
+pkg/mage/dsl/ron/temporary_death_exile.go and its test, compiler.go, inventory.go,
+union_damage_target_test.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/engine-rules-contracts.md, docs/dsl-reference.md
+and this ledger. Only these incremental changes are staged. Isolated collection
+assertions exclude Eureka's one-record gain; worktree assertions preserve it.
+No Go definitions, startup paths, generators or unused DSL services are removed:
+the complete-loading, gameplay and runtime cutover gates remain unmet.
+
+### Ranked next candidates
+
+1. Shared plural union target announcement/allocation for Pyrotechnics and
+   Fireball. Reuse target identities and damage batches; inspect engine allocation
+   and casting totals before selecting the smallest complete context. Estimate
+   one immediate unique unlock with allocation plus its distributed consumer;
+   Fireball's extra-target cost and rounding remain explicit.
+2. Live damage-history permanent subjects for Runesword's no-regeneration and
+   death replacement. The singleton engine proposal is now ready. History must
+   include damage after installation and must preserve source/recipient visits;
+   do not freeze the collection at activation resolution. Estimate one unique
+   complete unlock after both consumers share that live subject service.
+3. Shared intervening-if entry/departure snapshots for Earthbind and Urza's Miter.
+   Preserve detection/resolution checks, attachment facts and LKI. Persistent
+   host flying removal and WasntSacrificed remain independent body blockers.
+
+Migration remains incomplete. This run stops after TEMPORARY-PERMANENT-DEATH-EXILE.

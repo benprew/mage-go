@@ -321,6 +321,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
 		}
+	case "temporary_death_replacement_event":
+		if n.Name == "APermanentWouldDie" && len(n.Args) == 1 {
+			return "permanent_collection"
+		}
 	case "future_draw_replacement_event":
 		if n.Name == "NextTimePlayerWouldDrawACardThisTurn" && len(n.Args) == 1 {
 			return "player_reference"
@@ -969,6 +973,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 					return "permanent_collection_reference"
 				}
 				return []string{"permanent_filter", "temporary_modification", "duration"}[index]
+			}
+		case "CreateReplaceWouldPutIntoGraveyardUntil":
+			if len(n.Args) == 3 {
+				return []string{"temporary_death_replacement_event", "replacement_operation", "duration"}[index]
 			}
 		case "CreateEachPermanentRuleEffectUntil":
 			if len(n.Args) == 3 {

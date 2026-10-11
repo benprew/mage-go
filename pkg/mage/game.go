@@ -931,6 +931,14 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 
 // DestroyPermanent destroys a permanent (sends to graveyard).
 func (g *Game) DestroyPermanent(perm *Permanent) {
+	if perm == nil || perm.PhasedOut {
+		return
+	}
+	current := g.FindPermanent(perm.ID())
+	if current == nil || current.incarnationID != perm.incarnationID {
+		return
+	}
+	perm = current
 	if perm.HasKeyword(Indestructible) {
 		return
 	}
@@ -939,6 +947,10 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return // regenerated or otherwise replaced
+	}
+	if move, ok := result.(*permanentGraveyardAction); ok {
+		g.performPermanentGraveyardAction(move)
+		return
 	}
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
@@ -1064,6 +1076,20 @@ func (g *Game) syncAbilityContext(perm *Permanent) {
 // (e.g., 0-toughness creatures) and other rules that move permanents to the
 // graveyard without destruction.
 func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
+	if perm == nil || perm.PhasedOut {
+		return
+	}
+	current := g.FindPermanent(perm.ID())
+	if current == nil || current.incarnationID != perm.incarnationID {
+		return
+	}
+	proposal := &permanentGraveyardAction{subject: perm.ID(), incarnation: perm.incarnationID, destination: ZoneGraveyard}
+	if result, ok := g.effects.ApplyReplacements(proposal, g).(*permanentGraveyardAction); ok {
+		g.performPermanentGraveyardAction(result)
+	}
+}
+
+func (g *Game) putPermanentIntoGraveyard(perm *Permanent) {
 	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {

@@ -18,11 +18,19 @@ func (g *Game) WaitingExileSources() []DamageSource {
 	var sources []DamageSource
 	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
-			rule, ok := replacement.(*exileInsteadOfGraveyardReplacement)
-			if !ok || !rule.IsActive(g) {
+			if !replacement.IsActive(g) {
 				continue
 			}
-			for _, saved := range []DamageSource{rule.subject, rule.continued} {
+			var subjects []DamageSource
+			switch rule := replacement.(type) {
+			case *exileInsteadOfGraveyardReplacement:
+				subjects = []DamageSource{rule.subject, rule.continued}
+			case *temporaryDeathExileReplacement:
+				subjects = []DamageSource{rule.reference}
+			default:
+				continue
+			}
+			for _, saved := range subjects {
 				if !saved.hasExactIdentity() {
 					continue
 				}
