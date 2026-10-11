@@ -13578,3 +13578,37 @@ entry controller. The source correction follows `data/LEG.json` Oracle text.
 legality, copies, simultaneous deaths, independent instances and cloned games.
 Leaves events, other owner operands, plural watched subjects, new targets,
 other durations and out-of-scope event reads remain separate contracts.
+
+## RON specific-permanent tap payments
+
+`MustCost(TapPermanent(ref))` followed immediately by
+`If(CostWasPaid, actions)` or `Unless(CostWasPaid, actions)` makes a mandatory
+payment at resolution. `CostWasntPaid` supplies the opposite condition. The
+nonempty continuation keeps its own result; another payment cannot change it.
+`ref` must be a bound singular permanent reference in that action context.
+Ordinary spell, activation and supported delayed bodies use the same lowering.
+Optional payments, explicit `PlayerMustCost` and `IfElse` forms remain separate.
+
+The adapter uses `RequiredTapOrElse(player PlayerRef, subject PermanentRef,
+paid, unpaid ResolvingEffect) ResolvingEffect`. The effect controller pays, as with other implicit `MustCost` payments.
+Only the exact present, unphased, untapped subject can pay. Tapping does not
+require control unless the declaration supplies that restriction. A written tap
+instruction permits summoning sickness. Payment makes no optional offer and
+uses the shared transaction and tap event service.
+
+`TapPermanent(HostPermanent)` in an Aura's activated cost uses the existing
+`TapAttachedPermanentCost() Cost`. The transaction locks both source and host
+visits. It rejects departure, return, phasing, changed attachment and an already
+tapped host before spending live resources. The adapter does not change the
+existing `TapPermanent(ThisPermanent)` tap-symbol behavior.
+
+Energy Tap's `AddManaRepeated(fixedProduction, ManaValueOfPermanent(ref))`
+uses the existing typed mana-value reader and `AddManaAmount`. This context
+accepts one fixed-color production; multiple productions and a color choice
+remain rejected. The information read permits exact departure LKI, while the
+payment itself requires a present object. Mana is added during resolution.
+
+`TestRONSpecificTapPayment*` maps complete Energy Tap (LEG:76) and Tourach's
+Gate (FEM:97) gameplay. It covers announcement, payment, legality, upkeep,
+cleanup, attachments, independent instances, copies, clones, delayed bodies,
+invalid declarations, inventory and atomic loading. RON source is unchanged.

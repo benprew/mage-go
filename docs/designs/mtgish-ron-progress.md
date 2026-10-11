@@ -2,16 +2,16 @@
 
 ## Current status
 
-The isolated slice reports **834 accepted / 152 rejected names** (986 total),
-**2,165 compiled / 280 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **835/151 names** and **2,166/279 records**. The strict
+The isolated slice reports **836 accepted / 150 rejected names** (986 total),
+**2,167 compiled / 278 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **837/149 names** and **2,168/277 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-DELAYED-DEATH-EVENT-BINDINGS saves the watched permanent's exact death visit,
-owner and controller in each pending body's saved frame. Reincarnation now has
-complete RON gameplay tests and uses its dead creature's owner for entry.
-Compilation gains are **1 unique name / 1 record**. Existing accepted records
-and unrelated working-tree changes remain.
+SPECIFIC-PERMANENT-TAP-PAYMENTS implements mandatory typed resolution payment
+and Aura-host activation payment. Complete Energy Tap and Tourach's Gate records
+have RON gameplay tests. Exact visits, local outcomes, rollback, delayed queries,
+copies and clones reuse shared services. Compilation gains are **2 names /
+2 records**. Existing accepted records and unrelated work remain preserved.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -73296,3 +73296,176 @@ API/rules docs, vocabulary snapshot and this ledger.
    saved historical controller reads and the established graveyard-return action.
 
 This run stops after delayed death-event bindings. Migration is incomplete.
+
+## Run 2026-10-10: SPECIFIC-PERMANENT-TAP-PAYMENTS
+
+Status: one complete vertical capability slice. No second slice is started.
+
+### Selection and dependency comparison
+
+The previous ranked first candidate is evaluated first. It is dependency-ready,
+but unlocks only one unique card and is not needed by the selected two-card
+capability. Three candidates are compared using complete records and nested
+forms, with reprints counted once:
+
+| Candidate | Distinct affected cards; estimated full-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | --- |
+| Durable tap-payment history | Vodalian War Machine, FEM:101; one name/record | Its two matching tap activations, defender permission, temporary P/T and death event already compile. Only the paid-history predicate remains. The successful transaction must own durable source/paid visits across cleanup, control changes, death and clones. Medium effort; a single-card historical consumer. Deferred while useful multi-card work remains. |
+| Declaration-bound block-history targets | Glyph of Delusion, LEG:100; zero immediate names/records | Its second numbered target depends on its first target's blocker visit. Engine turn history and resolving collection selection exist, including accepted Glyph of Doom, LEG:102. The complete Delusion record still needs acquired conditional untap and upkeep abilities. Medium effort; enables contextual history target declarations, with no new Doom unlock credited. |
+| Specific-permanent tap payments, selected | Energy Tap, LEG:76, and Tourach's Gate, FEM:97; two names/records | Energy Tap needs mandatory typed resolution payment and its mana-value consumer. Tourach's Gate needs an Aura-host activation-cost adapter; enchant control, Thrull sacrifice, counters, upkeep and attacking-creature boost already compile. The mana-value reader and mana-production engine exist, but their RON consumer whitelist needs one adapter. Low to medium effort; provides reusable exact typed payment, attachment-cost lowering and delayed/local result contracts. |
+
+The complete Glyph of Reincarnation record (LEG:104) is also inspected to keep
+the blocker estimate honest: after-combat casting, death-result iteration and
+historical controller lowering remain separate. It supplies no immediate gain
+for block-history targeting. No first-error frequency is treated as an unlock
+estimate. The old DSL migration plan does not select this run's work.
+
+Selection rationale: two complete unique cards are credible at similar or lower
+effort than one durable-history consumer. Reuse the existing host payment and
+information services; add only the missing exact resolution payment contract.
+The required real-card tests are written before implementation. Their expected
+red failures reject Energy Tap's `MustCost(TapPermanent(...))`, reject Tourach's
+Gate's `HostPermanent` cost, and fail engine compilation for the absent API.
+Initial harness API mistakes are corrected before those red results are recorded.
+Energy Tap then exposes the missing mana-amount adapter, despite the existing
+reader. That adapter is included as the selected payment's required consumer;
+it introduces no new information or mana mechanic. The unlock estimate remains
+two and actual gains match it.
+
+### Exact supported signatures, contexts and reuse boundary
+
+Engine API:
+
+`RequiredTapOrElse(player PlayerRef, subject PermanentRef, paid, unpaid
+ResolvingEffect) ResolvingEffect`.
+
+It resolves the typed singular subject once, saves its exact battlefield visit,
+and uses the existing required-payment transaction without an optional offer
+or subject choice. At least one branch is required. The internal exact tap cost
+requires a present, unphased, untapped saved visit; stale payment fails before
+live resources are spent. A written tap instruction permits summoning sickness.
+Tapping itself does not require control: any required control filter belongs to
+the declaration. LKI cannot make an absent subject available for payment.
+
+RON supports `MustCost(TapPermanent(ref))` immediately followed by nonempty
+`If(condition, actions)` or `Unless(condition, actions)`, where `condition` is
+the symbol `CostWasPaid` or `CostWasntPaid`. `ref` uses the existing singular
+permanent scope and fresh instance bindings. Ordinary spells, activations and
+supported delayed bodies share the lowering. Each continuation has its own
+result; nested payments cannot overwrite it. The implicit payer is the effect
+controller, as with existing MustCost payments. Explicit player payment, optional
+payment and `IfElse` adapters remain rejected for this cost. Unbound, malformed,
+wrong-type and out-of-scope reads fail at declaration time.
+
+`TapPermanent(HostPermanent)` in an Aura activation cost lowers to existing
+`TapAttachedPermanentCost() Cost`. The existing transaction saves both source
+and host visits and rejects phasing, return, changed attachments and tapped
+hosts. The source tap-symbol form is unchanged. This adapter is limited to the
+existing Aura permanent scope and does not accept host costs on artifacts or
+spell additional costs.
+
+Energy Tap's required continuation uses
+`AddManaRepeated(fixedProduction, ManaValueOfPermanent(ref))`. The adapter
+reuses `compileInstanceValue`, `ManaValueOfWithLKI`, `MultiplyValues` and
+`AddManaAmount`. One fixed-color production is supported; a color choice or
+multiple productions remains rejected in this new amount context. Existing
+fixed amounts and sacrifice/counter result producers retain their behavior.
+
+`Game.TapPermanent`, shared cost validation/commit, target selection and legality,
+source/host identity, mana production and information, upkeep, counters,
+sacrifice, continuous layers, cleanup, delayed frames and copies/clones supply
+execution. The new effect declares source reads in payer, subject and both
+branches to waiting queries. Queries do not pay or choose. CR 118.3, 118.10,
+118.12, 400.7, 602.2/602.5a and 701.26a supply the payment, identity and written
+tap contracts. No new tap replacement or simultaneous operation is established.
+No card-name dispatch, Go-card fallback, global result slot or partial registry
+is added. Existing Go definitions and DSL callers remain until cutover gates.
+
+### Affected cards and gameplay evidence
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Energy Tap, complete unchanged LEG:76 | `TestRONSpecificTapPaymentEnergyTap`: cast/payment, no tap at announcement, written tap of a newly entered creature, mana value at resolution, tapped/control/shroud legality, phasing and phase cycle, leave/return, copies and stack clones. |
+| Tourach's Gate, complete unchanged FEM:97 | `TestRONSpecificTapPaymentTourachsGate`: Aura cast and attachment, Thrull sacrifice for three counters, host tap payment, repeat-payment rejection, attacking controlled collection +2/-1, cleanup and all three upkeep counter removals with zero-counter sacrifice. |
+| Aura-host activation lifetime | `TestRONSpecificTapPaymentHostLifetime`: complete record with newly entered creature-land host, unavailable/phased host, phase cycle, reattachment, paid source departure, copied controller collections and clone isolation. Existing `TestTapAttachedPermanentCost*` checks source/host return, attachment locking and rollback with earlier life payment. |
+| Declaration scopes and local results | `TestRONSpecificTapPaymentPolarityAndLocalResults`, `Invalid`, `Contexts`: all four If/Unless result polarities, independent nested outcomes, malformed and unbound references, rejected optional/two-branch forms, activation and delayed source payment, pending copies, phasing and returned-source identity. |
+| Native loading, reprints and instance plans | `TestRONSpecificTapPaymentNativeAndInventory`: unchanged real records, fixture reprint deduplication, three records/two names, nested cost roles, fresh ability IDs, two independent pending games and targets, declaration validation, strict atomic rejection preserving an existing test registry. |
+| Reusable engine mechanics | `TestRequiredTapPaymentIdentity`, `Definition`, `Rollback`, `WaitingAndCopies`: exact saved subjects, opponent control, mandatory/no-offer payment, nil/unbound declarations, stale commit with earlier life cost, duplicate payment rejection, pure waiting references after departure/phasing/return, independent copied outcomes and cloned schedules. |
+| Existing accepted records | Definition rebuilding and inventory suites cover all newly accepted records. Existing source-tap, attached-tap, counter, enchant-control, upkeep-text and whole-repository tests remain enabled. Compilation counts are separate from these two complete-card gameplay mappings. |
+
+### Source data, validation and collection evidence
+
+Local Oracle records in `data/LEG.json` and `data/FEM.json` match both complete
+RON declarations, including Energy Tap's untapped controlled target and Tourach's
+Gate's written host tap. No source defect is corrected. RON source does not
+change, so the vocabulary snapshot is not rewritten. Pre-existing vocabulary
+and source-defect observations remain outside this slice.
+
+Fresh shared baseline: `make build` passes; RON short tests pass (40.577s).
+Strict loader exits 1 for collection rejection: 2,166 compiled / 279 rejected
+records, 835 accepted / 151 rejected unique names. Fresh isolated HEAD baseline:
+`make build` passes; loader exits 1 with 2,165/280 records and 834/152 names.
+All baselines have 2,445 records and 986 names. Pre-existing Eureka accounts for
+the one-record difference and is not credited to this slice.
+
+Final isolated checks pass: focused
+`go test ./pkg/mage/dsl/ron -run TestRONSpecificTapPayment -count=1`, engine
+`TestRequiredTapPayment|TestTapAttachedPermanentCost`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+`make lint` and `git diff --check`. Final isolated RON short/full-suite times
+are 41.760s / 40.711s. Lint reports zero issues. Its only automatic change is
+import grouping in the new RON test; the post-lint focused and engine tests
+pass again. The final isolated loader exits 1 for collection rejection.
+
+Shared focused tests, build, vet, engine short tests and full tests also pass
+(43.815s / 43.781s for the RON short/full suites). Shared `make lint`
+and `git diff --check` pass, with zero lint issues. Fresh shared loader exits 1
+for collection rejection. No unrelated shared file changes during automatic
+lint fixes. No unresolved build, test, vet, lint or environment failure remains.
+
+The first broad RON short run finds stale expectations that still reject
+Tourach's Gate in counter and enchant reports, and two upkeep declaration
+censuses. Those assertions are advanced by this exact card, retaining other
+rejections and adding an explicit Tourach's Gate census assertion. Four general
+collection census assertions advance by exactly two records. An independent
+instance test initially tries to cast two sorceries onto one stack; the fixture
+is corrected to two pending games, preserving legal casting and the target
+isolation check. No test is weakened and no production exception is introduced.
+
+Final isolated loader: **2,167 compiled / 278 rejected records**, **836 accepted /
+150 rejected names**. Fresh final shared loader: **2,168/277 records**,
+**837/149 names**, including preserved Eureka. Both exit 1 and publish no
+partial registry. Actual isolated gain is **2 names / 2 records**, matching the
+estimate. Before/after JSON comparisons in both trees show only Energy Tap
+and Tourach's Gate diagnostics removed; every other diagnostic is unchanged.
+Full-card gameplay gain is two newly mapped complete records;
+collection acceptance alone is not a gameplay claim.
+
+The shared tree begins with tracked migration/doc edits and untracked repeated
+entry files. Work uses an isolated checkout of `b786e9c4`. Only this slice is
+committed, then incremental merges preserve shared changes, the shared ledger
+archive link and unrelated untracked files. No DSL function, Go card definition,
+startup wiring or set generator is removed because their gates remain unmet.
+API and rules docs describe only the behavior established here.
+
+Changed files: new engine `resolution_tap.go` and `resolution_tap_test.go`,
+`payment_transaction.go` and `doc.go`; new RON `specific_tap_payment.go` and
+`specific_tap_payment_test.go`, payment dispatch, activation-cost lowering,
+mana production, affected rejection/census tests; API/rules docs and this ledger.
+
+### Ranked next candidates
+
+1. Durable tap-payment history for Vodalian War Machine: one estimated complete
+   name/record. Evaluate fresh shared multi-card work first; successful payment
+   must own durable source and paid incarnations, distinct from a resolution result.
+2. Contextual spell-controller predicates: shared prerequisites for Goblin
+   Artisans and Invoke Prejudice. Their complete records also require
+   ability-target exclusion and color-sharing predicates respectively; compare
+   complete nested forms before estimating full-card gains. Verduran Enchantress
+   remains a separate cast-event player adapter with a complete optional draw body.
+3. Declaration-bound block-history targets for Glyph of Delusion: zero immediate
+   full-card gain until its acquired conditional untap/upkeep rules are supported.
+   Glyph of Doom already uses resolving history collections. Glyph of
+   Reincarnation still needs death-result iteration and after-combat casting.
+
+This run stops after specific-permanent tap payments. Migration is incomplete.

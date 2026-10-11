@@ -136,6 +136,15 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 		}
 		return costs, x, nil
 	}
+	if n.Name == "TapPermanent" && len(n.Args) == 1 && n.Args[0].Name == "HostPermanent" {
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		if _, err := compilePermanentRef(n.Args[0], ctx); err != nil {
+			return nil, false, err
+		}
+		return []boundCostFactory{func(instanceBindings) mage.Cost { return mage.TapAttachedPermanentCost() }}, false, nil
+	}
 	if n.Name == "SacrificePermanent" && ctx.sourceCardPayment != nil {
 		if _, _, err := compileCosts(n); err != nil {
 			return nil, false, err

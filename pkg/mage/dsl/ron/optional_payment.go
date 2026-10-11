@@ -245,6 +245,9 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 	if len(payment.Args) > 0 && payment.Args[len(payment.Args)-1].Name == "RemoveCounters" {
 		return compileResolutionCounterPayment(payment, continuation, ctx)
 	}
+	if payment.Name == "MustCost" && len(payment.Args) == 1 && payment.Args[0].Name == "TapPermanent" {
+		return compileRequiredTapPayment(payment, continuation, ctx)
+	}
 	if continuation.Name == "IfElse" {
 		return compilePaymentBranches(payment, continuation, ctx)
 	}

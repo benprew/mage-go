@@ -9,6 +9,7 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 	if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
 		return compilePlayerMana(n, ctx)
 	}
+	var dynamic valueFactory
 	count := 1
 	args := 1
 	if n.Name == "AddManaRepeated" {
@@ -32,25 +33,40 @@ func compileResolvingMana(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return compileBoundRepeatedMana(n, ctx)
 		}
-		if value.Name != "Integer" {
+		if value.Name == "ManaValueOfPermanent" {
+			var err error
+			dynamic, err = compileInstanceValue(value, ctx)
+			if err != nil {
+				return nil, err
+			}
+		} else if value.Name != "Integer" {
 			return nil, unsupported(value, "mana amount")
 		}
-		if err := arity(value, 1); err != nil {
-			return nil, err
+		if dynamic == nil {
+			if err := arity(value, 1); err != nil {
+				return nil, err
+			}
+			if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
+				return nil, problem(value, "mana amount must be nonnegative")
+			}
+			count = value.Args[0].Integer
 		}
-		if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
-			return nil, problem(value, "mana amount must be nonnegative")
-		}
-		count = value.Args[0].Integer
 	}
 	productions, err := compileMana(n.Args[0])
 	if err != nil {
 		return nil, err
 	}
+	if dynamic != nil && (len(productions) != 1 || productions[0].Color == core.AnyColor) {
+		return nil, unsupported(n.Args[0], "fixed-color permanent mana-value production")
+	}
 	var effects []effectFactory
 	for _, production := range productions {
 		amount, color := production.Amount*count, production.Color
 		effects = append(effects, func(bindings instanceBindings) mage.Effect {
+			if dynamic != nil {
+				value := mage.MultiplyValues(mage.Fixed(production.Amount), dynamic(bindings))
+				return mage.AddManaAmount(color, value)
+			}
 			if color == core.AnyColor {
 				return mage.AddManaOfAnyOneColor(mage.Fixed(amount))
 			}

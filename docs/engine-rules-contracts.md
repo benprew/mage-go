@@ -17707,3 +17707,38 @@ execution, separately saved owner/controller values, resolution-time non-target
 choice, target legality, copies, simultaneous watches and native atomic loading.
 Required costs, damage ordering and plural death-result loops are outside this
 new event-binding contract.
+
+## Mandatory payment by tapping a saved permanent
+
+`RequiredTapOrElse(player PlayerRef, subject PermanentRef, paid, unpaid
+ResolvingEffect) ResolvingEffect` reads its subject once at resolution and
+saves its battlefield visit for the shared payment transaction. CR 118.3,
+118.10 and 118.12 require an untapped available subject and keep each payment
+result local. CR 701.26a supplies the tap operation. This written instruction
+has no tap symbol, so CR 602.5a does not restrict a newly entered creature.
+Control is checked by the calling declaration when required, as in Energy Tap's
+target filter; tapping itself can affect a permanent controlled by another player.
+
+The operation makes no optional offer or permanent choice. It uses the shared
+transaction and `Game.TapPermanent`. Its internal cost checks the saved visit,
+phasing and tap state before live resources are spent. Duplicate tap costs fail
+validation on the isolated game. A later return cannot pay for a saved visit
+(CR 400.7), and departure LKI cannot permit payment. The two branches use the
+existing resolution frame and typed bindings. Definition validation requires
+a player, a valid subject and at least one branch. Delayed queries retain
+explicit source reads in both branches, payer and subject without paying or
+reading state. Pending copies and cloned games keep separate outcomes.
+
+RON Aura-host activation payments reuse `TapAttachedPermanentCost`, including
+its source/host locking, stale-attachment checks and rollback. Existing source
+tap-symbol costs are unchanged. The two complete cards also reuse target
+legality, fixed mana production, mana-value LKI, upkeep events, counter changes,
+shared sacrifice and temporary collection layers. No new tap replacement or
+simultaneous operation is established by this slice.
+
+`TestRequiredTapPaymentIdentity`, `Definition`, `Rollback` and
+`WaitingAndCopies` establish the engine contract. Existing
+`TestTapAttachedPermanentCost*` retains attachment, source-return and rollback
+coverage. `TestRONSpecificTapPayment*` supplies native real-record gameplay,
+declaration rejection, local nested outcomes, copies, clone isolation and
+atomic collection rejection.

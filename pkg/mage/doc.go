@@ -2518,6 +2518,17 @@
 // OwnerOfPermanent and ControllerOfPermanent of Trigger_ThatPermanent read
 // the saved event players. Other owner contexts need separate adapters.
 //
+// Use [RequiredTapOrElse] for mandatory payment with one saved permanent.
+// Each operation keeps its own paid and unpaid body. The shared transaction
+// requires that exact present, unphased, untapped visit. Return cannot pay.
+// A written tap instruction permits summoning sickness. Control restrictions
+// belong to the declaration. Payment makes no optional offer or subject choice.
+// Delayed queries retain source reads without paying. Copies and clones keep
+// separate outcomes. RON lowers MustCost(TapPermanent(ref)) with an adjacent
+// If or Unless condition. Aura activation costs can tap HostPermanent through
+// [TapAttachedPermanentCost]. Existing source tap-symbol costs stay unchanged.
+// Energy Tap reads [ManaValueOfWithLKI] for one fixed-color mana production.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

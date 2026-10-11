@@ -521,6 +521,9 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok && !taps.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen tap cost")
 		}
+		if tap, ok := cost.(*exactPermanentTapCost); ok && !tap.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot tap the declared permanent")
+		}
 		if attached, ok := cost.(*tapAttachedPermanentCost); ok && !attached.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay attached permanent tap cost")
 		}
