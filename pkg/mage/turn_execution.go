@@ -352,7 +352,7 @@ func (g *Game) doCleanupActions() bool {
 	g.zones.ClearExileInstead()
 	g.damage.expireEndOfTurnEffects()
 	g.effects.Rules.ClearEndOfTurn()
-	// Clear non-persistent delayed triggers (they only last "this turn")
+	// Cleanup ends turn-scoped schedules but keeps pending triggers.
 	g.triggers.ClearEndOfTurn()
 	// CR 514.3a keeps turn history available during cleanup priority.
 	performed := g.checkStateBasedActions()

@@ -16,6 +16,7 @@ type DelayedTrigger struct {
 	targets              []Target
 	eventPlayerBinding   *PlayerBinding
 	matchFlagFalse       bool
+	expiresAtCleanup     bool
 	sourceCaptured       bool
 	sourceIncarnation    uuid.UUID
 	matchIncarnation     uuid.UUID
@@ -141,11 +142,11 @@ func (ts *TriggerSystem) ClearUnseenArmed(seen map[stateTriggerKey]bool) {
 	}
 }
 
-// ClearEndOfTurn removes persistent (turn-scoped) delayed triggers.
+// ClearEndOfTurn removes turn-scoped delayed triggers.
 func (ts *TriggerSystem) ClearEndOfTurn() {
 	kept := ts.delayed[:0]
 	for _, dt := range ts.delayed {
-		if !dt.Persistent {
+		if !dt.Persistent && !dt.expiresAtCleanup {
 			kept = append(kept, dt)
 		}
 	}

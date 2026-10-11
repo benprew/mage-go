@@ -212,7 +212,6 @@ func TestRONDelayedStepInvalid(t *testing.T) {
 	for _, action := range []string{
 		`CreateFutureTrigger(AtTheBeginningOfTheNextEndStep(), ActionList([GainLife(Integer(1))]))`,
 		`CreateFutureTrigger(AtTheNextEndOfCombat(Integer(1)), ActionList([GainLife(Integer(1))]))`,
-		`CreateFutureTrigger(AtNextEndOfCombatThisTurn, ActionList([GainLife(Integer(1))]))`,
 		`CreateFutureTrigger(AtTheBeginningOfPlayersNextUpkeep(Opponent), ActionList([GainLife(Integer(1))]))`,
 		`CreateFutureTrigger(AtTheBeginningOfPlayersNextUpkeep(You()), ActionList([GainLife(Integer(1))]))`,
 		`CreateFutureTrigger(AtTheBeginningOfTheNextEndStep, ActionList([]))`,

@@ -3973,8 +3973,9 @@ Other events and new target declarations or modes in the delayed body remain
 compiler errors. Bound cast-event spell reads use the saved spell frame described
 in "Delayed spell-event references" below. Next upkeep accepts only bare `You`; other players need
 an explicit scheduling contract. `AtNextEndOfCombatThisTurn` is distinct from
-`AtTheNextEndOfCombat` and remains unsupported. This adapter does not add casting
-restrictions, combat events, choices, histories, links, or finite prevention.
+`AtTheNextEndOfCombat`; its bounded schedule is described below. This adapter
+does not add casting restrictions, combat events, choices, histories, links,
+or finite prevention.
 
 ### RON combat-pair triggers
 
@@ -7483,10 +7484,11 @@ references and cross-rule reads are declaration errors. Inventory gives the
 operand a permanent-reference role even below unsupported delayed actions.
 
 Target-filter use, including Glyph of Delusion's dependent second target, is
-still unsupported. `AtNextEndOfCombatThisTurn`, after-combat casting, death-result
+still unsupported. After-combat casting, death-result
 loops and the RON last-block controller expression remain separate gaps. The
 engine's typed `ControllerWhenLastBlockedThisTurn` supplies the controller
-history prerequisite. The three complete Glyph records still reject. Tests
+history prerequisite. Glyph of Delusion and Glyph of Reincarnation still reject;
+Glyph of Doom uses the bounded schedule described below. Tests
 of extracted clauses do not claim complete gameplay coverage for those cards.
 
 ## RON resolving collection attack rules
@@ -13315,3 +13317,27 @@ Each action saves its own source visit at resolution. Factory instances, copies
 and clones do not share chosen source state. Existing singleton death replacements
 and collection attack rules keep their behavior. Runesword uses creature-at-damage
 history for regeneration and a current creature filter for death replacement.
+
+### RON bounded next-combat schedule
+
+`CreateFutureTrigger(AtNextEndOfCombatThisTurn, ActionList(actions))` accepts a
+bare event symbol and a nonempty action list in supported resolving contexts.
+It lowers to `AtNextThisTurn(EachEndOfCombat, Sequence(actions...))`. No targets
+are declared inside the delayed body. Existing typed references and bindings
+use the same capture rules as `AtNext`.
+
+The schedule triggers once at the next end-of-combat event after installation.
+An extra combat in the same turn can supply that event. Installation during
+end-of-combat priority cannot see the event that already occurred. Cleanup
+removes unused schedules; they cannot wait for another turn. Detection consumes
+the schedule before stack placement. Countering cannot rearm it. Pending bodies
+keep their captured frame after cleanup. Ordinary next-step schedules keep
+their existing unbounded lifetime.
+
+Glyph of Doom uses the complete LEG RON record. Its saved Wall visit supplies
+live turn history after departure or phasing. A returned Wall cannot replace
+that visit. Destruction selects current creature members when the body resolves;
+returned and phased attackers are excluded. Shared batch destruction permits
+regeneration and respects indestructibility. Source departure does not cancel
+the schedule. Factories, spell copies and game clones keep separate frames.
+Target-history predicates and other Glyph card prerequisites remain unsupported.

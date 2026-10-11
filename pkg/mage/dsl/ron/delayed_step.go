@@ -9,12 +9,12 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 	event := n.Args[0]
 	var pattern mage.DelayedStepPattern
 	switch event.Name {
-	case "AtTheBeginningOfTheNextEndStep", "AtTheNextEndOfCombat":
+	case "AtTheBeginningOfTheNextEndStep", "AtTheNextEndOfCombat", "AtNextEndOfCombatThisTurn":
 		if _, err := symbol(event); err != nil {
 			return nil, err
 		}
 		pattern = mage.EachEndStep
-		if event.Name == "AtTheNextEndOfCombat" {
+		if event.Name != "AtTheBeginningOfTheNextEndStep" {
 			pattern = mage.EachEndOfCombat
 		}
 	case "AtTheBeginningOfPlayersNextUpkeep":
@@ -56,6 +56,9 @@ func compileDelayedStep(n Node, ctx scope) (effectFactory, error) {
 		values := make([]mage.Effect, len(effects))
 		for i, build := range effects {
 			values[i] = build(bindings)
+		}
+		if event.Name == "AtNextEndOfCombatThisTurn" {
+			return mage.AtNextThisTurn(pattern, mage.Sequence(values...))
 		}
 		return mage.AtNext(pattern, mage.Sequence(values...))
 	}, nil

@@ -2,17 +2,15 @@
 
 ## Current status
 
-The isolated slice reports **828 accepted / 158 rejected names** (986 total),
-**2,149 compiled / 296 rejected records** (2,445 total). With pre-existing Eureka,
-the worktree reports **829/157 names** and **2,150/295 records**. The strict
+The isolated slice reports **829 accepted / 157 rejected names** (986 total),
+**2,150 compiled / 295 rejected records** (2,445 total). With pre-existing Eureka,
+the worktree reports **830/156 names** and **2,151/294 records**. The strict
 loader rejects the collection and publishes no partial registry.
 
-LIVE-TURN-DAMAGE-HISTORY-RULES executes resolving damage-history collections,
-live regeneration restrictions and live death-to-exile replacements. Complete
-RON gameplay and compilation gain **1 name / 1 record**: Runesword. Creature
-status at actual damage remains separate from live creature filters. Exact
-visits, later damage, replacements, phasing, clones and cleanup use shared engine
-services. The Runesword source defect and vocabulary snapshot are corrected.
+BOUNDED-NEXT-COMBAT-SCHEDULE executes one next-combat trigger this turn with
+independent cleanup expiry. Complete RON gameplay and compilation gain
+**1 name / 1 record**: Glyph of Doom. Saved frames, exact blocker history,
+phasing, copies, clones and simultaneous destruction use shared engine services.
 
 Complete collection gameplay, runtime loading, Go-card removal and unused DSL
 removal remain unfinished.
@@ -71642,3 +71640,161 @@ the vocabulary snapshot and this ledger. Unrelated original edits are preserved.
    additional users of CreateEachPermanentLayerEffect before selecting.
 
 Migration remains incomplete. This run stops after LIVE-TURN-DAMAGE-HISTORY-RULES.
+
+
+## Run 2026-10-10: BOUNDED-NEXT-COMBAT-SCHEDULE
+
+Status: complete one vertical slice. No second capability was started.
+
+### Selection and candidate comparison
+
+Fresh baseline in the shared worktree: make build passes; RON short tests pass
+(40.039s). The strict loader exits 1 for collection rejection, not a build
+failure: 829 accepted / 157 rejected names and 2,150 compiled / 295 rejected
+records, from 986 names and 2,445 records. Existing Eureka, ledger archival,
+engine/compiler/API documentation and other edits were preserved. A detached
+checkout at the starting HEAD isolates this slice for validation and staging.
+
+The latest ledger ranks blocking history/bounded combat scheduling first,
+coin outcomes/repetition second, and Brine Hag layers third. Full LEG records
+for Glyph of Doom, Glyph of Delusion, Glyph of Reincarnation, Reincarnation and
+Brine Hag, and the full DRK Mana Clash record were read. The targeted vocabulary
+entries confirm one bounded-combat event, three block-history users, one
+CreateEachPermanentLayerEffect user and two distinct RepeatableActions users.
+Eureka is already supported in the shared worktree and is not an unlock here.
+Reprints are counted once.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Blocking history and bounded schedules | Glyph of Doom, Glyph of Delusion, Glyph of Reincarnation; Reincarnation is a related finite-event consumer | 1 name / 1 record for bounded next combat | Resolving history is already supported. Delusion needs an announcement predicate and permanent granted rules. Glyph of Reincarnation needs after-combat legality, death results and graveyard return; Reincarnation needs graveyard-return decisions. Separate cleanup expiry from repeat behavior for reusable delayed-step lifetimes. | Small engine lifetime change, one adapter, broad lifecycle tests; fits one run. |
+| Per-player coin outcomes and Mana Clash repetition | Mana Clash; Eureka uses another supported repetition shape | 1 name / 1 record | Requires simultaneous saved coin results, tails player collection, all-heads condition, repeated rounds and shared damage. Enables independent round results for future coin processes. Existing coin branches are not simultaneous outcomes. | Larger: several typed producers/consumers and repeat control, RNG and clone tests. |
+| Indefinite captured collection base P/T | Brine Hag | 1 name / 1 record | Reverse damage subjects already exist; capture live creature members with an indefinite layer lifetime. Enables captured collection modifications beyond this card. No other collection record uses CreateEachPermanentLayerEffect. | Medium: collection layer adapter, indefinite duration and capture/layer tests. |
+
+Candidate one is dependency-ready. Its bounded scheduling subcapability is the
+selected slice. All three candidates have one credible immediate full-card gain;
+no compared multi-card unlock is available at lower effort. The smallest shared
+engine contract completes Glyph of Doom without combining the separate target
+predicate, grants, coin process or indefinite-layer capabilities. No first-error
+count was treated as an unlock estimate. Actual gain matches the estimate.
+
+### Contract, dependencies and reuse
+
+Exact RON shape:
+`CreateFutureTrigger(AtNextEndOfCombatThisTurn, ActionList(actions))`.
+The event is a bare symbol. The body is nonempty and uses supported resolving
+actions, with existing typed references and per-instance bindings. New targets
+inside the delayed body, unbound operands, tuple event spellings and wrong arity
+remain declaration errors. Inventory already assigns delayed_step_event and
+nested typed permanent-reference roles; no new inventory branch is needed.
+
+Engine signature:
+`AtNextThisTurn(pattern DelayedStepPattern, body ResolvingEffect,
+options ...DelayedStepOption) ResolvingEffect`.
+The compiler selects EachEndOfCombat and keeps syntax policy in ron. Engine
+nextStepEffect and DelayedTrigger carry an independent expiresAtCleanup flag.
+The existing TriggerSystem.ClearEndOfTurn removes unused bounded schedules.
+Persistent retains its repeat behavior and prior turn-subscription cleanup.
+Detection consumes one schedule before stack placement. Countering cannot rearm
+it; a pending body survives expiry of the registration. Extra combats can supply
+a later event in the same turn. Creation after the event cannot observe it.
+
+Existing AtNext frame capture, source/controller context, target visits, lexical
+bindings, X, stack copies, clone isolation, declaration validation and waiting
+queries remain the reuse boundary. Ordinary next-step lifetimes remain intact.
+Glyph of Doom uses BlockedByThisTurn and DestroyEach: membership is read when
+the delayed body resolves, with exact saved Wall history after departure or
+phasing. Returned attackers cannot inherit old history; phased attackers are
+absent. Returned Walls cannot replace the saved blocker. Current creature
+filters, simultaneous destruction, regeneration and indestructibility use shared
+services. No RON game-state subsystem, fallback, card-name branch, partial
+production registry, global last-action slot or game-time declaration panic was
+added. No RON source changed, so no vocabulary snapshot refresh is required.
+
+Local data/LEG.json confirms Glyph of Doom's this-turn next end-of-combat wording.
+CR 511.2, 603.7a/c-e, 400.7 and 514.2 support timing, captured visits and expiry.
+No source-data correction was made. Reincarnation's local Oracle text specifies
+owner control, while its RON return modifier reads ControllerOfPermanent; this
+potential data defect remains a separate audit, with no global inversion or
+silent correction. All other known source defects remain separate.
+
+### Failing-first evidence and card-to-test mapping
+
+The new full-card RON test first fails at unsupported delayed step event
+AtNextEndOfCombatThisTurn. The engine test first fails compilation because
+AtNextThisTurn is undefined. After implementation, a live-history fixture found
+that separate blocker declarations retain prior pairs; it was corrected to one
+simultaneous legal proposal with multi-block permission. An initial test fixture
+used nonexistent attribute APIs; it was corrected to supported keyword fixtures.
+No production rule or assertion was weakened to obtain a pass. The first full
+engine run found one missed numeric-consumer collection-count fixture. Its
+expected totals were updated by one record, then verification was rerun. The two obsolete
+negative assertions for the now-supported event/card were removed; Delusion and
+Glyph of Reincarnation remain explicitly rejected.
+
+| Card or contract | Tests |
+| --- | --- |
+| Complete Glyph of Doom, sole LEG record | TestRONBoundedDelayedStepGlyphOfDoom: failing payment rollback, paid cast, no early destruction, next event, skipped/later turn expiry, saved Wall departure/return/phasing, attacker return/phasing/cycle, control, regeneration, spell copy, clones, all-illegal target and countered trigger. |
+| Complete loading and independent factory/target frames | TestRONBoundedDelayedStepNativeAndBindings: strict full-record registry, two fresh factories and queued casts, separate target histories, atomic invalid-collection rejection and delayed-event inventory. |
+| Live membership and shared destruction | TestRONBoundedDelayedStepLiveHistory: history added after detection but before body execution, multiple victims in one declaration, current membership, indestructible survivor. |
+| Invalid RON declarations | TestRONBoundedDelayedStepInvalid: tuple events, invalid event operands, empty/new-target bodies and unbound references. |
+| Engine lifetime and compatibility | TestBoundedDelayedStepLifetime: prior event, extra combat, skipped event, cleanup, pending triggers, countering, controller and independent clone. TestBoundedDelayedStepDeclarations: nil pattern/body, missing producer and unbounded AtNext compatibility. |
+| Existing reused contracts | TestRONDelayedStep*, TestRONBlockHistory*, TestComposableDelayed* and TestBlockHistory* remain passing. Whole suites retain replacement, simultaneous movement, waiting queries and accepted-record regressions. |
+
+### Validation and final collection status
+
+Focused RON and engine tests pass with -count=1. Both isolated and shared
+make build and go vet ./... pass. The first engine-short attempt found a stale
+numeric-consumer collection-count fixture; after its exact one-record update,
+engine short tests pass (shared RON 45.350s; isolated RON 49.292s). Both make test
+runs pass (shared RON 47.906s; isolated RON 46.415s). No gameplay test remains
+failing, and accepted definitions keep their regressions.
+
+Final make lint reports 0 issues in both trees. One initial simultaneous lint
+attempt hit golangci-lint's process lock; the isolated command was rerun after
+the shared command finished. This transient command failure is resolved.
+Automatic edits changed only the new loading test's strings.Split loop to
+strings.SplitSeq. That edit was reviewed; post-format focused bounded-delay,
+existing delayed-step/history and numeric-inventory tests pass in both trees
+(shared 2.112s; isolated 2.329s). git diff --check and the staged patch check pass.
+
+Final strict loader commands exit 1 solely for collection rejection. Isolated:
+829 accepted / 157 rejected names and 2,150 compiled / 295 rejected records.
+Shared with preserved Eureka: 830 accepted / 156 rejected names and 2,151
+compiled / 294 rejected records. Both retain 986 names and 2,445 records;
+Glyph of Doom has no diagnostics. Delusion still rejects its announcement
+WasBlockedByDefenderThisTurn predicate; Glyph of Reincarnation rejects
+IsAfterCombat; Brine Hag rejects CreateEachPermanentLayerEffect. Mana Clash
+rejects RepeatableActions in the isolated tree and EachPlayerAction as a repeated
+round producer in the shared tree. No partial production registry is published.
+
+The commit is staged from the independently validated isolated checkout, then
+applied to the shared index. It contains only this slice. The shared worktree
+retains Eureka support, ledger archival and all other original edits. A byte
+comparison confirms unrelated original files remain unchanged. Runtime loading,
+Go-card deletion and broad DSL cleanup remain gated; no second slice was started.
+
+Changed files: pkg/mage/composable_conditions.go, trigger_system.go,
+turn_execution.go, bounded_delayed_step_test.go and doc.go;
+pkg/mage/dsl/ron/delayed_step.go, bounded_delayed_step_test.go,
+delayed_step_test.go, block_history_test.go, inventory_test.go and
+definition_plan_test.go and numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. Unrelated work remains unstaged and unchanged.
+
+Complete-card compilation and gameplay gain: 1 unique name / 1 record,
+Glyph of Doom. Collection gameplay coverage remains distinct from compilation.
+Full runtime loading, Go-card deletion, generator retirement and obsolete DSL
+removal remain gated. No Go card definitions or engine services were removed.
+No unused DSL deletion was attempted, so no removal caller audit was needed.
+
+### Ranked next candidates
+
+1. Indefinite captured base-P/T collection effects for Brine Hag. Reuse reverse
+   damage subjects; compare fresh multi-card opportunities before selection.
+2. Simultaneous per-player coin outcomes and complete Mana Clash repetition.
+   Reuse per-player bindings, shared damage and deterministic RNG.
+3. Announcement block-history target predicates and permanent granted rules for
+   Glyph of Delusion. Keep target queries separate from resolving collections.
+   Audit Glyph of Reincarnation's death-result/return prerequisites and the
+   Reincarnation return-control source defect independently.
+
+Migration remains incomplete. This run stops after BOUNDED-NEXT-COMBAT-SCHEDULE.

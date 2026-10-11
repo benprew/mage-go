@@ -233,11 +233,12 @@ func (o interveningIfOption) applyDelayedStep(e *nextStepEffect) {
 }
 
 type nextStepEffect struct {
-	modes     []Mode
-	condition StateCondition
-	targets   []Target
-	pattern   DelayedStepPattern
-	body      ResolvingEffect
+	expiresAtCleanup bool
+	modes            []Mode
+	condition        StateCondition
+	targets          []Target
+	pattern          DelayedStepPattern
+	body             ResolvingEffect
 }
 
 // AtNext creates a one-shot trigger for the next matching turn-step event.
@@ -250,6 +251,14 @@ func AtNext(pattern DelayedStepPattern, body ResolvingEffect, options ...Delayed
 		}
 		option.applyDelayedStep(e)
 	}
+	return e
+}
+
+// AtNextThisTurn creates one trigger for the next matching step this turn.
+// Cleanup ends an unused schedule. A pending trigger keeps its saved body.
+func AtNextThisTurn(pattern DelayedStepPattern, body ResolvingEffect, options ...DelayedStepOption) ResolvingEffect {
+	e := AtNext(pattern, body, options...).(*nextStepEffect)
+	e.expiresAtCleanup = true
 	return e
 }
 
@@ -286,7 +295,12 @@ func AtNextModes(pattern DelayedStepPattern, options ...ModalDelayedStepOption) 
 	return e
 }
 
-func (*nextStepEffect) Text() string { return "at the next matching turn step" }
+func (e *nextStepEffect) Text() string {
+	if e.expiresAtCleanup {
+		return "at the next matching turn step this turn"
+	}
+	return "at the next matching turn step"
+}
 func (e *nextStepEffect) Properties() EffectProperties {
 	if len(e.modes) > 0 {
 		var effects []Effect
@@ -315,6 +329,7 @@ func (e *nextStepEffect) inspectDefinition() definitionNode {
 }
 func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 	dt := e.pattern.delayedStep(ctx.Controller)
+	dt.expiresAtCleanup = e.expiresAtCleanup
 	body := &capturedDelayedBody{
 		body:              e.body,
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),

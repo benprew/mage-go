@@ -116,7 +116,7 @@ func TestRONBlockHistoryInvalid(t *testing.T) {
 			t.Fatal("accepted", filter)
 		}
 	}
-	for _, name := range []string{"Glyph of Doom", "Glyph of Delusion", "Glyph of Reincarnation"} {
+	for _, name := range []string{"Glyph of Delusion", "Glyph of Reincarnation"} {
 		if _, err := Compile(hostUntapRecord(t, "LEG", name)); err == nil {
 			t.Fatal("prerequisite published incomplete card", name)
 		}

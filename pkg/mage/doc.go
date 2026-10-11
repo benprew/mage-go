@@ -2427,6 +2427,12 @@
 // Returned objects cannot inherit them. Clones keep separate history and rules.
 // RON supports resolving history collections and the two Runesword consumers.
 //
+// Use [AtNextThisTurn] for one future step trigger before cleanup.
+// Its schedule expires separately from repeat behavior. Detection consumes it;
+// a pending body keeps its saved frame after cleanup or source departure.
+// Clones keep separate schedules. [AtNext] retains its unbounded lifetime.
+// RON lowers AtNextEndOfCombatThisTurn with the existing capture service.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

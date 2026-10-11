@@ -17357,3 +17357,33 @@ Evidence: `TestLiveDamageHistory*` and `TestRONLiveDamageHistory*`, including th
 complete corrected Runesword record. The source correction follows local
 `data/DRK.json`: creature-at-damage is required for its regeneration restriction;
 its death replacement requires a current creature. There is one RON printing.
+
+### Bounded one-shot delayed steps
+
+`AtNextThisTurn(pattern DelayedStepPattern, body ResolvingEffect,
+options ...DelayedStepOption) ResolvingEffect` uses the same typed declaration,
+frame capture, source/controller, target and binding services as `AtNext`.
+It sets a separate cleanup lifetime on the resulting `DelayedTrigger`.
+`Persistent` continues to control repeated detection. The bounded schedule is
+one-shot: detection removes it before placement, and cleanup removes an unused
+schedule without discarding a pending trigger. Cloning copies the lifetime.
+Existing persistent turn subscriptions and ordinary next-step schedules retain
+their behavior. No cost, replacement ordering or simultaneous zone service changes.
+
+CR 603.7a and 511.2 require installation before the matching event. CR 603.7c-e
+and 400.7 retain saved visits and the resolving controller. CR 514.2 ends unused
+this-turn schedules at cleanup. The explicit next-event contract consumes one
+match even if additional combats occur. Glyph of Doom selects live blocked
+creatures at delayed resolution through `BlockedByThisTurn` and `DestroyEach`;
+its declaration target is not selected again.
+
+Evidence: `TestBoundedDelayedStepLifetime` covers creation timing, extra combat,
+skipped combat, cleanup, pending triggers, countering, controller and clones.
+`TestBoundedDelayedStepDeclarations` covers nil operands, missing producers and
+ordinary schedule compatibility. `TestRONBoundedDelayedStepGlyphOfDoom` covers
+the complete card, payment rollback, target legality, saved Wall and attacker
+visits, phasing, control, regeneration, copies and clones. `NativeAndBindings`
+uses a strict full-record registry and independent targets; `LiveHistory` covers
+resolution-time membership and indestructibility; `Invalid` rejects malformed
+events, bodies and references. All RON names have prefix
+`TestRONBoundedDelayedStep`. Runtime collection cutover remains gated.
