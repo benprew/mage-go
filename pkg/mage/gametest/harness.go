@@ -369,6 +369,13 @@ func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 	tp.chooseFromLibrary = append(tp.chooseFromLibrary, name)
 }
 
+// StopChoosingFromLibrary queues the end of an "up to N" library search: at
+// this point in the ChooseFromLibrary queue the player picks no further card.
+func (tg *TestGame) StopChoosingFromLibrary(p PlayerRef) {
+	tp := tg.GetPlayer(p)
+	tp.chooseFromLibrary = append(tp.chooseFromLibrary, "")
+}
+
 // ChooseScry queues a scry placement for the next scry the player performs
 // (CR 701.18). `bottom` lists card names (in placement order) that go to the
 // bottom of the library; `topOrder` lists the remaining card names in their

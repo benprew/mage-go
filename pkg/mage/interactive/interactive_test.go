@@ -373,6 +373,40 @@ func TestHumanPlayer_ChooseCardFromLibrary(t *testing.T) {
 	}
 }
 
+func TestHumanPlayer_ChooseCardsFromLibrary(t *testing.T) {
+	hp := interactive.NewHumanPlayer("Human")
+	p1 := mage.NewLand("Plains")
+	p2 := mage.NewLand("Plains")
+	i1 := mage.NewLand("Island")
+	g, _, _ := newTestGame()
+
+	result := make(chan []mage.Card, 1)
+	go func() { result <- hp.ChooseCardsFromLibrary([]mage.Card{p1, p2, i1}, 3, "search", g) }()
+
+	simulateTUI(t, hp, func(req interactive.ChoiceRequest) {
+		if req.Type != interactive.ChoiceCardFromLibrary {
+			t.Errorf("request type = %v, want ChoiceCardFromLibrary", req.Type)
+		}
+		if len(req.Options) != 3 {
+			t.Fatalf("expected Plains, Island and Done, got %d options", len(req.Options))
+		}
+		if last := req.Options[2]; last.ID != uuid.Nil || last.Label != "Done" {
+			t.Errorf("last option = %+v, want Done with a zero ID", last)
+		}
+	}, interactive.ChoiceResponse{SelectedIDs: []uuid.UUID{p1.ID()}})
+
+	simulateTUI(t, hp, func(req interactive.ChoiceRequest) {
+		if len(req.Options) != 3 {
+			t.Errorf("expected the second Plains to stay offered, got %d options", len(req.Options))
+		}
+	}, interactive.ChoiceResponse{SelectedIDs: []uuid.UUID{uuid.Nil}})
+
+	got := <-result
+	if len(got) != 1 || got[0].ID() != p1.ID() {
+		t.Errorf("ChooseCardsFromLibrary = %v, want only the first Plains", got)
+	}
+}
+
 func TestHumanPlayer_ChoiceRequests_ClosedOnGameOver(t *testing.T) {
 	// When the choice channel is closed (game ends), the receiving side gets ok=false.
 	hp := interactive.NewHumanPlayer("Human")
