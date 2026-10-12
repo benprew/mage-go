@@ -49,19 +49,21 @@ func (p *HumanPlayer) PhaseStop(step core.PhaseStep, ownTurn bool) bool {
 	return p.phaseStops.stops[idx][step]
 }
 
-func (p *HumanPlayer) autoPassPriority(g *mage.Game, playerIdx int, options []ActionOption) bool {
+func (p *HumanPlayer) autoPassPriority(g *mage.Game, options []ActionOption) bool {
+	ap := g.ActivePlayer()
+	own := ap.PlayerID() == p.PlayerID()
+
 	p.phaseStops.RLock()
 	enabled := p.phaseStops.enabled
 	p.phaseStops.RUnlock()
 	if !enabled {
 		return shouldAutoPassPriority(options)
 	}
-	own := g.ActivePlayerIndex() == playerIdx
-	if p.PhaseStop(g.GetStep(), own) || g.StackSize() > 0 {
+	if p.PhaseStop(g.GetStep(), own) || g.StackSize() > 0 || len(g.CombatGroups()) > 0 {
 		return false
 	}
 	if own {
-		return g.GetStep() != core.BeginCombat || len(getEligibleAttackers(g, g.PlayerAt(playerIdx).PlayerID())) == 0
+		return g.GetStep() != core.BeginCombat || len(getEligibleAttackers(g, ap.PlayerID())) == 0
 	}
-	return len(g.CombatGroups()) == 0
+	return true
 }

@@ -116,8 +116,8 @@ type Game struct {
 	customState map[string]any
 }
 
-func (g *Game) ActivePlayer() int {
-	return g.turns.ActivePlayerIndex()
+func (g *Game) ActivePlayer() Player {
+	return g.players[g.turns.ActivePlayerIndex()]
 }
 
 // NewGame creates a new 2-player game.

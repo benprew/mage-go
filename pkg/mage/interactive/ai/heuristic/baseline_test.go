@@ -263,7 +263,7 @@ func oldEvaluateResponse(p mage.Player, g *mage.Game, w ai.WeightedPersonality) 
 	inCombat := g.GetStep() == core.DeclareAttackers || g.GetStep() == core.DeclareBlockers ||
 		g.GetStep() == core.CombatDamage || g.GetStep() == core.FirstStrikeDamage
 
-	activePlayer := g.PlayerAt(g.ActivePlayer())
+	activePlayer := g.ActivePlayer()
 	isOpponentEndStep := g.GetStep() == core.EndStep && activePlayer != nil && activePlayer.PlayerID() != playerID
 
 	var bestAction *interactive.PriorityAction

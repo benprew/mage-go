@@ -49,9 +49,9 @@ func TestRunStepWithPriority_Draw(t *testing.T) {
 	g := newPriorityTestGame()
 	g.SetTurn(2) // not turn 1 so draw happens
 
-	handBefore := len(g.players[g.ActivePlayer()].Hand())
+	handBefore := len(g.ActivePlayer().Hand())
 	g.RunStepWithPriority(Draw)
-	handAfter := len(g.players[g.ActivePlayer()].Hand())
+	handAfter := len(g.ActivePlayer().Hand())
 
 	if handAfter != handBefore+1 {
 		t.Errorf("expected hand size %d after draw, got %d", handBefore+1, handAfter)
@@ -91,7 +91,7 @@ func TestRunStepWithPriority_NilHandler_FullTurn(t *testing.T) {
 		for _, step := range AllSteps() {
 			g.RunStepWithPriority(step)
 		}
-		g.SetActivePlayerIndex((g.ActivePlayer() + 1) % 2)
+		g.SetActivePlayerIndex((g.ActivePlayerIndex() + 1) % 2)
 		g.SetTurn(g.CurrentTurn() + 1)
 	}
 
