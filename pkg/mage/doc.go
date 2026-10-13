@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChooseUpToPermanentsEach] saves repeated optional choices in one set.
+// Each player uses a saved count and chooses in turn order. A choice can
+// include another player's permanents. Separate choices can share a visit.
+// [PermanentSetBinding] uses the existing result frames; [CreatedTokensBinding]
+// retains its compatible API. [FromPermanentSet] reads present saved visits.
+// [WithoutPermanents] excludes those visits from a live collection. Phasing
+// keeps identity; return cannot inherit a choice. Copies, clones and delays
+// keep separate frames. Waiting queries do not make choices.
+// RON lowers ChooseUptoNumberPermanentsForEach after a local tap producer.
+// EachablePlayer is local to its repetition count. NotChosenThisWay reads
+// that plural producer in resolving collections. Other counts stay separate.
+//
 // [TapAnyNumberEach] offers each player a count and distinct controlled subjects.
 // All choices precede one tap batch. Present untapped visits supply actual counts
 // in [PlayerNumbersBinding] before tap events. A return cannot supply an old visit.
@@ -7,7 +19,7 @@
 // Copies, clones and delays use separate frames. Waiting queries make no choices.
 // RON accepts AnyPlayer with one conjunctive ActionPlayer controller filter.
 // NumberOfPermanentsTappedThisWayByPlayer reads the preceding local producer.
-// Plural kept choices, exclusions and EachablePlayer scopes need separate adapters.
+// Plural choices use [ChooseUpToPermanentsEach] with a local saved count.
 //
 // [ChoosePermanentForPlayer] saves a chooser and an exact permanent visit.
 // [PermanentChosenByPlayer] reads the latest preceding choice by that player.

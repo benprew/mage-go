@@ -60,8 +60,8 @@ func TestRONPlayerTapResultsRaidingPartyInstruction(t *testing.T) {
 	if count != 3 || red.Tapped || a.requests != 1 || b.requests != 1 {
 		t.Fatal("real tap instruction", count, a.requests, b.requests)
 	}
-	if _, err := Compile(staticBaseRecord(t, "FEM", "Raiding Party")); err == nil || !strings.Contains(err.Error(), "ChooseUptoNumberPermanentsForEach") {
-		t.Fatal("remaining procedure not rejected", err)
+	if _, err := Compile(staticBaseRecord(t, "FEM", "Raiding Party")); err != nil {
+		t.Fatal("complete procedure rejected", err)
 	}
 }
 func TestRONPlayerTapResultsScopesCopiesClonesAndDelay(t *testing.T) {

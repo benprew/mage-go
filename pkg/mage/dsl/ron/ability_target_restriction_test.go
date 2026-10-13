@@ -138,10 +138,13 @@ func TestRONAbilityTargetRestrictionInvalid(t *testing.T) {
 
 func TestRONAbilityTargetRestrictionRaidingParty(t *testing.T) {
 	record := staticBaseRecord(t, "FEM", "Raiding Party")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseUptoNumberPermanentsForEach") {
-		t.Fatal("complete unsupported procedure was accepted", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatal("complete procedure rejected", err)
 	}
-	factory := staticBaseSubrule(t, record, record.Fields["Rules"].Args[0])
+	factory, err := Compile(record)
+	if err != nil {
+		t.Fatal(err)
+	}
 	g, a, b := ronGame()
 	p := g.PutOnBattlefield(factory(), a.PlayerID())
 	white := mage.NewCreature("White", "{W}", 1, 1)

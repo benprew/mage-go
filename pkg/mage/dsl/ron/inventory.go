@@ -1486,6 +1486,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "ChooseUptoNumberPermanentsForEach" && len(n.Args) == 3 {
+			return []string{"value", "permanent_filter", "value"}[index]
+		}
 		if n.Name == "DiscardAllButNumberCards" && len(n.Args) == 1 {
 			return "value"
 		}

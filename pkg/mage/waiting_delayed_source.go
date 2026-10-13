@@ -214,6 +214,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return permanentRefReadsSourcePermanent(s.recipient) || permanentSetReadsSourcePermanent(s.candidates)
 	case blockedThisTurnSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
+	case differencePermanentSet:
+		return permanentSetReadsSourcePermanent(s.subjects) || permanentSetReadsSourcePermanent(s.excluded)
 	case excludedPermanentSet:
 		return permanentSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
 	case leastPowerComparisonSet:

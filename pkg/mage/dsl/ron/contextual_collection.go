@@ -7,6 +7,16 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "NotChosenThisWay":
+		if n.Kind != Symbol {
+			return nil, problem(n, "expected plural choice exclusion symbol")
+		}
+		if ctx.permanentSetChoice == nil {
+			return nil, problem(n, "unbound plural permanent choice")
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.WithoutPermanents(mage.MatchingPermanents(mage.AnyPermanent), mage.FromPermanentSet(bindings.permanentSetChoices[ctx.permanentSetChoice]))
+		}, nil
 	case "ControlledSinceBeginningOfTurn", "NotControlledSinceBeginningOfTurn":
 		filter, err := compileCurrentTurnControlFilter(n)
 		if err != nil {

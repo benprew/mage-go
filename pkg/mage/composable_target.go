@@ -931,31 +931,31 @@ func (e *randomPlayerChoice) inspectDefinition() definitionNode {
 
 // --- from composable_token_set.go ---
 // CreatedTokensBinding names one token-entry result set.
-type CreatedTokensBinding struct{ name string }
+type CreatedTokensBinding = PermanentSetBinding
 
 // BindCreatedTokens declares one instance-local token result.
 func BindCreatedTokens(name string) *CreatedTokensBinding { return &CreatedTokensBinding{name: name} }
 
-func (b *CreatedTokensBinding) bindingName() string { return b.name }
-func (b *CreatedTokensBinding) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "created-tokens-binding", Text: b.name, bindingDeclaration: b}
+func (b *PermanentSetBinding) bindingName() string { return b.name }
+func (b *PermanentSetBinding) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "permanent-set-binding", Text: b.name, bindingDeclaration: b}
 	if b.name == "" {
 		n.problem = "supply a binding name"
 	}
 	return n
 }
 
-type createdTokensSet struct{ binding *CreatedTokensBinding }
+type savedPermanentSet struct{ binding *CreatedTokensBinding }
 
 // FromCreatedTokens selects surviving, unphased incarnations from one entry batch.
 func FromCreatedTokens(binding *CreatedTokensBinding) PermanentSet {
-	return createdTokensSet{binding: binding}
+	return savedPermanentSet{binding: binding}
 }
-func (createdTokensSet) permanentSet() {}
-func (s createdTokensSet) inspectDefinition() definitionNode {
-	return definitionNode{Role: "created-tokens-set", bindingRead: s.binding, children: []definitionEdge{{"binding", s.binding}}}
+func (savedPermanentSet) permanentSet() {}
+func (s savedPermanentSet) inspectDefinition() definitionNode {
+	return definitionNode{Role: "saved-permanent-set", bindingRead: s.binding, children: []definitionEdge{{"binding", s.binding}}}
 }
-func (s createdTokensSet) resolvePermanents(ctx *EffectContext) []*Permanent {
+func (s savedPermanentSet) resolvePermanents(ctx *EffectContext) []*Permanent {
 	values := ctx.Game.resolution.createdTokenBindings[s.binding]
 	result := make([]*Permanent, 0, len(values))
 	for _, value := range values {

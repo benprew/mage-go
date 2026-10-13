@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-12): **845 accepted / 141 rejected names**
-(986 total), **2,186 compiled / 259 rejected records** (2,445 total).
-The fresh baseline has the same counts. The strict loader still rejects the
-collection and publishes no partial registry.
+Latest measured result (2026-10-12): **846 accepted / 140 rejected names**
+(986 total), **2,187 compiled / 258 rejected records** (2,445 total).
+The fresh baseline was 845 / 141 names and 2,186 / 259 records. The strict loader
+still rejects the collection and publishes no partial registry.
 
-The latest slice is **OPTIONAL-PLAYER-TAP-RESULTS**. Raiding Party's exact tap
-instruction now executes with per-player actual counts. Its remaining plural
-Plains choices and exclusions still reject; no complete card was unlocked.
+The latest slice is **SAVED-PLURAL-PERMANENT-CHOICES**. Raiding Party's complete
+record now executes repeated bounded Plains choices and saved visit exclusions,
+with its existing static restrictions and optional tap/count behavior.
 Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
@@ -23,22 +23,23 @@ Reassess these candidates with fresh loader and inventory evidence under
 compare full-card gains, shared dependencies and effort before choosing a slice.
 Count reprints once; a first diagnostic alone does not establish a full-card gain.
 
-1. **Raiding Party: bounded plural kept choices and exclusions.**
-   Optional tap selection and per-player actual counts now exist. Add saved plural
-   choices with `ChooseUptoNumberPermanentsForEach`, its local `EachablePlayer`
-   count read, and `NotChosenThisWay`. Estimate one complete unique name.
-2. **Shared dependent permanent target comparison.**
-   Gauntlets of Chaos still needs shared-type comparison against the first target,
-   followed by exact exchange-result conditions and its Aura-filter correction.
-3. **City in a Bottle and Worms of the Earth: land-play restrictions.**
-   Compare shared land restrictions with captured state members and filtered
-   spell restrictions. Each prerequisite alone gives zero complete-card gains.
+1. **Shared land-play restrictions: City in a Bottle and Worms of the Earth.**
+   Two downstream names; neither complete card unlocks from this prerequisite
+   alone. City still needs state-member capture and filtered spell restrictions;
+   Worms still needs land-entry prevention and its alternative optional payment.
+2. **Shared dependent permanent target comparison: Gauntlets of Chaos.**
+   Zero immediate gains from the comparison alone. Exchange-result handling and
+   the recorded Aura-only source repair remain required.
+3. **Captured state-member events: City in a Bottle.**
+   Zero immediate gains until its shared casting/land restrictions exist. Exact
+   simultaneous member capture is a reusable state-trigger prerequisite.
 
 ## Dependencies and source blockers
 
 - Reuse `TapAnyNumberEach`, `PlayerNumbersBinding` and `PlayerNumber` for optional
   tap results. The RON producer requires one conjunctive ActionPlayer controller
-  clause. Saved plural choices and `EachablePlayer` scopes remain unsupported.
+  clause. Saved plural choices now use `ChooseUpToPermanentsEach` and `PermanentSetBinding`.
+  `EachablePlayer` is local to the repetition count; other uses remain unsupported.
 - Reuse `SacrificeAllButEach`, `LeastControlledPermanentCount`, the bounded
   subset selector and the existing simultaneous sacrifice service for permanent
   cardinality work. The latest slice supports required kept-count choices in
@@ -378,3 +379,177 @@ contains only this completed slice, tests and documentation.
 3. Shared land-play restrictions for City in a Bottle and Worms of the Earth.
    Zero gains from that prerequisite alone; compare two-card shared value with
    City state-member capture and filtered spell restrictions before selection.
+
+
+## 2026-10-12 — SAVED-PLURAL-PERMANENT-CHOICES
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline strict loader exited 1
+with 2,186 compiled / 259 rejected records and 845 accepted / 141 rejected names.
+This was collection rejection, not an environment or compilation failure.
+Complete RON records were read for Raiding Party (FEM), Gauntlets of Chaos (LEG),
+City in a Bottle (ARN), and Worms of the Earth (DRK). Targeted vocabulary entries
+confirmed one plural-choice constructor and one exclusion symbol, both Raiding
+Party. None of these four names has a collection reprint to count separately.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers / downstream value | Estimated implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Saved bounded plural choices and exclusions | Raiding Party | 1 name / 1 record | Tap counts and subset choices already exist. General saved sets and exact set difference serve later plural choice procedures | Small/medium: one producer, scoped adapter, shared saved-set API and frame/identity tests |
+| Dependent shared-cardtype target comparison | Gauntlets of Chaos | 0 immediately; 1 after later work | Needs exchange-result condition and the recorded Aura-only source repair. Enables dependent target legality | Medium/large: announcement and resolution comparison, saved first target, exchange result and source audit |
+| Shared land-play restrictions | City in a Bottle; Worms of the Earth | 0 immediately; 2 after separate prerequisites | City needs captured state members and filtered casting restrictions. Worms needs entry prevention and alternative sacrifice/damage payments. Enables shared player restrictions | Large for full cards; medium for the isolated restriction and legality tests |
+
+Candidate #1 is dependency-ready and completes an already established procedure.
+There is no dependency-ready multi-name full-card unlock among these three
+candidates. Its immediate gain and reusable plural-set service give the largest
+credible gain for the bounded effort. The two-name land prerequisite remains
+useful next work; it would not complete either card in this slice.
+
+### Established contract, signatures and reuse boundary
+
+Supported RON resolving shape:
+
+`EachPlayerAction(AnyPlayer, ChooseUptoNumberPermanentsForEach(Integer(n), filter,
+NumberOfPermanentsTappedThisWayByPlayer(EachablePlayer)))`, n >= 0, after a local
+tap producer. `EachablePlayer` is accepted only in this repetition count.
+`NotChosenThisWay` is a symbol in later contextual permanent collections.
+Branch-local results do not escape; fresh producers shadow earlier plural sets;
+delayed bodies retain the saved result. Other player sets, count forms, costs,
+static predicates and target filters still reject. Inventory arguments have
+value / permanent-filter / value roles and a typed local player reference.
+
+Engine APIs:
+
+- `BindPermanentSet(name string) *PermanentSetBinding`.
+- `FromPermanentSet(binding *PermanentSetBinding) PermanentSet`.
+- `WithoutPermanents(subjects, excluded PermanentSet) PermanentSet`.
+- `ChooseUpToPermanentsEach(players PlayerSet, subjects PermanentSet,
+  limit ResolutionValue, repetitions *PlayerNumbersBinding,
+  result *PermanentSetBinding) ResolvingEffect`.
+
+The engine reads counts, limit and candidates before choices. Each player makes
+one separate zero-to-limit selection per saved repetition, in APNAP order.
+Subjects may belong to either player. Within one choice, members are distinct;
+later choices and players may overlap. Later players see earlier public choices.
+Malformed counts are clamped and malformed subjects use the existing distinct
+subset fallback. The result is the union of exact saved visits, cleared on every
+invocation including empty choices. Live exclusions read present visits; phasing
+keeps identity but stops actions, and a return cannot inherit an earlier choice.
+
+`CreatedTokensBinding` is now a compatibility alias for `PermanentSetBinding`.
+Existing token callers remain intact. The existing exact-visit result storage,
+deep clone, resolution/loop frames, delayed capture and waiting/stack source
+queries serve both producers with separate named bindings. Definition validation
+checks nil operands, binding names and producer dominance. RON owns spelling,
+argument checks and lexical plans; the engine owns choices and visit identity.
+
+No new cost transaction or replacement pipeline was added. Choices are effects
+and make no zone changes. Raiding Party continues to use existing Orc sacrifice
+payment, optional taps and actual counts, current Plains filters and simultaneous
+`DestroyEach` with its destruction/regeneration/replacement behavior. No Go-card
+fallback, card-name branch, partial registry, global result slot or game-time
+declaration panic was introduced. No Go card definition or DSL API was removed;
+the design's cutover gates remain open.
+
+CR 101.4/101.4b/101.4c, 400.7, 608.2d–f and the existing tap contract establish
+choice order, exact visits and resolution timing. Local `data/FEM.json` confirms
+any player's Plains and one up-to-two selection per actual tapped creature.
+No RON source defect was found or repaired. The Gauntlets Aura-only defect remains.
+RON source records did not change, so no vocabulary source refresh was needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Engine tests first failed to compile because `BindPermanentSet`,
+`FromPermanentSet`, `WithoutPermanents` and `ChooseUpToPermanentsEach` did not exist.
+After correcting the RON fixture's Parse arguments, its complete-record test
+failed at `unsupported all-player action (ChooseUptoNumberPermanentsForEach)`.
+These failures preceded implementation.
+
+- **Raiding Party** → `TestRONPermanentSetChoiceRaidingParty`: complete FEM
+  record; failed Orc payment, no choices during activation, actual tap count,
+  repeated bounds including zero, opponent Plains, source departure, phased
+  exclusion and independent non-Plains survival. The existing
+  `TestRONPlayerTapResultsRaidingPartyInstruction` retains white/untapped/type
+  filtering, failed payment and both players' actual-count evidence.
+- **Raiding Party static rule** → `TestRONAbilityTargetRestrictionRaidingParty`
+  now tests the complete factory and keeps white spell/ability source coverage.
+- `TestRONPermanentSetChoiceCopiesClonesDelayAndScope`: copied stack producers,
+  independent clone choices and separate delayed saved sets.
+- `TestRONPermanentSetChoiceInvalid`: malformed arity, negative/variable bounds,
+  wrong players, unbound/early reads and incompatible exclusion shapes.
+- `TestRONPermanentSetChoiceBranchDominance`: valid local branch producer/read;
+  escape rejects specifically with an unbound plural-choice diagnostic.
+- `TestRONPermanentSetChoiceInventoryAndAtomicLoad`: exact count-player role,
+  accepted declaration and rejection without publishing a partial registry.
+- `TestPermanentSetChoiceRepeatedAPNAPAndOverlap`: both active-player orders,
+  separate repeated choices, overlap and opponent-controlled subjects.
+- `TestPermanentSetChoiceVisitsResetCloneAndDelay`: set difference, reset,
+  phase cycle, returned visits, clone independence and saved delay.
+- `TestPermanentSetChoiceInvalidDefinitions`: nil operands and unbound reads.
+- `TestPermanentSetChoiceBoundsDistinctVisitsAndWaiting`: clamped counts,
+  distinct selections across repetitions, duplicate/absent players, duplicate /
+  phased / old / nil subjects, explicit source reads and pure waiting queries.
+- `TestPermanentSetChoiceMalformedSubsetFallback`: invalid answers receive two
+  distinct legal subjects.
+
+Fixture corrections changed Parse argument order, PhaseIn's slice argument and
+the complete card's activation index (its static rule adds earlier abilities).
+The inventory test found a missing player-action role adapter; it was corrected.
+These changes did not weaken gameplay assertions or alter payment semantics.
+Collection-count tests now assert the measured 2,187 / 258 record counts.
+
+### Changed files
+
+- New engine `permanent_set_choice.go` and `permanent_set_choice_test.go`;
+  compatibility/saved-set declarations in `composable_target.go`, explicit set
+  difference source reads in `waiting_delayed_source.go`, and `doc.go`.
+- New RON `permanent_set_choice.go` and `permanent_set_choice_test.go`; compiler
+  scopes, instance bindings, action sequences, contextual collections, inventory
+  roles, existing static/tap tests and three measured-count regression files.
+- This ledger, `docs/engine-rules-contracts.md` and `docs/dsl-reference.md`.
+
+### Verification and measured collection result
+
+Required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONPermanentSetChoice -count=1`.
+- `go test ./pkg/mage -run TestPermanentSetChoice -count=1`.
+- Additional focused `TestRON(PermanentSetChoice|PlayerTapResults|AbilityTargetRestrictionRaidingParty)`
+  and `Test(PermanentSetChoice|PlayerTapResults)` runs passed.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`.
+- `make test`.
+- `make lint`: pass, 0 issues. Import formatting was reviewed; only this slice's
+  files changed. No lint behavior correction was needed. Focused tests, build,
+  vet, engine short tests and the full suite passed again after formatting and
+  the added branch-dominance check.
+- `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: expected exit 1; **2,187 compiled / 258
+  rejected records**, **846 accepted / 140 rejected names** (2,445 / 986 totals).
+  Full baseline/final diagnostic comparison removes only Raiding Party's
+  `ChooseUptoNumberPermanentsForEach` issue at FEM:71:549, adds no issue and
+  changes no remaining diagnostic. Previously accepted records remain accepted.
+  Strict loading still publishes no partial registry.
+
+No environment or pre-existing validation blocker remains. The completed slice
+is ready for the authorized `feat(ron): implement saved plural permanent choices`
+commit. No other capability slice was started.
+
+The estimated one-name / one-record gain matches the measured result exactly.
+Raiding Party now has complete RON behavior mappings for both rules. Compilation
+and gameplay coverage remain separate; no other card gained a gameplay claim.
+Runtime loading, native startup, Go-card deletion and DSL cleanup remain open.
+
+### Ranked next candidates
+
+1. Shared land-play restrictions for City in a Bottle and Worms of the Earth.
+   Two downstream unique names, zero immediate full-card gains. Build on current
+   player legality services; keep City's captured state/casting restrictions and
+   Worms' entry/payment contracts separate.
+2. Shared dependent permanent target comparison for Gauntlets of Chaos. Zero
+   immediate gains; shared-type target legality precedes exchange-result tests
+   and the evidence-based Aura-only source correction.
+3. Captured state-member events for City in a Bottle. Zero immediate gains until
+   its casting and land restrictions exist. Exact member snapshots must retain
+   simultaneous-event, source-visit and pending-trigger facts.

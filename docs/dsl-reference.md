@@ -440,9 +440,9 @@ operands and unsupported filters remain compile errors. Conditional restriction
 rules and target-declaration predicates need separate contracts.
 
 Artifact Ward's complete ATQ record now executes all three rules. Raiding Party's
-exact static rule has contract tests; its complete record remains rejected at
-`ChooseUptoNumberPermanentsForEach`. Optional tapping and saved tap counts now
-execute; plural chosen-Plains and destruction exclusions still need contracts. Local `data/ATQ.json` and `data/FEM.json` confirm
+complete record now executes its static rule, optional tapping, saved tap counts,
+repeated plural Plains choices and destruction exclusions. Local
+`data/ATQ.json` and `data/FEM.json` confirm
 these semantics. No RON source record changed.
 
 ## Land-subtype mana bonuses
@@ -13950,16 +13950,62 @@ preceding optional-tap producer in that lexical action sequence through
 `PlayerActions` can select the saved seat. Branch producers stay in their branch;
 independent producers use distinct declarations. Delayed bodies retain saved
 counts. Activation costs, static rules, unbound reads and `EachablePlayer` outside
-its future plural-choice scope reject. No global last-operation result is used.
+its plural-choice repetition scope reject. No global last-operation result is used.
 
 `TestRONPlayerTapResultsRaidingPartyInstruction` executes the exact first
 instruction of Raiding Party's activated body, including its Orc sacrifice cost,
 failed-payment check, white/untapped/creature restrictions, both players' optional
-choices and source departure. This is instruction coverage, not complete-card
-coverage: the full record still rejects `ChooseUptoNumberPermanentsForEach`; kept
-plural choices and `NotChosenThisWay` need separate contracts.
+choices and source departure. Complete-card evidence now also includes
+`TestRONPermanentSetChoiceRaidingParty` and the existing target-restriction test.
 `ScopesCopiesClonesAndDelay`, `ActivationSources`, `Invalid`, and
 `InventoryAndAtomicLoad` cover saved counts, independent factories and producers,
 stack copies, game clones, source control/phasing/return, delayed reads, declaration
 errors, typed inventory roles and strict atomic loading. Existing Raiding Party
 spell/ability target-restriction tests retain coverage for its other rule.
+
+
+## Repeated optional permanent choices and saved exclusions
+
+`ChooseUpToPermanentsEach(players PlayerSet, subjects PermanentSet,
+limit ResolutionValue, repetitions *PlayerNumbersBinding,
+result *PermanentSetBinding) ResolvingEffect` reads the limit, candidate visits
+and each selected player's saved count before choices. It makes that many
+separate bounded choices per player, in APNAP order. Each choice offers zero
+through the smaller of the limit and present candidate count. Negative limits
+and repetition counts mean zero. Distinct members are required within one
+choice; repeated choices and different players can select the same visit.
+Subjects do not need to be controlled by the chooser. Later players receive
+earlier players' public selections. The existing subset selector supplies legal
+fallbacks for malformed answers. Choices do not move or tap subjects.
+
+`BindPermanentSet(name string) *PermanentSetBinding` declares the union result.
+Each invocation clears the old result, including empty choices. The saved union
+contains exact visits, with no duplicate visit. `FromPermanentSet` reads surviving,
+unphased visits. `WithoutPermanents(subjects, excluded PermanentSet) PermanentSet`
+reads both sets at resolution and excludes matching visits. Control changes and
+phase cycles retain identity; departure and return cannot supply an old choice.
+Existing simultaneous destruction, regeneration and replacements apply later.
+
+`CreatedTokensBinding` is a compatibility alias for `PermanentSetBinding`.
+Token entry and choice producers retain separate named declarations. Both use
+the existing exact-visit result maps, definition dominance validation, resolution
+frames, deep cloning, delayed captures and waiting/stack source queries.
+No new action-result storage or token behavior is introduced.
+
+RON supports the complete resolving shape
+`EachPlayerAction(AnyPlayer, ChooseUptoNumberPermanentsForEach(Integer(n),
+filter, NumberOfPermanentsTappedThisWayByPlayer(EachablePlayer)))` with n >= 0
+and a preceding local tap producer. `EachablePlayer` is permitted only in that
+count position. `NotChosenThisWay` is a symbol in later contextual permanent
+collections. Branch results remain local, later producers use fresh declarations,
+and delayed bodies retain saved choices. Other player sets, repetition forms,
+costs, targets and static predicates remain unsupported.
+
+CR 101.4/101.4b/101.4c, 400.7 and 608.2d–f establish choice order, exact identity
+and resolution timing. Local `data/FEM.json` confirms that Raiding Party permits
+any player's Plains and one up-to-two choice for each tapped creature.
+Evidence: `TestPermanentSetChoiceRepeatedAPNAPAndOverlap`,
+`VisitsResetCloneAndDelay`, `InvalidDefinitions`, `BoundsDistinctVisitsAndWaiting`;
+`TestRONPermanentSetChoiceRaidingParty`, `Invalid`,
+`CopiesClonesDelayAndScope`, `InventoryAndAtomicLoad`, and
+`TestRONAbilityTargetRestrictionRaidingParty` with the complete factory.
