@@ -58,8 +58,8 @@ func TestRONLandPlayRestrictionRealRules(t *testing.T) {
 				}
 			})
 		}
-		if _, err := Compile(staticBaseRecord(t, set, name)); err == nil {
-			t.Fatal("incomplete card accepted")
+		if _, err := Compile(staticBaseRecord(t, set, name)); (err != nil) != (name == "Worms of the Earth") {
+			t.Fatal("complete-card support changed", name, err)
 		}
 	}
 }

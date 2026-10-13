@@ -7,6 +7,14 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "Trigger_ThosePermanents":
+		if n.Kind != Symbol || ctx.statePermanents == nil {
+			return nil, problem(n, "unbound state permanent set")
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.FromPermanentSet(bindings.statePermanents[ctx.statePermanents])
+		}, nil
+
 	case "NotChosenThisWay":
 		if n.Kind != Symbol {
 			return nil, problem(n, "expected plural choice exclusion symbol")

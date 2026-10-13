@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WhenPermanentsPresent] saves exact matching visits when a state triggers.
+// One pending or stacked trigger prevents another detection for that source
+// visit and rule. [FromPermanentSet] reads the saved present, unphased visits.
+// Later entries and type changes cannot change the saved set. Control changes
+// use the current controllers for sacrifice. Return cannot supply an old visit.
+// Pending bodies keep their source and controller after departure or phasing.
+// Copies, clones and delays keep separate resolution frames.
+// RON lowers WhenAnyNumberOfPermanentsAreOnTheBattlefield with nonempty filter
+// groups and Other(ThisPermanent). Trigger_ThosePermanents is a plural read
+// local to that trigger body. Other event contexts do not supply this binding.
+//
 // [PreventSpellCasts] prevents each player from casting matching cards.
 // [Game.IsSpellCastProhibited] reads active rules without changing state.
 // All casting paths and hand queries check before choices or payment.

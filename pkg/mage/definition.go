@@ -613,6 +613,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			}
 			visit(edge.value, path+"."+edge.name, spell, active, allowAllocation)
 			_, eventTrigger := value.(*GenericTriggered)
+			_, stateCapture := edge.value.(permanentSetState)
 			_, capture := edge.value.(activationCapture)
 			_, history := edge.value.(activationHistoryDeclaration)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
@@ -629,7 +630,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
 			mill, paidMill := edge.value.(*millCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !history && !paidCost && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
+			if !definitionSequential(value) && (!eventTrigger || (edge.name != "event" && (edge.name != "condition" || !stateCapture))) && !capture && !history && !paidCost && !paidSource && (!tapCost || !paidTap.capture) && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && (!exileCardsPayment || !exileCards.paidRequired) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) && (!paidMill || !mill.capture) {
 				assigned = before
 			}
 		}

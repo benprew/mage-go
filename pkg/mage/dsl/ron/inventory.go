@@ -1677,7 +1677,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "HasNumberCountersOfType" && len(n.Args) == 2 {
 			return []string{"static_counter_comparison", "permanent_counter_type"}[index]
 		}
-		if (n.Name == "AttachedToPermanent" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender") && len(n.Args) == 1 {
+		if (n.Name == "Other" || n.Name == "AttachedToPermanent" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if n.Name == "IsEnchantmentType" && len(n.Args) == 1 {
@@ -1791,7 +1791,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenNoPermanentsAreOnTheBattlefield", "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentLeavesTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
+			case "WhenAnyNumberOfPermanentsAreOnTheBattlefield", "WhenNoPermanentsAreOnTheBattlefield", "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked", "WhenACreatureBlocks", "WhenAPermanentDealsDamage", "WhenAPermanentIsDealtDamage", "WhenAPermanentEntersTheBattlefield", "WhenAPermanentLeavesTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
 				return "permanent_filter"
 			case "WhenAPlayerDrawsACard", "WhenAPlayerIsDealtDamage", "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep", "AtTheBeginningOfCombatDuringAPlayersTurn":
 				return "player_filter"

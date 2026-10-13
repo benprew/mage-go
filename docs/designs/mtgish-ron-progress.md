@@ -6,32 +6,31 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-12): **846 accepted / 140 rejected names**
-(986 total), **2,187 compiled / 258 rejected records** (2,445 total).
-The fresh baseline and final counts are equal. The strict loader still rejects
-the collection and publishes no partial registry.
+Latest measured result (2026-10-12): **847 accepted / 139 rejected names**
+(986 total), **2,188 compiled / 257 rejected records** (2,445 total).
+The latest slice adds one accepted name and record: City in a Bottle.
+The strict loader still rejects the collection and publishes no partial registry.
 
-The latest slice is **FILTERED-CASTING-AND-PLAYER-RULE-LISTS**. Shared card-filter
-casting restrictions and compound player rules now execute City in a Bottle's
-complete player-rule subrule. Its captured state-member trigger remains blocked.
+The latest slice is **CAPTURED-STATE-PERMANENT-SETS**. State triggers save exact
+plural visits at detection and use shared per-resolution bindings. City in a
+Bottle's complete unchanged record now has RON gameplay evidence for both rules.
 Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
 
-Reassess these candidates with fresh loader and inventory evidence under
-[the execution design](mtgish-ron-execution.md). Read complete RON records and
-compare full-card gains, shared dependencies and effort before choosing a slice.
-Count reprints once; a first diagnostic alone does not establish a full-card gain.
+Reassess these candidates with fresh loader and complete-record evidence under
+[the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Captured state-member trigger sets: City in a Bottle.**
-   Its casting and land-play subrule now works. Exact plural event visits and
-   pending suppression remain; estimated one complete-card unlock.
-2. **Shared dependent permanent target comparison: Gauntlets of Chaos.**
-   Zero immediate gains from the comparison alone. Exchange-result handling and
-   the recorded Aura-only source repair remain required.
-3. **Land entry prevention: Worms of the Earth.**
-   Zero immediate gains; alternative optional sacrifice/damage payments remain.
-   Use the entry service for the global prohibition, separate from land plays.
+1. **Eligible-player optional payments: Scarwood Bandits.**
+   Its opponent mana offer and local unpaid branch are candidates for one
+   complete-card gain. Shared eligibility/result scope also precedes Worms of
+   the Earth and Cleansing payment forms, which retain separate blockers.
+2. **Dependent permanent target comparison: Gauntlets of Chaos.**
+   Zero immediate gains. Exchange-result handling and the documented Aura-only
+   source correction remain required.
+3. **Global land entry prevention: Worms of the Earth.**
+   Zero immediate gains. Preserve entry/play separation; alternative optional
+   sacrifice/damage payments remain.
 
 ## Dependencies and source blockers
 
@@ -876,3 +875,187 @@ for the authorized `feat(ron): implement filtered casting restrictions` commit.
 Reassess useful shared multi-card work with fresh inventory before selection.
 No second slice was started. Complete RON gameplay, runtime loading, native
 startup, Go-card deletion and unused DSL cleanup remain unfinished.
+
+## 2026-10-12 — CAPTURED-STATE-PERMANENT-SETS
+
+### Candidate comparison and selection
+
+The worktree was clean. Read the complete RON records for City in a Bottle
+(ARN:13), Gauntlets of Chaos (LEG:95) and Worms of the Earth (DRK:118), including
+all nested actions, targets and payments. Targeted vocabulary searches confirm
+one occurrence of the captured state event; the other two signatures also each
+occur on one unique name. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Captured state-member trigger sets, ranked #1 | City in a Bottle | 1 name / 1 record | Casting, land-play restrictions, source exclusion sets and simultaneous controller sacrifice already exist. Typed detection sets also serve existing collection actions and delayed bodies without a new zone subsystem. | Medium: one engine capture contract, one RON event adapter, definition dominance and lifecycle tests. Dependency-ready. |
+| Dependent permanent target card-type comparison | Gauntlets of Chaos | 0 | Comparison would unblock shared target legality, but exchange-result handling and the documented Aura-only source correction remain. | Medium for comparison alone; finishing the card requires a separate result contract and source audit. |
+| Global land entry prevention | Worms of the Earth | 0 | Existing entry service can enforce the prohibition, separate from land plays. Eligible-player alternative sacrifice/damage payments and their scoped result remain. | Small/medium for the entry adapter and lifecycle tests; payment procedure exceeds this slice. |
+
+Candidate #1 is dependency-ready and finishes a card with existing downstream
+services. The compared alternatives have no immediate gain. There is no
+multi-name complete-card unlock among these three bounded candidates. Selected
+one cohesive captured state-set capability, including its existing consumer.
+Estimated one-name / one-record gain equals the measured gain. No second slice
+was started.
+
+### Contract, signatures, contexts and reuse
+
+Engine signature:
+`WhenPermanentsPresent(subjects PermanentSet, result *PermanentSetBinding,
+body ResolvingEffect) TriggeredAbility`.
+
+It builds on `WhenState`, `PermanentSetBinding`, `FromPermanentSet`, the existing
+pending-trigger capture transfer and resolution frames. The engine selects exact
+present, unphased visits once when the state is detected and deduplicates them.
+The state condition is a definition-time binding producer for its body. Null
+sets/results, wrong source zones and unproduced reads fail validation.
+
+RON signature:
+`TriggerA(WhenAnyNumberOfPermanentsAreOnTheBattlefield(subjects), actions)`
+in ordinary battlefield rules. Subjects accept context-free permanent filters,
+nonempty nested `And`/`Or` and `Other(ThisPermanent)`. The source operand must
+be a symbol. Player/target/choice/event-dependent subjects remain rejected.
+`Trigger_ThosePermanents` is a plural symbol local to this body and its captured
+delayed continuation; it is not a singular reference or a sibling-rule result.
+Each factory makes fresh bindings and ability declarations. Inventory marks the
+event operand as a permanent filter and the exclusion operand as a permanent
+reference. RON owns spelling, arity, subject restrictions and lexical scope;
+engine owns detection snapshots, identity and execution.
+
+CR 603.8 suppression uses the existing source-incarnation/ability key: one
+pending or stacked trigger prevents another detection. Resolution/countering
+permits fresh detection. Later entries cannot join an old set; later type changes
+cannot remove detected membership. Current controllers sacrifice saved visits
+through `ControllersSacrificeEach`; owner destinations and simultaneous
+replacement preparation remain shared. Indestructible and regeneration cannot
+stop sacrifice. Returned members cannot inherit old visits. Phasing prevents
+action while preserving identity; a phase cycle permits action again.
+
+Source departure, phasing and ability removal stop new detection. Pending bodies
+retain their detected source/controller. Return of the same physical source
+starts a new incarnation and can trigger while the old body remains pending.
+Stack copies, cloned games and delays use the shared independent frames. Waiting
+queries do not execute a delayed body. Immutable pending capture slices are
+copied into each resolution frame. No global last-action slot is introduced.
+CR 113.7a, 400.7, 603.3b/8, 701.21 and 702.26 support these contracts. Local
+`data/ARN.json` supplies the exact City Oracle text. No new information read,
+payment, damage, targeting or replacement-order subsystem was added; LKI cannot
+make an absent member actionable.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONStatePermanentSet -count=1`
+  failed on the complete City record with unsupported
+  `WhenAnyNumberOfPermanentsAreOnTheBattlefield`.
+- `go test ./pkg/mage -run TestStatePermanentSet -count=1` failed to compile
+  because `WhenPermanentsPresent` did not exist. Implementation followed this
+  expected failure. A test-only draw signature error was corrected before
+  confirming the missing-API failure.
+
+Complete-card mapping:
+
+- **City in a Bottle** → `TestRONStatePermanentSetCity`: unchanged complete ARN
+  record, both active players, captured multi-controller subjects, owner
+  destinations, source/token/basic-name exclusion, late entry, repeat detection,
+  spell prohibition and land-play prohibition.
+- `TestRONStatePermanentSetPending`: same complete record with returned visits,
+  phasing/cycles, control changes, source departure/phasing, copies, countering
+  and clone independence.
+- `TestRONStatePermanentSetInstancesAndInventory`: fresh factories, separate
+  source exclusions/suppression, semantic reference roles and both APNAP orders.
+  Two Cities can cause a new pending trigger after the first body resolves;
+  the test checks the resulting order-dependent departures.
+- `TestRONStatePermanentSetInvalid`: malformed arities, empty groups, unsupported
+  subject references, wrong event/result shapes, sibling leakage, singular reads,
+  wrong source zone and atomic collection rejection.
+- `TestRONStatePermanentSetDelay`: saved members through a delayed continuation,
+  source departure, later entry, clone isolation and pure waiting queries.
+
+Native contract mapping:
+
+- `TestStatePermanentSetCapture`: detection before placement, pending suppression,
+  late entry, exact visits, phasing/cycles, current control, source departure,
+  copies, counter/rearm and clone independence.
+- `TestStatePermanentSetInvalid`: nil subject/result and instant-source validation.
+- `TestStatePermanentSetLifecycleAndReplacement`: empty states, source phasing,
+  ability removal, same-card source return, membership after type changes,
+  canceled/exiled sacrifices, regeneration/indestructible and final batch state.
+
+Existing City enclosing-rejection assertions now require successful complete
+compilation. Worms still must reject. Exact accepted-collection assertions move
+from 2,187/258 to 2,188/257. No gameplay assertion was deleted or weakened. One
+initial two-City expectation omitted a valid new detection under the second
+APNAP order; the final test explicitly checks both outcomes.
+
+### Changed files and source defects
+
+New `pkg/mage/state_permanent_set.go` and native tests; detection integration in
+`game.go`, producer validation in `definition.go`, and corrected state-lifecycle
+comment in `triggered.go`. New RON adapter and tests in
+`pkg/mage/dsl/ron/state_permanent_set*.go`; scope/binding, collection-read, trigger
+and inventory integration in `compiler.go`, `player_scope.go`,
+`contextual_collection.go`, `triggers.go` and `inventory.go`. Existing sacrifice,
+name-filter, casting/land restriction and collection-count tests update their
+obsolete support expectations. Established API/contracts are documented in
+`pkg/mage/doc.go`, `docs/engine-rules-contracts.md` and `docs/dsl-reference.md`.
+This ledger updates the summary and appends the completed evidence.
+
+No RON source defect was corrected. Gauntlets' Aura-only defect remains open.
+RON source did not change, so the vocabulary snapshot does not require refresh.
+No Go definitions, DSL exports, generators or application startup paths were
+removed. Their cutover/removal gates remain open. No fallback, partial production
+registry, card-name executor or game-time declaration check was introduced.
+
+### Verification and measured collection result
+
+Fresh clean-tree baseline: focused RON package tests and `make build` passed.
+The loader exited 1 with 2,187 compiled / 258 rejected records and 846 accepted /
+140 rejected names (2,445 records / 986 names total). An interim read of an old
+result file showed 2,180 before the baseline process finished; its final output
+matches the prior ledger. There is no baseline regression or environment failure.
+
+Required checks passed in fast-fail order:
+
+- Focused RON `TestRONStatePermanentSet` and native `TestStatePermanentSet`,
+  both with `-count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- `go test ./... -short -count=1` for the engine skill.
+- `make lint`: final 0 issues. The initial run reported one `wastedassign`
+  on `matched := false`; changed it to `var matched bool`, then reran focused
+  tests, build, vet, engine short tests and the full suite. Automatic changes
+  only sorted imports in new files; reviewed those changes. The same-card source
+  return test also passed afresh. Final lint passed after these changes.
+- `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1, **2,188 compiled / 257 rejected
+  records**, **847 accepted / 139 rejected names** (2,445 / 986 totals).
+
+The only removed rejection is City in a Bottle at ARN:13. Every other rejection
+key and diagnostic is unchanged from the fresh baseline. Previously accepted
+records remain accepted. The strict loader still rejects the collection and
+publishes no partial registry. Compilation coverage gains one name/record;
+complete-card gameplay coverage also gains City through the mappings above.
+No remaining validation or environment blocker prevents this slice's commit.
+
+### Ranked next candidates
+
+1. Eligible-player optional resolution-payment scope for Scarwood Bandits.
+   Inspect `AnyPlayerMayCost(Opponent, PayMana(...))` and its local unpaid branch
+   against the existing transaction and control-duration contracts. Expected
+   one full-card gain if those remaining forms are supported. Shared eligibility
+   and result scope are also prerequisites for Worms' alternative payments and
+   Cleansing's per-permanent offers; those cards retain separate blockers.
+2. Dependent permanent target card-type comparison for Gauntlets of Chaos.
+   Existing target legality and atomic exchange are reusable. Exchange-result
+   handling and the documented Aura-only source repair remain separate; zero
+   immediate gains from comparison alone.
+3. Global land entry prevention for Worms of the Earth. Reuse entry services,
+   preserve entry/play separation; eligible-player alternative sacrifice/damage
+   payments still block the complete card. Zero immediate gains.
+
+Reassess candidates with fresh complete records and inventory before selecting.
+Complete RON gameplay, runtime loading, native startup, Go-card deletion and
+unused DSL cleanup remain unfinished. This run completed exactly one slice.

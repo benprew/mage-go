@@ -2085,15 +2085,29 @@ func (g *Game) CheckStateTriggers() {
 				continue
 			}
 			g.triggers.DisarmStateTrigger(key)
-			if !ta.CheckTrigger(nil, g) {
+			var captures []Effect
+			var matched bool
+			if trigger, ok := ta.(*GenericTriggered); ok {
+				if condition, ok := trigger.stateDefinition.(interface {
+					detectState(*Game, uuid.UUID, uuid.UUID) ([]Effect, bool)
+				}); ok {
+					captures, matched = condition.detectState(g, perm.ID(), perm.ControllerID())
+				} else {
+					matched = ta.CheckTrigger(nil, g)
+				}
+			} else {
+				matched = ta.CheckTrigger(nil, g)
+			}
+			if !matched {
 				continue
 			}
 			g.triggers.ArmStateTrigger(key)
 			g.queuePendingTrigger(&pendingTrigger{
-				stateKey:   key,
-				ability:    ta,
-				sourceID:   perm.ID(),
-				controller: perm.ControllerID(),
+				stateKey:      key,
+				ability:       ta,
+				sourceID:      perm.ID(),
+				controller:    perm.ControllerID(),
+				eventCaptures: captures,
 			})
 		}
 	}

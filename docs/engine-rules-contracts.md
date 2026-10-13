@@ -18397,3 +18397,35 @@ ordering or simultaneous operation is added by this pure legality query.
 
 Evidence: `TestSpellCastRestrictionLifecycle`, `PathsAndRollback`,
 `StackCopyAndOverlap`, `Invalid`; RON evidence is mapped in the DSL reference.
+
+## Captured permanent-set state triggers
+
+`WhenPermanentsPresent(subjects PermanentSet, result *PermanentSetBinding,
+body ResolvingEffect) TriggeredAbility` uses `WhenState` and the existing
+CR 603.8 lifecycle. Definition validation requires a battlefield source,
+a nonnil subject set, a named nonnil result and a valid body. The condition
+is the binding producer; another rule cannot inherit its result. The engine
+selects the subjects once at detection, rejects absent or phased visits and
+deduplicates exact permanent identities. No player choice occurs at detection.
+
+The pending trigger retains an immutable set of physical IDs and battlefield
+incarnations before stack placement. Its capture enters the normal resolution
+frame before the body. `FromPermanentSet` returns only present, unphased saved
+visits. Later entries cannot join; return cannot inherit the old visit
+(CR 400.7). A phase cycle preserves it (CR 702.26). Later characteristics do
+not alter detection membership. No LKI can permit an action on an absent visit.
+
+The existing source/controller capture, APNAP placement and state suppression
+remain shared. Countering or resolution permits a fresh detection. Departure,
+phasing and ability removal stop new detection while pending bodies survive
+(CR 113.7a). Stack copies and cloned games retain the saved set in independent
+resolution frames. Delayed bodies use the existing frame capture service.
+
+`ControllersSacrificeEach` reads current controllers for the saved visits,
+then uses the shared simultaneous sacrifice batch and owner destinations
+(CR 701.21). Indestructible and regeneration cannot stop sacrifice. Cancellation
+and exile replacements retain their existing order and can permit later state
+triggers. No new payment, damage or replacement service is introduced.
+
+Evidence: `TestStatePermanentSetCapture`, `TestStatePermanentSetInvalid`,
+`TestStatePermanentSetLifecycleAndReplacement` and `TestRONStatePermanentSet*`.

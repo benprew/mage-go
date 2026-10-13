@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAnyNumberOfPermanentsAreOnTheBattlefield":
+		return compileStatePermanentSetTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentLeavesTheBattlefield":
 		if err := arity(trigger, 1); err != nil {
 			return nil, err

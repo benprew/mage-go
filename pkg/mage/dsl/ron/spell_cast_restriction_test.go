@@ -43,8 +43,8 @@ func TestRONSpellCastRestrictionCity(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := Compile(staticBaseRecord(t, "ARN", "City in a Bottle")); err == nil || !strings.Contains(err.Error(), "WhenAnyNumberOfPermanentsAreOnTheBattlefield") {
-		t.Fatal("unsupported sibling trigger accepted", err)
+	if _, err := Compile(staticBaseRecord(t, "ARN", "City in a Bottle")); err != nil {
+		t.Fatal("complete state trigger did not compile", err)
 	}
 }
 

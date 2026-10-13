@@ -23,8 +23,8 @@ type TriggeredAbility interface {
 	TriggerSourceZone() Zone
 	// IsStateTrigger reports whether this is a state-triggered ability
 	// (CR 603.8): one whose condition is checked alongside state-based
-	// actions, not in response to events. State triggers fire once per
-	// false→true transition of the condition.
+	// actions, not in response to events. A pending or stacked trigger
+	// prevents another detection for the same source visit and rule.
 	IsStateTrigger() bool
 }
 

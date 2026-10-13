@@ -117,8 +117,8 @@ func TestRONOriginalPrintingNamesBottleFilter(t *testing.T) {
 	if g.FindPermanent(victim.ID()) != nil || g.FindPermanent(land.ID()) == nil || g.FindPermanent(source.ID()) != nil {
 		t.Fatal("Arabian names use set membership or omit self")
 	}
-	if _, err := Compile(staticBaseRecord(t, "ARN", "City in a Bottle")); err == nil || !strings.Contains(err.Error(), "WhenAnyNumberOfPermanentsAreOnTheBattlefield") {
-		t.Fatal("unsupported enclosing trigger changed", err)
+	if _, err := Compile(staticBaseRecord(t, "ARN", "City in a Bottle")); err != nil {
+		t.Fatal("complete state trigger did not compile", err)
 	}
 }
 

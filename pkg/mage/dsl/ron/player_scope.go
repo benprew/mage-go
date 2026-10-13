@@ -37,6 +37,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	statePermanents      map[*statePermanentSetPlan]*mage.PermanentSetBinding
 	permanentSetChoices  map[*permanentSetChoicePlan]*mage.PermanentSetBinding
 	recipientSets        map[*damageTargetsPlan]*mage.DamageTargetsBinding
 	drawReplacements     map[*drawReplacementPlan]*mage.PlayerBinding

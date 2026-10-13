@@ -14054,3 +14054,38 @@ subrule under both active players. The unsupported captured state trigger keeps
 the full record rejected. `CompositionAndInventory` and `ListOrderAndInstances`
 cover ATQ names, compound visibility/land rules, ordering, independent lifetimes
 and atomic loading. `Invalid` covers declaration rejection. No RON source changed.
+
+## RON captured permanent-set state triggers
+
+`TriggerA(WhenAnyNumberOfPermanentsAreOnTheBattlefield(subjects), actions)`
+is supported for ordinary battlefield declarations. Subjects accept the
+context-free permanent filters, nonempty nested `And`/`Or` groups and
+`Other(ThisPermanent)`. Dynamic player, target, choice and event reads in the
+subjects remain rejected. Every tuple has its exact arity; the source reference
+must be a symbol. The adapter creates a fresh `PermanentSetBinding` per factory
+and lowers through `mage.WhenPermanentsPresent`.
+
+The body supplies `Trigger_ThosePermanents` as a plural collection symbol.
+It can be read by existing collection actions, including
+`ControllersSacrificeEachPermanent`. It is unavailable in sibling rules,
+other trigger events, singular references, costs or static declarations.
+The ordinary action compiler retains target, player and delay scope checks.
+
+Detection saves exact unphased visits, including both players' matching members.
+One pending or stacked instance suppresses further detection for that source
+visit and declaration. Later entries wait for a new detection; later type
+changes do not change the pending set. Phasing prevents actions while preserving
+identity; return cannot replace a saved visit. Pending bodies survive source
+departure and phasing. Sacrifice uses current controllers and owner destinations
+through the shared simultaneous replacement service. Copies and clones keep
+separate resolution frames.
+
+City in a Bottle's complete unchanged ARN record now compiles and executes both
+its captured trigger and its compound casting/land-play restriction.
+`TestRONStatePermanentSetCity` covers both active players, name membership,
+source/token/basic-name exclusion, current controllers, owner destinations,
+late entry and repeat detection. `Pending` covers identity, phasing, source
+lifetimes, copying, countering and clones. `InstancesAndInventory` covers
+separate factories, source exclusion, APNAP and semantic reference roles.
+`Invalid` covers malformed syntax, unsupported subjects, result scope,
+wrong reference type, source zone and atomic loader rejection.

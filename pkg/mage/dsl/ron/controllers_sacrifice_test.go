@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -84,8 +83,8 @@ func TestRONControllersSacrificeDeclarations(t *testing.T) {
 		})
 	}
 	record := staticBaseRecord(t, "ARN", "City in a Bottle")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "WhenAnyNumberOfPermanentsAreOnTheBattlefield") {
-		t.Fatal("unsupported state trigger changed", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatal("complete state trigger did not compile", err)
 	}
 }
 
