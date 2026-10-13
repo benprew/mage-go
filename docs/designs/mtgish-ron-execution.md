@@ -223,6 +223,20 @@ target bounds need announcement values; payments need result scopes; damage
 triggers need source identity; delayed triggers need bindings and durations.
 Implement prerequisites first, not incomplete dependent adapters.
 
+Within those dependencies, prioritize shared capabilities that unlock multiple
+unique cards. Reassess priority on every run from fresh inventory and loader
+evidence; phase numbers and the ledger's next slice are not fixed priorities.
+Compare at least three plausible candidates, or all if fewer remain. Record
+distinct affected names, estimated full-card unlocks, remaining blockers,
+downstream capabilities enabled, and implementation/test effort. Count reprints
+once. Read complete records and nested forms to estimate unlocks; first-error
+frequency alone does not show whether a card will compile after the change.
+Choose the largest credible multi-card benefit for the effort. A shared
+prerequisite can take priority without immediate unlocks when it enables a
+concrete multi-card capability. Defer single-card capabilities while useful
+multi-card work remains, unless they are required prerequisites. Record actual
+gains against estimates and rank next candidates after validation.
+
 ### Concrete acceptance checkpoints
 
 - `Healing Salve`: mode-local life/prevention targets and explicit players.
@@ -311,9 +325,10 @@ authoring and loading. Do not restore removed card/set skills.
 2. Establish fresh focused tests and loader diagnostics. Inspect all nested
    forms for the selected capability. Separate adapter, engine, data, and
    environment gaps.
-3. Select one dependency-ready slice with observable behavior, exact shapes,
-   affected cards, reuse boundary, and acceptance tests. Do not recreate an
-   implemented function because an old plan calls it missing.
+3. Compare candidates using the multi-card priority policy above. Select one
+   dependency-ready slice with observable behavior, exact shapes, affected cards,
+   reuse boundary, and acceptance tests. Do not recreate an implemented function
+   because an old plan calls it missing.
 4. Write failing tests first and confirm the intended failure. Add declaration
    rejection cases, needed engine contracts, and RON-backed gameplay evidence.
 5. Implement the smallest complete capability. Preserve other callers until
