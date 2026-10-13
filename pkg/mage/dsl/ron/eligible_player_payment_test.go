@@ -248,7 +248,6 @@ func TestRONEligiblePlayerPaymentInvalid(t *testing.T) {
 		`AnyPlayerMayCost(Opponent,PayMana([])),If(CostWasPaid,[])`,
 		`AnyPlayerMayCost(Opponent,PayMana([])),IfElse(CostWasPaid,[GainLife(Integer(1))],[])`,
 		`AnyPlayerMayCost(Opponent,PayMana([])),GainLife(Integer(1)),If(CostWasPaid,[GainLife(Integer(1))])`,
-		`AnyPlayerMayCost(Opponent,PayMana([])),If(CostWasPaid,[PlayerAction(ActionPlayer,GainLife(Integer(1)))])`,
 		`AnyPlayerMayCost(Opponent,PayMana([])),If(CostWasPaid,[GainLife(Integer(1))]),If(CostWasPaid,[GainLife(Integer(1))])`,
 	} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(ActionList([` + body + `]))])`
@@ -273,8 +272,8 @@ func TestRONEligiblePlayerPaymentInvalid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := compileEligiblePlayerPayment(nodes[0], nodes[1], scope{actionPlayer: &playerActionsPlan{name: "outer"}}); err == nil {
-		t.Fatal("eligible payment inherited another ActionPlayer")
+	if _, err := compileEligiblePlayerPayment(nodes[0], nodes[1], scope{actionPlayer: &playerActionsPlan{name: "outer"}}); err != nil {
+		t.Fatal("eligible payment did not supply its local ActionPlayer", err)
 	}
 }
 

@@ -1,18 +1,31 @@
 package mage
 
-import "slices"
+import (
+	"slices"
+
+	"github.com/google/uuid"
+)
 
 // PayAnyOrElse offers eligible players a payment in turn order.
 // The first complete payment selects paid. Otherwise, unpaid runs once.
 // Either body can be nil. The bodies retain the original effect controller.
 func PayAnyOrElse(players PlayerSet, costs CostGroup, paid, unpaid ResolvingEffect) ResolvingEffect {
-	return &eligiblePlayerPayment{players, costs, paid, unpaid}
+	return &eligiblePlayerPayment{players: players, costs: costs, paid: paid, unpaid: unpaid}
+}
+
+// PayAnyOrElseWithPayer saves each candidate during the offer and payment.
+// Only the paid body can read the successful payer. The binding stays local.
+// Both bodies retain the original effect controller.
+func PayAnyOrElseWithPayer(players PlayerSet, costs CostGroup, payer *PlayerBinding, paid, unpaid ResolvingEffect) ResolvingEffect {
+	return &eligiblePlayerPayment{players: players, costs: costs, paid: paid, unpaid: unpaid, payer: payer, scopedPayer: true}
 }
 
 type eligiblePlayerPayment struct {
 	players      PlayerSet
 	costs        CostGroup
 	paid, unpaid ResolvingEffect
+	payer        *PlayerBinding
+	scopedPayer  bool
 }
 
 func (*eligiblePlayerPayment) Text() string { return "offer eligible players a payment" }
@@ -27,11 +40,33 @@ func (e *eligiblePlayerPayment) Properties() EffectProperties {
 }
 func (e *eligiblePlayerPayment) Apply(ctx *EffectContext) error {
 	eligible := e.players.resolvePlayers(ctx)
+	if e.scopedPayer {
+		if ctx.Game.resolution.playerBindings == nil {
+			ctx.Game.resolution.playerBindings = make(map[*PlayerBinding]uuid.UUID)
+		}
+		previous, present := ctx.Game.resolution.playerBindings[e.payer]
+		delete(ctx.Game.resolution.playerBindings, e.payer)
+		defer func() {
+			delete(ctx.Game.resolution.playerBindings, e.payer)
+			if present {
+				ctx.Game.resolution.playerBindings[e.payer] = previous
+			}
+		}()
+	}
 	body := e.unpaid
 	for _, id := range EachPlayer.resolvePlayers(ctx) {
-		if slices.Contains(eligible, id) && tryResolutionCostPayment(ctx, id, e.costs.costs, false) {
+		if !slices.Contains(eligible, id) {
+			continue
+		}
+		if e.scopedPayer {
+			ctx.Game.resolution.playerBindings[e.payer] = id
+		}
+		if tryResolutionCostPayment(ctx, id, e.costs.costs, false) {
 			body = e.paid
 			break
+		}
+		if e.scopedPayer {
+			delete(ctx.Game.resolution.playerBindings, e.payer)
 		}
 	}
 	if nilDefinition(body) {
@@ -41,6 +76,9 @@ func (e *eligiblePlayerPayment) Apply(ctx *EffectContext) error {
 }
 func (e *eligiblePlayerPayment) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "eligible-player-payment", Text: e.Text(), children: []definitionEdge{{"players", e.players}, {"costs", e.costs}}}
+	if e.scopedPayer {
+		n.children = append(n.children, definitionEdge{"payer", e.payer})
+	}
 	if !nilDefinition(e.paid) {
 		n.children = append(n.children, definitionEdge{"paid", e.paid})
 	}

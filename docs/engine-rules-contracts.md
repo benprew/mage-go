@@ -18462,9 +18462,9 @@ declining optional payments.
 RON supports `AnyPlayerMayCost(Opponent|AnyPlayer, PayMana([...]))` in ordinary
 resolving sequences with an adjacent `If`, `Unless` or `IfElse` and symbolic
 `CostWasPaid`/`CostWasntPaid`. Each required list must be nonempty. Other sets,
-costs, payer bindings, entry and draw replacement bodies remain rejected.
-The adapter clears an inherited `ActionPlayer` scope to prevent use of an
-unrelated payer. Fixed costs and bodies are built afresh per card factory.
+costs, entry and draw replacement bodies remain rejected.
+The payer-scope contract below supplies a local `ActionPlayer` on paid paths.
+Fixed costs and bodies are built afresh per card factory.
 
 Evidence: native `TestEligiblePlayerPaymentOrderAndResult`,
 `TestEligiblePlayerPaymentRecheckAndNested`,
@@ -18522,3 +18522,45 @@ forestwalk, casting, activation costs and rollback, artifact target legality,
 opponent payment, resolution timing, control lifetime, source/target identity,
 phasing, ability removal, independent instances, stack copies and game clones.
 No new cost, replacement-order or simultaneous movement contract is introduced.
+
+
+## Eligible-player payer scope
+
+`PayAnyOrElseWithPayer(players PlayerSet, costs CostGroup, payer *PlayerBinding,
+paid, unpaid ResolvingEffect) ResolvingEffect` retains `PayAnyOrElse` eligibility,
+active-player ordering, affordability and total-cost transaction behavior
+(CR 101.4, 118.3, 118.5, 608.2d–g). It assigns each eligible candidate before
+checking affordability or offering payment. Costs can read that candidate
+through `FromPlayer(payer)` in the live and isolated payment games. A failed
+payment clears the candidate before the next offer. The paid body reads the
+successful payer; the unpaid body has no candidate. Both bodies retain the
+original effect controller, source and targets. Zero-cost payment still needs
+acceptance. The old `PayAnyOrElse` signature and behavior remain available.
+
+The binding is local to this operation. Definition validation accepts reads
+only in its costs and paid body. It rejects nil or unnamed bindings, an already
+produced payer binding, unpaid reads and reads after the operation. Assignments
+made inside either branch retain their existing isolation. Runtime exit removes
+the local value and restores a prior value if one exists. Nested operations use
+separate declarations. Delayed bodies created inside a paid branch capture the
+payer in their existing saved frame; ending the local scope does not erase
+that delayed snapshot. Copies use separate resolution frames. Game clones
+keep their existing optional-payment policy; clones of an already created
+delayed body retain its saved payer. Waiting queries enumerate source reads
+without making offers or executing paid bodies (CR 113.7a, 400.7).
+
+RON accepts `ActionPlayer` only on the successful branch of the existing
+`AnyPlayerMayCost(Opponent|AnyPlayer, PayMana([...]))` pair. This includes
+`If(CostWasPaid)`, `Unless(CostWasntPaid)` and either paid `IfElse` branch.
+An enclosing action player is shadowed on the paid path and unavailable on the
+unpaid path. After the pair the enclosing lexical scope is unchanged. Implicit
+player actions keep their prior context; an explicit player reference selects
+the payer. Each factory creates a fresh binding. Payment cost alternatives,
+action payments and repeated subject offers keep separate compiler contracts.
+No RON card record changes, replacement rules or simultaneous actions are added.
+
+Evidence: `TestEligiblePayerScopeOffersAndRollback`,
+`TestEligiblePayerScopeCostBinding`, `TestEligiblePayerScopeNestedAndDelayed`,
+`TestEligiblePayerScopeInvalid`, and `TestRONEligiblePayerScope*`.
+Existing `TestEligiblePlayerPayment*`, `TestRONEligiblePlayerPayment*` and
+`TestRONSourcePresenceDuration*` preserve caller and real-card coverage.

@@ -2400,13 +2400,24 @@ active-player order and stops at the first complete payment. No successful
 payment selects the unpaid path, including an empty eligible set. Both paths
 keep the original effect controller. Each factory builds fresh costs and bodies.
 
-This shape does not supply a payer binding: `ActionPlayer` cannot read the
-offer's payer or inherit an enclosing player-action binding through the pair.
+On the paid path, `ActionPlayer` reads the successful payer through
+`PayAnyOrElseWithPayer`. This applies to `If(CostWasPaid, ...)`,
+`Unless(CostWasntPaid, ...)`, and the paid branch of either `IfElse` polarity.
+The unpaid path cannot read or inherit `ActionPlayer`. The payer stays local
+to this pair; subsequent actions retain their enclosing scope. Explicit
+`PlayerAction(ActionPlayer, ...)` selects the payer. Ordinary player actions
+keep their existing player context, and `You` keeps the effect controller.
+A delayed body created on the paid path saves the payer in its own frame.
+Nested offers have separate bindings and restore the enclosing paid scope.
+Each factory builds a fresh binding. Costs and eligibility keep their existing
+fixed-mana forms; the native API also supplies the candidate during payment.
 Other player collections, X, nonmana/alternative costs, entry operations and
 draw replacement bodies remain rejected. This is a shared prerequisite for
 Scarwood Bandits, Worms of the Earth and Cleansing, not full-card coverage.
 Scarwood has complete source-presence coverage; Worms needs entry prevention and
 alternative payments; Cleansing needs repeated offers with per-subject results.
+`TestRONEligiblePayerScope*` covers paid-path scope, delays, nested bindings,
+active-player order, instance isolation and invalid unpaid reads.
 `TestRONEligiblePlayerPayment*` covers lowering, gameplay, all polarities,
 contexts, identity, copies, clones, inventory roles and atomic loading.
 

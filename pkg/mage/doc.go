@@ -18,7 +18,11 @@
 // Waiting queries declare source reads without offers or payment.
 // RON lowers AnyPlayerMayCost with Opponent or AnyPlayer and fixed PayMana.
 // An adjacent If, Unless or IfElse keeps the result local to that pair.
-// Payer bindings, other costs, entry and replacement bodies stay separate.
+// [PayAnyOrElseWithPayer] saves each candidate during offers and payment.
+// The paid body can read that player. The unpaid body has no payer.
+// The binding stays local; delayed bodies can save it in their frames.
+// RON ActionPlayer reads this payer only on the paid path.
+// Other costs, entry and replacement bodies stay separate.
 //
 // [WhenPermanentsPresent] saves exact matching visits when a state triggers.
 // One pending or stacked trigger prevents another detection for that source

@@ -530,6 +530,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if n.problem != "" {
 			fail(n.problem)
 		}
+		if payment, ok := value.(*eligiblePlayerPayment); ok && payment.scopedPayer && !nilDefinition(payment.payer) && assigned[payment.payer] {
+			fail("payer binding requires a separate local declaration")
+		}
 		if choice, ok := value.(*wordPairChoice); ok && !nilDefinition(choice.binding) && assigned[choice.binding] {
 			fail("duplicate text word pair producer")
 		}
@@ -595,6 +598,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		for _, edge := range n.children {
 			before := maps.Clone(assigned)
+			if payment, ok := value.(*eligiblePlayerPayment); ok && payment.scopedPayer && !nilDefinition(payment.payer) && (edge.name == "costs" || edge.name == "paid") {
+				assigned[payment.payer] = true
+			}
 			_, sequence := value.(*sequenceEffect)
 			allowAllocation := allocationAllowed && sequence
 			switch parent := value.(type) {

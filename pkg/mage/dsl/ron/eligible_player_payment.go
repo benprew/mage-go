@@ -1,6 +1,10 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"maps"
+
+	"github.com/benprew/mage-go/pkg/mage"
+)
 
 func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
 	if ctx.drawReplacementBody || ctx.enteringSource {
@@ -38,7 +42,8 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 		return nil, unsupported(condition, "payment condition")
 	}
 	branches := make([][]effectFactory, count-1)
-	ctx.actionPlayer = nil
+	payer := &playerActionsPlan{name: "payment payer " + payment.Position.String()}
+	firstPaid := (continuation.Name == "Unless") != (condition.Name == "CostWasPaid")
 	for i := range branches {
 		parts, err := list(continuation.Args[i+1])
 		if err != nil {
@@ -47,12 +52,23 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 		if len(parts) == 0 {
 			return nil, problem(continuation.Args[i+1], "payment branch requires at least one action")
 		}
-		branches[i], err = compileActionSequence(parts, ctx)
+		branchCtx := ctx
+		branchCtx.actionPlayer = nil
+		if (i == 0) == firstPaid {
+			branchCtx.actionPlayer = payer
+		}
+		branches[i], err = compileActionSequence(parts, branchCtx)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return func(bindings instanceBindings) mage.Effect {
+		binding := mage.BindPlayer(payer.name)
+		bindings.actionPlayers = maps.Clone(bindings.actionPlayers)
+		if bindings.actionPlayers == nil {
+			bindings.actionPlayers = make(map[*playerActionsPlan]*mage.PlayerBinding)
+		}
+		bindings.actionPlayers[payer] = binding
 		values := make([]mage.Cost, len(costs))
 		for i, build := range costs {
 			values[i] = build()
@@ -72,6 +88,6 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 		if players.Name == "Opponent" {
 			eligible = mage.OpponentsOf(mage.You)
 		}
-		return mage.PayAnyOrElse(eligible, mage.Costs(values...), bodies[0], bodies[1])
+		return mage.PayAnyOrElseWithPayer(eligible, mage.Costs(values...), binding, bodies[0], bodies[1])
 	}, nil
 }
