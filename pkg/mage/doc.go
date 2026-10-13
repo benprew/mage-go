@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventLandEntry] stops land entry through shared preparation.
+// [Game.IsLandEntryProhibited] reads active source rules without changes.
+// Phasing, departure and ability removal stop the rule. Return starts a new visit.
+// Copies that become lands stop before later entry replacements.
+// Blocked entry keeps hand, graveyard, library and exile cards in their zones.
+// Token batches keep permitted members. Land plays check before zone removal.
+// RON accepts CardsCantEnterTheBattlefield(IsCardtype(Land)) on permanents.
+//
 // [PayAnyAlternativeOrElseWithPayer] offers complete payment alternatives.
 // Each eligible player chooses in turn order. The first payment selects paid.
 // [CostPaymentOption] uses shared transactions and rollback.

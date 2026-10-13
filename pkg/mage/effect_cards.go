@@ -469,16 +469,13 @@ func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	}
 	if player := ctx.Game.GetPlayer(ctx.Controller); player != nil {
 		for _, card := range player.Graveyard() {
-			if card.ID() == ctx.Targets[0] && !graveyardCardCanEnter(ctx.Game, card) {
-				return nil
+			if card.ID() == ctx.Targets[0] {
+				returnGraveyardCardToBattlefield(ctx.Game, card.ID(), ctx.Controller)
+				break
 			}
 		}
 	}
-	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
-	if !ok {
-		return nil // target gone
-	}
-	ctx.Game.PutOnBattlefieldBy(card, ctx.Controller, ctx.Controller)
+
 	return nil
 }
 
@@ -495,22 +492,35 @@ func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
 }
 
 func returnGraveyardCardToBattlefieldWithEntry(g *Game, cardID, controller uuid.UUID, tapped bool) {
-	for _, player := range g.players {
-		for _, card := range player.Graveyard() {
-			if card.ID() == cardID && !graveyardCardCanEnter(g, card) {
-				return
-			}
-		}
-	}
-	card, _, ok := g.MoveFromAnyGraveyard(cardID, ZoneBattlefield)
-	if !ok {
-		return
-	}
-	g.putOnBattlefieldWithEntry(card, controller, controller, nil, uuid.Nil, 0, tapped)
+	returnGraveyardCardToBattlefieldWithActor(g, cardID, controller, controller, tapped)
 }
 
-func graveyardCardCanEnter(g *Game, card Card) bool {
-	return !card.HasType(TypeLand) || !g.effects.Rules.LandsCantEnter()
+func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, actor uuid.UUID, tapped bool) {
+	for _, player := range g.players {
+		for _, card := range player.Graveyard() {
+			if card.ID() != cardID {
+				continue
+			}
+			visit := g.graveyardVisit(cardID)
+			perm, failed := g.prepareBattlefieldEntryResult(card, controller, nil, 0, tapped)
+			if visit == uuid.Nil || g.graveyardVisit(cardID) != visit {
+				return
+			}
+			if perm == nil && failed == nil {
+				return
+			}
+			if _, ok := g.MoveFromGraveyard(player.PlayerID(), cardID, ZoneBattlefield); !ok {
+				return
+			}
+			if perm == nil {
+				player.AddToGraveyard(failed)
+				return
+			}
+			g.registerBattlefieldEntry(perm, nil, uuid.Nil)
+			g.completeBattlefieldEntry(perm, controller, actor, 0)
+			return
+		}
+	}
 }
 
 func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {
@@ -559,11 +569,14 @@ func (*returnSourceFromGraveyardToBattlefieldEffect) Apply(ctx *EffectContext) e
 	// usually the owner, but the card may have moved zones since the trigger
 	// was queued.
 	for _, p := range ctx.Game.AllPlayers() {
-		if card, ok := ctx.Game.MoveFromGraveyard(p.PlayerID(), ctx.SourceID, ZoneBattlefield); ok {
-			ctx.Game.PutOnBattlefieldBy(card, p.PlayerID(), ctx.Controller)
-			return nil
+		for _, card := range p.Graveyard() {
+			if card.ID() == ctx.SourceID {
+				returnGraveyardCardToBattlefieldWithActor(ctx.Game, ctx.SourceID, p.PlayerID(), ctx.Controller, false)
+				return nil
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -687,9 +700,14 @@ func (e *putFromHandOntoBattlefieldEffect) Apply(ctx *EffectContext) error {
 	if chosen == nil {
 		return nil
 	}
-	if _, ok := p.RemoveFromHand(chosen.ID()); ok {
-		ctx.Game.PutOnBattlefieldBy(chosen, ctx.Controller, ctx.Controller)
+	if ctx.Game.IsLandEntryProhibited(chosen) {
+		return nil
 	}
+	if visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
+		_, err := ctx.Game.putChosenHandCard(p, chosen, visitor.handVisit(chosen.ID()))
+		return err
+	}
+
 	return nil
 }
 

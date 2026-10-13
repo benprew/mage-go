@@ -1070,6 +1070,9 @@ func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, cho
 	}
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
+		if entry, ok := action.(*battlefieldEntryAction); ok && g.isLandEntryProhibited(entry.permanent.HasType(TypeLand)) {
+			return nil, outcomes
+		}
 		switch damage := action.(type) {
 		case *DamageToPlayerAction:
 			if damage.Amount() <= 0 {

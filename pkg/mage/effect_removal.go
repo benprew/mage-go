@@ -173,14 +173,29 @@ func ExileTargetReturnAtEndStep(onReturn ReturnedPermanentModifier) Effect {
 				"return exiled card",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-					card, ok := g.RemoveFromExile(cardID)
-					if !ok {
+					exiled := g.FindExiledCard(cardID)
+					if exiled == nil || g.IsLandEntryProhibited(exiled.Card) {
 						return nil
 					}
-					newPerm := g.PutOnBattlefieldBy(card, owner, controller)
-					if newPerm != nil && onReturn != nil {
-						onReturn(g, newPerm)
+					prepared, failed := g.prepareBattlefieldEntryResult(exiled.Card, owner, nil, 0, false)
+					if prepared == nil && failed == nil {
+						return nil
 					}
+					if _, ok := g.RemoveFromExile(cardID); !ok {
+						return nil
+					}
+					if prepared == nil {
+						if p := g.GetPlayer(owner); p != nil {
+							p.AddToGraveyard(failed)
+						}
+						return nil
+					}
+					g.registerBattlefieldEntry(prepared, nil, uuid.Nil)
+					g.completeBattlefieldEntry(prepared, owner, controller, 0)
+					if onReturn != nil {
+						onReturn(g, prepared)
+					}
+
 					return nil
 				},
 			)

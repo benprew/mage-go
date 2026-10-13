@@ -18637,3 +18637,39 @@ one action payment.
 Tests: TestEligibleAlternativePayment, OrderAndRecheck, Invalid, Declarations,
 SacrificeBatch; TestRONEligibleAlternativePaymentWorms, Frames and Invalid.
 Existing eligible-payer and action-payment tests retain their contracts.
+
+## Static land-entry prohibition
+
+`PreventLandEntry() StaticRule` prevents lands from entering while its battlefield
+source ability is active. `Game.IsLandEntryProhibited(card Card) bool` is a pure
+query; nil and nonland cards return false. It retains the legacy global flag.
+The typed rule reads active printed declarations directly, so phasing suspends
+it without a layer pass. Departure, face-down status and ability removal stop
+it; tapping and control changes do not. Return installs a new source visit.
+Overlapping sources and cloned games have independent lifetimes.
+
+Entry preparation checks land type before replacements and after copy changes.
+The shared replacement loop stops when a copy makes the entering object a land,
+before another entry replacement can apply. Prohibition produces no entry,
+entry counters or entry event. Token batches retain only permitted members.
+Existing entry-copy priorities, builders and printed departure rules remain in
+use. This is a prohibition, not an entry replacement (CR 101.2, 614.17).
+
+Hand and graveyard entry prepare the object before removing its saved zone
+visit. Prohibited copies keep that visit. Graveyard entry rechecks the saved
+visit after entry choices. Library search retains a prohibited card and still
+shuffles. Delayed exile return retains a prohibited card in exile and consumes
+the delay. Linked exile batches use the same query and entry preparation.
+A land play with prohibited entry fails before zone removal or turn history;
+playable-land queries exclude it. Ordinary cast copies and token creation use
+shared preparation. Existing land-play restrictions remain independent.
+
+RON accepts `CardsCantEnterTheBattlefield(IsCardtype(Land))` as an ordinary
+permanent rule. Other filters, malformed arguments and resolving action contexts
+reject during compilation. Each factory builds independent declarations.
+
+Evidence: `TestLandEntryRestrictionLifecycle`, `ZoneRetention`, `Batch`,
+`CopyRecheck`, `Play`; `TestRONLandEntryRestrictionWorms`, `Invalid`, `AtomicLoad`,
+`RealEntryPaths`. Worms of the Earth uses its complete unchanged DRK record.
+Its land-play, entry and upkeep payment rules all have gameplay evidence.
+Gaea's Touch and Untamed Wilds retain their complete RON entry regression tests.

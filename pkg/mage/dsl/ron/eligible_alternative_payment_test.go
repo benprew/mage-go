@@ -54,8 +54,8 @@ func TestRONEligibleAlternativePaymentWorms(t *testing.T) {
 			}
 		})
 	}
-	if _, err := Compile(record); err == nil {
-		t.Fatal("land-entry prohibition remains unsupported")
+	if _, err := Compile(record); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -146,7 +146,7 @@ func TestRONEligibleAlternativePaymentInvalid(t *testing.T) {
 	if _, err := LoadFS(files, "*.ron"); err != nil {
 		t.Fatal(err)
 	}
-	files["blocked.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Blocked",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[]),Rules:[CardsCantEnterTheBattlefield(IsCardtype(Land))])`)}
+	files["blocked.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Blocked",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[]),Rules:[CardsCantEnterTheBattlefield(IsCardtype(Creature))])`)}
 	if registry, err := LoadFS(files, "*.ron"); err == nil || registry != nil {
 		t.Fatal("partial registry published")
 	}

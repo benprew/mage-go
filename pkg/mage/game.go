@@ -446,7 +446,7 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 
 // Entry batches must finish choices before a failed entry moves to the graveyard.
 func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) (*Permanent, Card) {
-	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
+	if g.IsLandEntryProhibited(card) {
 		return nil, nil
 	}
 	perm := NewPermanent(card, controller)
@@ -463,9 +463,12 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 	defer g.zones.ClearEnteringPermanent()
 	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement), textChanges: entryCopyTextChanges(card)}
 	if g.effects.ApplyReplacements(entry, g) == nil {
+		if g.isLandEntryProhibited(perm.HasType(TypeLand)) {
+			return nil, nil
+		}
 		return nil, cardForBattlefieldDeparture(perm.Card)
 	}
-	if perm.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
+	if g.isLandEntryProhibited(perm.HasType(TypeLand)) {
 		return nil, nil
 	}
 

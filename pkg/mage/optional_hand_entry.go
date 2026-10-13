@@ -2,8 +2,6 @@ package mage
 
 import (
 	"github.com/google/uuid"
-
-	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 type optionalHandEntry struct {
@@ -72,7 +70,7 @@ func (e *optionalHandEntry) applyPlayer(ctx *EffectContext, id uuid.UUID) (bool,
 }
 
 func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) (bool, error) {
-	if card.HasType(core.TypeLand) && g.effects.Rules.LandsCantEnter() {
+	if g.IsLandEntryProhibited(card) {
 		return false, nil
 	}
 	var host *Permanent
@@ -107,12 +105,18 @@ func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) (boo
 	if !ok || visitor.handVisit(card.ID()) != visit {
 		return false, nil
 	}
-	removed, ok := player.RemoveFromHand(card.ID())
-	if !ok {
+	perm, failed := g.prepareBattlefieldEntryResult(card, player.PlayerID(), nil, 0, false)
+	if perm == nil && failed == nil {
 		return false, nil
 	}
-	perm := g.prepareBattlefieldEntry(removed, player.PlayerID(), nil, 0, false)
+	if visitor.handVisit(card.ID()) != visit {
+		return false, nil
+	}
+	if _, ok := player.RemoveFromHand(card.ID()); !ok {
+		return false, nil
+	}
 	if perm == nil {
+		player.AddToGraveyard(failed)
 		return false, nil
 	}
 	g.registerBattlefieldEntry(perm, nil, uuid.Nil)

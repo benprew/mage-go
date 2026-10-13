@@ -315,6 +315,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"event", "actions"}[index]
 			}
+		case "CardsCantEnterTheBattlefield":
+			if len(n.Args) == 1 {
+				return "entry_prohibition_card_filter"
+			}
 		case "EnchantPermanent":
 			if len(n.Args) == 1 {
 				return "permanent_filter"
@@ -372,6 +376,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "DecreaseSpellCost" && len(n.Args) == 2 {
 			return []string{"cost_spell_filter", "spell_cost_reduction"}[index]
+		}
+	case "entry_prohibition_card_filter":
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
 		}
 	case "cost_spell_filter":
 		if n.Name == "IsColor" && len(n.Args) == 1 {

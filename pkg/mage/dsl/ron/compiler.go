@@ -628,6 +628,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileDrawStepLifeReplacement(n)
 	case "ActivatedAbilityEffect":
 		return compileActivationCostModifier(n, ctx)
+	case "CardsCantEnterTheBattlefield":
+		return compileLandEntryRestriction(n)
 	case "EachPlayerEffect":
 		return compileAllPlayerRule(n)
 	case "PlayerEffect":

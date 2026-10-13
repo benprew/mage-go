@@ -48,7 +48,7 @@ func (g *Game) IsLandPlayProhibited(card Card) bool {
 	if card == nil || !card.HasType(core.TypeLand) {
 		return false
 	}
-	if g.effects.Rules.CantPlayLands() || g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
+	if g.IsLandEntryProhibited(card) || g.effects.Rules.CantPlayLands() || g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
 		return true
 	}
 	for _, effect := range g.effects.effects {

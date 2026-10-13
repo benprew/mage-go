@@ -112,7 +112,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 				continue
 			}
 		}
-		if entry.permanent.HasType(core.TypeLand) && g.effects.Rules.LandsCantEnter() {
+		if g.isLandEntryProhibited(entry.permanent.HasType(core.TypeLand)) {
 			continue
 		}
 		if _, ok := g.RemoveFromExile(entry.subject.id); !ok {

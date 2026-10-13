@@ -14188,8 +14188,27 @@ queries make no offers. Copies and clones resolve independently; delays retain
 the exact source information and saved payer bindings they need.
 
 TestRONEligibleAlternativePaymentWorms executes the unchanged upkeep rule from
-the complete Worms of the Earth record. Its full record remains rejected for
-CardsCantEnterTheBattlefield; this mapping proves the payment rule, not complete
-card gameplay. Frames covers source departure/return/phasing/control, copies,
+the complete Worms of the Earth record. This test isolates the payment rule;
+TestRONLandEntryRestrictionWorms now supplies complete card gameplay. Frames covers source departure/return/phasing/control, copies,
 clones, lifelink and delay queries. Invalid covers malformed alternatives,
 unsupported costs, unbound or escaped payers and atomic collection rejection.
+
+## RON static land-entry prohibition
+
+`CardsCantEnterTheBattlefield(IsCardtype(Land))` is supported in an ordinary
+permanent rule list. It lowers to `Static(PreventLandEntry())`. Other filters,
+wrong arities, nonpermanent declarations and resolving action contexts reject.
+RON owns the syntax and fresh declarations; the engine owns entry legality,
+replacement rechecks, zone retention and source lifetimes.
+
+`Game.IsLandEntryProhibited(card Card) bool` reads active source rules without
+choices or mutation. Phasing, departure and ability removal stop the source
+rule. Existing lands remain on the battlefield. Land copies and tokens cannot
+bypass the prohibition. Blocked hand, graveyard, library and exile entry retain
+the card in its zone; searches still shuffle and delays expire normally.
+
+`TestRONLandEntryRestrictionWorms` executes the complete unchanged record,
+including land-play restriction, entry prohibition, each upkeep's alternative
+payment, prevention and destruction. `RealEntryPaths` covers Gaea's Touch,
+Untamed Wilds and clone isolation. `Invalid` and `AtomicLoad` retain strict
+shape validation and atomic collection loading.

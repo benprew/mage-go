@@ -6,33 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **849 accepted / 137 rejected names**
-(986 total), **2,190 compiled / 255 rejected records** (2,445 total).
-The latest slice adds eligible-player alternative resolution payments. Worms of
-the Earth's unchanged upkeep rule has RON gameplay evidence; land-entry
-prohibition still blocks its complete record. The strict loader rejects the
-collection and publishes no partial registry.
+Latest measured result (2026-10-13): **850 accepted / 136 rejected names**
+(986 total), **2,191 compiled / 254 rejected records** (2,445 total).
+The latest slice adds static land-entry prohibition. Worms of the Earth's
+complete unchanged DRK record now compiles and has RON gameplay evidence for
+all three rules. The strict loader still rejects the collection and publishes
+no partial registry.
 
-The latest slice is **ELIGIBLE-PLAYER-ALTERNATIVE-PAYMENT**. Fixed mana,
-matching sacrifice and damage options share local candidate payer bindings.
-Accepted damage pays even when prevented. Estimated and actual full-card gains
-are zero. Runtime cutover and removal gates remain open.
+The latest slice is **STATIC-LAND-ENTRY-PROHIBITION**. Entry checks use active
+source lifetimes and recheck copy changes. Prohibited cards retain their zone
+visits. Estimated and actual gains are one unique card / one record.
+Runtime cutover, Go-card removal and obsolete DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Land-entry prohibition: Worms of the Earth.**
-   Its alternative payment prerequisite is complete. Audit all entry paths and
-   replacement ordering before lowering CardsCantEnterTheBattlefield. Estimated
-   immediate gain: one unique card / one record. Reassess shared multi-card work.
-2. **Dependent permanent target comparison: Gauntlets of Chaos.**
+1. **Dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains. Exchange-result handling and the documented Aura-only
-   source correction remain required.
-3. **Source-leave layer duration: Gaea's Liege.**
-   Its defending-player filter, characteristic rules and known source defect remain.
-   Reassess shared multi-card candidates before selecting these prerequisites.
+   source correction remain required. Reassess shared multi-card work first.
+2. **Source-leave layer duration: Gaea's Liege.**
+   Zero immediate gains until its defending-player filter, characteristic rules
+   and known source defect are resolved. Reuse the completed source durations.
+3. **Graveyard-source trigger arming: Nether Shadow.**
+   Six reprints share one definition. Intervening-if graveyard order, exact card
+   visits and optional entry require a complete nested contract before an unlock
+   estimate. Compare shared event prerequisites before selecting this work.
 
 ## Dependencies and source blockers
 
@@ -1979,3 +1979,193 @@ cleanup remain unfinished.
 
 Reassess shared multi-card work with complete records before selecting a next
 slice. This run stops after eligible-player alternative resolution payments.
+
+## 2026-10-13 — STATIC-LAND-ENTRY-PROHIBITION
+
+### Baseline, candidates and selection
+
+The starting working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, with
+2,190 compiled / 255 rejected records and 849 accepted / 137 rejected names.
+This was not a build or test failure. No unrelated work was changed.
+
+The latest entry's ranked candidates were assessed from complete unchanged RON
+records and nested forms, with reprints counted once:
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers | Downstream value | Effort |
+| --- | --- | --- | --- | --- | --- |
+| Static land-entry prohibition | Worms of the Earth | 1 name / 1 record | None after the prior payment slice | Shared legality query, copy rechecks and zone-retention entry paths; interaction coverage for Gaea's Touch and Untamed Wilds | Moderate; one adapter, one static service, entry-path repairs and contract tests; one run |
+| Dependent target type comparison | Gauntlets of Chaos | 0 | Exchange-result guard and recorded Aura-only source correction | Cross-target type legality for an exchange | High; prerequisite slice followed by separate result and data work |
+| Source-leave layer duration | Gaea's Liege | 0 across 6 records | Defending-player membership, characteristic behavior and the duplicate IsntAttacking source defect | Source-bound type effects and characteristic values | High; several independent contracts and source evidence |
+
+Candidate 1 was the only bounded, dependency-ready full-card unlock among these
+candidates. The two alternatives provide no immediate shared multi-card gain.
+The broad phases are dependency guidance; first-error counts do not establish
+full-card unlocks. This run completes the final independent Worms rule and does
+not start another capability.
+
+Before implementation, the selected contract was an ordinary permanent rule
+with exact syntax `CardsCantEnterTheBattlefield(IsCardtype(Land))`. Acceptance
+cases included invalid declarations, full Worms gameplay, source lifetimes,
+zone retention, copy rechecks and token batches. RON owns spelling, shape checks
+and fresh factories. The engine owns entry legality, replacements and movement.
+No reference or result scope is added by this static rule.
+
+### Exact signatures, dependencies and reuse
+
+- `PreventLandEntry() StaticRule` creates a reusable battlefield source rule.
+- `Game.IsLandEntryProhibited(card Card) bool` is a pure query. Nil and nonland
+  cards return false. Legacy global entry flags remain supported.
+- RON accepts exactly one `IsCardtype(Land)` argument on an ordinary permanent
+  rule. Other card types, compound filters, wrong arities, unbound references,
+  nonpermanent rules and resolving action contexts reject before gameplay.
+- Inventory descendants now use `entry_prohibition_card_filter` and `card_type`.
+  The strict loader and atomic registry publication behavior remain unchanged.
+
+The typed effect reads the existing printed declaration wrapper, source visit
+and active-effect service instead of writing a cached global flag. Phasing,
+face-down status, departure and ability removal stop it; tapping and control
+changes do not. Return, overlapping sources and clones keep separate lifetimes.
+No new mutable declaration, result slot or resolution callback is shared.
+
+Existing entry preparation, copied definitions, replacement priorities, zone
+storage, source attribution, token batches and event services remain in use.
+Initial land entry is prohibited before entry replacements. A copy that becomes
+a land stops the replacement loop before later entry operations. This is a
+prohibition, not a new replacement effect. Prohibited token members produce no
+entry event; permitted members still enter in the shared batch.
+
+Three pre-existing entry-path defects were exposed by failing tests: legacy hand
+entry consumed a prohibited card, source-graveyard return removed a prohibited
+card, and delayed exile return removed a prohibited card. Those paths now retain
+their cards. Hand and graveyard entry prepare before consuming a saved visit and
+recheck the visit after choices; prohibited copies retain that visit. Delayed
+exile return prepares before removal. Library search retains its existing
+restoration and shuffle behavior. Linked exile batches share the active query.
+Land play and playable-land queries also reject prohibited entry before hand or
+library removal and before turn-history changes.
+
+The local obsolete `graveyardCardCanEnter` helper had no remaining callers after
+the shared entry-path changes and was removed. No broad DSL function was removed.
+The existing Go definitions, legacy engine APIs, generators and startup wiring
+remain in place because their removal gates are not satisfied.
+
+### Failing-first evidence and gameplay mappings
+
+`TestLandEntryRestriction` first failed to compile for the missing
+`PreventLandEntry` signature. A test setup typo in the existing token-batch method
+name was corrected, and the missing-signature failure was confirmed again before
+production implementation. The initial service then exposed assertion failures
+for immediate phasing and the three zone-retention paths listed above.
+
+Before RON production changes, `TestRONLandEntryRestrictionWorms` and
+`AtomicLoad` failed with unsupported CardsCantEnterTheBattlefield. Copy tests
+then failed for a later replacement firing after land copying and for losing the
+hand visit. The land-play test failed because a prohibited land play succeeded.
+Each corresponding repair followed its observed assertion failure.
+
+Native mappings:
+
+- `TestLandEntryRestrictionLifecycle`: normal, tapped, control-changed, phased,
+  phase-cycle, ability removal/restoration, departed/returned, cloned, overlapping
+  and face-down sources; both players, land creatures and permitted nonlands;
+  definition validation rejects a static entry rule on an instant.
+- `TestLandEntryRestrictionZoneRetention`: hand, optional hand, graveyard,
+  source-graveyard, library and delayed exile paths retain prohibited cards.
+- `TestLandEntryRestrictionBatch`: mixed permitted/prohibited members and land
+  tokens; only permitted members produce battlefield entry events.
+- `TestLandEntryRestrictionCopyRecheck`: direct, hand, graveyard, library and
+  delayed exile copies that become lands; no later replacement fires, no
+  prohibited copy is placed in the graveyard, and saved visits remain intact.
+- `TestLandEntryRestrictionPlay`: failed land play preserves hand identity and
+  turn history; playable-land queries exclude prohibited entry.
+
+RON mappings:
+
+- **Worms of the Earth → TestRONLandEntryRestrictionWorms**: complete unchanged
+  DRK record, cast through the engine; both upkeep players; land play and direct
+  entry prohibition for both players; sacrifice, damage acceptance, full damage
+  prevention, decline, self-destruction and restriction expiration. The complete
+  record is newly accepted. Existing isolated payment/frame tests still cover
+  source LKI, copies, clones, delayed frames and transaction behavior.
+- **Gaea's Touch → TestRONLandEntryRestrictionRealEntryPaths/hand**: complete
+  unchanged DRK record cannot consume a Forest from hand under Worms.
+  Existing TestRONOptionalHandEntryGaeasTouch retains its full-card mapping.
+- **Untamed Wilds → TestRONLandEntryRestrictionRealEntryPaths/library**: complete
+  unchanged LEG spell retains a searched basic land in the library under Worms.
+  Existing library-search scenarios remain valid.
+- `RealEntryPaths/clone`: complete Worms source rules remain independent between
+  a live game and its clone after the clone loses the source.
+- `TestRONLandEntryRestrictionInvalid` and `AtomicLoad`: static shape/context
+  rejection and no partial publication when any record fails.
+
+### Source evidence, files and validation
+
+`data/DRK.json` confirms Worms' land-play, land-entry and sacrifice-or-damage
+upkeep text. CR 101.2 and 614.17 establish prohibition before the event and
+entry-characteristic rechecks; CR 614.12 supplies entry-choice timing.
+No source defect was corrected or introduced. All RON records remain unchanged,
+so the source vocabulary snapshot needs no refresh. Previously recorded source
+issues for Gauntlets, Gaea's Liege and other cards remain open.
+
+Engine changes: new land_entry_restriction.go/test; entry integration in game.go,
+effect_manager.go, effect_cards.go, optional_hand_entry.go, effect_removal.go,
+linked_exile_entry.go and land_play_restriction.go. Compiler changes: new
+land_entry_restriction.go/test, compiler.go and inventory.go. Existing payment,
+land-play, definition-plan, numeric, inventory and upkeep inventory tests update
+exact collection expectations and keep explicit Worms coverage. Documentation:
+pkg/mage/doc.go, engine-rules-contracts.md, dsl-reference.md and this ledger.
+
+Required checks:
+
+- Focused RON land-entry tests and expanded payment, land-play, definition-plan,
+  numeric and inventory tests pass with `-count=1`.
+- Native land-entry and existing optional-hand, copy, library-search, linked-exile,
+  permanent-spell-copy and land-play regressions pass with `-count=1`.
+- `make build` and `go vet ./...` pass.
+- `go test ./pkg/mage/... -short -count=1` and `make test` pass.
+- The engine skill's additional `go test ./... -short -count=1` passes.
+- The first engine-short run found seven obsolete expected counts or rejection
+  assertions after Worms became accepted. Exact record counts changed by one;
+  upkeep inventories now explicitly require Worms and count 59 names / 120
+  records. The formerly unsupported fixture uses an unsupported Creature filter
+  instead of the newly supported Land filter. No assertion was weakened.
+  Focused tests and all build, vet, engine-short and full-suite checks then passed.
+- Initial `make lint` rejected a test helper variable named copy for shadowing
+  Go's built-in. It was renamed clone. The final focused RON/native tests,
+  build, vet, engine short tests and `make test` passed again after that change.
+  Final `make lint` passed with **0 issues**. Automatic changes were reviewed;
+  only import formatting changed, with no unrelated changes. `git diff --check`
+  passed. There is no outstanding environment, build, test or lint blocker.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected for the remaining
+  unsupported collection: **2,191 compiled / 254 rejected records**,
+  **850 accepted / 136 rejected names**, 2,445 records / 986 names total.
+  Comparing every diagnostic with the fresh baseline removes exactly
+  Worms of the Earth's DRK.lines.ron:118:221 CardsCantEnterTheBattlefield issue.
+  No other diagnostic changed and no new diagnostic appeared. No accepted record
+  regressed; no partial production registry was published.
+
+Estimated and actual compilation gains match: **one unique card / one record**.
+Full-card RON gameplay coverage gains **Worms of the Earth**. Existing Gaea's
+Touch and Untamed Wilds mappings gain prohibition interaction evidence, without
+new compilation gains. Compilation and gameplay coverage remain separate.
+Collection gaps remain 136 names / 254 records. Complete collection gameplay,
+embedded native loading, application cutover, Go-card deletion and obsolete DSL
+cleanup remain unfinished.
+
+### Ranked next candidates
+
+1. Dependent permanent target type comparison for Gauntlets of Chaos. Its
+   exchange-result guard and documented Aura-only source correction remain;
+   estimated immediate full-card gain is zero. Reassess useful shared multi-card
+   work before choosing this single-card prerequisite.
+2. Source-leave layer duration for Gaea's Liege. Defending-player membership,
+   characteristic behavior and the known duplicate predicate remain; estimated
+   immediate gain is zero until the complete nested requirements are resolved.
+3. Graveyard-source trigger arming for Nether Shadow. Its six reprints share one
+   definition; the full nested shape also needs a graveyard-order intervening-if,
+   exact zone visits and optional entry. Establish dependencies and an unlock
+   estimate before implementation; compare shared event work first.
+
+This run stops after static land-entry prohibition.
