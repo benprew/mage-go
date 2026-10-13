@@ -8,24 +8,26 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **854 accepted / 132 rejected names**
 (986 total), **2,196 compiled / 249 rejected records** (2,445 total).
-The latest slice adds temporary singular control durations. Complete unchanged
-Preacher (DRK) and Disharmony (LEG) records now compile and have RON gameplay
-evidence. The strict loader still rejects the collection and publishes no
-partial registry.
+The latest slice adds resolving permanent card-type comparison as a shared
+prerequisite for Gauntlets of Chaos and Enchantment Alteration. Both complete
+records still reject. The strict loader rejects the collection and publishes
+no partial registry.
 
-The latest slice is **TEMPORARY-SINGULAR-CONTROL**. Typed layer 2 modifications
-use end-of-turn or tapped-source lifetimes with exact visits and saved controllers.
-Estimated and actual gains are two names / two records. Runtime cutover,
-Go-card removal and DSL cleanup gates remain open.
+The latest slice is **RESOLVING-PERMANENT-TYPE-COMPARISON**. Both comparison
+spellings lower resolving collections to typed current-or-LKI engine selection.
+Estimated and actual gains are zero names / zero records. Dependent target
+context remains separate. Runtime cutover, Go-card removal and DSL cleanup
+gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Shared dependent permanent type comparison.** Gauntlets of Chaos and
-   Enchantment Alteration need related typed comparisons. Immediate gains are
-   zero until exchange-result/source repair and attachment actions are complete.
+1. **Dependent target context and target-derived host references.** Resolving
+   type comparison is complete. Gauntlets of Chaos still needs earlier target
+   choices in announcement queries; Enchantment Alteration needs the target's
+   host. Immediate gains remain zero until outcomes and attachment actions finish.
 2. **Shared announcement mana restrictions and clamped outcomes: Drain Life.**
    Saved damage results exist; restricted X payment and clamping remain.
    Compare other mana-payment contexts before selecting a bounded prerequisite.
@@ -2501,3 +2503,197 @@ embedded native loading, startup cutover, Go-card deletion and obsolete DSL clea
    order-based intervening-if, exact visits and optional entry still need contracts.
 
 This run stops after temporary singular control.
+
+## 2026-10-13 — RESOLVING-PERMANENT-TYPE-COMPARISON
+
+### Candidate comparison and selection
+
+The worktree was clean before edits. AGENTS.md, the engine reference, execution
+design, current status and latest entry were read. Fresh complete RON package
+tests supplied passing compilation/test evidence before production edits. The
+baseline strict loader exited 1 with 2,196 compiled / 249 rejected records and
+854 accepted / 132 rejected names. Collection rejection was not a build failure.
+
+Complete records were inspected for Gauntlets of Chaos and Enchantment Alteration
+in LEG and Drain Life and Nether Shadow in all six reprint sets. Targeted
+vocabulary inspection found one occurrence of each card-type comparison form.
+Nested forms and remaining blockers determined the estimates; reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Shared permanent card-type comparison | Gauntlets of Chaos; Enchantment Alteration | 0 names / 0 records from the resolving prerequisite | Gauntlets needs dependent target queries, exchange results and the Aura-only source repair. Alteration needs attachment movement and a target-derived host. A typed current/LKI comparison supplies a shared information and selection contract for both downstream capabilities. | Medium for the resolving context; high for announcement context and every target acquisition path. |
+| Restricted announcement X mana | Drain Life | 0 from payment alone; 1 name / 6 records after clamped outcomes | Saved damage outcomes exist. Restricted X payment and pre-damage life/loyalty/toughness clamping remain. The payment contract could serve later restricted casting forms, but this collection form affects one name. | Medium for payment; medium/high for complete damage clamping and replacements. |
+| Graveyard-source trigger arming | Nether Shadow | 0 from arming alone; 1 name / 6 records after all prerequisites | Needs exact graveyard visits, ordered creature cards above the source, intervening-if checks and optional entry. Zone-source event infrastructure can be reused downstream, but this candidate proves only one immediate name. | High for event lifecycle, order checks and native entry tests. |
+
+Candidate #1 wins as the ranked multi-card prerequisite. Investigation found that
+`targetDeclaration` stores no choices and announcement `Possible` queries do not
+carry earlier groups' choices. Completing dependent targets would also require
+feasibility queries, player/opponent/random selection, trigger placement, payment
+rechecks and copy retargeting to share that frame. These are explicit missing
+engine contracts, not adapters that can safely capture mutable target state.
+
+This run therefore selects one complete supported context: resolving permanent
+collections, including delayed bodies. The reuse boundary is exact permanent
+information plus typed set selection in mage; spelling, arity and local bindings
+stay in ron. Acceptance cases were stated before edits: current and LKI types,
+identity across return/phasing, declaration rejection, payment rollback,
+target legality, copied/cloned/delayed frames and pure queries. Announcement
+predicates are deferred as a separate prerequisite, not partly accepted.
+
+### Exact signatures, contexts and engine reuse
+
+New engine API:
+
+```go
+PermanentsSharingCardTypes(reference PermanentRef, subjects PermanentSet,
+    types ...core.CardType) PermanentSet
+```
+
+No supplied types permits all engine card types. A supplied list restricts the
+intersection and is copied at construction. Definition checks reject invalid
+or duplicate types, missing operands, incompatible information references and
+undeclared target/choice reads. The reference uses the existing
+`readPermanentInformation` current/phase/departure service. Subjects must remain
+present, unphased, exact visits. Input order is retained and duplicates are removed.
+Layered and face-down types are read through `Permanent.HasType` and exact LKI.
+An absent reference with no retained information selects nothing. Control is
+independent of type comparison; other set operands can restrict it.
+
+RON resolving collections accept exactly:
+
+```text
+SharesACardtypeWithPermanent(permanentRef)
+SharesACardtypeWithPermanentFromAmongCardtypes(permanentRef, [cardTypes...])
+```
+
+The restricted list must be nonempty and distinct. It uses existing RON type
+symbols: Artifact, Creature, Enchantment, Instant, Land and Sorcery. Unrestricted
+comparison can match all engine types. Typed singular source, Aura host, target,
+event and prior-choice references retain their normal scope and declaration
+checks. These forms compose with resolving And/Or collections and lower to the
+new service over `MatchingPermanents(AnyPermanent)`. Entry and draw-replacement
+bodies reject them. Target filters and static declarations retain their errors.
+
+The shared information service, resolution/target frames, current attachments,
+permanent choices, set intersections/unions, action batches, payment transaction,
+target legality, copying and game cloning supply execution. Waiting delayed
+source traversal now sees both reference and subject-set operands without
+reading types or running filters. No mutable declarations, global results,
+card-name branches, fallback registry, replacement system or zone system were
+introduced. Existing engine and Go-card callers keep their signatures.
+
+### Failing-first evidence and gameplay mappings
+
+Before the engine implementation, `TestPermanentTypeComparison*` failed to
+compile solely because `PermanentsSharingCardTypes` did not exist. Initial
+test-only helper mistakes were corrected before confirming that expected
+failure. Before the RON adapter, focused gameplay failed on unsupported
+`SharesACardtypeWithPermanent` and the restricted form's old one-argument
+filter rejection. Both expected failures were observed before their respective
+production implementations. Test fixture mistakes about type attributes and an
+Aura activation index were corrected; no gameplay requirement was removed.
+
+- Native `TestPermanentTypeComparison`: unrestricted/restricted intersection,
+  no types, empty intersections, layer 4 changes, departure LKI, returned source,
+  phase/phase cycle, missing identity, phased members, control, clones and RNG purity.
+- Native `TestPermanentTypeComparisonDeclarations`: nil operands, invalid and
+  duplicate types, undeclared targets/choices, valid typed target and independent
+  constructor list storage.
+- Native `TestPermanentTypeComparisonSavedAndWaiting`: source, target, saved
+  and attachment references; departure/return/phase/face-down information,
+  clone execution and pure waiting queries for either explicit source operand.
+- `TestRONPermanentTypeComparisonResolution`: both complete synthetic RON
+  forms; real mana payment and rollback, resolution timing, current types and
+  control, late entry, source LKI/return/phasing, member phasing, copies and clones.
+- `TestRONPermanentTypeComparisonTargetsAndHost`: typed target and Aura-host
+  bindings through real RON activation and shared tapping.
+- `TestRONPermanentTypeComparisonTargetLegality`: illegal target information
+  cannot select subjects; partial legality still runs independent life gain;
+  all-illegal spells do not resolve. Covers shroud, return and phasing.
+- `TestRONPermanentTypeComparisonDelayedChoice`: preceding lexical choice,
+  future end-step execution, source departure, returned/phased choice LKI,
+  copied activations, cloned delayed frames and waiting-query purity.
+- **Gauntlets of Chaos → TestRONPermanentTypeComparisonRepositoryExpressions**:
+  executes its exact nested restricted comparison with its numbered target
+  binding in an explicit fixture. Complete unchanged record still rejects.
+- **Enchantment Alteration → TestRONPermanentTypeComparisonRepositoryExpressions**:
+  executes its exact nested unrestricted host comparison in an Aura fixture.
+  This proves the information prerequisite, not a target-derived spell host or
+  attachment movement. Complete unchanged record still rejects.
+- `TestRONPermanentTypeComparisonInvalid`: malformed arity/kinds/type lists,
+  duplicate types, unbound and incompatible references and continued complete-card
+  rejection. Repository-expression tests also reject entry/replacement contexts.
+
+These nine top-level tests add contract/gameplay evidence for this resolving
+capability. The two repository-expression mappings are partial prerequisites;
+they do not establish full-card gameplay coverage or increase accepted names.
+
+### Rules, source defects and removal boundaries
+
+Local authoritative data/LEG.json confirms the exact Oracle requirements.
+CR 400.7 and 608.2h support exact-visit/current/LKI reads; 608.2b controls illegal
+target information; 702.26b and existing information contracts keep phased
+subjects separate from information references. CR 601.2c supports the deferred
+announcement context's need for prior target choices.
+
+Gauntlets' existing attachment collection still lacks Oracle's Aura restriction;
+it could include Equipment. The full record's exchange-result condition remains
+unsupported. Alteration's HostPermanent is not currently bound in its instant
+spell context; a target-derived host service must define that read before its
+attachment instruction can lower. These remain explicit source/engine boundaries.
+No RON source was changed, so no vocabulary refresh is needed. Gaea's Liege's
+duplicate attack predicate and other recorded source defects remain open.
+
+API/reference documentation records only this resolving contract. No Go card
+definition, generator or DSL function is removed: the full-collection, startup,
+gameplay and caller-removal gates remain open. There is no new partial production
+registry. No environment failure was observed.
+
+### Validation and measured gain
+
+Required verification passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONPermanentTypeComparison -count=1` passed.
+- `go test ./pkg/mage -run TestPermanentTypeComparison -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's additional `go test ./... -short -count=1` passed.
+- `make lint` passed with **0 issues**. Formatter/modernizer output and the
+  final worktree were reviewed; no unrelated changes or semantic edits appeared.
+  Post-lint focused native and RON tests passed again.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as required while remaining
+  records reject. JSON comparison with the fresh baseline is exactly equal:
+  every count, position and diagnostic is unchanged.
+
+Estimated and actual full-card gains are **zero names / zero records**. The
+selected resolving prerequisite adds gameplay/contract evidence but does not
+wire the unsupported parents in the two inventory records. Final counts remain
+**854 accepted / 132 rejected names**, **2,196 compiled / 249 rejected records**,
+out of 986 names / 2,445 records. Gauntlets still reports LEG:95:416, expected one
+positional filter argument for the restricted dependent target comparison.
+Alteration still reports LEG:75:286, unsupported AttachPermanentToAPermanent.
+There are no new diagnostics, collection regressions or validation blockers.
+
+Changed files: `pkg/mage/permanent_type_comparison.go` and its native test;
+`pkg/mage/dsl/ron/permanent_type_comparison.go` and its RON test;
+`pkg/mage/dsl/ron/contextual_collection.go`, `pkg/mage/waiting_delayed_source.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
+this ledger. Remaining gaps are the 132 names / 249 records, complete collection
+gameplay, embedded loading, application cutover, Go-card deletion and DSL cleanup.
+
+### Ranked next candidates
+
+1. **Dependent target context and target-derived host references**: Gauntlets of
+   Chaos and Enchantment Alteration. The resolving comparison service is ready.
+   Select a bounded complete announcement/reference prerequisite with all
+   acquisition, legality and copy paths. Full cards still need exchange results,
+   Aura-only correction or attachment movement; zero immediate estimated unlocks.
+2. **Restricted X announcement mana payment**: Drain Life. Zero gain until its
+   clamped result consumer also works; eventual one name / six records. Compare
+   other complete restricted-payment records before selecting this prerequisite.
+3. **Graveyard-source trigger arming**: Nether Shadow. Exact source visits,
+   graveyard order, intervening-if and optional entry remain; eventual one name /
+   six records. Keep event arming separate from incomplete source-zone execution.
+
+This run stops after resolving permanent card-type comparison.

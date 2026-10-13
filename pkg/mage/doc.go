@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentsSharingCardTypes] selects present subjects with a shared card type.
+// The reference reads current or exact departure and phase information.
+// Return cannot replace the saved visit. With no type list, all types can match.
+// Restricted lists contain distinct valid types. Absent and phased subjects
+// cannot match. Existing frames keep targets, choices, copies and delays separate.
+// Waiting queries retain explicit source reads without running the comparison.
+// RON accepts both card-type comparison forms in resolving collections.
+// Target predicates, entry operations and replacements need separate adapters.
+//
 // RON temporary singular control uses [ChangeController] with [Until] or
 // [UntilSourceUntaps]. Subjects keep their exact visits and the effect controller.
 // Cleanup ends end-of-turn control. Tapped-source control starts only with a

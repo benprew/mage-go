@@ -7,6 +7,8 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "SharesACardtypeWithPermanent", "SharesACardtypeWithPermanentFromAmongCardtypes":
+		return compilePermanentTypeComparison(n, ctx)
 	case "CostWasntPaidForIt":
 		if n.Kind != Symbol || ctx.permanentPayment == nil {
 			return nil, problem(n, "unbound unpaid permanent set")

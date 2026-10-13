@@ -18739,3 +18739,35 @@ complete unchanged card records, opponent choice, spell/activation payments,
 combat window and removal, exact visits, phasing, source control changes,
 ability removal, optional untap, stun, copies, delayed frames and clones.
 Plural control and other declaration contexts need separate adapters.
+
+## Resolving permanent card-type comparison
+
+`PermanentsSharingCardTypes(reference PermanentRef, subjects PermanentSet,
+types ...core.CardType) PermanentSet` selects current subjects with at least one
+card type shared with the reference. An omitted list permits every engine card
+type; a supplied list restricts the intersection. The constructor copies the
+list. Definition validation rejects invalid or duplicate types, missing operands,
+unsupported information references and reads without a local producer/declaration.
+Supertypes, subtypes and colors do not supply card types.
+
+The existing exact-incarnation information service supplies current layered
+types or departure/phase information (CR 400.7, 608.2h, 702.26b). A return cannot
+replace a saved source, target or choice. The reference supplies information only;
+subjects must be present, unphased, current visits. Selection keeps input order
+and removes duplicate subjects. Face-down references and subjects use their
+current face-down types. Empty type intersections select nothing. Control and
+shroud do not restrict an untargeted collection unless its other operands do so.
+
+Target legality remains with the enclosing ability (CR 608.2b). Illegal target
+bindings cannot supply resolving comparison information. Source departure can
+supply LKI. Attachment references use the existing current-or-retained exact-host
+contract; they do not follow a returned host. All members are selected before the
+shared action batch. No new zone, replacement, layer or payment system is added.
+
+Waiting delayed queries retain explicit source reads from both the reference and
+subject set without reading types or running filters. Existing frames keep saved
+choices, targets, copied bodies, delayed bodies and cloned games separate.
+Evidence: `TestPermanentTypeComparison`, `Declarations`, `SavedAndWaiting` and
+`TestRONPermanentTypeComparison*`. These tests establish the resolving service.
+Dependent announcement targets, attachment movement, static declarations, entry
+operations and replacement bodies require separate adapters.

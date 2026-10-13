@@ -14267,3 +14267,39 @@ Preacher (DRK) and Disharmony (LEG) now compile as complete unchanged records.
 Evidence: `TestRONTemporaryControl*` and `TestTemporaryControlDuration*`.
 Existing controller-bound and source-presence endpoints retain their callers.
 Plural control, new endpoints, static, cost and entry forms remain separate.
+
+## RON resolving card-type comparison
+
+Resolving permanent collections accept:
+
+```text
+SharesACardtypeWithPermanent(permanentRef)
+SharesACardtypeWithPermanentFromAmongCardtypes(permanentRef, [Artifact, Creature, Land])
+```
+
+The second form requires a nonempty list of distinct supported card-type symbols:
+Artifact, Creature, Enchantment, Instant, Land or Sorcery. It uses the existing
+RON card-type vocabulary; an unrestricted comparison can match all engine types.
+Both forms use a locally bound singular reference, including a permanent source,
+Aura host, declared singular target, event reference or prior permanent choice.
+They compose with existing `And` intersections and `Or` unions. They lower to
+`mage.PermanentsSharingCardTypes(ref, mage.MatchingPermanents(mage.AnyPermanent),
+types...)`; RON owns spelling, arity and scope, while mage owns identity,
+information timing and membership. Reads without a producer, incompatible
+references and malformed type lists remain declaration errors.
+
+Current or exact last-known reference types are compared with current, present,
+unphased collection members. Target legality still applies to a target reference.
+Source departure and saved-choice departure can supply exact LKI. Copies, clones
+and delayed frames keep their own bindings. Waiting queries do not run filters.
+Entry and draw-replacement bodies reject these forms. Target-filter declarations
+and static rules remain unsupported contexts.
+
+`TestRONPermanentTypeComparisonRepositoryExpressions` executes the exact nested
+expressions from Gauntlets of Chaos and Enchantment Alteration in explicit test
+fixtures. These are prerequisite tests, not complete-card gameplay evidence.
+Full unchanged records still reject: dependent announcement target context,
+exchange outcome and Aura-only source correction remain for Gauntlets; attachment
+movement and a target-derived host reference remain for Enchantment Alteration.
+`Resolution`, `TargetsAndHost`, `TargetLegality`, `DelayedChoice` and `Invalid`
+cover synthetic complete RON gameplay and supported declaration boundaries.

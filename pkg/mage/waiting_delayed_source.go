@@ -221,6 +221,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return permanentSetReadsSourcePermanent(s.subjects) || permanentRefReadsSourcePermanent(s.excluded)
 	case leastPowerComparisonSet:
 		return permanentSetReadsSourcePermanent(s.subjects) || permanentSetReadsSourcePermanent(s.compared)
+	case sharingCardTypesSet:
+		return permanentRefReadsSourcePermanent(s.reference) || permanentSetReadsSourcePermanent(s.subjects)
 	case lowestPowerSet:
 		return permanentSetReadsSourcePermanent(s.subjects)
 	case highestManaValueSet:
