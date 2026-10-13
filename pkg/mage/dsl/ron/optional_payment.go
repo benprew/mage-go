@@ -26,6 +26,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			i++
 			continue
 		}
+		if part.Name == "EachPlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "TapAnyNumberOfPermanents" {
+			build, err := compilePlayerTapResults(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if part.Name == "EachPlayerAction" && part.Kind == Tuple && len(part.Args) == 2 && part.Args[1].Name == "DiscardUptoNumberCards" {
 			build, err := compilePlayerDiscardResults(part, parts[i+1:], ctx)
 			if err != nil {

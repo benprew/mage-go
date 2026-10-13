@@ -18259,3 +18259,39 @@ Evidence: `TestHandCardinalityChoicesAndBatch`, `BoundsLeastAndDeclarations`,
 creature sacrifice in their declared order. Existing permanent-cardinality and
 optional-discard result tests retain their identity, phasing, LKI, replacement,
 payment and frame evidence.
+
+## Optional per-player tap selection and actual results
+
+`TapAnyNumberEach(players PlayerSet, subjects PermanentSet,
+result *PlayerNumbersBinding) ResolvingEffect` saves each selected player's actual
+tap count. The subjects are restricted to present untapped permanents controlled
+by that player. Duplicate or absent player IDs and duplicate, phased or old
+permanent visits do not add subjects. The entire candidate collection is read
+once, and both players' candidate groups are saved before any choice.
+
+Each player chooses a count from zero to their candidate count, then distinct
+permanents through the shared bounded subset selector. Choices use APNAP order;
+later players receive the previous players' public selections, including an empty
+selection (CR 101.4, 101.4b, 608.2d–f). Malformed counts are clamped. Malformed
+permanent responses use distinct saved candidates. All choices precede taps.
+Summoning sickness does not restrict this effect; it is not a tap-symbol cost.
+
+Each selected subject must retain its exact battlefield visit, remain untapped
+and present, and remain controlled by its chooser before tapping. Only these
+actual transitions supply counts (CR 400.7, 701.26a). The shared
+`tapPermanentsTogether` service sets every state before any tap event. Counts are
+saved before event detection. There is no new tap replacement pipeline or cost
+transaction: this operation is a resolution effect. Existing costs and tap-cost
+callers retain their behavior. Every invocation clears both result members,
+including absent players and zero choices. Later untapping, control changes and
+departure cannot change the saved counts (CR 608.2i).
+
+`PlayerNumber` reads these same typed result frames. Definition validation checks
+nil operands and producer dominance. Factory declarations, stack copies, game
+clones and delayed bodies retain separate values. Explicit typed source reads in
+players and subjects supply waiting delayed references without selecting members,
+asking questions, or tapping. Phasing and departure retain those references;
+returned sources cannot supply their earlier visits.
+
+Evidence: `TestPlayerTapResultsChoicesAndBatch`, `VisitsAndActualTransitions`,
+`BoundsResetAndDeclarations`, and `SnapshotAndWaiting`, plus the RON tests below.

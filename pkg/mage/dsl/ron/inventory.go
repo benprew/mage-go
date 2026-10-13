@@ -1100,6 +1100,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "spell_reference"
 			}
+		case "TapAnyNumberOfPermanents":
+			if len(n.Args) == 1 {
+				return "permanent_filter"
+			}
 		case "DiscardUptoNumberCards", "DiscardAllButNumberCards":
 			if len(n.Args) == 1 {
 				return "value"
@@ -1426,7 +1430,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "TheLowestNumberOfPermanentsControlledAmongPlayers" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "player_filter"}[index]
 		}
-		if n.Name == "TheNumberOfCardsDiscardedByPlayerThisWay" && len(n.Args) == 1 {
+		if (n.Name == "TheNumberOfCardsDiscardedByPlayerThisWay" || n.Name == "NumberOfPermanentsTappedThisWayByPlayer") && len(n.Args) == 1 {
 			return "player_reference"
 		}
 		if n.Name == "DamageDealtToPlayerThisTurn" && len(n.Args) == 1 {

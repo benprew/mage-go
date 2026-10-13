@@ -441,8 +441,8 @@ rules and target-declaration predicates need separate contracts.
 
 Artifact Ward's complete ATQ record now executes all three rules. Raiding Party's
 exact static rule has contract tests; its complete record remains rejected at
-`TapAnyNumberOfPermanents`, with later tapped-result, chosen-Plains and destruction
-exclusion work still required. Local `data/ATQ.json` and `data/FEM.json` confirm
+`ChooseUptoNumberPermanentsForEach`. Optional tapping and saved tap counts now
+execute; plural chosen-Plains and destruction exclusions still need contracts. Local `data/ATQ.json` and `data/FEM.json` confirm
 these semantics. No RON source record changed.
 
 ## Land-subtype mana bonuses
@@ -13932,3 +13932,34 @@ The compiler lowers these forms directly to `mage.DiscardAllButEach` and
 spelling is local to this action; other player sets, cost/static contexts and
 saved discard results require separate adapters. Complete Balance gameplay is
 covered by `TestRONHandCardinalityBalance` for all six reprints.
+
+## Optional per-player tap results
+
+RON resolving action lists support
+`EachPlayerAction(AnyPlayer, TapAnyNumberOfPermanents(filter))`. The filter must
+contain exactly one conjunctive
+`ControlledByAPlayer(SinglePlayer(ActionPlayer))` clause, either alone or inside
+nested `And` lists. Other clauses use existing contextual permanent collections.
+The engine restricts the resulting set to the chooser's present untapped
+permanents. Disjunctive controller bindings and other player collections reject.
+No tap choices occur during casting or payment.
+
+`NumberOfPermanentsTappedThisWayByPlayer(playerRef)` reads the most recent
+preceding optional-tap producer in that lexical action sequence through
+`PlayerNumber`. Ordinary typed player references and a bound `ActionPlayer` from
+`PlayerActions` can select the saved seat. Branch producers stay in their branch;
+independent producers use distinct declarations. Delayed bodies retain saved
+counts. Activation costs, static rules, unbound reads and `EachablePlayer` outside
+its future plural-choice scope reject. No global last-operation result is used.
+
+`TestRONPlayerTapResultsRaidingPartyInstruction` executes the exact first
+instruction of Raiding Party's activated body, including its Orc sacrifice cost,
+failed-payment check, white/untapped/creature restrictions, both players' optional
+choices and source departure. This is instruction coverage, not complete-card
+coverage: the full record still rejects `ChooseUptoNumberPermanentsForEach`; kept
+plural choices and `NotChosenThisWay` need separate contracts.
+`ScopesCopiesClonesAndDelay`, `ActivationSources`, `Invalid`, and
+`InventoryAndAtomicLoad` cover saved counts, independent factories and producers,
+stack copies, game clones, source control/phasing/return, delayed reads, declaration
+errors, typed inventory roles and strict atomic loading. Existing Raiding Party
+spell/ability target-restriction tests retain coverage for its other rule.

@@ -19,6 +19,7 @@ type costFactory func() mage.Cost
 type scope struct {
 	drawReplacementBody  bool
 	drawReplacement      *drawReplacementPlan
+	playerTap            *playerTapPlan
 	playerDiscard        *playerDiscardPlan
 	sacrificeSubtype     *sacrificeSubtypePlan
 	colorWords           *textWordChoicePlan

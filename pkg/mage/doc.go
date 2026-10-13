@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TapAnyNumberEach] offers each player a count and distinct controlled subjects.
+// All choices precede one tap batch. Present untapped visits supply actual counts
+// in [PlayerNumbersBinding] before tap events. A return cannot supply an old visit.
+// Phasing and loss of control prevent a tap. Saved counts keep historical facts.
+// Copies, clones and delays use separate frames. Waiting queries make no choices.
+// RON accepts AnyPlayer with one conjunctive ActionPlayer controller filter.
+// NumberOfPermanentsTappedThisWayByPlayer reads the preceding local producer.
+// Plural kept choices, exclusions and EachablePlayer scopes need separate adapters.
+//
 // [ChoosePermanentForPlayer] saves a chooser and an exact permanent visit.
 // [PermanentChosenByPlayer] reads the latest preceding choice by that player.
 // Empty choices replace older results. Control changes do not change the chooser.

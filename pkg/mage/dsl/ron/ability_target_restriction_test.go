@@ -138,7 +138,7 @@ func TestRONAbilityTargetRestrictionInvalid(t *testing.T) {
 
 func TestRONAbilityTargetRestrictionRaidingParty(t *testing.T) {
 	record := staticBaseRecord(t, "FEM", "Raiding Party")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "TapAnyNumberOfPermanents") {
+	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "ChooseUptoNumberPermanentsForEach") {
 		t.Fatal("complete unsupported procedure was accepted", err)
 	}
 	factory := staticBaseSubrule(t, record, record.Fields["Rules"].Args[0])
