@@ -98,40 +98,34 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 		return ErrPlayerNotFound
 	}
 
-	card, ok := p.RemoveFromHand(cardID)
+	var card Card
 	fromZone := ZoneHand
-	if !ok {
-		// Try the top of library if the player has a grant for that zone.
-		if g.effects.Rules.CanPlayLandsFromZone(playerID, ZoneLibrary) {
-			lib := p.Library()
-			if len(lib) > 0 && lib[0].ID() == cardID {
-				card = lib[0]
-				p.SetLibrary(lib[1:])
-				ok = true
-				fromZone = ZoneLibrary
-			}
+	for _, candidate := range p.Hand() {
+		if candidate.ID() == cardID {
+			card = candidate
+			break
 		}
 	}
-	if !ok {
+	if card == nil && g.effects.Rules.CanPlayLandsFromZone(playerID, ZoneLibrary) {
+		library := p.Library()
+		if len(library) > 0 && library[0].ID() == cardID {
+			card = library[0]
+			fromZone = ZoneLibrary
+		}
+	}
+	if card == nil {
 		return ErrCardNotInHand
 	}
 	if !card.HasType(TypeLand) {
-		if fromZone == ZoneLibrary {
-			// Restore to top of library.
-			p.SetLibrary(append([]Card{card}, p.Library()...))
-		} else {
-			p.AddToHand(card)
-		}
 		return fmt.Errorf("card is not a land")
 	}
-	// Check expansion block (City in a Bottle)
-	if g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
-		if fromZone == ZoneLibrary {
-			p.SetLibrary(append([]Card{card}, p.Library()...))
-		} else {
-			p.AddToHand(card)
-		}
-		return fmt.Errorf("can't play %s: card is from a blocked expansion", card.Name())
+	if g.IsLandPlayProhibited(card) {
+		return fmt.Errorf("can't play %s: land play is prohibited", card.Name())
+	}
+	if fromZone == ZoneLibrary {
+		p.SetLibrary(p.Library()[1:])
+	} else {
+		p.RemoveFromHand(cardID)
 	}
 
 	g.PutOnBattlefieldBy(card, playerID, playerID)

@@ -3058,7 +3058,7 @@ func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
 	}
 	var lands []Card
 	for _, c := range p.Hand() {
-		if c.HasType(TypeLand) {
+		if c.HasType(TypeLand) && !g.IsLandPlayProhibited(c) {
 			lands = append(lands, c)
 		}
 	}

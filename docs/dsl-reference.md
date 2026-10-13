@@ -14009,3 +14009,24 @@ Evidence: `TestPermanentSetChoiceRepeatedAPNAPAndOverlap`,
 `TestRONPermanentSetChoiceRaidingParty`, `Invalid`,
 `CopiesClonesDelayAndScope`, `InventoryAndAtomicLoad`, and
 `TestRONAbilityTargetRestrictionRaidingParty` with the complete factory.
+
+## RON static land play restrictions
+
+In a permanent's top-level Rules list, RON accepts
+`EachPlayerEffect(AnyPlayer, [CantPlayLands])` and
+`EachPlayerEffect(AnyPlayer, [CantPlayLandsOfType(predicate)])`.
+Each declaration contains exactly one operation. The filtered form accepts the
+symbols `SharesANameOriginallyPrintedInArabianNights` and
+`SharesANameOriginallyPrintedInAntiquities`, using the embedded CR 206.3 catalogs
+against the candidate card's name. Physical set membership does not control the
+result. Mountain is not in the ARN name list. RON owns these spellings and
+lowers them to `mage.PreventLandPlays(CardFilter)`.
+
+Tuple spellings for symbols, wrong arity, other player scopes, resolving/cost
+contexts, permanent references, arbitrary filter shapes and mixed operation
+lists reject at compilation. Inventory reports the filtered operand as
+`land_play_card_filter`. Strict collection loading still rejects unsupported
+records and does not publish a partial registry. City in a Bottle still needs
+captured state members and filtered casting rules; Worms of the Earth still
+needs land entry prevention and alternative optional payment. No source RON
+record changed.

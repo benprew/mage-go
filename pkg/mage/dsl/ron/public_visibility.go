@@ -14,6 +14,9 @@ func compileAllPlayerRule(n Node) (optionFactory, error) {
 		return nil, problem(n.Args[1], "supply one all-player rule operation")
 	}
 	operation := operations[0]
+	if operation.Name == "CantPlayLands" || operation.Name == "CantPlayLandsOfType" {
+		return compileLandPlayRestriction(n)
+	}
 	if operation.Name == "SkipsUntapStep" {
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
 			return nil, unsupported(n.Args[0], "untap skip player filter")

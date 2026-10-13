@@ -18341,3 +18341,32 @@ Evidence: `TestPermanentSetChoiceRepeatedAPNAPAndOverlap`,
 `TestRONPermanentSetChoiceRaidingParty`, `Invalid`,
 `CopiesClonesDelayAndScope`, `InventoryAndAtomicLoad`, and
 `TestRONAbilityTargetRestrictionRaidingParty` with the complete factory.
+
+## Static land play restrictions
+
+`PreventLandPlays(filter CardFilter) StaticRule` prevents all players from
+playing matching land cards while its source rule is active. A zero filter is
+invalid; an explicit all-card filter supplies the unconditional form.
+`Game.IsLandPlayProhibited(card Card) bool` is a pure restriction query, separate
+from timing, zone permission and land-play limits. It also retains the existing
+global and legacy expansion restrictions. Nonlands and nil cards return false.
+
+The typed static effect uses the existing printed declaration and source-visit
+lifecycle. Queries read active effects directly so phasing immediately stops the
+rule without a new layer cycle. Departure, face-down status and ability removal
+stop it; tapping and control changes do not. A phase cycle restores the same
+visit. Return installs a fresh rule. Effect cloning keeps source lifetimes
+independent; no per-game mutable predicate result is shared.
+
+`PlayLand` checks a hand card or permitted library top before removing it.
+Rejected plays preserve zone order, land-play history and the battlefield.
+`GetPlayableLands` uses the same restriction for its existing hand enumeration.
+Extra and unlimited land-play permissions cannot override a prohibition
+(CR 101.2, 305.1–4). Direct battlefield entry does not use this rule (CR 305.4).
+Source identity, abilities and phasing use CR 400.7, 613.11 and 702.26b–d.
+
+Evidence: `TestLandPlayRestrictionLifecycle`, `LibraryAndOverlap`, `Invalid`,
+`HandOrderAndPermissions`; `TestRONLandPlayRestrictionRealRules`, `Invalid`,
+`InventoryAndAtomicLoad`. Real-card probes retain the exact land subrules from
+City in a Bottle and Worms of the Earth, not their unsupported sibling rules.
+These probes do not establish complete gameplay support for either card.
