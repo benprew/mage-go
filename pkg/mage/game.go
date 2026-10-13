@@ -2206,13 +2206,7 @@ func (g *Game) PutTriggersOnStack() {
 			var labels []string
 			var indices []int
 			for i, mode := range modes {
-				legal := true
-				for _, target := range mode.Targets {
-					if len(uniqueTargetCandidates(target.Possible(pt.controller, targetSource, g.targetPlayerQuery(obj.capturedPlayers)))) < target.Min() {
-						legal = false
-						break
-					}
-				}
+				legal := g.targetPlayerQuery(obj.capturedPlayers).hasLegalTargetSelection(pt.controller, targetSource, mode.Targets, 0)
 				if legal {
 					labels = append(labels, mode.Label)
 					indices = append(indices, i)
@@ -2422,7 +2416,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 	sourceCard := g.triggerTargetSource(pt)
 	var out []uuid.UUID
 	var aligned []Target
-	for _, t := range declared {
+	for i, t := range declared {
 		if pair, ok := t.(*randomActivePlayerExchangePairTarget); ok {
 			chosen := pair.chooseForTrigger(pt.controller, sourceCard, g)
 			if len(chosen) < t.Min() {
@@ -2446,7 +2440,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 			continue
 		}
 		t.Reset()
-		possible := t.Possible(pt.controller, sourceCard, query)
+		possible := query.targetCandidatesForList(pt.controller, sourceCard, declared, i, out, 0)
 		if len(possible) < t.Min() {
 			return nil, nil, false
 		}
@@ -2589,7 +2583,7 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 		if count < minimum {
 			return fmt.Errorf("not enough targets for %s", label)
 		}
-		possible := g.possibleTargetsWithX(spec, controller, sourceCard, x)
+		possible := g.targetBindingsQuery(specs[:i], chosen[:offset], nil, x).possibleTargetsWithX(spec, controller, sourceCard, x)
 		seen := make(map[uuid.UUID]bool, count)
 		for _, id := range chosen[offset : offset+count] {
 			if seen[id] || !slices.Contains(possible, id) {
@@ -3041,6 +3035,13 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		}
 		// Spells with targets (e.g. auras) can't be cast if no legal targets exist
 		if ct := card.CastTargets(); len(ct) > 0 {
+			if hasTargetDependencies(ct) {
+				if !g.hasLegalTargetSelection(playerID, SpellTargetSource(card), ct, 0) {
+					continue
+				}
+				castable = append(castable, card)
+				continue
+			}
 			hasLegalTarget := false
 			for _, t := range ct {
 				if len(t.Possible(playerID, SpellTargetSource(card), g)) > 0 {
@@ -3291,13 +3292,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		var available []Mode
 		var indices []int
 		for i, mode := range modes {
-			legal := true
-			for _, target := range mode.Targets {
-				if len(uniqueTargetCandidates(target.Possible(playerID, perm.Card, g))) < target.Min() {
-					legal = false
-					break
-				}
-			}
+			legal := g.hasLegalTargetSelection(playerID, perm.Card, mode.Targets, g.resolution.X())
 			if legal {
 				available = append(available, mode)
 				indices = append(indices, i)

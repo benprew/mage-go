@@ -218,6 +218,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 		}
 	}
 	if spec, ok := b.spec.(*PermanentTarget); ok {
+		for i, dependency := range spec.typeDependencies {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("typeDependencies[%d]", i), dependency})
+		}
 		for i, relation := range spec.combatRelations {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("combatRelations[%d]", i), targetCombatRelationOption{relation}})
 		}
@@ -370,7 +373,7 @@ type targetGroupContract struct {
 }
 
 func (c targetGroupContract) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "target-groups"}
+	n := definitionNode{Role: "target-groups", problem: targetDependencyProblem(c.targets)}
 	variable, typed := 0, false
 	for _, t := range c.targets {
 		if _, ok := t.(*targetDeclaration); ok {

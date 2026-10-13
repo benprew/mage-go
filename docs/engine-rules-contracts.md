@@ -18769,8 +18769,9 @@ subject set without reading types or running filters. Existing frames keep saved
 choices, targets, copied bodies, delayed bodies and cloned games separate.
 Evidence: `TestPermanentTypeComparison`, `Declarations`, `SavedAndWaiting` and
 `TestRONPermanentTypeComparison*`. These tests establish the resolving service.
-Dependent announcement targets, static declarations, entry operations and
-replacement bodies require separate adapters. Resolving attachment movement now
+Dependent singular announcement card-type targets now have the service below.
+Other dependent targets, static declarations, entry operations and replacement
+bodies require separate adapters. Resolving attachment movement now
 uses this service as described in Required attachment host choice below.
 
 
@@ -18839,3 +18840,51 @@ Evidence: `TestAttachmentMove`, `TestAttachmentMoveDeclarations`,
 `TestRONAttachmentMoveScopesAndDelay`, `TestRONAttachmentMovePlayerScope` and
 `TestRONAttachmentMoveKudzuPrerequisite`. Enchantment Alteration has complete RON
 casting and gameplay evidence; Kudzu has only movement prerequisite evidence.
+
+
+## Dependent singular permanent target queries
+
+`TargetSharesCardTypeWith(reference *PermanentTargetBinding, types
+...core.CardType) PermanentTargetOption` requires a shared current card type
+with an earlier singular permanent target. The supplied type list is copied;
+omission permits all card types. Definition validation rejects nil, undeclared,
+self or forward references, invalid/duplicate types, and lists that combine this
+option with nonsingular or nonpermanent declarations. RON's restricted spelling
+also rejects an empty list. Both resolving collections and target comparisons
+reuse `sharesPermanentCardType`; only collections permit their documented LKI.
+
+`Game.PossibleTargetGroup(controller uuid.UUID, card Card, specs []Target,
+group int, chosen []uuid.UUID, x int) []uuid.UUID` queries fixed singular groups.
+The earlier prefix must be legal and have one choice per earlier declaration.
+The query excludes candidates with no complete later selection. It keeps X and
+typed target captures in a separate shallow query game with separate binding
+storage. It makes no choices, payments or random calls and does not replace live
+resolution bindings. Pure activation/spell availability and modal legality use
+complete-selection checks. Explicit announcements, prompted and forced choices,
+opponent choices and trigger placement share the context. Existing optional and
+plural target group boundaries retain their original validation.
+
+At resolution all targeting restrictions use the saved exact visits and current
+characteristics before any effects run (CR 608.2b). A present earlier target can
+supply the targeting relation even if shroud makes its own slot illegal. Its
+return or phasing cannot supply a present reference; no departure LKI restores
+this relation (CR 400.7, 702.26b). Illegal resolving slots remain absent from
+effect bindings. Source departure, control, protection and LKI keep the existing
+target-source service. Factory instances and cloned games have separate captures.
+
+Copy retargeting reads each newly selected earlier group for later candidates.
+It permits unchanged illegal targets (CR 707.10c). Explicit legal rechoices save
+current battlefield incarnations, including returned cards with the same physical
+ID. Cancellation retains old captures. Copies do not alter the original's
+choices or captures. Costs and replacements retain the shared transaction;
+Gauntlets' exact activation prefix proves failed pairs cannot spend mana or
+sacrifice the source. Trigger APNAP and removal use the existing placement service
+(CR 602.2b, 603.3c-d); the new query adds no event or payment subsystem.
+
+Evidence: `TestTargetDependency` (legality, type changes, absence, phasing, copies
+and clones), `Declarations`, `Query` (complete-selection pruning, forced choices,
+list immutability and purity), `CopyAndPrompt`, `CopyReturnedChoice` (failing-first
+returned-visit regression), and `Triggers`; `TestRONTargetDependency*` adds
+spell/activation rollback, mode/event/opponent scope, independent factories and
+the exact Gauntlets prefix. Complete Gauntlets gameplay remains blocked by its
+exchange-result consumer and the recorded Aura-only source defect.

@@ -220,7 +220,7 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 			continue
 		}
 		old := obj.Targets[offset : offset+count]
-		possible := g.targetPlayerQuery(obj.capturedPlayers).possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
+		possible := g.targetPlayerQuery(obj.capturedPlayers).targetBindingsQuery(specs, out, obj.targetIncarnations, obj.XValue).possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
 		chosen := g.GetPlayer(obj.Controller).ChooseTargets(possible, count, count, g)
 		valid := len(chosen) == count
 		seen := make(map[uuid.UUID]bool, count)
@@ -235,6 +235,9 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 			copy(out[offset:offset+count], chosen)
 			for _, id := range chosen {
 				visit := g.cardTargetVisit(id)
+				if permanent := g.FindPermanent(id); permanent != nil && !permanent.PhasedOut {
+					visit = permanent.incarnationID
+				}
 				if visit == uuid.Nil || !slices.Contains(possible, id) {
 					continue
 				}
@@ -267,7 +270,7 @@ func (g *Game) promptTargetsForListWithX(controller uuid.UUID, sourceCard Card, 
 		return nil
 	}
 	var out []uuid.UUID
-	for _, t := range targets {
+	for i, t := range targets {
 		minimum, maximum := TargetBounds(t, x)
 		if random, ok := randomTargetSpec(t); ok {
 			chosen := g.chooseRandomTargets(controller, sourceCard, random, x)
@@ -279,7 +282,7 @@ func (g *Game) promptTargetsForListWithX(controller uuid.UUID, sourceCard Card, 
 			continue
 		}
 		t.Reset()
-		possible := g.possibleTargetsWithX(t, controller, sourceCard, x)
+		possible := g.targetCandidatesForList(controller, sourceCard, targets, i, out, x)
 		if len(possible) == 0 {
 			if minimum > 0 {
 				out = append(out, uuid.Nil)

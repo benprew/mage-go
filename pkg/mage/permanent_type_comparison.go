@@ -39,16 +39,6 @@ func (s sharingCardTypesSet) resolvePermanents(ctx *EffectContext) []*Permanent 
 	if p == nil && lki == nil {
 		return nil
 	}
-	types := s.types
-	if len(types) == 0 {
-		types = core.CardTypeValues()
-	}
-	shared := make([]core.CardType, 0, len(types))
-	for _, kind := range types {
-		if (p != nil && p.HasType(kind)) || (lki != nil && lki.HasType(kind)) {
-			shared = append(shared, kind)
-		}
-	}
 	var result []*Permanent
 	for _, candidate := range s.subjects.resolvePermanents(ctx) {
 		if candidate == nil || candidate.PhasedOut {
@@ -58,9 +48,18 @@ func (s sharingCardTypesSet) resolvePermanents(ctx *EffectContext) []*Permanent 
 		if current == nil || current.incarnationID != candidate.incarnationID {
 			continue
 		}
-		if slices.ContainsFunc(shared, current.HasType) && !slices.Contains(result, current) {
+		if sharesPermanentCardType(current, p, lki, s.types) && !slices.Contains(result, current) {
 			result = append(result, current)
 		}
 	}
 	return result
+}
+
+func sharesPermanentCardType(subject, reference *Permanent, lki *PermanentLKI, types []core.CardType) bool {
+	if len(types) == 0 {
+		types = core.CardTypeValues()
+	}
+	return slices.ContainsFunc(types, func(kind core.CardType) bool {
+		return subject.HasType(kind) && ((reference != nil && reference.HasType(kind)) || (lki != nil && lki.HasType(kind)))
+	})
 }

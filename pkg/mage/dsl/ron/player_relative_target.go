@@ -5,6 +5,9 @@ import "github.com/benprew/mage-go/pkg/mage"
 type permanentTargetOptionsFactory func(instanceBindings) []mage.PermanentTargetOption
 
 func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter, permanentTargetOptionsFactory, error) {
+	if n.Name == "SharesACardtypeWithPermanent" || n.Name == "SharesACardtypeWithPermanentFromAmongCardtypes" {
+		return compileTargetTypeDependency(n, ctx)
+	}
 	if n.Name == "ControlledSinceBeginningOfTurn" || n.Name == "NotControlledSinceBeginningOfTurn" {
 		filter, err := compileCurrentTurnControlFilter(n)
 		return filter, func(instanceBindings) []mage.PermanentTargetOption { return nil }, err

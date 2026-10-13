@@ -49,8 +49,9 @@ func (g *Game) prepareTargetGroups(controller uuid.UUID, card Card, specs []Targ
 	var aligned []Target
 	for i, spec := range specs {
 		chosen := append([]uuid.UUID(nil), groups[i]...)
-		chosen = g.acquireOpponentChosenTargets(controller, card, []Target{spec}, chosen)
-		if err := g.validateActionTargets(controller, card, []Target{spec}, chosen, x, label); err != nil {
+		query := g.targetBindingsQuery(aligned, targets, nil, x)
+		chosen = query.acquireOpponentChosenTargets(controller, card, []Target{spec}, chosen)
+		if err := query.validateActionTargets(controller, card, []Target{spec}, chosen, x, label); err != nil {
 			return nil, nil, fmt.Errorf("target group %d: %w", i+1, err)
 		}
 		targets = append(targets, chosen...)

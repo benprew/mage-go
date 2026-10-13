@@ -8,33 +8,34 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **855 accepted / 131 rejected names**
 (986 total), **2,197 compiled / 248 rejected records** (2,445 total).
-The latest slice implements required resolving attachment movement and unlocks
-Enchantment Alteration with complete RON gameplay evidence.
+The latest slice implements dependent singular permanent target comparisons.
+Gauntlets of Chaos now reaches its exchange-result blocker. Its exact activation
+prefix has RON gameplay evidence; complete-card coverage is unchanged.
 The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **REQUIRED-ATTACHMENT-MOVEMENT**. A bound singular attachment
-moves to a required legal host choice at resolution. Exact visits, scoped choosers,
-phasing, protection, enchant restrictions and shared timestamps are preserved.
-Estimated and actual gains are one name / one record. Kudzu's movement action
-is ready; PlayerMayAction and its former-host controller contract remain.
-Runtime cutover, Go-card removal and DSL cleanup gates remain open.
+The latest slice is **DEPENDENT-PERMANENT-TARGET-COMPARISON**. Earlier target
+choices supply current types in separate query frames. Acquisition, availability,
+resolution and copies retain exact visits and independent choices. Explicit copy
+rechoices capture returned battlefield visits. Estimated and actual gains are
+zero names / zero records. Exchange outcomes and Gauntlets' Aura-only source
+defect remain. Runtime cutover, Go-card removal and DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Dependent target announcement context.** Gauntlets of Chaos needs earlier
-   target choices in every acquisition and legality query. Resolving comparison
-   is ready; exchange-result and Aura-only source correction remain. Zero
-   immediate estimated gain. Reassess wider target dependencies before selection.
-2. **Restricted X announcement payment.** Drain Life still needs restricted X
-   and clamped actual-damage consumption; zero immediate gain, eventual one
-   name / six records. Nether Shadow's source-zone contract remains deferred.
-3. **Explicit optional player action and former-host controller.** Kudzu's six
-   records now have attachment movement. Estimate one name / six records only
-   after proving its destruction-to-movement timing and captured former host.
-   This is a single-card completion; defer while useful shared work remains.
+1. **Announced X in entry operations.** Rock Hydra and Frankenstein's Monster
+   share this prerequisite. Zero immediate gain; finite source prevention and
+   entry exile-payment/result/counter distribution remain. Reassess engine entry
+   X support before selection; concrete downstream value is two unique cards.
+2. **Exchange outcomes and Aura-only source correction.** Gauntlets of Chaos'
+   exact target/exchange prefix now works. Estimated one name / one record after
+   a local successful-exchange result and the Oracle-supported source correction.
+3. **Restricted X casting payment.** Drain Life still needs black-only X and
+   clamped actual-damage consumption. Zero immediate gain, eventual one name /
+   six records. Kudzu's optional former-host action remains another single-card
+   completion candidate.
 
 ## Dependencies and source blockers
 
@@ -3059,3 +3060,153 @@ No RON source, Go card, generator or legacy DSL removal is included.
    timing. Medium effort; defer single-card completion while shared work remains.
 
 This run stops after required attachment movement.
+
+
+## 2026-10-13 — DEPENDENT-PERMANENT-TARGET-COMPARISON
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for
+collection rejection: 2,197 compiled / 248 rejected records, 855 accepted /
+131 rejected names. This was not a build or test failure.
+
+The latest ranked candidates were evaluated from complete canonical RON records,
+including nested bodies. Reprints count once. None supplies immediate multi-card
+completion; the first-ranked candidate is a dependency-ready unblocking prerequisite.
+
+| Candidate | Distinct affected names; estimated full-card gain | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- |
+| Dependent target context | Gauntlets of Chaos; 0 names / 0 records | Exchange-result consumer and Aura-only source defect remain. Enables its exact dependent card-type target and later exchange-result continuation. Query frames are shared by spells, activations, triggers, modes and copies; this is not counted as multi-card gameplay coverage. | Medium/large: declaration order, pure complete-selection queries, acquisition paths, resolution visits and copy retargeting. |
+| Restricted X casting payment | Drain Life; 0 immediate, eventual 1 name / 6 records | Clamped actual-damage consumer remains. Enables exact black-only X announcement before damage/life execution. | Medium: total-cost and mana planner integration, rollback, copies and X results. |
+| Optional explicit player action | Kudzu; estimated 1 name / 6 records if fully completed | Must retain former-host controller and destruction-to-movement timing. Required movement is ready; optional ownership and host facts are not. Enables its optional resolving reattachment. | Medium: explicit decision player, retained host identity, destruction and Aura lifecycle tests. |
+
+Selected the first-ranked unblocking prerequisite. Reuse boundaries were declared
+before editing: RON owns spelling, arity and earlier-target scope; mage owns query
+frames, card-type comparison, acquisition and legality. No full-card gain was
+promised. The implementation stops at this one target capability.
+
+### Supported signatures, dependencies and engine reuse
+
+- `SharesACardtypeWithPermanent(Ref_TargetPermanentN)` and
+  `SharesACardtypeWithPermanentFromAmongCardtypes(Ref_TargetPermanentN, [types])`
+  in later singular permanent target filters and supported `And` conjunctions.
+  The reference must name an earlier declaration in the same target list.
+  The restricted list is nonempty, valid and distinct. Self/forward/unbound,
+  source/host/choice/player/plural references and malformed shapes reject.
+- `TargetSharesCardTypeWith(reference *PermanentTargetBinding, types
+  ...core.CardType) PermanentTargetOption` copies its type list. Engine validation
+  requires earlier singular permanent declarations throughout a dependent list.
+  Omitted engine types permit every card type.
+- `Game.PossibleTargetGroup(controller uuid.UUID, card Card, specs []Target,
+  group int, chosen []uuid.UUID, x int) []uuid.UUID` keeps exact prior choices in
+  a separate query frame. Invalid prefixes return no candidates. Every candidate
+  permits a complete remaining selection. Queries make no decisions or payments,
+  consume no randomness and leave live X/bindings unchanged.
+- Explicit announcements, prompted/forced/opponent choices, spell/activation
+  availability, trigger placement, modal legality and copied target choices use
+  shared services. Resolution reads saved visits and current types before effects.
+  Phasing/return cannot supply a present reference; a phase cycle keeps identity.
+  Target relations can read a present earlier slot that became shrouded, while
+  that illegal slot remains unavailable to resolving effects. No relation LKI
+  restores an absent target. Existing source LKI and protection remain separate.
+- Both resolving collections and target predicates use `sharesPermanentCardType`.
+  Collections retain their prior LKI contract. Factory builds remain fresh and
+  ordered; frames, stack copies and clones keep independent captured choices.
+  Existing costs, APNAP, replacement, control-exchange and effect services remain.
+  Optional/plural group boundaries retain their prior validation.
+- Copy retargeting now captures explicitly reselected battlefield visits, including
+  a returned card with the same physical ID, before querying later groups. An
+  unchanged illegal target can remain under CR 707.10c; cancellation keeps old
+  captures. The original stack object cannot inherit a copy's new visit.
+
+### Failing-first evidence and card-to-test mappings
+
+The native test first failed to compile for the missing target option. Two
+fixture API names were corrected, then the constructor-only failure was confirmed.
+RON gameplay separately failed at the restricted comparison's unsupported arity.
+`TestTargetDependencyCopyReturnedChoice` later failed on stale copy incarnation
+capture before the battlefield rechoice fix. No assertion was weakened.
+
+- **Gauntlets of Chaos → TestRONTargetDependencyGauntletsPrerequisite**: unchanged
+  complete LEG record still rejects its exchange-result consumer. A separate
+  test-only AST prefix retains its exact targets, `ExchangeControl`, {5} payment
+  and source sacrifice. Tests cover invalid/unpaid rollback, live type additions,
+  illegal/returned/phased targets, phase cycles, source return, control changes,
+  copied pairs, legal copied candidates and cloned control state. This is partial
+  prerequisite evidence, not a complete-card mapping or production fallback.
+- `TestRONTargetDependencyGameplay`, `Invalid`, `Scopes` and
+  `InstancesAndUnrestricted`: spell/activation gameplay, declaration errors,
+  trigger/modal/opponent acquisition, both spellings and independent factories.
+- `TestTargetDependency`, `Declarations`, `Query`, `CopyAndPrompt`,
+  `CopyReturnedChoice` and `Triggers`: exact visits, type loss, partial legality,
+  source departure, phase cycles, copies/clones, declaration order/type errors,
+  copied type lists, complete-selection pruning, pure queries and forced choices.
+- Existing `TestRONSingularGroupsStrictLoadAndConsumers` advances only Gauntlets'
+  expected blocker. Existing target-group, type-comparison and accepted-definition
+  tests remain. No compilation count fixture needs a changed expectation.
+
+Broader tests caught two optional-group boundary regressions during integration;
+restoring per-group validation preserved duplicate choices across separate groups
+and rejected excess choices within one group. The engine short suite also caught
+an inspection panic on an existing nil-target validation fixture. Nil checks now
+precede unwrapping. The original regression assertions pass unchanged.
+
+### Rules, source, validation and measured result
+
+Local `data/LEG.json` supplies Gauntlets' complete Oracle text. CR 601.2c,
+602.2b, 603.3c-d, 608.2b, 400.7, 702.26b and 707.10c supply announcement,
+placement, legality, identity, phasing and copy contracts. The known RON defect
+remains: Gauntlets' attachment collection omits the Aura-only restriction.
+No RON source changed; vocabulary spelling and source hashes are unchanged.
+No Go card, generator or legacy DSL function was removed. Runtime cutover and
+removal gates remain open. API/rules docs describe only the established service.
+
+Required checks passed in fast-fail order after the integration fixes:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTargetDependency -count=1` passed.
+- Native `go test ./pkg/mage -run TestTargetDependency -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` also passed.
+- `make lint` passed with **0 issues**. Automatic changes only regrouped imports
+  in the new RON test file. The tracked diff and final new files were reviewed;
+  no unrelated change or semantic modernizer edit occurred. Native/RON focused
+  tests and target-group/type-comparison/nil-declaration regressions passed again.
+- `git diff --check` passed. Final `go run ./cmd/loadcards -json` exited **1**,
+  as expected. No rejected record was added or removed. Only Gauntlets' diagnostic
+  changed: LEG:95:416 rejected the comparison; LEG:95:594 now rejects
+  `PermanentsChangedControlThisWay`. Every other diagnostic is unchanged.
+  Drain Life still rejects `SpendOnlyColorManaOnX`; Kudzu rejects `PlayerMayAction`.
+
+Actual gains match the zero-name / zero-record estimate. Complete-card gameplay
+coverage is unchanged; Gauntlets gains target prerequisite evidence only. Final
+counts remain 855 accepted / 131 rejected names and 2,197 compiled / 248 rejected
+records out of 986 names / 2,445 records. The strict loader rejects the collection
+and publishes no partial registry. No environmental or pre-existing failure
+blocks this slice.
+
+Changed files: new mage and RON `target_dependency.go` and test files; mage
+`activated.go`, `composable_target.go`, `game.go`, `permanent_type_comparison.go`,
+`resolution_state.go`, `spell_cast_stack.go`, `spell_copy.go`, `stack_resolver.go`,
+`target.go`; RON `player_relative_target.go`, `singular_target_groups_test.go`;
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
+this ledger. No RON record changed.
+
+### Ranked next candidates
+
+1. **Announced X in entry operations — Rock Hydra, Frankenstein's Monster.**
+   Reassess the shared entry-X prerequisite using these complete records. Zero
+   immediate estimated unlocks: Hydra still needs finite source prevention;
+   Monster still needs entry exile-payment/results and counter distribution.
+   Concrete downstream value is two names; medium prerequisite effort.
+2. **Exchange outcomes and Aura-only source correction — Gauntlets of Chaos.**
+   Its target and exchange prefix is ready. Save a local successful exchange
+   result, gate later destruction and prove the source correction from Oracle.
+   Estimated one name / one record; small/medium, single-card completion.
+3. **Restricted X casting payment — Drain Life.** Its clamped actual-damage
+   consumer remains a separate dependency. Zero immediate gain, eventual one
+   name / six records; medium effort. Kudzu's optional former-host action remains
+   another single-card completion candidate.
+
+This run stops after dependent singular permanent target comparisons.

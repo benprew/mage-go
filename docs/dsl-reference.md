@@ -6945,7 +6945,9 @@ Delayed actions retain the captured incarnation and existing information reads.
 Empty lists, mixed declaration kinds, plural groups, opponent-choice declarations,
 unbound or malformed numbered references, mode-scope leaks, nested declarations,
 and conflicting `You`/`Opponent` target controller restrictions are rejected.
-This adds no dependent target filter, exchange, fight or graveyard group adapter.
+Dependent card-type target comparisons now have the bounded adapter described
+below. Other dependent filters, exchange outcomes, fight and graveyard groups
+need separate adapters.
 Gauntlets of Chaos and Glyph of Delusion now reach their dependent-filter gaps;
 Arena, Cuombajj Witches and Drafna's Restoration still need other target forms.
 No complete-card gameplay mapping is added by this prerequisite.
@@ -14298,8 +14300,8 @@ and static rules remain unsupported contexts.
 `TestRONPermanentTypeComparisonRepositoryExpressions` executes the exact nested
 expressions from Gauntlets of Chaos and Enchantment Alteration in explicit test
 fixtures. These are prerequisite tests, not complete-card gameplay evidence.
-Gauntlets still requires dependent announcement target context, exchange outcomes
-and an Aura-only source correction. Enchantment Alteration now compiles and has
+Gauntlets now has dependent card-type announcement targets. Exchange outcomes
+and an Aura-only source correction still block the complete record. Enchantment Alteration now compiles and has
 complete gameplay evidence in `TestRONAttachmentMoveAlteration`.
 `Resolution`, `TargetsAndHost`, `TargetLegality`, `DelayedChoice` and `Invalid`
 cover synthetic complete RON gameplay and supported declaration boundaries.
@@ -14356,3 +14358,41 @@ Alteration record. `TestRONAttachmentMoveKudzuPrerequisite` covers the unchanged
 movement action in six Kudzu records; the complete card still needs
 `PlayerMayAction`. Native `TestAttachmentMove*` tests cover attachment legality,
 visit checks, static subjects, timestamps and pure waiting queries.
+
+
+## RON dependent singular permanent target comparisons
+
+In a `Targeted` list of singular permanent declarations, a later filter can use
+`SharesACardtypeWithPermanent(Ref_TargetPermanentN)` or
+`SharesACardtypeWithPermanentFromAmongCardtypes(Ref_TargetPermanentN, [types])`.
+The numbered reference must name an earlier declaration in that list. The
+restricted form requires distinct valid card types in a nonempty list. Both
+forms can occur in supported target `And` conjunctions with ordinary filters
+and controller restrictions. Self, forward, unbound, source, host, choice, player
+and plural references reject. Other disjunctions and declaration contexts retain
+their existing restrictions. No new RON spelling or source change is needed.
+
+Lowering uses `mage.TargetSharesCardTypeWith(reference *PermanentTargetBinding,
+types ...core.CardType) PermanentTargetOption`. Each factory builds fresh target
+declarations in order. Spell, activation, trigger and mode-local target lists
+use the same query and legality services. `Game.PossibleTargetGroup(controller,
+card, specs, group, chosen, x)` queries one fixed singular group with exactly the
+earlier choices. Invalid prefixes yield no candidates. Every returned candidate
+permits a complete later selection. Availability queries make no decisions.
+
+Both compared visits must be present and unphased; current layered card types
+supply the comparison. Resolution uses saved incarnations and checks every
+target before effects. A shrouded earlier target cannot receive effects, but its
+present characteristics still supply the targeting relation. Departure does not
+supply LKI for this relation. A phase cycle keeps the visit; return ends it.
+Copies keep separate target choices and can retain illegal unchanged targets.
+Explicit legal new choices save current battlefield visits, including a new
+visit with the same physical card ID. Existing transaction rollback, protection,
+control exchange, APNAP placement and clone services retain their contracts.
+
+Evidence: `TestRONTargetDependencyGameplay`, `Invalid`, `Scopes`,
+`InstancesAndUnrestricted` and `GauntletsPrerequisite`; native
+`TestTargetDependency*`. The Gauntlets test compiles only its exact activation
+prefix through `ExchangeControl`, with the original mana and sacrifice costs.
+The unchanged full record must still reject `PermanentsChangedControlThisWay`.
+This adds prerequisite coverage for one unique card and no complete-card mapping.

@@ -379,7 +379,7 @@ func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard Car
 		}
 
 		spec.Reset()
-		possible := spec.Possible(controller, sourceCard, g)
+		possible := g.targetCandidatesForList(controller, sourceCard, specs, i, out, g.resolution.X())
 		chooser := g.GetOpponent(controller)
 		var requested []uuid.UUID
 		if chooser != nil && len(possible) > 0 {
@@ -699,9 +699,9 @@ func ForcedActivationTargets(controller uuid.UUID, card Card, declared []Target,
 		return nil
 	}
 	var out []uuid.UUID
-	for _, t := range declared {
+	for i, t := range declared {
 		t.Reset()
-		possible := t.Possible(controller, card, g)
+		possible := g.targetCandidatesForList(controller, card, declared, i, out, g.resolution.X())
 		if t.Min() <= 0 || t.Min() != t.Max() || len(possible) != t.Min() {
 			return nil
 		}
@@ -812,6 +812,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 type PermanentTarget struct {
 	fixedCreatureEnchant         bool
 	fixedLandEnchant             bool
+	typeDependencies             []targetTypeDependency
 	controllerRefs               []PlayerRef
 	combatRelations              []targetCombatRelation
 	manaValueEqualX              bool
@@ -889,7 +890,7 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var controllers []uuid.UUID
-	ctx := &EffectContext{Game: g, Controller: controller}
+	ctx := &EffectContext{Game: g, Controller: controller, targetBindings: g.resolution.targetQueryBindings}
 	for _, ref := range t.controllerRefs {
 		if nilDefinition(ref) {
 			return nil
@@ -902,6 +903,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.ContainsFunc(t.typeDependencies, func(dependency targetTypeDependency) bool { return !dependency.matches(p, ctx) }) {
+			continue
+		}
 		if slices.ContainsFunc(t.combatRelations, func(relation targetCombatRelation) bool { return !relation.matches(p, sourceCard, g) }) {
 			continue
 		}

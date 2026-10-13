@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetSharesCardTypeWith] compares a target with an earlier singular target.
+// Both exact visits must be present and unphased. Current types supply the
+// comparison; departure information cannot restore a target. A supplied type
+// list contains distinct valid types. An omitted list permits every card type.
+// [Game.PossibleTargetGroup] keeps prior choices in a separate query frame.
+// Each candidate must permit a complete remaining selection. Queries do not
+// choose, pay, use randomness or change the current resolution frame.
+// Announcement, forced choices, triggers and copies use these declarations.
+// Resolution checks each saved visit before actions. Copies can keep illegal
+// old targets; explicit legal choices save current visits. Clones and factory
+// instances keep separate choices. RON supports both card-type comparisons
+// against earlier numbered singular permanent targets in conjunctions.
+// Other reference kinds, target unions and plural groups need separate adapters.
+//
 // [HostOfPermanent] reads the host of an exact attachment visit.
 // Current attachments use their current host. Departed attachments keep their
 // last host. Return cannot replace either visit. Information reads can use host

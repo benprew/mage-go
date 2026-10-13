@@ -299,6 +299,12 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 			return false
 		}
 	}
+	if hasTargetDependencies(a.targets) {
+		p := g.FindPermanent(a.source)
+		if p == nil || !g.hasLegalTargetSelection(controller, p.Card, a.targets, x) {
+			return false
+		}
+	}
 	if a.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}

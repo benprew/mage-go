@@ -17,6 +17,7 @@ type ResolutionState struct {
 	manaProduced          int
 	manaColors            []Color
 	manaTracking          bool
+	targetQueryBindings   map[*targetDeclaration][]capturedPermanent
 	targetSpecs           []Target
 	targetIncarnations    map[uuid.UUID]uuid.UUID
 	permanentBindings     map[*PermanentBinding]capturedPermanent
@@ -219,6 +220,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
 		manaTypesBindings:      cloneManaTypesBindings(s.manaTypesBindings),
+		targetQueryBindings:    cloneDelayedTargets(s.targetQueryBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),
 		targetIncarnations:     maps.Clone(s.targetIncarnations),
 		sourceIncarnation:      s.sourceIncarnation,
