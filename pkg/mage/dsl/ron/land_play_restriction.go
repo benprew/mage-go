@@ -29,7 +29,7 @@ func compileLandPlayRestriction(n Node) (optionFactory, error) {
 		if err := arity(operation, 1); err != nil {
 			return nil, err
 		}
-		filter, err = compileLandPlayCardFilter(operation.Args[0])
+		filter, err = compileOriginalPrintingCardFilter(operation.Args[0], "land play card filter")
 		if err != nil {
 			return nil, err
 		}
@@ -37,9 +37,9 @@ func compileLandPlayRestriction(n Node) (optionFactory, error) {
 	return func() mage.CardOption { return mage.WithAbility(mage.Static(mage.PreventLandPlays(filter))) }, nil
 }
 
-func compileLandPlayCardFilter(n Node) (mage.CardFilter, error) {
+func compileOriginalPrintingCardFilter(n Node, role string) (mage.CardFilter, error) {
 	if n.Kind != Symbol {
-		return mage.CardFilter{}, unsupported(n, "land play card filter")
+		return mage.CardFilter{}, unsupported(n, role)
 	}
 	set := "ARN"
 	switch n.Name {
@@ -47,7 +47,7 @@ func compileLandPlayCardFilter(n Node) (mage.CardFilter, error) {
 	case "SharesANameOriginallyPrintedInAntiquities":
 		set = "ATQ"
 	default:
-		return mage.CardFilter{}, unsupported(n, "land play card filter")
+		return mage.CardFilter{}, unsupported(n, role)
 	}
 	catalog, err := mage.OriginalPrintingNameCatalog(set)
 	if err != nil {

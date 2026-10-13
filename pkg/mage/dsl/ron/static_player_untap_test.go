@@ -190,7 +190,7 @@ func TestRONStasisUpkeep(t *testing.T) {
 func TestRONStaticUntapDeclarations(t *testing.T) {
 	valid := `If(PermanentPassesFilter(ThisPermanent,IsUntapped),[EachPlayerEffect(AnyPlayer,[CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(1),IsCardtype(Land))])])`
 	for _, rule := range []string{
-		`EachPlayerEffect(AnyPlayer(),[SkipsUntapStep])`, `EachPlayerEffect(You,[SkipsUntapStep])`, `EachPlayerEffect(AnyPlayer,[SkipsUntapStep()])`, `EachPlayerEffect(AnyPlayer,[SkipsUntapStep,SkipsUntapStep])`,
+		`EachPlayerEffect(AnyPlayer(),[SkipsUntapStep])`, `EachPlayerEffect(You,[SkipsUntapStep])`, `EachPlayerEffect(AnyPlayer,[SkipsUntapStep()])`, `EachPlayerEffect(AnyPlayer,[SkipsUntapStep,Unknown])`,
 		strings.Replace(valid, "Integer(1)", "Integer(-1)", 1), strings.Replace(valid, "Integer(1)", "ValueX", 1), strings.Replace(valid, "ThisPermanent", "Ref_TargetPermanent", 1), strings.Replace(valid, "ThisPermanent", "HostPermanent", 1), strings.Replace(valid, "AnyPlayer", "SinglePlayer(You)", 1), strings.Replace(valid, "IsUntapped", "IsUntapped()", 1), strings.Replace(valid, "CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(1),IsCardtype(Land))", "SkipsUntapStep", 1),
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[`+rule+`])`), "invalid.ron")

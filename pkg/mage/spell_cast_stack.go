@@ -252,6 +252,9 @@ func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
 }
 
 func (g *Game) checkSpellTiming(card Card, caster uuid.UUID) error {
+	if g.IsSpellCastProhibited(caster, card) {
+		return fmt.Errorf("can't cast %s: a continuous effect prohibits this spell", card.Name())
+	}
 	if err := g.checkSpellCastingConditions(card, caster); err != nil {
 		return err
 	}

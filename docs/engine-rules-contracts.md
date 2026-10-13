@@ -18370,3 +18370,30 @@ Evidence: `TestLandPlayRestrictionLifecycle`, `LibraryAndOverlap`, `Invalid`,
 `InventoryAndAtomicLoad`. Real-card probes retain the exact land subrules from
 City in a Bottle and Worms of the Earth, not their unsupported sibling rules.
 These probes do not establish complete gameplay support for either card.
+
+
+## Filtered static casting restrictions
+
+`PreventSpellCasts(filter CardFilter) StaticRule` prohibits all players from
+casting matching nonland cards while its source ability is active. A zero
+filter fails definition validation. `Game.IsSpellCastProhibited(playerID
+uuid.UUID, card Card) bool` is a pure query that also retains the existing
+player-level and legacy expansion restrictions. Nil and land cards return false.
+The filter supplies reusable policy; the engine does not select card names.
+
+The shared cast precheck enforces the rule in hand casting, free and alternate
+zone casting, cast copies, and hand castability queries before modes, targets,
+zone removal or payment. Rejection preserves hand/graveyard order, mana, stack
+and life. Casting permission or an alternate cost cannot override prohibition
+(CR 101.2, 601.2e). A stack copy is not cast, and existing spells still resolve.
+Direct battlefield entry and land plays use separate rules.
+
+Active printed effects retain source-visit and ability-removal contracts.
+Departure, face-down status, phasing and removal stop the rule; tapping and
+controller changes do not. Phasing stops it without a new layer cycle. Return
+creates a new source visit. Overlapping sources and cloned games retain separate
+lifetimes (CR 400.7, 613.11, 702.26b–d). No result binding, LKI action, replacement
+ordering or simultaneous operation is added by this pure legality query.
+
+Evidence: `TestSpellCastRestrictionLifecycle`, `PathsAndRollback`,
+`StackCopyAndOverlap`, `Invalid`; RON evidence is mapped in the DSL reference.

@@ -130,7 +130,7 @@ func TestRONOriginalPrintingNamesDeclarations(t *testing.T) {
 				t.Fatal("invalid declaration published", filter)
 			}
 		}
-		for _, rule := range []string{`Activated(%s,ActionList([]))`, `Activated(PayMana([]),ActionList([%s]))`, `EachPlayerEffect(AnyPlayer,[CantCastSpells(%s)])`} {
+		for _, rule := range []string{`Activated(%s,ActionList([]))`, `Activated(PayMana([]),ActionList([%s]))`} {
 			text := `Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[` + fmt.Sprintf(rule, name) + `])`
 			if registry, err := LoadFS(fstest.MapFS{"a.ron": {Data: []byte(text)}}, "*.ron"); err == nil || registry != nil {
 				t.Fatal("invalid role published", rule)

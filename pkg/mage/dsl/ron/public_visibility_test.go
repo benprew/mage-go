@@ -68,7 +68,7 @@ func TestRONPublicVisibilityInvalid(t *testing.T) {
 		`EachPlayerEffect(AnyPlayer,[PlaysWithTopOfLibraryRevealed(Integer(1))])`,
 		`EachPlayerEffect(AnyPlayer(),[PlaysWithHandRevealed])`,
 		`EachPlayerEffect(SinglePlayer(You),[PlaysWithHandRevealed])`,
-		`EachPlayerEffect(AnyPlayer,[PlaysWithHandRevealed,PlaysWithTopOfLibraryRevealed])`,
+		`EachPlayerEffect(AnyPlayer,[PlaysWithHandRevealed,Unknown])`,
 		`PlayerEffect(You,[PlaysWithHandRevealed])`,
 		`Activated(PayMana([]),ActionList([PlaysWithHandRevealed]))`,
 	} {

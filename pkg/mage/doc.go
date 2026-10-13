@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventSpellCasts] prevents each player from casting matching cards.
+// [Game.IsSpellCastProhibited] reads active rules without changing state.
+// All casting paths and hand queries check before choices or payment.
+// Free casts and alternate costs cannot override this rule. Stack copies,
+// resolution, land plays and direct entry use their separate rules.
+// Departure, phasing, face-down status and ability removal stop the rule.
+// Return starts a new visit; clones keep separate source lifetimes.
+// RON accepts CantCastSpells with fixed ARN or ATQ name predicates in
+// nonempty AnyPlayer rule lists. All list operations must be supported.
+//
 // [PreventLandPlays] prevents each player from playing matching land cards.
 // [Game.IsLandPlayProhibited] reads active source rules without changing state.
 // PlayLand and GetPlayableLands use this check. A rejected play keeps hand and
@@ -9,7 +19,7 @@
 // A return starts a new visit; clones keep separate source lifetimes.
 // RON accepts one AnyPlayer CantPlayLands or CantPlayLandsOfType operation.
 // The filtered form accepts fixed ARN or ATQ original-printing name predicates.
-// Casting, entry prevention and lists with other operations stay separate.
+// Entry prevention stays separate. Supported all-player operations can share a list.
 //
 // [ChooseUpToPermanentsEach] saves repeated optional choices in one set.
 // Each player uses a saved count and chooses in turn order. A choice can

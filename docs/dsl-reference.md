@@ -14015,7 +14015,7 @@ Evidence: `TestPermanentSetChoiceRepeatedAPNAPAndOverlap`,
 In a permanent's top-level Rules list, RON accepts
 `EachPlayerEffect(AnyPlayer, [CantPlayLands])` and
 `EachPlayerEffect(AnyPlayer, [CantPlayLandsOfType(predicate)])`.
-Each declaration contains exactly one operation. The filtered form accepts the
+Each declaration has a nonempty supported operation list. The filtered form accepts the
 symbols `SharesANameOriginallyPrintedInArabianNights` and
 `SharesANameOriginallyPrintedInAntiquities`, using the embedded CR 206.3 catalogs
 against the candidate card's name. Physical set membership does not control the
@@ -14023,10 +14023,34 @@ result. Mountain is not in the ARN name list. RON owns these spellings and
 lowers them to `mage.PreventLandPlays(CardFilter)`.
 
 Tuple spellings for symbols, wrong arity, other player scopes, resolving/cost
-contexts, permanent references, arbitrary filter shapes and mixed operation
-lists reject at compilation. Inventory reports the filtered operand as
+contexts, permanent references, arbitrary filter shapes and unsupported operations
+reject at compilation. Inventory reports the filtered operand as
 `land_play_card_filter`. Strict collection loading still rejects unsupported
 records and does not publish a partial registry. City in a Bottle still needs
-captured state members and filtered casting rules; Worms of the Earth still
+captured state members; Worms of the Earth still
 needs land entry prevention and alternative optional payment. No source RON
 record changed.
+
+
+## RON filtered casting restrictions and player-rule lists
+
+`EachPlayerEffect(AnyPlayer, [CantCastSpells(predicate), ...])` accepts the
+symbols `SharesANameOriginallyPrintedInArabianNights` and
+`SharesANameOriginallyPrintedInAntiquities`. The fixed CR 206.3 catalogs match
+card names, independent of physical printing. RON lowers the predicate to
+`mage.PreventSpellCasts(CardFilter)` and reports `casting_card_filter` in the
+semantic inventory. No permanent binding or result scope is needed.
+
+Nonempty all-player lists compose the supported casting, land-play, public
+visibility, untap-skip, untap-limit and spell-cost-increase operations. Each
+operation must validate before a factory is returned. Declaration order and
+repeated operations are retained. Factories create separate cards and abilities.
+Unsupported operands, tuple spellings for symbols, wrong arity, other player
+scopes, action/cost contexts and battlefield rules on instants reject. Invalid
+collections publish no registry.
+
+`TestRONSpellCastRestrictionCity` executes City's exact complete player-rule
+subrule under both active players. The unsupported captured state trigger keeps
+the full record rejected. `CompositionAndInventory` and `ListOrderAndInstances`
+cover ATQ names, compound visibility/land rules, ordering, independent lifetimes
+and atomic loading. `Invalid` covers declaration rejection. No RON source changed.

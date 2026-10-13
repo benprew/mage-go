@@ -75,7 +75,7 @@ func TestRONLandPlayRestrictionInvalid(t *testing.T) {
 		`EachPlayerEffect(AnyPlayer,[CantPlayLandsOfType(SharesANameOriginallyPrintedInArabianNights())])`,
 		`EachPlayerEffect(AnyPlayer,[CantPlayLandsOfType(SinglePermanent(ThisPermanent))])`,
 		`EachPlayerEffect(AnyPlayer,[CantPlayLandsOfType(IsCardtype(Land))])`,
-		`EachPlayerEffect(AnyPlayer,[CantPlayLands,CantPlayLands])`,
+		`EachPlayerEffect(AnyPlayer,[CantPlayLands,Unknown])`,
 		`PlayerEffect(You,[CantPlayLands])`,
 		`Activated(PayMana([]),ActionList([CantPlayLands]))`,
 	} {

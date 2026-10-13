@@ -11,9 +11,9 @@ Latest measured result (2026-10-12): **846 accepted / 140 rejected names**
 The fresh baseline and final counts are equal. The strict loader still rejects
 the collection and publishes no partial registry.
 
-The latest slice is **STATIC-LAND-PLAY-RESTRICTIONS**. Shared unconditional and
-fixed-name land restrictions now execute City in a Bottle and Worms of the
-Earth's exact land subrules. Both complete cards retain explicit sibling gaps.
+The latest slice is **FILTERED-CASTING-AND-PLAYER-RULE-LISTS**. Shared card-filter
+casting restrictions and compound player rules now execute City in a Bottle's
+complete player-rule subrule. Its captured state-member trigger remains blocked.
 Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
@@ -23,9 +23,9 @@ Reassess these candidates with fresh loader and inventory evidence under
 compare full-card gains, shared dependencies and effort before choosing a slice.
 Count reprints once; a first diagnostic alone does not establish a full-card gain.
 
-1. **Filtered casting restrictions and compound all-player rule lists.**
-   City in a Bottle can reuse the fixed-name catalog and land restriction.
-   Zero immediate full-card gains; captured state members remain a prerequisite.
+1. **Captured state-member trigger sets: City in a Bottle.**
+   Its casting and land-play subrule now works. Exact plural event visits and
+   pending suppression remain; estimated one complete-card unlock.
 2. **Shared dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains from the comparison alone. Exchange-result handling and
    the recorded Aura-only source repair remain required.
@@ -708,3 +708,171 @@ Reassess shared multi-card opportunities from fresh inventory before selecting
 another prerequisite. No second slice was started in this run. Complete RON
 gameplay, runtime loading, native startup, Go-card deletion and DSL cleanup
 remain unfinished.
+
+## 2026-10-12 — FILTERED-CASTING-AND-PLAYER-RULE-LISTS
+
+### Fresh environment and candidate comparison
+
+The initial working tree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1`
+and `make build` passed. The baseline loader exited 1 because the collection
+still has unsupported records: 846 accepted / 140 rejected unique names,
+2,187 compiled / 258 rejected records, from 986 names and 2,445 records.
+Collection rejection was not a compilation or environment failure.
+
+Evaluated the latest ranked candidates first. Read the complete City in a
+Bottle (ARN:13), Gauntlets of Chaos (LEG:95), and Worms of the Earth (DRK:118)
+records, including nested actions, filters, costs and branches. Targeted
+vocabulary signatures agree with their source shapes. Each occurs once; no
+reprints add unique value.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers | Downstream behavior | Estimated effort |
+| --- | --- | --- | --- | --- | --- |
+| Filtered casting and compound all-player rules | City in a Bottle | 0 | Captured state-member trigger and plural event subjects | Completes City's player-rule declaration; reusable card-filter cast legality and composition of supported player rules | One run, about 250–350 test lines; ready |
+| Dependent permanent target comparison | Gauntlets of Chaos | 0 | Exchange-result predicate; recorded Aura-only attachment source defect | Two-target shared-type legality, then conditional attachment destruction | About 400–600 test lines; more identity and target coupling |
+| Land entry prevention | Worms of the Earth | 0 | Alternative optional sacrifice/damage payment and result scope | Global entry restriction and exact land-play/entry separation | About 250–400 test lines; entry proposal and destination contracts |
+
+Selected candidate #1 as the dependency-ready unblocking prerequisite requested
+by the selection policy. It reuses exact active-effect and casting services;
+the other two retain more transaction or identity dependencies. This slice does
+not claim a multi-card unlock. A collection scan found City's declaration is
+the only compound AnyPlayer rule list in current source. The adapter is shared
+across supported player-rule operations and uses no card-name dispatch.
+Contract and acceptance cases were stated before editing. Only this slice was
+implemented.
+
+### Supported signatures, engine contract and reuse boundary
+
+RON supports `EachPlayerEffect(AnyPlayer, [CantCastSpells(predicate), ...])`
+in a permanent's top-level Rules. The unary tuple accepts the bare symbols
+SharesANameOriginallyPrintedInArabianNights and
+SharesANameOriginallyPrintedInAntiquities. The existing immutable CR 206.3
+catalogs match the candidate card's name, independent of physical printing.
+The shared `compileOriginalPrintingCardFilter` retains the existing land-filter
+behavior and supplies context-specific diagnostics. Inventory classifies the
+casting operand as `casting_card_filter`.
+
+All-player rule lists are nonempty and compose already supported casting,
+land-play, public visibility, untap-skip, untap-limit and cost-increase operations.
+Each operand validates before factory publication. Declaration order and repeated
+operations are retained. Empty lists, unsupported mixed operands, wrong arity,
+tuple spellings for symbols, wrong scopes, action/cost contexts, arbitrary
+filters, permanent references and battlefield rules on instants remain errors.
+Each factory makes fresh cards and ability declarations. There is no payment,
+player-result or permanent-result binding in this pure static query.
+
+The engine provides `PreventSpellCasts(filter CardFilter) StaticRule` and
+`Game.IsSpellCastProhibited(playerID uuid.UUID, card Card) bool`. A zero filter
+fails definition validation. Nil and land cards return false. Existing player
+and legacy expansion restrictions remain included. The shared checkSpellTiming
+precheck covers hand casting, free and alternate zone casting, cast copies and
+GetCastableSpells before modes, targets, zone removal or payment. Casting
+permission cannot override prohibition. Rejection keeps resources, zone order,
+life and the stack intact. Stack copying, pending spell resolution, direct
+battlefield entry and land plays retain separate services.
+
+Printed active effects preserve source visits and ability-removal behavior.
+Departure, phasing, face-down status and removal stop the rule; tapping and
+control changes do not. Immediate phasing needs no layer pass. Return starts a
+new visit; overlaps and cloned games keep separate lifetimes. The embedded
+catalog is immutable; no mutable filter result or last-action slot is shared.
+CR 101.2, 206.3, 400.7, 601.2e, 613.11 and 702.26b–d support the contracts.
+No new LKI action, event binding, replacement ordering or simultaneous batch
+is introduced. These are legality queries, not resolving effects.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, focused engine and RON tests failed to compile because
+PreventSpellCasts and IsSpellCastProhibited did not exist. Implementation followed
+that expected failure. Eight focused tests now cover the supported contracts:
+
+- **City in a Bottle** → `TestRONSpellCastRestrictionCity`: exact complete
+  player-rule subrule under both active players; matching names on other
+  printings; both spell and land prohibition; unrestricted Mountain name;
+  failed cast/query state; direct entry; immediate source phasing. A fresh
+  complete record still rejects its captured state-member trigger. This is
+  subrule gameplay evidence, not complete-card gameplay coverage.
+- `TestRONSpellCastRestrictionCompositionAndInventory`: ATQ name catalog,
+  catalog separation, compound land/hand/top-library visibility rules,
+  semantic operand role and atomic collection rejection.
+- `TestRONSpellCastRestrictionListOrderAndInstances`: operation permutations,
+  repeated operations, fresh factories, overlapping source lifetimes and
+  battlefield-only definition validation.
+- `TestRONSpellCastRestrictionInvalid`: invalid shapes, arity, scope, contexts,
+  unsupported filters and mixed lists, with no published registry.
+- `TestSpellCastRestrictionLifecycle`: both active players, source tap/control,
+  face-down/phased/cycle, ability removal/expiry, departure/return, clone
+  independence, pure queries and direct entry.
+- `TestSpellCastRestrictionPathsAndRollback`: ordinary, free, alternate,
+  graveyard and cast-copy paths; unchanged hand/graveyard order, mana, stack
+  and life on rejection.
+- `TestSpellCastRestrictionStackCopyAndOverlap`: overlapping sources, clone
+  isolation, allowed stack copying, pending resolution and later casting.
+- `TestSpellCastRestrictionInvalid`: zero engine filter fails validation.
+
+The existing original-printing-name rejection fixture no longer rejects valid
+casting operands. Mixed public-visibility, duplicate untap-skip and duplicate
+land-rule rejection fixtures now use unsupported operands instead. New positive
+composition/order tests establish the supported behavior. No gameplay assertion
+was removed to accommodate wrong engine behavior. Test-only fixes used the
+existing IsTopCardRevealed API and re-read the original complete record because
+staticBaseSubrule changes its shared Rules map; neither changed production rules.
+
+### Changed files and source defects
+
+New engine `pkg/mage/spell_cast_restriction.go` and its test; the shared casting
+precheck in `spell_cast_stack.go`. New RON `spell_cast_restriction.go` and its
+test; composition/dispatch in `public_visibility.go`, shared catalog adapter in
+`land_play_restriction.go`, and semantic role in `inventory.go`. Four existing
+RON declaration test files update obsolete rejection cases. API/rules contracts
+are documented in `pkg/mage/doc.go`, `docs/engine-rules-contracts.md` and
+`docs/dsl-reference.md`. This ledger updates the summary and appends evidence.
+
+No source defect was corrected. The Gauntlets Aura-only defect remains open.
+RON source did not change, so no vocabulary snapshot refresh was required.
+No Go definitions, DSL exports, generators or runtime startup were removed or
+changed. Their cutover/removal gates remain open. No partial registry, fallback,
+card-name executor or game-time declaration panic was added.
+
+### Verification and measured collection result
+
+All required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONSpellCastRestriction -count=1`.
+- `go test ./pkg/mage -run TestSpellCastRestriction -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1`.
+- `make test`; also `go test ./... -short -count=1` for the engine skill.
+- `make lint`: 0 issues. Reviewed final tracked/untracked source and automatic
+  formatting; no behavior changes or unrelated file changes were introduced.
+  No affected rerun was required.
+- `git diff --check`.
+- `go run ./cmd/loadcards -json`: expected exit 1, 2,187 compiled / 258 rejected
+  records and 846 accepted / 140 rejected names (2,445 / 986 totals).
+
+Final rejection keys and diagnostic messages exactly equal the fresh baseline.
+City still reports ARN:13:146 unsupported trigger
+WhenAnyNumberOfPermanentsAreOnTheBattlefield. Previously accepted records remain
+accepted. The loader rejects the collection and publishes no partial registry.
+
+Estimated full-card unlocks were zero; actual gains are zero. Gameplay evidence
+now covers City's complete compound player-rule subrule and reusable engine
+casting contracts. Complete-card gameplay coverage is unchanged. There is no
+remaining environment or pre-existing validation blocker. This slice is ready
+for the authorized `feat(ron): implement filtered casting restrictions` commit.
+
+### Ranked next candidates
+
+1. Captured state-member trigger sets for City in a Bottle. Its casting and
+   land-play declarations now work; exact detected plural visits and pending
+   trigger suppression must precede ControllersSacrificeEachPermanent. Estimated
+   one complete-card unlock if no further contract gap appears.
+2. Shared dependent permanent target comparison for Gauntlets of Chaos. Reuse
+   shared target legality and atomic exchange; exchange-result handling and the
+   recorded Aura-only source correction remain separate. Zero immediate gains.
+3. Land entry prevention for Worms of the Earth. Preserve global entry/play
+   separation; alternative optional sacrifice/damage payment results remain.
+   Zero immediate gains.
+
+Reassess useful shared multi-card work with fresh inventory before selection.
+No second slice was started. Complete RON gameplay, runtime loading, native
+startup, Go-card deletion and unused DSL cleanup remain unfinished.
