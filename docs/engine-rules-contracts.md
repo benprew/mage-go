@@ -18215,3 +18215,47 @@ Evidence: `TestPermanentCardinalityChoicesAndBatch`, `LeastAndDeclaration`,
 `TargetsCopiesAndDelay`, `RolesAndInventory`. All six Balance reprints supply
 unchanged land and creature instructions. The full card remains rejected at
 `DiscardAllButNumberCards`; instruction coverage is not full-card gameplay.
+
+## Required hand cardinality choices and simultaneous discard
+
+`LeastHandSize(players PlayerSet) ResolutionValue` reads the minimum current
+hand size of the selected present players. Empty hands count as zero. Duplicate
+and absent IDs are excluded; an empty set supplies zero. The query does not
+make choices, reveal cards, run replacements or change game state.
+
+`DiscardAllButEach(players PlayerSet, keep ResolutionValue) ResolvingEffect`
+reads the kept count once, then snapshots each selected hand and its exact visits
+before any choice. Negative kept counts mean zero; counts above hand size cause
+no discard. Each player chooses the required number of cards to **discard**, in
+APNAP order. Hidden card names are not added to later prompts (CR 101.4a).
+Selections must belong to the saved hand and be distinct. Invalid, duplicate,
+nil or short answers receive distinct fallback cards in saved hand order.
+
+The private `snapshotHandGroup` and `chooseHandDiscards` helpers also serve the
+existing `DiscardUpToEach` operation. That operation retains its optional count
+choice and per-player actual-result binding. Both operations preserve visits
+before card choice. A changed or returned hand visit cannot replace a selection.
+No persistent choice binding or global action result is added.
+
+All choices precede the existing `discardActionsTogether` service. Replacement
+preparation and owner graveyard ordering precede movement; all moves precede
+discard events. Cancellation or a changed destination does not repeat selection
+or recalculate the minimum. Independent later instructions still run. This is an
+effect, not a cost; existing payment transactions retain their contracts.
+CR 101.4/101.4a, 400.7, 608.2c–f/608.2h and 701.9a–c establish these boundaries.
+
+RON accepts `EachPlayerAction(AnyPlayer, DiscardAllButNumberCards(count))` in
+resolving spell, activation, trigger and delayed action lists. `count` is
+`Integer(n)` with n >= 0 or
+`TheLowestNumberOfCardsInHandAmongPlayers(AnyPlayer)`. The latter spelling is
+local to this count context. Other RON player sets, dynamic count expressions,
+singular player actions, costs and static declarations remain rejected.
+
+Evidence: `TestHandCardinalityChoicesAndBatch`, `BoundsLeastAndDeclarations`,
+`ReplacementsAndVisits`, `ReadsOnceAndWaiting`, `ChoiceVisitsAndSnapshot`;
+`TestRONHandCardinalityBalance`, `Invalid`, `CopiesClonesAndDelay`,
+`InventoryAndAtomicLoad`. Complete unchanged Balance records from LEA, LEB,
+2ED, 3ED, CED and CEI execute land sacrifice, simultaneous hand discard and
+creature sacrifice in their declared order. Existing permanent-cardinality and
+optional-discard result tests retain their identity, phasing, LKI, replacement,
+payment and frame evidence.

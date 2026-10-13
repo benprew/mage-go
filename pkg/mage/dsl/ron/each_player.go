@@ -11,6 +11,12 @@ func compileEachPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	action := n.Args[1]
 	switch action.Name {
+	case "DiscardAllButNumberCards":
+		build, err := compileDiscardAllBut(action)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
 	case "SacrificeAllPermanentsExceptForNum":
 		build, err := compileSacrificeAllBut(action, ctx)
 		if err != nil {

@@ -183,6 +183,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		return permanentSetReadsSourcePermanent(v.subjects)
 	case leastControlledPermanentCount:
 		return playerSetReadsSourcePermanent(v.players) || permanentSetReadsSourcePermanent(v.subjects)
+	case leastHandSize:
+		return playerSetReadsSourcePermanent(v.players)
 	case arithmeticValue:
 		return resolutionValueReadsSourcePermanent(v.left) || resolutionValueReadsSourcePermanent(v.right)
 	default:

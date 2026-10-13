@@ -13916,3 +13916,19 @@ Evidence: `TestPermanentCardinalityChoicesAndBatch`, `LeastAndDeclaration`,
 `TargetsCopiesAndDelay`, `RolesAndInventory`. All six Balance reprints supply
 unchanged land and creature instructions. The full card remains rejected at
 `DiscardAllButNumberCards`; instruction coverage is not full-card gameplay.
+
+### RON required hand cardinality
+
+In resolving action lists,
+`EachPlayerAction(AnyPlayer, DiscardAllButNumberCards(count))` makes each player
+choose cards to discard down to the kept count. Supported counts are a
+nonnegative `Integer(n)` and
+`TheLowestNumberOfCardsInHandAmongPlayers(AnyPlayer)`. The minimum is read once
+when this instruction resolves, including empty hands. All required choices
+precede simultaneous discard; replacements do not cause a new choice.
+
+The compiler lowers these forms directly to `mage.DiscardAllButEach` and
+`mage.LeastHandSize`. Hidden choices preserve exact hand visits. The count
+spelling is local to this action; other player sets, cost/static contexts and
+saved discard results require separate adapters. Complete Balance gameplay is
+covered by `TestRONHandCardinalityBalance` for all six reprints.

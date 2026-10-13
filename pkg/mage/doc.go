@@ -2638,7 +2638,18 @@
 // Copies and clones read their own battlefield at resolution. No result is saved.
 // RON lowers EachPlayerAction(AnyPlayer, SacrificeAllPermanentsExceptForNum)
 // with a fixed nonnegative count or an all-player least permanent count.
-// Hand counts, optional selection results and other player sets stay separate.
+// Optional selection results and other RON player sets stay separate.
+//
+// Use [DiscardAllButEach] for required hand choices in turn order.
+// The kept count is read once. All hand visits are saved before choices.
+// Each player chooses cards to discard without revealing their names.
+// Shared replacements and graveyard ordering precede one discard batch.
+// Returned visits cannot move. Cancellation does not cause another choice.
+// [LeastHandSize] includes empty hands and excludes absent or duplicate players.
+// Empty player sets supply zero. Copies, clones and delays read current hands.
+// RON lowers EachPlayerAction(AnyPlayer, DiscardAllButNumberCards) with a
+// fixed nonnegative count or TheLowestNumberOfCardsInHandAmongPlayers(AnyPlayer).
+// This count spelling is local to this resolving action. No result is saved.
 //
 // # Further Documentation
 //

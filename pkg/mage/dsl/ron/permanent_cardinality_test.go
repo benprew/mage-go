@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -53,8 +52,8 @@ func TestRONPermanentCardinalityBalanceInstructions(t *testing.T) {
 				t.Fatal("clone lost instruction")
 			}
 		}
-		if _, err := Compile(staticBaseRecord(t, set, "Balance")); err == nil || !strings.Contains(err.Error(), "DiscardAllButNumberCards") {
-			t.Fatal("complete Balance must retain its hand-operation blocker", err)
+		if _, err := Compile(staticBaseRecord(t, set, "Balance")); err != nil {
+			t.Fatal("complete Balance rejected", err)
 		}
 	}
 }

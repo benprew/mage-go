@@ -118,36 +118,7 @@ func (e *discardUpToEachEffect) Apply(ctx *EffectContext) error {
 		if count == 0 {
 			continue
 		}
-		chosen := player.ChooseCardsFromHand(count, "discard", ctx.Game)
-		held := make(map[uuid.UUID]Card, len(player.Hand()))
-		for _, c := range player.Hand() {
-			held[c.ID()] = c
-		}
-		ids := make(map[uuid.UUID]bool)
-		for _, c := range chosen {
-			if c == nil || held[c.ID()] == nil || ids[c.ID()] {
-				continue
-			}
-			ids[c.ID()] = true
-			action := NewDiscardAction(ctx.SourceID, id, c.ID())
-			action.handVisit = ctx.Game.handVisit(c.ID())
-			actions = append(actions, action)
-			if len(ids) == count {
-				break
-			}
-		}
-		for _, c := range player.Hand() {
-			if len(ids) == count {
-				break
-			}
-			if ids[c.ID()] {
-				continue
-			}
-			ids[c.ID()] = true
-			action := NewDiscardAction(ctx.SourceID, id, c.ID())
-			action.handVisit = ctx.Game.handVisit(c.ID())
-			actions = append(actions, action)
-		}
+		actions = append(actions, chooseHandDiscards(ctx, snapshotHandGroup(ctx, player), count)...)
 	}
 	for _, event := range ctx.Game.discardActionsTogetherWithEvents(actions, false) {
 		if b := e.result.member(ctx.Game, event.PlayerID); b != nil {
