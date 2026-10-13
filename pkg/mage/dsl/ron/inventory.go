@@ -1009,6 +1009,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "resolution_cost"}[index]
 			}
+		case "ForEachPermanentAnyPlayerMayCost":
+			if len(n.Args) == 3 {
+				return []string{"permanent_collection", "player_collection", "resolution_cost"}[index]
+			}
 		case "AnyPlayerMayCost":
 			if len(n.Args) == 2 {
 				return []string{"player_collection", "resolution_cost"}[index]

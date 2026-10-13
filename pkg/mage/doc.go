@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [OfferCostForEachPermanent] saves visits for which no eligible player pays.
+// Each visit needs its own complete payment. All offers precede later actions.
+// Subjects use turn order; the effect controller chooses order within a group.
+// Offers name each subject. Shared transactions keep rechecks and rollback.
+// [FromPermanentSet] reads saved present, unphased visits. Return cannot replace
+// a visit. Empty results clear older values. Copies, clones and delays keep
+// separate frames. Waiting queries make no offers. RON supports fixed life
+// payments to AnyPlayer in ordinary resolving sequences. CostWasntPaidForIt
+// reads the latest local producer. Branch-local results cannot escape.
+//
 // [UntilSourcePresent] saves subjects and values at resolution.
 // An absent, returned or phased source cannot start the duration.
 // Source departure and phasing end it. Phase-in cannot start it again.

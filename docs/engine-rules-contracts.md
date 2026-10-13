@@ -18564,3 +18564,41 @@ Evidence: `TestEligiblePayerScopeOffersAndRollback`,
 `TestEligiblePayerScopeInvalid`, and `TestRONEligiblePayerScope*`.
 Existing `TestEligiblePlayerPayment*`, `TestRONEligiblePlayerPayment*` and
 `TestRONSourcePresenceDuration*` preserve caller and real-card coverage.
+
+## Per-permanent eligible-player payments
+
+`OfferCostForEachPermanent(subjects PermanentSet, players PlayerSet,
+costs CostGroup, unpaid *PermanentSetBinding) ResolvingEffect` saves the exact
+present, unphased visits at resolution and reads player eligibility once.
+Duplicate subjects and absent players cannot supply additional offers.
+Subjects are grouped by their controllers in turn order. The effect controller
+chooses the relative order within each group (CR 608.2f). Each subject's offer
+names that subject. Eligible players receive offers in active-player order;
+the first complete payment ends that subject's offers (CR 101.4, 118.3).
+Each subject needs a separate payment. A zero cost still needs acceptance.
+
+The shared eligible-player offer loop and action payment transaction own
+payment, affordability rechecks and rollback. Failure or decline continues to
+the next player. The result contains unpaid exact visits, including an empty
+result that clears older values. All offers finish before the next effect.
+`FromPermanentSet(unpaid)` reads current present, unphased saved visits.
+A control change or phase cycle keeps identity; departure and return cannot
+replace a visit. Later entries do not enter the result. Existing resolution
+frames keep factory instances, stack copies, game clones and delayed captures
+separate. Waiting queries declare source reads without running offers.
+
+RON supports `ForEachPermanentAnyPlayerMayCost(collection, AnyPlayer,
+PayLife(Integer(n)))` for nonnegative fixed life in ordinary resolving action
+sequences. `CostWasntPaidForIt` is a plural collection read from the latest
+preceding producer in that lexical sequence. Nested branches keep their own
+producer; a branch cannot export one. Entry and draw replacement bodies,
+other player sets, other payment forms and dynamic amounts remain rejected.
+No per-subject permanent or payer binding is exported by this shape.
+
+Cleansing's complete DRK record uses this producer followed by
+`DestroyEachPermanent(CostWasntPaidForIt)`. The shared destruction batch retains
+simultaneous departure information, owner destinations, regeneration,
+indestructibility and replacement ordering (CR 608.2f, 701.8).
+The local `data/DRK.json` Oracle text confirms its source shape; no RON correction
+was required. Native `TestPermanentPayment*` and RON
+`TestRONPermanentPayment*` establish this contract and full Cleansing gameplay.

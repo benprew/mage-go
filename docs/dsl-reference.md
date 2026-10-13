@@ -14144,3 +14144,21 @@ layer order, control restrictions, copies and clone frames remain in use.
 layer and phasing lifecycle forms require their own adapters and contracts.
 Evidence: `TestUntilSourcePresent*` and `TestRONSourcePresenceDuration*`;
 Scarwood Bandits now has complete RON-backed gameplay coverage.
+
+### Per-permanent optional life payments in RON
+
+In ordinary resolving action sequences,
+`ForEachPermanentAnyPlayerMayCost(collection, AnyPlayer, PayLife(Integer(n)))`
+offers each eligible player a separate payment for each saved matching visit.
+`n` is fixed and nonnegative. The first player who pays protects that visit;
+the result contains visits for which no player pays. Prompts name the subject.
+`CostWasntPaidForIt` reads the latest preceding producer's unpaid permanent set
+in the same lexical sequence. Branch-local producers cannot escape their branch.
+
+The native API is `OfferCostForEachPermanent(subjects PermanentSet,
+players PlayerSet, costs CostGroup, unpaid *PermanentSetBinding) ResolvingEffect`.
+Use `BindPermanentSet` and `FromPermanentSet` for its result. All offers precede
+later actions; empty results replace old results. Existing exact visits and
+resolution frames preserve phasing, return identity, clones, copies and delays.
+Cleansing uses the existing `DestroyEach` batch on this result. Other RON
+payment forms, dynamic life and entry/replacement contexts need separate adapters.

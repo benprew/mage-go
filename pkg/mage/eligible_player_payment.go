@@ -54,20 +54,8 @@ func (e *eligiblePlayerPayment) Apply(ctx *EffectContext) error {
 		}()
 	}
 	body := e.unpaid
-	for _, id := range EachPlayer.resolvePlayers(ctx) {
-		if !slices.Contains(eligible, id) {
-			continue
-		}
-		if e.scopedPayer {
-			ctx.Game.resolution.playerBindings[e.payer] = id
-		}
-		if tryResolutionCostPayment(ctx, id, e.costs.costs, false) {
-			body = e.paid
-			break
-		}
-		if e.scopedPayer {
-			delete(ctx.Game.resolution.playerBindings, e.payer)
-		}
+	if offerEligibleResolutionCost(ctx, eligible, e.costs.costs, e.payer, "") {
+		body = e.paid
 	}
 	if nilDefinition(body) {
 		return nil
@@ -92,4 +80,22 @@ func (e *eligiblePlayerPayment) inspectDefinition() definitionNode {
 }
 func (e *eligiblePlayerPayment) refersToSourcePermanent() bool {
 	return playerSetReadsSourcePermanent(e.players) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
+}
+
+func offerEligibleResolutionCost(ctx *EffectContext, eligible []uuid.UUID, costs []Cost, payer *PlayerBinding, subject string) bool {
+	for _, id := range EachPlayer.resolvePlayers(ctx) {
+		if !slices.Contains(eligible, id) {
+			continue
+		}
+		if payer != nil {
+			ctx.Game.resolution.playerBindings[payer] = id
+		}
+		if tryResolutionCostPaymentFor(ctx, id, costs, false, subject) {
+			return true
+		}
+		if payer != nil {
+			delete(ctx.Game.resolution.playerBindings, payer)
+		}
+	}
+	return false
 }

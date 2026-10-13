@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **848 accepted / 138 rejected names**
-(986 total), **2,189 compiled / 256 rejected records** (2,445 total).
-The latest slice adds typed eligible-player payer scope. Collection counts are
-unchanged. The strict loader rejects the collection and publishes no partial
-registry.
+Latest measured result (2026-10-13): **849 accepted / 137 rejected names**
+(986 total), **2,190 compiled / 255 rejected records** (2,445 total).
+The latest slice adds per-permanent eligible-player life offers and saved unpaid
+subject sets. Cleansing is newly accepted and has complete RON gameplay evidence.
+The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **ELIGIBLE-PLAYER-PAYER-SCOPE**. Each candidate is bound
-during its offer and payment. RON paid branches can read the successful payer
-through ActionPlayer; unpaid branches cannot. This is a shared payment
-prerequisite, with zero new complete-card unlocks. Runtime cutover and removal
+The latest slice is **PER-PERMANENT-LIFE-PAYMENT**. Each exact matching visit
+receives separate offers; later actions read the saved unpaid set. Existing
+transactions and simultaneous destruction retain their contracts. Estimated and
+actual gains match: one unique card / one record. Runtime cutover and removal
 gates remain open.
 
 ## Ranked next candidates
@@ -23,20 +23,16 @@ gates remain open.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Repeated eligible-player life offers and unpaid subject sets.**
-   Cleansing needs one complete per-land payment/result contract. Reuse the
-   eligible-player offer service, life costs and exact permanent-set bindings.
-   Estimated full-card gain: one. Read the full record and destruction contracts.
-2. **Eligible-player alternative and action payments.**
+1. **Eligible-player alternative and action payments.**
    Worms of the Earth needs sacrifice-or-damage payments. Candidate payer scope
-   is ready; damage acceptance is distinct from actual damage. Entry prevention
-   remains a separate blocker. Estimated immediate full-card gain: zero.
-3. **Dependent permanent target comparison: Gauntlets of Chaos.**
+   and the shared offer loop are ready; damage acceptance is distinct from actual
+   damage. Entry prevention remains a separate blocker. Estimated immediate gain: zero.
+2. **Dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains. Exchange-result handling and the documented Aura-only
    source correction remain required.
-4. **Source-leave layer duration: Gaea's Liege.**
-   Keep phasing distinct from Scarwood's source-presence control duration. Its
-   defending-player filter, characteristic rules and known source defect remain.
+3. **Source-leave layer duration: Gaea's Liege.**
+   Its defending-player filter, characteristic rules and known source defect remain.
+   Reassess shared multi-card candidates before selecting these prerequisites.
 
 ## Dependencies and source blockers
 
@@ -46,7 +42,7 @@ Reassess these candidates with fresh loader and complete-record evidence under
   `EachablePlayer` is local to the repetition count; other uses remain unsupported.
 - Reuse `SacrificeAllButEach`, `LeastControlledPermanentCount`, the bounded
   subset selector and the existing simultaneous sacrifice service for permanent
-  cardinality work. The latest slice supports required kept-count choices in
+  cardinality work. The cardinality adapter supports required kept-count choices in
   APNAP order; it does not add optional cardinality or saved plural results.
 - Reuse `DiscardAllButEach`, `LeastHandSize`, exact hand selection and the shared
   discard batch for required hand cardinality. Optional discard counts/results
@@ -1605,3 +1601,177 @@ pre-existing build/test failure or independent required check remains blocked.
 
 Complete collection gameplay, runtime loading, Go-card deletion and unused DSL
 cleanup remain unfinished. This run implements exactly one payer-scope slice.
+
+## 2026-10-13 — PER-PERMANENT-LIFE-PAYMENT
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loader execution
+exited 1 for collection rejection: 2,189 compiled / 256 rejected records,
+848 accepted / 138 rejected names. This was an unsupported collection,
+not a build or environment failure.
+
+Complete source records inspected: Cleansing at DRK.lines.ron:19,
+Worms of the Earth at DRK.lines.ron:118, and Gauntlets of Chaos at
+LEG.lines.ron:95. Targeted vocabulary entries and nested actions were checked.
+Names count reprints once. Local DRK/LEG Oracle data confirmed the requirements.
+
+| Candidate | Affected distinct names | Estimated full-card gain | Other blockers | Downstream capability | Effort |
+| --- | --- | --- | --- | --- | --- |
+| Per-permanent life offers and unpaid sets | Cleansing | 1 name / 1 record | None | Repeated eligible-player offers and exact unpaid collections for later consumers | Medium: engine producer, lexical lowering, lifecycle and batch tests |
+| Alternative/action eligible-player payments | Worms of the Earth | 0 | Land-entry prohibition; sacrifice-or-damage acceptance adapters | General eligible-player alternatives using saved payer scope | Larger: action acceptance versus outcome, alternatives and rollback |
+| Dependent target type comparison | Gauntlets of Chaos | 0 | Exchange-result guard; Aura-only RON defect | Cross-target type comparisons for target legality | Medium: dependent target reads, legality and copy contracts |
+
+Candidate 1 was dependency-ready and completes the latest ledger's first-ranked
+slice. It provides an actual full-card unlock rather than stopping at another
+intermediate adapter. The other two candidates retain independent blockers.
+The reusable service has no card-name policy. This run implements one capability
+and stops; no runtime cutover or removal gate is satisfied.
+
+### Exact supported signatures and ownership
+
+Native API:
+
+`OfferCostForEachPermanent(subjects PermanentSet, players PlayerSet,
+costs CostGroup, unpaid *PermanentSetBinding) ResolvingEffect`
+
+The producer snapshots distinct present, unphased visits and player eligibility
+at resolution. Subject controller groups use turn order; the effect controller
+chooses relative order within each group (CR 608.2f). Each offer identifies its
+subject. For each visit the shared eligible-player loop offers the full cost in
+active-player order, stopping at the first complete payment. Failure, decline
+and insufficient resources continue to later players. Separate subjects require
+separate payments. Zero costs require acceptance. The result saves unpaid visits
+and replaces older values even when empty. All offers precede later actions.
+
+RON signatures:
+
+- `ForEachPermanentAnyPlayerMayCost(collection, AnyPlayer, PayLife(Integer(n)))`
+  in ordinary resolving action sequences, with fixed nonnegative `n`.
+- Symbolic `CostWasntPaidForIt` as a plural contextual collection read from the
+  latest preceding producer. Nested branches shadow it locally and cannot export
+  their producer. Following outer reads keep the outer producer.
+- Ordinary spells, permanent activations, triggers and delayed bodies share the
+  lowering. Delay creation can save an already produced set. Entry and draw
+  replacement contexts, other player sets, other payment forms, dynamic amounts,
+  malformed arity and unbound results remain rejected.
+
+The engine owns visit capture, order decisions, payments and result frames.
+RON owns spelling, declaration diagnostics, lexical plans and fresh bindings.
+Dependencies reused: controlledPermanentGroups, EachPlayer turn order,
+PayAnyOrElse's extracted offer loop, tryResolutionCostPayment's shared transaction
+and affordability checks, LifePayCost, PermanentSetBinding/FromPermanentSet,
+resolution capture, stack copies, game cloning, AtNext and DestroyEach.
+The subject-aware prompt uses the same payment transaction. Old payment APIs and
+prompts remain compatible. There is no global result slot, Go-card fallback,
+partial registry, replacement shortcut or parallel destruction implementation.
+
+### Failing-first evidence and gameplay mapping
+
+Before implementation, `go test ./pkg/mage -run TestPermanentPayment -count=1`
+failed to compile for missing OfferCostForEachPermanent. The focused RON suite
+failed at the unsupported real Cleansing producer and isolated loading case.
+The inventory-role test separately failed before its adapter was added.
+These expected failures preceded their production changes.
+
+Native evidence:
+
+- TestPermanentPaymentOffersOrderAndRollback: both active players, effect-controller
+  subject ordering, payments for another controller's land, duplicate collections,
+  stop-at-success, separate charges, full-cost rollback and empty-result reset.
+- TestPermanentPaymentIdentityDelayAndClone: initial phasing exclusion, saved visit
+  phasing and phase cycle, delayed capture, departure/return and cloned-frame isolation.
+- TestPermanentPaymentSnapshotRecheckAndSimultaneous: offer-time resource change,
+  failed transaction followed by a later payer, subjects that leave and return,
+  later entry exclusion, one destruction batch and simultaneous departure LKI.
+- TestPermanentPaymentInvalid: missing subjects/players/costs/result, nil costs,
+  empty binding name, unproduced set and valid sequential producer/consumer.
+- Existing TestEligiblePlayerPayment* and TestEligiblePayerScope* retain coverage
+  for the shared loop, payer bindings, affordability, local branches and delays.
+
+RON evidence and full-card mapping:
+
+- **Cleansing → TestRONPermanentPaymentCleansing** uses its complete unchanged DRK
+  record. It covers failed casting costs, resolution-only offers, no payment,
+  controller/opponent payments, per-land life affordability, phased lands,
+  regeneration, indestructibility, unaffected nonlands, stack copies and clones.
+- TestRONPermanentPaymentContextsAndScope covers upkeep triggers, activation,
+  live delayed collection versus delayed saved results, source departure,
+  waiting-query purity, cloned pending delays and nested producer isolation.
+- TestRONPermanentPaymentInvalidAndLoading checks invalid player/payment forms,
+  negative/dynamic life, malformed result symbol, escaped branch result,
+  unbound result and atomic collection rejection.
+- TestRONPermanentPaymentInventory checks resolution-cost semantic classification.
+- Repository inventory/definition/numeric tests keep exact new collection totals
+  and explicitly reject a regression that makes Cleansing unsupported again.
+
+The first required engine short run exposed four stale collection-count
+assertions expecting 2,189/256. They were updated to the measured 2,190/255;
+no semantic assertion was removed or weakened. A late native test used an
+incorrect event enum name; it was corrected to the engine's EvtZoneChange.
+An intermediate commentary mistakenly read stale temporary lint output; fresh
+slice-specific logs are the validation evidence below.
+
+### Source defects, files and gates
+
+No RON source changed, so no vocabulary-source snapshot refresh is required.
+No new source defect was found. Gauntlets' Aura-only omission and Gaea's Liege's
+known duplicate IsntAttacking branch remain open. No Go card, DSL export,
+generator or startup wiring was removed. Whole-repository caller removal audits
+remain for the design's cutover gates.
+
+Engine files: new permanent_payment.go and permanent_payment_test.go;
+shared eligible_player_payment.go and composable_costs.go; doc.go.
+Compiler files: new permanent_payment.go and permanent_payment_test.go;
+compiler.go, player_scope.go, optional_payment.go, contextual_collection.go,
+inventory.go. Collection totals: definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go. Docs: engine-rules-contracts.md, dsl-reference.md and
+this ledger.
+
+### Verification and measured collection result
+
+All required checks passed after the collection expectation and allocation fixes:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONPermanentPayment -count=1` passed.
+  Native TestPermanentPayment and existing eligible-player/payer regressions
+  passed with `-count=1`.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+  The engine skill's additional `go test ./... -short -count=1` passed.
+- The first fresh `make lint` found two preallocation issues in the new compiler
+  and test. Explicit capacities fixed them. Focused tests, build, vet, engine
+  short tests and `make test` passed again after those changes. Final `make lint`
+  passed with **0 issues**. Automatic formatting/fixes were reviewed; the working
+  tree contains only this slice's files. `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as required while gaps remain:
+  **2,190 compiled / 255 rejected records**, **849 accepted / 137 rejected names**
+  (2,445 records / 986 names). The final issues array exactly equals the fresh
+  baseline issues array with Cleansing removed. No other diagnostic changed,
+  no accepted record regressed and no partial production registry was published.
+
+There is no outstanding environment, build, test or lint blocker. Validation
+logs used slice-specific names after the intermediate stale-log correction.
+
+Estimated and actual compilation gains match: **one newly accepted unique card,
+one record (Cleansing)**. Its complete RON gameplay mapping is added above.
+Synthetic producer/consumer tests establish capability contracts; they are not
+additional full-card coverage. Remaining compilation gaps are 137 distinct names
+and 255 records. Complete collection gameplay and native runtime cutover remain
+unfinished, as do Go-card deletion and obsolete DSL cleanup.
+
+### Ranked next candidates
+
+1. Eligible-player alternative/action payments for Worms of the Earth. Shared
+   offers and candidate payer scope are ready; distinguish accepted damage from
+   damage actually dealt. Land-entry prevention remains an independent blocker.
+   Estimated immediate full-card gain: zero; prerequisite for one unique card.
+2. Dependent target type comparison for Gauntlets of Chaos. Exchange-result guard
+   and Aura-only correction remain. Estimated immediate full-card gain: zero.
+3. Source-leave layer duration for Gaea's Liege. Defending-player membership,
+   characteristic rules and its known source defect remain. Estimate zero until
+   the full nested shape is audited in the next run.
+
+Reassess shared multi-card candidates against fresh complete-record evidence
+before selecting these remaining prerequisites. Do not infer unlocks from first
+errors alone. This run ends after the per-permanent payment slice.

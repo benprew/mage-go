@@ -7,6 +7,14 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "CostWasntPaidForIt":
+		if n.Kind != Symbol || ctx.permanentPayment == nil {
+			return nil, problem(n, "unbound unpaid permanent set")
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.FromPermanentSet(bindings.permanentPayments[ctx.permanentPayment])
+		}, nil
+
 	case "Trigger_ThosePermanents":
 		if n.Kind != Symbol || ctx.statePermanents == nil {
 			return nil, problem(n, "unbound state permanent set")

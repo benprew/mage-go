@@ -864,6 +864,10 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 }
 
 func tryResolutionCostPayment(ctx *EffectContext, id uuid.UUID, costs []Cost, required bool) bool {
+	return tryResolutionCostPaymentFor(ctx, id, costs, required, "")
+}
+
+func tryResolutionCostPaymentFor(ctx *EffectContext, id uuid.UUID, costs []Cost, required bool, subject string) bool {
 	player := ctx.Game.GetPlayer(id)
 	if player == nil {
 		return false
@@ -880,7 +884,11 @@ func tryResolutionCostPayment(ctx *EffectContext, id uuid.UUID, costs []Cost, re
 			break
 		}
 	}
-	if available && (required || player.ChooseMayAbility("pay "+strings.Join(texts, ", "))) {
+	prompt := "pay " + strings.Join(texts, ", ")
+	if subject != "" {
+		prompt += " for " + subject
+	}
+	if available && (required || player.ChooseMayAbility(prompt)) {
 		tx, err := ctx.Game.prepareActionPaymentTransaction(actionPaymentSpec{
 			SourceID: ctx.SourceID, Controller: id, Costs: costs,
 			Targets: ctx.Targets, XValue: ctx.Game.XValue(),
