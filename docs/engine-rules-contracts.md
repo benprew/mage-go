@@ -18602,3 +18602,38 @@ indestructibility and replacement ordering (CR 608.2f, 701.8).
 The local `data/DRK.json` Oracle text confirms its source shape; no RON correction
 was required. Native `TestPermanentPayment*` and RON
 `TestRONPermanentPayment*` establish this contract and full Cleansing gameplay.
+
+## Eligible-player alternative resolution payments
+
+`PayAnyAlternativeOrElseWithPayer(PlayerSet, []ResolutionPaymentOption,
+*PlayerBinding, ResolvingEffect, ResolvingEffect)` offers each eligible player
+complete alternatives in turn order. The first complete payment selects the
+paid body. Otherwise the unpaid body runs once. Both bodies keep the original
+effect controller. The payer binding is local to offers, options and the paid
+body; the shared definition validator rejects unpaid and escaped reads.
+
+`CostPaymentOption(CostGroup)` uses the existing affordability checks and action
+payment transaction. Acceptance precedes one mode choice among available
+options; a single available option needs no mode choice. Invalid mode selection,
+failed rechecks or transaction failure allow the next eligible player to pay.
+Failed transactions do not commit partial resources. Sacrifice payments use the
+existing simultaneous batch and departure information.
+
+`ActionPaymentOption(ResolutionActionPayment)` reuses action-payment preparation
+and execution. It saves amounts, source information and recipient visits before
+the offer and rechecks availability afterward. An accepted damage instruction
+pays even when all damage is prevented (CR 118.11–12). Damage replacements,
+lifelink and events use the shared damage service. Phasing prevents action on a
+recipient; a phase cycle preserves its visit, and a return cannot replace it.
+The declaration stores no payment result or prepared game state. Copies, clones
+and delays use their separate resolution frames and source capture.
+
+Missing players, bindings, options, action inputs or both branches fail definition
+validation. Existing PayAnyOrElse, PayAnyOrElseWithPayer and PayActionOrElse
+remain available. This service does not combine action instructions with ordinary
+costs in one option. Each option is either a complete transactional cost group or
+one action payment.
+
+Tests: TestEligibleAlternativePayment, OrderAndRecheck, Invalid, Declarations,
+SacrificeBatch; TestRONEligibleAlternativePaymentWorms, Frames and Invalid.
+Existing eligible-payer and action-payment tests retain their contracts.

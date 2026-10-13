@@ -8,25 +8,25 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **849 accepted / 137 rejected names**
 (986 total), **2,190 compiled / 255 rejected records** (2,445 total).
-The latest slice adds per-permanent eligible-player life offers and saved unpaid
-subject sets. Cleansing is newly accepted and has complete RON gameplay evidence.
-The strict loader rejects the collection and publishes no partial registry.
+The latest slice adds eligible-player alternative resolution payments. Worms of
+the Earth's unchanged upkeep rule has RON gameplay evidence; land-entry
+prohibition still blocks its complete record. The strict loader rejects the
+collection and publishes no partial registry.
 
-The latest slice is **PER-PERMANENT-LIFE-PAYMENT**. Each exact matching visit
-receives separate offers; later actions read the saved unpaid set. Existing
-transactions and simultaneous destruction retain their contracts. Estimated and
-actual gains match: one unique card / one record. Runtime cutover and removal
-gates remain open.
+The latest slice is **ELIGIBLE-PLAYER-ALTERNATIVE-PAYMENT**. Fixed mana,
+matching sacrifice and damage options share local candidate payer bindings.
+Accepted damage pays even when prevented. Estimated and actual full-card gains
+are zero. Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Eligible-player alternative and action payments.**
-   Worms of the Earth needs sacrifice-or-damage payments. Candidate payer scope
-   and the shared offer loop are ready; damage acceptance is distinct from actual
-   damage. Entry prevention remains a separate blocker. Estimated immediate gain: zero.
+1. **Land-entry prohibition: Worms of the Earth.**
+   Its alternative payment prerequisite is complete. Audit all entry paths and
+   replacement ordering before lowering CardsCantEnterTheBattlefield. Estimated
+   immediate gain: one unique card / one record. Reassess shared multi-card work.
 2. **Dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains. Exchange-result handling and the documented Aura-only
    source correction remain required.
@@ -1775,3 +1775,207 @@ unfinished, as do Go-card deletion and obsolete DSL cleanup.
 Reassess shared multi-card candidates against fresh complete-record evidence
 before selecting these remaining prerequisites. Do not infer unlocks from first
 errors alone. This run ends after the per-permanent payment slice.
+
+## 2026-10-13 — ELIGIBLE-PLAYER-ALTERNATIVE-PAYMENT
+
+### Baseline and candidate selection
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The completed baseline loader
+exited 1 with 2,190 compiled / 255 rejected records and 849 accepted /
+137 rejected unique names. Collection rejection is expected and is separate
+from build or test failure.
+
+The latest entry's first candidate was dependency-ready. Complete records and
+nested forms were inspected for all three ranked candidates; reprints count once:
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- | --- |
+| Eligible-player alternative/action payments | Worms of the Earth; Scarwood Bandits retains its existing fixed-mana form | 0 | Worms still needs CardsCantEnterTheBattlefield | Completes the sacrifice-or-damage upkeep prerequisite. Existing action preparation, transactions and payer frames make this a moderate adapter/engine/test slice. |
+| Dependent target type comparison | Gauntlets of Chaos | 0 | PermanentsChangedControlThisWay and its Aura-only source correction | Enables the two-target exchange declaration; requires dependent announcement and resolution legality plus exchange-result work. Moderate to high effort. |
+| Source-leave layer duration | Gaea's Liege | 0 | Defending-player forest membership, characteristic rules and duplicate IsntAttacking source defect | Enables saved land-type effects; requires broader layer/source-lifetime tests before the remaining static rules. Moderate to high effort. |
+
+Selected the first ranked prerequisite. This completes one cohesive resolution
+payment shape rather than combining it with independent entry prevention. The
+service reuses action payments already used by Farrel's Zealot, Delif's Cone and
+Floral Spuzzem. Their complete RON records, plus Farrel's Mantle's blocked record,
+were read before the shared adapter was extracted. Their existing mappings
+remain unchanged. No new complete card is claimed from the extracted rule.
+
+The pre-edit contract was: offer affordable complete alternatives in turn order;
+stop at the first payment; keep ActionPlayer local; distinguish accepted damage
+from actual damage; preserve rollback, exact visits, source LKI, phasing, copies,
+clones, delays and declaration rejection.
+
+### Supported shape, engine boundary and dependencies
+
+RON `AnyPlayerMayCost(AnyPlayer | Opponent, payment)` now accepts:
+
+- Fixed `PayMana` with no X.
+- `SacrificeAPermanent(filter)` and positive fixed
+  `SacrificeNumberPermanents(Integer(n), filter)` through existing cost filters.
+- `HavePermanentDealDamage(permanentRef, resolutionValue, recipient)` through
+  typed permanent, value and singular damage-recipient adapters.
+- Nested `Or([payment, payment, ...])` lists with at least two alternatives.
+  Every descendant must compile; unsupported options still reject the declaration.
+
+The adjacent If/Unless/IfElse uses CostWasPaid or CostWasntPaid and nonempty
+branches. ActionPlayer is the candidate payer within damage options and the
+successful payer within the paid branch. It cannot escape the pair or occur in
+an unpaid branch. The forms apply in ordinary resolving sequences, including
+permanent activations, triggers and delays. Entry, replacement and announcement
+contexts retain their separate contracts. Variable sacrifice counts, other
+payment actions, and combined action/cost instructions remain unsupported.
+
+Engine API:
+
+- `ResolutionPaymentOption` declares one complete option.
+- `CostPaymentOption(CostGroup) ResolutionPaymentOption` uses shared costs.
+- `ActionPaymentOption(ResolutionActionPayment) ResolutionPaymentOption` uses
+  the shared action preparation and damage/life/destruction execution contract.
+- `PayAnyAlternativeOrElseWithPayer(PlayerSet, []ResolutionPaymentOption,
+  *PlayerBinding, ResolvingEffect, ResolvingEffect) ResolvingEffect` offers options
+  and resolves one branch with the original effect controller.
+
+Each offer prepares action values, recipient visits and source information before
+choices. Only available options are listed; one option needs no mode choice.
+Invalid selection or failed rechecks allow the next eligible player to pay.
+Ordinary costs use tryResolutionCostPayment and the existing transaction;
+failed payments do not commit partial resources. Damage uses the established
+ResolutionActionPayment contract: prevention does not undo accepted payment.
+Matching sacrifice uses the shared simultaneous zone batch and departure LKI.
+
+The existing eligiblePlayerPayment effect owns payer restoration and definition
+scope. A shared offerEligibleResolutionPayment loop now serves ordinary,
+per-permanent and alternative payments. Existing binding validation keeps the
+payer assigned only in option and paid-body edges. Effect properties include
+action options. Source-read detection includes payment actions, so delayed source
+queries capture exact source information without offers or mutation. Prepared
+values stay local to Apply; factories create fresh bindings and option declarations.
+Old payment APIs remain available without signature changes.
+
+RON owns syntax, diagnostics and lexical plans. Mage owns ordering, choices,
+transactions, action preparation, source information and result frames. No Go-card
+fallback, card-name branch, last-action slot or partial production registry was
+added. No independent cost, damage or zone implementation was introduced.
+
+### Failing-first evidence and gameplay mappings
+
+Before production changes, native TestEligibleAlternativePayment failed to compile
+for the missing option type, constructors and eligible-alternative API. After test
+setup API corrections, the expected missing-signature failure was confirmed.
+TestRONEligibleAlternativePaymentWorms then failed with the real DRK record's
+unsupported eligible-player payment cost (Or). Both failures preceded production
+implementation.
+
+Native tests:
+
+- TestEligibleAlternativePayment: damage and sacrifice selection, prevention,
+  unaffordable option exclusion, decline, invalid selection, transaction rollback,
+  next-payer success and local payer restoration.
+- TestEligibleAlternativePaymentOrderAndRecheck: both active players, exact target
+  visits, offer-time phasing and return, phase cycles, zero and negative damage.
+- TestEligibleAlternativePaymentInvalid and Declarations: nil options, absent cost
+  groups, nil action inputs, nil player sets/payers, absent branches, unpaid reads
+  and escaped payer reads fail engine definition validation.
+- TestEligibleAlternativePaymentSacrificeBatch: both departures share retained
+  battlefield information, both lands leave together, and exactly two committed
+  triggers resolve. The transaction's speculative affordability/validation games
+  can also evaluate conditions; assertions use the event reader and committed
+  effects, not side effects on an external counter or the original game during
+  speculative payment.
+
+RON card-to-test and synthetic mapping:
+
+- **Worms of the Earth → TestRONEligibleAlternativePaymentWorms** reads the complete
+  unchanged DRK record, executes its isolated unchanged upkeep rule, and covers
+  damage acceptance, full prevention, sacrifice and decline. The complete record
+  still rejects CardsCantEnterTheBattlefield. This proves its payment rule, not
+  full-card gameplay.
+- **Scarwood Bandits → TestRONSourcePresenceDurationScarwood** retains complete
+  RON gameplay for the unchanged fixed-mana payment and source-present duration.
+- **Delif's Cone, Farrel's Zealot, Floral Spuzzem → TestRONActionPaymentRealCards
+  and TestRONActionPaymentNativeCombat** retain their existing complete mappings
+  through the extracted shared action-payment adapter. Farrel's Mantle remains
+  blocked by its recorded host-event and source-data gaps.
+- TestRONEligibleAlternativePaymentFrames: source departure/return/phasing/control,
+  source LKI and lifelink, stack copies, cloned pending resolution, delayed source
+  capture, waiting-query purity and successful-payer branch reads.
+- TestRONEligibleAlternativePaymentInvalid: nested alternatives, malformed/empty
+  lists, unsupported life options, invalid sacrifice counts, unbound references,
+  malformed payer reads, escaped/unpaid reads and atomic collection rejection.
+- Existing TestRONEligiblePlayerPayment*, TestRONEligiblePayerScope*,
+  TestRONActionPayment*, TestEligiblePlayerPayment*, TestEligiblePayerScope*,
+  TestResolutionActionPayment* and TestPermanentPayment* retain shared-service
+  and existing card regressions, including targets, nested payments and delays.
+
+### Files, source defects and gates
+
+New engine files: eligible_alternative_payment.go and its test.
+Shared engine file: eligible_player_payment.go. Compiler files:
+eligible_player_payment.go, action_payment.go and new
+eligible_alternative_payment_test.go. Documentation: pkg/mage/doc.go,
+docs/engine-rules-contracts.md, docs/dsl-reference.md and this ledger.
+The inventory already classifies nested resolution-cost Or, sacrifice and damage
+arguments correctly; no inventory adapter or collection-count change is needed.
+
+Local data/DRK.json Oracle text confirms Worms of the Earth's sacrifice-or-damage
+choice and subsequent self-destruction. CR 118.3/11/12 and the existing action
+payment contract establish affordability and acceptance despite prevention.
+
+No RON source changed, so the source vocabulary snapshot does not need refresh.
+No new source defect was found. Gauntlets' Aura omission, Gaea's Liege's duplicate
+IsntAttacking branch and other recorded source defects remain open. No Go card,
+DSL export, generator or startup wiring was removed; the removal gates are open.
+
+### Verification and measured collection result
+
+All required checks passed after the test setup and lint corrections:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONEligibleAlternativePayment -count=1`
+  passed. Expanded focused runs for the existing eligible-player, payer-scope
+  and action-payment regressions passed. Native alternative-payment, eligible
+  payer/player, action-payment and permanent-payment regressions passed with
+  `-count=1`.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+  The engine skill's additional `go test ./... -short -count=1` also passed.
+- The first engine-short run caught the sacrifice test's original-game assertion
+  during a speculative transaction. The test now checks simultaneous departure
+  LKI on the event reader and exactly two committed trigger effects, as described
+  above; it passes without an engine change or a weaker gameplay assertion.
+- The first `make lint` found one wasted boolean initialization. Replacing the
+  initialization with a declaration fixed it. Focused tests, build, vet, engine
+  short tests and `make test` passed again after the fix. The final `make lint`
+  passed with **0 issues**. Automatic changes were reviewed: import formatting
+  and maps.Copy in the isolated-record test preserve its independent field map.
+  `git diff --check` passed. Only this slice's ten files changed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected while gaps remain:
+  **2,190 compiled / 255 rejected records**, **849 accepted / 137 rejected names**
+  (2,445 records / 986 names). The entire final JSON report exactly equals the
+  fresh baseline report. Worms still reports DRK.lines.ron:118:221 unsupported
+  rule CardsCantEnterTheBattlefield. No diagnostic changed, no accepted record
+  regressed, and no partial production registry was published.
+
+There is no outstanding environment, build, test or lint blocker.
+
+Estimated and actual gains are **zero newly accepted unique cards / zero records**.
+Payment-rule gameplay evidence increased; full-card gameplay coverage did not.
+Worms is now blocked solely by the independent entry prohibition at its enclosing
+record. Collection compilation gaps remain 137 names / 255 records. Complete
+collection gameplay, native runtime cutover, Go-card deletion and obsolete DSL
+cleanup remain unfinished.
+
+### Ranked next candidates
+
+1. CardsCantEnterTheBattlefield land-entry prohibition. Worms of the Earth's
+   payment prerequisite is complete; inspect replacement ordering and every entry
+   path. Estimated immediate full-card gain: one unique card / one record.
+2. Dependent target type comparison for Gauntlets of Chaos. Exchange-result guard
+   and Aura-only source correction remain. Estimated immediate gain: zero.
+3. Source-leave layer duration for Gaea's Liege. Defending-player membership,
+   characteristic rules and its known source defect remain. Estimate zero until
+   the complete nested shape and source evidence are resolved.
+
+Reassess shared multi-card work with complete records before selecting a next
+slice. This run stops after eligible-player alternative resolution payments.

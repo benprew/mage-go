@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PayAnyAlternativeOrElseWithPayer] offers complete payment alternatives.
+// Each eligible player chooses in turn order. The first payment selects paid.
+// [CostPaymentOption] uses shared transactions and rollback.
+// [ActionPaymentOption] saves values and visits before the offer.
+// Accepted damage still pays when prevention stops all damage.
+// The payer stays local to offers, options and the paid body.
+// Copies, clones and delays keep separate frames and source information.
+// RON accepts fixed mana, matching sacrifice and permanent damage options
+// in AnyPlayerMayCost, including nested Or lists in resolving bodies.
+// Entry, replacement and announcement payments keep separate contracts.
+//
 // [OfferCostForEachPermanent] saves visits for which no eligible player pays.
 // Each visit needs its own complete payment. All offers precede later actions.
 // Subjects use turn order; the effect controller chooses order within a group.

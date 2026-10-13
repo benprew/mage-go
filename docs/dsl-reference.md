@@ -14162,3 +14162,34 @@ later actions; empty results replace old results. Existing exact visits and
 resolution frames preserve phasing, return identity, clones, copies and delays.
 Cleansing uses the existing `DestroyEach` batch on this result. Other RON
 payment forms, dynamic life and entry/replacement contexts need separate adapters.
+
+## RON eligible-player alternative resolution payments
+
+`AnyPlayerMayCost(AnyPlayer | Opponent, payment)` accepts fixed `PayMana`,
+`SacrificeAPermanent(filter)`, positive fixed
+`SacrificeNumberPermanents(Integer(n), filter)`, and
+`HavePermanentDealDamage(permanentRef, value, recipient)`.
+`Or([payment, payment, ...])` accepts at least two alternatives and can nest.
+Every nested option must compile. These forms apply to ordinary resolving
+sequences, including triggers, activated bodies and delays. Entry and replacement
+bodies remain rejected.
+
+The payment immediately precedes a nonempty `If`, `Unless` or `IfElse` using
+`CostWasPaid` or `CostWasntPaid`. `ActionPlayer` reads the candidate payer in the
+damage option and the successful payer in the paid branch. It is unavailable in
+the unpaid branch and after the pair. Other references use their existing typed
+scopes. Fixed sacrifice filters use the existing cost filter adapter; variable
+counts, other costs and combined action/cost options remain rejected.
+
+The engine owns offers, option selection, saved damage information, transactions,
+rollback and result frames. RON owns declarations, lexical bindings and fresh
+factory instances. Prevented damage still selects the paid branch. Waiting
+queries make no offers. Copies and clones resolve independently; delays retain
+the exact source information and saved payer bindings they need.
+
+TestRONEligibleAlternativePaymentWorms executes the unchanged upkeep rule from
+the complete Worms of the Earth record. Its full record remains rejected for
+CardsCantEnterTheBattlefield; this mapping proves the payment rule, not complete
+card gameplay. Frames covers source departure/return/phasing/control, copies,
+clones, lifelink and delay queries. Invalid covers malformed alternatives,
+unsupported costs, unbound or escaped payers and atomic collection rejection.

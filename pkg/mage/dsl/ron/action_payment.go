@@ -33,6 +33,54 @@ func compileResolutionActionPayment(payment, continuation Node, ctx scope) (effe
 		}
 	}
 	cost := payment.Args[count-1]
+	buildPayment, err := compileResolutionPaymentAction(cost, ctx)
+	if err != nil {
+		return nil, err
+	}
+	branchCount := 2
+	if continuation.Name == "IfElse" {
+		branchCount = 3
+	} else if continuation.Name != "If" && continuation.Name != "Unless" {
+		return nil, problem(continuation, "action payment requires an adjacent result continuation")
+	}
+	if err := arity(continuation, branchCount); err != nil {
+		return nil, err
+	}
+	condition := continuation.Args[0]
+	if condition.Kind != Symbol || condition.Name != "CostWasPaid" && condition.Name != "CostWasntPaid" {
+		return nil, unsupported(condition, "action payment condition")
+	}
+	branches := make([][]effectFactory, branchCount-1)
+	for i := range branches {
+		parts, err := list(continuation.Args[i+1])
+		if err != nil {
+			return nil, err
+		}
+		if len(parts) == 0 {
+			return nil, problem(continuation.Args[i+1], "action payment branch requires at least one action")
+		}
+		branches[i], err = compileActionSequence(parts, ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return func(bindings instanceBindings) mage.Effect {
+		built := make([]mage.ResolvingEffect, 2)
+		for i, branch := range branches {
+			effects := make([]mage.Effect, len(branch))
+			for j, build := range branch {
+				effects[j] = build(bindings)
+			}
+			built[i] = mage.Sequence(effects...)
+		}
+		if (continuation.Name == "Unless") == (condition.Name == "CostWasPaid") {
+			built[0], built[1] = built[1], built[0]
+		}
+		return mage.PayActionOrElse(payer.build(bindings), buildPayment(bindings), built[0], built[1])
+	}, nil
+}
+
+func compileResolutionPaymentAction(cost Node, ctx scope) (func(instanceBindings) mage.ResolutionActionPayment, error) {
 	var buildPayment func(instanceBindings) mage.ResolutionActionPayment
 	switch cost.Name {
 	case "GainLife":
@@ -76,46 +124,8 @@ func compileResolutionActionPayment(payment, continuation Node, ctx scope) (effe
 		buildPayment = func(bindings instanceBindings) mage.ResolutionActionPayment {
 			return mage.DestroyPayment(subject.build(bindings))
 		}
+	default:
+		return nil, unsupported(cost, "resolution action payment")
 	}
-	branchCount := 2
-	if continuation.Name == "IfElse" {
-		branchCount = 3
-	} else if continuation.Name != "If" && continuation.Name != "Unless" {
-		return nil, problem(continuation, "action payment requires an adjacent result continuation")
-	}
-	if err := arity(continuation, branchCount); err != nil {
-		return nil, err
-	}
-	condition := continuation.Args[0]
-	if condition.Kind != Symbol || condition.Name != "CostWasPaid" && condition.Name != "CostWasntPaid" {
-		return nil, unsupported(condition, "action payment condition")
-	}
-	branches := make([][]effectFactory, branchCount-1)
-	for i := range branches {
-		parts, err := list(continuation.Args[i+1])
-		if err != nil {
-			return nil, err
-		}
-		if len(parts) == 0 {
-			return nil, problem(continuation.Args[i+1], "action payment branch requires at least one action")
-		}
-		branches[i], err = compileActionSequence(parts, ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return func(bindings instanceBindings) mage.Effect {
-		built := make([]mage.ResolvingEffect, 2)
-		for i, branch := range branches {
-			effects := make([]mage.Effect, len(branch))
-			for j, build := range branch {
-				effects[j] = build(bindings)
-			}
-			built[i] = mage.Sequence(effects...)
-		}
-		if (continuation.Name == "Unless") == (condition.Name == "CostWasPaid") {
-			built[0], built[1] = built[1], built[0]
-		}
-		return mage.PayActionOrElse(payer.build(bindings), buildPayment(bindings), built[0], built[1])
-	}, nil
+	return buildPayment, nil
 }

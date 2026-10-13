@@ -17,16 +17,12 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 	if players.Kind != Symbol || (players.Name != "Opponent" && players.Name != "AnyPlayer") {
 		return nil, unsupported(players, "eligible payment players")
 	}
-	cost := payment.Args[1]
-	if cost.Name != "PayMana" {
-		return nil, unsupported(cost, "eligible player payment cost")
-	}
-	costs, hasX, err := compileCosts(cost)
+	payer := &playerActionsPlan{name: "payment payer " + payment.Position.String()}
+	paymentCtx := ctx
+	paymentCtx.actionPlayer = payer
+	options, err := compileEligiblePaymentOptions(payment.Args[1], paymentCtx)
 	if err != nil {
 		return nil, err
-	}
-	if hasX {
-		return nil, problem(cost, "eligible player payment requires fixed mana")
 	}
 	count := 2
 	if continuation.Name == "IfElse" {
@@ -42,7 +38,6 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 		return nil, unsupported(condition, "payment condition")
 	}
 	branches := make([][]effectFactory, count-1)
-	payer := &playerActionsPlan{name: "payment payer " + payment.Position.String()}
 	firstPaid := (continuation.Name == "Unless") != (condition.Name == "CostWasPaid")
 	for i := range branches {
 		parts, err := list(continuation.Args[i+1])
@@ -69,9 +64,9 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 			bindings.actionPlayers = make(map[*playerActionsPlan]*mage.PlayerBinding)
 		}
 		bindings.actionPlayers[payer] = binding
-		values := make([]mage.Cost, len(costs))
-		for i, build := range costs {
-			values[i] = build()
+		values := make([]mage.ResolutionPaymentOption, len(options))
+		for i, build := range options {
+			values[i] = build(bindings)
 		}
 		bodies := make([]mage.ResolvingEffect, 2)
 		for i, branch := range branches {
@@ -88,6 +83,56 @@ func compileEligiblePlayerPayment(payment, continuation Node, ctx scope) (effect
 		if players.Name == "Opponent" {
 			eligible = mage.OpponentsOf(mage.You)
 		}
-		return mage.PayAnyOrElseWithPayer(eligible, mage.Costs(values...), binding, bodies[0], bodies[1])
+		return mage.PayAnyAlternativeOrElseWithPayer(eligible, values, binding, bodies[0], bodies[1])
 	}, nil
+}
+
+func compileEligiblePaymentOptions(n Node, ctx scope) ([]func(instanceBindings) mage.ResolutionPaymentOption, error) {
+	if n.Name == "Or" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		parts, err := list(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		if len(parts) < 2 {
+			return nil, problem(n, "supply at least two payment alternatives")
+		}
+		options := make([]func(instanceBindings) mage.ResolutionPaymentOption, 0, len(parts))
+		for _, part := range parts {
+			nested, err := compileEligiblePaymentOptions(part, ctx)
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, nested...)
+		}
+		return options, nil
+	}
+	if n.Name == "HavePermanentDealDamage" {
+		build, err := compileResolutionPaymentAction(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []func(instanceBindings) mage.ResolutionPaymentOption{func(bindings instanceBindings) mage.ResolutionPaymentOption {
+			return mage.ActionPaymentOption(build(bindings))
+		}}, nil
+	}
+	if n.Name != "PayMana" && n.Name != "SacrificeNumberPermanents" && n.Name != "SacrificeAPermanent" {
+		return nil, unsupported(n, "eligible player payment cost")
+	}
+	costs, hasX, err := compileCosts(n)
+	if err != nil {
+		return nil, err
+	}
+	if hasX {
+		return nil, problem(n, "eligible player payment requires fixed costs")
+	}
+	return []func(instanceBindings) mage.ResolutionPaymentOption{func(_ instanceBindings) mage.ResolutionPaymentOption {
+		values := make([]mage.Cost, len(costs))
+		for i, build := range costs {
+			values[i] = build()
+		}
+		return mage.CostPaymentOption(mage.Costs(values...))
+	}}, nil
 }

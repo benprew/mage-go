@@ -21,6 +21,7 @@ func PayAnyOrElseWithPayer(players PlayerSet, costs CostGroup, payer *PlayerBind
 }
 
 type eligiblePlayerPayment struct {
+	alternatives *resolutionPaymentAlternatives
 	players      PlayerSet
 	costs        CostGroup
 	paid, unpaid ResolvingEffect
@@ -31,6 +32,11 @@ type eligiblePlayerPayment struct {
 func (*eligiblePlayerPayment) Text() string { return "offer eligible players a payment" }
 func (e *eligiblePlayerPayment) Properties() EffectProperties {
 	var props EffectProperties
+	if e.alternatives != nil {
+		for _, option := range e.alternatives.options {
+			mergeEffectProperties(&props, option.properties())
+		}
+	}
 	for _, body := range []ResolvingEffect{e.paid, e.unpaid} {
 		if !nilDefinition(body) {
 			mergeEffectProperties(&props, body.Properties())
@@ -54,7 +60,13 @@ func (e *eligiblePlayerPayment) Apply(ctx *EffectContext) error {
 		}()
 	}
 	body := e.unpaid
-	if offerEligibleResolutionCost(ctx, eligible, e.costs.costs, e.payer, "") {
+	var paid bool
+	if e.alternatives != nil {
+		paid = e.alternatives.offer(ctx, eligible, e.payer)
+	} else {
+		paid = offerEligibleResolutionCost(ctx, eligible, e.costs.costs, e.payer, "")
+	}
+	if paid {
 		body = e.paid
 	}
 	if nilDefinition(body) {
@@ -64,6 +76,9 @@ func (e *eligiblePlayerPayment) Apply(ctx *EffectContext) error {
 }
 func (e *eligiblePlayerPayment) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "eligible-player-payment", Text: e.Text(), children: []definitionEdge{{"players", e.players}, {"costs", e.costs}}}
+	if e.alternatives != nil {
+		n.children[1].value = e.alternatives
+	}
 	if e.scopedPayer {
 		n.children = append(n.children, definitionEdge{"payer", e.payer})
 	}
@@ -79,10 +94,23 @@ func (e *eligiblePlayerPayment) inspectDefinition() definitionNode {
 	return n
 }
 func (e *eligiblePlayerPayment) refersToSourcePermanent() bool {
+	if e.alternatives != nil {
+		for _, option := range e.alternatives.options {
+			if option.actionOption && actionPaymentReadsSourcePermanent(option.action) {
+				return true
+			}
+		}
+	}
 	return playerSetReadsSourcePermanent(e.players) || effectReadsSourcePermanent(e.paid) || effectReadsSourcePermanent(e.unpaid)
 }
 
 func offerEligibleResolutionCost(ctx *EffectContext, eligible []uuid.UUID, costs []Cost, payer *PlayerBinding, subject string) bool {
+	return offerEligibleResolutionPayment(ctx, eligible, payer, func(id uuid.UUID) bool {
+		return tryResolutionCostPaymentFor(ctx, id, costs, false, subject)
+	})
+}
+
+func offerEligibleResolutionPayment(ctx *EffectContext, eligible []uuid.UUID, payer *PlayerBinding, offer func(uuid.UUID) bool) bool {
 	for _, id := range EachPlayer.resolvePlayers(ctx) {
 		if !slices.Contains(eligible, id) {
 			continue
@@ -90,7 +118,7 @@ func offerEligibleResolutionCost(ctx *EffectContext, eligible []uuid.UUID, costs
 		if payer != nil {
 			ctx.Game.resolution.playerBindings[payer] = id
 		}
-		if tryResolutionCostPaymentFor(ctx, id, costs, false, subject) {
+		if offer(id) {
 			return true
 		}
 		if payer != nil {
