@@ -5805,9 +5805,10 @@ own controller. The action has no target and does not cast or play the card.
 The card filter accepts bare `IsPermanent`, `IsSupertype(Basic|Legendary|Snow|World)`,
 `IsLandType(subtype)`, `IsCreatureType(subtype)`, existing card-type and color
 filters, and nonempty nested `And`/`Or` lists. Subtype families are validated.
-Only one bare `EntersNormally` entry operation is supported. Explicit player
-loops, repeated processes, other entry operations and action-result reads remain
-separate contracts. The engine excludes instants and sorceries from entry.
+Only one bare `EntersNormally` entry operation is supported. Repeated sequential
+entry rounds use the contract below. Other explicit player loops, entry operations
+and action-result reads remain separate contracts. The engine excludes instants
+and sorceries from entry.
 
 The engine keeps each offered hand visit through both choices. Invalid, absent
 or returned choices cannot move a card. Entry uses the existing preparation,
@@ -11368,6 +11369,41 @@ event players and source-controller reads. It is an action, not a cost, static
 modification or entry operation. Glasses of Urza has complete RON gameplay tests.
 Word of Command's combined inspection, selection and controlled play remains
 unsupported until its separate decision and player-control contracts are ready.
+
+## Repeated optional hand-entry rounds (RON)
+
+The supported resolving shape is:
+
+```ron
+RepeatableActions([
+    EachPlayerStartingWithMayAction(
+        AnyPlayer, You,
+        PutACardFromHandOnBattlefield(IsPermanent, [EntersNormally])
+    ),
+    Unless(NoOneTookAnActionThisWay, [RepeatThisProcess])
+])
+```
+
+The starting operand accepts an in-scope typed player reference. The hand filter
+uses the existing optional-entry filters. The body must contain exactly one
+round and its adjacent continuation. The continuation requires the bare result
+condition and one bare `RepeatThisProcess`. Other producers, result conditions,
+extra actions, tuple-shaped symbols and escaped result/repeat reads reject.
+
+Each factory builds a fresh `NumberBinding`. Lowering uses
+`EachPlayerMayPutFromHandOntoBattlefield(PlayerSet, PlayerRef, CardFilter,
+*NumberBinding)` with `RepeatWhilePositive(ResolvingEffect, ResolutionValue)`.
+The engine counts actual entries, rather than accepted offers. Players act in
+seating order from the starting player and read their current hands in each
+round. A player can accept after declining a previous round. Normal entry rules
+and attachment legality apply; entering a land does not play it.
+
+Round-local binding maps and target captures are separate copies of the outer
+frame. Nested execution, errors, stack copies and game clones keep separate
+results. Source-read queries do not execute a round. This supports Eureka's full
+record; Mana Clash still requires coin-result and damage adapters.
+
+Evidence: `TestRONRepeatedEntry*` and native `TestRepeatedEntry*`.
 
 ## Printed conditional source P/T text revision
 

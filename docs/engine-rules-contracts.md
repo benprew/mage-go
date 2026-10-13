@@ -6391,8 +6391,8 @@ Evidence: `TestOptionalHandEntryChoices`, `TestOptionalHandEntryDeclarationAndCl
 `TestOptionalHandEntryAura`, `TestOptionalHandEntryAuraRequiredHost`, and the RON `TestRONOptionalHandEntry*` tests.
 Contracts use CR 400.4a/400.7, 608.2d/h and 303.4f/g. This single-card action
 adds no batch, APNAP or replacement-order policy; existing entry services retain
-those responsibilities. It does not establish repeated entry procedures or
-player-enchanting Auras.
+those responsibilities. Repeated entry procedures use the contract below.
+Player-enchanting Auras need a separate contract.
 
 ## Live Aura attachment restriction and exception
 
@@ -14803,6 +14803,57 @@ covers detection versus placement text, ordered revisions, targets and clones.
 `EventBindings` covers independent spell/caster captures and copied payments;
 `IndependentDeclarations` covers sibling and source isolation plus pending bodies
 after departure. `Invalid` and native `Declaration`/`Rejects` cover rejection.
+
+## Repeated resolution and sequential optional hand entry
+
+`RepeatWhilePositive(body ResolvingEffect, again ResolutionValue) ResolvingEffect`
+executes the complete body before evaluating the repeat value. Positive values
+repeat; zero and negative values stop. It has no artificial iteration limit or
+mid-round life-total test. State-based actions and trigger placement retain their
+normal resolution boundaries (CR 608.2c/d/n, 603.3, 704.4).
+
+Each round clones all existing typed resolution binding maps and the body's
+target captures from the outer frame. Local results cannot escape into a sibling
+round or the caller. The original maps are restored after success or error;
+completed game actions are retained. Declaration validation permits reads of
+body results in the repeat value, rejects use before production, and keeps these
+results out of subsequent outer instructions. Nil body/value declarations reject.
+Existing `ResolutionState.Clone` services retain each binding's exact object,
+zone visit, information and clone behavior. No new global last-action state exists.
+
+`EachPlayerMayPutFromHandOntoBattlefield(subjects PlayerSet, starting PlayerRef,
+filter CardFilter, result *NumberBinding) ResolvingEffect` clears its count, reads
+the player operands, and visits selected players in seating order starting with
+the specified player. An absent starting player produces zero with no choices.
+Each player makes an independent optional choice from the current hand after
+preceding entries. It reuses the existing exact-hand-visit selection and normal
+entry/attachment pipeline (CR 400.7, 303.4f/g, 608.2d/h). Entry choices, tapped
+status, ownership, static registration and zone events keep their existing rules.
+Entry is neither casting nor playing a land. This procedure is sequential, as
+Eureka's explicit starting-player instruction requires, rather than simultaneous.
+
+The count records actual battlefield entries. Decline, empty hands, stale or
+invalid selections, prohibited land entry, unavailable Aura hosts and failed
+entry operations produce no entry. Entries count even if a later instruction
+removes the permanent. A zero count ends Eureka's process; earlier successful
+rounds cannot keep the process running. Nil subjects, starting player or result
+bindings reject during definition validation.
+
+Waiting delayed-source queries retain explicit source reads in the repeat body,
+repeat value, player collection and starting player. They do not evaluate values,
+select players, inspect hands, make choices or move cards. Saved incarnations
+remain after departure and phasing; returned objects cannot replace them.
+
+Evidence: native `TestRepeatedEntryRounds`, `ActualResults`, `ScopeAndError`,
+`InvalidDefinitions`, `AbsentStart`, `AllBindingFrames`, `WaitingSource`; RON
+`TestRONRepeatedEntryEureka`, `CopyAndClone`, `LegalAuraAndFreshHand`, `Rejects`,
+`StrictLoadAndRemainingGap`, `DeferredTriggersAndProhibition`,
+`SiblingInstancesAndInventory`, `BoundStart`. Complete Eureka gameplay uses paid casting,
+rollback, current hands, both players, Aura entry and Ankh of Mishra's pending
+triggers. A test-only land prohibition exercises failed entry; the complete
+Worms of the Earth record remains unsupported. Other repeated producers and
+generic loop adjudication need separate contracts. Coin damage rounds use the
+heads-or-tails contract below.
 
 ## Printed conditional source P/T text revision
 

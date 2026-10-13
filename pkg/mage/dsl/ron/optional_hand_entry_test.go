@@ -202,13 +202,9 @@ func TestRONOptionalHandEntryShapesAndStrictLoad(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{
-		{"LEG", "Eureka", "unsupported action (RepeatableActions)"},
-	} {
-		node := hostUntapRecord(t, tc.set, tc.name)
-		if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s gap: %v", tc.name, err)
-		}
+	eureka := repositoryCard(t, "LEG", "Eureka")
+	if err := mage.ValidateCardDefinition(eureka.Name(), eureka); err != nil {
+		t.Fatal(err)
 	}
 	wizard := repositoryCard(t, "DRK", "Goblin Wizard")
 	if err := mage.ValidateCardDefinition(wizard.Name(), wizard); err != nil {

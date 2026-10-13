@@ -1849,6 +1849,18 @@
 // Recipient ability removal does not remove a separate Aura's rule.
 // Use [CantAttack] for the same live subject attack restriction.
 //
+// Use [RepeatWhilePositive] for complete resolving rounds with local results.
+// Each round starts with separate copies of the caller's binding frame.
+// A positive value repeats; a nonpositive value ends the process.
+// Completion and errors restore the outer bindings. Game actions remain.
+// Use [EachPlayerMayPutFromHandOntoBattlefield] for sequential optional entries.
+// Seating order starts with the selected player. Each entry reads the current
+// hand and uses normal entry rules. Its number binding counts actual entries.
+// Failed entries do not count. Each round clears its count before choices.
+// RON supports one entry round and its adjacent result-based repeat instruction.
+// Queries retain typed source reads without making choices or reading results.
+// Other repeated procedure adapters need separate contracts.
+//
 // Use [MayPutFromHandOntoBattlefield] for one optional matching permanent
 // card at resolution. The choice keeps its hand visit. Entry uses the selected
 // player as controller and actor. This action does not cast or play the card.

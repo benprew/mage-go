@@ -855,10 +855,6 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"value", "recipient"}[index]
 			}
-		case "RepeatableActions":
-			if len(n.Args) == 1 {
-				return "action"
-			}
 		case "GainControlOfPermanentUntil":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]
@@ -897,6 +893,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {
 				return []string{"delayed_step_event", "actions"}[index]
+			}
+		case "RepeatableActions":
+			if len(n.Args) == 1 {
+				return "action"
+			}
+		case "EachPlayerStartingWithMayAction":
+			if len(n.Args) == 3 {
+				return []string{"player_filter", "player_reference", "action"}[index]
 			}
 		case "MayAction":
 			if len(n.Args) == 1 {

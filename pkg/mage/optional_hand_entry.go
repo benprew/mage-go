@@ -26,13 +26,18 @@ func (e *optionalHandEntry) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
+	_, err := e.applyPlayer(ctx, id)
+	return err
+}
+
+func (e *optionalHandEntry) applyPlayer(ctx *EffectContext, id uuid.UUID) (bool, error) {
 	player := ctx.Game.GetPlayer(id)
 	if player == nil {
-		return nil
+		return false, nil
 	}
 	visitor, ok := player.(interface{ handVisit(uuid.UUID) uuid.UUID })
 	if !ok {
-		return nil
+		return false, nil
 	}
 	var candidates []Card
 	visits := make(map[uuid.UUID]uuid.UUID)
@@ -43,15 +48,15 @@ func (e *optionalHandEntry) Apply(ctx *EffectContext) error {
 		}
 	}
 	if len(candidates) == 0 || !player.ChooseMayAbility(e.Text()) {
-		return nil
+		return false, nil
 	}
 	chosen := player.ChooseCardFromHand(candidates, e.Text(), ctx.Game)
 	if chosen == nil {
-		return nil
+		return false, nil
 	}
 	visit, offered := visits[chosen.ID()]
 	if !offered || visit == uuid.Nil || visitor.handVisit(chosen.ID()) != visit {
-		return nil
+		return false, nil
 	}
 	var current Card
 	for _, card := range player.Hand() {
@@ -61,14 +66,14 @@ func (e *optionalHandEntry) Apply(ctx *EffectContext) error {
 		}
 	}
 	if current == nil || !IsPermanentCard.Match(current) || !e.filter.Match(current) {
-		return nil
+		return false, nil
 	}
 	return ctx.Game.putChosenHandCard(player, current, visit)
 }
 
-func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) error {
+func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) (bool, error) {
 	if card.HasType(core.TypeLand) && g.effects.Rules.LandsCantEnter() {
-		return nil
+		return false, nil
 	}
 	var host *Permanent
 	if card.HasSubType("Aura") {
@@ -80,7 +85,7 @@ func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) erro
 			}
 		}
 		if len(hosts) == 0 {
-			return nil
+			return false, nil
 		}
 		chosen := player.ChoosePermanent(hosts, "enchant", g)
 		selected := hosts[0]
@@ -94,26 +99,26 @@ func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) erro
 		}
 		host = g.FindPermanent(selected.ID())
 		if host == nil || host.incarnationID != selected.incarnationID || !g.canAttach(source, host) {
-			return nil
+			return false, nil
 		}
 
 	}
 	visitor, ok := player.(interface{ handVisit(uuid.UUID) uuid.UUID })
 	if !ok || visitor.handVisit(card.ID()) != visit {
-		return nil
+		return false, nil
 	}
 	removed, ok := player.RemoveFromHand(card.ID())
 	if !ok {
-		return nil
+		return false, nil
 	}
 	perm := g.prepareBattlefieldEntry(removed, player.PlayerID(), nil, 0, false)
 	if perm == nil {
-		return nil
+		return false, nil
 	}
 	g.registerBattlefieldEntry(perm, nil, uuid.Nil)
 	if host != nil {
 		g.Attach(perm.ID(), host.ID())
 	}
 	g.completeBattlefieldEntry(perm, player.PlayerID(), player.PlayerID(), 0)
-	return nil
+	return true, nil
 }

@@ -6,21 +6,29 @@ import (
 )
 
 func compileOptionalHandEntry(n Node) (effectFactory, error) {
-	if err := arity(n, 2); err != nil {
+	filter, err := compileOptionalHandEntryFilter(n)
+	if err != nil {
 		return nil, err
+	}
+	return func(instanceBindings) mage.Effect { return mage.MayPutFromHandOntoBattlefield(mage.You, filter) }, nil
+}
+
+func compileOptionalHandEntryFilter(n Node) (mage.CardFilter, error) {
+	if err := arity(n, 2); err != nil {
+		return mage.CardFilter{}, err
 	}
 	filter, err := compileEntryHandFilter(n.Args[0])
 	if err != nil {
-		return nil, err
+		return mage.CardFilter{}, err
 	}
 	entries, err := list(n.Args[1])
 	if err != nil {
-		return nil, err
+		return mage.CardFilter{}, err
 	}
 	if len(entries) != 1 || entries[0].Kind != Symbol || entries[0].Name != "EntersNormally" {
-		return nil, unsupported(n.Args[1], "hand entry operations")
+		return mage.CardFilter{}, unsupported(n.Args[1], "hand entry operations")
 	}
-	return func(instanceBindings) mage.Effect { return mage.MayPutFromHandOntoBattlefield(mage.You, filter) }, nil
+	return filter, nil
 }
 
 func compileEntryHandFilter(n Node) (mage.CardFilter, error) {
