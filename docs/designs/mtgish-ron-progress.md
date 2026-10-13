@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-12): **847 accepted / 139 rejected names**
+Latest measured result (2026-10-13): **847 accepted / 139 rejected names**
 (986 total), **2,188 compiled / 257 rejected records** (2,445 total).
-The latest slice adds one accepted name and record: City in a Bottle.
+The latest slice adds eligible-player fixed-mana payments, with zero full-card gains.
 The strict loader still rejects the collection and publishes no partial registry.
 
-The latest slice is **CAPTURED-STATE-PERMANENT-SETS**. State triggers save exact
-plural visits at detection and use shared per-resolution bindings. City in a
-Bottle's complete unchanged record now has RON gameplay evidence for both rules.
+The latest slice is **ELIGIBLE-PLAYER-FIXED-MANA-PAYMENT**. Offers use turn order,
+shared cost transactions and local branches. Scarwood Bandits now reaches its
+source-duration blocker. Its complete record remains rejected.
 Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
@@ -21,16 +21,17 @@ Runtime cutover and removal gates remain open.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Eligible-player optional payments: Scarwood Bandits.**
-   Its opponent mana offer and local unpaid branch are candidates for one
-   complete-card gain. Shared eligibility/result scope also precedes Worms of
-   the Earth and Cleansing payment forms, which retain separate blockers.
-2. **Dependent permanent target comparison: Gauntlets of Chaos.**
+1. **Eligible-player alternatives and payer bindings.**
+   Fixed mana offers are complete. Extend typed payer scope for Worms of the
+   Earth's alternative payments and Cleansing's per-permanent offers. These
+   consumers retain separate entry and repeated-result blockers.
+2. **Source-presence control duration: Scarwood Bandits.**
+   Expected one full-card gain. Oracle's "for as long as" duration must end on
+   source phasing; `UntilSourceLeaves` deliberately survives phasing. Evaluate
+   shared source-presence durations, including Gaea's Liege's layer context.
+3. **Dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains. Exchange-result handling and the documented Aura-only
    source correction remain required.
-3. **Global land entry prevention: Worms of the Earth.**
-   Zero immediate gains. Preserve entry/play separation; alternative optional
-   sacrifice/damage payments remain.
 
 ## Dependencies and source blockers
 
@@ -1059,3 +1060,188 @@ No remaining validation or environment blocker prevents this slice's commit.
 Reassess candidates with fresh complete records and inventory before selecting.
 Complete RON gameplay, runtime loading, native startup, Go-card deletion and
 unused DSL cleanup remain unfinished. This run completed exactly one slice.
+
+## 2026-10-12 — ELIGIBLE-PLAYER-FIXED-MANA-PAYMENT
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh RON package tests and build passed. Strict loader
+baseline: 2,188 compiled / 257 rejected records, 847 accepted / 139 rejected
+names, with 2,445 records / 986 names total. Its exit 1 was collection rejection,
+not a build/test failure. Complete unchanged records were read for Scarwood
+Bandits, Worms of the Earth, Cleansing and Gauntlets of Chaos. Targeted vocabulary
+inspection found two `AnyPlayerMayCost` occurrences, one for each of Scarwood
+and Worms. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Eligible-player optional payment | Scarwood Bandits; Worms of the Earth; Cleansing as a composed consumer | 0 for this prerequisite; 1 for Scarwood after a separate duration slice | Shared player eligibility, complete payment and local branch service supports all three names. Scarwood needs its duration; Worms needs land entry prevention plus alternative sacrifice/damage and payer binding; Cleansing needs per-permanent offers/results | Small/medium: reuse the existing transaction, add player-set orchestration, lowering and contract tests |
+| Dependent target card-type comparison | Gauntlets of Chaos | 0 | Exchange-result guard and the recorded Aura-only source defect remain. Shared target legality can serve future dependent target groups | Medium: announcement/resolution predicates and copy identity tests |
+| Global land entry prevention | Worms of the Earth | 0 | Alternative eligible-player payments remain. Shared entry prevention would keep play/entry separation and replacement ordering | Medium: entry preflight, source lifecycle and batch tests |
+
+Candidate #1 is dependency-ready as a shared prerequisite with concrete
+three-card downstream use. The ledger's suggested one-card gain was corrected
+after inspecting the nested duration, not inferred from first-error frequency.
+`compileSourceControl` does not accept `UntilPermanentLeavesBattlefield`, and
+the existing `UntilSourceLeaves` engine service deliberately survives phasing.
+`data/DRK.json` gives Scarwood's duration as "for as long as this creature remains
+on the battlefield". CR 611.2b and 702.26f require a distinct presence duration.
+Adding that contract here would be a second slice. This run completes only
+eligible-player fixed-mana payment. Estimated zero full-card gains matches the
+actual result. No complete-card gameplay gain is claimed.
+
+### Signatures, contexts and reuse boundary
+
+- Engine: `PayAnyOrElse(players PlayerSet, costs CostGroup, paid, unpaid
+  ResolvingEffect) ResolvingEffect`. At least one body must be supplied. An
+  explicit valid cost group and player set are required. Current player IDs
+  are read once, normalized to turn order and offered at most once. Absent
+  and duplicate IDs cannot supply extra offers. Empty eligibility runs unpaid.
+- RON: `AnyPlayerMayCost(Opponent|AnyPlayer, PayMana([...]))` followed immediately
+  by `If(condition, [actions])`, `Unless(condition, [actions])` or
+  `IfElse(condition, [actions], [actions])`. Condition is symbolic `CostWasPaid`
+  or `CostWasntPaid`; each required body is nonempty. Ordinary spell, activated,
+  triggered and delayed sequences use the same lowering. X, other cost forms,
+  other player sets, entry and draw replacement contexts remain rejected.
+- The shape exports no payer binding. `ActionPlayer` cannot inherit an unrelated
+  enclosing player-action scope inside the pair. Other saved references keep
+  their existing contexts. Nested payments cannot overwrite the outer result.
+- `ron` owns syntax, adjacency, polarity, context and inventory roles. Each
+  factory builds fresh costs and branch effects against its instance bindings.
+  The engine owns eligibility and payment. Both bodies retain the original
+  resolving controller, source, targets and saved visits.
+- Private `tryResolutionCostPayment` is extracted from `unlessPaidEffect.Apply`.
+  Existing optional and mandatory callers use the same helper. Affordability
+  remains pure; accepted payments use `prepareActionPaymentTransaction` and
+  commit atomically. No independent solver, global payment slot, replacement
+  order or simultaneous movement service is introduced.
+- Native service supports existing resolution cost groups, including life,
+  with their existing validation. Payer-bound action alternatives and repeated
+  per-permanent result orchestration remain separate adapters/contracts.
+- Typed player-set and both body source declarations participate in the shared
+  waiting query without resolving eligibility, paying or choosing. Saved source
+  identity, LKI, target legality, phasing, copy and clone frames are reused.
+
+### Failing-first evidence and card-to-test mappings
+
+Before implementation, `go test ./pkg/mage -run TestEligiblePlayerPayment -count=1`
+failed to compile because `PayAnyOrElse` did not exist. The focused RON command
+failed gameplay tests with unsupported `AnyPlayerMayCost`, including the actual
+Scarwood payment node. Implementation followed these expected failures.
+
+Native coverage:
+
+- `TestEligiblePlayerPaymentOrderAndResult`: both active-player orders, first
+  and second acceptance, stop after payment, decline, insufficient resources,
+  combined-cost rollback, opponent-only eligibility, empty set and zero costs.
+- `TestEligiblePlayerPaymentRecheckAndNested`: an accepted offer becomes
+  unpayable before transaction preparation, later player pays, and an inner
+  failed payment cannot change the outer result.
+- `TestEligiblePlayerPaymentDelayedIdentity`: live, returned, phased and
+  control-changed source information, exact waiting references and query purity,
+  delayed execution, clone isolation and simulation-player decline policy.
+- `TestEligiblePlayerPaymentInvalid`: nil declarations/costs/bodies and saved
+  results leaking between branches or to a sibling instruction.
+
+RON coverage:
+
+- Scarwood Bandits → `TestRONEligiblePlayerPaymentRealRecords`: read and reject
+  its complete unchanged record, extract its exact payment AST node, lower it
+  with a synthetic observable continuation and execute through the engine.
+  This proves the payment's opponent eligibility and decline behavior, not the
+  unsupported control duration or complete card. Worms' unchanged complete
+  record also remains rejected. Cleansing remains a downstream mapping only.
+- `TestRONEligiblePlayerPaymentGameplay`: eligible sets, success/decline/lack
+  of resources, resolution-only timing and local nested outcomes.
+- `TestRONEligiblePlayerPaymentPolarityAndContexts`: both symbolic conditions,
+  If/Unless/IfElse, accepted/declined offers, ordinary spells, upkeep triggers
+  and delayed continuations after source departure.
+- `TestRONEligiblePlayerPaymentTargetsCopiesAndFactories`: fresh factories,
+  independent target declarations, departure/return/control/phasing of sources,
+  returned/phased/phase-cycled/shrouded targets, stack copies, game clones and
+  automatic payment from actual RON Forests. Simulation clones decline optional
+  payment, so their unpaid result is checked separately from a paying original.
+- `TestRONEligiblePlayerPaymentInvalid`: malformed arities, symbols and costs,
+  missing/empty/detached continuations, unbound payer reads, unsupported execution
+  contexts and inherited payer-scope rejection.
+- `TestRONEligiblePlayerPaymentInventoryAndAtomicLoading`: player-collection
+  and resolution-cost roles, supported isolated registry and strict rejection
+  without partial publication when another record is invalid.
+
+### Changed files and source defects
+
+New native `eligible_player_payment.go` and tests; shared attempt helper in
+`composable_costs.go`; new RON adapter and tests with sequence integration in
+`optional_payment.go` and roles in `inventory.go`. The existing landwalk test's
+Scarwood blocker advances to `UntilPermanentLeavesBattlefield`; it still
+requires complete-record rejection. API/contracts are documented in `doc.go`,
+`docs/dsl-reference.md` and `docs/engine-rules-contracts.md`. This ledger updates
+the current summary and appends this entry.
+
+No RON source defect was corrected. Gauntlets' Aura-only defect remains open.
+Scarwood's duration is an engine/adapter prerequisite, not a data defect.
+RON sources did not change, so the vocabulary snapshot needs no refresh.
+No Go card definitions, DSL exports, generators or runtime wiring were removed;
+their gates remain open. No fallback, partial production registry, card-name
+branch or game-time declaration panic was added.
+
+### Verification and measured collection result
+
+Focused RON and native tests, RON package tests, `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1`, `make test`, and the skill's
+`go test ./... -short -count=1` passed. `make lint` passed with 0 issues.
+Automatic changes only reordered imports in the two new test files; reviewed
+them and reran both focused test groups and `make build`, which passed.
+`git diff --check` passed.
+
+Final `go run ./cmd/loadcards -json` exited 1 for expected collection rejection:
+**2,188 compiled / 257 rejected records**, **847 accepted / 139 rejected names**
+(2,445 records / 986 names total). There are zero added or removed rejection
+keys. The only changed diagnostic is Scarwood Bandits at DRK:91, advancing from
+unsupported `AnyPlayerMayCost` at column 351 to unsupported source control
+duration `UntilPermanentLeavesBattlefield` at column 480. Every other rejection
+diagnostic is unchanged, and all previously accepted records remain accepted.
+The loader still publishes no partial registry. Compilation coverage and
+complete-card gameplay coverage both gain zero names/records; the fixed-mana
+payment capability now has native and RON gameplay contracts. There is no
+environment or validation blocker to committing this slice.
+
+### Ranked next candidates
+
+1. Eligible-player alternative payments and typed payer binding. Worms' two
+   sacrifice-or-damage alternatives require payer identity and local success;
+   Cleansing can reuse eligibility with fixed life and repeated per-subject
+   results. Entry prevention and repeated result orchestration remain separate.
+2. Source-presence control duration for Scarwood Bandits: expected one full-card
+   gain after the payment prerequisite. Test phase-out and phase cycles before
+   and after resolution, departure/return, source control and ability removal.
+   Evaluate shared duration use in Gaea's Liege's separate layer context.
+3. Dependent target card-type comparison for Gauntlets of Chaos: zero immediate
+   gains; exchange-result guard and Aura-only source repair remain separate.
+
+Reassess with complete records and fresh evidence. Complete collection gameplay,
+runtime loading, application cutover, Go-card deletion and unused DSL cleanup
+remain unfinished. This run completed exactly one payment capability slice.
+
+### Completion validation — 2026-10-13
+
+Resumed the existing fixed-mana payment slice and reviewed its engine service,
+RON lowering, tests, complete affected records and documentation. No second
+capability was started. Fresh focused native and RON tests, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`, and
+`go test ./... -short -count=1` all passed. `make lint` passed with 0 issues;
+it made no further changes. `git diff --check` passed.
+
+The initial sandboxed build reported a denied Go module-cache write. The
+approved build outside the sandbox and vet both passed. This was an environment
+restriction, not an engine or compiler failure.
+
+Fresh strict-loader validation exited 1 for expected collection rejection:
+2,188 compiled / 257 rejected records and 847 accepted / 139 rejected names.
+A temporary Go overlay of the HEAD compiler sequence and inventory files
+provided a fresh pre-slice loader comparison without changing the worktree.
+Both reports have identical counts and rejection keys. Only Scarwood Bandits'
+diagnostic changed, from `AnyPlayerMayCost` to `UntilPermanentLeavesBattlefield`.
+The estimated and actual full-card gain remains zero. The ranked next candidates
+above remain applicable; eligible-player alternatives and payer bindings are
+next. All required checks passed before committing this slice.

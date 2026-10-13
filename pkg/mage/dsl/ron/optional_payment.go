@@ -254,7 +254,7 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 			i++
 			continue
 		}
-		if part.Name == "PlayerMayCost" || part.Name == "MayCost" || part.Name == "MustCost" {
+		if part.Name == "PlayerMayCost" || part.Name == "MayCost" || part.Name == "MustCost" || part.Name == "AnyPlayerMayCost" {
 			if i+1 == len(parts) {
 				return nil, nil, problem(part, "payment requires an adjacent payment continuation")
 			}
@@ -276,6 +276,9 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if payment.Name == "AnyPlayerMayCost" {
+		return compileEligiblePlayerPayment(payment, continuation, ctx)
+	}
 	if len(payment.Args) > 0 {
 		cost := payment.Args[len(payment.Args)-1]
 		if cost.Name == "AnteAPermanent" || cost.Name == "AnteTopCardOfLibrary" {

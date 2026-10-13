@@ -853,6 +853,21 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 			}
 		}
 	}
+	paid := tryResolutionCostPayment(ctx, id, costs, e.required)
+	if paid == e.ifPaid {
+		return e.effect.Apply(ctx)
+	}
+	if !nilDefinition(e.otherwise) {
+		return e.otherwise.Apply(ctx)
+	}
+	return nil
+}
+
+func tryResolutionCostPayment(ctx *EffectContext, id uuid.UUID, costs []Cost, required bool) bool {
+	player := ctx.Game.GetPlayer(id)
+	if player == nil {
+		return false
+	}
 	texts := make([]string, len(costs))
 	for i, cost := range costs {
 		texts[i] = cost.Text()
@@ -865,20 +880,14 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 			break
 		}
 	}
-	if available && (e.required || ctx.Game.GetPlayer(id).ChooseMayAbility("pay "+strings.Join(texts, ", "))) {
+	if available && (required || player.ChooseMayAbility("pay "+strings.Join(texts, ", "))) {
 		tx, err := ctx.Game.prepareActionPaymentTransaction(actionPaymentSpec{
 			SourceID: ctx.SourceID, Controller: id, Costs: costs,
 			Targets: ctx.Targets, XValue: ctx.Game.XValue(),
 		})
 		paid = err == nil && tx.Commit() == nil
 	}
-	if paid == e.ifPaid {
-		return e.effect.Apply(ctx)
-	}
-	if !nilDefinition(e.otherwise) {
-		return e.otherwise.Apply(ctx)
-	}
-	return nil
+	return paid
 }
 func (e *unlessPaidEffect) inspectDefinition() definitionNode {
 	role, branch := "unless-paid", "unpaid"

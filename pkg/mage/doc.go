@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PayAnyOrElse] offers eligible players one cost in turn order.
+// The first complete payment selects its paid body. No payment selects unpaid.
+// Each call keeps its own result and the original effect controller.
+// The shared cost transaction keeps failure separate from live resources.
+// Saved sources, targets, copies, clones and delays use their existing frames.
+// Waiting queries declare source reads without offers or payment.
+// RON lowers AnyPlayerMayCost with Opponent or AnyPlayer and fixed PayMana.
+// An adjacent If, Unless or IfElse keeps the result local to that pair.
+// Payer bindings, other costs, entry and replacement bodies stay separate.
+//
 // [WhenPermanentsPresent] saves exact matching visits when a state triggers.
 // One pending or stacked trigger prevents another detection for that source
 // visit and rule. [FromPermanentSet] reads the saved present, unphased visits.

@@ -18429,3 +18429,48 @@ triggers. No new payment, damage or replacement service is introduced.
 
 Evidence: `TestStatePermanentSetCapture`, `TestStatePermanentSetInvalid`,
 `TestStatePermanentSetLifecycleAndReplacement` and `TestRONStatePermanentSet*`.
+
+## Eligible-player optional resolution payment
+
+`PayAnyOrElse(players PlayerSet, costs CostGroup, paid, unpaid ResolvingEffect)`
+reads eligibility once, excludes absent players and duplicates, and offers the
+cost in active-player order (CR 101.4, 608.2d). Each eligible player receives at
+most one offer. The first complete payment stops further offers and runs `paid`.
+Decline, lack of resources or transaction failure lets the next eligible player
+try. If no payment succeeds, including an empty set, `unpaid` runs once. Either
+body may be nil; declaration validation requires at least one body.
+
+The private `tryResolutionCostPayment` helper also serves existing `IfPaid`,
+`UnlessPaid`, `PayOrElse` and mandatory payment callers. It retains their pure
+affordability checks and shared action payment transaction. Costs must be paid
+in full (CR 118.3); combined-cost failure does not commit partial resources.
+Fixed mana can use mana abilities during resolution (CR 118.2, 608.2g).
+Zero costs still require acceptance (CR 118.5). Existing resolution cost group
+validation remains in force. This adds no replacement-order or simultaneous
+movement service.
+
+Both bodies keep the resolving object's controller, source, saved visits and
+targets. The payment payer does not become the effect controller. The result
+is a local variable; nested pairs, copies and clones cannot overwrite it.
+Declaration checks isolate branch assignments. No payer result is exported.
+Delayed source enumeration declares typed reads in the player set and both
+bodies without evaluating eligibility or making offers. Current controller
+reads and exact departure LKI keep their existing timing and identity contracts
+(CR 113.7a, 400.7, 608.2h). Simulation clones retain their existing policy of
+declining optional payments.
+
+RON supports `AnyPlayerMayCost(Opponent|AnyPlayer, PayMana([...]))` in ordinary
+resolving sequences with an adjacent `If`, `Unless` or `IfElse` and symbolic
+`CostWasPaid`/`CostWasntPaid`. Each required list must be nonempty. Other sets,
+costs, payer bindings, entry and draw replacement bodies remain rejected.
+The adapter clears an inherited `ActionPlayer` scope to prevent use of an
+unrelated payer. Fixed costs and bodies are built afresh per card factory.
+
+Evidence: native `TestEligiblePlayerPaymentOrderAndResult`,
+`TestEligiblePlayerPaymentRecheckAndNested`,
+`TestEligiblePlayerPaymentDelayedIdentity`, `TestEligiblePlayerPaymentInvalid`,
+and RON `TestRONEligiblePlayerPayment*`. The real Scarwood payment node has
+gameplay evidence; its complete record remains rejected for the source duration.
+The existing `UntilSourceLeaves` duration survives phasing and is not an exact
+adapter for Oracle's "for as long as" wording (CR 611.2b, 702.26f). A separate
+source-presence duration contract is required before Scarwood can be accepted.

@@ -31,7 +31,7 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 	}
 	names := map[string]bool{}
 	count := 0
-	rejected := map[string]string{"Scarwood Bandits": "AnyPlayerMayCost", "Goblin Flotilla": "UntilEndOfCombat"}
+	rejected := map[string]string{"Scarwood Bandits": "UntilPermanentLeavesBattlefield", "Goblin Flotilla": "UntilEndOfCombat"}
 	blocked := 0
 	for _, file := range files {
 		data, err := os.ReadFile(file)

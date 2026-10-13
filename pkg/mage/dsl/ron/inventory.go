@@ -1009,6 +1009,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "resolution_cost"}[index]
 			}
+		case "AnyPlayerMayCost":
+			if len(n.Args) == 2 {
+				return []string{"player_collection", "resolution_cost"}[index]
+			}
 		case "Unless", "If":
 			if n.Name == "If" && len(n.Args) == 2 && n.Args[0].Name == "TimesThisAbilityHasBeenActivatedThisTurnIs" {
 				return []string{"activation_history_condition", "action"}[index]
