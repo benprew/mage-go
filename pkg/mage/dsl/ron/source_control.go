@@ -1,6 +1,9 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 func compileSourceControl(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 2); err != nil {
@@ -10,10 +13,32 @@ func compileSourceControl(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if n.Args[1].Kind == Symbol && n.Args[1].Name == "UntilEndOfTurn" {
+		if ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "temporary control requires an ordinary resolving body")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.Until(core.EndOfTurn, mage.ChangeController(subject.build(bindings), mage.You))
+		}, nil
+	}
 	if !ctx.permanent {
 		return nil, problem(n, "source control duration requires a permanent source")
 	}
 	duration := n.Args[1]
+	if duration.Name == "ForAsLongAsPermanentRemainsTapped" {
+		if ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "tapped source control requires an ordinary resolving body")
+		}
+		if err := arity(duration, 1); err != nil {
+			return nil, err
+		}
+		if duration.Args[0].Kind != Symbol || duration.Args[0].Name != "ThisPermanent" {
+			return nil, unsupported(duration.Args[0], "tapped source control reference")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.UntilSourceUntaps(mage.This, mage.ChangeController(subject.build(bindings), mage.You))
+		}, nil
+	}
 	if duration.Name == "UntilPermanentLeavesBattlefield" {
 		if err := arity(duration, 1); err != nil {
 			return nil, err

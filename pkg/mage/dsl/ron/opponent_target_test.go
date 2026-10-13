@@ -348,7 +348,7 @@ func TestRONOpponentTargetsTriggerAndModes(t *testing.T) {
 
 func TestRONOpponentTargetsRecordFragments(t *testing.T) {
 	for _, tc := range []struct{ set, name, blocker string }{
-		{"DRK", "Preacher", "source control duration"},
+		{"DRK", "Preacher", ""},
 		{"PROMOS", "Arena", ""},
 		{"LEG", "Nova Pentacle", "unbound or incompatible chosen damage source"},
 	} {

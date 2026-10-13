@@ -130,7 +130,7 @@ func TestUntilSourceUntapsStartAndValidation(t *testing.T) {
 	for _, card := range []Card{
 		NewInstant("No source", "", WithAbility(Spell(UntilSourceUntaps(This, ModifyPT(This, Fixed(1), Fixed(1)))))),
 		NewArtifact("Empty", "", WithAbility(Activate(Costs(), UntilSourceUntaps(This)))),
-		NewArtifact("Control", "", WithAbility(Activate(Costs(), UntilSourceUntaps(This, ChangeController(This, You))))),
+		NewArtifact("Control", "", WithAbility(Activate(Costs(), UntilSourceLeaves(This, ChangeController(This, You))))),
 	} {
 		if ValidateCardDefinition(card.Name(), card) == nil {
 			t.Fatalf("accepted %s", card.Name())

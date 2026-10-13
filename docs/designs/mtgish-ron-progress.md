@@ -6,29 +6,29 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **852 accepted / 134 rejected names**
-(986 total), **2,194 compiled / 251 rejected records** (2,445 total).
-The latest slice adds saved instruction damage outcomes. Complete unchanged
-Syphon Soul (LEG) and Mishra's War Machine (ATQ/3ED) records now compile and
-have RON gameplay evidence. The strict loader still rejects the collection and
-publishes no partial registry.
+Latest measured result (2026-10-13): **854 accepted / 132 rejected names**
+(986 total), **2,196 compiled / 249 rejected records** (2,445 total).
+The latest slice adds temporary singular control durations. Complete unchanged
+Preacher (DRK) and Disharmony (LEG) records now compile and have RON gameplay
+evidence. The strict loader still rejects the collection and publishes no
+partial registry.
 
-The latest slice is **SAVED-DAMAGE-OUTCOMES**. Typed local results retain actual
-damage after replacement and prevention. Exact source/player conditions keep
-historical visits separate. Estimated and actual gains are two names / three
-records. Runtime cutover, Go-card removal and DSL cleanup gates remain open.
+The latest slice is **TEMPORARY-SINGULAR-CONTROL**. Typed layer 2 modifications
+use end-of-turn or tapped-source lifetimes with exact visits and saved controllers.
+Estimated and actual gains are two names / two records. Runtime cutover,
+Go-card removal and DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Shared announcement mana restrictions and clamped outcomes: Drain Life.**
-   Saved damage results now exist; restricted X payment and clamping remain.
-   Inspect other restricted-payment cards before selecting a bounded prerequisite.
-2. **Dependent permanent target comparison: Gauntlets of Chaos.**
-   Zero immediate gains; exchange-result handling and the recorded Aura-only
-   source correction remain. Compare shared targets before selection.
+1. **Shared dependent permanent type comparison.** Gauntlets of Chaos and
+   Enchantment Alteration need related typed comparisons. Immediate gains are
+   zero until exchange-result/source repair and attachment actions are complete.
+2. **Shared announcement mana restrictions and clamped outcomes: Drain Life.**
+   Saved damage results exist; restricted X payment and clamping remain.
+   Compare other mana-payment contexts before selecting a bounded prerequisite.
 3. **Graveyard-source trigger arming: Nether Shadow.**
    Six reprints share one definition. Graveyard-order intervening-if, exact visits
    and optional entry remain; compare shared zone-source event work first.
@@ -2352,3 +2352,152 @@ API/rules documentation and this progress ledger are updated.
 
 Gaea's Liege remains deferred with its defending-player and source-data blockers.
 This run stops after saved damage outcomes.
+
+## 2026-10-13 — TEMPORARY-SINGULAR-CONTROL
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and the complete RON package
+suite passed. Baseline `go run ./cmd/loadcards -json` exited 1 with 2,194
+compiled / 251 rejected records and 852 accepted / 134 rejected names. This
+was collection rejection, not a build or test failure. All complete records for
+the compared candidates were read, including nested bodies and endpoints.
+Targeted vocabulary reads covered casting restrictions, source-control duration
+and dependent card-type comparison. Reprints count once.
+
+| Candidate | Unique affected cards | Estimated complete unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1 restricted announcement X payment | Drain Life (six records) | Zero for payment alone; one after a separate clamp contract | Saved actual damage now exists, but restricted X payment and the Oracle life/toughness clamp are independent. Sunglasses of Urza, North Star and Mishra's Workshop have different conversion, one-use cast and production restrictions; this X-only adapter would not unlock them. | Medium engine/planner integration and payment tests, then a separate clamp slice |
+| Ranked #2 dependent permanent type comparison | Gauntlets of Chaos; related SharesACardtypeWithPermanent operand in Enchantment Alteration | Zero | Gauntlets also needs exchange-result binding and its recorded Aura-only source repair. Alteration needs attachment action and resolving host selection. Shared comparison work can enable both downstream cards. | Medium typed target/reference and legality tests, plus later independent actions |
+| Temporary singular control duration | Preacher (DRK); Disharmony (LEG) | Two names / two records | All other nested forms already compile. Preacher's opponent target choice, optional untap and tap payment exist. Disharmony's casting window, attacking target, untap and combat removal exist. This closes both direct duration forms without changing controller-bound endpoints. | Small adapter and checked engine extension; broad lifecycle and card tests |
+
+Ranked #3 Nether Shadow was also inspected: six identical graveyard-source
+records still need trigger arming, graveyard-order intervening-if and exact-visit
+optional return. It is a larger single-card pipeline than the selected slice.
+The selected multi-card adapter has the largest credible immediate gain for this
+run. No unrelated mana, comparison, graveyard or plural-control slice was started.
+
+### Contract, implementation and reuse boundary
+
+`GainControlOfPermanentUntil(permanentRef, UntilEndOfTurn)` supports ordinary
+resolving spell, permanent activation, trigger and delayed contexts. It lowers
+to `mage.Until(core.EndOfTurn, mage.ChangeController(ref, mage.You))`.
+`GainControlOfPermanentUntil(permanentRef,
+ForAsLongAsPermanentRemainsTapped(ThisPermanent))` requires a permanent source
+and lowers to `mage.UntilSourceUntaps(mage.This,
+mage.ChangeController(ref, mage.You))`. Source spelling must be a symbol.
+Both forms reject entry and draw-replacement bodies; malformed endpoints and
+unbound or incompatible references remain declaration errors.
+
+The engine now accepts control modifications in checked `UntilSourceUntaps`
+definitions. Existing capture, layer 2 timestamps, incarnation checks, source
+transition hooks, simultaneous untap, cleanup, frames, copying and cloning run
+these effects. No parallel control system, global result, fallback or card-name
+branch was added. The saved effect controller receives control even after source
+control changes. End-of-turn control ends at cleanup. Tapped-source control
+requires the present unphased tapped original source at resolution. Actual
+untapping, departure or source phasing permanently ends it. Stun replacements,
+source control changes and ability removal do not end it. Target phasing keeps
+identity; a returned target cannot inherit control.
+
+RON owns spelling/context validation and fresh per-factory typed declarations.
+Engine APIs keep their signatures and existing callers. The earlier invalid
+native tapped-control fixture now tests the still-unsupported `UntilSourceLeaves`
+control shape; new positive tests explicitly validate tapped control. Previously
+unsupported RON assertions now use malformed endpoint fixtures or require full
+Preacher compilation. No gameplay assertion was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `TestTemporaryControlDuration` failed definition validation
+with the exact missing tapped-control contract. `TestRONTemporaryControlPreacher`
+failed on unsupported tapped duration. `TestRONTemporaryControlDisharmony` failed
+on its erroneous permanent-source requirement. These expected failures were
+confirmed before production edits. Additional test-only compile errors in the
+new start/waiting tests were repaired using the existing typed binding/source API.
+
+- **Preacher → TestRONTemporaryControlPreacher**: full unchanged record;
+  opponent chooses a creature they control despite supplied controller targets;
+  summoning-sickness rollback, resolution timing, untap/phase/return before
+  resolution, source control changes, target return/phasing/shroud, source
+  expiration, ability removal, copies and pending clone isolation.
+- **Preacher → TestRONTemporaryControlPreacherCastingAndUntap**: printed mana
+  payment and rollback, 1/1 entry metadata, summoning sickness, printed optional
+  untap, decline/accept, stun replacement, and the untap offer after target departure.
+- **Disharmony → TestRONTemporaryControlDisharmony**: full unchanged record;
+  combat window and unpaid-cast rollback, attacking target recheck, resolution
+  untap/removal/control, shroud/phasing/return, copies, clones and native cleanup.
+- **Disharmony → TestRONTemporaryControlContextsAndCopies**: copy retargeting
+  keeps independent subjects; installed clone lifetime is independent; entry and
+  replacement contexts reject the new forms.
+- `TestRONTemporaryControlDelayed`: both endpoint forms save the controller and
+  exact source through future triggers; repeated waiting queries make no changes;
+  saved control resolves and expires independently of an intervening control effect.
+- `TestRONTemporaryControlInvalid`: malformed symbol/arity/source operands,
+  spell-source tapped durations and unsupported endpoints remain errors.
+- Native `TestTemporaryControlDuration`: checked declaration, shared layer 2
+  execution, untap-retap/source phase/return, target phase/return, control changes,
+  ability removal, stun, cleanup and installed game clone isolation.
+- Native `TestTemporaryControlDurationStart`: untapped, absent, phased and
+  returned sources install nothing; retapping before resolution permits a start.
+- Native `TestTemporaryControlDurationSimultaneousUntap`: both control effects
+  end and both sources untap before either untap notification.
+
+Local authoritative `data/DRK.json` and `data/LEG.json` confirm both full records.
+CR 611.2a–c, 514.2 and 702.26f support the lifetime and phasing contracts. No source
+defect was changed. Gauntlets' Aura-only defect and Gaea's Liege's duplicate
+predicate remain open. RON sources are unchanged; no vocabulary refresh is needed.
+API and rules documentation now records only these established control contexts.
+
+### Validation and measured gain
+
+Required verification passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTemporaryControl -count=1` passed.
+- Native `go test ./pkg/mage -run 'TestTemporaryControlDuration|TestUntilSourceUntaps' -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's additional `go test ./... -short -count=1` passed.
+- Complete `go test ./pkg/mage/dsl/ron -count=1` passed after updating exact
+  collection counts and formerly unsupported duration expectations. Its initial
+  run exposed six obsolete count/boundary assertions; all now require the new
+  behavior or a still-invalid declaration, while retaining gameplay checks.
+- `make lint` passed with **0 issues**. Automatic edits added import-group
+  spacing in the two new test files. They were reviewed; no unrelated files or
+  semantic changes were introduced. Post-format focused RON/native tests passed.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+  records remain. Fresh full-diagnostic comparison confirmed the counts below.
+
+No environment, build, test or lint blocker remains.
+
+Final collection gains are exactly **two names / two records**, matching the
+estimate: **854 accepted / 132 rejected names**, **2,196 compiled / 249 rejected
+records**, out of 986 names / 2,445 records. Comparing every loader diagnostic
+removes only Preacher's DRK:82 tapped-duration error and Disharmony's LEG:63
+permanent-source error. No diagnostics are added or changed. Compilation evidence
+and gameplay evidence are separate: this run adds complete gameplay mappings for
+these two cards, not every accepted card. No partial production registry is published.
+
+Changed production files: `pkg/mage/dsl/ron/source_control.go` and
+`pkg/mage/composable_continuous.go`. New native/RON temporary-control tests and
+existing collection/boundary expectations are updated. `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger record
+the contract. No Go card definition or DSL function is removed: cutover/removal
+gates are still open and no caller-removal audit is warranted for this adapter.
+Remaining gaps include 132 names / 249 records, full collection gameplay,
+embedded native loading, startup cutover, Go-card deletion and obsolete DSL cleanup.
+
+### Ranked next candidates
+
+1. Shared dependent permanent type comparison: Gauntlets of Chaos and Enchantment
+   Alteration. Zero immediate unlocks, but a concrete shared prerequisite for two
+   names. Compare target and resolving reference contracts; keep exchange results,
+   attachment actions and Gauntlets' Aura-only defect explicit.
+2. Restricted announcement mana payment and clamped damage outcomes: Drain Life.
+   Zero immediate gain from one prerequisite; one name / six records after both
+   contracts. Compare complete restricted-payment records before selection.
+3. Graveyard-source trigger arming: Nether Shadow. Six records, one name;
+   order-based intervening-if, exact visits and optional entry still need contracts.
+
+This run stops after temporary singular control.

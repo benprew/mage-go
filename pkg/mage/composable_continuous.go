@@ -952,8 +952,8 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	}
 	for i, m := range e.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
-		if !nilDefinition(m) && m.modification().layer == LayerControl && !e.sourcePresent && (e.sourceBound || e.duration != EndOfTurn) {
-			n.problem = "control modification requires Until(EndOfTurn) or UntilSourcePresent"
+		if !nilDefinition(m) && m.modification().layer == LayerControl && !e.sourcePresent && !e.sourceTapped && (e.sourceBound || e.duration != EndOfTurn) {
+			n.problem = "control modification requires Until(EndOfTurn), UntilSourcePresent or UntilSourceUntaps"
 		}
 	}
 	return n

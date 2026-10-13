@@ -3092,8 +3092,9 @@ ForAsLongAsPermanentRemainsTapped(ThisPermanent))` supports the existing typed
 subjects and temporary modifications in resolving permanent abilities, including
 activations and supported triggers. The source operand must be the symbol
 `ThisPermanent`. Host, target, event and numbered source operands are rejected.
-Spell-only, static, cost, collection-layer and control-duration contexts are not
-added. Existing `UntilEndOfTurn` declarations retain their behavior.
+Spell-only, static, cost and collection-layer contexts are not added. Temporary
+singular control uses the separate adapter documented below. Existing
+`UntilEndOfTurn` declarations retain their behavior.
 
 The compiler lowers to this engine service:
 
@@ -14242,3 +14243,27 @@ Complete unchanged records: Syphon Soul (LEG) and Mishra's War Machine
 (ATQ/3ED), mapped to `TestRONDamageOutcomeSyphonSoul` and
 `TestRONDamageOutcomeWarMachine` respectively. These tests cover all card rules;
 `TestRONDamageOutcomeScopes` supplies additional sequencing and delay evidence.
+
+## RON temporary singular control
+
+Ordinary resolving spell, activation, trigger and delayed bodies can use
+`GainControlOfPermanentUntil(permanentRef, UntilEndOfTurn)`. Permanent bodies
+also accept `ForAsLongAsPermanentRemainsTapped(ThisPermanent)` as the endpoint.
+The source spelling must be a symbol. Both endpoints reject entry and
+replacement bodies. The subject uses the existing typed singular reference
+scope, including targets and saved visits. The gained controller is the saved
+effect controller, even after a source control change.
+
+Lowering reuses `mage.ChangeController(PermanentRef, PlayerRef)` with
+`mage.Until(core.EndOfTurn, ...)` or `mage.UntilSourceUntaps(mage.This, ...)`.
+The latter now accepts control modifications in checked engine definitions.
+It does not require continued source control. Copies and delayed bodies retain
+their own bindings; returned objects cannot inherit an old effect. End-of-turn
+control expires at cleanup. Tapped-source control ends permanently on actual
+untapping, departure or source phasing. Optional untap and stun replacements
+keep their existing behavior.
+
+Preacher (DRK) and Disharmony (LEG) now compile as complete unchanged records.
+Evidence: `TestRONTemporaryControl*` and `TestTemporaryControlDuration*`.
+Existing controller-bound and source-presence endpoints retain their callers.
+Plural control, new endpoints, static, cost and entry forms remain separate.

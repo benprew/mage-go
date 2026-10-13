@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// RON temporary singular control uses [ChangeController] with [Until] or
+// [UntilSourceUntaps]. Subjects keep their exact visits and the effect controller.
+// Cleanup ends end-of-turn control. Tapped-source control starts only with a
+// present, unphased, tapped original source. Untapping, departure and source
+// phasing end it permanently. Control changes and ability removal do not end it.
+// Copies, clones and delayed bodies keep separate targets and saved frames.
+// Entry and replacement declarations need separate adapters.
+//
 // [DamageOutcomesInto] saves actual singular damage outcomes after replacements.
 // [IfDamageDealtToPlayer] checks those outcomes against an exact source and player.
 // Prevention and redirection can stop the match. Departure does not erase facts;

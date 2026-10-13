@@ -2825,7 +2825,8 @@ phasing suspends application without ending a duration that tracks the source;
 source expiration while the target is phased still ends the effect. A returned
 target is a new incarnation and receives no old bonus. Source control changes,
 ability removal and end-of-turn cleanup do not end this duration. Control layer
-modifications still require their separate lifetime adapter and are rejected.
+modifications use this same captured lifetime; the temporary singular control
+contract below adds their checked definition and RON adapter.
 
 This service does not register a target-dependent untap policy. A separate
 printed permission to remain tapped remains a choice even after a recipient
@@ -18708,3 +18709,33 @@ unchanged.
 Contract evidence: `TestDamageOutcomeCondition`, `Definition`, `Waiting` and
 `Batch`; RON `TestRONDamageOutcomeSyphonSoul`, `WarMachine`, `Scopes`, `Invalid`
 and `InventoryAndAtomicLoad`.
+
+## RON temporary singular control
+
+`GainControlOfPermanentUntil(subject, UntilEndOfTurn)` lowers an ordinary
+resolving body to `Until(core.EndOfTurn, ChangeController(subject, You))`.
+`GainControlOfPermanentUntil(subject,
+ForAsLongAsPermanentRemainsTapped(ThisPermanent))` requires a permanent source
+and lowers to `UntilSourceUntaps(This, ChangeController(subject, You))`.
+Entry and draw-replacement bodies reject both forms. Other endpoints retain
+their existing support boundaries. The engine now validates layer 2 control
+modifications under `UntilSourceUntaps`; no separate control system is added.
+
+CR 611.2a–c locks the subjects, controller and duration at resolution. Shared
+layer 2 timestamps apply control effects. End-of-turn control ends at cleanup
+(CR 514.2). A tapped source must be present, phased in, tapped and still on its
+original visit at resolution. Untapping, departure and source phasing end the
+installed effect permanently (CR 702.26f). A stun replacement preserves it.
+Source control changes and ability removal do not end it. Target phasing keeps
+identity; target return cannot inherit it. Simultaneous source untaps restore
+all affected controllers before the first untap notification. Waiting queries
+retain explicit source reads without executing control or reading tap state.
+
+Engine evidence: `TestTemporaryControlDuration`, `Start` and
+`SimultaneousUntap`, plus retained `TestUntilSourceUntaps*` contracts.
+RON evidence: `TestRONTemporaryControlPreacher`, `PreacherCastingAndUntap`,
+`Disharmony`, `ContextsAndCopies`, `Delayed` and `Invalid`. These cover both
+complete unchanged card records, opponent choice, spell/activation payments,
+combat window and removal, exact visits, phasing, source control changes,
+ability removal, optional untap, stun, copies, delayed frames and clones.
+Plural control and other declaration contexts need separate adapters.
