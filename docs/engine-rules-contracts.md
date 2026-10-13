@@ -18769,8 +18769,9 @@ subject set without reading types or running filters. Existing frames keep saved
 choices, targets, copied bodies, delayed bodies and cloned games separate.
 Evidence: `TestPermanentTypeComparison`, `Declarations`, `SavedAndWaiting` and
 `TestRONPermanentTypeComparison*`. These tests establish the resolving service.
-Dependent announcement targets, attachment movement, static declarations, entry
-operations and replacement bodies require separate adapters.
+Dependent announcement targets, static declarations, entry operations and
+replacement bodies require separate adapters. Resolving attachment movement now
+uses this service as described in Required attachment host choice below.
 
 
 ## Exact attachment host references
@@ -18799,3 +18800,42 @@ replacement, payment or simultaneous-operation service.
 
 Evidence: `TestPermanentHost`, `Declarations`, `ReferencesAndWaiting`, the
 existing `TestPermanentInformation*` regressions and `TestRONTargetHost*`.
+
+## Required attachment host choice
+
+`AttachPermanentToChoice(player PlayerRef, attachment PermanentRef, hosts
+PermanentSet) ResolvingEffect` makes a required, non-targeted choice at resolution.
+It uses `ChoosePermanent` with a typed legal-host collection and then `Game.Attach`.
+The current host, the attachment itself, absent visits, phased visits and illegal
+hosts cannot be chosen. Invalid or nil answers use the shared required-choice
+fallback. One legal host needs no decision call; zero legal hosts cause no move.
+
+The attachment visit is saved before the choice. The selected host keeps its
+exact visit in a private per-instance binding in the resolution frame. After the
+choice, both objects must be present, unphased and have the saved incarnations.
+Host collection membership and attachment legality are checked again. Returned
+objects cannot replace either visit. The Aura's current controller supplies its
+enchant restriction, while the explicit player supplies the choice. Shroud and
+hexproof do not restrict the host choice; protection and enchant limits do
+(CR 303.4e/j, 701.3a/b). This action does not target the destination.
+
+Successful movement uses both host links, static layer application, attachment
+timestamp order and the existing attach event (CR 701.3c). It does not change
+ownership or control, create a zone move, offer payment or run a replacement
+operation. Each action instance has its own result declaration. Copies, clones
+and delayed bodies keep separate resolution frames. Waiting source queries
+traverse explicit attachment, player and collection reads without evaluating
+filters, making choices or changing state.
+
+RON accepts `AttachPermanentToAPermanent` with exactly two positional arguments:
+a bound singular attachment reference and a supported resolving host collection.
+Ordinary resolving action sequences, direct scoped player bodies and delays are
+supported. Entry and draw replacement contexts reject the declaration. No
+`TheChosenPermanent` result escapes this action.
+
+Evidence: `TestAttachmentMove`, `TestAttachmentMoveDeclarations`,
+`TestAttachmentMoveKindsAndTimestamp`, `TestAttachmentMoveWaiting`,
+`TestRONAttachmentMoveAlteration`, `TestRONAttachmentMoveInvalid`,
+`TestRONAttachmentMoveScopesAndDelay`, `TestRONAttachmentMovePlayerScope` and
+`TestRONAttachmentMoveKudzuPrerequisite`. Enchantment Alteration has complete RON
+casting and gameplay evidence; Kudzu has only movement prerequisite evidence.

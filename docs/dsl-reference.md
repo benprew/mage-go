@@ -14298,9 +14298,9 @@ and static rules remain unsupported contexts.
 `TestRONPermanentTypeComparisonRepositoryExpressions` executes the exact nested
 expressions from Gauntlets of Chaos and Enchantment Alteration in explicit test
 fixtures. These are prerequisite tests, not complete-card gameplay evidence.
-Full unchanged records still reject: dependent announcement target context,
-exchange outcome and Aura-only source correction remain for Gauntlets; attachment
-movement and a target-derived host reference remain for Enchantment Alteration.
+Gauntlets still requires dependent announcement target context, exchange outcomes
+and an Aura-only source correction. Enchantment Alteration now compiles and has
+complete gameplay evidence in `TestRONAttachmentMoveAlteration`.
 `Resolution`, `TargetsAndHost`, `TargetLegality`, `DelayedChoice` and `Invalid`
 cover synthetic complete RON gameplay and supported declaration boundaries.
 
@@ -14327,7 +14327,32 @@ game state. No source spell is treated as an attachment.
 real RON casting, payment rollback, legality, attachment changes, phasing,
 returned visits, delayed LKI, copies, retargeting, cloning and lexical rejection.
 `RepositoryComparison` maps Enchantment Alteration's exact nested type
-comparison to the typed target host. Its complete unchanged record still
-rejects `AttachPermanentToAPermanent`; this mapping proves a prerequisite,
-not full-card gameplay. The attachment action must separately enforce another
-permanent, type matching and attachment legality.
+comparison to the typed target host. That test remains prerequisite evidence.
+The complete unchanged record now has gameplay evidence in
+`TestRONAttachmentMoveAlteration`, including another permanent, matching types
+and attachment legality.
+
+## Required attachment movement in RON
+
+`AttachPermanentToAPermanent(attachmentRef, hostCollection)` is a resolving
+action. The first argument is a bound singular permanent reference. The second
+is a supported resolving permanent collection, including nested type comparisons.
+The action player makes a required choice at resolution from legal hosts other
+than the current host. Direct `PlayerActions` bodies and their delayed bodies
+keep the scoped chooser. The action does not produce `TheChosenPermanent`.
+Entry operations and replacement bodies do not accept this action.
+
+The engine API is `AttachPermanentToChoice(player PlayerRef, attachment
+PermanentRef, hosts PermanentSet) ResolvingEffect`. It uses the shared required
+choice and attachment services. Shroud and hexproof do not stop the host choice.
+Enchant restrictions and protection still apply. No legal host leaves the
+attachment in place. Exact visits prevent a returned attachment or a returned
+chosen host from taking the place of the saved object. Phasing stops movement;
+a completed phase cycle preserves identity. Copies, clones and delays use their
+own resolution frames.
+
+Evidence: `TestRONAttachmentMoveAlteration` covers the complete Enchantment
+Alteration record. `TestRONAttachmentMoveKudzuPrerequisite` covers the unchanged
+movement action in six Kudzu records; the complete card still needs
+`PlayerMayAction`. Native `TestAttachmentMove*` tests cover attachment legality,
+visit checks, static subjects, timestamps and pure waiting queries.

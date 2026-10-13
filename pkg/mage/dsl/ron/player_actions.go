@@ -44,7 +44,7 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 			continue
 		}
 		switch part.Name {
-		case "CreateFutureTrigger":
+		case "CreateFutureTrigger", "AttachPermanentToAPermanent":
 		case "SacrificeAPermanent", "SacrificeAPermanentOfAPlayersChoice", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "RevealTopCardOfLibrary", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "CreateTokens", "ChooseAnAction", "FlipACoin_OnLose", "FlipACoin_OnWinAndLose", "MillNumberCards", "PlayerActions", "PlayerAction", "TapEachPermanent", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "GainLife", "GainLifeForEach", "LoseLife", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "DiscardHand", "DiscardCards", "RevealHand":
 		default:
 			return nil, nil, nil, unsupported(part, "scoped player action")

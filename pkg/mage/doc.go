@@ -5,7 +5,17 @@
 // last host. Return cannot replace either visit. Information reads can use host
 // LKI; actions need a present, unphased host. RON binds HostPermanent in resolving
 // spell bodies with one singular Aura target. Aura source bodies keep their
-// existing source-host read. Attachment movement needs a separate adapter.
+// existing source-host read.
+//
+// [AttachPermanentToChoice] makes a required legal host choice at resolution.
+// The choice does not target and excludes the current host. Shared attachment
+// rules check enchant limits, protection and attachment types. Both saved visits
+// must remain present and unphased after the choice. A move keeps control and
+// ownership, changes both host links and updates the static effect timestamp.
+// Copies, clones and delays keep separate frames. Waiting queries make no choices.
+// RON lowers AttachPermanentToAPermanent with a singular reference and a
+// resolving host collection. Scoped player bodies keep their saved chooser.
+// Entry and replacement operations need separate adapters.
 //
 // [PermanentsSharingCardTypes] selects present subjects with a shared card type.
 // The reference reads current or exact departure and phase information.

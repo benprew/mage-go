@@ -6,34 +6,35 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **854 accepted / 132 rejected names**
-(986 total), **2,196 compiled / 249 rejected records** (2,445 total).
-The latest slice adds target-derived host references as a prerequisite for
-Enchantment Alteration. Its complete record still rejects attachment movement.
+Latest measured result (2026-10-13): **855 accepted / 131 rejected names**
+(986 total), **2,197 compiled / 248 rejected records** (2,445 total).
+The latest slice implements required resolving attachment movement and unlocks
+Enchantment Alteration with complete RON gameplay evidence.
 The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **TARGET-DERIVED-HOST-REFERENCE**. A resolving spell body
-with one singular Aura target binds HostPermanent to that target's exact host.
-Estimated and actual gains are zero names / zero records. Dependent target
-announcement and attachment movement remain separate. Runtime cutover,
-Go-card removal and DSL cleanup gates remain open.
+The latest slice is **REQUIRED-ATTACHMENT-MOVEMENT**. A bound singular attachment
+moves to a required legal host choice at resolution. Exact visits, scoped choosers,
+phasing, protection, enchant restrictions and shared timestamps are preserved.
+Estimated and actual gains are one name / one record. Kudzu's movement action
+is ready; PlayerMayAction and its former-host controller contract remain.
+Runtime cutover, Go-card removal and DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Shared attachment movement.** Enchantment Alteration and Kudzu use the
-   same two-argument action (seven records). Alteration's target-derived host
-   is ready; estimate one name / one record after complete attachment and
-   another-permanent legality evidence. Kudzu still needs PlayerMayAction.
-2. **Dependent target announcement context.** Gauntlets of Chaos needs earlier
+1. **Dependent target announcement context.** Gauntlets of Chaos needs earlier
    target choices in every acquisition and legality query. Resolving comparison
    is ready; exchange-result and Aura-only source correction remain. Zero
-   immediate estimated gain.
-3. **Restricted X announcement payment.** Drain Life still needs restricted X
+   immediate estimated gain. Reassess wider target dependencies before selection.
+2. **Restricted X announcement payment.** Drain Life still needs restricted X
    and clamped actual-damage consumption; zero immediate gain, eventual one
    name / six records. Nether Shadow's source-zone contract remains deferred.
+3. **Explicit optional player action and former-host controller.** Kudzu's six
+   records now have attachment movement. Estimate one name / six records only
+   after proving its destruction-to-movement timing and captured former host.
+   This is a single-card completion; defer while useful shared work remains.
 
 ## Dependencies and source blockers
 
@@ -2875,3 +2876,186 @@ and this ledger. No RON, Go-card, generator or legacy DSL removal is included.
    additional graveyard-order, intervening-if and optional-entry contracts.
 
 This run stops after target-derived host references.
+
+
+## 2026-10-13 — REQUIRED-ATTACHMENT-MOVEMENT
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and the complete RON package
+passed before editing. The baseline loader exited 1 for unsupported collection
+records: 854 accepted / 132 rejected names, 2,196 compiled / 249 rejected records.
+Collection rejection was separate from build/test failure.
+
+The latest entry's candidate #1 was dependency-ready after the exact-host slice.
+All seven complete attachment records were read, along with Gauntlets of Chaos
+and all six Drain Life records. Targeted vocabulary inspection confirmed the
+unchanged two-argument action. Reprints count once in this comparison.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Required resolving attachment movement | Enchantment Alteration; Kudzu | 1 name / 1 record | Alteration's nested Aura target, host reference and shared-type collection already lower. Kudzu still needs PlayerMayAction and exact former-host controller/timing evidence. Shared movement serves both cards, seven records, Aura/Equipment/Fortification actions and delayed/scoped consumers. | Medium: one reusable engine action, AST adapter, native and RON gameplay tests |
+| Dependent target announcement | Gauntlets of Chaos | 0 now; eventual 1 name / 1 record | Its complete second target depends on Ref_TargetPermanent1 during acquisition and legality. Exchange outcomes and the missing Aura-only attachment restriction remain. Enables constrained later-target declarations beyond resolving comparisons. | Medium/large: target acquisition/query/copy integration and legality tests |
+| Restricted X announcement payment | Drain Life | 0 now; eventual 1 name / 6 records | Complete CastEffect restricts X to black mana; nested GainLife still needs clamped actual damage. Enables the restricted-X solver contract for subsequent damage consumers. | Medium: announcement solver metadata, transactional payments and result tests |
+
+Selection: candidate #1 offers the largest credible immediate gain and a concrete
+second-card dependency. No engine or source prerequisite blocks its resolving
+shape. The source records remain unchanged. No old composable migration plan,
+Go card requirements, removed skills or Go stubs were used.
+
+### Established contract and reuse boundary
+
+Before editing, the declared acceptance contract was a required, non-targeted
+host choice at resolution with another-permanent and legal attachment checks.
+The tests cover malformed declarations, current and returned visits, phasing,
+protection, enchant restrictions, shroud/hexproof, copies, clones, real payment
+and resolution timing. Scoped/delayed consumers and timestamps complete that
+same action contract.
+
+Engine signature:
+`AttachPermanentToChoice(player PlayerRef, attachment PermanentRef, hosts PermanentSet) ResolvingEffect`.
+It saves the attachment visit, uses the shared `ChoosePermanent` service with a
+typed legal-host set, rechecks both visits, membership and legality, then calls
+`Game.Attach`. A private per-instance host binding uses existing resolution maps.
+No legal host makes no move; nil/invalid answers use required-choice fallback.
+Both objects must be present and unphased. Return cannot substitute either visit;
+a complete phase cycle preserves identity. The Aura's controller determines its
+enchant limits; the explicit player determines who chooses. Movement keeps
+ownership/control, removes the former host link, adds the new link, applies
+static effects, updates attachment timestamps and uses the shared attach event.
+
+RON signature:
+`AttachPermanentToAPermanent(attachmentRef, hostCollection)` with exactly two
+positional arguments. The first uses `compilePermanentRef`; the second uses
+`compileContextualCollection`, including nested shared-card-type comparisons.
+Ordinary resolving sequences, direct `PlayerActions` and delayed action bodies
+are supported. Entry/draw-replacement bodies, incompatible/unbound operands,
+malformed lists and escaped `TheChosenPermanent` results reject during compile.
+Waiting queries retain explicit typed source reads without choices or filters.
+
+Dependencies/reuse: exact source/target/choice visits, `HostOfPermanent`,
+`PermanentsSharingCardTypes`, shared collection composition, legal target frames,
+`ChoosePermanent`, enchant controller checks, protection, `Game.canAttach`,
+`Game.Attach`, attachment retimestamps, delayed capture and copied/cloned frames.
+RON owns spelling, shape and scope. Mage owns decisions, identity, legality,
+links and layers. No parallel zone/layer/replacement service, game-time declaration
+panic, global action result, card-name branch or partial registry was introduced.
+
+### Failing-first evidence and card-to-test mappings
+
+The native tests first failed to compile for the missing engine signature.
+Fixture-only references to core enums were corrected, and the expected
+constructor-only failure was confirmed before engine implementation. Every real
+Alteration gameplay scenario then failed with unsupported AttachPermanentToAPermanent
+before AST lowering. The direct scoped-player test separately failed with
+unsupported scoped player action before adding its dispatch entry.
+
+Initial gameplay fixtures needed a non-creature-only Aura for land movement.
+Native creature-Aura tests use the actual type layer, rather than modifying a
+printed card after entry. A delayed chooser fixture was corrected to give the
+Aura to its intended chooser. No acceptance behavior was removed.
+
+- **Enchantment Alteration → TestRONAttachmentMoveAlteration**: complete unchanged
+  LEG record, real casting/payment, invalid and unpaid rollback, resolution-time
+  choice, creature/land/creature-land matching, no destination, current Aura
+  enchant-control limits, protection, shroud/hexproof hosts, illegal shrouded
+  target, returned target, source/host phasing, phase cycles, changed attachment,
+  copied spells, independently retargeted host comparisons and cloned games.
+- **Kudzu → TestRONAttachmentMoveKudzuPrerequisite**: exact unchanged nested
+  movement action in LEA/LEB/2ED/3ED/CED/CEI. Each complete record still rejects
+  PlayerMayAction. This is partial prerequisite evidence, not full-card coverage.
+- `TestAttachmentMove`: required choice, nil/invalid fallback, legal candidates,
+  control/ownership and both links, protection/enchant limits, creature Aura,
+  old/returned/phased source and host visits, phase cycles, and visit/legality
+  changes during the decision.
+- `TestAttachmentMoveDeclarations`: nil player/reference/set and unbound
+  references reject; valid source declaration passes engine validation.
+- `TestAttachmentMoveKindsAndTimestamp`: Equipment, Fortification, ordinary
+  nonattachment, Aura static subject changes and shared timestamp order.
+- `TestAttachmentMoveWaiting`: explicit source retention, no filter/choice/state
+  execution and RNG purity during waiting queries.
+- `TestRONAttachmentMoveScopesAndDelay`: two fresh factory instances, scoped
+  saved chooser, delayed exact targets, returned/phased visits, phase cycles
+  and independent cloned resolution frames.
+- `TestRONAttachmentMovePlayerScope`: direct explicit chooser differs from the
+  spell controller and performs the required choice at resolution.
+- `TestRONAttachmentMoveInvalid`: arity/kind, incompatible and unbound operands,
+  empty filter conjunction, entry/replacement boundary and private result escape.
+- Existing `TestRONTargetHostRepositoryComparison` now asserts complete record
+  compilation and retains its expression gameplay check. Type-comparison invalid
+  tests retain Gauntlets' blocker; Alteration now has complete acceptance tests.
+  Four inventory/definition count expectations were advanced by exactly one record.
+
+### Rules, source and removal boundaries
+
+Local authoritative `data/LEG.json` states: “Attach target Aura attached to a
+creature or land to another permanent of that type.” CR 303.4e/j and 701.3a–c
+support controller separation, illegal-attachment no-op and timestamps. Existing
+exact visit, target legality and phasing services retain their contracts.
+
+No source defect was found in the selected action and no RON source changed.
+Vocabulary source hashes and syntax remain unchanged, so no snapshot refresh is
+needed. Gauntlets' Aura-only collection defect stays explicit. Kudzu's optional
+former-host player and destruction/movement lifecycle remain separate blockers.
+No environment failure blocked implementation. No Go card, generator or legacy
+DSL function was removed: full collection, cutover and removal gates remain open.
+API and rules-contract docs were updated only for established movement behavior
+and obsolete Alteration blocker claims.
+
+### Verification and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONAttachmentMove -count=1` passed.
+- Native `go test ./pkg/mage -run 'TestAttachmentMove|TestMayAttach|TestPermanentHost' -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's additional `go test ./... -short -count=1` passed.
+- Initial `make lint` found one prealloc issue in a two-instance test fixture.
+  Its slice now reserves capacity two. Native focused tests and RON focused
+  tests, including target-host and type-comparison regressions, passed again.
+  Final `make lint` passed with **0 issues**. Automatic formatting changed only
+  import grouping in new test files; no unrelated edits or semantic modernizer
+  changes occurred. The complete slice diff was reviewed.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected for the remaining
+  unsupported collection. Its complete JSON equals the post-implementation
+  measurement. Comparing with the fresh baseline removes only Alteration's
+  LEG:75:286 attachment-action diagnostic; no issue was added or changed.
+
+Estimated and actual gains match: **one full-card name / one record**. Final
+counts are **855 accepted / 131 rejected names**, **2,197 compiled / 248 rejected
+records** out of 986 names / 2,445 records. Full-card gameplay coverage increases
+by one unique card, Enchantment Alteration. Kudzu's six movement-expression tests
+establish a prerequisite only. Every previously accepted record remains accepted;
+the accepted-definition rebuild audit and full suite pass. The strict loader
+continues to reject the collection without publishing a partial registry.
+
+Representative remaining diagnostics: Kudzu at 2ED:137:306 rejects PlayerMayAction;
+Gauntlets at LEG:95:416 requires one positional filter argument; Drain Life at
+2ED:68:163 rejects SpendOnlyColorManaOnX. No environmental or pre-existing check
+failure remains. Runtime loading, complete gameplay, Go-card deletion and unused
+DSL removal are still incomplete.
+
+Changed files: new `pkg/mage/attachment_move.go` and native tests; new
+`pkg/mage/dsl/ron/attachment_move.go` and RON tests; RON `compiler.go` and
+`player_actions.go`; definition, inventory and numeric-consumer count fixtures;
+prior type-comparison and target-host tests; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+No RON source, Go card, generator or legacy DSL removal is included.
+
+### Ranked next candidates
+
+1. **Dependent target announcement context — Gauntlets of Chaos.** Earlier target
+   bindings must be available to later target acquisition, legality, copies and
+   pure queries. Zero immediate unlocks until exchange outcomes and the Aura-only
+   source correction finish; medium/large effort. Reassess shared target value.
+2. **Restricted X announcement payment — Drain Life.** Zero immediate unlocks
+   until clamped damage-result consumption also works; eventual one name / six
+   records. Medium effort. Source-zone Nether Shadow remains a larger procedure.
+3. **Explicit optional player action and former-host controller — Kudzu.** The
+   exact movement expression is ready. One name / six records is contingent on
+   optional-choice ownership, retained former-host facts and destruction-to-move
+   timing. Medium effort; defer single-card completion while shared work remains.
+
+This run stops after required attachment movement.

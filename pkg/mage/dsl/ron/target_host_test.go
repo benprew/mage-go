@@ -163,8 +163,8 @@ func TestRONTargetHostRepositoryComparison(t *testing.T) {
 	if comparison.Name == "" {
 		t.Fatal("missing repository comparison")
 	}
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "AttachPermanentToAPermanent") {
-		t.Fatalf("full-card attachment blocker changed: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("full attachment record rejected: %v", err)
 	}
 	targetPlan := &permanentTargetPlan{name: "Ref_TargetPermanent"}
 	build, err := compilePermanentTypeComparison(comparison, scope{spellTargets: true, permanentTarget: targetPlan, targetHost: targetPlan})
