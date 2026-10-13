@@ -78,6 +78,7 @@ type scope struct {
 	player            playerReferencePlan
 	playerTarget      *playerTargetPlan
 	permanentTarget   *permanentTargetPlan
+	targetHost        *permanentTargetPlan
 	permanentGroups   map[string]*permanentTargetPlan
 	permanentTargets  *permanentTargetsPlan
 	spellTarget       *spellTargetPlan
@@ -944,6 +945,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		}
 		if binding == "Ref_TargetPermanent" {
 			ctx.permanentTarget = &permanentTargetPlan{name: binding}
+			if ctx.spellTargets && !ctx.permanent && !ctx.activation && targetRequiresAura(targets[0].Args[0]) {
+				ctx.targetHost = ctx.permanentTarget
+			}
 		}
 		if binding == "Ref_TargetPermanents" {
 			filter := targets[0].Args[len(targets[0].Args)-1]

@@ -14303,3 +14303,31 @@ exchange outcome and Aura-only source correction remain for Gauntlets; attachmen
 movement and a target-derived host reference remain for Enchantment Alteration.
 `Resolution`, `TargetsAndHost`, `TargetLegality`, `DelayedChoice` and `Invalid`
 cover synthetic complete RON gameplay and supported declaration boundaries.
+
+
+## RON target-derived host references
+
+In a resolving `SpellActions(Targeted([TargetPermanent(filter)], body))`,
+`HostPermanent` can read the singular target's attachment host when the filter
+requires `IsEnchantmentType(Aura)`, directly or through nested `And` lists.
+Disjunctions do not establish this scope. Numbered/plural/mixed target groups,
+activated or triggered target declarations, entry and replacement operations
+do not infer this host. Existing Aura source bodies retain their source host.
+
+The compiler builds `HostOfPermanent(targetBinding)` with the target and body
+for each factory instance. The host is read at execution, rather than at target
+selection. Changing attachment changes the read. Shared target legality clears
+illegal reads; an all-illegal spell does not resolve. Legal captured references
+can retain an attachment after a preceding resolving action moves that target.
+Delayed bodies retain those frames, including exact departure and host LKI.
+Copies with new targets read their own targets' hosts; clones retain separate
+game state. No source spell is treated as an attachment.
+
+`TestRONTargetHostGameplay`, `Instances`, `DepartureAndDelay` and `Invalid` cover
+real RON casting, payment rollback, legality, attachment changes, phasing,
+returned visits, delayed LKI, copies, retargeting, cloning and lexical rejection.
+`RepositoryComparison` maps Enchantment Alteration's exact nested type
+comparison to the typed target host. Its complete unchanged record still
+rejects `AttachPermanentToAPermanent`; this mapping proves a prerequisite,
+not full-card gameplay. The attachment action must separately enforce another
+permanent, type matching and attachment legality.

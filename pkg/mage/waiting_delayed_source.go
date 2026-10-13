@@ -391,6 +391,9 @@ func (e *removeAllCountersEffect) refersToSourcePermanent() bool {
 }
 
 func permanentRefReadsSourcePermanent(ref PermanentRef) bool {
+	if host, ok := ref.(permanentHostRef); ok {
+		return permanentRefReadsSourcePermanent(host.attachment)
+	}
 	if choice, ok := ref.(playerChosenPermanentRef); ok {
 		return playerRefReadsSourcePermanent(choice.player)
 	}

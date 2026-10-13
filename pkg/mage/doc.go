@@ -1,5 +1,12 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [HostOfPermanent] reads the host of an exact attachment visit.
+// Current attachments use their current host. Departed attachments keep their
+// last host. Return cannot replace either visit. Information reads can use host
+// LKI; actions need a present, unphased host. RON binds HostPermanent in resolving
+// spell bodies with one singular Aura target. Aura source bodies keep their
+// existing source-host read. Attachment movement needs a separate adapter.
+//
 // [PermanentsSharingCardTypes] selects present subjects with a shared card type.
 // The reference reads current or exact departure and phase information.
 // Return cannot replace the saved visit. With no type list, all types can match.

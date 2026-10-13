@@ -18771,3 +18771,31 @@ Evidence: `TestPermanentTypeComparison`, `Declarations`, `SavedAndWaiting` and
 `TestRONPermanentTypeComparison*`. These tests establish the resolving service.
 Dependent announcement targets, attachment movement, static declarations, entry
 operations and replacement bodies require separate adapters.
+
+
+## Exact attachment host references
+
+`HostOfPermanent(attachment PermanentRef) PermanentRef` reads the host of an
+exact information-capable attachment reference: source, singular target, saved
+permanent or another information reference. Definition validation rejects nil,
+undeclared targets and unbound saved references. The constructor stores no
+game state. The host uses the existing current attachment incarnation and
+`departedAttachments` records. `AttachedPermanent` shares its information
+identity implementation and retains its existing action behavior.
+
+A present attachment reads its current host. Detachment clears that read; a
+host departure detaches a still-present Equipment. A departed attachment reads
+its last saved host. Returning either object cannot replace the saved visit.
+Information consumers can read that host's exact departure or phase LKI;
+action and damage-recipient consumers require the exact present, unphased host.
+Control changes do not change attachment identity (CR 303.4b/e, 400.7, 608.2h,
+702.26). Target consumers use only legal target bindings (CR 608.2b).
+
+Per-instance target bindings and shared delayed frames, stack copies,
+retargeting and game cloning preserve separate reads. Waiting comparison
+queries traverse the attachment operand for explicit source reads without
+executing the comparison or making choices. This API creates no attachment,
+replacement, payment or simultaneous-operation service.
+
+Evidence: `TestPermanentHost`, `Declarations`, `ReferencesAndWaiting`, the
+existing `TestPermanentInformation*` regressions and `TestRONTargetHost*`.

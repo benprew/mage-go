@@ -8,32 +8,32 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **854 accepted / 132 rejected names**
 (986 total), **2,196 compiled / 249 rejected records** (2,445 total).
-The latest slice adds resolving permanent card-type comparison as a shared
-prerequisite for Gauntlets of Chaos and Enchantment Alteration. Both complete
-records still reject. The strict loader rejects the collection and publishes
-no partial registry.
+The latest slice adds target-derived host references as a prerequisite for
+Enchantment Alteration. Its complete record still rejects attachment movement.
+The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **RESOLVING-PERMANENT-TYPE-COMPARISON**. Both comparison
-spellings lower resolving collections to typed current-or-LKI engine selection.
+The latest slice is **TARGET-DERIVED-HOST-REFERENCE**. A resolving spell body
+with one singular Aura target binds HostPermanent to that target's exact host.
 Estimated and actual gains are zero names / zero records. Dependent target
-context remains separate. Runtime cutover, Go-card removal and DSL cleanup
-gates remain open.
+announcement and attachment movement remain separate. Runtime cutover,
+Go-card removal and DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Dependent target context and target-derived host references.** Resolving
-   type comparison is complete. Gauntlets of Chaos still needs earlier target
-   choices in announcement queries; Enchantment Alteration needs the target's
-   host. Immediate gains remain zero until outcomes and attachment actions finish.
-2. **Shared announcement mana restrictions and clamped outcomes: Drain Life.**
-   Saved damage results exist; restricted X payment and clamping remain.
-   Compare other mana-payment contexts before selecting a bounded prerequisite.
-3. **Graveyard-source trigger arming: Nether Shadow.**
-   Six reprints share one definition. Graveyard-order intervening-if, exact visits
-   and optional entry remain; compare shared zone-source event work first.
+1. **Shared attachment movement.** Enchantment Alteration and Kudzu use the
+   same two-argument action (seven records). Alteration's target-derived host
+   is ready; estimate one name / one record after complete attachment and
+   another-permanent legality evidence. Kudzu still needs PlayerMayAction.
+2. **Dependent target announcement context.** Gauntlets of Chaos needs earlier
+   target choices in every acquisition and legality query. Resolving comparison
+   is ready; exchange-result and Aura-only source correction remain. Zero
+   immediate estimated gain.
+3. **Restricted X announcement payment.** Drain Life still needs restricted X
+   and clamped actual-damage consumption; zero immediate gain, eventual one
+   name / six records. Nether Shadow's source-zone contract remains deferred.
 
 ## Dependencies and source blockers
 
@@ -2697,3 +2697,181 @@ gameplay, embedded loading, application cutover, Go-card deletion and DSL cleanu
    six records. Keep event arming separate from incomplete source-zone execution.
 
 This run stops after resolving permanent card-type comparison.
+
+
+## 2026-10-13 — TARGET-DERIVED-HOST-REFERENCE
+
+### Fresh evidence and candidate selection
+
+The starting tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline strict loader exited
+1 with 854 accepted / 132 rejected names and 2,196 compiled / 249 rejected
+records. Collection rejection was not a build or test failure.
+
+The latest ranking was evaluated first. Complete records were read for
+Gauntlets of Chaos, Enchantment Alteration, Drain Life and Nether Shadow;
+reprints count once. Targeted vocabulary signatures confirm one unrestricted
+host comparison, one restricted dependent-target comparison, six restricted-X
+records and six graveyard-source records.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream work | Effort |
+| --- | --- | --- | --- | --- |
+| Dependent targets / target-derived host (rank 1) | Gauntlets of Chaos; Enchantment Alteration | 0 names / 0 records | Gauntlets needs announcement frames, exchange outcomes and Aura-only data correction. Alteration needs attachment movement. Resolving comparisons are ready. | Medium to large for full announcement acquisition; small for the bounded exact-host reference prerequisite. |
+| Restricted X announcement mana (rank 2) | Drain Life | 0 now; eventual 1 name / 6 records | Color-restricted X payment and clamped actual-damage consumer remain. Existing damage outcomes are ready. No other complete source record uses this restriction. | Medium; mana planning, announcement legality and rollback evidence. |
+| Graveyard-source arming (rank 3) | Nether Shadow | 0 now; eventual 1 name / 6 records | Exact graveyard visits, ordered creature count, intervening-if, optional entry and source-zone lifecycle remain. | Large for complete execution; medium for arming alone. |
+
+Select the bounded target-derived host prerequisite from rank 1. This is
+required before Alteration's attachment adapter can use its exact comparison.
+The other half of rank 1, sequential dependent-target announcement, is a
+separate capability with broader acquisition and copy paths. This run does not
+claim to complete either card or that announcement capability. The single-card
+prerequisite is selected because rank 1 explicitly calls for a bounded complete
+reference prerequisite and the two alternatives also have zero immediate gain
+with larger contracts. No useful multi-card full-card gain was established for
+these three candidates.
+
+Before editing, the contract was resolving HostPermanent in a spell with one
+explicit singular Aura target, with exact binding, current attachment reads,
+legality, LKI, phasing, copies, cloning and declaration rejection. RON owns
+spelling and scope; the engine owns exact attachment and host information.
+
+### Exact API, contexts and reuse boundary
+
+New reusable API: `HostOfPermanent(attachment PermanentRef) PermanentRef`.
+It accepts information-capable typed references and retains no game state.
+Definition validation follows its attachment operand and rejects nil,
+undeclared target and unbound saved references. Existing `AttachedPermanent`
+shares its information identity implementation; its action behavior is retained.
+
+RON accepts the symbol `HostPermanent` in resolving
+`SpellActions(Targeted([TargetPermanent(filter)], body))` on a nonpermanent
+spell when `filter` requires `IsEnchantmentType(Aura)` directly or through
+nested conjunctions. Each fresh factory builds the target and host consumer
+with the same instance binding. Existing Aura source scope retains precedence.
+Disjunctive Aura alternatives, ambiguous numbered groups, untyped/plural targets,
+activated and triggered declarations, entry and replacement contexts do not
+infer a target host. Tuple spelling of HostPermanent remains invalid.
+
+A present attachment reads its current host. Detachment clears the read.
+Departure saves the attachment's last host. Returned attachments and hosts
+cannot replace saved visits. Information consumers can read exact host LKI;
+action and damage-recipient consumers require a present, unphased host.
+Shared legal target bindings prevent reads from illegal targets. An all-illegal
+spell does not execute independent instructions. Earlier resolving departure
+and delayed bodies can retain a previously legal target's attachment facts.
+
+Reuse: `permanentInformationReference`, exact incarnation reads,
+`departedAttachments`, phase/departure information, legal target frames,
+per-instance bindings, delayed capture, copy retargeting, cloning and shared
+cost transactions. Waiting comparison traversal follows the attachment operand
+without evaluating filters or changing state. No attachment action, zone system,
+replacement pipeline, global action slot or partial registry was introduced.
+
+### Failing-first evidence and test mappings
+
+Before production changes, `TestPermanentHost*` failed to compile because
+HostOfPermanent did not exist. An initial fixture used a nonexistent detach
+method; that was corrected before confirming the constructor-only failure.
+The fixture attachment was corrected to Equipment so shared attachment legality
+applies. Before the RON adapter, every `TestRONTargetHostGameplay` scenario
+failed with an unbound HostPermanent. No acceptance condition was removed.
+
+Native current-Equipment host-departure expectations were corrected after
+observing the shared detachment behavior: a present detached attachment has no
+host. Separate departure-before-host-departure cases establish retained host
+LKI, including both returned visits. A repository AST helper typo was corrected
+without changing the required comparison.
+
+- `TestPermanentHost`: current/moved/detached attachments, attachment departure
+  and return, host departure and return, combined departure/return LKI, phasing,
+  phase cycles, unknown identities, clone reads and RNG purity.
+- `TestPermanentHostDeclarations`: nil, undeclared and unbound operands reject;
+  a declared singular target validates.
+- `TestPermanentHostReferencesAndWaiting`: target/source/saved operands and
+  pure waiting comparison traversal without filter execution.
+- `TestRONTargetHostGameplay`: complete synthetic RON spells, real casting and
+  mana payment, invalid/unpaid rollback, resolution timing, current attachment,
+  shroud, returned targets, target/host phasing, phase cycles, copies, retargeting
+  and cloned pending spells.
+- `TestRONTargetHostInstances`: two fresh factory instances keep their own
+  target hosts through separate resolutions.
+- `TestRONTargetHostDepartureAndDelay`: legal target departure during resolution,
+  delayed exact attachment/host LKI, returned visits and cloned saved frames.
+- **Enchantment Alteration → TestRONTargetHostRepositoryComparison**: its exact
+  unchanged nested comparison runs through a typed target host in an explicit
+  fixture. Complete record rejection on AttachPermanentToAPermanent is retained.
+  This is partial prerequisite evidence, not full-card coverage.
+- `TestRONTargetHostInvalid`: absent/ambiguous/non-Aura hosts, disjunctions,
+  symbol/tuple mismatch, activated/triggered and entry/replacement boundaries.
+- Existing `TestPermanentInformation*` regressions preserve source attachment
+  information after implementation reuse.
+
+### Rules, data and removal boundaries
+
+Local authoritative `data/LEG.json` requires Alteration to attach a target Aura
+attached to a creature or land to another permanent of that type. CR 303.4b/e,
+400.7, 608.2b/h and the existing phasing contract support the exact-host read.
+The future attachment adapter must independently enforce another permanent,
+matching types and attachment legality. This slice makes no source correction.
+Gauntlets' missing Aura-only destruction restriction and its exchange-result
+blocker remain. No RON source changed, so no vocabulary refresh is needed.
+
+No Go cards, generator or DSL functions are removed. Complete collection
+execution, gameplay, native startup, cutover and caller-audit gates remain open.
+API and rules-contract docs describe only the new reference behavior.
+
+### Validation and measured gain
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONTargetHost -count=1` passed.
+- `go test ./pkg/mage -run 'TestPermanentHost|TestPermanentInformation' -count=1`
+  passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's additional `go test ./... -short -count=1` passed.
+- Initial `make lint` rejected a test-local variable named copy because it
+  shadowed a builtin. It was renamed to copied; affected focused native and
+  RON tests passed again. Final `make lint` passed with **0 issues**.
+  Automatic formatting was reviewed; only new-file formatting changed and
+  there were no unrelated edits or semantic modernizer changes.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected. Its complete
+  JSON equals the fresh baseline, including every issue, position and count.
+
+Estimated and actual full-card gain: **zero names / zero records**. Eight new
+top-level native/RON tests establish reference and gameplay contracts, including
+one partial inventory-card mapping. Full-card gameplay coverage does not
+increase. Final counts remain **854 accepted / 132 rejected names**,
+**2,196 compiled / 249 rejected records** out of 986 names / 2,445 records.
+Alteration still reports LEG:75:286, unsupported AttachPermanentToAPermanent;
+Gauntlets still reports LEG:95:416, expected one positional filter argument.
+No accepted record regressed. No environment or pre-existing check failure
+blocked this slice.
+
+Changed files: `pkg/mage/permanent_host.go` and its native test;
+`pkg/mage/dsl/ron/target_host.go` and its RON test; `compiler.go`,
+`permanent_scope.go`, `composable_information.go`, `waiting_delayed_source.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. No RON, Go-card, generator or legacy DSL removal is included.
+
+### Ranked next candidates
+
+1. **Shared attachment movement — Enchantment Alteration and Kudzu.** The
+   vocabulary and all seven complete records show the same two-argument
+   AttachPermanentToAPermanent action. Alteration now has its host comparison
+   prerequisite. Estimate one immediate full-card name / one record, contingent
+   on exact required choice, another-permanent and attachment legality evidence.
+   Kudzu still needs PlayerMayAction and its saved former-host controller. This
+   shared action can enable two unique cards; medium implementation/test effort.
+2. **Dependent target announcement — Gauntlets of Chaos.** Lower its restricted
+   comparison against the preceding numbered target with complete acquisition,
+   query, resolution legality and copy contracts. Zero immediate gain until
+   exchange outcomes and the Aura-only source correction finish; medium to large
+   effort. Keep it separate from this completed resolving-host reference.
+3. **Restricted X announcement mana — Drain Life.** Zero immediate gain until
+   clamped actual-damage consumption also works; eventual one name / six records.
+   Medium effort. Nether Shadow remains a larger source-zone capability with
+   additional graveyard-order, intervening-if and optional-entry contracts.
+
+This run stops after target-derived host references.

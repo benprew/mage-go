@@ -28,16 +28,7 @@ func (sourceRef) informationIdentity(ctx *EffectContext) (capturedPermanent, boo
 }
 
 func (attachedPermanentRef) informationIdentity(ctx *EffectContext) (capturedPermanent, bool) {
-	source, ok := This.informationIdentity(ctx)
-	if !ok {
-		return capturedPermanent{}, false
-	}
-	if p := ctx.Game.FindPermanentIncludingPhased(source.id); p != nil && p.incarnationID == source.incarnation {
-		host := capturedPermanent{p.AttachedTo, p.attachedIncarnation}
-		return host, host.id != uuid.Nil && host.incarnation != uuid.Nil
-	}
-	host, ok := ctx.Game.zones.departedAttachments[source.incarnation]
-	return host, ok
+	return permanentHostRef{This}.informationIdentity(ctx)
 }
 
 func readPermanentInformation(subject PermanentRef, ctx *EffectContext) (*Permanent, *PermanentLKI) {

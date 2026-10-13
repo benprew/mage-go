@@ -11,6 +11,7 @@ type permanentReferenceKind uint8
 const (
 	permanentSource permanentReferenceKind = iota
 	permanentHost
+	permanentTargetHost
 	permanentTarget
 	permanentEvent
 	permanentDeath
@@ -83,6 +84,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			if ctx.aura {
 				return permanentReferencePlan{kind: permanentHost}, nil
 			}
+			if ctx.targetHost != nil && !ctx.enteringSource && !ctx.drawReplacementBody {
+				return permanentReferencePlan{kind: permanentTargetHost, target: ctx.targetHost}, nil
+			}
 		case "Trigger_ThatPermanent":
 			if ctx.delayedDeath != nil {
 				return permanentReferencePlan{kind: permanentDeath, death: ctx.delayedDeath}, nil
@@ -114,6 +118,8 @@ func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentR
 		return mage.This
 	case permanentHost:
 		return mage.AttachedPermanent
+	case permanentTargetHost:
+		return mage.HostOfPermanent(bindings.permanents[p.target])
 	case permanentEvent:
 		return mage.From(bindings.tapped[p.event])
 	case permanentDeath:
