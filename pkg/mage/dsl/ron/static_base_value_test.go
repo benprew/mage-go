@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"os"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -14,21 +13,7 @@ import (
 
 func staticBaseRecord(t *testing.T, set, name string) Node {
 	t.Helper()
-	data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	nodes, err := Parse(strings.NewReader(string(data)), set+".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, n := range nodes {
-		if n.Fields["Name"].String == name {
-			return n
-		}
-	}
-	t.Fatal("missing record", name)
-	return Node{}
+	return repositoryRecord(t, set, name, set+".lines.ron")
 }
 
 // Test fixtures keep exact subrules because the complete cards still have gaps.

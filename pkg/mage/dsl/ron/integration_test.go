@@ -1,7 +1,6 @@
 package ron
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -13,25 +12,12 @@ import (
 
 func repositoryCard(t *testing.T, set, name string) mage.Card {
 	t.Helper()
-	data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
+	node := repositoryRecord(t, set, name, set+".ron")
+	factory, err := Compile(node)
 	if err != nil {
 		t.Fatal(err)
 	}
-	nodes, err := Parse(strings.NewReader(string(data)), set+".ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, node := range nodes {
-		if node.Fields["Name"].String == name {
-			factory, err := Compile(node)
-			if err != nil {
-				t.Fatal(err)
-			}
-			return factory()
-		}
-	}
-	t.Fatalf("missing card %s", name)
-	return nil
+	return factory()
 }
 
 func ronGame() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {

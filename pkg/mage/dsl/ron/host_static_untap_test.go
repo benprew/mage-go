@@ -3,7 +3,6 @@ package ron
 import (
 	"fmt"
 	"maps"
-	"os"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -16,21 +15,7 @@ import (
 
 func hostUntapRecord(t *testing.T, set, name string) Node {
 	t.Helper()
-	data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	nodes, err := Parse(strings.NewReader(string(data)), set+".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, n := range nodes {
-		if n.Fields["Name"].String == name {
-			return n
-		}
-	}
-	t.Fatal("missing record", name)
-	return Node{}
+	return repositoryRecord(t, set, name, set+".lines.ron")
 }
 
 func hostUntapClause(t *testing.T, set, name string) mage.Card {

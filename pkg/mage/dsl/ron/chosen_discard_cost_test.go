@@ -2,7 +2,6 @@ package ron
 
 import (
 	"maps"
-	"os"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -36,21 +35,7 @@ func (p *ronChosenCostPlayer) ChooseCardsFromHand(n int, _ string, _ mage.GameRe
 
 func chosenDiscardRecord(t *testing.T, set, name string) Node {
 	t.Helper()
-	data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	nodes, err := Parse(strings.NewReader(string(data)), set+".ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, node := range nodes {
-		if node.Fields["Name"].String == name {
-			return node
-		}
-	}
-	t.Fatal("missing record", name)
-	return Node{}
+	return repositoryRecord(t, set, name, set+".ron")
 }
 
 func TestRONChosenDiscardCostArmorerClause(t *testing.T) {
