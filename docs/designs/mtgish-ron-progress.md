@@ -6,37 +6,37 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **855 accepted / 131 rejected names**
-(986 total), **2,197 compiled / 248 rejected records** (2,445 total).
-The latest slice supplies typed announced X for entry counters. Rock Hydra's
-six entry rules have casting, resolution and counter gameplay evidence.
-Complete-card coverage is unchanged; Hydra now rejects static prevention.
-The strict loader rejects the collection and publishes no partial registry.
+Latest measured result (2026-10-13): **856 accepted / 130 rejected names**
+(986 total), **2,198 compiled / 247 rejected records** (2,445 total).
+The latest slice supplies typed saved control-exchange outcomes. Gauntlets of
+Chaos executes its complete RON record with an Oracle-supported Aura-only filter.
+Estimated and actual gains are one unique name / one record. The strict loader
+still rejects the collection and publishes no partial registry.
 
-The latest slice is **ENTRY-ANNOUNCED-X**. Permanent spell entry reads its own
-stack object's X; direct entry supplies zero. Copies retain X; acquired entry
-copy rules, clones, phasing, return and replacement order have contract tests.
-Estimated and actual gains are zero names / zero records. This completes the
-shared entry-X prerequisite for Rock Hydra and Frankenstein's Monster.
-Entry payments, prevention and counter distribution remain. Runtime cutover,
-Go-card removal and unused DSL cleanup gates remain open.
+The latest slice is **CONTROL-EXCHANGE-RESULT**. The latest local ExchangeControl
+supplies If(PermanentsChangedControlThisWay). Failures clear prior success;
+branches, copies, clones, factory instances and delayed reads retain separate
+frames. Atomic exchange and destruction reuse existing engine services.
+Hydra/Rasputin's finite self-recipient source defect remains open; its corrected
+recipient form already has compiler and engine support. Monster's entry payments
+and counter distribution remain. Runtime cutover, Go-card removal and unused
+DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Finite self-recipient prevention.** Rock Hydra and Rasputin Dreamweaver
-   share the shape. Audit the `ByPermanent` spelling against local Oracle text
-   before lowering it. Zero immediate gain: Hydra also needs static
-   counter-removal prevention; Rasputin needs turn-start history and a counter cap.
+1. **Static per-point counter-removal prevention.** Rock Hydra has entry X.
+   Combine the exact prevention contract with the Oracle-supported finite
+   self-recipient correction for all identical Hydra reprints. Potential gain:
+   one name / six records. Recheck the complete upkeep/counter ability too.
 2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
-   now has integer storage and entry X. Payment/result/combination-counter and
-   failed-entry contracts remain; zero immediate gain for this prerequisite.
-3. **Exchange outcomes and Aura-only correction.** Gauntlets of Chaos has exact
-   targets and exchange. Estimated one name / one record after a local successful
-   result and the Oracle-supported source correction. Drain Life's restricted
-   casting X and clamped damage remain separate later candidates.
+   needs the shared typed entry transaction before distribution and failed entry.
+   Zero immediate gain; one DRK record's concrete prerequisite.
+3. **Restricted casting X payment.** Drain Life's six reprints require black-only
+   X payment. Estimated zero immediate gain: clamped actual damage life gain is
+   a separate blocker. Preserve normal casting mana for the other cost symbols.
 
 ## Dependencies and source blockers
 
@@ -53,10 +53,9 @@ Reassess these candidates with fresh loader and complete-record evidence under
   retain their existing service and use the same selection helper.
 - Reuse player-keyed permanent choices, APNAP choice groups and atomic control
   exchange where applicable. Juxtapose's APNAP source correction is complete.
-- Gauntlets of Chaos has an open source defect at `cards/mtgish/LEG.lines.ron:95`:
-  its attachment collection lacks Oracle's Aura-only restriction. Existing
-  attachment collections can include Equipment. Preserve this defect explicitly
-  when assessing its target and exchange-result prerequisites.
+- Gauntlets of Chaos's Aura-only source defect at `cards/mtgish/LEG.lines.ron:95`
+  is resolved by CONTROL-EXCHANGE-RESULT. The complete record now compiles and
+  has RON gameplay evidence; attached Equipment is retained.
 - Consult the completed archive for earlier source defects and capability limits
   when selecting other cards; historical next-step rankings are not current
   priorities.
@@ -3554,3 +3553,186 @@ RON `entry_tapped.go`, `entry_counters_test.go` and new `entry_announced_x_test.
    damage remain separate later candidates.
 
 This run stops after announced X at entry.
+
+
+## 2026-10-13 — CONTROL-EXCHANGE-RESULT
+
+### Candidate comparison and selection
+
+The working tree was clean. Native environment: Go 1.27.2 on Darwin/arm64.
+Fresh baseline `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+The baseline strict loader exited 1 for unsupported collection records, not a
+build failure: 855 accepted / 131 rejected names; 2,197 compiled / 248 rejected
+records, out of 986 names / 2,445 records. Complete RON records and nested forms
+were inspected for all compared names; reprints were counted once.
+
+| Candidate from the previous ranking | Distinct affected names | Estimated full-card gains | Remaining blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Finite self-recipient prevention | Rock Hydra; Rasputin Dreamweaver | 0 names / 0 records | Local LEA/LEG Oracle data says damage **to** the source, while all seven RON records say `ByPermanent`. The exact corrected `ToRecipient(Integer(1), Permanent(ThisPermanent))` form already has AST lowering through `compileFinitePrevention`, typed `PreventNextDamage` and shared shields. Hydra still needs static per-point counter-removal prevention; Rasputin needs turn-start history and a permanent counter cap. Two-name benefit from data correction and gameplay evidence, but no missing compiler/engine capability for this candidate. | Small data/coverage task; it is not a new execution slice. Static Hydra prevention is a separate small/medium engine slice. |
+| Mandatory announced-X entry exile payment | Frankenstein's Monster | 0 names / 0 records | Integer counts and entry X are ready. A typed mandatory graveyard-exile entry transaction would enable one DRK record's later counter-choice distribution and failed-entry continuation. Both later forms still block the full card. | Medium; transaction, replacement, identity and entry-order tests are needed. |
+| Saved exchange outcomes and Aura-only source correction | Gauntlets of Chaos | 1 name / 1 record | Exact dependent targets, shared atomic exchange, contextual attachment sets and destruction are ready. The missing result consumer and documented Aura-only defect are its only remaining blockers. A typed historical result supports ordinary resolving sequences and delayed continuations for future exchange consumers. | Small/medium; completes in this run. |
+
+Candidate #1 was evaluated first. Its Oracle-correct shape is already implemented;
+adding a second adapter or assigning recipient meaning to `ByPermanent` would
+be unnecessary or incorrect. No new shared capability was available in that
+candidate. It remains a source/coverage task and was not combined with this run.
+Candidate #3 has the largest credible complete-card gain among these three for
+its effort. This run implements only the missing exchange-result capability and
+its dependent, Oracle-supported Gauntlets filter correction. The selection,
+reuse boundary and acceptance cases were stated before implementation.
+
+### Exact contract and reuse boundary
+
+Engine APIs:
+
+```go
+func BindControlExchangeResult(name string) *ControlExchangeResultBinding
+func ExchangePermanentControlInto(first, second PermanentRef, result *ControlExchangeResultBinding) ResolvingEffect
+func IfControlExchanged(result *ControlExchangeResultBinding, body ResolvingEffect) ResolvingEffect
+```
+
+The producer saves success or failure on every call. It calls the existing
+`Game.ExchangeControl` service; atomic layer 2 application, current controller
+snapshots, control prohibitions, source-independent duration and continuous
+control history keep their existing contracts. Both exact visits must be
+present and unphased. Same subjects/controllers, prohibited control changes,
+departure or return save failure. Failure clears prior success. LKI cannot
+supply an absent action subject. The result is historical and does not reread
+later controllers. The result-free `ExchangePermanentControl` API is preserved.
+
+The public typed result wraps a private number binding in the existing shared
+resolution frame. It does not add another frame map or global last-action slot.
+Definition inspection checks producer dominance and nil declarations. Producer
+references and conditional bodies retain explicit source-read traversal.
+Copies, clones, delays and factory instances use the existing saved frame and
+exact-reference services. No new decision, payment or replacement service is
+introduced; existing cost transactions and simultaneous destruction are reused.
+
+RON spelling and lexical scope stay in `ron`. The supported consumer is exactly
+`If(PermanentsChangedControlThisWay, [actions...])`, with a symbol condition and
+a nonempty body, after the latest local two-reference `ExchangeControl` in an
+ordinary resolving sequence. Spell, activation and delayed contexts have direct
+gameplay evidence; ordinary resolving compiler paths also retain trigger and
+player/choice scopes. Branch producers cannot escape. Delayed bodies can capture
+an earlier outer result while a later producer gets a separate binding. Entry,
+replacement, static, cost and other conditional forms remain unsupported.
+
+### Source evidence and failing-first tests
+
+`data/LEG.json` Oracle text requires destruction of Auras attached to the
+exchanged permanents. The one complete `cards/mtgish/LEG.lines.ron:95` record now
+intersects `IsEnchantmentType(Aura)` with the original two attachment sets.
+A fresh collection search found no identical reprint for this name. No card-name
+engine branch, Go fallback or partial production registry was added. Hydra and
+Rasputin's `ByPermanent` source defects remain unchanged and explicit.
+
+Rules evidence: local CR 701.12a-b (all-or-nothing exchange and simultaneous
+control), 400.7 (new visits), and 702.26 (phasing). Existing attachment,
+destruction, cost, target, control-layer and delayed-frame contracts are reused.
+
+The initial native test failed to compile on the three missing APIs. The RON
+test, after an attachment fixture method correction, failed at the unsupported
+`PermanentsChangedControlThisWay` condition. After result lowering, correct
+attachment setup made the Aura-only assertion fail because the old source also
+destroyed Equipment. Only then was the RON collection corrected. A stale
+pre-clone permanent pointer and one synthetic RON parenthesis were corrected;
+assertions were retained. Four exact inventory/count assertions then exposed
+the expected one-record gain and were updated to 2,198 / 247. No gameplay test
+was weakened.
+
+- **Gauntlets of Chaos → `TestRONControlExchangeResultGauntlets`**: full RON
+  record; mana payment and sacrifice, unpaid rollback, actions at resolution,
+  source departure through its cost, exchange success and control prohibition,
+  phasing and phase cycle, return identity, shroud, copied ability, destruction
+  of attached Auras and retention of Equipment, and independent clone outcomes.
+- **Gauntlets of Chaos → `TestRONTargetDependencyGauntletsPrerequisite`**:
+  its former prefix projection is removed. The full RON record retains all
+  earlier invalid-pair/payment rollback, dependent-type, retargeted-copy,
+  source-return, control-change, phasing, identity and clone assertions.
+- `TestRONControlExchangeResultInvalid`: unbound, premature, tuple-shaped,
+  empty-body and branch-local escaping result reads reject at compilation.
+- `TestRONControlExchangeResultContexts`: the latest failure replaces a previous
+  success, the latest success replaces failure, inner branch producers keep
+  their scope, and delayed historical reads survive another exchange, source
+  departure and independent clone resolution.
+- `TestRONControlExchangeResultCopiesAndInstances`: two copied spell resolutions
+  retain separate controllers and outcomes; a blocked clone and a later factory
+  instance cannot inherit earlier success.
+- `TestControlExchangeResult`: saved success, repeated failure clearing, equal
+  controllers, prohibited changes, phasing, phase cycle, return and identical
+  subjects. `TestControlExchangeResultDeclaration` checks valid sequencing,
+  unbound reads, nil results, nil subjects and nil bodies.
+- Prior native `TestReferencedControlExchange*` and
+  `TestExchangeControlIsAtomicAndUsesSnapshotControllers` remain in verification
+  for exact visits, waiting source queries, durations and simultaneous layers.
+  Earlier compiler prerequisite checks now expect complete Gauntlets acceptance.
+
+### Verification and measured outcome
+
+Required final checks, after the exact count updates:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONControlExchangeResult -count=1` passed.
+- Focused prior exchange, target dependency, type comparison and singular-target
+  tests passed. Focused new/prior native exchange tests passed.
+- Focused collection-definition, inventory and numeric-consumer count checks
+  passed with 2,198 accepted / 247 rejected records.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` passed.
+- Initial `make lint` reported one `prealloc` issue. The producer/continuation
+  effect list now has capacity for both. All preceding required checks and the
+  skill's repository short tests were rerun after this change and passed.
+- Final `make lint` passed with **0 issues**. Automatic formatter/fix output was
+  reviewed; no additional code changes resulted.
+- `git diff --check` passed before the final loader check and again after the
+  ledger and vocabulary updates.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected: **856 accepted /
+  130 rejected unique names**, **2,198 compiled / 247 rejected records**, out of
+  986 names / 2,445 records. The only removed diagnostic is Gauntlets' unsupported
+  `PermanentsChangedControlThisWay`. All other diagnostics match the fresh
+  baseline exactly. This is collection rejection, not a build/test failure.
+
+The vocabulary snapshot was refreshed from the actual parsed source. The LEG
+file hash changed. `And`, `Aura` and `IsEnchantmentType` gained one occurrence
+each; three example groups received updated Gauntlets positions. No new
+spelling/signature was added. The loader snapshot uses the final diagnostics.
+Its previously stored loader data predated the fresh baseline, so this refresh
+also records prior completed slices. The runtime baseline-to-final comparison
+above still has exactly one changed record: Gauntlets of Chaos.
+
+Actual gains match the estimate: **one complete name / one record**. Complete
+RON gameplay coverage now includes Gauntlets; compilation and gameplay are
+reported separately. No environmental or pre-existing failure blocks this slice.
+Strict full-collection publication, runtime cutover, Go-card removal and unused
+DSL cleanup gates remain open. No Go card definitions, public DSL functions or
+Go-set generators were removed.
+
+Changed files: `pkg/mage/control_exchange_refs.go`, new
+`control_exchange_result.go` and `control_exchange_result_test.go`, and `doc.go`;
+RON `compiler.go`, `optional_payment.go`, `player_scope.go`, new
+`control_exchange_result.go` and `control_exchange_result_test.go`, existing
+`control_exchange_test.go`, `target_dependency_test.go`,
+`permanent_type_comparison_test.go`, `singular_target_groups_test.go`,
+`definition_plan_test.go`, `inventory_test.go` and `numeric_consumers_test.go`;
+`cards/mtgish/LEG.lines.ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, vocabulary snapshot and this ledger.
+
+### Ranked next candidates
+
+1. **Static per-point counter-removal prevention — Rock Hydra.** Entry X and
+   counter services are ready. Add an exact per-one-damage static replacement
+   contract and correct finite self-recipient source data across all identical
+   reprints with the local Oracle evidence. Potential one name / six records;
+   small/medium effort after checking complete nested upkeep/counter forms.
+   Rasputin's identical finite source defect must be corrected with matching
+   source evidence, but its history and cap remain separate engine work.
+2. **Mandatory entry exile payment using announced X — Frankenstein's Monster.**
+   Integer storage and entry X are ready. Add the typed mandatory entry-payment
+   contract before combination-counter distribution and failed-entry continuation.
+   Zero immediate unlocks; one DRK record's concrete prerequisite. Medium effort.
+3. **Restricted casting X payment — Drain Life.** Black-only announced-X payment
+   must use the shared casting solver and rollback. Zero immediate unlocks across
+   six records; clamped actual damage/life gain remains. Medium effort. Compare
+   fresh shared multi-card candidates before choosing any single-card adapter.
+
+This run stops after saved exchange outcomes.

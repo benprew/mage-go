@@ -50,21 +50,6 @@ func TestRONTargetDependencyGameplay(t *testing.T) {
 
 func TestRONTargetDependencyGauntletsPrerequisite(t *testing.T) {
 	record := staticBaseRecord(t, "LEG", "Gauntlets of Chaos")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "PermanentsChangedControlThisWay") {
-		t.Fatalf("remaining blocker: %v", err)
-	}
-	rules := record.Fields["Rules"]
-	ability := rules.Args[0]
-	targeted := ability.Args[1]
-	body := targeted.Args[1]
-	actions := body.Args[0]
-	// The exchange outcome still blocks the complete record.
-	actions.Args = actions.Args[:1]
-	body.Args[0] = actions
-	targeted.Args[1] = body
-	ability.Args[1] = targeted
-	rules.Args[0] = ability
-	record.Fields["Rules"] = rules
 	f, err := Compile(record)
 	if err != nil {
 		t.Fatal(err)

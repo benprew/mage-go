@@ -13860,11 +13860,10 @@ players, collections and unbound choices reject during compilation.
 
 `mage.ExchangePermanentControl(first, second PermanentRef) ResolvingEffect`
 resolves both exact visits and calls the existing `Game.ExchangeControl` service.
-No result binding is produced. `ThePermanentChosenByPlayerThisWay` and
-`PermanentsChangedControlThisWay` remain unsupported. Juxtapose and Gauntlets of
-Chaos therefore remain rejected as complete records. `TestRONControlExchange*`
-provides prerequisite gameplay evidence, including the actual Gauntlets exchange
-AST in a supported synthetic declaration.
+The result-free API remains available. The saved-result API below supports
+`PermanentsChangedControlThisWay`; player-keyed choice history has its own
+contract. Gauntlets of Chaos now has complete-record gameplay evidence.
+`TestRONControlExchange*` also retains the original exchange prerequisite tests.
 
 ### Player-keyed permanent choices
 
@@ -14444,3 +14443,46 @@ records; the other rules still reject. `TestEntryAnnouncedX*` covers direct entr
 failed payment rollback, exact departure counters, phase cycles, return, acquired
 copy rules and separate entry payment facts. This adds entry-rule coverage, not
 complete gameplay coverage for Rock Hydra or Frankenstein's Monster.
+
+
+## Saved permanent-control exchange outcomes
+
+`BindControlExchangeResult(name string) *ControlExchangeResultBinding` declares
+one typed outcome. `ExchangePermanentControlInto(first, second PermanentRef,
+result *ControlExchangeResultBinding) ResolvingEffect` writes success or failure
+on every call. `IfControlExchanged(result *ControlExchangeResultBinding,
+body ResolvingEffect) ResolvingEffect` runs its body only for saved success.
+
+The producer reuses `Game.ExchangeControl` and its simultaneous layer 2 pass
+(CR 701.12a-b). It adds no control mechanics. Missing, returned, phased,
+identical, same-controller or prohibited subjects save failure. Exact references
+and resolution target legality retain their existing contracts. Failure replaces
+older success. Later control changes and departures do not change the saved
+historical result. Definition validation requires a producer on every read path
+and rejects nil references, results and bodies.
+
+The typed binding stores its private value in the shared number frame. Copies,
+clones, delayed bodies and factory instances use the existing frame services;
+there is no global result slot. Waiting queries traverse the producer references
+and conditional body without executing an exchange.
+
+RON supports `If(PermanentsChangedControlThisWay, [actions...])` after the latest
+local `ExchangeControl(permanentRef, permanentRef)` in ordinary resolving
+sequences. The condition must be a symbol and the body must be nonempty.
+Branches keep local producers; an outer result can be captured by a delayed
+body. Entry, replacement, static, cost and other conditional forms remain
+unsupported. Both existing exchange callers and the result-free API remain.
+
+Gauntlets of Chaos now executes its complete LEG RON record. Local
+`data/LEG.json` Oracle text requires destruction of Auras attached to the
+exchanged subjects. Its RON collection now intersects `IsEnchantmentType(Aura)`
+with the two attachment sets. Equipment remains on the battlefield. There is
+only one record for this name; no reprint correction is needed.
+
+Evidence: `TestControlExchangeResult*` checks historical success, repeated failure,
+identity, phasing and declaration validation. `TestRONControlExchangeResult*`
+checks full Gauntlets gameplay, mana/sacrifice rollback and timing, failed exchanges,
+Aura-only destruction, copies, instances, clone isolation, local producer
+selection and delayed frames. `TestRONTargetDependencyGauntletsPrerequisite`
+now runs the full record with all prior target legality and payment assertions.
+Existing native atomic-exchange and duration tests remain in validation.

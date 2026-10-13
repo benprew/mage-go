@@ -198,6 +198,12 @@
 // returned subjects cannot inherit them. Targets keep resolution legality.
 // RON lowers ExchangeControl in resolving bodies with singular permanent reads.
 // Player-keyed choices and exchange-result conditions need separate adapters.
+// [ExchangePermanentControlInto] saves success or failure in a typed result.
+// [BindControlExchangeResult] uses the shared resolution frames.
+// [IfControlExchanged] reads that result, not later controller changes.
+// Failures clear prior success. Copies, clones and delays keep separate frames.
+// RON binds the latest local ExchangeControl for If(PermanentsChangedControlThisWay).
+// Branch-local results cannot escape. Entry and replacement bodies stay separate.
 //
 // [PowerEqualToLeastOf] compares two current permanent sets at resolution.
 // Empty comparison sets supply no power. Negative power and ties keep their

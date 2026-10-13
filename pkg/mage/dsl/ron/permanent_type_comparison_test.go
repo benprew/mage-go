@@ -157,8 +157,8 @@ func TestRONPermanentTypeComparisonInvalid(t *testing.T) {
 		}
 	}
 	for _, name := range []string{"Gauntlets of Chaos"} {
-		if _, err := Compile(staticBaseRecord(t, "LEG", name)); err == nil {
-			t.Fatalf("incomplete record accepted: %s", name)
+		if _, err := Compile(staticBaseRecord(t, "LEG", name)); err != nil {
+			t.Fatal(err)
 		}
 	}
 }

@@ -14,6 +14,13 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		if part.Name == "ExchangeControl" && hasControlExchangeRead(parts[i+1:]) {
+			build, err := compileControlExchangeProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		switch part.Name {
 		case "SpellDealsDamageDividedAmongRecipientsRoundedDown", "SpellDealsMultipleDamage", "PermanentDealsMultipleDamage", "DeadGuestPermanentDealsDamage":
 			if hasDamageOutcomeRead(parts[i+1:]) {

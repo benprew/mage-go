@@ -201,7 +201,7 @@ func TestRONSingularGroupsStrictLoadAndConsumers(t *testing.T) {
 		t.Fatal("rejected load changed installed registry")
 	}
 	for _, tc := range []struct{ set, name, want string }{
-		{"LEG", "Gauntlets of Chaos", "PermanentsChangedControlThisWay"},
+		{"LEG", "Gauntlets of Chaos", ""},
 		{"LEG", "Glyph of Delusion", "WasBlockedByDefenderThisTurn"},
 		{"PROMOS", "Arena", ""},
 	} {

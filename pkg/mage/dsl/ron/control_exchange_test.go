@@ -116,8 +116,8 @@ func TestRONControlExchangeGauntletsProjection(t *testing.T) {
 	if p.ControllerID() != b.PlayerID() || q.ControllerID() != a.PlayerID() {
 		t.Fatal("real RON exchange failed")
 	}
-	if _, err = Compile(record); err == nil {
-		t.Fatal("incomplete card accepted")
+	if _, err = Compile(record); err != nil {
+		t.Fatal(err)
 	}
 }
 

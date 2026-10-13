@@ -2,6 +2,8 @@ package mage
 
 type permanentControlExchangeEffect struct {
 	first, second PermanentRef
+	result        *NumberBinding
+	captureResult bool
 }
 
 // ExchangePermanentControl exchanges current controllers of two present visits.
@@ -13,7 +15,12 @@ func ExchangePermanentControl(first, second PermanentRef) ResolvingEffect {
 func (*permanentControlExchangeEffect) Text() string                 { return "exchange control of two permanents" }
 func (*permanentControlExchangeEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *permanentControlExchangeEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"first", e.first}, {"second", e.second}}}
+	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"first", e.first}, {"second", e.second}}}
+	if e.captureResult {
+		node.bindingWrite = e.result
+		node.children = append(node.children, definitionEdge{"result", e.result})
+	}
+	return node
 }
 func (e *permanentControlExchangeEffect) refersToSourcePermanent() bool {
 	return permanentRefReadsSourcePermanent(e.first) || permanentRefReadsSourcePermanent(e.second)
@@ -21,8 +28,12 @@ func (e *permanentControlExchangeEffect) refersToSourcePermanent() bool {
 func (e *permanentControlExchangeEffect) Apply(ctx *EffectContext) error {
 	first, firstOK := e.first.resolvePermanent(ctx)
 	second, secondOK := e.second.resolvePermanent(ctx)
-	if firstOK && secondOK {
-		ctx.Game.ExchangeControl(first.ID(), second.ID(), ctx.SourceID)
+	success := 0
+	if firstOK && secondOK && ctx.Game.ExchangeControl(first.ID(), second.ID(), ctx.SourceID) {
+		success = 1
+	}
+	if e.captureResult {
+		return SnapshotNumber(Fixed(success), e.result).Apply(ctx)
 	}
 	return nil
 }
