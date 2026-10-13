@@ -22,7 +22,7 @@ func (v *activationManaX) value(g *Game, sourceID uuid.UUID) (int, bool) {
 	if p == nil || p.PhasedOut || v.counter < 0 || v.counter >= core.NumCounters {
 		return 0, false
 	}
-	return int(p.Counters[v.counter]), true
+	return p.Counters[v.counter], true
 }
 
 func (v *activationManaX) inspectDefinition() definitionNode {

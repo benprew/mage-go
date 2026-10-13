@@ -3640,10 +3640,9 @@ observation, zero placement and fresh factory ability declarations.
 This establishes the fixed-entry compiler adapter, with no engine execution API
 change. It introduces no event or saved-result bindings and no batch operation.
 General entry choices, X, copy-on-entry replacement ordering and token batches
-remain outside this slice. The engine stores counter totals in `uint8`;
-declarations above 255 are rejected here. Unbounded counter totals, including
-replacement-expanded totals beyond that storage, remain an engine limitation;
-the observed collection counts (2–7) and tested replacement totals (7–8) fit.
+remain outside this adapter. The integer-counter-capacity slice below removes
+the byte storage bound and the fixed-entry declaration limit. Counts use the
+engine integer range; replacement ordering retains the existing service.
 
 ## RON player-target life lowering
 
@@ -5685,7 +5684,7 @@ Evidence in `pkg/mage/dsl/ron/singular_entry_counter_test.go`:
 
 No new target, LKI, simultaneous-operation or cost contract is introduced.
 General entry choices, multiple operations and counter-state triggers remain
-outside this adapter. Existing counter storage limits remain unchanged.
+outside this adapter. Counter counts now use the integer-capacity contract below.
 
 ## RON source counter-state cycles
 
@@ -18888,3 +18887,33 @@ returned-visit regression), and `Triggers`; `TestRONTargetDependency*` adds
 spell/activation rollback, mode/event/opponent scope, independent factories and
 the exact Gauntlets prefix. Complete Gauntlets gameplay remains blocked by its
 exchange-result consumer and the recorded Aura-only source defect.
+
+## Integer counter capacity
+
+Counters use `int` throughout live permanent arrays, exact departure snapshots
+and interactive raw snapshots. Fixed entry RON amounts above 255 lower to
+`EntersWithNCounters(counter, n)` with the existing nonnegative literal contract.
+No byte conversion can change entry placement, ordinary addition/removal,
+loyalty damage or saved departure counts. The shared replacement service retains
+affected-controller choices and replacement rechecks (CR 122.6, 614.1c, 616.1).
+The array representation retains value-copy clone isolation. Phasing retains
+counts; zone return starts fresh counters for a new visit (CR 122.2, 400.7,
+702.26d). Typed byte-array callers require mechanical integer-array updates.
+
+Evidence: `TestCounterCapacity` covers 255, 256, 300 and 65,536 counters at entry,
+addition across the old bound, failed and successful removal, clone isolation,
+phase cycles, exact departure snapshots and fresh return.
+`TestRONCounterCapacity` casts synthetic RON cards with those fixed counts, checks
+entry timing and factory isolation. `TestRONCounterCapacityTriskelion` executes
+the complete ATQ record with seven counter doublers, 384 entry counters, rejected
+target announcement without payment, and a paid damage activation.
+`TestRONCounterCapacityReplacementOrder` checks 606 versus 306 counters from
+add-then-double versus double-then-add and the entering controller's decision.
+Existing fixed-entry rejection tests retain every invalid form except the former
+256 storage rejection, which is now a positive gameplay case.
+
+This service is a prerequisite for Rock Hydra's announced-X entry and
+Frankenstein's Monster's entry-result counter distribution. It does not add X
+entry scope, payments, result bindings or complete gameplay for those cards.
+The separate bounded-counter declaration context retains its 0–255 limit.
+Counts use machine integers, as do the engine's damage and other numeric values.

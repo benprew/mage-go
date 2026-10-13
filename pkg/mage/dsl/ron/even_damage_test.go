@@ -154,7 +154,7 @@ func TestRONEvenDamageUnion(t *testing.T) {
 			g.ResolveStack()
 			clone.ResolveStack()
 			for _, game := range []*mage.Game{g, clone} {
-				if game.FindPermanentIncludingPhased(first.ID()).Damage != wantFirst || int(game.FindPermanent(walker.ID()).Counters[core.Loyalty]) != 20-share || game.GetPlayer(b.PlayerID()).Life() != 20-share {
+				if game.FindPermanentIncludingPhased(first.ID()).Damage != wantFirst || game.FindPermanent(walker.ID()).Counters[core.Loyalty] != 20-share || game.GetPlayer(b.PlayerID()).Life() != 20-share {
 					t.Fatal("wrong legal-recipient division")
 				}
 			}

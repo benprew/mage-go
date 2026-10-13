@@ -15,7 +15,7 @@ func TestActivationDefinedXPayment(t *testing.T) {
 			t.Fatal(err)
 		}
 		p := g.PutOnBattlefield(card, a.PlayerID())
-		g.MutablePermanent(p.ID()).Counters[core.Pin] = uint8(count)
+		g.MutablePermanent(p.ID()).Counters[core.Pin] = count
 		g.SetXValue(99)
 		if count > 0 {
 			a.ManaPool().Add(core.Colorless, 2*count-1)

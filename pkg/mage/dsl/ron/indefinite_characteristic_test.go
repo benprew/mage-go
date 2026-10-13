@@ -150,7 +150,7 @@ func TestRONCocoonCompleteLifecycle(t *testing.T) {
 		}
 		g.FireEvent(core.GameEvent{Type: core.EvtUpkeep, PlayerID: a.PlayerID()})
 		g.ResolveStack()
-		if g.FindPermanent(aura.ID()) == nil || g.FindPermanent(aura.ID()).Counters[core.Pupa] != uint8(2-i) || g.FindPermanent(host.ID()).HasKeyword(core.Flying) {
+		if g.FindPermanent(aura.ID()) == nil || g.FindPermanent(aura.ID()).Counters[core.Pupa] != (2-i) || g.FindPermanent(host.ID()).HasKeyword(core.Flying) {
 			t.Fatal("counter payment failed")
 		}
 	}

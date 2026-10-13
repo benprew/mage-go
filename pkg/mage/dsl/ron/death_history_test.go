@@ -79,7 +79,7 @@ func TestRONDeathHistoryCards(t *testing.T) {
 				}
 				for _, game := range []*mage.Game{g, clone} {
 					current := game.FindPermanentIncludingPhased(c.ID())
-					if int(current.Counters[tc.counter]) != want {
+					if current.Counters[tc.counter] != want {
 						t.Fatalf("counters = %d, want %d", current.Counters[tc.counter], want)
 					}
 					dp := 0
@@ -159,7 +159,7 @@ func TestRONDeathHistoryEvents(t *testing.T) {
 				want = 1
 			}
 			g.RunStepWithPriority(core.EndStep)
-			if int(g.FindPermanent(source.ID()).Counters[core.P1P1]) != want {
+			if g.FindPermanent(source.ID()).Counters[core.P1P1] != want {
 				t.Fatalf("counters = %d, want %d", g.FindPermanent(source.ID()).Counters[core.P1P1], want)
 			}
 		})

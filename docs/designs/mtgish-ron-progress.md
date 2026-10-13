@@ -8,17 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **855 accepted / 131 rejected names**
 (986 total), **2,197 compiled / 248 rejected records** (2,445 total).
-The latest slice implements dependent singular permanent target comparisons.
-Gauntlets of Chaos now reaches its exchange-result blocker. Its exact activation
-prefix has RON gameplay evidence; complete-card coverage is unchanged.
+The latest slice removes byte truncation from permanent counter counts and
+fixed entry declarations. RON Triskelion has large-count gameplay evidence.
+Complete-card coverage and loader diagnostics are unchanged.
 The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **DEPENDENT-PERMANENT-TARGET-COMPARISON**. Earlier target
-choices supply current types in separate query frames. Acquisition, availability,
-resolution and copies retain exact visits and independent choices. Explicit copy
-rechoices capture returned battlefield visits. Estimated and actual gains are
-zero names / zero records. Exchange outcomes and Gauntlets' Aura-only source
-defect remain. Runtime cutover, Go-card removal and DSL cleanup gates remain open.
+The latest slice is **INTEGER-COUNTER-CAPACITY**. Live arrays, departure
+snapshots and interactive raw snapshots use `int`; existing callers receive
+mechanical type updates. Shared replacements retain ordering and choices.
+Estimated and actual gains are zero names / zero records. This removes the
+storage prerequisite for Rock Hydra's entry X and Frankenstein's Monster's
+entry counter distribution. Runtime cutover, Go-card removal and DSL cleanup
+gates remain open.
 
 ## Ranked next candidates
 
@@ -3210,3 +3211,170 @@ this ledger. No RON record changed.
    another single-card completion candidate.
 
 This run stops after dependent singular permanent target comparisons.
+
+## 2026-10-13 — INTEGER-COUNTER-CAPACITY
+
+### Selection, dependencies and contract
+
+The working tree was clean. Fresh `make build` and uncached RON package tests
+passed. The baseline loader exited 1 for collection rejection: 2,197 compiled /
+248 rejected records, 855 accepted / 131 rejected unique names. It did not fail
+because of a build or environment problem.
+
+The latest ranked candidates were compared from complete RON records:
+
+| Candidate | Distinct names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Announced X in entry operations | Rock Hydra; Frankenstein's Monster | 0 names / 0 records | Hydra needs finite prevention. Monster needs entry exile payment, payment results and counter distribution. Shared entry X enables both names, but native counter storage truncates at 256. | Medium, with a required storage prerequisite |
+| Exchange outcomes | Gauntlets of Chaos | 1 name / 1 record after source correction | Local successful-exchange result and Aura-only attachment source correction; dependent targets and exchange prefix are ready. Enables full exchange-result consumers. | Small/medium |
+| Restricted X casting payment | Drain Life | 0 names / 0 records | Clamped actual-damage consumer remains; enables one name / six records downstream. | Medium |
+
+Selected **integer counter capacity**, the missing shared prerequisite for the
+first candidate. CR 107.1 and 122 impose no byte-size counter bound. A complete
+entry-X adapter cannot use wrapping byte storage for legal announced amounts or
+replacement-expanded counts. This prerequisite enables Rock Hydra and
+Frankenstein's Monster and repairs counter behavior for current accepted RON
+cards. It has concrete multi-card value despite zero immediate compilation gains.
+It is one storage/placement capability, not entry-X lowering or a second slice.
+
+Supported RON signature remains
+`AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(Integer(n), counter)])`
+on permanent cards, with one operation, a validated permanent counter type and
+a nonnegative literal in the engine `int` range. Amounts above 255 now lower to
+`WithAbility(EntersWithNCounters(counter, n))`. Wrong arity, negative/noninteger
+amounts, incompatible counters, other sources and resolving-action contexts
+remain errors. `ValueX` and entry payment/result forms remain errors.
+
+`Permanent.Counters [NumCounters]int`, exact-visit
+`ZoneSystem.departedCounters map[uuid.UUID][core.NumCounters]int` and
+`PermanentState.RawCounters [core.NumCounters]int` replace byte arrays.
+`EntersWithNCounters`, `AddCounter`, `RemoveCounter`, counter replacement,
+placement-batch and payment service signatures remain. Counter arithmetic and
+loyalty damage avoid byte casts. The fixed arrays retain clone value semantics.
+Existing typed byte callers receive mechanical integer updates, including the
+retained Antiquities counter snapshot and two counter arithmetic statements.
+The wider type also makes 243 conversions unnecessary across 97 caller files;
+lint diagnostics identify each conversion, and an AST-directed edit removes only
+those wrappers. Retained Go sets, tests, engine services, gametest and interactive
+consumers keep their existing behavior. No compiler spelling or rule is changed
+by those caller edits.
+No Go card behavior was used as a requirement or rewritten. No public function
+was removed; a fresh repository search found all counter-array/byte consumers.
+The separate bounded-counter declaration context still limits its literal to
+0–255. General numeric arithmetic remains bounded by machine `int`.
+
+RON owns declaration checks. Mage owns storage, arithmetic, exact departure
+facts and replacement execution. Shared placement, affected-controller choices,
+replacement rechecks, counter payment rollback, entry observations, cloning,
+phasing and return services are reused. No new binding or last-action slot exists.
+No global X is read by the new adapter. Runtime loading and removal gates remain
+open; no registry fallback or partial publication was added.
+
+### Affected records and gameplay evidence
+
+Complete fixed-entry consumer records were inspected for **Clockwork Beast,
+Clockwork Avian, Tetravus, Triskelion, Icatian Moneychanger, Merseine, Divine
+Intervention and Rasputin Dreamweaver**: eight unique names / thirteen records.
+Rock Hydra's six complete reprints and Frankenstein's Monster's complete DRK
+record were inspected for the downstream prerequisite; neither gains acceptance.
+The complete Gauntlets and Drain Life records supplied comparison evidence.
+
+Failing-first native tests exposed addition truncation at the old boundary.
+RON tests independently rejected 256, 300 and 65,536 fixed entry declarations;
+complete Triskelion gameplay failed with replacement-expanded entry counters.
+An omitted test import was corrected before confirming the RON failures. The
+native clone fixture later needed to reacquire the mutable live permanent after
+copy-on-write counter addition; its count assertions were kept. No regression
+assertion was weakened. The former 256 invalid declaration moves to positive
+RON gameplay because its storage restriction is the capability removed here.
+
+Card-to-test mappings:
+
+- **Triskelion → TestRONCounterCapacityTriskelion**: unchanged complete ATQ
+  record, seven counter doublers, 384 counters and 385 power at entry, rejected
+  target announcement without spending a counter, paid removal to 383 and one
+  damage to the opponent. Existing complete-card tests retain all prior behavior.
+- **Triskelion → TestRONCounterCapacityReplacementOrder**: add 300 then double
+  yields 606; double then add yields 306. The entering controller chooses, while
+  the donor controller makes no replacement decision.
+- `TestRONCounterCapacity`: synthetic RON spell casting and resolution with
+  255, 256, 300 and 65,536 counters; no early entry, independent factory instances
+  and exact clone counts after live removal.
+- `TestCounterCapacity`: native large-count entry, P/T reads, addition, failed
+  removal without mutation, successful removal, phase cycles, clone isolation,
+  exact departure counter snapshots and fresh counts on a returned visit.
+- `TestRONEntryCountersDeclarations` retains malformed-shape, negative amount,
+  incompatible counter, source and context rejection. Existing counter payment,
+  batch placement, source-LKI, layer, loyalty, gameplay and clone tests keep their
+  original assertions with integer-typed fixtures.
+- The other seven fixed-entry names keep their existing test mappings. This run
+  adds no complete-card coverage claim for them or the two entry-X consumers.
+
+Rules evidence: local CR 107.1, 122.1–122.6, 400.7, 614.1c, 614.12,
+616.1 and 702.26 supply integer counts, counter placement, entry replacement,
+identity and phasing contracts. No Oracle transcription was changed. Gauntlets'
+known Aura-only source defect remains deferred. No RON source changed, so the
+vocabulary snapshot and source hashes remain unchanged.
+
+### Validation and measured outcome
+
+Required verification passed after the counter-type and lint integration fixes:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCounterCapacity -count=1` passed.
+- `go test ./pkg/mage -run TestCounterCapacity -count=1` passed. The final
+  uncached native/RON package run also includes these tests.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed, including
+  retained Go-set callers. Both were repeated after the broad conversion cleanup.
+- The engine skill's `go test ./... -short -count=1` passed, also repeated after
+  the broad cleanup.
+- Initial `make lint` runs exposed conversions made redundant by integer
+  counter storage. Default diagnostic limits and per-line collapsing hid later
+  occurrences. Expanded diagnostics and AST-directed edits removed 243 redundant
+  conversions across 97 files. The remaining 14 conversions were confined to
+  eight native/RON test files. Final
+  `go test ./pkg/mage ./pkg/mage/dsl/ron -short -count=1` passed after those edits.
+- Final `make lint` passed with **0 issues**. Automatic formatter changes and
+  the conversion edits were reviewed. No unrelated semantic edit occurred.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected. Its complete
+  JSON report is identical to the fresh baseline: **855 accepted / 131 rejected
+  names**, **2,197 compiled / 248 rejected records**, out of 986 names / 2,445
+  records. No unsupported record was accepted or skipped. Rock Hydra still
+  rejects `ValueX` at entry; Monster still rejects the entry sequence; Gauntlets
+  still rejects `PermanentsChangedControlThisWay`; Drain Life still rejects
+  `SpendOnlyColorManaOnX`.
+
+Actual gains match the estimate: zero names / zero records. Complete-card
+coverage is unchanged; existing Triskelion coverage now includes large-count
+replacement and payment evidence. The shared storage prerequisite is complete.
+Entry X, runtime cutover, Go-card deletion and obsolete DSL cleanup remain open.
+No environmental or pre-existing failure blocks this slice.
+
+Changed implementation files: mage `card.go`, `zone_system.go`,
+`damage_system.go`, interactive `types.go`, `snapshot.go` and `eval/eval.go`;
+RON `entry_tapped.go`; new native and
+RON `counter_capacity_test.go`. Other code changes only adapt counter types and remove newly redundant
+conversions in existing tests, engine services, gametest, interactive consumers
+and retained Go sets. API/rules docs and this ledger
+record the established contract. No legacy DSL function, Go definition or
+set-generation tool was removed.
+
+### Ranked next candidates
+
+1. **Announced X in entry operations — Rock Hydra, Frankenstein's Monster.**
+   Counter capacity is now ready. Carry the entering spell's own X through a
+   typed entry context; direct entry must use zero rather than ambient resolution
+   X. Lower Hydra's entry counter operation. Monster can reuse the context for
+   later exile payment. Zero immediate unlocks; concrete two-name downstream
+   value; medium effort. Other complete-record blockers above remain.
+2. **Exchange outcomes and Aura-only source correction — Gauntlets of Chaos.**
+   Targets and exchange are ready. Save a local successful result and gate later
+   destruction; correct the attachment collection only with Oracle evidence.
+   Estimated one name / one record; small/medium effort.
+3. **Restricted X casting payment — Drain Life.** Clamped actual-damage results
+   remain separate. Zero immediate unlocks; eventual one name / six records;
+   medium effort. Kudzu's optional former-host action remains another single-card
+   completion candidate.
+
+This run stops after integer counter capacity.

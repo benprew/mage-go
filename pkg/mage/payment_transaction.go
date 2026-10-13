@@ -369,7 +369,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				return fmt.Errorf("cannot pay chosen counter cost: source absent")
 			}
 			payer := tx.game.GetPlayer(tx.controller)
-			cntCopy.count = payer.ChooseNumber(0, int(source.Counters[cntCopy.ct]), cntCopy.Text())
+			cntCopy.count = payer.ChooseNumber(0, source.Counters[cntCopy.ct], cntCopy.Text())
 			cntCopy.incarnation = source.incarnationID
 			cntCopy.locked = true
 			validationCost = &cntCopy
@@ -509,7 +509,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			counterAmount = 0
 		}
 		if counterAmount > 0 {
-			available := int(tx.game.FindPermanent(tx.sourceID).Counters[counterType])
+			available := tx.game.FindPermanent(tx.sourceID).Counters[counterType]
 			if counterAmount > available-counterTotals[counterType] {
 				return fmt.Errorf("cannot pay total counter cost")
 			}

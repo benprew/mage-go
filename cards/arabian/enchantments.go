@@ -32,7 +32,7 @@ func registerEnchantments() {
 								return nil
 							}
 							perm.AddCounter(Wind, 1)
-							count := int(perm.Counters[Wind])
+							count := perm.Counters[Wind]
 							// Build the mana cost: {G} per wind counter
 							var cost strings.Builder
 							for range count {

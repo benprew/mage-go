@@ -115,7 +115,7 @@ func (v livePermanentView) ViewToughness() int { return v.p.CurrentToughness(v.g
 func (v livePermanentView) ViewIsToken() bool {
 	return v.p.IsToken
 }
-func (v livePermanentView) ViewCounters(ct CounterType) int { return int(v.p.Counters[ct]) }
+func (v livePermanentView) ViewCounters(ct CounterType) int { return v.p.Counters[ct] }
 func (v livePermanentView) ViewAbilities() []Ability        { return v.p.RuntimeAbilities }
 
 // PermanentLKI captures Last-Known-Information about a permanent at the
@@ -206,7 +206,7 @@ func (l *PermanentLKI) ViewCounters(ct CounterType) int {
 	if l.Snapshot == nil {
 		return 0
 	}
-	return int(l.Snapshot.Counters[ct])
+	return l.Snapshot.Counters[ct]
 }
 func (l *PermanentLKI) ViewAbilities() []Ability {
 	if l.Snapshot == nil {

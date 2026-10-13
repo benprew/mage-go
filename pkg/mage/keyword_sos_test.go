@@ -383,7 +383,7 @@ func TestIncrement_PutsCounterWhenManaSpentExceedsPower(t *testing.T) {
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 
-	if got := int(srcPerm.Counters[P1P1]); got != 1 {
+	if got := srcPerm.Counters[P1P1]; got != 1 {
 		t.Errorf("expected 1 +1/+1 counter, got %d", got)
 	}
 }
@@ -414,7 +414,7 @@ func TestIncrement_NoCounterWhenManaSpentEqualsPower(t *testing.T) {
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 
-	if got := int(srcPerm.Counters[P1P1]); got != 0 {
+	if got := srcPerm.Counters[P1P1]; got != 0 {
 		t.Errorf("expected 0 +1/+1 counters, got %d", got)
 	}
 }

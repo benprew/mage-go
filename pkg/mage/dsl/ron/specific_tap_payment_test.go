@@ -131,7 +131,7 @@ func TestRONSpecificTapPaymentTourachsGate(t *testing.T) {
 		if i == 0 && source != nil {
 			t.Fatal("Aura survived zero counters")
 		}
-		if i > 0 && (source == nil || int(source.Counters[core.Time]) != i) {
+		if i > 0 && (source == nil || source.Counters[core.Time] != i) {
 			t.Fatal("upkeep counter failed")
 		}
 	}

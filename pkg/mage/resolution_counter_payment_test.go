@@ -85,7 +85,7 @@ func TestResolutionCounterPayment(t *testing.T) {
 			case "short":
 				wantLife, wantCounters = 27, 1
 			}
-			if a.Life() != wantLife || int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.Charge]) != wantCounters || b.Life() != 20 {
+			if a.Life() != wantLife || g.FindPermanentIncludingPhased(p.ID()).Counters[core.Charge] != wantCounters || b.Life() != 20 {
 				t.Fatalf("life %d counters %d", a.Life(), g.FindPermanentIncludingPhased(p.ID()).Counters[core.Charge])
 			}
 			if clone.GetPlayer(a.PlayerID()).Life() != 20 {
@@ -164,7 +164,7 @@ func TestResolutionCounterPaymentStaleChoice(t *testing.T) {
 				if !chosen && change == "invalid-count" {
 					wantCounters = 1
 				}
-				if int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.Charge]) != wantCounters {
+				if g.FindPermanentIncludingPhased(p.ID()).Counters[core.Charge] != wantCounters {
 					t.Fatal("stale payment spent counters")
 				}
 			})

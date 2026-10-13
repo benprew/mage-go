@@ -42,7 +42,7 @@ func TestEvenDamageLegalRecipients(t *testing.T) {
 				wantVictim = 0
 			}
 			g.ResolveStack()
-			if victim.Damage != wantVictim || int(walker.Counters[Loyalty]) != 20-wantShare || b.Life() != 20-wantShare || a.divisions != 0 {
+			if victim.Damage != wantVictim || walker.Counters[Loyalty] != 20-wantShare || b.Life() != 20-wantShare || a.divisions != 0 {
 				t.Fatalf("damage=%d loyalty=%d life=%d prompts=%d", victim.Damage, walker.Counters[Loyalty], b.Life(), a.divisions)
 			}
 		})

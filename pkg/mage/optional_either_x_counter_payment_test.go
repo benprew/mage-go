@@ -43,7 +43,7 @@ func TestOptionalEitherXCounterPaymentAmount(t *testing.T) {
 				if paid {
 					removed = x
 				}
-				if a.offers != offers || offers != wantOffers || g.LastCostOptionalPaid(source.ID()) != paid || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if a.offers != offers || offers != wantOffers || g.LastCostOptionalPaid(source.ID()) != paid || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d X=%d: offers=%d counters=%d paid=%v", accept, available, x, a.offers, g.FindPermanent(source.ID()).Counters[Charge], g.LastCostOptionalPaid(source.ID()))
 				}
 				if outcomes[source.ID()] {
@@ -95,7 +95,7 @@ func TestOptionalEitherXCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			events := 0
 			watcher := NewArtifact("Watcher", "", WithAbility(NewTriggered(EvtLifeLost, false).SetCondition(func(*GameEvent, GameReader, uuid.UUID, uuid.UUID) bool { events++; return false })))
@@ -103,7 +103,7 @@ func TestOptionalEitherXCounterPaymentPreflight(t *testing.T) {
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid accepted optional cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 || g.LastCostOptionalPaid(source.ID()) || events != 0 {
@@ -165,7 +165,7 @@ func TestOptionalEitherXCounterPaymentPresence(t *testing.T) {
 				if paid {
 					removed = x
 				}
-				if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != 3-removed {
+				if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != 3-removed {
 					t.Fatal("wrong counter payment")
 				}
 			})
@@ -245,7 +245,7 @@ func TestOptionalEitherXCounterPaymentSelection(t *testing.T) {
 				if accept && ct == selected {
 					want = 1
 				}
-				if int(g.FindPermanent(source.ID()).Counters[ct]) != want {
+				if g.FindPermanent(source.ID()).Counters[ct] != want {
 					t.Fatal("wrong selected counter payment")
 				}
 			}

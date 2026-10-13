@@ -29,7 +29,7 @@ func (v permanentCounterInformation) resolveValue(ctx *EffectContext) int {
 	if p == nil || v.counter < 0 || v.counter >= core.NumCounters {
 		return 0
 	}
-	return int(p.Counters[v.counter])
+	return p.Counters[v.counter]
 }
 
 func (v permanentCounterInformation) inspectDefinition() definitionNode {
@@ -68,7 +68,7 @@ func (v permanentCounterTotal) resolveValue(ctx *EffectContext) int {
 			continue
 		}
 		seen[current.incarnationID] = true
-		total += int(current.Counters[v.counter])
+		total += current.Counters[v.counter]
 	}
 	return total
 }

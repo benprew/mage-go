@@ -206,7 +206,7 @@ func TestRONOsaiVulturesEndStep(t *testing.T) {
 			if scenario == "copy" {
 				want = 2
 			}
-			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.Carrion] != uint8(want) || clone.FindPermanentIncludingPhased(p.ID()).Counters[core.Carrion] != uint8(want) {
+			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.Carrion] != want || clone.FindPermanentIncludingPhased(p.ID()).Counters[core.Carrion] != want {
 				t.Fatal("counter outcome")
 			}
 		})

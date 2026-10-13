@@ -86,7 +86,7 @@ func registerArtifacts() {
 				if src == nil {
 					return nil
 				}
-				n := int(src.Counters[Page])
+				n := src.Counters[Page]
 				if n > 0 {
 					g.AddActivationCostReduction(sourceID, n)
 				}

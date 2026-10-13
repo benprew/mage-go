@@ -114,7 +114,7 @@ func TestRONCounterPlacementRealCards(t *testing.T) {
 				}
 				for _, game := range []*mage.Game{g, clone} {
 					p := game.FindPermanentIncludingPhased(target.ID())
-					if int(p.Counters[tc.counter]) != want {
+					if p.Counters[tc.counter] != want {
 						t.Fatalf("counter count = %d, want %d", p.Counters[tc.counter], want)
 					}
 				}
@@ -217,10 +217,10 @@ func TestRONCounterPlacementSourceAndHost(t *testing.T) {
 				clone.ResolveStack()
 				for _, game := range []*mage.Game{g, clone} {
 					p := game.FindPermanentIncludingPhased(target.ID())
-					if p != nil && int(p.Counters[core.Charge]) != want {
+					if p != nil && p.Counters[core.Charge] != want {
 						t.Fatalf("source/host counters = %d, want %d", p.Counters[core.Charge], want)
 					}
-					if int(game.FindPermanent(other.ID()).Counters[core.Charge]) != otherWant {
+					if game.FindPermanent(other.ID()).Counters[core.Charge] != otherWant {
 						t.Fatal("counter followed wrong attachment")
 					}
 				}
@@ -245,7 +245,7 @@ func TestRONCounterPlacementAmountsAndRollback(t *testing.T) {
 			t.Fatal(err)
 		}
 		g.ResolveStack()
-		if int(g.FindPermanent(p.ID()).Counters[core.Charge]) != max(amount, 0) {
+		if g.FindPermanent(p.ID()).Counters[core.Charge] != max(amount, 0) {
 			t.Fatal("wrong literal amount")
 		}
 	}
@@ -278,7 +278,7 @@ func TestRONCounterPlacementAmountsAndRollback(t *testing.T) {
 			t.Fatal("spell copy failed")
 		}
 		g.ResolveStack()
-		if int(g.FindPermanent(target.ID()).Counters[core.P1P1]) != 2*x {
+		if g.FindPermanent(target.ID()).Counters[core.P1P1] != 2*x {
 			t.Fatal("announced X not retained by spell copy")
 		}
 	}
@@ -420,7 +420,7 @@ func TestRONCounterPlacementReplacementOrder(t *testing.T) {
 				t.Fatal(err)
 			}
 			g.ResolveStack()
-			if int(g.FindPermanent(target.ID()).Counters[core.P1P1]) != tc.want {
+			if g.FindPermanent(target.ID()).Counters[core.P1P1] != tc.want {
 				t.Fatal("placement ignored affected player's replacement order")
 			}
 			if a.choices != 0 || b.choices != 1 || a.Life() != 21 {

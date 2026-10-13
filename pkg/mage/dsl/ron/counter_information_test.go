@@ -415,7 +415,7 @@ func TestRONCounterInformationReplacementOrder(t *testing.T) {
 		}
 		g.ResolveStack()
 		want := 4 - index
-		if int(g.FindPermanent(p.ID()).Counters[core.P1P1]) != want || a.Life() != 20+want || a.choices != 1 {
+		if g.FindPermanent(p.ID()).Counters[core.P1P1] != want || a.Life() != 20+want || a.choices != 1 {
 			t.Fatal("value read before completed replacement pipeline")
 		}
 	}

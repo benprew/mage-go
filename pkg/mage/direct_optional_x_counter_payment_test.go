@@ -40,7 +40,7 @@ func TestDirectOptionalXCounterPaymentAmount(t *testing.T) {
 				if accept && available >= x {
 					wantPaid, removed = 1, x
 				}
-				if tx.paidNumbers[paid] != wantPaid || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if tx.paidNumbers[paid] != wantPaid || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d X=%d: result=%d counters=%d", accept, available, x, tx.paidNumbers[paid], g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if a.offers != offers {
@@ -89,12 +89,12 @@ func TestDirectOptionalXCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid accepted optional cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 {

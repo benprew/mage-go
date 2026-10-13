@@ -170,7 +170,7 @@ func TestRONEntryCountersReplacements(t *testing.T) {
 			if choice == 1 {
 				want = 7
 			}
-			if int(p.Counters[core.P1P1]) != want || a.choices != 0 || b.choices != 1 {
+			if p.Counters[core.P1P1] != want || a.choices != 0 || b.choices != 1 {
 				t.Fatalf("entry replacement counters=%d, choices=%d/%d, want %d", p.Counters[core.P1P1], a.choices, b.choices, want)
 			}
 		})
@@ -182,7 +182,6 @@ func TestRONEntryCountersDeclarations(t *testing.T) {
 		`EntersWithNumberCounters`, `EntersWithNumberCounters(Integer(3))`,
 		`EntersWithNumberCounters(Integer(3), PTCounter(1,1), ChargeCounter)`,
 		`EntersWithNumberCounters(3, PTCounter(1,1))`, `EntersWithNumberCounters(Integer(-1), PTCounter(1,1))`,
-		`EntersWithNumberCounters(Integer(256), PTCounter(1,1))`,
 		`EntersWithNumberCounters(Integer("3"), PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3,4), PTCounter(1,1))`,
 		`EntersWithNumberCounters(ValueX, PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3), PoisonCounter)`,
 		`EntersWithNumberCounters(Integer(3), CreditCounter())`, `EntersWithNumberCounters(Integer(3), PTCounter(Integer(1),1))`,
@@ -346,7 +345,7 @@ func TestRONEntryCountersCompleteRecordInventory(t *testing.T) {
 				g, a, _ := ronGame()
 				p := g.PutOnBattlefield(c, a.PlayerID())
 				ability := c.Abilities()[0].(*mage.EntersWithNCountersAbility)
-				if int(p.Counters[ability.CounterType]) != amount {
+				if p.Counters[ability.CounterType] != amount {
 					t.Fatalf("%s entry count", name)
 				}
 				seen[name]++

@@ -175,7 +175,7 @@ func TestRONHostUpkeepGameplay(t *testing.T) {
 							amount = 0
 						}
 						p := game.FindPermanentIncludingPhased(target.ID())
-						if p == nil || int(p.Counters[core.M1M1]) != amount {
+						if p == nil || p.Counters[core.M1M1] != amount {
 							t.Fatalf("counter target=%v want=%d", p, amount)
 						}
 						if scenario == "normal" && p.CurrentPower(game) != 7-amount {

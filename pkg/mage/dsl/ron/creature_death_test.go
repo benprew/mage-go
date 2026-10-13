@@ -111,7 +111,7 @@ func TestRONCreatureDeathSengir(t *testing.T) {
 			g.ResolveStack()
 			for _, game := range []*mage.Game{g, clone} {
 				p := game.FindPermanentIncludingPhased(source.ID())
-				if int(p.Counters[core.P1P1]) != wantCounters {
+				if p.Counters[core.P1P1] != wantCounters {
 					t.Fatalf("counters=%d want=%d", p.Counters[core.P1P1], wantCounters)
 				}
 				if !p.PhasedOut && p.CurrentPower(game) != 4+wantCounters {

@@ -744,7 +744,7 @@ func (g *Game) addCountersWithReplacementLimit(perm *Permanent, ct CounterType, 
 			return
 		}
 		if aca.CounterType() == ct {
-			amount = min(amount, max(*limit-int(target.Counters[ct]), 0))
+			amount = min(amount, max(*limit-target.Counters[ct], 0))
 		}
 	}
 	if amount > 0 {

@@ -26,7 +26,7 @@ type ZoneSystem struct {
 	phaseInformation       map[uuid.UUID]*PermanentLKI
 	// Delayed abilities can read an old attachment after turn cleanup.
 	departedAttachments      map[uuid.UUID]capturedPermanent
-	departedCounters         map[uuid.UUID][core.NumCounters]uint8
+	departedCounters         map[uuid.UUID][core.NumCounters]int
 	castFromExilePermissions []CastableFromExilePermission
 	exileInsteadCards        map[uuid.UUID]uuid.UUID
 }
@@ -568,7 +568,7 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 		return
 	}
 	if zs.departedCounters == nil {
-		zs.departedCounters = make(map[uuid.UUID][core.NumCounters]uint8)
+		zs.departedCounters = make(map[uuid.UUID][core.NumCounters]int)
 	}
 	zs.departedCounters[p.incarnationID] = p.Counters
 	if zs.lki == nil {

@@ -419,7 +419,7 @@ func TestRONPlayerPlaneswalkerTargetIdentity(t *testing.T) {
 				g.MutablePermanent(walker.ID()).Card.Types()[0] = core.TypeArtifact
 			}
 			g.ResolveStack()
-			want := uint8(5)
+			want := int(5)
 			if change == "control" || change == "phase-cycle" {
 				want = 4
 			}

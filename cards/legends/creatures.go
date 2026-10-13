@@ -1374,7 +1374,7 @@ func registerCreatures() {
 							return nil
 						}
 						perm.AddCounter(P1P1, 1)
-						counters := int(perm.Counters[P1P1])
+						counters := perm.Counters[P1P1]
 						cost := fmt.Sprintf("{%d}", counters)
 						player := g.GetPlayer(controller)
 						paid := false

@@ -1445,7 +1445,7 @@ func registerCreatures() {
 						if self == nil {
 							return nil
 						}
-						available := int(self.Counters[P1P1])
+						available := self.Counters[P1P1]
 						if available <= 0 {
 							return nil
 						}
@@ -1477,8 +1477,8 @@ func registerCreatures() {
 							return nil
 						}
 						// Move X +1/+1 counters from self to target.
-						if x > int(self.Counters[P1P1]) {
-							x = int(self.Counters[P1P1])
+						if x > self.Counters[P1P1] {
+							x = self.Counters[P1P1]
 						}
 						self.RemoveCounter(P1P1, x)
 						target.AddCounter(P1P1, x)
@@ -2827,7 +2827,7 @@ func registerCreatures() {
 						}
 						totalCounters := 0
 						for _, n := range lki.Snapshot.Counters {
-							totalCounters += int(n)
+							totalCounters += n
 						}
 						if totalCounters == 0 {
 							return nil
@@ -2846,7 +2846,7 @@ func registerCreatures() {
 						// Put this creature's counters on that token.
 						for ct, n := range lki.Snapshot.Counters {
 							if n > 0 {
-								g.AddCountersWithReplacement(perm, CounterType(ct), int(n), sourceID, false)
+								g.AddCountersWithReplacement(perm, CounterType(ct), n, sourceID, false)
 							}
 						}
 						g.ApplyContinuousEffects()
@@ -3130,7 +3130,7 @@ func registerCreatures() {
 							return nil
 						}
 						if perm.Counters[Charge] > 0 {
-							perm.RemoveCounter(Charge, int(perm.Counters[Charge]))
+							perm.RemoveCounter(Charge, perm.Counters[Charge])
 							g.TapPermanent(perm)
 						}
 						return nil
@@ -3909,7 +3909,7 @@ func registerCreatures() {
 					return nil
 				}
 				// Clear the flag.
-				perm.RemoveCounter(Charge, int(perm.Counters[Charge]))
+				perm.RemoveCounter(Charge, perm.Counters[Charge])
 				token := NewToken("Fractal Token", 0, 0,
 					[]CardType{TypeCreature}, []string{"Fractal"})
 				token.SetOwner(controller)
@@ -4539,7 +4539,7 @@ func registerCreatures() {
 						}
 						totalCounters := 0
 						for _, n := range lki.Snapshot.Counters {
-							totalCounters += int(n)
+							totalCounters += n
 						}
 						if totalCounters == 0 {
 							return nil
@@ -4553,7 +4553,7 @@ func registerCreatures() {
 						}
 						for ct, n := range lki.Snapshot.Counters {
 							if n > 0 {
-								g.AddCountersWithReplacement(dest, CounterType(ct), int(n), sourceID, false)
+								g.AddCountersWithReplacement(dest, CounterType(ct), n, sourceID, false)
 							}
 						}
 						return nil
@@ -5164,7 +5164,7 @@ func registerCreatures() {
 						if src == nil {
 							return nil
 						}
-						colors := int(src.Counters[Charge])
+						colors := src.Counters[Charge]
 						// Remove the Charge counters used for Converge bookkeeping.
 						src.RemoveCounter(Charge, colors)
 						target := g.FindPermanent(targets[0])

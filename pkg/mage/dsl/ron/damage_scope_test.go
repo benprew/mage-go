@@ -97,7 +97,7 @@ func TestRONDamageScopeRealCards(t *testing.T) {
 						t.Fatal("creature binding or clone isolation")
 					}
 				case "planeswalker":
-					if int(g.FindPermanent(target).Counters[core.Loyalty]) != 9-tc.amount || clone.FindPermanent(target).Counters[core.Loyalty] != 9 {
+					if g.FindPermanent(target).Counters[core.Loyalty] != 9-tc.amount || clone.FindPermanent(target).Counters[core.Loyalty] != 9 {
 						t.Fatal("planeswalker binding or clone isolation")
 					}
 				}

@@ -132,7 +132,7 @@ func TestRONDistributedDamagePyrotechnics(t *testing.T) {
 				case "copy":
 					wantFirst, wantLife = 6, 18
 				}
-				if game.FindPermanentIncludingPhased(first.ID()).Damage != wantFirst || game.GetPlayer(b.PlayerID()).Life() != wantLife || game.FindPermanent(walker.ID()).Counters[core.Loyalty] != uint8(wantWalker) {
+				if game.FindPermanentIncludingPhased(first.ID()).Damage != wantFirst || game.GetPlayer(b.PlayerID()).Life() != wantLife || game.FindPermanent(walker.ID()).Counters[core.Loyalty] != wantWalker {
 					t.Fatalf("damage/life/loyalty mismatch for %s", scenario)
 				}
 			}

@@ -2109,7 +2109,7 @@ func (v counterResolutionValue) resolveValue(ctx *EffectContext) int {
 	if !ok {
 		return 0
 	}
-	return int(p.Counters[v.counter])
+	return p.Counters[v.counter]
 }
 
 func (v counterResolutionValue) inspectDefinition() definitionNode {

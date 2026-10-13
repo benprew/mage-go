@@ -80,7 +80,7 @@ func TestRONHostStaticUntapClauses(t *testing.T) {
 			if tc.onHost {
 				subject = host.ID()
 			}
-			for _, count := range []uint8{0, 1, 3, 0, 2} {
+			for _, count := range []int{0, 1, 3, 0, 2} {
 				g.MutablePermanent(subject).Counters[tc.counter] = count
 				g.TapPermanent(g.FindPermanent(host.ID()))
 				g.SetActivePlayerIndex(1)

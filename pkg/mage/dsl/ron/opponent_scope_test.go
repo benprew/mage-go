@@ -109,7 +109,7 @@ func TestRONOpponentCitanulDruid(t *testing.T) {
 				expected = 0
 			}
 			if p := g.FindPermanentIncludingPhased(current); p != nil {
-				if int(p.Counters[core.P1P1]) != expected || p.CurrentPower(g) != 1+expected || p.CurrentToughness(g) != 1+expected {
+				if p.Counters[core.P1P1] != expected || p.CurrentPower(g) != 1+expected || p.CurrentToughness(g) != 1+expected {
 					t.Fatal("counter missed original incarnation")
 				}
 			} else if scenario != "source-depart" {
@@ -119,7 +119,7 @@ func TestRONOpponentCitanulDruid(t *testing.T) {
 				t.Fatal("resolution changed clone")
 			}
 			clone.ResolveStack()
-			if p := clone.FindPermanentIncludingPhased(current); p != nil && int(p.Counters[core.P1P1]) != expected {
+			if p := clone.FindPermanentIncludingPhased(current); p != nil && p.Counters[core.P1P1] != expected {
 				t.Fatal("clone lost event")
 			}
 		})

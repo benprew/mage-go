@@ -108,7 +108,7 @@ func TestPutCounterCostTransaction(t *testing.T) {
 				if change == "doubled" {
 					want = 2
 				}
-				if a.Life() != 18 || a.ManaPool().Count(core.Red) != 0 || int(g.FindPermanent(p.ID()).Counters[core.M1M1]) != want {
+				if a.Life() != 18 || a.ManaPool().Count(core.Red) != 0 || g.FindPermanent(p.ID()).Counters[core.M1M1] != want {
 					t.Fatal("wrong payment")
 				}
 			}
@@ -205,7 +205,7 @@ func TestPutCounterCostReplacementPayment(t *testing.T) {
 			if mode == "change-type" {
 				wantPlus = 1
 			}
-			if int(p.Counters[core.M1M1]) != wantMinus || int(p.Counters[core.P1P1]) != wantPlus {
+			if p.Counters[core.M1M1] != wantMinus || p.Counters[core.P1P1] != wantPlus {
 				t.Fatal("replacement bypassed")
 			}
 		})
@@ -282,7 +282,7 @@ func TestPutCounterCostReplacementOrder(t *testing.T) {
 			if index == 1 {
 				want = 3
 			}
-			if int(g.FindPermanent(p.ID()).Counters[core.M1M1]) != want || a.orders != 1 || a.calls != 1 || a.Life() != 21 {
+			if g.FindPermanent(p.ID()).Counters[core.M1M1] != want || a.orders != 1 || a.calls != 1 || a.Life() != 21 {
 				t.Fatal("affected payer order or locked payment")
 			}
 		})

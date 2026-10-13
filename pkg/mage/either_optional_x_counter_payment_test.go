@@ -40,7 +40,7 @@ func TestEitherOptionalXCounterPaymentAmount(t *testing.T) {
 				if accept && available >= x {
 					wantPaid, removed = 1, x
 				}
-				if tx.paidNumbers[paid] != wantPaid || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if tx.paidNumbers[paid] != wantPaid || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d X=%d: result=%d counters=%d", accept, available, x, tx.paidNumbers[paid], g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if a.offers != offers {
@@ -89,12 +89,12 @@ func TestEitherOptionalXCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid accepted optional cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 {
@@ -237,7 +237,7 @@ func TestEitherOptionalXCounterPaymentAnnouncement(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			t.Fatal(err)
 		}
-		if int(g.FindPermanent(source.ID()).Counters[Charge]) != 3-x || tx.paidNumbers[paid] != 1 || a.offers != 1 || a.choices != 2 {
+		if g.FindPermanent(source.ID()).Counters[Charge] != 3-x || tx.paidNumbers[paid] != 1 || a.offers != 1 || a.choices != 2 {
 			t.Fatal("commit changed announced amount, choice, or outcome")
 		}
 	}
@@ -265,7 +265,7 @@ func TestEitherOptionalXCounterPaymentSelection(t *testing.T) {
 		if branch == 1 {
 			wantOffers, wantCounters, wantLife = 0, 3, 19
 		}
-		if a.choices != 1 || a.offers != wantOffers || int(g.FindPermanent(source.ID()).Counters[Charge]) != wantCounters || a.Life() != wantLife {
+		if a.choices != 1 || a.offers != wantOffers || g.FindPermanent(source.ID()).Counters[Charge] != wantCounters || a.Life() != wantLife {
 			t.Fatal("commit changed branch or optional acceptance")
 		}
 	}

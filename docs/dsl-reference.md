@@ -3676,8 +3676,8 @@ for engine APIs, lifecycle behavior, and test evidence.
 
 `AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(Integer(n), counter)])`
 accepts one entry operation on a permanent card. The source is the symbol
-`ThisPermanent`. The amount is a nonnegative integer literal that fits the
-engine's current counter storage (0–255); larger declarations are rejected.
+`ThisPermanent`. The amount is a nonnegative integer literal in the engine's `int` range.
+Counter storage does not truncate counts above 255.
 `counter` uses the same validated permanent counter types as `PutCounters`,
 including `PTCounter(+1, +0)`, `PTCounter(+1, +1)` and named counters.
 The adapter uses `WithAbility(EntersWithNCounters(counter, n))`, with a fresh
@@ -14396,3 +14396,23 @@ Evidence: `TestRONTargetDependencyGameplay`, `Invalid`, `Scopes`,
 prefix through `ExchangeControl`, with the original mana and sacrifice costs.
 The unchanged full record must still reject `PermanentsChangedControlThisWay`.
 This adds prerequisite coverage for one unique card and no complete-card mapping.
+
+## RON integer counter capacity
+
+Fixed entry declarations retain their existing shape and scope:
+`AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(Integer(n), counter)])`.
+Nonnegative `int` literals, including counts above 255, use the shared counter
+placement service. Wrong arity, negative or noninteger amounts, unsupported
+counter types, other source references and resolving-action use still reject.
+`ValueX` entry lowering remains unsupported.
+
+`Permanent.Counters`, departure counter snapshots and `PermanentState.RawCounters`
+use fixed arrays of `int`. `AddCounter` and `RemoveCounter` keep their signatures;
+callers that store or assign typed byte counts must use integers. Replacement
+amounts, P/T reads, payment checks and loyalty damage retain full integer counts.
+The separate `AddCountersUpTo` declaration limit remains 0–255.
+
+`TestRONCounterCapacity*` covers large fixed entry declarations and complete RON
+Triskelion gameplay with replacement-expanded counters and counter payments.
+`TestCounterCapacity` covers native addition, removal, cloning, phasing and exact
+departure snapshots. This establishes counter capacity, not announced entry X.

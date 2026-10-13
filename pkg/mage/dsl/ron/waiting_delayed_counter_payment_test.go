@@ -159,7 +159,7 @@ func TestRONWaitingDelayedCounterPaymentProtection(t *testing.T) {
 						if state == "returned" {
 							wantCounters = 0
 						}
-						if int(g.FindPermanentIncludingPhased(sourceCard.ID()).Counters[core.Charge]) != wantCounters {
+						if g.FindPermanentIncludingPhased(sourceCard.ID()).Counters[core.Charge] != wantCounters {
 							t.Fatal("payment removed counters from the wrong object or count")
 						}
 					}

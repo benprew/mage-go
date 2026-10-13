@@ -29,7 +29,7 @@ func TestRONEndCombatClockwork(t *testing.T) {
 				card := clockworkTriggerCard(t, tc.set, tc.name)
 				card.SetOwner(a.PlayerID())
 				p := g.PutOnBattlefield(card, a.PlayerID())
-				if int(p.Counters[core.P1P0]) != tc.counters || p.CurrentPower(g) != tc.counters || p.HasAttr(core.Flying) != (tc.name == "Clockwork Avian") {
+				if p.Counters[core.P1P0] != tc.counters || p.CurrentPower(g) != tc.counters || p.HasAttr(core.Flying) != (tc.name == "Clockwork Avian") {
 					t.Fatal("entry or characteristics")
 				}
 				g.RunStepWithPriority(core.BeginCombat)
@@ -62,19 +62,19 @@ func TestRONEndCombatClockwork(t *testing.T) {
 				if role == "attack" || role == "block" || role == "removed-from-combat" || role == "both" {
 					want--
 				}
-				if int(g.FindPermanent(p.ID()).Counters[core.P1P0]) != want || g.StackSize() != 0 {
+				if g.FindPermanent(p.ID()).Counters[core.P1P0] != want || g.StackSize() != 0 {
 					t.Fatalf("counter count = %d, want %d", g.FindPermanent(p.ID()).Counters[core.P1P0], want)
 				}
-				if int(clone.FindPermanent(p.ID()).Counters[core.P1P0]) != tc.counters {
+				if clone.FindPermanent(p.ID()).Counters[core.P1P0] != tc.counters {
 					t.Fatal("clone shared counters")
 				}
 				clone.RunStepWithPriority(core.EndCombat)
-				if int(clone.FindPermanent(p.ID()).Counters[core.P1P0]) != want {
+				if clone.FindPermanent(p.ID()).Counters[core.P1P0] != want {
 					t.Fatal("clone lost history")
 				}
 				g.RunStepWithPriority(core.BeginCombat)
 				g.RunStepWithPriority(core.EndCombat)
-				if int(g.FindPermanent(p.ID()).Counters[core.P1P0]) != want {
+				if g.FindPermanent(p.ID()).Counters[core.P1P0] != want {
 					t.Fatal("prior combat history triggered again")
 				}
 			})
@@ -137,7 +137,7 @@ func TestRONEndCombatInterveningIdentity(t *testing.T) {
 			if change == "copy" {
 				want = 2
 			}
-			if int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0]) != want || int(clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0]) != want || g.FindPermanent(other.ID()).Counters[core.P1P0] != 4 {
+			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0] != want || clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0] != want || g.FindPermanent(other.ID()).Counters[core.P1P0] != 4 {
 				t.Fatal("condition recheck, identity or instance isolation")
 			}
 		})

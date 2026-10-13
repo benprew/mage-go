@@ -1269,7 +1269,7 @@ func TestTypedCounterRemovalAmounts(t *testing.T) {
 				t.Fatal(err)
 			}
 			p := g.FindPermanent(source.ID())
-			if got, want := int(p.Counters[Charge]), 5-min(max(amount, 0), 5); got != want {
+			if got, want := p.Counters[Charge], 5-min(max(amount, 0), 5); got != want {
 				t.Fatalf("counters = %d, want %d", got, want)
 			}
 			if p.Counters[Tide] != 2 || a.Life() != 21 {
@@ -1415,7 +1415,7 @@ func TestCounterStateCondition(t *testing.T) {
 	condition := SourceHasCounters(Tide, 4)
 	ctx := StateContext{SourceID: c.ID(), ControllerID: a.PlayerID()}
 	for _, n := range []int{0, 1, 3, 4, 5} {
-		g.MutablePermanent(c.ID()).Counters[Tide] = uint8(n)
+		g.MutablePermanent(c.ID()).Counters[Tide] = n
 		for range 2 {
 			if got := condition.checkState(g, ctx); got != (n >= 4) {
 				t.Fatalf("count %d: condition = %v", n, got)
@@ -1478,7 +1478,7 @@ func TestRemoveAllTypedCounters(t *testing.T) {
 				if scenario == "phased" {
 					want = 5
 				}
-				if int(p.Counters[Tide]) != want {
+				if p.Counters[Tide] != want {
 					t.Fatalf("tide = %d, want %d", p.Counters[Tide], want)
 				}
 				if scenario != "returned" && p.Counters[Charge] != 2 {
@@ -1753,7 +1753,7 @@ func TestCreatureEntryPermanentBindingIdentity(t *testing.T) {
 			if tc.phase {
 				g.PhaseIn([]uuid.UUID{creature.ID()})
 			}
-			if got := g.FindPermanent(creature.ID()).Counters[P1P1]; int(got) != tc.want {
+			if got := g.FindPermanent(creature.ID()).Counters[P1P1]; got != tc.want {
 				t.Fatalf("counters=%d, want %d", got, tc.want)
 			}
 		})
@@ -2435,7 +2435,7 @@ func TestOpponentLandTapBindingIdentity(t *testing.T) {
 				t.Fatalf("clone changed original: %d counters", got)
 			}
 			g.ResolveStack()
-			if got := int(g.FindPermanentIncludingPhased(land.ID()).Counters[Charge]); got != tc.want {
+			if got := g.FindPermanentIncludingPhased(land.ID()).Counters[Charge]; got != tc.want {
 				t.Fatalf("counters=%d, want %d", got, tc.want)
 			}
 		})
@@ -4741,7 +4741,7 @@ func TestComposableTapChoiceEvents(t *testing.T) {
 			if a.Life() != tc.wantLife {
 				t.Fatalf("life = %d, want %d from action events", a.Life(), tc.wantLife)
 			}
-			wantStun := uint8(0)
+			wantStun := int(0)
 			if tc.stun && !tc.accept {
 				wantStun = 1
 			}

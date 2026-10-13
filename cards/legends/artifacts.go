@@ -36,7 +36,7 @@ func manaBattery(name string, color Color) Card {
 					if p == nil {
 						return nil
 					}
-					counters := int(p.Counters[Charge])
+					counters := p.Counters[Charge]
 					if counters > 0 {
 						p.RemoveCounter(Charge, counters)
 					}
@@ -577,7 +577,7 @@ func registerArtifacts() {
 							if src == nil {
 								return nil
 							}
-							pins := int(src.Counters[Pin])
+							pins := src.Counters[Pin]
 							g.DestroyPermanent(src)
 							if pins > 0 {
 								p := g.GetPlayer(controller)
@@ -603,7 +603,7 @@ func registerArtifacts() {
 						if src == nil {
 							return nil
 						}
-						pins := int(src.Counters[Pin])
+						pins := src.Counters[Pin]
 						if pins <= 0 {
 							return nil
 						}

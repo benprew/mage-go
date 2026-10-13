@@ -82,7 +82,7 @@ func TestRONRoundedDamageCards(t *testing.T) {
 						if b.Life() != 20-wantTarget {
 							t.Fatalf("target life %d", b.Life())
 						}
-					} else if int(g.FindPermanent(target).Counters[core.Loyalty]) != 20-wantTarget {
+					} else if g.FindPermanent(target).Counters[core.Loyalty] != 20-wantTarget {
 						t.Fatal("wrong walker damage")
 					}
 					wantCallbacks := 0
@@ -246,7 +246,7 @@ func TestRONRoundedDamageTargetIdentity(t *testing.T) {
 					if current.Damage != wantTarget {
 						t.Fatal("wrong face-down damage")
 					}
-				} else if int(current.Counters[core.Loyalty]) != 10-wantTarget {
+				} else if current.Counters[core.Loyalty] != 10-wantTarget {
 					t.Fatal("wrong target identity")
 				}
 			})

@@ -22,7 +22,7 @@ func TestCounterRemovalResultAmounts(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := min(max(amount, 0), 5)
-			if a.Life() != 20+want || int(g.FindPermanent(p.ID()).Counters[Charge]) != 5-want || g.FindPermanent(p.ID()).Counters[Tide] != 2 {
+			if a.Life() != 20+want || g.FindPermanent(p.ID()).Counters[Charge] != 5-want || g.FindPermanent(p.ID()).Counters[Tide] != 2 {
 				t.Fatal("incorrect actual removal result")
 			}
 		})

@@ -101,17 +101,17 @@ func TestWaitingDelayedCounterActionReferences(t *testing.T) {
 						}
 						game.PutTriggersOnStack()
 						game.ResolveStack()
-						want := int(before) + 1
+						want := before + 1
 						if kind == "remove" {
-							want = max(int(before)-1, 0)
+							want = max(before-1, 0)
 						}
 						if kind == "all" {
 							want = 0
 						}
 						if state == "returned" || state == "phased" {
-							want = int(before)
+							want = before
 						}
-						if live := game.FindPermanentIncludingPhased(p.ID()); live != nil && int(live.Counters[core.Charge]) != want {
+						if live := game.FindPermanentIncludingPhased(p.ID()); live != nil && live.Counters[core.Charge] != want {
 							t.Fatalf("counters %d want %d", live.Counters[core.Charge], want)
 						}
 						if game == clone && (len(g.WaitingDelayedPermanentSources()) != 1 || p.Counters[core.Charge] != before || a.calls != 0) {

@@ -38,7 +38,7 @@ func TestOptionalXCounterPaymentAnnouncement(t *testing.T) {
 				if accept && available >= x {
 					wantPaid, removed = 1, x
 				}
-				if tx.paidNumbers[paid] != wantPaid || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if tx.paidNumbers[paid] != wantPaid || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d X=%d: result=%d counters=%d", accept, available, x, tx.paidNumbers[paid], g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if a.offers != offers {

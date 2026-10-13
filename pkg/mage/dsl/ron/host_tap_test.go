@@ -126,7 +126,7 @@ func TestRONHostTapRealCards(t *testing.T) {
 						if affected {
 							count = want
 						}
-						if p == nil || int(p.Counters[core.M0M2]) != count {
+						if p == nil || p.Counters[core.M0M2] != count {
 							t.Fatalf("counters=%v want=%d", p, count)
 						}
 						if p.CurrentToughness(game) != 8-2*count {

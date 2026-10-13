@@ -21,7 +21,7 @@ func (g *Game) checkStateBasedActions() bool {
 
 		var toDestroy, toGraveyard []*Permanent
 		for _, p := range g.zones.battlefield {
-			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
+			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && p.Counters[Loyalty] <= 0 {
 				toGraveyard = append(toGraveyard, p)
 			} else if p.HasType(TypeCreature) && (p.LethalDamage(g) || (p.DeathtouchDamage && p.Damage > 0)) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)

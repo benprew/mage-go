@@ -41,7 +41,7 @@ func (c *removeAnyCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) 
 		return false
 	}
 	p := g.FindPermanent(sourceID)
-	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.count >= 0 && int(p.Counters[c.ct]) >= c.count
+	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.count >= 0 && p.Counters[c.ct] >= c.count
 }
 
 func (c *removeAnyCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {

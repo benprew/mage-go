@@ -168,7 +168,7 @@ type PermanentState struct {
 	Attacking   bool
 	Blocking    uuid.UUID
 	Counters    map[string]int
-	RawCounters [core.NumCounters]uint8
+	RawCounters [core.NumCounters]int
 	Keywords    []string
 	ManaCost    string
 	Types       string

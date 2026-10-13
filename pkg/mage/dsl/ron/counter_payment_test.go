@@ -76,7 +76,7 @@ func TestRONCounterPaymentBatteries(t *testing.T) {
 				if err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), 1, nil); err != nil {
 					t.Fatal(err)
 				}
-				if g.StackSize() != 0 || a.ManaPool().Count(tc.color) != 1+count || b.ManaPool().TotalMana() != 0 || a.calls != 1 || int(g.FindPermanent(p.ID()).Counters[core.Charge]) != 3-count || !g.FindPermanent(p.ID()).Tapped {
+				if g.StackSize() != 0 || a.ManaPool().Count(tc.color) != 1+count || b.ManaPool().TotalMana() != 0 || a.calls != 1 || g.FindPermanent(p.ID()).Counters[core.Charge] != 3-count || !g.FindPermanent(p.ID()).Tapped {
 					t.Fatal("counter payment or immediate mana")
 				}
 				if clone.GetPlayer(a.PlayerID()).ManaPool().TotalMana() != 0 || clone.FindPermanent(p.ID()).Counters[core.Charge] != 3 || clone.FindPermanent(p.ID()).Tapped {

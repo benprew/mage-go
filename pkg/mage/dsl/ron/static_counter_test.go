@@ -179,7 +179,7 @@ func TestRONStaticCounterRealClauses(t *testing.T) {
 				counter = core.Sleep
 			}
 			for _, count := range []int{0, 1, 2, 3, 4, 0} {
-				g.MutablePermanent(subject.ID()).Counters[counter] = uint8(count)
+				g.MutablePermanent(subject.ID()).Counters[counter] = count
 				g.ApplyContinuousEffects()
 				switch name {
 				case "Homarid":
@@ -241,7 +241,7 @@ func TestRONStaticCounterCompositionAndBounds(t *testing.T) {
 	} {
 		g, a, _ := ronGame()
 		p := g.PutOnBattlefield(counterStaticFactory(t, tc.filter, "ThisPermanent")(), a.PlayerID())
-		g.MutablePermanent(p.ID()).Counters[core.Net] = uint8(tc.count)
+		g.MutablePermanent(p.ID()).Counters[core.Net] = tc.count
 		g.ApplyContinuousEffects()
 		if got := g.FindPermanent(p.ID()).HasKeyword(core.Flying); got != tc.want {
 			t.Fatalf("%s at %d: %v", tc.filter, tc.count, got)
@@ -319,7 +319,7 @@ func TestRONStaticCounterPlayerConditions(t *testing.T) {
 			g.AddControlEffect(mage.ControlEffectSpec{SourceID: b.PlayerID(), TargetID: member.ID(), ControllerID: b.PlayerID(), Duration: core.Indefinite})
 		}
 		for _, count := range []int{0, 1, 2, 0} {
-			g.MutablePermanent(member.ID()).Counters[core.Net] = uint8(count)
+			g.MutablePermanent(member.ID()).Counters[core.Net] = count
 			g.ApplyContinuousEffects()
 			want := count > 0
 			if strings.Contains(condition, "ControlsNo") {

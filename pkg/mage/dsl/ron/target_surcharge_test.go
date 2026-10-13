@@ -103,7 +103,7 @@ func TestRONTargetSurchargeFireball(t *testing.T) {
 				}
 				clone.ResolveStack()
 				for _, game := range []*mage.Game{g, clone} {
-					if game.FindPermanentIncludingPhased(first.ID()).Damage != firstShare || int(game.FindPermanent(walker.ID()).Counters[core.Loyalty]) != 20-walkerShare || game.GetPlayer(b.PlayerID()).Life() != 20-playerShare {
+					if game.FindPermanentIncludingPhased(first.ID()).Damage != firstShare || game.FindPermanent(walker.ID()).Counters[core.Loyalty] != 20-walkerShare || game.GetPlayer(b.PlayerID()).Life() != 20-playerShare {
 						t.Fatal("wrong damage or saved recipient")
 					}
 					if game.GetPlayer(a.PlayerID()).ManaPool().TotalMana() != 0 || game.StackSize() != 0 {

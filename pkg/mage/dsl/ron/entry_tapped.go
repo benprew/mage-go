@@ -1,8 +1,6 @@
 package ron
 
 import (
-	"math"
-
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -80,9 +78,6 @@ func compileFixedEntryCounters(n Node) (optionFactory, error) {
 	amount := value.Args[0]
 	if amount.Kind != IntegerNode || amount.Integer < 0 {
 		return nil, problem(amount, "entry counter amount requires a nonnegative integer")
-	}
-	if amount.Integer > math.MaxUint8 {
-		return nil, problem(amount, "entry counter amount exceeds engine counter storage")
 	}
 	counter, err := compilePermanentCounterType(n.Args[1])
 	if err != nil {

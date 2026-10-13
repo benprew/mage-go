@@ -2159,7 +2159,7 @@ func TestPaidCounterChoiceZeroAndInvalid(t *testing.T) {
 				t.Fatalf("activation error = %v", err)
 			}
 			g.ResolveStack()
-			if a.Life() != tc.wantLife || int(g.FindPermanent(source.ID()).Counters[Charge]) != tc.wantCounters {
+			if a.Life() != tc.wantLife || g.FindPermanent(source.ID()).Counters[Charge] != tc.wantCounters {
 				t.Fatal("invalid or zero payment changed state")
 			}
 		})
@@ -4608,7 +4608,7 @@ func TestActivationPermanentCaptureLifetime(t *testing.T) {
 			if g.FindPermanent(aura.ID()) != nil || g.StackSize() != 1 {
 				t.Fatal("sacrifice was not paid")
 			}
-			want := uint8(2)
+			want := int(2)
 			switch change {
 			case "return source":
 				g.PutOnBattlefield(aura, a.PlayerID())

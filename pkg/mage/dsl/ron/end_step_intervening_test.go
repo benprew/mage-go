@@ -158,7 +158,7 @@ func TestRONEndStepInterveningDervish(t *testing.T) {
 				want = 2
 			}
 			for _, game := range []*mage.Game{g, clone} {
-				if got := int(game.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P1]); got != want {
+				if got := game.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P1]; got != want {
 					t.Fatalf("counters=%d want %d", got, want)
 				}
 			}

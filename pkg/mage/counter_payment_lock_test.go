@@ -76,7 +76,7 @@ func TestCounterPaymentCommitPreflight(t *testing.T) {
 							expected = 3
 						}
 					}
-					if int(p.Counters[Charge]) != expected {
+					if p.Counters[Charge] != expected {
 						t.Fatal("failed commit removed counters")
 					}
 				}
@@ -118,7 +118,7 @@ func TestCounterPaymentLockIsolationAndZero(t *testing.T) {
 			if err := cloneTx.Commit(); err != nil {
 				t.Fatal(err)
 			}
-			if int(g.FindPermanent(first.ID()).Counters[Charge]) != 2 || int(g.FindPermanent(second.ID()).Counters[Charge]) != 2-count || int(clone.FindPermanent(first.ID()).Counters[Charge]) != 2-count {
+			if g.FindPermanent(first.ID()).Counters[Charge] != 2 || g.FindPermanent(second.ID()).Counters[Charge] != 2-count || clone.FindPermanent(first.ID()).Counters[Charge] != 2-count {
 				t.Fatal("payment crossed source or clone boundary")
 			}
 			if declaration.(*removeCountersCost).locked {
@@ -288,7 +288,7 @@ func TestEitherCounterPaymentLockIsolationAndZero(t *testing.T) {
 			if err := cloneTx.Commit(); err != nil {
 				t.Fatal(err)
 			}
-			if int(g.FindPermanent(first.ID()).Counters[Charge]) != 2 || int(g.FindPermanent(second.ID()).Counters[Charge]) != 2-count || int(clone.FindPermanent(first.ID()).Counters[Charge]) != 2-count {
+			if g.FindPermanent(first.ID()).Counters[Charge] != 2 || g.FindPermanent(second.ID()).Counters[Charge] != 2-count || clone.FindPermanent(first.ID()).Counters[Charge] != 2-count {
 				t.Fatal("payment crossed source or clone boundary")
 			}
 			if inner.(*removeCountersCost).locked || declaration.(*eitherCost).locked {
@@ -385,7 +385,7 @@ func TestEitherXCounterPaymentLockIsolationAndZero(t *testing.T) {
 			if err := cloneTx.Commit(); err != nil {
 				t.Fatal(err)
 			}
-			if int(g.FindPermanent(first.ID()).Counters[Charge]) != 2 || int(g.FindPermanent(second.ID()).Counters[Charge]) != 2-count || int(clone.FindPermanent(first.ID()).Counters[Charge]) != 2-count {
+			if g.FindPermanent(first.ID()).Counters[Charge] != 2 || g.FindPermanent(second.ID()).Counters[Charge] != 2-count || clone.FindPermanent(first.ID()).Counters[Charge] != 2-count {
 				t.Fatal("payment crossed source or clone boundary")
 			}
 			if declaration.(*eitherCost).locked {

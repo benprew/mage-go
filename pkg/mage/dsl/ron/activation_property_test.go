@@ -302,7 +302,7 @@ func TestRONActivationPropertyThresholdsAndModifiers(t *testing.T) {
 			c := factory()
 			c.SetOwner(a.PlayerID())
 			p := g.PutOnBattlefield(c, a.PlayerID())
-			g.MutablePermanent(p.ID()).Counters[core.Hatchling] = uint8(tc.count)
+			g.MutablePermanent(p.ID()).Counters[core.Hatchling] = tc.count
 			g.MutablePermanent(p.ID()).Counters[core.Charge] = 1
 			a.ManaPool().Add(core.Colorless, 1)
 			if err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), 0, nil); err == nil {
@@ -315,7 +315,7 @@ func TestRONActivationPropertyThresholdsAndModifiers(t *testing.T) {
 			c = factory()
 			c.SetOwner(a.PlayerID())
 			p = g.PutOnBattlefield(c, a.PlayerID())
-			g.MutablePermanent(p.ID()).Counters[core.Hatchling] = uint8(tc.count)
+			g.MutablePermanent(p.ID()).Counters[core.Hatchling] = tc.count
 			g.MutablePermanent(p.ID()).Counters[core.Charge] = 1
 			err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), 0, nil)
 			if (err == nil) != tc.allowed {
@@ -331,7 +331,7 @@ func TestRONActivationPropertyManaPlanning(t *testing.T) {
 	c := factory()
 	c.SetOwner(a.PlayerID())
 	p := g.PutOnBattlefield(c, a.PlayerID())
-	for _, count := range []uint8{0, 1, 0, 2} {
+	for _, count := range []int{0, 1, 0, 2} {
 		g.MutablePermanent(p.ID()).Counters[core.Charge] = count
 		if g.CanAfford(a.PlayerID(), core.ParseManaCost("{U}"), nil) != (count > 0) {
 			t.Fatal("solver ignored condition")

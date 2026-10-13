@@ -1184,7 +1184,7 @@ func (r *counterDamagePreventionReplacement) Replace(a Action, g *Game) Action {
 	if permanent == nil {
 		return a
 	}
-	prevented := min(damage.Amount(), int(permanent.Counters[r.counterType]))
+	prevented := min(damage.Amount(), permanent.Counters[r.counterType])
 	permanent.RemoveCounter(r.counterType, prevented)
 	remaining := damage.Amount() - prevented
 	if remaining == 0 {

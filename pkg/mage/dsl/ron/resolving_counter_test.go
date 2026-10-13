@@ -47,14 +47,14 @@ func TestRONResolvingCounterRealClauses(t *testing.T) {
 					land := g.PutOnBattlefield(mage.NewLand("Host"), a.PlayerID())
 					g.Attach(p.ID(), land.ID())
 				}
-				g.MutablePermanent(p.ID()).Counters[counter] = uint8(count)
+				g.MutablePermanent(p.ID()).Counters[counter] = count
 				g.MutablePermanent(p.ID()).Counters[core.Charge] = 9
 				queueRONUpkeep(g, b)
 				if g.StackSize() != 0 {
 					t.Fatal("opponent upkeep triggered")
 				}
 				queueRONUpkeep(g, a)
-				if g.StackSize() != 1 || int(g.FindPermanent(p.ID()).Counters[counter]) != count {
+				if g.StackSize() != 1 || g.FindPermanent(p.ID()).Counters[counter] != count {
 					t.Fatal("early counter change")
 				}
 				g.ResolveStack()
@@ -68,7 +68,7 @@ func TestRONResolvingCounterRealClauses(t *testing.T) {
 				if (live == nil) != gone {
 					t.Fatal("wrong sequential counter condition")
 				}
-				if live != nil && (int(live.Counters[counter]) != want || live.Counters[core.Charge] != 9) {
+				if live != nil && (live.Counters[counter] != want || live.Counters[core.Charge] != 9) {
 					t.Fatal("wrong counter kind or amount")
 				}
 			})
@@ -136,7 +136,7 @@ func TestRONResolvingCounterFilters(t *testing.T) {
 			g, a, _ := ronGame()
 			factory := permanentScopeFactory(t, "Artifact", `Activated(PayMana([]),ActionList([If(PermanentPassesFilter(ThisPermanent,`+filter+`),[GainLife(Integer(1))])]))`)
 			p := g.PutOnBattlefield(factory(), a.PlayerID())
-			g.MutablePermanent(p.ID()).Counters[core.Time] = uint8(count)
+			g.MutablePermanent(p.ID()).Counters[core.Time] = count
 			if err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), 0, nil); err != nil {
 				t.Fatal(err)
 			}
@@ -300,7 +300,7 @@ func TestRONResolvingCounterClauseCasting(t *testing.T) {
 			if p != nil {
 				t.Fatal("fifth upkeep did not destroy source")
 			}
-		} else if p == nil || int(p.Counters[core.Hunger]) != turn {
+		} else if p == nil || p.Counters[core.Hunger] != turn {
 			t.Fatal("upkeep progression", turn)
 		}
 	}

@@ -128,7 +128,7 @@ func TestRONWaitingDelayedCounterActionProtection(t *testing.T) {
 						game.PutTriggersOnStack()
 						game.ResolveStack()
 						if live := game.FindPermanentIncludingPhased(p.ID()); live != nil {
-							want := uint8(3)
+							want := int(3)
 							if strings.Contains(action, "ACounterOfTypeFromPermanent") {
 								want = 1
 							}
@@ -253,7 +253,7 @@ func TestRONWaitingDelayedCounterActionInstances(t *testing.T) {
 					if game.FindPermanent(returned.ID()).Counters[core.Charge] != 0 {
 						t.Fatal("counters followed returned target")
 					}
-					want := uint8(0)
+					want := int(0)
 					if strings.HasPrefix(amount, "TheTotalNumber") || strings.HasPrefix(amount, "ManaValue") {
 						want = 2
 					}

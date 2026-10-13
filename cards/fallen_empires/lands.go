@@ -63,7 +63,7 @@ func storageLandFactory(name string, color Color) func() Card {
 						if perm == nil {
 							return nil
 						}
-						count := int(perm.Counters[Storage])
+						count := perm.Counters[Storage]
 						if count > 0 {
 							perm.RemoveCounter(Storage, count)
 							p := g.GetPlayer(controller)

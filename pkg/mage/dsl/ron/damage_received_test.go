@@ -117,7 +117,7 @@ func TestRONDamageReceivedFungusaur(t *testing.T) {
 				want = 0
 			}
 			got := g.FindPermanentIncludingPhased(p.ID())
-			if int(got.Counters[core.P1P1]) != want {
+			if got.Counters[core.P1P1] != want {
 				t.Fatalf("counters %d, want %d", got.Counters[core.P1P1], want)
 			}
 			if clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P1] != 0 {
@@ -128,7 +128,7 @@ func TestRONDamageReceivedFungusaur(t *testing.T) {
 			if change == "copy" {
 				cloneWant--
 			}
-			if int(clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P1]) != cloneWant {
+			if clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P1] != cloneWant {
 				t.Fatal("clone lost source identity")
 			}
 		})
@@ -217,7 +217,7 @@ func TestRONDamageReceivedControllerClause(t *testing.T) {
 			if change == "return" || change == "phase-after" {
 				want = 0
 			}
-			if int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.Vitality]) != want {
+			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.Vitality] != want {
 				t.Fatalf("vitality counters, want %d", want)
 			}
 			if clone.FindPermanentIncludingPhased(p.ID()).Counters[core.Vitality] != 0 {
@@ -227,7 +227,7 @@ func TestRONDamageReceivedControllerClause(t *testing.T) {
 			if change == "copy" {
 				want /= 2
 			}
-			if int(clone.FindPermanentIncludingPhased(p.ID()).Counters[core.Vitality]) != want {
+			if clone.FindPermanentIncludingPhased(p.ID()).Counters[core.Vitality] != want {
 				t.Fatal("clone lost amount")
 			}
 		})

@@ -1,5 +1,11 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Permanent counters and exact departure snapshots use integer arrays.
+// [EntersWithNCounters] and the shared counter replacement service keep counts
+// above 255. Clones keep separate arrays. Phasing keeps counters; a zone return
+// starts new counters. RON fixed entry amounts accept nonnegative integers.
+// Announced entry X and entry payment results need separate adapters.
+//
 // [TargetSharesCardTypeWith] compares a target with an earlier singular target.
 // Both exact visits must be present and unphased. Current types supply the
 // comparison; departure information cannot restore a target. A supplied type

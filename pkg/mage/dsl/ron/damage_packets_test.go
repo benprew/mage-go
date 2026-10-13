@@ -96,7 +96,7 @@ func TestRONDamagePacketsCards(t *testing.T) {
 					if kind == "creature" && g.FindPermanent(target).Damage != tc.targeted {
 						t.Error("incomplete creature packet")
 					}
-					if kind == "planeswalker" && int(g.FindPermanent(target).Counters[core.Loyalty]) != 10-tc.targeted {
+					if kind == "planeswalker" && g.FindPermanent(target).Counters[core.Loyalty] != 10-tc.targeted {
 						t.Error("incomplete walker packet")
 					}
 					if tc.selfPermanent && g.FindPermanent(source.ID()).Damage != tc.self+map[bool]int{true: tc.targeted}[kind == "overlap"] {

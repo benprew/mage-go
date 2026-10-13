@@ -73,7 +73,7 @@ func TestRONIndefiniteTypeLegalityAndReplacement(t *testing.T) {
 				}
 			}
 			g.ResolveStack()
-			want := uint8(1)
+			want := int(1)
 			if scenario == "counter-prevented" || scenario == "becomes-artifact" {
 				want = 0
 			}
@@ -290,11 +290,11 @@ func assertIndefiniteType(t *testing.T, g *mage.Game, id uuid.UUID, monk, change
 			}
 		}
 	} else {
-		count := uint8(0)
+		count := int(0)
 		if changed {
 			count = 1
 		}
-		if p.HasType(core.TypeArtifact) != changed || !p.HasType(core.TypeCreature) || !p.HasSubType("Bird") || !p.HasKeyword(core.Flying) || p.Counters[core.P1P1] != count || p.CurrentPower(g) != 2+int(count) || p.CurrentToughness(g) != 3+int(count) {
+		if p.HasType(core.TypeArtifact) != changed || !p.HasType(core.TypeCreature) || !p.HasSubType("Bird") || !p.HasKeyword(core.Flying) || p.Counters[core.P1P1] != count || p.CurrentPower(g) != 2+count || p.CurrentToughness(g) != 3+count {
 			t.Fatal("artifact addition lost characteristics or counter")
 		}
 	}

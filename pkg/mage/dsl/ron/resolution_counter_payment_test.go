@@ -93,7 +93,7 @@ func TestRONResolutionCounterChosenBranches(t *testing.T) {
 			if accept {
 				want = 2 * count
 			}
-			if a.Life() != 20+want || int(g.FindPermanent(p.ID()).Counters[core.Charge]) != 5-want || g.FindPermanent(q.ID()).Counters[core.Charge] != 5 {
+			if a.Life() != 20+want || g.FindPermanent(p.ID()).Counters[core.Charge] != 5-want || g.FindPermanent(q.ID()).Counters[core.Charge] != 5 {
 				t.Fatal("payment binding or instance isolation")
 			}
 			if clone.FindPermanent(p.ID()).Counters[core.Charge] != 5 {
@@ -235,7 +235,7 @@ func TestRONResolutionCounterMandatory(t *testing.T) {
 		if counters == 0 {
 			want = 23
 		}
-		if a.Life() != want || int(g.FindPermanent(p.ID()).Counters[core.Pupa]) != max(0, counters-1) {
+		if a.Life() != want || g.FindPermanent(p.ID()).Counters[core.Pupa] != max(0, counters-1) {
 			t.Fatal("mandatory payment or unpaid branch")
 		}
 	}

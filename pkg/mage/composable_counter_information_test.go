@@ -113,7 +113,7 @@ func TestCounterInformationDeclaration(t *testing.T) {
 
 func TestCounterInformationBoundsAndPurity(t *testing.T) {
 	for _, counter := range []CounterType{Charge, P1P1, Pin, Storage, Wind, Credit, Doom} {
-		for _, count := range []uint8{0, 1, 255} {
+		for _, count := range []int{0, 1, 255} {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
 			g := NewGame(a, b)
 			p := g.PutOnBattlefield(NewArtifact("Subject", ""), a.PlayerID())
@@ -121,7 +121,7 @@ func TestCounterInformationBoundsAndPurity(t *testing.T) {
 			ctx := &EffectContext{Game: g, Controller: a.PlayerID(), SourceID: p.ID(), sourceCaptured: true, sourceIncarnation: p.incarnationID}
 			value := CountersOnWithLKI(This, counter)
 			for range 3 {
-				if value.resolveValue(ctx) != int(count) {
+				if value.resolveValue(ctx) != count {
 					t.Fatal("counter count wrapped or changed")
 				}
 			}

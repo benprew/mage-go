@@ -107,7 +107,7 @@ func ttSupplementalKey(g *mage.Game) uint64 {
 				continue
 			}
 			mixInt(int(ct))
-			mixInt(int(perm.Counters[ct]))
+			mixInt(perm.Counters[ct])
 		}
 	}
 

@@ -91,7 +91,7 @@ func TestRONExilePaymentNecropolis(t *testing.T) {
 				if change == "return" || change == "phase" {
 					want = 0
 				}
-				if int(p.Counters[core.P0P1]) != want {
+				if p.Counters[core.P0P1] != want {
 					t.Fatalf("counters=%d want %d", p.Counters[core.P0P1], want)
 				}
 			}

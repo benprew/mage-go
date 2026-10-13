@@ -16,13 +16,13 @@ func HasCounter(counter core.CounterType) PermanentFilter {
 // CounterCountEquals matches the current count without a narrow integer cast.
 func CounterCountEquals(counter core.CounterType, count int) PermanentFilter {
 	return NewPermanentFilter(fmt.Sprintf("has exactly %d %s counters", count, counter), func(p *Permanent, _ *Game) bool {
-		return p != nil && int(p.Counters[counter]) == count
+		return p != nil && p.Counters[counter] == count
 	})
 }
 
 // CounterCountAtLeast compares the count without a narrow integer cast.
 func CounterCountAtLeast(counter core.CounterType, minimum int) PermanentFilter {
 	return NewPermanentFilter(fmt.Sprintf("has at least %d %s counters", minimum, counter), func(p *Permanent, _ *Game) bool {
-		return p != nil && int(p.Counters[counter]) >= minimum
+		return p != nil && p.Counters[counter] >= minimum
 	})
 }

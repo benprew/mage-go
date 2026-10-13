@@ -47,7 +47,7 @@ func TestRONSingleCounterRemovalVenarianGold(t *testing.T) {
 		t.Fatal("wrong player's upkeep removed counter")
 	}
 	g.SetActivePlayerIndex(1)
-	for _, want := range []uint8{2, 1, 0, 0} {
+	for _, want := range []int{2, 1, 0, 0} {
 		g.RunStepWithPriority(core.Untap)
 		if want > 0 && !g.FindPermanent(host.ID()).Tapped {
 			t.Fatal("host untapped with sleep counters")
@@ -70,7 +70,7 @@ func TestRONSingleCounterRemovalSource(t *testing.T) {
 			c := factory()
 			c.SetOwner(a.PlayerID())
 			p := g.PutOnBattlefield(c, a.PlayerID())
-			count := uint8(3)
+			count := int(3)
 			if scenario == "zero" {
 				count = 0
 			}
@@ -176,7 +176,7 @@ func TestRONSingleCounterRemovalTarget(t *testing.T) {
 				}
 			}
 			g.ResolveStack()
-			want := uint8(3)
+			want := int(3)
 			life := 20
 			if scenario == "present" {
 				want = 2
@@ -317,7 +317,7 @@ func TestRONSingleCounterRemovalHost(t *testing.T) {
 			if g.StackSize() != 1 {
 				t.Fatal("host upkeep trigger missing")
 			}
-			wantHost, wantOther := uint8(2), uint8(7)
+			wantHost, wantOther := int(2), int(7)
 			switch scenario {
 			case "reattach":
 				g.Attach(aura.ID(), other.ID())

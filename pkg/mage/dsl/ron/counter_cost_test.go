@@ -91,7 +91,7 @@ func TestRONCounterCostRealCards(t *testing.T) {
 							}
 						}
 					}
-					wantCounters := uint8(3)
+					wantCounters := int(3)
 					if change == "return" {
 						wantCounters = 0
 					}
@@ -287,7 +287,7 @@ func TestRONCounterCostFormsAndTiming(t *testing.T) {
 			if err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), 0, nil); err == nil {
 				t.Fatal("second activation accepted")
 			}
-			wantCharge, wantPT := uint8(3), uint8(3)
+			wantCharge, wantPT := int(3), int(3)
 			if strings.HasPrefix(instruction, "ACounter") {
 				wantCharge--
 			}

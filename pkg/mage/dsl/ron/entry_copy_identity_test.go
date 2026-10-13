@@ -78,7 +78,7 @@ func TestRONEntryCopyIdentityEntryReplacements(t *testing.T) {
 		if choice == 1 {
 			want = 7
 		}
-		if int(p.Counters[core.P1P1]) != want || p.Counters[core.Javelin] != 0 || a.choices != 0 || b.choices != 1 || !p.HasType(core.TypeArtifact) {
+		if p.Counters[core.P1P1] != want || p.Counters[core.Javelin] != 0 || a.choices != 0 || b.choices != 1 || !p.HasType(core.TypeArtifact) {
 			t.Fatal("copy entry used physical rules or a separate replacement pipeline")
 		}
 	}

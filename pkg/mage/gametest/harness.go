@@ -1440,7 +1440,7 @@ func (tg *TestGame) AssertCounterCount(p PlayerRef, name string, ct core.Counter
 		tg.t.Errorf("AssertCounterCount(%v, %s): permanent not found", p, name)
 		return
 	}
-	got := int(perm.Counters[ct])
+	got := perm.Counters[ct]
 	if got != want {
 		tg.t.Errorf("AssertCounterCount(%v, %s, %s): got %d, want %d", p, name, ct, got, want)
 	}

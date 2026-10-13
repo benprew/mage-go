@@ -426,7 +426,7 @@ func permPower(p *mage.Permanent) int {
 	}
 	for ct := range core.NumCounters {
 		if n := p.Counters[ct]; n != 0 {
-			pw += ct.PowerBoost() * int(n)
+			pw += ct.PowerBoost() * n
 		}
 	}
 	return pw
@@ -439,7 +439,7 @@ func permToughness(p *mage.Permanent) int {
 	}
 	for ct := range core.NumCounters {
 		if n := p.Counters[ct]; n != 0 {
-			tg += ct.ToughnessBoost() * int(n)
+			tg += ct.ToughnessBoost() * n
 		}
 	}
 	return tg

@@ -36,7 +36,7 @@ func (e *boundedCountersEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	upper := min(e.amount.resolveValue(ctx), max(e.limit-int(p.Counters[e.counter]), 0))
+	upper := min(e.amount.resolveValue(ctx), max(e.limit-p.Counters[e.counter], 0))
 	if upper <= 0 {
 		return nil
 	}
@@ -52,7 +52,7 @@ func (e *boundedCountersEffect) Apply(ctx *EffectContext) error {
 	if live == nil || live.incarnationID != p.incarnationID {
 		return nil
 	}
-	chosen = min(chosen, max(e.limit-int(live.Counters[e.counter]), 0))
+	chosen = min(chosen, max(e.limit-live.Counters[e.counter], 0))
 	if chosen > 0 {
 		ctx.Game.addCountersWithReplacementLimit(live, e.counter, chosen, ctx.SourceID, false, &e.limit)
 	}

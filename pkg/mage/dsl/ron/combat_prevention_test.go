@@ -116,18 +116,18 @@ func TestRONGlobalCombatPreventionSporeFlower(t *testing.T) {
 			for count := 1; count <= 3; count++ {
 				g.FireEvent(core.GameEvent{Type: core.EvtUpkeep, PlayerID: a.PlayerID()})
 				g.PutTriggersOnStack()
-				if g.FindPermanent(source.ID()).Counters[core.Spore] != uint8(count-1) {
+				if g.FindPermanent(source.ID()).Counters[core.Spore] != (count - 1) {
 					t.Fatal("counter placed before resolution")
 				}
 				g.ResolveStack()
-				if g.FindPermanent(source.ID()).Counters[core.Spore] != uint8(count) {
+				if g.FindPermanent(source.ID()).Counters[core.Spore] != count {
 					t.Fatal("wrong upkeep counter amount")
 				}
 				if count < 3 {
 					if err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 1, nil); err == nil {
 						t.Fatal("insufficient counters accepted")
 					}
-					if g.StackSize() != 0 || g.FindPermanent(source.ID()).Counters[core.Spore] != uint8(count) {
+					if g.StackSize() != 0 || g.FindPermanent(source.ID()).Counters[core.Spore] != count {
 						t.Fatal("failed payment changed counters")
 					}
 				}

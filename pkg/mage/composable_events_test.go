@@ -707,7 +707,7 @@ func TestArtifactAbilityWithoutTapCostEvent(t *testing.T) {
 				t.Fatal("clone changed original")
 			}
 			g.ResolveStack()
-			if got := g.FindPermanent(source.ID()).Counters[Charge]; int(got) != tc.want {
+			if got := g.FindPermanent(source.ID()).Counters[Charge]; got != tc.want {
 				t.Fatalf("counters=%d, want %d", got, tc.want)
 			}
 			if b.Life() != 21+tc.want {
@@ -841,7 +841,7 @@ func TestArtifactBecomesTappedCapturesParticipants(t *testing.T) {
 		phaseSource, phaseObj bool
 		returnObj             bool
 		wantTriggers          int
-		wantCounters          uint8
+		wantCounters          int
 	}{
 		{"own artifact", true, false, false, false, false, 1, 1},
 		{"opponent artifact", true, true, false, false, false, 1, 1},
@@ -6359,7 +6359,7 @@ func TestPermanentBecomesTappedIdentityAndSourceLifecycle(t *testing.T) {
 				g.PutOnBattlefield(card, b.PlayerID())
 			}
 			g.ResolveStack()
-			wantCounters := uint8(1)
+			wantCounters := int(1)
 			if state == "returned" || want == 0 {
 				wantCounters = 0
 			}

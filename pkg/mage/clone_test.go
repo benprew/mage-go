@@ -998,7 +998,7 @@ func BenchmarkClone(b *testing.B) {
 		if i%3 == 0 {
 			perm.Tapped = true
 		}
-		perm.Counters[P1P1] = uint8(i % 4)
+		perm.Counters[P1P1] = (i % 4)
 		g.zones.battlefield = append(g.zones.battlefield, perm)
 	}
 
@@ -1095,8 +1095,8 @@ func setupRogueBoardCloneBenchmarkGame() *Game {
 		if i%5 == 0 {
 			perm.Damage = i % 4
 		}
-		perm.Counters[P1P1] = uint8(i % 3)
-		perm.Counters[Charge] = uint8(i % 4)
+		perm.Counters[P1P1] = (i % 3)
+		perm.Counters[Charge] = (i % 4)
 		if i%7 == 0 {
 			perm.RuntimeAbilities = append(perm.RuntimeAbilities, NewManaAbility(Black))
 		}

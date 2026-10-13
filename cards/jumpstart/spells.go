@@ -1094,7 +1094,7 @@ func registerSpells() {
 						perm.AddCounter(P1P1, 1)
 					}
 					for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
-						if int(perm.Counters[P1P1]) > 0 {
+						if perm.Counters[P1P1] > 0 {
 							perm = g.MutablePermanent(perm.ID())
 							if perm == nil {
 								continue

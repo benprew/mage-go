@@ -261,7 +261,7 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 			if n == 0 {
 				continue
 			}
-			h ^= z.permCounter[idx][ct][clampIdx(int(n), maxCount)]
+			h ^= z.permCounter[idx][ct][clampIdx(n, maxCount)]
 		}
 	}
 

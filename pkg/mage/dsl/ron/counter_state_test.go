@@ -40,7 +40,7 @@ func TestRONCounterStateHomarid(t *testing.T) {
 		t.Fatal("entry before resolution")
 	}
 	g.ResolveStack()
-	check := func(wantCounters uint8, wantPT int) {
+	check := func(wantCounters int, wantPT int) {
 		t.Helper()
 		g.ApplyContinuousEffects()
 		p := g.FindPermanent(c.ID())
@@ -54,7 +54,7 @@ func TestRONCounterStateHomarid(t *testing.T) {
 	check(1, 1)
 	g.SetActivePlayerIndex(0)
 	for _, want := range []struct {
-		n  uint8
+		n  int
 		pt int
 	}{{2, 2}, {3, 3}, {0, 2}, {1, 1}, {2, 2}, {3, 3}, {0, 2}} {
 		g.RunStepWithPriority(core.Upkeep)
@@ -297,7 +297,7 @@ func TestRONCounterStateResetTarget(t *testing.T) {
 				}
 			}
 			g.ResolveStack()
-			want := uint8(7)
+			want := int(7)
 			if scenario == "present" {
 				want = 0
 			}
@@ -415,7 +415,7 @@ func TestRONCounterStateResetHost(t *testing.T) {
 				}
 			}
 			g.ResolveStack()
-			wantHost, wantOther := uint8(0), uint8(7)
+			wantHost, wantOther := int(0), int(7)
 			if scenario == "reattach" {
 				wantHost, wantOther = 5, 0
 			}

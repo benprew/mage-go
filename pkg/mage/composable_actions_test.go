@@ -545,7 +545,7 @@ func TestAttachedControllerUpkeepCapture(t *testing.T) {
 				t.Fatal("wrong step or controller triggered")
 			}
 			g.FireEvent(GameEvent{Type: EvtUpkeep, PlayerID: b.PlayerID()})
-			want := uint8(2)
+			want := int(2)
 			switch change {
 			case "move":
 				g.Attach(source.ID(), second.ID())
@@ -705,7 +705,7 @@ func TestAttachedBecomesTappedCapture(t *testing.T) {
 				t.Fatal("wrong step or controller triggered")
 			}
 			g.TapPermanent(g.FindPermanent(first.ID()))
-			want := uint8(2)
+			want := int(2)
 			switch change {
 			case "move":
 				g.Attach(source.ID(), second.ID())
@@ -897,7 +897,7 @@ func TestAttachedPermanentResolutionLifetime(t *testing.T) {
 				t.Fatal("copy failed")
 			}
 			g.ResolveStack()
-			if g.FindPermanentIncludingPhased(first.ID()).Counters[Charge] != uint8(2*wantFirst) || g.FindPermanent(second.ID()).Counters[Charge] != uint8(2*wantSecond) {
+			if g.FindPermanentIncludingPhased(first.ID()).Counters[Charge] != (2*wantFirst) || g.FindPermanent(second.ID()).Counters[Charge] != (2*wantSecond) {
 				t.Fatal("attachment did not retain the required incarnation")
 			}
 			if g.GetPlayer(a.PlayerID()).Life() != 22 || g.GetPlayer(b.PlayerID()).Life() != 22 {
@@ -1676,7 +1676,7 @@ func TestAnotherCreatureEntersAnyController(t *testing.T) {
 				t.Fatalf("clone changed original counters=%d", got)
 			}
 			g.ResolveStack()
-			if got := g.FindPermanentIncludingPhased(watcher.ID()).Counters[P1P1]; int(got) != tc.want {
+			if got := g.FindPermanentIncludingPhased(watcher.ID()).Counters[P1P1]; got != tc.want {
 				t.Fatalf("counters=%d, want %d", got, tc.want)
 			}
 		})
@@ -6603,7 +6603,7 @@ func TestEnchantmentYouControlEntersReturnedAndCopied(t *testing.T) {
 		if returned {
 			want = 0
 		}
-		if got := int(g.FindPermanent(entry.ID()).Counters[P1P1]); got != want {
+		if got := g.FindPermanent(entry.ID()).Counters[P1P1]; got != want {
 			t.Fatalf("returned=%v: counters=%d, want %d", returned, got, want)
 		}
 	}

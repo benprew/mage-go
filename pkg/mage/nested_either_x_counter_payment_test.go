@@ -42,12 +42,12 @@ func TestNestedEitherXCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid selected nested cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 {
@@ -121,7 +121,7 @@ func TestNestedEitherXCounterPaymentSelectionAndZero(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			t.Fatal(err)
 		}
-		if a.choices != 2 || a.Life() != 20 || int(g.FindPermanent(source.ID()).Counters[Charge]) != 3-count {
+		if a.choices != 2 || a.Life() != 20 || g.FindPermanent(source.ID()).Counters[Charge] != 3-count {
 			t.Fatal("nested selection changed at commit")
 		}
 	}
@@ -151,7 +151,7 @@ func TestNestedEitherXCounterPaymentAnnouncement(t *testing.T) {
 			if err := tx.Commit(); err != nil {
 				t.Fatal(err)
 			}
-			if int(g.FindPermanent(source.ID()).Counters[Charge]) != available-x {
+			if g.FindPermanent(source.ID()).Counters[Charge] != available-x {
 				t.Fatal("payment used ambient X")
 			}
 			if _, ok := declaration.(*eitherCost).options[0].(*eitherCost).options[0].(*removeXCountersCost); !ok {

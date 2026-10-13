@@ -120,7 +120,7 @@ func TestRONCounterPlacementPaymentChants(t *testing.T) {
 					if state == "copy" || state == "doubled" {
 						count = 2
 					}
-					if int(g.FindPermanent(victim.ID()).Counters[core.M1M1]) != count {
+					if g.FindPermanent(victim.ID()).Counters[core.M1M1] != count {
 						t.Fatal("wrong placement")
 					}
 				}
@@ -307,13 +307,13 @@ func TestRONCounterPlacementPaymentNativeLand(t *testing.T) {
 				if pay {
 					life, count = 20, 1
 				}
-				if b.Life() != life || int(g.FindPermanent(victim.ID()).Counters[core.M1M1]) != count {
+				if b.Life() != life || g.FindPermanent(victim.ID()).Counters[core.M1M1] != count {
 					t.Fatal("native land payment")
 				}
 				second := repositoryCard(t, "LEB", tc.land)
 				second.SetOwner(b.PlayerID())
 				b.AddToHand(second)
-				if err := g.PlayLand(b.PlayerID(), second.ID()); err == nil || b.Life() != life || int(g.FindPermanent(victim.ID()).Counters[core.M1M1]) != count {
+				if err := g.PlayLand(b.PlayerID(), second.ID()); err == nil || b.Life() != life || g.FindPermanent(victim.ID()).Counters[core.M1M1] != count {
 					t.Fatal("illegal land changed payment")
 				}
 			})

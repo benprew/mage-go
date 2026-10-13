@@ -80,7 +80,7 @@ func (e *addCountersEffect) Apply(ctx *EffectContext) error {
 	for _, perm := range perms {
 		amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 		if e.maxTotal > 0 {
-			current := int(perm.Counters[e.ct])
+			current := perm.Counters[e.ct]
 			room := max(e.maxTotal-current, 0)
 			amount = min(amount, room)
 		}
@@ -161,7 +161,7 @@ func MoveCountersFromSourceToTarget(ct CounterType) Effect {
 			if source == nil || target == nil {
 				return nil
 			}
-			available := int(source.Counters[ct])
+			available := source.Counters[ct]
 			if available <= 0 {
 				return nil
 			}
@@ -211,7 +211,7 @@ func (e *SnapshotSourceCounterData) Apply(ctx *EffectContext) error {
 		ctx.SetInt(e.StoreAs, 0)
 		return nil
 	}
-	ctx.SetInt(e.StoreAs, int(perm.Counters[e.CounterType]))
+	ctx.SetInt(e.StoreAs, perm.Counters[e.CounterType])
 	return nil
 }
 
@@ -228,5 +228,5 @@ func (c SourceHasCounterCond) CheckTriggerCond(_ *GameEvent, g GameReader, sourc
 	if perm == nil {
 		return false
 	}
-	return int(perm.Counters[c.CounterType]) >= c.MinCount
+	return perm.Counters[c.CounterType] >= c.MinCount
 }

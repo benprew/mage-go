@@ -712,7 +712,7 @@ func registerCreatures() {
 						if src == nil {
 							return nil
 						}
-						maxCounters := int(src.Counters[P1P1])
+						maxCounters := src.Counters[P1P1]
 						if maxCounters == 0 {
 							return nil
 						}
@@ -721,7 +721,7 @@ func registerCreatures() {
 						if n == 0 {
 							return nil
 						}
-						src.Counters[P1P1] -= uint8(n)
+						src.Counters[P1P1] -= n
 						for range n {
 							token := NewToken("Tetravite", 1, 1,
 								[]CardType{TypeArtifact, TypeCreature},
@@ -764,7 +764,7 @@ func registerCreatures() {
 								g.ExilePermanent(tetravites[i])
 							}
 						}
-						src.Counters[P1P1] += uint8(n)
+						src.Counters[P1P1] += n
 						return nil
 					}), true,
 			)),

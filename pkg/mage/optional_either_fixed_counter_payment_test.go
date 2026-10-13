@@ -41,7 +41,7 @@ func TestOptionalEitherFixedCounterPaymentAmount(t *testing.T) {
 				if accept && available >= count {
 					wantPaid, removed = 1, count
 				}
-				if g.LastCostOptionalPaid(source.ID()) != (wantPaid == 1) || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if g.LastCostOptionalPaid(source.ID()) != (wantPaid == 1) || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d count=%d: result=%v counters=%d", accept, available, count, g.LastCostOptionalPaid(source.ID()), g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if a.offers != offers {
@@ -89,12 +89,12 @@ func TestOptionalEitherFixedCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid accepted optional cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 {
@@ -192,7 +192,7 @@ func TestOptionalEitherFixedCounterPaymentPresenceAndLegacy(t *testing.T) {
 				if g.LastCostOptionalPaid(source.ID()) != (want == 1) {
 					t.Fatal("wrong legacy acceptance flag")
 				}
-				if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != 3-count*want {
+				if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != 3-count*want {
 					t.Fatal("wrong counter payment")
 				}
 			})
@@ -233,7 +233,7 @@ func TestOptionalEitherFixedCounterPaymentBranchSelection(t *testing.T) {
 				if err := tx.Commit(); err != nil {
 					t.Fatal(err)
 				}
-				if a.offers != offers || a.choices != choices || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if a.offers != offers || a.choices != choices || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d branch=%d: offers=%d choices=%d counters=%d", accept, available, branch, a.offers, a.choices, g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if inner.(*eitherCost).locked || inner.(*eitherCost).options[1].(*eitherCost).locked {

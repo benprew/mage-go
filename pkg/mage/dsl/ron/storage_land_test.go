@@ -175,7 +175,7 @@ func TestRONStorageInterveningIf(t *testing.T) {
 				want = 2
 			}
 			for _, game := range []*mage.Game{g, clone} {
-				if q := game.FindPermanentIncludingPhased(current); q != nil && int(q.Counters[core.Storage]) != want {
+				if q := game.FindPermanentIncludingPhased(current); q != nil && q.Counters[core.Storage] != want {
 					t.Fatalf("counters=%d want %d", q.Counters[core.Storage], want)
 				}
 			}

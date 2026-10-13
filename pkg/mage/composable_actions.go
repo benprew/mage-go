@@ -1209,11 +1209,11 @@ func (e *removeCountersSubjectEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	amount := min(e.amount.resolveValue(ctx), int(p.Counters[e.counter]))
+	amount := min(e.amount.resolveValue(ctx), p.Counters[e.counter])
 	if amount <= 0 {
 		return nil
 	}
-	before := int(p.Counters[e.counter])
+	before := p.Counters[e.counter]
 	child := *ctx
 	child.Targets = []uuid.UUID{p.ID()}
 	if err := RemoveCounters(e.counter, amount).Targeting(ToTarget()).Apply(&child); err != nil {
@@ -1222,7 +1222,7 @@ func (e *removeCountersSubjectEffect) Apply(ctx *EffectContext) error {
 	if e.result != nil {
 		current := ctx.Game.FindPermanent(p.ID())
 		if current != nil && current.incarnationID == p.incarnationID {
-			ctx.Game.resolution.numberBindings[e.result] = before - int(current.Counters[e.counter])
+			ctx.Game.resolution.numberBindings[e.result] = before - current.Counters[e.counter]
 		}
 	}
 	return nil
@@ -1241,7 +1241,7 @@ func SourceHasCounters(counter CounterType, minimum int) StateCondition {
 func (sourceCounterCondition) stateCondition() {}
 func (c sourceCounterCondition) checkState(g GameReader, ctx StateContext) bool {
 	p := g.FindPermanent(ctx.SourceID)
-	return p != nil && !p.PhasedOut && int(p.Counters[c.counter]) >= c.minimum
+	return p != nil && !p.PhasedOut && p.Counters[c.counter] >= c.minimum
 }
 func (c sourceCounterCondition) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "state-condition", Text: fmt.Sprintf("source has at least %d %s counters", c.minimum, c.counter), battlefieldSource: true}
@@ -1274,7 +1274,7 @@ func (e *removeAllCountersEffect) Apply(ctx *EffectContext) error {
 	}
 	child := *ctx
 	child.Targets = []uuid.UUID{p.ID()}
-	return RemoveCounters(e.counter, int(p.Counters[e.counter])).Targeting(ToTarget()).Apply(&child)
+	return RemoveCounters(e.counter, p.Counters[e.counter]).Targeting(ToTarget()).Apply(&child)
 }
 
 // --- from composable_damage_each.go ---
@@ -3658,10 +3658,10 @@ func (v sourceCounterValue) Text() string {
 func (v sourceCounterValue) resolveValue(ctx *EffectContext) int {
 	p := ctx.Game.FindPermanentIncludingPhased(ctx.SourceID)
 	if p != nil && (!ctx.sourceCaptured || p.incarnationID == ctx.sourceIncarnation) {
-		return int(p.Counters[v.counter])
+		return p.Counters[v.counter]
 	}
 	if ctx.sourceCaptured {
-		return int(ctx.Game.zones.departedCounters[ctx.sourceIncarnation][v.counter])
+		return ctx.Game.zones.departedCounters[ctx.sourceIncarnation][v.counter]
 	}
 	return 0
 }

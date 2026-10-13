@@ -41,7 +41,7 @@ func TestEitherOptionalFixedCounterPaymentSelection(t *testing.T) {
 		if branch == 1 {
 			wantOffers, wantCounters, wantLife = 0, 3, 19
 		}
-		if a.choices != 1 || a.offers != wantOffers || int(g.FindPermanent(source.ID()).Counters[Charge]) != wantCounters || a.Life() != wantLife {
+		if a.choices != 1 || a.offers != wantOffers || g.FindPermanent(source.ID()).Counters[Charge] != wantCounters || a.Life() != wantLife {
 			t.Fatal("commit changed branch or optional acceptance")
 		}
 	}
@@ -79,7 +79,7 @@ func TestEitherOptionalFixedCounterPaymentAmount(t *testing.T) {
 				if accept && available >= count {
 					wantPaid, removed = 1, count
 				}
-				if tx.paidNumbers[paid] != wantPaid || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-removed {
+				if tx.paidNumbers[paid] != wantPaid || g.FindPermanent(source.ID()).Counters[Charge] != available-removed {
 					t.Fatalf("accept=%v available=%d count=%d: result=%d counters=%d", accept, available, count, tx.paidNumbers[paid], g.FindPermanent(source.ID()).Counters[Charge])
 				}
 				if a.offers != offers {
@@ -127,12 +127,12 @@ func TestEitherOptionalFixedCounterPaymentPreflight(t *testing.T) {
 			}
 			remaining := 0
 			if p := g.FindPermanent(source.ID()); p != nil {
-				remaining = int(p.Counters[Charge])
+				remaining = p.Counters[Charge]
 			}
 			if err := tx.Commit(); err == nil {
 				t.Fatal("changed source paid accepted optional cost")
 			}
-			if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+			if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != remaining {
 				t.Fatal("failed commit removed counters")
 			}
 			if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 {
@@ -243,7 +243,7 @@ func TestEitherOptionalFixedCounterPaymentPresenceAndLegacy(t *testing.T) {
 					} else if g.LastCostOptionalPaid(source.ID()) != (want == 1) {
 						t.Fatal("wrong legacy acceptance flag")
 					}
-					if p := g.FindPermanent(source.ID()); p != nil && int(p.Counters[Charge]) != 3-count*want {
+					if p := g.FindPermanent(source.ID()); p != nil && p.Counters[Charge] != 3-count*want {
 						t.Fatal("wrong counter payment")
 					}
 				})

@@ -71,7 +71,7 @@ func TestComposableSpiritShackleCapturesHost(t *testing.T) {
 			if change == "return host" {
 				want = 0
 			}
-			if int(g.FindPermanent(host).Counters[core.M0M2]) != want || g.FindPermanent(other).Counters[core.M0M2] != 0 {
+			if g.FindPermanent(host).Counters[core.M0M2] != want || g.FindPermanent(other).Counters[core.M0M2] != 0 {
 				t.Fatal("counter applied to the wrong incarnation")
 			}
 		})

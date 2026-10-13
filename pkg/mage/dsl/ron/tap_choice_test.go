@@ -137,7 +137,7 @@ func TestRONTapChoiceRealCards(t *testing.T) {
 					if p.Tapped != expected {
 						t.Fatalf("tapped=%t want=%t", p.Tapped, expected)
 					}
-					wantStun := uint8(0)
+					wantStun := int(0)
 					if scenario == "decline-stun" || (game == clone && scenario == "stun") {
 						wantStun = 1
 					}
@@ -457,7 +457,7 @@ func TestRONTapChoiceSequenceAndEvents(t *testing.T) {
 				t.Fatalf("tap triggers=%d want=%d", g.StackSize(), want)
 			}
 			g.ResolveStack()
-			if int(g.FindPermanent(host.ID()).Counters[core.M0M2]) != want {
+			if g.FindPermanent(host.ID()).Counters[core.M0M2] != want {
 				t.Fatal("tap event bypassed RON observer")
 			}
 		})

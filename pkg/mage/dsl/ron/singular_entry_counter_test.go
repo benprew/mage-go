@@ -194,7 +194,7 @@ func TestRONSingularEntryCounterReplacements(t *testing.T) {
 			if choice == 1 {
 				want = 3
 			}
-			if int(p.Counters[core.Javelin]) != want || a.choices != 0 || b.choices != 1 {
+			if p.Counters[core.Javelin] != want || a.choices != 0 || b.choices != 1 {
 				t.Fatalf("replacement count=%d choices=%d/%d, want %d", p.Counters[core.Javelin], a.choices, b.choices, want)
 			}
 		})

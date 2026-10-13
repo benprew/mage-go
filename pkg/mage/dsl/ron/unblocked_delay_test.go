@@ -89,7 +89,7 @@ func TestRONUnblockedDelayRealClauses(t *testing.T) {
 					if !blocked {
 						want = 1
 					}
-					if g.FindPermanent(source.ID()).Counters[core.Cube] != uint8(want) {
+					if g.FindPermanent(source.ID()).Counters[core.Cube] != want {
 						t.Fatal("counter timing or source identity")
 					}
 				}

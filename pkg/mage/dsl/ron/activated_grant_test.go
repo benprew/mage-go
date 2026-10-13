@@ -151,7 +151,7 @@ func TestRONActivatedGrantLifeMatrix(t *testing.T) {
 				want = 0
 			}
 			q := g.FindPermanent(p.ID())
-			if int(q.Counters[core.Matrix]) != want || len(q.RuntimeAbilities) != want {
+			if q.Counters[core.Matrix] != want || len(q.RuntimeAbilities) != want {
 				t.Fatalf("counter/grant count %d/%d want %d", q.Counters[core.Matrix], len(q.RuntimeAbilities), want)
 			}
 			if want == 0 {
@@ -166,10 +166,10 @@ func TestRONActivatedGrantLifeMatrix(t *testing.T) {
 			if err := g.ActivateAbilityByIndex(actor, p.ID(), 0, nil); err != nil {
 				t.Fatal(err)
 			}
-			if int(g.FindPermanent(p.ID()).Counters[core.Matrix]) != want-1 || g.HasRegenerationShield(p.ID()) {
+			if g.FindPermanent(p.ID()).Counters[core.Matrix] != want-1 || g.HasRegenerationShield(p.ID()) {
 				t.Fatal("counter payment timing")
 			}
-			if int(clone.FindPermanent(p.ID()).Counters[core.Matrix]) != want {
+			if clone.FindPermanent(p.ID()).Counters[core.Matrix] != want {
 				t.Fatal("clone shares payment")
 			}
 			g.ResolveStack()
@@ -509,7 +509,7 @@ func TestRONActivatedGrantCounterReplacement(t *testing.T) {
 			t.Fatal(err)
 		}
 		g.ResolveStack()
-		want := uint8(2)
+		want := int(2)
 		if prevent {
 			want = 0
 		}

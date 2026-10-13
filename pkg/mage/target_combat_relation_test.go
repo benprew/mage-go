@@ -87,7 +87,7 @@ func TestTargetCombatRelation(t *testing.T) {
 					clone.combat.RemoveFromCombat(victim.ID())
 				}
 				g.ResolveStack()
-				want := uint8(0)
+				want := int(0)
 				if change == "live" || change == "tap" || change == "clone" || change == "source-abilities" {
 					want = 1
 				}
@@ -98,7 +98,7 @@ func TestTargetCombatRelation(t *testing.T) {
 					t.Fatal("wrong live relationship or incarnation")
 				}
 				clone.ResolveStack()
-				cloneWant := uint8(1)
+				cloneWant := int(1)
 				if change == "clone" {
 					cloneWant = 0
 				}

@@ -687,7 +687,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	sourceID := a.ActionSource()
 
 	if perm.HasType(TypePlaneswalker) {
-		perm.Counters[Loyalty] -= uint8(min(amount, int(perm.Counters[Loyalty])))
+		perm.Counters[Loyalty] -= min(amount, perm.Counters[Loyalty])
 	}
 	if perm.HasType(TypeCreature) {
 		perm.Damage += amount

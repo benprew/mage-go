@@ -39,7 +39,7 @@ func TestOptionalXCounterAlternativeResultPayment(t *testing.T) {
 						}
 					}
 					got, exists := tx.paidNumbers[paid]
-					if !exists || got != want || a.offers != offers || int(g.FindPermanent(source.ID()).Counters[Charge]) != available-count*want {
+					if !exists || got != want || a.offers != offers || g.FindPermanent(source.ID()).Counters[Charge] != available-count*want {
 						t.Fatalf("result=%d exists=%v offers=%d counters=%d", got, exists, a.offers, g.FindPermanent(source.ID()).Counters[Charge])
 					}
 					if inner.(*eitherCost).locked || inner.(*eitherCost).options[0].(*eitherCost).options[0].(*removeXCountersCost).ct != Charge {
@@ -103,7 +103,7 @@ func TestOptionalXCounterAlternativeResultIdentityAndRollback(t *testing.T) {
 				g.PutOnBattlefield(watcher, a.PlayerID())
 				remaining := 0
 				if p := g.FindPermanent(card.ID()); p != nil {
-					remaining = int(p.Counters[Charge])
+					remaining = p.Counters[Charge]
 				}
 				fail := (count > 0 && (state == "return" || state == "absent" || state == "phase" || state == "short")) || state == "combined"
 				err = tx.Commit()
@@ -114,7 +114,7 @@ func TestOptionalXCounterAlternativeResultIdentityAndRollback(t *testing.T) {
 					if a.Life() != 20 || a.ManaPool().Count(Red) != 1 || len(tx.paidNumbers) != 0 || events != 0 {
 						t.Fatal("failed commit spent resources or published result")
 					}
-					if p := g.FindPermanent(card.ID()); p != nil && int(p.Counters[Charge]) != remaining {
+					if p := g.FindPermanent(card.ID()); p != nil && p.Counters[Charge] != remaining {
 						t.Fatal("failed commit removed counters")
 					}
 				} else {

@@ -245,7 +245,7 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(ctx *EffectContext) erro
 		return nil
 	}
 	perm.AddCounter(Charge, 1)
-	if int(perm.Counters[Charge]) >= e.threshold {
+	if perm.Counters[Charge] >= e.threshold {
 		ctx.Game.RegisterDelayedTrigger(&DelayedTrigger{
 			EventType:  EvtEndStep,
 			TargetID:   perm.ID(),

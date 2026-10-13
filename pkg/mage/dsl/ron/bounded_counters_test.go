@@ -36,7 +36,7 @@ func TestRONBoundedCountersFullCards(t *testing.T) {
 			}
 			g.ResolveStack()
 			p := g.FindPermanent(card.ID())
-			if int(p.Counters[core.P1P0]) != tc.limit || p.CurrentPower(g) != tc.limit || p.CurrentToughness(g) != 4 || p.HasAttr(core.Flying) != (tc.name == "Clockwork Avian") {
+			if p.Counters[core.P1P0] != tc.limit || p.CurrentPower(g) != tc.limit || p.CurrentToughness(g) != 4 || p.HasAttr(core.Flying) != (tc.name == "Clockwork Avian") {
 				t.Fatal("entry metadata")
 			}
 			g.SetStep(core.Upkeep)
@@ -50,17 +50,17 @@ func TestRONBoundedCountersFullCards(t *testing.T) {
 			if err := g.ActivateAbilityByIndex(a.PlayerID(), p.ID(), boundedActivationIndex(t, p), nil); err != nil {
 				t.Fatal(err)
 			}
-			if a.ManaPool().TotalMana() != 0 || !g.FindPermanent(p.ID()).Tapped || int(g.FindPermanent(p.ID()).Counters[core.P1P0]) != tc.limit-3 {
+			if a.ManaPool().TotalMana() != 0 || !g.FindPermanent(p.ID()).Tapped || g.FindPermanent(p.ID()).Counters[core.P1P0] != tc.limit-3 {
 				t.Fatal("cost or early restoration")
 			}
 			g.SetXValue(99)
 			clone := g.Clone()
 			g.ResolveStack()
-			if int(g.FindPermanent(p.ID()).Counters[core.P1P0]) != tc.limit || int(clone.FindPermanent(p.ID()).Counters[core.P1P0]) != tc.limit-3 {
+			if g.FindPermanent(p.ID()).Counters[core.P1P0] != tc.limit || clone.FindPermanent(p.ID()).Counters[core.P1P0] != tc.limit-3 {
 				t.Fatal("restoration or clone")
 			}
 			clone.ResolveStack()
-			if int(clone.FindPermanent(p.ID()).Counters[core.P1P0]) != tc.limit {
+			if clone.FindPermanent(p.ID()).Counters[core.P1P0] != tc.limit {
 				t.Fatal("clone restoration")
 			}
 			if err := mage.ValidateCardDefinition(tc.name, card); err != nil {
@@ -156,7 +156,7 @@ func TestRONBoundedCountersResolution(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if len(a.bounds) != 0 || !g.FindPermanent(p.ID()).Tapped || payer.ManaPool().TotalMana() != 0 || int(g.FindPermanent(p.ID()).Counters[core.P1P0]) != initial {
+				if len(a.bounds) != 0 || !g.FindPermanent(p.ID()).Tapped || payer.ManaPool().TotalMana() != 0 || g.FindPermanent(p.ID()).Counters[core.P1P0] != initial {
 					t.Fatal("announcement timing or costs")
 				}
 				want := min(initial+x, limit)
@@ -196,10 +196,10 @@ func TestRONBoundedCountersResolution(t *testing.T) {
 				clone := g.Clone()
 				before := g.FindPermanentIncludingPhased(p.ID())
 				g.ResolveStack()
-				if live := g.FindPermanentIncludingPhased(p.ID()); live != nil && int(live.Counters[core.P1P0]) != want {
+				if live := g.FindPermanentIncludingPhased(p.ID()); live != nil && live.Counters[core.P1P0] != want {
 					t.Fatalf("counters %d want %d", live.Counters[core.P1P0], want)
 				}
-				if before != nil && int(clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0]) != int(before.Counters[core.P1P0]) {
+				if before != nil && clone.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0] != before.Counters[core.P1P0] {
 					t.Fatal("clone shared mutation")
 				}
 				if scenario == "left" || scenario == "returned" || scenario == "phased" || scenario == "zero" || scenario == "full" || scenario == "overfull" {
@@ -220,7 +220,7 @@ func TestRONBoundedCountersResolution(t *testing.T) {
 				if scenario == "copy" {
 					cloneWant = min(initial+2*x, limit)
 				}
-				if live := clone.FindPermanentIncludingPhased(p.ID()); live != nil && int(live.Counters[core.P1P0]) != cloneWant {
+				if live := clone.FindPermanentIncludingPhased(p.ID()); live != nil && live.Counters[core.P1P0] != cloneWant {
 					t.Fatal("clone pending resolution")
 				}
 			})
@@ -317,7 +317,7 @@ func TestRONBoundedCountersReplacements(t *testing.T) {
 				t.Fatal(err)
 			}
 			g.ResolveStack()
-			if int(g.FindPermanent(p.ID()).Counters[core.P1P1]) != tc.want || a.Life() != 21 || b.choices != 1 || a.choices != 0 {
+			if g.FindPermanent(p.ID()).Counters[core.P1P1] != tc.want || a.Life() != 21 || b.choices != 1 || a.choices != 0 {
 				t.Fatal("replacement order, restriction or chooser")
 			}
 		})
@@ -403,7 +403,7 @@ func TestRONBoundedCountersTypedTarget(t *testing.T) {
 			if scenario == "copy" {
 				want = 4
 			}
-			if int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0]) != want {
+			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0] != want {
 				t.Fatal("target legality or identity")
 			}
 		})

@@ -54,7 +54,7 @@ func TestAddCountersUpTo(t *testing.T) {
 			if err := AddCountersUpTo(This, core.P1P0, Fixed(tc.amount), tc.limit).Apply(ctx); err != nil {
 				t.Fatal(err)
 			}
-			if got := int(g.FindPermanent(p.ID()).Counters[core.P1P0]); got != tc.want || a.upper != tc.upper || a.calls != tc.calls {
+			if got := g.FindPermanent(p.ID()).Counters[core.P1P0]; got != tc.want || a.upper != tc.upper || a.calls != tc.calls {
 				t.Fatalf("counters %d want %d; choice bounds/calls %d/%d want %d/%d", got, tc.want, a.upper, a.calls, tc.upper, tc.calls)
 			}
 		})
@@ -93,7 +93,7 @@ func TestAddCountersUpToIdentity(t *testing.T) {
 			if change == "phase" || change == "leave" || change == "return" {
 				want = 0
 			}
-			if live := ctx.Game.FindPermanentIncludingPhased(p.ID()); live != nil && int(live.Counters[core.P1P0]) != want {
+			if live := ctx.Game.FindPermanentIncludingPhased(p.ID()); live != nil && live.Counters[core.P1P0] != want {
 				t.Fatal("wrong incarnation or phase state")
 			}
 			if change == "clone" && g.FindPermanent(p.ID()).Counters[core.P1P0] != 0 {
@@ -155,7 +155,7 @@ func TestAddCountersUpToReplacementRecheck(t *testing.T) {
 			if scenario == "add" {
 				want = 7
 			}
-			if int(g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0]) != want {
+			if g.FindPermanentIncludingPhased(p.ID()).Counters[core.P1P0] != want {
 				t.Fatal("replacement recheck")
 			}
 		})

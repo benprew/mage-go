@@ -22,7 +22,7 @@ func TestRONNumericConsumerLivingArmor(t *testing.T) {
 			}
 			c.SetOwner(a.PlayerID())
 			s := g.PutOnBattlefield(c, a.PlayerID())
-			cost, want := "{2}{U}", uint8(3)
+			cost, want := "{2}{U}", int(3)
 			if change == "zero" {
 				cost, want = "", 0
 			}
@@ -85,7 +85,7 @@ func TestRONNumericConsumerLivingArmor(t *testing.T) {
 			clone.ResolveStack()
 			for _, game := range []*mage.Game{g, clone} {
 				target := game.FindPermanentIncludingPhased(p.ID())
-				if target != nil && (target.Counters[core.P0P1] != want || target.CurrentPower(game) != 1 || target.CurrentToughness(game) != 8+int(want)) {
+				if target != nil && (target.Counters[core.P0P1] != want || target.CurrentPower(game) != 1 || target.CurrentToughness(game) != 8+want) {
 					t.Fatalf("counters or P/T: %+v, want %d", target.Counters, want)
 				}
 				if len(game.GetPlayer(a.PlayerID()).Graveyard()) != 1 {
@@ -331,7 +331,7 @@ func TestRONNumericConsumerReplacementOrder(t *testing.T) {
 		}
 		g.ResolveStack()
 		want := 4 - index
-		if int(g.FindPermanent(p.ID()).Counters[core.P1P1]) != want || a.Life() != 20+2*want || a.choices != 1 {
+		if g.FindPermanent(p.ID()).Counters[core.P1P1] != want || a.Life() != 20+2*want || a.choices != 1 {
 			t.Fatal("counter amount or later life read bypassed replacement order")
 		}
 	}
@@ -419,7 +419,7 @@ func TestRONNumericConsumerNonpositive(t *testing.T) {
 		}
 		g.ResolveStack()
 		want := max(n, 0)
-		if int(g.FindPermanent(p.ID()).Counters[core.Charge]) != want || a.Life() != 20+2*want {
+		if g.FindPermanent(p.ID()).Counters[core.Charge] != want || a.Life() != 20+2*want {
 			t.Fatal("nonpositive amount or multiplication")
 		}
 	}

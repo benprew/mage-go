@@ -53,7 +53,7 @@ func TestRONCombatAssignmentCube(t *testing.T) {
 				if game.GetPlayer(b.PlayerID()).Life() != 20 {
 					t.Fatal("Cube did not suppress combat assignment")
 				}
-				want := uint8(1)
+				want := int(1)
 				if blocked {
 					want = 0
 				}
@@ -182,7 +182,7 @@ func TestRONCombatAssignmentCubeRollbackAndIdentity(t *testing.T) {
 				t.Fatalf("life=%d want=%d", b.Life(), want)
 			}
 			if change != "source-left" {
-				count := uint8(0)
+				count := int(0)
 				if active {
 					count = 1
 				}
@@ -291,7 +291,7 @@ func TestRONCombatAssignmentCubeRepeatedCombat(t *testing.T) {
 		g.GetCombat().AddAttacker(creature.ID(), b.PlayerID())
 		g.ExecuteBlockers(nil)
 		g.ExecuteCombatDamage()
-		if b.Life() != 20 || g.FindPermanent(cube.ID()).Counters[core.Cube] != uint8(i) {
+		if b.Life() != 20 || g.FindPermanent(cube.ID()).Counters[core.Cube] != i {
 			t.Fatal("subscription did not persist through separate combats")
 		}
 	}
