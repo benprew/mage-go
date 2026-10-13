@@ -14,6 +14,20 @@ func compileSourceControl(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n, "source control duration requires a permanent source")
 	}
 	duration := n.Args[1]
+	if duration.Name == "UntilPermanentLeavesBattlefield" {
+		if err := arity(duration, 1); err != nil {
+			return nil, err
+		}
+		if ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "source presence control requires an ordinary resolving body")
+		}
+		if duration.Args[0].Kind != Symbol || duration.Args[0].Name != "ThisPermanent" {
+			return nil, unsupported(duration.Args[0], "source presence duration reference")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.UntilSourcePresent(mage.This, mage.ChangeController(subject.build(bindings), mage.You))
+		}, nil
+	}
 	tapped := false
 	if duration.Name == "Or" {
 		if err := arity(duration, 1); err != nil {

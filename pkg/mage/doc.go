@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [UntilSourcePresent] saves subjects and values at resolution.
+// An absent, returned or phased source cannot start the duration.
+// Source departure and phasing end it. Phase-in cannot start it again.
+// Control changes, untapping and ability removal do not end it.
+// Saved subjects, copies and clones keep their exact visits and frames.
+// RON uses this duration for GainControlOfPermanentUntil with
+// UntilPermanentLeavesBattlefield(ThisPermanent) in resolving permanent bodies.
+// Layer and replacement declarations keep their separate duration contracts.
+// [UntilSourceLeaves] retains its duration through source phasing.
+//
 // [PayAnyOrElse] offers eligible players one cost in turn order.
 // The first complete payment selects its paid body. No payment selects unpaid.
 // Each call keeps its own result and the original effect controller.

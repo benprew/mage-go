@@ -2405,7 +2405,7 @@ offer's payer or inherit an enclosing player-action binding through the pair.
 Other player collections, X, nonmana/alternative costs, entry operations and
 draw replacement bodies remain rejected. This is a shared prerequisite for
 Scarwood Bandits, Worms of the Earth and Cleansing, not full-card coverage.
-Scarwood still needs its source duration; Worms needs entry prevention and
+Scarwood has complete source-presence coverage; Worms needs entry prevention and
 alternative payments; Cleansing needs repeated offers with per-subject results.
 `TestRONEligiblePlayerPayment*` covers lowering, gameplay, all polarities,
 contexts, identity, copies, clones, inventory roles and atomic loading.
@@ -14109,3 +14109,27 @@ lifetimes, copying, countering and clones. `InstancesAndInventory` covers
 separate factories, source exclusion, APNAP and semantic reference roles.
 `Invalid` covers malformed syntax, unsupported subjects, result scope,
 wrong reference type, source zone and atomic loader rejection.
+
+
+## RON source-presence control duration
+
+`GainControlOfPermanentUntil(subject,
+UntilPermanentLeavesBattlefield(ThisPermanent))` is supported in ordinary
+resolving permanent bodies. The subject uses the existing singular permanent
+references. Only `ThisPermanent` supplies the duration endpoint. Other endpoints,
+malformed declarations, spell sources, entry and replacement bodies remain
+errors. This adapter does not extend the same spelling in layer declarations.
+
+Lowering uses `mage.UntilSourcePresent(mage.This,
+mage.ChangeController(subject, mage.You))`. The exact source must be present
+and phased in at resolution. Later departure or phasing ends the duration
+permanently. Source control changes, untapping and ability removal preserve it.
+Target phasing preserves identity; return cannot receive the old effect.
+The resolving controller stays fixed. Existing targets, payment transactions,
+layer order, control restrictions, copies and clone frames remain in use.
+
+`mage.UntilSourcePresent` also accepts captured characteristic modifications.
+`mage.UntilSourceLeaves` remains separate and survives source phasing. The RON
+layer and phasing lifecycle forms require their own adapters and contracts.
+Evidence: `TestUntilSourcePresent*` and `TestRONSourcePresenceDuration*`;
+Scarwood Bandits now has complete RON-backed gameplay coverage.

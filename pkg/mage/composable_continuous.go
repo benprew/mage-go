@@ -637,6 +637,7 @@ type composedLayerEffect struct {
 	captured          []capturedModification
 	sourceBound       bool
 	sourceTapped      bool
+	sourcePresent     bool
 	expired           bool
 	sourceIncarnation uuid.UUID
 	grantID           uuid.UUID
@@ -666,9 +667,9 @@ func (e *composedLayerEffect) IsActive(g *Game) bool {
 	if e.continuesAcrossLayers(g) {
 		return true
 	}
-	if e.sourceTapped {
+	if e.sourceTapped || e.sourcePresent {
 		p := g.FindPermanent(e.sourceID)
-		if p == nil || p.incarnationID != e.sourceIncarnation || !p.Tapped {
+		if p == nil || p.incarnationID != e.sourceIncarnation || (e.sourceTapped && !p.Tapped) {
 			e.expired = true
 		}
 		return !e.expired
@@ -778,6 +779,7 @@ type untilEffect struct {
 	modifications []ContinuousModification
 	sourceBound   bool
 	sourceTapped  bool
+	sourcePresent bool
 	upkeepPlayer  PlayerRef
 	endNextUpkeep bool
 	endNextTurn   bool
@@ -809,6 +811,12 @@ func UntilSourceLeaves(_ sourceRef, modifications ...ContinuousModification) Res
 	return &untilEffect{duration: Indefinite, modifications: append([]ContinuousModification(nil), modifications...), sourceBound: true}
 }
 
+// UntilSourcePresent keeps captured modifications while the source is present.
+// Source phasing ends the duration. A phase-in cannot start it again.
+func UntilSourcePresent(_ sourceRef, modifications ...ContinuousModification) ResolvingEffect {
+	return &untilEffect{duration: Indefinite, modifications: append([]ContinuousModification(nil), modifications...), sourceBound: true, sourcePresent: true}
+}
+
 // UntilSourceUntaps captures modifications while this source remains tapped.
 // Untapping, source phasing, and source departure end the duration permanently.
 func UntilSourceUntaps(_ sourceRef, modifications ...ContinuousModification) ResolvingEffect {
@@ -823,6 +831,9 @@ func (e *untilEffect) Text() string {
 		}
 	}
 	body := strings.Join(descriptions, "; ")
+	if e.sourcePresent {
+		return body + " for as long as this source remains on the battlefield"
+	}
 	if e.sourceTapped {
 		return body + " for as long as this source remains tapped"
 	}
@@ -921,6 +932,9 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "until", Text: e.Text()}
 	if e.sourceBound {
 		n.Role = "until-source-leaves"
+		if e.sourcePresent {
+			n.Role = "until-source-present"
+		}
 		if e.sourceTapped {
 			n.Role = "until-source-untaps"
 		}
@@ -938,8 +952,8 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	}
 	for i, m := range e.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
-		if !nilDefinition(m) && m.modification().layer == LayerControl && (e.sourceBound || e.duration != EndOfTurn) {
-			n.problem = "control modification requires Until(EndOfTurn)"
+		if !nilDefinition(m) && m.modification().layer == LayerControl && !e.sourcePresent && (e.sourceBound || e.duration != EndOfTurn) {
+			n.problem = "control modification requires Until(EndOfTurn) or UntilSourcePresent"
 		}
 	}
 	return n
@@ -959,7 +973,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 		if source == nil || (ctx.sourceCaptured && source.incarnationID != ctx.sourceIncarnation) {
 			return nil
 		}
-		if e.sourceTapped && (source.PhasedOut || !source.Tapped) {
+		if (e.sourcePresent && source.PhasedOut) || (e.sourceTapped && (source.PhasedOut || !source.Tapped)) {
 			return nil
 		}
 		sourceIncarnation = source.incarnationID
@@ -982,14 +996,14 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 			}
 			for _, sub := range []SublayerPT{SublayerPT_CDA, SublayerPT_Set, SublayerPT_Modify, SublayerPT_Switch} {
 				if caps := sublayerCaps[sub]; len(caps) > 0 {
-					entry := &composedLayerEffect{layer: LayerPT, sublayer: sub, duration: e.duration, sourceBound: e.sourceBound, sourceTapped: e.sourceTapped, sourceIncarnation: sourceIncarnation, captured: caps}
+					entry := &composedLayerEffect{layer: LayerPT, sublayer: sub, duration: e.duration, sourceBound: e.sourceBound, sourceTapped: e.sourceTapped, sourcePresent: e.sourcePresent, sourceIncarnation: sourceIncarnation, captured: caps}
 					entry.SetSourceID(ctx.SourceID)
 					effects = append(effects, entry)
 				}
 			}
 			continue
 		}
-		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceTapped: e.sourceTapped, sourceIncarnation: sourceIncarnation}
+		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceTapped: e.sourceTapped, sourcePresent: e.sourcePresent, sourceIncarnation: sourceIncarnation}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {
 			m := value.modification()

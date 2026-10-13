@@ -18470,7 +18470,55 @@ Evidence: native `TestEligiblePlayerPaymentOrderAndResult`,
 `TestEligiblePlayerPaymentRecheckAndNested`,
 `TestEligiblePlayerPaymentDelayedIdentity`, `TestEligiblePlayerPaymentInvalid`,
 and RON `TestRONEligiblePlayerPayment*`. The real Scarwood payment node has
-gameplay evidence; its complete record remains rejected for the source duration.
+gameplay evidence. Its complete record also has coverage in
+`TestRONSourcePresenceDurationScarwood`.
 The existing `UntilSourceLeaves` duration survives phasing and is not an exact
-adapter for Oracle's "for as long as" wording (CR 611.2b, 702.26f). A separate
-source-presence duration contract is required before Scarwood can be accepted.
+adapter for Oracle's "for as long as" wording (CR 611.2b, 702.26f). The separate
+source-presence contract below supplies that duration.
+
+
+## Captured source-presence duration
+
+`UntilSourcePresent(This, modifications ...ContinuousModification) ResolvingEffect`
+requires a permanent source and at least one valid modification. It captures
+subjects, values and player references at resolution through the shared composed
+layer service (CR 611.2c–d). Control modifications are permitted with this
+lifetime; existing `Until` and `UntilSourceLeaves` validation stays unchanged.
+
+The exact source incarnation must be present and phased in when the duration
+starts. Departure LKI, a returned source and a phased source cannot start it
+(CR 400.7, 611.2b). A phase cycle completed before resolution permits a new
+duration to start. Later source departure or phasing ends all installed layers
+permanently (CR 702.26f). The phase-out hook expires all layers before phase-in
+can occur and reconciles their removal. Untapping, source control changes,
+ability removal and cleanup do not end this duration. `UntilSourceLeaves`
+continues through phasing and remains a distinct contract.
+
+Each subject retains its captured incarnation. Target phasing suspends
+application; phase-in restores it if the source duration remains active.
+A returned target cannot receive an old effect. Later collection members are
+excluded. Control uses the resolving controller, layer 2 timestamp order and
+the shared prohibition on changing control. Expiration reveals older effects
+or base control. Cloned games keep independent expiration state. Delayed bodies
+retain their original frames; source enumeration declares the source read
+without installing effects or changing state.
+
+RON accepts `GainControlOfPermanentUntil(subject,
+UntilPermanentLeavesBattlefield(ThisPermanent))` in ordinary resolving
+permanent bodies, including local payment branches, triggers and delays.
+The subject is an existing typed singular permanent reference. Only the source
+endpoint is supported. Static, entry, cost, draw replacement, spell-source and
+layer-duration contexts gain no adapter. Identical endpoint spelling in other
+roles does not imply identical phasing rules. Scarwood Bandits uses Oracle's
+“for as long as” wording (`data/DRK.json`). Gaea's Liege's layer effect instead
+uses “until … leaves” (`data/LEA.json`) and needs its separate adapter. Oubliette
+uses a phasing lifecycle, and Quarum Trench Gnomes already uses a distinct
+subject-bound mana replacement service.
+
+Evidence: `TestUntilSourcePresentLifetime`, `StartAndValidation`, `ControlOrder`,
+and `TestRONSourcePresenceDurationScarwood`, `Contexts`, `InvalidAndLoading`,
+`CastingAndBoundary`. Scarwood's complete unchanged RON record is tested for
+forestwalk, casting, activation costs and rollback, artifact target legality,
+opponent payment, resolution timing, control lifetime, source/target identity,
+phasing, ability removal, independent instances, stack copies and game clones.
+No new cost, replacement-order or simultaneous movement contract is introduced.

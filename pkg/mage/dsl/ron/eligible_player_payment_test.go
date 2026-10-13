@@ -279,7 +279,7 @@ func TestRONEligiblePlayerPaymentInvalid(t *testing.T) {
 }
 
 func TestRONEligiblePlayerPaymentRealRecords(t *testing.T) {
-	for _, name := range []string{"Scarwood Bandits", "Worms of the Earth"} {
+	for _, name := range []string{"Worms of the Earth"} {
 		record := staticBaseRecord(t, "DRK", name)
 		if _, err := Compile(record); err == nil {
 			t.Fatal("accepted enclosing record with remaining blockers")

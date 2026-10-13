@@ -6,14 +6,14 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **847 accepted / 139 rejected names**
-(986 total), **2,188 compiled / 257 rejected records** (2,445 total).
-The latest slice adds eligible-player fixed-mana payments, with zero full-card gains.
+Latest measured result (2026-10-13): **848 accepted / 138 rejected names**
+(986 total), **2,189 compiled / 256 rejected records** (2,445 total).
+The latest slice adds source-presence control duration and unlocks Scarwood Bandits.
 The strict loader still rejects the collection and publishes no partial registry.
 
-The latest slice is **ELIGIBLE-PLAYER-FIXED-MANA-PAYMENT**. Offers use turn order,
-shared cost transactions and local branches. Scarwood Bandits now reaches its
-source-duration blocker. Its complete record remains rejected.
+The latest slice is **SOURCE-PRESENCE-CONTROL-DURATION**. Captured layers end
+permanently on source departure or phasing. Scarwood Bandits now has complete
+RON-backed gameplay coverage. Other duration roles keep separate contracts.
 Runtime cutover and removal gates remain open.
 
 ## Ranked next candidates
@@ -22,16 +22,15 @@ Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
 1. **Eligible-player alternatives and payer bindings.**
-   Fixed mana offers are complete. Extend typed payer scope for Worms of the
-   Earth's alternative payments and Cleansing's per-permanent offers. These
-   consumers retain separate entry and repeated-result blockers.
-2. **Source-presence control duration: Scarwood Bandits.**
-   Expected one full-card gain. Oracle's "for as long as" duration must end on
-   source phasing; `UntilSourceLeaves` deliberately survives phasing. Evaluate
-   shared source-presence durations, including Gaea's Liege's layer context.
-3. **Dependent permanent target comparison: Gauntlets of Chaos.**
+   Fixed mana offers are complete. Worms of the Earth and Cleansing need typed
+   payer/subject scope; entry prevention and repeated result orchestration remain
+   separate blockers. Select a small shared prerequisite from these contracts.
+2. **Dependent permanent target comparison: Gauntlets of Chaos.**
    Zero immediate gains. Exchange-result handling and the documented Aura-only
    source correction remain required.
+3. **Source-leave layer duration: Gaea's Liege.**
+   Keep phasing distinct from Scarwood's source-presence control duration. Its
+   defending-player filter, characteristic rules and known source defect remain.
 
 ## Dependencies and source blockers
 
@@ -1245,3 +1244,189 @@ diagnostic changed, from `AnyPlayerMayCost` to `UntilPermanentLeavesBattlefield`
 The estimated and actual full-card gain remains zero. The ranked next candidates
 above remain applicable; eligible-player alternatives and payer bindings are
 next. All required checks passed before committing this slice.
+
+## SOURCE-PRESENCE-CONTROL-DURATION — 2026-10-13
+
+### Baseline, candidates and selection
+
+The working tree was clean. Fresh `make build` and focused existing eligible-player
+payment/source-control tests passed. Baseline `go run ./cmd/loadcards -json`
+exited 1 for collection rejection, not build failure: 2,188 compiled / 257
+rejected records, 847 accepted / 139 rejected names. Complete records and nested
+forms were read for Worms of the Earth, Cleansing, Scarwood Bandits, Gauntlets
+of Chaos, all six Gaea's Liege reprints, Oubliette and Quarum Trench Gnomes.
+The targeted vocabulary entries were inspected without loading the full snapshot.
+
+| Compared candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Eligible-player alternatives and payer bindings | Worms of the Earth; Cleansing | 0 | Worms needs land-entry prevention as well as alternative sacrifice/action payments with local payer identity. Cleansing needs repeated per-land offers and typed unpaid-subject results. Shared eligibility is ready; the combined alternative/payer contract is not ready as one small adapter. Enables both payment consumers. | Large: choice, transaction/action-payment composition, binding scope and repeated outcomes need separate contracts. |
+| Source-presence control duration | Scarwood Bandits | 1 | Fixed mana payment, typed artifact targets and forestwalk are ready. Supplies a reusable captured lifetime for control and characteristic modifications. Gaea's Liege and Oubliette use different lifetimes; Quarum already has its subject-bound mana replacement adapter. | Medium: capture/start checks, permanent expiration on phasing, control reconciliation, identity/copy/clone tests. |
+| Dependent permanent target type comparison | Gauntlets of Chaos | 0 | Prior target identity must constrain announcement and resolution legality. Exchange-result guard and the documented Aura-only source defect remain separate. Enables the dependent target before those later prerequisites. | Medium: dependent target binding and legality; later guard/data work still required. |
+
+Candidate #1 was evaluated first. Its combined alternative and payer shape needs
+separate contracts before it is dependency-ready. Candidate #2 has the largest
+credible complete-card gain for this run's effort. The initial comparison of
+all `UntilPermanentLeavesBattlefield` spellings was narrowed after Oracle and
+role checks: only Scarwood is a new consumer of this control lifetime. Matching
+spelling does not make the layer, phasing and replacement lifetimes equivalent.
+No multi-card unlock is claimed for those separate roles.
+
+The selected contract and acceptance cases were stated before implementation:
+read the exact source at resolution, capture subjects/values/controller, reject
+invalid declarations, prevent absent/phased/returned sources from starting the
+duration, permanently end it on source departure/phasing, preserve it through
+source control changes/ability removal, retain target identity through phasing,
+and keep stack copies, delayed frames and cloned games separate.
+
+### Exact signatures, contexts and reuse boundary
+
+New engine API:
+
+`UntilSourcePresent(_ sourceRef, modifications ...ContinuousModification) ResolvingEffect`
+
+The source marker is `mage.This`. A declaration needs a permanent source and
+at least one valid modification. This duration accepts control modifications;
+other duration validation stays unchanged. It uses `untilEffect` and
+`composedLayerEffect` for capture, layers and clone state. The exact source
+incarnation must be present and phased in at resolution. A completed phase
+cycle before resolution can start the duration. Later source phasing latches
+expiration for all its installed layers in `Game.PhaseOut`, including indirect
+phasing groups, before an immediate phase-in can occur. Source departure uses
+the existing removal service. Untapping, control changes, ability removal and
+cleanup do not end it. `UntilSourceLeaves` still survives source phasing.
+
+RON supports exactly:
+
+`GainControlOfPermanentUntil(subject, UntilPermanentLeavesBattlefield(ThisPermanent))`
+
+in ordinary resolving permanent bodies, including activated actions, triggers,
+local payment branches and delayed bodies. `subject` uses the existing typed
+singular permanent references. The adapter calls `UntilSourcePresent(This,
+ChangeController(subject, You))`; RON owns spelling, arity, endpoint and context
+checks, while the engine owns duration state and rules. Other endpoint references,
+malformed symbols/tuples, spell sources, static, entry, cost, draw replacement
+and layer-duration contexts gain no support. No state or choices are captured
+by the compiler factory. Waiting delayed-source queries inherit the existing
+explicit source-read declaration from the source-bound duration.
+
+Rules evidence: CR 611.2b–d, 702.26d–f and 400.7. `data/DRK.json` states
+Scarwood's "for as long as this creature remains on the battlefield." The
+shared captured subject/value services, layer 2 timestamp reconciliation,
+control-change prohibition, target resolution legality, cost transactions,
+opponent offers, delayed frames and clone services are reused. This slice
+adds no damage, replacement-order, APNAP or simultaneous movement service.
+
+### Failing-first evidence and card-to-test mapping
+
+Before implementation, `go test ./pkg/mage -run TestUntilSourcePresent -count=1`
+failed to compile because the new API did not exist. The new focused RON tests
+failed on unsupported `UntilPermanentLeavesBattlefield` in the actual Scarwood
+record. Implementation followed those expected failures. The initial broader
+layer adapter was removed after the role/Oracle check; the final boundary test
+requires that layer shape to remain rejected.
+
+Native contracts:
+
+- `TestUntilSourcePresentLifetime`: control/P/T/keyword layers, captured members,
+  source direct/indirect phasing/cycles/departure/return, control/untap/ability removal/cleanup,
+  subject phasing/return, expiration while the subject is phased, and clone isolation.
+- `TestUntilSourcePresentStartAndValidation`: live, absent, returned and phased
+  source starts, pre-resolution phase cycle, permanent-source validation,
+  empty/nil modifications and valid source-presence control declarations.
+- `TestUntilSourcePresentControlOrder`: later layer wins; expiration reveals an
+  earlier layer or base control; control-change prohibition remains enforced.
+
+RON contracts and full-card mapping:
+
+- Scarwood Bandits → `TestRONSourcePresenceDurationScarwood`: the complete
+  unchanged DRK record supplies forestwalk, activation costs/rollback, artifact
+  target legality, opponent paid/declined/unaffordable branches, announcement
+  versus resolution timing, source/target departures and returns, phase cycles
+  before/after resolution, source control/ability changes, shroud, independent
+  instances, stack copies and pending game clones.
+- Scarwood Bandits → `TestRONSourcePresenceDurationCastingAndBoundary`:
+  complete casting cost, 2/2 and forestwalk, fresh factory target declarations,
+  invalid entry/replacement/spell-source contexts and layer-role rejection.
+- `TestRONSourcePresenceDurationContexts`: upkeep and delayed control bodies
+  retain their resolving controller after source control changes; repeated
+  waiting-source reads preserve exact identity and do not execute the body.
+- `TestRONSourcePresenceDurationInvalidAndLoading`: invalid arities/endpoints,
+  complete Scarwood acceptance, continued Gaea/Oubliette rejection and atomic
+  loading with a valid isolated registry and an invalid additional record.
+
+Existing payment-node tests remain in force. Their old enclosing Scarwood
+rejection assertion is removed because the complete record now passes.
+`TestRONTextLandwalkRecords` gains Scarwood (12 names / 22 records / 1 blocked).
+Collection plan/inventory/numeric assertions advance by exactly one record;
+no rejection checks or engine behavior assertions were weakened.
+
+### Source defects, changed files and gates
+
+No RON source changed. No vocabulary refresh is needed. Gaea's Liege retains
+its known duplicate `IsntAttacking` branch defect; local `data/LEA.json` confirms
+that its second branch must describe attacking. Its activated layer says
+"until this creature leaves the battlefield" and needs a distinct adapter that
+preserves phasing. Oubliette's local `data/ARN.json` says "phases out until this
+enchantment leaves" and needs its separate phasing lifecycle. Quarum's existing
+subject-bound replacement lifetime is already supported and is unchanged.
+Gauntlets' Aura-only defect remains open. No source-data correction was made.
+
+Changed engine files: `composable_continuous.go`, `effect_manager.go`, `game.go`,
+`doc.go`, and new `source_presence_duration_test.go`. Changed RON files:
+`source_control.go`, new `source_presence_duration_test.go`, payment/landwalk
+regressions and collection plan/inventory/numeric count assertions. Established
+contracts are documented in `docs/engine-rules-contracts.md` and
+`docs/dsl-reference.md`; this ledger updates the current status and appends the
+entry. No Go cards, DSL functions, generators or runtime wiring were removed.
+Their cutover/removal gates remain open. No fallback, partial registry,
+card-name branch or game-time declaration panic was added.
+
+
+### Verification and measured collection result
+
+Final checks passed in the required order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONSourcePresenceDuration -count=1`;
+  focused native `go test ./pkg/mage -run TestUntilSourcePresent -count=1`;
+  focused payment/landwalk and collection regression checks also passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1`, `make test` and the engine skill's
+  `go test ./... -short -count=1` passed. These checks were repeated after the
+  final indirect-phasing test was added and passed again.
+- `make lint` passed twice with 0 issues. The only automatic change was import
+  order in the new native test file; it was reviewed, and focused tests,
+  build/vet and repository suites were rerun. The final lint made no further
+  changes. `git diff --check` passed.
+- `go run ./cmd/loadcards -json` exited 1 for expected collection rejection:
+  **2,189 compiled / 256 rejected records**, **848 accepted / 138 rejected
+  names** (2,445 records / 986 names total).
+
+The first engine-short run found four old collection-count assertions expecting
+2,188 / 257. Those exact expectations were updated to 2,189 / 256; all behavior
+and rejection checks remain. There was no environmental or pre-existing build
+failure. No independent required check remains blocked.
+
+The fresh loader comparison removes exactly one rejection key: Scarwood Bandits
+at DRK:91, previously unsupported `UntilPermanentLeavesBattlefield` at column
+480. No new rejection key appears; every remaining rejection diagnostic is
+unchanged. All previously accepted records remain accepted. Strict collection
+loading still publishes no partial registry.
+
+Estimated and actual gains match: **one unique card and one record**. Scarwood
+also gains complete-card RON gameplay evidence, separately from compilation
+coverage. The shared engine lifetime has additional synthetic control/P/T/ability
+contracts; these are not counted as inventory card unlocks.
+
+### Ranked next candidates
+
+1. Eligible-player alternative payments and typed payer scope for Worms of the
+   Earth and Cleansing. Split out a small shared prerequisite; Worms retains
+   land-entry prevention and Cleansing retains per-subject result orchestration.
+2. Dependent target card-type comparison for Gauntlets of Chaos. Zero immediate
+   gains; exchange-result guard and Aura-only source correction remain separate.
+3. Source-leave layer duration for Gaea's Liege, preserving phasing. Defending-
+   player characteristics and the known duplicate predicate defect also remain.
+
+Reassess with complete records and fresh evidence. Complete collection gameplay,
+runtime loading, application cutover, Go-card deletion and unused DSL cleanup
+remain unfinished. This run completes exactly one duration capability slice.

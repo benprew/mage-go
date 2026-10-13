@@ -481,6 +481,17 @@ func (em *EffectManager) expireSourceTapped(sourceID uuid.UUID) bool {
 	return changed
 }
 
+func (em *EffectManager) expireSourcePresence(sourceID uuid.UUID) bool {
+	changed := false
+	for _, effect := range em.effects {
+		if e, ok := effect.(*composedLayerEffect); ok && e.sourcePresent && e.SourceID() == sourceID && !e.expired {
+			e.expired = true
+			changed = true
+		}
+	}
+	return changed
+}
+
 func (em *EffectManager) expireCapturedControlSource(sourceID uuid.UUID, tappedOnly bool) bool {
 	changed := false
 	for _, effect := range em.effects {
