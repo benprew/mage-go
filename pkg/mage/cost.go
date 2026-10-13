@@ -951,11 +951,15 @@ func (c *eitherCost) Text() string {
 
 // exileFromGraveyardCost requires exiling cards from your graveyard.
 type exileFromGraveyardCost struct {
-	amount       int
-	locked       bool
-	selected     []capturedCard
-	paid         *CardsBinding
-	paidRequired bool
+	singleMatching bool
+	filter         CardFilter
+	players        PlayerSet
+	graveyard      uuid.UUID
+	amount         int
+	locked         bool
+	selected       []capturedCard
+	paid           *CardsBinding
+	paidRequired   bool
 }
 
 // ExileFromGraveyardCost creates a cost that requires the controller to exile n cards from their graveyard.
@@ -970,19 +974,28 @@ func ExileFromGraveyardCostWithCards(n int, paid *CardsBinding) Cost {
 
 func (c *exileFromGraveyardCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "graveyard-exile-cost", Text: c.Text()}
+	if c.singleMatching {
+		n.children = append(n.children, definitionEdge{"players", c.players})
+		if nilDefinition(c.players) || c.filter.IsZero() {
+			n.problem = "single graveyard exile cost requires players and a card filter"
+		}
+	}
 	if c.amount < 0 {
 		n.problem = "graveyard exile cost count cannot be negative"
 	}
 	if c.paid != nil {
 		n.bindingWrite = c.paid
-		n.children = []definitionEdge{{"paid cards", c.paid}}
+		n.children = append(n.children, definitionEdge{"paid cards", c.paid})
 	} else if c.paidRequired {
 		n.problem = "paid cards binding must be non-nil"
 	}
 	return n
 }
 
-func (c *exileFromGraveyardCost) choose(controller uuid.UUID, g *Game) error {
+func (c *exileFromGraveyardCost) choose(sourceID, controller uuid.UUID, g *Game) error {
+	if c.singleMatching {
+		return c.chooseSingleGraveyard(sourceID, controller, g)
+	}
 	p := g.GetPlayer(controller)
 	if p == nil || c.amount < 0 || len(p.Graveyard()) < c.amount {
 		return fmt.Errorf("cannot pay graveyard exile cost")
@@ -1005,6 +1018,9 @@ func (c *exileFromGraveyardCost) choose(controller uuid.UUID, g *Game) error {
 }
 
 func (c *exileFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.singleMatching {
+		return c.canPaySingleGraveyard(sourceID, controller, g)
+	}
 	p := g.GetPlayer(controller)
 	if p == nil || c.amount < 0 || len(p.Graveyard()) < c.amount {
 		return false
@@ -1026,7 +1042,7 @@ func (c *exileFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game)
 func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if !c.locked {
 		chosen := *c
-		if err := chosen.choose(controller, g); err != nil {
+		if err := chosen.choose(sourceID, controller, g); err != nil {
 			return err
 		}
 		return chosen.Pay(sourceID, controller, g)
@@ -1038,6 +1054,10 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 	for _, selected := range c.selected {
 		ids = append(ids, selected.id)
 	}
+	if c.singleMatching {
+		g.exileGraveyardCardsTogether(c.graveyard, ids, sourceID)
+		return nil
+	}
 	removed := g.MoveCardsFromGraveyard(controller, ids, ZoneExile)
 	for _, card := range removed {
 		g.ExileCard(card, sourceID)
@@ -1046,6 +1066,9 @@ func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) er
 }
 
 func (c *exileFromGraveyardCost) Text() string {
+	if c.singleMatching {
+		return fmt.Sprintf("Exile %d matching cards from a single graveyard", c.amount)
+	}
 	if c.amount == 1 {
 		return "Exile a card from your graveyard"
 	}

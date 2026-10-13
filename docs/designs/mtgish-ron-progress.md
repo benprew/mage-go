@@ -6,34 +6,34 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **857 accepted / 129 rejected names**
-(986 total), **2,204 compiled / 241 rejected records** (2,445 total).
-The latest slice supplies static per-point counter-removal prevention. Rock
-Hydra executes all six complete RON reprints. Estimated and actual gains are
-one unique name / six records. The strict loader still rejects the collection
-and publishes no partial registry.
+Latest measured result (2026-10-13): **858 accepted / 128 rejected names**
+(986 total), **2,205 compiled / 240 rejected records** (2,445 total).
+The latest slice is **SINGLE-GRAVEYARD-EXILE-COST**. Night Soil executes its
+complete unchanged FEM record. Estimated and actual gains are one unique name /
+one record. The strict loader still rejects the collection and publishes no
+partial registry.
 
-The latest slice is **COUNTER-POINT-PREVENTION**. Unpreventable damage removes
-matching counters without reducing damage or consuming finite shields. Shared
-replacement choices, exact source visits, phasing and clone isolation apply.
-Hydra and Rasputin's finite self-recipient source defects are corrected with
-local Oracle evidence. Rasputin still needs turn-start untapped history and
-an absolute counter cap. Monster's entry payments and counter distribution
-remain. Runtime cutover, Go-card removal and unused DSL cleanup gates remain open.
+Matching plural activation payments use the shared cost transaction and exact
+graveyard visits. All cards reach exile before zone events. Payer choices,
+rollback, copies and clones keep separate state. This supplies a selection/batch
+prerequisite for Frankenstein's Monster; its mandatory entry scope and result
+branches remain. Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
-   needs the typed entry transaction before distribution and failed entry.
-   Zero immediate gain; one DRK record's concrete prerequisite.
-2. **Restricted casting X payment.** Drain Life's six reprints require black-only
+1. **Shared entry color choice and typed chosen-color predicates.** Psychic
+   Allergy and Jihad need the entry binding and later reads. Jihad also needs
+   combined entry choices and conditional layer/state predicates. Zero immediate
+   gain for a choice-only prerequisite; two downstream unique names.
+2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
+   can reuse matching selection and complete-batch exile. Entry transaction,
+   result/failure routing and counter distribution remain. Zero immediate gain
+   for the transaction prerequisite.
+3. **Restricted casting X payment.** Drain Life's six reprints require black-only
    X payment. Zero immediate gain until clamped actual damage life gain exists.
-3. **Turn-start untapped history and static counter cap.** Rasputin Dreamweaver's
-   corrected shield is ready; implement each remaining contract as a separate
-   slice. Reassess shared multi-card candidates before either single-card adapter.
 
 ## Dependencies and source blockers
 
@@ -3926,3 +3926,192 @@ API/rules-contract docs, vocabulary snapshot and this ledger.
    unlocks; small/medium effort. Keep each contract a separate complete slice.
 
 This run stops after static per-point counter-removal prevention.
+
+## 2026-10-13 — SINGLE-GRAVEYARD-EXILE-COST
+
+Status: complete for fixed matching plural activation payments from one graveyard.
+This run implements one capability and stops. Complete collection execution,
+runtime cutover, Go-card removal and obsolete DSL cleanup remain incomplete.
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean; no user changes or unrelated untracked files were
+present. Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed.
+Fresh `go run ./cmd/loadcards -json` exited 1 with 2,204 compiled / 241 rejected
+records and 857 accepted / 129 rejected names. This was strict collection
+rejection, not a build or test failure. Complete RON records and nested forms
+were inspected for each candidate, including all six Drain Life reprints.
+Targeted vocabulary entries confirm the three-argument single-graveyard form,
+two-argument graveyard-count form and one-argument casting-color restriction.
+
+| Candidate | Distinct affected names | Estimated complete-name gain | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: mandatory announced-X entry exile payment | Frankenstein's Monster (one DRK record) | 0 | Entry X and integer counters exist, but matching plural selection, typed entry transaction/results and failure continuation are absent. Combination-counter distribution remains. The selection and batch service is an implementation prerequisite. | Medium/high for the full entry transaction and its contracts. |
+| Restricted casting X payment | Drain Life (six reprints, one name) | 0 | The shared mana solver must preserve fixed symbols and restrict only X. Clamped actual-damage life gain remains. Enables the restricted X casting adapter. | Medium; no immediate complete record. |
+| Matching plural exile from one eligible graveyard as activation payment | Night Soil (one FEM record); Frankenstein's Monster as a downstream selection/batch consumer | 1 | Night Soil's mana and complete Saproling token body are already supported. Monster still needs its distinct entry scope, dynamic amount, mandatory payment/result and counter branches. | Medium; reuse the existing plural cost transaction, add matching/foreign selection and complete-batch events. |
+
+The first ranked candidate needs the reusable matching plural selector before
+its entry adapter can be complete. This slice supplies that prerequisite in a
+complete activation context and unlocks Night Soil immediately. It has a larger
+credible gain for this run than either zero-unlock adapter. No first-error count
+was treated as a complete-card estimate. No second slice was started.
+
+### Contract, lowering and reuse boundary
+
+RON accepts exactly
+`Exile([NumberCardsInASingleGraveyard(Integer(n), cardFilter, AnyPlayer)], [])`
+as an activation cost. `n` is a fixed nonnegative integer. Intrinsic card-type
+and color predicates and nonempty `And`/`Or` groups use the existing card-filter
+compiler. There is one exile object, no operations and at most one graveyard
+exile payment in the activation. Existing `And` cost composition remains valid.
+RON owns arity, spelling, role/context checks and diagnostics. Inventory gives
+the object `exile_payment_object`, count `announcement_value`, predicate
+`card_filter` and selector `player_collection` roles.
+
+New native signature:
+`ExileMatchingCardsFromSingleGraveyardCost(amount int, filter CardFilter, players PlayerSet) Cost`.
+It extends `exileFromGraveyardCost`; current own-graveyard constructors retain
+their behavior. The internal `choose` now receives source and controller IDs,
+and both shared transaction call sites supply those IDs. The player set uses
+that payment context. Definition validation rejects negative counts, zero
+filters and nil player sets. No mutable selection enters a compiled factory.
+
+The payer chooses distinct matching cards. Only graveyards with enough matching
+cards are offered. The first choice fixes the graveyard; later choices cannot
+cross graveyards. Offered visits and holder identities are saved before choices.
+Zero counts make no card choices. Pure affordability queries do not choose,
+move cards or use randomness. Other players do not make the payer's choices.
+
+Existing `costPaymentTransaction` locks the copied cost and validates all costs
+on its isolated game. Live commitment rechecks exact visits and matching types
+before resources are spent. Returned cards cannot pay, overlapping costs cannot
+reuse cards, and invalid selections do not spend mana or life. `EitherCost`
+retains its locked option and the same exact selections. The new native batch
+uses existing player removal, exile storage and events, putting all selected
+cards in face-up exile before any per-card zone event. The graveyard holder
+supplies event `PlayerID`; ownership and paying source attribution are retained.
+One `EvtCardsLeftGraveyard` reports the complete count. There is no new parallel
+zone or replacement system and no global last-action/result slot.
+
+Plural payment cannot supply singular `TheCardExiledThisWay` mana-value reads.
+The activation factory allocates that number binding only for the existing
+singular producer. Dynamic counts, other RON player selectors, entry transactions,
+resolving collections and optional resolution exile payments remain errors.
+Native player-set and alternative-cost reuse does not expand those RON contexts.
+
+### Requirements and source evidence
+
+Night Soil's complete `cards/mtgish/FEM.lines.ron:64` record matches retained
+`data/FEM.json` Oracle text: `{1}, Exile two creature cards from a single
+graveyard: Create a 1/1 green Saproling creature token.` Exile is before the
+colon, so it happens during activation payment, not token resolution. The payer
+may choose either graveyard; no target is declared. Relevant local rules:
+118.3, 118.10, 602.1a, 602.2b, 400.7, 406.3, 701.13a and 603.10.
+
+No source-data defect or environmental failure was found in this slice. No RON
+source changed, so file hashes and constructor spellings in the vocabulary
+snapshot remain unchanged; no source snapshot refresh was required. The latest
+loader measurements are recorded here. Frankenstein's Monster remains rejected
+at its existing multiple-entry-operation diagnostic; no gameplay gain is claimed
+for its complete record. Drain Life's six diagnostics remain unchanged.
+
+### Failing-first evidence and card-to-test mapping
+
+Test fixture API errors were corrected before semantic evidence was recorded.
+Native `TestSingleGraveyardExileCost*` then failed to compile only because the
+new service signature did not exist. RON positive gameplay tests failed at
+`NumberCardsInASingleGraveyard`: expected one positional argument. The adapter
+and engine implementation then passed those tests. An initial test assumed the
+engine rejected unused target arguments; existing activation callers accept
+those arguments. That fixture case was removed without changing the engine or
+weakening any payment, identity, rollback or gameplay assertion.
+
+- **Night Soil → `TestRONSingleGraveyardExileCostNightSoil`**: complete unchanged
+  FEM record, native casting, own/foreign graveyards, retained noncreature cards,
+  cost at announcement, token at resolution, source departure/control/phasing,
+  phase cycles and return, countered activation, changed-controller copies,
+  exact green 1/1 Saproling tokens, payment not repeated and cloned resolution.
+- **Night Soil → `TestRONSingleGraveyardExileCostRollback`**: insufficient cards
+  split across graveyards, wrong card type, unpaid mana and phased source; live
+  mana, zones and stack remain unchanged after rejection.
+- **Night Soil → `TestRONSingleGraveyardExileCostIndependentActivations`**:
+  separate RON factory instances and two pending activations each, eight distinct
+  paid cards and independent saved token controllers.
+- `TestRONSingleGraveyardExileCostInvalid`: malformed and negative counts,
+  dynamic X, tuple player symbols, unsupported player selectors, empty and
+  incompatible predicates, operations, duplicate costs, wrong execution contexts
+  and attempts to read a singular result from the plural producer.
+- `TestRONSingleGraveyardExileCostInventory`: semantic roles, accepted complete
+  record, rejected mixed collection and unchanged pre-existing registry.
+- Native `TestSingleGraveyardExileCostSelection`: payer choices across eligible
+  graveyards, distinct same-graveyard subjects, exact payment timing, ownership,
+  pure queries and clone isolation.
+- Native `TestSingleGraveyardExileCostRollback`: split resources, invalid,
+  duplicate and cross-graveyard choices, absent/returned/changed-type visits,
+  overlapping cost claims and life rollback before live commitment.
+- Native `TestSingleGraveyardExileCostBatch`: all selected cards in exile before
+  zone observers, two zone events, one full-count graveyard batch and holder facts.
+- Native `TestSingleGraveyardExileCostDefinitionAndZero`, `ChoiceVisit` and
+  `PlayerSetAndAlternative`: invalid declarations, zero/absent payer, return during
+  offered choice, opponent-only native selection and locked `EitherCost` reuse.
+- Retained `TestGraveyardExileCost*`, `TestExileDamageSourceStackBindings` and
+  `TestRONExilePayment*` pass for current plural/singular own-graveyard callers.
+
+### Verification and measured outcome
+
+Required verification ran in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONSingleGraveyardExileCost -count=1`
+  passed. Native `go test ./pkg/mage -run
+  'TestSingleGraveyardExileCost|TestGraveyardExileCost|TestExileDamageSourceStackBindings'
+  -count=1` and the retained focused RON exile payment tests passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` passed.
+- `make lint` passed with **0 issues**. Automatic import grouping changes in
+  the new files were reviewed. No behavior or assertions changed. The focused
+  RON and native tests were rerun after formatting and passed.
+- `git diff --check` passed before final loader validation and after this ledger
+  update.
+- Final `go run ./cmd/loadcards -json` exited **1**, as required while gaps
+  remain: **2,205 compiled / 240 rejected records**, **858 accepted / 128 rejected
+  names**. Comparison with the baseline confirms that only Night Soil's issue
+  disappeared and no other diagnostic changed. This is collection rejection,
+  not failed native validation.
+
+Estimated and actual gains match: **one unique complete name / one record**.
+Complete RON gameplay coverage gains Night Soil. Compilation acceptance now
+measures **858 accepted / 128 rejected names** (986 total) and **2,205 compiled /
+240 rejected records** (2,445 total). Only Night Soil's diagnostic disappeared;
+all other baseline diagnostics exactly match. The strict loader still exits 1
+and publishes no partial collection. Compilation and gameplay evidence are
+reported separately. Full collection gameplay, runtime loading and application
+cutover remain open; no Go definitions, generators or DSL exports were removed.
+
+Changed files: new engine `pkg/mage/single_graveyard_exile_cost.go` and its tests;
+`cost.go`, `payment_transaction.go`, `doc.go`; new RON
+`single_graveyard_exile_cost.go` and its tests; `exile_payment.go`,
+`activation_timing.go`, `inventory.go`; collection count tests in
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. **Shared entry color choice and typed chosen-color predicates — Psychic
+   Allergy and Jihad.** Both complete records require an entry color and later
+   color reads. Jihad also combines its opponent choice with the color choice
+   and uses a conditional layer/state trigger. Establish the shared entry choice
+   binding before dependent predicates. Estimated zero immediate unlocks for a
+   choice-only prerequisite, with two concrete downstream names. Medium effort;
+   assess the smallest complete shape and avoid partial combined-entry support.
+2. **Mandatory entry exile payment using announced X — Frankenstein's Monster.**
+   Matching selection, exact visits and complete-batch exile now have a native
+   service. Entry scope, required transaction/result and failed entry remain,
+   followed by combination-counter distribution. Estimated zero immediate
+   unlocks for the transaction slice; medium effort.
+3. **Restricted casting X payment — Drain Life.** Preserve fixed casting symbols
+   while restricting only X through the shared solver. Six reprints still need
+   clamped actual-damage life gain. Estimated zero immediate unlocks; medium
+   effort. Recompare other shared capabilities before selecting.
+
+This run stops after matching plural single-graveyard activation exile payment.

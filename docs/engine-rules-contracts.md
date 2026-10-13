@@ -19044,3 +19044,48 @@ Evidence: native `TestCounterPointPreventionUnpreventable` and retained
 activations, upkeep legality and rollback. Rasputin's test covers only the entry,
 mana and corrected shield prerequisite; full history and counter-cap support
 remain open. Resolved finite shields reuse their existing lifetime contract.
+
+
+## Matching plural graveyard exile payments
+
+`ExileMatchingCardsFromSingleGraveyardCost(amount int, filter CardFilter,
+players PlayerSet) Cost` extends the existing plural graveyard exile payment.
+Definition validation requires a nonnegative count, nonzero card filter and
+nonnull typed player set. The payer chooses from eligible graveyards that each
+contain enough matching cards. The first card chooses the graveyard; remaining
+choices are distinct members of that same graveyard. Only the payer chooses,
+even when the cards belong to another player (CR 602.1a, 602.2b, 118.3).
+The player set reads the payment source and controller context. Queries do not
+choose cards, move cards, spend resources or use randomness. Zero payments need
+no card choices; an absent payer or empty eligible player set cannot pay.
+
+The shared `costPaymentTransaction` copies and locks the cost, then validates
+all costs on a cloned game. Choices save the visits present when offered.
+Before payment, each card must retain that exact graveyard visit and match the
+filter; a returned card cannot pay (CR 400.7). Invalid, duplicate, cross-graveyard,
+absent and changed-type choices fail. Overlapping costs cannot reuse a card.
+Failure retains live mana, life, zones and stack. `EitherCost` uses the same
+locked payment. Declarations retain no chosen state between activations.
+
+The native batch removes all selected cards and places them in face-up exile
+with their original owners and the paying ability's source attribution. It then
+sends each `EvtZoneChange` with the graveyard holder as `PlayerID`, followed by
+one `EvtCardsLeftGraveyard` with the full count (CR 701.13a, 406.3, 603.10).
+Observers see the completed zone batch. This uses existing player removal,
+exile storage, exact-visit and event services. It does not create a separate
+replacement system. Existing own-graveyard plural and singular cost callers
+retain their behavior. The new service does not write a global last-action slot.
+
+Night Soil pays at announcement and creates its token at resolution. Countering
+the activation does not undo payment. Pending bodies keep their controller after
+source departure, control change or phasing. Copies create tokens for their own
+controller without another payment. Factory instances, repeated activations and
+game clones remain independent. Source return cannot alter paid graveyard visits.
+
+Evidence: native `TestSingleGraveyardExileCostSelection`, `Rollback`, `Batch`,
+`DefinitionAndZero`, `ChoiceVisit`, `PlayerSetAndAlternative`; retained
+`TestGraveyardExileCost*` and `TestExileDamageSourceStackBindings`. RON evidence:
+`TestRONSingleGraveyardExileCostNightSoil`, `Rollback`, `IndependentActivations`,
+`Invalid`, `Inventory`. The adapter supports fixed counts with AnyPlayer only.
+Entry transactions, dynamic counts, entry results and failed-entry continuations
+remain separate contracts. No complete Frankenstein's Monster claim is made.

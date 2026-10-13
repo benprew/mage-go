@@ -10,6 +10,14 @@
 // one matching counter condition, one source counter removal and PreventThatDamage.
 // Other recipients and replacement bodies need separate adapters.
 //
+// [ExileMatchingCardsFromSingleGraveyardCost] requires distinct matching cards
+// from one eligible graveyard. The payer chooses; other players do not choose.
+// Queries make no choices. Shared transactions save and recheck exact visits.
+// A returned card cannot pay. All cards reach exile before zone events.
+// Copies do not pay again. Separate activations and clones keep their choices.
+// RON accepts fixed nonnegative counts and AnyPlayer in activation costs.
+// Entry payments, dynamic counts and plural result reads need separate adapters.
+//
 // Permanent counters and exact departure snapshots use integer arrays.
 // [EntersWithNCounters] and the shared counter replacement service keep counts
 // above 255. Clones keep separate arrays. Phasing keeps counters; a zone return

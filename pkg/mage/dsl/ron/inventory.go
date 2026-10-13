@@ -708,6 +708,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "exile_payment_object":
+		if n.Name == "NumberCardsInASingleGraveyard" && len(n.Args) == 3 {
+			return []string{"announcement_value", "card_filter", "player_collection"}[index]
+		}
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

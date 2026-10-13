@@ -2,7 +2,11 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-type exilePaymentPlan struct{ filter mage.CardFilter }
+type exilePaymentPlan struct {
+	filter          mage.CardFilter
+	singleGraveyard bool
+	amount          int
+}
 
 func compileExileCost(n Node) (*exilePaymentPlan, error) {
 	if err := arity(n, 2); err != nil {
@@ -20,6 +24,9 @@ func compileExileCost(n Node) (*exilePaymentPlan, error) {
 		return nil, problem(n, "exile payment requires one object and no operations")
 	}
 	object := objects[0]
+	if object.Name == "NumberCardsInASingleGraveyard" {
+		return compileSingleGraveyardExileCost(object)
+	}
 	if err := arity(object, 1); err != nil {
 		return nil, err
 	}
@@ -171,6 +178,11 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 				return mage.ExileSourceCost()
 			}}, false, nil
 		}
+		if plan.singleGraveyard {
+			return []boundCostFactory{func(instanceBindings) mage.Cost {
+				return mage.ExileMatchingCardsFromSingleGraveyardCost(plan.amount, plan.filter, mage.EachPlayer)
+			}}, false, nil
+		}
 		return []boundCostFactory{func(bindings instanceBindings) mage.Cost {
 			return mage.ExileMatchingCardFromGraveyardCostInto(plan.filter, "Exile a matching card from your graveyard", bindings.exiles[ctx.exilePayment])
 		}}, false, nil
@@ -195,7 +207,7 @@ func compileExilePaymentValue(n Node, ctx scope) (valueFactory, error) {
 		return nil, err
 	}
 	ref := n.Args[0]
-	if ref.Kind != Symbol || ref.Name != "TheCardExiledThisWay" || ctx.exilePayment == nil {
+	if ref.Kind != Symbol || ref.Name != "TheCardExiledThisWay" || ctx.exilePayment == nil || ctx.exilePayment.singleGraveyard {
 		return nil, problem(ref, "unbound or incompatible exile payment result")
 	}
 	return func(bindings instanceBindings) mage.ResolutionValue {

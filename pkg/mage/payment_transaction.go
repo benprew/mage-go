@@ -227,7 +227,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			}
 			if exile, ok := locked.options[locked.selected].(*exileFromGraveyardCost); ok {
 				chosen := *exile
-				if err := chosen.choose(tx.controller, tx.game); err != nil {
+				if err := chosen.choose(tx.sourceID, tx.controller, tx.game); err != nil {
 					return err
 				}
 				locked.options[locked.selected] = &chosen
@@ -353,7 +353,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		}
 		if exile, ok := cost.(*exileFromGraveyardCost); ok {
 			locked := *exile
-			if err := locked.choose(tx.controller, tx.game); err != nil {
+			if err := locked.choose(tx.sourceID, tx.controller, tx.game); err != nil {
 				return err
 			}
 			validationCost = &locked

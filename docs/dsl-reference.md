@@ -5691,8 +5691,8 @@ InAPlayersGraveyard(SinglePlayer(You))]))], [])` chooses one matching card from
 the activator's graveyard. Exactly one graveyard exile cost is supported in an
 activation. The controller clause must occur once in the outer conjunction.
 Other conjuncts use the existing intrinsic card type/color filters and nonempty
-logical combinations. Plural, foreign-graveyard, and permanent-choice payments
-remain unsupported. The object list has one element and the operation list is
+logical combinations. The plural single-graveyard form is documented below. Other plural,
+foreign-graveyard and permanent-choice payment forms remain unsupported. The object list has one element and the operation list is
 empty. These forms are not resolving actions or resolution costs.
 
 `ManaValueOfExiled(TheCardExiledThisWay)` reads a typed number saved by that
@@ -14505,3 +14505,32 @@ Rock Hydra now uses its complete RON record. Its finite activation, and Rasputin
 matching activation, use `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`
 with `Permanent(ThisPermanent)`, as required by their local Oracle text.
 Rasputin's turn-start history and counter-cap rules remain unsupported.
+
+
+## RON matching plural exile from one graveyard
+
+Activation costs accept
+`Exile([NumberCardsInASingleGraveyard(Integer(n), cardFilter, AnyPlayer)], [])`.
+The count is a fixed nonnegative integer. The card filter uses intrinsic card
+kinds/colors and nonempty `And`/`Or` groups. The object list has one element and
+the operation list is empty. One graveyard exile payment is permitted per
+activation, including within `And` with other supported costs. The activator
+chooses distinct matching cards from one graveyard under either player. The
+first card choice fixes that graveyard; later choices exclude other graveyards.
+Insufficient matching cards in each individual graveyard cannot pay, even if
+the total across graveyards is sufficient. These choices do not target.
+
+Lowering uses `ExileMatchingCardsFromSingleGraveyardCost(int, CardFilter,
+PlayerSet) Cost` with `EachPlayer`. The shared transaction saves exact graveyard
+visits and checks the total payment before commitment. Cards move to exile at
+activation, before the body resolves. Copies retain the body without payment.
+Every moved card reaches exile before per-card zone events and one graveyard
+batch event. Ownership remains unchanged. Invalid declarations fail compilation;
+queries make no choices or moves. A zero count makes no card choices.
+
+`ValueX`, other RON player sets, entry operations, resolving exile collections,
+optional resolution payments and plural result reads remain unsupported in this
+shape. The singular `TheCardExiledThisWay` value cannot read this plural payment.
+Night Soil uses its complete unchanged FEM record. Evidence:
+`TestRONSingleGraveyardExileCostNightSoil`, `Rollback`, `IndependentActivations`,
+`Invalid`, `Inventory`; native `TestSingleGraveyardExileCost*`.
