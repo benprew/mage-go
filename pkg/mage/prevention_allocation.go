@@ -62,7 +62,7 @@ func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Gam
 			priority := ReplacementPriorityDefault
 			seenShields := make(map[ReplacementEffect]bool)
 			for i, action := range actions {
-				if action == nil || damageActionAmount(action) <= 0 || damageReplacementBlocked(action, g) {
+				if action == nil || damageActionAmount(action) <= 0 {
 					continue
 				}
 				affected := replacementAffectedPlayer(action, g)

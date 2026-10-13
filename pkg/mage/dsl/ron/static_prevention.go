@@ -7,6 +7,9 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "EachDamageWouldBeDealtToRecipient" {
+		return compileCounterPointPrevention(n, ctx)
+	}
 	if event.Name == "DamageWouldBeDealtByASourceToRecipient" {
 		return compileStaticSourceTypePrevention(n, ctx)
 	}

@@ -1063,11 +1063,6 @@ func (em *EffectManager) prepareReplacements(action Action, g *Game) (Action, []
 
 func (em *EffectManager) prepareReplacementsChoosing(action Action, g *Game, choose func([]ReplacementEffect, Action, *Game) int) (Action, []preventionLifeGain) {
 	var outcomes []preventionLifeGain
-	if dca, ok := action.(*DamageToCreatureAction); ok {
-		if perm := g.FindPermanent(dca.PermanentID()); perm != nil && perm.HasAttr(AttrDamageCantBePreventedOrRedirected) {
-			return action, outcomes
-		}
-	}
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
 		if entry, ok := action.(*battlefieldEntryAction); ok && g.isLandEntryProhibited(entry.permanent.HasType(TypeLand)) {
@@ -1109,6 +1104,12 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 	seen := make(map[ReplacementEffect]bool)
 	for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
 		for _, r := range list {
+			if damageReplacementBlocked(action, g) {
+				additional, ok := r.(interface{ appliesToUnpreventableDamage() bool })
+				if !ok || !additional.appliesToUnpreventableDamage() {
+					continue
+				}
+			}
 			if !applied[r] && !seen[r] && r.IsActive(g) && r.Matches(action, g) {
 				candidates = append(candidates, r)
 				seen[r] = true
@@ -1123,7 +1124,7 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 		}
 	}
 	// A replacement can change the recipient before protection applies.
-	if damage, ok := action.(*DamageToCreatureAction); ok {
+	if damage, ok := action.(*DamageToCreatureAction); ok && !damageReplacementBlocked(action, g) {
 		source := damage.DamageSource()
 		if !source.Valid() {
 			source = g.CaptureDamageSource(damage.ActionSource())

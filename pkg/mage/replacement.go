@@ -1186,6 +1186,9 @@ func (r *counterDamagePreventionReplacement) Replace(a Action, g *Game) Action {
 	}
 	prevented := min(damage.Amount(), permanent.Counters[r.counterType])
 	permanent.RemoveCounter(r.counterType, prevented)
+	if damageReplacementBlocked(a, g) {
+		return a
+	}
 	remaining := damage.Amount() - prevented
 	if remaining == 0 {
 		return nil
@@ -1216,6 +1219,9 @@ func (r *counterDamagePreventionReplacement) Clone() ReplacementEffect {
 }
 
 func (*counterDamagePreventionReplacement) IsPreventionEffect() bool { return true }
+
+// Counter removal still applies when damage cannot be prevented (CR 615.12).
+func (*counterDamagePreventionReplacement) appliesToUnpreventableDamage() bool { return true }
 
 // ---------------------------------------------------------------------------
 // Prevention effect classification (CR 616.1 ordering helper)

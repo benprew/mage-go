@@ -2,7 +2,6 @@ package ron
 
 import (
 	"fmt"
-	"maps"
 	"strings"
 	"testing"
 
@@ -89,12 +88,7 @@ func TestRONEntryAnnouncedXDeclarations(t *testing.T) {
 func TestRONEntryAnnouncedXHydraRecord(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		n := repositoryRecord(t, set, "Rock Hydra", "hydra.ron")
-		entryRecord := n
-		entryRecord.Fields = maps.Clone(n.Fields)
-		rules := n.Fields["Rules"]
-		rules.Args = rules.Args[:1:1]
-		entryRecord.Fields["Rules"] = rules
-		factory, err := Compile(entryRecord)
+		factory, err := Compile(n)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -110,9 +104,6 @@ func TestRONEntryAnnouncedXHydraRecord(t *testing.T) {
 		g.ResolveStack()
 		if p := g.FindPermanent(c.ID()); p == nil || p.Counters[core.P1P1] != 4 || p.CurrentToughness(g) != 4 {
 			t.Fatal("Hydra entry contract failed")
-		}
-		if _, err := Compile(n); err == nil {
-			t.Fatal("unsupported complete Hydra accepted")
 		}
 	}
 }

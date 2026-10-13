@@ -18994,3 +18994,53 @@ Aura-only destruction, copies, instances, clone isolation, local producer
 selection and delayed frames. `TestRONTargetDependencyGauntletsPrerequisite`
 now runs the full record with all prior target legality and payment assertions.
 Existing native atomic-exchange and duration tests remain in validation.
+
+## Static per-point counter-removal prevention
+
+`PreventDamageToSourceByRemovingCounters(counterType) ContinuousEffect` retains
+its public signature and live source/declaration checks. Positive damage removes
+`min(damage, matching counters)` counters and prevents the same amount. Empty
+counters cannot match. The damage source and combat status remain on any residual
+packet. Damage assignment precedes replacement, so combat power is fixed before
+counter removal. State actions follow damage; zero toughness cannot regenerate.
+
+CR 615.12 requires counter removal even when damage cannot be prevented. Both
+single-action and simultaneous pipelines now admit an additional-effect rule
+through the private `appliesToUnpreventableDamage() bool` contract. The counter
+rule removes counters and returns the unchanged damage packet in this context.
+Each rule applies once per packet (CR 615.12a). Existing finite shields retain
+capacity. The combined prevention/redirection prohibition keeps excluding other
+rules; this slice does not define new unpreventable-damage syntax.
+
+Shared replacement choices use the affected controller and APNAP batch order
+(CR 616.1). Redirection first can remove the original recipient from the counter
+rule; counter prevention first can eliminate the redirect event. Depletion is
+checked for each packet. Rules from different source visits and declarations stay
+separate. Phasing and ability removal stop static prevention; phase-in and ability
+restoration can resume it. Departure ends it, and return needs a new registration.
+Waiting queries retain exact active subjects without consuming counters. Clones
+keep separate rules and counters (CR 400.7, 702.26).
+
+RON accepts this exact static shape on a permanent:
+
+```text
+PreventDamage(EachDamageWouldBeDealtToRecipient(Permanent(ThisPermanent)),
+ [If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(counter)),
+  [RemoveCounters([ACounterOfTypeFromPermanent(counter,ThisPermanent)]),
+   PreventThatDamage])])
+```
+
+All three references must be the source and both counter declarations must match.
+The shared permanent-counter parser validates counter kinds. Other recipients,
+conditions, removal quantities, operation order and resolving contexts reject at
+compilation. Each factory creates a fresh static rule ID. The adapter does not
+execute arbitrary resolving actions inside a replacement.
+
+Evidence: native `TestCounterPointPreventionUnpreventable` and retained
+`TestWaitingCounterPreventionReferences`/`Boundaries`; RON
+`TestRONCounterPointPrevention`, `Invalid`, `Ordering`, `BatchAndCombat`,
+`Hydra`, `HydraShieldLifetime`, `HydraZeroToughness`, `Inventory` and
+`RasputinSourceCorrection`. Full Hydra records exercise X casting, both mana
+activations, upkeep legality and rollback. Rasputin's test covers only the entry,
+mana and corrected shield prerequisite; full history and counter-cap support
+remain open. Resolved finite shields reuse their existing lifetime contract.

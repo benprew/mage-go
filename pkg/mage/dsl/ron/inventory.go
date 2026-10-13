@@ -756,6 +756,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "prevention_event":
+		if n.Name == "EachDamageWouldBeDealtToRecipient" && len(n.Args) == 1 {
+			return "prevention_recipient"
+		}
 		if n.Name == "NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient" && len(n.Args) == 2 {
 			return []string{"damage_source_reference", "prevention_recipient"}[index]
 		}
@@ -784,6 +787,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "prevention_operation":
+		if n.Name == "If" && len(n.Args) == 2 {
+			return []string{"condition", "prevention_operation"}[index]
+		}
+		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
+			return "counter_removal_instruction"
+		}
 		if n.Name == "PreventSomeOfThatDamage" && len(n.Args) == 1 {
 			return "proposed_damage_value"
 		}

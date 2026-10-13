@@ -6,37 +6,34 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **856 accepted / 130 rejected names**
-(986 total), **2,198 compiled / 247 rejected records** (2,445 total).
-The latest slice supplies typed saved control-exchange outcomes. Gauntlets of
-Chaos executes its complete RON record with an Oracle-supported Aura-only filter.
-Estimated and actual gains are one unique name / one record. The strict loader
-still rejects the collection and publishes no partial registry.
+Latest measured result (2026-10-13): **857 accepted / 129 rejected names**
+(986 total), **2,204 compiled / 241 rejected records** (2,445 total).
+The latest slice supplies static per-point counter-removal prevention. Rock
+Hydra executes all six complete RON reprints. Estimated and actual gains are
+one unique name / six records. The strict loader still rejects the collection
+and publishes no partial registry.
 
-The latest slice is **CONTROL-EXCHANGE-RESULT**. The latest local ExchangeControl
-supplies If(PermanentsChangedControlThisWay). Failures clear prior success;
-branches, copies, clones, factory instances and delayed reads retain separate
-frames. Atomic exchange and destruction reuse existing engine services.
-Hydra/Rasputin's finite self-recipient source defect remains open; its corrected
-recipient form already has compiler and engine support. Monster's entry payments
-and counter distribution remain. Runtime cutover, Go-card removal and unused
-DSL cleanup gates remain open.
+The latest slice is **COUNTER-POINT-PREVENTION**. Unpreventable damage removes
+matching counters without reducing damage or consuming finite shields. Shared
+replacement choices, exact source visits, phasing and clone isolation apply.
+Hydra and Rasputin's finite self-recipient source defects are corrected with
+local Oracle evidence. Rasputin still needs turn-start untapped history and
+an absolute counter cap. Monster's entry payments and counter distribution
+remain. Runtime cutover, Go-card removal and unused DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Static per-point counter-removal prevention.** Rock Hydra has entry X.
-   Combine the exact prevention contract with the Oracle-supported finite
-   self-recipient correction for all identical Hydra reprints. Potential gain:
-   one name / six records. Recheck the complete upkeep/counter ability too.
-2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
-   needs the shared typed entry transaction before distribution and failed entry.
+1. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
+   needs the typed entry transaction before distribution and failed entry.
    Zero immediate gain; one DRK record's concrete prerequisite.
-3. **Restricted casting X payment.** Drain Life's six reprints require black-only
-   X payment. Estimated zero immediate gain: clamped actual damage life gain is
-   a separate blocker. Preserve normal casting mana for the other cost symbols.
+2. **Restricted casting X payment.** Drain Life's six reprints require black-only
+   X payment. Zero immediate gain until clamped actual damage life gain exists.
+3. **Turn-start untapped history and static counter cap.** Rasputin Dreamweaver's
+   corrected shield is ready; implement each remaining contract as a separate
+   slice. Reassess shared multi-card candidates before either single-card adapter.
 
 ## Dependencies and source blockers
 
@@ -3736,3 +3733,196 @@ RON `compiler.go`, `optional_payment.go`, `player_scope.go`, new
    fresh shared multi-card candidates before choosing any single-card adapter.
 
 This run stops after saved exchange outcomes.
+
+## 2026-10-13 — COUNTER-POINT-PREVENTION
+
+### Fresh baseline and candidate selection
+
+The initial working tree was clean. `make build` and fresh
+`go test ./pkg/mage/dsl/ron -count=1` passed. Initial strict
+`go run ./cmd/loadcards -json` exited 1 with 2,198 compiled / 247 rejected
+records, 856 accepted / 130 rejected names, from 2,445 records / 986 names.
+This was expected collection rejection, not an environment or build failure.
+Instructions, engine API, execution design, top status and latest ledger entry
+were read before selection. Targeted vocabulary queries and complete RON records
+supplied requirements; no Go card definition supplied requirements.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Static per-point counter-removal prevention, ranked #1 | Rock Hydra; Rasputin Dreamweaver for matching source correction | 1 name / 6 records | Hydra entry X, counter placement and upkeep timing are ready. Its finite self shield needs an Oracle-supported recipient correction. Rasputin needs turn-start history and an absolute counter cap. The reusable engine rule already exists but must preserve counter removal under unpreventable damage. | Small/medium: exact adapter, two pipeline entry points, full-card and replacement tests |
+| Mandatory entry exile payment using announced X | Frankenstein's Monster | 0 names / 0 records | Shared entry X and counter storage are ready. Entry payment results, combination-counter distribution and failed-entry continuation still block the complete DRK record. Establishing the typed entry transaction enables those downstream operations. | Medium: entry choices, payment rollback and result binding |
+| Restricted casting X payment | Drain Life | 0 names / 0 records | Six complete reprints also need clamped actual damage/life gain. A black-only X solver contract would enable the casting prerequisite while preserving the generic and black fixed cost symbols. | Medium: mana planning, announced X, rollback and copies |
+
+Ranked #1 is dependency-ready and gives the only credible immediate gain among
+these candidates. It reuses shared engine behavior and repairs a concrete rules
+contract instead of adding a card-specific executor. Complete nested Hydra rules
+confirm that the finite source correction leaves no other compiler blockers.
+The slice ends after this capability; later candidates are not implemented.
+
+### Exact shapes, engine boundary and source evidence
+
+The supported static permanent rule is:
+
+```text
+PreventDamage(EachDamageWouldBeDealtToRecipient(Permanent(ThisPermanent)),
+ [If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(counter)),
+  [RemoveCounters([ACounterOfTypeFromPermanent(counter,ThisPermanent)]),
+   PreventThatDamage])])
+```
+
+All source references must be valid singular source references. The checked and
+removed counter types must be equal and valid permanent counters. The condition,
+removal quantity, operation order and static context are exact; other declarations
+remain compiler errors. `compileCounterPointPrevention(Node, scope)` owns syntax
+and validation and lowers to a fresh
+`WithStaticAbility(PreventDamageToSourceByRemovingCounters(kind))` per factory.
+Inventory roles now distinguish event, recipient, condition and counter removal.
+No general action executor runs inside this static replacement.
+
+The retained native signature is
+`PreventDamageToSourceByRemovingCounters(CounterType) ContinuousEffect`.
+Existing source incarnation and rule IDs control active registration. Shared
+replacement candidates, affected-controller choices and APNAP batch ordering
+remain in the engine. Positive damage removes and prevents the minimum of damage
+and matching counters. Residual packets retain source and combat information.
+No LKI read can make an absent or returned recipient actionable. Phasing and
+ability removal stop the rule; phase-in or restoration resumes the present rule.
+Clones keep independent counters, damage and replacement registrations.
+
+A missing engine contract was found: both replacement pipeline entry points
+skipped counter removal for unpreventable damage. CR 615.12 and 615.12a require
+additional effects to occur once per event even when prevention cannot occur.
+The private `appliesToUnpreventableDamage() bool` contract lets this counter rule
+reach the shared candidate chooser. It removes counters and returns the unchanged
+packet when prevention is prohibited. Finite shields retain capacity. Other rules
+retain the existing combined prevention/redirection prohibition. No new RON
+unpreventable-damage declaration or exported engine signature is introduced.
+
+Local `data/LEA.json` Rock Hydra Oracle text says its red activation prevents
+damage dealt **to** the creature. `data/LEG.json` says the same for Rasputin's
+counter-paid shield. All six Hydra records (LEA, LEB, 2ED, 3ED, CED, CEI) and the
+single LEG Rasputin record incorrectly used
+`NextAmountOfDamageThatWouldBeDealtThisTurnByPermanent(Integer(1),ThisPermanent)`.
+They now use the already supported
+`NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(Integer(1),Permanent(ThisPermanent))`.
+A fresh source search found exactly those seven occurrences. No predicate was
+inverted, no unrelated record was corrected, and no new spelling was invented.
+Rasputin's full record still rejects at `StartedThisTurnUntapped`; its cap remains
+an additional blocker. Relevant local CR sections: 615.1, 615.5–7, 615.12–12a,
+616.1–2, with retained identity/phasing contracts from 400.7 and 702.26.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial test fixture errors (nonexistent action executor and attribute names)
+were corrected before recording semantic failures. Native
+`TestCounterPointPreventionUnpreventable` then failed with one unpreventable
+damage point retaining all three counters. RON positive tests failed at the
+unsupported `EachDamageWouldBeDealtToRecipient` event. After lowering, complete
+Hydra records failed at their finite `ByPermanent` source defect. The source
+correction uses the Oracle evidence above. Activation fixture indices were fixed
+to include entry and static rules. Assertions were retained. Fresh collection
+checks exposed 2,204 / 241 in four inventory/count tests; those exact expectations
+were updated. The prior Hydra entry projection is removed and now compiles the
+complete records.
+
+- **Rock Hydra → `TestRONCounterPointPreventionHydra`**: all six complete
+  reprints; unpaid cast, X mana payment, entry counters and P/T, two-point
+  removal, upkeep-only activation and failed-payment rollback, counter addition,
+  finite shield after ability removal, and outgoing damage left unaffected.
+- **Rock Hydra → `TestRONCounterPointPreventionHydraShieldLifetime`**: copied
+  activations, control change, phasing before versus after resolution, phase-in,
+  source return before/after resolution, cleanup expiry and independent clones.
+- **Rock Hydra → `TestRONCounterPointPreventionBatchAndCombat`**: native combat
+  assignment fixes power before counter removal. Generic RON rules also exercise
+  simultaneous depletion, independent subjects, departed/returned source LKI,
+  player damage and clone isolation.
+- **Rock Hydra → `TestRONCounterPointPreventionHydraZeroToughness`**: all damage
+  can be prevented while the last counter is removed. Later state actions move
+  the zero-toughness Hydra to its owner's graveyard despite regeneration.
+- **Rock Hydra → `TestRONEntryAnnouncedXHydraRecord`**: the former prefix test
+  now uses full records and retains its entry-X checks across all six reprints.
+- **Rasputin Dreamweaver → `TestRONCounterPointPreventionRasputinSourceCorrection`**:
+  explicitly projected entry/mana/shield prerequisites, separate counter costs,
+  immediate colorless mana and the corrected incoming shield. The complete
+  record must still reject at turn-start history. No full gameplay claim is made.
+- `TestRONCounterPointPrevention` covers empty counters, unpreventable damage,
+  removal, phasing, phase cycle, control change, return and clone isolation.
+- `TestRONCounterPointPreventionInvalid` rejects unbound/wrong source references,
+  tuple symbols, unknown/mismatched counters, wrong conditions, incomplete bodies,
+  wrong recipients and resolving declaration contexts.
+- `TestRONCounterPointPreventionOrdering` proves the affected controller chooses
+  counter prevention versus redirection and that recipient legality is rechecked.
+- `TestRONCounterPointPreventionInventory` checks semantic roles and atomic loader
+  rejection. Native `TestCounterPointPreventionUnpreventable` checks both pipeline
+  paths, positive/zero/negative amounts, depletion, cloned counters and preservation
+  of a finite shield. Prior `TestWaitingCounterPreventionReferences`/`Boundaries`
+  retain exact-visit, rule-removal/restoration and waiting-query evidence.
+
+### Verification and measured outcome
+
+Required checks ran in fast-fail order after implementation and count updates:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCounterPointPrevention -count=1` passed.
+  Focused `TestRONEntryAnnouncedXHydraRecord` and native
+  `TestCounterPointPrevention` / `TestWaitingCounterPrevention` passed.
+  Prior native static prevention and allocation regressions also passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` passed.
+- Initial `make lint` found one `wastedassign` test initializer. The variable now
+  uses a declaration without an explicit zero initializer. The affected native
+  tests and `go vet ./...` were rerun and passed. No behavior or assertion changed.
+- Final `make lint` passed with **0 issues**. Automatic formatter/fix changes
+  were reviewed; no other code changes resulted.
+- `git diff --check` passed before final collection validation and after this
+  ledger update.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected: **857 accepted /
+  129 rejected unique names**, **2,204 compiled / 241 rejected records**, from
+  986 names / 2,445 records. This is strict collection rejection, not a failed
+  build or test. Final diagnostics exactly match the post-implementation snapshot.
+
+The estimated and actual gains match: **one complete unique name / six records**.
+Only Rock Hydra's six diagnostics disappeared. Rasputin's diagnostic moved from
+unsupported finite `ByPermanent` prevention to
+`LEG.lines.ron:211:736: unsupported intervening-if filter (StartedThisTurnUntapped)`.
+All other diagnostics exactly match the fresh baseline. Complete RON gameplay
+coverage gains Rock Hydra; Rasputin gains only tested entry/mana/shield
+prerequisites and remains rejected. Compilation progress remains separate from
+full-card gameplay evidence.
+
+The vocabulary snapshot was refreshed from the parsed native inventory. Seven
+file hashes changed. The unused source `ByPermanent` event signature disappeared,
+so constructor signatures changed from 605 to 604. The recipient event and
+`Permanent` gained seven occurrences each; six example groups moved with the
+corrected source positions. No new spelling was added. Loader data uses final
+2,204 / 241 diagnostics. Collection publication, native runtime cutover, Go-card
+removal and obsolete DSL cleanup remain gated. No Go card definitions, generators
+or public DSL functions were removed. No environmental failure blocks this slice.
+
+Changed files: new `pkg/mage/dsl/ron/counter_point_prevention.go` and
+`counter_point_prevention_test.go`, `static_prevention.go`, `inventory.go`,
+`entry_announced_x_test.go`, `definition_plan_test.go`, `inventory_test.go` and
+`numeric_consumers_test.go`; new native `pkg/mage/counter_point_prevention_test.go`,
+`effect_manager.go`, `prevention_allocation.go`, `replacement.go` and `doc.go`;
+seven source files `cards/mtgish/{LEA,LEB,2ED,3ED,CED,CEI,LEG}.lines.ron`;
+API/rules-contract docs, vocabulary snapshot and this ledger.
+
+### Ranked next candidates
+
+1. **Mandatory entry exile payment using announced X — Frankenstein's Monster.**
+   Entry X and integer counter storage are ready. Establish the typed mandatory
+   entry transaction, exact graveyard choices and rollback before result-driven
+   combination-counter distribution and failed-entry continuation. Estimated zero
+   immediate unlocks; one complete DRK record's prerequisite. Medium effort.
+2. **Restricted casting X payment — Drain Life.** Preserve fixed casting symbols
+   while restricting announced X to black mana through the shared solver and
+   transaction. Six reprints remain blocked by clamped actual damage/life gain.
+   Estimated zero immediate unlocks; medium effort. Recompare shared multi-card
+   candidates before selecting this adapter.
+3. **Turn-start untapped history — Rasputin Dreamweaver.** Its corrected finite
+   shield now works through existing services. Capture turn-start untapped facts
+   by exact visit for intervening-if detection and resolution; its absolute seven
+   dream-counter cap remains a separate contract. Estimated zero immediate
+   unlocks; small/medium effort. Keep each contract a separate complete slice.
+
+This run stops after static per-point counter-removal prevention.

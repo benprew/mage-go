@@ -14486,3 +14486,22 @@ Aura-only destruction, copies, instances, clone isolation, local producer
 selection and delayed frames. `TestRONTargetDependencyGauntletsPrerequisite`
 now runs the full record with all prior target legality and payment assertions.
 Existing native atomic-exchange and duration tests remain in validation.
+
+### RON static per-point counter prevention
+
+Use `PreventDamage(EachDamageWouldBeDealtToRecipient(Permanent(ThisPermanent)),
+[If(PermanentPassesFilter(ThisPermanent,HasACounterOfType(counter)),
+[RemoveCounters([ACounterOfTypeFromPermanent(counter,ThisPermanent)]),
+PreventThatDamage])])` for one counter removed per damage point prevented.
+Both counter kinds must match, and all permanent references must be the source.
+This static context accepts no other conditions, subjects or operation lists.
+Lowering uses `WithStaticAbility(PreventDamageToSourceByRemovingCounters(kind))`
+with a fresh rule per factory instance.
+
+Unpreventable damage still removes counters and retains its full damage amount
+(CR 615.12). Finite shields keep their capacity. Shared replacement order, source
+identity, phasing, ability removal, simultaneous damage and clone services apply.
+Rock Hydra now uses its complete RON record. Its finite activation, and Rasputin's
+matching activation, use `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`
+with `Permanent(ThisPermanent)`, as required by their local Oracle text.
+Rasputin's turn-start history and counter-cap rules remain unsupported.

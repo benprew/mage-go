@@ -5,18 +5,18 @@
   "records": 2445,
   "unique_card_names": 986,
   "top_level_rule_names": 51,
-  "constructor_signatures": 605,
+  "constructor_signatures": 604,
   "conflicting_reprints": [],
   "files": [
     {
       "path": "cards/mtgish/2ED.lines.ron",
       "records": 291,
-      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
+      "sha256": "511f194a083023eeebe2c73e26ffcec11cdd56b0b8fccacafd2b3ae3fc2e1692"
     },
     {
       "path": "cards/mtgish/3ED.lines.ron",
       "records": 296,
-      "sha256": "c6eefac1ab2ba2d3333ebebad97282de6095910875de6a32189aa929b64bc40b"
+      "sha256": "c2459d8fefcdc3597ddc1e7f09abe9142188f4ddb5a4f010eee6263c318dc493"
     },
     {
       "path": "cards/mtgish/ARN.lines.ron",
@@ -31,12 +31,12 @@
     {
       "path": "cards/mtgish/CED.lines.ron",
       "records": 291,
-      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
+      "sha256": "511f194a083023eeebe2c73e26ffcec11cdd56b0b8fccacafd2b3ae3fc2e1692"
     },
     {
       "path": "cards/mtgish/CEI.lines.ron",
       "records": 291,
-      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
+      "sha256": "511f194a083023eeebe2c73e26ffcec11cdd56b0b8fccacafd2b3ae3fc2e1692"
     },
     {
       "path": "cards/mtgish/DRK.lines.ron",
@@ -51,17 +51,17 @@
     {
       "path": "cards/mtgish/LEA.lines.ron",
       "records": 289,
-      "sha256": "df8c89821239c6c52671dd5e864106224dc49531dc56c0bca808b494a1b1a575"
+      "sha256": "d7f6c38ab6f9f714db6adebc81132673d9e6993489a8f77656ae762923639b3a"
     },
     {
       "path": "cards/mtgish/LEB.lines.ron",
       "records": 291,
-      "sha256": "aa96d0b2b9338b5487e2cfd1b03869b6fb76e9020700b0720f51061a1014d782"
+      "sha256": "511f194a083023eeebe2c73e26ffcec11cdd56b0b8fccacafd2b3ae3fc2e1692"
     },
     {
       "path": "cards/mtgish/LEG.lines.ron",
       "records": 309,
-      "sha256": "a9bba1527a7b1a4b2ad86cf14b5c57aa6341cc92c5104aa23e8e1a046ebeb1ed"
+      "sha256": "8efd288ce746551c5e84969230e2c123e31896e307714e1a81e1c14c71838f8c"
     },
     {
       "path": "cards/mtgish/PROMOS.lines.ron",
@@ -130,7 +130,7 @@
     {"name": "ACounterOfTypeFromCardInExile", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["All Hallow's Eve (cards/mtgish/LEG.lines.ron:12:440)"]},
     {"name": "ACounterOfTypeFromPermanent", "kind": "tuple", "arity": 2, "occurrences": 40, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:389)", "Living Artifact (cards/mtgish/2ED.lines.ron:146:448)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:410)"]},
     {"name": "ACounterOfTypeOnAPermanent", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["Thelon's Chant (cards/mtgish/FEM.lines.ron:86:465)", "Tourach's Chant (cards/mtgish/FEM.lines.ron:96:467)"]},
-    {"name": "ACounterOfTypeOnPermanent", "kind": "tuple", "arity": 2, "occurrences": 73, "examples": ["Cyclopean Tomb (cards/mtgish/2ED.lines.ron:54:325)", "Fungusaur (cards/mtgish/2ED.lines.ron:94:252)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:767)"]},
+    {"name": "ACounterOfTypeOnPermanent", "kind": "tuple", "arity": 2, "occurrences": 73, "examples": ["Cyclopean Tomb (cards/mtgish/2ED.lines.ron:54:325)", "Fungusaur (cards/mtgish/2ED.lines.ron:94:252)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:778)"]},
     {"name": "ACounterOfTypeOnPlayer", "kind": "tuple", "arity": 2, "occurrences": 2, "examples": ["Pit Scorpion (cards/mtgish/LEG.lines.ron:191:265)", "Serpent Generator (cards/mtgish/LEG.lines.ron:234:437)"]},
     {"name": "ACreatureOrPlaneswalkerDiedThisTurn", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Osai Vultures (cards/mtgish/LEG.lines.ron:185:210)"]},
     {"name": "APermanent", "kind": "tuple", "arity": 1, "occurrences": 4, "examples": ["Camel (cards/mtgish/ARN.lines.ron:12:263)", "Blood of the Martyr (cards/mtgish/DRK.lines.ron:9:242)", "City of Shadows (cards/mtgish/DRK.lines.ron:18:151)"]},
@@ -293,7 +293,7 @@
     {"name": "CantBlockAttackers", "kind": "tuple", "arity": 1, "occurrences": 8, "examples": ["Ironclaw Orcs (cards/mtgish/2ED.lines.ron:124:184)", "Ironclaw Orcs (cards/mtgish/CED.lines.ron:124:184)", "Ironclaw Orcs (cards/mtgish/CEI.lines.ron:124:184)"]},
     {"name": "CantCastSpells", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["City in a Bottle (cards/mtgish/ARN.lines.ron:13:389)"]},
     {"name": "CantCauseTheNumberOfCountersOfTypeOnPermanentToBeGreaterThan", "kind": "tuple", "arity": 3, "occurrences": 7, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:667)", "Clockwork Beast (cards/mtgish/3ED.lines.ron:39:667)", "Clockwork Avian (cards/mtgish/ATQ.lines.ron:20:674)"]},
-    {"name": "CantHaveMoreThanNumberCountersOfType", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Rasputin Dreamweaver (cards/mtgish/LEG.lines.ron:211:873)"]},
+    {"name": "CantHaveMoreThanNumberCountersOfType", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Rasputin Dreamweaver (cards/mtgish/LEG.lines.ron:211:884)"]},
     {"name": "CantPlayCardInHand", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Firestorm Phoenix (cards/mtgish/LEG.lines.ron:85:404)"]},
     {"name": "CantPlayLands", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Worms of the Earth (cards/mtgish/DRK.lines.ron:118:204)"]},
     {"name": "CantPlayLandsOfType", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["City in a Bottle (cards/mtgish/ARN.lines.ron:13:450)"]},
@@ -627,7 +627,7 @@
     {"name": "IsSupertype", "kind": "tuple", "arity": 1, "occurrences": 20, "examples": ["Gaea's Touch (cards/mtgish/DRK.lines.ron:44:249)", "Goblin Caves (cards/mtgish/DRK.lines.ron:47:243)", "Goblin Shrine (cards/mtgish/DRK.lines.ron:51:244)"]},
     {"name": "IsTapped", "kind": "symbol", "arity": 0, "occurrences": 27, "examples": ["Mana Vault (cards/mtgish/2ED.lines.ron:157:468)", "Royal Assassin (cards/mtgish/2ED.lines.ron:209:242)", "Time Vault (cards/mtgish/2ED.lines.ron:248:294)"]},
     {"name": "IsTheirTurn", "kind": "symbol", "arity": 0, "occurrences": 16, "examples": ["Disrupting Scepter (cards/mtgish/2ED.lines.ron:66:365)", "Instill Energy (cards/mtgish/2ED.lines.ron:121:383)", "Disrupting Scepter (cards/mtgish/3ED.lines.ron:67:365)"]},
-    {"name": "IsTheirUpkeep", "kind": "symbol", "arity": 0, "occurrences": 29, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:817)", "Cyclopean Tomb (cards/mtgish/2ED.lines.ron:54:581)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:871)"]},
+    {"name": "IsTheirUpkeep", "kind": "symbol", "arity": 0, "occurrences": 29, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:817)", "Cyclopean Tomb (cards/mtgish/2ED.lines.ron:54:581)", "Rock Hydra (cards/mtgish/2ED.lines.ron:207:882)"]},
     {"name": "IsUnblocked", "kind": "symbol", "arity": 0, "occurrences": 11, "examples": ["Forcefield (cards/mtgish/2ED.lines.ron:90:206)", "Veteran Bodyguard (cards/mtgish/2ED.lines.ron:264:289)", "Veteran Bodyguard (cards/mtgish/3ED.lines.ron:270:289)"]},
     {"name": "IsUntapped", "kind": "symbol", "arity": 0, "occurrences": 46, "examples": ["Castle (cards/mtgish/2ED.lines.ron:29:171)", "Howling Mine (cards/mtgish/2ED.lines.ron:114:224)", "Power Surge (cards/mtgish/2ED.lines.ron:192:297)"]},
     {"name": "Island", "kind": "symbol", "arity": 0, "occurrences": 106, "examples": ["Island (cards/mtgish/2ED.lines.ron:126:84)", "Island Sanctuary (cards/mtgish/2ED.lines.ron:127:362)", "Lord of Atlantis (cards/mtgish/2ED.lines.ron:150:276)"]},
@@ -716,8 +716,7 @@
     {"name": "NamedCard", "kind": "tuple", "arity": 1, "occurrences": 20, "examples": ["Plague Rats (cards/mtgish/2ED.lines.ron:187:229)", "Plague Rats (cards/mtgish/2ED.lines.ron:187:347)", "Plague Rats (cards/mtgish/3ED.lines.ron:191:229)"]},
     {"name": "NamedTokenWithPT", "kind": "tuple", "arity": 7, "occurrences": 9, "examples": ["The Hive (cards/mtgish/2ED.lines.ron:243:232)", "The Hive (cards/mtgish/3ED.lines.ron:251:232)", "The Hive (cards/mtgish/CED.lines.ron:243:232)"]},
     {"name": "NetCounter", "kind": "symbol", "arity": 0, "occurrences": 3, "examples": ["Merseine (cards/mtgish/FEM.lines.ron:61:269)", "Merseine (cards/mtgish/FEM.lines.ron:61:342)", "Merseine (cards/mtgish/FEM.lines.ron:61:550)"]},
-    {"name": "NextAmountOfDamageThatWouldBeDealtThisTurnByPermanent", "kind": "tuple", "arity": 2, "occurrences": 7, "examples": ["Rock Hydra (cards/mtgish/2ED.lines.ron:207:568)", "Rock Hydra (cards/mtgish/3ED.lines.ron:212:568)", "Rock Hydra (cards/mtgish/CED.lines.ron:207:568)"]},
-    {"name": "NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient", "kind": "tuple", "arity": 2, "occurrences": 44, "examples": ["Conservator (cards/mtgish/2ED.lines.ron:42:247)", "Guardian Angel (cards/mtgish/2ED.lines.ron:107:209)", "Guardian Angel (cards/mtgish/2ED.lines.ron:107:428)"]},
+    {"name": "NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient", "kind": "tuple", "arity": 2, "occurrences": 51, "examples": ["Conservator (cards/mtgish/2ED.lines.ron:42:247)", "Guardian Angel (cards/mtgish/2ED.lines.ron:107:209)", "Guardian Angel (cards/mtgish/2ED.lines.ron:107:428)"]},
     {"name": "NextTimeCombatDamageWouldBeDealtThisTurnByCreatureToRecipient", "kind": "tuple", "arity": 2, "occurrences": 5, "examples": ["Forcefield (cards/mtgish/2ED.lines.ron:90:270)", "Forcefield (cards/mtgish/CED.lines.ron:90:270)", "Forcefield (cards/mtgish/CEI.lines.ron:90:270)"]},
     {"name": "NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient", "kind": "tuple", "arity": 2, "occurrences": 47, "examples": ["Circle of Protection: Black (cards/mtgish/2ED.lines.ron:33:278)", "Circle of Protection: Blue (cards/mtgish/2ED.lines.ron:34:276)", "Circle of Protection: Green (cards/mtgish/2ED.lines.ron:35:278)"]},
     {"name": "NextTimePermanentWouldBeDestroyedThisTurn", "kind": "tuple", "arity": 1, "occurrences": 1, "examples": ["Pyramids (cards/mtgish/ARN.lines.ron:62:431)"]},
@@ -784,7 +783,7 @@
     {"name": "PayManaForEach", "kind": "tuple", "arity": 2, "occurrences": 1, "examples": ["Cyclone (cards/mtgish/ARN.lines.ron:16:303)"]},
     {"name": "PayManaX", "kind": "tuple", "arity": 2, "occurrences": 29, "examples": ["Clockwork Beast (cards/mtgish/2ED.lines.ron:38:485)", "Illusionary Mask (cards/mtgish/2ED.lines.ron:120:160)", "Power Sink (cards/mtgish/2ED.lines.ron:191:241)"]},
     {"name": "Pegasus", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Mesa Pegasus (cards/mtgish/2ED.lines.ron:161:89)", "Mesa Pegasus (cards/mtgish/3ED.lines.ron:166:89)", "Mesa Pegasus (cards/mtgish/CED.lines.ron:161:89)"]},
-    {"name": "Permanent", "kind": "tuple", "arity": 1, "occurrences": 77, "examples": ["Earthbind (cards/mtgish/2ED.lines.ron:74:363)", "Jade Monolith (cards/mtgish/2ED.lines.ron:129:387)", "Personal Incarnation (cards/mtgish/2ED.lines.ron:181:360)"]},
+    {"name": "Permanent", "kind": "tuple", "arity": 1, "occurrences": 84, "examples": ["Earthbind (cards/mtgish/2ED.lines.ron:74:363)", "Jade Monolith (cards/mtgish/2ED.lines.ron:129:387)", "Personal Incarnation (cards/mtgish/2ED.lines.ron:181:360)"]},
     {"name": "PermanentDealsDamage", "kind": "tuple", "arity": 3, "occurrences": 195, "examples": ["Ankh of Mishra (cards/mtgish/2ED.lines.ron:6:210)", "Black Vise (cards/mtgish/2ED.lines.ron:19:276)", "Copper Tablet (cards/mtgish/2ED.lines.ron:46:198)"]},
     {"name": "PermanentDealsDamageAndPreventSomeOfIt", "kind": "tuple", "arity": 4, "occurrences": 6, "examples": ["Power Leak (cards/mtgish/2ED.lines.ron:190:329)", "Power Leak (cards/mtgish/3ED.lines.ron:194:329)", "Power Leak (cards/mtgish/CED.lines.ron:190:329)"]},
     {"name": "PermanentDealsMultipleDamage", "kind": "tuple", "arity": 2, "occurrences": 10, "examples": ["Orcish Artillery (cards/mtgish/2ED.lines.ron:177:244)", "Orcish Artillery (cards/mtgish/3ED.lines.ron:180:244)", "Cuombajj Witches (cards/mtgish/ARN.lines.ron:15:262)"]},
@@ -1003,7 +1002,7 @@
     {"name": "Spider", "kind": "symbol", "arity": 0, "occurrences": 6, "examples": ["Giant Spider (cards/mtgish/2ED.lines.ron:98:89)", "Giant Spider (cards/mtgish/3ED.lines.ron:103:89)", "Giant Spider (cards/mtgish/CED.lines.ron:98:89)"]},
     {"name": "Spirit", "kind": "symbol", "arity": 0, "occurrences": 21, "examples": ["Nether Shadow (cards/mtgish/2ED.lines.ron:171:90)", "Will-o'-the-Wisp (cards/mtgish/2ED.lines.ron:286:93)", "Dancing Scimitar (cards/mtgish/3ED.lines.ron:54:103)"]},
     {"name": "SporeCounter", "kind": "symbol", "arity": 0, "occurrences": 13, "examples": ["Elvish Farmer (cards/mtgish/FEM.lines.ron:25:259)", "Elvish Farmer (cards/mtgish/FEM.lines.ron:25:366)", "Feral Thallid (cards/mtgish/FEM.lines.ron:31:284)"]},
-    {"name": "StartedThisTurnUntapped", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Rasputin Dreamweaver (cards/mtgish/LEG.lines.ron:211:725)"]},
+    {"name": "StartedThisTurnUntapped", "kind": "symbol", "arity": 0, "occurrences": 1, "examples": ["Rasputin Dreamweaver (cards/mtgish/LEG.lines.ron:211:736)"]},
     {"name": "StorageCounter", "kind": "symbol", "arity": 0, "occurrences": 12, "examples": ["City of Shadows (cards/mtgish/DRK.lines.ron:18:291)", "City of Shadows (cards/mtgish/DRK.lines.ron:18:455)", "Bottomless Vault (cards/mtgish/FEM.lines.ron:5:380)"]},
     {"name": "SubtypesList", "kind": "tuple", "arity": 1, "occurrences": 23, "examples": ["The Hive (cards/mtgish/2ED.lines.ron:243:304)", "Bottle of Suleiman (cards/mtgish/3ED.lines.ron:26:331)", "The Hive (cards/mtgish/3ED.lines.ron:251:304)"]},
     {"name": "Swamp", "kind": "symbol", "arity": 0, "occurrences": 101, "examples": ["Badlands (cards/mtgish/2ED.lines.ron:10:81)", "Bayou (cards/mtgish/2ED.lines.ron:13:78)", "Bog Wraith (cards/mtgish/2ED.lines.ron:25:168)"]},
@@ -1233,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2198,
+    "compiled": 2204,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1254,7 +1253,6 @@
       {"card": "Power Leak", "source": {"File": "2ED.lines.ron", "Line": 190, "Column": 1}, "message": "2ED.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "2ED.lines.ron", "Line": 192, "Column": 1}, "message": "2ED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "2ED.lines.ron", "Line": 197, "Column": 1}, "message": "2ED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
-      {"card": "Rock Hydra", "source": {"File": "2ED.lines.ron", "Line": 207, "Column": 1}, "message": "2ED.lines.ron:207:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "2ED.lines.ron", "Line": 238, "Column": 1}, "message": "2ED.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "2ED.lines.ron", "Line": 248, "Column": 1}, "message": "2ED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "2ED.lines.ron", "Line": 263, "Column": 1}, "message": "2ED.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
@@ -1276,7 +1274,6 @@
       {"card": "Power Leak", "source": {"File": "3ED.lines.ron", "Line": 194, "Column": 1}, "message": "3ED.lines.ron:194:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "3ED.lines.ron", "Line": 196, "Column": 1}, "message": "3ED.lines.ron:196:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Primal Clay", "source": {"File": "3ED.lines.ron", "Line": 197, "Column": 1}, "message": "3ED.lines.ron:197:188: unsupported entry operation (EntersWithLayerEffectOfChoice)"},
-      {"card": "Rock Hydra", "source": {"File": "3ED.lines.ron", "Line": 212, "Column": 1}, "message": "3ED.lines.ron:212:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "3ED.lines.ron", "Line": 246, "Column": 1}, "message": "3ED.lines.ron:246:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Titania's Song", "source": {"File": "3ED.lines.ron", "Line": 257, "Column": 1}, "message": "3ED.lines.ron:257:149: unsupported rule (EachPermanentStickyLayerEffect)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "3ED.lines.ron", "Line": 269, "Column": 1}, "message": "3ED.lines.ron:269:292: unsupported entry copy modifications (AddAbility)"},
@@ -1326,7 +1323,6 @@
       {"card": "Power Leak", "source": {"File": "CED.lines.ron", "Line": 190, "Column": 1}, "message": "CED.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "CED.lines.ron", "Line": 192, "Column": 1}, "message": "CED.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "CED.lines.ron", "Line": 197, "Column": 1}, "message": "CED.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
-      {"card": "Rock Hydra", "source": {"File": "CED.lines.ron", "Line": 207, "Column": 1}, "message": "CED.lines.ron:207:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "CED.lines.ron", "Line": 238, "Column": 1}, "message": "CED.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "CED.lines.ron", "Line": 248, "Column": 1}, "message": "CED.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "CED.lines.ron", "Line": 263, "Column": 1}, "message": "CED.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
@@ -1350,7 +1346,6 @@
       {"card": "Power Leak", "source": {"File": "CEI.lines.ron", "Line": 190, "Column": 1}, "message": "CEI.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "CEI.lines.ron", "Line": 192, "Column": 1}, "message": "CEI.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "CEI.lines.ron", "Line": 197, "Column": 1}, "message": "CEI.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
-      {"card": "Rock Hydra", "source": {"File": "CEI.lines.ron", "Line": 207, "Column": 1}, "message": "CEI.lines.ron:207:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "CEI.lines.ron", "Line": 238, "Column": 1}, "message": "CEI.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "CEI.lines.ron", "Line": 248, "Column": 1}, "message": "CEI.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "CEI.lines.ron", "Line": 263, "Column": 1}, "message": "CEI.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
@@ -1403,7 +1398,6 @@
       {"card": "Power Leak", "source": {"File": "LEA.lines.ron", "Line": 189, "Column": 1}, "message": "LEA.lines.ron:189:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "LEA.lines.ron", "Line": 191, "Column": 1}, "message": "LEA.lines.ron:191:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "LEA.lines.ron", "Line": 196, "Column": 1}, "message": "LEA.lines.ron:196:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
-      {"card": "Rock Hydra", "source": {"File": "LEA.lines.ron", "Line": 206, "Column": 1}, "message": "LEA.lines.ron:206:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "LEA.lines.ron", "Line": 237, "Column": 1}, "message": "LEA.lines.ron:237:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "LEA.lines.ron", "Line": 247, "Column": 1}, "message": "LEA.lines.ron:247:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "LEA.lines.ron", "Line": 262, "Column": 1}, "message": "LEA.lines.ron:262:292: unsupported entry copy modifications (AddAbility)"},
@@ -1427,7 +1421,6 @@
       {"card": "Power Leak", "source": {"File": "LEB.lines.ron", "Line": 190, "Column": 1}, "message": "LEB.lines.ron:190:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "LEB.lines.ron", "Line": 192, "Column": 1}, "message": "LEB.lines.ron:192:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
       {"card": "Raging River", "source": {"File": "LEB.lines.ron", "Line": 197, "Column": 1}, "message": "LEB.lines.ron:197:147: unsupported trigger (WhenAnyNumberOfCreaturesAttack)"},
-      {"card": "Rock Hydra", "source": {"File": "LEB.lines.ron", "Line": 207, "Column": 1}, "message": "LEB.lines.ron:207:252: unsupported static prevention event (EachDamageWouldBeDealtToRecipient)"},
       {"card": "Sunglasses of Urza", "source": {"File": "LEB.lines.ron", "Line": 238, "Column": 1}, "message": "LEB.lines.ron:238:158: unsupported player rule operation (MaySpendColoredManaAsThoughItWereAnotherColor)"},
       {"card": "Time Vault", "source": {"File": "LEB.lines.ron", "Line": 248, "Column": 1}, "message": "LEB.lines.ron:248:306: unsupported conditional static body (ReplaceWouldBeginATurn)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "LEB.lines.ron", "Line": 263, "Column": 1}, "message": "LEB.lines.ron:263:292: unsupported entry copy modifications (AddAbility)"},
@@ -1462,7 +1455,7 @@
       {"card": "Nova Pentacle", "source": {"File": "LEG.lines.ron", "Line": 184, "Column": 1}, "message": "LEG.lines.ron:184:388: unbound or incompatible chosen damage source (TheChosenDamageSource)"},
       {"card": "Psychic Purge", "source": {"File": "LEG.lines.ron", "Line": 199, "Column": 1}, "message": "LEG.lines.ron:199:231: unsupported non-spell rule on an instant or sorcery (FromAnyZone)"},
       {"card": "Puppet Master", "source": {"File": "LEG.lines.ron", "Line": 200, "Column": 1}, "message": "LEG.lines.ron:200:276: unsupported mandatory sacrifice cost (PutGraveyardCardIntoHand)"},
-      {"card": "Rasputin Dreamweaver", "source": {"File": "LEG.lines.ron", "Line": 211, "Column": 1}, "message": "LEG.lines.ron:211:521: unsupported finite prevention event (NextAmountOfDamageThatWouldBeDealtThisTurnByPermanent)"},
+      {"card": "Rasputin Dreamweaver", "source": {"File": "LEG.lines.ron", "Line": 211, "Column": 1}, "message": "LEG.lines.ron:211:736: unsupported intervening-if filter (StartedThisTurnUntapped)"},
       {"card": "Rebirth", "source": {"File": "LEG.lines.ron", "Line": 212, "Column": 1}, "message": "LEG.lines.ron:212:238: unsupported action (EachPlayerMayCost)"},
       {"card": "Recall", "source": {"File": "LEG.lines.ron", "Line": 213, "Column": 1}, "message": "LEG.lines.ron:213:183: unsupported fixed discard amount (ValueX)"},
       {"card": "Relic Bind", "source": {"File": "LEG.lines.ron", "Line": 217, "Column": 1}, "message": "LEG.lines.ron:217:297: unsupported action list (Modal_ChooseOne)"},

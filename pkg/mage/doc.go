@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventDamageToSourceByRemovingCounters] removes one matching counter for
+// each damage point and prevents that point. Unpreventable damage still removes
+// counters, but it keeps its amount and does not consume finite shields.
+// Shared replacement choices apply each rule once per packet and check the
+// current recipient again. Phasing and ability removal stop the static rule.
+// Return requires a new source visit. Clones keep separate counters and rules.
+// RON accepts EachDamageWouldBeDealtToRecipient(Permanent(ThisPermanent)) with
+// one matching counter condition, one source counter removal and PreventThatDamage.
+// Other recipients and replacement bodies need separate adapters.
+//
 // Permanent counters and exact departure snapshots use integer arrays.
 // [EntersWithNCounters] and the shared counter replacement service keep counts
 // above 255. Clones keep separate arrays. Phasing keeps counters; a zone return
