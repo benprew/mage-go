@@ -6,33 +6,32 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **850 accepted / 136 rejected names**
-(986 total), **2,191 compiled / 254 rejected records** (2,445 total).
-The latest slice adds static land-entry prohibition. Worms of the Earth's
-complete unchanged DRK record now compiles and has RON gameplay evidence for
-all three rules. The strict loader still rejects the collection and publishes
-no partial registry.
+Latest measured result (2026-10-13): **852 accepted / 134 rejected names**
+(986 total), **2,194 compiled / 251 rejected records** (2,445 total).
+The latest slice adds saved instruction damage outcomes. Complete unchanged
+Syphon Soul (LEG) and Mishra's War Machine (ATQ/3ED) records now compile and
+have RON gameplay evidence. The strict loader still rejects the collection and
+publishes no partial registry.
 
-The latest slice is **STATIC-LAND-ENTRY-PROHIBITION**. Entry checks use active
-source lifetimes and recheck copy changes. Prohibited cards retain their zone
-visits. Estimated and actual gains are one unique card / one record.
-Runtime cutover, Go-card removal and obsolete DSL cleanup gates remain open.
+The latest slice is **SAVED-DAMAGE-OUTCOMES**. Typed local results retain actual
+damage after replacement and prevention. Exact source/player conditions keep
+historical visits separate. Estimated and actual gains are two names / three
+records. Runtime cutover, Go-card removal and DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Dependent permanent target comparison: Gauntlets of Chaos.**
-   Zero immediate gains. Exchange-result handling and the documented Aura-only
-   source correction remain required. Reassess shared multi-card work first.
-2. **Source-leave layer duration: Gaea's Liege.**
-   Zero immediate gains until its defending-player filter, characteristic rules
-   and known source defect are resolved. Reuse the completed source durations.
+1. **Shared announcement mana restrictions and clamped outcomes: Drain Life.**
+   Saved damage results now exist; restricted X payment and clamping remain.
+   Inspect other restricted-payment cards before selecting a bounded prerequisite.
+2. **Dependent permanent target comparison: Gauntlets of Chaos.**
+   Zero immediate gains; exchange-result handling and the recorded Aura-only
+   source correction remain. Compare shared targets before selection.
 3. **Graveyard-source trigger arming: Nether Shadow.**
-   Six reprints share one definition. Intervening-if graveyard order, exact card
-   visits and optional entry require a complete nested contract before an unlock
-   estimate. Compare shared event prerequisites before selecting this work.
+   Six reprints share one definition. Graveyard-order intervening-if, exact visits
+   and optional entry remain; compare shared zone-source event work first.
 
 ## Dependencies and source blockers
 
@@ -2169,3 +2168,187 @@ cleanup remain unfinished.
    estimate before implementation; compare shared event work first.
 
 This run stops after static land-entry prohibition.
+
+## 2026-10-13 — SAVED-DAMAGE-OUTCOMES
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and `go test ./pkg/mage/dsl/ron
+-count=1` passed. Fresh strict loading exited 1 with 2,191 compiled / 254
+rejected records and 850 accepted / 136 rejected unique names. Collection
+rejection was not a build or test failure.
+
+The latest ledger candidate #1 was assessed first. Complete records were read
+for Gauntlets of Chaos (LEG), all six Gaea's Liege reprints, Nether Shadow's six
+reprints, Syphon Soul (LEG), Mishra's War Machine (ATQ/3ED), and Drain Life's six
+reprints. Nested declarations were checked; reprints count once. Targeted
+vocabulary queries covered the target comparison, source-leave duration, `Other`,
+actual damage total, clamped damage total and source/player result condition.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream benefit | Estimated implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Dependent target type comparison, latest candidate #1 | Gauntlets of Chaos | 0 | Exchange-result condition and documented Aura-only source defect remain. Shared comparison would enable dependent target legality | Medium: target dependency, announcement and resolution rechecks, copies and identity |
+| Source-leave layer duration | Gaea's Liege | 0 | Defending-player membership, characteristic behavior and duplicated `IsntAttacking` source defect remain. Existing source duration services reduce engine work | Small adapter; large additional full-card/rules/data work |
+| Saved instruction damage outcomes | Syphon Soul; Mishra's War Machine; downstream Drain Life | 2 names / 3 records | Syphon needs player exclusion and saved actual total. Machine needs a saved source/player condition. Drain Life still needs restricted X payment and a distinct clamped total. Shared actual results enable all three | Medium, bounded: shared singular capture, typed result branch and player batch adapter, lexical compiler producer, prevention/identity/frame tests |
+
+Nether Shadow's full nested declaration was also checked. Graveyard arming,
+order-based intervening-if and optional exact-visit entry are several contracts;
+it is not a smaller ready shared slice. The selected shared result contract gives
+the largest credible gain here. Gauntlets remains deferred without concealing its
+source defect. No production registry or card-name branch was added.
+
+### Established signatures and boundaries
+
+Engine additions:
+
+- `DamageOutcomesInto(*DamageResultsBinding) DamageResultOption` saves the shared
+  singular executor's positive actual outcome and clears old output before every
+  attempt. Existing `DamageResultsInto` and all current callers keep their APIs.
+- `IfDamageDealtToPlayer(results *DamageResultsBinding, source DamageSourceRef,
+  player PlayerRef, body ResolvingEffect) ResolvingEffect` runs the body once for
+  a matching positive outcome. `DamageSource.SameObject` requires exact visits.
+- `PlayerDamageRecipients(PlayerSet) DamageRecipientSet` supplies distinct present
+  players to the existing simultaneous damage service. Its typed operands retain
+  explicit waiting source reads.
+
+RON lowers direct `SpellDealsDamage(ThisSpell, amount, recipient)` and
+`PermanentDealsDamage(permanentRef, amount, recipient)` with result consumers in
+ordinary resolving action sequences. Singular `Player`, `Permanent` and union
+bindings use `DealDamageFrom`; `EachPermanent` and `EachPlayer(AnyPlayer |
+Opponent | Other(playerRef))` use the shared batch with one amount read. The
+symbol `TheAmountOfDamageDealtThisWay` reads the latest local producer.
+`If(PermanentDealtDamageToPlayerThisWay(permanentRef, playerRef), [actions])`
+checks its saved actual source and recipient. Spell/permanent references use
+existing typed compilation and LKI services. Result declarations are fresh per
+factory; each continuation has its own plan and cloned binding map.
+
+Branch producers cannot export results. Nested direct instructions replace the
+local producer. Delayed bodies retain saved totals and outcomes in existing
+frames. Unsupported instruction families cannot masquerade as a producer.
+Clamped totals, per-recipient amount bindings, entry operations and replacement
+operations remain separate unsupported shapes. Invalid declarations fail during
+compilation or definition validation, not at game time.
+
+Reuse: shared damage/replacement executors, immutable `damageOutcome` storage,
+number/result frames, delayed captures, stack copies, game clones, source LKI,
+exact incarnation matching, optional discard transaction and upkeep triggers.
+There is no parallel damage system or global last-action state. No card source
+changed. Runtime cutover and removal gates remain unsatisfied, so Go definitions
+and DSL exports are retained; no unused function was removed without caller audit.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed compilation for missing `DamageOutcomesInto` and
+`IfDamageDealtToPlayer`, after fixing test-only context/player spelling. The
+player batch test then failed for missing `PlayerDamageRecipients` before that
+adapter was added. The RON tests failed with unsupported `Other`, unsupported
+actual total and Machine's erroneous activation-history dispatch before compiler
+changes. New lowering then exposed duplicate binding names and the requirement
+for a typed player-only recipient set; both were fixed against failing tests.
+
+- **Syphon Soul → TestRONDamageOutcomeSyphonSoul**: complete unchanged LEG spell,
+  failed payment leaves hand intact, paid cast, resolution timing, other-player
+  damage and exact actual life gain, partial/full prevention, copied spell with
+  another controller, independent game clone outcomes.
+- **Mishra's War Machine → TestRONDamageOutcomeWarMachine**: complete unchanged
+  ATQ and 3ED records, banding and 5/5 metadata, controller upkeep only, optional
+  discard paid/unpaid, partial/full prevention, conditional tap, controller
+  change after detection, source departure/return/phasing, copied trigger and
+  separate cloned resolution. Custom paid test players clone to BasePlayer;
+  the clone independently declines and takes damage, which is asserted.
+- `TestRONDamageOutcomeScopes`: latest direct instruction replaces older results,
+  zero damage clears totals, nested branch producer does not overwrite its
+  enclosing producer, exact union targets, delayed saved total after spell departure.
+- `TestRONDamageOutcomeInvalid` and `ContextBoundaries`: unbound/escaped results, malformed totals and
+  predicates, unsupported clamping/player reads and unsupported producer boundaries.
+- `TestRONDamageOutcomeInventoryAndAtomicLoad`: typed source/player operand roles
+  and atomic rejection of a collection with one invalid record.
+- Native `TestDamageOutcomeCondition`: positive/partial/full prevention,
+  redirection to a permanent, zero/stale outputs, wrong source/player, departure,
+  return and phasing, historical identity and game clone isolation.
+- Native `Definition`, `Batch`, `Waiting` and `WaitingPlayerSet`: missing and nil
+  expressions, duplicate outputs, shared batch actual totals, explicit waiting
+  source reads without execution or mutation.
+
+Engine documentation records CR 120.4b–d's distinction between actual damage and
+its life/counter results. Local `data/LEG.json` and `data/ATQ.json` confirm the
+complete card instructions. No source defect was corrected or introduced.
+Gauntlets' missing Aura-only filter and Gaea's Liege's duplicate predicate stay
+open. RON sources are unchanged; no vocabulary snapshot refresh is required.
+
+### Validation and measured gain
+
+Required checks passed after the repairs below:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONDamageOutcome -count=1` and native
+  `go test ./pkg/mage -run TestDamageOutcomeCondition -count=1` pass.
+- Expanded inventory, definition-plan, discard-boundary and upkeep tests pass.
+- `make build` and `go vet ./...` pass.
+- `go test ./pkg/mage/... -short -count=1` and `make test` pass.
+- The engine skill's additional `go test ./... -short -count=1` passes.
+- Initial RON package tests reported eight obsolete count/boundary expectations
+  after the three records became accepted. Exact counts are updated, Machine is
+  explicitly required in upkeep inventories, and the formerly unsupported
+  discard-boundary assertion now requires successful compilation. Keyword
+  inventories now require all ten matching names; no unsupported error is
+  tolerated. Gameplay assertions were retained.
+- A new unsupported-producer test failed because packet damage between a
+  captured instruction and a result read left the former result available.
+  That unsupported producer family is now rejected explicitly.
+- `TestRONDamageOutcomeContextBoundaries` failed for inherited result reads in
+  entry/replacement contexts. Both total and condition consumers now reject
+  those contexts explicitly. The focused and complete verification chain was
+  rerun after this repair.
+- First `make lint` reported preallocation and redundant-type style issues.
+  The native test type was automatically simplified; the producer effects slice
+  now reserves its complete capacity. Automatic formatting/type changes were
+  reviewed. Only slice changes remain. The final lint pass reports **0 issues**.
+- `git diff --check` passes after removing an added blank line at the ledger EOF.
+  No environment, build, test or lint blocker remains.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as required while collection
+support is incomplete: **2,194 compiled / 251 rejected records** and **852
+accepted / 134 rejected names**, out of 2,445 records / 986 names. Comparing all
+diagnostics with the fresh baseline removes exactly Syphon Soul's
+LEG.lines.ron:255:218 `Other` error and Machine's ATQ.lines.ron:45:348 and
+3ED.lines.ron:170:348 activation-history errors. No other diagnostic changed;
+there are no new diagnostics and no accepted-record regression. No partial
+production registry was published. Post-lint focused RON/native tests and
+`git diff --check` pass again; reviewed automatic changes were formatting and
+the redundant test type already corrected before the complete verification rerun.
+
+Estimated and actual gains match: **two unique names / three records**. Full-card
+RON gameplay mappings gain **Syphon Soul** and **Mishra's War Machine**.
+Compilation and gameplay evidence remain separate; this does not verify all
+852 accepted names. Remaining gaps are 134 names / 251 records, full collection
+gameplay, embedded native loading, startup cutover, Go-card deletion and obsolete
+DSL cleanup. The next run must reassess the candidates below; this run implements
+no second slice.
+
+Changed engine files: `damage_outcome_condition.go`/test,
+`composable_actions.go`, `waiting_delayed_source.go` and `doc.go`.
+Changed compiler files: `damage_outcome.go`/test, `compiler.go`,
+`optional_payment.go`, `player_scope.go`, `sacrifice_value.go` and `inventory.go`.
+Exact collection expectations and former unsupported-card assertions changed in
+`chosen_discard_cost_test.go`, `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go` and the upkeep keyword/layer/trigger inventory tests.
+API/rules documentation and this progress ledger are updated.
+
+### Ranked next candidates
+
+1. Shared announcement mana restrictions and clamped outcomes, starting from
+   Drain Life. Its saved actual-damage prerequisite now exists, but restricted X
+   payment and the Oracle clamp remain separate. Compare the complete nested
+   requirements of other restricted-payment cards before selecting the next
+   bounded engine prerequisite. Estimated immediate gain from a prerequisite
+   alone is zero; completing both remaining contracts could unlock one name /
+   six records.
+2. Dependent permanent target type comparison for Gauntlets of Chaos. Immediate
+   gain remains zero until exchange-result handling and its recorded Aura-only
+   source correction are complete; compare shared target work first.
+3. Graveyard-source trigger arming for Nether Shadow. Six reprints share one
+   definition. Order-based intervening-if, exact visits and optional entry still
+   need distinct contracts. Compare shared zone-source events before selection.
+
+Gaea's Liege remains deferred with its defending-player and source-data blockers.
+This run stops after saved damage outcomes.

@@ -18673,3 +18673,38 @@ Evidence: `TestLandEntryRestrictionLifecycle`, `ZoneRetention`, `Batch`,
 `RealEntryPaths`. Worms of the Earth uses its complete unchanged DRK record.
 Its land-play, entry and upkeep payment rules all have gameplay evidence.
 Gaea's Touch and Untamed Wilds retain their complete RON entry regression tests.
+
+## Saved instruction damage outcomes (RON execution)
+
+`DamageOutcomesInto(*DamageResultsBinding) DamageResultOption` extends singular
+`DealDamageFrom` with the same immutable outcome storage used by simultaneous
+`DamageResultsInto`. It clears the output before resolving the source, recipient
+and amount. An absent source, illegal recipient, nonpositive amount or fully
+prevented instruction supplies no positive outcome. The final source identity,
+recipient and actual amount come from the shared replacement and damage services
+(CR 120.4b–d). Life loss is not the damage amount.
+
+`IfDamageDealtToPlayer(results *DamageResultsBinding, source DamageSourceRef,
+player PlayerRef, body ResolvingEffect) ResolvingEffect` executes its body once
+if a positive saved outcome has that exact source and player. `SameObject`
+requires the source's exact battlefield or zone visit. Departure retains facts;
+a returned object cannot stand for the former source. Player and source operands
+are read when the condition resolves. The output must have a preceding producer.
+Nil declarations and duplicate singular outputs fail definition validation.
+
+`PlayerDamageRecipients(PlayerSet) DamageRecipientSet` selects distinct present
+players before one shared simultaneous batch. The amount and source are read
+once by `DealDamageEach`. Prevention, redirection, lifelink, damage events and
+replacement choices use the existing batch. Typed player-set operands supply
+explicit waiting source reads without selecting players or executing damage.
+
+Existing resolution frames save numbers and immutable outcomes for delayed
+bodies, stack copies and game clones. A branch producer stays in its branch;
+no global last-damage slot is used. The new condition declares explicit source
+reads in its source, player and body for waiting queries. Queries make no damage
+or condition checks. Existing replacement ordering and cost transactions are
+unchanged.
+
+Contract evidence: `TestDamageOutcomeCondition`, `Definition`, `Waiting` and
+`Batch`; RON `TestRONDamageOutcomeSyphonSoul`, `WarMachine`, `Scopes`, `Invalid`
+and `InventoryAndAtomicLoad`.

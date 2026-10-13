@@ -1590,6 +1590,8 @@ type damageFromEffect struct {
 	playerResult         *PlayerBinding
 	permanentResult      *PermanentBinding
 	sourceResult         *DamageSourceBinding
+	outcomes             *DamageResultsBinding
+	outcomesOptionCount  int
 	amountOptionCount    int
 	playerOptionCount    int
 	permanentOptionCount int
@@ -1707,7 +1709,7 @@ func (e *damageFromEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipient", e.recipient}, {"amount", e.amount}}}
 	if e.invalidOption {
 		n.problem = "supply a damage result binding"
-	} else if e.amountOptionCount > 1 || e.playerOptionCount > 1 || e.permanentOptionCount > 1 || e.sourceOptionCount > 1 {
+	} else if e.amountOptionCount > 1 || e.playerOptionCount > 1 || e.permanentOptionCount > 1 || e.sourceOptionCount > 1 || e.outcomesOptionCount > 1 {
 		n.problem = "supply each damage result binding only once"
 	}
 	if e.result != nil {
@@ -1726,10 +1728,20 @@ func (e *damageFromEffect) inspectDefinition() definitionNode {
 		n.bindingWrites = append(n.bindingWrites, e.sourceResult)
 		n.children = append(n.children, definitionEdge{"source result", e.sourceResult})
 	}
+	if e.outcomes != nil {
+		n.bindingWrites = append(n.bindingWrites, e.outcomes)
+		n.children = append(n.children, definitionEdge{"outcomes", e.outcomes})
+	}
 	return n
 }
 func (e *damageFromEffect) Apply(ctx *EffectContext) error {
 	outcome := damageOutcome{}
+	if e.outcomes != nil {
+		if ctx.Game.resolution.damageResultsBindings == nil {
+			ctx.Game.resolution.damageResultsBindings = make(map[*DamageResultsBinding][]damageOutcome)
+		}
+		delete(ctx.Game.resolution.damageResultsBindings, e.outcomes)
+	}
 	if e.result != nil {
 		if ctx.Game.resolution.numberBindings == nil {
 			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
@@ -1782,6 +1794,9 @@ func (e *damageFromEffect) Apply(ctx *EffectContext) error {
 			ctx.Game.resolution.damageSourceBindings = make(map[*DamageSourceBinding]DamageSource)
 		}
 		ctx.Game.resolution.damageSourceBindings[e.sourceResult] = cloneDamageSource(outcome.source)
+	}
+	if e.outcomes != nil && outcome.amount > 0 {
+		ctx.Game.resolution.damageResultsBindings[e.outcomes] = []damageOutcome{cloneDamageOutcome(outcome)}
 	}
 	return nil
 }

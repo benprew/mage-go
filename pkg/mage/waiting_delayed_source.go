@@ -84,7 +84,8 @@ func (e *damageFromEffect) refersToSourcePermanent() bool {
 
 func (e *damageEachEffect) refersToSourcePermanent() bool {
 	recipients, mixed := e.recipients.(mixedDamageRecipients)
-	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount) || (mixed && (playerSetReadsSourcePermanent(recipients.players) || permanentSetReadsSourcePermanent(recipients.permanents)))
+	players, playerOnly := e.recipients.(playerDamageRecipients)
+	return damageReadsSourcePermanent(e.source) || resolutionValueReadsSourcePermanent(e.amount) || (mixed && (playerSetReadsSourcePermanent(recipients.players) || permanentSetReadsSourcePermanent(recipients.permanents))) || (playerOnly && playerSetReadsSourcePermanent(players.players))
 }
 
 func (e *playerDamageEachEffect) refersToSourcePermanent() bool {

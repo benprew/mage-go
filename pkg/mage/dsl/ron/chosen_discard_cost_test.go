@@ -317,8 +317,10 @@ func TestRONChosenDiscardCostIndependentPayers(t *testing.T) {
 }
 
 func TestRONChosenDiscardCostStrictBoundaries(t *testing.T) {
+	if _, err := Compile(chosenDiscardRecord(t, "ATQ", "Mishra's War Machine")); err != nil {
+		t.Fatal(err)
+	}
 	for _, tc := range []struct{ set, name, gap string }{
-		{"ATQ", "Mishra's War Machine", "activation history requires the resolving activated ability"},
 		{"LEG", "Land's Edge", "DiscardedCardPassesFilter"},
 	} {
 		n := chosenDiscardRecord(t, tc.set, tc.name)

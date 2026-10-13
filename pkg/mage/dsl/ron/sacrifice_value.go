@@ -15,6 +15,17 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "TheAmountOfDamageDealtThisWay" {
+		if ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "damage outcomes require an ordinary resolving body")
+		}
+		if n.Kind != Symbol || ctx.damageOutcome == nil {
+			return nil, problem(n, "unbound or incompatible damage outcome")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.damageOutcomes[ctx.damageOutcome].total)
+		}, nil
+	}
 	if n.Name == "NumberOfPermanentsTappedThisWayByPlayer" {
 		return compilePlayerTapValue(n, ctx)
 	}

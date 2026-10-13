@@ -215,13 +215,12 @@ func TestRONTextUpkeepKeywordsInventory(t *testing.T) {
 }
 
 func testRONTextUpkeepKeywordInventory(t *testing.T, spell bool) {
-	expected := map[string]int{"Force of Nature": 6, "Phantasmal Forces": 6, "Serendib Efreet": 2, "Lord of the Pit": 6, "Junún Efreet": 1, "Palladia-Mors": 1, "Cosmic Horror": 1, "Yawgmoth Demon": 1, "Wall of Tombstones": 1}
+	expected := map[string]int{"Force of Nature": 6, "Phantasmal Forces": 6, "Serendib Efreet": 2, "Lord of the Pit": 6, "Junún Efreet": 1, "Palladia-Mors": 1, "Mishra's War Machine": 2, "Cosmic Horror": 1, "Yawgmoth Demon": 1, "Wall of Tombstones": 1}
 	files, err := filepath.Glob("../../../../cards/mtgish/*.ron")
 	if err != nil {
 		t.Fatal(err)
 	}
 	counts := map[string]int{}
-	rejected := map[string]int{}
 	for _, file := range files {
 		data, err := os.ReadFile(file)
 		if err != nil {
@@ -246,11 +245,7 @@ func testRONTextUpkeepKeywordInventory(t *testing.T, spell bool) {
 			}
 			factory, err := Compile(node)
 			if err != nil {
-				if !strings.Contains(err.Error(), "activation history requires the resolving activated ability") {
-					t.Fatal(err)
-				}
-				rejected[node.Fields["Name"].String]++
-				continue
+				t.Fatal(err)
 			}
 			g, a, _ := ronGame()
 			var p *mage.Permanent
@@ -268,9 +263,6 @@ func testRONTextUpkeepKeywordInventory(t *testing.T, spell bool) {
 	}
 	if !maps.Equal(counts, expected) {
 		t.Fatalf("accepted keyword contexts: %v", counts)
-	}
-	if !maps.Equal(rejected, map[string]int{"Mishra's War Machine": 2}) {
-		t.Fatalf("remaining body blockers: %v", rejected)
 	}
 }
 

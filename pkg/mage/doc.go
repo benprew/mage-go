@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DamageOutcomesInto] saves actual singular damage outcomes after replacements.
+// [IfDamageDealtToPlayer] checks those outcomes against an exact source and player.
+// Prevention and redirection can stop the match. Departure does not erase facts;
+// return cannot replace a saved visit. Zero damage clears older outcomes.
+// [PlayerDamageRecipients] selects distinct players for the shared damage batch.
+// Existing result frames keep delayed reads, copies and clones separate.
+// RON reads TheAmountOfDamageDealtThisWay from its latest local damage producer.
+// PermanentDealtDamageToPlayerThisWay checks that producer's saved outcomes.
+// Branch-local producers cannot supply outer reads. Entry, replacement and
+// clamped damage values retain separate contracts.
+//
 // [PreventLandEntry] stops land entry through shared preparation.
 // [Game.IsLandEntryProhibited] reads active source rules without changes.
 // Phasing, departure and ability removal stop the rule. Return starts a new visit.

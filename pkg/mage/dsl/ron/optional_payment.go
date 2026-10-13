@@ -14,6 +14,19 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
+		switch part.Name {
+		case "SpellDealsDamageDividedAmongRecipientsRoundedDown", "SpellDealsMultipleDamage", "PermanentDealsMultipleDamage", "DeadGuestPermanentDealsDamage":
+			if hasDamageOutcomeRead(parts[i+1:]) {
+				return nil, nil, unsupported(part, "damage outcome producer")
+			}
+		}
+		if (part.Name == "SpellDealsDamage" || part.Name == "PermanentDealsDamage") && hasDamageOutcomeRead(parts[i+1:]) {
+			build, err := compileDamageOutcomeProducer(part, parts[i+1:], ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			return append(effects, build), ctx.chosenName, nil
+		}
 		if part.Name == "ForEachPermanentAnyPlayerMayCost" {
 			build, err := compilePermanentPayment(part, parts[i+1:], ctx)
 			if err != nil {

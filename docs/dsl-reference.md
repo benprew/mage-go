@@ -14212,3 +14212,33 @@ including land-play restriction, entry prohibition, each upkeep's alternative
 payment, prevention and destruction. `RealEntryPaths` covers Gaea's Touch,
 Untamed Wilds and clone isolation. `Invalid` and `AtomicLoad` retain strict
 shape validation and atomic collection loading.
+
+### RON saved damage outcomes
+
+In an ordinary resolving action sequence, `SpellDealsDamage(ThisSpell, amount,
+recipient)` or `PermanentDealsDamage(permanentRef, amount, recipient)` can supply
+`TheAmountOfDamageDealtThisWay`. This symbol reads the latest preceding local
+instruction's actual damage after replacement and prevention. Singular typed
+`Player`/`Permanent` recipients and singular union targets use `DealDamageFrom`;
+`EachPermanent` and fixed-amount `EachPlayer` collections use `DealDamageEach`.
+The player collection accepts `AnyPlayer`, `Opponent` or `Other(playerRef)`.
+Per-recipient amount bindings and other damage instruction families retain their
+separate adapters.
+
+`If(PermanentDealtDamageToPlayerThisWay(permanentRef, playerRef), [actions])`
+reads that producer's saved positive outcomes. A fully prevented instruction or
+redirection away from that player cannot select the body. Exact source identity
+keeps departed and returned objects separate. Source information follows the
+existing LKI rules. The engine API is `IfDamageDealtToPlayer` with
+`DamageOutcomesInto` for singular damage or `DamageResultsInto` for a batch.
+
+Factories create separate result declarations. Nested producers replace the
+local read but cannot export a result from a branch. Delayed bodies retain saved
+results. Invalid arity, unbound reads and entry/replacement contexts are rejected.
+`TheClampedAmountOfDamageDealtThisWay` remains unsupported; Drain Life still needs
+its restricted X payment and clamping contract.
+
+Complete unchanged records: Syphon Soul (LEG) and Mishra's War Machine
+(ATQ/3ED), mapped to `TestRONDamageOutcomeSyphonSoul` and
+`TestRONDamageOutcomeWarMachine` respectively. These tests cover all card rules;
+`TestRONDamageOutcomeScopes` supplies additional sequencing and delay evidence.

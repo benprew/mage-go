@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	damageOutcome        *damageOutcomePlan
 	permanentPayment     *permanentPaymentPlan
 	statePermanents      *statePermanentSetPlan
 	permanentSetChoice   *permanentSetChoicePlan
@@ -1356,6 +1357,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "If":
+		if len(n.Args) > 0 && n.Args[0].Name == "PermanentDealtDamageToPlayerThisWay" {
+			build, err := compileDamageOutcomeBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		if len(n.Args) > 0 && n.Args[0].Name == "PermanentPassesFilter" {
 			build, err := compileResolvingPermanentBranch(n, ctx)
 			if err != nil {

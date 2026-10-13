@@ -400,6 +400,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "subtype"
 		}
 	case "condition":
+		if n.Name == "PermanentDealtDamageToPlayerThisWay" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "player_reference"}[index]
+		}
 		if n.Name == "APermanentWasSacrificedThisWay" && len(n.Args) == 1 {
 			return "saved_sacrifice_subtype_filter"
 		}
@@ -1814,6 +1817,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_filter":
+		if n.Name == "Other" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "Or" && len(n.Args) == 1 {
 			return role
 		}
