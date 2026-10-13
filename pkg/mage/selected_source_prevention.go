@@ -24,7 +24,7 @@ func (g *Game) continueSpellDamageReplacements(spell DamageSource, permanent *Pe
 }
 
 func (g *Game) putPermanentSpellOnBattlefield(obj *StackObject, card Card, colorsSpent int, hostID uuid.UUID) *Permanent {
-	permanent := g.prepareBattlefieldEntry(card, obj.Controller, obj.ColorOverride, colorsSpent, false)
+	permanent := g.prepareBattlefieldEntryWithContext(card, obj.Controller, obj.ColorOverride, battlefieldEntryContext{announcedX: obj.XValue, castColorsSpent: colorsSpent}, false)
 	if permanent == nil {
 		return nil
 	}

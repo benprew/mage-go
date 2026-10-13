@@ -72,7 +72,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := exiled.Card.Copy()
 			card.SetID(subject.id)
-			perm, failed := g.prepareBattlefieldEntryResult(card, owner.PlayerID(), nil, 0, false)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{}, false)
 			if perm == nil {
 				if failed != nil {
 					prepared = append(prepared, preparedExileEntry{subject: subject, failed: failed, owner: owner.PlayerID()})

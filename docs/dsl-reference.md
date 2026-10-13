@@ -14404,7 +14404,7 @@ Fixed entry declarations retain their existing shape and scope:
 Nonnegative `int` literals, including counts above 255, use the shared counter
 placement service. Wrong arity, negative or noninteger amounts, unsupported
 counter types, other source references and resolving-action use still reject.
-`ValueX` entry lowering remains unsupported.
+`ValueX` entry lowering is specified in the following entry-X contract.
 
 `Permanent.Counters`, departure counter snapshots and `PermanentState.RawCounters`
 use fixed arrays of `int`. `AddCounter` and `RemoveCounter` keep their signatures;
@@ -14416,3 +14416,31 @@ The separate `AddCountersUpTo` declaration limit remains 0–255.
 Triskelion gameplay with replacement-expanded counters and counter payments.
 `TestCounterCapacity` covers native addition, removal, cloning, phasing and exact
 departure snapshots. This establishes counter capacity, not announced entry X.
+
+
+## RON announced X at entry
+
+`AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(ValueX, counter)])`
+accepts the `ValueX` symbol and one supported permanent counter type. It lowers
+per factory instance to `EntersWithCounters(counter, AnnouncedXForEnteringPermanent())`.
+Fixed integer entry forms remain supported. `ValueX()` and `ValueX(...)`, other
+source references, event-value reads, incompatible counters and use in resolving
+spell or activation bodies reject at declaration time. Entry lists still require
+one operation; entry payment and counter distribution are separate capabilities.
+
+`AnnouncedXForEnteringPermanent() EntryCounterValue` reads the permanent spell's
+saved X through a private typed entry context. It cannot accept a resolution
+value. `ColorsSpentToCastEnteringPermanent()` reads its separate payment-color
+field. Direct entry from any zone and token creation supply zero X. A resolving
+permanent spell copy keeps the original X even though it was not cast. Copy rules
+acquired during entry use the entering spell's X. Neither the donor's counters
+nor ambient resolution X can supply that value. The existing
+`EntersWithXCounters(counter)` API now uses the same exact entry context.
+
+`TestRONEntryAnnouncedX*` covers declarations, X=0/3/300, casting and entry timing,
+spell copies, clones, factory identity, entry observers and counter replacement
+order. `HydraRecord` tests only the entry rule from all six complete Rock Hydra
+records; the other rules still reject. `TestEntryAnnouncedX*` covers direct entry,
+failed payment rollback, exact departure counters, phase cycles, return, acquired
+copy rules and separate entry payment facts. This adds entry-rule coverage, not
+complete gameplay coverage for Rock Hydra or Frankenstein's Monster.

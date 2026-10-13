@@ -502,7 +502,7 @@ func returnGraveyardCardToBattlefieldWithActor(g *Game, cardID, controller, acto
 				continue
 			}
 			visit := g.graveyardVisit(cardID)
-			perm, failed := g.prepareBattlefieldEntryResult(card, controller, nil, 0, tapped)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, controller, nil, battlefieldEntryContext{}, tapped)
 			if visit == uuid.Nil || g.graveyardVisit(cardID) != visit {
 				return
 			}

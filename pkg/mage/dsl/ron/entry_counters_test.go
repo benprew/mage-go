@@ -183,7 +183,7 @@ func TestRONEntryCountersDeclarations(t *testing.T) {
 		`EntersWithNumberCounters(Integer(3), PTCounter(1,1), ChargeCounter)`,
 		`EntersWithNumberCounters(3, PTCounter(1,1))`, `EntersWithNumberCounters(Integer(-1), PTCounter(1,1))`,
 		`EntersWithNumberCounters(Integer("3"), PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3,4), PTCounter(1,1))`,
-		`EntersWithNumberCounters(ValueX, PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3), PoisonCounter)`,
+		`EntersWithNumberCounters(ValueX(), PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3), PoisonCounter)`,
 		`EntersWithNumberCounters(Integer(3), CreditCounter())`, `EntersWithNumberCounters(Integer(3), PTCounter(Integer(1),1))`,
 		`EntersWithNumberCounters(Integer(3), PTCounter(2,2))`,
 	} {

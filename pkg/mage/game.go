@@ -431,7 +431,11 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 }
 
 func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) *Permanent {
-	perm, failed := g.prepareBattlefieldEntryResult(card, controller, colors, castColorsSpent, tapped)
+	return g.prepareBattlefieldEntryWithContext(card, controller, colors, battlefieldEntryContext{castColorsSpent: castColorsSpent}, tapped)
+}
+
+func (g *Game) prepareBattlefieldEntryWithContext(card Card, controller uuid.UUID, colors *[]Color, context battlefieldEntryContext, tapped bool) *Permanent {
+	perm, failed := g.prepareBattlefieldEntryResultWithContext(card, controller, colors, context, tapped)
 	if failed != nil {
 		owner := failed.Owner()
 		if owner == uuid.Nil {
@@ -445,7 +449,7 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 }
 
 // Entry batches must finish choices before a failed entry moves to the graveyard.
-func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) (*Permanent, Card) {
+func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uuid.UUID, colors *[]Color, context battlefieldEntryContext, tapped bool) (*Permanent, Card) {
 	if g.IsLandEntryProhibited(card) {
 		return nil, nil
 	}
@@ -461,7 +465,7 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 	g.syncAbilityContext(perm)
 	g.zones.SetEnteringPermanent(perm)
 	defer g.zones.ClearEnteringPermanent()
-	entry := &battlefieldEntryAction{permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement), textChanges: entryCopyTextChanges(card)}
+	entry := &battlefieldEntryAction{context: context, permanent: perm, copies: make(map[entryCopyKey]*entryCopyReplacement), textChanges: entryCopyTextChanges(card)}
 	if g.effects.ApplyReplacements(entry, g) == nil {
 		if g.isLandEntryProhibited(perm.HasType(TypeLand)) {
 			return nil, nil
@@ -478,14 +482,10 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 		perm.RevokeBaseAttr(EntersTapped)
 	}
 
-	// Add X counters if configured (replacement effect, not a trigger).
-	// Routed through AddCountersWithReplacement so ETB-additional counter
-	// effects (Oona's Blackguard) and counter doublers (Branching Evolution)
-	// can intercept the placement.
+	// The entry keeps its own spell facts through replacement choices.
 	for _, a := range perm.RuntimeAbilities {
-		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.resolution.X() > 0 {
-			g.AddCountersWithReplacement(perm, xc.CounterType, g.resolution.X(), perm.ID(), true)
-			break
+		if xc, ok := a.(*EntersWithXCountersAbility); ok {
+			g.AddCountersWithReplacement(perm, xc.CounterType, entry.context.announcedX, perm.ID(), true)
 		}
 	}
 
@@ -498,7 +498,7 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 		}
 	}
 	for _, a := range perm.RuntimeAbilities {
-		if xc, ok := a.(*EntersWithXCountersAbility); ok {
+		if xc, ok := a.(*EntersWithXCountersAbility); ok && entry.context.announcedX > 0 {
 			baseCtrTypes[xc.CounterType] = true
 		}
 	}
@@ -517,7 +517,7 @@ func (g *Game) prepareBattlefieldEntryResult(card Card, controller uuid.UUID, co
 	}
 	for _, ability := range perm.RuntimeAbilities {
 		if counters, ok := ability.(*entryCountersAbility); ok && !nilDefinition(counters.amount) {
-			n := counters.amount.entryCounterAmount(castColorsSpent)
+			n := counters.amount.entryCounterAmount(entry.context)
 			if n > 0 {
 				g.AddCountersWithReplacement(perm, counters.counter, n, perm.ID(), true)
 				baseCtrTypes[counters.counter] = true

@@ -105,7 +105,7 @@ func (g *Game) putChosenHandCard(player Player, card Card, visit uuid.UUID) (boo
 	if !ok || visitor.handVisit(card.ID()) != visit {
 		return false, nil
 	}
-	perm, failed := g.prepareBattlefieldEntryResult(card, player.PlayerID(), nil, 0, false)
+	perm, failed := g.prepareBattlefieldEntryResultWithContext(card, player.PlayerID(), nil, battlefieldEntryContext{}, false)
 	if perm == nil && failed == nil {
 		return false, nil
 	}

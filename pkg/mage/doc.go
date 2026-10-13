@@ -6,6 +6,15 @@
 // starts new counters. RON fixed entry amounts accept nonnegative integers.
 // Announced entry X and entry payment results need separate adapters.
 //
+// [AnnouncedXForEnteringPermanent] reads the entering spell's own X.
+// [EntersWithCounters] uses this typed entry value before entry events.
+// Direct entry supplies zero. Copies keep the original spell's X.
+// Entry copy rules use the entering spell's X, not the donor's counters.
+// [EntersWithXCounters] uses the same entry facts. Phasing keeps counters;
+// return starts a new visit with zero X unless a new spell supplies it.
+// RON accepts ValueX in one EntersWithNumberCounters entry operation.
+// Entry payments and counter distribution need separate adapters.
+//
 // [TargetSharesCardTypeWith] compares a target with an earlier singular target.
 // Both exact visits must be present and unphased. Current types supply the
 // comparison; departure information cannot restore a target. A supplied type

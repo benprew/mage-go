@@ -56,7 +56,7 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		}, nil
 	}
 	if operation.Name == "EntersWithNumberCounters" {
-		return compileFixedEntryCounters(operation)
+		return compileEntryCounters(operation)
 	}
 	if operation.Kind != Symbol || operation.Name != "EntersTapped" {
 		return nil, unsupported(operation, "entry operation")
@@ -64,11 +64,20 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 	return func() mage.CardOption { return mage.WithKeyword(core.EntersTapped) }, nil
 }
 
-func compileFixedEntryCounters(n Node) (optionFactory, error) {
+func compileEntryCounters(n Node) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
 	value := n.Args[0]
+	if value.Kind == Symbol && value.Name == "ValueX" {
+		counter, err := compilePermanentCounterType(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.EntersWithCounters(counter, mage.AnnouncedXForEnteringPermanent()))
+		}, nil
+	}
 	if value.Name != "Integer" {
 		return nil, unsupported(value, "fixed entry counter amount")
 	}

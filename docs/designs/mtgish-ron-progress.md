@@ -8,35 +8,35 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **855 accepted / 131 rejected names**
 (986 total), **2,197 compiled / 248 rejected records** (2,445 total).
-The latest slice removes byte truncation from permanent counter counts and
-fixed entry declarations. RON Triskelion has large-count gameplay evidence.
-Complete-card coverage and loader diagnostics are unchanged.
+The latest slice supplies typed announced X for entry counters. Rock Hydra's
+six entry rules have casting, resolution and counter gameplay evidence.
+Complete-card coverage is unchanged; Hydra now rejects static prevention.
 The strict loader rejects the collection and publishes no partial registry.
 
-The latest slice is **INTEGER-COUNTER-CAPACITY**. Live arrays, departure
-snapshots and interactive raw snapshots use `int`; existing callers receive
-mechanical type updates. Shared replacements retain ordering and choices.
-Estimated and actual gains are zero names / zero records. This removes the
-storage prerequisite for Rock Hydra's entry X and Frankenstein's Monster's
-entry counter distribution. Runtime cutover, Go-card removal and DSL cleanup
-gates remain open.
+The latest slice is **ENTRY-ANNOUNCED-X**. Permanent spell entry reads its own
+stack object's X; direct entry supplies zero. Copies retain X; acquired entry
+copy rules, clones, phasing, return and replacement order have contract tests.
+Estimated and actual gains are zero names / zero records. This completes the
+shared entry-X prerequisite for Rock Hydra and Frankenstein's Monster.
+Entry payments, prevention and counter distribution remain. Runtime cutover,
+Go-card removal and unused DSL cleanup gates remain open.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Announced X in entry operations.** Rock Hydra and Frankenstein's Monster
-   share this prerequisite. Zero immediate gain; finite source prevention and
-   entry exile-payment/result/counter distribution remain. Reassess engine entry
-   X support before selection; concrete downstream value is two unique cards.
-2. **Exchange outcomes and Aura-only source correction.** Gauntlets of Chaos'
-   exact target/exchange prefix now works. Estimated one name / one record after
-   a local successful-exchange result and the Oracle-supported source correction.
-3. **Restricted X casting payment.** Drain Life still needs black-only X and
-   clamped actual-damage consumption. Zero immediate gain, eventual one name /
-   six records. Kudzu's optional former-host action remains another single-card
-   completion candidate.
+1. **Finite self-recipient prevention.** Rock Hydra and Rasputin Dreamweaver
+   share the shape. Audit the `ByPermanent` spelling against local Oracle text
+   before lowering it. Zero immediate gain: Hydra also needs static
+   counter-removal prevention; Rasputin needs turn-start history and a counter cap.
+2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
+   now has integer storage and entry X. Payment/result/combination-counter and
+   failed-entry contracts remain; zero immediate gain for this prerequisite.
+3. **Exchange outcomes and Aura-only correction.** Gauntlets of Chaos has exact
+   targets and exchange. Estimated one name / one record after a local successful
+   result and the Oracle-supported source correction. Drain Life's restricted
+   casting X and clamped damage remain separate later candidates.
 
 ## Dependencies and source blockers
 
@@ -3378,3 +3378,179 @@ set-generation tool was removed.
    completion candidate.
 
 This run stops after integer counter capacity.
+
+
+## ENTRY-ANNOUNCED-X — 2026-10-13
+
+Status: implemented; validation results are recorded below. This run completes
+one entry-counter capability and its typed entry-context prerequisite.
+
+### Environment, candidates and selection
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. The baseline loader exited 1
+for unsupported collection records, not a build or test failure: 855 accepted /
+131 rejected unique names; 2,197 compiled / 248 rejected records; 986 names and
+2,445 records total. No partial registry was published.
+
+Complete Rock Hydra records in LEA, LEB, 2ED, 3ED, CED and CEI, Frankenstein's
+Monster in DRK, Gauntlets of Chaos in LEG and all six Drain Life reprints were
+read, including nested forms. The vocabulary's `ValueX` and
+`EntersWithNumberCounters` signatures were inspected separately. Reprints count
+once in this comparison:
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Announced X at entry | Rock Hydra; Frankenstein's Monster | 0 names / 0 records | Hydra needs static counter-removal prevention and finite self-recipient prevention; Monster needs entry exile payment, payment results, combination-counter choice and failed-entry handling. Exact entry facts are a shared prerequisite for both names. | Medium; one typed entry context, counter adapter and identity/replacement tests |
+| Successful exchange outcomes | Gauntlets of Chaos | 1 name / 1 record | Needs local successful-exchange results and Oracle-supported Aura-only attachment correction. Existing targets and exchange mechanics are ready. | Small/medium; local result and source audit |
+| Restricted casting X payment | Drain Life | 0 names / 0 records | Black-only X payment enables one name / six records later; clamped actual-damage results remain separate. | Medium; mana solver/payment policy and rollback evidence |
+
+Candidate 1 wins because the storage prerequisite is complete and it supplies
+concrete shared behavior for two names. The engine already had entry-X counters,
+but they read ambient `ResolutionState.X`. That is an engine contract gap, not
+just a missing compiler case. Direct entry must not inherit another action's X.
+No Go card definition supplied requirements or was changed.
+
+### Supported contract and reuse boundary
+
+RON now lowers the exact shape
+`AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(ValueX, counter)])`.
+`ValueX` must be a symbol; the list contains one operation; `counter` uses the
+existing permanent-counter declaration checks. Fixed `Integer(n)` forms remain
+supported. Wrong arity, tuple-form X, other sources, event-value references,
+incompatible counter types and resolving spell/activation use remain errors.
+
+The factory builds a fresh
+`EntersWithCounters(counter, AnnouncedXForEnteringPermanent())` ability.
+`AnnouncedXForEnteringPermanent() EntryCounterValue` reads a private typed
+`battlefieldEntryContext`, with separate integer fields `announcedX` and
+`castColorsSpent`. The proposed entry action keeps these values through entry
+copy replacement. `putPermanentSpellOnBattlefield` supplies the exact stack
+object's X. Direct entry wrappers supply zero. Existing public entry and counter
+APIs retain their signatures; the private entry-value method now accepts the
+context rather than a color-count integer. The existing `EntersWithXCounters`
+ability also uses this context and cannot read ambient resolution X.
+
+Mage owns entry facts and counter execution; RON owns syntax and context
+validation. Shared casting transactions, permanent spell copies, entry-copy
+rules, counter replacements, affected-controller order, event dispatch,
+incarnation LKI, phasing and cloning are reused. Zero-X entry still permits
+external entry-counter additions through the existing synthesized proposal.
+Doubling alone cannot create counters. A new battlefield visit receives zero
+entry X unless a new resolving spell supplies it. No global result slot,
+card-name execution branch or production registry fallback was added.
+
+### Failing-first evidence and test mappings
+
+The initial native test failed to compile because the new typed constructor was
+absent. RON X=0/3/300 and Hydra entry tests failed at the existing unsupported
+`ValueX` diagnostic. A later zero-X replacement assertion exposed suppression
+of external additions; it failed with zero instead of two counters before the
+positive-count guard was restored. Test fixture method/type names were corrected
+without changing assertions. The former `ValueX` invalid-declaration case becomes
+a positive gameplay case; malformed `ValueX()` remains rejected.
+
+- **Rock Hydra → `TestRONEntryAnnouncedXHydraRecord`**: all six complete records
+  are parsed. A test-only projection keeps original metadata, mana cost and P/T,
+  and executes the exact entry rule with X=4 through casting and resolution.
+  Every unmodified full record must still reject its unsupported remaining rule.
+  This is entry-rule gameplay evidence, not complete-card coverage.
+- **Frankenstein's Monster → prerequisite only**: its complete entry sequence
+  remains rejected. No Monster gameplay coverage is claimed. The entry context
+  now carries the spell's X for a future entry payment adapter.
+- `TestRONEntryAnnouncedX`: synthetic RON X=0/3/300, no entry before resolution,
+  independent spell-copy entries under another controller, clone isolation,
+  current P/T, fresh factory instances and direct-entry zero.
+- `TestRONEntryAnnouncedXDeclarations`: malformed X, unbound event values,
+  incompatible counter/source declarations and resolving-context rejection.
+- `TestRONEntryAnnouncedXReplacementOrder`: X=3 yields eight versus seven
+  counters for the two orders; X=0 plus one then double yields two. Only the
+  entering controller chooses. The donor controller does not choose.
+- `TestRONEntryAnnouncedXObserver`: fresh ability identities and counter
+  visibility at the single actual entry event, after spell resolution begins.
+- `TestEntryAnnouncedXDirect` and `SpellAndReturn`: both typed and retained
+  X-counter APIs; ambient-X exclusion, unpaid X rollback without resource
+  mutation, copies, clones, phasing, exact departure snapshots and a fresh
+  returned visit with zero X.
+- `TestEntryAnnouncedXContext`: separate announced-X and cast-color facts,
+  unchanged ambient X and no battlefield installation during preparation.
+- `TestEntryAnnouncedXAcquiredCopyRules`: entry copying uses the entering spell's
+  X=4, not the donor's 17 counters; the donor and choice count remain unchanged.
+- `TestEntryAnnouncedXDefinition`: valid typed declarations and invalid counter
+  definition checks. Existing entry payment-color and compile-failure fixtures
+  remain in the full-suite validation.
+
+Rules evidence: local CR 107.3a/g/m, 122.6, 400.7/d, 614.1c, 614.12,
+616.1 and 702.26d. Local `data/LEA.json`, `data/DRK.json` and `data/LEG.json`
+supply Oracle comparison evidence for the candidates. No RON source changed;
+vocabulary counts and source hashes remain unchanged. Gauntlets' known Aura
+filter defect remains deferred. The finite-prevention spelling
+`NextAmountOfDamageThatWouldBeDealtThisTurnByPermanent` appears in both Hydra and
+Rasputin, while local Oracle text specifies damage to the source. The next slice
+must settle that source expression before lowering it; this run does not assign
+new semantics to it or correct any reprint.
+
+### Verification and measured outcome
+
+Final required checks passed after the private entry-wrapper cleanup:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONEntryAnnouncedX -count=1` passed.
+- `go test ./pkg/mage -run TestEntryAnnouncedX -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- The engine skill's `go test ./... -short -count=1` passed.
+- Initial `make lint` found one `unparam` issue: the old private direct-entry
+  result wrapper always received nil colors. A fresh whole-repository caller
+  audit found four direct preparation paths: graveyard, temporary exile, linked
+  exile and hand entry. These callers now pass an explicit zero-valued typed
+  entry context. The redundant private wrapper was removed; public APIs remain.
+  Every preceding check was rerun after this change and passed.
+- Final `make lint` passed with **0 issues**. Formatter and automatic fixes were
+  reviewed; no extra code edits resulted.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json` exited **1**, as expected: **855 accepted /
+  131 rejected unique names**, **2,197 compiled / 248 rejected records**, out of
+  986 names / 2,445 records. Exactly six diagnostics changed, all Rock Hydra
+  reprints. Each advanced from unsupported entry `ValueX` to
+  `unsupported static prevention event (EachDamageWouldBeDealtToRecipient)`.
+  Monster still rejects the multi-operation entry sequence; Gauntlets still
+  rejects `PermanentsChangedControlThisWay`; Drain Life still rejects
+  `SpendOnlyColorManaOnX`. All other diagnostics are identical to baseline.
+
+No environmental or pre-existing failure blocks this slice.
+
+Actual full-card gains match the estimate: zero names / zero records. New entry
+rule gameplay evidence covers Rock Hydra's six reprints. Complete-card gameplay
+coverage is unchanged. Frankenstein's Monster's multi-operation entry still
+rejects. Strict collection publication, runtime cutover, Go-card deletion and
+unused DSL removal gates remain open. No public DSL function or Go-set generator
+was removed.
+
+Changed files: `pkg/mage/composable_actions.go`, `entry_copy.go`, `game.go`,
+`selected_source_prevention.go`, `effect_cards.go`, `effect_removal.go`,
+`linked_exile_entry.go`, `optional_hand_entry.go`, `doc.go` and new
+`entry_announced_x_test.go`;
+RON `entry_tapped.go`, `entry_counters_test.go` and new `entry_announced_x_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. **Finite self-recipient prevention — Rock Hydra; Rasputin Dreamweaver.**
+   Entry X is ready for Hydra. Shared prevention and counter-payment services
+   exist. Audit the `ByPermanent` source spelling against the local Oracle
+   self-recipient requirement, including every identical reprint. Estimated
+   zero immediate names / records: Hydra also needs its static counter-removal
+   prevention adapter; Rasputin also needs
+   `StartedThisTurnUntapped` and the permanent seven-counter cap. Small/medium
+   adapter effort after the source contract is settled; two-name downstream value.
+2. **Mandatory entry exile payment using announced X — Frankenstein's Monster.**
+   Integer counts and exact entry X are ready. Add one typed entry-payment
+   contract before combination-counter distribution and failed-entry continuation.
+   Zero immediate unlocks; concrete prerequisite for the complete DRK record.
+   Medium effort; do not combine the whole entry sequence into one oversized run.
+3. **Exchange outcomes and Aura-only correction — Gauntlets of Chaos.**
+   Exact targets and exchange are ready. Estimated one name / one record;
+   small/medium effort. Drain Life's restricted X casting payment and clamped
+   damage remain separate later candidates.
+
+This run stops after announced X at entry.

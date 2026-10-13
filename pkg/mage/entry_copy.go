@@ -48,7 +48,13 @@ type entryCopyKey struct {
 	index int
 }
 
+type battlefieldEntryContext struct {
+	announcedX      int
+	castColorsSpent int
+}
+
 type battlefieldEntryAction struct {
+	context     battlefieldEntryContext
 	permanent   *Permanent
 	copies      map[entryCopyKey]*entryCopyReplacement
 	textChanges []TextChange

@@ -2387,7 +2387,7 @@ func (e *drawStepLifeContinuous) cloneEffect() ContinuousEffect {
 // EntryCounterValue reads a value while one permanent enters the battlefield.
 type EntryCounterValue interface {
 	entryCounterValue()
-	entryCounterAmount(int) int
+	entryCounterAmount(battlefieldEntryContext) int
 	inspectDefinition() definitionNode
 }
 
@@ -2396,10 +2396,26 @@ type entryCastColorsValue struct{}
 // ColorsSpentToCastEnteringPermanent reads the entering spell's own payment.
 func ColorsSpentToCastEnteringPermanent() EntryCounterValue { return entryCastColorsValue{} }
 
-func (entryCastColorsValue) entryCounterValue()           {}
-func (entryCastColorsValue) entryCounterAmount(n int) int { return n }
+func (entryCastColorsValue) entryCounterValue() {}
+func (entryCastColorsValue) entryCounterAmount(ctx battlefieldEntryContext) int {
+	return ctx.castColorsSpent
+}
 func (entryCastColorsValue) inspectDefinition() definitionNode {
 	return definitionNode{Role: "entry-counter-value", Text: "colors spent to cast entering permanent"}
+}
+
+type entryAnnouncedXValue struct{}
+
+// AnnouncedXForEnteringPermanent reads X from the spell that becomes this permanent.
+// Entry without a resolving permanent spell supplies zero.
+func AnnouncedXForEnteringPermanent() EntryCounterValue { return entryAnnouncedXValue{} }
+
+func (entryAnnouncedXValue) entryCounterValue() {}
+func (entryAnnouncedXValue) entryCounterAmount(ctx battlefieldEntryContext) int {
+	return ctx.announcedX
+}
+func (entryAnnouncedXValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "entry-counter-value", Text: "announced X for entering permanent"}
 }
 
 type entryCountersAbility struct {

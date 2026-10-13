@@ -18917,3 +18917,36 @@ Frankenstein's Monster's entry-result counter distribution. It does not add X
 entry scope, payments, result bindings or complete gameplay for those cards.
 The separate bounded-counter declaration context retains its 0–255 limit.
 Counts use machine integers, as do the engine's damage and other numeric values.
+
+
+## Announced X for battlefield entry
+
+The private `battlefieldEntryContext` contains separate `announcedX` and
+`castColorsSpent` integer fields. Permanent spell resolution supplies its own
+`StackObject.XValue`; every direct entry wrapper supplies zero X. The proposed
+`battlefieldEntryAction` retains these values through copy replacements. No
+ambient resolution value or permanent counter count supplies X (CR 107.3a,
+107.3g, 107.3m, 400.7d). A copied permanent spell retains its copied X; its
+payment-color count remains zero. The context does not survive battlefield entry.
+Phasing retains counters; a returned object starts new counters and receives zero
+entry X unless a new resolving spell supplies it (CR 400.7, 702.26d).
+
+`AnnouncedXForEnteringPermanent() EntryCounterValue` and
+`EntersWithCounters(counter, amount)` use that context before entry events.
+The retained `EntersWithXCounters` API uses the same context. Counter placement
+uses the shared replacement service and affected-controller ordering
+(CR 122.6, 614.1c, 614.12, 616.1). With zero native X, external entry additions
+still run through the existing synthesized placement proposal; doubling alone
+does not invent counters. Entry copying acquires the new definition's entry rule
+but keeps the entering spell's X, separate from the donor's existing counters.
+Clones retain independent stack objects, entry ability identities and counters.
+
+Evidence: `TestEntryAnnouncedXDirect`, `SpellAndReturn`, `Context`,
+`AcquiredCopyRules` and `Definition`; RON `TestRONEntryAnnouncedX`,
+`Declarations`, `ReplacementOrder`, `Observer` and `HydraRecord`.
+Payment rollback leaves hand, mana and stack unchanged; entry observers see
+counters only after resolution. Replacement tests distinguish add-then-double
+from double-then-add and verify that only the entering controller chooses.
+The RON adapter accepts one source entry counter operation with the `ValueX`
+symbol. Entry exile payments, entry result bindings and counter distribution
+remain separate contracts. No complete-card acceptance gain is claimed.
