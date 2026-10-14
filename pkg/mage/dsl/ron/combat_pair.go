@@ -18,21 +18,27 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 	}
 	name, ref, filter, union := pair.name, pair.subject, pair.filter, pair.union
 	ctx.combatOpponent = &permanentEventPlan{name: name}
+	ctx.combatSubject = &permanentEventPlan{name: "CombatSubject@" + event.Position.String()}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
 	}
 	return func() mage.CardOption {
 		opponent := mage.BindPermanent(name)
-		actions := plan.buildWithBindings(instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.combatOpponent: opponent}})
-		var pattern mage.EventPattern
+		savedSubject := mage.BindPermanent(ctx.combatSubject.name)
+		actions := plan.buildWithBindings(instanceBindings{tapped: map[*permanentEventPlan]*mage.PermanentBinding{ctx.combatOpponent: opponent, ctx.combatSubject: savedSubject}})
 		subject := ref.build(instanceBindings{})
-		if union {
-			pattern = mage.BlocksOrBecomesBlockedByCreatureMatching(subject, filter).WithOpponent(opponent)
-		} else if pair.blocks {
-			pattern = mage.BlocksCreatureMatching(subject, filter).WithOpponent(opponent)
-		} else {
-			pattern = mage.BecomesBlockedByCreatureMatching(subject, filter).WithOpponent(opponent)
+		pattern := mage.BlocksOrBecomesBlockedByCreatureMatching(subject, filter)
+		if !union {
+			if pair.blocks {
+				pattern = mage.BlocksCreatureMatching(subject, filter)
+			} else {
+				pattern = mage.BecomesBlockedByCreatureMatching(subject, filter)
+			}
+		}
+		pattern = pattern.WithOpponent(opponent)
+		if ctx.combatSubject.referenced {
+			pattern = pattern.WithSubject(savedSubject)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		trigger.WithLayeredCombatPairTextRevision()

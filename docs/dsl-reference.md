@@ -4089,6 +4089,13 @@ binding. The matching engine patterns save the opposing incarnation at detection
 Aura events read the current attachment at detection. Later attachment, color,
 subtype, toughness or controller changes do not recheck filters or redirect
 the saved object.
+Ordinary battlefield `TriggerA` pair events also provide `Trigger_ThatCreature`
+and `Trigger_ThatPermanent` for the watched source or Aura host. Both aliases
+use one separate `WithSubject(binding)` capture at detection. Resolving actions
+and nested delayed step actions retain it. Reattachment cannot redirect the
+saved host. Return invalidates its visit; phasing keeps identity but prevents
+actions. These aliases do not add intervening pair events, subscription-subject
+capture or temporary combat-rule adapters.
 Departure of the source does not end pending or delayed abilities. A returned
 opponent is a new object; a phased-out opponent cannot be destroyed.
 

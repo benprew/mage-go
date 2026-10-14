@@ -283,8 +283,8 @@ func TestRONDestructionPaymentInventoryAndStrictLoad(t *testing.T) {
 		t.Fatal("invalid load replaced registry")
 	}
 	infinite := hostUntapRecord(t, "LEG", "Infinite Authority")
-	if _, err = Compile(infinite); err == nil || !strings.Contains(err.Error(), "Trigger_ThatCreature") {
-		t.Fatal("unsupported nested event binding", err)
+	if _, err = Compile(infinite); err != nil {
+		t.Fatal("complete destruction-result consumer", err)
 	}
 }
 

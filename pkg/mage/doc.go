@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// Combat-pair patterns accept WithSubject to save the watched battlefield visit.
+// WithOpponent can save the opposing visit in a separate binding. Detection
+// precedes trigger placement. Reattachment cannot change either saved subject.
+// Return cannot supply an old visit. Phasing prevents actions but keeps identity.
+// Pending events, copies, clones and nested delays keep separate saved frames.
+// RON ordinary combat-pair TriggerA bodies accept Trigger_ThatCreature and
+// Trigger_ThatPermanent for the watched visit. Shared destruction results and
+// delayed counters complete Infinite Authority. Intervening pair conditions,
+// temporary rule references and subscription subjects need separate adapters.
+//
 // [core.P2P2] is one +2/+2 counter. Each counter adds two to power and
 // toughness in layer 7c. Base values apply first; switches apply last.
 // The counter remains separate from +1/+1 and -1/-1 counters.

@@ -6,16 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **884 accepted / 102 rejected names**
-(986 total), **2,253 compiled / 192 rejected records** (2,445 total).
-The latest slice is **DISTINCT-P2P2-COUNTERS**. PTCounter(+2, +2) lowers to
-core.P2P2 through the existing permanent-counter adapters. One counter adds
-two power and two toughness in layer 7c and remains a distinct counter kind.
-Soul Exchange now compiles unchanged and has complete RON gameplay evidence.
-Engine and RON tests cover replacements, layers, counter-kind independence,
-identity, phasing, departure facts, rollback, copies and clones.
+Latest measured result (2026-10-14): **885 accepted / 101 rejected names**
+(986 total), **2,254 compiled / 191 rejected records** (2,445 total).
+The latest slice is **SAVED-COMBAT-PAIR-SUBJECTS**. WithSubject saves the watched
+source or Aura host's exact battlefield visit before trigger placement. Ordinary
+RON combat-pair TriggerA bodies expose Trigger_ThatCreature and
+Trigger_ThatPermanent, including supported nested step delays.
+Infinite Authority now compiles unchanged and has complete RON gameplay evidence.
+Tests cover binding validation, local scopes, native combat, destruction outcomes,
+timing, reattachment, return, phasing, LKI, rollback, copies and clones.
 Estimated and actual gain: **one unique name / one record**. Complete-card
-gameplay coverage gains Soul Exchange; synthetic contract coverage increases.
+gameplay coverage gains Infinite Authority; synthetic contract coverage increases.
 No RON source changed. All required checks pass; lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -25,16 +26,18 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Saved combat event subjects and temporary rule references.** Compare
-   Infinite Authority and Wall of Dust; retain exact host/opponent visits through
-   delayed destruction, counters and next-turn restrictions. Wall of Caltrops
-   still has separate intervening combat-membership conditions.
-2. **Optional plural sacrifice payment/results.** Sword of the Ages needs saved
+1. **Temporary combat rule references and next-turn windows.** Wall of Dust
+   already captures its opponent, but its rule adapter rejects event references.
+   Compare shared bound-subject demand and the separate DuringPlayersNextTurn
+   lifecycle before selecting one complete supported shape.
+2. **Intervening combat-pair conditions.** Wall of Caltrops can reuse watched and
+   opposing subject capture. It still needs TriggerI detection/resolution checks
+   and blocking-set cardinality predicates; compare shared demand first.
+3. **Optional plural sacrifice or entry payment/results.** Sword of the Ages needs saved
    power, exact departure visits and graveyard exile of completed sacrifices.
-   Audit shared demand before selecting the producer and consumers.
-3. **Entry payment/results.** Nameless Race and Frankenstein's Monster need
-   different producers. Keep each entry transaction and its complete result
-   contract together; reassess shared prerequisites and other multi-card demand.
+   Nameless Race and Frankenstein's Monster need different entry producers.
+   Keep each transaction and its complete result contract together; reassess
+   shared prerequisites and other multi-card demand.
 
 ## Dependencies and source blockers
 
@@ -10972,3 +10975,201 @@ docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
    compare it against other shared demand before selection.
 
 Stop after this slice. All migration completion gates are still outstanding.
+
+
+## 2026-10-14 — SAVED-COMBAT-PAIR-SUBJECTS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for
+expected atomic collection rejection: 2,253 compiled / 192 rejected records,
+884 accepted / 102 rejected names. This was not a build or environment failure.
+
+Started with the latest ranked saved-combat-subject candidate. Read complete
+records and nested forms for Infinite Authority, Wall of Dust, Wall of Caltrops,
+Sword of the Ages, Nameless Race and Frankenstein's Monster. Also read the
+complete shared-path records for Cockatrice, Thicket Basilisk, Abomination,
+Venom, Aisling Leprechaun, Infernal Medusa, Battering Ram, Giant Shark and Goblin
+Flotilla, and Wood Elemental for the separate entry sacrifice form. Targeted
+vocabulary inspection covered both pair-event constructors, Trigger_ThatCreature,
+DuringPlayersNextTurn, SacrificeAnyNumberOfPermanents and PayAnyAmountOfLifeUpto.
+The two plural-sacrifice occurrences are Sword and the already supported Wood
+Elemental entry form; they do not imply two new activation-payment unlocks.
+Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Saved combat watched subject, ranked #1 | Infinite Authority; downstream Wall of Caltrops; related Wall of Dust | 1 name / 1 record | Infinite Authority already has exact opponent capture, destruction results, delayed steps and counters. Caltrops needs separate TriggerI and blocking-set predicates. Dust needs temporary rule references and a next-turn window, not a new watched producer. Saved subjects enable exact exclusions and information reads for later combat conditions. | Small/medium: optional engine capture, scoped aliases, invalid declarations and identity/timing tests. |
+| Optional plural sacrifice payment/results, ranked #2 | Sword of the Ages | 1 after the complete chain; 0 for selection alone | Needs bounded optional selection within the cost transaction, saved total power and exact graveyard departure/exile results. Wood Elemental uses a separate, already supported entry producer. | High: several producer/consumer and rollback contracts. |
+| Entry payment/results, ranked #3 | Nameless Race, Frankenstein's Monster | 1 per distinct complete chain; 0 from a generic result placeholder | Race needs bounded entry life payment, its full maximum calculation and saved P/T. Monster needs required plural graveyard exile, entry failure and distributed counter choices. These are different transactions. | High for both; medium/high per complete chain. |
+
+Selected saved watched-subject capture because candidate #1 is dependency-ready
+and completes an existing destruction/result/double-delay chain with one shared
+primitive. This is an unblocking prerequisite with an immediate one-card gain
+and concrete downstream use by Wall of Caltrops. The other apparent multi-card
+entry candidate comprises different producers, not one ready adapter. No
+card-name branch or partial production registry was used.
+
+The contract, reuse boundary and acceptance cases were stated before edits.
+The engine owns exact detection capture, definition checks and shared frames;
+RON owns aliases, context validation and fresh bindings. Local data/LEG.json
+confirms Infinite Authority's creature enchant restriction, toughness-three
+pair condition, end-of-combat destruction and next-end-step counter award.
+Existing contracts and CR 509.3b/d/f, 603.3a, 603.7, 400.7 and 702.26 establish
+event multiplicity, detection facts, delayed control, return identity and phasing.
+No source-data defect or missing environment prerequisite was found.
+
+### Exact signatures, contexts and engine reuse
+
+- `filteredCombatPairPattern.WithSubject(binding *PermanentBinding)
+  filteredCombatPairPattern` is optional on `BlocksCreatureMatching`,
+  `BecomesBlockedByCreatureMatching` and `BlocksOrBecomesBlockedByCreatureMatching`.
+  Existing This and AttachedPermanent subjects and filters retain their behavior.
+- A successful detection saves event.SourceID's exact battlefield incarnation
+  before trigger placement. WithOpponent can save event.TargetID separately.
+  Both use eventPermanentCapture, PermanentBinding and the shared pending,
+  stack-copy, clone and delayed resolution frames. They are typed producers.
+- Nil/unnamed subject bindings, repeated subject declarations, one binding used
+  for both subjects, and unbound reads fail definition validation. Queries keep
+  existing incarnation, creature, phasing and current-characteristic checks.
+- `compileCombatPairTrigger(Node, Node, scope) (optionFactory, error)` creates
+  `scope.combatSubject`. `compilePermanentRef(Node, scope)
+  (permanentReferencePlan, error)` maps symbol-only Trigger_ThatCreature and
+  Trigger_ThatPermanent to the same saved watched binding in ordinary battlefield
+  pair TriggerA bodies, both directions and their equal-subject/filter union.
+- Engine binding names use `CombatSubject@` plus the positioned event. Each
+  factory call creates a separate binding. Alias reads mark the plan referenced;
+  only referenced subjects request capture. This preserves existing stack-source
+  queries for cards that do not consume the watched subject.
+- Supported nested delayed step bodies retain the enclosing subject. Existing
+  nested unblocked and death producers take precedence for their local aliases.
+  New combat-pair subscriptions clear the enclosing watched plan and reject
+  these unsupported subscription subject reads at compilation. TriggerI pair
+  events, temporary rule-reference adapters and subscription subject capture
+  remain separate capability gaps.
+- Actions use From(binding) and require the exact present, unphased visit.
+  Information reads can use departure/phase LKI. Reattachment, control change,
+  source departure and ability loss cannot redirect saved facts or change the
+  detecting controller. Return starts a different visit. Phasing retains identity.
+- Infinite Authority reuses DestroyWithResult, DestroyedThisWayInto, IfPositive,
+  AtNext and AddCountersTo. Failed destruction schedules no counter award.
+  Successful destruction schedules the next actual end step. Counter replacements
+  remain in the shared service. No new payment, replacement-order, APNAP,
+  simultaneous-operation, zone or counter subsystem was introduced.
+
+### Failing-first and card-to-test mappings
+
+Initial engine tests exposed the missing WithSubject signature. Early test
+fixture corrections used Permanent.Tapped and the typed base-P/T effect API.
+After those RON setup corrections, the full Infinite Authority matrix failed on
+its expected LEG:133:754 unbound Trigger_ThatCreature before implementation.
+Native ExecuteBlockers resolves declaration triggers before returning, so the
+native tests assert delayed gameplay; explicit event setup keeps pending triggers
+available for stack-copy cases.
+
+The first engine-short run exposed one obsolete unsupported-record expectation
+and stack-source query regressions caused by capturing unused watched subjects.
+The existing query assertions were preserved; reference-driven capture fixed
+production behavior. The stale Infinite Authority expectations now require its
+full record to compile. Count tests use the measured 2,254/191 result.
+
+Further failing-first scope tests exposed duplicate symbolic binding names and a
+nested death read that selected the enclosing watched subject. Unique internal
+labels and local-producer precedence fixed these errors. A nested pair body now
+fails with the intended positioned unbound-reference diagnostic rather than an
+incidental duplicate-opponent-binding error. No engine rule was weakened.
+
+- **Infinite Authority -> TestRONCombatPairSubjectInfiniteAuthority**: complete
+  unchanged LEG record, both native combat directions, detection-time toughness,
+  shroud on untargeted opponents, destruction at end of combat and counters only
+  at the next end step. Covers reattachment, Aura departure, host return/phasing/
+  phase cycle, opponent return/phasing, regeneration, indestructibility, later
+  toughness changes, control, stack copies, delayed clones and counter doubling.
+  A copied destruction against one opponent yields only one successful result.
+- **Infinite Authority -> TestRONCombatPairSubjectCasting**: printed WWW payment,
+  insufficient-payment rollback, illegal noncreature enchant target without
+  mana consumption and successful Aura attachment.
+- **Infinite Authority -> TestRONCombatPairSubjectIndependentEvents**: two fresh
+  factory instances with two different host/opponent events each; source departure,
+  one regenerated opponent, distinct destruction outcomes and pending clone
+  isolation. The correct original host receives each successful award.
+- **Infinite Authority -> existing TestRONCombatCharacteristicNativeClauses**:
+  complete original event/filter declarations cover nonmatching toughness and
+  multiple opponents; full-card matrix adds the actual original consumers.
+- **TestRONCombatPairSubjectShapes**: all source/host, direction/union and alias
+  combinations, delayed counters after reattachment, exact stack source queries
+  and engine definition validation.
+- **TestRONCombatPairSubjectInvalid / AtomicLoad**: malformed and out-of-scope
+  aliases reject; the complete valid record loads, while adding an invalid record
+  cannot replace its registry.
+- **TestRONCombatPairSubjectNestedSubscription / NestedLocalEvent**: unsupported
+  nested watched subjects reject with the intended diagnostic. Existing unblocked
+  and death subscriptions retain their own local subjects while the enclosing
+  event can still use its saved creature.
+- **TestCombatPairSubjectDeclarations / Capture / IndependentFacts**: engine
+  declaration errors, optional subject-only capture, dual capture, three directions,
+  source/host subjects, reattachment, source loss, return, phasing, control, copies,
+  clones, independent pending events, departure power and saved controller.
+- Existing Cockatrice, Thicket Basilisk, Abomination, Venom, Aisling Leprechaun,
+  Infernal Medusa and Battering Ram tests retain their complete RON mappings.
+  Goblin Flotilla keeps its existing subscription contract. Giant Shark, Wall of
+  Dust and Wall of Caltrops retain their separate diagnostic blockers; they gain
+  no full-card gameplay claim in this slice.
+
+### Validation and measured outcome
+
+Required checks passed in fast-fail order after the final scope corrections:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCombatPairSubject -count=1`, with focused
+  stack-bound-source and destruction-payment regressions.
+- `go test ./pkg/mage -run TestCombatPairSubject -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- `make lint`: final result **0 issues**. The initial lint run found one prealloc
+  issue in the new independent-event test; fixed its bounded allocation. Automatic
+  formatter changes only reordered imports in this slice's two new test files.
+  No unrelated file changed.
+- Post-format review: full RON package tests with `-count=1`, focused engine tests,
+  and skill verification `go test ./... -short -count=1` all passed again.
+- `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: exit **1**, expected atomic collection
+  rejection. **2,254 compiled / 191 rejected records**, **885 accepted / 101
+  rejected names**. Only Infinite Authority's LEG:133:754 diagnostic was removed.
+  No remaining diagnostic changed, no diagnostic was added and no accepted record
+  was lost. This is collection rejection, not a build/test/environment failure.
+
+Estimated and actual gain match: **one unique name / one record**. Complete-card
+RON gameplay coverage independently gains Infinite Authority. Synthetic contract
+coverage also increases. No source defect was corrected. All twelve source hashes
+match the vocabulary snapshot; no source or snapshot refresh is needed.
+
+The implement-engine skill supplied engine contract guidance; the user's RON
+migration scope supplied lowering, full-record gameplay and ledger requirements.
+No removed card/set skill was invoked. Existing callers remain. Runtime cutover,
+Go-card deletion, obsolete Go-set generation and unused DSL removal remain gated
+by complete collection support and startup. No DSL function or card definition
+was removed, so no removal caller audit was required for this slice.
+
+Changed files: pkg/mage/combat_pair_matching.go, combat_pair_subject_test.go and
+doc.go; pkg/mage/dsl/ron/combat_pair.go, combat_pair_delay.go, compiler.go,
+permanent_scope.go, combat_pair_subject_test.go, combat_characteristic_test.go,
+destruction_payment_test.go, definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. The slice is ready for the single authorized commit
+`feat(ron): implement saved combat pair subjects`.
+
+### Ranked next candidates
+
+1. **Temporary combat-rule bound subjects and next-turn windows.** Wall of Dust
+   already has an exact saved opponent. Inspect shared consumers before completing
+   its CreatePermanentRuleEffectUntil event reference and DuringPlayersNextTurn
+   contract. The timing window is distinct from UntilPlayersNextTurn.
+2. **Intervening combat-pair conditions.** Wall of Caltrops can reuse saved watched
+   and opposing visits. It still needs TriggerI detection/resolution checks and
+   blocking-set cardinality/absence predicates. Compare shared condition demand.
+3. **Optional plural sacrifice or entry payment/results.** Reassess Sword of the
+   Ages, Nameless Race and Frankenstein's Monster against shared demand. Keep
+   their different producers and complete result chains separate.
+
+Stop after this completed slice. All migration completion gates remain unfinished.

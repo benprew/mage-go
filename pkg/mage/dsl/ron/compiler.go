@@ -76,6 +76,7 @@ type scope struct {
 	beginCombat       bool
 	defendingPlayer   *sourceCombatPlayerPlan
 	combatOpponent    *permanentEventPlan
+	combatSubject     *permanentEventPlan
 	targetNamespace   string
 	exilePayment      *exilePaymentPlan
 	counterPayment    *counterPaymentPlan

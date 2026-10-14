@@ -30,6 +30,7 @@ func compileCombatPairDelay(n Node, ctx scope) (effectFactory, error) {
 	}
 	event := &permanentEventPlan{name: pair.name}
 	ctx.combatOpponent = event
+	ctx.combatSubject = nil
 	ctx.delayedStep = true
 	ctx.drawReplacementBody = false
 	effects, err := compileActionSequence(parts, ctx)

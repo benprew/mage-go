@@ -20726,3 +20726,64 @@ counter replacement. `TestRONP2P2CounterReplacementOrder` proves affected-player
 prevention with the new kind. `TestRONP2P2CounterSoulExchangeRollback` proves incomplete
 casting cannot spend the creature or available mana. Existing payment and
 returned-visit contracts continue to supply identity and timing.
+
+## Saved watched subjects in ordinary combat-pair events
+
+The patterns returned by `BlocksCreatureMatching(PermanentRef, PermanentFilter)`,
+`BecomesBlockedByCreatureMatching(PermanentRef, PermanentFilter)` and
+`BlocksOrBecomesBlockedByCreatureMatching(PermanentRef, PermanentFilter)` now
+accept `WithSubject(binding *PermanentBinding) filteredCombatPairPattern`.
+This optional producer saves the exact watched source or attached creature at
+successful detection, before trigger placement. `WithOpponent` can capture the
+opposing visit at the same event. Both use the shared `eventPermanentCapture`.
+Nil or unnamed bindings, repeated subject declarations and using one binding
+for both subjects fail definition validation. Existing callers remain valid.
+
+Event direction, creature checks, current characteristics and explicit event
+incarnations retain the existing matcher under CR 509.3b/d/f. The watched and
+opposing captures are separate typed producers. Pending events keep separate
+facts, including multiple events from one Aura attached to different hosts.
+Reattachment, source departure, ability removal and control changes cannot
+redirect saved subjects or change the detecting controller (CR 603.3a, 608.2h).
+Shared pending, stack-copy, clone and nested-delay frames preserve both facts.
+Actions require the exact present, unphased visit. Information reads can use
+its departure LKI. Return cannot supply the saved visit (CR 400.7); phasing keeps
+identity while preventing actions (CR 702.26b). No cost, APNAP, replacement-order
+or simultaneous-operation service changes.
+
+RON owns `scope.combatSubject`, alias validation and per-factory binding
+allocation. Lowering requests subject capture only when the body reads an alias;
+unused subjects do not add entries to stack source queries. Existing cards keep
+their previous explicit source lists. Ordinary battlefield combat-pair `TriggerA` bodies expose
+`Trigger_ThatCreature` and `Trigger_ThatPermanent` for this producer. Existing
+opponent aliases remain distinct. Supported nested delayed step bodies keep the
+same subject. Intervening pair events, watched subjects of temporary subscriptions,
+and temporary combat-rule references require their separate adapters.
+New pair subscriptions clear the enclosing pair subject before body lowering.
+Existing nested unblocked and death producers take precedence for their local
+aliases. Position-based internal names keep these declarations separate from
+the enclosing watched binding. `TestRONCombatPairSubjectNestedSubscription`
+requires a positioned unbound-reference error; `NestedLocalEvent` proves local
+captures do not redirect actions to the enclosing creature.
+
+`TestCombatPairSubjectDeclarations`, `Capture` and `IndependentFacts` cover the
+three directions, source/host subjects, binding errors, reattachment, source
+loss, return, phasing, control, pending copies, clones, independent event frames
+and departure power. These names have the prefix `TestCombatPairSubject`.
+`TestRONCombatPairSubjectShapes`, `Invalid` and `AtomicLoad` verify aliases,
+scope rejection, fresh declarations and atomic collection rejection.
+`InfiniteAuthority` executes the complete unchanged LEG record in both native
+combat directions. It checks delayed timing, saved hosts, regeneration,
+indestructibility, return, phasing, changed toughness, source departure, copies,
+clones and counter doubling. `Casting` covers white mana, enchant restrictions,
+rollback and attachment; `IndependentEvents` covers two factory instances with
+two saved host/opponent pairs each and independent destruction outcomes.
+These names have the prefix `TestRONCombatPairSubject`. Existing
+`TestRONCombatCharacteristicNativeClauses` supplies nonmatching toughness cases.
+
+Infinite Authority reuses `DestroyWithResult`, `DestroyedThisWayInto`, `IfPositive`,
+`AtNext`, and `AddCountersTo`. A failed destruction cannot schedule its counter
+award. A successful destruction schedules the next actual end step, where the
+saved first creature must still be present and unphased. The full record adds
+one unique card and one compiled record; compilation and gameplay are measured
+separately. No RON source defect or spelling change is needed.

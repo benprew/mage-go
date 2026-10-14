@@ -11,8 +11,11 @@ type filteredCombatPairPattern struct {
 	filter           PermanentFilter
 	kind             EventType
 	opponent         *PermanentBinding
+	savedSubject     *PermanentBinding
 	captureOpponent  bool
 	duplicateCapture bool
+	captureSubject   bool
+	duplicateSubject bool
 }
 
 // BlocksCreatureMatching checks each opposing creature at the block event.
@@ -36,6 +39,15 @@ func (p filteredCombatPairPattern) WithOpponent(binding *PermanentBinding) filte
 		p.duplicateCapture = true
 	}
 	p.opponent, p.captureOpponent = binding, true
+	return p
+}
+
+// WithSubject saves the watched battlefield visit before trigger placement.
+func (p filteredCombatPairPattern) WithSubject(binding *PermanentBinding) filteredCombatPairPattern {
+	if p.captureSubject {
+		p.duplicateSubject = true
+	}
+	p.savedSubject, p.captureSubject = binding, true
 	return p
 }
 
@@ -67,14 +79,18 @@ func (p filteredCombatPairPattern) matchesSubject(event *GameEvent, reader *Game
 }
 
 func (p filteredCombatPairPattern) captureDetectedEvent(event *GameEvent, reader GameReader, _ uuid.UUID) []Effect {
-	if !p.captureOpponent || p.opponent == nil {
-		return nil
+	var captures []Effect
+	if p.captureSubject && p.savedSubject != nil {
+		if subject := reader.FindPermanent(event.SourceID); subject != nil && !subject.PhasedOut {
+			captures = append(captures, &eventPermanentCapture{binding: p.savedSubject, value: capturedPermanent{subject.ID(), subject.incarnationID}})
+		}
 	}
-	opponent := reader.FindPermanent(event.TargetID)
-	if opponent == nil || opponent.PhasedOut {
-		return nil
+	if p.captureOpponent && p.opponent != nil {
+		if opponent := reader.FindPermanent(event.TargetID); opponent != nil && !opponent.PhasedOut {
+			captures = append(captures, &eventPermanentCapture{binding: p.opponent, value: capturedPermanent{opponent.ID(), opponent.incarnationID}})
+		}
 	}
-	return []Effect{&eventPermanentCapture{binding: p.opponent, value: capturedPermanent{opponent.ID(), opponent.incarnationID}}}
+	return captures
 }
 
 func (p filteredCombatPairPattern) inspectDefinition() definitionNode {
@@ -93,6 +109,19 @@ func (p filteredCombatPairPattern) inspectDefinition() definitionNode {
 	}
 	if p.duplicateCapture {
 		n.problem = "combat pair event: save one opponent"
+	}
+	if p.captureSubject {
+		n.bindingWrites = append(n.bindingWrites, p.savedSubject)
+		n.children = append(n.children, definitionEdge{"subject", &eventPermanentCapture{binding: p.savedSubject}})
+	}
+	if p.captureSubject && p.savedSubject == nil {
+		n.problem = "combat pair event: supply a subject binding"
+	}
+	if p.duplicateSubject {
+		n.problem = "combat pair event: save one subject"
+	}
+	if p.captureSubject && p.captureOpponent && p.savedSubject != nil && p.savedSubject == p.opponent {
+		n.problem = "combat pair event: use separate subject and opponent bindings"
 	}
 	return n
 }
