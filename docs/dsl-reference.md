@@ -5114,6 +5114,29 @@ The compiler requires announced X in the scope. Other comparisons, static
 filters, disjunctions and combined spell mana value/permanent-target restrictions
 remain unsupported. Detonate and Spell Blast have complete RON gameplay tests.
 
+## RON resolving whole-graveyard exile
+
+`Exile([EachCardInGraveyards(InAPlayersGraveyard(SinglePlayer(ref)))], [])`
+lowers to `mage.ExileGraveyardFor(PlayerRef) ResolvingEffect`. The player can be
+an existing bound target, event, action player, source-controller read or other
+supported singular resolving reference. The adapter checks the lexical scope
+and creates the reference from each factory's own bindings. The graveyard is
+read at resolution, including cards added since announcement. An empty graveyard
+or missing player supplies no cards. A returned card present at resolution can
+join this new selection; a saved old visit cannot substitute for a selected visit.
+
+The engine moves every saved current visit to face-up exile before zone events.
+It sends one graveyard-departure event with the completed count. No card result
+or link is declared. Waiting delayed queries retain explicit source-controller
+reads without moving cards. Copies can retarget independently; clones keep their
+zones and resolution frames separate. Tormod's Crypt includes its sacrificed
+source when it targets its owner's graveyard. See `TestRONGraveyardBatchExile*`
+and `TestGraveyardBatchExile*`.
+
+Multiple graveyard players, characteristic filters, exile modifiers, entry and
+payment contexts, `NumberCardsInGraveyards`, and saved plural sacrifice subjects
+require separate adapters. Existing singular graveyard exile stays supported.
+
 ## RON singular graveyard exile and source-death cards
 
 `Exile([CardInGraveyards(ref)], [])` lowers to

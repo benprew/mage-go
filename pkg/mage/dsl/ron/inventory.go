@@ -641,6 +641,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "graveyard_card_filter":
+		if n.Name == "InAPlayersGraveyard" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "IsCardtype" && len(n.Args) == 1 {
 			return "card_type"
 		}
@@ -842,6 +845,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "card_counter_type"}[index]
 		}
 	case "exile_subject":
+		if n.Name == "EachCardInGraveyards" && len(n.Args) == 1 {
+			return "graveyard_card_filter"
+		}
 		if n.Name == "Spell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}

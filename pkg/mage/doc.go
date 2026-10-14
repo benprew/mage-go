@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExileGraveyardFor] reads one player's current graveyard at resolution.
+// Saved visits cannot follow returned cards. All moves precede zone events.
+// One graveyard departure event supplies the completed batch count. Cards added
+// during event observations cannot join that batch. Existing single-graveyard
+// exile payments use the same movement service. Copies and clones keep their
+// player frames and zones separate. Waiting queries retain explicit source reads
+// without movement. RON accepts EachCardInGraveyards with one InAPlayersGraveyard
+// and SinglePlayer reference in resolving Exile with no modifiers. Saved plural
+// sacrifice results, entry payments and multi-graveyard sets need adapters.
+//
 // [SacrificeAnyNumberAsEnters] offers a bounded permanent choice before entry.
 // The controller can sacrifice only present matching visits they control.
 // Shared replacements and owner ordering precede one simultaneous batch.

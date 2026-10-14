@@ -20522,3 +20522,43 @@ Rules: CR 701.21a restricts sacrifices to the controller and separates them
 from destruction. CR 614.5, 614.12a, 614.13 and 616.1 govern entry replacement
 choices and once-only application. CR 208.2a and 604.3 govern the CDA and zero
 when its number cannot be determined. CR 400.7 gives return a new object.
+
+## Resolving whole-graveyard exile
+
+`ExileGraveyardFor(PlayerRef) ResolvingEffect` resolves the player once, then
+saves every card's exact current graveyard visit. The operation uses the shared
+`exileGraveyardVisitsTogether(playerID, []capturedCard, sourceID)` service.
+Missing, returned, wrong-zone and duplicate visits cannot move. The service
+removes all eligible cards, puts all of them into face-up exile, then sends
+per-card `EvtZoneChange` events and one `EvtCardsLeftGraveyard` event with the
+actual count. Empty batches send no departure events. Zone observations see
+the completed batch; cards added during observations cannot join it. Physical
+ownership and source attribution are retained (CR 400.7, 404, 406.2–3, 603.10).
+The existing single-graveyard exile payment helper uses this same service after
+its existing transaction has checked its locked choices. Its choices, replacement
+policy, costs and rollback contract stay with the payment subsystem.
+
+Selection is at resolution rather than announcement. Thus Tormod's Crypt's paid
+source joins a self-targeted graveyard, and cards that entered or returned before
+resolution qualify as current members. Countering the ability does not refund
+its sacrificed source. Copies use their own player targets without paying again.
+Clones retain separate pending references and zones. This operation is exile,
+not sacrifice or destruction; battlefield regeneration and phasing do not apply
+to graveyard cards. No new replacement ordering or payment producer is declared.
+
+The definition inspector checks the typed player reference and its binding
+producer. The effect declares explicit source reads in that reference to waiting
+delayed queries. Such queries do not read the graveyard or move cards. Source
+controller information uses the existing current/LKI rules for its exact visit;
+a returned source cannot replace that visit. Detection transfers the existing
+saved frame to the pending body.
+
+Evidence: `TestGraveyardBatchExileEvents` checks completed movement, face-up
+visibility, source and owner facts, event attribution, one batch count and a card
+added during observation. `TestGraveyardBatchExileSavedVisits` checks duplicate,
+missing and returned visits plus clone isolation. `TestGraveyardBatchExileDeclaration`
+checks invalid/unbound references and empty/missing players. Existing
+`TestSingleGraveyardExileCost*` checks shared-service payment compatibility.
+`TestRONGraveyardBatchExile*` covers native casting and activation, resolution
+membership, self-target payment, countering, copies, retargeting, rollback,
+phasing, delayed current/LKI reads, fresh factories, inventory and atomic loading.

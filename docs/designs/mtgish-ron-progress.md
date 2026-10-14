@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **881 accepted / 105 rejected names**
-(986 total), **2,250 compiled / 195 rejected records** (2,445 total).
-The latest slice is **VOLUNTARY-ENTRY-SACRIFICE-COUNT**. One source entry
-operation selects voluntary sacrifices and retains the completed count for
-matching dual CDAs. Shared entry replacements and simultaneous sacrifices
-supply choices, exact visits, owner destinations and departure information.
-Wood Elemental now has complete-record native casting, zero-toughness, combat,
-spell-copy, phasing, return, clone and strict-loading evidence. Sword of the Ages
-still needs optional activation payments, saved power and linked graveyard exile.
-Estimated and actual gains are **one unique name / one record**. No RON source
-changed. Every previously accepted record remains accepted; the vocabulary
-loader baseline is refreshed. All required checks pass on the final code.
+Latest measured result (2026-10-14): **882 accepted / 104 rejected names**
+(986 total), **2,251 compiled / 194 rejected records** (2,445 total).
+The latest slice is **RESOLVING-GRAVEYARD-BATCH-EXILE**. One resolving player
+reference selects a current graveyard. Exact visits move to face-up exile before
+zone events, with one completed departure count. The existing single-graveyard
+payment helper uses the same movement service. Tormod's Crypt now has complete
+RON native casting, activation, self-target payment, copy, retargeting, clone,
+rollback and strict-loading evidence. Saved plural sacrifice results and entry
+payment producers remain separate contracts. Estimated and actual gains are
+**one unique name / one record**. No RON source changed. Every previously
+accepted record remains accepted; the vocabulary loader baseline is refreshed.
+All required checks pass on the final code.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,15 +26,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Entry payment/result contracts.** Compare Nameless Race and Frankenstein's
-   Monster. The shared entry replacement process is ready; life bounds and
-   graveyard exile payments need distinct typed results and exact choices.
-2. **Optional plural sacrifice payments.** Reassess Sword of the Ages. Reuse
-   voluntary selection and completed sacrifice batches; add transactional saved
-   subjects, power and graveyard visits before estimating a full-card unlock.
-3. **Conditional protection.** Compare Guardian Beast, Bronze Horse and Wall of
-   Shadows for shared Aura/control and spell/ability target contracts. Do not
-   count first errors as full-card gains.
+1. **Entry payment/result contracts.** Compare bounded entry life payment for
+   Nameless Race with exact graveyard exile payment for Frankenstein's Monster.
+   Shared graveyard movement is ready; mandatory paid counts, failed-entry
+   replacement and chosen counter combinations still need distinct contracts.
+2. **Matching permanent exile payments.** Compare City of Shadows and Soul
+   Exchange. Both use APermanent exile costs; Soul Exchange also needs saved
+   Thrull facts and its returned-permanent result. Prefer a shared transactional
+   producer before a single-card consumer.
+3. **Optional plural sacrifice payments.** Sword of the Ages still needs paid
+   visit sets, saved total power and exact resulting graveyard-card visits. The
+   whole-graveyard resolving adapter does not supply those results.
 
 ## Dependencies and source blockers
 
@@ -9919,3 +9921,183 @@ generators and broad DSL exports are preserved. Their removal gates remain shut.
 Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
 Go-set generation and unused DSL cleanup remain incomplete. Stop after this
 voluntary entry sacrifice result slice.
+
+## 2026-10-14 — RESOLVING-GRAVEYARD-BATCH-EXILE
+
+### Baseline, candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for collection rejection:
+2,250 compiled / 195 rejected records; 881 accepted / 105 rejected names.
+This was a supported-collection gap, not a build or environment failure.
+
+Read the current design, engine reference and latest ledger entry. Evaluated
+ranked candidate 1 first against complete DRK records for Nameless Race and
+Frankenstein's Monster. The entry replacement process is ready, but those cards
+need distinct payment producers; together they are not one small capability.
+Read complete Sword of the Ages, Guardian Beast, Bronze Horse, Wall of Shadows,
+Tormod's Crypt and Night Soil records. Targeted vocabulary reads confirmed
+EachCardInGraveyards has two occurrences, NumberCardsInGraveyards has one,
+and the entry life and combination-counter forms are separate. Reprints count
+once in these estimates.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and concrete downstream benefit | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Entry payment/results, ranked first | Nameless Race; Frankenstein's Monster | 1 from life payment plus its retained P/T result; 0 from exile movement alone | Nameless Race needs bounded life payment and a saved layer value. Frankenstein's Monster needs mandatory X creature-card exile, paid count, failed-entry replacement and chosen counter combinations. Shared entry ordering is ready, but these are different producers. | Medium for life; large for the complete mandatory exile/counter procedure |
+| Optional plural sacrifice payment | Sword of the Ages | 0 from a selected-subject prerequisite; 1 only after all consumers | Needs transactional paid visit sets, historical total power and the exact graveyard-card results for exile. Entry sacrifice count does not provide activation payments. | Large: payment and at least two result consumers |
+| Resolving whole-graveyard exile, selected | Tormod's Crypt; Night Soil retains shared payment movement; Frankenstein's Monster and Sword of the Ages are downstream users of exact-visit movement | 1 name / 1 record | Tormod's Crypt's other declarations already lower. Visit-aware batching is reusable by future graveyard payments and result-bound exile. No new payment/result scope is claimed for either downstream card. | Small: one adapter, one typed effect, shared movement and event/identity/copy tests |
+
+The ledger's conditional-protection candidates were also screened from complete
+records. Guardian Beast still needs conditional collection rule declarations,
+Aura attachment behavior and control restrictions. Bronze Horse needs targeting
+spell damage-source information; Wall of Shadows needs both spell and ability
+CanTargetOnly declaration contracts. They cannot be counted as three unlocks
+from one filter adapter. Defer these medium/large distinct contracts.
+
+Selected the shared graveyard movement prerequisite within the entry-payment
+work, with an immediate Tormod's Crypt unlock. It has a smaller complete contract
+than the payment candidates and shares actual production movement with Night
+Soil rather than adding a second zone path. The engine skill was applied only
+to reusable mechanics and tests; no Go card definitions were read as requirements
+or changed. No sub-agents were used.
+
+Before editing, stated the exact supported syntax, engine/compiler boundary and
+acceptance cases: either player, the paid source in a self-targeted graveyard,
+current resolution membership, rollback, copies, clones, complete event batches,
+invalid forms and atomic collection loading.
+
+### Supported contract and reuse boundary
+
+- RON accepts `Exile([EachCardInGraveyards(InAPlayersGraveyard(SinglePlayer(ref)))], [])`
+  in resolving action bodies. `ref` uses existing singular resolving player
+  references with their lexical target/event/action/source scopes. No new binding
+  producer is introduced. Factories create references from their own instance
+  bindings. Ordinary and delayed action bodies share this adapter.
+- Multiple graveyard players, characteristic selection filters, modifiers,
+  `NumberCardsInGraveyards`, entry operations, activation/resolution costs and
+  `ThePermanentsSacrificedThisWay` remain rejected by their respective contexts.
+  Sword of the Ages must not exile a whole graveyard in place of its paid cards.
+- Public engine signature: `ExileGraveyardFor(PlayerRef) ResolvingEffect`.
+  It resolves its player once, selects current graveyard cards and saves visits.
+  Private shared signature:
+  `(*Game).exileGraveyardVisitsTogether(uuid.UUID, []capturedCard, uuid.UUID)`.
+  The holder, saved visits and attributing source are separate operands.
+- All eligible saved visits leave before exile insertion, and all exile insertions
+  precede zone events. Missing, returned, wrong-zone and duplicate visits cannot
+  move. One `EvtCardsLeftGraveyard` reports the completed count; empty batches
+  send no departure events. Cards added by event observers cannot join the batch.
+  Cards are face up and keep ownership and source attribution.
+- Existing `exileGraveyardCardsTogether` captures current visits and delegates
+  to this service. Existing transaction choices, locks and rollback stay in the
+  cost subsystem. `MoveCardsFromGraveyard` and singular exile callers keep their
+  existing contracts. No payment result or linked exile declaration is added.
+- Explicit source reads in the typed player supply waiting delayed references.
+  Queries do not read graveyards or move cards. Existing current/LKI controller
+  reads keep exact source visits after phasing or departure. Return cannot
+  replace the saved source. Copies and clones use existing frames and zone state.
+- RON owns grammar, declaration checks and lexical binding; mage owns saved
+  visits, zone movement, event timing, ownership, delayed reads and clone state.
+  Reused definition inspection, player references, graveyard visits, ExileCard,
+  zone events, payment transactions and source-information services. No global
+  last-action slot, card-name branch, fallback or partial production registry.
+
+CR 400.7, 404, 406.2–3 and 603.10 supply the identity, visibility and observation
+contracts. Exile is neither destruction nor sacrifice. Graveyard cards do not
+use battlefield phasing or regeneration. No new replacement-order policy is
+added beyond the existing graveyard-exile service. No source-data defect was
+found; no RON records or vocabulary source hashes changed.
+
+### Failing-first evidence and card-to-test mappings
+
+Initial engine tests failed on absent `ExileGraveyardFor` and
+`exileGraveyardVisitsTogether` signatures. Corrected an initially assumed opponent
+reference to the existing typed player API and reconfirmed only the expected
+signature failures. Initial RON gameplay and strict subset loading failed on
+`unsupported exile subject (EachCardInGraveyards)`. An unused test import was
+removed before confirming that expected RON failure. The inventory test then
+caught the missing child role for InAPlayersGraveyard; the role adapter fixes it.
+Corrected one extra parenthesis in the synthetic delayed fixture. No gameplay
+assertion was weakened.
+
+- **Tormod's Crypt (DRK) → `TestRONGraveyardBatchExileReal`**: full record,
+  native zero-mana casting and entry, tap/sacrifice activation, either player's
+  graveyard, source included by self-targeting, cards added or returned before
+  resolution, unchanged-target copies, countering without a source refund,
+  and cloned pending bodies.
+- **Tormod's Crypt → `TestRONGraveyardBatchExileRetargetedCopy`**: independent
+  player targets, copied ability controlled by the other player, no repeat cost,
+  and original target isolation.
+- **Tormod's Crypt → `TestRONGraveyardBatchExileRollback`**: missing target,
+  tapped or phased source cannot pay or create a stack object.
+- **Tormod's Crypt → `TestRONGraveyardBatchExileLoadAndInventory`**: complete
+  record strict subset loading, fresh declarations, atomic rejection of a bad
+  collection, accepted-registry preservation and typed inventory roles.
+- `TestRONGraveyardBatchExileDelayedSource`: synthetic full RON action,
+  delayed current controller, phased information, returned-source LKI,
+  pure waiting queries, clone execution and one-shot lifetime.
+- `TestRONGraveyardBatchExileInvalid` / `UnsupportedContexts`: wrong arities,
+  callable/unbound references, incompatible collections, modifiers and costs.
+- `TestGraveyardBatchExileEvents`: all destinations visible to each zone
+  observation, two per-card events, one actual-count batch event, face-up exile,
+  source/owner/player attribution and exclusion of a later added card.
+- `TestGraveyardBatchExileSavedVisits`: missing, duplicate and returned visits
+  cannot move; clones keep independent graveyards and saved identities.
+- `TestGraveyardBatchExileDeclaration`: nil/unbound declaration rejection and
+  empty/missing resolving player behavior.
+- **Night Soil (FEM) → existing `TestSingleGraveyardExileCost*` and
+  `TestRONSingleGraveyardExileCost*`**: the reused helper retains its existing choices,
+  full-payment rollback, exact visits, simultaneous events and clone contracts.
+  This slice adds no new full-card coverage claim for Night Soil.
+
+### Validation and measured outcome
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONGraveyardBatchExile -count=1`
+and `go test ./pkg/mage -run 'TestGraveyardBatchExile|TestSingleGraveyardExileCost'
+-count=1` passed. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1` and `make test` passed. The engine
+skill's additional `go test ./... -short -count=1` passed. Initial `make lint`
+reported one prealloc issue in the four-visit fixture. Building that fixture
+with all four entries fixes it. Reviewed automatic import grouping in the two
+new test files. Final `make lint` passed with **0 issues**. After lint, reran
+focused RON tests, `make build`, `go vet ./...`, the engine short suite and
+`make test`; all passed. Final `git diff --check` passed. No environment,
+build, test or lint blocker remains.
+
+Final required `go run ./cmd/loadcards -json` exited **1**, as expected:
+**2,251 compiled / 194 rejected records**, **882 accepted / 104 rejected names**.
+Only Tormod's Crypt DRK 107 was removed from the rejected diagnostics. Every
+remaining diagnostic is identical to the fresh baseline, and every previously
+accepted record remains accepted. Estimated and actual compilation gains match:
+**one unique name / one record**. Complete-record RON gameplay coverage gains
+Tormod's Crypt; no new coverage is claimed for the downstream payment cards.
+Four collection-count assertions now use 2,251/194. The vocabulary loader
+baseline matches the final report, and all twelve RON file hashes remain
+unchanged. Atomic rejection of the incomplete collection remains.
+
+Changed files: new mage `graveyard_batch_exile.go` / `_test.go`; existing
+`single_graveyard_exile_cost.go`; new ron `graveyard_batch_exile.go` / `_test.go`;
+ron `permanent_exile.go`, `inventory.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, vocabulary loader
+baseline and this ledger. Go card definitions, startup wiring, generators and
+broad DSL exports remain at their gated stage. No unused DSL removal was
+attempted, so no caller was removed or changed outside this slice.
+
+### Ranked next candidates
+
+1. **Entry payment/result contracts.** Reassess Nameless Race and Frankenstein's
+   Monster. Entry ordering and graveyard movement are ready. Bounded life payment,
+   mandatory creature-card X exile, failed-entry replacement and counter
+   combinations still require separate contracts. Select one shared prerequisite.
+2. **Matching permanent exile payments.** City of Shadows and Soul Exchange both
+   need APermanent exile costs. The latter also needs saved Thrull facts and a
+   returned-permanent result. Compare transactional producer value before
+   implementing a single-card consumer.
+3. **Optional plural sacrifice payments.** Sword of the Ages needs paid visits,
+   historical total power and exact resulting graveyard cards. Do not use the
+   whole-graveyard adapter as its result-bound exile instruction.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation and unused DSL cleanup remain incomplete. Stop after this
+resolving graveyard batch exile slice.
