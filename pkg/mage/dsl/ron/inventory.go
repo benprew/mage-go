@@ -817,6 +817,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_filter"
 		}
 	case "token_instruction", "token_definition":
+		if n.Name == "TokenCopyOfPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "token_copy_modification"}[index]
+		}
 		if n.Name == "NumberTokens" && len(n.Args) == 2 {
 			return []string{"value", "token_definition"}[index]
 		}

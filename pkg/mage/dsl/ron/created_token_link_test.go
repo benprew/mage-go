@@ -118,7 +118,10 @@ func TestRONCreatedTokenLinkInvalid(t *testing.T) {
 			t.Fatalf("accepted %s", rules)
 		}
 	}
-	for _, tc := range []struct{ set, name string }{{"DRK", "Dance of Many"}, {"ATQ", "Tetravus"}} {
+	if card := repositoryCard(t, "DRK", "Dance of Many"); mage.ValidateCardDefinition(card.Name(), card) != nil {
+		t.Fatal("complete token-copy consumer rejected")
+	}
+	for _, tc := range []struct{ set, name string }{{"ATQ", "Tetravus"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

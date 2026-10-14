@@ -6,17 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **904 accepted / 82 rejected names**
-(986 total), **2,283 compiled / 162 rejected records** (2,445 total).
-The latest slice is **LINKED-CREATED-TOKEN-LEAVE-EVENTS**.
-Ordinary battlefield triggers can detect `TheCreatedTokens` departures by exact
-producer declaration and source visit. Shared snapshots retain departed members;
-simultaneous moves use the former battlefield. Return, phasing, ability removal,
-trigger copies and game clones preserve the stated identity and timing contracts.
-This supplies Dance of Many's persistent event prerequisite, with **zero new
-full-card unlocks**, as estimated. Its token-copy producer remains unsupported.
-Stangg's lexical delayed events and Tetravus's linked payments remain separate.
-All required checks pass; loader counts and diagnostics are unchanged.
+Latest measured result (2026-10-14): **905 accepted / 81 rejected names**
+(986 total), **2,284 compiled / 161 rejected records** (2,445 total).
+The latest slice is **RESOLVING-PERMANENT-TOKEN-COPIES**.
+Resolving `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` uses exact present
+subjects, fresh copiable rules and shared linked token entry batches.
+Copy exceptions, acquired entry rules, phasing, return, copies and clones retain
+the stated identity and timing contracts. Complete Dance of Many now compiles
+and has gameplay evidence for all four rules and their linked lifecycle.
+Actual gain is **one name / one record**, as estimated. Air Elemental supplies
+the real copied creature. Stangg and Tetravus remain unsupported.
+All required checks pass. Every remaining loader diagnostic is unchanged.
 No RON source or vocabulary baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -26,16 +26,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Token copying:** evaluate Dance of Many's
-   `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` with existing persistent links
-   and the new linked leave event. Estimated one-name/one-record unlock; compare
-   fresh shared multi-card work before selecting this single-card capability.
-2. **Lexical created-token results and delayed leave events:** Stangg. Reuse exact
-   departure reading and delayed frames. Legendary token syntax remains another
-   blocker; events alone give no full-card unlock.
-3. **Linked optional exile payment/count:** Tetravus. Reuse the persistent
-   collection and payment transactions; token `CantBeEnchanted` remains unsupported.
-   Compare multi-card payment alternatives before selecting this chain.
+1. **Shared source-bound control durations:** compare a bounded prerequisite
+   for Old Man of the Sea, Seasinger and The Wretched. Dynamic predicates,
+   duration composition and plural control still block complete records.
+2. **Shared redirection event/recipient prerequisites:** compare Personal
+   Incarnation, Eye for an Eye, Blood of the Martyr and Reverberation. Keep
+   bounded amounts, continued-damage results and optional choices separate.
+3. **Lexical created-token results and delayed leave events:** Stangg. Reuse
+   exact departure reading and delayed frames; legendary token syntax remains
+   another blocker. Tetravus still needs its token rule and linked exile payment.
 
 ## Dependencies and source blockers
 
@@ -15666,3 +15665,198 @@ RON `created_token_leave_test.go`, `triggers.go` and shared Hive test helper in
 `created_token_link_test.go`; `pkg/mage/doc.go`, API/rules-contract docs and this
 ledger. Commit title: `feat(ron): implement linked created-token leave events`.
 This run stops after LINKED-CREATED-TOKEN-LEAVE-EVENTS.
+
+## 2026-10-14 — RESOLVING-PERMANENT-TOKEN-COPIES
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, with
+2,283 compiled / 162 rejected records and 904 accepted / 82 rejected names.
+This was expected unsupported syntax, not a build or test failure.
+
+The latest ranked candidate was evaluated first. Complete records and nested
+forms were read for Dance of Many, Old Man of the Sea, Seasinger, The Wretched,
+Eye for an Eye, Personal Incarnation, Blood of the Martyr and Reverberation.
+Reprint identity was checked: Eye for an Eye has two identical records and
+Personal Incarnation has six; the other compared cards have one each.
+The complete Stangg and Tetravus records were also inspected for remaining
+producer/result blockers. Targeted vocabulary entries confirmed that
+`TokenCopyOfPermanent/2` and `NoTokenCopyEffects` each occur once, in Dance of Many.
+Reprints count once in estimates below.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream capabilities | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Resolving unmodified token copy | Dance of Many | 1 name / 1 record | No remaining adapter blocker: persistent links, linked leave events, source-leave exile, optional upkeep payment, typed targets and copy provenance exist. Reuses independent rule construction and shared entry; supports later token-copy modifications/results | Medium, bounded: one resolving operation plus linked variant, strict lowering, entry/identity/copy/clone tests and complete real-card lifecycle |
+| Shared source-bound control durations | Old Man of the Sea, Seasinger, The Wretched | 0 for one basic duration prerequisite; three cards only after their remaining contracts | Old Man needs a dynamic power comparison plus target-power expiry; Seasinger needs a controller `ControlsA` predicate and combined control-change/tapped duration; The Wretched needs plural gain-control and source control-change expiry. Shared duration services could serve all three, but no one simple adapter completes them | Large for the full family; several separate engine/adapter contracts with layer timing, condition rechecks, source/subject visits and plural membership |
+| Shared future/temporary redirection forms | Eye for an Eye, Personal Incarnation, Blood of the Martyr, Reverberation | 0 for a common event prerequisite; four cards only after distinct operations | Personal Incarnation requires bounded next damage to a permanent and owner redirection; Eye needs continued damage plus a saved source-controller/amount result; Blood needs optional recipient-wide choices; Reverberation needs a retained sorcery source. Existing redirection services do not establish all these shapes | Large for the full family; several events, recipients, result scopes and optional choices, each with replacement ordering/rechecks |
+
+Selected the dependency-ready first candidate. The compared multi-card families
+have concrete downstream value but their full contracts exceed one bounded slice;
+no dependency-ready simple adapter in those families yields a complete card.
+Dance of Many has a credible immediate gain with no data correction or fallback.
+The reuse boundary is copiable snapshots, independent definition builders, exact
+references, shared token batch entry and persistent links. RON retains spelling,
+arity, reference scope and positioned diagnostics. The engine retains mechanics.
+
+Before edits, acceptance cases were declared: strict no-modification syntax,
+bound singular subjects, no old-visit substitution, phasing, fresh acquired entry
+rules, linked source departure/return, copied triggers and independent clones,
+invalid declarations, and all four complete Dance of Many rules. No other slice
+was started.
+
+### Established signatures, contexts and dependencies
+
+Added native APIs:
+
+- `CreateTokenCopiesOfPermanent(player PlayerRef, count ResolutionValue, subject PermanentRef) ResolvingEffect`.
+- `CreateTokenCopiesOfPermanentLinked(player PlayerRef, count ResolutionValue, subject PermanentRef, link *CreatedTokenLink) ResolvingEffect`.
+
+The action reads the creator and count, resolves an exact present unphased
+subject, captures immutable copiable values, then builds all independent token
+cards before the existing simultaneous entry batch. Nil operands and invalid
+required links fail definition validation. Missing creators, unavailable subjects
+and nonpositive counts create nothing. Unknown provenance returns an error;
+builder errors cannot install a partial batch. Counters, ordinary layers, owner,
+controller, tapped/face-down status, saved targets and entry choices do not
+transfer. Mana costs and previously established copy exceptions do transfer.
+Standard face-down copying produces face-up nameless colorless 2/2 tokens.
+Acquired entry rules run before observation and make new choices.
+
+The linked variant saves the maker's exact information identity, including after
+source departure. Return cannot replace the maker visit or copied subject visit.
+Every accepted token has its link before entry observations. Copies retain the
+maker visit and use their resolving controller. Clones retain separate token
+state. Waiting queries declare source reads without building or creating tokens.
+
+RON accepts one resolving
+`CreateTokens([TokenCopyOfPermanent(ref, NoTokenCopyEffects)], [])`, including
+the existing `NumberTokens(value, token)` wrapper and player scopes.
+The reference uses the shared typed permanent compiler and per-instance bindings.
+`NoTokenCopyEffects` is a strict symbol. Other copy modifications, creation
+modifiers, unbound references, wrong arity, static/cost/entry operations and
+lexical result consumers remain rejected. Inventory descends into the reference
+and modification roles without claiming gameplay support.
+
+Reused `CaptureCopiableValues`, `CopiableValues.Build`, `CardDefinitionPlan`,
+shared entry replacement ordering and simultaneous observations,
+`putTokensOnBattlefieldTogetherWithLink`, `CreatedTokenLink`, exact references,
+source information/LKI, validation, APNAP triggers, payment rollback, stack
+copies, game clones and delayed source-read analysis. No new mutable game state,
+last-action slot, payment service, copy layer or production registry was added.
+Existing Go callers and card definitions are retained. Removal gates remain shut.
+
+CR 111.2–5, 400.7, 603.3/603.6, 607.1/607.2c, 707.2–7 and 708.2a supply creator
+ownership, identity, linked abilities, copiable values, entry rules and face-down
+contracts. Local authoritative Oracle text in `data/DRK.json` confirms Dance of
+Many's complete rules. No source defect was found or corrected. RON source and
+vocabulary source snapshot remain unchanged. API/rules docs describe only this
+established operation and its existing dependency boundaries.
+
+### Failing-first evidence and gameplay mappings
+
+New native tests first failed compilation for the missing copy APIs. Test setup
+was corrected to use existing `GainLifeFor` and `AbilityID` APIs before confirming
+the intended missing-signature failure. New RON tests failed with
+`unsupported creature token definition (TokenCopyOfPermanent)` for the complete
+real Dance of Many record and the supported-shape spell fixture.
+No gameplay assertion was weakened or removed.
+
+Native `TestTokenCopyPermanent*` mappings:
+
+- `Batch`: simultaneous linked entry, acquired tapped/counter entry rules,
+  independent abilities, saved copy provenance, departed maker creation,
+  old/new source groups and clone isolation.
+- `Identity`: present, phased, departed and returned subjects; face-down copying;
+  zero/negative counts; explicit untracked-provenance errors.
+- `Invalid`: nil player/count/subject and nil/zero required link declarations.
+- `ExceptionsAndEntry`: retained copy-added artifact type, exclusion of ordinary
+  P/T modifications and extra counters, copied characteristics before replacement
+  observations, and prohibited land-token entry.
+- `BuildFailure`: a later definition build failure installs no partial batch.
+- `Waiting`: repeated pure source queries and delayed resolution across source
+  return and independent game clones.
+
+RON `TestRONTokenCopyPermanent*` mappings:
+
+- `Dance`: complete real paid casting and failed-cast rollback, copied Air
+  Elemental name/P/T/flying/mana cost, source leave exile, token leave sacrifice,
+  changed token control, token phasing, paid and unpaid controller upkeep.
+- `Pending`: complete real entry trigger, copied trigger with separate creator,
+  target return/phasing and all-illegal resolution, maker return before queued
+  creation, old/new maker group cleanup, and independent cloned resolution.
+- `Invalid`: malformed modifiers and arity, unsupported modifications, unbound
+  target/source/collection references, and accepted resolving spell context.
+- `Inventory`: complete real compilation/validation and typed descendant roles
+  that still report unverified gameplay in the inventory schema.
+
+| Unique real card | Complete record scope | Evidence and limits |
+| --- | --- | --- |
+| Dance of Many | DRK.lines.ron:22, one full record | Newly accepted; `Dance` and `Pending` cover all four rules and their linked lifecycle, with separate copy/return/clone cases |
+| Air Elemental | Six complete identical reprints; LEB used at runtime | Real copied creature supplies flying, P/T and mana cost; this extends copy-consumer evidence for an already accepted card |
+| Stangg | LEG.lines.ron:247, full record | Retained collection rejection; legendary token declaration and lexical result/delayed events remain blockers |
+| Tetravus | ATQ.lines.ron:70, full record | Retained collection rejection; token rule and optional linked exile payment/count remain blockers |
+
+Exact accepted-record and upkeep-text inventory assertions now include Dance of
+Many: 2,284/161 records and 66 names/133 upkeep records. Prior negative Dance of
+Many checks now assert complete definition validation; Stangg/Tetravus still
+prove atomic collection rejection. The unsupported token-copy boundary continues
+to reject `CopyEffects([])`. These updates track changed support without reducing
+engine or gameplay assertions.
+
+### Validation and measured gain
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTokenCopyPermanent' -count=1`.
+- `go test ./pkg/mage -run '^TestTokenCopyPermanent' -count=1`.
+- `make build` and `go vet ./...`: passed with no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed across the whole repository.
+- `go test ./... -short -count=1`: passed, as required by implement-engine.
+- `make lint`: passed, 0 issues. Automatic changes only separated third-party
+  and project imports in the two new test files. No semantic or unrelated change.
+- After formatting, native focused tests, the entire RON package, `make build`
+  and `git diff --check` passed. Final doc/ledger edits also passed diff checks.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for atomic unsupported
+  collection rejection, 2,284 compiled / 161 rejected records, 905 accepted /
+  81 rejected names. Parsed JSON matches baseline after removal of exactly the
+  one Dance of Many diagnostic; all remaining diagnostic objects are identical.
+  Stangg still rejects token supertypes; Tetravus still rejects token
+  `PermanentRuleEffect`. No accepted record regressed.
+
+Actual gain equals the estimate: one newly accepted name, one newly compiled
+record and one newly complete gameplay mapping, Dance of Many. Existing Air
+Elemental copy-consumer coverage is additional evidence, not another unlock.
+Environment failures: none. Source defects: none. No RON source changed, so no
+vocabulary refresh was required. Compilation and the listed gameplay contracts
+are measured separately. Runtime cutover, Go-card deletion and unused DSL cleanup
+remain gated by the other 81 unsupported names and complete native startup.
+
+### Ranked next candidates
+
+1. Evaluate shared source-bound control duration prerequisites for Old Man of
+   the Sea, Seasinger and The Wretched. A bounded source-visit duration service
+   could unblock all three downstream chains even with zero immediate full-card
+   gain. Recheck current dynamic power/controller predicates and membership needs;
+   do not combine all missing contracts into one partial slice.
+2. Evaluate a shared redirection event/recipient prerequisite across Personal
+   Incarnation, Eye for an Eye, Blood of the Martyr and Reverberation. Compare
+   source identities and permanent/player recipients against the existing shared
+   pipeline. Bounded damage and saved continued-damage facts remain distinct.
+3. Stangg lexical created-token result and delayed departure event support.
+   Reuse exact departure snapshots, saved permanent sets and delayed frames.
+   Legendary token syntax remains a blocker. Tetravus's token rule and optional
+   linked exile/count remain another single-card chain; compare shared work first.
+
+Changed files: new `pkg/mage/token_copy_permanent.go`, its native test and
+`pkg/mage/dsl/ron/token_copy_permanent_test.go`; RON `token_creation.go` and
+`inventory.go`; retained boundary/atomic tests in `token_creation_test.go`,
+`created_token_link_test.go` and `created_token_leave_test.go`; exact inventory
+assertions in `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`, `text_upkeep_layer_test.go` and
+`text_upkeep_trigger_test.go`; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement resolving permanent token copies`.
+This run stops after RESOLVING-PERMANENT-TOKEN-COPIES.

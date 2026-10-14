@@ -21938,12 +21938,13 @@ scalar token history remain in the existing per-permanent game state.
 RON lowers only ordinary battlefield
 `TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens), body)`, with one
 permanent-source producer and a strict symbol. It creates no event binding.
-Lexical `TheTokensCreatedThisWay` delayed events, token-copy producers and linked
-optional exile payments remain unsupported. CR 400.7, 603.3b, 603.6c, 603.10a,
+Lexical `TheTokensCreatedThisWay` delayed events and linked optional exile
+payments remain unsupported. Unmodified token copying uses the operation below.
+CR 400.7, 603.3b, 603.6c, 603.10a,
 607.1/607.2c and 702.26b/d establish identity, placement, look-back, linkage and
 phasing. Local `data/DRK.json` and `data/LEG.json` establish Dance of Many and
-Stangg's requirements; their complete RON records remain rejected without any
-instruction removal or source repair.
+Stangg's requirements. Dance of Many now has the complete copy mapping below;
+Stangg remains rejected without instruction removal or source repair.
 
 Evidence: native `TestCreatedTokenLeaveLifecycle` covers declaration/source
 isolation, token control, simultaneous departures, pending clone resolution,
@@ -21956,5 +21957,66 @@ synthetic linked sacrifice rule, paid activation, two factory instances, changed
 token control, trigger copying and clone resolution. `SourceReturns` covers phasing and
 a returned source before queued sacrifice resolves. `Invalid` rejects malformed
 subjects, missing/ambiguous producers and out-of-scope reads. `CollectionAtomic`
-checks all complete blocked Dance of Many, Stangg and Tetravus records and proves
-the prior registry survives failed loading. No new full-card coverage is claimed.
+now checks complete Dance of Many validation and blocked Stangg/Tetravus records;
+the prior registry survives failed loading. The complete Dance of Many gameplay
+mapping is supplied by the token-copy tests below.
+
+## Resolving permanent token copies
+
+`CreateTokenCopiesOfPermanent(player PlayerRef, count ResolutionValue,
+subject PermanentRef) ResolvingEffect` reads an exact present unphased subject
+at resolution. `CreateTokenCopiesOfPermanentLinked(player PlayerRef,
+count ResolutionValue, subject PermanentRef, link *CreatedTokenLink)
+ResolvingEffect` also retains the producing source's exact information identity.
+This identity can come from retained departure facts. The copied subject must
+still be present: LKI cannot replace it. Return creates a different subject or
+maker visit (CR 400.7). Nil operands and nil/zero required links fail definition
+validation. No choices, captures or construction occur during waiting queries.
+
+The action reads count and creator, captures immutable `CopiableValues`, and
+builds all token cards before any entry. Failed capture or construction returns
+an error with no partial token batch. Missing creators, missing/phased subjects
+and nonpositive counts create nothing. Unknown copy provenance is an explicit
+error under the existing snapshot contract. The supported source representation
+is a validated permanent definition or standard face-down permanent; this does
+not add live legacy copy layers, double-faced objects or copy exceptions.
+
+`CopiableValues.Build` supplies fresh declarations and retains established copy
+exceptions, including mana cost, types and independent rules (CR 707.2–3).
+Tokens receive new identities, token status and the creator's ownership/control
+(CR 111.2–4). Ordinary layers, counters, attachments, saved targets and entry
+choices do not transfer. Standard face-down subjects supply face-up nameless
+colorless 2/2 tokens (CR 707.2, 707.6, 708.2a). Changes to the donor after capture
+cannot change the batch. Fresh acquired entry rules run through the shared
+replacement service before observation (CR 707.5–6, 614.12). Entry prohibitions
+prevent creation (CR 111.5). All accepted entrants are registered before entry
+events. Each has its persistent maker link before observations. Copies keep the
+original maker visit but use their own resolving controller; clones keep separate
+permanent and resolution state. Payment, APNAP and departure matching reuse
+existing services without new state slots.
+
+RON accepts one resolving `TokenCopyOfPermanent(ref, NoTokenCopyEffects)`
+instruction, optionally wrapped in `NumberTokens`, under existing player scopes.
+The no-modification argument is a strict symbol. Invalid arity, unsupported
+modifications and unbound references reject before gameplay. Complete Dance of
+Many now compiles. Its local Oracle text in `data/DRK.json` confirms all four
+rules; no source correction was needed. Lexical creation results and modified
+token-copy syntax remain unsupported.
+
+Evidence: native `TestTokenCopyPermanentBatch` covers simultaneous linked entry,
+entry counters/tapped status, fresh ability identities, copy provenance, source
+LKI/return and clone isolation. `Identity` covers absent/phased/returned subjects,
+face-down copying, nonpositive counts and unknown provenance. `Invalid` covers
+missing operands and invalid links. `ExceptionsAndEntry` covers copy-added types,
+ordinary P/T changes, replacement observations and prohibited land-token entry.
+`BuildFailure` proves no partial construction batch. `Waiting` covers pure source
+queries and delayed resolution across return and cloned games.
+
+RON `TestRONTokenCopyPermanentDance` uses complete Dance of Many and Air Elemental
+records for casting rollback, copied characteristics, source/token departures,
+changed token control, phasing and paid/unpaid upkeep. `Pending` covers all-illegal
+returned/phased targets, copies with separate controllers, old/new maker groups
+and clone resolution. `Invalid` covers declaration rejection and a resolving
+spell context. `Inventory` verifies descendant roles. Existing accepted-collection
+reconstruction and upkeep text revision inventories now include Dance of Many.
+Compilation acceptance and these gameplay mappings are distinct evidence.

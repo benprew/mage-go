@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CreateTokenCopiesOfPermanent] reads one present subject's copiable values.
+// [CreateTokenCopiesOfPermanentLinked] also saves the maker's exact visit.
+// Fresh token rules precede shared batch entry, replacements and observations.
+// Copy exceptions and mana costs remain. Counters, ordinary layers, ownership,
+// targets and entry choices do not transfer. Entry rules choose again.
+// Zero counts, absent players and absent or phased subjects create nothing.
+// Return cannot supply an old subject. Builder errors install no partial batch.
+// Source departure keeps the maker link. Source return starts a separate group.
+// Copies use their resolving controller. Clones keep separate token state.
+// Waiting queries report source reads without building or creating tokens.
+// RON accepts resolving TokenCopyOfPermanent(ref, NoTokenCopyEffects), with
+// the existing NumberTokens wrapper and player scopes. This completes Dance
+// of Many. Copy modifications and lexical creation results need separate adapters.
+//
 // [CreatedTokenLeaves] matches one linked token's exact departure visit.
 // Shared departure snapshots retain the link after the token leaves.
 // Simultaneous moves read the former battlefield. Each member triggers once.
@@ -8,7 +22,7 @@
 // their source visit and controller through copies and separate game clones.
 // RON accepts TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens),
 // body) for one permanent-source producer. This event supplies no new binding.
-// Lexical delayed token events and token copying need separate adapters.
+// Lexical delayed token events need separate adapters.
 //
 // [CreatedTokenLink] separates one token producer from other producers.
 // [CreateTokenCopiesLinked] saves the declaration and source visit on accepted
@@ -20,8 +34,8 @@
 // source reads without creating tokens or selecting members.
 // RON accepts one permanent-source CreateTokens producer and TheCreatedTokens
 // in later resolving collections. Ambiguous producers and spell sources reject.
-// This supplies a shared prerequisite for Dance of Many and Tetravus. Token
-// copies and linked exile payments need separate adapters.
+// This supplies the links for Dance of Many and a Tetravus prerequisite.
+// Linked exile payments need separate adapters.
 //
 // [CanTargetOnlySubtypeFilter] reads every applicable target declaration.
 // [TargetSourceCanTargetOnlySubtype] requires a nonempty complete list and

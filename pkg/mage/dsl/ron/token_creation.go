@@ -38,6 +38,25 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		}
 		tokenNode = tokenNode.Args[1]
 	}
+	if tokenNode.Name == "TokenCopyOfPermanent" {
+		if err := arity(tokenNode, 2); err != nil {
+			return nil, err
+		}
+		modifier := tokenNode.Args[1]
+		if modifier.Kind != Symbol || modifier.Name != "NoTokenCopyEffects" {
+			return nil, unsupported(modifier, "token copy modifications")
+		}
+		subject, err := compilePermanentRef(tokenNode.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			if ctx.createdTokenLink != nil {
+				return mage.CreateTokenCopiesOfPermanentLinked(ctx.player.build(bindings), count(bindings), subject.build(bindings), ctx.createdTokenLink)
+			}
+			return mage.CreateTokenCopiesOfPermanent(ctx.player.build(bindings), count(bindings), subject.build(bindings))
+		}, nil
+	}
 	token, err := compileCreatureToken(tokenNode)
 	if err != nil {
 		return nil, err

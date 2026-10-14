@@ -370,7 +370,7 @@ func TestRONTokenCreationDeclarationBoundaries(t *testing.T) {
 	for _, rule := range []string{
 		`Activated(` + action + `, ActionList([GainLife(Integer(1))]))`,
 		`PermanentLayerEffect(ThisPermanent, [` + action + `])`,
-		`Activated(PayMana([]), ActionList([CreateTokens([TokenCopyOfPermanent(ThisPermanent, NoTokenCopyEffects)], [])]))`,
+		`Activated(PayMana([]), ActionList([CreateTokens([TokenCopyOfPermanent(ThisPermanent, CopyEffects([]))], [])]))`,
 		`Activated(PayMana([]), ActionList([CreateTokens([TokenWithPT(PT(1,1),Colorless,[],[Creature],SubtypesList([]),[])], [])]))`,
 		`Activated(PayMana([]), ActionList([CreateTokens([TokenWithPT(PT(1,1),Colorless,[],[Creature],SubtypesList([Saproling]),[Flying(1)])], [])]))`,
 	} {

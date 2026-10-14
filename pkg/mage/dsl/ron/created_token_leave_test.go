@@ -105,7 +105,10 @@ func TestRONCreatedTokenLeaveSourceReturns(t *testing.T) {
 
 func TestRONCreatedTokenLeaveCollectionAtomic(t *testing.T) {
 	registry := linkedHiveRegistryWithRules(t, `,TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens),ActionList([SacrificePermanent(ThisPermanent)]))`)
-	for _, tc := range []struct{ set, name string }{{"DRK", "Dance of Many"}, {"LEG", "Stangg"}, {"ATQ", "Tetravus"}} {
+	if card := repositoryCard(t, "DRK", "Dance of Many"); mage.ValidateCardDefinition(card.Name(), card) != nil {
+		t.Fatal("complete token-copy consumer rejected")
+	}
+	for _, tc := range []struct{ set, name string }{{"LEG", "Stangg"}, {"ATQ", "Tetravus"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

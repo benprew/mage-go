@@ -16495,7 +16495,8 @@ RON associates one permanent-source `CreateTokens/2` occurrence with symbol
 `TheCreatedTokens` across that source's rules. The symbol is supported in resolving
 contextual permanent collections, including `Exile([EachPermanent(TheCreatedTokens)],
 [])`. This requires one unambiguous producer and existing supported token syntax;
-it does not accept token copying or optional linked exile payment. Token ability
+it accepts the unmodified token-copy producer described below. Optional linked
+exile payment remains unsupported. Token ability
 bodies have a separate scope. Spell sources, missing
 or multiple producers, tuple spelling, static and entry collections reject.
 Existing `CreatedTokensBinding` remains a lexical result with dominance checks.
@@ -16506,7 +16507,8 @@ Tests: native `TestCreatedTokenLink{Lifecycle,Invalid,EntryProhibition,Waiting}`
 and RON `TestRONCreatedTokenLink{Gameplay,DepartedCreation,Invalid}`. The RON gameplay fixture uses
 The Hive's unchanged complete record plus a synthetic source-leave consumer;
 this is producer integration evidence, not full coverage of Dance of Many or
-Tetravus. Both complete blocked records continue to reject atomically.
+Tetravus. Dance of Many now has the complete copy gameplay mapping below;
+Tetravus continues to reject atomically.
 
 
 ## Linked created-token leave events
@@ -16526,11 +16528,46 @@ body)` with a strict symbol and one unambiguous permanent-source `CreateTokens`
 producer. Existing action lists and targets supply the body. No event binding is
 introduced: `Trigger_ThatPermanent` is still unbound in this context. Missing or
 multiple producers, tuple spelling, spell sources and lexical
-`TheTokensCreatedThisWay` events reject. Token copying and lexical delayed events
-remain separate adapters.
+`TheTokensCreatedThisWay` events reject. Unmodified token copying uses the
+adapter below; lexical delayed events remain unsupported.
 
 Tests: native `TestCreatedTokenLeave{Lifecycle,Destinations,ExactEvent,Invalid}`
 and RON `TestRONCreatedTokenLeave{Gameplay,SourceReturns,Invalid,CollectionAtomic}`.
 RON gameplay uses The Hive's complete LEB producer with synthetic linked cleanup
-and sacrifice rules. This supplies producer integration evidence; Dance of Many,
-Stangg and Tetravus still reject as complete records.
+and sacrifice rules. This supplies producer integration evidence. Dance of Many
+now has the complete mapping below; Stangg and Tetravus still reject.
+
+## Resolving token copies of permanents
+
+`CreateTokens([TokenCopyOfPermanent(ref, NoTokenCopyEffects)], [])` accepts a
+bound singular permanent reference in resolving spell and ability actions.
+The existing `NumberTokens(value, token)` wrapper supplies the count, and existing
+player scopes supply the creator. `NoTokenCopyEffects` must be a symbol. Copy
+modifications, creation modifiers, entry operations and lexical token results
+remain separate adapters. Unbound or incompatible references reject at compile
+time. Inventory descendants retain permanent-reference and token-copy-modification
+roles without claiming gameplay verification.
+
+`mage.CreateTokenCopiesOfPermanent(player mage.PlayerRef, count
+mage.ResolutionValue, subject mage.PermanentRef) mage.ResolvingEffect` captures
+one present, unphased subject's copiable values and builds independent tokens
+before the shared entry batch. `mage.CreateTokenCopiesOfPermanentLinked` has the
+same arguments plus `link *mage.CreatedTokenLink`; it retains the maker's exact
+visit before entry observations. Existing `TheCreatedTokens` consumers and linked
+leave events use that group. Source departure permits pending creation; source
+return cannot inherit it. Copies create tokens for their resolving controller.
+
+Copied mana costs and established copy exceptions remain copiable. Counters,
+ordinary layers, tapped/face-down status, owner, controller and saved choices do
+not transfer. Acquired entry rules apply normally, including new choices.
+Standard face-down subjects supply face-up nameless 2/2 tokens. Missing subjects,
+phased subjects, absent creators and nonpositive counts create nothing. A returned
+subject cannot replace a saved visit. Unknown provenance and builder failures
+return errors; failed construction installs no partial batch. Waiting queries
+report source reads without constructing tokens. Clones retain separate state.
+
+Evidence: native `TestTokenCopyPermanent*` and RON
+`TestRONTokenCopyPermanent*`. Dance of Many's complete DRK record now has casting,
+copying, linked departure, phasing, paid/unpaid upkeep, copied trigger, return and
+clone gameplay evidence. Air Elemental supplies the real copied creature; its
+six complete reprints have identical definitions. No RON source changed.
