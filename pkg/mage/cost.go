@@ -488,6 +488,7 @@ func (c *tapMatchingCost) Text() string { return c.text }
 type discardCost struct {
 	amount         int
 	differentNames bool
+	lastDrawn      bool
 	filter         CardFilter
 	selected       []capturedCard
 	locked         bool
@@ -501,6 +502,11 @@ type discardCost struct {
 // DiscardCost creates a cost that requires the controller to discard n cards.
 func DiscardCost(n int) Cost {
 	return &discardCost{amount: n}
+}
+
+// DiscardLastDrawnCardCost requires the payer's exact last draw this turn.
+func DiscardLastDrawnCardCost() Cost {
+	return &discardCost{amount: 1, lastDrawn: true}
 }
 
 // DiscardCardCostInto saves one discarded card during its graveyard visit.
@@ -523,7 +529,34 @@ func DiscardMatchingCardCostInto(filter CardFilter, paid *CardBinding) Cost {
 	return &discardCost{amount: 1, filter: filter, paidCard: paid, captureCard: true}
 }
 
+func (c *discardCost) lastDrawnCard(p Player) Card {
+	history, ok := p.(interface{ lastDrawnHandCard() capturedCard })
+	if !ok {
+		return nil
+	}
+	visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
+	if !ok {
+		return nil
+	}
+	saved := history.lastDrawnHandCard()
+	if saved.id == uuid.Nil || saved.visit == uuid.Nil || visitor.handVisit(saved.id) != saved.visit {
+		return nil
+	}
+	for _, card := range p.Hand() {
+		if card.ID() == saved.id {
+			return card
+		}
+	}
+	return nil
+}
+
 func (c *discardCost) choose(p Player, g *Game) []Card {
+	if c.lastDrawn {
+		if card := c.lastDrawnCard(p); card != nil {
+			return []Card{card}
+		}
+		return nil
+	}
 	if c.amount == 0 {
 		return nil
 	}
@@ -575,6 +608,15 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
 	if p == nil || c.amount < 0 || len(p.Hand()) < c.amount {
 		return false
+	}
+	if c.lastDrawn {
+		card := c.lastDrawnCard(p)
+		if card == nil {
+			return false
+		}
+		if c.locked && (len(c.selected) != 1 || c.selected[0].id != card.ID()) {
+			return false
+		}
 	}
 	if !c.locked {
 		if !c.filter.IsZero() {
@@ -679,6 +721,9 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 }
 
 func (c *discardCost) Text() string {
+	if c.lastDrawn {
+		return "Discard the last card you drew this turn"
+	}
 	if !c.filter.IsZero() {
 		return "Discard one " + c.filter.Text()
 	}

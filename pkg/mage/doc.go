@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DiscardLastDrawnCardCost] requires the payer's last successful draw this turn.
+// The exact hand visit must remain present. Return cannot supply that visit.
+// Shared transactions lock the card and recheck history before payment.
+// Queries and payment selection make no choices. Replaced draws keep history
+// unless their bodies draw cards. Copies do not pay again. Clones keep separate
+// history and zones. Turn cleanup clears history after pending actions finish.
+// RON accepts DiscardCard(TheLastCardDrawnThisTurn) in activation costs,
+// including And lists. Resolution payments and other card references reject.
+//
 // [ClampedDamageAmount] reads one saved singular damage outcome.
 // Actual damage follows replacements and prevention. The final recipient supplies
 // player life and loyalty before damage. Creature toughness uses the exact visit

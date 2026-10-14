@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **864 accepted / 122 rejected names**
-(986 total), **2,226 compiled / 219 rejected records** (2,445 total).
-The latest slice is **CLAMPED-DAMAGE-GAIN**. Singular actual-damage results now
-supply pre-damage life/loyalty limits and exact-visit creature toughness reads.
-Estimated and actual full-card gains are **one name / six records**.
-All six unchanged Drain Life records now compile and execute all their rules.
-Native and RON tests cover caps, prevention, redirection, LKI, phasing, payment,
-legality, scopes, copies, clones, delayed frames and declaration errors.
-Complete-card gameplay coverage gains Drain Life; all accepted records stay accepted.
+Latest measured result (2026-10-13): **865 accepted / 121 rejected names**
+(986 total), **2,228 compiled / 217 rejected records** (2,445 total).
+The latest slice is **LAST-DRAWN-DISCARD-COST**. Activation payments now use the
+payer's exact last successful draw this turn, still in its original hand visit.
+Estimated and actual full-card gains are **one name / two records**.
+Both unchanged Jandor's Ring records now compile and execute all their rules.
+Native and RON tests cover draw history, visit identity, payment rollback,
+replacements, cleanup, phasing, controllers, copies, clones and invalid syntax.
+Complete-card gameplay coverage gains Jandor's Ring; accepted records stay accepted.
 
-The loader still rejects the collection atomically. Exile counters, exact
-last-drawn costs and other unsupported records remain gaps. Runtime cutover,
+The loader still rejects the collection atomically. Color-modified spell copies,
+exile counters and other unsupported records remain gaps. Runtime cutover,
 Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -25,12 +25,13 @@ Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Exact last-drawn discard cost — Jandor's Ring.** Estimated one name/two
-   records. Recheck the last draw's exact hand visit through shared transactions.
-2. **Color-modified spell copying — Fork.** Estimated one name/six records.
-   Copiable red exceptions and optional retargeting need contract assessment.
-3. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
+1. **Color-modified spell copying — Fork.** Estimated one name/six records.
+   Reuse stack copies and optional retargeting; establish the copiable red exception.
+2. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
    precedes predicates/removal, spell exile and all-graveyard batch returns.
+3. **Counter-bound duration — Cyclopean Tomb.** Estimated zero immediate gains;
+   exact source/subject visits and counter-removal history need assessment before
+   its land-type effect and cleanup can execute the complete records.
 
 ## Dependencies and source blockers
 
@@ -6188,3 +6189,143 @@ exports were removed; complete collection loading and runtime removal gates rema
    counter storage precedes queries/removal, spell exile and batch return.
 
 This run stops after clamped damage gain.
+
+## 2026-10-13 — LAST-DRAWN-DISCARD-COST
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1` and
+`make build` passed. The strict loader exited 1 for collection rejection:
+2,226 compiled / 219 rejected records; 864 accepted / 122 rejected names,
+out of 2,445 records / 986 names. This was not a compilation or environment
+failure. Top status, the latest ledger entry, complete nested RON records and
+targeted vocabulary keys supplied the comparison.
+
+| Candidate | Distinct affected cards | Estimated full-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Exact last-drawn discard cost | Jandor's Ring | 1 name / 2 records | Mana, source tap and drawing are ready. Per-player ID history exists but lacks the exact hand visit. Extends shared exact discard payments without another transaction service. | Small history/cost adapter; medium lifecycle and rollback tests. |
+| Color-modified spell copying | Fork | 1 name / 6 records | Existing stack copy and optional retargeting are available. The explicit red copiable exception needs a new contract and copy/provenance tests. Enables reusable modified spell copies. | Medium copy mechanics and broader interaction tests. |
+| Exact exile-card counters | All Hallow's Eve | 0 immediate names / records | Counter storage precedes predicates/removal. Spell exile with counters and simultaneous each-graveyard return still block the complete record. Enables the source-exile counter chain. | Medium lifecycle prerequisite; multiple later adapters. |
+
+Candidate 1 was selected after comparing all three. The immediate unique-card
+gain ties Fork, while exact discard reuses more existing execution and has a
+smaller implementation boundary. Fork's larger reprint count is not a larger
+unique-card gain. Exile counters have no immediate unlock and need later slices.
+No multi-card unlock is claimed for these candidates. This run establishes one
+complete exact identity payment shape and stops.
+
+### Established contract and reuse boundary
+
+Engine: `DiscardLastDrawnCardCost() Cost`. The payer's last successful draw this
+turn must remain in the exact original hand visit. `BasePlayer.DrawCard` saves
+both ID and visit. The existing `LastDrawnCardID()` API stays unchanged; private
+`lastDrawnHandCard() capturedCard` supplies history to the cost and wrapper clone
+extraction. Direct player clones also preserve the token. History clears with
+the ID at final cleanup; the existing pending-cleanup timing is unchanged.
+
+A later draw replaces history. When that later draw leaves hand, an older draw
+cannot pay. Non-draw hand additions, departure and return cannot provide the
+visit. Replaced or failed draws keep history; replacement bodies that actually
+draw update it. Each player's history remains separate, including opponent-turn
+draws. Queries and exact selection make no choices and do not consume RNG.
+
+RON: `DiscardCard(TheLastCardDrawnThisTurn)` in activation cost declarations,
+alone or inside `And([...])`. Outer arity is one; the argument must be exactly
+the symbol. Each factory builds fresh costs. Other references, tuple arguments,
+wrong arity, resolving actions, optional resolution payments and entry operations
+reject. The compiler owns syntax checks; the engine owns draw history and payment.
+
+The existing `discardCost` locks the selected visit on transaction preparation
+and rechecks that the saved latest draw still matches before commit. Shared
+full-payment simulation detects overlaps and failed discard replacements before
+live mana/tap payment. Existing discard replacement ordering, batch events,
+source identity, stack copying and cloning are reused. Hidden replacement
+destinations may pay this identity cost; no characteristics are required.
+Effect-only replacement rules do not apply to cost-caused discard.
+
+Local Oracle evidence: `data/ARN.json` says “Discard the last card you drew this
+turn.” CR 121.1–2 and 121.5–7 establish draw timing and replacements; CR 400.7
+requires new visits after zone changes; CR 118.11, 601.2h and 701.9 establish
+replacement payment and complete-cost rules. No source defect was found. No
+RON record or vocabulary source hash changed. No global action-result slot,
+Go-card fallback, card-name executor or partial production registry was added.
+
+### Failing-first evidence and card-to-test mappings
+
+After correcting test API names, native tests failed only at undefined
+`DiscardLastDrawnCardCost`. Complete RON gameplay tests failed at unsupported
+`DiscardCard` for both records before implementation. A fixture initially used
+a different set for Library of Leng, then exposed that its full RON declaration
+is still unsupported. It now uses a synthetic established effect-discard rule
+for the interaction, without substituting a Go card definition. Native tests
+supply general discard replacements through existing test fixtures.
+
+- **Jandor's Ring (ARN, 3ED) → TestRONLastDrawnCostRing.** Both entire unchanged
+  records cast for six mana, pay two mana/tap/exact discard at activation, and
+  draw at resolution. Source departure, control change, phasing, return, countered
+  abilities, copies under another controller and independent clones retain timing
+  and controller behavior. The effect-only discard fixture cannot replace costs.
+- **TestRONLastDrawnCostRollback / Instances.** Missing history, non-draw hand
+  additions, returned visits, departed latest draws, insufficient mana, tapped or
+  phased sources, wrong controllers and turn reset reject without live spending.
+  Separate factories/players pay their own draw; a new resolution draw can pay
+  a later activation.
+- **TestLastDrawnCostIdentity / Transaction.** Latest card rather than an older
+  hand card, other-player draws, failed empty draws, cleanup reset, returned or
+  departed visits, post-preparation newer draws, duplicate costs and total-cost
+  failure. Queries are pure and failures preserve mana, tap state and zones.
+- **TestLastDrawnCostClone / Interleaved.** Direct and wrapped player extraction,
+  separate clone history/zones, independent interleaved payer transactions, absent
+  payer rejection, valid engine definitions and no card-choice callbacks.
+- **TestLastDrawnCostDrawReplacement / DiscardReplacement.** Replaced versus
+  replacement-generated draws; hidden library destination payment, discard event
+  facts, prevented discards, replacement rechecks and full-cost rollback.
+- **TestRONLastDrawnCostInvalid / AtomicLoad.** Malformed/unbound card references,
+  unsupported contexts, atomic registry preservation on failure and successful
+  loading of the two complete equivalent reprints.
+
+Four fixed inventory assertions now use the measured 2,228/217 counts, with
+an explicit Jandor's Ring acceptance assertion. No gameplay assertion was removed
+or weakened. Compilation progress and gameplay coverage are separate: the
+complete-card gameplay mapping gains one unique card, Jandor's Ring.
+
+### Validation and measured result
+
+Passed:
+`go test ./pkg/mage/dsl/ron -run TestRONLastDrawnCost -count=1`,
+`go test ./pkg/mage -run TestLastDrawnCost -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, and `make test`.
+The first lint run identified an unnecessary constructor wrapper and an explicit
+inferred test variable type. Both were corrected. Automatic formatting only
+regrouped imports in the new native tests. Focused tests, build and vet passed
+again after those changes. Final `make lint` passed with **0 issues** and
+`git diff --check` passed. No environment or validation blocker remains.
+
+Final `go run ./cmd/loadcards -json` exited 1 for expected atomic collection
+rejection: **2,228 compiled / 217 rejected records**, **865 accepted / 121 rejected
+names**. Both Jandor's Ring diagnostics disappear. There are no added rejections
+or changed remaining diagnostics; every previously accepted record stays accepted.
+Estimated one-name/two-record gains match actual gains. Complete-card gameplay
+coverage gains one unique name, with both complete RON reprints tested.
+
+Changed files: `pkg/mage/cost.go`, `player.go`, `clone.go`, `doc.go` and new
+`last_drawn_cost_test.go`; RON `compiler.go`, new `last_drawn_cost_test.go`,
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+RON sources and vocabulary hashes are unchanged. Current callers and Go card
+files remain. No DSL export was removed; collection loading, startup cutover,
+Go-card deletion and caller-audited DSL removal gates remain unmet.
+
+### Ranked next candidates
+
+1. **Color-modified spell copying — Fork.** One name/six records estimated;
+   establish the copiable red exception through shared stack copying, with
+   optional retargeting, source identity, copy-of-copy and clone tests.
+2. **Exact exile-card counters — All Hallow's Eve.** Zero immediate gains;
+   establish visit storage before counter predicates/removal, spell exile with
+   counters and simultaneous each-graveyard creature returns.
+3. **Counter-bound duration — Cyclopean Tomb.** Zero immediate gains estimated;
+   source/subject counter history, `EachablePermanent` duration binding and
+   delayed counter cleanup still need contracts before complete-card execution.
+
+This run stops after exact last-drawn discard cost.

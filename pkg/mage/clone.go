@@ -108,6 +108,9 @@ func extractBasePlayer(p Player) *BasePlayer {
 	if !p.IsAlive() && p.Life() > 0 {
 		bp.lost = true
 	}
+	if history, ok := p.(interface{ lastDrawnHandCard() capturedCard }); ok {
+		bp.lastDrawnCardVisit = history.lastDrawnHandCard().visit
+	}
 	// Copy zones.
 	bp.hand = cloneZoneCards(p.Hand())
 	if state, ok := p.(interface{ handIsPublic() bool }); ok {
@@ -169,14 +172,15 @@ func extractBasePlayer(p Player) *BasePlayer {
 // cloneBasePlayer deep copies a BasePlayer, preserving the same UUID.
 func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone := &BasePlayer{
-		id:              bp.id,
-		name:            bp.name,
-		life:            bp.life,
-		lost:            bp.lost,
-		drewFromEmpty:   bp.drewFromEmpty,
-		lastDrawnCardID: bp.lastDrawnCardID,
-		poisonCounters:  bp.poisonCounters,
-		manaPool:        NewManaPool(),
+		id:                 bp.id,
+		name:               bp.name,
+		life:               bp.life,
+		lost:               bp.lost,
+		drewFromEmpty:      bp.drewFromEmpty,
+		lastDrawnCardID:    bp.lastDrawnCardID,
+		lastDrawnCardVisit: bp.lastDrawnCardVisit,
+		poisonCounters:     bp.poisonCounters,
+		manaPool:           NewManaPool(),
 	}
 	// Mutable zone facts must stay separate in each game.
 	clone.hand = cloneZoneCards(bp.hand)

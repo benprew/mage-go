@@ -845,6 +845,17 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "DiscardCard":
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		if _, err := symbol(n.Args[0]); err != nil {
+			return nil, false, err
+		}
+		if n.Args[0].Name != "TheLastCardDrawnThisTurn" {
+			return nil, false, unsupported(n.Args[0], "exact discard cost reference")
+		}
+		return []costFactory{mage.DiscardLastDrawnCardCost}, false, nil
 	case "DiscardACard":
 		if _, err := symbol(n); err != nil {
 			return nil, false, err

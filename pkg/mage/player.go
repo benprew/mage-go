@@ -110,7 +110,7 @@ type Player interface {
 	DeclareBlockers(g *Game) []BlockAssignment
 	ChooseMayAbility(description string) bool
 
-	// Last drawn card tracking (for Jandor's Ring)
+	// Draw history remains available until turn cleanup.
 	LastDrawnCardID() uuid.UUID
 	ClearLastDrawnCard()
 
@@ -191,7 +191,8 @@ type BasePlayer struct {
 	ante                     []Card
 	anteVisits               map[uuid.UUID]uuid.UUID
 	manaPool                 *ManaPool
-	lastDrawnCardID          uuid.UUID // ID of the last card drawn this turn (for Jandor's Ring)
+	lastDrawnCardID          uuid.UUID
+	lastDrawnCardVisit       uuid.UUID
 	poisonCounters           int
 }
 
@@ -511,14 +512,22 @@ func (p *BasePlayer) DrawCard() (Card, bool) {
 	delete(p.libraryVisits, c.ID())
 	p.AddToHand(c)
 	p.lastDrawnCardID = c.ID()
+	p.lastDrawnCardVisit = p.handVisit(c.ID())
 	return c, true
 }
 
 // LastDrawnCardID returns the ID of the last card drawn this turn.
 func (p *BasePlayer) LastDrawnCardID() uuid.UUID { return p.lastDrawnCardID }
 
-// ClearLastDrawnCard resets the last drawn card tracking (called at turn start).
-func (p *BasePlayer) ClearLastDrawnCard() { p.lastDrawnCardID = uuid.Nil }
+// ClearLastDrawnCard prevents a prior turn's draw from paying a cost.
+func (p *BasePlayer) ClearLastDrawnCard() {
+	p.lastDrawnCardID = uuid.Nil
+	p.lastDrawnCardVisit = uuid.Nil
+}
+
+func (p *BasePlayer) lastDrawnHandCard() capturedCard {
+	return capturedCard{id: p.lastDrawnCardID, visit: p.lastDrawnCardVisit, zone: ZoneHand}
+}
 
 // PoisonCounters returns the number of poison counters this player has.
 func (p *BasePlayer) PoisonCounters() int { return p.poisonCounters }
