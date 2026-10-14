@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CopyInstantOrSorceryWithColors] sets colors within the spell copy process.
+// The copy uses these colors before it can choose new legal targets.
+// Empty lists make colorless copies. Color definitions are omitted.
+// Later copies keep the exception. Ordinary color changes are not copied.
+// Shared stack services keep X, modes, allocations, payments and source identity.
+// Copies do not cast or pay again. Absent spells cannot use departure facts.
+// RON accepts one fixed SetColor operation for an instant-or-sorcery target
+// in resolving spell bodies. Other contexts and exceptions need adapters.
+//
 // [DiscardLastDrawnCardCost] requires the payer's last successful draw this turn.
 // The exact hand visit must remain present. Return cannot supply that visit.
 // Shared transactions lock the card and recheck history before payment.

@@ -1002,7 +1002,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 			ctx.cardTarget = &cardTargetPlan{name: binding, creatureOnly: graveyardFilterRequiresCreature(targets[0].Args[0])}
 		}
 		if binding == "Ref_TargetSpell" {
-			ctx.spellTarget = &spellTargetPlan{name: binding}
+			ctx.spellTarget = &spellTargetPlan{name: binding, instantOrSorcery: spellFilterOnlyInstantsOrSorceries(targets[0].Args[0])}
 		}
 		if binding == "Ref_AnyTarget" || binding == "Ref_TargetPlayerOrPermanent" {
 			ctx.damageTarget = &damageTargetPlan{name: binding}
@@ -1721,6 +1721,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "RegeneratePermanent":
 		build, err := compileRegeneration(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "CopySpellAndMayChooseNewTargetsWithEffects":
+		build, err := compileSpellColorCopy(n, ctx)
 		if err != nil {
 			return nil, err
 		}

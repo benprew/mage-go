@@ -7,7 +7,10 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type spellTargetPlan struct{ name string }
+type spellTargetPlan struct {
+	name             string
+	instantOrSorcery bool
+}
 
 type spellReferencePlan struct {
 	target *spellTargetPlan

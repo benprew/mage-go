@@ -14994,3 +14994,35 @@ Evidence: native `TestLastDrawnCostIdentity`, `Transaction`, `Clone`,
 `TestRONLastDrawnCostRing`, `Rollback`, `Invalid`, `AtomicLoad` and `Instances`.
 Both complete unchanged Jandor's Ring records (ARN and 3ED) exercise casting,
 payment and drawing. Synthetic fixtures supply replacement interaction rules.
+
+## RON fixed-color spell copying
+
+`CopySpellAndMayChooseNewTargetsWithEffects(Ref_TargetSpell,
+[SetColor(SimpleColorList([Red]))])` copies a scoped instant-or-sorcery target
+in a resolving spell body. One fixed `SetColor` operation is supported. The list
+can use any of the five colors, or be empty for colorless. A direct instant or
+sorcery target predicate qualifies; `And` requires a qualifying restriction and
+all `Or` branches must qualify. Arbitrary spell domains, event and union reads,
+activation, delayed, replacement and entry contexts require separate adapters.
+Unbound references, variable colors, `Colorless` symbols and other modifications
+fail compilation.
+
+The engine primitive is
+`CopyInstantOrSorceryWithColors(StackObjectRef, ...core.Color) ResolvingEffect`.
+It applies the copiable color exception before optional target choices. The
+copy controller can retain targets, including illegal old targets, or choose
+legal new targets. Protection checks use the copy's colors. Copies retain X,
+modes, target counts, allocations and payment bindings without casting or paying
+again. Departed spells cannot supply copies; returned targets cannot replace saved
+visits. Later copies inherit the fixed colors and exclude ordinary color changes.
+Clones keep separate choices and color changes. Color-defining abilities are
+omitted through the existing copy-modification service (CR 707.9d).
+
+The semantic inventory gives the fixed copy color its existing color-word role.
+`RevisePrintedSpellText` can change Fork's color exception without changing its
+red mana cost, its own color or another game's pending rules. Tests execute all
+six complete Fork records, Hurricane damage/protection, Psionic Blast retargeting,
+Healing Salve modes and Fireball X/target costs. Native tests cover copy identity,
+allocation transfer, color-definition omission, snapshot provenance, phasing,
+returned targets and invalid definitions. See `TestRONSpellCopyColors*` and
+`TestSpellCopyColors*`. Rules: CR 400.7, 608.2b, 612.1–3, 702.16 and 707.2/9/10.

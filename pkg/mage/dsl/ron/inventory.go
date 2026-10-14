@@ -1149,6 +1149,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "ability_reference"
 			}
+		case "CopySpellAndMayChooseNewTargetsWithEffects":
+			if len(n.Args) == 2 {
+				return []string{"spell_reference", "resolving_modification"}[index]
+			}
 		case "CounterSpell":
 			if len(n.Args) == 1 {
 				return "spell_reference"

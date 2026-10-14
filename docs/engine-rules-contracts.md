@@ -19630,3 +19630,44 @@ Evidence: native `TestLastDrawnCostIdentity`, `Transaction`, `Clone`,
 `TestRONLastDrawnCostRing`, `Rollback`, `Invalid`, `AtomicLoad` and `Instances`.
 Both complete unchanged Jandor's Ring records (ARN and 3ED) exercise casting,
 payment and drawing. Synthetic fixtures supply replacement interaction rules.
+
+## Fixed-color instant and sorcery copies
+
+`CopyInstantOrSorceryWithColors(StackObjectRef, ...core.Color) ResolvingEffect`
+copies a present instant or sorcery under the resolving effect controller.
+The five Magic colors are valid; an empty list sets colorless. Invalid colors,
+nil references and unbound declarations fail definition validation. A departed
+spell or a referenced permanent spell supplies no copy. The action does not use
+LKI to restore a departed stack object.
+
+The exception modifies the copied card before optional target choices. Shared
+`copyStackObjectWithCard` retains the existing copy service's identities, modes,
+X, target groups, allocations, casting facts and payment bindings. Protection
+uses the copy's colors during choices and resolution. Cancelled or illegal new
+choices retain old targets, including illegal old targets and their saved visits.
+Returned or phased targets cannot supply those visits. The copy has its own
+source card and belongs to its controller. It is not cast and pays no new costs.
+Instant and sorcery copies cease to exist after resolution or countering.
+
+`CopyRetainColors`, immutable `CopiableValues.WithModifications` and the checked
+text builder retain the color exception and omit color-defining abilities.
+Ordinary stack color changes remain separate and are not inherited by later
+copies. Game clones keep separate stack choices and ordinary color changes.
+Current callers of both public stack-copy methods keep their existing behavior.
+No replacement, payment or event subsystem is added.
+
+RON accepts `CopySpellAndMayChooseNewTargetsWithEffects(ref,
+[SetColor(SimpleColorList([color, ...]))])` in resolving spell bodies. The reference
+must be a scoped singular target restricted to instants or sorceries. A direct
+type predicate qualifies; conjunctions require a qualifying conjunct, and every
+disjunction branch must qualify. Event, union, activation, delayed, replacement
+and entry contexts remain unsupported. Other effects, variable colors, colorless
+symbols and multiple modifications reject. The fixed color words use the existing
+spell text-revision service; names, mana costs and indicators remain fixed.
+
+Evidence: native `TestSpellCopyColorsIdentity`, `Retarget`, `Definition` and
+`Exceptions`; RON `TestRONSpellCopyColorsFork`, `Hurricane`, `Shapes`, `Text`,
+`Retarget`, `Modal`, `Fireball`, `Invalid` and `AtomicLoad`. All six complete Fork
+records have gameplay evidence. CR 707.2, 707.9b–d and 707.10–10c establish the
+copy contract; CR 400.7, 608.2b, 612.1–3 and 702.16 establish identity, resolution,
+text changes and protection interactions.

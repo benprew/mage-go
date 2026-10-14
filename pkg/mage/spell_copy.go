@@ -50,6 +50,10 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		copiedCard.SetOwner(controller)
 	}
 
+	return g.copyStackObjectWithCard(original, controller, mayChooseNewTargets, copiedCard)
+}
+
+func (g *Game) copyStackObjectWithCard(original *StackObject, controller uuid.UUID, mayChooseNewTargets bool, copiedCard Card) *StackObject {
 	cp := &StackObject{
 		spellTextDefinition:    original.spellTextDefinition,
 		ID:                     uuid.New(),

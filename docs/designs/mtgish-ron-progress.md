@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **865 accepted / 121 rejected names**
-(986 total), **2,228 compiled / 217 rejected records** (2,445 total).
-The latest slice is **LAST-DRAWN-DISCARD-COST**. Activation payments now use the
-payer's exact last successful draw this turn, still in its original hand visit.
-Estimated and actual full-card gains are **one name / two records**.
-Both unchanged Jandor's Ring records now compile and execute all their rules.
-Native and RON tests cover draw history, visit identity, payment rollback,
-replacements, cleanup, phasing, controllers, copies, clones and invalid syntax.
-Complete-card gameplay coverage gains Jandor's Ring; accepted records stay accepted.
+Latest measured result (2026-10-13): **866 accepted / 120 rejected names**
+(986 total), **2,234 compiled / 211 rejected records** (2,445 total).
+The latest slice is **COLOR-MODIFIED-SPELL-COPY**. Resolving spell bodies now
+copy scoped instant-or-sorcery targets with fixed copiable colors before optional
+retargeting. Estimated and actual full-card gains are **one name / six records**.
+All six unchanged Fork records now compile and have complete-card gameplay tests.
+Native and RON tests cover identity, protection, targets, X, modes, allocations,
+payment timing, copy-of-copy, color definitions, text revision and clone isolation.
+Complete-card gameplay coverage gains Fork; accepted records stay accepted.
 
-The loader still rejects the collection atomically. Color-modified spell copies,
-exile counters and other unsupported records remain gaps. Runtime cutover,
+The loader still rejects the collection atomically. Exile counters, dynamic
+mana production and other unsupported records remain gaps. Runtime cutover,
 Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -25,13 +25,13 @@ Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Color-modified spell copying — Fork.** Estimated one name/six records.
-   Reuse stack copies and optional retargeting; establish the copiable red exception.
+1. **Dynamic mana-production options — Fellwar Stone.** Assess complete
+   production choices, replacements and pure solver metadata; estimated one
+   name/one record if the shared production query can support the whole shape.
 2. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
    precedes predicates/removal, spell exile and all-graveyard batch returns.
 3. **Counter-bound duration — Cyclopean Tomb.** Estimated zero immediate gains;
-   exact source/subject visits and counter-removal history need assessment before
-   its land-type effect and cleanup can execute the complete records.
+   exact source/subject visits and counter-removal history remain prerequisites.
 
 ## Dependencies and source blockers
 
@@ -6329,3 +6329,164 @@ Go-card deletion and caller-audited DSL removal gates remain unmet.
    delayed counter cleanup still need contracts before complete-card execution.
 
 This run stops after exact last-drawn discard cost.
+
+## 2026-10-13 — COLOR-MODIFIED-SPELL-COPY
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and the complete RON package tests
+passed. Fresh loader collection rejection exited 1 with **2,228 compiled / 217
+rejected records**, **865 accepted / 121 rejected names**. This was collection
+rejection, not a build or test failure. All compared cards' complete RON records
+and nested forms were inspected; reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Remaining blockers / downstream benefit | Implementation and test effort |
+| --- | --- | --- | --- | --- |
+| Color-modified spell copying | Fork (six records) | One name / six records | No other Fork blocker. Shared copiable color exceptions use existing stack copying and retargeting. | Small lowering and copy-service extension; broad identity, color, target, copy and clone tests. |
+| Exact exile-card counters | All Hallow's Eve (one record) | Zero | Needs spell exile with counters, predicates/removal, and simultaneous each-graveyard creature returns after storage. | Medium visit-storage prerequisite, then several dependent slices. |
+| Counter-bound duration | Cyclopean Tomb (five records) | Zero | Needs each-subject duration binding, source placement/removal history and delayed cleanup. | Medium duration contract plus independent history work. |
+
+Ledger candidate #1 was ready but supplied one unique-card gain, not multi-card
+value. The other two ranked candidates had no immediate complete-card gain and
+larger remaining dependencies. A fresh diagnostic grouping found no shared exact
+first-error signature across multiple unique names. That grouping was not used
+as an unlock estimate. Complete Fork records establish the bounded positive gain.
+Fork therefore wins this comparison. No multi-card gain is claimed.
+
+Before editing, the contract was fixed-color copying with optional retargeting,
+source identity, copy-of-copy and clone isolation. The implementation explicitly
+limits the RON context to resolving spell bodies with an instant-or-sorcery target
+domain. Permanent-spell and other copy exceptions are separate capabilities.
+
+### Established contract, dependencies and reuse
+
+Engine API:
+`CopyInstantOrSorceryWithColors(StackObjectRef, ...core.Color) ResolvingEffect`.
+The five Magic colors are legal; an empty list makes colorless copies. Native
+references can be target or saved spell bindings. A departed spell cannot supply
+action LKI, and a permanent spell does not qualify. Definition checks reject nil,
+unbound and invalid-color operands. Colors are saved independently of caller
+slices and normalized through the existing retained-color modification.
+
+The copied card receives its copiable color exception before shared target
+choices. `CopyRetainColors`, `CopiableValues.WithModifications` and checked text
+builders retain the exception and omit color-defining abilities. An immutable
+modified provenance plan follows the copy. Ordinary stack color changes remain
+separate. Later copies inherit the exception but exclude those ordinary changes.
+
+Private `copyStackObjectWithCard` is extracted from the existing copy service.
+Both public copy methods keep their signatures and behavior. The new action uses
+that service for fresh card/stack identities, controller and ownership, X, mode,
+selected targets, distributions, casting facts and saved payment frames. Copies
+are not cast and do not pay again. Existing target services retain cancelled or
+illegal new choices, recheck protection using the copy's colors, and preserve old
+illegal target visits. Departure/return and phasing cannot restore old targets.
+No replacement or payment ordering service is duplicated.
+
+RON signature:
+`CopySpellAndMayChooseNewTargetsWithEffects(Ref_TargetSpell,
+[SetColor(SimpleColorList([color, ...]))])`.
+The reference must be a local singular target whose domain requires instants or
+sorceries. Direct type predicates qualify. A conjunction needs a qualifying
+conjunct; every disjunction branch must qualify. One fixed `SetColor` is supported.
+Empty fixed color lists are valid. Event/union references, activation, delayed,
+replacement and entry contexts, variable colors, `Colorless` symbols, incorrect
+arity and additional modifications reject before factory publication. Every
+factory builds fresh target bindings. The semantic inventory supplies the fixed
+color's existing color-word role so pending spell text can revise the exception.
+
+Local Oracle evidence in `data/LEA.json` matches the unchanged Fork RON records.
+CR 707.2, 707.9b–d and 707.10–10c supply the copy contract, including the explicit
+Fork example. CR 400.7, 608.2b, 612.1–3 and 702.16 supply identity, resolution,
+text revision and protection requirements. No source defect was found. RON
+sources and vocabulary source hashes are unchanged. No Go fallback, card-name
+branch, global action-result slot or partial production registry was added.
+
+### Failing-first evidence and card-to-test mapping
+
+After correcting test-only API names, native tests failed at the undefined copy
+constructor and RON gameplay/atomic-load tests failed at the unsupported copy
+action in all six Fork records. A separate text-revision regression failed at
+“text word has no validated semantic role (Red)” before its inventory adapter.
+An initial modal fixture let the default copy chooser select another player;
+the final fixture explicitly cancels retargeting to test retained modal targets.
+No assertion was weakened to accept that fixture error.
+
+- **Fork (LEA, LEB, 2ED, 3ED, CED, CEI) → TestRONSpellCopyColorsFork.** All six
+  complete records pay RR, select an instant, and copy it only at resolution.
+  Ancestral Recall checks kept/new targets, departed targets, a new cast of the
+  same physical card, copied Forks, independent clones, ordinary recoloring,
+  copy-of-copy and countered Forks. Unpaid announcement leaves state unchanged.
+- **Fork → TestRONSpellCopyColorsHurricane.** A sorcery copy retains X=3 and
+  distinct source/controller facts. Its red damage is prevented on a protected
+  flying creature; the green original damages it. Both player damage batches
+  execute. Copies produce no cast history and enter no graveyard.
+- **Fork → TestRONSpellCopyColorsRetarget.** Psionic Blast proves that red
+  protection excludes a new target before the choice. Legal retargeting succeeds;
+  cancellation and illegal answers retain the old target, which is then illegal
+  for the red copy. The copy's independent self-damage uses its controller.
+- **Fork → TestRONSpellCopyColorsModal / Fireball.** Healing Salve retains its
+  chosen mode and target group, without another mode choice. Fireball retains X,
+  target count, division and rounding without repaying its casting surcharge.
+- **Fork → TestRONSpellCopyColorsText.** The pending color word can change from
+  red to white; a separate clone keeps red. A later copy inherits white.
+- **TestRONSpellCopyColorsShapes / Invalid / Contexts / AtomicLoad.** Fixed
+  colorless and multicolor lists, qualifying target domains, fresh factories,
+  malformed syntax, unbound references, unsupported contexts and atomic loading
+  of the six equivalent complete reprints.
+- **TestSpellCopyColorsIdentity / Retarget.** Fresh ownership/source identity,
+  modes, X, allocation transfer to retargeted subjects, independent ordinary color
+  changes, copy-of-copy, clones, protection, cancelled choices, phasing and exact
+  returned-target visits.
+- **TestSpellCopyColorsDefinition / Exceptions.** Invalid/unbound declarations,
+  absent spell references, colorless/multicolor exceptions, color-definition
+  omission, retained immutable snapshot provenance and independent controllers.
+
+Four fixed inventory assertions use the measured **2,234 / 211** record counts;
+an explicit Fork acceptance assertion is added. Compilation gains and gameplay
+coverage remain separate: complete-card gameplay coverage gains one unique name,
+with all six reprints tested. No DSL export was removed and no Go card definition
+or generator was changed; their removal gates are still unmet.
+
+### Validation and measured result
+
+Passed, in fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONSpellCopyColors -count=1`,
+`go test ./pkg/mage -run TestSpellCopyColors -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`,
+and the skill-required `go test ./... -short -count=1`.
+`make lint` passed with **0 issues**. Automatic formatting changed only import
+grouping in the new tests. Both focused packages, build and vet passed again
+after formatting. `git diff --check` passed. No validation or environment blocker
+remains.
+
+Final `go run ./cmd/loadcards -json` exited 1 for expected atomic collection
+rejection: **2,234 compiled / 211 rejected records**, **866 accepted / 120 rejected
+names**. An exact comparison against the fresh baseline removes only the six
+Fork diagnostics; it adds no rejection and changes no remaining diagnostic.
+All previously accepted records stay accepted. Estimated and actual gains match:
+one unique name and six records. Complete-card gameplay coverage gains Fork,
+with every unchanged reprint tested.
+
+Changed files: engine `spell_copy.go`, new `spell_copy_colors.go`, new
+`spell_copy_colors_test.go` and `doc.go`; RON `compiler.go`, `spell_scope.go`,
+`inventory.go`, new `spell_copy.go`, new `spell_copy_colors_test.go`,
+`definition_plan_test.go`, `inventory_test.go` and `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+RON data and vocabulary source hashes are unchanged. Production callers,
+Go card definitions and generators remain until their cutover gates pass.
+
+### Ranked next candidates
+
+1. **Dynamic mana-production options — Fellwar Stone.** Assess the complete
+   `AnyManaColorAPermanentCouldProduce` shape, “could produce” choices,
+   replacement effects and pure mana-solver metadata. Estimated one name/one
+   record if the complete source-production query can be established in one run.
+2. **Exact exile-card counters — All Hallow's Eve.** Zero immediate gains;
+   exact-visit storage before counter predicates/removal, spell exile with
+   counters and simultaneous each-graveyard creature entry.
+3. **Counter-bound duration — Cyclopean Tomb.** Zero immediate gains estimated;
+   each-subject binding, source counter history and delayed removal still need
+   contracts before complete-card execution.
+
+This run stops after fixed-color instant and sorcery copying.
