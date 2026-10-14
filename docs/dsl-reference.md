@@ -15718,3 +15718,22 @@ and `TestRONP2P2CounterSoulExchangeRollback`. The unchanged FEM record executes
 its payment, target, return, saved Thrull check and counter placement together.
 Delayed saved-visit evidence is `TestRONP2P2CounterSavedVisit`; declaration
 rejections are `TestRONP2P2CounterInvalid`.
+
+### Saved attack restriction during a player's next turn
+
+Use `mage.CantAttackDuringNextTurn(subject mage.PermanentRef, player mage.PlayerRef)`
+to save an exact present subject and a player at resolution. The shared turn
+entry hook starts the restriction before that player's next actual turn actions;
+cleanup ends it. Skipped turns do not consume the window, and extra turns do.
+Source loss, ability loss and later control changes cannot redirect it. Return
+cannot supply the old subject; phasing preserves an installed rule. Copies and
+clones keep separate windows. Nil/unbound declarations reject, and absent runtime
+subjects or players install nothing.
+
+RON accepts `CreatePermanentRuleEffectUntil(subject, [CantAttack],
+DuringPlayersNextTurn(player))` in resolving actions with existing typed
+permanent/player references. Combat-pair event subjects use saved bindings.
+This window is distinct from `UntilPlayersNextTurn`, which ends at turn entry.
+Other operations with this duration and other declaration contexts reject.
+See `TestNextTurnAttackWindow*` and `TestRONNextTurnAttackWindow*` for the contract
+and complete Wall of Dust gameplay mapping.

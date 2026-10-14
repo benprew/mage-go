@@ -20787,3 +20787,51 @@ award. A successful destruction schedules the next actual end step, where the
 saved first creature must still be present and unphased. The full record adds
 one unique card and one compiled record; compilation and gameplay are measured
 separately. No RON source defect or spelling change is needed.
+
+## Saved-subject attack restriction during the next turn
+
+`CantAttackDuringNextTurn(subject PermanentRef, player PlayerRef) ResolvingEffect`
+requires a present, unphased subject and a valid player at resolution. It saves
+that exact battlefield visit, the selected player and the installation turn.
+Nil and unbound references fail definition validation. Missing runtime subjects
+or players install nothing. Departure facts cannot supply an actionable subject.
+Explicit source operands remain visible to waiting delayed source queries.
+
+The installed rule starts in `BeginActiveTurn` before the saved player's next
+actual turn actions. It is inactive in the installation turn and in intervening
+turns. Turn selection alone does not start it. A skipped turn cannot consume it;
+an extra turn can. A skipped untap cannot prevent it. Repeated turn entry and
+extra upkeeps do not change its window (CR 500.7, 500.11, 611.2a).
+
+Cleanup removes the rule in the same expiration stage as end-of-turn effects,
+before state-based actions and cleanup priority (CR 514.2–3). It stays active
+through the end step. It cannot restart in a later turn. The shared effect manager
+owns window entry and removal. Each rule keeps its own window value; cloned
+rules retain separate window state.
+
+The shared attack-rule service checks the saved visit at attack declaration.
+The restriction is separate from abilities and cannot remove an attacker already
+in combat. Source departure, phasing or ability loss cannot end a resolved rule.
+The subject's control changes do not redirect the saved player. Subject phasing
+prevents actions but keeps an installed rule; return creates a different visit.
+A subject phased out before resolution cannot receive the rule (CR 611.2a–c).
+No new payment or replacement service is introduced.
+
+RON lowers `CreatePermanentRuleEffectUntil(subject, [CantAttack],
+DuringPlayersNextTurn(player))` in resolving action bodies. Existing typed
+permanent and player references supply the operands, including combat-pair
+`Trigger_ThatOtherPermanent` and its resolution-time controller. The operation
+must be one symbol. Wrong arity, unbound references, mixed operation lists and
+other durations remain compilation errors. Other operations with this duration,
+static declarations, entry and payment contexts gain no adapter.
+
+`TestNextTurnAttackWindow*` supplies engine contract evidence for lifetimes,
+skipped and extra turns, independent players, declarations, source loss, control,
+return, phasing, waiting departure information and clone isolation.
+`TestRONNextTurnAttackWindow*` maps the complete unchanged Wall of Dust record
+to native blocking/damage/attack legality, printed casting costs and rollback,
+identity changes before and after resolution, stack copies, pending clones,
+independent factories and pending events, strict atomic loading, invalid syntax
+and inventory roles. Synthetic resolving source, host and target consumers
+retain the same typed reference services. Compilation and full-card gameplay
+each gain Wall of Dust, one unique name and one record.

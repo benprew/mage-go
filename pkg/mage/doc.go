@@ -2813,6 +2813,16 @@
 // current subject with [While]. Use [GrantKeywordModification] with
 // AttrCanAttack to permit attacks through defender.
 //
+// [CantAttackDuringNextTurn] saves one subject and one player at resolution.
+// [BeginActiveTurn] starts the rule before that player's next actual turn actions.
+// Cleanup ends the rule. Skipped turns do not start it; extra turns do.
+// Source loss cannot end it. Control changes cannot select a different player.
+// Return cannot supply the saved subject. Phasing keeps the installed rule.
+// Copies and clones keep separate saved visits and windows.
+// RON accepts one CantAttack in CreatePermanentRuleEffectUntil with a typed
+// permanent subject and DuringPlayersNextTurn with a typed player reference.
+// Other operations and duration contexts need separate adapters.
+//
 // Use [UntilNextTurn] to save the duration player at resolution.
 // [BeginActiveTurn] ends the effects before that player's next turn actions.
 // Skipped turns do not end the duration. Extra turns do.

@@ -347,6 +347,7 @@ func (g *Game) doCleanupActions() bool {
 	// Remove end-of-turn effects and clear turn-scoped state
 	g.playerPayments = nil
 	g.effects.RemoveEndOfTurn()
+	g.effects.removeNextTurnWindows(g.CurrentTurn())
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
 	g.zones.ClearExileInstead()

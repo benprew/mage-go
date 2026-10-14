@@ -70,6 +70,25 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 			return mage.Until(core.EndOfTurn, mage.AssignsNoCombatDamage(subject.build(bindings)))
 		}, nil
 	}
+	if len(operations) == 1 && operations[0].Name == "CantAttack" {
+		if operations[0].Kind != Symbol {
+			return nil, unsupported(operations[0], "temporary attack restriction")
+		}
+		duration := n.Args[2]
+		if duration.Name != "DuringPlayersNextTurn" {
+			return nil, unsupported(duration, "attack restriction duration")
+		}
+		if err := arity(duration, 1); err != nil {
+			return nil, err
+		}
+		player, err := compilePlayerRef(duration.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.CantAttackDuringNextTurn(subject.build(bindings), player.build(bindings))
+		}, nil
+	}
 	if subject.kind != permanentTarget && subject.kind != permanentDamageTarget && subject.kind != permanentSource {
 		return nil, unsupported(n.Args[0], "temporary combat rule reference")
 	}

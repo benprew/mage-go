@@ -24,6 +24,46 @@ func MustAttackThisTurn(subject PermanentRef) ResolvingEffect {
 	return &singularTurnAttackRuleEffect{subject: subject}
 }
 
+// CantAttackDuringNextTurn saves the subject and player until the next actual turn.
+// The restriction starts before turn actions and ends at that turn's cleanup.
+func CantAttackDuringNextTurn(subject PermanentRef, player PlayerRef) ResolvingEffect {
+	return &nextTurnAttackWindowEffect{subject: subject, player: player}
+}
+
+type nextTurnAttackWindowEffect struct {
+	subject PermanentRef
+	player  PlayerRef
+}
+
+func (*nextTurnAttackWindowEffect) Text() string {
+	return "the saved permanent cannot attack during the saved player's next turn"
+}
+func (*nextTurnAttackWindowEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *nextTurnAttackWindowEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"player", e.player}}}
+}
+func (e *nextTurnAttackWindowEffect) refersToSourcePermanent() bool {
+	return permanentRefReadsSourcePermanent(e.subject) || playerRefReadsSourcePermanent(e.player)
+}
+func (e *nextTurnAttackWindowEffect) Apply(ctx *EffectContext) error {
+	subject, ok := e.subject.resolvePermanent(ctx)
+	if !ok {
+		return nil
+	}
+	player, ok := e.player.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	rule := &turnAttackRule{
+		funcContinuousEffect: FuncContinuousEffect(core.LayerAbility, core.Indefinite, func(*Game, uuid.UUID) error { return nil }).(*funcContinuousEffect),
+		filter:               IsCreature, subject: capturedPermanent{subject.ID(), subject.incarnationID},
+		window: nextTurnWindow{player: player, afterTurn: ctx.Game.CurrentTurn()},
+	}
+	rule.SetSourceID(ctx.SourceID)
+	ctx.Game.AddContinuousEffect(rule)
+	return nil
+}
+
 type singularTurnAttackRuleEffect struct{ subject PermanentRef }
 
 func (*singularTurnAttackRuleEffect) Text() string {
@@ -94,8 +134,16 @@ type turnAttackRule struct {
 	controller uuid.UUID
 	require    bool
 	subject    capturedPermanent
+	window     nextTurnWindow
 }
 
+func (e *turnAttackRule) nextTurnLifetime() *nextTurnWindow { return &e.window }
+func (e *turnAttackRule) IsActive(g *Game) bool {
+	if e.window.player != uuid.Nil {
+		return e.window.active(g.CurrentTurn())
+	}
+	return e.funcContinuousEffect.IsActive(g)
+}
 func (*turnAttackRule) survivesSourceExit() bool { return true }
 func (e *turnAttackRule) cloneEffect() ContinuousEffect {
 	clone := *e

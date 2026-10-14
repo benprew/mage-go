@@ -262,9 +262,9 @@ func TestRONCombatPairReferenceIndependentEvents(t *testing.T) {
 	}
 }
 
-func TestRONCombatPairReferenceRemainingGap(t *testing.T) {
-	if _, err := Compile(hostUntapRecord(t, "LEG", "Wall of Dust")); err == nil || !strings.Contains(err.Error(), "unsupported temporary combat rule reference (Trigger_ThatOtherPermanent)") {
-		t.Fatalf("remaining combat-rule context gap: %v", err)
+func TestRONCombatPairReferenceNextTurnRule(t *testing.T) {
+	if _, err := Compile(hostUntapRecord(t, "LEG", "Wall of Dust")); err != nil {
+		t.Fatal(err)
 	}
 }
 

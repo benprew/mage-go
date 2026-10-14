@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **885 accepted / 101 rejected names**
-(986 total), **2,254 compiled / 191 rejected records** (2,445 total).
-The latest slice is **SAVED-COMBAT-PAIR-SUBJECTS**. WithSubject saves the watched
-source or Aura host's exact battlefield visit before trigger placement. Ordinary
-RON combat-pair TriggerA bodies expose Trigger_ThatCreature and
-Trigger_ThatPermanent, including supported nested step delays.
-Infinite Authority now compiles unchanged and has complete RON gameplay evidence.
-Tests cover binding validation, local scopes, native combat, destruction outcomes,
-timing, reattachment, return, phasing, LKI, rollback, copies and clones.
-Estimated and actual gain: **one unique name / one record**. Complete-card
-gameplay coverage gains Infinite Authority; synthetic contract coverage increases.
-No RON source changed. All required checks pass; lint reports 0 issues.
+Latest measured result (2026-10-14): **886 accepted / 100 rejected names**
+(986 total), **2,255 compiled / 190 rejected records** (2,445 total).
+The latest slice is **NEXT-TURN-ATTACK-WINDOW**. CantAttackDuringNextTurn saves
+one exact subject and one player at resolution. Shared turn entry starts the
+rule before that player's next actual turn; cleanup ends it. Skipped turns do
+not consume the window; extra turns do. Return cannot supply the saved subject.
+RON accepts one CantAttack with DuringPlayersNextTurn and typed references.
+Wall of Dust now compiles unchanged and has complete RON gameplay evidence.
+Tests cover timing, native combat, control, return, phasing, source loss, waiting
+LKI, rollback, copies, independent bindings and clones. Estimated and actual
+gain: **one unique name / one record**. Complete-card gameplay gains Wall of Dust.
+No RON source changed. All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,18 +26,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Temporary combat rule references and next-turn windows.** Wall of Dust
-   already captures its opponent, but its rule adapter rejects event references.
-   Compare shared bound-subject demand and the separate DuringPlayersNextTurn
-   lifecycle before selecting one complete supported shape.
-2. **Intervening combat-pair conditions.** Wall of Caltrops can reuse watched and
-   opposing subject capture. It still needs TriggerI detection/resolution checks
-   and blocking-set cardinality predicates; compare shared demand first.
-3. **Optional plural sacrifice or entry payment/results.** Sword of the Ages needs saved
-   power, exact departure visits and graveyard exile of completed sacrifices.
-   Nameless Race and Frankenstein's Monster need different entry producers.
-   Keep each transaction and its complete result contract together; reassess
-   shared prerequisites and other multi-card demand.
+1. **Intervening combat-pair conditions and live blocking sets.** Wall of
+   Caltrops needs event-time/resolution checks and blocker count/absence predicates.
+   Compare shared condition demand before selecting the complete contract.
+2. **Plural activation sacrifice with saved facts and card visits.** Sword of the
+   Ages needs total power, exact completed sacrifice visits and graveyard exile.
+   Compare shared plural payment/result demand and keep the complete chain together.
+3. **Entry payments and saved results.** Compare Nameless Race's bounded life
+   payment with Frankenstein's Monster's X graveyard payment and counter choices.
+   Keep their different producers separate and select a ready prerequisite.
 
 ## Dependencies and source blockers
 
@@ -11171,5 +11168,165 @@ and this ledger. The slice is ready for the single authorized commit
 3. **Optional plural sacrifice or entry payment/results.** Reassess Sword of the
    Ages, Nameless Race and Frankenstein's Monster against shared demand. Keep
    their different producers and complete result chains separate.
+
+Stop after this completed slice. All migration completion gates remain unfinished.
+
+## 2026-10-14 — NEXT-TURN-ATTACK-WINDOW
+
+### Fresh baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before implementation. Fresh
+`go run ./cmd/loadcards -json` exited 1 with 2,254 compiled / 191 rejected
+records and 885 accepted / 101 rejected names. The nonzero loader exit is
+atomic collection rejection, not a build or environment failure.
+
+Read the current status, latest ledger entry, execution design, engine reference,
+selected compiler and engine services, targeted vocabulary signatures and the
+complete RON records below. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Complete implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: saved temporary attack rule and next-turn window | Wall of Dust | 1 | Event opponent and controller references already exist. Needs one rule consumer and actual-turn entry/cleanup lifecycle. Shared window management can supply later resolving turn-window rules. No other card uses this exact duration in the snapshot. | Small: typed lowering, saved rule, shared turn hooks, native combat, identity/timing/copy/clone tests. |
+| Ranked #2: intervening combat-pair conditions | Wall of Caltrops | 1 if both dependencies complete; 0 from an event-only adapter | Needs TriggerI checks at detection and resolution plus live blocking-set cardinality, Other and absence checks. Its banding consumer already exists. Enables future blocking-set conditions and intervening event bindings. | Larger: two contract families and their changing membership/identity matrix. |
+| Ranked #3: plural sacrifice or entry payments/results | Sword of the Ages; Nameless Race; Frankenstein's Monster. Wood Elemental already supported. | At most 1 per separate complete producer/result chain; 0 from a generic syntax adapter alone | Sword needs transactional plural sacrifice, saved total power and exact completed sacrifice card visits for graveyard exile. Nameless Race needs bounded entry life payment, white nontoken permanent/graveyard counts and TheLifePaid. Monster needs X entry graveyard exile, paid status, completed type count, counter combination and failed-entry destination. These are different transactions. Shared decisions/results can enable later entry payments, but no small common adapter completes all three. | Large for the group; medium/large for each producer with replacement, rollback and identity tests. |
+
+Selected ranked #1 after comparison. It is dependency-ready and gives a credible
+complete-card gain within one bounded slice. The compared candidates do not
+supply a ready multi-card capability with one cohesive small contract. Do not
+claim that one next-turn adapter unlocks the unrelated entry-payment cards.
+Estimated and actual compilation gain match: **one unique name / one record**.
+Full-card gameplay independently gains **Wall of Dust**.
+
+### Supported shape, engine contract and reuse boundary
+
+RON resolving bodies accept exactly
+`CreatePermanentRuleEffectUntil(subject, [CantAttack],
+DuringPlayersNextTurn(player))`. CantAttack is one symbol, the duration has one
+typed player operand, and the subject uses the existing typed permanent compiler.
+Source, host, target and combat-pair event references retain their established
+scopes. Wall of Dust reads Trigger_ThatOtherPermanent and its controller at
+resolution. Wrong arity, malformed/unbound operands, mixed operations and other
+durations reject before game execution. Other operations with this duration,
+static, entry and payment contexts gain no adapter.
+
+Engine API:
+`CantAttackDuringNextTurn(subject PermanentRef, player PlayerRef) ResolvingEffect`.
+It saves one present unphased visit, one valid player and the installation turn.
+Missing runtime operands install nothing. Definition validation rejects nil or
+unbound operands. Departure facts cannot supply an actionable subject. Explicit
+source operands remain visible to waiting delayed source queries.
+
+The shared effect manager starts each saved window in BeginActiveTurn before
+actual turn actions and removes it in the cleanup expiration stage. Selection
+alone does not start a turn. Skipped turns do not consume the window; extra turns
+do. Skipped untap, extra upkeep and repeated turn entry do not alter it. The rule
+stays through the end step and ends before cleanup state-based actions/priority.
+Each installed rule and clone keeps separate window state. CR 500.7, 500.11,
+514.2–3 and 611.2a–c supply the timing and identity contract.
+
+Reused typed references, combat-pair detection-time saved bindings, target
+legality, shared turn drivers, cleanup, attack rules, permanent incarnation checks,
+waiting source inspection, stack copies and engine clone services. The installed
+attack rule remains separate from abilities. Source loss or phasing cannot end
+it. Later control changes cannot redirect its player. Subject return cannot
+inherit the old rule; phasing keeps an installed rule but prevents actions.
+No new payment, replacement ordering, simultaneous movement or counter subsystem.
+RON owns spelling and scope; mage owns the reusable lifecycle and legality.
+
+### Failing-first and card-to-test mappings
+
+The initial engine tests failed with undefined CantAttackDuringNextTurn. The
+initial complete Wall of Dust test failed at LEG:291:294 with the expected
+unsupported temporary combat rule reference. After implementation, engine tests
+caught a source-dependence bug in the Indefinite effect base: source departure
+and phasing incorrectly disabled the saved restriction. The explicit window's
+IsActive contract fixes this without changing legacy turn-attack lifetimes.
+
+Additional fixture corrections used the actual EvtDeclaredBlocker event,
+IsAttackingInCombat query, complete Aura metadata and original RON record bytes.
+Native combat fixtures end combat before testing a later declaration and clear
+the original attack tap status to isolate turn-window legality. No assertion or
+existing engine regression was weakened.
+
+- **Wall of Dust -> TestRONNextTurnAttackWindowWallOfDust**: complete unchanged
+  record, resolving event, inactive installation turn, next-turn attack legality
+  and cleanup expiry.
+- **Wall of Dust -> NativeCombat**: native attackers/blockers/damage, printed
+  defender and 1/4 characteristics, shroud on the untargeted attacker, intervening
+  turn, rejected next-turn declaration and cleanup expiry.
+- **Wall of Dust -> Identity**: pending source departure/phasing, subject return
+  and phasing before/after resolution, phase cycle, controller changes before/
+  after resolution, ability removal, stack copies and pending cloned games.
+- **Wall of Dust -> IndependentBindings**: two factory instances and two events
+  each retain four separate opponents after source departure and trigger placement.
+- **Wall of Dust -> CastingAndLoad**: printed 2R cast payment, insufficient mana
+  rollback, successful entry and strict atomic collection rejection.
+- **Invalid / Contexts / Inventory**: invalid declaration matrix; synthetic
+  resolving source, Aura host and permanent-target references; unpaid activation
+  rollback; semantic duration operand roles. Existing unsupported fixture now
+  uses the complete Wall of Caltrops record rather than newly supported Wall of
+  Dust. Accepted collection counts require the measured gain.
+- **TestNextTurnAttackWindowLifetime / Declarations**: engine nil/unbound/absent
+  operands, source loss, exact subject visit, control, phase-in, saved player,
+  inactive scheduled turn, skipped untap, end-step lifetime and clone isolation.
+- **SkippedAndExtraTurns / IndependentPlayers / WaitingSource**: native skipped
+  turn, extra-turn activation, repeated entry/upkeep/cleanup, no later restart,
+  separate player windows, active clone expiry isolation and explicit waiting
+  departure information without an actionable LKI subject.
+
+### Validation and measured outcome
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONNextTurnAttackWindow -count=1`.
+- `go test ./pkg/mage -run 'TestNextTurnAttackWindow|TestUntilNextTurn|TestSingularAttackRule' -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- `make lint`: final result **0 issues**. The first run reported one bounded
+  four-event test allocation; preallocated its capacity and reran the focused
+  RON tests and lint. Automatic formatting only changed imports in the new test
+  files. Reviewed the final diff; no unrelated file changed.
+- Post-format skill verification `go test ./... -short -count=1` passed.
+- `git diff --check` passed.
+- Final `go run ./cmd/loadcards -json`: exit **1**, expected atomic collection
+  rejection. **2,255 compiled / 190 rejected records**, **886 accepted / 100
+  rejected names**. The only removed diagnostic is Wall of Dust's
+  LEG.lines.ron:291:294 temporary combat rule reference. No diagnostic was added
+  or changed and no accepted record was lost. This is collection rejection,
+  not build/test/environment failure.
+
+Estimated and actual gain match: **one name / one record**. Complete-card RON
+behavior gains Wall of Dust separately from compilation and synthetic contracts.
+The completed slice is ready for the authorized single commit
+`feat(ron): implement next-turn attack windows`.
+
+No source defect was corrected. All twelve source SHA-256 values still match
+the vocabulary snapshot; no source or snapshot refresh is needed. Existing
+callers remain. Runtime cutover, Go-card removal, obsolete generator retirement
+and DSL cleanup remain gated. No definition or DSL function was removed, so no
+removal caller audit was needed. The implement-engine skill supplied engine
+contract guidance; the user's migration scope supplied RON lowering, gameplay,
+ledger and commit requirements. No removed card/set skill was used.
+
+Changed files: pkg/mage/attack_rule_turn.go, next_turn_duration.go,
+turn_execution.go, next_turn_attack_window_test.go and doc.go;
+pkg/mage/dsl/ron/temporary_blocking.go, inventory.go,
+next_turn_attack_window_test.go, combat_pair_reference_test.go,
+matching_permanent_exile_cost_test.go, definition_plan_test.go, inventory_test.go
+and numeric_consumers_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+### Ranked next candidates
+
+1. **Intervening combat-pair conditions and live blocking sets.** Reassess Wall
+   of Caltrops against other intervening-condition demand. Its complete record
+   requires both event-time/resolution checks and blocker count/absence semantics.
+2. **Plural activation sacrifice with saved facts and card visits.** Sword of the
+   Ages needs the complete power/damage/graveyard-exile chain. Compare shared
+   plural payment/result demand before selecting a prerequisite.
+3. **Entry payments and saved results.** Compare Nameless Race's bounded life
+   payment with Frankenstein's Monster's X graveyard payment and counter choices.
+   Keep different producers separate and implement a dependency-ready contract.
 
 Stop after this completed slice. All migration completion gates remain unfinished.

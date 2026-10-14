@@ -44,7 +44,48 @@ func (em *EffectManager) removeUntilNextTurn(player uuid.UUID, turn int) bool {
 // Drivers must check turn skips first. Repeated calls in one turn are safe.
 func (g *Game) BeginActiveTurn() {
 	g.recordActiveTurnStart()
-	if g.effects.removeUntilNextTurn(g.ActivePlayerObj().PlayerID(), g.CurrentTurn()) {
+	started := g.effects.beginNextTurnWindows(g.ActivePlayerObj().PlayerID(), g.CurrentTurn())
+	if g.effects.removeUntilNextTurn(g.ActivePlayerObj().PlayerID(), g.CurrentTurn()) || started {
 		g.ApplyContinuousEffects()
 	}
+}
+
+// Each installed rule keeps its own window so clones can enter different turns.
+type nextTurnWindow struct {
+	player     uuid.UUID
+	afterTurn  int
+	activeTurn int
+}
+
+func (w *nextTurnWindow) active(turn int) bool {
+	return w.player == uuid.Nil || w.activeTurn == turn && turn > w.afterTurn
+}
+
+type nextTurnWindowEffect interface {
+	nextTurnLifetime() *nextTurnWindow
+}
+
+func (em *EffectManager) beginNextTurnWindows(player uuid.UUID, turn int) bool {
+	changed := false
+	for _, effect := range em.effects {
+		if rule, ok := effect.(nextTurnWindowEffect); ok {
+			window := rule.nextTurnLifetime()
+			if window.player == player && turn > window.afterTurn && window.activeTurn == 0 {
+				window.activeTurn = turn
+				changed = true
+			}
+		}
+	}
+	return changed
+}
+
+func (em *EffectManager) removeNextTurnWindows(turn int) {
+	effects := em.effects[:0]
+	for _, effect := range em.effects {
+		if rule, ok := effect.(nextTurnWindowEffect); ok && rule.nextTurnLifetime().player != uuid.Nil && rule.nextTurnLifetime().activeTurn == turn {
+			continue
+		}
+		effects = append(effects, effect)
+	}
+	em.effects = effects
 }
