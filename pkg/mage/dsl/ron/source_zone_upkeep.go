@@ -8,9 +8,10 @@ import (
 type sourceZonePlan struct {
 	zone core.Zone
 	name string
+	aura bool
 }
 
-func compileSourceZoneUpkeep(n Node) (optionFactory, error) {
+func compileSourceZoneUpkeep(n Node, declaration scope) (optionFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func compileSourceZoneUpkeep(n Node) (optionFactory, error) {
 	if body.Name != "ActionList" {
 		return nil, unsupported(body, "source-zone action list")
 	}
-	source := &sourceZonePlan{zone: core.ZoneGraveyard, name: "ThisGraveyardCard"}
+	source := &sourceZonePlan{zone: core.ZoneGraveyard, name: "ThisGraveyardCard", aura: declaration.aura}
 	if n.Name == "FromExile" {
 		source = &sourceZonePlan{zone: core.ZoneExile, name: "ThisExiledCard"}
 	}

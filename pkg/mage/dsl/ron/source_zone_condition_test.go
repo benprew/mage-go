@@ -107,8 +107,8 @@ func TestRONSourceZoneConditionRecords(t *testing.T) {
 	for _, set := range []string{"LEA", "LEB", "2ED", "3ED", "CED", "CEI"} {
 		t.Run(set, func(t *testing.T) {
 			node := repositoryRecord(t, set, "Nether Shadow", set+".ron")
-			if _, err := Compile(node); err == nil {
-				t.Fatal("complete card unexpectedly compiled")
+			if _, err := Compile(node); err != nil {
+				t.Fatal(err)
 			}
 			wrapper := node.Fields["Rules"].Args[1]
 			trigger := wrapper.Args[0]

@@ -6,40 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **861 accepted / 125 rejected names**
-(986 total), **2,208 compiled / 237 rejected records** (2,445 total).
-The latest slice is **RESTRICTED-FIXED-MANA**. Fixed resolving productions use
-one replacement event and retain artifact-only or creature-only spending rules
-in both manual execution and automatic payment metadata.
+Latest measured result (2026-10-13): **862 accepted / 124 rejected names**
+(986 total), **2,214 compiled / 231 rejected records** (2,445 total).
+The latest slice is **OPTIONAL-GRAVEYARD-SOURCE-RETURN**. Exact non-Aura source-card
+returns offer a resolution-time choice and use the shared battlefield entry path.
 
-Estimated and actual full-card gains are **one name / one record**.
-Mishra's Workshop now has complete unchanged-record gameplay tests.
-Metamorphosis retains full gameplay coverage through the shared restriction
-adapter. Native and RON evidence covers payment legality, rollback, phasing,
-replacement batching, immutable declarations, copies and game clones.
+Estimated and actual full-card gains are **one name / six records**.
+Nether Shadow now has complete unchanged-record gameplay tests for every reprint.
+Native and RON evidence covers acceptance/decline, ordered intervening conditions,
+choice-time visit rechecks, haste, phasing, entry counters/replacements, immutable
+bindings, independent events, delayed frames, factory isolation, copies and clones.
 All previously accepted records stay accepted; remaining diagnostics are unchanged.
 
 The loader still rejects the collection atomically. Restricted X payment,
-optional source-card return, exile counters and other unsupported records remain
-gaps. Runtime cutover, Go-card removal and DSL cleanup stay gated.
+as-though spending, exile counters and other unsupported records remain gaps.
+Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Source-zone intervening-if facts and predicates.** Reuse the new exact
-   source visits for Nether Shadow's ordered graveyard condition and All Hallow's
-   Eve's exile counter condition. Their optional return and counter actions still
-   need adapters. Zero immediate gains from the shared predicate frame alone;
-   medium effort with concrete downstream value for two names.
-2. **Mandatory entry exile payment/results — Frankenstein's Monster.**
-   Ordered entry and announced X are ready. Entry transaction, local outcomes,
-   failure routing and combination counter placement remain; zero gains from
-   payment alone. Medium/high effort for one eventual name / record.
-3. **Persistent number choices — Shapeshifter.** Entry 0–7 choice, optional
-   controller-upkeep update and live P/T must share one per-visit number. One potential
-   name / record after all three contexts; medium/high effort.
+1. **As-though colored mana spending — Sunglasses of Urza.** One name/six records;
+   compare shared payment/solver support and restriction preservation first.
+2. **Restricted X payment — Drain Life.** Zero immediate gains until clamped
+   damage life gain also works; payment decomposition is a shared prerequisite.
+3. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
+   precedes predicates/removal, spell exile and all-graveyard batch returns.
 
 ## Dependencies and source blockers
 
@@ -5669,3 +5662,133 @@ DSL functions were removed; the cutover/removal gates remain unmet.
    remains a separate comparison candidate.
 
 This run stops after restricted fixed mana production.
+
+## 2026-10-13 — OPTIONAL-GRAVEYARD-SOURCE-RETURN
+
+### Candidate comparison and selection
+
+The tree was clean. Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1`
+passed. The baseline loader exited 1 for collection rejection with 2,208 compiled /
+237 rejected records and 861 accepted / 125 rejected names. This was collection rejection. The latest ranked candidates were compared from
+complete records, nested forms and targeted vocabulary. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card gains | Other blockers; downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: optional exact graveyard source return | Nether Shadow; one name/six records | Event, exact source binding, condition and shared entry are ready. Only the optional native operation and compiler adapter remain. Completes source-zone return; typed native optional entry can also serve future saved card results. | Low/medium |
+| Ranked #2: restricted X payment | Drain Life; zero immediate gains, one eventual name/six records | Announced cost decomposition and solver restrictions need a contract. Clamped actual-damage gain is a separate remaining blocker. Enables shared X legality, including interaction with restricted mana and as-though spending. | Medium/high |
+| Ranked #3: exile-card counter storage | All Hallow's Eve; zero immediate gains, one eventual name/record | Storage precedes predicates/removal. Spell-exile modifiers and simultaneous all-graveyard return also remain. Enables exact-visit counters in query and resolving frames. | Medium/high |
+
+Candidate #1 is dependency-ready and has the largest credible complete-card gain
+per effort among these candidates. No compared alternative unlocks multiple unique cards in one complete slice.
+The six Nether Shadow and Drain Life records and the complete LEG All Hallow's
+Eve record were inspected. No Go card supplied requirements. Local LEA/LEG
+Oracle data agrees with the selected source. CR 603.4/5 requires both intervening
+checks and a resolution-time optional choice; CR 400.7 prevents stale returns;
+CR 404.1 preserves graveyard order; CR 603.6d and 614.1c/d put entry replacements
+before entry events. No source-data defect was found.
+
+### Contract, dependencies and reuse boundary
+
+Native signature: `mage.MayReturnNonAuraCardToBattlefield(card mage.CardRef,
+player mage.PlayerRef) mage.ResolvingEffect` for non-Aura permanents. The selected player chooses normal
+entry at resolution and is the entry controller/actor. Ownership stays unchanged.
+No card, no player, a nonpermanent, an Aura or a card outside a graveyard
+supplies no offer.
+The operation saves the exact graveyard visit before the offer and checks it
+after acceptance. Departure or return cannot supply entry. Decline does not stop
+independent instructions or future offers. Native definition validation retains
+the existing typed card/player child contracts. No declaration holds chosen state.
+
+RON signature/context: `MayAction(PutGraveyardCardOntoBattlefield(
+ThisGraveyardCard, [EntersNormally]))` in ordinary `ActionList` bodies of supported non-Aura
+`FromGraveyard` upkeep `TriggerA`/`TriggerI` and their saved delayed bodies.
+`compileOptionalSourceReturn(Node, scope) (effectFactory, error)` validates the
+source plan and exactly one bare entry symbol. The selected player is `You` in
+this context. Fresh source bindings are built for each factory. Aura or exile sources,
+other references, modifiers, malformed arities, unbound references, entry and
+replacement contexts and scoped player-action optional returns still reject.
+The ordinary targeted return adapter and all existing callers remain unchanged.
+
+RON owns spelling, scope and declaration errors. The engine adds an immutable
+optional flag to the existing typed return operation. It reuses
+`returnGraveyardCardToBattlefieldWithEntry`, entry preparation/replacements,
+post-preparation visit validation, graveyard movement, registration and events.
+Event capture, intervening conditions, APNAP, stack copies, delayed frame capture
+and clones keep their existing contracts. No global result slot or parallel zone
+service is added. Native controller source reads use the existing waiting-query
+contract without resolving operands or making offers. Phasing preserves saved
+waiting identity; returned sources cannot replace it. This singular return has
+no payment, rollback or simultaneous batch contract. Entry replacement ordering
+is supplied by the existing shared entry service.
+
+### Failing-first tests and card mappings
+
+Native tests first failed at undefined `MayReturnNonAuraCardToBattlefield`, after test
+API spelling corrections. RON tests independently failed at the expected
+unsupported optional `PutGraveyardCardOntoBattlefield` in the complete records.
+Direct-frame and cloned-player fixtures were corrected to retain exact visit
+methods and explicit decisions; no production clone change was needed. A final
+failing Aura test exposed missing attachment choices in the reused entry path.
+The native API now explicitly filters Auras, and the compiler rejects Aura sources
+using retained source-plan declaration metadata. Existing event/condition probes
+now assert full Nether Shadow compilation. Exact collection assertions require
+2,214 compiled / 231 rejected records.
+
+- **Nether Shadow → TestRONOptionalGraveyardReturnNetherShadow.** All six complete
+  unchanged records: haste permits immediate attack, own-upkeep only, three
+  matching creatures above the source, noncreatures/below-source exclusions,
+  false detection/resolution, source departure/return, choice-time return,
+  acceptance/decline, entry replacement, two factories, copies with same/other
+  controller, pending and stacked clones and source phasing. One name/six records
+  receive complete-card coverage, including metadata.
+- **TestRONOptionalGraveyardReturnFrames.** Synthetic source-zone bodies: separate
+  queued events, decline followed by later acceptance, independent continuation,
+  saved delayed bodies and returned delayed visits. Inventory retains action,
+  card-reference and entry-operation roles without claiming behavior coverage.
+- **TestRONOptionalGraveyardReturnInvalid.** Wrong arities, entry symbol shape,
+  empty/multiple/unsupported entry options, wrong/unbound source zones, unsupported
+  contexts and atomic rejected loading with a retained registry.
+- **TestOptionalGraveyardReturn, Declarations and Waiting.** Native acceptance,
+  decline, departed/returned visits, departures/returns during choice, different
+  owner/controller, nonpermanents, exile, missing players, entry counters and
+  tapped-entry replacement ordering. Definition rejection and waiting-query
+  source identity, phasing, departure, return exclusion, opaque player purity
+  and clone lifetime are tested.
+
+### Verification and measured result
+
+Focused RON/native tests passed with -count=1. After the Aura boundary correction,
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` passed. `make lint` passed with 0 issues. Formatting was reviewed;
+no unrelated file changed. Native/RON focused tests passed again after lint.
+`git diff --check` passed. No environment failure or validation blocker remains.
+Final `go run ./cmd/loadcards -json` exits 1 for atomic collection rejection:
+**2,214 compiled / 231 rejected records**, **862 accepted / 124 rejected names**,
+out of 2,445 records and 986 names. A baseline/final diagnostic comparison removes
+only the six Nether Shadow issues; no accepted record regresses and all remaining
+diagnostics are unchanged. Estimated one-name/six-record gains match actual gains.
+Complete-card RON gameplay coverage adds Nether Shadow. Compilation counts remain
+separate from behavior evidence; complete collection gameplay and runtime cutover
+are still unmet.
+
+Changed files: engine composable_actions.go/doc.go and new native return test;
+RON compiler.go, tap_choice.go, source_zone_upkeep.go, new optional return adapter
+and test, source-zone upkeep/condition tests, definition_plan_test.go,
+inventory_test.go and numeric_consumers_test.go;
+docs/dsl-reference.md, engine-rules-contracts.md and this ledger. No source RON
+changed, so vocabulary file hashes need no refresh. No Go definitions, generators
+or broad DSL functions were removed; all removal gates remain unmet.
+
+### Ranked next candidates
+
+1. **As-though colored mana spending — Sunglasses of Urza.** Complete inspected
+   records have one rule and suggest one name/six records. Establish shared mana
+   solver/payment legality and restriction preservation before lowering.
+2. **Restricted X payment — Drain Life.** Fixed production restrictions do not
+   constrain X. Zero immediate gains until clamped damage life gain works;
+   medium/high effort for shared announced-cost decomposition and payment.
+3. **Exile-card counters — All Hallow's Eve.** Exact query frames are ready;
+   storage precedes predicates/removal, spell exile and batch returns. Zero
+   immediate gains; medium/high effort. Compare broader shared candidates afresh.
+
+This run stops after optional exact graveyard source return.

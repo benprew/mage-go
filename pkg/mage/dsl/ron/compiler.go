@@ -665,7 +665,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "TriggerA":
 		return compileTriggerRule(n, ctx)
 	case "FromGraveyard", "FromExile":
-		return compileSourceZoneUpkeep(n)
+		return compileSourceZoneUpkeep(n, ctx)
 	case "TriggerI":
 		return compileTappedUpkeep(n, ctx)
 	case "EachPermanentRuleEffect":

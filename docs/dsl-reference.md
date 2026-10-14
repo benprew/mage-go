@@ -14816,3 +14816,29 @@ restrictions, repeated one-color production and spell copies under separate
 controllers and in cloned games. `Invalid` checks compiler contexts, malformed
 forms, nested empty groups and atomic registry rejection. Existing
 `TestRONSacrificeManaMetamorphosis` retains full Metamorphosis coverage.
+
+### RON optional exact graveyard source return
+
+`MayAction(PutGraveyardCardOntoBattlefield(ThisGraveyardCard, [EntersNormally]))`
+is supported for non-Aura sources in ordinary `ActionList` bodies of `FromGraveyard` upkeep triggers
+and their saved delayed bodies. `compileOptionalSourceReturn(Node, scope)`
+validates the exact source binding and one bare normal-entry symbol. It lowers
+to `mage.MayReturnNonAuraCardToBattlefield(card CardRef, player PlayerRef)
+ResolvingEffect` with fresh factory bindings. The player is `You` in this context.
+The player decides at resolution and controls the returned permanent. Ownership
+stays unchanged. The source must retain its saved graveyard visit before and
+after the choice. Normal entry uses the shared entry preparation and event path.
+
+Aura sources, other card references, empty/multiple entry operations, entry modifiers, exile
+sources, unbound references, entry/replacement declarations and scoped
+`PlayerAction`/`PlayerActions` optional returns reject before publication.
+This does not add optional targets or a general optional-action wrapper.
+
+Complete unchanged Nether Shadow records in LEA, LEB, 2ED, 3ED, CED and CEI now
+compile and execute. `TestRONOptionalGraveyardReturnNetherShadow` tests all rules,
+including haste and the ordered graveyard condition at both trigger time and
+resolution. `Frames` covers saved delays, independent queued events, later
+actions and decline followed by a later offer. `Invalid` covers declaration
+rejection and atomic loading. Native `TestOptionalGraveyardReturn*` covers
+choice-time rechecks, owner/controller separation, entry counters/replacements,
+definition validation and pure waiting queries.

@@ -113,8 +113,9 @@ func TestRONSourceZoneUpkeepRecordPrerequisites(t *testing.T) {
 	} {
 		t.Run(tc.set+"/"+tc.name, func(t *testing.T) {
 			node := repositoryRecord(t, tc.set, tc.name, tc.set+".ron")
-			if _, err := Compile(node); err == nil {
-				t.Fatal("complete record unexpectedly compiled")
+			_, compileErr := Compile(node)
+			if (compileErr == nil) != (tc.wrapper == "FromGraveyard") {
+				t.Fatalf("complete record support changed: %v", compileErr)
 			}
 			var wrapper Node
 			for _, rule := range node.Fields["Rules"].Args {

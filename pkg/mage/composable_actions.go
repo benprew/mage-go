@@ -2775,6 +2775,7 @@ func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
 type returnCardToBattlefieldEffect struct {
 	card         CardRef
 	controller   PlayerRef
+	optional     bool
 	entryTapped  bool
 	entryOptions int
 }
@@ -2807,7 +2808,18 @@ func ReturnCardToBattlefield(card CardRef, controller PlayerRef, options ...Batt
 	}
 	return effect
 }
-func (*returnCardToBattlefieldEffect) Text() string {
+
+// MayReturnNonAuraCardToBattlefield offers entry for one non-Aura graveyard permanent.
+// The selected player chooses at resolution and controls the card.
+// The saved visit must remain current after the choice.
+func MayReturnNonAuraCardToBattlefield(card CardRef, player PlayerRef) ResolvingEffect {
+	return &returnCardToBattlefieldEffect{card: card, controller: player, optional: true}
+}
+
+func (e *returnCardToBattlefieldEffect) Text() string {
+	if e.optional {
+		return "may return card from graveyard to the battlefield"
+	}
 	return "return card from graveyard to the battlefield"
 }
 func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
@@ -2833,6 +2845,16 @@ func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	controller, ok := e.controller.resolvePlayer(ctx)
 	if !ok {
 		return nil
+	}
+	if e.optional {
+		visit := ctx.Game.graveyardVisit(card.ID())
+		player := ctx.Game.GetPlayer(controller)
+		if visit == uuid.Nil || !IsPermanentCard.Match(card) || card.HasSubType("Aura") || player == nil || !player.ChooseMayAbility(e.Text()) {
+			return nil
+		}
+		if ctx.Game.graveyardVisit(card.ID()) != visit {
+			return nil
+		}
 	}
 	returnGraveyardCardToBattlefieldWithEntry(ctx.Game, card.ID(), controller, e.entryTapped)
 	return nil

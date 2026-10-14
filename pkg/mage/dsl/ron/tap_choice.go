@@ -7,6 +7,9 @@ func compileOptionalTapChoice(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	action := n.Args[0]
+	if action.Name == "PutGraveyardCardOntoBattlefield" {
+		return compileOptionalSourceReturn(action, ctx)
+	}
 	if action.Name == "DrawACard" {
 		if action.Kind != Symbol {
 			return nil, problem(action, "DrawACard requires a symbol")

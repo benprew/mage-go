@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [MayReturnNonAuraCardToBattlefield] offers normal entry for one exact
+// non-Aura graveyard card.
+// The selected player chooses at resolution and controls the returned card.
+// Departure and return before or during choice cannot supply the saved visit.
+// Missing players, absent cards, Auras and nonpermanent cards supply no offer.
+// Shared entry rules run before entry events. Copies and clones keep separate
+// frames. Decline does not stop later actions or later offers. Waiting queries
+// retain explicit player source reads without choices or movement.
+// RON accepts MayAction around PutGraveyardCardOntoBattlefield with
+// ThisGraveyardCard and one EntersNormally in non-Aura graveyard source lists.
+// Other references, entry options and player-action contexts need adapters.
+//
 // [AddRestrictedMana] saves fixed productions with one spending rule.
 // All productions use one shared mana replacement event. Each mana unit
 // keeps its rule through type replacements, payment and game clones.

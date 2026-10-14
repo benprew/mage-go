@@ -19406,3 +19406,48 @@ restrictions, repeated one-color production and spell copies under separate
 controllers and in cloned games. `Invalid` checks compiler contexts, malformed
 forms, nested empty groups and atomic registry rejection. Existing
 `TestRONSacrificeManaMetamorphosis` retains full Metamorphosis coverage.
+
+## Optional exact graveyard return
+
+`MayReturnNonAuraCardToBattlefield(card CardRef, player PlayerRef) ResolvingEffect`
+adds an optional normal-entry form for non-Aura permanents to the existing typed
+graveyard return operation. The selected player chooses at resolution and is the entry controller
+and actor. Ownership stays unchanged. A missing player, unavailable reference,
+a nonpermanent, an Aura or a card outside a graveyard supplies no offer. The
+graveyard visit is saved before the offer and checked again after acceptance. A departed
+or returned card cannot supply entry (CR 400.7). This action does not use LKI.
+
+An accepted offer uses `returnGraveyardCardToBattlefieldWithEntry` and the shared
+entry preparation, exact-visit recheck, graveyard move, registration and entry
+completion services. Entry counters and tapped-entry replacements run before
+entry events (CR 603.6d, 614.1c/d). There is no payment or simultaneous batch in
+this singular operation. Decline leaves the card in its graveyard and does not
+stop later instructions or later event offers (CR 603.5).
+
+Definition validation retains the existing card/player child contracts: nil
+references, unwritten card/player bindings and undeclared targets reject. The
+optional declaration stores no chosen state. Event frames, stack copies, delayed
+frames and game clones keep saved visits separate. The existing explicit
+controller-source read also serves the optional form in waiting delayed queries.
+Queries do not read players or cards, make offers, move cards or change frames.
+Phasing preserves that waiting reference; a returned source cannot replace it.
+
+RON accepts exactly one normal-entry non-Aura source return inside `MayAction` in
+`FromGraveyard` upkeep action lists and saved delayed lists. Aura declarations
+reject because the shared return path does not supply Aura attachment choices. Source-zone trigger and intervening-condition restrictions
+remain unchanged. Nether Shadow checks its own graveyard visit and three creature cards above it at detection and at
+resolution (CR 603.4, 404.1). A copy under another controller checks that
+controller's graveyard. Two copies cannot return the same original visit twice.
+Phased battlefield cards do not acquire graveyard trigger membership.
+
+Native `TestOptionalGraveyardReturn`, `Declarations` and `Waiting` cover offer
+acceptance/decline, missing and returned visits, departure during choice,
+owner/controller separation, counters and entry replacement order, wrong zones,
+nonpermanents, invalid bindings, source identity, query purity and clone lifetime.
+RON `TestRONOptionalGraveyardReturnNetherShadow` covers all six complete records,
+ordered threshold checks, haste, factory isolation, pending and stacked clones,
+copies, source phasing and entry replacements. `Frames` covers distinct events,
+delays, returned delayed visits and independent continuation actions. `Invalid`
+covers unsupported signatures/contexts and atomic registry rejection. The old
+source-zone condition projections remain prerequisite tests; the new unchanged
+record tests establish complete-card behavior.
