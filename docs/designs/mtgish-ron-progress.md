@@ -6,19 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **868 accepted / 118 rejected names**
-(986 total), **2,236 compiled / 209 rejected records** (2,445 total).
-The latest slice is **SIMULTANEOUS-GRAVEYARD-CREATURE-ENTRY**. Resolving bodies
-capture creature graveyard visits, prepare owner entry choices in APNAP order,
-recheck visits and register every successful entrant before observations.
-Entry replacements, counters, copies and tapped status use shared services.
-Returned visits and late additions cannot join the batch. Uncast entry uses
-zero X; clones keep separate execution. Entrant layers precede notifications.
+Latest measured result (2026-10-13): **869 accepted / 117 rejected names**
+(986 total), **2,237 compiled / 208 rejected records** (2,445 total).
+The latest slice is **EVENT-PLAYER-TARGET-CHOOSER**. Bound step triggers use a
+saved event player for target choice at placement. Current target legality uses
+the detected controller and source; resolution checks the exact target visit.
+Copies retain event facts and let their controller choose new targets.
 Estimated and actual full-card gains are **one name / one record**.
-All Hallow's Eve now has complete unchanged-record RON gameplay evidence.
+The Abyss now has complete unchanged-record RON gameplay evidence, including
+paid casting, both upkeep players and destruction without regeneration.
 Compilation coverage and complete-card gameplay each gain this one card.
 
-The loader still rejects the collection atomically. All Hallow's Eve's mass-entry
+The loader still rejects the collection atomically. The Abyss's target-arity
 diagnostic is gone; every remaining rejection diagnostic is unchanged. Runtime
 cutover, Go-card removal and DSL cleanup stay gated.
 
@@ -27,11 +26,16 @@ cutover, Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Player-chosen trigger targets — The Abyss.** Saved upkeep-player chooser,
-   current legality and copy retargeting; estimated one name / one record.
+1. **Temporary P/T switch — Transmutation.** Existing layer services can supply
+   the reusable switch operation; estimated one name / one record. Compare fresh
+   multi-card prerequisites before selecting this small adapter.
 2. **Variable discard and saved discard-count return — Recall.** Self-exile is
    ready. Discard alone gives zero gains; its dependent return can unlock one
-   name / one record. Reassess shared value with fresh complete records.
+   name / one record. Keep the two contracts separate unless one complete slice
+   can establish the whole saved-result procedure.
+3. **Host unblocked attack event — Farrel's Mantle.** A shared host event
+   prerequisite has zero immediate unlocks; dependent event aliases, target
+   exclusion and optional damage-payment body still need complete inspection.
 
 ## Dependencies and source blockers
 
@@ -7327,6 +7331,161 @@ only established behavior. No RON source or vocabulary file changed.
    graveyard-return consumer can finish one name / one record. Do not count
    already accepted fixed-discard cards as new unlocks. Reassess multi-card
    prerequisites before choosing this two-contract procedure.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain gated. This run stops
+after one completed slice.
+
+## 2026-10-13 — EVENT-PLAYER-TARGET-CHOOSER
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1` passed;
+fresh loader evidence was 2,236 compiled / 209 rejected records, 868 accepted /
+118 rejected names. The loader exited 1 for atomic collection rejection, not a
+build failure. Complete The Abyss, Recall and Transmutation records were read
+from LEG; the complete Farrel's Mantle record was also read for downstream
+comparison. Targeted vocabulary queries confirmed one occurrence each of
+`TargetPermanentOfPlayersChoice`, `NumCardsDiscardedThisWay` and `SwitchPT`.
+No Go card definition was used as a requirement. Reprints count once.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- | --- |
+| Event-player target chooser (ranked #1) | The Abyss | 1 name / 1 record | Upkeep binding, characteristics and no-regeneration destruction are ready. Add shared saved-player choice and control filter; reusable for other bound step-target rules | Small: typed option, placement query, lowering and identity/choice tests |
+| Variable discard and discard-count return (ranked #2) | Recall | 0 for discard alone; 1 name / 1 record after both contracts | Self-exile is ready. Needs actual discard count and dependent graveyard return, with saved visits and separate result scope. Enables later saved-discard consumers | Medium/large: two distinct operation contracts and result lifetime |
+| Temporary layer switch | Transmutation | 1 name / 1 record | Existing target and duration lower. Needs switch-layer lowering and native contract evidence; reusable P/T switch layer | Small: layer adapter and order/lifetime tests; no multi-card occurrence in this collection |
+
+Ranked #1 is dependency-ready and gives the same credible immediate gain as
+Transmutation, while adding an explicit shared chooser contract. The records
+show no dependency-ready multi-card gain among these bounded candidates.
+Recall's two contracts give a smaller gain per effort. Selection, boundary and
+acceptance cases were stated before edits. Only this slice was implemented.
+Estimated and actual gains match: one unique name and one record.
+
+### Exact signatures, contexts and engine reuse
+
+- Native `TargetChosenBy(player PlayerRef) PermanentTargetOption` accepts one
+  saved event player. Definition validation rejects nil, unbound or incompatible
+  refs, duplicate explicit choosers and simultaneous explicit/opponent choosers.
+  The declaration holds no game-time selected state.
+- RON `TargetPermanentOfPlayersChoice(filter, Trigger_ThatPlayer)` accepts one
+  singular or numbered permanent target group in a bound step-trigger body.
+  `ControlledByAPlayer(SinglePlayer(Trigger_ThatPlayer))` in its target filter
+  resolves the same step binding. The existing direct player argument parsing
+  also applies to this filter. Characteristic filters and nested And compose.
+  Other event chooser contexts, other chooser refs, tuple player substitutions,
+  wrong arities and unbound/non-step reads reject.
+- Factory-local `instanceBindings.steps` builds the chooser and control reads.
+  The adapter remains in ron; reusable execution remains in mage.
+- `chooseTriggerTargets` uses `capturedTriggerTargetPlayers` and
+  `targetPlayerQuery` to resolve the chooser. It does not replace the live
+  resolution frame or run the ability body. Missing players cannot choose.
+  Target candidate selection and validation still use the detected ability
+  controller and source, including protection, hexproof, shroud and phasing.
+- Shared target identity, resolution legality, regeneration/destruction,
+  event capture, clone and stack-copy services are reused. Copies keep captured
+  event players and original target identities. CR 707.10c gives their controller
+  the new-target choice; the event player still restricts controlled subjects.
+  Existing spell-text declaration comparison now includes the chooser count.
+
+CR 115.1d, 603.3d, 400.7, 608.2b, 702.26 and 707.10c support target placement,
+missing legal choices, exact visits, resolution legality, phasing and copy
+choices. Local `data/LEG.json` Oracle text matches the complete unchanged
+The Abyss record. No source defect was found. RON sources and vocabulary hashes
+are unchanged; no vocabulary refresh was required.
+
+No payment, simultaneous operation, replacement or LKI subsystem was added.
+Destruction without regeneration uses the existing service and still respects
+indestructibility. Trigger source LKI uses the existing target-source snapshot.
+No mutable declarations, global last-action slot, card-name dispatch, fallback,
+partial production registry or game-time declaration panic was added. Current
+Go callers and definitions remain. Runtime cutover and all removal gates remain
+unmet, so no DSL function or Go definition was deleted.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed to compile at missing `TargetChosenBy`. The completed
+RON gameplay test failed at The Abyss's exact missing two-argument target
+adapter. Initial RON fixture construction used unavailable artifact/protection
+helpers; those were corrected before the expected adapter failure was captured.
+A failing native invalid-declaration assertion exposed nil chooser acceptance;
+explicit declaration counts repaired nil and conflicting chooser checks.
+The copy fixture initially assumed `ResolveStack` resolves one object; it was
+corrected to assert both objects after the shared full-stack operation, retaining
+the original destruction and clone assertions.
+
+- **The Abyss → `TestRONEventTargetChooserAbyss`.** Complete original record;
+  failed and paid casting, both upkeep players, choice timing, nonartifact and
+  current control filters, protection, controller-relative hexproof, invalid
+  chooser response, no legal target, source control/departure/return/phasing,
+  phased-source detection exclusion, target control/return/shroud/phasing and
+  phase cycle, indestructibility, regeneration exclusion, copy retargeting and
+  clone isolation.
+- **The Abyss → `TestRONEventTargetChooserBindingsAndStrictLoad`.** Exact source
+  record loaded through strict registry APIs; two pending event players keep
+  separate choices, clones keep separate zones, and invalid chooser collections
+  fail atomically without replacing the registry.
+- **The Abyss → `TestRONTextUpkeepTriggerInventory` and
+  `TestRONTextUpkeepLayerInventory`.** Existing complete-record
+  definition rebuild/text-revision inventory now includes The Abyss, increasing
+  this declaration inventory from 61/123 to 62 names/124 records.
+- **`TestRONEventTargetChooserInvalid`.** Malformed, incompatible and unbound
+  chooser declarations reject in both spell and bound upkeep bodies.
+- **`TestRONEventTargetChooserNumberedInstances`.** End-step event, two numbered
+  groups, separate factory instances, four explicit choices and cloned execution.
+- **`TestTargetEventChooser`, `Invalid`, `Conflict`.** Native saved-player
+  placement, preserved enclosing query binding, copy-controller retargeting,
+  original/copy target independence and declaration validation.
+
+### Validation and files
+
+The first and second engine short checks exposed stale upkeep trigger/layer
+inventory expected counts after this newly accepted record. Exact collection and declaration counts
+were updated; no assertions or scenarios were removed.
+
+Final checks passed after the exact inventory count and lint-name corrections:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONEventTargetChooser -count=1`
+   passed; native `go test ./pkg/mage -run TestTargetEventChooser -count=1`
+   passed. The existing target-player-reference tests and both upkeep inventory
+   tests also passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+4. Final `make lint` passed with **0 issues**, and `git diff --check` passed.
+   Lint initially found a test variable named `copy`; renaming it to `copied`
+   repaired the issue. Automatic import formatting in the new test files was
+   reviewed. Focused tests, build, vet, engine short tests and the full suite
+   passed again after this correction. No unrelated changes occurred.
+5. Final `go run ./cmd/loadcards -json` exited 1 for required atomic collection
+   rejection: **2,237 compiled / 208 rejected records**, **869 accepted / 117
+   rejected names**. A keyed comparison with the fresh baseline proves that only
+   `LEG.lines.ron:261:211: expected 1 positional arguments (TargetPermanentOfPlayersChoice)`
+   disappears. All remaining rejected records retain identical diagnostics.
+   No accepted record regressed. Expected collection rejection does not block
+   this slice's commit. No environment, build, test or lint blocker remains.
+
+Native files: new `target_event_chooser.go` and native tests; `target.go`,
+`composable_target.go`, `game.go`, `text_spell_continuation.go` and `doc.go`.
+Compiler files: new `event_target_chooser.go` and RON gameplay/rejection tests;
+`singular_target_groups.go` and `player_relative_target.go`. Exact totals changed
+in definition-plan, inventory, numeric-consumer and upkeep trigger/layer
+inventory tests. API/rules-contract docs and this ledger record only the behavior
+established here. No RON source, vocabulary, Go card definition or broad DSL
+export changed.
+
+### Ranked next candidates
+
+1. **Temporary P/T switch — Transmutation.** One name / one record; a small
+   existing-layer adapter and set/modify/switch order, lifetime and clone tests.
+   Reassess fresh multi-card prerequisites before selecting single-card work.
+2. **Variable discard result prerequisite — Recall.** Zero names from the
+   prerequisite alone; one name / one record after the dependent saved-count
+   graveyard return. Establish actual discard count and exact result lifetime;
+   self-exile is already ready.
+3. **Host unblocked attack event — Farrel's Mantle.** Zero immediate names from
+   this event prerequisite; the complete record also needs event-subject aliases,
+   target exclusion and optional damage-payment contracts. A shared host event
+   adapter can enable those later rules; inspect broader host-event records first.
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain gated. This run stops

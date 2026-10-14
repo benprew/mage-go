@@ -19901,3 +19901,38 @@ The complete card casts to exile with two counters, ignores opponent upkeeps,
 counts down on two owner upkeeps, moves itself to its graveyard, and returns both
 players' creatures together. Earlier source-counter tests retain their focused
 projections and now require the complete record to compile.
+
+## Saved event player as trigger target chooser
+
+`TargetChosenBy(player PlayerRef) PermanentTargetOption` requires a saved event
+player. Definition validation rejects nil, unbound and other player reference
+kinds, repeated explicit choosers and a simultaneous opponent chooser. The option
+is immutable and stores no selected player or target. At trigger placement the
+shared event snapshot query resolves the chooser without changing the live
+resolution frame. A missing player removes the trigger. Candidate legality still
+uses the detected ability controller and source, including protection, hexproof,
+shroud and phasing. A required group without legal choices is removed (CR 603.3d).
+
+Copies retain captured event players and target visits. When new targets are
+permitted, the copy controller chooses (CR 707.10c). The original event player
+still supplies control restrictions; resolution uses current characteristics and
+control and the exact saved target visit (CR 400.7, 608.2b). Source departure,
+return, control changes or phasing after detection do not change the saved player.
+Clones retain independent captured maps and target state.
+
+RON accepts `TargetPermanentOfPlayersChoice(filter, Trigger_ThatPlayer)` in
+ordinary bound step-trigger bodies, as a singular or numbered permanent target
+group. `ControlledByAPlayer(SinglePlayer(Trigger_ThatPlayer))` in that target
+filter uses the same per-factory step binding. Existing characteristic filters
+and conjunctions compose with it. Wrong arities, tuple player substitutions,
+unbound reads, other chooser references and non-step contexts reject. Other
+events and chooser contexts require separate adapters.
+
+`TestTargetEventChooser`, `Invalid` and `Conflict` prove native snapshot query,
+copy and definition behavior. `TestRONEventTargetChooserAbyss` covers the complete
+unchanged The Abyss record: paid casting, both upkeep players, source changes,
+protection and nonartifact/control legality, exact target visits, phase cycles,
+indestructibility, destruction without regeneration, copy choices and clones.
+`TestRONEventTargetChooserBindingsAndStrictLoad` covers two pending upkeep events,
+clone isolation and atomic rejection of invalid collections. `Invalid` covers
+unbound and malformed declarations in spell and bound upkeep contexts.

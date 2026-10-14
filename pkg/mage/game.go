@@ -2428,7 +2428,13 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 			continue
 		}
 		chooser := controller
-		if isOpponentChosenTarget(t) {
+		if ref := targetChooserReference(t); ref != nil {
+			id, ok := ref.resolvePlayer(&EffectContext{Game: query, Controller: pt.controller})
+			if !ok {
+				return nil, nil, false
+			}
+			chooser = g.GetPlayer(id)
+		} else if isOpponentChosenTarget(t) {
 			if opp := g.GetOpponent(pt.controller); opp != nil {
 				chooser = opp
 			}

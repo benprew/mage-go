@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetChosenBy] uses a saved event player at trigger placement.
+// The query keeps the live resolution frame. Legality uses the ability controller
+// and source. Missing players cannot supply choices. Copies keep the event facts;
+// their controller chooses new targets. Resolution checks the exact target visit.
+// RON accepts TargetPermanentOfPlayersChoice(filter, Trigger_ThatPlayer) in
+// bound step-trigger bodies. ControlledByAPlayer(SinglePlayer(Trigger_ThatPlayer))
+// uses the same binding with current control. Other chooser contexts reject.
+//
 // [PutGraveyardCreaturesOntoBattlefieldUnderOwnersControl] returns creatures together.
 // Selection saves current graveyard visits before entry choices in APNAP order.
 // Returned visits and cards added during choices cannot join the batch.

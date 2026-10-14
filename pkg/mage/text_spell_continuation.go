@@ -161,7 +161,7 @@ func sameSpellTextTargetSpec(a, b Target) bool {
 		return ok && first.fixedCreatureEnchant == second.fixedCreatureEnchant && first.fixedLandEnchant == second.fixedLandEnchant && first.manaValueEqualX == second.manaValueEqualX && first.excludeSource == second.excludeSource &&
 			first.attachedToControllerOnly == second.attachedToControllerOnly && first.toughnessLessThanSourcePower == second.toughnessLessThanSourcePower &&
 			first.controllerOnly == second.controllerOnly && first.controllerOwned == second.controllerOwned &&
-			first.opponentOnly == second.opponentOnly && first.opponentOwned == second.opponentOwned && first.opponentChooses == second.opponentChooses &&
+			first.chooserCount == second.chooserCount && first.opponentOnly == second.opponentOnly && first.opponentOwned == second.opponentOwned && first.opponentChooses == second.opponentChooses &&
 			len(first.Filters) == len(second.Filters) && len(first.controllerRefs) == len(second.controllerRefs) && slices.Equal(first.combatRelations, second.combatRelations)
 	case *PlayerTarget:
 		second, ok := b.(*PlayerTarget)

@@ -224,6 +224,12 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 		for i, relation := range spec.combatRelations {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("combatRelations[%d]", i), targetCombatRelationOption{relation}})
 		}
+		if spec.chooserCount > 0 {
+			if spec.chooserCount != 1 || spec.opponentChooses {
+				n.problem = "supply one target chooser"
+			}
+			n.children = append(n.children, definitionEdge{"chooser", targetChosenByOption{spec.chooserRef}})
+		}
 		for i, player := range spec.controllerRefs {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("controllerRefs[%d]", i), targetControlledByOption{player}})
 		}

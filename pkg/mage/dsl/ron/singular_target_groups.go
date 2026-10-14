@@ -7,6 +7,9 @@ import (
 )
 
 func compileSingularPermanentTarget(n Node, ctx scope, name string) (targetFactory, error) {
+	if n.Name == "TargetPermanentOfPlayersChoice" {
+		return compileEventChosenPermanentTarget(n, ctx, name)
+	}
 	count := 1
 	chosen := n.Name == "TargetPermanentOfAPlayersChoice" || n.Name == "TargetPermanentOfAPlayersChoiceTheyControl"
 	if chosen {
@@ -92,5 +95,5 @@ func singularTargetControllers(n Node) (you, opponent bool) {
 }
 
 func isSingularPermanentTarget(n Node) bool {
-	return n.Name == "TargetPermanent" || n.Name == "TargetPermanentOfAPlayersChoice" || n.Name == "TargetPermanentOfAPlayersChoiceTheyControl"
+	return n.Name == "TargetPermanentOfPlayersChoice" || n.Name == "TargetPermanent" || n.Name == "TargetPermanentOfAPlayersChoice" || n.Name == "TargetPermanentOfAPlayersChoiceTheyControl"
 }

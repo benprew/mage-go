@@ -23,6 +23,15 @@ func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter,
 			}
 			player = player.Args[0]
 		}
+		if player.Kind == Symbol && player.Name == "Trigger_ThatPlayer" && ctx.stepEvent != nil {
+			ref, err := compilePlayerRef(player, ctx)
+			if err != nil {
+				return mage.PermanentFilter{}, nil, err
+			}
+			return mage.AnyPermanent, func(bindings instanceBindings) []mage.PermanentTargetOption {
+				return []mage.PermanentTargetOption{mage.TargetControlledBy(ref.build(bindings))}
+			}, nil
+		}
 		switch player.Name {
 		case "SpellDefendingPlayer":
 			if player.Kind != Symbol || !ctx.spellTargets || ctx.permanent || ctx.activation {

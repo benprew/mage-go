@@ -814,6 +814,8 @@ type PermanentTarget struct {
 	fixedLandEnchant             bool
 	typeDependencies             []targetTypeDependency
 	controllerRefs               []PlayerRef
+	chooserRef                   PlayerRef
+	chooserCount                 int
 	combatRelations              []targetCombatRelation
 	manaValueEqualX              bool
 	excludeSource                bool
