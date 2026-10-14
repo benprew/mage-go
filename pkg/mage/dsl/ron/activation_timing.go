@@ -196,6 +196,18 @@ func compileActivationModifier(n Node, ctx scope, during bool, seenMaximum, seen
 			options = append(options, next...)
 		}
 		return options, nil
+	case "OnlyOtherPlayersMayActivate":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Opponent" {
+			return nil, unsupported(n.Args[0], "activation permission player filter")
+		}
+		if *seenPermission {
+			return nil, problem(n, "multiple activation permissions are not supported")
+		}
+		*seenPermission = true
+		return []mage.ActionOption{mage.WithAnyPlayerMay(), mage.WithActivationStateCondition(mage.NotCondition(mage.PlayerIsPermanentController(mage.This)))}, nil
 	case "OnlyPlayerMayActivate":
 		if *seenPermission {
 			return nil, problem(n, "multiple activation permissions are not supported")

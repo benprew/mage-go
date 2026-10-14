@@ -22090,3 +22090,59 @@ source ability removal/restoration, clones and the combat-only reference.
 `TestRONControlsMatching*` uses complete Seasinger and Orgg records for casting,
 legality, failed activation payment, target rechecks, source and target visits,
 copies/clones, source durations, state sacrifice and attack/block restrictions.
+
+## RON destruction replacement operations
+
+`RegenerateInsteadOfDestroy() Ability` supplies a repeatable source destruction
+replacement (CR 614.8, 701.19b). Each destruction proposal reads the subject's
+current runtime abilities and exact battlefield visit. Phasing, face-down status,
+departure and ability removal stop applicability. A new visit reads its own
+abilities. The action retains candidate identity by visit and ability declaration
+so shared replacement rechecks cannot apply a declaration twice to one event.
+The affected controller chooses between ordinary replacements (CR 616.1).
+No-regeneration destruction and current `CantRegenerate` prohibit this candidate.
+Static and shield regeneration use the same native damage removal, tap and
+combat removal service. A static rule is not consumed by regeneration.
+
+`ReplaceNextDestructionThisTurn(subject PermanentRef) ResolvingEffect` saves a
+present, unphased subject at resolution. One destruction consumes the rule and
+removes marked damage and the deathtouch flag. It neither taps nor removes the
+subject from combat. It can replace destruction that forbids regeneration.
+Indestructibility stops destruction before the rule can be consumed. Sacrifice,
+zero-toughness death and other moves are not destruction (CR 701.8, 704.5).
+Source departure, control and ability changes do not end this saved rule.
+Phasing suspends matching; a return cannot replace the saved visit (CR 400.7,
+702.26). Cleanup removes it. Copies install separate rules; clones keep separate
+consumption state. Waiting persistent replacement queries retain the exact saved
+subject, including its departure information, until consumption or cleanup.
+Both forms use the existing destruction batch and replacement ordering service.
+
+RON accepts exactly source
+`ReplaceWouldDestroy(PermanentWouldBeDestroyed(ThisPermanent),
+[RegeneratePermanent(WouldBeDestroyed_ThatPermanent)])`, and resolving
+`CreateFutureReplaceWouldDestroy(NextTimePermanentWouldBeDestroyedThisTurn(ref),
+[CancelDestroy, RemoveAllDamageFromPermanent(WouldBeDestroyed_ThatPermanent)])`.
+The latter uses existing typed singular permanent references and per-instance
+target bindings. The event subject symbol is local to these checked operation
+bodies; it is not a general resolving reference. Other events, subjects in the
+static context, operation lists and event reference spellings reject.
+
+Clergy's `OnlyOtherPlayersMayActivate(Opponent)` adapter uses existing any-player
+permission plus the negation of `PlayerIsPermanentController(This)`. Permission
+reads the current source controller at announcement. The activator pays, and
+the prohibition still applies to the ability's source at resolution. Duplicate
+permissions and other player filters reject. No new payment or permission engine
+service was introduced.
+
+Evidence: `TestDestructionReplacementNext`, `Static`, `CombatAndBatch`,
+`OrderingAndRecheck`, `Declarations` and `WaitingSubject` cover native identity,
+phasing, lifecycle, prohibitions, simultaneous members, combat, definition
+validation, competing replacement rechecks and separate clone state.
+`TestRONDestructionReplacementPyramids` and `AuraMode` cover both complete ARN
+modes, paid/unpaid activation, target rechecks, departure, phasing, copies and
+clones. `Clergy` and `ClergyLifecycle` cover the complete LEG record, repeatable
+regeneration, lethal damage, opponent payment, changed controller, copies,
+pending clones and cleanup. `Casting` checks both complete cards and definition
+reconstruction. `Invalid`, `StrictDeclarations` and `Inventory` cover declaration
+rejection and typed syntax inventory. Collection compilation remains separate
+from gameplay support. Oracle evidence: local `data/ARN.json` and `data/LEG.json`.

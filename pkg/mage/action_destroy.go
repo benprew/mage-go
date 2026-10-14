@@ -4,6 +4,7 @@ import "github.com/google/uuid"
 
 // DestroyPermanentAction represents a permanent about to be destroyed.
 type DestroyPermanentAction struct {
+	regeneration     map[staticRegenerationKey]*staticRegenerationReplacement
 	cannotRegenerate bool
 	source           uuid.UUID
 	permanentID      uuid.UUID

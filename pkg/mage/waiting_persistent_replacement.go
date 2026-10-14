@@ -5,6 +5,8 @@ package mage
 func (g *Game) WaitingPersistentReplacementPermanentSources() []DamageSource {
 	return g.waitingReplacementPermanentSources(func(replacement ReplacementEffect) []capturedPermanent {
 		switch rule := replacement.(type) {
+		case *nextDestructionReplacement:
+			return []capturedPermanent{{rule.subject, rule.incarnation}}
 		case *lichLifeGainReplacement:
 			return []capturedPermanent{{rule.sourceID, rule.incarnation}}
 		case *islandSanctuaryReplacement:

@@ -686,6 +686,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileRetainedEntry(n)
 	case "ReplaceWouldEnter":
 		return compileFilteredEntry(n)
+	case "ReplaceWouldDestroy":
+		return compileStaticDestructionReplacement(n)
 	case "ReplaceWouldDraw":
 		return compileDrawReplacement(n, ctx)
 	case "ReplaceWouldBeginDrawStep":
@@ -1533,6 +1535,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "CreateTriggerUntil":
 		build, err := compileDepartureDelay(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "CreateFutureReplaceWouldDestroy":
+		build, err := compileFutureDestructionReplacement(n, ctx)
 		if err != nil {
 			return nil, err
 		}

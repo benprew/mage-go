@@ -1124,6 +1124,13 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 			}
 		}
 	}
+	if destruction, ok := action.(*DestroyPermanentAction); ok {
+		for _, replacement := range destruction.staticRegenerationCandidates(g) {
+			if !applied[replacement] {
+				candidates = append(candidates, replacement)
+			}
+		}
+	}
 	// A replacement can change the recipient before protection applies.
 	if damage, ok := action.(*DamageToCreatureAction); ok && !damageReplacementBlocked(action, g) {
 		source := damage.DamageSource()

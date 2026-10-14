@@ -6,13 +6,13 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **909 accepted / 77 rejected names**
-(986 total), **2,288 compiled / 157 rejected records** (2,445 total).
-The latest slice is **LIVE-CONTROLS-MATCHING-PREDICATES**.
-Permanent targets can require their current controller to control a matching
-permanent. Source attack restrictions can test the combat defending player's
-matching permanents at declaration, after current power and toughness apply.
-Complete Seasinger and Orgg compile and have RON gameplay mappings.
+Latest measured result (2026-10-14): **911 accepted / 75 rejected names**
+(986 total), **2,290 compiled / 155 rejected records** (2,445 total).
+The latest slice is **DESTRUCTION-REPLACEMENT-OPERATIONS**.
+Static source regeneration replaces each eligible destruction. Future cancellation
+removes damage instead of one destruction this turn, without tapping or combat
+removal. Both use shared replacement order, exact visits and rechecks.
+Complete Pyramids and Clergy of the Holy Nimbus have RON gameplay mappings.
 Actual gain is **two names / two records**, as estimated. All required checks
 pass. Precise remaining diagnostics are recorded in the latest entry below.
 No RON source or vocabulary snapshot changed.
@@ -24,16 +24,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared destruction replacement operations:** evaluate Pyramids and Clergy
-   of the Holy Nimbus. They need future cancel-destruction/remove-damage and
-   static regeneration replacement contexts. Reuse the native destruction
-   pipeline; compare complete-record gains and replacement ordering first.
-2. **Bounded player redirection:** Personal Incarnation. Eye for an Eye still
-   needs continued-damage result scopes; Heroism needs per-source optional
-   payment during prevention. These remain separate contexts.
-3. **Source-bound control extensions:** dynamic power legality and a latched
-   power endpoint for Old Man of the Sea; plural captured control membership
-   for The Wretched. Existing source duration services remain reusable.
+1. **Proposed damage results and bounded redirection:** reassess Personal
+   Incarnation, Eye for an Eye and Heroism. Bounded recipient redirection,
+   continued-damage results and optional per-source payment are separate contexts.
+   Prefer a shared prerequisite if full-record evidence proves multi-card value.
+2. **Source-bound control extensions:** Old Man of the Sea needs dynamic power
+   legality and a latched endpoint; The Wretched needs plural captured membership.
+   Existing source duration services remain reusable.
+3. **Live history filters:** evaluate Giant Shark and Glyph of Delusion against
+   existing damage and combat history before selecting their separate adapters.
 
 ## Dependencies and source blockers
 
@@ -16177,3 +16176,154 @@ and `numeric_consumers_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement live controls matching predicates`.
 This run stops after LIVE-CONTROLS-MATCHING-PREDICATES.
+
+## 2026-10-14 — DESTRUCTION-REPLACEMENT-OPERATIONS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and `go test ./pkg/mage/dsl/ron
+-count=1` passed. Baseline loader JSON was valid with expected exit 1: 2,288
+compiled / 157 rejected records, 909 accepted / 77 rejected names. This was
+collection rejection, not a build or test failure. All complete records for the
+following names were read, including every Personal Incarnation reprint, nested
+replacement bodies, owner death trigger and control durations. Targeted vocabulary
+reads confirmed the destruction forms and their two event-reference occurrences.
+Reprints count once in estimates.
+
+| Candidate | Distinct affected names | Estimated complete gains | Other blockers and downstream benefit | Full effort |
+| --- | --- | --- | --- | --- |
+| Destruction replacement operations, selected | Pyramids; Clergy of the Holy Nimbus | 2 names / 2 records | Native destruction actions/order exist; static regeneration and future cancellation need contracts. Clergy also needs a strict opponent-permission adapter to the existing engine service. Supplies shared replacement eligibility and operation mechanics for further destruction contexts; Equinox still needs granted targeting and its own spell filter | Medium: two lifetimes over one destruction pipeline, identity/order/combat tests and two real cards |
+| Bounded recipient damage redirection | Personal Incarnation; related future contexts Eye for an Eye and Heroism | 1 name / 6 records for bounded redirection alone | Personal's owner permission/death rules already lower. Eye needs continued damage and actual amount/controller results; Heroism needs optional per-source prevention payment. These are separate downstream contracts, not three immediate unlocks | Medium for bounded form; large for all three |
+| Source-bound control extensions | Old Man of the Sea; The Wretched | 1 name for either separate complete extension; 0 from dynamic power alone | Old Man needs live source-relative power targeting plus a latched power endpoint. Wretched needs a plural combat-member capture. Existing source duration mechanics remain; neither is an adapter-only multi-card slice | Medium/large; separate legality, duration and membership contracts |
+
+Ranked candidate #1 is dependency-ready, gives two complete cards and reuses the
+native destruction pipeline. It beats the credible gains of either alternative
+for one bounded slice. Initial inspection missed Clergy's permission adapter;
+failing compilation exposed it after the replacement lowered. Its native contract
+already existed, so the strict adapter completes the selected slice. The unlock
+estimate remains two, and no unsupported behavior was silently accepted.
+
+### Exact contracts, dependencies and boundaries
+
+Native `RegenerateInsteadOfDestroy() Ability` reads the source's current runtime
+abilities when destruction is proposed. Candidate identity is cached on that
+action by permanent visit and ability declaration. Source phasing, face-down
+status, departure and ability removal stop it. No-regeneration destruction and
+current regeneration prohibitions exclude it. Each eligible destruction uses the
+same native tap, damage removal and combat removal service as existing shields;
+the static rule is not consumed. This is CR 614.8 and 701.19b, not a new shield.
+
+Native `ReplaceNextDestructionThisTurn(subject PermanentRef) ResolvingEffect`
+saves one present subject visit. It cancels one destruction and removes damage
+and the deathtouch flag without tapping or combat removal. It survives source
+exit and ignores regeneration prohibitions. Indestructible blocks destruction
+before consumption; sacrifice and zero-toughness moves are not destruction.
+Phasing suspends matching; return cannot supply an old visit. Cleanup expires
+it. Shared waiting persistent reference queries now expose its saved subject,
+including departure facts. Copies and clones keep separate consumption state.
+
+RON accepts exactly `ReplaceWouldDestroy(PermanentWouldBeDestroyed(ThisPermanent),
+[RegeneratePermanent(WouldBeDestroyed_ThatPermanent)])` at permanent rule scope,
+and resolving `CreateFutureReplaceWouldDestroy(
+NextTimePermanentWouldBeDestroyedThisTurn(ref), [CancelDestroy,
+RemoveAllDamageFromPermanent(WouldBeDestroyed_ThatPermanent)])` with existing
+singular typed references. The event reference is checked locally, not added as
+a general resolving reference. Malformed arity, symbols, subjects, operation
+lists and unrelated contexts reject before execution. RON spelling stays in ron;
+engine mechanics contain no card-name branches or global result slots.
+
+`OnlyOtherPlayersMayActivate(Opponent)` lowers to existing `WithAnyPlayerMay()`
+and `WithActivationStateCondition(NotCondition(PlayerIsPermanentController(This)))`.
+The current source controller determines permission; the activator pays. Other
+filters and duplicate permissions reject. Existing target visits, per-instance
+bindings, source resolution, payment rollback, printed definition reconstruction,
+replacement choices/rechecks and simultaneous destruction are reused.
+
+Local Oracle data in `data/ARN.json` and `data/LEG.json` confirms both records.
+Rules read: CR 701.8, 701.19a–c, 614.8 and 616.1; identity/phasing and target
+contracts use existing CR 400.7, 601.2c, 608.2b and 702.26 behavior. No source
+defect or environment failure was found. RON hashes remain unchanged, so no
+vocabulary snapshot refresh was required. Existing callers remain. No Go-card
+or unused-DSL removal gate is open; no functions were deleted without an audit.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed compilation for the two missing APIs, after fixing
+fixture calls to existing keyword/destruction methods. Real RON tests first
+failed at unsupported ReplaceWouldDestroy and CreateFutureReplaceWouldDestroy.
+Later failures exposed Clergy's missing permission adapter and the missing saved
+subject integration in waiting references. Both were implemented. Fixture-only
+corrections supplied owners, selected the available modal index and placed
+deathtouch damage after ability resolution so state-based death did not preempt
+the intended test. No production behavior or assertion was weakened.
+
+| Unique card | Complete RON record | Tests |
+| --- | --- | --- |
+| Pyramids | ARN.lines.ron:62 | `TestRONDestructionReplacementPyramids`: paid/unpaid activation, land target phase/return, source departure, separate copied shields and pending clones. `AuraMode`: complete other mode, attachment/type restriction, shroud and phasing rechecks. `Casting`: paid/unpaid casting and definition reconstruction |
+| Clergy of the Holy Nimbus | LEG.lines.ron:47 | `TestRONDestructionReplacementClergy`: static regeneration, opponent-only activation, cost failure and paid prohibition. `ClergyLifecycle`: lethal damage, cleanup restoration, changed-controller permission, copied abilities and pending clones. `Casting`: paid/unpaid casting and reconstruction |
+| Island; Wild Growth | LEB complete records | Existing real target/attachment consumers; no new compilation gain |
+
+`TestDestructionReplacementNext`, `Static`, `CombatAndBatch`,
+`OrderingAndRecheck`, `Declarations` and `WaitingSubject` cover native visit
+identity, phase cycles, source departure, ability removal, indestructibility,
+no-regeneration, sacrifice, zero toughness, repeated regeneration, simultaneous
+members, combat effects, replacement competition/rechecks, invalid definitions,
+retained departure facts, cleanup and clone isolation. `TestRONDestructionReplacement
+Invalid`, `StrictDeclarations` and `Inventory` cover invalid syntax and typed
+inventory descendants. Collection compilation and gameplay coverage remain
+separate; each new accepted card has a complete gameplay mapping.
+
+### Final validation and measured gain
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONDestructionReplacement' -count=1`.
+- `go test ./pkg/mage -run '^TestDestructionReplacement' -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- `go test ./... -short -count=1`, required by implement-engine.
+- Initial `make lint` found one prealloc issue in the new batch test. The test
+  slice now declares capacity 3; the affected native tests passed again.
+  Final `make lint` passed with 0 issues. Automatic formatting was reviewed;
+  no unrelated files or production semantics changed.
+- `git diff --check` passed, including the final ledger update.
+- `go run ./cmd/loadcards -json` returned valid JSON and expected exit 1:
+  **2,290 compiled / 155 rejected records**, **911 accepted / 75 rejected names**,
+  unchanged totals of 2,445 records and 986 unique names. Removing only Pyramids
+  and Clergy of the Holy Nimbus from the fresh baseline issue array gives the
+  final array exactly, including diagnostic objects and ordering. No accepted
+  record regressed. Collection publication remains atomic and rejected.
+
+Actual gain equals the estimate: two names, two records and two new complete
+RON gameplay mappings. Compilation counts do not claim collection gameplay
+completion. Environment blockers: none. Source defects: none. Complete gameplay,
+runtime loading/cutover, Go-card and generator deletion, unused DSL removal and
+native startup proof remain unfinished.
+
+### Ranked next candidates
+
+1. Reassess proposed-damage result bindings and bounded recipient redirection.
+   Personal Incarnation still rejects `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`
+   (2ED:181:294); Eye for an Eye still rejects the `Player` recipient (3ED:84:311)
+   and needs continued-damage amount/controller results. Heroism still rejects
+   its combat prevention `And` collection (FEM:41:291) and needs optional
+   per-source replacement payment. A shared prerequisite must prove downstream
+   multi-card value; these are not one ready adapter or three immediate unlocks.
+2. Source-bound control extensions: Old Man of the Sea rejects dynamic
+   `PowerOfPermanent` in target legality (ARN:59:354) and needs a latched endpoint.
+   The Wretched rejects `GainControlOfEachPermanentUntil` (LEG:265:199) and needs
+   plural captured combat membership. Reuse existing source duration mechanics.
+3. Live history filters: Giant Shark's `WasDealtDamageThisTurn` rejects its arity
+   (DRK:46:384); Glyph of Delusion rejects `WasBlockedByDefenderThisTurn`
+   (LEG:100:233). Compare their complete records and history services before
+   treating them as shared work; their remaining actions and result scopes differ.
+
+Changed files: new native `destruction_replacement.go` and its tests; native
+`action_destroy.go`, `effect_manager.go`, `replacement.go`,
+`waiting_persistent_replacement.go`, `doc.go`; new RON
+`destruction_replacement.go` and its tests; RON `compiler.go`,
+`activation_timing.go`, `inventory.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. RON records were unchanged.
+Commit title: `feat(ron): implement destruction replacement operations`.
+This run stops after DESTRUCTION-REPLACEMENT-OPERATIONS.

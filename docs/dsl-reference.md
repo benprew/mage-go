@@ -16620,3 +16620,28 @@ Both contexts use the existing reference-free property filter compiler: nonempty
 supported intrinsic properties. References, source-relative values, chosen
 colors and empty conjunctions reject. The existing positive
 `CantAttackUnlessDefendingPlayer` land shape is unchanged.
+
+### Destruction replacement contexts
+
+Use `RegenerateInsteadOfDestroy()` as a native static ability to regenerate its
+source on each eligible destruction. Use `ReplaceNextDestructionThisTurn(ref)`
+as a resolving effect to cancel one destruction this turn and remove all damage.
+The second operation does not tap or remove the subject from combat and is not
+regeneration. Both use shared destruction replacement order and exact visits.
+
+RON lowers `ReplaceWouldDestroy(PermanentWouldBeDestroyed(ThisPermanent),
+[RegeneratePermanent(WouldBeDestroyed_ThatPermanent)])` and
+`CreateFutureReplaceWouldDestroy(NextTimePermanentWouldBeDestroyedThisTurn(ref),
+[CancelDestroy,RemoveAllDamageFromPermanent(WouldBeDestroyed_ThatPermanent)])`.
+The future context supports existing typed singular references. Its subject is
+saved at resolution; source departure keeps the rule, phasing suspends matching,
+return cannot supply the saved visit, and cleanup ends it. The static context
+requires the source's current ability and checks regeneration prohibitions.
+Other operation lists and event-subject uses reject during compilation.
+
+`OnlyOtherPlayersMayActivate(Opponent)` uses existing any-player activation
+permission with `NotCondition(PlayerIsPermanentController(This))`. The current
+controller determines opponents at announcement; the activator pays the cost.
+Pyramids and Clergy of the Holy Nimbus are mapped to complete RON gameplay by
+`TestRONDestructionReplacement*`. See the destruction replacement contract in
+[engine-rules-contracts.md](engine-rules-contracts.md).

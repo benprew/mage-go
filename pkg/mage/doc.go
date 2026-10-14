@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RegenerateInsteadOfDestroy] replaces each eligible destruction of its source.
+// Current abilities supply the rule. Phasing and ability removal suspend it.
+// [ReplaceNextDestructionThisTurn] saves one permanent visit until cleanup.
+// It cancels one destruction and removes damage without tapping or combat removal.
+// No-regeneration clauses stop regeneration but do not stop damage removal.
+// Both use shared replacement choices and rechecks. Clones keep separate state.
+// Source departure keeps the saved rule. Return cannot supply the saved subject.
+// Waiting persistent replacement queries retain that exact subject after departure.
+// RON accepts source ReplaceWouldDestroy with regeneration, and resolving
+// CreateFutureReplaceWouldDestroy with CancelDestroy and damage removal.
+// Both bodies require WouldBeDestroyed_ThatPermanent. Other operations reject.
+// OnlyOtherPlayersMayActivate(Opponent) uses the current source controller.
+// These contexts complete Pyramids and Clergy of the Holy Nimbus.
+//
 // [ControllerControls] tests a present subject's current controller through
 // [PlayerControls]. Matching uses present, unphased battlefield permanents.
 // [PlayerControls] accepts [CombatDefendingPlayer] for pure combat queries.

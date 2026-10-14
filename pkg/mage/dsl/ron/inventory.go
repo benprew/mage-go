@@ -311,6 +311,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"static_entry_event", "static_entry_operation"}[index]
 			}
+		case "ReplaceWouldDestroy":
+			if len(n.Args) == 2 {
+				return []string{"destruction_replacement_event", "destruction_replacement_operation"}[index]
+			}
 		case "ReplaceWouldDraw":
 			if len(n.Args) == 2 {
 				return []string{"draw_replacement_event", "action"}[index]
@@ -372,6 +376,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "retained_entry_sacrifice":
 		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
 			return "entry_permanent_filter"
+		}
+	case "destruction_replacement_event":
+		if (n.Name == "PermanentWouldBeDestroyed" || n.Name == "NextTimePermanentWouldBeDestroyedThisTurn") && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+	case "destruction_replacement_operation":
+		if (n.Name == "RegeneratePermanent" || n.Name == "RemoveAllDamageFromPermanent") && len(n.Args) == 1 {
+			return "destruction_event_reference"
 		}
 	case "static_entry_event":
 		if n.Name == "APermanentWouldEnterTheBattlefield" && len(n.Args) == 1 {
@@ -552,6 +564,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "activation_modifier":
 		if n.Name == "XIs" && len(n.Args) == 1 {
 			return "activation_x_value"
+		}
+		if n.Name == "OnlyOtherPlayersMayActivate" && len(n.Args) == 1 {
+			return "player_filter"
 		}
 		if n.Name == "OnlyPlayerMayActivate" && len(n.Args) == 1 {
 			return "player_reference"
@@ -1088,6 +1103,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 					return "delayed_combat_event"
 				}
 				return []string{"delayed_departure_event", "actions", "duration"}[index]
+			}
+		case "CreateFutureReplaceWouldDestroy":
+			if len(n.Args) == 2 {
+				return []string{"destruction_replacement_event", "destruction_replacement_operation"}[index]
 			}
 		case "CreateFutureReplaceWouldDraw":
 			if len(n.Args) == 2 {
