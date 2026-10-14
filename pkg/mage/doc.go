@@ -2624,6 +2624,12 @@
 // incarnations must remain in combat. LKI cannot restore the pair.
 // Use [BlockedByThisTurn] for live members of an exact blocker's turn history.
 // Saved blocker references keep their identity after departure and phasing.
+// [TargetBlockedByThisTurn] requires history with an earlier singular target.
+// Selection queries require a complete legal target list. Resolution reads the
+// saved blocker visit even after departure or phasing. It reads no current
+// blocker characteristics. A returned attacker cannot use its old history.
+// RON accepts WasBlockedByDefenderThisTurn(Ref_TargetPermanentN) in a later
+// singular permanent target, directly or within And. Other target forms reject.
 // [ControllerWhenLastBlockedThisTurn] reads the attacker controller at the last
 // matching block. Returned objects cannot use an earlier object's history.
 // Both services use turn history that remains until final cleanup.

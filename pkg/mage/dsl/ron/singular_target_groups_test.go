@@ -202,7 +202,7 @@ func TestRONSingularGroupsStrictLoadAndConsumers(t *testing.T) {
 	}
 	for _, tc := range []struct{ set, name, want string }{
 		{"LEG", "Gauntlets of Chaos", ""},
-		{"LEG", "Glyph of Delusion", "WasBlockedByDefenderThisTurn"},
+		{"LEG", "Glyph of Delusion", "supply one indefinite type modification"},
 		{"PROMOS", "Arena", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

@@ -5,6 +5,10 @@ import "github.com/benprew/mage-go/pkg/mage"
 type permanentTargetOptionsFactory func(instanceBindings) []mage.PermanentTargetOption
 
 func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter, permanentTargetOptionsFactory, error) {
+	if n.Name == "WasBlockedByDefenderThisTurn" {
+		return compileTargetBlockHistory(n, ctx)
+	}
+
 	if n.Name == "SharesACardtypeWithPermanent" || n.Name == "SharesACardtypeWithPermanentFromAmongCardtypes" {
 		return compileTargetTypeDependency(n, ctx)
 	}

@@ -815,6 +815,7 @@ type PermanentTarget struct {
 	fixedCreatureEnchant         bool
 	fixedLandEnchant             bool
 	typeDependencies             []targetTypeDependency
+	blockHistoryDependencies     []targetBlockHistoryDependency
 	controllerRefs               []PlayerRef
 	excludedBindings             []*PermanentBinding
 	chooserRef                   PlayerRef
@@ -927,6 +928,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 			continue
 		}
 		if slices.ContainsFunc(t.typeDependencies, func(dependency targetTypeDependency) bool { return !dependency.matches(p, ctx) }) {
+			continue
+		}
+		if slices.ContainsFunc(t.blockHistoryDependencies, func(dependency targetBlockHistoryDependency) bool { return !dependency.matches(p, ctx) }) {
 			continue
 		}
 		if slices.ContainsFunc(t.combatRelations, func(relation targetCombatRelation) bool { return !relation.matches(p, sourceCard, g) }) {

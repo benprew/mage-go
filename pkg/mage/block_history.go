@@ -41,12 +41,16 @@ func (s blockedThisTurnSet) resolvePermanents(ctx *EffectContext) []*Permanent {
 		if p.PhasedOut {
 			continue
 		}
-		pair := blockHistoryPair{blocker, capturedPermanent{p.ID(), p.incarnationID}}
-		if _, ok := ctx.Game.trackers.Turn.blockHistory[pair]; ok {
+		if ctx.Game.wasBlockedByThisTurn(blocker, p) {
 			result = append(result, p)
 		}
 	}
 	return result
+}
+
+func (g *Game) wasBlockedByThisTurn(blocker capturedPermanent, attacker *Permanent) bool {
+	_, ok := g.trackers.Turn.blockHistory[blockHistoryPair{blocker, capturedPermanent{attacker.ID(), attacker.incarnationID}}]
+	return ok
 }
 
 type lastBlockedController struct{ attacker, blocker PermanentRef }

@@ -22425,3 +22425,53 @@ Evidence: native `TestReceivedDamageHistoryIdentity`, `OutcomesAndClone`,
 `TestRONReceivedDamageHistoryShark`, `Blocking`, `CastingAndCombat`, `Invalid`
 and `Inventory`. Giant Shark's full DRK record maps to these tests and
 `TestRONChosenStateAbsenceExistingCards` for its Island-absence sacrifice.
+
+## Dependent block-history permanent targets
+
+`TargetBlockedByThisTurn(reference *PermanentTargetBinding)
+PermanentTargetOption` requires an exact current-turn block pair between an
+earlier singular permanent target and this candidate. Native definition
+validation rejects nil, undeclared, self and forward references, and target
+lists containing plural or nonpermanent declarations. RON lowers
+`WasBlockedByDefenderThisTurn(Ref_TargetPermanentN)` directly or inside `And`
+in a later singular permanent target. Other reference kinds and target shapes
+remain unsupported. No new resolving collection spelling is added.
+
+This option uses the existing dependent selection service: complete-selection
+pruning, pure availability queries, explicit and prompted announcement, forced
+choices, modal lists, opponent choices and trigger placement. Announcement
+requires both targets to be present, unphased and targetable (CR 115.1–3,
+601.2c, 602.2b, 603.3d). Failed choices and costs keep the existing payment
+transaction and rollback. Factories create separate declarations.
+
+Resolution checks the recorded pair using both saved visits before any effect
+runs (CR 608.2b). The blocker reference supplies historical identity, not current
+characteristics or a resolving effect's information about an illegal target.
+Its departure, return, phasing, subtype loss or shroud cannot erase that pair.
+A returned blocker cannot add the new visit's pairs to the saved visit.
+The candidate must remain the same present, unphased and targetable visit;
+return cannot inherit an earlier attacker's history (CR 400.7, 702.26b/d).
+Control changes and removal from combat do not erase history. Illegal slots
+remain absent from resolving effect bindings; all-illegal lists do not resolve.
+No departure characteristics or LKI calculation is needed for the pair test.
+
+`Game.wasBlockedByThisTurn` is the shared pair lookup for this option and
+`BlockedByThisTurn`. Existing legal-block recording, band handling, final
+cleanup and game cloning retain their contracts. Copy retargeting reads the
+copy's newly selected blocker for the next group; unchanged copies keep their
+saved visits (CR 707.10). No new history storage, choice, replacement, event,
+layer or payment mechanism is added.
+
+Evidence: native `TestTargetBlockHistoryQuery`, `Declarations` and
+`CopyAndInstances` cover pruning, purity, cleanup, clone isolation, invalid
+lists, new copied pairs and separate factory declarations. RON
+`TestRONTargetBlockHistoryGameplay` executes Glyph of Delusion's complete
+source target declarations and first counter instruction. It covers printed
+mana payment, illegal-pair rollback, sequencing, current power, both target
+returns and phasing, phase cycles, shroud, all-illegal resolution, control,
+unchanged copies and clones. `Contexts` covers prompted activation, modal,
+entry trigger and opponent-choice lists; `Invalid` and `Inventory` cover
+strict syntax, scope and semantic reference roles. The complete Glyph of
+Delusion record still rejects at its lasting two-ability grant. This is clause
+coverage, not complete-card gameplay evidence. Glyph of Doom and Glyph of
+Reincarnation retain their separate resolving history collection contract.

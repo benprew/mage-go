@@ -16887,3 +16887,20 @@ now compiles. `TestRONReceivedDamageHistory*` covers casting, Island attack
 legality, both block directions, per-opponent boosts, trample, expiry, history,
 identity, copies, clones and invalid declarations. Its sacrifice rule also maps
 to `TestRONChosenStateAbsenceExistingCards` using the complete record.
+
+### RON dependent block-history targets
+
+In a list of singular permanent targets, a later target can use
+`WasBlockedByDefenderThisTurn(Ref_TargetPermanentN)`, directly or inside `And`.
+The numbered reference must name an earlier singular permanent declaration.
+The engine option is `TargetBlockedByThisTurn(*PermanentTargetBinding)`.
+Selection and resolution use the exact recorded block pair for this turn.
+Selection requires a complete legal target list. At resolution the saved
+blocker identity keeps its history after departure or phasing; a returned
+attacker cannot inherit an old pair. Final cleanup clears the history.
+
+This supports Glyph of Delusion's target declarations and counter instruction.
+Its lasting conditional rule and upkeep-trigger grants remain unsupported, so
+its complete record still rejects. Existing `BlockedByThisTurn` resolving
+collections and current-combat target options keep their separate contracts.
+See `TestRONTargetBlockHistory*` and `TestTargetBlockHistory*` for evidence.

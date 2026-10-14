@@ -8,17 +8,17 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **918 accepted / 68 rejected names**
 (986 total), **2,298 compiled / 147 rejected records** (2,445 total).
-The latest slice is **RECEIVED-DAMAGE-COMBAT-FILTER**.
-The strict `WasDealtDamageThisTurn` symbol now works in creature combat-pair
-filters. The engine records actual positive damage to exact recipient visits,
-including damage from spells. Regeneration and other damage removal preserve
-history; return starts a new visit. Phasing hides the subject without erasing
-history. Final turn cleanup clears it. Simultaneous damage records all members
-before observations; clones keep separate maps. Detection reads history once.
-Giant Shark now compiles and has complete RON gameplay coverage, including
-casting, attack legality, both block directions, per-opponent boosts, trample,
-expiry and Island-absence sacrifice. Actual gain is **one name / one record**,
-matching the estimate. Other RON filter contexts remain unsupported.
+The latest slice is **DEPENDENT-BLOCK-HISTORY-TARGET**.
+`WasBlockedByDefenderThisTurn(Ref_TargetPermanentN)` now works in a later
+singular permanent target, directly or inside `And`. Selection requires a
+complete legal list; resolution tests exact saved visits against shared block
+history. The blocker can supply its historical identity after departure or
+phasing. A returned attacker cannot inherit an old pair. Pure queries, copies,
+clones, rollback, target legality and cleanup use existing engine services.
+Glyph of Delusion's source target declarations and counter instruction have
+RON gameplay evidence. Its lasting two-ability grant remains unsupported.
+Actual gain is **zero names / zero records**, matching the prerequisite estimate.
+Complete-card gameplay coverage is unchanged. No RON source changed.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -17453,3 +17453,160 @@ Changed files: native `damage_system.go`, new `received_damage_history.go` and
 `docs/engine-rules-contracts.md` and this ledger. Commit title:
 `feat(ron): implement received-damage combat filters`.
 This run stops after RECEIVED-DAMAGE-COMBAT-FILTER.
+
+## 2026-10-14 — DEPENDENT-BLOCK-HISTORY-TARGET
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. The fresh loader
+returned valid JSON and expected exit 1: 2,298 compiled / 147 rejected records,
+918 accepted / 68 rejected names. Unsupported collection rejection was separate
+from build and test success. No environment failure or user change was present.
+
+Read the execution design, engine reference and targeted vocabulary signatures
+for `WasBlockedByDefenderThisTurn`, `AddAbility` and `AsPermanentEnters`.
+Read the complete records for Glyph of Delusion, Glyph of Doom, Glyph of
+Reincarnation, Lich, Rapid Fire and Gabriel Angelfire. Inspected nested target,
+counter, grant, entry, payment and replacement forms before estimating unlocks.
+Reprints count once.
+
+| Candidate | Distinct consumers and estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: dependent block-history target | Glyph of Delusion; 0 names / 0 records | Its lasting conditional rule and upkeep-trigger grants remain. Supplies the required earlier-target identity and legality contract for those grants. Glyph of Doom and Glyph of Reincarnation use the already supported resolving collection and are not extra target consumers. | Small: one typed engine option, existing dependent-query integration, RON adapter and lifecycle tests. |
+| Ranked #2: lasting conditional rule and upkeep-trigger grants | Glyph of Delusion; 0 until the target prerequisite | Establishes captured recipients, counter conditions, live recipient controllers, grant identity, phasing, return and ability removal. Rapid Fire and Gabriel Angelfire have supported temporary grant forms and supply no new unlock. | Medium to large: compose two grant forms and test their interacting lifetimes; depends on #1. |
+| Ranked #3: entry life loss | Lich; 0 names, five records are one consumer | Life-gain draw replacement, mandatory plural sacrifice payment, life-based loss exception and explicit lose-game operations remain. Shared entry ordering enables its life reset, but does not complete Lich. | Small to medium adapter with entry/replacement tests; less immediate dependency value. |
+
+Selected the first candidate as the dependency-ready prerequisite explicitly
+ranked by the prior entry. The exact history and general dependent selection
+services already exist. The lasting grant cannot complete without this target
+contract. The compared alternatives offer no immediate unique-card gain and
+require more independent contracts. This is the required-prerequisite exception
+to deferring single-card work. No unsupported body was published to manufacture
+an unlock.
+
+### Implemented contract and reuse boundary
+
+RON accepts `WasBlockedByDefenderThisTurn(Ref_TargetPermanentN)` in a later
+singular permanent target, directly or within `And`. The earlier numbered
+reference is a strict symbol and must already exist in that target list.
+Malformed arity, tuple aliases, unnumbered, self, forward, player, source and
+host references reject. Native definition validation rejects nil, undeclared,
+self and forward references and target lists with nonsingular/nonpermanent
+groups. Other target shapes and disjunction need separate adapters.
+
+Native API:
+`TargetBlockedByThisTurn(reference *PermanentTargetBinding) PermanentTargetOption`.
+The option retains an immutable typed declaration reference, not a chosen ID.
+`Game.wasBlockedByThisTurn(blocker capturedPermanent, attacker *Permanent) bool`
+is the shared exact-pair lookup for this option and `BlockedByThisTurn`.
+RON owns syntax, lexical validation and per-factory lowering. The engine owns
+history and target legality. Existing `compileSingularPermanentGroups` and
+`actionPlan.buildWithBindings` build declarations in order with fresh bindings.
+
+The existing dependency service supplies complete-selection pruning, pure
+availability, explicit/prompted/forced choices, modal actions, opponent choices,
+trigger placement, resolution query captures and copy retargeting. Invalid
+choices and failed payments keep shared rollback. No new history map, global
+last-action slot, payment, replacement, event or zone mechanism was added.
+
+Announcement requires both present, unphased and targetable visits. At
+resolution the saved blocker identifies an existing historical pair even after
+departure, return, phasing or shroud. This lookup reads no current blocker
+characteristics or effect information about an illegal target. Candidate return
+cannot inherit an old attacker's pair; candidate phasing and shroud prevent
+its targeting. Phase cycles keep identity. Control changes and combat reset do
+not erase history. All-illegal target lists do not resolve. Illegal slots stay
+absent from effect bindings. The counter instruction reads current legal
+recipient power at resolution. Copies keep or rechoose separate exact pairs;
+clones retain separate game state. Final cleanup clears history.
+
+Read CR 115.1–3, 601.2c, 608.2b/h and the existing engine contracts for legal
+block history, target dependency queries, exact visits, copy retargeting and
+phasing (CR 400.7, 509, 702.26, 707.10). Local `data/LEG.json` confirms Delusion's
+two targets, power-based counters and lasting grants. No source-data defect
+was found or corrected. No RON source changed, so the vocabulary snapshot was
+not regenerated. Existing Go card definitions and DSL callers remain intact;
+no cleanup or runtime cutover removal gate is open.
+
+### Failing-first and gameplay evidence
+
+Native tests first failed compilation at the missing `TargetBlockedByThisTurn`
+API and target dependency field/type. After correcting test-only API spelling,
+RON tests failed at `unsupported permanent filter (WasBlockedByDefenderThisTurn)`
+in the real source target declarations. The implementation makes these pass.
+
+| Unique card | Source and mapping | Coverage boundary |
+| --- | --- | --- |
+| Glyph of Delusion | LEG.lines.ron:100; `TestRONTargetBlockHistoryGameplay` compiles its unchanged target declarations and first counter action under a test-only contract name. | Printed mana, unpaid rollback, unrelated target rejection, resolution timing, current power, exact returns for both subjects, phasing and phase cycles, shroud and all-illegal lists, control changes, unchanged spell copies and clone isolation. Its lasting two-ability grant is deliberately excluded from this clause fixture; the full record must still reject. |
+| Glyph of Doom / Glyph of Reincarnation | Existing block-history collection tests retained. | No new full-card coverage claimed; these are separate collection consumers. |
+
+Native `TestTargetBlockHistoryQuery` checks first-group pruning, second-group
+candidates, pure repeated queries, final cleanup and clone isolation.
+`Declarations` rejects nil, unbound, self, forward and plural declarations.
+`CopyAndInstances` rechooses a different actual block pair and checks separate
+copy, original and factory bindings. RON `Contexts` covers prompted activation,
+modal, entry-trigger and opponent-choice declarations. `Invalid` checks strict
+syntax and reference scope, and confirms the complete record still rejects at
+`supply one indefinite type modification`. `Inventory` verifies the nested
+numbered reference's semantic role. The existing singular-group blocker test
+now expects this later diagnostic. Existing full RON census and accepted
+factory reconstruction tests remain active.
+
+No new binding lifetime, LKI characteristics, replacement ordering, simultaneous
+operation or cost solver contract was needed. Existing legal block batching,
+exact history, target query frames, transaction rollback and cleanup retain
+those responsibilities.
+
+### Validation and result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTargetBlockHistory' -count=1`: pass,
+  including a fresh rerun after lint formatting.
+- `go test ./pkg/mage -run '^TestTargetBlockHistory' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass, including accepted-definition
+  reconstruction, existing gameplay regressions and the exact collection census.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed automatic edits: only import grouping
+  in the new RON test file changed. The affected focused suite passed again.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON and expected exit 1. Fresh result:
+  **918 accepted / 68 rejected names**, **2,298 compiled / 147 rejected records**.
+  A comparison of every ordered diagnostic found exactly one change:
+  Glyph of Delusion advanced from LEG.lines.ron:100:233, unsupported
+  `WasBlockedByDefenderThisTurn`, to LEG.lines.ron:100:474,
+  `supply one indefinite type modification ()`. Every other diagnostic and
+  its order are unchanged. The collection still rejects atomically.
+
+Estimated and actual gains match: **zero full-card names / zero records**.
+One required target capability now has native and RON gameplay evidence;
+complete-card gameplay coverage is unchanged. The test-only Delusion clause
+fixture is not a production registry entry. No check or environment blocker
+remains for this slice. Runtime cutover, complete collection support, Go-card
+and generator removal, DSL cleanup and native startup remain unfinished.
+The removal gates remain closed.
+
+### Ranked next candidates
+
+1. Glyph of Delusion's lasting conditional untap rule and upkeep-trigger grant.
+   The dependent target prerequisite is now complete. Audit captured grant
+   identity, recipient controller changes, counters, ability removal, phasing
+   and return. Estimated one full-card unlock if both grant forms are completed
+   in one cohesive grant slice; compare other shared grant gaps before selection.
+2. Lich entry life loss through shared entry replacements. Estimated zero
+   immediate unlocks; five records remain one consumer. Its independent
+   replacement, payment and loss clauses remain blockers.
+3. Per-death action-result iteration for Glyph of Reincarnation. Exact block
+   history and last-block controller services exist. Audit death result scopes,
+   simultaneous deaths and owners' control; its `IsAfterCombat` casting window
+   is another blocker. Estimate zero until both prerequisites are complete.
+
+Changed files: new native `target_block_history.go` and
+`target_block_history_test.go`; native `target.go`, `target_dependency.go`,
+`composable_target.go`, `block_history.go`, `doc.go`; new RON
+`target_block_history.go` and `target_block_history_test.go`; RON
+`player_relative_target.go`, `singular_target_groups_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement dependent block-history targets`.
+This run stops after DEPENDENT-BLOCK-HISTORY-TARGET.

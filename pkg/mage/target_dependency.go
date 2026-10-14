@@ -52,7 +52,7 @@ func hasTargetDependencies(specs []Target) bool {
 			return false
 		}
 		t, ok := UnwrapTarget(spec).(*PermanentTarget)
-		return ok && t != nil && len(t.typeDependencies) != 0
+		return ok && t != nil && (len(t.typeDependencies) != 0 || len(t.blockHistoryDependencies) != 0)
 	})
 }
 
@@ -168,6 +168,11 @@ func targetDependencyProblem(specs []Target) string {
 			return "dependent targets require singular permanent declarations"
 		}
 		for _, dependency := range t.typeDependencies {
+			if dependency.reference == nil || !prior[dependency.reference.targetDeclaration] {
+				return fmt.Sprintf("target group %d requires an earlier singular permanent declaration", i+1)
+			}
+		}
+		for _, dependency := range t.blockHistoryDependencies {
 			if dependency.reference == nil || !prior[dependency.reference.targetDeclaration] {
 				return fmt.Sprintf("target group %d requires an earlier singular permanent declaration", i+1)
 			}

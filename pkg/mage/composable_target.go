@@ -233,6 +233,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 		for i, dependency := range spec.typeDependencies {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("typeDependencies[%d]", i), dependency})
 		}
+		for i, dependency := range spec.blockHistoryDependencies {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("blockHistoryDependencies[%d]", i), dependency})
+		}
 		for i, relation := range spec.combatRelations {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("combatRelations[%d]", i), targetCombatRelationOption{relation}})
 		}
