@@ -6,6 +6,9 @@ func compileConditionalStaticPrevention(n Node, ctx scope, condition mage.StateC
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
+	if n.Args[0].Name == "DamageWouldBeDealtByAPermanentToARecipient" {
+		return compileStaticCollectionPrevention(n, ctx, condition)
+	}
 	if n.Args[0].Name != "DamageWouldBeDealtByAPermanentToRecipient" {
 		return nil, unsupported(n.Args[0], "conditional static prevention event")
 	}
@@ -23,6 +26,9 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "DamageWouldBeDealtByAPermanentToARecipient" {
+		return compileStaticCollectionPrevention(n, ctx, nil)
+	}
 	if event.Name == "EachDamageWouldBeDealtToRecipient" {
 		return compileCounterPointPrevention(n, ctx)
 	}

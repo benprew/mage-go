@@ -41,11 +41,12 @@ func (r *counterDamagePreventionReplacement) waitingPreventionPermanents(*Game) 
 }
 
 func (r *staticDamagePreventionReplacement) waitingPreventionPermanents(g *Game) []capturedPermanent {
-	subject, ok := r.currentSubject(g)
-	if !ok {
-		return nil
+	subjects := r.currentSubjects(g)
+	result := make([]capturedPermanent, 0, len(subjects))
+	for _, subject := range subjects {
+		result = append(result, capturedPermanent{subject.ID(), subject.incarnationID})
 	}
-	return []capturedPermanent{{subject.ID(), subject.incarnationID}}
+	return result
 }
 
 func (g *Game) legacyPreventionSourceIncarnation(sourceID uuid.UUID) uuid.UUID {

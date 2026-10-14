@@ -6,19 +6,20 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **879 accepted / 107 rejected names**
-(986 total), **2,248 compiled / 197 rejected records** (2,445 total).
-The latest slice is **SAVED-NUMERIC-SOURCE-CHOICE**. One exact permanent visit
-stores its entry number and optional resolving updates. Existing information
-and layer services supply live static power and toughness reads.
-Shapeshifter now has complete-record native casting, all eight numbers, upkeep,
-combat, spell-copy, phasing, return, zero-toughness death and clone evidence.
+Latest measured result (2026-10-14): **880 accepted / 106 rejected names**
+(986 total), **2,249 compiled / 196 rejected records** (2,445 total).
+The latest slice is **LIVE-STATIC-COLLECTION-QUERIES**. Typed live sets supply
+static control conditions and permanent-source prevention recipients. Queries
+use the exact source visit and current controller; waiting references use the
+same membership and condition checks.
+Camel now has complete-record native casting, band formation, combat,
+prevention, spell-copy, phasing, return and clone evidence. Bronze Horse advances
+to its spell-source prevention blocker. Guardian Beast protection still rejects.
 Estimated and actual gains are **one unique name / one record**. No RON source
 changed. Accepted records remain accepted; loader baseline and hashes are fresh.
 
-The loader still rejects the collection atomically. Only Shapeshifter's former
-diagnostic disappears. Runtime cutover, Go-card removal and DSL cleanup remain
-gated by complete collection support and native startup validation.
+The loader still rejects the collection atomically. Runtime cutover, Go-card
+removal and DSL cleanup remain gated by complete support and native startup.
 
 ## Ranked next candidates
 
@@ -9585,3 +9586,152 @@ Existing Go card definitions, startup paths and broad DSL exports remain gated.
 Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
 Go-set generation and unused DSL cleanup remain incomplete. Stop after this
 saved numeric source-choice slice.
+
+## 2026-10-14 — LIVE-STATIC-COLLECTION-QUERIES
+
+### Baseline, candidates and selection
+
+The working tree was clean. Fresh `make build` and RON package tests passed.
+The initial loader exited 1 for collection rejection: 2,248 compiled / 197
+rejected records, 879 accepted / 107 rejected names. This was not a build failure.
+Read the execution design, engine API, ledger top/latest entry, targeted vocabulary
+keys, selected compiler/engine code and complete records for every candidate.
+
+| Candidate | Distinct affected names | Estimated full-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Shared live static queries | Camel, Bronze Horse, Guardian Beast | 1 name / 1 record | Camel needs live band recipients. Bronze Horse needs source exclusion, then spell-source prevention. Guardian Beast already has artifact layer membership; new Aura and control restrictions remain. Typed live sets support future rule consumers. | Moderate: adapters, two reusable consumers and lifecycle tests |
+| Conditional artifact protection | Guardian Beast | 1 name / 1 record | Its layer membership is ready, but both Aura attachment and control acquisition need exact restrictions. Shared protection rules follow. | Higher: two rule contracts and attachment/control tests |
+| Entry payment/result producers | Nameless Race, Frankenstein's Monster, Wood Elemental | 0 from one common prerequisite; 3 eventual names | Life bound and saved P/T; X graveyard exile, failure replacement and counter combinations; Forest sacrifice and two CDA reads are separate contracts. A common entry-result framework enables all three. | High: multiple decisions, replacements, results and layers |
+
+Selected ranked candidate #1 as one shared live query capability with complete
+static control-condition and prevention consumers. Its immediate gain is Camel;
+Bronze Horse's next blocker is now exposed. Guardian Beast's existing selection
+was reused as evidence of readiness, not counted as a new unlock. No card-name
+branches or separate spell-source/Aura/control/payment slice was added.
+
+Local ARN Oracle text matches Camel's unchanged full RON record. CR 400.7,
+615.1/615.6/615.12, 616.1f/616.2, 702.22e–g and 702.26 establish source visits,
+live prevention, rechecks, band removal and phasing. No source defect was fixed.
+
+### Signatures, supported contexts and reuse boundary
+
+- `PlayerControlsAny(player PlayerRef, subjects PermanentSet) StateCondition`:
+  present exact source, typed player and live membership; no choices or writes.
+- `PreventDamageFromMatchingPermanentsToSetIf(subjects PermanentSet,
+  from PermanentFilter, condition StateCondition) StaticRule`: nonnil set and
+  condition; live matching recipients, permanent sources and all damage. A zero
+  source filter permits any permanent. Source visit is saved per registration.
+- RON battlefield static collection shapes: `SinglePermanent(ThisPermanent)`,
+  `Other(ThisPermanent)`, `BandedWith(ThisPermanent)`,
+  `ControlledByAPlayer(SinglePlayer(You))`, existing static-condition filters,
+  and nonempty nested `And`/`Or` lists. Other source references reject.
+- Static `PlayerPassesFilter(player, ControlsA(set))` / `ControlsNo(set)` consume
+  contextual sets with existing You or declared chosen-player scope. Existing
+  characteristic-only and chosen-color condition adapters retain their behavior.
+- `PreventDamage(DamageWouldBeDealtByAPermanentToARecipient(sourceFilter,
+  APermanent(set)), [PreventThatDamage])` accepts these live sets, directly or
+  in supported static If/Unless/IfElse branches. Only this operation is supported.
+  Resolving, entry, payment, target and event bindings cannot enter this static
+  collection scope. Spell-source prevention remains a compile error.
+
+RON owns syntax, scope and early validation. mage owns current control, source
+identity, condition checks and prevention. Reuse includes typed permanent sets,
+union/intersection/difference, singleton, live control, attacking bands, source
+LKI/phase facts, static cycle registration, replacement rechecks, waiting source
+queries, simultaneous damage, unpreventable damage, cloning and native casting.
+Existing singular prevention callers keep their contracts. No members are saved
+at declaration time. Empty sets can acquire members later. Current queries and
+waiting queries use the same condition and set; returned sources cannot supply
+old registrations. Layer consumers keep their existing layer-cycle semantics.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON tests failed on the collection-recipient event and Other condition.
+Initial engine tests failed to compile because both new public APIs were absent.
+The first implementation pass exposed a test timing assumption: direct PhaseOut
+needs an explicit layer cycle before inspecting derived keywords. Spell-copy
+lethal damage likewise needs the state-based check. Test setup used the existing
+Card field and CurrentPower/CurrentToughness APIs after compilation corrections.
+No rules or gameplay assertions were weakened.
+
+- `TestLiveStaticCollectionPrevention`: live control, recipient return, source
+  phase/departure, ability loss, cloned state, source LKI, replacement
+  rechecks, unpreventable damage and simultaneous permanent/player packets.
+- `TestLiveStaticCollectionCondition`: source exclusion, new members, phase,
+  clone isolation and refusal of a returned source visit.
+- `TestLiveStaticCollectionInvalid`: nil sets/conditions, targets and unbound
+  saved sets fail definition validation.
+- `TestLiveStaticCollectionWaitingIdentity`: live waiting recipients, phase,
+  condition changes, cloned registrations and stale source return.
+- **Camel (ARN) → `TestRONLiveStaticCollectionCamel`**: full record, failed/paid
+  casting, printed banding, native band formation, attacking-source prevention,
+  simultaneous packets, native combat, clone and removal from the band.
+- **Camel → `TestRONLiveStaticCollectionCamelChanges` / `CamelSpellCopy`**:
+  ability loss, source/member return and phase cycles, departed/returned damage
+  source information, non-Desert sources and independent copied spell instances.
+- **Camel → `TestRONLiveStaticCollectionLoadAndScope` / `Invalid` / `Inventory`**:
+  complete-record strict loading, separate factories, atomic rejection, invalid
+  shapes/contexts and event/recipient/band/reference inventory roles.
+- `TestRONLiveStaticCollectionCondition`, `NestedControl`, `Unconditional`:
+  synthetic contract evidence for Bronze Horse's source-exclusion prerequisite,
+  live control, nested set composition, ControlsNo and direct prevention.
+  Bronze Horse still fails on its actual unsupported spell-source event.
+
+The engine short suite found one obsolete rejection expectation for a now-valid
+ControlsA current-controller collection. Moved that declaration into positive
+P/T gameplay coverage in NestedControl; other invalid declarations remain.
+Four collection-count assertions now expect 2,249/196. Compilation acceptance
+and complete-card gameplay evidence remain separate.
+
+### Validation, preservation and next work
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONLiveStaticCollection -count=1`
+and `go test ./pkg/mage -run TestLiveStaticCollection -count=1` passed.
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`,
+`make test` and the engine skill's `go test ./... -short -count=1` passed.
+Lint's automatic changes were import grouping and a slices.ContainsFunc rewrite
+of the new recursive syntax search. Reviewed both and repeated affected checks.
+The first lint run reported prealloc on the waiting recipient result. Allocating
+capacity from the live subjects fixes it; checks were rerun on the final code.
+Final `make lint` passed with **0 issues**; `git diff --check` passed. All required
+checks and repository short tests passed on the final implementation. No
+validation or environment blocker remains.
+
+The final required loader exited **1**, as expected: **2,249 compiled / 196
+rejected records**, **880 accepted / 106 rejected names**. Exact baseline
+comparison removes only Camel's ARN 12:200 rejection. Bronze Horse's diagnostic
+advances from LEG 38:199 Other condition to LEG 38:262 spell-source prevention.
+No other diagnostic changes and no new rejection appears. Every previously
+accepted record stays accepted. Vocabulary loader baseline equals the final
+report; all source hashes match, and syntax counts are unchanged.
+
+Estimated and actual gains match: **one unique name / one record**. Complete RON
+native gameplay coverage gains Camel; synthetic source-exclusion coverage is a
+prerequisite for Bronze Horse, not a complete-card gameplay claim. Guardian Beast
+retains its protection blocker. No source record, production Go definition,
+startup path, generator or broad DSL export changed. Removal gates remain shut.
+
+Changed files: new mage live_static_collection.go / live_static_collection_test.go;
+static_combat_prevention.go and waiting_prevention.go; new ron
+live_static_collection.go / live_static_collection_test.go; chosen_static.go,
+static_prevention.go and inventory.go; conditional_static_test.go and three
+collection-count test files; doc.go, dsl-reference.md, engine-rules-contracts.md,
+vocabulary loader baseline and this progress ledger.
+
+### Ranked next candidates
+
+1. **Saved voluntary-sacrifice result contracts.** Reassess Wood Elemental and
+   Sword of the Ages together. Shared visit selection, completed sacrifice batches
+   and retained characteristics may enable both; entry and activation contexts
+   need separate adapters. Do not infer two unlocks from the common syntax alone.
+2. **Entry payment/result prerequisites.** Compare Nameless Race and
+   Frankenstein's Monster with Wood Elemental. Choose one bounded shared contract,
+   then account for life bounds, X/exile failure replacement, counters and CDAs.
+3. **Remaining conditional static protection.** Compare Guardian Beast's Aura
+   attachment/control restrictions with Bronze Horse's spell-target source
+   prevention now that its condition compiles. Both are single-card follow-ups;
+   prefer credible shared entry/result work while it remains dependency-ready.
+
+Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
+Go-set generation and unused DSL cleanup remain incomplete. Stop after this
+live static collection query slice.

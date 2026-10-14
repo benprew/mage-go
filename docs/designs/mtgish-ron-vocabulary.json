@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2248,
+    "compiled": 2249,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1270,7 +1270,6 @@
       {"card": "Abu Ja'far", "source": {"File": "ARN.lines.ron", "Line": 1, "Column": 1}, "message": "ARN.lines.ron:1:259: unsupported permanent filter (BlockedDeadAttacker)"},
       {"card": "Aladdin's Lamp", "source": {"File": "ARN.lines.ron", "Line": 3, "Column": 1}, "message": "ARN.lines.ron:3:457: unsupported activation modifier (XCantBeZero)"},
       {"card": "Ali from Cairo", "source": {"File": "ARN.lines.ron", "Line": 6, "Column": 1}, "message": "ARN.lines.ron:6:181: unsupported player rule operation (DamageThatWouldReduceLifeTotalToLessThanNumberReducesItToThatNumberInstead)"},
-      {"card": "Camel", "source": {"File": "ARN.lines.ron", "Line": 12, "Column": 1}, "message": "ARN.lines.ron:12:200: unsupported conditional static prevention event (DamageWouldBeDealtByAPermanentToARecipient)"},
       {"card": "Cyclone", "source": {"File": "ARN.lines.ron", "Line": 16, "Column": 1}, "message": "ARN.lines.ron:16:303: unsupported two-branch payment cost (PayManaForEach)"},
       {"card": "Eye for an Eye", "source": {"File": "ARN.lines.ron", "Line": 29, "Column": 1}, "message": "ARN.lines.ron:29:311: unsupported selected-source redirection recipient (Player)"},
       {"card": "Ghazbán Ogre", "source": {"File": "ARN.lines.ron", "Line": 33, "Column": 1}, "message": "ARN.lines.ron:33:316: unsupported indefinite type modification (SetController)"},
@@ -1391,7 +1390,7 @@
       {"card": "Arboria", "source": {"File": "LEG.lines.ron", "Line": 17, "Column": 1}, "message": "LEG.lines.ron:17:205: unsupported global landwalk blocking operation (CantAttackAPlayer)"},
       {"card": "Backdraft", "source": {"File": "LEG.lines.ron", "Line": 24, "Column": 1}, "message": "LEG.lines.ron:24:221: unsupported action (ChooseASpellThatResolvedThisTurn)"},
       {"card": "Blazing Effigy", "source": {"File": "LEG.lines.ron", "Line": 31, "Column": 1}, "message": "LEG.lines.ron:31:278: unsupported action (DeadPermanentDealsDamage)"},
-      {"card": "Bronze Horse", "source": {"File": "LEG.lines.ron", "Line": 38, "Column": 1}, "message": "LEG.lines.ron:38:199: unsupported static condition filter (Other)"},
+      {"card": "Bronze Horse", "source": {"File": "LEG.lines.ron", "Line": 38, "Column": 1}, "message": "LEG.lines.ron:38:262: unsupported conditional static prevention event (DamageWouldBeDealtByASpellToRecipient)"},
       {"card": "Caverns of Despair", "source": {"File": "LEG.lines.ron", "Line": 42, "Column": 1}, "message": "LEG.lines.ron:42:169: unsupported rule (NoMoreThanNumberCreaturesCanAttack)"},
       {"card": "Chain Lightning", "source": {"File": "LEG.lines.ron", "Line": 43, "Column": 1}, "message": "LEG.lines.ron:43:243: unbound or incompatible player reference (PlayerOrControllerOfPermanent)"},
       {"card": "Clergy of the Holy Nimbus", "source": {"File": "LEG.lines.ron", "Line": 47, "Column": 1}, "message": "LEG.lines.ron:47:150: unsupported rule (ReplaceWouldDestroy)"},

@@ -25,6 +25,17 @@ func compileStaticPlayerControls(n Node, ctx scope) (mage.StateCondition, error)
 	if err := arity(selector, 1); err != nil {
 		return nil, err
 	}
+	if hasLiveStaticCollection(selector.Args[0]) {
+		subjects, err := compileLiveStaticCollection(selector.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		condition := mage.PlayerControlsAny(player, subjects)
+		if selector.Name == "ControlsNo" {
+			condition = mage.NotCondition(condition)
+		}
+		return condition, nil
+	}
 	filter, chosen, err := compileStaticChosenColorConjunction(selector.Args[0], ctx)
 	if err != nil {
 		return nil, err

@@ -9,6 +9,7 @@ import (
 type staticDamagePreventionRule struct {
 	condition        StateCondition
 	conditional      bool
+	subjects         PermanentSet
 	subject          PermanentRef
 	from             PermanentFilter
 	outgoing         bool
@@ -33,6 +34,15 @@ func PreventDamageFromMatchingPermanentsIf(subject PermanentRef, from PermanentF
 	rule := PreventDamageFromMatchingPermanents(subject, from).(staticDamagePreventionRule)
 	rule.condition, rule.conditional = condition, true
 	return rule
+}
+
+// PreventDamageFromMatchingPermanentsToSetIf checks live recipients before prevention.
+// The source visit and its current controller supply the query context.
+func PreventDamageFromMatchingPermanentsToSetIf(subjects PermanentSet, from PermanentFilter, condition StateCondition) StaticRule {
+	if from.IsZero() {
+		from = AnyPermanent
+	}
+	return staticDamagePreventionRule{subjects: subjects, from: from, condition: condition, conditional: true, allDamage: true, permanentSources: true}
 }
 
 // PreventCombatDamageFrom prevents combat damage from the current subject.
@@ -61,6 +71,9 @@ func PreventDamageFromBlockedCreatures(subject PermanentRef) StaticRule {
 func (staticDamagePreventionRule) staticRule() {}
 func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "static-rule", Text: "prevent combat damage", battlefieldSource: true, children: []definitionEdge{{"subject", r.subject}}}
+	if !nilDefinition(r.subjects) {
+		node.children = []definitionEdge{{"subjects", r.subjects}}
+	}
 	if r.blockedCreatures {
 		node.Text = "prevent damage from blocked creatures"
 	} else if r.permanentSources {
@@ -99,7 +112,7 @@ func (e *staticDamagePreventionEffect) cloneEffect() ContinuousEffect {
 	return &cloned
 }
 func (e *staticDamagePreventionEffect) ApplyContinuous(ctx *EffectContext) error {
-	if nilDefinition(e.rule.subject) {
+	if nilDefinition(e.rule.subject) && nilDefinition(e.rule.subjects) {
 		return nil
 	}
 	source := ctx.Game.FindPermanent(e.SourceID())
@@ -107,9 +120,11 @@ func (e *staticDamagePreventionEffect) ApplyContinuous(ctx *EffectContext) error
 		return nil
 	}
 	context := &EffectContext{Game: ctx.Game, SourceID: source.ID(), Controller: source.ControllerID(), sourceCaptured: true, sourceIncarnation: source.incarnationID}
-	_, ok := e.rule.subject.resolvePermanent(context)
-	if !ok {
-		return nil
+	if nilDefinition(e.rule.subjects) {
+		_, ok := e.rule.subject.resolvePermanent(context)
+		if !ok {
+			return nil
+		}
 	}
 	ctx.Game.effects.AddCycleReplacement(&staticDamagePreventionReplacement{
 		replacementBase:   replacementBase{sourceID: source.ID()},
@@ -137,14 +152,38 @@ func (r *staticDamagePreventionReplacement) currentSubject(g *Game) (*Permanent,
 	return r.rule.subject.resolvePermanent(ctx)
 }
 
+func (r *staticDamagePreventionReplacement) currentSubjects(g *Game) []*Permanent {
+	if nilDefinition(r.rule.subjects) {
+		subject, ok := r.currentSubject(g)
+		if !ok {
+			return nil
+		}
+		return []*Permanent{subject}
+	}
+	source := g.FindPermanent(r.sourceID)
+	if source == nil || source.incarnationID != r.sourceIncarnation {
+		return nil
+	}
+	if r.rule.conditional && (nilDefinition(r.rule.condition) || !r.rule.condition.checkState(g, StateContext{SourceID: source.ID(), ControllerID: source.ControllerID(), SourceIncarnation: source.incarnationID})) {
+		return nil
+	}
+	return r.rule.subjects.resolvePermanents(&EffectContext{Game: g, SourceID: source.ID(), Controller: source.ControllerID(), sourceCaptured: true, sourceIncarnation: source.incarnationID})
+}
+
 func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameReader) bool {
 	g := reader.(*Game)
-	subject, ok := r.currentSubject(g)
-	if !ok {
+	subjects := r.currentSubjects(g)
+	if len(subjects) == 0 {
 		return false
 	}
-	id, incarnation := subject.ID(), subject.incarnationID
-	identity := NewPermanentFilter("current prevention subject", func(p *Permanent, _ *Game) bool { return p.ID() == id && p.incarnationID == incarnation })
+	identity := NewPermanentFilter("current prevention subjects", func(p *Permanent, _ *Game) bool {
+		for _, subject := range subjects {
+			if p.ID() == subject.ID() && p.incarnationID == subject.incarnationID {
+				return true
+			}
+		}
+		return false
+	})
 	match := &damagePreventionRuleReplacement{combatOnly: !r.rule.allDamage}
 	if r.rule.allDamage && !r.rule.blockedCreatures && !r.rule.permanentSources && !damageSourceHasCardType(action, g, r.rule.sourceType) {
 		return false
@@ -157,7 +196,7 @@ func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameRe
 			match.from = NewPermanentFilter("creature blocked by current subject", func(p *Permanent, game *Game) bool {
 				current := game.FindPermanent(p.ID())
 				return current != nil && current.incarnationID == p.incarnationID && current.HasType(core.TypeCreature) &&
-					game.combat.BlocksIncarnations(id, incarnation, current.ID(), current.incarnationID)
+					game.combat.BlocksIncarnations(subjects[0].ID(), subjects[0].incarnationID, current.ID(), current.incarnationID)
 			})
 		}
 		match.to = identity

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PlayerControlsAny] checks current control of live set members.
+// [PreventDamageFromMatchingPermanentsToSetIf] checks live recipients before
+// each replacement match. Both require a present exact source visit. The source
+// controller supplies You. Phasing and return cannot supply a saved visit.
+// Waiting prevention reads use the same membership and condition checks.
+// RON accepts source SinglePermanent, Other and BandedWith, You control,
+// supported characteristic filters and nonempty nested And/Or collections.
+// Static ControlsA/ControlsNo and APermanent prevention recipients consume these
+// queries. Resolving, entry and payment contexts keep their separate adapters.
+//
 // [ChooseNumberAsEnters] saves the controller's number before entry.
 // [MayChooseNumber] offers an update to the resolving controller. Decline keeps
 // the number. The subject must keep the same unphased visit through each choice.
@@ -32,7 +42,8 @@
 // operands without selecting members. Clones keep separate combat and frames.
 // RON accepts BandedWith(permanentRef) in resolving collections, including
 // nested And and Or lists. Temporary grants save recipients at resolution.
-// Static prevention, entry and payment declarations need separate adapters.
+// Static prevention accepts source band membership in a live recipient set.
+// Entry and payment declarations need separate adapters.
 //
 // [PreventDamageFromMatchingPermanentsIf] checks a live static condition.
 // Replacement rechecks and waiting source queries use the same condition.
@@ -40,8 +51,8 @@
 // RON static If, Unless and IfElse accept lists of supported rule, prevention
 // and layer declarations. All branches must pass definition checks.
 // Layer parts keep their existing membership and same-layer limits.
-// Conditional prevention accepts one permanent source filter, ThisPermanent
-// recipient and PreventThatDamage. Collection recipients need an adapter.
+// Conditional prevention accepts one permanent source filter and PreventThatDamage.
+// Recipients can use ThisPermanent or a supported live static collection.
 //
 // [YourMainPhase] matches each main phase on the controller's turn.
 // [AtNext] waits for the next actual boundary, including extra main phases.

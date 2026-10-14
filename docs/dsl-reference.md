@@ -15416,8 +15416,9 @@ Nonempty `And` and `Or` lists use shared intersection and union services.
 Temporary keyword grants capture the selected visits at resolution, retain them
 after combat removal, control changes and a phase cycle, and expire at cleanup.
 Waiting delayed source queries retain direct source operands without selecting
-members or executing actions. Entry, replacement, static prevention and payment
-forms remain separate adapters. Icatian Skirmishers has complete-record evidence
+members or executing actions. Static prevention now uses the live static
+collection adapter below. Entry, replacement bodies and payment forms remain
+separate adapters. Icatian Skirmishers has complete-record evidence
 in `TestRONBandedCollectionNative`, `Pending` and `CapturedLifetime`.
 
 ## RON copiable entry variants
@@ -15483,3 +15484,30 @@ lists reject. The supported declaration is source-local; it does not bind a
 number on a recipient of a granted ability. Entry life payments and sacrifice
 counts need separate producers. This section supersedes the earlier numeric
 choice limitation after finite copiable entry variants.
+
+## RON live static collection queries
+
+`PlayerControlsAny(player PlayerRef, subjects PermanentSet) StateCondition`
+checks whether the player controls a current member. It requires the present
+source visit. `PreventDamageFromMatchingPermanentsToSetIf(subjects PermanentSet,
+from PermanentFilter, condition StateCondition) StaticRule` prevents all matching
+permanent-source damage to live members while the condition holds. A zero source
+filter permits any permanent source. Supply a nonnil condition. Existing singular
+prevention APIs keep their contracts.
+
+RON battlefield static declarations accept `SinglePermanent(ThisPermanent)`,
+`Other(ThisPermanent)`, `BandedWith(ThisPermanent)`,
+`ControlledByAPlayer(SinglePlayer(You))`, supported static-condition characteristic
+filters, and nonempty nested `And`/`Or` lists. No declaration captures members.
+The new queries consume these sets in static `PlayerPassesFilter(player,
+ControlsA(set))` / `ControlsNo(set)` and in
+`PreventDamage(DamageWouldBeDealtByAPermanentToARecipient(sourceFilter,
+APermanent(set)), [PreventThatDamage])`, including static conditional branches.
+The player keeps the existing You or declared chosen-player scope. Chosen-color
+filters retain their separate adapter. Other source references, targets, entry,
+payment and resolving contexts reject this static form.
+
+Camel uses its live source and attacking band. Bronze Horse now accepts the
+other-creature condition but still rejects spell-source prevention. Guardian
+Beast's existing artifact layer selection is retained; its protection operations
+remain unsupported. No production Go cards or RON source records change.

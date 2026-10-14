@@ -20292,8 +20292,9 @@ RON owns branch validation and declaration composition for top-level static
 conditional attack, untap, spell-target, untap-limit, damage-redirection and
 permanent-source prevention declarations with the existing conditional layers.
 Each family retains its supported subjects and shapes. All branches compile,
-even when inactive. Bare keywords, targets, payments, triggers, resolving actions,
-collection prevention and unsupported protection operations remain errors.
+even when inactive. Bare keywords, targets, payments, triggers, resolving actions
+and unsupported protection operations remain errors. Live collection prevention
+now uses the consumer contract below.
 Factories create separate abilities and static registrations. No result binding
 or announcement state transfers between declarations.
 
@@ -20340,7 +20341,8 @@ Skirmishers RON evidence is `TestRONBandedCollectionNative`, `Pending` and
 trigger resolution (CR 508.1–2), simultaneous first-strike and normal damage,
 expiry and saved event identity. `TargetsAndInstances`, `Invalid` and `Load`
 cover independent bindings, resolution target legality and atomic loading.
-Camel's static collection-recipient prevention remains unsupported.
+Camel's static collection-recipient prevention uses the live static consumer
+contract below.
 
 ## Copiable entry variants
 
@@ -20430,3 +20432,36 @@ numbers, failed and paid native casts, ordinary upkeep priority, decline,
 updates, zero-toughness state actions, spell copies, source return, independent
 factories, atomic loading and native combat damage. Its unchanged source matches
 local `data/ATQ.json`; no source correction is required.
+
+## Live static collection consumers
+
+`PlayerControlsAny(player PlayerRef, subjects PermanentSet) StateCondition`
+requires a present, unphased source of the specified visit. It resolves the typed
+player and live members without choices or writes. Missing players and empty
+sets cannot match. The shared set difference, union, intersection, control and
+attacking-band services keep their identity and duplicate-removal contracts.
+
+`PreventDamageFromMatchingPermanentsToSetIf(subjects PermanentSet,
+from PermanentFilter, condition StateCondition) StaticRule` requires a nonnil
+set and condition. Definition checks reject targets and unbound saved results in
+static declarations. Each cycle registration saves the source incarnation, even
+when no recipient currently matches. Each replacement match reads that source's
+current controller, condition and recipients. Empty membership can later become
+nonempty without a new ability. Only present recipient visits can match. Existing
+permanent damage-source matching retains current, phase and departure facts;
+spells cannot match. Existing prevention ordering, unpreventable damage and
+simultaneous packet services apply. Waiting prevention queries use the same live
+condition and membership. Clones own their game state and cycle registrations.
+
+These contracts use CR 400.7, 615.1/615.6/615.12, 616.1f/616.2, 702.22e–g and
+702.26. No new cost, timing, replacement-order or combat policy is introduced.
+RON owns source spelling, declaration contexts and AST composition.
+
+Engine evidence: `TestLiveStaticCollectionPrevention`, `Condition`, `Invalid`
+and `WaitingIdentity` cover live control, phasing, source and recipient return,
+ability loss, source LKI, clones, replacement rechecks, waiting references,
+unpreventable damage, definition errors and simultaneous recipients.
+RON evidence: `TestRONLiveStaticCollectionCamel`, `CamelChanges`,
+`CamelSpellCopy`, `Condition`, `Invalid` and `LoadAndScope` cover the complete
+Camel record, paid native casting, native attacking bands and combat, band
+removal, source copies, factories, scope errors and atomic collection rejection.
