@@ -1338,6 +1338,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	}
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield":
+		build, err := compileGraveyardBatchEntry(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "RepeatableActions":
 		var build effectFactory
 		var err error

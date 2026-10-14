@@ -114,7 +114,7 @@ func TestRONSourceZoneUpkeepRecordPrerequisites(t *testing.T) {
 		t.Run(tc.set+"/"+tc.name, func(t *testing.T) {
 			node := repositoryRecord(t, tc.set, tc.name, tc.set+".ron")
 			_, compileErr := Compile(node)
-			if (compileErr == nil) != (tc.wrapper == "FromGraveyard") {
+			if compileErr != nil {
 				t.Fatalf("complete record support changed: %v", compileErr)
 			}
 			var wrapper Node

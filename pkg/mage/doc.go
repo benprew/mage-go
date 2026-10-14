@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PutGraveyardCreaturesOntoBattlefieldUnderOwnersControl] returns creatures together.
+// Selection saves current graveyard visits before entry choices in APNAP order.
+// Returned visits and cards added during choices cannot join the batch.
+// Shared entry rules supply copies, choices, counters and tapped status.
+// Blocked or failed entries keep their graveyard visits. Uncast entry uses zero X.
+// All entrants are registered before graveyard departure and entry observations.
+// Each owner gets one graveyard departure notification with the actual count.
+// RON accepts PutEachCardFromEachPlayersGraveyardOntoTheBattlefield with
+// IsCardtype(Creature), AnyPlayer and one EntersNormally in resolving bodies.
+// Other filters, players and entry options need separate adapters.
+//
 // [ThisSpell] reads the exact spell whose body is now resolving.
 // [ExileSpell] and [ExileSpellWithCounters] move one present spell to face-up
 // exile. Fixed counters are set before zone observations. Later instructions

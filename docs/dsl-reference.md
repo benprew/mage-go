@@ -15121,3 +15121,40 @@ cannot move the new exile visit. The reusable engine APIs are `ThisSpell`,
 `ExileSpell(StackObjectRef)` and
 `ExileSpellWithCounters(StackObjectRef, core.CounterType, int)`.
 Tests: `TestRONSpellExile*` and native `TestSpellExile*`.
+
+
+## Simultaneous graveyard creature entry
+
+`PutGraveyardCreaturesOntoBattlefieldUnderOwnersControl() ResolvingEffect`
+selects every present nontoken creature card from both owner graveyards at
+resolution. Typed saved visits prevent returned cards from replacing selected
+subjects (CR 400.7); cards added during choices cannot join the batch.
+Each owner controls their entrants. Entry choices run in APNAP order, with each
+owner choosing their own card order (CR 101.4, 101.4c). Shared entry preparation
+supplies replacements, copy choices, counters, tapped status and attachments
+(CR 614.12, 616.1). Preparation uses independent card copies with physical IDs.
+Uncast entrants use zero X and cast colors; the enclosing X is restored.
+
+All saved visits, ownership, land prohibitions and required Aura hosts are
+checked after choices. Prohibited or failed entries keep their graveyard visits.
+All successful cards leave their graveyards and reach the battlefield before
+observations. Their continuous layers apply before departure notifications. Each owner gets one `EvtCardsLeftGraveyard` with the actual count;
+entry zone events report graveyard origin and the resolving controller as actor.
+Entering observers can see other entrants (CR 603.6a). Clones retain separate
+zones and pending execution. No cost or announcement target is added.
+
+RON accepts exactly
+`PutEachCardFromEachPlayersGraveyardOntoTheBattlefield(IsCardtype(Creature), AnyPlayer, [EntersNormally])`
+in resolving spell, activated, triggered and delayed bodies, including source-zone
+triggers and conditional bodies. Other filters, player sets, entry options,
+costs, static rules, entry declarations and replacement bodies reject at compilation.
+
+`TestGraveyardBatchEntry*` proves native batch timing, APNAP choices, exact visit
+rechecks, fresh counters, tapped entry, entry-copy land prohibition, failed entry,
+zero X, entrant observations and grouped graveyard departure notifications.
+`TestRONGraveyardBatchEntry*` proves strict loading, declaration rejection,
+resolution timing, pending clones and complete unchanged All Hallow's Eve gameplay.
+The complete card casts to exile with two counters, ignores opponent upkeeps,
+counts down on two owner upkeeps, moves itself to its graveyard, and returns both
+players' creatures together. Earlier source-counter tests retain their focused
+projections and now require the complete record to compile.

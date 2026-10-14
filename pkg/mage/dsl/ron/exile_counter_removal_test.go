@@ -164,8 +164,8 @@ func TestRONExileCounterRemovalNested(t *testing.T) {
 
 func TestRONExileCounterRemovalAllHallowsEve(t *testing.T) {
 	node := repositoryRecord(t, "LEG", "All Hallow's Eve", "LEG.ron")
-	if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield") {
-		t.Fatalf("full record lost its independent gap: %v", err)
+	if _, err := Compile(node); err != nil {
+		t.Fatalf("full record failed: %v", err)
 	}
 	probes, err := Parse(strings.NewReader(`SpellActions(ActionList([GainLife(Integer(0))])) GainLife(Integer(2))`), "probe.ron")
 	if err != nil {

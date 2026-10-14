@@ -79,7 +79,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 				}
 				continue
 			}
-			host, ok := g.chooseExileEntryAuraHost(perm, owner)
+			host, ok := g.chooseEntryAuraHost(perm, owner)
 			if !ok {
 				continue
 			}
@@ -155,7 +155,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (g *Game) chooseExileEntryAuraHost(perm *Permanent, owner Player) (capturedPermanent, bool) {
+func (g *Game) chooseEntryAuraHost(perm *Permanent, owner Player) (capturedPermanent, bool) {
 	if !perm.HasSubType("Aura") {
 		return capturedPermanent{}, true
 	}

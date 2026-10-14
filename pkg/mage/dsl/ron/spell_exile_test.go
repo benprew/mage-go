@@ -130,24 +130,6 @@ func TestRONSpellExileInvalid(t *testing.T) {
 
 func TestRONSpellExileAllHallowsEve(t *testing.T) {
 	node := repositoryRecord(t, "LEG", "All Hallow's Eve", "LEG.ron")
-	if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield") {
-		t.Fatalf("unexpected remaining gap: %v", err)
-	}
-	probe, err := Parse(strings.NewReader(`GainLife(Integer(2))`), "probe.ron")
-	if err != nil {
-		t.Fatal(err)
-	}
-	wrapper := node.Fields["Rules"].Args[1]
-	trigger := wrapper.Args[0]
-	body := trigger.Args[2]
-	branch := body.Args[0].Args[1]
-	branch.Args = append([]Node(nil), branch.Args...)
-	branch.Args[1].Args = []Node{branch.Args[1].Args[0], probe[0]}
-	body.Args = []Node{{Kind: List, Args: []Node{body.Args[0].Args[0], branch}}}
-	trigger.Args = []Node{trigger.Args[0], trigger.Args[1], body}
-	wrapper.Args = []Node{trigger}
-	node.Fields = maps.Clone(node.Fields)
-	node.Fields["Rules"] = Node{Kind: List, Args: []Node{node.Fields["Rules"].Args[0], wrapper}}
 	factory, err := Compile(node)
 	if err != nil {
 		t.Fatal(err)
@@ -176,12 +158,12 @@ func TestRONSpellExileAllHallowsEve(t *testing.T) {
 	}
 	queueRONUpkeep(g, a)
 	g.ResolveStack()
-	if g.FindExiledCard(card.ID()) != nil || len(a.Graveyard()) != 1 || a.Life() != 22 {
+	if g.FindExiledCard(card.ID()) != nil || len(a.Graveyard()) != 1 || a.Life() != 20 {
 		t.Fatal("second upkeep did not resolve zero branch")
 	}
 	queueRONUpkeep(g, a)
 	g.ResolveStack()
-	if a.Life() != 22 {
+	if a.Life() != 20 {
 		t.Fatal("departed source armed")
 	}
 }

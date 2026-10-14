@@ -6,31 +6,30 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **867 accepted / 119 rejected names**
-(986 total), **2,235 compiled / 210 rejected records** (2,445 total).
-The latest slice is **SPELL-EXILE-WITH-INITIAL-COUNTERS**. One resolving spell
-moves to an exact face-up exile visit with fixed counters before observations.
-Later instructions continue; repeat actions and cleanup cannot move it again.
-Copies have separate visits and cease at the next state-based check. Clones
-retain departure state and separate counters, including during resolution.
-Estimated and actual full-card gains are **zero names / zero records**.
-All Hallow's Eve gains its verified cast-to-exile countdown path; Recall gains
-self-exile prerequisite evidence. Complete-card gameplay coverage is unchanged.
+Latest measured result (2026-10-13): **868 accepted / 118 rejected names**
+(986 total), **2,236 compiled / 209 rejected records** (2,445 total).
+The latest slice is **SIMULTANEOUS-GRAVEYARD-CREATURE-ENTRY**. Resolving bodies
+capture creature graveyard visits, prepare owner entry choices in APNAP order,
+recheck visits and register every successful entrant before observations.
+Entry replacements, counters, copies and tapped status use shared services.
+Returned visits and late additions cannot join the batch. Uncast entry uses
+zero X; clones keep separate execution. Entrant layers precede notifications.
+Estimated and actual full-card gains are **one name / one record**.
+All Hallow's Eve now has complete unchanged-record RON gameplay evidence.
+Compilation coverage and complete-card gameplay each gain this one card.
 
-The loader still rejects the collection atomically. All Hallow's Eve now needs
-only simultaneous mass graveyard entry. Recall retains discard/result-return
-gaps. Runtime cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. All Hallow's Eve's mass-entry
+diagnostic is gone; every remaining rejection diagnostic is unchanged. Runtime
+cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Simultaneous mass graveyard entry — All Hallow's Eve.** Spell exile is ready;
-   estimated one name / one record after complete entry-batch implementation.
-2. **Player-chosen trigger targets — The Abyss.** Saved upkeep-player chooser,
+1. **Player-chosen trigger targets — The Abyss.** Saved upkeep-player chooser,
    current legality and copy retargeting; estimated one name / one record.
-3. **Variable discard and saved discard-count return — Recall.** Self-exile is
+2. **Variable discard and saved discard-count return — Recall.** Self-exile is
    ready. Discard alone gives zero gains; its dependent return can unlock one
    name / one record. Reassess shared value with fresh complete records.
 
@@ -7165,3 +7164,170 @@ blocker remains. Only this completed slice is committed; no next slice starts.
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain gated.
+
+
+## 2026-10-13 — SIMULTANEOUS-GRAVEYARD-CREATURE-ENTRY
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and uncached RON package tests passed.
+Baseline loader exit 1 was expected atomic collection rejection, not a build or
+test failure: 2,235 compiled / 210 rejected records and 867 accepted / 119 rejected
+names. The complete LEG records for All Hallow's Eve, The Abyss and Recall were
+read, including every nested condition, target restriction and result consumer.
+Targeted vocabulary reads confirmed one mass-entry occurrence, one Recall
+saved-discard return, and the broader fixed/variable discard family. Reprints
+count once.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: simultaneous graveyard creature entry | All Hallow's Eve | 1 name / 1 record | Spell exile, initial counters, owner upkeep, source conditions and removal are ready. Shared entry preparation exists; saved graveyard batch selection and deferred observations are missing. Establishes an owner-entry batch boundary for later collection adapters. | Small/medium: one native effect, one lowering adapter, batch and identity contracts |
+| Ranked #2: event-player target chooser | The Abyss | 1 name / 1 record | Upkeep event binding exists; its saved player must choose a nonartifact creature they control. Needs chooser-aware target declaration, announcement legality and copy retargeting integration. | Medium: target contract across announcement and copies |
+| Ranked #3: variable discard and saved count return | Recall | 0 for discard alone; 1 name / 1 record for the full procedure | Self-exile is ready. Variable discard must produce an exact local count for the separate graveyard-return consumer. Fixed discard already serves Bazaar of Baghdad and Mindstab Thrull; those are not new unlocks. | Large relative to this run: two dependent producer/consumer contracts |
+
+Ranked #1 is dependency-ready. Comparison found no immediate multi-name unlock
+among these candidates. It gives the same full-card gain as The Abyss with the
+smallest credible shared-service effort. Recall requires two distinct contracts.
+Only the mass-entry slice was implemented. Estimated and actual gains match:
+**one unique name / one record**. Complete-card gameplay gains one mapping.
+Compilation and gameplay coverage remain separate measurements.
+
+### Exact supported shape and engine contract
+
+RON accepts
+`PutEachCardFromEachPlayersGraveyardOntoTheBattlefield(IsCardtype(Creature), AnyPlayer, [EntersNormally])`
+in resolving spell, activated, triggered and delayed bodies, including `If` and
+source-zone upkeep bodies. Tuple arity, symbol kinds and the single entry option
+are exact. Other filters, player sets, options, costs, static rules, entry
+operations, direct nonresolving scopes and draw-replacement bodies reject during
+compilation. `compileGraveyardBatchEntry(Node, scope)` keeps spelling and scope
+validation in `ron`. Inventory operands have graveyard-filter, player-reference
+and entry-operation roles.
+
+The reusable API is
+`mage.PutGraveyardCreaturesOntoBattlefieldUnderOwnersControl() mage.ResolvingEffect`.
+It captures typed current graveyard visits once before choices. Each owner makes
+entry choices in APNAP order and can order their own cards through the existing
+sanitized card-order service. New cards and returned visits cannot join the
+saved selection. Preparation uses independent copied definitions with physical
+IDs, zero announced entry X and zero cast colors. The enclosing X is restored.
+
+The engine reuses `prepareBattlefieldEntryResultWithContext`, copy and counter
+replacements, tapped entry, required entry operations, land-entry prohibitions,
+registration and entry completion. The existing exact Aura-host choice helper
+was renamed `chooseEntryAuraHost` and is shared with linked exile entry; no old
+caller was removed. Saved visits, owners, hosts and prohibitions are checked
+again after choices. Blocked or failed entries remain in their graveyards with
+their current visits. All successful removals and registrations finish before
+observations. Continuous layers apply before notifications. Each owner receives
+one `EvtCardsLeftGraveyard` with the actual count; entry zone events use graveyard
+origin and the resolving controller as actor. Entrants observe other entrants.
+
+No mutable declaration, card-name dispatch, Go-card fallback, partial production
+registry, global last-action slot or game-time declaration panic was added.
+The effect has no source read or announcement target and adds no payment form.
+Clones use separate zones and pending execution. Graveyard cards do not phase;
+queued activations still resolve after source departure. Aura host phasing and
+incarnation checks reuse the established attachment service. Cost rollback and
+payment replacement order remain with existing entry/payment services; this
+slice adds no cost declaration. Broader filters and explicit entry options
+remain separate adapters.
+
+CR 101.4/101.4c, 107.3g, 400.7, 603.6a, 614.12 and 616.1 support the established
+choice, identity, entry and observation behavior. Local `data/LEG.json` Oracle
+text matches the complete unchanged All Hallow's Eve record. No source defect
+was found. RON sources and vocabulary snapshot hashes are unchanged. Runtime
+cutover, Go-card deletion, obsolete generation and unused DSL cleanup gates
+remain unmet; no such removal was attempted.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed to compile at the missing engine API. The complete
+All Hallow's Eve spell test then failed at the precise unsupported mass-entry
+action. Both passed after the native service and lowering were added. Test
+fixture corrections used battlefield membership instead of `FindPermanent`
+(which also exposes a preparing entrant), and an explicit player that accepts
+optional copy choices. Assertions were retained.
+
+A later failing native assertion proved graveyard-departure observers initially
+missed entrants' static P/T layers. Applying the shared layers after registration
+and before notifications repaired the ordering. A failing scope assertion proved
+the initial adapter accepted nonresolving/replacement/entry scopes; the explicit
+scope guard repaired that boundary. The first engine short run found stale
+collection counts and the former All Hallow's Eve rejection assertion. Those
+were updated to the new exact counts and complete-record acceptance.
+
+- **All Hallow's Eve → `TestRONGraveyardBatchEntryAllHallowsEve`.** Strict loading
+  of the complete original record; paid casting, exile with two counters,
+  opponent-upkeep exclusion, two owner-upkeep countdowns, source graveyard move
+  before batch observations, both owners' creature returns, fresh entry counters,
+  pending upkeep clone isolation and no new trigger after departure.
+- **All Hallow's Eve → `TestRONSpellExileAllHallowsEve`.** The former life-probe
+  projection now uses the complete record and covers the empty-graveyard path.
+  Existing `TestRONExileCounterConditionAllHallowsEve`,
+  `TestRONExileCounterRemovalAllHallowsEve` and
+  `TestRONSourceZoneUpkeepRecordPrerequisites` retain their focused probes and
+  require complete-record acceptance.
+- **`TestRONGraveyardBatchEntryGameplay`.** Strict synthetic RON loading,
+  announcement/resolution timing, spell copies, activated source departure,
+  delayed bodies, owner control and pending clone isolation.
+- **`TestRONGraveyardBatchEntryInvalid`, `InvalidScope`.** Invalid arities,
+  symbol/tuple substitutions, filter/player/entry variants, cost/static/entry
+  contexts and direct nonresolving/replacement scopes reject.
+- **`TestGraveyardBatchEntry`.** Native definition validation, owner control,
+  tapped and counter replacements, noncreature exclusion, exact batch
+  observations, repeat execution and zone clone isolation.
+- **`TestGraveyardBatchEntryChoicesAndVisits`, `APNAPAndFinalRecheck`.** Choices
+  precede movement; both active-player orders, visits returned before or after
+  preparation, late additions, entry-copy land prohibition, failed entry,
+  retained graveyard visits, zero entry X and restored enclosing X.
+- **`TestGraveyardBatchEntryEntrantObservations`.** All three entrants observe
+  each other; one owner departure notification reports three cards; static
+  entrant layers are present at that notification.
+
+### Validation and files
+
+Final checks passed after the layer-order repair and scope guard:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONGraveyardBatchEntry -count=1` and
+   `go test ./pkg/mage -run TestGraveyardBatchEntry -count=1`. The earlier source
+   exile/counter All Hallow's Eve probes and linked-exile-entry regression tests
+   also passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1`, `make test`, and skill-required
+   `go test ./... -short -count=1` passed.
+4. Final `make lint` passed with **0 issues**. Automatic import formatting in
+   the new files was reviewed; no unrelated change occurred. Final
+   `git diff --check` passed.
+5. Final `go run ./cmd/loadcards -json` exited 1 for required atomic collection
+   rejection: **2,236 compiled / 209 rejected records**, **868 accepted / 118
+   rejected names**. All Hallow's Eve's prior
+   `LEG.lines.ron:12:634: unsupported action (PutEachCardFromEachPlayersGraveyardOntoTheBattlefield)`
+   diagnostic disappears. A keyed comparison with the fresh baseline confirms
+   every remaining rejected record retains its exact diagnostic. No accepted
+   record regressed. Expected collection rejection does not block this slice's
+   commit. No build, test, lint or environment blocker remains.
+
+Changed native files: new `graveyard_batch_entry.go` and native tests,
+`linked_exile_entry.go` helper reuse and `doc.go`. Changed compiler files: new
+mass-entry adapter and RON tests, compiler dispatch and inventory roles.
+Earlier spell/source-counter probes now require complete All Hallow's Eve
+acceptance; definition-plan, inventory and numeric-consumer count assertions
+use the fresh collection totals. API/rules-contract docs and this ledger cover
+only established behavior. No RON source or vocabulary file changed.
+
+### Ranked next candidates
+
+1. **Event-player target chooser — The Abyss.** Save the explicit upkeep-player
+   chooser through announcement and copy retargeting. Preserve its current
+   nonartifact-creature/control legality and destroy-without-regeneration action.
+   Estimated one name / one record; reassess broader shared chooser uses first.
+2. **Variable discard and saved discard-count return — Recall.** Its self-exile
+   prerequisite is ready. Discard alone gives zero new names; the dependent
+   graveyard-return consumer can finish one name / one record. Do not count
+   already accepted fixed-discard cards as new unlocks. Reassess multi-card
+   prerequisites before choosing this two-contract procedure.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain gated. This run stops
+after one completed slice.

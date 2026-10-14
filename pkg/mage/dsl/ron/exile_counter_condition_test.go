@@ -103,8 +103,8 @@ func TestRONExileCounterConditionGameplay(t *testing.T) {
 
 func TestRONExileCounterConditionAllHallowsEve(t *testing.T) {
 	node := repositoryRecord(t, "LEG", "All Hallow's Eve", "LEG.ron")
-	if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield") {
-		t.Fatalf("full record must retain its independent mass-entry gap: %v", err)
+	if _, err := Compile(node); err != nil {
+		t.Fatalf("full record failed: %v", err)
 	}
 	wrapper := node.Fields["Rules"].Args[1]
 	trigger := wrapper.Args[0]
