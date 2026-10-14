@@ -21604,3 +21604,36 @@ effects, stack copies, snapshot independence, clones, source departure, subject
 return, phasing, cleanup, unpreventable damage, pure waiting queries, nil subject
 rejection, amount changes, redirection into and out of protection and packet
 rechecks after subject departure. No RON source correction was required.
+
+## Single-target spell predicate
+
+`SpellWithSingleTarget() SpellFilter` matches a spell with exactly one announced
+target occurrence (CR 115.9a). Two target groups that select the same object count
+as two occurrences. This is distinct from the unique-object check for “targets
+only” in CR 115.9c. Abilities, missing spell cards and absent stack objects do not
+match. The predicate reads `StackObject.Targets`; it does not query target
+legality, current characteristics or departure information. Phasing, departure,
+return and protection do not erase occurrences. A changed target list supplies
+the current count. Copies and game clones keep separate lists.
+
+The existing `SpellTargetBinding.WithFilter` applies the predicate at selection
+and resolution. Failed selection spends no resources. The existing cast-event
+filter checks detection once; pending triggers retain that result. Immutable
+And/Or/Not composition and definition validation use the shared spell filters.
+There is no new targeting, identity, copy or event subsystem.
+
+RON accepts the strict symbol `TargetsOnlyASingleTarget` in contextual
+`TargetSpell` and `WhenAPlayerCastsASpell` filters, including existing And/Or and
+ExceptFor composition. Tuple forms and card-only static spell restrictions
+reject it. Despite the RON spelling, Reflecting Mirror's local DRK Oracle says
+“with a single target”; the occurrence contract follows that wording. Its full
+record remains unsupported. `CanTargetOnly`, target-dependent announcement X,
+player-target predicates and retargeting remain separate capabilities.
+
+Evidence: native `TestSpellSingleTargetOccurrences` and
+`TestSpellSingleTargetSavedAndCurrentLists`; RON `TestRONSingleTargetGameplay`,
+`RejectAndDeclarations`, `CastEvents` and `ActivationAndComposition`. These use
+complete Lightning Bolt and Llanowar Elves RON definitions with synthetic
+predicate consumers. They establish the prerequisite, not complete Reflecting
+Mirror gameplay. Replacement order, payment amounts, LKI reads and simultaneous
+movement are unchanged by this query.

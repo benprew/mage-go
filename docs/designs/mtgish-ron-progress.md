@@ -8,17 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
 (986 total), **2,282 compiled / 163 rejected records** (2,445 total).
-The latest slice is **TARGETING-CAUSE-DAMAGE-PREVENTION**.
-Silhouette now executes its complete RON record. The causing spell or ability
-keeps its own exact stack identity and target visits, separate from the damage
-source. Resolving protection saves one permanent visit until cleanup. Shared
-replacement paths retain the cause through amount and recipient changes.
-Native and RON tests cover spell/ability causes, a different damage source,
-copies, clones, illegal targets, phasing, return, replacement rechecks and
-unpreventable damage. Estimated and actual gain: **one name / one record**.
-All earlier accepted records remain accepted. No RON source changed; only the
-vocabulary loader baseline is refreshed. Validation and mappings are in the
-latest entry.
+The latest slice is **SINGLE-TARGET-SPELL-PREDICATE**.
+RON contextual spell filters now accept the strict TargetsOnlyASingleTarget
+symbol. The engine counts announced target occurrences, including illegal or
+departed targets. Two occurrences of the same object count as two targets.
+Selection and resolution use the current list. Copies and clones keep separate
+lists; cast triggers keep detection results. This is a prerequisite for
+Reflecting Mirror, which still has announcement-X and retargeting blockers.
+Estimated and actual compilation gain: **zero names / zero records**.
+Complete Lightning Bolt and Llanowar Elves records supply integration evidence
+with synthetic predicate consumers. No complete Mirror gameplay is claimed.
+All earlier accepted records remain accepted. No RON source or vocabulary
+baseline changed. Validation and mappings are in the latest entry.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -14399,3 +14400,154 @@ pkg/mage/doc.go, API/rules-contract docs, vocabulary baseline and this ledger.
 Complete RON gameplay, embedded runtime startup, Go-card deletion and unused DSL
 cleanup remain gated. The collection still rejects atomically. This run stops
 after TARGETING-CAUSE-DAMAGE-PREVENTION.
+
+
+## 2026-10-14 — SINGLE-TARGET-SPELL-PREDICATE
+
+### Baseline and candidate comparison
+
+The working tree was clean before work. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict JSON loading exited 1
+with 2,282 compiled / 163 rejected records and 903 accepted / 83 rejected names.
+This was collection rejection, not a build, test or environment failure.
+
+Read the execution design, current status and latest ledger entry, engine API,
+selected spell filter/target/reference/compiler code, targeted vocabulary keys,
+and the complete Wall of Shadows, Reflecting Mirror and Kry Shield records.
+Local LEG/DRK Oracle data supplies their exact text. CR 115.1, 115.3, 115.6,
+115.8 and 115.9 distinguish declarations, modes, occurrences and unique targets.
+
+1. Ranked shared spell-target predicate candidate: two unique names, Wall of
+   Shadows and Reflecting Mirror. These are different predicates, not one
+   interchangeable implementation. Wall's CanTargetOnly needs a semantic target
+   schema and exact active ability identity; the current arbitrary filter
+   functions cannot establish that only Walls are permitted. Estimated effort:
+   high for that schema and spell/ability propagation. Mirror's announced single
+   target count already has a shared stack list: low implementation effort,
+   moderate contract/integration testing. Neither prerequisite alone unlocks a
+   complete card. The latter enables Mirror's later announcement-X and target
+   change path, and composes with existing contextual target and event filters.
+2. Typed target-dependent announcement X: Reflecting Mirror, one unique name,
+   at most one eventual unlock. Other blockers are the single-target check,
+   player target check and retargeting. Its ManaValueIs(EqualTo(ValueX)) also
+   needs an Oracle audit: payment X is twice spell mana value, not equal to it.
+   Estimated effort: high across announcement, target dependency and payment
+   rollback. It is not ready as the next isolated adapter.
+3. Unlimited source damage prevention: Kry Shield, one unique name, zero
+   unlocks alone. A separate AdjustPTX(Zero, PlusX,
+   ManaValueOfPermanent(ActionPermanent)) adapter remains. Estimated effort:
+   moderate prevention contracts plus a separate layer capability. This enables
+   Kry Shield's prevention half; complete gameplay needs both blockers resolved.
+
+Selected the dependency-ready single-target prerequisite from candidate #1.
+This deliberately implements one predicate, not the whole proposed targeting
+family. None of the compared candidates offers an immediate multi-card unlock.
+The bounded required prerequisite can finish in this run; the schema and
+announcement dependencies remain explicit. Estimated gain: zero full names and
+zero records. The affected source name is Reflecting Mirror (one DRK record).
+Wall of Shadows and Kry Shield remain comparison candidates, not affected cards.
+
+### Exact contract and reuse boundary
+
+Engine signature: `SpellWithSingleTarget() SpellFilter`. Matches exactly one
+entry in a spell's StackObject.Targets. Two groups selecting the same UUID
+count as two occurrences under CR 115.9a. This does not implement CR 115.9c's
+unique-object “targets only” check. Abilities, missing cards and absent stack
+objects fail. Legality, phasing, departure and return do not erase occurrences.
+Queries make no choices and mutate no state. Changed lists supply current counts.
+Copies and clones retain their own lists.
+
+RON spelling: strict symbol `TargetsOnlyASingleTarget` in contextual spell
+filters, including TargetSpell in resolving spells/permanent activations and
+WhenAPlayerCastsASpell. Existing And/Or/ExceptFor compose it. Tuple forms,
+resolving action use and card-only static spell restrictions reject it.
+No new binding is necessary: the existing typed spell target/event frames own
+identity and saved selections. Target checks run at selection and resolution;
+cast events save detection results and do not repeat the check at resolution.
+Reflecting Mirror's local Oracle says “with a single target”, which establishes
+occurrence counting despite the RON symbol's name.
+
+Reused SpellFilter definition validation/composition, typedSpellTarget,
+SpellTargetBinding, spellCastPattern, cast-event snapshots, target validation,
+activation/casting transactions, stack copy and Game.Clone. No parallel payment,
+targeting, LKI, replacement or event system was added. No caller signature was
+changed. No Go factory fallback, card-name branch, global action result, runtime
+declaration panic or partial registry was added. No Go card or DSL export was
+removed; the runtime cutover gate remains closed.
+
+### Failing-first tests and mappings
+
+Native tests first failed to compile on missing SpellWithSingleTarget. RON tests
+then failed at the unsupported single-target symbol. After the engine function
+and compiler lowering, both focused groups passed. Assertions were not weakened.
+
+- Native `TestSpellSingleTargetOccurrences`: zero/one/two targets, duplicate UUID
+  occurrences, abilities, absent objects/cards and definition validation.
+- Native `TestSpellSingleTargetSavedAndCurrentLists`: phasing, departure, copies,
+  clone isolation and changed target lists.
+- RON `TestRONSingleTargetGameplay`: complete LEB Lightning Bolt as the subject
+  of synthetic RON predicate consumers; player/permanent targets, unpaid casting,
+  phasing, return, spell copies, clones and resolution target-count rechecks.
+- RON `TestRONSingleTargetRejectAndDeclarations`: complete LEB Llanowar Elves
+  as an untargeted subject; illegal zero/multiple/duplicate target occurrences
+  retain mana and stack state; tuple/context rejection, semantic inventory role
+  and atomic loading rejection. Complete DRK Reflecting Mirror still rejects.
+- RON `TestRONSingleTargetCastEvents`: complete Lightning Bolt and Llanowar Elves
+  distinguish targeted/untargeted casts. Later list changes do not cancel an
+  already detected trigger.
+- RON `TestRONSingleTargetActivationAndComposition`: source departure after
+  activation retains the bound spell; And/Or/ExceptFor composition and fresh
+  factory ability instances.
+
+These mappings establish the predicate and existing-card integration, not full
+Reflecting Mirror gameplay. No new full-card gameplay completion is claimed.
+LKI, replacement ordering and simultaneous movement are not operations of this
+pure predicate. Existing targeting/copy/transaction contracts remain in force.
+
+### Validation and actual gain
+
+All required checks passed:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONSingleTarget' -count=1`: pass.
+  Native `go test ./pkg/mage -run '^TestSpellSingleTarget' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- First `make lint` found one revive issue: the new native test used `copy` as
+  a variable name. Renamed it to `copiedSpell`. Repeated native and RON focused
+  tests passed. Final `make lint`: pass, **0 issues**. Automatic formatting
+  changed only import grouping in the new test files. No unrelated file changed.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,282 compiled /
+  163 rejected records; 903 accepted / 83 rejected unique names**. Final JSON
+  equals the fresh baseline, including all diagnostics. Reflecting Mirror's
+  earlier unsupported announcement-X modifier still supplies its first error.
+  This is atomic collection rejection, not a build/test failure.
+
+The reviewed production diff is one immutable engine predicate, its definition
+validation case and strict RON lowering. Build, test and environment blockers:
+none. Existing compilation coverage is preserved. New predicate gameplay
+coverage is separate from full-card coverage.
+
+No source defect was corrected. The Mirror mana-value equality concern remains
+explicit, supported by local DRK Oracle. No RON hashes, syntax or loader baseline
+changed. Actual compilation gain matches the estimate: zero names / zero records.
+
+### Ranked next candidates
+
+1. Target-domain schema and active ability target identity for CanTargetOnly:
+   Wall of Shadows. Required prerequisite for its spell/ability restrictions;
+   zero unlocks until both lowering paths exist. Do not infer a domain from the
+   current battlefield or selected targets.
+2. Target-dependent announcement X: Reflecting Mirror. The single-target
+   prerequisite now exists. Audit the mana-value equality, then compare the
+   announcement dependency with player-target/retargeting contracts. At most one
+   eventual card unlock; no standalone adapter can claim the whole record.
+3. Source damage prevention: Kry Shield. Still paired with its separate dynamic
+   toughness layer adapter; zero full-card unlocks from prevention alone.
+
+Changed files: pkg/mage/spell_filter.go, spell_single_target_test.go and doc.go;
+pkg/mage/dsl/ron/contextual_spell_filter.go and spell_single_target_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement single-target spell predicate`.
+Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
+remain gated. This run stops after SINGLE-TARGET-SPELL-PREDICATE.

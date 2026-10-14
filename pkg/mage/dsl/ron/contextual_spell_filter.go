@@ -4,6 +4,11 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 func compileContextualSpellFilter(n Node, ctx scope) (mage.SpellFilter, error) {
 	switch n.Name {
+	case "TargetsOnlyASingleTarget":
+		if n.Kind != Symbol {
+			return mage.SpellFilter{}, problem(n, "single target spell filter requires a symbol")
+		}
+		return mage.SpellWithSingleTarget(), nil
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
 			return mage.SpellFilter{}, err

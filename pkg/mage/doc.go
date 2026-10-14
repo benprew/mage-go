@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SpellWithSingleTarget] counts one announced target occurrence on a spell.
+// Target legality, phasing and departure do not remove the occurrence.
+// Two occurrences of the same object are two targets. Changed target lists
+// supply the current count. Copies and clones keep separate lists.
+// RON accepts TargetsOnlyASingleTarget as a strict symbol in contextual spell
+// target and cast-event filters. Card-only filters reject it. Reflecting Mirror
+// still needs announcement X, player-target predicates and retargeting support.
+//
 // [PreventDamageCausedByTargetingThisTurn] saves one permanent visit until cleanup.
 // A resolving spell or ability supplies its own stack identity and target visits.
 // These facts stay separate from the damage source. Another permanent can deal

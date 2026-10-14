@@ -23,6 +23,10 @@ type SpellFilter struct {
 // SpellCardMatches uses current spell characteristics with an existing card filter.
 func SpellCardMatches(filter CardFilter) SpellFilter { return SpellFilter{kind: "card", card: filter} }
 
+// SpellWithSingleTarget counts target occurrences, including illegal targets.
+// Two occurrences of the same object are two targets.
+func SpellWithSingleTarget() SpellFilter { return SpellFilter{kind: "single-target"} }
+
 // SpellControlledByYou compares current spell control with the action controller.
 func SpellControlledByYou() SpellFilter { return SpellFilter{kind: "controller"} }
 
@@ -54,6 +58,8 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, source Card, spell *
 	switch f.kind {
 	case "card":
 		return f.card.Match(spell.Card)
+	case "single-target":
+		return len(spell.Targets) == 1
 	case "controller":
 		return controller != uuid.Nil && spell.Controller == controller
 	case "shares-color":
@@ -84,7 +90,7 @@ func (f SpellFilter) matches(g *Game, controller uuid.UUID, source Card, spell *
 func (f SpellFilter) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "spell-filter", Text: f.kind}
 	switch f.kind {
-	case "card", "controller", "shares-color", "ability-target-exclusion":
+	case "card", "controller", "shares-color", "ability-target-exclusion", "single-target":
 	case "all", "any":
 		if len(f.children) == 0 {
 			n.problem = "supply at least one spell filter"
