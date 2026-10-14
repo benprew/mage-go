@@ -12,6 +12,7 @@ import (
 // Each result has separate card data. The query does not make a choice.
 func (g *Game) DamageSourcesFor(playerID uuid.UUID) []DamageSource {
 	candidates := (&damageSourceChoice{allSources: true}).candidates(g, playerID)
+	candidates = append(candidates, g.WaitingDamageExpansionSources()...)
 	for _, object := range g.stack.referenceObjects() {
 		if object.IsAbility && object.abilitySourceVisit != uuid.Nil {
 			candidates = append(candidates, g.graveyardVisitInformation(object.SourceID, object.abilitySourceVisit))

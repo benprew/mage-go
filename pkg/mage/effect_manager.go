@@ -1092,6 +1092,17 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 }
 
 func (em *EffectManager) prepareReplacements(action Action, g *Game, local ...ReplacementEffect) (Action, []preventionLifeGain) {
+	switch action.(type) {
+	case *DamageToPlayerAction, *DamageToCreatureAction:
+		if damageActionAmount(action) <= 0 {
+			return nil, nil
+		}
+		actions, gains := em.prepareDamageBatchReplacementsWithLocal([]Action{action}, g, local...)
+		if len(actions) > 1 {
+			return &expandedDamageAction{actions: actions, originalCount: 1}, gains
+		}
+		return actions[0], gains
+	}
 	return em.prepareReplacementsChoosing(action, g, chooseReplacement, local...)
 }
 

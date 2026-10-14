@@ -396,6 +396,10 @@ type damageOutcome struct {
 }
 
 func executeDamageOutcome(g *Game, action Action) damageOutcome {
+	if expanded, ok := action.(*expandedDamageAction); ok {
+		outcomes := g.damage.executePreparedDamageActions(g, expanded.actions)
+		return outcomes[0]
+	}
 	result := damageOutcome{}
 	if playerAction, ok := action.(*DamageToPlayerAction); ok {
 		if player := g.GetPlayer(playerAction.PlayerID()); player != nil {
@@ -668,14 +672,25 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			actions = append(actions, action)
 		}
 	}
+	originalCount := len(actions)
 	actions, gains := g.effects.prepareDamageBatchReplacements(actions, g)
-	batch := &damageBatch{}
-	g.damageBatch = batch
-	outcomes := make([]damageOutcome, 0, len(actions))
-	for _, action := range actions {
-		if outcome := executeDamageOutcome(g, action); outcome.amount > 0 {
+	all := ds.executePreparedDamageActions(g, actions)
+	var outcomes []damageOutcome
+	for _, outcome := range all[:originalCount] {
+		if outcome.amount > 0 {
 			outcomes = append(outcomes, outcome)
 		}
+	}
+	applyPreventionLifeGains(g, gains)
+	return outcomes
+}
+
+func (ds *DamageSystem) executePreparedDamageActions(g *Game, actions []Action) []damageOutcome {
+	batch := &damageBatch{}
+	g.damageBatch = batch
+	outcomes := make([]damageOutcome, len(actions))
+	for i, action := range actions {
+		outcomes[i] = executeDamageOutcome(g, action)
 	}
 	g.damageBatch = nil
 	for i, event := range batch.events {
@@ -686,7 +701,6 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			ds.onDamageDealt(notification.source, notification.target, notification.amount, notification.combat)
 		}
 	}
-	applyPreventionLifeGains(g, gains)
 	return outcomes
 }
 
@@ -861,6 +875,13 @@ func (g *Game) DealDamageToPlayerFromSource(p Player, amount int, source DamageS
 
 func (g *Game) executeDamageAction(action Action) int {
 	switch a := action.(type) {
+	case *expandedDamageAction:
+		outcomes := g.damage.executePreparedDamageActions(g, a.actions)
+		total := 0
+		for _, outcome := range outcomes[:a.originalCount] {
+			total += outcome.amount
+		}
+		return total
 	case *DamageToPlayerAction:
 		return g.damage.ExecuteDamageToPlayer(g, a)
 	case *DamageToCreatureAction:

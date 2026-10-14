@@ -49,6 +49,10 @@ func (em *EffectManager) applyDamageBatchReplacements(actions []Action, g *Game)
 }
 
 func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Game) ([]Action, []preventionLifeGain) {
+	return em.prepareDamageBatchReplacementsWithLocal(actions, g)
+}
+
+func (em *EffectManager) prepareDamageBatchReplacementsWithLocal(actions []Action, g *Game, local ...ReplacementEffect) ([]Action, []preventionLifeGain) {
 	var outcomes []preventionLifeGain
 	// Keep one use per packet so redirection cannot apply a rule twice.
 	applied := make([]map[ReplacementEffect]bool, len(actions))
@@ -69,7 +73,7 @@ func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Gam
 				if (player == nil && affected != nil) || (player != nil && (affected == nil || affected.PlayerID() != player.PlayerID())) {
 					continue
 				}
-				for _, replacement := range em.replacementCandidates(action, g, applied[i]) {
+				for _, replacement := range em.replacementCandidates(action, g, applied[i], local...) {
 					p := getReplacementPriority(replacement)
 					if p > priority {
 						continue
@@ -82,7 +86,8 @@ func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Gam
 					_, shield := replacement.(*preventionShieldReplacement)
 					source, nextSource := replacement.(*sourcePreventionReplacement)
 					_, redirect := replacement.(*selectedSourceRedirectReplacement)
-					if shield || redirect || (nextSource && source.capturesSourceIdentity()) {
+					_, expansion := replacement.(damageEventExpander)
+					if shield || redirect || expansion || (nextSource && source.capturesSourceIdentity()) {
 						if seenShields[replacement] {
 							continue
 						}
@@ -115,18 +120,33 @@ func (em *EffectManager) prepareDamageBatchReplacements(actions []Action, g *Gam
 			}
 		}
 		selected := candidates[choice]
-		if shield, ok := selected.replacement.(*preventionShieldReplacement); ok {
-			shield.allocateBatch(actions, applied, g)
-		} else if source, ok := selected.replacement.(*sourcePreventionReplacement); ok && source.capturesSourceIdentity() {
-			outcome := source.preventBatch(actions, applied, g)
-			if outcome.amount > 0 {
-				outcomes = append(outcomes, outcome)
+		switch replacement := selected.replacement.(type) {
+		case damageEventExpander:
+			originalCount := len(actions)
+			actions, applied = replacement.expandDamageEvent(actions, applied, g)
+			// The added spell damage belongs to a separate instruction.
+			for _, used := range applied[originalCount:] {
+				for _, rule := range local {
+					used[rule] = true
+				}
 			}
-		} else if redirect, ok := selected.replacement.(*selectedSourceRedirectReplacement); ok {
-			redirect.redirectBatch(actions, applied, g)
-		} else {
-			applied[selected.index][selected.replacement] = true
-			actions[selected.index] = keepDamageCause(actions[selected.index], selected.replacement.Replace(actions[selected.index], g))
+		case *preventionShieldReplacement:
+			replacement.allocateBatch(actions, applied, g)
+		case *sourcePreventionReplacement:
+			if replacement.capturesSourceIdentity() {
+				outcome := replacement.preventBatch(actions, applied, g)
+				if outcome.amount > 0 {
+					outcomes = append(outcomes, outcome)
+				}
+			} else {
+				applied[selected.index][replacement] = true
+				actions[selected.index] = keepDamageCause(actions[selected.index], replacement.Replace(actions[selected.index], g))
+			}
+		case *selectedSourceRedirectReplacement:
+			replacement.redirectBatch(actions, applied, g)
+		default:
+			applied[selected.index][replacement] = true
+			actions[selected.index] = keepDamageCause(actions[selected.index], replacement.Replace(actions[selected.index], g))
 		}
 	}
 	return actions, outcomes

@@ -1,5 +1,21 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AddSpellDamageToNextSelectedSourceEvent] saves one selected-source event.
+// The original damage remains. The saved spell deals the proposed amount to
+// that source's controller in the same event. Replacement choices and rechecks
+// precede all damage. Each new packet keeps prior replacement uses. The spell
+// has its own source, cause and noncombat status. Original instruction results
+// exclude its added damage. Local instruction prevention stays with that instruction.
+// Exact source visits, selected permanent-spell continuity and retained spell
+// information survive departure. Copies and clones keep separate saved rules.
+// [Game.WaitingDamageExpansionSources] supplies their saved source references
+// to general damage-source choices until consumption or cleanup.
+// RON accepts a selected-source next-time Player event in an ordinary spell
+// resolving body, with ContinueDealingDamage and one SpellDealsDamage operation.
+// The amount and destination must be the proposed damage and source controller.
+// This completes Eye for an Eye. Bounded redirection and replacement payments
+// require separate adapters.
+//
 // [TargetPowerLessThanOrEqualToSourcePower] reads current target power and
 // current source power. An absent source supplies exact retained power.
 // [GainControlWhileSourceTappedAndPowerLE] saves one subject and source visit.

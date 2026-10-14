@@ -12,6 +12,9 @@ func PreventNextDamageFromSelectedSource(source DamageSourceRef, recipient Playe
 func (g *Game) continueSpellDamageReplacements(spell DamageSource, permanent *Permanent) {
 	for _, list := range [2][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
+			if rule, ok := replacement.(*continuedDamageReplacement); ok && rule.IsActive(g) && rule.source.SameObject(spell) {
+				rule.continued = damageSourceFromPermanent(permanent)
+			}
 			if redirect, ok := replacement.(*selectedSourceRedirectReplacement); ok && redirect.IsActive(g) && redirect.source.SameObject(spell) {
 				redirect.continued = damageSourceFromPermanent(permanent)
 			}

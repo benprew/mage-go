@@ -16681,3 +16681,43 @@ comparisons and plural durations remain errors. Targets, modes, events and
 copies retain existing per-instance bindings and exact visits. No RON source
 record or vocabulary snapshot changes. Evidence: `TestRONSourceControlExtensions*`
 and `TestSourceControlExtensions*`.
+
+
+## RON continued proposed damage (2026-10-14)
+
+An ordinary spell resolving body accepts:
+
+```ron
+ChooseADamageSource(AnyDamageSource),
+CreateFutureReplaceWouldDealDamage(
+    NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+        TheChosenDamageSource, Player(You)),
+    [ContinueDealingDamage,
+     SpellDealsDamage(ThisSpell, WouldDealDamage_ThatMuchDamage,
+         Player(WouldDealDamage_ControllerOfDamageSource))])
+```
+
+The source must be a dominating lexical damage-source choice. The event recipient
+uses an existing typed player reference. The operations must be exactly the strict
+continuation symbol followed by one spell damage tuple. The spell must be the
+strict `ThisSpell` symbol; the amount must be the strict proposed-amount symbol;
+the destination must be the proposed source controller in the Player wrapper.
+These proposed-event operands cannot escape into ordinary actions or other rules.
+Permanent-source, entry, source-zone, delayed and draw-replacement contexts reject.
+Other operation lists, amounts, recipients and bounded events remain unsupported.
+
+RON validates spelling, arity, scope and contexts. Each card factory supplies its
+own bindings. Mage saves the selected source, player, spell and installing cause,
+then expands the proposed event through the shared replacement and damage service.
+The original damage remains, with independent prevention and redirection checks
+for the added spell packet. Replacement order determines the copied amount.
+Copies use their own spell identity and resolving controller. This completes both
+Eye for an Eye records, without source changes or Go factory fallback.
+
+Evidence: `TestRONContinuedDamageEye` covers both complete records, paid/unpaid
+casting and installed clones. `Lifecycle` covers source departure/return, phasing,
+control, cleanup, own/foreign copies, pending clones, simultaneous packets and
+prevention. `Invalid` covers malformed declarations and scope/context rejection.
+`Inventory` retains semantic roles for proposed operands. Native contracts cover
+combat status, separate causes, source-spell continuity, inherited replacement
+uses, waiting source references and instruction-local prevention.

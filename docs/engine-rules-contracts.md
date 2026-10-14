@@ -22191,3 +22191,51 @@ Sea and The Wretched records, including casting, optional untap and stun,
 retargeted copies, pending/installed clones, exact combat membership, rollback
 on illegal targets, contexts, malformed endpoints and inventory roles. No cost,
 replacement, zone-change or APNAP service is replaced by these adapters.
+
+
+## Continued proposed damage events (2026-10-14)
+
+`AddSpellDamageToNextSelectedSourceEvent(source DamageSourceRef, recipient PlayerRef,
+spell DamageSourceRef, filter DamageSourceFilter) ResolvingEffect` saves a selected
+source, one receiving player and an exact spell source. The spell source must
+supply a stack identity, without a battlefield incarnation. Invalid or absent
+runtime references install nothing. Definition validation rejects missing operands
+and unbound typed bindings.
+
+The next matching positive damage event this turn keeps the original damage and
+adds noncombat damage from the saved spell to the proposed source's controller.
+The amount is read when this replacement applies. Matching simultaneous packets
+share one application and add one packet per source controller, with their amounts
+combined. Original packets keep their sources, causes and combat status. The added
+packet keeps the installing spell's source and cause. It is damage through the
+shared service, including prevention, redirection, history and events.
+
+`damageEventExpander` extends the existing batch replacement service. New packets
+retain prior replacement uses (CR 614.5); newly applicable rules are selected and
+rechecked under CR 616.1–2. A single input event uses this same path. No damage
+packet executes until all replacement choices finish. Shared batch execution
+holds damage observations until all recipients have received damage (CR 120.4).
+Instruction-local prevention applies only to that instruction's original packets;
+original instruction results exclude the added spell damage. No public caller
+signature changes.
+
+The rule is consumed when applied, even if later prevention stops the original
+or added damage. Prevention before application changes the proposed amount; full
+prior prevention leaves the rule waiting. Zero damage supplies no event. Cleanup
+ends an unused rule. Source filters use current information or exact retained
+information, and are checked at installation and event time. Source departure and
+phasing do not erase a waiting rule. Return is a different object. The existing
+selected permanent-spell continuation service supplies its resulting permanent;
+another spell copy cannot supply that identity. The source controller comes from
+the proposed damage packet, rather than the earlier source choice.
+
+`WaitingDamageExpansionSources() []DamageSource` returns separate saved source,
+continued permanent and spell information for active rules. General CR 609.7a
+choices include these references and retain existing privacy checks and identity
+deduplication. Copies and game clones retain independent rules and saved card data.
+No new payment, target-selection or static-layer contract is established.
+
+Evidence: native `TestContinuedDamageEvent`, `Lifecycle`, `Ordering`,
+`InheritedUses`, `IdentityAndWaiting`, `SpellContinuity`, `Invalid`,
+`CauseAndCombat` and `InstructionPrevention`. RON mapping and exact declaration
+limits are in the DSL reference and migration ledger.

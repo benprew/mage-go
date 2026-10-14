@@ -964,7 +964,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DealToCreatureOrPlaneswalkerInstead" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "proposed_damage_recipient":
+		if n.Name == "Player" && len(n.Args) == 1 {
+			return "proposed_damage_player_reference"
+		}
 	case "redirection_operation":
+		if n.Name == "SpellDealsDamage" && len(n.Args) == 3 {
+			return []string{"spell_reference", "proposed_damage_value", "proposed_damage_recipient"}[index]
+		}
+		if n.Name == "DealToPlayerInstead" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "DealToCreatureOrPlaneswalkerInstead" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
@@ -1187,6 +1197,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreatePlayerEffectUntil":
 			if len(n.Args) == 3 {
 				return []string{"player_reference", "temporary_player_operation", "duration"}[index]
+			}
+		case "CreateFutureReplaceWouldDealDamage":
+			if len(n.Args) == 2 {
+				return []string{"prevention_event", "redirection_operation"}[index]
 			}
 		case "CreateFuturePreventDamage":
 			if len(n.Args) == 2 {

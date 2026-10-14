@@ -7,6 +7,9 @@ func compileSelectedSourceRedirect(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient" && len(event.Args) == 2 && event.Args[1].Name == "Player" {
+		return compileContinuedDamage(n, ctx)
+	}
 	if event.Name != "NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient" {
 		return nil, unsupported(event, "selected-source redirection event")
 	}

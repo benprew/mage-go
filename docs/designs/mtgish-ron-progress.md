@@ -6,16 +6,17 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **913 accepted / 73 rejected names**
-(986 total), **2,292 compiled / 153 rejected records** (2,445 total).
-The latest slice is **SOURCE-BOUND-CONTROL-EXTENSIONS**.
-Dynamic source-power target legality and tapped/power endpoints complete Old Man
-of the Sea. Captured plural source-control durations complete The Wretched.
-Power endpoints use completed layers and latch expiration. Both forms reuse
-shared control layers, exact visits, source transitions and clone services.
-Both complete records have RON gameplay mappings. Actual gain is **two names /
-two records**, as estimated. Required checks and precise remaining diagnostics
-are recorded in the latest entry below. No RON source or vocabulary changed.
+Latest measured result (2026-10-14): **914 accepted / 72 rejected names**
+(986 total), **2,294 compiled / 151 rejected records** (2,445 total).
+The latest slice is **CONTINUED-PROPOSED-DAMAGE**.
+A selected-source next-time damage replacement can keep the original damage and
+add spell damage to that source's controller in the same event. This completes
+Eye for an Eye. The shared batch pipeline retains replacement uses on new packets,
+separate sources/causes and independent prevention. Instruction-local prevention
+stays with the original instruction; added damage does not enter its saved result.
+Both complete records have RON gameplay mappings. Actual gain is **one name /
+two records**, as estimated. Required checks and remaining diagnostics are in the
+latest entry below. No RON source or vocabulary changed.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,16 +25,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Proposed damage results and bounded redirection:** reassess Personal
-   Incarnation, Eye for an Eye and Heroism. These still need separate bounded
-   recipient, continued-damage and optional-payment contexts. Select a shared
-   prerequisite only with concrete downstream multi-card evidence.
-2. **Live history filters:** Giant Shark needs a damage-history combat-pair
+1. **Bounded recipient redirection:** Personal Incarnation still needs its finite
+   recipient budget. The shared damage expansion pipeline is now available;
+   allocation and returned-result membership still need their own contract.
+2. **Replacement-time optional payments:** Heroism needs a proposed source
+   controller, payment choices and unpaid prevention. Compare shared payment
+   operations with Tidal Flats, whose permanent loop and combat-pair grants remain
+   separate prerequisites. Do not count two immediate unlocks.
+3. **Live history filters:** Giant Shark needs a damage-history combat-pair
    predicate. Glyph of Delusion needs dependent block-history target legality,
    dynamic counter amounts and conditional/triggered indefinite grants.
-3. **Saved action/payment identities:** compare Phyrexian Gremlins' saved tapped
-   subject with Vodalian War Machine's paid-tap history. Exact payment and action
-   identities are different producers; first errors alone do not prove unlocks.
 
 ## Dependencies and source blockers
 
@@ -16493,3 +16494,188 @@ RON `temporary_animation.go`, `source_control.go`, `compiler.go`, `inventory.go`
 and this ledger. RON records and the vocabulary snapshot are unchanged.
 Commit title: `feat(ron): implement source-bound control extensions`.
 This run stops after SOURCE-BOUND-CONTROL-EXTENSIONS.
+
+
+## 2026-10-14 — CONTINUED-PROPOSED-DAMAGE
+
+### Fresh baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` returned valid JSON and expected exit 1:
+913 accepted / 73 rejected unique names, 2,292 compiled / 153 rejected records,
+986 names and 2,445 records total. This was atomic collection rejection, not a
+build or test failure. No unrelated changes or untracked repository files existed.
+
+The latest ranked candidate #1 was evaluated first. Complete RON records were
+read for Personal Incarnation (all six identical reprints), Eye for an Eye (both
+records), Heroism, Giant Shark, Glyph of Delusion, Phyrexian Gremlins and Vodalian
+War Machine. Targeted vocabulary queries covered the bounded damage event,
+continued-damage symbol, damage-history symbol and paid-tap-history constructor.
+First diagnostics were not treated as full-card unlock counts.
+
+| Compared candidate | Distinct affected names | Estimated full-card unlocks | Other blockers; downstream value; effort |
+| --- | --- | --- | --- |
+| Proposed damage event expansion | Personal Incarnation; Eye for an Eye; Heroism | One from the selected continued-damage shape, not three | Personal Incarnation needs finite allocation and result membership. Heroism needs replacement-time optional payment. Event expansion and inherited replacement uses support the bounded-redirection prerequisite. Medium engine/compiler/test effort. |
+| Live history filters | Giant Shark; Glyph of Delusion | One from Shark's combat-pair predicate | Glyph also needs dependent target legality, dynamic counter placement and conditional/triggered indefinite grants. Current damage and blocking histories are separate producers. Small effort for Shark; large for the complete pair. |
+| Saved action/payment identities | Phyrexian Gremlins; Vodalian War Machine | One per separate producer, not two from one adapter | Gremlins needs a saved tap-action subject and its source-tapped duration. War Machine needs persistent paid-tap history through source death. A local action result cannot supply payment history. Medium effort per producer. |
+
+Selected candidate #1's **continued proposed damage** shape. None of these
+candidates offered two immediate card unlocks from one ready adapter. The selected
+shape supplies one complete card plus shared event-expansion mechanics needed by
+bounded partial redirection. The service keeps descendant replacement uses,
+rechecks and simultaneous damage inside the existing engine pipeline. This is a
+concrete prerequisite for Personal Incarnation, not a claim that finite allocation
+or redirected result membership is already implemented. Heroism remains a separate
+payment context. No second slice was started.
+
+Contract and acceptance cases were stated before edits: retain the selected source,
+receiving player and installing spell; continue original damage and add the proposed
+amount to the damage source's controller in the same event; test ordering,
+simultaneous packets, identity/LKI, source-spell continuity, independent copies and
+clones, cleanup, prevention and declaration rejection. The implement-engine skill
+was used for the reusable engine contract. No agents were spawned.
+
+### Exact supported signatures, dependencies and reuse
+
+Native APIs:
+
+- `AddSpellDamageToNextSelectedSourceEvent(source DamageSourceRef,
+  recipient PlayerRef, spell DamageSourceRef, filter DamageSourceFilter)
+  ResolvingEffect`.
+- `(*Game).WaitingDamageExpansionSources() []DamageSource`.
+
+RON accepts exactly this operation sequence in an ordinary spell resolving body:
+
+```ron
+ChooseADamageSource(AnyDamageSource),
+CreateFutureReplaceWouldDealDamage(
+    NextTimeDamageWouldBeDealtThisTurnBySourceToRecipient(
+        TheChosenDamageSource, Player(You)),
+    [ContinueDealingDamage,
+     SpellDealsDamage(ThisSpell, WouldDealDamage_ThatMuchDamage,
+         Player(WouldDealDamage_ControllerOfDamageSource))])
+```
+
+The event player uses existing typed player references and the choice uses existing
+source-filter forms. The source choice must dominate the consumer. Continuation,
+spell, proposed amount and source-controller operands are strict symbols. Operations
+must have that exact order and count. Proposed operands cannot escape their event.
+Permanent-source, source-zone, entry, delayed and draw-replacement contexts reject.
+Other bounded events, operations and destinations reject. Existing selected-source
+permanent-to-player redirection remains supported.
+
+RON owns spelling, arity, context, lexical scope, fresh factory bindings and semantic
+inventory roles. Mage owns saved exact source/spell information, event expansion,
+replacement ordering/rechecks, packet identity, damage execution and cloning. It
+reuses selected permanent-spell continuation, current/retained source information,
+player choices, CR 609.7a source enumeration, cleanup and shared damage batches.
+No card-name branch, Go factory fallback, global result slot or partial registry.
+
+New packets retain prior replacement uses under CR 614.5. The original packets
+keep source, cause and combat facts; added spell damage has its own saved source
+and installing cause and is noncombat damage. Simultaneous matching packets combine
+the added amount per source controller. Replacement choices finish before damage
+execution; shared damage observations see all recipient mutations. Full prior
+prevention leaves the rule waiting. Applying the rule consumes it even if later
+prevention stops damage. Instruction-local prevention cannot cross into the added
+spell instruction. Original saved damage outcomes exclude the added spell damage.
+Copies, clones, source return and separate spell copies retain distinct identities.
+Waiting source queries return separate card information, without installing rules
+or choosing anything. General source choices retain privacy and deduplication.
+
+Local Oracle evidence: `data/ARN.json`, Eye for an Eye. Both complete RON records
+agree with Oracle. Relevant rules: CR 120.4, 120.7–9, 609.7a, 614.1–7/9 and
+616.1–2; existing source, prevention and damage-result contracts were inspected.
+Source defects: none. No RON records changed; vocabulary refresh is unnecessary.
+Existing callers and Go card definitions remain because removal gates are closed.
+No unused DSL functions were removed and no deletion audit was claimed.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed compilation for the new API. RON tests first failed on
+the selected-source Player recipient in both complete records. After implementation,
+a focused instruction-prevention test exposed prevention leaking into added spell
+damage (17/17 life instead of 17/15); it failed before the pipeline correction and
+then passed. An exploratory engine short run also found nonpositive singleton
+actions returning instead of disappearing. That regression was fixed without
+weakening the existing test. Inventory expected counts and Eye's former unsupported
+full-record fixture now require successful compilation.
+
+The foreign-copy fixture initially let the second player choose an arbitrary
+source, which could be the original Eye spell. Both players now explicitly choose
+the intended permanent. This corrected the fixture; no production rule or assertion
+was relaxed.
+
+| Unique card | Complete records | RON gameplay tests |
+| --- | --- | --- |
+| Eye for an Eye | ARN.lines.ron:29; 3ED.lines.ron:84 | `TestRONContinuedDamageEye`: both full records, failed/paid casting, resolution-only choice and installed clones. `TestRONContinuedDamageLifecycle`: source departure/return, phasing/return from phasing, control changes, cleanup, own and foreign spell copies, pending clones, simultaneous packets, original and added prevention. |
+
+Native `TestContinuedDamageEvent`, `Lifecycle`, `Ordering`, `InheritedUses`,
+`IdentityAndWaiting`, `SpellContinuity`, `Invalid`, `CauseAndCombat` and
+`InstructionPrevention` prove grouped event amounts, shared damage history,
+atomic damage observations, exact original outcomes, prior/later prevention,
+additional redirection, inherited uses, separate combat/cause/source facts,
+source-spell continuity/copy isolation, saved waiting references, query isolation,
+zero damage, cleanup and independent clones. RON `Invalid` rejects malformed,
+unbound and incompatible event declarations and context escapes. RON `Inventory`
+checks contextual proposed-amount and player-reference roles. Compilation and
+complete-card gameplay coverage remain separate claims.
+
+### Validation and final measurement
+
+Commands and final results:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONContinuedDamage' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestContinuedDamage' -count=1`: pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `go test ./... -short -count=1`, required by implement-engine: pass.
+- `make lint`: final pass, 0 issues. Its first run reported two gocritic style
+  issues (unnamed results and a type-assertion chain). Those were corrected;
+  focused tests, build, vet, engine short tests and make test passed again before
+  the successful lint rerun. Automatic import formatting was reviewed. No
+  unrelated files or rule semantics changed. Both focused suites passed again
+  after final lint.
+- `git diff --check`: pass, including final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1;
+  **914 accepted / 72 rejected names**, **2,294 compiled / 151 rejected records**,
+  unchanged totals of 986 names / 2,445 records. Removing only Eye for an Eye
+  from the fresh baseline issue array gives the final array exactly, including
+  diagnostic objects and ordering. No accepted record regressed.
+
+Actual gain equals the estimate: one unique name, two records and one complete
+RON gameplay mapping. Collection publication remains atomic and rejected.
+Complete collection gameplay, runtime loading/cutover, Go-card and generator
+removal, unused DSL cleanup and native startup proof remain unfinished.
+No environment blocker prevents this slice's validation or commit.
+
+### Ranked next candidates and remaining diagnostics
+
+1. **Bounded recipient redirection:** Personal Incarnation still rejects
+   `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient` at 2ED:181:294.
+   This run supplies the expansion/recheck foundation. A next slice must add the
+   finite budget, affected-player allocation across simultaneous sources and
+   original-result membership for redirected descendants. Inspect its death/life
+   branch before counting its six records as a complete-card gain.
+2. **Replacement-time optional payment:** Heroism still rejects its combat
+   prevention And collection at FEM:41:291 and needs optional payment by the
+   proposed source controller. Tidal Flats' complete record was also inspected:
+   it needs ActionForEachPermanent, member-controller payment and blocking-pair
+   grants. Compare a shared payment-operation prerequisite; these are not two
+   immediate unlocks from one ready adapter.
+3. **Live history:** Giant Shark still reports expected 1 positional arguments
+   for WasDealtDamageThisTurn at DRK:46:384. Glyph of Delusion still rejects
+   WasBlockedByDefenderThisTurn at LEG:100:233 and has later counter/grant blockers.
+   Saved tap-action and paid-tap histories remain separate alternatives for
+   Phyrexian Gremlins and Vodalian War Machine.
+
+Changed files: new native `continued_damage.go` and its tests; `damage_system.go`,
+`effect_manager.go`, `prevention_allocation.go`, `general_damage_source.go`,
+`selected_source_prevention.go`, `doc.go`; new RON `continued_damage.go` and its
+tests; RON `selected_source_redirect.go`, `inventory.go`, `inventory_test.go`,
+`definition_plan_test.go`, `numeric_consumers_test.go`, `chosen_source_filter_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement continued proposed damage`.
+This run stops after CONTINUED-PROPOSED-DAMAGE.
