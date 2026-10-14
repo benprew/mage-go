@@ -963,6 +963,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"player_filter", "player_reference", "action"}[index]
 			}
+		case "ChooseANumberBetween":
+			if len(n.Args) == 2 {
+				return "integer_literal"
+			}
 		case "MayAction":
 			if len(n.Args) == 1 {
 				return "action"
@@ -1291,6 +1295,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "ChooseANumberBetween" && len(n.Args) == 2 {
+			return "integer_literal"
+		}
 		if n.Name == "ChooseAColor" && len(n.Args) == 1 {
 			return "color_choice_filter"
 		}
@@ -1337,10 +1344,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "value"
 			}
 		case "SetToughness":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "static_value"
+			}
 			if role == "resolving_modification" && len(n.Args) == 1 {
 				return "value"
 			}
 		case "SetPower":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "static_value"
+			}
 			if role == "temporary_modification" && len(n.Args) == 1 {
 				return "value"
 			}

@@ -20383,3 +20383,50 @@ choice, snapshots, counters, layers, clone isolation, control, phasing, return,
 invalid answers and pre-registration batch choices. The complete RON mapping
 is `TestRONEntryVariantReal`, `TestRONEntryVariantLoad` and
 `TestRONEntryVariantSpellCopy` for both Primal Clay records.
+
+## Saved numeric entry and resolution choices
+
+`ChooseNumberAsEnters(minimum, maximum int) AsEntersBattlefieldAbility` saves
+one number on the entering permanent. Bounds must be nonnegative integers in
+ascending order. The entry controller chooses before battlefield registration
+(CR 614.12a). A missing player or an answer outside the bounds supplies the
+minimum. Copy replacements run first; an acquired entry rule makes a fresh
+choice (CR 707.5–6). Entry batches finish all choices before entry observations.
+
+`MayChooseNumber(subject PermanentRef, minimum, maximum int) ResolvingEffect`
+offers a new number to the resolving ability's saved controller. Decline keeps
+the previous number. The subject must be present and unphased before the offer,
+after the offer and after the number choice. The service saves and rechecks the
+battlefield visit, so departure and return during a choice cannot supply it.
+The service refreshes existing continuous effects after a successful change.
+No cost, payment transaction, zone movement or damage operation is added.
+
+`ChosenNumberOf(subject PermanentRef) ResolutionValue` is a pure exact-visit
+information read. Current state, phase information and departure LKI use the
+shared permanent information service. A missing visit or missing choice supplies
+zero (CR 107.2). Reading never makes a choice. The permanent stores an integer
+and a presence flag. Clones and LKI snapshots copy both fields by value. Control
+changes and phasing keep the choice; return requires a new entry choice
+(CR 400.7, 702.26). Chosen numbers are not copiable characteristics (CR 707.6).
+
+RON supports one `AsPermanentEnters(ThisPermanent,
+[ChooseANumberBetween(minimum, maximum)])` declaration. That declaration binds
+`TheChosenNumber` in live static P/T values and enables
+`MayAction(ChooseANumberBetween(minimum, maximum))` in resolving battlefield
+source bodies. Multiple entry declarations, missing bindings, nonpermanent
+entry, payment contexts, zone source bodies and granted bodies without their own
+entry declaration reject during compilation. Source `PermanentLayerEffect`,
+with the entry number declaration, accepts a nonempty list of separate `SetPower(value)` and `SetToughness(value)` operations,
+at most one of each, using the existing static numeric values. These use layer
+7b; bonuses and counters use 7c and switches use 7d (CR 613.4b–d).
+
+`TestNumericChoiceTimingAndIdentity`, `TestNumericChoiceUpdate`,
+`TestNumericChoiceInvalid`, `TestNumericChoiceCopyAndBatch` and
+`TestNumericChoiceLayerOrderAndNoChoice` cover bounds, timing, controller versus
+owner, decline, pending control changes, exact visit rechecks, LKI, phasing,
+copy entry, batch observations, missing players, definition rejection, clone
+isolation and layer ordering. Complete Shapeshifter RON tests cover all eight
+numbers, failed and paid native casts, ordinary upkeep priority, decline,
+updates, zero-toughness state actions, spell copies, source return, independent
+factories, atomic loading and native combat damage. Its unchanged source matches
+local `data/ATQ.json`; no source correction is required.

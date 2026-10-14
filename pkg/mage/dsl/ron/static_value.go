@@ -73,6 +73,11 @@ func compileStaticValueLayer(n Node, parts []Node, ctx scope) (optionFactory, er
 
 func compileStaticPTValue(n Node, ctx scope) (valueFactory, error) {
 	switch n.Name {
+	case "TheChosenNumber":
+		if n.Kind != Symbol || !ctx.permanent || !ctx.numberEntryChoice {
+			return nil, problem(n, "chosen number requires a source entry choice")
+		}
+		return func(instanceBindings) mage.ResolutionValue { return mage.ChosenNumberOf(mage.This) }, nil
 	case "Integer":
 		if err := arity(n, 1); err != nil {
 			return nil, err

@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2247,
+    "compiled": 2248,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1285,7 +1285,6 @@
       {"card": "Drafna's Restoration", "source": {"File": "ATQ.lines.ron", "Line": 27, "Column": 1}, "message": "ATQ.lines.ron:27:154: unsupported singular permanent target group (TargetPlayer)"},
       {"card": "Gaea's Avenger", "source": {"File": "ATQ.lines.ron", "Line": 32, "Column": 1}, "message": "ATQ.lines.ron:32:316: unsupported characteristic count value (Plus)"},
       {"card": "Phyrexian Gremlins", "source": {"File": "ATQ.lines.ron", "Line": 51, "Column": 1}, "message": "ATQ.lines.ron:51:405: unbound or incompatible permanent reference (ThePermanentTappedThisWay)"},
-      {"card": "Shapeshifter", "source": {"File": "ATQ.lines.ron", "Line": 61, "Column": 1}, "message": "ATQ.lines.ron:61:189: unsupported entry operation (ChooseANumberBetween)"},
       {"card": "Tawnos's Coffin", "source": {"File": "ATQ.lines.ron", "Line": 67, "Column": 1}, "message": "ATQ.lines.ron:67:479: unsupported action (NoteCountersOnPermanent)"},
       {"card": "Tetravus", "source": {"File": "ATQ.lines.ron", "Line": 70, "Column": 1}, "message": "ATQ.lines.ron:70:596: unsupported token keyword (PermanentRuleEffect)"},
       {"card": "Titania's Song", "source": {"File": "ATQ.lines.ron", "Line": 72, "Column": 1}, "message": "ATQ.lines.ron:72:149: unsupported rule (EachPermanentStickyLayerEffect)"},

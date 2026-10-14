@@ -6,32 +6,31 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **878 accepted / 108 rejected names**
-(986 total), **2,247 compiled / 198 rejected records** (2,445 total).
-The latest slice is **COPIABLE-ENTRY-VARIANTS**. Required entry choices use
-shared replacement ordering and immutable copiable characteristic modifications.
-Primal Clay now has complete-record native casting, all three variants, combat
-legality, spell-copy, phasing, return and clone evidence for both reprints.
-Estimated and actual gains are **one unique name / two records**. Both Wall
-records now use the Oracle 1/6 values. Shapeshifter still needs numeric choices.
-Accepted records remain accepted. Vocabulary hashes and loader baseline are fresh.
+Latest measured result (2026-10-14): **879 accepted / 107 rejected names**
+(986 total), **2,248 compiled / 197 rejected records** (2,445 total).
+The latest slice is **SAVED-NUMERIC-SOURCE-CHOICE**. One exact permanent visit
+stores its entry number and optional resolving updates. Existing information
+and layer services supply live static power and toughness reads.
+Shapeshifter now has complete-record native casting, all eight numbers, upkeep,
+combat, spell-copy, phasing, return, zero-toughness death and clone evidence.
+Estimated and actual gains are **one unique name / one record**. No RON source
+changed. Accepted records remain accepted; loader baseline and hashes are fresh.
 
-The loader still rejects the collection atomically. Only Primal Clay's former
-diagnostics disappear. Runtime cutover, Go-card removal and DSL cleanup remain
+The loader still rejects the collection atomically. Only Shapeshifter's former
+diagnostic disappears. Runtime cutover, Go-card removal and DSL cleanup remain
 gated by complete collection support and native startup validation.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Saved numeric choice — Shapeshifter.** Entry and optional upkeep choices
-   need one source-visit number and live SetPower/SetToughness consumers.
-   Finite copiable variants do not supply this distinct state contract.
-2. **Conditional artifact protections — Guardian Beast.** Static branches are
-   ready. Current-controller membership and control/new-Aura prohibitions remain.
-3. **Static collection-recipient prevention — Camel.** Band membership is ready;
-   static collection lowering and replacement rechecks remain. Compare broader
-   shared prevention and entry-payment prerequisites before a single-card slice.
+1. **Shared live static collection queries.** Compare Camel's prevention
+   recipients, Bronze Horse's source exclusion and Guardian Beast's current
+   controller membership before choosing a complete supported query context.
+2. **Conditional artifact protection rules — Guardian Beast.** Live membership
+   and new-Aura/control acquisition restrictions need exact shared contracts.
+3. **Entry payment/result producers.** Compare Nameless Race, Frankenstein's
+   Monster and Wood Elemental before implementing a typed shared prerequisite.
 
 ## Dependencies and source blockers
 
@@ -9437,3 +9436,152 @@ No Go production card definition, startup path or DSL export changed.
 Complete RON gameplay, runtime loading, Go-card deletion, obsolete Go-set
 generation removal and unused DSL cleanup remain incomplete. This run stops
 after the finite copiable entry-variant slice.
+
+## 2026-10-14 — SAVED-NUMERIC-SOURCE-CHOICE
+
+### Environment, comparison and selection
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The initial loader exited 1 for
+expected atomic collection rejection: 2,247 compiled / 198 rejected records,
+878 accepted / 108 rejected names, out of 2,445 records / 986 names.
+
+The latest ranked candidates were evaluated from their complete RON records and
+nested forms, not first-error frequency. Counts below are distinct names.
+
+| Candidate | Affected names / estimated full unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Saved numeric choice | Shapeshifter / 1 name, 1 record | Missing exact-visit numeric state, entry/update adapters and separate static P/T consumers. Existing entry, upkeep, information and layer services are ready. Supplies reusable persistent numeric reads and optional updates. | Medium: one state contract, adapters, lifecycle and gameplay tests. |
+| Conditional artifact protections | Guardian Beast / 1 name, 1 record | Live noncreature artifact membership, current controller, control prohibition and new-Aura-only prohibition. Existing attachments must remain. Enables broader conditional permanent restrictions after those contracts exist. | High: several rule services and attachment/control interaction tests. |
+| Static collection-recipient prevention | Camel / 1 name, 1 record | BandedWith exists, but static collection context and replacement-time membership rechecks are missing. Supplies a prerequisite for broader collection damage rules; Blood of the Martyr still needs optional redirection. | Medium/high: live collection query, static prevention adapter and replacement/combat tests. |
+
+Other inspected complete records included Bronze Horse, Gaea's Liege, Heroism,
+Tidal Flats, Blood of the Martyr, Kry Shield, Silhouette, Nameless Race,
+Frankenstein's Monster and Wood Elemental. Their distinct spell-target, combat,
+loop, entry-payment and result producers prevent treating them as additional
+unlocks from any of these three narrow slices. Gaea's Liege retains the known
+contradictory attack predicates; it was not changed or counted as an unlock.
+
+All three ranked candidates have one credible immediate full-card gain. The
+saved numeric choice was selected because its surrounding engine dependencies
+are ready and it has the smallest complete rules boundary. The finite copiable
+variant implementation cannot store or update this independent number. No
+additional slice, production fallback, Go-card removal or DSL cleanup was added.
+
+### Supported signatures, contexts and engine boundary
+
+- `ChooseNumberAsEnters(minimum, maximum int) AsEntersBattlefieldAbility`:
+  nonnegative ordered integer bounds; entry controller chooses before
+  registration. Missing players and invalid answers use the minimum.
+- `MayChooseNumber(subject PermanentRef, minimum, maximum int) ResolvingEffect`:
+  resolving controller chooses; decline keeps state. Saves the subject visit and
+  rechecks after the offer and the numeric choice. Absent, returned or phased
+  subjects supply no update. Successful updates refresh existing layers.
+- `ChosenNumberOf(subject PermanentRef) ResolutionValue`: pure exact-visit
+  current/phase/departure information. Missing choices supply zero. An integer
+  plus a presence flag belongs to each Permanent; clones/LKI copy both by value.
+- RON: one `AsPermanentEnters(ThisPermanent,[ChooseANumberBetween(min,max)])`;
+  `MayAction(ChooseANumberBetween(min,max))` in resolving battlefield source
+  bodies; bound symbol `TheChosenNumber` in static values, including `Minus`;
+  source `PermanentLayerEffect` with separate `SetPower(value)` and
+  `SetToughness(value)`, at most one of each, under the number entry declaration.
+  Unsupported mixed lists, duplicate declarations, malformed bounds, nonpermanent
+  entry, payments, zone-source bodies and unbound/granted reads reject early.
+
+RON owns spelling, source scope and validation. mage owns the saved state,
+decision, visit rechecks and information read. Existing source references, entry
+copy ordering, entry batches, upkeep/APNAP, permanent information/LKI, clone,
+spell-copy/token and layer 7b/7c/7d services are reused. No new cost transaction,
+replacement-order policy, zone subsystem or global action-result slot is added.
+Source control and phase cycles retain the number. Return and copied entry make
+new choices. Relevant local rules: CR 107.1a/107.2, 400.7, 607.2d, 613.4b–d,
+614.12a, 702.26 and 707.5–6. Local ATQ Oracle text matches the unchanged record.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial RON gameplay failed on unsupported ChooseANumberBetween. Engine tests
+failed on the missing choice/read/update APIs and fields. Test setup signatures
+for phase-in and free mana cost were corrected during development. Initial
+post-implementation checks also corrected two test assumptions: FindPermanent
+can see a provisional entrant, and a 7/0 must die at the state-based check.
+No engine rule or gameplay assertion was weakened to retain it.
+
+- `TestNumericChoiceTimingAndIdentity`: bounds, pre-registration choice,
+  controller versus owner, phase cycles, clone isolation, departure LKI,
+  new return choices and refusal to update the departed visit.
+- `TestNumericChoiceUpdate`: decline, detection-controller retention after
+  control change, layer refresh, phasing and departure during numeric choice.
+- `TestNumericChoiceInvalid`: invalid bounds, nonpermanent entry, nil subjects
+  and invalid update definitions.
+- `TestNumericChoiceCopyAndBatch`: copy replacement before acquired entry
+  choice, independent donor/copy values, all batch choices before observations
+  and missing-player fallback.
+- `TestNumericChoiceLayerOrderAndNoChoice`: bonuses, counters and switches,
+  live update, pure missing-choice reads and phase information.
+- **Shapeshifter (ATQ) → `TestRONNumericChoiceReal`**: all eight entry numbers,
+  failed/paid native casting, entry versus announcement timing, opponent upkeep,
+  decline, resolution updates, pending game clones, phasing and 7/0 death.
+- **Shapeshifter → `TestRONNumericChoiceSpellCopyAndReturn`**: permanent spell
+  copy chooses independently as a token, departure/return cannot redirect a
+  pending update, clone isolation and native chosen-power combat damage.
+- **Shapeshifter → `TestRONNumericChoiceLoadAndInstances`**: strict complete
+  record loading, factory separation, atomic rejection and native upkeep priority.
+- `TestRONNumericChoiceInvalid` / `TestRONNumericChoiceContexts`: malformed,
+  duplicate, unbound, wrong-role, nonpermanent and granted-source rejection.
+
+### Validation, loader delta and preservation
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONNumericChoice -count=1` and
+`go test ./pkg/mage -run TestNumericChoice -count=1` passed. `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test` and the
+engine skill's `go test ./... -short -count=1` all passed on the final code.
+
+The first broader engine run found an existing rejection assertion for unrelated
+fixed static toughness and a printed-upkeep inventory count. Separate P/T
+lowering was scoped to the selected source entry-number context, preserving that
+rejection. Both printed-upkeep inventories now assert 63 names / 125 records and
+explicitly include Shapeshifter. Four collection-count assertions use 2,248/197.
+The first lint run found gocritic's unnamedResult on the bounds helper. Named
+results fix it. Focused tests, build, vet, engine short, full and repository short
+checks were repeated after this change. Final `make lint` passed with **0 issues**.
+Automatic changes were import grouping in new files; they were reviewed.
+Post-format focused RON/engine tests and `git diff --check` passed again.
+
+The final required loader exited **1**, as expected for unsupported collection
+records: **2,248 compiled / 197 rejected records**, **879 accepted / 107 rejected
+unique names**. Exact baseline comparison removes only Shapeshifter's former
+ATQ 61:189 diagnostic. No other diagnostic is added or changed. Every previously
+accepted record remains accepted. The vocabulary loader baseline equals the
+final report; every recorded source hash matches. No environment or validation
+blocker remains.
+
+Estimated and actual gains match: **one unique name / one record**. Native
+complete-record gameplay coverage grows by Shapeshifter. Compilation coverage
+and gameplay evidence remain separate; 879 accepted names are not all claimed
+as complete gameplay coverage. No RON source changed and no new source defect
+was corrected. The vocabulary's loader baseline is refreshed; source hashes and
+syntax occurrence counts remain unchanged.
+
+Changed files: new mage numeric_choice.go / numeric_choice_test.go; card.go and
+clone.go; new ron numeric_choice.go / numeric_choice_test.go; compiler.go,
+entry_tapped.go, tap_choice.go, layers.go, static_value.go and inventory.go;
+collection-count and printed-upkeep inventory tests; doc.go, dsl-reference.md,
+engine-rules-contracts.md, vocabulary loader baseline and this progress ledger.
+Existing Go card definitions, startup paths and broad DSL exports remain gated.
+
+### Ranked next candidates
+
+1. **Shared live static collection queries.** Compare Camel's prevention
+   recipients, Bronze Horse's Other(ThisPermanent) condition and Guardian Beast's
+   current-controller artifact membership. Distinguish a reusable prerequisite
+   from their separate spell-source, Aura and control-rule blockers.
+2. **Conditional artifact protection rules — Guardian Beast.** Keep existing
+   Auras; prohibit new Aura attachment and control acquisition only while the
+   source is untapped. Reuse exact shared rules after live membership is ready.
+3. **Entry payment/result producers.** Compare Nameless Race, Frankenstein's
+   Monster and Wood Elemental. Their life, exile and sacrifice decisions need
+   separate typed results and replacement/batch contracts before adapters.
+
+Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
+Go-set generation and unused DSL cleanup remain incomplete. Stop after this
+saved numeric source-choice slice.

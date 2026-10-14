@@ -14,6 +14,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	for _, part := range parts {
+		if part.Name == "SetPower" || part.Name == "SetToughness" {
+			return compileSeparateStaticPT(n, parts, ctx)
+		}
 		if part.Name == "SetLandTypeVariable" {
 			return compileChosenLandTypeLayer(n, parts, ctx)
 		}

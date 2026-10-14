@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChooseNumberAsEnters] saves the controller's number before entry.
+// [MayChooseNumber] offers an update to the resolving controller. Decline keeps
+// the number. The subject must keep the same unphased visit through each choice.
+// [ChosenNumberOf] reads current, phase or departure information for that visit.
+// Missing choices supply zero. Return and copied entry make new choices.
+// Clones keep separate integer and presence fields. Existing layers apply the
+// live number before bonuses, counters and switches. Queries make no choices.
+// RON accepts one source ChooseANumberBetween entry declaration, optional
+// resolving battlefield updates, and separate static SetPower/SetToughness
+// consumers. Other entry results and payment producers need separate adapters.
+//
 // [ChooseCopiableVariantAsEnters] requires a controller choice before entry.
 // Each option applies a list of [CopyModification] values. Options and rules
 // keep separate definitions. The shared entry replacement process applies each

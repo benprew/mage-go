@@ -15448,3 +15448,38 @@ variants, paid casting, failed payment, flying and defender legality, phase
 cycles, return and clones. `TestRONEntryVariantLoad` proves strict reprint loading,
 fresh factories and atomic rejection. `TestRONEntryVariantSpellCopy` proves
 independent original/copy choices and token departure.
+
+## Saved numeric source choices in RON
+
+The engine exports `ChooseNumberAsEnters(minimum, maximum int)
+AsEntersBattlefieldAbility`, `MayChooseNumber(subject PermanentRef, minimum,
+maximum int) ResolvingEffect` and `ChosenNumberOf(subject PermanentRef)
+ResolutionValue`. One permanent visit stores the number and its presence. The
+entry controller supplies the initial choice. The resolving controller supplies
+an optional update; decline retains the number. Missing players and invalid
+number answers use the minimum. Live, phased and departed information reads
+use the exact visit; action subjects must remain present through both choices.
+Copies choose again on entry, return creates a new visit, and clones keep
+separate state. These exports are in `mage`; no broad DSL alias is added.
+
+RON accepts one source entry number declaration, an optional resolving update
+and live static consumers:
+
+```ron
+AsPermanentEnters(ThisPermanent, [ChooseANumberBetween(0, 7)])
+TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+    ActionList([MayAction(ChooseANumberBetween(0, 7))]))
+PermanentLayerEffect(ThisPermanent, [
+    SetPower(TheChosenNumber),
+    SetToughness(Minus(Integer(7), TheChosenNumber)),
+])
+```
+
+Bounds are nonnegative integer literals in ascending order. Separate static
+power and toughness operations require the source entry number declaration and
+use existing layer 7b services and static numeric expressions. Duplicate operations, unbound number reads,
+nonpermanent entry, payment declarations and unsupported mixed modification
+lists reject. The supported declaration is source-local; it does not bind a
+number on a recipient of a granted ability. Entry life payments and sacrifice
+counts need separate producers. This section supersedes the earlier numeric
+choice limitation after finite copiable entry variants.

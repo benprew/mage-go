@@ -21,6 +21,7 @@ type scope struct {
 	sourceZone           *sourceZonePlan
 	resolving            bool
 	colorEntryChoice     bool
+	numberEntryChoice    bool
 	controlExchange      *controlExchangePlan
 	damageOutcome        *damageOutcomePlan
 	permanentPayment     *permanentPaymentPlan
@@ -400,6 +401,10 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		ctx.colorEntryChoice = hasColorEntryChoice(rules)
+		ctx.numberEntryChoice, err = compileNumericEntryDeclaration(rules, permanent)
+		if err != nil {
+			return nil, err
+		}
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err
