@@ -299,6 +299,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "permanent_rule_operation"}[index]
 			}
+		case "ReplaceWouldEnter":
+			if len(n.Args) == 2 {
+				return []string{"static_entry_event", "static_entry_operation"}[index]
+			}
 		case "ReplaceWouldDraw":
 			if len(n.Args) == 2 {
 				return []string{"draw_replacement_event", "action"}[index]
@@ -330,6 +334,25 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "PermanentLayerEffect":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
+			}
+		}
+	case "static_entry_event":
+		if n.Name == "APermanentWouldEnterTheBattlefield" && len(n.Args) == 1 {
+			return "entry_permanent_filter"
+		}
+	case "entry_permanent_filter":
+		switch n.Name {
+		case "And", "Or":
+			if len(n.Args) == 1 {
+				return role
+			}
+		case "ControlledByAPlayer":
+			if len(n.Args) == 1 {
+				return "player_filter"
+			}
+		case "IsCardtype", "IsNonCardtype":
+			if len(n.Args) == 1 {
+				return "card_type"
 			}
 		}
 	case "temporary_death_replacement_event":

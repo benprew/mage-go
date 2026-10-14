@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [EntersTappedFor] supplies a live static entry replacement for selected players.
+// Current source control supplies You. Ability removal and phasing suspend it.
+// Matching projects entry types and control through shared layers without entry.
+// Copy replacements apply first. The affected controller chooses ordinary order.
+// Each source visit and ability applies once; execution rechecks after choices.
+// Tapped status precedes entry observations, including simultaneous token entry.
+// RON accepts one opponent controller clause with nested card-type predicates
+// and one EntersTapped symbol. This completes Kismet. Other entry operations
+// and the Land Equilibrium sequence require separate adapters.
+//
 // [SourceCounterCap] limits one counter type on the source's current visit.
 // Shared entry, single and batch placement apply the cap after replacements.
 // Current abilities supply the rule. Ability removal stops it. Phasing stops

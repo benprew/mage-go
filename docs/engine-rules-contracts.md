@@ -21140,3 +21140,48 @@ remove excess counters once a live cap applies.
 Engine evidence: `TestSourceCounterCap`, `Definition`, `BatchAndMultipleRules`
 and `StateBased`. Complete Rasputin RON evidence and rejection cases are mapped
 in the API reference. No source-data correction or registry cutover is included.
+
+## Static filtered tapped entry
+
+`EntersTappedFor(players PlayerSet, filter PermanentFilter) Ability` attaches
+one live static entry replacement. Definition validation requires a typed player
+set and a permanent source. The filter's zero value matches every permanent.
+Current runtime abilities supply the rule before the proposed entry. Phasing,
+face-down status, source departure and ability removal suspend its availability.
+Restoration and return use the current source's ability and controller. The
+source's current controller supplies `You`; ownership does not select recipients.
+
+Candidates join the shared `battlefieldEntryAction` replacement pipeline at
+`ReplacementPriorityDefault`. The affected entrant's controller chooses between
+competing replacements. Copy replacements apply first. Each source visit and
+ability ID supplies a stable per-event identity, so an applied rule cannot repeat
+when candidates are rebuilt. Replacement execution rechecks the source after a
+player choice. Multiple sources retain separate identities and factory instances.
+There is no saved global entry result, entry trigger, or registration-only rule.
+
+Matching reads a separate game layer projection of the proposed entrant. This
+keeps copy-modified characteristics, existing continuous effects and source-only
+composed static modifications of the entrant. The entrant's general static
+abilities cannot supply a new global effect before entry. The projection does
+not publish a live entrant, perform an entry choice, fire events, run state-based
+actions, or change the live board, life totals or stack. The supported RON filter
+reads card types and the projected controller. Other entry-state query families
+require their own adapters and evidence. Self-only legacy callback effects do
+not have a typed subject contract and are not added as new projected effects.
+
+The replacement sets the proposed permanent's tapped state before registration
+and entry observations. It emits no tap event. Token batches still prepare every
+entrant before registration and observations. Copies and game clones retain
+separate controller frames, candidates and layer state. This rule consumes no
+cost or resolution result; Kismet casting uses the existing rollback service.
+
+CR 614.1d, 614.4, 614.5, 614.12 and 616.1 establish timing, availability,
+characteristic matching, one application per event, and affected-player order.
+Local `data/LEG.json` confirms Kismet's complete Oracle text. No source correction
+is needed. Land Equilibrium remains unsupported: its player count predicate,
+retained entrant and mandatory post-entry sacrifice sequence are separate work.
+
+Evidence: native `TestFilteredEntryLifecycle`, `Definition`, `Characteristics`,
+`CopyAndBatch`, `ReplacementOrder`, `ChoiceRecheck` and
+`LiveControlAndProjectionPurity`; RON `TestRONFilteredEntryKismet`,
+`CopiedKismet`, `Invalid` and `InventoryAndAtomicLoad`.

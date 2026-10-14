@@ -15956,3 +15956,33 @@ Complete Rasputin gameplay: `TestRONSourceCounterCapRasputin`,
 `TestRONCounterPointPreventionRasputinSourceCorrection`. The replacement order
 contract is `TestRONSourceCounterCapReplacementOrder`; invalid declarations
 are `TestRONSourceCounterCapInvalid`. Source RON is unchanged.
+
+## Static filtered tapped entry
+
+`mage.EntersTappedFor(players mage.PlayerSet, filter mage.PermanentFilter)
+mage.Ability` supplies a static entry replacement. Use `mage.WithAbility` to
+attach it to a permanent definition. Its current source controller supplies
+`mage.You`; selected players supply the proposed entrant's controller test.
+
+RON supports a battlefield rule with this exact shape:
+
+```ron
+ReplaceWouldEnter(
+    APermanentWouldEnterTheBattlefield(And([
+        Or([IsCardtype(Artifact), IsCardtype(Creature), IsCardtype(Land)]),
+        ControlledByAPlayer(Opponent),
+    ])),
+    [EntersTapped],
+)
+```
+
+The outer conjunction requires exactly one `ControlledByAPlayer(Opponent)`
+clause and at least one type predicate. Type predicates accept `IsCardtype`,
+`IsNonCardtype`, and nonempty nested `And`/`Or` lists. `EntersTapped` must be a
+single symbol. Other player filters, entry operations, references, resolving
+bodies, and conditional replacement declarations require separate adapters.
+
+Kismet's complete unchanged record has gameplay evidence in
+`TestRONFilteredEntryKismet` and `TestRONFilteredEntryCopiedKismet`.
+Compilation support does not establish Land Equilibrium's separate replacement
+sequence or its land-count and sacrifice contracts.

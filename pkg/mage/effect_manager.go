@@ -1118,7 +1118,7 @@ func (em *EffectManager) replacementCandidates(action Action, g *Game, applied m
 		}
 	}
 	if entry, ok := action.(*battlefieldEntryAction); ok {
-		for _, replacement := range entry.replacementCandidates() {
+		for _, replacement := range append(entry.replacementCandidates(), entry.filteredReplacementCandidates(g)...) {
 			if !applied[replacement] {
 				candidates = append(candidates, replacement)
 			}

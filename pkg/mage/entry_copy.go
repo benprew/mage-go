@@ -54,6 +54,7 @@ type battlefieldEntryContext struct {
 }
 
 type battlefieldEntryAction struct {
+	filtered     map[filteredEntryKey]*filteredEntryReplacement
 	context      battlefieldEntryContext
 	permanent    *Permanent
 	copies       map[entryCopyKey]*entryCopyReplacement

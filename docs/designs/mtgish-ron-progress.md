@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **894 accepted / 92 rejected names**
-(986 total), **2,268 compiled / 177 rejected records** (2,445 total).
-The latest slice is **SOURCE-COUNTER-CAP**. Live static source abilities limit
-entry, ordinary and simultaneous counter placements after replacements.
-State-based actions remove excess counters when a cap becomes active.
-Ability removal, phasing, exact visits, copied entry and clones have contract tests.
-Rasputin Dreamweaver now has complete RON gameplay evidence.
+Latest measured result (2026-10-14): **895 accepted / 91 rejected names**
+(986 total), **2,269 compiled / 176 rejected records** (2,445 total).
+The latest slice is **STATIC-FILTERED-TAPPED-ENTRY**. Live source abilities
+match projected entry types and control through the shared replacement pipeline.
+Copy priority, affected-player order, ability removal, phasing, source visits,
+clones and simultaneous entry have contract tests. Kismet has complete RON
+casting, entry and spell-copy evidence. Land Equilibrium retains separate gaps.
 Estimated and actual gain: **one unique name / one record**. No RON source changed.
-All required checks pass after three local lint naming fixes; final lint has 0 issues.
+All required checks pass after two local lint fixes; final lint has 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -23,14 +23,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Damage causation identity for Silhouette.** Distinct causing spell/ability
-   identity still needs an engine contract. Audit concrete downstream multi-card value.
+1. **Land Equilibrium's retained entry and sacrifice sequence.** Reuse the new
+   live entry matching/projection prerequisite; land-count and sequence gaps remain.
 2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
-   atomic paid visits, saved powers and exact graveyard consumers; audit its
-   sacrificed-artifact exile source defect before claiming full gameplay.
-3. **Static entry-replacement matching.** Kismet and Land Equilibrium share
-   entry-subject/player prerequisites. Land Equilibrium also needs its land-count
-   condition, retained entrant and mandatory sacrifice sequence.
+   atomic saved powers and exact graveyard consumers. Its RON omits artifact exile.
+3. **Damage causation identity.** Silhouette needs distinct causing spell/ability
+   identity; compare shared multi-card work before selecting this one-card adapter.
 
 ## Dependencies and source blockers
 
@@ -12398,3 +12396,164 @@ ledger. Commit title: `feat(ron): implement source counter cap`.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. Stop after this slice.
+
+## 2026-10-14 — STATIC-FILTERED-TAPPED-ENTRY
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loader exit 1 was
+collection rejection, not build failure: 2,268 compiled / 177 rejected records,
+894 accepted / 92 rejected names, of 2,445 records / 986 names.
+Read the execution design, engine API and targeted CR sections; read only this
+ledger's top status and latest tail. Inspected complete unchanged RON records
+for Silhouette, Sword of the Ages, Wood Elemental, Kismet and Land Equilibrium.
+Targeted vocabulary queries confirmed the contexts and occurrence counts.
+No sub-agents, removed implementation skills, Go-card requirements or stubs were
+used. No user files or unrelated changes were modified.
+
+Compared the three ranked candidates before edits, counting reprints once:
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers and concrete downstream work | Effort |
+| --- | --- | --- | --- | --- |
+| Damage causation identity | Silhouette | 1 after the complete cause identity and temporary prevention adapter | Only one RON causation constructor occurrence; no second concrete consumer found. Existing spell-source target snapshots cannot identify a different causing spell or ability. | High: cause propagation through damage producers, copies, batches and replacement adapters; several contract groups. |
+| Plural activation sacrifice facts and visits | Sword of the Ages | 0 for the prerequisite alone | Saved power, exact graveyard consumers, and artifact exile are still required. Oracle includes the sacrificed artifact; RON only exiles the creature collection. Wood Elemental is the other syntax occurrence, already supported in entry context, so it supplies no new unlock. | High: transactional plural payment plus saved facts and zone consumers; likely more than one bounded slice. |
+| Static entry matching and tapped operation | Kismet, Land Equilibrium | 1: Kismet | Shared entry-characteristic/controller matching and per-event source identity become an engine prerequisite for Land Equilibrium. That card still requires a land-count predicate, a retained entrant and a mandatory post-entry sacrifice sequence. | Moderate: one rule adapter, live candidate service and layer projection; four RON and seven native test groups. |
+
+Candidate 1 lacked concrete multi-card downstream value. Candidate 2 had zero
+immediate gain and unresolved dependent operations. Selected static filtered
+entry because it completes Kismet and establishes a shared prerequisite for
+Land Equilibrium in one bounded run. This is an adapter and engine-contract gap;
+no environment failure or Kismet source defect was found.
+
+### Contract, supported shape and reuse boundary
+
+Engine signature: `EntersTappedFor(players PlayerSet, filter PermanentFilter)
+Ability`, attached with `WithAbility`. Definition validation requires a nonnil,
+valid typed player set and a permanent source. Current source control supplies
+You. Ownership does not select entrants. Source departure, ability removal,
+face-down status and phasing disable the rule; restoration and a new visit use
+current abilities and control. The filter's zero value matches all permanents.
+
+RON supports one battlefield declaration:
+`ReplaceWouldEnter(APermanentWouldEnterTheBattlefield(And([type predicates,
+ControlledByAPlayer(Opponent)])), [EntersTapped])`. The outer And requires one
+controller clause and at least one type predicate. Type predicates are
+`IsCardtype(type)`, `IsNonCardtype(type)`, and nonempty nested And/Or lists.
+The sole operation must be the EntersTapped symbol. Other players, entry event
+families, operations, conditional rules and resolving contexts remain errors.
+RON owns spelling, shape and lexical validity; mage owns matching and entry.
+
+`battlefieldEntryAction` saves replacement objects keyed by source ID, exact
+incarnation and ability ID. Candidates are rebuilt from current runtime abilities
+and join the shared default-priority replacement tier. Copy replacements run
+first. The affected controller chooses the ordinary replacement order. Each rule
+applies once per event; execution rechecks the live source after the choice.
+Multiple sources and returned visits keep separate identities. There are no
+card-name branches, global last-entry slots or game-time declaration panics.
+
+An isolated clone applies existing layers to a proposed entrant. It includes
+copy-modified characteristics and typed source-only composed static modifications
+of the entrant. The entrant's general static effects do not start before entry.
+The live battlefield, stack, life and event queues do not receive this proposal.
+The RON filter reads projected card types and control. Other entry query families
+need their own adapters and evidence; untyped legacy callback effects have no
+self-subject contract for newly acquired projection effects.
+
+The replacement sets tapped status before entry observers. Shared token batches
+prepare every entrant before registration and observations. No tap event is
+emitted. Reused the shared replacement pipeline, copy priority, layer service,
+permanent cloning, typed PlayerSet/You references, current runtime abilities,
+entry batches, factory plans, casting rollback and atomic registry replacement.
+No Go definitions, DSL services or authoring/startup paths were removed because
+the runtime and removal gates remain closed. No RON source changed, so the
+vocabulary snapshot needs no refresh.
+
+Rules evidence: local CR 614.1d, 614.4, 614.5, 614.12 and 616.1.
+Local `data/LEG.json` confirms Kismet's exact Oracle text: artifacts, creatures
+and lands the opponents control enter tapped. Land Equilibrium's complete text
+requires its separate post-entry sacrifice sequence. Sword of the Ages's Oracle
+includes exiling the artifact, which its RON record omits. This compared-candidate
+source defect remains deferred with that slice; no unrelated source was changed.
+
+### Failing-first tests and card mappings
+
+First RON gameplay failed with unsupported ReplaceWouldEnter. After correcting
+a test-only cleanup API name, native tests failed only on the missing
+EntersTappedFor signature. Implemented the service and adapter. Expanded tests
+found a copy fixture selecting an unplanned donor; restricted that synthetic
+choice to the planned donor. The independent semantic-inventory test then failed
+on absent entry roles; added those roles and retained the assertion. Collection
+count tests failed with the measured new count; updated their exact expectations.
+No assertion was weakened or removed.
+
+- Kismet -> `TestRONFilteredEntryKismet`: full unchanged record, rejected unpaid
+  cast with zone/stack rollback, correct 3W payment, opponent artifact/creature/
+  land entry, unaffected enchantment and own land, source departure and clone.
+- Kismet -> `TestRONFilteredEntryCopiedKismet`: real spell copy enters as a token
+  under the other controller; each copy supplies its own opponent frame and
+  source lifecycle.
+- Declaration contract -> `TestRONFilteredEntryInvalid`: wrong operation shape,
+  empty/multiple operations, symbol-versus-constructor mismatch, wrong event,
+  unbound player/permanent references, empty nested filters, missing conjunction
+  and resolving misuse.
+- Inventory/factories/loader -> `TestRONFilteredEntryInventoryAndAtomicLoad`:
+  full repository record, entry-event/filter/operation and player/type roles,
+  fresh card and ability IDs, and invalid collection preserving the prior registry.
+- Native `TestFilteredEntryLifecycle`: current source ability, own/opponent types,
+  phasing, game clone, removal/restoration, departure and new source visit/control.
+- Native `TestFilteredEntryDefinition`: nil player set and nonpermanent source reject.
+- Native `TestFilteredEntryCharacteristics`: existing type layers, entrant's
+  self-only type effect and exclusion of its not-yet-active global type effect.
+- Native `TestFilteredEntryCopyAndBatch`: copy-before-match priority and all token
+  entrants visible together with final tapped status before entry observations.
+- Native `TestFilteredEntryReplacementOrder`: both competing replacement orders,
+  affected entrant controller, and one application per rule without a loop.
+- Native `TestFilteredEntryChoiceRecheck`: source departure during the affected
+  player's choice cannot supply the selected replacement.
+- Native `TestFilteredEntryLiveControlAndProjectionPurity`: source control layer
+  updates recipients; projection keeps the proposal out of live state.
+
+### Measured gain and verification
+
+Fresh loader: **2,269 compiled / 176 rejected records; 895 accepted / 91 rejected
+names**, of 2,445 records / 986 names. Estimated and actual gain match:
+**one unique name / one record**, Kismet. That card also gains complete RON
+behavior evidence. The engine prerequisite does not establish Land Equilibrium
+gameplay. Comparison removes only Kismet's prior unsupported rule diagnostic;
+no diagnostic was added or changed. The collection still rejects atomically.
+
+Required verification:
+
+- `go test ./pkg/mage/dsl/ron -run FilteredEntry -count=1`: pass.
+- `go test ./pkg/mage -run FilteredEntry -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- First `make lint` reported one return evaluation-order issue and two diagnostics
+  for one test name that shadowed the built-in copy function. Used an explicit
+  projected lookup and renamed the test variable. Reviewed automatic formatting;
+  no unrelated source changed. Final `make lint`: pass, 0 issues.
+- Reran focused RON/native tests, build and vet after the local fixes; all pass.
+  Reran focused tests after final lint; both pass.
+- `git diff --check`: pass. Final `go run ./cmd/loadcards -json`: expected exit 1,
+  with the counts above. Only Kismet's diagnostic was removed.
+
+Changed files: mage and ron filtered_entry.go/tests; entry_copy.go,
+effect_manager.go and doc.go; RON compiler.go, inventory.go and three existing
+collection-count tests; dsl-reference.md, engine-rules-contracts.md and this ledger.
+Intended commit title: `feat(ron): implement static filtered tapped entry`.
+
+### Ranked next candidates
+
+1. **Land Equilibrium's retained entry and sacrifice sequence.** The live entry
+   matching/projection prerequisite now exists. Reuse typed land counts, but
+   establish the exact entrant and mandatory sequence before adding its adapter.
+2. **Plural activation sacrifice facts and visits.** Sword of the Ages still
+   needs atomic saved power/visits and exact graveyard consumers. Correct the
+   artifact-exile omission with the Oracle evidence above when implementing it.
+3. **Damage causation identity.** Silhouette still requires distinct causing
+   spell/ability facts. Reassess multi-card benefit against other remaining shared
+   adapters before prioritizing its single-card prevention shape.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after the selected slice.
