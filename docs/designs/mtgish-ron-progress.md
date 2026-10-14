@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **883 accepted / 103 rejected names**
-(986 total), **2,252 compiled / 193 rejected records** (2,445 total).
-The latest slice is **PERMANENT-EXILE-PAYMENT-FACTS**. A singular APermanent
-additional casting payment supplies APermanentWasExiledThisWay in resolving If
-branches, including delayed bodies. Each condition keeps a typed, independent
-payment-time match. Engine and RON tests cover current characteristics,
-identity, phasing, rollback, copies, clones and factory isolation.
-Soul Exchange now reaches its separate resolving PTCounter(+2, +2) gap.
-Estimated and actual gain: **zero unique names / zero records**. Complete-card
-gameplay coverage is unchanged; source-clause and synthetic coverage increased.
+Latest measured result (2026-10-14): **884 accepted / 102 rejected names**
+(986 total), **2,253 compiled / 192 rejected records** (2,445 total).
+The latest slice is **DISTINCT-P2P2-COUNTERS**. PTCounter(+2, +2) lowers to
+core.P2P2 through the existing permanent-counter adapters. One counter adds
+two power and two toughness in layer 7c and remains a distinct counter kind.
+Soul Exchange now compiles unchanged and has complete RON gameplay evidence.
+Engine and RON tests cover replacements, layers, counter-kind independence,
+identity, phasing, departure facts, rollback, copies and clones.
+Estimated and actual gain: **one unique name / one record**. Complete-card
+gameplay coverage gains Soul Exchange; synthetic contract coverage increases.
 No RON source changed. All required checks pass; lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -25,17 +25,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Resolving +2/+2 counters.** Complete the engine counter kind, layer and
-   RON adapters required by Soul Exchange. Its payment facts and returned
-   permanent reference now work. Compare fresh shared counter demand first.
-2. **Saved combat event subjects and temporary rule references.** Compare
+1. **Saved combat event subjects and temporary rule references.** Compare
    Infinite Authority and Wall of Dust; retain exact host/opponent visits through
    delayed destruction, counters and next-turn restrictions. Wall of Caltrops
    still has separate intervening combat-membership conditions.
-3. **Entry payment/results or optional plural sacrifice results.** Nameless
-   Race, Frankenstein's Monster and Sword of the Ages still need separate,
-   complete producer/consumer contracts. Reassess shared prerequisites before
-   choosing a single-card implementation.
+2. **Optional plural sacrifice payment/results.** Sword of the Ages needs saved
+   power, exact departure visits and graveyard exile of completed sacrifices.
+   Audit shared demand before selecting the producer and consumers.
+3. **Entry payment/results.** Nameless Race and Frankenstein's Monster need
+   different producers. Keep each entry transaction and its complete result
+   contract together; reassess shared prerequisites and other multi-card demand.
 
 ## Dependencies and source blockers
 
@@ -10815,3 +10814,161 @@ as `feat(ron): implement permanent exile payment facts`.
 
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set creation and unused DSL cleanup remain gated. Stop after this slice.
+
+
+## 2026-10-14 — DISTINCT-P2P2-COUNTERS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and all RON package tests passed.
+The initial loader exited 1 for atomic collection rejection, with 2,252 compiled
+and 193 rejected records: 883 accepted and 103 rejected unique names.
+Complete records and nested forms were inspected for Soul Exchange, Infinite
+Authority, Wall of Dust, Wall of Caltrops, Nameless Race, Frankenstein's Monster,
+Sword of the Ages, Basal Thrull and Grizzly Bears. Reprints count once.
+Targeted vocabulary entries show PTCounter has two arguments and 98 occurrences;
+only Soul Exchange uses the +2/+2 pair. Other counter pairs already have kinds.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Resolving distinct +2/+2 counters, ranked #1 | Soul Exchange | 1 name / 1 record | Payment facts and returned-permanent bindings are ready. No remaining nested gap. The shared kind also becomes available to existing entry, removal, payment and information adapters without new context shapes. | Low: append a kind, lower a pair, test layers/replacements/identity and complete gameplay. |
+| Saved combat subjects and temporary rule references, ranked #2 | Infinite Authority, Wall of Dust; related Wall of Caltrops | 0 for a subject-binding prerequisite alone; up to 2 after separate consumers | Infinite Authority needs the saved watched host through two delayed bodies and destruction payment success. Wall of Dust also needs CantAttack and DuringPlayersNextTurn. Wall of Caltrops separately needs intervening pair events and blocking-set predicates. Enables shared exact combat subjects for later payments, restrictions and counters. | Medium/high: event capture, scoped delayed frames and separate payment/duration contracts. |
+| Entry or optional plural payment results, ranked #3 | Nameless Race, Frankenstein's Monster, Sword of the Ages | 0 for a generic prerequisite alone; each complete producer/consumer chain can unlock 1 | Race needs bounded entry life and stored P/T. Monster needs required plural graveyard payment, failure entry replacement and counter distribution. Sword needs optional sacrifice choices, saved total power and exact graveyard departure/exile results. These are distinct producers, not one ready adapter. | High for the group; medium/high per coherent producer/consumer slice. |
+
+Selected the first ranked candidate because it is dependency-ready and unblocks
+an already implemented payment/return/fact chain with one small shared engine
+kind. The larger alternatives have concrete downstream multi-card value but
+require separate contracts before complete records unlock. This is the bounded
+unblocking exception to deferring single-card capabilities; it does not claim
+multi-card coverage from the 98 total PTCounter occurrences.
+
+The contract and acceptance cases were stated before edits. No source-data or
+environment defect was found. Local authoritative data/FEM.json confirms Soul
+Exchange requires one +2/+2 counter after a Thrull exile payment. CR 122.1a,
+122.2, 122.3, 613.4c–d, 704.5q and 400.7 establish counter characteristics,
+kind independence, layers and return identity. CR 702.26 governs phasing.
+
+### Exact signatures, contexts and reuse boundary
+
+- `core.P2P2` is appended before `core.NumCounters`. Existing enum values remain
+  unchanged. `String() string` returns "+2/+2"; `PowerBoost() int` and
+  `ToughnessBoost() int` each return 2.
+- `compilePermanentCounterType(Node) (core.CounterType, error)` accepts the
+  two literal coordinates in `PTCounter(+2, +2)`. Invalid arity, nonliteral
+  coordinates and unsupported pairs remain errors. It adds no new subject,
+  amount, producer, collection or context shape.
+- Resolving `PutCounters([ACounterOfTypeOnPermanent(counter, permanentRef)])`
+  and the existing numeric instruction lower through `mage.AddCountersTo`.
+  Existing entry, removal, payment and information adapters use the same kind
+  validator and retain their own context restrictions.
+- RON retains spelling, lexical references and declaration validation. The
+  engine retains counter storage, typed per-instance bindings, exact visit
+  lookup, replacements, layers, departure snapshots and clone behavior.
+- Counter arrays include the new kind automatically. Existing layer code uses
+  each kind's boost, so no new layer subsystem is required. One +2/+2 counter
+  remains separate from +1/+1 and -1/-1 counters; it cannot cancel against them.
+- Shared affected-player replacement decisions and rechecks apply. The new
+  kind changes no APNAP, simultaneous movement, target legality or payment
+  transaction behavior. No global result slot, Go factory fallback, card-name
+  branch or game-time declaration panic was introduced.
+
+### Failing-first and card-to-test evidence
+
+Initial engine and RON tests failed to compile for the missing core.P2P2 kind.
+After adding the engine kind, all seven initial complete Soul Exchange cases
+failed on the expected unsupported permanent counter type at FEM:78:590.
+The adapter then made the complete unchanged record execute. Test setup fixes
+reacquired mutable storage after cloning, used a live counter-doubler source,
+removed an illegal target from its graveyard before entry, and parameterized
+an existing replacement fixture that previously matched only +1/+1 counters.
+No production contract was changed to accommodate those test errors.
+
+- **Soul Exchange -> TestRONP2P2CounterSoulExchange**: unchanged full FEM record
+  executes exile payment, graveyard target, return, saved Thrull check and one
+  distinct +2/+2 counter. Tests Thrull and non-Thrull payments, payment-card
+  return, copied spells without another payment, pending clone isolation,
+  counter doubling and a target that has left its graveyard.
+- **Soul Exchange -> TestRONP2P2CounterSoulExchangeRollback**: insufficient
+  mana leaves the payment creature, available mana, graveyard and stack intact.
+- **Basal Thrull / Grizzly Bears**: complete RON guest records supply real
+  payment and return objects. Their unrelated abilities gain no new coverage.
+- **TestRONP2P2CounterSavedVisit**: a saved returned entrant receives delayed
+  counters after source departure; phasing and departure/return block placement,
+  while a phase cycle keeps the same visit eligible.
+- **TestRONP2P2CounterReplacementOrder**: affected-player choices distinguish
+  add-then-double from double-then-add; prevention stops placement without
+  stopping an independent later life action.
+- **TestRONP2P2CounterInvalid**: invalid arity, nonliteral coordinates and
+  unsupported counter pairs reject. Existing source/reference/context rejection
+  tests remain. Four invalid fixtures now use unsupported +3/+3 instead of the
+  newly supported +2/+2 pair.
+- **TestP2P2CounterLifecycle**: doubling, mixed minus counters without false
+  cancellation, failed and successful removal, clone storage, phasing,
+  departure facts and fresh returned visits.
+- **TestP2P2CounterLayers**: installed base, bonus and switch effects prove
+  counters apply after base values and before switches; counter metadata and
+  array bounds are checked.
+- **TestRONCounterPlacementSignedPT**: includes +2/+2 alongside existing kinds.
+  Earlier payment and returned-permanent source-clause tests now require the
+  full record to compile. The strict-load test uses complete unsupported Wall
+  of Dust to retain atomic rejection; it does not publish a partial registry.
+
+### Validation and measured outcome
+
+The first broad engine-short run failed only on stale expectations: four
+invalid fixtures treated +2/+2 as unsupported, and four collection-count tests
+pinned 2,252/193. Updated the unsupported examples to +3/+3, added +2/+2
+positive gameplay, and changed expected counts to the fresh 2,253/192 result.
+The strict loader rejection remains covered by a complete unsupported record.
+
+Passed required verification in fast-fail order after the expectation fixes:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONP2P2Counter -count=1`, plus focused
+  prior payment, returned-permanent and placement regressions.
+- `go test ./pkg/mage -run TestP2P2Counter -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- Skill verification `go test ./... -short -count=1`.
+- `make lint`: **0 issues**. Automatic changes only formatted this slice's
+  imports. No unrelated file changed. After review, the entire RON package
+  (`go test ./pkg/mage/dsl/ron -count=1`) and focused engine tests passed again.
+- `git diff --check`.
+- Final `go run ./cmd/loadcards -json`: exit **1**, expected atomic collection
+  rejection. **2,253 compiled / 192 rejected records**, **884 accepted / 102
+  rejected unique names**. Only Soul Exchange's FEM:78:590 diagnostic was
+  removed; no diagnostic was added or changed. This is collection rejection,
+  not a build, test or environment failure.
+
+No remaining validation blocker exists. The completed slice is committed with
+`feat(ron): implement distinct +2/+2 counters`.
+
+No RON source changed. All twelve file hashes match the vocabulary snapshot;
+no snapshot refresh is required. No source defect was corrected. Estimated and
+actual compilation gains are one unique name and one record. Full-card gameplay
+coverage gains Soul Exchange, independently of the compilation count. No
+previously accepted record is lost. Runtime cutover, Go-card deletion, obsolete
+Go-set generation and DSL cleanup remain gated by complete support and startup.
+No definition, caller, generator or unused DSL function was removed in this run.
+
+Changed files: engine core/counter.go, doc.go and p2p2_counter_test.go; RON
+counter_placement.go, p2p2_counter_test.go, counter_placement_test.go,
+entry_counters_test.go, singular_entry_counter_test.go,
+exile_counter_removal_test.go, permanent_exile_fact_test.go,
+returned_permanent_test.go, matching_permanent_exile_cost_test.go,
+definition_plan_test.go, inventory_test.go and numeric_consumers_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+
+### Ranked next candidates
+
+1. **Saved combat watched-subject and temporary rule references.** Compare
+   Infinite Authority and Wall of Dust for a shared exact-subject contract;
+   inspect the separate destruction-payment and next-turn restriction consumers.
+   Wall of Caltrops has additional intervening blocking-set predicates.
+2. **Optional plural sacrifice payment/results.** Sword of the Ages needs saved
+   total power and exact departure visits for subsequent graveyard exile.
+   Compare shared demand before choosing the complete producer/consumer shape.
+3. **Entry payment/results.** Nameless Race and Frankenstein's Monster have
+   different producers; complete one bounded transaction/result chain and
+   compare it against other shared demand before selection.
+
+Stop after this slice. All migration completion gates are still outstanding.

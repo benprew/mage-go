@@ -381,15 +381,16 @@ func (p *counterReplacementChooser) ChooseMode(_ []string, _ string) int {
 type counterPlacementReplacement struct {
 	source  uuid.UUID
 	prevent bool
+	counter core.CounterType
 }
 
 func (r *counterPlacementReplacement) SourceID() uuid.UUID           { return r.source }
 func (*counterPlacementReplacement) GetDuration() core.Duration      { return core.Indefinite }
 func (*counterPlacementReplacement) IsActive(mage.GameReader) bool   { return true }
 func (r *counterPlacementReplacement) Clone() mage.ReplacementEffect { c := *r; return &c }
-func (*counterPlacementReplacement) Matches(a mage.Action, _ mage.GameReader) bool {
+func (r *counterPlacementReplacement) Matches(a mage.Action, _ mage.GameReader) bool {
 	placement, ok := a.(*mage.AddCountersAction)
-	return ok && placement.CounterType() == core.P1P1 && placement.Amount() > 0 && !placement.OnEntry()
+	return ok && placement.CounterType() == r.counter && placement.Amount() > 0 && !placement.OnEntry()
 }
 func (r *counterPlacementReplacement) Replace(a mage.Action, _ *mage.Game) mage.Action {
 	if r.prevent {
@@ -444,6 +445,7 @@ func TestRONCounterPlacementSignedPT(t *testing.T) {
 		{`PTCounter(0, 1)`, core.P0P1, 0, 1},
 		{`PTCounter(2, 0)`, core.P2P0, 2, 0},
 		{`PTCounter(0, 2)`, core.P0P2, 0, 2},
+		{`PTCounter(+2, +2)`, core.P2P2, 2, 2},
 	} {
 		t.Run(tc.spelling, func(t *testing.T) {
 			g, a, _ := ronGame()
@@ -473,7 +475,7 @@ func TestRONCounterPlacementInvalid(t *testing.T) {
 		`PutCounters([ACounterOfTypeOnPermanent])`, `PutCounters([ACounterOfTypeOnPermanent(ChargeCounter)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(UnknownCounter, ThisPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(ChargeCounter(), ThisPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(PTCounter(1), ThisPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(PTCounter(Integer(1), 1), ThisPermanent)])`,
-		`PutCounters([ACounterOfTypeOnPermanent(PTCounter(2, 2), ThisPermanent)])`,
+		`PutCounters([ACounterOfTypeOnPermanent(PTCounter(3, 3), ThisPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Ref_TargetPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, HostPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Trigger_ThatPermanent)])`, `PutCounters([ACounterOfTypeOnPlayer(ChargeCounter, You)])`,
 		`PutCounters([NumberCountersOfTypeOnPermanent(ValueX, ChargeCounter, ThisPermanent)])`,

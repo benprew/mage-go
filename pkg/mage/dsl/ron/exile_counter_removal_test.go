@@ -214,7 +214,7 @@ func TestRONExileCounterRemovalInvalid(t *testing.T) {
 		`RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter,ThisExiledCard),ACounterOfTypeFromCardInExile(ScreamCounter,ThisExiledCard)])`,
 		`RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter)])`,
 		`RemoveCounters([ACounterOfTypeFromCardInExile(UnknownCounter,ThisExiledCard)])`,
-		`RemoveCounters([ACounterOfTypeFromCardInExile(PTCounter(+2,+2),ThisExiledCard)])`,
+		`RemoveCounters([ACounterOfTypeFromCardInExile(PTCounter(+3,+3),ThisExiledCard)])`,
 		`RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter,ThisPermanent)])`,
 		`RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter,ThisGraveyardCard)])`,
 		`RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter,Ref_TargetCard)])`,

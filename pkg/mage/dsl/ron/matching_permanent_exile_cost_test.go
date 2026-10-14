@@ -165,10 +165,10 @@ func TestRONMatchingPermanentExileCostRollback(t *testing.T) {
 }
 
 func TestRONMatchingPermanentExileCostRecords(t *testing.T) {
-	for _, card := range []struct{ set, name, gap string }{{"FEM", "Soul Exchange", "permanent counter type"}} {
+	for _, card := range []struct{ set, name string }{{"FEM", "Soul Exchange"}} {
 		record := repositoryRecord(t, card.set, card.name, card.set+".ron")
-		if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), card.gap) {
-			t.Fatalf("complete %s must retain its independent gap: %v", card.name, err)
+		if _, err := Compile(record); err != nil {
+			t.Fatalf("complete %s must compile: %v", card.name, err)
 		}
 	}
 	node, err := Parse(strings.NewReader(matchingExileRON), "payment.ron")
@@ -209,7 +209,7 @@ func TestRONMatchingPermanentExileCostStrictLoad(t *testing.T) {
 	if err != nil || report.Compiled != 1 {
 		t.Fatal("inventory rejected supported declaration", err)
 	}
-	for _, entry := range []struct{ set, name string }{{"FEM", "Soul Exchange"}} {
+	for _, entry := range []struct{ set, name string }{{"LEG", "Wall of Dust"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + entry.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

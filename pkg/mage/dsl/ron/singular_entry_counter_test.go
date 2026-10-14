@@ -208,7 +208,7 @@ func TestRONSingularEntryCounterDeclarations(t *testing.T) {
 		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(TideCounter,JavelinCounter)])`,
 		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(PoisonCounter)])`,
 		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(TideCounter())])`,
-		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(PTCounter(2,2))])`,
+		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(PTCounter(3,3))])`,
 		`AsPermanentEnters(HostPermanent,[EntersWithACounter(TideCounter)])`,
 		`AsPermanentEnters(ThisPermanent(),[EntersWithACounter(TideCounter)])`,
 		`AsPermanentEnters(ThisPermanent,[EntersWithACounter(TideCounter),EntersTapped])`,

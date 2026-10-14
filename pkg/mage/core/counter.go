@@ -60,6 +60,8 @@ const (
 	P0P2   // +0/+2 (Frankenstein's Monster)
 	Hunger // Fasting
 
+	P2P2
+
 	// NumCounters must remain the last entry — it sizes the fixed-length
 	// counter array on Permanent, so clone is a memcpy instead of a map copy.
 	NumCounters
@@ -149,6 +151,8 @@ func (ct CounterType) String() string {
 		return "+0/+2"
 	case Hunger:
 		return "Hunger"
+	case P2P2:
+		return "+2/+2"
 	default:
 		return "Unknown"
 	}
@@ -159,7 +163,7 @@ func (ct CounterType) PowerBoost() int {
 	switch ct {
 	case P1P1, P1P0, P1P2:
 		return 1
-	case P2P0:
+	case P2P0, P2P2:
 		return 2
 	case M1M1:
 		return -1
@@ -175,7 +179,7 @@ func (ct CounterType) ToughnessBoost() int {
 	switch ct {
 	case P1P1, P0P1:
 		return 1
-	case P1P2, P0P2:
+	case P1P2, P0P2, P2P2:
 		return 2
 	case M1M1:
 		return -1

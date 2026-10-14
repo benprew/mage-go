@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [core.P2P2] is one +2/+2 counter. Each counter adds two to power and
+// toughness in layer 7c. Base values apply first; switches apply last.
+// The counter remains separate from +1/+1 and -1/-1 counters.
+// Shared counter services supply replacements, removal and departure facts.
+// Phasing keeps counters. Return starts a new visit without the old counters.
+// Clones keep separate arrays. RON accepts PTCounter(+2, +2) through the
+// existing typed permanent-counter adapters. This completes Soul Exchange.
+//
 // [ExileMatchingPermanentCostWithFacts] saves each [PermanentPaymentFact]
 // before the chosen permanent leaves. Current payment-time characteristics
 // supply each match. [NumberBinding] results contain one or zero. The shared

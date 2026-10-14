@@ -20697,6 +20697,32 @@ Engine evidence: `TestPermanentExileFactPayment`,
 `TestRONPermanentExileFactInvalid`, `TestRONPermanentExileFactFilters`, and
 `TestRONPermanentExileFactSourceClause`.
 The source-clause test preserves Soul Exchange's real payment, target, return
-and condition and substitutes a supported tap for its unsupported counter
-consumer. Basal Thrull and Grizzly Bears use their complete RON records. This
-establishes clause evidence, not complete Soul Exchange gameplay.
+and condition and substitutes a supported tap for its counter consumer. Basal
+Thrull and Grizzly Bears use their complete RON records. This establishes clause
+evidence, not complete Soul Exchange gameplay.
+
+
+## Distinct +2/+2 counter kind
+
+`core.P2P2` has `String() == "+2/+2"`, `PowerBoost() == 2` and
+`ToughnessBoost() == 2`. It is appended before `core.NumCounters`; previous
+counter values remain unchanged. The fixed counter arrays, clone storage,
+departure snapshots and shared layer calculations include it automatically.
+
+CR 122.1a and 613.4c apply each counter in layer 7c after base values and before
+7d switching. CR 122.3 and 704.5q cancel only +1/+1 and -1/-1 pairs: a +2/+2
+counter remains distinct from both kinds. Existing `AddCountersTo` and
+`Game.AddCountersWithReplacement` use the same replacement pipeline for the
+new kind. Counter doubling changes the number of counters, not their kind.
+Phasing retains them (CR 702.26); departure retains exact snapshot facts but
+return starts a new object without them (CR 400.7, 122.2).
+
+`TestP2P2CounterLifecycle` covers replacement doubling, mixed counter kinds,
+removal, clone isolation, phasing and departure/return. `TestP2P2CounterLayers`
+uses installed base, bonus and switch effects to verify layer order.
+`TestRONP2P2CounterSoulExchange` adds complete unchanged RON gameplay with
+Thrull/non-Thrull payments, payment return, illegal targets, copies, clones and
+counter replacement. `TestRONP2P2CounterReplacementOrder` proves affected-player ordering and
+prevention with the new kind. `TestRONP2P2CounterSoulExchangeRollback` proves incomplete
+casting cannot spend the creature or available mana. Existing payment and
+returned-visit contracts continue to supply identity and timing.

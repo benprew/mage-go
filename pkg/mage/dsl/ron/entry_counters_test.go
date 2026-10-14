@@ -185,7 +185,7 @@ func TestRONEntryCountersDeclarations(t *testing.T) {
 		`EntersWithNumberCounters(Integer("3"), PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3,4), PTCounter(1,1))`,
 		`EntersWithNumberCounters(ValueX(), PTCounter(1,1))`, `EntersWithNumberCounters(Integer(3), PoisonCounter)`,
 		`EntersWithNumberCounters(Integer(3), CreditCounter())`, `EntersWithNumberCounters(Integer(3), PTCounter(Integer(1),1))`,
-		`EntersWithNumberCounters(Integer(3), PTCounter(2,2))`,
+		`EntersWithNumberCounters(Integer(3), PTCounter(3,3))`,
 	} {
 		src := fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[AsPermanentEnters(ThisPermanent,[%s])])`, operation)
 		nodes, err := Parse(strings.NewReader(src), "invalid-entry.ron")

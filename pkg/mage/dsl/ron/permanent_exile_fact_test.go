@@ -67,8 +67,8 @@ func TestRONPermanentExileFactSourceClause(t *testing.T) {
 	for _, payment := range []string{"Basal Thrull", "Grizzly Bears"} {
 		t.Run(payment, func(t *testing.T) {
 			record := hostUntapRecord(t, "FEM", "Soul Exchange")
-			if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "permanent counter type") {
-				t.Fatal("complete record must keep its counter adapter gap", err)
+			if _, err := Compile(record); err != nil {
+				t.Fatal("complete record must compile", err)
 			}
 			rules := record.Fields["Rules"]
 			spell := rules.Args[1]

@@ -85,7 +85,7 @@ func compilePermanentCounterType(n Node) (core.CounterType, error) {
 			{1, 1}: core.P1P1, {-1, -1}: core.M1M1, {1, 0}: core.P1P0,
 			{1, 2}: core.P1P2, {-2, -2}: core.M2M2, {0, -1}: core.M0M1,
 			{0, -2}: core.M0M2, {0, 1}: core.P0P1, {2, 0}: core.P2P0,
-			{0, 2}: core.P0P2,
+			{0, 2}: core.P0P2, {2, 2}: core.P2P2,
 		}[[2]int{n.Args[0].Integer, n.Args[1].Integer}]
 		if ok {
 			return counter, nil

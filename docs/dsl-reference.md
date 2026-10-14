@@ -15687,5 +15687,27 @@ Multiple conditions remain independent. Branch bodies must contain actions.
 An absent producer, unsupported filter, empty filter, invalid signature or
 modal body rejects at compilation. Activation, entry, resolving-payment,
 plural-result and `Unless`/`IfElse` forms are separate adapters. Soul Exchange's
-payment and return clauses have gameplay evidence; its complete record still
-rejects the separate `PTCounter(+2, +2)` adapter gap.
+payment and return clauses retain their gameplay evidence; its complete record
+now compiles and has gameplay evidence in `TestRONP2P2CounterSoulExchange`.
+
+
+## RON +2/+2 permanent counters
+
+`PTCounter(+2, +2)` lowers to `core.P2P2` in the existing typed permanent-counter
+adapters. In resolving actions, `PutCounters([ACounterOfTypeOnPermanent(counter,
+permanentRef)])` places one; `NumberCountersOfTypeOnPermanent(value, counter,
+permanentRef)` uses its existing amount contract. No new reference, amount,
+producer, list or context shape is added. Existing entry, removal, payment and
+counter-information adapters use the same validated kind.
+
+One +2/+2 counter adds two power and two toughness; it is not two +1/+1 counters.
+The engine applies it in layer 7c and retains its distinct kind through
+replacement, removal, phasing, departure snapshots and clones. Return cannot
+inherit old counters or a pending placement on the former visit. Invalid arity,
+nonliteral coordinates and unsupported pairs remain compilation errors.
+
+Complete Soul Exchange gameplay is mapped to `TestRONP2P2CounterSoulExchange`
+and `TestRONP2P2CounterSoulExchangeRollback`. The unchanged FEM record executes
+its payment, target, return, saved Thrull check and counter placement together.
+Delayed saved-visit evidence is `TestRONP2P2CounterSavedVisit`; declaration
+rejections are `TestRONP2P2CounterInvalid`.
