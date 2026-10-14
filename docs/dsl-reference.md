@@ -15419,3 +15419,32 @@ Waiting delayed source queries retain direct source operands without selecting
 members or executing actions. Entry, replacement, static prevention and payment
 forms remain separate adapters. Icatian Skirmishers has complete-record evidence
 in `TestRONBandedCollectionNative`, `Pending` and `CapturedLifetime`.
+
+## RON copiable entry variants
+
+`AsPermanentEnters(ThisPermanent, [EntersWithLayerEffectOfChoice(options)])`
+accepts a nonempty list of nonempty option lists. One required controller choice
+runs in the shared entry replacement process. Each option supports:
+
+- `SetCopiablePT(PT(power, toughness))` with integer literals.
+- `AddCopiableCardtype(type)` with a permanent card type.
+- `AddCopiableCreatureType(type)` with a subtype symbol.
+- `AddCopiableAbility([keywords])` with a nonempty list of supported fixed keywords.
+
+The adapter builds `mage.ChooseCopiableVariantAsEnters` and typed
+`CopyModification` values. It uses fresh ability definitions per factory.
+Selected P/T, types and keywords become copiable values. Existing types and
+abilities remain. Later copies make their own entry choices and keep prior
+copiable additions. Counters and ordinary layers stay outside the snapshot.
+Permanent spell copies enter as tokens and choose independently.
+
+The supported context is one operation in a source entry rule. Host, resolving,
+static-layer and malformed declarations reject. Numeric choices, dynamic
+operands and variable abilities require separate adapters. This slice does not
+add `ChooseANumberBetween` or Shapeshifter's saved-number consumers.
+
+Both complete Primal Clay records map to `TestRONEntryVariantReal` for all
+variants, paid casting, failed payment, flying and defender legality, phase
+cycles, return and clones. `TestRONEntryVariantLoad` proves strict reprint loading,
+fresh factories and atomic rejection. `TestRONEntryVariantSpellCopy` proves
+independent original/copy choices and token departure.

@@ -6,35 +6,32 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **877 accepted / 109 rejected names**
-(986 total), **2,245 compiled / 200 rejected records** (2,445 total).
-The latest slice is **RESOLVING-BANDED-COLLECTION**. Resolving BandedWith reads
-exact current attacking-band visits and composes with contextual collections.
-Icatian Skirmishers now has complete-record native casting, band formation,
-first-strike combat, pending trigger, identity, clone and cleanup evidence.
-Estimated and actual gains are **one unique name / one record**. Camel gains
-its engine membership prerequisite but still needs static collection prevention.
-Accepted records remain accepted. Syntax and source hashes are unchanged.
+Latest measured result (2026-10-14): **878 accepted / 108 rejected names**
+(986 total), **2,247 compiled / 198 rejected records** (2,445 total).
+The latest slice is **COPIABLE-ENTRY-VARIANTS**. Required entry choices use
+shared replacement ordering and immutable copiable characteristic modifications.
+Primal Clay now has complete-record native casting, all three variants, combat
+legality, spell-copy, phasing, return and clone evidence for both reprints.
+Estimated and actual gains are **one unique name / two records**. Both Wall
+records now use the Oracle 1/6 values. Shapeshifter still needs numeric choices.
+Accepted records remain accepted. Vocabulary hashes and loader baseline are fresh.
 
-The loader still rejects the collection atomically. Only Icatian Skirmishers'
-former diagnostic disappears. Runtime cutover, Go-card removal and DSL cleanup
-remain gated.
+The loader still rejects the collection atomically. Only Primal Clay's former
+diagnostics disappear. Runtime cutover, Go-card removal and DSL cleanup remain
+gated by complete collection support and native startup validation.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Entry choice state — Primal Clay and Shapeshifter.** Compare a shared
-   per-entry choice prerequisite with the separate finite copiable variants and
-   saved numeric entry/upkeep consumers. Clay's two Wall records use 3/3;
-   local Oracle requires 1/6. Resolve that defect before complete-card claims.
+1. **Saved numeric choice — Shapeshifter.** Entry and optional upkeep choices
+   need one source-visit number and live SetPower/SetToughness consumers.
+   Finite copiable variants do not supply this distinct state contract.
 2. **Conditional artifact protections — Guardian Beast.** Static branches are
-   ready. Live noncreature artifact selection, control prohibition and new Aura
-   attachment prohibition with existing Auras retained need contracts.
-3. **Static collection-recipient prevention — Camel.** Typed band membership
-   is ready in the engine. Add the live static recipient adapter, not the
-   resolving collection context. Compare broader prevention consumers before
-   selecting this single-card completion.
+   ready. Current-controller membership and control/new-Aura prohibitions remain.
+3. **Static collection-recipient prevention — Camel.** Band membership is ready;
+   static collection lowering and replacement rechecks remain. Compare broader
+   shared prevention and entry-payment prerequisites before a single-card slice.
 
 ## Dependencies and source blockers
 
@@ -9252,3 +9249,191 @@ baseline and this ledger. No production card, startup or DSL export changed.
 Complete RON gameplay, runtime loading, Go-card deletion, obsolete Go-set
 generation removal and unused DSL cleanup remain incomplete. Stop after this
 slice.
+
+## 2026-10-14 — COPIABLE-ENTRY-VARIANTS
+
+### Selection and environment evidence
+
+The working tree was clean at the start. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Fresh strict loading exited
+1 for collection rejection, with 2,245 compiled / 200 rejected records and
+877 accepted / 109 rejected names. There was no build or environment blocker.
+
+Complete RON records were inspected for Primal Clay (ATQ and 3ED), Shapeshifter,
+Guardian Beast and Camel, including their nested operations. Targeted vocabulary
+queries confirmed the finite choice constructor has two occurrences, fixed
+copiable P/T has six, creature-type addition has two and keyword addition has
+four. Reprints count once in selection.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Remaining blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Entry choice family, finite variants first | Primal Clay, Shapeshifter | 1 name / 2 records for finite variants | Shapeshifter's entry and optional upkeep number choices need saved visit state and independent SetPower/SetToughness consumers. Immutable copiable P/T, subtype and keyword operations provide reusable entry/copy infrastructure. | Medium, one finite choice context |
+| Conditional artifact protections | Guardian Beast | 1 name / 1 record | Conditional bodies and indestructible layers exist. Live controller membership, control prohibition and new Aura attachment prohibition that retains existing Auras need distinct contracts. | Large, several rule services |
+| Static collection recipients | Camel | 1 name / 1 record | Exact band membership exists. Static collection scope and replacement-time recipient rechecks remain. Resolving collection lowering cannot be used as a static query. | Medium, separate static/replacement context |
+
+The first ranked family splits into finite copiable variants and saved numeric
+choices; these do not have one common choice-state contract. No compared
+candidate offered more than one immediate unique-card unlock. The finite variant
+slice was selected for its bounded scope and shared typed copy modifications,
+which also serve later copies of the supported card. This does not claim that
+finite variants implement Shapeshifter's numeric producer or payment results.
+Other inspected entry consumers, Nameless Race, Wood Elemental and
+Frankenstein's Monster, still require distinct payment and saved-result contracts;
+they are not counted as unlocks. Complete Dance of Many and Stangg records also
+retain linked-token gaps and receive no coverage claim from these modifications.
+
+Before edits, the acceptance contract was a required entry-controller choice,
+made before registration, with copiable selected characteristics; independent
+factory definitions; fresh choices on later entry; retained values through
+phasing; correct physical departure; and exact declaration rejection. Tests
+include later copies and competing entry replacements. The engine owns these
+mechanics; RON owns spelling, shape validation and factory lowering.
+
+### Supported signatures, context and engine reuse
+
+RON supports exactly one operation in
+`AsPermanentEnters(ThisPermanent, [EntersWithLayerEffectOfChoice(options)])`.
+`options` is a nonempty list of nonempty modification lists. Each list can use:
+
+- `SetCopiablePT(PT(integer, integer))`.
+- `AddCopiableCardtype(permanentType)`.
+- `AddCopiableCreatureType(subtypeSymbol)`.
+- `AddCopiableAbility([fixedKeywords])`, with a nonempty supported keyword list.
+
+The adapter validates every option, including unchosen options. Host, resolving,
+static-layer, empty, malformed, dynamic and unknown declarations reject.
+It creates fresh abilities per factory and has no card-name dispatch.
+
+Engine API: `ChooseCopiableVariantAsEnters(variants ...[]CopyModification) Ability`,
+`CopySetPowerToughness(power, toughness int) CopyModification`,
+`CopyAddSubTypes(subtypes ...string) CopyModification`, and
+`CopyAddKeywords(keywords ...core.Attr) CopyModification`.
+Existing `CopyAddCardTypes` supplies type addition. Fixed P/T changes base
+values and keeps existing characteristic definitions; it does not implement
+copy exceptions that remove those abilities.
+
+The engine reuses `battlefieldEntryAction`, the shared replacement service,
+`CopiableValues.WithModifications`, fresh definition plans,
+`BuildEntryCopyWithText`, physical printed provenance and `replaceEntryDefinition`.
+Stable declaration-origin/ordinal keys prevent a variant rule from applying
+again after rebuilding its definition in the same entry event. Copy replacement
+priority precedes variant choices; same-priority replacements keep the existing
+affected-player choice. Option labels show characteristics. Preview builds make
+no game choices. Invalid answers or a missing player use the first option.
+
+Selected values become copiable under CR 707.2. Copies acquire the entry rule and
+make a new choice under CR 707.5–6; copied additions remain. Counters and ordinary
+layer effects do not enter the snapshot. Source control changes and phase cycles
+do not repeat entry. Return starts with printed physical rules and a new visit.
+Permanent spell copies retain token identity, owner and controller. There is no
+new cost, damage, LKI query, APNAP policy or simultaneous-operation mechanism.
+Existing batch entry makes all choices before registering any entrant.
+
+### Failing-first evidence and card-to-test mappings
+
+The first tests had two setup errors (HasSubtype versus HasSubType, and a player
+wrapper passed to a BasePlayer helper). After correction, engine compilation
+failed on only the missing variant and modification APIs. Complete-record RON
+tests failed on unsupported EntersWithLayerEffectOfChoice. The same behavior
+assertions pass after implementation and the evidenced Wall correction.
+
+A later failing-first copied-spell test exposed the permanent spell-copy wrapper
+path: its token did not enter. The engine now unwraps that definition when it
+reads copiable provenance, as the existing entry-copy service does. That test
+passes without a card-name branch or token fallback.
+
+- **TestEntryVariantTimingIdentity**: choice before registration; controller
+  rather than owner; exactly one choice; subtype/keyword retention; captured
+  copiable values; exclusion of counters and ordinary layers; phase cycle,
+  printed departure, fresh return and clone isolation.
+- **TestEntryVariantInvalid**: empty options, nil modifications, invalid keyword
+  and subtype lists, and nonpermanent source declarations.
+- **TestEntryVariantPriorityAndCopy**: copy replacement first, acquired choice
+  rule, no repeated replacement and retained copied flying on a new 3/3 choice.
+- **TestEntryVariantInstancesAndBatch**: independent choices before batch
+  registration, invalid-answer fallback, control retention and defensive option
+  snapshots. A reused test declaration was corrected to build fresh abilities;
+  definition validation was kept intact.
+- **Primal Clay (ATQ, 3ED) → TestRONEntryVariantReal**: every complete variant,
+  failed unpaid cast, paid native cast, resolution choice, exact metadata,
+  flying block legality, defender attack legality, phasing, return and clones.
+- **Primal Clay (ATQ, 3ED) → TestRONEntryVariantLoad**: strict reprint loading,
+  independent factory abilities, malformed/context rejection and atomic registry
+  preservation after a rejected collection.
+- **Primal Clay → TestRONEntryVariantSpellCopy**: copied permanent spell enters
+  as an owned token, chooses independently of the original, keeps flying, uses
+  the shared token departure lifecycle and remains isolated in a game clone.
+- **Shapeshifter, Guardian Beast, Camel**: no new complete-card coverage claim;
+  their unsupported forms remain diagnostic errors.
+
+### Source correction and preservation
+
+Both complete Primal Clay records formerly used `SetCopiablePT(PT(3, 3))` in the
+Wall option. Local authoritative `data/ATQ.json` Oracle text specifies a 1/6 Wall
+with defender in addition to its other types. Both identical RON reprints now
+use `SetCopiablePT(PT(1, 6))`. Existing Shapeshifter subtype and card types remain.
+CR 614.1c establishes entry replacement timing; CR 614.5 prevents repeat
+application; CR 707.2 and 707.5–6 establish copiable values and later entry choices.
+No predicate inversion or card-specific engine behavior was introduced.
+
+The vocabulary snapshot has fresh SHA-256 hashes for both changed files and a
+fresh loader baseline. Constructor signatures, occurrence counts and source
+positions are unchanged. Existing Go definitions, startup wiring and DSL exports
+remain because the collection/removal gates are not met. No cleanup caller audit
+or DSL deletion was warranted in this slice.
+
+### Validation and loader evidence
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONEntryVariant -count=1` and
+`go test ./pkg/mage -run TestEntryVariant -count=1` passed. `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test` and the
+skill's additional `go test ./... -short -count=1` passed after the spell-copy
+fix. The four existing collection-count assertions now require the freshly
+measured 2,247/198 result; gameplay assertions were not weakened.
+
+The first `make lint` found one preallocation issue and three uses of the
+deprecated core.Keyword alias in new code. The label slice now has capacity,
+and the new signatures use core.Attr. Focused tests, build, vet, engine short,
+full and repository short tests were repeated and passed after these changes.
+The final `make lint` passed with **0 issues**. Automatic formatting changes
+were reviewed: import grouping in new files, with no unrelated changes.
+Post-format focused engine/RON tests and `git diff --check` passed again.
+
+The final required `go run ./cmd/loadcards -json` exited **1** for expected
+atomic collection rejection: **2,247 compiled / 198 rejected records**,
+**878 accepted / 108 rejected unique names**, out of 2,445 records / 986 names.
+Exact baseline comparison removes only Primal Clay's former diagnostics at
+3ED 197:188 and ATQ 55:188. No diagnostic is added or changed for another card.
+Every previously accepted record remains accepted. The vocabulary loader
+baseline equals the final report, and all source hashes match the current files.
+No environment or verification blocker remains.
+
+Estimated and actual gains match: **one unique name / two records**. Complete
+RON gameplay coverage grows by Primal Clay, including both identical reprints.
+Compilation counts and gameplay coverage are separate measurements; the remaining
+878 accepted names are not all claimed to have complete gameplay coverage.
+
+Changed files: new engine entry_variant.go, copy_variant_modification.go and
+entry_variant_test.go; shared entry_copy.go; new compiler entry_variant.go and
+entry_variant_test.go plus entry_tapped.go; the three collection-count test files;
+ATQ.lines.ron and 3ED.lines.ron; pkg/mage/doc.go, docs/dsl-reference.md,
+docs/engine-rules-contracts.md, the vocabulary snapshot and this ledger.
+No Go production card definition, startup path or DSL export changed.
+
+### Ranked next candidates
+
+1. **Saved numeric choice — Shapeshifter.** Inspect the complete entry/upkeep
+   choice and its SetPower/TheChosenNumber and SetToughness/Minus consumers.
+   Source-visit numeric state and optional update need their own contract;
+   copiable finite variants must not substitute for that state.
+2. **Conditional artifact protections — Guardian Beast.** Static branches are
+   ready. Compare live noncreature artifact membership plus control and new-Aura
+   prohibitions with broader rule-effect prerequisites before selection.
+3. **Static collection-recipient prevention — Camel.** Exact band membership
+   is ready. Static collection context and replacement-time membership rechecks
+   remain. Compare broader multi-card prevention work before choosing a
+   single-card completion.
+
+Complete RON gameplay, runtime loading, Go-card deletion, obsolete Go-set
+generation removal and unused DSL cleanup remain incomplete. This run stops
+after the finite copiable entry-variant slice.

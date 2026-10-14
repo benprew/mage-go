@@ -24,6 +24,9 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		return nil, problem(n, "entry requires one entry operation")
 	}
 	operation := operations[0]
+	if operation.Name == "EntersWithLayerEffectOfChoice" {
+		return compileEntryVariant(operation)
+	}
 	if operation.Name == "ChooseAColor" {
 		if err := validateColorEntryOperation(operation); err != nil {
 			return nil, err

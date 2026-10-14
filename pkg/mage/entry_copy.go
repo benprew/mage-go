@@ -57,6 +57,7 @@ type battlefieldEntryAction struct {
 	context     battlefieldEntryContext
 	permanent   *Permanent
 	copies      map[entryCopyKey]*entryCopyReplacement
+	variants    map[entryCopyKey]*entryVariantReplacement
 	textChanges []TextChange
 }
 
@@ -74,7 +75,26 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 	}
 	var result []ReplacementEffect
 	index := 0
+	variantIndex := 0
 	for _, ability := range a.permanent.RuntimeAbilities {
+		if variant, ok := UnwrapAbility(ability).(*entryVariantAbility); ok {
+			plan := base.definitionPlan
+			if plan != nil && plan.declarationOrigin != nil {
+				plan = plan.declarationOrigin
+			}
+			key := entryCopyKey{plan, variantIndex}
+			variantIndex++
+			if a.variants == nil {
+				a.variants = make(map[entryCopyKey]*entryVariantReplacement)
+			}
+			replacement := a.variants[key]
+			if replacement == nil {
+				replacement = &entryVariantReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityDefault}, ability: variant}
+				a.variants[key] = replacement
+			}
+			result = append(result, replacement)
+			continue
+		}
 		copyAbility, ok := UnwrapAbility(ability).(*entryCopyAbility)
 		if !ok {
 			continue

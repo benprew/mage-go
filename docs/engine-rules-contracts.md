@@ -20341,3 +20341,45 @@ trigger resolution (CR 508.1–2), simultaneous first-strike and normal damage,
 expiry and saved event identity. `TargetsAndInstances`, `Invalid` and `Load`
 cover independent bindings, resolution target legality and atomic loading.
 Camel's static collection-recipient prevention remains unsupported.
+
+## Copiable entry variants
+
+`ChooseCopiableVariantAsEnters(variants ...[]CopyModification) Ability` requires
+one option from the entering controller. Each option must contain at least one
+valid modification. The declaration requires a permanent source and a tracked
+`CardDefinitionPlan`. Empty options, nil modifications and invalid keywords or
+subtypes fail definition validation.
+
+The shared `battlefieldEntryAction` replacement process applies the choice
+before registration (CR 614.1c). Copy replacements have priority. Each variant
+rule has a stable declaration-origin and ordinal key, so a rebuilt definition
+cannot apply the same rule again in one entry event (CR 614.5). Other default
+replacements share the existing affected-player order. A missing chooser or an
+invalid mode answer uses the first option. Option labels show P/T, types,
+subtypes and keywords; option preparation does not make game choices.
+
+`CopySetPowerToughness(power, toughness int) CopyModification` sets copiable base
+P/T. `CopyAddSubTypes(subtypes ...string) CopyModification` adds distinct subtype
+names without removing existing names. `CopyAddKeywords(keywords ...core.Attr)
+CopyModification` adds the supported fixed keywords. These operations preserve
+existing abilities, including characteristic definitions; they do not supply a
+copy exception that removes a characteristic definition. `CopyAddCardTypes`
+continues to provide permanent type additions. All operations use immutable
+snapshots and fresh definition builders.
+
+The selected characteristics are copiable under CR 707.2. Counters and ordinary
+layer changes are excluded. A later entry copy receives the selected values and
+makes its own entry choice (CR 707.5–6). Additions from its copied definition
+remain. For example, a copy of the flying variant can choose 3/3 and keep flying.
+Physical identity, owner and token status follow `BuildEntryCopyWithText`.
+Departure returns printed physical rules; a new visit chooses again (CR 400.7).
+Control changes and phase cycles do not make choices. Independent factory
+instances and game clones keep separate objects and rules.
+
+`TestEntryVariantTimingIdentity`, `TestEntryVariantInvalid`,
+`TestEntryVariantPriorityAndCopy` and `TestEntryVariantInstancesAndBatch` cover
+entry timing, copy acquisition, replacement reuse, physical identity, controller
+choice, snapshots, counters, layers, clone isolation, control, phasing, return,
+invalid answers and pre-registration batch choices. The complete RON mapping
+is `TestRONEntryVariantReal`, `TestRONEntryVariantLoad` and
+`TestRONEntryVariantSpellCopy` for both Primal Clay records.

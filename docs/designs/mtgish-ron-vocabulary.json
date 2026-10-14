@@ -16,7 +16,7 @@
     {
       "path": "cards/mtgish/3ED.lines.ron",
       "records": 296,
-      "sha256": "c2459d8fefcdc3597ddc1e7f09abe9142188f4ddb5a4f010eee6263c318dc493"
+      "sha256": "64c687bc92f5ba59e1194db347c3270df8407977fb37d717d0749dda527f5f8f"
     },
     {
       "path": "cards/mtgish/ARN.lines.ron",
@@ -26,7 +26,7 @@
     {
       "path": "cards/mtgish/ATQ.lines.ron",
       "records": 85,
-      "sha256": "25b2149f0ed53ba276e05d39a3ac22d5bf55c6f6bf18de7bf2c643abae794122"
+      "sha256": "28663a79c41a88ded168363ddcdc5c4048d7ffb6c72bc783628290aa9a11e728"
     },
     {
       "path": "cards/mtgish/CED.lines.ron",
@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2245,
+    "compiled": 2247,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1265,7 +1265,6 @@
       {"card": "Personal Incarnation", "source": {"File": "3ED.lines.ron", "Line": 185, "Column": 1}, "message": "3ED.lines.ron:185:294: unsupported selected-source redirection event (NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient)"},
       {"card": "Power Leak", "source": {"File": "3ED.lines.ron", "Line": 194, "Column": 1}, "message": "3ED.lines.ron:194:308: expected 1 positional arguments (PayAnyAmountOfMana)"},
       {"card": "Power Surge", "source": {"File": "3ED.lines.ron", "Line": 196, "Column": 1}, "message": "3ED.lines.ron:196:237: unsupported value (TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn)"},
-      {"card": "Primal Clay", "source": {"File": "3ED.lines.ron", "Line": 197, "Column": 1}, "message": "3ED.lines.ron:197:188: unsupported entry operation (EntersWithLayerEffectOfChoice)"},
       {"card": "Titania's Song", "source": {"File": "3ED.lines.ron", "Line": 257, "Column": 1}, "message": "3ED.lines.ron:257:149: unsupported rule (EachPermanentStickyLayerEffect)"},
       {"card": "Vesuvan Doppelganger", "source": {"File": "3ED.lines.ron", "Line": 269, "Column": 1}, "message": "3ED.lines.ron:269:292: unsupported entry copy modifications (AddAbility)"},
       {"card": "Abu Ja'far", "source": {"File": "ARN.lines.ron", "Line": 1, "Column": 1}, "message": "ARN.lines.ron:1:259: unsupported permanent filter (BlockedDeadAttacker)"},
@@ -1286,7 +1285,6 @@
       {"card": "Drafna's Restoration", "source": {"File": "ATQ.lines.ron", "Line": 27, "Column": 1}, "message": "ATQ.lines.ron:27:154: unsupported singular permanent target group (TargetPlayer)"},
       {"card": "Gaea's Avenger", "source": {"File": "ATQ.lines.ron", "Line": 32, "Column": 1}, "message": "ATQ.lines.ron:32:316: unsupported characteristic count value (Plus)"},
       {"card": "Phyrexian Gremlins", "source": {"File": "ATQ.lines.ron", "Line": 51, "Column": 1}, "message": "ATQ.lines.ron:51:405: unbound or incompatible permanent reference (ThePermanentTappedThisWay)"},
-      {"card": "Primal Clay", "source": {"File": "ATQ.lines.ron", "Line": 55, "Column": 1}, "message": "ATQ.lines.ron:55:188: unsupported entry operation (EntersWithLayerEffectOfChoice)"},
       {"card": "Shapeshifter", "source": {"File": "ATQ.lines.ron", "Line": 61, "Column": 1}, "message": "ATQ.lines.ron:61:189: unsupported entry operation (ChooseANumberBetween)"},
       {"card": "Tawnos's Coffin", "source": {"File": "ATQ.lines.ron", "Line": 67, "Column": 1}, "message": "ATQ.lines.ron:67:479: unsupported action (NoteCountersOnPermanent)"},
       {"card": "Tetravus", "source": {"File": "ATQ.lines.ron", "Line": 70, "Column": 1}, "message": "ATQ.lines.ron:70:596: unsupported token keyword (PermanentRuleEffect)"},

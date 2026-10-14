@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ChooseCopiableVariantAsEnters] requires a controller choice before entry.
+// Each option applies a list of [CopyModification] values. Options and rules
+// keep separate definitions. The shared entry replacement process applies each
+// rule once. Copy replacements run first. Other replacements can read or replace
+// the chosen values. Spell copies keep their token status and make new choices.
+// [CopySetPowerToughness], [CopyAddSubTypes] and [CopyAddKeywords] change
+// copiable base values. They keep existing types and abilities. Counters and
+// later layer changes are not copied. Phasing keeps values; departure restores
+// printed rules. Return requires a new choice. Clones keep separate objects.
+// RON accepts EntersWithLayerEffectOfChoice in one source entry operation.
+// Options contain fixed P/T, permanent type, creature type and keyword additions.
+// Numeric entry/upkeep choices and other operations need separate adapters.
+//
 // [BandedWith] selects the present members of one current attacking band.
 // The subject and members must match their saved combat visits. No departure
 // facts can supply a member. Ability loss keeps the band; combat removal and
