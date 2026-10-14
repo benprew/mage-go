@@ -16904,3 +16904,52 @@ Its lasting conditional rule and upkeep-trigger grants remain unsupported, so
 its complete record still rejects. Existing `BlockedByThisTurn` resolving
 collections and current-combat target options keep their separate contracts.
 See `TestRONTargetBlockHistory*` and `TestTargetBlockHistory*` for evidence.
+
+
+## Lasting conditional untap and upkeep ability grants
+
+`AcquireStaticAbility(subject PermanentRef, rule StaticRule) ResolvingEffect`
+now also accepts `PreventUntapDuringStep(subject PermanentRef, condition
+StateCondition) StaticRule`. The acquired rule has a fresh binding scope;
+its recipient supplies the current source, controller and condition. Nil and
+unbound subjects or conditions reject during definition validation. Existing
+continuous-rule acquisition remains supported with its existing restrictions.
+
+The acquisition saves one exact recipient visit. Layer 6 grants its static
+declaration; the shared untap service reads the condition before simultaneous
+untap. Earlier removal can precede acquisition; later removal suppresses the
+ability. Removing the final counter stops the restriction, and another counter
+can restore it. Other untap effects remain legal. Phasing suspends the rule;
+a phase cycle preserves it. Departure and return cannot inherit the grant.
+Clones retain independent acquisition and recipient state. CR 400.7, 604.2/7,
+611.2a/c, 611.3a, 613.1f/7 and 702.26 apply.
+
+RON accepts `CreatePermanentLayerEffect(permanentRef, [AddAbility([ability,
+...]), ...])` in ordinary resolving bodies when every modification is an
+AddAbility and each ability is one of:
+
+- `If(condition, [PermanentRuleEffect(ThisPermanent,
+  [DoesntUntapDuringControllersUntap])])`, with a supported static condition
+  in a fresh permanent-source scope.
+- `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), body)`, with
+  an ordinary supported action body in a fresh permanent-source scope.
+
+The outer recipient can use the enclosing action's typed references. Nested
+rules cannot read those bindings or the donor's attachment. ThisPermanent and
+You use the recipient's context. Each upkeep grant uses
+`TriggeredAbilityModification(PermanentRef, *GenericTriggered)` with
+`Until(Indefinite, ...)`; every installation has a separate identity. Pending
+triggers retain exact source visits after removal or departure. Copies retain
+separate frames; copies and repeated grants can remove multiple counters.
+Entry and draw replacement bodies reject. Other acquired static rules, trigger
+events, mixed modifications and durations need separate adapters. Existing
+keyword, activated and Aura-host acquisition adapters remain available.
+
+Evidence: native `TestAcquiredUntapRule` and `TestAcquiredUntapInvalid`;
+RON `TestRONLastingGrantDelusion` and `TestRONLastingGrantInvalid`.
+`TestRONTargetBlockHistoryGameplay` now executes the complete unchanged Glyph
+of Delusion record, including its grants. These suites cover costs, target
+legality and exact history, resolution power, zero counters, counter recovery,
+control, phasing, return, ability removal, spell/trigger copies and clone
+isolation. No new payment, replacement, event or simultaneous-operation
+mechanism is introduced.

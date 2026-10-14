@@ -13,14 +13,11 @@ import (
 func delusionTargetFactory(t *testing.T) mage.CardFactory {
 	t.Helper()
 	n := hostUntapRecord(t, "LEG", "Glyph of Delusion")
-	actions := &n.Fields["Rules"].Args[0].Args[0].Args[1].Args[0]
-	actions.Args = actions.Args[:1]
-	n.Fields["Name"] = Node{Kind: String, String: "Delusion target contract"}
 	f, err := Compile(n)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := mage.ValidateCardDefinition("Delusion target contract", f()); err != nil {
+	if err := mage.ValidateCardDefinition("Glyph of Delusion", f()); err != nil {
 		t.Fatal(err)
 	}
 	return f
@@ -134,7 +131,7 @@ func TestRONTargetBlockHistoryInvalid(t *testing.T) {
 			t.Fatal("accepted", expr)
 		}
 	}
-	if _, err := Compile(hostUntapRecord(t, "LEG", "Glyph of Delusion")); err == nil || !strings.Contains(err.Error(), "supply one indefinite type modification") {
+	if _, err := Compile(hostUntapRecord(t, "LEG", "Glyph of Delusion")); err != nil {
 		t.Fatalf("full-card blocker: %v", err)
 	}
 }

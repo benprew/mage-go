@@ -34,6 +34,9 @@ type acquiredStaticDefinition struct{ rule StaticRule }
 
 func (d acquiredStaticDefinition) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "acquired-static-rule", bindingScope: true, children: []definitionEdge{{"rule", d.rule}}}
+	if _, ok := d.rule.(subjectUntapRule); ok {
+		return n
+	}
 	rule, ok := d.rule.(*continuousRule)
 	if !ok || rule == nil {
 		n.problem = "acquired static ability requires a continuous rule"

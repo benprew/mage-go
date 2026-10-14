@@ -6,19 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **918 accepted / 68 rejected names**
-(986 total), **2,298 compiled / 147 rejected records** (2,445 total).
-The latest slice is **DEPENDENT-BLOCK-HISTORY-TARGET**.
-`WasBlockedByDefenderThisTurn(Ref_TargetPermanentN)` now works in a later
-singular permanent target, directly or inside `And`. Selection requires a
-complete legal list; resolution tests exact saved visits against shared block
-history. The blocker can supply its historical identity after departure or
-phasing. A returned attacker cannot inherit an old pair. Pure queries, copies,
-clones, rollback, target legality and cleanup use existing engine services.
-Glyph of Delusion's source target declarations and counter instruction have
-RON gameplay evidence. Its lasting two-ability grant remains unsupported.
-Actual gain is **zero names / zero records**, matching the prerequisite estimate.
-Complete-card gameplay coverage is unchanged. No RON source changed.
+Latest measured result (2026-10-14): **919 accepted / 67 rejected names**
+(986 total), **2,299 compiled / 146 rejected records** (2,445 total).
+The latest slice is **LASTING-CONDITIONAL-ABILITY-GRANTS**.
+Resolving AddAbility lists now support conditional untap rules and
+controller-upkeep triggers with fresh recipient scopes. Acquired untap rules
+use the existing static acquisition, exact visit, layer order and untap services.
+Current counters and control, phasing, return, ability removal, copies and
+clones have native and RON evidence. Glyph of Delusion now executes its complete
+unchanged record, including both lasting abilities. Its earlier target suite
+also uses the complete record. Actual gain is **one name / one record**,
+matching the estimate. Complete-card gameplay coverage gains Glyph of Delusion.
+No RON source changed. All required validation passed; lint reported zero issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -17610,3 +17609,155 @@ Changed files: new native `target_block_history.go` and
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement dependent block-history targets`.
 This run stops after DEPENDENT-BLOCK-HISTORY-TARGET.
+
+## 2026-10-14 — LASTING-CONDITIONAL-ABILITY-GRANTS
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader JSON reported
+**918 accepted / 68 rejected names**, **2,298 compiled / 147 rejected records**
+out of 986 names and 2,445 records. The expected exit 1 was collection rejection,
+not a build or environment failure. No registry was published.
+
+The latest ranked candidate was evaluated first. Its target prerequisites were
+complete. The following comparison used complete records and nested clauses;
+reprints count once.
+
+| Candidate | Distinct affected cards | Estimated complete unlocks | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Lasting conditional untap and upkeep ability grants | Glyph of Delusion | 1 name / 1 record | No remaining blocker for Delusion. Shared acquired-static and triggered-modification services already retain identity and layer order. Animate Dead and Vesuvan Doppelganger were also inspected as grant consumers: the former needs graveyard enchantment, linked entry and attachment; the latter needs copy exceptions, recursive granted copying and ThisAbility. Neither is an unlock for this shape. | Small engine-contract extension, compiler adapters, native lifecycle tests and full RON gameplay; feasible in one run. |
+| Entry life loss | Lich | 0 names / 0 records | Five identical records; life-to-draw replacement, mandatory sacrifice-result handling and loss clauses still block the complete card. Enables exact life loss before entry observations. | Medium entry-value and replacement/timing tests. |
+| Per-death action-result iteration | Glyph of Reincarnation | 0 names / 0 records | Its IsAfterCombat casting restriction remains unsupported. Needs exact simultaneous death results, per-member scopes and last-block controller reads. Enables the later graveyard return clause. | Larger result-binding and simultaneous-operation contract. |
+
+Candidate 1 was dependency-ready and gave a complete-card gain with the lowest
+credible effort. The shared grant audit found no additional ready multi-card
+unlock within this contract. This run selected only that cohesive capability.
+
+### Contract, boundaries and implementation
+
+Supported resolving shape:
+`CreatePermanentLayerEffect(permanentRef, [AddAbility([ability, ...]), ...])`,
+with only the following abilities in this new branch:
+
+- `If(condition, [PermanentRuleEffect(ThisPermanent,
+  [DoesntUntapDuringControllersUntap])])`. The condition uses the existing
+  static-condition grammar in a fresh permanent-source scope.
+- `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), body)`.
+  The body uses the existing action grammar in a fresh permanent-source scope.
+
+The outer recipient uses existing typed enclosing bindings. Each granted body
+has its own scope: ThisPermanent is the recipient, You is its controller, and
+outer targets and donor attachments cannot leak inward. Entry and draw
+replacement bodies reject this branch. Other trigger events, acquired rules,
+mixed modifications and durations remain unsupported by this branch. Existing
+keyword, activated and Aura-host acquisition adapters are preserved.
+
+Native signatures are unchanged:
+`AcquireStaticAbility(PermanentRef, StaticRule) ResolvingEffect` now also accepts
+`PreventUntapDuringStep(PermanentRef, StateCondition) StaticRule`.
+The nested definition gets the existing fresh binding and battlefield context.
+Nil or unbound rule children fail definition validation. Existing continuous
+acquisition restrictions remain intact.
+
+RON owns spelling, arity, lexical checks and fresh lowering. Its existing
+upkeep-grant parser was factored into `compileRecipientUpkeepAbility` and reused.
+The engine owns saved recipient visits, acquired declarations, layer 6
+installation, removal timestamps, live condition/controller reads and untap
+decisions. Existing `TriggeredAbilityModification` with `Until(Indefinite, ...)`
+supplies distinct upkeep grant identities and pending event frames. No parallel
+zone, counter, payment, history, replacement or event service was added.
+
+The static restriction follows current counters; zero counters stop it and a
+later counter restores it. Ordinary untap effects remain legal. Earlier ability
+removal can precede acquisition; later removal suppresses the new abilities.
+Control changes use the recipient's current upkeep. Phasing suspends detection
+and static operation while preserving the visit; return cannot inherit grants.
+Queued triggers keep exact visits after return, and copies use separate frames.
+Repeated grants supply separate upkeep triggers. Clones retain independent
+counter, acquisition, trigger and pending state. Shared untap snapshots retain
+simultaneous decisions; no new replacement-order contract is needed.
+
+Local `data/LEG.json` confirms the counter amount, conditional untap ability and
+controller-upkeep removal. CR 400.7, 604.2/7, 611.2a/c, 611.3a, 613.1f/7 and
+702.26 supply the identity, static rule, duration, ordering and phasing contracts.
+No source defect was found or corrected. No RON source changed, so the vocabulary
+snapshot was not regenerated. Go definitions, production registries and existing
+DSL callers remain intact. No removal gate is open.
+
+### Failing-first and card-to-test evidence
+
+Native tests first had a test-only API spelling error (`WithSpellTarget`);
+after using `Spell(..., WithTargets(...))`, they failed at the intended engine
+definition rejection: `acquired static ability requires a continuous rule`.
+The RON gameplay cases failed at Delusion's existing
+`supply one indefinite type modification` diagnostic. The implementation makes
+both suites pass. Initial untap assertions were corrected to tap the subject
+before calling the engine's change-reporting UntapPermanent API.
+
+| Unique card | Source and tests | Coverage |
+| --- | --- | --- |
+| Glyph of Delusion | Complete unchanged LEG.lines.ron:100; `TestRONLastingGrantDelusion`, `TestRONLastingGrantInvalid`, `TestRONTargetBlockHistoryGameplay`, `TestRONTargetSubtypeDomainRecords`, `TestRONSingleCounterRemovalClauses` | Printed payment and unpaid rollback, exact historical pair and resolution power, target legality, return/phasing of both targets, partial/all-illegal resolution, control, zero counters and later counters, before/after ability removal, current-controller upkeep, spell and trigger copies, pending return, independent clone state and clone trigger execution. |
+| Earthbind, Energy Flux, The Tabernacle at Pendrell Vale, Farmstead | Existing acquired-static and granted-upkeep suites retained | Regression evidence for preserved callers of acquisition and the factored upkeep helper; no new coverage gain claimed for these cards. |
+
+Native `TestAcquiredUntapRule` covers valid spell-target declaration, live
+counters, recipient return, phasing/cycle, layer order, control and clone
+isolation. `TestAcquiredUntapInvalid` rejects nil and unbound subjects and nil
+conditions. Existing acquired-static lifecycle/invalid suites remain green.
+RON invalid tests reject outer target reads in acquired conditions and bodies,
+tuple aliases, wrong upkeep players, empty untap operations and unknown counters.
+
+The previous target-only Delusion fixture now compiles the whole source record;
+it no longer excludes the lasting grants. Existing incomplete-card assertions
+were updated to accept Delusion while retaining Reincarnation's rejection.
+Exact census tests now require 2,299 compiled / 146 rejected records, including
+fresh accepted-definition reconstruction. Compilation and complete-card gameplay
+both gain **one unique name / one record**, matching the estimate.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONLastingGrant' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestAcquired(Untap|Static)' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass, including accepted-definition
+  reconstruction, complete record census and existing gameplay regressions.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed final source and test formatting;
+  no unrelated files changed. The new grant suite, full-card block-history and
+  subtype-domain suites, and native acquired suites passed again after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1; **919 accepted /
+  67 rejected names**, **2,299 compiled / 146 rejected records**. Comparison with
+  fresh baseline diagnostics found only the removal of Glyph of Delusion's
+  LEG.lines.ron:100:474 rejection. No other diagnostic changed or was added.
+
+Estimated and actual gains match: **one full-card name / one record**.
+Complete-card gameplay coverage gains Glyph of Delusion. Collection loading
+still rejects atomically. No environment or validation blocker remains for this
+slice. Complete collection support, runtime cutover, Go-card/generator removal,
+DSL cleanup and native startup remain unfinished; their removal gates are closed.
+
+### Ranked next candidates
+
+1. Lich entry life loss through shared entry replacements. Estimated zero
+   immediate complete-card unlocks (five records); independent life replacement,
+   mandatory sacrifice-result and loss clauses remain blockers. Audit entry
+   observation timing, zero/negative life and replacement interactions.
+2. Per-death action-result iteration for Glyph of Reincarnation. Estimated zero
+   until IsAfterCombat is supported. Exact block history and last-block controller
+   services exist; audit simultaneous deaths, result scopes and owner control.
+3. Copy-effect ability grants for Vesuvan Doppelganger. Estimated zero until
+   recursive resolving copy changes and ThisAbility retention also work. This
+   slice's upkeep parser is reusable, but copy exceptions and copiable ability
+   retention require their own complete contract.
+
+Changed files: engine `acquired_static.go`, new `acquired_untap_test.go`,
+`doc.go`; RON new `lasting_grant.go` and `lasting_grant_test.go`,
+`indefinite_type.go`, `granted_upkeep.go`; RON regression/census tests
+`block_history_test.go`, `counter_removal_test.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `singular_target_groups_test.go`,
+`target_block_history_test.go`, `target_subtype_domain_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement lasting conditional ability grants`.
+This run stops after LASTING-CONDITIONAL-ABILITY-GRANTS.

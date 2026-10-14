@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AcquireStaticAbility] also accepts [PreventUntapDuringStep].
+// The exact recipient keeps the grant. Its current counters and controller
+// supply untap decisions. Ability removal uses layer order. Phasing suspends
+// the rule; return cannot inherit it. Other effects can untap the recipient.
+// RON accepts lasting AddAbility lists with conditional untap rules and
+// controller-upkeep triggers in ordinary resolving bodies. Each granted body
+// has a fresh recipient scope. ThisPermanent and You refer to that recipient.
+// [TriggeredAbilityModification] retains each upkeep grant independently.
+// This completes Glyph of Delusion. Copy and attachment grants need adapters.
+//
 // [WasDealtDamageThisTurn] tests positive damage to one present battlefield visit.
 // Prevention and redirection supply only the final damage recipient. Spell
 // and permanent sources use the same history. Damage removal and control
@@ -3589,7 +3599,8 @@
 // RON supports source-entry keyword conditions and WasntSacrificed death guards.
 // Acquired host keyword removal uses [AcquireStaticAbility].
 //
-// Use [AcquireStaticAbility] for one captured layer 6 static ability.
+// Use [AcquireStaticAbility] for one captured layer 6 static ability or
+// one [PreventUntapDuringStep] rule.
 // The live recipient supplies its source, controller and attachment context.
 // Each acquisition keeps a separate declaration and original battlefield visit.
 // Shared layer order permits an earlier removal followed by acquisition.

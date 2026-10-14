@@ -16,7 +16,28 @@ func compileGrantedUpkeepLayer(n Node, parts []Node, ctx scope) (optionFactory, 
 	if len(abilities) != 1 || abilities[0].Name != "TriggerA" {
 		return nil, problem(parts[0], "supply one granted upkeep trigger")
 	}
-	trigger := abilities[0]
+	build, err := compileRecipientUpkeepAbility(abilities[0])
+	if err != nil {
+		return nil, err
+	}
+	if n.Name == "EachPermanentLayerEffect" {
+		subjects, err := compileStaticPermanentFilter(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.Static(mage.GrantEachTriggeredAbility(subjects.build(), build())))
+		}, nil
+	}
+	if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
+		return nil, unsupported(n.Args[0], "granted upkeep subject")
+	}
+	return func() mage.CardOption {
+		return mage.WithAbility(mage.Static(mage.GrantTriggeredAbility(mage.AttachedPermanent, build())))
+	}, nil
+}
+
+func compileRecipientUpkeepAbility(trigger Node) (func() *mage.GenericTriggered, error) {
 	if err := arity(trigger, 2); err != nil {
 		return nil, err
 	}
@@ -38,23 +59,5 @@ func compileGrantedUpkeepLayer(n Node, parts []Node, ctx scope) (optionFactory, 
 		return nil, unsupported(player.Args[0], "granted upkeep player reference")
 	}
 	// A granted body cannot read the donor's attachment or bindings.
-	build, err := compileBoundStepAbility(event, trigger.Args[1], scope{permanent: true}, mage.EachUpkeep, mage.YourUpkeep, "upkeep", nil)
-	if err != nil {
-		return nil, err
-	}
-	if n.Name == "EachPermanentLayerEffect" {
-		subjects, err := compileStaticPermanentFilter(n.Args[0])
-		if err != nil {
-			return nil, err
-		}
-		return func() mage.CardOption {
-			return mage.WithAbility(mage.Static(mage.GrantEachTriggeredAbility(subjects.build(), build())))
-		}, nil
-	}
-	if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
-		return nil, unsupported(n.Args[0], "granted upkeep subject")
-	}
-	return func() mage.CardOption {
-		return mage.WithAbility(mage.Static(mage.GrantTriggeredAbility(mage.AttachedPermanent, build())))
-	}, nil
+	return compileBoundStepAbility(event, trigger.Args[1], scope{permanent: true}, mage.EachUpkeep, mage.YourUpkeep, "upkeep", nil)
 }

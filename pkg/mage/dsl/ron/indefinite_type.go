@@ -24,6 +24,15 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 			return compilePermanentObjectText(n, ctx, subject, parts)
 		}
 	}
+	for _, part := range parts {
+		if part.Name == "AddAbility" && len(part.Args) == 1 && part.Args[0].Kind == List {
+			for _, ability := range part.Args[0].Args {
+				if ability.Name == "If" || ability.Name == "TriggerA" {
+					return compileLastingAbilityGrants(n, ctx, subject, parts)
+				}
+			}
+		}
+	}
 	if len(parts) != 1 {
 		return nil, problem(n.Args[1], "supply one indefinite type modification")
 	}

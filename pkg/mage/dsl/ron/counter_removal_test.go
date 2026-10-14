@@ -193,7 +193,7 @@ func TestRONSingleCounterRemovalClauses(t *testing.T) {
 	for _, tc := range []struct {
 		set, name string
 		complete  bool
-	}{{"LEG", "Divine Intervention", false}, {"FEM", "Ebon Praetor", true}, {"FEM", "Merseine", true}, {"FEM", "Tourach's Gate", true}, {"ATQ", "Armageddon Clock", true}, {"ATQ", "Clockwork Avian", true}, {"2ED", "Clockwork Beast", true}, {"LEG", "Glyph of Delusion", false}} {
+	}{{"LEG", "Divine Intervention", false}, {"FEM", "Ebon Praetor", true}, {"FEM", "Merseine", true}, {"FEM", "Tourach's Gate", true}, {"ATQ", "Armageddon Clock", true}, {"ATQ", "Clockwork Avian", true}, {"2ED", "Clockwork Beast", true}, {"LEG", "Glyph of Delusion", true}} {
 		t.Run(tc.name, func(t *testing.T) {
 			data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 			if err != nil {
