@@ -14612,3 +14612,29 @@ need separate contracts. Jihad's exact unchanged entry record has gameplay
 subrule evidence; its complete static/state rules remain rejected.
 
 Evidence: `TestRONCombinedEntryChoice*` and `TestRequiredEntryOperations*`.
+
+## RON opponent upkeep events
+
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(Opponent), body)` lowers to
+`mage.OpponentUpkeep(player *mage.PlayerBinding) mage.EventPattern` with a fresh
+binding for each factory instance and declaration. `Opponent` is a bare selector;
+`SinglePlayer(Opponent)` and `Opponent()` remain invalid in this context.
+`Trigger_ThatPlayer` reads the player whose upkeep began. `You` reads the saved
+ability controller. Detection compares the event player with the current source
+controller. Later control changes cannot change a pending trigger's players.
+
+Shared event capture retains each pending event through departure, return,
+phasing, copies, game clones and delayed bodies. Phasing and ability removal
+stop new detection. Counts in the body read current members at resolution;
+source choice reads use the original visit's current or retained information.
+The new event does not opt into printed upkeep text revision. Existing
+controller, any-player and chosen-player text contracts keep their boundaries.
+Granted triggers, intervening-if events and other step selectors are separate
+adapters.
+
+`TestRONOpponentUpkeepPsychicAllergy` covers the complete unchanged Psychic
+Allergy record's entry choice and opponent damage. `Payment` covers its separate
+controller upkeep, two-Island payment, exact source destruction and regeneration.
+`Gameplay`, `Invalid` and `CollectionAndTextBoundary` cover event scope, fresh
+instances, strict loading and text boundaries. Native `TestOpponentUpkeep*`
+covers event capture, source lifetime, delays, copies and definition checks.

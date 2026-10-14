@@ -104,10 +104,11 @@ func TestRONChosenColorFilterInvalid(t *testing.T) {
 func TestRONChosenColorFilterRealRequirements(t *testing.T) {
 	psychic := repositoryRecord(t, "DRK", "Psychic Allergy", "DRK.ron")
 	jihad := repositoryRecord(t, "ARN", "Jihad", "ARN.ron")
-	for _, node := range []Node{psychic, jihad} {
-		if _, err := Compile(node); err == nil {
-			t.Fatal("claimed unsupported complete card")
-		}
+	if _, err := Compile(psychic); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Compile(jihad); err == nil {
+		t.Fatal("claimed unsupported complete card")
 	}
 	rules := psychic.Fields["Rules"].Args
 	entry, err := compilePermanentEntry(rules[0])
@@ -115,7 +116,6 @@ func TestRONChosenColorFilterRealRequirements(t *testing.T) {
 		t.Fatal(err)
 	}
 	trigger := rules[1]
-	trigger.Args[0].Args[0] = Node{Kind: Symbol, Name: "AnyPlayer", Position: trigger.Args[0].Args[0].Position}
 	triggerOption, err := compileTriggerRule(trigger, scope{permanent: true, colorEntryChoice: true})
 	if err != nil {
 		t.Fatal(err)

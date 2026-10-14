@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [OpponentUpkeep] checks the source controller when an upkeep begins.
+// It saves that upkeep player in a separate event binding. Pending bodies keep
+// the player and controller through control changes, departure and phasing.
+// Copies, clones and delayed bodies keep separate frames. Phasing and ability
+// removal stop new detection. Return starts a new source visit.
+// RON accepts AtTheBeginningOfAPlayersUpkeep(Opponent) in ordinary TriggerA.
+// Opponent upkeep text revision and intervening-if adapters stay separate.
+//
 // [ChooseColorAsEnters] saves the entry controller's choice before entry.
 // Only the five colors are legal. Invalid answers use white.
 // Copies choose again. Phasing and control changes keep the saved choice.

@@ -6,17 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **858 accepted / 128 rejected names**
-(986 total), **2,205 compiled / 240 rejected records** (2,445 total).
-The latest slice is **COMBINED-COLOR-OPPONENT-ENTRY**. One ordered source entry
-rule chooses a color and an opponent through required engine entry operations.
-Estimated and actual full-card gains are zero. Jihad's exact entry declaration
-now has gameplay evidence; its complete static/state rules remain rejected.
-The strict loader still rejects the collection and publishes no partial registry.
+Latest measured result (2026-10-13): **859 accepted / 127 rejected names**
+(986 total), **2,206 compiled / 239 rejected records** (2,445 total).
+The latest slice is **OPPONENT-UPKEEP-EVENT**. Ordinary upkeep triggers can
+select the current source controller's opponent and capture that upkeep player.
+Estimated and actual gains are one full name and one record: Psychic Allergy.
+Its complete unchanged RON record now has entry, damage and payment gameplay
+coverage. The strict loader still rejects the collection atomically.
 
-Copies and returns choose again. Phasing and control changes keep both choices.
-Existing resolving color and chosen-player event consumers keep their scopes.
-Opponent upkeep, static/state choice consumers and entry payments remain.
+Pending events keep independent players and controllers through source control
+changes, departure, return, phasing, copies, clones and delayed bodies. Phasing
+and ability removal stop new detection. Opponent upkeep text revision,
+intervening-if and granted-event adapters remain separate.
 Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -24,18 +25,18 @@ Runtime cutover, Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Opponent upkeep selector.** Psychic Allergy's entry, resolving color count
-   and optional two-Island sacrifice primitives exist. Estimate one full-card
-   unlock, subject to event/controller capture and gameplay tests. Small/medium
-   effort; recompare shared multi-card work first.
-2. **Live chosen-player/chosen-color static membership.** Jihad's joint entry is
-   complete. Its conditional static bonus needs a live choice membership service;
+1. **Live chosen-player/chosen-color static membership.** Jihad's joint entry is
+   complete. A live membership service supplies its conditional static bonus;
    state detection retains a separate adapter. Zero immediate unlocks from the
-   static prerequisite; medium effort.
-3. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
+   static prerequisite; medium effort. Recompare shared multi-card work first.
+2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
    can reuse ordered required entry execution. Entry transaction, result/failure
    scope and combination counter placement remain. Zero immediate gain from
    the payment prerequisite; medium/high effort.
+3. **Persistent chosen-number entry and resolving choices.** Shapeshifter needs
+   one per-visit number shared by entry, optional upkeep updates and live P/T.
+   Resolution-only lexical number results cannot supply this lifetime. Separate
+   entry and static adapters remain; medium/high effort.
 
 ## Dependencies and source blockers
 
@@ -4621,3 +4622,172 @@ production registry or broad DSL export changed.
 
 This run stops after combined color/opponent entry. Complete migration remains
 gated by the remaining collection, gameplay, runtime and removal work.
+
+## 2026-10-13 — OPPONENT-UPKEEP-EVENT
+
+### Baseline and candidate selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The fresh strict loader exited 1
+with 2,205 compiled / 240 rejected records and 858 accepted / 128 rejected names.
+This is collection rejection, not a build or test failure. An intermediate read
+of the output file occurred before the loader finished; the completed output
+matches the previous ledger. No environment failure was found.
+
+Read AGENTS.md, the engine reference and execution design, current ledger status
+and latest entry, targeted upkeep/payment vocabulary entries, selected compiler
+and engine services, and complete unchanged Jihad, Psychic Allergy and
+Frankenstein's Monster records. Reprints were counted once. Compared the latest
+ranked candidates:
+
+| Candidate | Distinct affected names | Estimated full names / records | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Opponent upkeep selector | Psychic Allergy | 1 / 1 | No remaining rule blocker: source color entry, live resolving color count, typed event player, damage, optional two-Island sacrifice and destruction exist. Adds a reusable controller-relative event capture service. | Small/medium |
+| Live chosen-player/color static membership | Jihad | 0 / 0 for static prerequisite | Joint entry exists. Live chosen-color static membership and chosen-player predicate must compose; the no-matching-permanent state trigger needs its own adapter. Enables its conditional global bonus and later state consumer. | Medium |
+| Mandatory entry exile with announced X | Frankenstein's Monster | 0 / 0 for payment prerequisite | Required sequencing exists, but entry payment preparation, exact graveyard choices, result/failure routing and combination counters remain. Reuses shared graveyard payments and enables entry result consumers. | Medium/high |
+
+Selected the first ranked candidate because it is ready, completes a card in one
+bounded slice, and needs no speculative entry or static subsystem. Neither of
+the compared choice/payment prerequisites supplies a ready multi-card gain.
+The other candidates retain their full nested blockers; first-error counts were
+not treated as unlock estimates. The single-name result is explicit.
+
+### Contract, signatures and reuse boundary
+
+Engine API: `OpponentUpkeep(player *PlayerBinding) EventPattern`.
+RON shape: `TriggerA(AtTheBeginningOfAPlayersUpkeep(Opponent), body)` in ordinary
+permanent trigger rules. Bare `Opponent` selects relative to the current source
+controller at detection. Each factory and declaration gets a fresh
+`stepEventPlan` and `PlayerBinding`. `Trigger_ThatPlayer` is local to the body;
+`You` remains that trigger's saved controller. Resolution reads current subjects,
+not a set captured at detection. Independent queued upkeeps keep separate facts.
+
+The engine composes existing `EachUpkeep`, `EventPlayerIsOpponent` and
+`turnStepEventPattern` player capture, inspection and definition validation.
+Existing trigger placement, APNAP, source incarnation/LKI, stack copies, delayed
+capture, resolution frames and clone services own execution. The compiler owns
+selector spelling, scope and fresh lowering. No parallel event, payment, zone,
+damage or choice system was added. No card-name branch, Go fallback, partial
+registry, global result slot, skipped instruction or runtime declaration panic
+was introduced. Existing callers remain unchanged.
+
+Nil/unnamed bindings and reads from another ability are rejected. RON rejects
+`Opponent()`, `SinglePlayer(Opponent)`, extra selector arguments, unbound player
+and permanent reads, opponent end/draw steps and opponent upkeep `TriggerI`.
+Granted-upkeep validation keeps its existing controller-only boundary. Opponent
+upkeep does not opt into the older printed-upkeep text services. Ordinary
+controller, any-player and chosen-player text paths remain tested. Psychic
+Allergy's controller-upkeep declaration continues to use its existing text path;
+text inventory tests now include that newly compiled declaration.
+
+### Rules evidence and source classification
+
+Local `data/DRK.json` confirms Psychic Allergy's color choice, each opponent's
+upkeep, nontoken condition, chosen-color count and two-Island upkeep alternative.
+CR 109.5 and 603.3a establish the controller context; CR 503.1a and 603.2b
+establish upkeep detection and stack timing. CR 113.7a preserves pending abilities
+after source changes. CR 400.7 separates returned source visits. Existing color
+choice, sacrifice/payment and damage contracts supply their rules unchanged.
+
+The missing pieces were a typed engine event composition and a compiler
+selector adapter. No source-data defect was found or corrected. No RON source
+changed, so no vocabulary source/hash refresh was needed. Runtime cutover and
+both removal gates remain closed. No DSL function or Go card was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+- Native `TestOpponentUpkeep*` first failed compilation with
+  `undefined: OpponentUpkeep`.
+- `TestRONOpponentUpkeepGameplay` and `PsychicAllergy` first failed with
+  `unsupported upkeep player filter (Opponent)`.
+- New fixtures initially used two wrong API names for token/keyword setup;
+  these were corrected to existing engine APIs before behavioral verification.
+- Earlier color tests now require full Psychic Allergy compilation while Jihad
+  remains rejected. Its older damage requirement test now uses the exact
+  opponent selector instead of substituting AnyPlayer.
+- Definition-plan and semantic inventory counts increased by one. Upkeep text
+  inventories increased from 60 names / 122 records to 61 / 123 because the
+  newly accepted card also has an existing controller-upkeep declaration.
+  Explicit Psychic Allergy membership checks accompany those updated totals.
+
+**Psychic Allergy → `TestRONOpponentUpkeepPsychicAllergy` and
+`TestRONOpponentUpkeepPsychicAllergyPayment`.** Both execute the complete
+unchanged DRK record. The first covers casting before entry choice, saved red
+choice, opponent detection, nontoken/color/controller membership, current counts
+at resolution, prevention, control changes, source departure/return with a new
+blue choice, phasing, ability removal, stack copies and game clones. The second
+covers optional full two-Island payment, decline, insufficient/wrong/phased
+subjects without partial spending, owner graveyards, pending control changes,
+departure, source return, pending phasing, regeneration and indestructibility.
+The upkeep branch destroys rather than sacrifices the source.
+
+`TestRONOpponentUpkeepGameplay` queues opposite players' upkeeps across a control
+change, then returns the source before resolving both in independent game clones.
+`Invalid` checks malformed selectors, unsupported contexts and lexical scope.
+`CollectionAndTextBoundary` strictly loads the complete real record, checks
+atomic rejection of a mixed invalid collection, tests separate factory instances,
+and verifies rejection by both whole-object and trigger text-revision services.
+
+Native `TestOpponentUpkeepCapture` checks detection versus resolution, independent
+queued players/controllers, source return, saved delayed players and clone frames.
+`SourceLifetime` covers phase suspension/restoration, ability removal before and
+after detection, pending phasing and copied event-player capture. `Declarations`
+checks nil/unnamed and cross-ability binding rejection. Existing shared cost,
+batch sacrifice, replacement and damage tests remain the mechanics contracts.
+
+### Verification and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONOpponentUpkeep -count=1` and native
+  `go test ./pkg/mage -run TestOpponentUpkeep -count=1` passed.
+  The broader color-entry, chosen-color, combined-entry and upkeep-text focused
+  run also passed after the measured inventory assertions were updated.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+  The engine skill's `go test ./... -short -count=1` also passed.
+- `make lint` passed with 0 issues. Automatic formatting was reviewed; no
+  behavior or assertion changes were introduced. Both new focused groups were
+  rerun afterward and passed.
+- `git diff --check` passed, including the final ledger update.
+- Final `go run ./cmd/loadcards -json` exited 1 with **2,206 compiled / 239
+  rejected records** and **859 accepted / 127 rejected names**, out of 2,445
+  records and 986 names. Comparing every final diagnostic with the fresh baseline
+  removes only Psychic Allergy's `unsupported upkeep player filter (Opponent)`.
+  No diagnostic was added or changed; accepted records remain accepted.
+  The loader continues to reject the collection atomically.
+
+Actual gain is **one full name / one record**, matching the estimate. Compilation
+coverage and gameplay evidence are separate: the new complete-record tests prove
+Psychic Allergy's three rules, while the collection counts establish only
+compilation and definition-validation coverage. Full collection gameplay,
+embedded startup, application cutover, Go-card deletion and DSL cleanup remain
+unfinished. No removal gate was reached.
+
+Changed files: new `pkg/mage/opponent_upkeep.go`, `opponent_upkeep_test.go` and
+`pkg/mage/dsl/ron/opponent_upkeep_test.go`; RON `end_step.go`,
+`color_entry_test.go`, `chosen_color_filter_test.go`, `definition_plan_test.go`,
+`inventory_test.go`, `numeric_consumers_test.go`, `text_upkeep_layer_test.go` and
+`text_upkeep_trigger_test.go`; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No card source, generator,
+production registry or broad DSL export changed.
+
+### Ranked next candidates
+
+1. **Live chosen-player/chosen-color static membership — Jihad.** The joint
+   entry prerequisite is complete. Its conditional global P/T bonus needs live
+   choice predicates; its no-matching-permanent state event remains a separate
+   adapter. Zero immediate full-card gain from static membership alone; medium
+   effort. Recompare shared multi-card candidates before selecting.
+2. **Mandatory entry exile payment/result — Frankenstein's Monster.** Required
+   sequencing and announced entry X exist. Exact graveyard payment, entry-local
+   outcomes/failure and combination counter choice remain. Zero immediate gains
+   from the payment prerequisite alone; medium/high effort.
+3. **Persistent number choices — Shapeshifter.** Complete ATQ record inspected:
+   entry choice 0–7, optional controller-upkeep rechoice, and live power/chosen
+   number with toughness 7 minus that number. Per-visit storage must join entry,
+   resolving update and static reads. One potential name / record only after
+   all three contexts exist; medium/high effort. This run did not implement it.
+
+This run stops after opponent upkeep. Complete migration remains gated by the
+remaining collection, gameplay, runtime and removal work.

@@ -19184,3 +19184,35 @@ Evidence: `TestRequiredEntryOperationsOrderAndFailure`, `Declarations`,
 `Invalid`, `Jihad`, `Consumers`. Jihad uses its complete unchanged record for
 remaining-blocker checks and its exact entry declaration for gameplay. No full
 Jihad gameplay support is claimed.
+
+## Opponent upkeep with typed event capture
+
+`OpponentUpkeep(player *PlayerBinding) EventPattern` uses `EachUpkeep` and
+`EventPlayerIsOpponent` in the two-player engine. The event compares with the
+source controller at detection, as required by CR 109.5 and 603.3a. It writes
+one event-local player binding through the existing turn-step capture service.
+CR 503.1a and 603.2b require detection at each actual upkeep boundary; the body
+runs later through normal trigger placement and resolution. A skipped upkeep
+sends no boundary event. Repeated boundaries make independent pending captures.
+
+Source control changes before detection change the opponent. Changes after
+detection keep the captured upkeep player and trigger controller. Source
+phasing and ability removal stop detection; they cannot cancel a pending body
+(CR 113.7a). Departure and return cannot replace its saved source visit
+(CR 400.7). Copies keep the event player while using their copy controller.
+Delayed bodies and game clones use separate existing resolution frames.
+Nil or unnamed bindings and reads from another ability fail definition checks.
+This event supplies no payment, damage, replacement or text-revision service.
+
+RON supports the bare `Opponent` selector in ordinary upkeep `TriggerA` bodies.
+It retains separate boundaries for granted events, intervening-if declarations,
+other steps and printed upkeep text revision. Psychic Allergy's resolving damage
+uses live nontoken members and the exact source visit's chosen color. Its other
+upkeep uses the existing optional two-permanent sacrifice transaction and
+ordinary destruction. Local `data/DRK.json` confirms all three source rules;
+no source correction was needed.
+
+Evidence: `TestOpponentUpkeepCapture`, `SourceLifetime` and `Declarations`;
+`TestRONOpponentUpkeepGameplay`, `PsychicAllergy`, `PsychicAllergyPayment`,
+`Invalid` and `CollectionAndTextBoundary`. Existing color-entry, chosen-color,
+optional sacrifice, upkeep text and collection inventory tests remain required.

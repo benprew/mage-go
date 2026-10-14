@@ -28,8 +28,12 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 	var step mage.TurnStepPattern
 	attached := false
 	chosen := false
+	opponent := false
 	if players.Kind == Symbol && players.Name == "AnyPlayer" {
 		step = each
+	} else if players.Kind == Symbol && players.Name == "Opponent" && label == "upkeep" {
+		step = each
+		opponent = true
 	} else {
 		if players.Name != "SinglePlayer" {
 			return nil, unsupported(players, label+" player filter")
@@ -68,6 +72,9 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 		if chosen {
 			pattern = mage.ChosenPlayerUpkeep(player)
 		}
+		if opponent {
+			pattern = mage.OpponentUpkeep(player)
+		}
 		if attached {
 			host := mage.BindPermanent(ctx.permanentEvent.name)
 			bindings.tapped = map[*permanentEventPlan]*mage.PermanentBinding{ctx.permanentEvent: host}
@@ -79,7 +86,7 @@ func compileBoundStepAbility(event, body Node, ctx scope, each, your mage.TurnSt
 			options = append(options, mage.WithInterveningIf(condition))
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
-		if label == "upkeep" && !attached && condition == nil {
+		if label == "upkeep" && !attached && !opponent && condition == nil {
 			trigger.WithLayeredUpkeepTextRevision()
 		}
 		actions.effects = nil
