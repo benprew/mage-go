@@ -283,7 +283,7 @@ func (m *layerModification) inspectDefinition() definitionNode {
 	if m.ability != nil {
 		n.children = append(n.children, definitionEdge{"ability", grantedActivationDefinition{m.ability}})
 	}
-	if m.layer == LayerPT {
+	if m.layer == LayerPT && !m.isSwitch {
 		n.children = append(n.children, definitionEdge{"power", m.power}, definitionEdge{"toughness", m.toughness})
 	}
 	if m.layer == LayerControl {

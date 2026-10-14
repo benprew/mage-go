@@ -19936,3 +19936,37 @@ indestructibility, destruction without regeneration, copy choices and clones.
 `TestRONEventTargetChooserBindingsAndStrictLoad` covers two pending upkeep events,
 clone isolation and atomic rejection of invalid collections. `Invalid` covers
 unbound and malformed declarations in spell and bound upkeep contexts.
+
+
+## Temporary P/T switch declaration and RON execution
+
+`SwitchPowerToughness(PermanentRef) ContinuousModification` is a unary layer
+7d operation. Definition inspection checks its subject and does not expose
+unused power/toughness operands. Numeric P/T operations still require both
+operands. A missing switch subject remains invalid. This repairs declaration
+validation; the established layer execution service is reused unchanged.
+
+`Until` captures an exact subject visit at resolution. Layer 7b base values,
+layer 7c modifiers/counters and layer 7d switches keep their order regardless of
+installation order (CR 613.4b-d). Repeated layer passes produce the same result;
+two switches cancel. Later bonuses and base settings use the current switch,
+rather than saved P/T. Switched zero or negative toughness causes the usual
+state-based action. Cleanup ends the duration and clears damage together
+(CR 514.2). Phasing preserves an installed switch but prevents installation
+on a phased subject. Departure and return cannot transfer the effect (CR 400.7).
+Copies and clones retain separate subject visits and duration state.
+
+RON lowers the `SwitchPT` symbol only through singular
+`CreatePermanentLayerEffectUntil/3`. Existing resolving scopes, target legality,
+attachment information, delayed capture and durations retain their contracts.
+No static, collection, entry or payment adapter is established here.
+
+Evidence: `TestPTSwitchDefinition` verifies valid unary declarations, invalid
+subjects and continued rejection of missing numeric operands. `TestPTSwitchLayers`
+checks CR 613.4d examples, base/bonus/counter order, repeated passes, two switches
+and actual cleanup actions. `TestRONPTSwitchTransmutation` covers unchanged-record
+paid casting, failed payment, announcement and resolution legality, control,
+phasing, exact visits and duration expiry. `LayersCopiesAndClones`, `StrictLoad`,
+`SourceAndHost`, `SignedPowerAndStateActions`, `TriggerAndDelay` and `Invalid`
+cover independent bindings, atomic loading, attachment LKI, source departure,
+returned visits, state-based actions, delayed frames and invalid declarations.

@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SwitchPowerToughness] uses layer 7d after base values, bonuses and counters.
+// It has one subject and no numeric operands. Definition checks keep the subject
+// requirement. [Until] saves the exact visit at resolution. Later bonuses still
+// apply before the switch. Two switches cancel. Phasing keeps installed effects;
+// departure and return cannot transfer them. Clones keep separate lifetimes.
+// RON accepts SwitchPT in singular CreatePermanentLayerEffectUntil lists.
+// Existing resolving references, scopes and temporary durations apply.
+// Static, plural, entry and payment forms need separate adapters.
+//
 // [TargetChosenBy] uses a saved event player at trigger placement.
 // The query keeps the live resolution frame. Legality uses the ability controller
 // and source. Missing players cannot supply choices. Copies keep the event facts;

@@ -6,36 +6,38 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **869 accepted / 117 rejected names**
-(986 total), **2,237 compiled / 208 rejected records** (2,445 total).
-The latest slice is **EVENT-PLAYER-TARGET-CHOOSER**. Bound step triggers use a
-saved event player for target choice at placement. Current target legality uses
-the detected controller and source; resolution checks the exact target visit.
-Copies retain event facts and let their controller choose new targets.
+Latest measured result (2026-10-13): **870 accepted / 116 rejected names**
+(986 total), **2,238 compiled / 207 rejected records** (2,445 total).
+The latest slice is **TEMPORARY-PT-SWITCH**. Singular temporary layer lists
+accept the SwitchPT symbol and use the existing unary layer 7d engine service.
+Definition validation now checks the subject without unused numeric operands.
+Current base values, bonuses and counters apply before switching; two switches
+cancel. Exact visits, target legality, phasing, delayed frames and cleanup use
+shared services. Factories, copies and clones retain separate targets/lifetimes.
 Estimated and actual full-card gains are **one name / one record**.
-The Abyss now has complete unchanged-record RON gameplay evidence, including
-paid casting, both upkeep players and destruction without regeneration.
-Compilation coverage and complete-card gameplay each gain this one card.
+Transmutation has complete unchanged-record RON gameplay evidence. Compilation
+coverage and complete-card gameplay each gain this one card.
 
-The loader still rejects the collection atomically. The Abyss's target-arity
-diagnostic is gone; every remaining rejection diagnostic is unchanged. Runtime
-cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Only Transmutation's
+SwitchPT diagnostic disappears; every remaining diagnostic is unchanged.
+Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Temporary P/T switch — Transmutation.** Existing layer services can supply
-   the reusable switch operation; estimated one name / one record. Compare fresh
-   multi-card prerequisites before selecting this small adapter.
-2. **Variable discard and saved discard-count return — Recall.** Self-exile is
-   ready. Discard alone gives zero gains; its dependent return can unlock one
-   name / one record. Keep the two contracts separate unless one complete slice
-   can establish the whole saved-result procedure.
-3. **Host unblocked attack event — Farrel's Mantle.** A shared host event
-   prerequisite has zero immediate unlocks; dependent event aliases, target
-   exclusion and optional damage-payment body still need complete inspection.
+1. **Variable discard and saved discard-count return — Recall.** Self-exile is
+   ready. The result prerequisite gives zero immediate gains; the later return
+   can unlock one name / one record. Keep actual outcomes and lexical lifetimes
+   separate from graveyard choice/return.
+2. **Host combat event capture — Farrel's Mantle and Imprison.** Shared event
+   support can serve two names; the event prerequisite alone unlocks neither.
+   Inspect event aliases, target exclusion, activation filters and grouped events
+   before choosing a complete supported shape.
+3. **End-of-combat bounded paired triggers — Goblin Flotilla.** One name / one
+   record may follow a shared duration adapter. Check exact source/opponent
+   visits, arming during combat and expiry before expanding the existing service.
 
 ## Dependencies and source blockers
 
@@ -7490,3 +7492,159 @@ export changed.
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain gated. This run stops
 after one completed slice.
+
+
+## 2026-10-13 — TEMPORARY-PT-SWITCH
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Baseline loading exited 1
+for atomic collection rejection: 2,237 compiled / 208 rejected records,
+869 accepted / 117 rejected names. This was not a build or test failure.
+The architecture, current status and latest ledger entry were read first;
+targeted vocabulary signatures and full records supplied the requirements.
+Complete records read: Transmutation and Recall in LEG, Farrel's Mantle in FEM,
+and Imprison in LEG for the shared host-combat boundary. Goblin Flotilla and
+Infinite Authority were also inspected when ranking subsequent work.
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Temporary P/T switch | Transmutation | 1 name / 1 record | No other syntax blocker; existing layer/duration service needs unary definition-validation repair. Resolving singular switch contexts share the adapter | Small adapter and focused identity/layer tests |
+| Variable discard result | Recall | 0 from prerequisite; 1 after saved-count return | Needs actual chosen discard count, lexical producer lifetime and independent exact graveyard choice/return; self-exile already works | Medium for result contract; larger for complete procedure |
+| Host combat event capture | Farrel's Mantle, Imprison | 0 from event prerequisite | Farrel's Mantle also needs event-subject aliases and exclusion of that subject from targets. Imprison needs activation-filter and grouped attack/block support. Existing damage-action payment can be reused later | Medium event/capture tests plus separate dependent adapters |
+
+Ranked candidate #1 is dependency-ready. It does not unlock multiple names, so
+Recall and the shared host-combat prerequisite were compared before selection.
+One complete card with a small shared layer adapter gives the largest credible
+immediate gain for this effort. The compared shared event prerequisite gives
+zero immediate gains and leaves several independent contracts for both names.
+No first-error count was used as a full-card unlock estimate. Reprints count
+once; Transmutation has one record. All nested Transmutation forms were ready
+except the selected operation and the native unary declaration check.
+
+### Supported contract and reuse boundary
+
+- `compileTemporaryLayer(Node, scope) (effectFactory, error)` accepts symbol
+  `SwitchPT` inside a nonempty singular
+  `CreatePermanentLayerEffectUntil(permanentRef, modifications, duration)` list.
+  It composes with other supported modifications. Existing resolving scopes,
+  references and duration shapes remain in force. Spells, activations, ordinary
+  triggers and delayed bodies share this adapter. No new duration is added.
+- RON owns symbol/arity rejection, lexical subject validation and per-factory
+  construction. `SwitchPT()` and argument-bearing tuples reject, as do unbound
+  player/event/source reads and unsupported list children. Static, plural,
+  entry and cost/payment switch forms remain unsupported.
+- `SwitchPowerToughness(PermanentRef) ContinuousModification` is reused.
+  `layerModification.inspectDefinition` no longer adds power/toughness children
+  for a switch. Its subject still validates; numeric P/T operations still
+  reject missing operands. No signature or current caller is removed.
+- Existing `Until`, exact captured modifications and layer 7d mechanics supply
+  resolution-time membership, current P/T, set/modify/counter/switch order,
+  repeated-pass stability, double-switch cancellation and expiry. The switch
+  does not snapshot numeric values. Installed effects keep their visit through
+  phasing and control changes; departure/return cannot transfer them.
+- Target announcement/payment, resolution legality, source and attachment
+  information, delayed capture, spell copying, state-based actions and game
+  clones use shared engine services. No replacement, simultaneous-operation
+  or transactional payment subsystem was added. Actual cleanup is tested
+  natively; RON gameplay tests also check the shared end-of-turn expiry service.
+
+CR 613.4b-d/613.5 establishes layer order and current switched values;
+CR 400.7 establishes returned-object identity; CR 514.2 establishes expiry.
+Existing target/phasing and state-based-action contracts remain in force.
+Local `data/LEG.json` Oracle text is exactly “Switch target creature's power
+and toughness until end of turn.” It matches the unchanged complete RON record.
+No source defect was found. No RON source or vocabulary hash changed, so no
+vocabulary refresh was needed. No Go-card fallback, name dispatch, mutable
+factory target state, global result slot, partial production registry or runtime
+declaration panic was added. Removal and runtime cutover gates remain unmet.
+No DSL function or Go definition was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+`TestPTSwitchDefinition` first failed because the valid switch exposed nil
+numeric children (`modifications[0].power` and `.toughness`). The native layer
+execution test already passed, confirming exact mechanics existed.
+`TestRONPTSwitchTransmutation` and `LayersCopiesAndClones` then failed at
+`LEG.ron:273:273: unsupported temporary layer action (SwitchPT)`.
+Initial fixture errors used a nonexistent Shroud attribute/helper; these were
+corrected before capturing the expected compiler failure. After implementation,
+two fixture mistakes were corrected: changing card data alone retained the
+creature capability, and `CopySpellOnStack` needs the spell source ID. The final
+fixtures use the exact creature flag and source ID; no assertions were removed.
+
+- **Transmutation → `TestRONPTSwitchTransmutation`.** Complete original record,
+  failed and paid casting, illegal noncreature announcement without spending,
+  no effect at announcement, return/phasing/shroud/type-change legality,
+  control changes, phase cycle, normal spell departure and duration expiry.
+- **Transmutation → `TestRONPTSwitchLayersCopiesAndClones`.** Complete record,
+  independent copy retargeting, pending-clone isolation, current base values,
+  bonuses and counters applied after switching, a second switch cancellation,
+  cleanup and independent clone lifetime.
+- **Transmutation → `TestRONPTSwitchStrictLoad`.** Exact record through strict
+  registry APIs; two factory instances keep distinct IDs/targets and independently
+  resolve against separate subjects. Invalid mixed collections leave the prior
+  complete registry intact.
+- **Transmutation → `TestRONPTSwitchSignedPowerAndStateActions`.** Negative,
+  zero and positive power; nonpositive switched toughness reaches the normal
+  state-based graveyard action.
+- **Shared contexts → `TestRONPTSwitchSourceAndHost`.** Activated source and
+  Aura-host references, departed Aura attachment information, installed phase
+  cycle, returned subject exclusion and clone independence.
+- **Shared contexts → `TestRONPTSwitchTriggerAndDelay`.** Ordinary entry body,
+  saved next-end-step body, independent clone execution, absent and phased
+  subjects and returned-object exclusion.
+- **Rejection → `TestRONPTSwitchInvalid`.** Wrong shape/arity, unbound or
+  incompatible subject, malformed duration, unsupported list child, static,
+  collection and standalone forms.
+- **Native → `TestPTSwitchDefinition`, `TestPTSwitchLayers`.** Valid unary and
+  invalid subject declarations, continued numeric-operand checks, CR 613.4d
+  examples, layer order, repeated passes, counters, double switch and actual
+  cleanup actions.
+
+Compilation gains and complete-card gameplay gains are separately one name /
+one record. Both match the estimates. Synthetic context tests add contract
+coverage without counting additional collection cards.
+
+### Validation and changed files
+
+All required checks passed in fast-fail order:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONPTSwitch -count=1` and
+   `go test ./pkg/mage -run TestPTSwitch -count=1` passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+4. `make lint` passed with **0 issues**; `git diff --check` passed.
+   Automatic tools were reviewed: no unrelated edits or semantic rewrites
+   occurred. Both focused packages passed again after lint.
+5. `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+   records remain: **2,238 compiled / 207 rejected records**, **870 accepted /
+   116 rejected names**. Keyed baseline comparison removed only
+   `LEG.lines.ron:273:273: unsupported temporary layer action (SwitchPT)`.
+   There are no new or changed remaining diagnostics and no accepted-record
+   regression. No environment, build, test or lint blocker remains.
+
+Engine files: `composable_continuous.go`, new `pt_switch_test.go`, and `doc.go`.
+Compiler files: `temporary_layer.go`, new `pt_switch_test.go`, and exact count
+updates in `definition_plan_test.go`, `inventory_test.go` and
+`numeric_consumers_test.go`. API/rules docs: `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`; status and evidence: this ledger.
+No RON source, broad DSL export, runtime startup or Go card definition changed.
+
+### Ranked next candidates
+
+1. **Variable discard result — Recall.** Zero immediate names from this
+   prerequisite; one after the separate saved-count graveyard return. Reassess
+   shared multi-card work before starting a single-card procedure.
+2. **Host combat event capture — Farrel's Mantle and Imprison.** Zero immediate
+   names from the event prerequisite; concrete downstream benefit for two names.
+   Keep capture/aliases separate from target exclusion and grouped event/filter
+   adapters unless one cohesive supported context can complete in a run.
+3. **End-of-combat bounded paired trigger — Goblin Flotilla.** Inspect the
+   existing exact paired-combat service and duration boundary; estimated one
+   full-card unlock after all nested forms validate.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain gated. This run stops
+after this completed slice.

@@ -15158,3 +15158,28 @@ The complete card casts to exile with two counters, ignores opponent upkeeps,
 counts down on two owner upkeeps, moves itself to its graveyard, and returns both
 players' creatures together. Earlier source-counter tests retain their focused
 projections and now require the complete record to compile.
+
+
+## RON temporary power and toughness switch
+
+`CreatePermanentLayerEffectUntil(permanentRef, [SwitchPT], duration)` accepts
+`SwitchPT` as a symbol in a nonempty singular temporary-modification list.
+It can share that list with other supported modifications. Existing resolving
+permanent references, lexical scopes and temporary durations apply, including
+spell, activation, ordinary trigger and delayed bodies. No new reference or
+duration spelling is added. Tuple spellings (`SwitchPT()` or arguments), unbound
+subjects and unsupported operations reject during compilation. Static, plural,
+entry and payment switch forms remain separate gaps.
+
+The adapter uses `mage.SwitchPowerToughness(subject)` and the existing duration
+service. The switch runs in layer 7d after base values, bonuses and counters.
+Later changes to those values still apply before switching. Two switches cancel.
+The effect saves the subject's exact battlefield visit at resolution; phasing
+keeps an installed effect, and a returned card cannot inherit it. Target legality
+is checked again at resolution. Copies, factories and clones keep separate
+subjects and lifetimes. No power or toughness values are captured by the switch.
+
+The unchanged Transmutation record has complete gameplay evidence in
+`TestRONPTSwitchTransmutation`, `LayersCopiesAndClones`, `StrictLoad` and
+`SignedPowerAndStateActions`. `SourceAndHost`, `TriggerAndDelay` and `Invalid`
+cover shared contexts and declaration rejection.

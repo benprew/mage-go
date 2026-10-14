@@ -20,6 +20,15 @@ func compileTemporaryLayer(n Node, ctx scope) (effectFactory, error) {
 	}
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
+		if part.Name == "SwitchPT" {
+			if _, err := symbol(part); err != nil {
+				return nil, err
+			}
+			modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+				return mage.SwitchPowerToughness(subject.build(bindings))
+			})
+			continue
+		}
 		if part.Name == "AddAbilityVariable" {
 			if err := arity(part, 1); err != nil {
 				return nil, err
