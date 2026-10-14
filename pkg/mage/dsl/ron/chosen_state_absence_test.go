@@ -342,7 +342,6 @@ func TestRONChosenStateAbsenceExistingCards(t *testing.T) {
 			factory, err := Compile(record)
 			blocker := map[string]string{
 				"Giant Shark": "expected 1 positional arguments (WasDealtDamageThisTurn)",
-				"Seasinger":   "unsupported permanent target controller (ControlsA)",
 			}[tc.name]
 			if blocker != "" {
 				if err == nil || !strings.Contains(err.Error(), blocker) {

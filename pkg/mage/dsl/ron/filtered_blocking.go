@@ -58,6 +58,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 		}, nil
 	case "CantAttackUnlessCost":
 		return compileAttackCost(n, operation, ctx)
+	case "CantAttackIfDefendingPlayer":
+		return compileDefenderControlsRule(n, operation, ctx)
 	case "CantAttackUnlessDefendingPlayer":
 		return compileDefendingLandRule(n, operation, ctx)
 	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":

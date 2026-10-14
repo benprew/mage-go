@@ -617,7 +617,7 @@ func (c playerControlsCondition) checkState(g GameReader, ctx StateContext) bool
 func (c playerControlsCondition) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "state-condition", Text: "player controls matching permanent"}
 	switch ref := c.player.(type) {
-	case controllerRef, activePlayerRef, savedPlayerRef:
+	case controllerRef, activePlayerRef, savedPlayerRef, combatDefendingPlayerRef:
 		n.children = []definitionEdge{{"player", c.player}}
 	case chosenPermanentPlayerRef:
 		n.battlefieldSource = true
@@ -626,7 +626,7 @@ func (c playerControlsCondition) inspectDefinition() definitionNode {
 			n.problem = "state condition chosen player requires This"
 		}
 	default:
-		n.problem = "state condition requires You, ActivePlayer, a saved player, or the source chosen player"
+		n.problem = "state condition requires You, ActivePlayer, a saved player, the combat defending player, or the source chosen player"
 	}
 	return n
 }

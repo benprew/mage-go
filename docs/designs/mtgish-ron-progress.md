@@ -6,18 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **907 accepted / 79 rejected names**
-(986 total), **2,286 compiled / 159 rejected records** (2,445 total).
-The latest slice is **TEMPORARY-PLAYER-DAMAGE-REDIRECTION**.
-Resolving temporary damage redirection now supports a live permanent recipient
-filter with optional redirect to You, and exact spell damage redirected to its
-source controller. Shared replacements retain order, rechecks, damage cause,
-source facts, simultaneous observations, cleanup and separate clone state.
-Complete Blood of the Martyr and Reverberation compile and have RON gameplay
-mappings. Air Elemental and Earthquake supply real consumers.
+Latest measured result (2026-10-14): **909 accepted / 77 rejected names**
+(986 total), **2,288 compiled / 157 rejected records** (2,445 total).
+The latest slice is **LIVE-CONTROLS-MATCHING-PREDICATES**.
+Permanent targets can require their current controller to control a matching
+permanent. Source attack restrictions can test the combat defending player's
+matching permanents at declaration, after current power and toughness apply.
+Complete Seasinger and Orgg compile and have RON gameplay mappings.
 Actual gain is **two names / two records**, as estimated. All required checks
-pass. All other loader diagnostics are unchanged. No RON source or vocabulary snapshot changed.
-Validation and detailed mappings follow in the latest entry.
+pass. Precise remaining diagnostics are recorded in the latest entry below.
+No RON source or vocabulary snapshot changed.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,18 +24,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared controls-no-permanents state trigger:** evaluate live state detection,
-   single-pending arming and rearming for the ten unique records using
-   `WhenAPlayerControlsNoPermanents`, including Seasinger and Giant Shark.
-   Inspect each complete record for additional target/combat/choice blockers.
-2. **Bounded damage redirection and continued-damage results:** Personal
-   Incarnation and Eye for an Eye. Reuse the player redirect pipeline and
-   event-source controller facts from this slice; budget and result scopes remain
-   distinct contracts. Recheck Heroism's nested optional operation before selection.
-3. **Dynamic source power and plural source-bound control:** Old Man of the Sea
-   and The Wretched. Exact source durations already exist; dynamic legality,
-   latched duration endpoints and end-of-combat membership remain separate work.
-   Stangg's lexical token results still require legendary token support.
+1. **Shared destruction replacement operations:** evaluate Pyramids and Clergy
+   of the Holy Nimbus. They need future cancel-destruction/remove-damage and
+   static regeneration replacement contexts. Reuse the native destruction
+   pipeline; compare complete-record gains and replacement ordering first.
+2. **Bounded player redirection:** Personal Incarnation. Eye for an Eye still
+   needs continued-damage result scopes; Heroism needs per-source optional
+   payment during prevention. These remain separate contexts.
+3. **Source-bound control extensions:** dynamic power legality and a latched
+   power endpoint for Old Man of the Sea; plural captured control membership
+   for The Wretched. Existing source duration services remain reusable.
 
 ## Dependencies and source blockers
 
@@ -16034,3 +16030,150 @@ Changed files: new native `temporary_player_redirect.go` and its test, new RON
 `numeric_consumers_test.go`; native `waiting_redirection.go`; `pkg/mage/doc.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 This run stops after TEMPORARY-PLAYER-DAMAGE-REDIRECTION.
+
+## 2026-10-14 — LIVE-CONTROLS-MATCHING-PREDICATES
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and the complete RON package passed.
+The fresh baseline loader returned expected exit 1 for atomic collection
+rejection: 2,286 compiled / 159 rejected records, 907 accepted / 79 rejected names.
+This was collection rejection, not a build, test or environment failure.
+
+Ranked candidate #1 was already implemented. Complete records and native/RON
+state-trigger code cover Dandân, Island Fish Jasconius, Jihad, Merchant Ship,
+Pirate Ship, Sea Serpent, Serendib Djinn and Vodalian Knights. Giant Shark and
+Seasinger already have the same state trigger. Their actual remaining blockers
+are the zero-argument damage-history property and controller `ControlsA` target
+predicate, respectively. Rebuilding arming/rearming would unlock zero names.
+Targeted vocabulary lookups confirmed the event, ControlsA, ControlledByAPlayer
+and CantAttackIfDefendingPlayer signatures; complete nested records determined
+these estimates. Reprints count once.
+
+| Compared capability | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Bounded player redirection | Personal Incarnation; adjacent consumers Eye for an Eye, Heroism | 1 for the bounded form; 0 for either adjacent consumer | Eye needs continued-damage results; Heroism needs per-source payment/prevention operations. Shared player damage destinations already exist | Medium native budget and simultaneous-packet/order tests; separate large adjacent slices |
+| Source-bound control extensions | Old Man of the Sea, The Wretched | 0 from a dynamic-power target prerequisite alone; 1 per complete separate control extension | Old Man also needs the latched power endpoint. The Wretched needs plural captured membership; source control durations already exist | Medium/large for dynamic legality plus endpoint; medium for plural capture and identity tests |
+| Live ControlsA predicates, selected | Seasinger, Orgg | 2 | No further blockers: Seasinger's state/optional-untap/source-control rules and Orgg's power-based blocking/trample already have services. Shared current-control predicate and defender state reads enable later player-conditioned rules | Small native adapter/resolver extension plus two RON contexts; medium lifecycle, layer and gameplay tests |
+
+The selected slice implements one live matching-permanent player predicate in
+target-controller and defending-player contexts. It gives two credible full
+unlocks with less work than the alternatives. No capability was selected from
+first-error frequency alone. All compared records were read in full, including
+Personal Incarnation's owner death trigger, Eye's continuation, Heroism's payment,
+Old Man's duration and The Wretched's end-combat collection.
+
+### Exact contracts, dependencies and boundaries
+
+New native `ControllerControls(filter PermanentFilter) PermanentFilter` delegates
+to the existing `PlayerControls` state query. It checks a present subject's
+current controller, present unphased membership and current characteristics.
+Absent games, subjects and players cannot match. It saves no choices or state.
+`PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition` now
+accepts `CombatDefendingPlayer()`. Effect and state reads share the same pure
+combat-player resolver, which supplies no player outside two-player combat.
+Existing `CantAttackIf(This, condition)` performs the check at declaration,
+after power/toughness layers. Layer 6 does not cache incomplete power values.
+
+RON supports `ControlledByAPlayer(ControlsA(propertyFilter))` in permanent target
+filters, including conjunctions with ordinary target restrictions. Selection and
+resolution both read current control. The predicate does not become a resolved
+control effect's duration. RON also supports the source-only static shape
+`PermanentRuleEffect(ThisPermanent, [CantAttackIfDefendingPlayer(
+PlayerPassesFilter(DefendingPlayer, ControlsA(propertyFilter)))])`.
+Both contexts reuse the existing reference-free property filter grammar,
+including nonempty And/Or and fixed power/toughness comparisons. Bad arity,
+references in property filters, chosen colors, dynamic source bounds, wrong
+player and host-source declarations reject before execution. The existing
+positive land-dependent attack rule remains unchanged.
+
+Reuse includes permanent target visit checks and resolution legality, activation
+payment/rollback, source-bound control durations, static printed-rule lifecycle,
+state-trigger arming, current layers, phasing, definition validation, copies and
+clone isolation. There are no new mutable bindings, global action slots, card
+name branches, parallel engine services or partial production registries.
+No existing caller was removed. Runtime/Go-definition/DSL removal gates remain
+closed. No unused-DSL deletion was attempted without the required caller audit.
+
+Local `data/FEM.json` confirms both Oracle texts. CR 508.1c establishes attack
+restrictions; CR 601.2c and 608.2b establish live targeting checks; CR 702.26b
+establishes phased absence. No source defect was found or repaired. RON sources
+and vocabulary hashes did not change, so no snapshot refresh was needed.
+
+### Failing-first evidence and card-to-test mapping
+
+Native tests first failed compilation for missing `ControllerControls` after
+correcting a test-only PT helper call. RON tests first failed on both complete
+real records: unsupported controller ControlsA for Seasinger and unsupported
+static operation for Orgg. A test-only rejection helper name was corrected
+before that confirmation. No gameplay assertions were weakened. A later failing-first native assertion
+found that a departed subject could match when passed directly to the public
+filter. The predicate now requires the exact current visit and reads its current
+controller; a returned object cannot replace the former visit.
+
+| Unique card | Complete record | Gameplay evidence |
+| --- | --- | --- |
+| Seasinger | FEM.lines.ron:77, one record | `TestRONControlsMatchingSeasinger`: target rechecks, Island phasing/return, changed target control, untap/departure/control/phasing of source, returned/phased target, copied ability, pending clone, duration independence after resolution and optional untap attribute. `SeasingerIllegal`: illegal targets preserve tap cost and own Island absence causes sacrifice. `Casting`: failed and paid real casting. Existing `TestRONChosenStateAbsenceExistingCards` now executes the complete card without its former subrule extraction |
+| Orgg | FEM.lines.ron:70, one record | `TestRONControlsMatchingOrgg`: live untapped defender check, phasing, trample keyword, legal small blocker and prohibited large blocker. `Casting`: failed and paid real casting. Shared `TestCR702_19b_TrampleExcessDamageGoesToPlayer` retains the keyword's combat-damage contract |
+| Island, Air Elemental, Grizzly Bears | Complete LEB records | Real membership, target and blocker consumers; already accepted, not new unlocks |
+
+`TestControlsMatchingController` covers current membership, changed controller,
+phasing, departure/return, nil queries and clone isolation. `TestControlsMatchingDefender` covers
+native definition validation, layer-7 power changes, tapped status, phasing,
+source ability removal/restoration, clone isolation and the combat-only player
+reference. Shared target/activation/source-duration tests retain broader identity,
+LKI, legality and payment contracts. The new predicate adds no simultaneous action,
+replacement ordering or payment mechanism.
+
+`TestRONControlsMatchingInvalid`, `InvalidDefender` and `Inventory` cover invalid
+declarations and typed inventory descendants for both real factories. Inventory
+continues to distinguish compilation from gameplay; collection report assertions
+now expect 2,288/157. The Giant Shark rejection and strict collection gates remain.
+
+### Final validation and measured gain
+
+After the exact-visit fix, all required checks passed again in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONControlsMatching' -count=1`.
+- `go test ./pkg/mage -run '^TestControlsMatching' -count=1`.
+- `make build` and `go vet ./...`.
+- `go test ./pkg/mage/... -short -count=1` and `make test`.
+- `go test ./... -short -count=1`, also required by implement-engine.
+- `make lint`: passed, 0 issues. Automatic formatting/modernization was reviewed;
+  there were no unrelated or semantic automatic changes requiring another test run.
+- `git diff --check`: passed, including final ledger edits.
+- `go run ./cmd/loadcards -json`: expected exit 1, with valid collection JSON.
+  Final counts: 2,288 compiled / 157 rejected records, 909 accepted / 77 rejected
+  names, unchanged totals of 2,445 records / 986 names. Removing only Seasinger
+  and Orgg from the fresh baseline issue list produces the final issue list,
+  with identical remaining diagnostic objects and order. No accepted card regressed.
+
+Actual gain equals the estimate: two names, two records and two complete RON
+card mappings. Native contract evidence and real gameplay mappings are recorded
+separately from compiler coverage. Environment blockers: none. Source defects:
+none. Complete collection gameplay, runtime cutover, Go-definition deletion,
+obsolete generator removal and unused-DSL cleanup remain unfinished.
+
+### Ranked next candidates
+
+1. Evaluate shared destruction replacement operations for Pyramids and Clergy
+   of the Holy Nimbus. Their complete records require future cancel/remove-damage
+   and static regeneration contexts. Check native destruction behavior, ordering,
+   no-regeneration clauses and complete-record unlocks before selecting scope.
+2. Bounded player damage redirection for Personal Incarnation. Eye for an Eye's
+   continued-damage results and Heroism's per-source optional prevention payment
+   remain independent follow-on contexts; do not treat these as one adapter.
+3. Dynamic power legality plus a latched duration endpoint for Old Man of the Sea,
+   or plural source-bound control membership for The Wretched. Source duration
+   APIs are already present. Giant Shark still needs its independent damage-history
+   property adapter; the shared no-permanents state trigger is already supported.
+
+Changed files: new native `controls_matching.go` and its test; native
+`combat_defender.go`, `chosen_static_condition.go`, `composable_conditions.go`
+and `doc.go`; new RON `controls_matching.go` and its test; RON
+`temporary_animation.go`, `filtered_blocking.go`, `inventory.go`,
+`chosen_state_absence_test.go`, `definition_plan_test.go`, `inventory_test.go`
+and `numeric_consumers_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement live controls matching predicates`.
+This run stops after LIVE-CONTROLS-MATCHING-PREDICATES.

@@ -16594,3 +16594,29 @@ existing engine services. The saved spell appears in waiting redirection source
 queries. Entry/replacement bodies, other durations, other operation lists,
 unbound references and unsupported recipient contexts reject during compilation.
 No bounded next-damage budget or continued-damage result is established here.
+
+## Live matching-permanent controller predicates
+
+`ControllerControls(filter PermanentFilter) PermanentFilter` reads a present
+subject's current controller through `PlayerControls`. Missing or phased subjects,
+missing games and absent players cannot match. Matching permanents must be on the
+battlefield and unphased. Current types, power, counters and control supply the
+predicate. Queries make no choices and change no state.
+
+`PlayerControls(CombatDefendingPlayer(), filter)` is valid in state conditions.
+The reference selects the nonactive player only during two-player combat.
+`CantAttackIf(This, condition)` checks it at attacker declaration, after current
+power and toughness apply. Use the existing static rule lifecycle for source
+ability removal, departure, phasing and clone isolation.
+
+RON accepts `ControlledByAPlayer(ControlsA(propertyFilter))` in permanent target
+filters, including conjunctions with other target restrictions. Target selection
+and resolution both read the target's current controller. This predicate does
+not become a duration after a control effect resolves. RON also accepts the source
+rule `PermanentRuleEffect(ThisPermanent, [CantAttackIfDefendingPlayer(
+PlayerPassesFilter(DefendingPlayer, ControlsA(propertyFilter)))])`.
+Both contexts use the existing reference-free property filter compiler: nonempty
+`And`/`Or`, fixed power/toughness comparisons, types, colors, counters and other
+supported intrinsic properties. References, source-relative values, chosen
+colors and empty conjunctions reject. The existing positive
+`CantAttackUnlessDefendingPlayer` land shape is unchanged.

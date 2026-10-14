@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ControllerControls] tests a present subject's current controller through
+// [PlayerControls]. Matching uses present, unphased battlefield permanents.
+// [PlayerControls] accepts [CombatDefendingPlayer] for pure combat queries.
+// This reference has no value outside two-player combat. [CantAttackIf] checks
+// this condition at declaration, after current power and toughness apply.
+// Source ability removal, departure and phasing use the shared rule lifecycle.
+// RON accepts ControlledByAPlayer(ControlsA(propertyFilter)) in permanent target
+// filters, and source CantAttackIfDefendingPlayer with PlayerPassesFilter,
+// DefendingPlayer and ControlsA(propertyFilter). Properties use the existing
+// reference-free filter grammar. Target checks read the current controller at
+// selection and resolution. They do not set a control effect's duration.
+// This completes Seasinger and Orgg. Existing positive land checks remain.
+//
 // [MayRedirectDamageFromPermanentsToPlayerThisTurn] reads live recipients.
 // The saved player can accept each redirect until cleanup. Later entries and
 // current types use the filter. Phased recipients cannot receive damage.

@@ -1607,7 +1607,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "CantBeTheTargetOfSpells" && len(n.Args) == 1 {
 			return "spell_filter"
 		}
-		if n.Name == "CantAttackUnlessDefendingPlayer" && len(n.Args) == 1 {
+		if (n.Name == "CantAttackUnlessDefendingPlayer" || n.Name == "CantAttackIfDefendingPlayer") && len(n.Args) == 1 {
 			return "defending_player_condition"
 		}
 		if (n.Name == "CantBeBlockedExceptByDefenders" || n.Name == "CantBeBlockedByDefenders" || n.Name == "CantBlockAttackers" || n.Name == "AllCreaturesMustBlockIt") && len(n.Args) == 1 {
@@ -2084,6 +2084,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_filter":
+		if n.Name == "ControlsA" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "Other" && len(n.Args) == 1 {
 			return "player_reference"
 		}

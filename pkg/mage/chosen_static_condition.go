@@ -39,6 +39,9 @@ func resolveStatePlayer(g GameReader, ctx StateContext, player PlayerRef) uuid.U
 	switch ref := player.(type) {
 	case controllerRef:
 		return ctx.ControllerID
+	case combatDefendingPlayerRef:
+		player, _ := combatDefendingPlayerID(g)
+		return player
 	case activePlayerRef:
 		if active := g.ActivePlayerObj(); active != nil {
 			return active.PlayerID()

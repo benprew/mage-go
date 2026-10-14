@@ -17,12 +17,16 @@ func (r combatDefendingPlayerRef) resolveRecipient(ctx *EffectContext) (uuid.UUI
 	return r.resolvePlayer(ctx)
 }
 func (combatDefendingPlayerRef) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
-	step := ctx.Game.GetStep()
-	players := ctx.Game.AllPlayers()
+	return combatDefendingPlayerID(ctx.Game)
+}
+
+func combatDefendingPlayerID(g GameReader) (uuid.UUID, bool) {
+	step := g.GetStep()
+	players := g.AllPlayers()
 	if step < core.BeginCombat || step > core.EndCombat || len(players) != 2 {
 		return uuid.Nil, false
 	}
-	active := ctx.Game.ActivePlayerObj()
+	active := g.ActivePlayerObj()
 	if active == nil {
 		return uuid.Nil, false
 	}

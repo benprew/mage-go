@@ -157,6 +157,13 @@ func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, 
 			return mage.PermanentFilter{}, nil, err
 		}
 		player := n.Args[0]
+		if player.Name == "ControlsA" {
+			filter, err := compileControlsMatchingFilter(player)
+			if err != nil {
+				return mage.PermanentFilter{}, nil, err
+			}
+			return mage.ControllerControls(filter), nil, nil
+		}
 		if player.Kind == Symbol && player.Name == "Opponent" {
 			return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOpponentControls()}, nil
 		}

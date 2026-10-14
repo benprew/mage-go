@@ -22065,3 +22065,28 @@ Martyr and Reverberation records, real Air Elemental and Earthquake consumers,
 paid casting, failed payment, resolution timing, copies, clones, illegal spell
 targets, controller changes, cleanup, malformed declarations and inventory roles.
 Bounded damage budgets and continued-damage result operations remain unsupported.
+
+## Live controls-matching predicates
+
+`ControllerControls` adapts the shared `PlayerControls` state query to a permanent
+filter. It reads the current subject controller and present battlefield, without
+choices, cached membership or mutable bindings. Phased subjects and matches are
+absent (CR 702.26b). Target selection and resolution use the same live predicate
+(CR 601.2c, 608.2b). Returning an Island may satisfy current membership; returning
+a target cannot restore its saved target visit. Control gained after resolution
+uses its declared duration, independent of the former target predicate.
+
+`PlayerControls` now accepts the typed `CombatDefendingPlayer` reference through
+the same resolver as effect-time player reads. It has no value outside two-player
+combat. `CantAttackIf` evaluates this condition during attack declaration
+(CR 508.1c), after all current characteristics apply. It does not revoke an
+attribute during layer 6 based on incomplete layer 7 power. Shared printed-rule
+activation supplies source visit checks, phasing, ability removal and cloning.
+
+`TestControlsMatchingController` covers membership, controller changes, phasing,
+nil queries and clone isolation. `TestControlsMatchingDefender` covers definition
+validation, current power from a continuous effect, tapped status, phasing,
+source ability removal/restoration, clones and the combat-only reference.
+`TestRONControlsMatching*` uses complete Seasinger and Orgg records for casting,
+legality, failed activation payment, target rechecks, source and target visits,
+copies/clones, source durations, state sacrifice and attack/block restrictions.
