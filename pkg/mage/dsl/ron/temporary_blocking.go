@@ -48,6 +48,28 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(operations) == 1 && operations[0].Name == "DoesntUntapDuringControllersUntap" {
+		if operations[0].Kind != Symbol {
+			return nil, unsupported(operations[0], "untap-step operation")
+		}
+		duration := n.Args[2]
+		if duration.Name != "ForAsLongAsPermanentRemainsTapped" {
+			return nil, unsupported(duration, "untap-step duration")
+		}
+		if err := arity(duration, 1); err != nil {
+			return nil, err
+		}
+		source, err := compilePermanentRef(duration.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if source.kind != permanentSource || !ctx.resolving || !ctx.permanent || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, unsupported(duration, "untap-step source duration")
+		}
+		return func(bindings instanceBindings) mage.Effect {
+			return mage.PreventUntapWhileSourceTapped(subject.build(bindings))
+		}, nil
+	}
 	if len(operations) == 1 && operations[0].Name == "MustAttack" {
 		if _, err := symbol(operations[0]); err != nil {
 			return nil, err

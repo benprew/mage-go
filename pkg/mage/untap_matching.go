@@ -30,6 +30,12 @@ func (g *Game) matchingUntapRestrictions() map[uuid.UUID]bool {
 		if printed, ok := inner.(*printedAbilityContinuousEffect); ok {
 			inner = printed.ContinuousEffect
 		}
+		if rule, ok := inner.(*capturedTappedUntapRule); ok {
+			if subject := rule.subjectAtDecision(g); subject != nil {
+				blocked[subject.ID()] = true
+			}
+			continue
+		}
 		if rule, ok := inner.(*subjectUntapRestriction); ok {
 			if subject := rule.subjectAtDecision(g); subject != nil && !subject.PhasedOut {
 				blocked[subject.ID()] = true

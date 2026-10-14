@@ -473,6 +473,10 @@ func (em *EffectManager) retimestampAttachment(sourceID uuid.UUID) {
 func (em *EffectManager) expireSourceTapped(sourceID uuid.UUID) bool {
 	changed := em.expireCapturedControlSource(sourceID, true)
 	for _, effect := range em.effects {
+		if e, ok := effect.(*capturedTappedUntapRule); ok && e.SourceID() == sourceID && !e.expired {
+			e.expired = true
+			changed = true
+		}
 		if e, ok := effect.(*composedLayerEffect); ok && e.sourceTapped && e.SourceID() == sourceID && !e.expired {
 			e.expired = true
 			changed = true

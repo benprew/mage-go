@@ -16831,3 +16831,33 @@ still reject. Native `TestLifeTotalBoundSubjectReadAndClear` checks one subject
 read and absent-subject clearing; `TestWaitingDelayedPlayerValueReferences`
 adds saved life-subject coverage across source visits, control, phasing and
 clones. Information is read when each instruction applies (CR 608.2c, 608.2h).
+
+## RON captured untap restriction with a tapped-source duration
+
+In an ordinary permanent-source resolving body, RON accepts:
+
+```ron
+CreatePermanentRuleEffectUntil(
+    Ref_TargetPermanent,
+    [DoesntUntapDuringControllersUntap],
+    ForAsLongAsPermanentRemainsTapped(ThisPermanent),
+)
+```
+
+The subject uses the existing singular permanent reference service. The
+operation must be one strict symbol. The duration must contain one reference
+to the resolving battlefield source. Entry, replacement, cost and static
+contexts do not use this adapter. Other durations and operation lists reject.
+The compiler lowers this form to
+`mage.PreventUntapWhileSourceTapped(subject mage.PermanentRef)`.
+
+The engine saves exact subject and source visits. It prevents only untap-step
+untapping until the source untaps, leaves or phases out. Ability removal does
+not remove the installed rule. A stun replacement that keeps the source tapped
+keeps the duration. Subject phasing preserves the rule; returning starts a new
+visit. Shared simultaneous untap and clone services remain authoritative.
+
+Phyrexian Gremlins uses the declared target for both tap and restriction. It
+restricts an already-tapped artifact too. `ThePermanentTappedThisWay` is not an
+alias for a target and remains unsupported. This correction follows the Oracle
+text in `data/ATQ.json` and `data/catalog/ATQ.json` and CR 701.26a.

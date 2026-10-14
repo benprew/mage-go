@@ -22361,3 +22361,34 @@ still reject. Native `TestLifeTotalBoundSubjectReadAndClear` checks one subject
 read and absent-subject clearing; `TestWaitingDelayedPlayerValueReferences`
 adds saved life-subject coverage across source visits, control, phasing and
 clones. Information is read when each instruction applies (CR 608.2c, 608.2h).
+
+## Captured untap-step restriction while the source remains tapped
+
+`PreventUntapWhileSourceTapped(subject PermanentRef) ResolvingEffect` requires
+one battlefield source and one typed permanent subject. Resolution saves both
+exact visits. The source must be present, unphased and tapped; the subject must
+be present and unphased. There is no LKI substitute for either action subject.
+The subject need not have become tapped during the preceding instruction.
+
+The installed rule prevents only untapping during the subject controller's
+untap step. It is separate from the subject's abilities. Source and subject
+control changes and ability removal do not end it. Other effects can untap the
+subject. Subject phasing preserves the rule; return cannot supply an old visit.
+Source untapping, departure or phasing ends the duration permanently. Retapping
+or phase-in cannot restart it. A stun counter that replaces source untapping
+does not end it. Copies install separate rules; game clones have separate
+expiration state. Waiting delayed-source queries retain the source without
+installing a rule.
+
+The shared untap-step service reads restrictions before simultaneous untap
+(CR 502.3). If source and subject have the same controller, choosing to untap
+the source does not release the subject in that step. Later steps can untap it.
+The duration follows CR 611.2b and 702.26f; tap status follows CR 701.26.
+No payment, replacement-order or layer-characteristic rule changes.
+
+Evidence: native `TestTappedUntapRuleLifetime`, `Definition`,
+`IndependentSources` and `WaitingSource`; RON `TestRONTappedUntapRuleGremlins`,
+`OptionalAndSimultaneous`, `Invalid` and `Inventory`. The complete Gremlins RON
+record is covered. Its subject was corrected from a successful-tap result to
+the declared target using both local ATQ Oracle datasets. Oracle applies the
+restriction even if the target was tapped before resolution.

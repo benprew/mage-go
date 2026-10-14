@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PreventUntapWhileSourceTapped] saves one subject and source visit.
+// The source must be present and tapped when the rule starts. Source untap,
+// departure or phasing ends it permanently. Subject phasing keeps the rule.
+// Return cannot supply an old visit. Ability removal does not end the rule.
+// Other effects can untap the subject. Stun can keep the source tapped.
+// Shared untap-step decisions precede simultaneous untap. Copies and clones
+// keep separate rules. Waiting source queries do not install a rule.
+// RON accepts one DoesntUntapDuringControllersUntap operation with a
+// ForAsLongAsPermanentRemainsTapped(ThisPermanent) duration in ordinary
+// permanent-source resolving bodies. Phyrexian Gremlins uses its target even
+// if that artifact was already tapped. Other durations need separate adapters.
+//
 // [TappedForAbilitiesThisTurn] selects present payers for one exact source visit.
 // Successful activation costs supply actual tap subjects. Ordinary taps and
 // resolution payments supply no history. Copies do not pay again. Turn cleanup

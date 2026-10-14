@@ -6,20 +6,20 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **916 accepted / 70 rejected names**
-(986 total), **2,296 compiled / 149 rejected records** (2,445 total).
-The latest slice is **PAID-TAP-HISTORY**.
-`WasTappedToPayForAbilitiesOfPermanent(ref)` now selects present payers from
-successful activation payments in the current turn. Exact source and payer
-visits keep separate identities. Shared transactions supply actual taps;
-shared turn trackers supply reset and independent clone state. Source departure
-keeps queued death queries valid. Untapping and control changes keep history;
-phased payers are absent and returned objects cannot supply old visits.
-The complete Vodalian War Machine record now compiles and has RON gameplay
-coverage for defender, both activations and its death instruction. Actual gain
-is **one name / one record**, matching the estimate. Native contract tests cover
-tap payment forms, mana paths, rollback, query purity and clone isolation.
-Entry, static, target and cost-filter contexts remain separate adapters.
+Latest measured result (2026-10-14): **917 accepted / 69 rejected names**
+(986 total), **2,297 compiled / 148 rejected records** (2,445 total).
+The latest slice is **TAPPED-SOURCE-UNTAP-RULE**.
+`CreatePermanentRuleEffectUntil(ref, [DoesntUntapDuringControllersUntap],
+ForAsLongAsPermanentRemainsTapped(ThisPermanent))` now saves an exact subject
+and source visit in ordinary permanent-source resolving bodies. Source untap,
+departure or phasing ends the rule permanently. Subject phasing preserves it.
+Ability removal does not remove it. Shared untap decisions precede simultaneous
+untap; stun can keep the source tapped. Copies and clones keep separate rules.
+Phyrexian Gremlins now compiles and has complete RON gameplay coverage. Its RON
+subject was corrected to the declared target from both local Oracle datasets:
+an already-tapped artifact must also receive the restriction. No successful-tap
+result adapter is needed. Actual gain is **one name / one record**, matching
+the full-card estimate. Entry, replacement and other duration contexts reject.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -17139,3 +17139,167 @@ Changed files: native new `paid_tap_history.go` and `paid_tap_history_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement paid tap history`.
 This run stops after PAID-TAP-HISTORY.
+
+## 2026-10-14 — TAPPED-SOURCE-UNTAP-RULE
+
+### Fresh baseline, comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader returned valid
+JSON and expected exit 1: **916 accepted / 70 rejected names**, **2,296 compiled /
+149 rejected records**, from 986 names and 2,445 records. This was atomic
+collection rejection, not a build, test or environment failure. No user changes
+or unrelated untracked files were removed.
+
+Started with the latest entry's first-ranked candidate. Read the complete RON
+records for Phyrexian Gremlins, Giant Shark, Glyph of Delusion and all five Lich
+reprints, including nested rules. Targeted vocabulary inspection found one
+Gremlins result reference, two Shark damage-history symbols, and the shared
+three-card block-history spelling. Signature frequency was not used as a
+full-card unlock estimate.
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Saved tap subject and temporary untap-step restriction, ranked #1 | Phyrexian Gremlins | 1 | Initial inspection suggested a tap-result prerequisite plus a separate rule duration. Oracle investigation removed the result prerequisite: both instructions use the target. Existing typed references, tap actions, optional source untap and source lifetime notifications are reusable. Establishes a reusable exact-subject untap-step rule independent of abilities. No other current card record has this exact missing shape. | Medium; compiler adapter, captured engine rule and lifetime, clone, legality and simultaneous-untap tests. |
+| Combat-history adapters, ranked #2 | Giant Shark, Glyph of Delusion | 1 for Shark; 0 for Delusion from the same symbol | Shark needs the strict zero-argument damage-history predicate; its two combat events, land dependence and P/T/trample adapters exist. Delusion needs a dependent block-history target and counter-dependent granted-rule evidence. These are separate capabilities. | Low for Shark; medium for Delusion and its later contracts. |
+| Entry life loss, ranked #3 | Lich | 0 | Resolving life totals exist. Entry ordering needs its own adapter; gain-to-draw replacement, loss immunity, mandatory sacrifices and lose-game behavior remain. Five reprints count as one consumer. Enables one part of Lich, not a multi-card unlock. | Medium for the entry prerequisite; high for the complete card. |
+
+Selected the first-ranked, dependency-ready capability. None of these candidates
+credibly unlocks multiple distinct cards in one cohesive small shape. Correcting
+the source defect reduced Gremlins to one missing native rule and its compiler
+adapter, with one full-card gain. The contract, reuse boundary and acceptance
+cases were stated before editing. The scope correction was stated when Oracle
+inspection showed that the proposed successful-tap dependency was wrong.
+No tap-result or payment-history work remains in this slice.
+
+### Source defect and rules evidence
+
+`cards/mtgish/ATQ.lines.ron:51` used `ThePermanentTappedThisWay` as the subject of
+the untap restriction. Both `data/ATQ.json` and `data/catalog/ATQ.json` identify
+the subject as the target artifact; neither makes the restriction conditional
+on a successful tap transition. CR 701.26a allows only untapped permanents to
+be tapped. An already-tapped legal artifact must still receive this independent
+restriction. Changed this subject to `Ref_TargetPermanent`. Only one record
+of this card exists, so there are no identical reprints to repair.
+
+The vocabulary snapshot was refreshed through the RON AST: the unused symbol
+is removed, target-reference occurrences increase from 519 to 520, the duration
+example position and ATQ source hash change. The constructor signature count
+remains 604. Refreshed its stale loader baseline from 2,282 compiled records to
+the fresh 2,297 result; gains from earlier slices are not credited to this run.
+
+Rules read: CR 502.3–4 for simultaneous untap decisions, 611.2a–c for resolving
+continuous durations, 701.26a–b for tap status and 702.26b/f for phasing. Existing
+exact-visit reference services supply CR 400.7 identity. No new Oracle inference
+or card-name branch supplies engine behavior.
+
+### Supported signature, context and engine boundary
+
+RON accepts exactly:
+
+```ron
+CreatePermanentRuleEffectUntil(
+    Ref_TargetPermanent,
+    [DoesntUntapDuringControllersUntap],
+    ForAsLongAsPermanentRemainsTapped(ThisPermanent),
+)
+```
+
+The subject uses existing typed singular permanent references. The operation
+is one strict symbol. The duration has one typed reference to the resolving
+battlefield source. This adapter is limited to ordinary permanent-source
+resolving bodies. Wrong arity, tuple aliases, mixed operations, unbound or
+player references, other duration endpoints, entry, costs and spell-only
+source contexts reject. Static untap rules keep their separate existing path.
+`ThePermanentTappedThisWay` remains unsupported; it is not a target alias.
+
+Native API: `PreventUntapWhileSourceTapped(subject PermanentRef) ResolvingEffect`.
+Resolution requires a present, unphased, tapped source and a present, unphased
+subject. It saves both visits and installs `capturedTappedUntapRule` in the
+shared effect manager. The shared untap decision service checks this rule
+before selecting simultaneous untaps. This is a game rule, not an ability grant
+or a characteristic change. Other untap effects can untap the subject.
+
+Existing source untap and phase notifications expire the rule permanently.
+Departure removes it; a returned source cannot restart it. A replacement that
+keeps the source tapped, such as stun, preserves the duration. Source control
+changes and source/subject ability removal do not end it. Subject phasing keeps
+the rule; departure/return cannot substitute for the saved visit. A clone copies
+the expiration latch. Stack copies install separate restrictions and do not pay
+again. Waiting delayed-source queries retain the exact source without execution.
+No cost, damage, replacement-order or simultaneous-operation service changed.
+
+### Failing-first and gameplay evidence
+
+The first RON tests failed at the old unbound result reference. Native tests
+failed compilation because the new rule API did not exist. After the source
+correction, the complete-card test with the compiler adapter absent failed at
+`unsupported temporary blocking operation (DoesntUntapDuringControllersUntap)`.
+It passes with the adapter. The initial successful-tap experiment was removed
+when Oracle evidence invalidated that requirement. No production result adapter
+or unused native result function remains.
+
+| Unique card | Complete source | RON gameplay mapping |
+| --- | --- | --- |
+| Phyrexian Gremlins | ATQ.lines.ron:51, one record | `TestRONTappedUntapRuleGremlins` casts the full record; checks tap costs, target legality and announcement timing; restricts both untapped and already-tapped artifacts; checks source untap/retap before resolution, source return and phasing, illegal/returned targets, copies, clones, source control, ability removal and stun. `OptionalAndSimultaneous` checks decline/accept of the printed optional untap and verifies the artifact waits until the following step when both objects share a controller. |
+
+Native `TestTappedUntapRuleLifetime` covers exact source/subject returns,
+source and subject phasing, source untap/retap, stun, control changes, source and
+subject ability removal, other untap effects, simultaneous decisions and clone
+isolation. `Definition` rejects nil, unbound and spell-source declarations.
+`IndependentSources` shows that two source durations remain independent, even
+when the second tap is a no-op, and that clone expiration is separate.
+`WaitingSource` retains a departed delayed source without installing a rule.
+RON `Invalid` checks declaration shapes and contexts. `Inventory` checks the
+subject, duration source and operation roles. Accepted-definition reconstruction
+and exact collection census tests remain active; census assertions changed only
+after fresh loader evidence from 2,296/149 to 2,297/148.
+
+### Validation
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTappedUntapRule' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestTappedUntapRule' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Automatic formatting regrouped imports in the
+  two new test files; reviewed. Both focused suites passed again after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON and expected exit 1. **917 accepted /
+  69 rejected names**, **2,297 compiled / 148 rejected records**. Only Phyrexian
+  Gremlins' diagnostic was removed from the fresh baseline. Every remaining
+  diagnostic object and its order are unchanged. The refreshed vocabulary's
+  loader baseline matches this final result. Collection loading stays atomic.
+
+Estimated and actual full-card gain: **one unique name / one record**, with one
+new complete-card RON gameplay mapping. The Oracle correction eliminated the
+estimated tap-result prerequisite; it did not change the predicted full-card
+gain. Native rule coverage is separate from collection compilation and the card
+mapping. No environment or pre-existing test failure blocks this slice.
+
+Full RON gameplay, runtime loading, Go-card and generator removal, unused DSL
+cleanup and native startup remain unfinished. No Go production definitions,
+generators or existing DSL functions were removed. Removal gates remain closed.
+
+### Ranked next candidates
+
+1. Giant Shark's strict `WasDealtDamageThisTurn` symbol in combat-pair filters.
+   Reuse current-turn damage history and compare event timing, prevention,
+   phasing and exact visits. Likely one full-card unlock; do not count Glyph of
+   Delusion as another consumer of this shape.
+2. Glyph of Delusion's dependent `WasBlockedByDefenderThisTurn` target filter.
+   Compare the existing block-history collection service with target placement,
+   copy and resolution requirements. Audit retained counter-dependent grants
+   before estimating a full-card unlock.
+3. Entry life loss for Lich. Reuse typed life totals through shared entry
+   replacement ordering. Its five records are one consumer; later replacement,
+   mandatory-payment and lose-game blockers remain.
+
+Changed files: native new `tapped_untap_rule.go` and `tapped_untap_rule_test.go`,
+`effect_manager.go`, `untap_matching.go`, `doc.go`; RON `temporary_blocking.go`,
+new `tapped_untap_rule_test.go`, `definition_plan_test.go`, `inventory_test.go`,
+`numeric_consumers_test.go`; `cards/mtgish/ATQ.lines.ron`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, the vocabulary snapshot
+and this ledger. Commit title: `feat(ron): implement tapped-source untap rules`.
+This run stops after TAPPED-SOURCE-UNTAP-RULE.
