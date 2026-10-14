@@ -329,6 +329,7 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
+		leftStack:              obj.leftStack,
 		spellTextDefinition:    obj.spellTextDefinition,
 		targetIncarnations:     obj.targetIncarnations,
 		revealedHandCards:      slices.Clone(obj.revealedHandCards),

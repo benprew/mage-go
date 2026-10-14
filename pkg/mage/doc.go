@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ThisSpell] reads the exact spell whose body is now resolving.
+// [ExileSpell] and [ExileSpellWithCounters] move one present spell to face-up
+// exile. Fixed counters are set before zone observations. Later instructions
+// continue. Repeat actions cannot move a departed spell or its new visit.
+// Cleanup cannot move it again. Copies use their own visit and cease at the
+// next state-based check. Clones keep separate visits and counter arrays.
+// RON accepts Exile with one Spell(ThisSpell) in a resolving instant or sorcery
+// body. It accepts no modifiers or one ExilesWithNumberCounters with a fixed
+// nonnegative amount. Targets, events, costs and delayed bodies need adapters.
+//
 // [RemoveCounterFromExiledCard] removes one available counter from a saved,
 // present face-up exile visit. Missing, hidden or returned visits supply no
 // subject. Later instructions still run. Counts and saved bodies stay separate
@@ -16,7 +26,7 @@
 // RON accepts HasACounterOfType and HasNoCountersOfType in
 // ExiledCardPassesFilter(ThisExiledCard, filter) for owner-upkeep TriggerI and
 // resolving If bodies under FromExile. [RemoveCounterFromExiledCard] supplies
-// singular source removal. Placement and spell exile with counters need adapters.
+// singular source removal. General placement needs a separate adapter.
 //
 // [NewManaAbilityOfColorsOpponentPermanentsCouldProduce] adds one mana of
 // an available color. The source's current controller defines the opponent.

@@ -8,29 +8,31 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **867 accepted / 119 rejected names**
 (986 total), **2,235 compiled / 210 rejected records** (2,445 total).
-The latest slice is **EXACT-EXILE-SOURCE-COUNTER-REMOVAL**. One resolving
-instruction removes one available counter from the saved present face-up exile
-visit. Missing, hidden and returned subjects perform no removal. Later branches
-read the updated count. Copies keep the visit; clones keep separate counters.
+The latest slice is **SPELL-EXILE-WITH-INITIAL-COUNTERS**. One resolving spell
+moves to an exact face-up exile visit with fixed counters before observations.
+Later instructions continue; repeat actions and cleanup cannot move it again.
+Copies have separate visits and cease at the next state-based check. Clones
+retain departure state and separate counters, including during resolution.
 Estimated and actual full-card gains are **zero names / zero records**.
-All Hallow's Eve gains verified prerequisite removal; complete-card gameplay
-coverage does not increase. Accepted records and diagnostics stay unchanged.
+All Hallow's Eve gains its verified cast-to-exile countdown path; Recall gains
+self-exile prerequisite evidence. Complete-card gameplay coverage is unchanged.
 
-The loader still rejects the collection atomically. Spell exile with counters
-and mass graveyard entry remain All Hallow's Eve gaps.
-Runtime cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. All Hallow's Eve now needs
+only simultaneous mass graveyard entry. Recall retains discard/result-return
+gaps. Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Spell exile with counters — All Hallow's Eve; Recall shares spell exile.**
-   Zero immediate gains; preserve exact stack visits, copies and initialization.
-2. **Simultaneous mass graveyard entry — All Hallow's Eve.** Its last resolving
-   body gap; full-card gains depend on spell exile with initial counters.
-3. **Player-chosen trigger targets — The Abyss.** Assess the two-argument target
-   shape and a saved event-player chooser; estimated one name/one record.
+1. **Simultaneous mass graveyard entry — All Hallow's Eve.** Spell exile is ready;
+   estimated one name / one record after complete entry-batch implementation.
+2. **Player-chosen trigger targets — The Abyss.** Saved upkeep-player chooser,
+   current legality and copy retargeting; estimated one name / one record.
+3. **Variable discard and saved discard-count return — Recall.** Self-exile is
+   ready. Discard alone gives zero gains; its dependent return can unlock one
+   name / one record. Reassess shared value with fresh complete records.
 
 ## Dependencies and source blockers
 
@@ -6991,3 +6993,175 @@ ledger record the established behavior. No RON source or vocabulary changed.
 This run stops after exact exile-source counter removal. Complete collection
 gameplay, runtime loading, Go-card deletion, DSL cleanup and native cutover
 remain gated.
+
+## 2026-10-13 — SPELL-EXILE-WITH-INITIAL-COUNTERS
+
+### Selection, baseline and dependency readiness
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline
+`go run ./cmd/loadcards -json` exited 1 for expected atomic collection rejection:
+**2,235 compiled / 210 rejected records**, **867 accepted / 119 rejected names**,
+from 2,445 records / 986 names. This was collection rejection, not a build or
+test failure.
+
+Complete records and their nested forms were inspected for all three current
+ranked candidates. Reprints count once:
+
+| Candidate | Distinct affected names | Estimated immediate full-card unlocks | Other blockers and downstream value | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Spell exile with initial counters | All Hallow's Eve; Recall | 0 names / 0 records | All Hallow's Eve retains mass graveyard entry; Recall retains variable discard and discard-count return. Establishes shared exact spell departure and makes mass entry the last All Hallow's Eve gap. | Moderate: typed resolving reference, departure lifecycle, initial counters, copied spell cleanup, cloning, compiler adapter and tests. |
+| Simultaneous mass graveyard entry | All Hallow's Eve | 0 before spell exile; 1 name / 1 record after it | Spell exile is required first. Enables the final resolving branch through shared entry replacements and simultaneous observations. | Higher: entry preparation and owner choices across both graveyards, APNAP and batch observations. |
+| Event-player target chooser | The Abyss | 1 name / 1 record | Requires the explicit two-argument target shape, saved upkeep-player chooser and copy-retarget contracts. Its nested nonartifact creature and event-player controller filters need preserved legality. | Moderate: announcement chooser, saved event context, target queries and copies. |
+
+Candidate #1 was selected as the dependency-ready shared prerequisite for two
+unique cards. Counter state, source-zone upkeep, intervening predicates and
+singular removal already exist. Exact self-spell departure and copied exile
+lifecycle were missing engine contracts; AST spelling and scope were missing
+adapters. Neither source-data defects nor environment failures selected the
+work. The contract and acceptance cases were stated before editing.
+
+### Established signatures, contexts and reuse boundary
+
+New reusable engine APIs:
+
+- `ThisSpell StackObjectRef` reads the current resolving spell's exact stack ID.
+- `ExileSpell(spell StackObjectRef) ResolvingEffect` moves one present spell.
+- `ExileSpellWithCounters(spell StackObjectRef, counter core.CounterType,
+  count int) ResolvingEffect` sets a fixed nonnegative count on the new exile
+  visit before zone observations.
+
+RON accepts `Exile([Spell(ThisSpell)], [])` and exactly one
+`ExilesWithNumberCounters(Integer(n), counter)` modifier, with `n >= 0`, in a
+resolving instant or sorcery body. Counter kinds reuse the checked permanent
+counter parser, including supported literal P/T pairs. Wrong references,
+unbound reads, plural subjects, malformed arity, unknown counters, dynamic or
+negative amounts, face-down modifiers, costs, zone-source rules, delayed and
+replacement bodies remain rejected before gameplay. Inventory roles distinguish
+spell subjects/references and exile counter modifiers without claiming behavior
+coverage.
+
+The engine reuses `StackObjectRef`, resolving-reference frames, exact saved
+spell readers, stack departure information, zone exile constructors, turn
+tracking, zone-change events, state-based actions and existing clone services.
+RON contains no zone or counter mutation. No parallel event system or global
+last-action slot was added. The new departure flag stops repeated instructions,
+ordinary cleanup and permanent entry from moving the departed spell again.
+Later independent instructions continue. Returning the card or casting it again
+cannot supply the old stack visit. The card keeps its owner; the event keeps its
+former controller. Initial counters are integers, including counts above 255.
+
+Copies use their own card and exile visit. They remain observable through the
+remaining instructions, then cease at the next state-based check without a
+second zone-change event. This slice does not add transport of that copy from
+exile to another zone before the check. Stack clones retain the departure flag,
+including clones made during resolution; zone clones keep separate counter
+arrays. Phasing does not apply to spells or exile cards. This singular resolving
+operation makes no choices or payment, so cost rollback and plural simultaneous
+selection are outside this context. Permanent entry counter replacement rules
+do not apply to exile cards; no general exile-card counter placement adapter was
+added.
+
+CR 112.1/112.1a, 400.7, 608.2b/608.2c/608.2m/608.2n, 701.13a, 704.5e and 122.2
+support the established spell, identity, timing, exile, copy and counter rules.
+Local `data/LEG.json` Oracle text matches both unchanged affected RON records.
+No source defect was found. RON source and vocabulary snapshot hashes are
+unchanged. No Go definitions, obsolete generator or broad DSL export was
+removed; their removal gates remain unmet.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed to compile at the missing engine APIs. After engine
+implementation they passed. RON tests then failed at `unsupported exile subject
+(Spell)`, including strict loading and both real-record projections. Lowering
+removed that gap. Final review added a failing assertion for a clone made after
+spell exile during resolution; the explicit stack clone initializer omitted the
+new departure flag. Copying the flag repaired the test. Test harness corrections
+supplied mana for a second cast and used an instant for two simultaneous source
+instances; no engine behavior or assertion was weakened.
+
+- **All Hallow's Eve → `TestRONSpellExileAllHallowsEve`.** Retains metadata,
+  original cast cost, original spell exile with two counters, original owner
+  upkeep and intervening-if, counter removal, zero-counter branch and owner
+  graveyard move. Only mass creature entry uses a life probe. Casting initializes
+  two counters; opponent upkeep does nothing; two owner upkeeps count down and
+  move the source to its graveyard. Departure prevents later arming. The full
+  unchanged record rejects only at mass graveyard entry. This is prerequisite
+  evidence, not complete-card gameplay or a partial production registry.
+- **Recall → `TestRONSpellExileRecall`.** Retains metadata, double-X cost and
+  original unmodified self-exile instruction. Omits unsupported variable discard
+  and result-count return in the test projection. A paid X=2 cast spends five
+  mana and resolves to exile without counters or duplicate graveyard cleanup.
+  The full record retains its independent variable-discard diagnostic.
+- **`TestRONSpellExileGameplay`.** Strict RON registry loading, zero/two/300
+  counters, announcement versus resolution, repeated exile, other controllers,
+  separate factories, copied spells and pending clones.
+- **`TestRONSpellExileInvalid`, `FizzleAndAtomicRejection`, `Inventory`.** Invalid
+  declarations and contexts, all-illegal-target fizzle, delayed-body rejection,
+  atomic invalid collection loading and precise inventory roles.
+- **`TestSpellExileResolution`, `Definition`.** Native later instructions,
+  counter initialization, zero/wide counts, copied controllers and copy cleanup,
+  owner destinations, pending clones, return before repeat exile, existing
+  exile-on-leave behavior, nil/unwritten/invalid declarations and absent self
+  context.
+- **`TestSpellExileSavedVisitAndObservation`.** Existing saved spell references,
+  counter state before zone-event detection, former controller, exact departure,
+  queued observation body and rejection of a later cast of the same card.
+- **`TestSpellExileResolvingClone`.** Clone of an active departed spell frame
+  cannot restart exile or reset counters; counter mutations remain separate.
+
+Actual full-card gains match the estimate: **zero names / zero records**.
+Compilation coverage and complete-card gameplay coverage do not increase.
+The cast-to-exile countdown path and Recall's self-exile prerequisite gain
+verified behavior coverage.
+
+### Validation and files
+
+Passed in fast-fail order after the final clone repair:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONSpellExile -count=1` and native
+   `go test ./pkg/mage -run TestSpellExile -count=1`. Existing counter-condition
+   and counter-removal probes also passed. Their full-record rejection assertions
+   now require the independent mass-entry diagnostic. The first engine short
+   run exposed one stale old spell-exile diagnostic assertion; it was corrected
+   to that specific remaining error before repeating the suites.
+2. `make build` and `go vet ./...` passed again after the clone repair.
+3. `go test ./pkg/mage/... -short -count=1`, `make test`, and skill-required
+   `go test ./... -short -count=1` passed again after the clone repair.
+4. Initial lint reported two style issues: combine equal parameter types and
+   remove an overwritten test variable initializer. They were fixed manually.
+   Final `make lint` passed with **0 issues**. Automatic formatting changes were
+   reviewed; no unrelated changes occurred. Final `git diff --check` passed.
+5. Final `go run ./cmd/loadcards -json` exited 1 for expected atomic rejection:
+   **2,235 compiled / 210 rejected records**, **867 accepted / 119 rejected
+   names**. All rejected records except All Hallow's Eve retain their baseline
+   diagnostics. All Hallow's Eve now reports
+   `LEG.lines.ron:12:634: unsupported action (PutEachCardFromEachPlayersGraveyardOntoTheBattlefield)`.
+   Accepted counts remain unchanged. This collection failure is required while
+   unsupported records remain and does not block a validated slice commit.
+
+Changed engine files: new `spell_exile.go` and native tests; `stack.go`,
+`stack_resolver.go`, `state_based_actions.go`, `game.go`, `clone.go`,
+`composable_actions.go` and `doc.go`. Changed compiler files: new
+`spell_exile.go` and RON tests; `permanent_exile.go`, `inventory.go`, and the two
+previous exile-counter test files' gap assertions. API/rules-contract docs and
+this ledger record only established behavior. No required failure or environment
+blocker remains. Only this completed slice is committed; no next slice starts.
+
+### Ranked next candidates
+
+1. **Simultaneous mass graveyard entry — All Hallow's Eve.** Spell exile is now
+   ready. Lower the complete creature/AnyPlayer/EntersNormally shape through a
+   shared entry batch with owners, replacement order and simultaneous
+   observations. Estimated one name / one record; verify complete gameplay.
+2. **Event-player target chooser — The Abyss.** The explicit saved upkeep player
+   must choose its target using current legality and copy-retarget contracts.
+   Estimated one name / one record.
+3. **Variable discard and saved discard-count return — Recall.** Inspect the
+   discard producer and result-return consumer together; spell exile is ready.
+   The discard prerequisite alone gives zero unlocks, while completing its
+   dependent return can give one name / one record. Reassess shared value against
+   fresh complete-record inventory before selecting it.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation removal and unused DSL cleanup remain gated.

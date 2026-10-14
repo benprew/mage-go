@@ -834,7 +834,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "exile_modifier":
+		if n.Name == "ExilesWithNumberCounters" && len(n.Args) == 2 {
+			return []string{"value", "card_counter_type"}[index]
+		}
 	case "exile_subject":
+		if n.Name == "Spell" && len(n.Args) == 1 {
+			return "spell_reference"
+		}
 		if n.Name == "CardInGraveyards" && len(n.Args) == 1 {
 			return "card_reference"
 		}

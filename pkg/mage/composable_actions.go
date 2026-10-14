@@ -4208,6 +4208,8 @@ func (v spellManaValue) inspectDefinition() definitionNode {
 
 func spellReferenceID(spell StackObjectRef, ctx *EffectContext) uuid.UUID {
 	switch ref := spell.(type) {
+	case thisSpellRef:
+		return ctx.Game.resolution.resolvingStackID
 	case savedSpellRef:
 		return ctx.Game.resolution.spellBindings[ref.binding]
 	case *SpellTargetBinding:

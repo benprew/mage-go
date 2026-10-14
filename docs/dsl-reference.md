@@ -15104,3 +15104,20 @@ replacement operations remain unsupported. This does not add counter-removal
 trigger events. All Hallow's Eve retains independent spell-exile and mass-entry
 gaps. `TestRONExileCounterRemoval*` and `TestExileCounterRemoval*` provide the
 contract evidence, including its real-record prerequisite projection.
+
+### RON resolving spell exile
+
+`Exile([Spell(ThisSpell)], [])` moves the exact resolving instant or sorcery to
+face-up exile. One modifier
+`ExilesWithNumberCounters(Integer(n), counter)` initializes `n >= 0` counters
+before exile observations. Named kinds and literal P/T pairs use the existing
+counter parser. The spell continues its later instructions and does not move
+again during cleanup. Copies have separate visits and cease at the next
+state-based check. Clones keep separate counter arrays.
+
+The compiler rejects other spell references, plural subjects, dynamic counts,
+face-down modifiers, costs, delayed bodies and zone-source bodies. Repeated exile
+cannot move the new exile visit. The reusable engine APIs are `ThisSpell`,
+`ExileSpell(StackObjectRef)` and
+`ExileSpellWithCounters(StackObjectRef, core.CounterType, int)`.
+Tests: `TestRONSpellExile*` and native `TestSpellExile*`.

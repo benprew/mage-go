@@ -19,6 +19,13 @@ func (g *Game) checkStateBasedActions() bool {
 	for {
 		actions := false
 
+		for _, card := range slices.Clone(g.zones.exile) {
+			if card.spellCopy {
+				g.RemoveFromExile(card.Card.ID())
+				actions = true
+			}
+		}
+
 		var toDestroy, toGraveyard []*Permanent
 		for _, p := range g.zones.battlefield {
 			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && p.Counters[Loyalty] <= 0 {

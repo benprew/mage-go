@@ -35,6 +35,7 @@ var (
 // Other players see only that a face-down card is in exile.
 // Unauthorized players cannot inspect card characteristics.
 type ExiledCard struct {
+	spellCopy    bool
 	link         *ExileLink
 	linkedSource capturedPermanent
 	Card         Card

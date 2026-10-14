@@ -278,7 +278,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 
 	// Permanent spell copies must use the normal entry path (CR 707.10f).
 	permanentSpell := obj.Card != nil && !obj.IsAbility && (obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) || obj.Card.HasType(TypeLand))
-	if obj.IsCopy && !permanentSpell {
+	if obj.leftStack || (obj.IsCopy && !permanentSpell) {
 		return
 	}
 
@@ -397,7 +397,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 // instants/sorceries and fizzled spells
 func (g *Game) cleanupSpell(obj *StackObject) {
 	// do nothing for non-spells
-	if obj.Card == nil || obj.IsAbility {
+	if obj.Card == nil || obj.IsAbility || obj.leftStack {
 		return
 	}
 

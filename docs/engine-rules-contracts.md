@@ -19818,3 +19818,49 @@ zero-counter branch and owner-graveyard movement. Only spell exile and mass
 entry use probes. Two upkeeps remove two counters in order; the second moves
 the card to its owner's graveyard. This proves a prerequisite, not complete-card
 coverage. The unchanged full record still rejects at spell exile.
+
+## Resolving spell exile with initial counters
+
+`ThisSpell StackObjectRef` reads the exact resolving spell through its stack ID
+and the shared resolving-reference frame. An ability, absent resolution frame,
+or already departed spell supplies no subject. Current stack reads and departure
+information stay separate; `spellReferenceID` retains the ID for typed LKI reads.
+
+`ExileSpell(spell StackObjectRef) ResolvingEffect` and
+`ExileSpellWithCounters(spell StackObjectRef, counter core.CounterType, count int)
+ResolvingEffect` move one present spell to face-up exile. Definition checks
+reject nil or unwritten references, invalid counter types and negative counts.
+Saved event and target references use the existing exact stack readers. A later
+cast of the same card cannot replace an earlier stack visit.
+
+The shared stack service retains departure information. Zone storage starts a
+new exile visit, then sets the fixed counter amount before tracking and the
+stack-to-exile zone event. Counts remain integers, including amounts above 255.
+The event uses the former spell controller; the card keeps its owner. Ordinary
+cleanup and permanent entry cannot move the departed spell again. A second
+instruction cannot exile its new visit. Later independent instructions continue
+(CR 400.7, 608.2c, 608.2m, 608.2n, 701.13a, 122.2).
+
+Spell copies use their own cards and visits. They are observable in exile for
+the rest of resolution and cease at the next state-based check (CR 704.5e).
+Ceasing creates no second zone-change event. Stack and zone clones keep separate
+departure flags, exile visits and counter arrays. This contract does not add
+transport of an exiled spell copy into another zone before that check.
+
+RON lowers `Exile([Spell(ThisSpell)], [])` or one
+`ExilesWithNumberCounters(Integer(n), counter)` modifier, with `n >= 0`, in a
+resolving instant or sorcery body. Named counter types and literal P/T counter
+pairs use the existing checked parser. Other references, plural subjects,
+dynamic counts, face-down modifiers, costs, zone-source rules, replacement
+bodies and delayed bodies reject before gameplay. This singular operation
+makes no payment or choice. Permanent entry counter replacements do not apply
+to an exile card; no general exile-card counter placement rule is added.
+
+Tests: native `TestSpellExileResolution`, `TestSpellExileDefinition`,
+`TestSpellExileSavedVisitAndObservation`, `TestSpellExileResolvingClone`; RON `TestRONSpellExileGameplay`,
+`Invalid`, `FizzleAndAtomicRejection`, `Inventory`, `AllHallowsEve`, and `Recall`.
+The real-record tests keep original spell exile instructions. All Hallow's Eve
+also keeps its original exile-source upkeep and countdown body, with a life
+probe replacing only mass graveyard entry. Recall omits only unsupported discard
+and result-return instructions. These projections establish prerequisites;
+neither establishes complete-card gameplay coverage or a production registry.

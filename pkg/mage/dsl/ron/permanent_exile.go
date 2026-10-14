@@ -14,6 +14,9 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n.Args[0], "exile requires one subject")
 	}
 	subject := subjects[0]
+	if subject.Name == "Spell" {
+		return compileSpellExile(subject, n.Args[1], ctx)
+	}
 	if subject.Name == "TheTopCardOfLibrary" {
 		if subject.Kind != Symbol || !ctx.permanent {
 			return nil, problem(subject, "library-top linked exile requires a permanent source and a symbol")

@@ -11,6 +11,7 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
+	leftStack            bool
 	spellTextDefinition  Card
 	tappedForMana        bool
 	manaReplacementOrder []uuid.UUID
