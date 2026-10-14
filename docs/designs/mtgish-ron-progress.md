@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **905 accepted / 81 rejected names**
-(986 total), **2,284 compiled / 161 rejected records** (2,445 total).
-The latest slice is **RESOLVING-PERMANENT-TOKEN-COPIES**.
-Resolving `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` uses exact present
-subjects, fresh copiable rules and shared linked token entry batches.
-Copy exceptions, acquired entry rules, phasing, return, copies and clones retain
-the stated identity and timing contracts. Complete Dance of Many now compiles
-and has gameplay evidence for all four rules and their linked lifecycle.
-Actual gain is **one name / one record**, as estimated. Air Elemental supplies
-the real copied creature. Stangg and Tetravus remain unsupported.
-All required checks pass. Every remaining loader diagnostic is unchanged.
-No RON source or vocabulary baseline changed. Validation and mappings follow.
+Latest measured result (2026-10-14): **907 accepted / 79 rejected names**
+(986 total), **2,286 compiled / 159 rejected records** (2,445 total).
+The latest slice is **TEMPORARY-PLAYER-DAMAGE-REDIRECTION**.
+Resolving temporary damage redirection now supports a live permanent recipient
+filter with optional redirect to You, and exact spell damage redirected to its
+source controller. Shared replacements retain order, rechecks, damage cause,
+source facts, simultaneous observations, cleanup and separate clone state.
+Complete Blood of the Martyr and Reverberation compile and have RON gameplay
+mappings. Air Elemental and Earthquake supply real consumers.
+Actual gain is **two names / two records**, as estimated. All required checks
+pass. All other loader diagnostics are unchanged. No RON source or vocabulary snapshot changed.
+Validation and detailed mappings follow in the latest entry.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,15 +26,18 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared source-bound control durations:** compare a bounded prerequisite
-   for Old Man of the Sea, Seasinger and The Wretched. Dynamic predicates,
-   duration composition and plural control still block complete records.
-2. **Shared redirection event/recipient prerequisites:** compare Personal
-   Incarnation, Eye for an Eye, Blood of the Martyr and Reverberation. Keep
-   bounded amounts, continued-damage results and optional choices separate.
-3. **Lexical created-token results and delayed leave events:** Stangg. Reuse
-   exact departure reading and delayed frames; legendary token syntax remains
-   another blocker. Tetravus still needs its token rule and linked exile payment.
+1. **Shared controls-no-permanents state trigger:** evaluate live state detection,
+   single-pending arming and rearming for the ten unique records using
+   `WhenAPlayerControlsNoPermanents`, including Seasinger and Giant Shark.
+   Inspect each complete record for additional target/combat/choice blockers.
+2. **Bounded damage redirection and continued-damage results:** Personal
+   Incarnation and Eye for an Eye. Reuse the player redirect pipeline and
+   event-source controller facts from this slice; budget and result scopes remain
+   distinct contracts. Recheck Heroism's nested optional operation before selection.
+3. **Dynamic source power and plural source-bound control:** Old Man of the Sea
+   and The Wretched. Exact source durations already exist; dynamic legality,
+   latched duration endpoints and end-of-combat membership remain separate work.
+   Stangg's lexical token results still require legendary token support.
 
 ## Dependencies and source blockers
 
@@ -6132,7 +6135,9 @@ in all six complete records. The delayed RON assertion then failed because its
 saved outcome was absent; shared frame capture fixed that failure. Later short
 suite failures were four fixed inventory counts, now updated to the measured
 2,226/219 and strengthened with an explicit Drain Life acceptance assertion.
-No gameplay assertion was weakened.
+No gameplay assertion was weakened. A further failing-first native test exposed
+a returned recipient during the optional choice. Matching now checks the
+original damage recipient visit before it can redirect.
 
 - **Drain Life (LEA, LEB, 2ED, 3ED, CED, CEI) →
   TestRONClampedDamageDrainLife and TestRONRestrictedXGameplay.** Complete
@@ -9833,7 +9838,9 @@ existing bounded land subtype and family validators were added. Contract tests
 caught the missing explicit clone field, which also lost
 departure snapshots. A timing fixture now checks AllBattlefield because
 FindPermanent can expose the engine's pending entry object. The copy fixture
-explicitly accepts the optional copy offer. No gameplay assertion was weakened.
+explicitly accepts the optional copy offer. No gameplay assertion was weakened. A further failing-first native test exposed
+a returned recipient during the optional choice. Matching now checks the
+original damage recipient visit before it can redirect.
 
 - **Wood Elemental (LEG) → `TestRONEntrySacrificeReal`**: complete record,
   unpaid casting, paid native casting, resolution-time count choice, zero
@@ -10212,7 +10219,9 @@ activation-history scope at its unsupported exile-result If.
 
 The engine short suite identified one previous counter-information test whose
 expected City error was the old APermanent rejection. Updated it to require the
-exact new unsupported counter-mana diagnostic. No gameplay assertion was weakened.
+exact new unsupported counter-mana diagnostic. No gameplay assertion was weakened. A further failing-first native test exposed
+a returned recipient during the optional choice. Matching now checks the
+original damage recipient visit before it can redirect.
 
 ### Validation and measured outcome
 
@@ -13772,7 +13781,9 @@ signature. RON Cyclone tests failed first at the unsupported two-branch
 PayManaForEach cost. Implementation passed those contracts. Fixture repairs set
 main-phase casting and supply accepting cloned test players: normal game cloning
 uses SearchPlayer choices and does not retain custom test choice callbacks.
-No gameplay assertion was weakened. Full engine validation then found the two
+No gameplay assertion was weakened. A further failing-first native test exposed
+a returned recipient during the optional choice. Matching now checks the
+original damage recipient visit before it can redirect. Full engine validation then found the two
 ordinary-upkeep inventory assertions still expected 64 names / 131 records;
 changed to 65 / 132 and added an explicit Cyclone count of one. Collection-count
 fixtures changed from 2,273/172 to the measured 2,274/171. The former Cyclone gap
@@ -15860,3 +15871,166 @@ assertions in `definition_plan_test.go`, `inventory_test.go`,
 `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement resolving permanent token copies`.
 This run stops after RESOLVING-PERMANENT-TOKEN-COPIES.
+
+## 2026-10-14 — TEMPORARY-PLAYER-DAMAGE-REDIRECTION
+
+Status: implemented one complete resolving temporary player-redirection slice.
+Atomic collection rejection and all cutover/removal gates remain in effect.
+
+### Fresh evidence and candidate comparison
+
+The initial working tree was clean. Fresh `make build` and the complete RON
+package tests passed. Initial `go run ./cmd/loadcards -json` exited 1 because of
+unsupported records: 2,284 compiled / 161 rejected records, 905 accepted /
+81 rejected names. This was collection rejection, not a build failure.
+The latest ledger's ranked candidates were evaluated against current code,
+targeted vocabulary signatures, and complete records. Reprints count once.
+
+| Candidate | Distinct affected cards | Estimated complete unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- | --- |
+| Source-bound control prerequisites | Old Man of the Sea, Seasinger, The Wretched | 0 for a bounded common duration prerequisite | Source-controller/tapped/presence duration APIs and adapters already exist. Old Man needs dynamic source-power target legality and a latched filter endpoint; Seasinger needs state-trigger arming and a controller filter; The Wretched needs plural captured blocker membership. No single missing duration service unlocks this chain | High if combined; separate contracts required |
+| Temporary player damage redirection | Blood of the Martyr, Reverberation; downstream Personal Incarnation, Eye for an Eye | 2 names / 2 records | Blood needs a live permanent recipient filter, saved chooser and optional operation. Reverberation needs exact spell-source matching and event-source controller destination. Personal Incarnation still needs a bounded redirect budget; Eye for an Eye still needs continued-damage results and its next-event player context | Moderate, shared replacement implementation with two typed installation APIs |
+| Lexical token result and delayed leave events | Stangg; related Tetravus link consumers | 0 for the lexical-result prerequisite | Stangg still needs legendary token syntax. Tetravus needs token rules and optional linked exile/payment counts. Existing exact departure snapshots and delayed frames can serve these later consumers | Moderate to high, with no complete unlock for the bounded prerequisite |
+
+Candidate #1's proposed missing common duration contract already exists. The
+selected second candidate supplies the largest credible complete gain in one
+run: two distinct cards, with concrete source-controller and player-recipient
+reuse in the remaining redirection chain. No Go definitions supplied requirements.
+
+### Supported signatures, contracts and boundaries
+
+Accepted in ordinary resolving bodies, with strict arity and typed references:
+
+- `CreateReplaceWouldDealDamageUntil(DamageWouldBeDealtToARecipient(APermanent(filter)),
+  [MayActions([DealToPlayerInstead(You)])], UntilEndOfTurn)`.
+  The nonzero filter uses supported permanent predicates. The resolving
+  controller is saved as the chooser/destination. Matching reads current,
+  unphased recipients; later entrants and returned creatures can match.
+- `CreateReplaceWouldDealDamageUntil(DamageWouldBeDealtBySpell(spellRef),
+  [DealToPlayerInstead(WouldDealDamage_ControllerOfDamageSource)], UntilEndOfTurn)`.
+  A typed spell target or event binding supplies `spellRef`. Resolution saves
+  that spell's exact stack identity; each proposed damage event supplies its
+  controller. A copied damage spell or a later cast cannot inherit the rule.
+
+RON owns AST validation, context restrictions, spelling, instance bindings and
+inventory descendant roles. Native APIs established here:
+
+- `MayRedirectDamageFromPermanentsToPlayerThisTurn(PermanentFilter, PlayerRef) ResolvingEffect`.
+- `RedirectSpellDamageToSourceControllerThisTurn(StackObjectRef) ResolvingEffect`.
+
+The two installations share one native replacement implementation. Engine
+reuse includes exact spell damage-source capture, typed target references,
+current permanent filters, `ChooseMayAbility`, replacement order and per-packet
+used sets, damage-cause preservation, source/controller/LKI facts, lifelink,
+simultaneous damage, end-of-turn cleanup, definition validation, clone isolation,
+and waiting spell-source queries. Delayed source analysis reads the saved-player
+operand without installing a rule or making choices. No new mutable binding,
+global last-action slot, parallel damage service or production registry exists.
+Existing permanent-to-permanent temporary redirect callers remain intact.
+
+Other durations, operation lists, unbound spell/player references, entry and
+replacement-body contexts reject. Bounded next-damage redirection, continued
+actual-damage results, arbitrary replacement-body execution and event bindings
+remain separate work. Unsupported production records continue to reject.
+
+Local authoritative `data/DRK.json` and `data/LEG.json` confirm both Oracle texts.
+CR 614.7a, 614.9 and 616.1 supply nonpositive damage, legal destinations,
+replacement/prevention order and rechecks. No source defect was found or fixed.
+No RON source changed, so the vocabulary source snapshot needs no refresh.
+
+### Failing-first evidence and card-to-test mapping
+
+New engine tests failed compilation for the two missing installation APIs.
+Test setup was first corrected to use existing damage/stack APIs; the confirmed
+failure then named only the intended missing signatures. RON tests failed on
+both complete real records with unsupported temporary redirection events.
+The sorcery test's active-player setup was corrected before that confirmation.
+Later copy/cleanup assertions exposed direct-resolution harness calls retaining
+stack objects; tests now explicitly remove objects after direct resolution.
+No gameplay assertion was weakened. A further failing-first native test exposed
+a returned recipient during the optional choice. Matching now checks the
+original damage recipient visit before it can redirect.
+
+Native `TestTemporaryPlayerRedirect*`:
+
+- `Optional`: pure installation, accept/decline for two simultaneous packets,
+  repeated unconsumed operation and separate clone cleanup.
+- `RecipientState`: live recipients, later entry, return, phasing, type/control
+  changes, prohibited redirection, zero damage, decline and player prevention.
+- `Spell`: typed installation, departed spell/LKI cleanup, different stack
+  identity, waiting spell references and cloned execution.
+- `Invalid`: missing player, zero filter, nil spell and incompatible spell ref.
+- `ChoiceVisit`: leave-and-return during the optional choice cannot redirect
+  the former visit's damage.
+- `ReplacementOrder`: both prevention/redirection orders, recipient rechecks and
+  retained source lifelink after redirection.
+
+| Unique real card | Complete record scope | RON gameplay evidence |
+| --- | --- | --- |
+| Blood of the Martyr | DRK.lines.ron:9, complete record | `TestRONTemporaryPlayerRedirectBlood`: failed/paid casting, timing, real Air Elemental recipient, accepted redirect and cleanup. `BloodChoicesAndCopies`: decline, copied rule's controller, late entrant, phasing and redirected-player prevention |
+| Reverberation | LEG.lines.ron:222, complete record | `TestRONTemporaryPlayerRedirectReverberation`: real Earthquake, creature/player simultaneous packets and cloned pending resolution. `SpellIdentity`: failed payment, copied source exclusion, removed target, event-time controller change, cleanup and copied rule |
+| Air Elemental | Six identical complete reprints; LEB used | Already accepted. Real Blood recipient extends consumer evidence, not another full-card gain |
+| Earthquake | Six identical complete reprints; LEB used | Already accepted. Real Reverberation source extends exact spell-source and simultaneous-damage evidence, not another full-card gain |
+
+`TestRONTemporaryPlayerRedirectInvalid` rejects malformed duration, operation,
+recipient, player and unbound spell forms. `Inventory` validates both complete
+factories and typed descendant roles while retaining `unverified` gameplay
+status in the report schema. Collection count assertions now expect 2,286/159;
+no prior gameplay assertions or rejection gates were removed.
+
+### Validation and measured gain
+
+Final required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTemporaryPlayerRedirect' -count=1`.
+- `go test ./pkg/mage -run '^TestTemporaryPlayerRedirect' -count=1`.
+- `make build` and `go vet ./...`: passed.
+- `go test ./pkg/mage/... -short -count=1`: passed.
+- `make test`: passed across the whole repository.
+- `go test ./... -short -count=1`: passed, as required by implement-engine.
+- `make lint`: passed, 0 issues. The first lint run reported three test variables
+  named `copy`; they were renamed. Import formatting was reviewed. No unrelated
+  file or semantic change came from automatic lint fixes. All preceding checks
+  were rerun after the recipient-visit fix and variable renames.
+- `git diff --check`: passed. Final documentation edits also passed diff checks.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for atomic collection
+  rejection. Valid JSON reports 2,286 compiled / 159 rejected records and
+  907 accepted / 79 rejected names. Removing exactly Blood of the Martyr and
+  Reverberation from the baseline issue list yields the final issue list,
+  including identical objects and ordering. No accepted record regressed.
+
+Actual gain equals the estimate: two new names, two compiled records and two
+complete gameplay mappings. Air Elemental and Earthquake add existing-card
+consumer evidence, not unlocks. Environment failures: none. Source defects:
+none. No RON source changed and no vocabulary refresh was needed. Complete
+collection gameplay, runtime cutover, Go-card deletion and obsolete DSL cleanup
+remain gated by the remaining 79 rejected names and native startup requirements.
+
+Post-lint review also reran the focused native tests, complete RON package and
+build; all passed. These checks cover retained accepted records as well as the
+new capability. Commit title: `feat(ron): implement temporary player damage redirection`.
+
+### Ranked next candidates
+
+1. Evaluate shared `WhenAPlayerControlsNoPermanents` state-trigger detection and
+   single-pending arming/rearming across ten distinct names: Dandân, Giant Shark,
+   Island Fish Jasconius, Jihad, Merchant Ship, Pirate Ship, Sea Serpent,
+   Seasinger, Serendib Djinn and Vodalian Knights. Read complete nested records
+   and estimate actual unlocks before selecting; controller filters, combat
+   predicates and entry choices can remain independent blockers.
+2. Evaluate bounded redirect budgets for Personal Incarnation and continued
+   damage results for Eye for an Eye. Reuse this slice's shared player recipient
+   pipeline, exact source identities and event-controller facts. Heroism's nested
+   prevention/optional-operation context needs separate complete-record review.
+3. Dynamic source power/duration endpoints for Old Man of the Sea and plural
+   source-controlled membership for The Wretched. Existing source duration APIs
+   are dependencies, not missing work. Stangg lexical token result/delayed leave
+   support still requires legendary token declarations; Tetravus retains its
+   token-rule and linked-exile payment chain.
+
+Changed files: new native `temporary_player_redirect.go` and its test, new RON
+`temporary_player_redirect.go` and its test; existing RON `temporary_redirect.go`,
+`inventory.go`, `definition_plan_test.go`, `inventory_test.go` and
+`numeric_consumers_test.go`; native `waiting_redirection.go`; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+This run stops after TEMPORARY-PLAYER-DAMAGE-REDIRECTION.

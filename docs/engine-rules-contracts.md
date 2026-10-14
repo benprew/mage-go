@@ -22020,3 +22020,48 @@ and clone resolution. `Invalid` covers declaration rejection and a resolving
 spell context. `Inventory` verifies descendant roles. Existing accepted-collection
 reconstruction and upkeep text revision inventories now include Dance of Many.
 Compilation acceptance and these gameplay mappings are distinct evidence.
+
+## Temporary damage redirection to players (RON migration)
+
+`MayRedirectDamageFromPermanentsToPlayerThisTurn(filter PermanentFilter,
+player PlayerRef) ResolvingEffect` saves the recipient player at resolution and
+installs an end-of-turn replacement. It checks each current, unphased damage
+recipient against the nonzero filter. This is live membership, so later entrants,
+returned permanents and changed types use their current state. The saved player
+chooses when a matching damage event is replaced, including damage to an
+opponent's creature. Decline leaves that packet unchanged. Installation and
+matching queries make no choice. A choice is followed by a fresh legality check against the original damage
+recipient visit. A leave-and-return during the choice cannot supply that visit.
+
+`RedirectSpellDamageToSourceControllerThisTurn(spell StackObjectRef)
+ResolvingEffect` captures one live spell's exact stack identity. Its redirection
+matches player and permanent damage from that spell. Each damage packet supplies
+the destination controller from its damage-source information; the installing
+player is not the recipient. Departure and LKI cleanup cannot erase the saved
+identity. A later cast or a copied damage spell has a different identity. Damage
+already addressed to the source controller remains there.
+
+Both operations use the existing replacement pipeline (CR 614.7a, 614.9,
+616.1). The affected player selects competing replacement/prevention order;
+redirected packets are checked again for applicable prevention. Per-packet used
+sets stop loops. Redirects retain amount, combat status, damage cause and source,
+including lifelink. Simultaneous assignments retain shared batch observations.
+Damage that cannot be redirected does not offer a choice. End-of-turn cleanup
+removes these rules; clones own separate replacement state. Typed declaration
+validation rejects missing players, zero recipient filters, and invalid spell
+references. No source-bound lifetime is added.
+
+Waiting redirection spell queries include the saved spell even after departure.
+Delayed source-read analysis uses the installation's player reference; spell
+references have their existing target/binding contracts. No new event binding,
+payment result, global last-action slot or production registry is introduced.
+
+Native `TestTemporaryPlayerRedirect*` covers optional acceptance/decline,
+simultaneous packets, live recipient changes, return, phasing, control,
+redirection prohibition, nonpositive damage, clone cleanup, exact spell identity,
+departed source facts, invalid declarations, the recipient visit after a choice, and both prevention orders with
+source lifelink. `TestRONTemporaryPlayerRedirect*` uses complete Blood of the
+Martyr and Reverberation records, real Air Elemental and Earthquake consumers,
+paid casting, failed payment, resolution timing, copies, clones, illegal spell
+targets, controller changes, cleanup, malformed declarations and inventory roles.
+Bounded damage budgets and continued-damage result operations remain unsupported.

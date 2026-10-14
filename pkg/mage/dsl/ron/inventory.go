@@ -913,6 +913,42 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PreventAllButSomeOfThatDamage" && len(n.Args) == 1 {
 			return "value"
 		}
+	case "temporary_redirection_event":
+		switch n.Name {
+		case "DamageWouldBeDealtBySpell":
+			if len(n.Args) == 1 {
+				return "spell_reference"
+			}
+		case "DamageWouldBeDealtToARecipient":
+			if len(n.Args) == 1 {
+				return "temporary_redirection_recipient"
+			}
+		case "DamageWouldBeDealtByPermanentToRecipient":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "temporary_redirection_recipient"}[index]
+			}
+		}
+	case "temporary_redirection_recipient":
+		if len(n.Args) == 1 {
+			switch n.Name {
+			case "APermanent":
+				return "permanent_filter"
+			case "Player":
+				return "player_reference"
+			case "Permanent":
+				return "permanent_reference"
+			}
+		}
+	case "temporary_redirection_operation":
+		if n.Name == "MayActions" && len(n.Args) == 1 {
+			return "temporary_redirection_operation"
+		}
+		if n.Name == "DealToPlayerInstead" && len(n.Args) == 1 {
+			return "redirection_player_reference"
+		}
+		if n.Name == "DealToCreatureOrPlaneswalkerInstead" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "redirection_operation":
 		if n.Name == "DealToCreatureOrPlaneswalkerInstead" && len(n.Args) == 1 {
 			return "permanent_reference"
@@ -1132,6 +1168,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "CreateFuturePreventDamage":
 			if len(n.Args) == 2 {
 				return []string{"prevention_event", "prevention_operation"}[index]
+			}
+		case "CreateReplaceWouldDealDamageUntil":
+			if len(n.Args) == 3 {
+				return []string{"temporary_redirection_event", "temporary_redirection_operation", "duration"}[index]
 			}
 		case "CreatePreventDamageUntil":
 			if len(n.Args) == 3 {

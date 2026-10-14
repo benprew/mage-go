@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [MayRedirectDamageFromPermanentsToPlayerThisTurn] reads live recipients.
+// The saved player can accept each redirect until cleanup. Later entries and
+// current types use the filter. Phased recipients cannot receive damage.
+// [RedirectSpellDamageToSourceControllerThisTurn] saves one exact spell.
+// Each damage event supplies its source controller. Departure keeps that fact;
+// another cast or spell copy cannot supply the saved identity.
+// Shared replacement rules keep order, rechecks, cause, combat and source facts.
+// Clones keep separate rules. Waiting spell queries retain the saved source.
+// RON accepts resolving CreateReplaceWouldDealDamageUntil with a spell event
+// and its source controller, or a permanent filter and optional redirect to You.
+// Both forms require UntilEndOfTurn. Other budgets and operations need adapters.
+//
 // [CreateTokenCopiesOfPermanent] reads one present subject's copiable values.
 // [CreateTokenCopiesOfPermanentLinked] also saves the maker's exact visit.
 // Fresh token rules precede shared batch entry, replacements and observations.

@@ -16571,3 +16571,26 @@ Evidence: native `TestTokenCopyPermanent*` and RON
 copying, linked departure, phasing, paid/unpaid upkeep, copied trigger, return and
 clone gameplay evidence. Air Elemental supplies the real copied creature; its
 six complete reprints have identical definitions. No RON source changed.
+
+### Resolving temporary player damage redirection
+
+RON supports these complete `CreateReplaceWouldDealDamageUntil` forms in ordinary
+resolving bodies, with `UntilEndOfTurn`:
+
+- `DamageWouldBeDealtToARecipient(APermanent(filter))`, one
+  `MayActions([DealToPlayerInstead(You)])` operation. `filter` uses supported
+  nonzero permanent predicates. The resolving controller chooses separately for
+  each matching damage packet; recipients use current battlefield membership.
+- `DamageWouldBeDealtBySpell(spellRef)`, one
+  `DealToPlayerInstead(WouldDealDamage_ControllerOfDamageSource)` operation.
+  `spellRef` must be a bound typed spell reference. The rule retains its exact
+  stack identity; damage uses the source controller from that event.
+
+These forms complete Blood of the Martyr and Reverberation. Their shared engine
+services are `MayRedirectDamageFromPermanentsToPlayerThisTurn` and
+`RedirectSpellDamageToSourceControllerThisTurn`. Replacement order, prevention
+rechecks, simultaneous observations, damage causes, copies and clones use the
+existing engine services. The saved spell appears in waiting redirection source
+queries. Entry/replacement bodies, other durations, other operation lists,
+unbound references and unsupported recipient contexts reject during compilation.
+No bounded next-damage budget or continued-damage result is established here.

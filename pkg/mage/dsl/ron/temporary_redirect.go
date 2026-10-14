@@ -7,6 +7,9 @@ func compileTemporaryDamageRedirect(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "DamageWouldBeDealtBySpell" || event.Name == "DamageWouldBeDealtToARecipient" {
+		return compileTemporaryPlayerRedirect(n, ctx)
+	}
 	if event.Name != "DamageWouldBeDealtByPermanentToRecipient" {
 		return nil, unsupported(event, "temporary redirection event")
 	}

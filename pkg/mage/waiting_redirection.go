@@ -42,10 +42,13 @@ func ChooseDamageSourceFromWaitingRedirectionReferences(player PlayerRef, filter
 	return &damageSourceChoice{player: player, filter: filter, binding: binding, waitingRedirection: true}
 }
 
-// WaitingRedirectionSpellSources reads exact spells in active selected-source rules.
+// WaitingRedirectionSpellSources reads exact spells in active redirection rules.
 // A later cast cannot replace the saved spell's information.
 func (g *Game) WaitingRedirectionSpellSources() []DamageSource {
 	return g.waitingReplacementSpellSources(func(replacement ReplacementEffect) []DamageSource {
+		if rule, ok := replacement.(*playerDamageRedirectThisTurn); ok && rule.bySource {
+			return []DamageSource{rule.source}
+		}
 		rule, ok := replacement.(*selectedSourceRedirectReplacement)
 		if !ok || rule.source.StackID() == uuid.Nil || rule.source.Incarnation() != uuid.Nil {
 			return nil
