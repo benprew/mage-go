@@ -208,6 +208,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return permanentSetReadsSourcePermanent(s.hosts)
 	case blockersOfSet:
 		return permanentRefReadsSourcePermanent(s.attacker)
+	case bandedWithSet:
+		return permanentRefReadsSourcePermanent(s.subject)
 	case blockedAttackersOfSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case combatOpponentsSet:

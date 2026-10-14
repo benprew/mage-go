@@ -150,7 +150,10 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return func(bindings instanceBindings) mage.PermanentSet {
 			return bindings.permanentSets[ref]
 		}, nil
-	case "IsBlockingAttacker", "IsBlockedByDefender":
+	case "IsBlockingAttacker", "IsBlockedByDefender", "BandedWith":
+		if n.Name == "BandedWith" && (!ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody) {
+			return nil, problem(n, "band membership requires a resolving collection")
+		}
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -159,6 +162,9 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.PermanentSet {
+			if n.Name == "BandedWith" {
+				return mage.BandedWith(ref.build(bindings))
+			}
 			if n.Name == "IsBlockingAttacker" {
 				return mage.BlockersOf(ref.build(bindings))
 			}

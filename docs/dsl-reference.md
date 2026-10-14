@@ -15400,3 +15400,22 @@ Captured spell targets also remain available through
 retain exact identity, read current or departure characteristics, and do not
 execute the mana body. `TestNextMainPhaseSavedSpellTargets` and the complete
 Mana Drain tests cover this transition, recasts, source choices and clones.
+
+## Resolving attacking-band collections
+
+`BandedWith(subject PermanentRef) PermanentSet` selects current, present members
+of the subject's attacking band in battlefield order. Each subject must match
+its combat incarnation. An unbanded attacker supplies no members; a one-member
+band supplies its subject. Ability loss does not dissolve a band. Combat removal,
+including phasing, removes membership. Departure facts cannot supply members.
+Returned permanents cannot inherit old combat membership.
+
+RON lowers `BandedWith(permanentRef)` through `compileContextualCollection` in
+resolving bodies. Existing source, host, target and event scope checks apply.
+Nonempty `And` and `Or` lists use shared intersection and union services.
+Temporary keyword grants capture the selected visits at resolution, retain them
+after combat removal, control changes and a phase cycle, and expire at cleanup.
+Waiting delayed source queries retain direct source operands without selecting
+members or executing actions. Entry, replacement, static prevention and payment
+forms remain separate adapters. Icatian Skirmishers has complete-record evidence
+in `TestRONBandedCollectionNative`, `Pending` and `CapturedLifetime`.

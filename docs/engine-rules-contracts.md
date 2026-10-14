@@ -20308,3 +20308,36 @@ attack legality, P/T and prevention together, rejected inactive branches,
 independent factories and atomic loading. Repository regression uses complete
 Kird Ape, Sedge Troll, Giant Tortoise, Argothian Pixies, Desert Nomads and Uncle
 Istvan records. Synthetic mixed bodies establish no new full-card coverage.
+
+## Resolving attacking-band membership
+
+`BandedWith(subject PermanentRef) PermanentSet` reads the current attacking band
+for an exact present battlefield visit. Both the subject and selected members
+must match `Combat.AttackerIncarnations`. Results use battlefield order and
+include the subject when it is in a band, including a one-member band. Unbanded
+attackers, missing contexts and missing subjects supply no members. Definition
+validation rejects nil and unbound subjects. No LKI restores combat membership.
+
+Formation, ability loss and removal use the existing combat service under
+CR 702.22c–f. Phasing removes a member from combat under CR 702.26b. Phase-in
+does not restore membership. Each game clone retains separate combat state.
+Waiting delayed source traversal retains explicit source operands without
+resolving the set, reading combat or executing its body.
+
+RON resolving collections accept `BandedWith(permanentRef)` and compose it
+through the shared intersection and union services. Source, target, host and
+event references retain their existing binding checks. Temporary grants use
+`Until(EndOfTurn, GrantEachKeyword(...))`; recipients are saved at resolution
+under CR 611.2c. Later removal from combat, source departure, control changes
+and phase cycles cannot change this saved set. Return cannot inherit a grant.
+No new payment, replacement ordering, damage batch or event service is added.
+
+`TestBandedSetIdentity`, `Definitions` and `Waiting` cover exact visits, stale
+combat identities, singleton and absent bands, ability loss, phasing, removal,
+clones, definition validation and pure waiting queries. Complete Icatian
+Skirmishers RON evidence is `TestRONBandedCollectionNative`, `Pending` and
+`CapturedLifetime`: paid casting, the native BandFormer path before attack
+trigger resolution (CR 508.1–2), simultaneous first-strike and normal damage,
+expiry and saved event identity. `TargetsAndInstances`, `Invalid` and `Load`
+cover independent bindings, resolution target legality and atomic loading.
+Camel's static collection-recipient prevention remains unsupported.

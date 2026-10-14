@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [BandedWith] selects the present members of one current attacking band.
+// The subject and members must match their saved combat visits. No departure
+// facts can supply a member. Ability loss keeps the band; combat removal and
+// phasing remove membership. A one-member band includes its subject.
+// Queries do not change combat. Waiting delayed queries retain explicit source
+// operands without selecting members. Clones keep separate combat and frames.
+// RON accepts BandedWith(permanentRef) in resolving collections, including
+// nested And and Or lists. Temporary grants save recipients at resolution.
+// Static prevention, entry and payment declarations need separate adapters.
+//
 // [PreventDamageFromMatchingPermanentsIf] checks a live static condition.
 // Replacement rechecks and waiting source queries use the same condition.
 // The current source controller and exact battlefield visit supply its context.

@@ -6,36 +6,35 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **876 accepted / 110 rejected names**
-(986 total), **2,244 compiled / 201 rejected records** (2,445 total).
-The latest slice is **CONDITIONAL-STATIC-BODY**. Permanent static If, Unless
-and IfElse compose supported rule, replacement and layer declarations.
-Conditional permanent-source prevention checks the live condition during
-replacement rechecks and waiting-source queries. Layer membership limits stay
-in force. Native RON casting, branch validation, attack legality, prevention,
-P/T, source identity, attachments, phasing, clones and simultaneous damage have
-focused tests. Estimated and actual gains are **zero names / zero records**.
-This is a shared prerequisite for Camel and Guardian Beast; neither has complete
-RON gameplay coverage yet. Existing accepted records remain accepted.
+Latest measured result (2026-10-14): **877 accepted / 109 rejected names**
+(986 total), **2,245 compiled / 200 rejected records** (2,445 total).
+The latest slice is **RESOLVING-BANDED-COLLECTION**. Resolving BandedWith reads
+exact current attacking-band visits and composes with contextual collections.
+Icatian Skirmishers now has complete-record native casting, band formation,
+first-strike combat, pending trigger, identity, clone and cleanup evidence.
+Estimated and actual gains are **one unique name / one record**. Camel gains
+its engine membership prerequisite but still needs static collection prevention.
+Accepted records remain accepted. Syntax and source hashes are unchanged.
 
-The loader still rejects the collection atomically. Camel's diagnostic advances
-to its unsupported collection-recipient prevention event; other diagnostics are
-unchanged. Runtime cutover, Go-card removal and DSL cleanup remain gated.
+The loader still rejects the collection atomically. Only Icatian Skirmishers'
+former diagnostic disappears. Runtime cutover, Go-card removal and DSL cleanup
+remain gated.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Band-aware collection references — Camel and Icatian Skirmishers.**
-   Shared band membership has two concrete consumers. Camel also requires
-   collection-recipient prevention; inspect event-time band formation before
-   estimating complete-card gains for Skirmishers.
-2. **Conditional artifact protections — Guardian Beast.** Static-body dispatch
-   is ready. Implement current-controller noncreature artifact membership and
-   enchant/control protection, with existing Auras retained.
-3. **Entry choice state — Primal Clay and Shapeshifter.** Compare finite copiable
-   variants with saved numeric entry/upkeep choices. Check Primal Clay's Wall
-   variant against Oracle before estimating full-card gains.
+1. **Entry choice state — Primal Clay and Shapeshifter.** Compare a shared
+   per-entry choice prerequisite with the separate finite copiable variants and
+   saved numeric entry/upkeep consumers. Clay's two Wall records use 3/3;
+   local Oracle requires 1/6. Resolve that defect before complete-card claims.
+2. **Conditional artifact protections — Guardian Beast.** Static branches are
+   ready. Live noncreature artifact selection, control prohibition and new Aura
+   attachment prohibition with existing Auras retained need contracts.
+3. **Static collection-recipient prevention — Camel.** Typed band membership
+   is ready in the engine. Add the live static recipient adapter, not the
+   resolving collection context. Compare broader prevention consumers before
+   selecting this single-card completion.
 
 ## Dependencies and source blockers
 
@@ -9085,3 +9084,171 @@ baseline and this ledger. No source syntax or hashes changed.
 Complete RON gameplay, native runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain incomplete.
 Stop after this slice.
+
+## 2026-10-14 — RESOLVING-BANDED-COLLECTION
+
+### Baseline and candidate comparison
+
+The working tree was clean. Fresh `make build` and the complete RON package
+passed before edits. Baseline `go run ./cmd/loadcards -json` exited 1 for
+collection rejection, not a build failure: 2,244 compiled / 201 rejected records,
+876 accepted / 110 rejected names, 2,445 records / 986 names total.
+
+The latest ranked candidate #1 was dependency-ready. Complete Camel (ARN 12)
+and Icatian Skirmishers (FEM 56) records were read, including the conditional
+prevention union and attack-trigger temporary keyword grant. Targeted vocabulary
+inspection finds exactly two BandedWith occurrences, one for each unique name.
+Other compared records were Guardian Beast (ARN 35), Primal Clay (ATQ 55 and
+3ED 197) and Shapeshifter (ATQ 61). Reprints are counted once below.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream value | Estimated implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Band-aware resolving collection | Camel; Icatian Skirmishers | 1 name / 1 record: Skirmishers | Camel still needs live static collection-recipient prevention. Shared typed membership also supplies contextual counts, choices and collection actions. Existing attack resolution occurs after band formation. | Small: one engine set, one compiler adapter, identity and native combat suites. |
+| Conditional artifact protections | Guardian Beast | 1 name / 1 record if all contracts are supplied | Static branch composition is ready. Needs live noncreature artifact/controller membership, control prohibition, and new Aura attachment prohibition that keeps existing Auras. | Medium: multiple reusable protection contracts and attachment/control lifecycle tests. |
+| Entry choice state | Primal Clay; Shapeshifter | 0 for a shared state prerequisite; up to 2 names / 3 records after separate consumers | Clay needs finite copiable variants; Shapeshifter needs saved bounded number updates and dynamic P/T. Clay's Wall source defect must be resolved. Shared choice lifecycle is concrete downstream work, but these consumers do not form one small complete slice. | Larger: entry/copy state plus separate numeric upkeep and layer contracts. |
+
+Selected #1 for its small, complete shared contract and immediate full-card gain.
+The chosen reuse boundary and acceptance cases were stated before edits.
+No Go card definitions supplied requirements. Local data/FEM.json and ARN.json
+Oracle text matches the selected records. CR 508.1–2, 603.3, 608.2h,
+611.2c, 702.22c–g and 702.26b establish timing and identity contracts.
+
+### Exact contract, dependencies and engine reuse
+
+New engine API: `BandedWith(subject PermanentRef) PermanentSet`.
+It selects present current band members in battlefield order. The source and
+all members must match their exact combat incarnations. Unbanded attackers
+supply no members; one-member bands include their subject. Missing contexts,
+nil subjects and absent visits supply no members at execution. Definition
+validation rejects nil and unbound subjects. Combat membership has no LKI
+fallback. A returned visit cannot replace an old subject or combat participant.
+Ability loss keeps the band. Combat removal, departure and phasing remove band
+membership; phase-in cannot restore it. Clones read their own combat state.
+
+RON shape: `BandedWith(permanentRef)` in ordinary resolving contextual
+collections, including nested nonempty And/Or lists and existing source, host,
+target, choice and event reference scopes. Entry and draw replacement contexts
+reject this adapter. Static prevention and payment declarations remain separate.
+The compiler uses compilePermanentRef and builds operands per factory instance.
+There is no card-name branch, mutable declaration state or global action result.
+
+The engine reuses FormAttackingBand, IsAttackingIncarnation, band removal,
+PermanentRef, definition traversal, contextual set composition and saved frames.
+Waiting delayed traversal now retains explicit source operands in BandedWith;
+it does not read combat or execute actions. Existing AtNext, Until,
+GrantEachKeyword, target legality, spell/trigger copies, phasing and clone
+services keep their existing behavior. Temporary grants save recipients at
+resolution. Later combat removal, source departure, control changes and a phase
+cycle do not change those saved recipients; zone return cannot inherit a grant.
+No payment, replacement ordering or simultaneous damage mechanism was added.
+
+The native BandFormer path forms bands after individual attack events but before
+pending attack bodies resolve. Skirmishers needs its event identity at detection
+and its collection at resolution, so no attack event or band timing change is
+required. The explicit ExecuteAttackers path can likewise form a band before
+placing and resolving pending triggers.
+
+### Failing-first evidence and card-to-test mappings
+
+After correcting test setup syntax and EffectContext field names, engine tests
+failed compilation only for the missing BandedWith signature. After correcting
+the test's ability identity accessor, RON gameplay and strict-load tests failed
+on the expected unsupported BandedWith expression in the complete Skirmishers
+record. The same behavior assertions pass after implementation.
+
+- **TestBandedSetIdentity**: band inclusion and unrelated attackers, ability loss,
+  source/member return, phasing and phase cycles, combat removal, stale source
+  and member combat incarnations, and clone isolation.
+- **TestBandedSetDefinitions**: nil/unbound declarations, missing runtime context
+  and explicit source traversal.
+- **TestBandedSetWaiting**: nonattacker, unbanded attacker and one-member bands;
+  repeated pure delayed queries; exact departed source retained after return;
+  independent delayed expiry and no action on returned objects.
+- **Icatian Skirmishers → TestRONBandedCollectionNative**: complete repository
+  RON, rejected unpaid cast, paid native cast, BandFormer declaration, unrelated
+  attacker exclusion, shared first-strike and normal combat damage, retained
+  grants after combat removal, cleanup expiry and printed keyword retention.
+- **Icatian Skirmishers → TestRONBandedCollectionPending**: no grant at detection;
+  pending body survives ability removal; source/member departure and return,
+  phasing, combat removal, copied triggers and independent game clones.
+- **Icatian Skirmishers → TestRONBandedCollectionCapturedLifetime**: grants survive
+  source departure, subject phase cycles and control changes; returned subjects
+  cannot inherit them.
+- **TestRONBandedCollectionTargetsAndInstances**: two factory instances and two
+  independent bands with typed targets, duplicated union operands, untap actions,
+  returned-target rejection and later shroud at resolution.
+- **TestRONBandedCollectionInvalid**: missing, malformed, wrong-type, unbound
+  target/event and unavailable host operands.
+- **TestRONBandedCollectionLoad**: complete repository record strict loading,
+  fresh ability instances, rejected malformed collection and registry preservation.
+- **Camel**: shared engine membership prerequisite only. Its complete record
+  still rejects at static collection-recipient prevention; no full-card gameplay
+  claim is made.
+
+Estimated and actual gains match: **1 unique name / 1 record**. Complete-card
+RON gameplay coverage grows by Icatian Skirmishers. Synthetic contextual
+collection coverage and delayed source-query coverage also grow. Compilation
+acceptance remains distinct from gameplay evidence.
+
+### Source defects and preservation
+
+No RON source changed. Local data/ATQ.json confirms Primal Clay's Wall option is
+1/6 with defender, while both complete RON records use SetCopiablePT(PT(3, 3)).
+This pre-existing defect is documented for a later entry-variant slice; this run
+does not correct unrelated source data. Shapeshifter's two choice sites and
+numeric P/T consumer require their own complete supported contracts.
+
+Go definitions, startup wiring and DSL exports remain intact because the
+collection/runtime removal gates are not met. No DSL removal was attempted.
+
+### Validation and final loader evidence
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONBandedCollection -count=1` and
+`go test ./pkg/mage -run TestBandedSet -count=1` passed. `make build` and
+`go vet ./...` passed. The first engine short run found four obsolete collection
+count assertions in definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go. These now require the measured 2,245/200 result;
+no gameplay assertion was removed or weakened. After the baseline updates,
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`,
+`make test` and the skill's extra `go test ./... -short -count=1` all passed.
+
+The first `make lint` reported one preallocation issue in the new two-band test.
+Both fixed-size test slices now have capacity two. Focused RON tests passed
+again. The second complete `make lint` passed with **0 issues**. Automatic
+formatting changes were reviewed: import grouping in the new test files, with
+no unrelated changes. Focused RON and engine tests also passed after formatting.
+`git diff --check` passed. There is no environment or remaining check blocker.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as expected for atomic
+collection rejection: **2,245 compiled / 200 rejected records**, **877 accepted /
+109 rejected unique names**, out of 2,445 records / 986 names. Exact baseline
+comparison removes only Icatian Skirmishers' former unsupported BandedWith
+message (FEM 56:325). Every remaining diagnostic, including Camel's unsupported
+conditional static prevention event (ARN 12:200), is unchanged. No accepted
+record regresses. The vocabulary loader baseline equals the final report;
+syntax entries and source hashes remain unchanged.
+
+Changed files: new engine banded_set.go and banded_set_test.go; engine
+waiting_delayed_source.go; compiler contextual_collection.go and new
+banded_collection_test.go; the three collection-count test files; pkg/mage/doc.go,
+docs/dsl-reference.md, docs/engine-rules-contracts.md, the vocabulary loader
+baseline and this ledger. No production card, startup or DSL export changed.
+
+### Ranked next candidates
+
+1. **Entry choice state — Primal Clay and Shapeshifter.** Compare a shared
+   per-entry choice prerequisite with finite copiable variants and saved numeric
+   entry/upkeep consumers. Audit the complete Clay Wall option and correct both
+   reprints with Oracle evidence before any full-card claim.
+2. **Conditional artifact protections — Guardian Beast.** Conditional body
+   composition is ready. Current-controller noncreature artifact membership,
+   control prohibition and new Aura attachment prohibition that keeps existing
+   Auras remain separate reusable contracts.
+3. **Static collection-recipient prevention — Camel.** The engine now has
+   exact live band membership. Static lowering still needs its own collection
+   context and replacement recheck contract. Compare broader multi-card
+   prevention work before choosing this single-card completion.
+
+Complete RON gameplay, runtime loading, Go-card deletion, obsolete Go-set
+generation removal and unused DSL cleanup remain incomplete. Stop after this
+slice.

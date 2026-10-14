@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2244,
+    "compiled": 2245,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1345,7 +1345,6 @@
       {"card": "Whippoorwill", "source": {"File": "DRK.lines.ron", "Line": 115, "Column": 1}, "message": "DRK.lines.ron:115:341: unsupported temporary rule operation (DamageDealtToItCantBePreventedOrRedirected)"},
       {"card": "Conch Horn", "source": {"File": "FEM.lines.ron", "Line": 9, "Column": 1}, "message": "FEM.lines.ron:9:284: unsupported action (PutACardFromHandOnTopOfLibrary)"},
       {"card": "Heroism", "source": {"File": "FEM.lines.ron", "Line": 41, "Column": 1}, "message": "FEM.lines.ron:41:291: unsupported combat prevention collection union (And)"},
-      {"card": "Icatian Skirmishers", "source": {"File": "FEM.lines.ron", "Line": 56, "Column": 1}, "message": "FEM.lines.ron:56:325: unsupported permanent filter (BandedWith)"},
       {"card": "Merseine", "source": {"File": "FEM.lines.ron", "Line": 61, "Column": 1}, "message": "FEM.lines.ron:61:455: unsupported cost (PayManaCostOfPermanent)"},
       {"card": "Orgg", "source": {"File": "FEM.lines.ron", "Line": 70, "Column": 1}, "message": "FEM.lines.ron:70:195: unsupported self untap operations ()"},
       {"card": "Rainbow Vale", "source": {"File": "FEM.lines.ron", "Line": 72, "Column": 1}, "message": "FEM.lines.ron:72:313: unsupported value (ThisPermanent)"},
