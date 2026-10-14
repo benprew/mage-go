@@ -7,7 +7,17 @@
 // Subject colors and controllers use current layers. Clones keep separate choices.
 // RON accepts PlayerPassesFilter with You or a source entry-chosen player,
 // ControlsA or ControlsNo, and a chosen-color predicate in a conjunction.
-// Choice disjunctions, target predicates and state-event adapters stay separate.
+// Choice disjunctions and target predicates stay separate.
+//
+// [PlayerControlsNone] checks absence only for a known player.
+// [PlayerControlsNoneOfChosenColor] also requires a live source color choice.
+// Missing choices, source departure and source phasing cannot supply absence.
+// RON accepts a source entry-chosen player in no-permanent state triggers.
+// Fixed filters and chosen-color conjunctions use current control and colors.
+// [WhenState] keeps one pending or active trigger per source visit and rule.
+// Pending bodies keep the detected controller and source visit. They do not
+// check membership again. Return cannot supply that source. Copies and clones
+// keep separate choices and pending bodies. Ability removal stops detection.
 //
 // [OpponentUpkeep] checks the source controller when an upkeep begins.
 // It saves that upkeep player in a separate event binding. Pending bodies keep
@@ -26,13 +36,13 @@
 // Departure and phasing use saved information. Return cannot replace the visit.
 // Subjects use current colors and must be present and unphased.
 // RON accepts IsColor(TheChosenColor) in resolving permanent collections
-// with a source entry choice. Static and target predicates stay separate.
+// with a source entry choice. Target predicates stay separate.
 // [RequiredEntryOperations] runs one required sequence before entry.
 // Children run in order. A rejected child stops the sequence and entry.
 // RON accepts one source entry rule with a color choice then an opponent choice.
 // Both choices use existing services and keep separate permanent fields.
 // Copies and returns choose again. Control changes and phasing keep choices.
-// Other joint entry operations and static/state choice reads stay separate.
+// Other joint entry operations need separate adapters.
 //
 // [PreventDamageToSourceByRemovingCounters] removes one matching counter for
 // each damage point and prevents that point. Unpreventable damage still removes
@@ -402,7 +412,7 @@
 // groups and AnyTargetOfAPlayersChoice(Opponent). AnyTargetAsAPermanent requires
 // one singular union binding. Damage and prevention use shared typed services.
 //
-// RON no-land state triggers use [ControlsNone] with a current land-type filter.
+// RON no-land state triggers use [PlayerControlsNone] with a live land filter.
 // [WhenState] keeps one pending or active trigger per source visit and rule.
 // A new land does not cancel a pending trigger. Countering permits a new trigger.
 // Phasing and ability removal stop detection. Saved controllers and source visits

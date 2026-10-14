@@ -126,11 +126,8 @@ func TestRONColorEntryInventoryAndRealRequirements(t *testing.T) {
 	for _, tc := range []struct{ set, name string }{{"DRK", "Psychic Allergy"}, {"ARN", "Jihad"}} {
 		node := repositoryRecord(t, tc.set, tc.name, tc.set+".ron")
 		_, err := Compile(node)
-		if tc.name == "Psychic Allergy" && err != nil {
+		if err != nil {
 			t.Fatal(err)
-		}
-		if tc.name == "Jihad" && err == nil {
-			t.Fatalf("claimed complete unsupported record: %s", tc.name)
 		}
 		rules := node.Fields["Rules"].Args
 		entry := rules[0]

@@ -11,8 +11,8 @@ import (
 
 func TestRONChosenStaticJihadRequirement(t *testing.T) {
 	record := repositoryRecord(t, "ARN", "Jihad", "ARN.lines.ron")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported no-land trigger player reference") {
-		t.Fatalf("remaining state-event gap: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("complete Jihad record: %v", err)
 	}
 	rules := record.Fields["Rules"].Args
 	record.Fields["Rules"] = Node{Kind: List, Args: rules[:2]}

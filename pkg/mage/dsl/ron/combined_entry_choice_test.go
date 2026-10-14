@@ -122,8 +122,8 @@ func TestRONCombinedEntryChoiceInvalid(t *testing.T) {
 
 func TestRONCombinedEntryChoiceJihad(t *testing.T) {
 	record := repositoryRecord(t, "ARN", "Jihad", "ARN.lines.ron")
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "unsupported no-land trigger player reference") {
-		t.Fatalf("expected remaining Jihad state-event blocker: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("complete Jihad record: %v", err)
 	}
 	entry := record.Fields["Rules"].Args[0]
 	if err := validateColorEntryDeclaration([]Node{entry}, true); err != nil {

@@ -107,8 +107,8 @@ func TestRONChosenColorFilterRealRequirements(t *testing.T) {
 	if _, err := Compile(psychic); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Compile(jihad); err == nil {
-		t.Fatal("claimed unsupported complete card")
+	if _, err := Compile(jihad); err != nil {
+		t.Fatal(err)
 	}
 	rules := psychic.Fields["Rules"].Args
 	entry, err := compilePermanentEntry(rules[0])

@@ -19119,8 +19119,8 @@ RON `TestRONColorEntry*` covers strict lowering, invalid declarations, native
 casting, failed payment, pending clones, phasing, return, semantic inventory,
 atomic collection rejection and Psychic Allergy's unchanged entry declaration.
 The resolving chosen-color information contract is recorded below. Combined
-color/opponent entry choices are supported below. Jihad's static/state consumers
-require separate slices.
+color/opponent entry choices are supported below. Jihad's static and state
+consumers have separate contracts below.
 Legacy ETB color helpers retain their current callers and behavior.
 
 ## Exact chosen-color collection information
@@ -19181,9 +19181,9 @@ static chosen-color membership, state trigger or joint whole-object text revisio
 
 Evidence: `TestRequiredEntryOperationsOrderAndFailure`, `Declarations`,
 `CopyReplacementAndBatch`, `ChoiceOrder`; `TestRONCombinedEntryChoiceGameplay`,
-`Invalid`, `Jihad`, `Consumers`. Jihad uses its complete unchanged record for
-remaining-blocker checks and its exact entry declaration for gameplay. No full
-Jihad gameplay support is claimed.
+`Invalid`, `Jihad`, `Consumers`. Jihad's exact entry declaration retains separate
+gameplay evidence. Its complete unchanged record now compiles, with full-card
+gameplay established by the source-choice absence contract below.
 
 ## Opponent upkeep with typed event capture
 
@@ -19246,3 +19246,41 @@ casting/entry timing, both players' white recipients, nonwhite exclusion,
 nontoken membership, changing color/control, late subjects, phasing, source
 return, independent instances, clones and ability removal. State detection,
 replacement ordering, payments and simultaneous actions gain no new contract.
+
+## Source-choice absence conditions and state detection
+
+`PlayerControlsNone(player PlayerRef, filter PermanentFilter) StateCondition`
+checks that a known player controls no present matching permanents. It uses the
+shared `resolveStatePlayer`, `PlayerControls` and `FilterBattlefield` readers.
+It accepts the existing controller, active-player, bound-player and source
+`ChosenPlayerOf(This)` contexts. Bound players must have a definition producer.
+Missing or unknown players return false, rather than satisfying absence.
+
+`PlayerControlsNoneOfChosenColor(player PlayerRef, filter PermanentFilter)
+StateCondition` requires a live source with a valid five-color entry choice.
+It accepts `You`, `ActivePlayer` or `ChosenPlayerOf(This)` and uses the supplied
+filter in conjunction with that color. Definition checks reuse the positive
+condition contracts; nil, attachment/saved-object chosen references and unbound
+players reject. `StateContext.SourceIncarnation` prevents old queries from reading
+returned choices. Source departure/phasing supplies no LKI to these conditions.
+
+`WhenState` uses these pure declarations through the existing state-trigger
+service (CR 603.8). Each source visit/rule can have one pending or active trigger.
+Phasing and ability removal stop detection; restoration permits it. Subject
+control and color use current layers (CR 613.1b/e). Nontoken filters exclude
+physical tokens regardless of copy characteristics. Pending bodies retain source
+identity and the controller at detection (CR 603.3a, 113.7a); ordinary state
+triggers do not check membership again at resolution. A returned source cannot
+be sacrificed by its old body (CR 400.7), and a phased source cannot be acted on
+(CR 702.26b). A controller change after detection does not authorize the old
+controller to sacrifice the source (CR 701.21a). New detection under the new
+controller remains possible after the old trigger leaves the stack.
+
+Native evidence: `TestPlayerAbsenceConditionIdentity` and `Declarations` cover
+missing/invalid choices, exact visits, phasing, multicolor subjects, tokens,
+clone isolation and definition validation. RON evidence:
+`TestRONChosenStateAbsenceJihad`, `Lifecycle`, `SpellCopy`, `Filters`, `Invalid`.
+Complete Jihad gameplay includes actual casting, separate entry choices for spell
+copies, global white P/T and queued sacrifice after membership returns. Existing
+`TestRONChosenStatic*` and `TestRONCombinedEntryChoice*` retain their subrule tests.
+No new payment, replacement-order or simultaneous-operation contract is added.

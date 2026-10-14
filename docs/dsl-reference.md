@@ -14558,8 +14558,8 @@ shared entry batch precede its battlefield registration and entry events.
 Psychic Allergy's unchanged entry declaration has direct gameplay evidence.
 Its complete record still requires the opponent-upkeep selector. Resolving
 chosen-color collections are supported by the contract below. Jihad's combined
-color/opponent entry declaration is supported below; static chosen-color
-predicates, conditional layer and state trigger remain rejected. The entry-choice slice claims no complete gameplay coverage for either card. Resolving
+color/opponent entry declaration, static predicate/layer and state trigger have
+separate contracts below. The entry-choice slice alone supplies subrule coverage. Resolving
 color choices retain their existing separate adapter and result lifetime.
 
 ## RON resolving chosen-color collections
@@ -14659,7 +14659,45 @@ and `PlayerControlsChosenColor(player, filter)` for chosen-color conjunctions.
 prior lowering. Queries use live source choices and current subject membership.
 
 `TestRONChosenStaticJihadRequirement` executes Jihad's exact entry and static
-rules with its unchanged metadata. Its complete record still rejects the
-separate chosen-player no-permanent state event. This test is subrule evidence,
-not full-card gameplay coverage. `TestRONChosenStaticPlayerAndColorContexts`
+rules with its unchanged metadata. The complete record also compiles after the
+chosen-player state-event slice below. This test remains entry/static subrule evidence; the state-event tests
+provide complete-card gameplay coverage. `TestRONChosenStaticPlayerAndColorContexts`
 and `TestRONChosenStaticInvalid` verify supported contexts and rejection.
+
+## RON source-chosen player absence state events
+
+Ordinary battlefield `TriggerA` accepts
+`WhenAPlayerControlsNoPermanents(SinglePlayer(TheChosenPlayer), filter)`.
+The player read requires the source's validated `ChooseAPlayer(Opponent)` entry
+operation. Fixed filters use the static condition filter grammar, including
+nonempty fixed `And` and `Or` groups. `IsColor(TheChosenColor)` is accepted alone
+or inside nonempty nested conjunctions, with the source's validated
+`ChooseAColor(AnyColor)` entry operation. Chosen-color disjunctions, tuple reads,
+missing producers and action/event-local player reads reject at compilation.
+This state event supplies no `Trigger_ThatPlayer` binding to its body.
+
+Lowering uses `PlayerControlsNone(ChosenPlayerOf(This), filter)` or
+`PlayerControlsNoneOfChosenColor(ChosenPlayerOf(This), filter)` with `WhenState`.
+Existing `SinglePlayer(You)` land-type/card-type forms use `PlayerControlsNone`
+and keep their filter restrictions. Entry, replacement, delayed-event declarations
+and intervening-if forms retain separate contracts.
+
+Membership reads current subject control and color, excludes phased subjects and
+uses the exact source's live entry choices. Missing information cannot satisfy
+absence. Pending/stacked triggers suppress repeated detection. Countering or
+resolution permits new detection. Source phasing and ability removal stop new
+detection. A queued body retains its source visit and controller; restoring a
+member does not cancel sacrifice. Return cannot supply the old source. Copies,
+independent factories and cloned games keep separate choices and pending bodies.
+
+`TestRONChosenStateAbsenceJihad`, `Lifecycle` and `SpellCopy` execute the complete
+unchanged Jihad record. Its entry, global white-creature bonus and state sacrifice
+now have combined gameplay evidence. `Filters` covers fixed and nested predicate
+forms through an explicit RON registry. `Invalid` verifies declaration rejection
+and atomic loading. Existing land-dependence gameplay tests retain coverage for
+all previously accepted no-permanent state-event cards.
+
+`TestRONChosenStateAbsenceExistingCards` supplies direct absence-rule gameplay
+for seven other complete records. Giant Shark and Seasinger retain rejection
+checks for unrelated full-record gaps and test-only exact absence subrule
+projections. Those projections establish no full-card gameplay coverage.

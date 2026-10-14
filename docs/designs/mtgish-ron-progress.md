@@ -6,34 +6,38 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **859 accepted / 127 rejected names**
-(986 total), **2,206 compiled / 239 rejected records** (2,445 total).
-The latest slice is **LIVE-ENTRY-CHOICE-STATIC-MEMBERSHIP**. Static player
-conditions read the source's entry-chosen player and color through live engine
-queries. Jihad's exact entry and conditional global P/T rules have gameplay
-coverage. Its complete record still rejects its separate state-event adapter.
-Estimated and actual full-card gains are zero names and zero records.
+Latest measured result (2026-10-13): **860 accepted / 126 rejected names**
+(986 total), **2,207 compiled / 238 rejected records** (2,445 total).
+The latest slice is **SOURCE-CHOICE-PLAYER-ABSENCE-STATE-EVENT**. RON no-permanent
+state events read source entry choices through guarded engine absence queries.
+Jihad's complete unchanged record now compiles and has gameplay coverage for
+entry choices, its global white P/T bonus and its state-triggered sacrifice.
+Estimated and actual full-card gains are one name and one record.
 
-Source visits, phasing, current controller/color membership, ability removal,
-independent instances and clones have contract evidence. The strict loader still
-rejects the collection atomically. Runtime cutover, Go-card removal and DSL
-cleanup stay gated. Compilation counts do not establish full-card gameplay.
+Seven previously accepted controller-land absence cards use the same engine
+query and retain their gameplay tests. Two other complete records still reject
+unrelated filters; their exact absence subrules have explicit tests. Exact source visits, pending controller,
+phasing, ability removal, copies and clones have contract evidence. The loader
+still rejects the collection atomically. Runtime cutover, Go-card removal and
+DSL cleanup stay gated. Compilation counts do not establish collection gameplay.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Chosen-player no-permanent state event — Jihad.** Entry choices and live
-   static membership are complete. Add state detection with pending-trigger
-   suppression and exact source lifetime. One potential full name / record;
-   medium effort. Recompare shared multi-card candidates before selecting.
-2. **Mandatory entry exile payment with announced X — Frankenstein's Monster.**
-   Entry transaction, result/failure scope and combination counter placement
-   remain. Zero immediate gains from payment alone; medium/high effort.
-3. **Persistent number choices — Shapeshifter.** Entry 0–7 choice, optional
+1. **Mandatory entry exile payment/results — Frankenstein's Monster.**
+   Ordered entry and announced X are ready. Entry transaction, exact graveyard
+   visits, local outcome/failure routing and combination counter placement
+   remain. Zero immediate full-card gains from payment alone; medium/high effort.
+2. **Persistent number choices — Shapeshifter.** Entry 0–7 choice, optional
    controller-upkeep update and live P/T must share one per-visit number. One
    potential name / record after all three contexts; medium/high effort.
+3. **Nonbattlefield source lifetimes.** Recompare graveyard/exile/hand-source
+   rules before selecting another single-card adapter. Shared trigger ownership,
+   source-zone visit identity and pending lifetime are prerequisites for cards
+   such as Nether Shadow, All Hallow's Eve and Psychic Purge. Unlocks depend on
+   the chosen context and nested operations; high effort, no gain assumed.
 
 ## Dependencies and source blockers
 
@@ -4959,3 +4963,209 @@ and this ledger. No card source or production registry changed.
 
 This run stops after live entry-choice static membership. Complete migration
 remains gated by collection, gameplay, runtime and removal work.
+
+
+## 2026-10-13 — SOURCE-CHOICE-PLAYER-ABSENCE-STATE-EVENT
+
+### Selection and fresh baseline
+
+The initial working tree was clean. `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before edits. Fresh
+`go run ./cmd/loadcards -json` exited 1 with **2,206 compiled / 239 rejected
+records**, **859 accepted / 127 rejected names**. This was strict collection
+rejection, not a build/test/environment failure.
+
+The latest ranked candidates were evaluated first. Complete unchanged records
+were read for Jihad, Frankenstein's Monster and Shapeshifter. Targeted vocabulary
+reads checked `WhenAPlayerControlsNoPermanents`, `TheChosenColor`, `ChooseAColor`,
+`ChooseANumberBetween`, `TheChosenNumber` and mandatory payment constructors.
+All ten distinct records using the selected absence event were also read.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected names | Estimated complete gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Source-choice player absence state event | Jihad; shared query also serves Pirate Ship, Sea Serpent, Dandân, Island Fish Jasconius, Merchant Ship, Serendib Djinn, Giant Shark, Seasinger, Vodalian Knights | 1 name / 1 record; seven others compile; Giant Shark and Seasinger remain rejected | Entry choices and static membership are ready. Adds safe typed negative membership and reuses state-trigger lifetime across ten names. No other Jihad blocker is found in the complete nested record. Giant Shark still rejects its damage-history combat filter; Seasinger still rejects its controller target filter. | Low/medium; adapters, guarded engine queries and lifecycle tests |
+| Mandatory entry exile payment/results | Frankenstein's Monster | 0 from payment alone | ValueX entry facts are ready; exact graveyard payment, entry-local paid-card result/failure and combination-counter choice are not. A complete card requires those separate consumers. General entry transactions can support later entry-cost work, but this exact exile shape has one unique consumer. | Medium/high |
+| Persistent number choices | Shapeshifter | 1 only after all three contexts | Neither the entry producer, optional upkeep writer nor power/7-minus-number layer reader exists. Both producer occurrences and both number reads belong to this one card. Requires a new shared per-visit number contract. | Medium/high |
+
+Candidate #1 wins on a complete record gain for the smallest credible effort.
+It is dependency-ready and also shares its engine query with seven accepted
+absence-event cards and two already supported subrules of rejected cards. The compared payment and number families do not expose
+an additional ready multi-card unlock: nested consumers are counted rather than
+assuming family names imply support. No first-error frequency was treated as a
+full-card estimate. No engine layer, entry or trigger service was recreated.
+
+Before edits, the acceptance contract required validated entry producers,
+current control/color membership, nontoken exclusion, exact source identity,
+pending and active suppression, rearming, source/subject phasing, source control
+changes, departure/return, ability removal, copies, independent instances,
+clone isolation and complete Jihad gameplay. Unsupported declarations must
+reject before runtime; collection rejection must remain atomic.
+
+### Established signatures, scopes and engine boundary
+
+Ordinary battlefield `TriggerA` now lowers:
+
+- `WhenAPlayerControlsNoPermanents(SinglePlayer(TheChosenPlayer), filter)`.
+  The player requires a validated source `ChooseAPlayer(Opponent)` entry rule.
+- Fixed filters use the existing static-condition grammar, including nonempty
+  fixed conjunctions/disjunctions. `IsColor(TheChosenColor)` is accepted alone
+  or in nonempty nested conjunctions. It requires the source color entry rule.
+- Missing producers, tuple choice reads, chosen-color disjunctions, empty groups,
+  action-local players and unbound `Trigger_ThatPlayer` body reads reject.
+  This state event does not introduce an event-player binding.
+- Existing `SinglePlayer(You)` basic-land/card-type forms retain their restrictions.
+  They now lower through the same fixed absence query.
+
+New engine declarations:
+
+- `PlayerControlsNone(player PlayerRef, filter PermanentFilter) StateCondition`.
+  Existing controller, active-player, bound-player and source-chosen-player
+  contexts use shared player resolution. Unknown or missing players return false.
+- `PlayerControlsNoneOfChosenColor(player PlayerRef, filter PermanentFilter)
+  StateCondition`. Supports `You`, `ActivePlayer` and `ChosenPlayerOf(This)`.
+  Requires a live exact source visit and a valid five-color choice. It composes
+  the fixed absence reader with a color filter; absent/phased/returned sources
+  cannot supply choices and there is no state-query LKI fallback.
+
+RON owns spelling, choice-producer checks and filter lowering. The engine owns
+negative membership. Shared `PlayerControls`, `resolveStatePlayer`,
+`resolveStatePermanent`, `FilterBattlefield`, `WhenState`, state keys, pending
+trigger snapshots, resolution frames, sacrifice and layers provide execution.
+Definition validation reuses existing typed player/source condition contracts.
+Declarations contain no mutable choice or game state. Factories still build
+fresh trigger/action identities. No global result slot, card-name branch,
+Go factory fallback, game-time declaration panic or partial registry was added.
+
+Pending/stacked triggers keep the detected controller/source visit and suppress
+new detection. Countering or resolving allows new detection. Membership returning
+does not cancel a queued sacrifice. Ability removal and phasing stop detection;
+phase-in restores choices. Pending phase cycles cannot repeat a trigger. Source
+control changes preserve entry choices. The old controller cannot sacrifice a
+source acquired by another player. Return keeps the old pending visit separate.
+Copies, separate factories and clones keep distinct choices and pending bodies.
+
+### Rules, data and failing-first evidence
+
+Local `data/ARN.json` confirms Jihad's color/opponent entry choices, white global
++2/+1 condition, nontoken member restriction and separate absence sacrifice.
+CR 603.8 supplies pending/active suppression and rearming; CR 603.3a and 113.7a
+supply detected controller and source independence. CR 400.7 separates returns,
+CR 702.26b excludes phased objects, CR 701.21a restricts sacrifice to the current
+controller, and current control/color layers supply live membership.
+
+Native `TestPlayerAbsenceCondition*` first failed compilation with undefined
+`PlayerControlsNone` and `PlayerControlsNoneOfChosenColor`. The initial RON
+fixture used `StackObject.ControllerID`; this was corrected to the existing
+`Controller` field before confirming the intended failure. All complete Jihad
+RON cases then failed at `unsupported no-land trigger player reference
+(TheChosenPlayer)` before implementation. Invalid cases already rejected.
+
+One lifecycle assertion initially drained the entire stack after source control
+changed while the absence condition stayed true. The engine correctly queued a
+new trigger for the new controller after the original left the stack. The fixture
+now restores membership before control changes to isolate the old-controller
+sacrifice restriction; no engine rule or production assertion was weakened.
+
+This slice fills compiler adapters and a reusable guarded negative-query
+contract. No source defect or environment failure was found. No RON source
+changed, so the vocabulary source/hash snapshot requires no refresh. Runtime
+and removal gates remain closed. No Go cards, generators or broad DSL functions
+were removed; no unused-function removal was attempted.
+
+### Card-to-test mapping
+
+**Jihad → `TestRONChosenStateAbsenceJihad`, `Lifecycle`, `SpellCopy`.** These
+execute its complete unchanged record, including actual casting, entry timing,
+color/opponent choices, both players' white-creature P/T bonus, artifact and
+nontoken membership, current color/control, member phasing, source phasing and
+ability removal/restoration, pending/active suppression, counter rearming,
+pending control/return identity, restored membership before resolution,
+owner graveyard destination, copied spell choices, copied triggered abilities,
+independent factories and game clones. `TestRONChosenStaticJihadRequirement`
+retains detailed entry/static subrule coverage, including nonwhite exclusion,
+late subjects and source return; `TestRONCombinedEntryChoiceJihad` retains
+its entry-only test. Earlier color/entry tests now require complete compilation.
+
+**Seven previously accepted absence-event cards →
+`TestRONChosenStateAbsenceExistingCards`.** Pirate Ship, Sea Serpent, Dandân,
+Island Fish Jasconius, Merchant Ship, Serendib Djinn and Vodalian Knights execute
+their complete records for presence, member phasing, pending suppression and
+unconditional queued sacrifice after phase-in. Existing `TestRONLandDependence*`,
+`TestRONSourceAttack*` and `TestRONNoLandType*` retain their broader rule mappings.
+
+**Giant Shark and Seasinger → the same `ExistingCards` test, subrule coverage.**
+Their complete records are required to keep rejecting respectively at
+`expected 1 positional arguments (WasDealtDamageThisTurn)` and
+`unsupported permanent target controller (ControlsA)`. Test-only projections
+retain unchanged metadata and each exact absence trigger. They run that state
+rule through the engine; this is not complete-card gameplay evidence and no
+production registry skips their other rules. The fresh loader keeps both full
+records rejected at identical diagnostics.
+
+`TestRONChosenStateAbsenceFilters` checks fixed color, fixed disjunction and
+nested chosen-color conjunctions through explicit RON registries.
+`Invalid` checks declaration errors and atomic rejection preserving an existing
+registry. Native `Identity` checks missing/invalid choices, multicolor/token
+subjects, exact/stale visits, source/member phasing and clone isolation;
+`Declarations` checks typed-reference boundaries.
+
+### Validation and measured result
+
+- Focused RON and native tests passed with `-count=1`; related chosen-entry,
+  static, land-dependence, no-land, source-attack and combat-pair groups passed.
+- `make build` and `go vet ./...` passed.
+- The first engine short run found six obsolete acceptance/count assertions:
+  two still required Jihad rejection and four required 2,206/239. They were
+  updated to require compilation and exact measured 2,207/238 counts. The
+  rebuilt-definition test also checks Jihad's fresh accepted factory.
+- After those updates, focused/count tests, `make build`, `go vet ./...`,
+  `go test ./pkg/mage/... -short -count=1` and `make test` all passed.
+- Final review added direct absence-event tests for the other nine syntax users.
+  The first run exposed existing Giant Shark and Seasinger full-record gaps;
+  both are now asserted as rejection boundaries with test-only exact subrule
+  projections. Seven complete records retain direct regression evidence.
+- `make lint` passed with 0 issues. Its only automatic changes were import
+  grouping in the new engine/test files. After review, native condition tests
+  and the whole RON package passed; after the explicit existing-card regression
+  addition, the required sequence and final native/RON slice tests passed again.
+  No behavior or assertion changes came from lint.
+- `git diff --check` passed, including the final ledger/documentation update.
+- Final `go run ./cmd/loadcards -json` exited 1 with **2,207 compiled / 238
+  rejected records**, **860 accepted / 126 rejected names**, out of 2,445 records
+  and 986 names. Diagnostic comparison with the fresh baseline removes only
+  Jihad at ARN:44:470 (`unsupported no-land trigger player reference
+  (TheChosenPlayer)`). There are no added or changed remaining diagnostics.
+  Giant Shark and Seasinger keep their exact earlier rejection diagnostics.
+  All previously accepted records remain accepted. Loading remains atomic.
+
+Actual full-card gain is **one name / one record**, matching the estimate.
+Jihad advances from entry/static subrule evidence to complete-card gameplay.
+The other seven accepted absence-event names remain accepted. Giant Shark and
+Seasinger remain rejected at unrelated adapters, with new absence subrule
+evidence only.
+Complete collection gameplay, embedded loading, startup cutover, Go-card
+removal and DSL cleanup remain unfinished.
+
+Changed files: new `pkg/mage/player_absence_condition.go`, its native tests and
+`pkg/mage/dsl/ron/chosen_state_absence_test.go`; updated `land_dependence.go`,
+`triggers.go`, prior chosen-color/static/entry assertions, collection inventory,
+numeric-consumer and definition-plan count assertions; `pkg/mage/doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+
+### Ranked next candidates
+
+1. **Mandatory entry exile payment/results — Frankenstein's Monster.**
+   Source entry X and required operation order are ready. Add exact graveyard
+   transaction and entry-local paid-card outcomes/failure routing before the
+   combination-counter consumer. Zero immediate gains from payment alone;
+   medium/high effort. Recompare shared entry-cost work.
+2. **Persistent number choices — Shapeshifter.** One number visit must serve
+   entry, optional upkeep updates and live power/7-minus-choice toughness.
+   One potential full name / record after all three contexts; medium/high effort.
+3. **Nonbattlefield source lifetimes.** Compare complete Nether Shadow,
+   All Hallow's Eve and Psychic Purge records to scope a shared trigger/source
+   visit prerequisite. Their graveyard/exile/hand rules have separate nested
+   blockers; no full gains are assumed until that comparison. High effort.
+
+This run stops after source-choice player absence state events.

@@ -58,7 +58,7 @@ func compileDefendingLandRule(n, operation Node, ctx scope) (optionFactory, erro
 	}, nil
 }
 
-func compileNoLandTrigger(event, body Node, ctx scope) (optionFactory, error) {
+func compilePlayerAbsenceTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err := arity(event, 2); err != nil {
 		return nil, err
 	}
@@ -69,12 +69,31 @@ func compileNoLandTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err := arity(player, 1); err != nil {
 		return nil, err
 	}
-	if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
-		return nil, unsupported(player.Args[0], "no-land trigger player reference")
+	var condition mage.StateCondition
+	if player.Args[0].Kind != Symbol {
+		return nil, unsupported(player.Args[0], "no-permanent trigger player reference")
 	}
-	filter, err := compileNoLandStateFilter(event.Args[1])
-	if err != nil {
-		return nil, err
+	switch player.Args[0].Name {
+	case "You":
+		filter, err := compileNoLandStateFilter(event.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		condition = mage.PlayerControlsNone(mage.You, filter)
+	case "TheChosenPlayer":
+		if !ctx.permanent || ctx.opponentEntryChoice == nil {
+			return nil, problem(player.Args[0], "state chosen player requires a source entry choice")
+		}
+		filter, chosen, err := compileStaticChosenColorConjunction(event.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		condition = mage.PlayerControlsNone(mage.ChosenPlayerOf(mage.This), filter)
+		if chosen {
+			condition = mage.PlayerControlsNoneOfChosenColor(mage.ChosenPlayerOf(mage.This), filter)
+		}
+	default:
+		return nil, unsupported(player.Args[0], "no-permanent trigger player reference")
 	}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
@@ -82,7 +101,7 @@ func compileNoLandTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	}
 	return func() mage.CardOption {
 		actions := plan.build()
-		trigger := mage.WhenState(mage.ControlsNone(filter), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		trigger := mage.WhenState(condition, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil
