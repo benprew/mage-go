@@ -2,6 +2,22 @@ package mage
 
 import "github.com/google/uuid"
 
+// TargetPowerLessThanOrEqualToSourcePower compares current power values.
+// An absent source supplies its retained power at resolution.
+func TargetPowerLessThanOrEqualToSourcePower() PermanentTargetOption {
+	return targetPowerLESourceOption{}
+}
+
+type targetPowerLESourceOption struct{}
+
+func (targetPowerLESourceOption) permanentTargetOption() {}
+func (targetPowerLESourceOption) applyPermanentTarget(t *PermanentTarget) {
+	t.powerLESourcePower = true
+}
+func (targetPowerLESourceOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-source-power", Text: "power no greater than source power", battlefieldSource: true}
+}
+
 // TargetToughnessLessThanSourcePower checks current target toughness against
 // source power. An absent source uses its retained power at resolution.
 func TargetToughnessLessThanSourcePower() PermanentTargetOption {

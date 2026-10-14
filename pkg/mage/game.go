@@ -239,6 +239,7 @@ func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 		expired = g.effects.expireSourceTapped(permanentID) || expired
 		expired = g.effects.expireSourcePresence(permanentID) || expired
 		expired = g.effects.expireCapturedControlSource(permanentID, false) || expired
+		expired = g.effects.expireControlPowerSubject(permanentID) || expired
 	}
 	if expired {
 		g.ApplyContinuousEffects()

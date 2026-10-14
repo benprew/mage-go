@@ -16645,3 +16645,39 @@ controller determines opponents at announcement; the activator pays the cost.
 Pyramids and Clergy of the Holy Nimbus are mapped to complete RON gameplay by
 `TestRONDestructionReplacement*`. See the destruction replacement contract in
 [engine-rules-contracts.md](engine-rules-contracts.md).
+
+## RON source-bound control extensions
+
+Permanent-source targets accept exactly
+`PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent)))`, directly or in
+existing target conjunctions. Fixed power predicates retain their behavior.
+This lowers to `mage.TargetPowerLessThanOrEqualToSourcePower()`. Source LKI
+can supply target legality after departure; it cannot start a control duration.
+
+`GainControlOfPermanentUntil(subject, Or([
+ForAsLongAsPermanentRemainsTapped(ThisPermanent),
+UntilPermanentNoLongerPassesFilter(subject,
+PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent))))]))`
+accepts either endpoint order and requires exactly one of each. The endpoint
+subject must be the same typed reference as the controlled subject. It lowers
+to `mage.GainControlWhileSourceTappedAndPowerLE(subject)`. Either endpoint ends
+the duration permanently. Completed layers supply current power. Source control
+changes do not end it; target phasing does. This completes Old Man of the Sea,
+including its independent optional untap permission.
+
+`GainControlOfEachPermanentUntil(collection,
+UntilPermanentChangesControl(You, ThisPermanent))` accepts existing contextual
+permanent collections. It lowers to
+`mage.GainControlEachWhileSourceControlled(collection)`. Membership is captured
+at resolution. Later combat removal and entries cannot change that membership.
+Source control loss, phasing or departure ends it permanently. Target phasing
+preserves this source-only duration. The Wretched uses current blockers at end
+of combat; unrelated blockers are excluded and blockers removed before
+resolution are absent from the captured set.
+
+Both control forms require ordinary resolving bodies with permanent sources.
+Static, cost, entry and draw-replacement contexts reject. Other power sources,
+comparisons and plural durations remain errors. Targets, modes, events and
+copies retain existing per-instance bindings and exact visits. No RON source
+record or vocabulary snapshot changes. Evidence: `TestRONSourceControlExtensions*`
+and `TestSourceControlExtensions*`.

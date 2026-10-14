@@ -88,10 +88,10 @@ func (e *controlContinuousEffect) GetLayer() Layer       { return LayerControl }
 func (e *controlContinuousEffect) GetDuration() Duration { return e.duration }
 
 func (e *controlContinuousEffect) IsActive(g *Game) bool {
-	return e.isActive(g, true)
+	return e.isActive(g, true, false)
 }
 
-func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
+func (e *controlContinuousEffect) isActive(g *Game, latchExpiration, deferPower bool) bool {
 	if e.expired {
 		return false
 	}
@@ -112,6 +112,9 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 		return false
 	}
 	for _, condition := range e.conditions {
+		if _, power := condition.(ControlTargetPowerLESource); power && deferPower {
+			continue
+		}
 		if !condition.controlCondition(g, source, target, e.controllerID) {
 			if latchExpiration {
 				e.expired = true
@@ -120,6 +123,19 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 		}
 	}
 	return target != nil
+}
+
+func (e *controlContinuousEffect) expirePowerEndpoint(g *Game) bool {
+	if e.expired {
+		return false
+	}
+	for _, condition := range e.conditions {
+		if power, ok := condition.(ControlTargetPowerLESource); ok && !power.controlCondition(g, g.FindPermanent(e.SourceID()), g.FindPermanent(e.targetID), e.controllerID) {
+			e.expired = true
+			return true
+		}
+	}
+	return false
 }
 
 type attachedControlEffect struct{ effectSource }

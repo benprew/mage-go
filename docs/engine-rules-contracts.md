@@ -22146,3 +22146,48 @@ pending clones and cleanup. `Casting` checks both complete cards and definition
 reconstruction. `Invalid`, `StrictDeclarations` and `Inventory` cover declaration
 rejection and typed syntax inventory. Collection compilation remains separate
 from gameplay support. Oracle evidence: local `data/ARN.json` and `data/LEG.json`.
+
+## Source-bound control extensions (RON migration)
+
+`TargetPowerLessThanOrEqualToSourcePower() PermanentTargetOption` compares
+current target power to current source power during selection and resolution.
+Equality and negative power values use integer comparison. The existing source
+information service supplies the exact source's retained power after departure
+or phasing; a returned source cannot replace it (CR 400.7, 608.2b, 608.2h).
+Illegal targets are rejected before payment. Copies use their own target frames.
+
+`GainControlWhileSourceTappedAndPowerLE(subject PermanentRef) ResolvingEffect`
+starts only for a present, unphased, tapped source and present subject with power
+no greater than that source. It saves both exact visits and the resolving
+controller. It uses `ControlSourceTapped` and `ControlTargetPowerLESource` in
+the shared Layer 2 control service. Source control changes and ability removal
+do not end this effect. Source departure, untapping or phasing, target departure
+or phasing, and a failed current power comparison end it permanently. LKI can
+check target legality but cannot start a source-bound duration (CR 611.2b,
+702.26b/f). Retapping, power restoration and return cannot restart it.
+
+Power endpoints now evaluate after all layers have completed. A failed endpoint
+latches expiration and repeats the layer pass before control bookkeeping and
+state-trigger observations. Every repeated pass expires at least one effect;
+no intermediate reset of P/T can end a valid duration. This also corrects
+existing native `ControlTargetPowerLESource` callers. Source and subject phase
+hooks latch expiration before an immediate phase-in. Other source-only control
+durations continue to preserve target phasing.
+
+`GainControlEachWhileSourceControlled(subjects PermanentSet) ResolvingEffect`
+captures distinct present, unphased members at resolution (CR 611.2c). All
+control effects are installed before one layer reconciliation. Later entries,
+filter changes or combat removal cannot add members. The source must still be
+the original visit under the resolving controller's control. Source control
+loss, departure or phasing ends each duration permanently. Target phasing
+suspends application while preserving the source-only duration. Returned targets
+cannot inherit it. Existing timestamps, control prohibitions, summoning sickness,
+combat removal, cloning and untap services remain authoritative. The APIs require
+permanent sources and non-nil, bound typed subjects in definition validation.
+
+Evidence: `TestSourceControlExtensionsPower`, `Plural`, `TargetLegality`, `Start`
+and `Invalid`; `TestRONSourceControlExtensions*` covers complete Old Man of the
+Sea and The Wretched records, including casting, optional untap and stun,
+retargeted copies, pending/installed clones, exact combat membership, rollback
+on illegal targets, contexts, malformed endpoints and inventory roles. No cost,
+replacement, zone-change or APNAP service is replaced by these adapters.

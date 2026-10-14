@@ -1668,6 +1668,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "GainControlOfEachPermanentUntil":
+		build, err := compilePluralSourceControl(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutExiledCardIntoOwnersGraveyard":
 		effect, err := compileGroupedExileGraveyard(n, ctx)
 		return []effectFactory{effect}, err

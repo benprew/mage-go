@@ -1074,6 +1074,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]
 			}
+		case "GainControlOfEachPermanentUntil":
+			if len(n.Args) == 2 {
+				return []string{"permanent_collection", "source_control_duration"}[index]
+			}
 		case "LookAtPlayersHand":
 			if len(n.Args) == 1 {
 				return "player_reference"
@@ -1585,6 +1589,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "source_control_duration":
+		if n.Name == "UntilPermanentNoLongerPassesFilter" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "permanent_filter"}[index]
+		}
 		if n.Name == "Or" && len(n.Args) == 1 {
 			return "source_control_duration"
 		}

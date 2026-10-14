@@ -503,6 +503,23 @@ func (em *EffectManager) expireCapturedControlSource(sourceID uuid.UUID, tappedO
 	return changed
 }
 
+func (em *EffectManager) expireControlPowerSubject(id uuid.UUID) bool {
+	changed := false
+	for _, effect := range em.effects {
+		control, ok := effect.(*controlContinuousEffect)
+		if !ok || control.targetID != id || control.expired {
+			continue
+		}
+		for _, condition := range control.conditions {
+			if _, power := condition.(ControlTargetPowerLESource); power {
+				control.expired = true
+				changed = true
+			}
+		}
+	}
+	return changed
+}
+
 // SourceTapMaintainedStatus inspects the tap-maintained continuous effects the
 // given source keeps active by remaining tapped. hasEffect reports whether the
 // source has any such effect at all; targetLives reports whether at least one of
@@ -834,6 +851,22 @@ func (em *EffectManager) Apply(g *Game) {
 	em.syncAttrDeltas(g)
 
 	if controlStateMayChange {
+		expired := false
+		for _, effect := range em.effects {
+			if control, ok := effect.(*controlContinuousEffect); ok {
+				expired = control.expirePowerEndpoint(g) || expired
+			}
+		}
+		if expired {
+			// A duration uses completed layers, before control changes are observed.
+			for id, controller := range controllersAtCycleStart {
+				if p := g.MutablePermanent(id); p != nil {
+					p.computedController = controller
+				}
+			}
+			em.Apply(g)
+			return
+		}
 		// Post-layer enforcement: AttrCantChangeControl reverts any control changes
 		// applied during LayerControl. This runs after attrs are written so that
 		// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
@@ -965,7 +998,7 @@ func (em *EffectManager) hasControlLayerEffects() bool {
 
 func controlEffectActive(effect ContinuousEffect, g *Game, latchExpiration bool) bool {
 	if control, ok := effect.(*controlContinuousEffect); ok {
-		return control.isActive(g, latchExpiration)
+		return control.isActive(g, latchExpiration, true)
 	}
 	return effect.IsActive(g)
 }

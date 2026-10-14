@@ -13,6 +13,9 @@ func compileSourceControl(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if isSourcePowerControlDuration(n.Args[1]) {
+		return compileSourcePowerControl(n, ctx, subject)
+	}
 	if n.Args[1].Kind == Symbol && n.Args[1].Name == "UntilEndOfTurn" {
 		if ctx.enteringSource || ctx.drawReplacementBody {
 			return nil, problem(n, "temporary control requires an ordinary resolving body")

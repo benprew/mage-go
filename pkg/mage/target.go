@@ -824,6 +824,7 @@ type PermanentTarget struct {
 	excludeSource                bool
 	attachedToControllerOnly     bool
 	toughnessLessThanSourcePower bool
+	powerLESourcePower           bool
 	BaseTarget
 	controllerOnly  bool
 	controllerOwned bool
@@ -943,6 +944,12 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 		if t.toughnessLessThanSourcePower {
 			power, ok := targetSourcePower(sourceCard, g)
 			if !ok || p.CurrentToughness(g) >= power {
+				continue
+			}
+		}
+		if t.powerLESourcePower {
+			power, ok := targetSourcePower(sourceCard, g)
+			if !ok || p.CurrentPower(g) > power {
 				continue
 			}
 		}

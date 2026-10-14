@@ -1,5 +1,22 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetPowerLessThanOrEqualToSourcePower] reads current target power and
+// current source power. An absent source supplies exact retained power.
+// [GainControlWhileSourceTappedAndPowerLE] saves one subject and source visit.
+// Untapping, source absence or a failed power comparison ends it permanently.
+// Both powers use completed layers. Target phasing ends the power duration.
+// Source control changes and ability removal do not end the installed effect.
+// [GainControlEachWhileSourceControlled] saves present collection members.
+// Later entries and combat changes cannot add members. Source control loss,
+// departure or phasing ends each duration. Target phasing preserves it.
+// Return cannot supply an old source or subject. Copies and clones keep separate
+// members, controllers and expiration state. Both use shared control layers.
+// RON accepts source PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent)))
+// in permanent targets, paired tapped and subject-power duration endpoints,
+// and GainControlOfEachPermanentUntil with UntilPermanentChangesControl(You,
+// ThisPermanent) in ordinary permanent-source resolving bodies. These forms
+// complete Old Man of the Sea and The Wretched. Other endpoints need adapters.
+//
 // [RegenerateInsteadOfDestroy] replaces each eligible destruction of its source.
 // Current abilities supply the rule. Phasing and ability removal suspend it.
 // [ReplaceNextDestructionThisTurn] saves one permanent visit until cleanup.

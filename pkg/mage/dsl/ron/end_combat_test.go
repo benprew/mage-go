@@ -193,7 +193,7 @@ func TestRONEndCombatInvalid(t *testing.T) {
 }
 
 func TestRONEndCombatFullRecordLoading(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"LEA", "Clockwork Beast", ""}, {"LEB", "Clockwork Beast", ""}, {"2ED", "Clockwork Beast", ""}, {"3ED", "Clockwork Beast", ""}, {"CED", "Clockwork Beast", ""}, {"CEI", "Clockwork Beast", ""}, {"ATQ", "Clockwork Avian", ""}, {"LEG", "The Wretched", "GainControlOfEachPermanentUntil"}} {
+	for _, tc := range []struct{ set, name, blocker string }{{"LEA", "Clockwork Beast", ""}, {"LEB", "Clockwork Beast", ""}, {"2ED", "Clockwork Beast", ""}, {"3ED", "Clockwork Beast", ""}, {"CED", "Clockwork Beast", ""}, {"CEI", "Clockwork Beast", ""}, {"ATQ", "Clockwork Avian", ""}, {"LEG", "The Wretched", ""}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

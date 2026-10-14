@@ -108,6 +108,9 @@ func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []ma
 }
 
 func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if n.Name == "PowerIs" && len(n.Args) == 1 && len(n.Args[0].Args) == 1 && n.Args[0].Args[0].Name == "PowerOfPermanent" {
+		return compileSourcePowerLETarget(n, ctx)
+	}
 	if n.Name == "IsCreatureType" {
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err

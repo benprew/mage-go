@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **911 accepted / 75 rejected names**
-(986 total), **2,290 compiled / 155 rejected records** (2,445 total).
-The latest slice is **DESTRUCTION-REPLACEMENT-OPERATIONS**.
-Static source regeneration replaces each eligible destruction. Future cancellation
-removes damage instead of one destruction this turn, without tapping or combat
-removal. Both use shared replacement order, exact visits and rechecks.
-Complete Pyramids and Clergy of the Holy Nimbus have RON gameplay mappings.
-Actual gain is **two names / two records**, as estimated. All required checks
-pass. Precise remaining diagnostics are recorded in the latest entry below.
-No RON source or vocabulary snapshot changed.
+Latest measured result (2026-10-14): **913 accepted / 73 rejected names**
+(986 total), **2,292 compiled / 153 rejected records** (2,445 total).
+The latest slice is **SOURCE-BOUND-CONTROL-EXTENSIONS**.
+Dynamic source-power target legality and tapped/power endpoints complete Old Man
+of the Sea. Captured plural source-control durations complete The Wretched.
+Power endpoints use completed layers and latch expiration. Both forms reuse
+shared control layers, exact visits, source transitions and clone services.
+Both complete records have RON gameplay mappings. Actual gain is **two names /
+two records**, as estimated. Required checks and precise remaining diagnostics
+are recorded in the latest entry below. No RON source or vocabulary changed.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,14 +25,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
 1. **Proposed damage results and bounded redirection:** reassess Personal
-   Incarnation, Eye for an Eye and Heroism. Bounded recipient redirection,
-   continued-damage results and optional per-source payment are separate contexts.
-   Prefer a shared prerequisite if full-record evidence proves multi-card value.
-2. **Source-bound control extensions:** Old Man of the Sea needs dynamic power
-   legality and a latched endpoint; The Wretched needs plural captured membership.
-   Existing source duration services remain reusable.
-3. **Live history filters:** evaluate Giant Shark and Glyph of Delusion against
-   existing damage and combat history before selecting their separate adapters.
+   Incarnation, Eye for an Eye and Heroism. These still need separate bounded
+   recipient, continued-damage and optional-payment contexts. Select a shared
+   prerequisite only with concrete downstream multi-card evidence.
+2. **Live history filters:** Giant Shark needs a damage-history combat-pair
+   predicate. Glyph of Delusion needs dependent block-history target legality,
+   dynamic counter amounts and conditional/triggered indefinite grants.
+3. **Saved action/payment identities:** compare Phyrexian Gremlins' saved tapped
+   subject with Vodalian War Machine's paid-tap history. Exact payment and action
+   identities are different producers; first errors alone do not prove unlocks.
 
 ## Dependencies and source blockers
 
@@ -16327,3 +16328,168 @@ Changed files: new native `destruction_replacement.go` and its tests; native
 `docs/engine-rules-contracts.md` and this ledger. RON records were unchanged.
 Commit title: `feat(ron): implement destruction replacement operations`.
 This run stops after DESTRUCTION-REPLACEMENT-OPERATIONS.
+
+## 2026-10-14 — SOURCE-BOUND-CONTROL-EXTENSIONS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh loader JSON returned expected
+exit 1 with **911 accepted / 75 rejected names**, **2,290 compiled / 155 rejected
+records**. This is collection rejection, not a build or test failure.
+
+The latest ranked candidate #1 was evaluated first. Complete RON records were
+read for Personal Incarnation in all six sets, Eye for an Eye in ARN/3ED,
+Heroism, Old Man of the Sea, The Wretched, Giant Shark and Glyph of Delusion.
+Targeted vocabulary entries were read for bounded proposed damage, plural
+control, PowerIs, damage history and block history. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated complete-card gains | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Proposed damage results / bounded redirect | Personal Incarnation; Eye for an Eye; Heroism | 0 from a shared result prerequisite; each separate complete form could gain 1 name | Personal needs a finite recipient budget and owner permission; Eye needs continued-damage amount/controller results and player recipient; Heroism needs live attacking/red source matching and optional replacement payment. These are distinct contracts, not three ready adapters. Typed proposed-event results would enable Eye and Heroism's replacement bodies; a bounded redirect alone would not | Medium/large per complete form; several slices for all three |
+| Source-bound conditional control | Old Man of the Sea; The Wretched | 2 names / 2 records | Old Man needs source-power target legality and a latched tapped/power endpoint. Wretched needs captured plural membership with source-control duration. Native control conditions, exact combat collections and duration hooks exist; completed-layer power checking is the missing shared engine integration. Reusable APIs also serve future filtered source-bound control | Medium: two shared control contexts, one target adapter, one layer contract and lifecycle tests |
+| Live history filters | Giant Shark; Glyph of Delusion | 1 name from a complete damage-history combat-pair adapter; 0 from block-history target legality alone | Giant Shark's other temporary layer and no-Island rules already lower. Glyph additionally needs dynamic counter amounts and conditional/triggered indefinite grants; existing indefinite AddAbility accepts keywords/selected other forms, not these bodies. Damage and block histories are separate services. Dependent block-history legality would support Glyph and later history target consumers | Small/medium for Giant Shark; multiple medium contracts for Glyph |
+
+Candidate #1 is not one dependency-ready multi-card adapter. Conditional control
+provides the largest credible immediate multi-card gain for one cohesive
+source-bound control capability. No other slice was started. The estimated
+2-name / 2-record gain equals the measured result.
+
+### Contract, dependencies and reuse boundary
+
+Engine signatures:
+
+- `TargetPowerLessThanOrEqualToSourcePower() PermanentTargetOption`.
+- `GainControlWhileSourceTappedAndPowerLE(subject PermanentRef) ResolvingEffect`.
+- `GainControlEachWhileSourceControlled(subjects PermanentSet) ResolvingEffect`.
+
+Target legality reads current powers, including equality and negative values.
+The existing exact source-information service supplies LKI after departure or
+phasing; returned sources cannot replace it. Illegal announcements consume no
+payment. Power control requires a present, unphased tapped source and subject
+at resolution. It saves the source/subject visits and resolving controller.
+Source control changes and ability removal do not end it. Untapping, source
+absence, subject absence or a failed power comparison end it permanently.
+Subject phasing ends this subject-dependent duration under CR 702.26f.
+
+The native `ControlTargetPowerLESource` condition previously read reset P/T in
+Layer 2. Control-layer evaluation now defers that condition until all layers
+complete. A failed endpoint expires permanently and repeats the layer pass
+before control bookkeeping and state-trigger observations. Each repeat expires
+at least one effect. Normal `IsActive` queries retain full condition checks.
+This corrects existing native callers without replacing control reconciliation.
+
+Plural control captures distinct present, unphased members at resolution before
+installing all effects and reconciling layers once. It saves the exact source,
+subject visits and resolving controller. Later entries, combat removal or filter
+changes cannot add members. Source loss of control, phasing or departure ends
+all captured durations. Target phasing preserves this source-only duration;
+return cannot inherit it. Copies and clones retain independent frames/state.
+Source phase and untap hooks keep latched endpoints through immediate returns.
+
+RON exact contexts:
+
+- `PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent)))` in a
+  permanent-source permanent target, directly or in existing conjunctions.
+- `GainControlOfPermanentUntil(subject, Or([
+  ForAsLongAsPermanentRemainsTapped(ThisPermanent),
+  UntilPermanentNoLongerPassesFilter(subject,
+  PowerIs(LessThanOrEqualTo(PowerOfPermanent(ThisPermanent))))]))`.
+  Endpoint order is free; exactly one of each and the same typed subject are
+  required.
+- `GainControlOfEachPermanentUntil(collection,
+  UntilPermanentChangesControl(You, ThisPermanent))`, using existing contextual
+  permanent collections.
+
+Both resolving forms require ordinary permanent-source bodies. Other endpoint
+forms, power references, comparisons and plural durations reject. Static, cost,
+entry, spell-source and draw-replacement contexts gain no support. RON owns
+syntax, scope and diagnostics. Mage owns reusable mechanics. Existing typed
+references, targets, source LKI, per-instance factories, control timestamps,
+control prohibitions, combat removal, summoning sickness, optional untap/stun,
+copying and cloning are reused. No card-name branches or global action slots.
+
+Local Oracle evidence: `data/ARN.json` for Old Man of the Sea and `data/LEG.json`
+for The Wretched. Both full RON records agree with Oracle. Rules read: CR 611.2a–c,
+613.1–4, 702.26a–f, 608.2b/h and relevant target/identity contracts. Source
+transcription defects: none. Environment blockers: none. No RON records changed;
+the vocabulary snapshot needs no refresh. Existing callers and Go definitions
+remain because runtime/removal gates are closed. No DSL functions were removed.
+
+### Failing-first evidence and gameplay mapping
+
+Native tests first failed compilation for the three new APIs. RON tests first
+failed on unsupported dynamic PowerOfPermanent and GainControlOfEachPermanentUntil.
+The implementations then passed. Initial clone assertions exposed fixture
+writes through shared permanent pointers; tests now use MutablePermanent after
+cloning, as required by the existing copy-on-write contract. No assertions or
+production rules were weakened. Inventory expected counts and Wretched's old
+unsupported full-record fixture now require successful compilation.
+
+| Unique card | Complete record | Gameplay tests |
+| --- | --- | --- |
+| Old Man of the Sea | ARN.lines.ron:59 | `TestRONSourceControlExtensionsOldMan`: equal-power legality, rejected larger target with tap rollback, changing power before/after resolution, source control, untap, source/subject phase cycles, return, ability removal, foreign copies and pending clones. `Casting`: paid/unpaid casting, metadata and fresh factories. `RetargetAndUntap`: independent copied targets and duration endpoints. `OptionalUntap`: decline/accept, stun replacement and target departure |
+| The Wretched | LEG.lines.ron:265 | `TestRONSourceControlExtensionsWretched`: real multi-blocker combat, end-of-combat detection, unrelated blockers, member removed before resolution, captured membership after combat removal, source control loss/phase/return, subject return/phase, ability removal, foreign copies and pending/installed clones. `Casting`: paid/unpaid casting, metadata and fresh factories |
+
+`TestSourceControlExtensionsPower`, `Plural`, `TargetLegality`, `Start` and
+`Invalid` prove native layered power, switching, counters, negative values,
+exact source LKI, duration failure/restoration, visits, phasing distinctions,
+duplicate members, late entrants, independent clones and invalid declarations.
+RON `Invalid`, `StrictDeclarations` and `Inventory` cover malformed endpoints,
+wrong subject identity, invalid references/contexts and typed descendants under
+an unsupported parent. Compilation counts and gameplay coverage remain separate.
+
+### Validation and final measurement
+
+Commands and final results:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONSourceControlExtensions' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestSourceControlExtensions' -count=1`: pass.
+- Existing native source/control contract suites: pass.
+- `make build` and `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `go test ./... -short -count=1`, required by implement-engine: pass.
+- `make lint`: pass with 0 issues. Automatic formatting was reviewed; no
+  unrelated files or production semantics changed. Both new focused suites
+  passed again after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON, expected exit 1;
+  **913 accepted / 73 rejected names**, **2,292 compiled / 153 rejected records**,
+  unchanged totals of 986 names / 2,445 records. Removing only Old Man of the Sea
+  and The Wretched from the fresh baseline issue array gives the final array
+  exactly, including diagnostic objects and ordering. No accepted record regressed.
+
+Actual gain: two names, two records and two complete RON gameplay mappings.
+Collection publication remains atomic and rejected. Complete collection gameplay,
+runtime loading/cutover, Go-card and generator deletion, unused DSL removal and
+native startup proof remain unfinished. No environmental blocker prevents this
+slice's validation or commit.
+
+### Ranked next candidates and fresh diagnostics
+
+1. Proposed damage results / bounded recipient redirection: Personal Incarnation
+   still rejects `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient` at
+   2ED:181:294. Eye for an Eye still rejects the Player recipient at 3ED:84:311
+   and needs continued-damage results. Heroism still rejects its prevention And
+   collection at FEM:41:291 and needs optional replacement payment. Reassess a
+   shared proposed-event result prerequisite against these complete records;
+   none is three immediate unlocks from one ready adapter.
+2. Live history: Giant Shark still reports expected 1 positional arguments for
+   WasDealtDamageThisTurn at DRK:46:384. Glyph of Delusion still rejects
+   WasBlockedByDefenderThisTurn at LEG:100:233 and has the later counter/grant
+   blockers described above. Compare the separate services and total effort.
+3. Saved action/payment identities: Phyrexian Gremlins still rejects unbound
+   ThePermanentTappedThisWay at ATQ:51:405. Vodalian War Machine still rejects
+   WasTappedToPayForAbilitiesOfPermanent at FEM:101:780. Inspect full records and
+   distinguish action results from payment history before treating them as shared.
+
+Changed files: new native `source_control_extensions.go` and its tests;
+`target_numeric.go`, `target.go`, `effect_control.go`, `effect_manager.go`,
+`game.go`, `doc.go`; new RON `source_control_extensions.go` and its tests;
+RON `temporary_animation.go`, `source_control.go`, `compiler.go`, `inventory.go`,
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`,
+`end_combat_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. RON records and the vocabulary snapshot are unchanged.
+Commit title: `feat(ron): implement source-bound control extensions`.
+This run stops after SOURCE-BOUND-CONTROL-EXTENSIONS.
