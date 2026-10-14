@@ -17,6 +17,9 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(operations) == 2 && operations[0].Name == "ChooseAColor" {
+		return compileCombinedEntryChoice(n)
+	}
 	if len(operations) != 1 {
 		return nil, problem(n, "entry requires one entry operation")
 	}

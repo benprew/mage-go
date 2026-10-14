@@ -28,7 +28,11 @@ func validateColorEntryDeclaration(rules []Node, permanent bool) error {
 			if !permanent {
 				return unsupported(rule, "color entry choice on a nonpermanent")
 			}
-			if rule.Args[0].Kind != Symbol || rule.Args[0].Name != "ThisPermanent" || len(rule.Args[1].Args) != 1 {
+			if len(rule.Args[1].Args) == 2 {
+				if err := validateCombinedEntryChoice(rule); err != nil {
+					return err
+				}
+			} else if rule.Args[0].Kind != Symbol || rule.Args[0].Name != "ThisPermanent" || len(rule.Args[1].Args) != 1 {
 				return problem(rule, "color entry requires one source choice")
 			}
 			if err := validateColorEntryOperation(operation); err != nil {

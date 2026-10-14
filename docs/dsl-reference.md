@@ -14545,7 +14545,8 @@ registration and entry events. Invalid answers or an absent chooser use white.
 
 This shape permits one color choice in one entry declaration on a permanent.
 Wrong arity, non-symbol `AnyColor`, other color filters, duplicate declarations,
-additional entry declarations and combined entry operations are errors. The
+additional entry declarations and other combined entry operations are errors.
+The ordered color/opponent pair is supported by the contract below. The
 inventory marks `AnyColor` as `color_choice_filter` in the entry context.
 
 Copies make their own entry choices. Control changes and phasing keep the saved
@@ -14557,8 +14558,8 @@ shared entry batch precede its battlefield registration and entry events.
 Psychic Allergy's unchanged entry declaration has direct gameplay evidence.
 Its complete record still requires the opponent-upkeep selector. Resolving
 chosen-color collections are supported by the contract below. Jihad's combined
-color/opponent entry declaration, static chosen-color predicates, conditional layer
-and state trigger remain rejected. The entry-choice slice claims no complete gameplay coverage for either card. Resolving
+color/opponent entry declaration is supported below; static chosen-color
+predicates, conditional layer and state trigger remain rejected. The entry-choice slice claims no complete gameplay coverage for either card. Resolving
 color choices retain their existing separate adapter and result lifetime.
 
 ## RON resolving chosen-color collections
@@ -14586,3 +14587,28 @@ Psychic Allergy's unchanged damage body and entry operation execute through a
 synthetic supported upkeep selector; its actual opponent selector stays rejected.
 Jihad's complete record is inspected and remains blocked before its conditional
 static/state consumers. No complete card gameplay or compilation gain is claimed.
+
+
+## RON combined color and opponent entry choice
+
+`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor),ChooseAPlayer(Opponent)])`
+is one required entry declaration on a permanent. It lowers to
+`mage.RequiredEntryOperations(mage.ChooseColorAsEnters(),mage.ChooseOpponentAsEnters())`.
+The color choice runs first, then the opponent choice. Both finish before
+battlefield registration and entry events. No optional offer or stack object
+is created. Factories create fresh child declarations; choices belong to the
+permanent visit in separate `ChosenColor` and `ChosenPlayer` fields.
+
+Existing resolving `IsColor(TheChosenColor)` collections and
+`SinglePlayer(TheChosenPlayer)` upkeep events can read this declaration.
+Pending resolving color reads keep the exact source visit's saved information.
+The older whole-object upkeep text-revision opt-in still requires its separate
+standalone opponent declaration; the joint pair does not opt into that path.
+
+Wrong order, filters, arities, duplicate choices, extra entry operations,
+separate entry declarations and nonpermanent sources reject during compilation.
+Optional joint choices, entry costs/results and joint whole-object text revision
+need separate contracts. Jihad's exact unchanged entry record has gameplay
+subrule evidence; its complete static/state rules remain rejected.
+
+Evidence: `TestRONCombinedEntryChoice*` and `TestRequiredEntryOperations*`.

@@ -10,7 +10,7 @@ func upkeepObjectTextRules(rules []Node) bool {
 			return false
 		}
 		if rule.Name == "AsPermanentEnters" {
-			if choice || validateOpponentEntryChoice(rule) != nil {
+			if choice || validateOpponentEntryChoice(rule) != nil || len(rule.Args[1].Args) != 1 {
 				return false
 			}
 			choice = true

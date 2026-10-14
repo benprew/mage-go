@@ -8,16 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **858 accepted / 128 rejected names**
 (986 total), **2,205 compiled / 240 rejected records** (2,445 total).
-The latest slice is **RESOLVING-CHOSEN-COLOR-COLLECTIONS**. Resolving permanent
-collections read the source entry choice through exact current/LKI information.
-Estimated and actual full-card gains are zero. Psychic Allergy's unchanged
-entry operation and damage body now have engine gameplay evidence.
+The latest slice is **COMBINED-COLOR-OPPONENT-ENTRY**. One ordered source entry
+rule chooses a color and an opponent through required engine entry operations.
+Estimated and actual full-card gains are zero. Jihad's exact entry declaration
+now has gameplay evidence; its complete static/state rules remain rejected.
 The strict loader still rejects the collection and publishes no partial registry.
 
-Current layered colors and controllers select present, unphased subjects.
-Departure and phasing keep exact source information; return cannot replace it.
-This shared prerequisite supports Psychic Allergy and Jihad. Opponent upkeep,
-combined entry choices and static/state chosen-color consumers remain.
+Copies and returns choose again. Phasing and control changes keep both choices.
+Existing resolving color and chosen-player event consumers keep their scopes.
+Opponent upkeep, static/state choice consumers and entry payments remain.
 Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -25,17 +24,18 @@ Runtime cutover, Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Combined color/opponent entry choice.** Jihad can reuse the two entry
-   services and exact information reader. Zero full-card unlocks before static
-   color conditions and state-event consumers. Recompare shared capabilities
-   before selecting this one-card prerequisite.
-2. **Opponent upkeep selector.** Psychic Allergy's remaining selector is now
-   isolated; its entry, resolving color count and optional Island sacrifice
-   primitives exist. Estimate one full-card unlock, subject to complete gameplay
-   and interaction tests. Small effort; defer if better shared work is available.
+1. **Opponent upkeep selector.** Psychic Allergy's entry, resolving color count
+   and optional two-Island sacrifice primitives exist. Estimate one full-card
+   unlock, subject to event/controller capture and gameplay tests. Small/medium
+   effort; recompare shared multi-card work first.
+2. **Live chosen-player/chosen-color static membership.** Jihad's joint entry is
+   complete. Its conditional static bonus needs a live choice membership service;
+   state detection retains a separate adapter. Zero immediate unlocks from the
+   static prerequisite; medium effort.
 3. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
-   needs an entry transaction and failure/result scope, then combination counter
-   placement. Zero immediate gain; medium to high effort.
+   can reuse ordered required entry execution. Entry transaction, result/failure
+   scope and combination counter placement remain. Zero immediate gain from
+   the payment prerequisite; medium/high effort.
 
 ## Dependencies and source blockers
 
@@ -4450,3 +4450,174 @@ Removal gates remain unmet, so no DSL deletion/caller audit was needed.
 
 This run stops after resolving chosen-color collections. Complete collection
 execution, runtime cutover, Go-card deletion and unused DSL cleanup remain gated.
+
+
+## 2026-10-13 — COMBINED-COLOR-OPPONENT-ENTRY
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before implementation. Fresh strict
+loading exited 1 with 2,205 compiled / 240 rejected records and 858 accepted /
+128 rejected names. This is collection rejection, not a build/test failure.
+Complete RON records were inspected for Jihad, Psychic Allergy and Frankenstein's
+Monster, including every nested entry operation and later consumer. Targeted
+vocabulary entries confirmed the entry, color/player choice and chosen-reference
+shapes. Complete records with these shared choice adapters were also inspected:
+Black Vise, The Rack, Cursed Rack, Alchor's Tomb, Rainbow Vale, Backdraft and
+Rohgahh of Kher Keep. Reprints count once.
+
+| Candidate | Distinct directly affected names | Estimated full-card gains | Other blockers and downstream capabilities | Estimated implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Combined color/opponent entry, ranked #1 | Jihad | 0 names / 0 records | Must precede Jihad's conditional static chosen-color membership and captured chosen-player state detection. Reusable required sequencing also supplies ordered child execution and entry rejection for future mandatory entry procedures such as Frankenstein's Monster | Small/medium: one sequence service, strict joint lowering and lifecycle/copy/batch contracts |
+| Opponent upkeep selector, ranked #2 | Psychic Allergy | 1 name / 1 record | Complete record's entry, resolving nontoken color count and optional two-Island sacrifice already have primitives. Needs controller-relative event detection, independent event capture and upkeep text compatibility | Small/medium: event adapter/service and full-card event/payment tests |
+| Mandatory announced-X entry exile, ranked #3 | Frankenstein's Monster | 0 names / 0 records for payment prerequisite alone | Needs mandatory entry transaction, exact selected graveyard visits, payment-result/failure routing and combination-counter placement. Supplies future result-bearing entry payments | Medium/high: several distinct payment/result/counter contracts; exceeds the bounded joint-choice slice |
+
+Selected ranked #1 under the dependency-ready unblocking-prerequisite rule.
+Its exact joint entry is required before Jihad's dependent consumers. The
+reusable engine sequence is also usable by later multi-operation entry contracts;
+this run does not implement those costs or results. No dependency-ready
+multi-name full-card unlock was established among the compared candidates.
+Estimated and actual full-card gains match at zero. No second slice was started.
+
+### Signatures, supported contexts and reuse boundary
+
+New engine API:
+`RequiredEntryOperations(operations ...AsEntersBattlefieldAbility) AsEntersBattlefieldAbility`.
+One required ability runs its children in order before battlefield registration.
+No optional offer is made. A false child stops later children and rejects entry
+through the existing failed-entry destination. The input slice is copied;
+empty bodies, nil/typed-nil children, invalid nested declarations and
+nonpermanent sources fail definition validation.
+
+New RON shape:
+`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor),ChooseAPlayer(Opponent)])`.
+Only this order and these filters are accepted, in one source entry declaration
+on a permanent. Wrong arities, malformed symbols, reversed order, duplicate
+choices, extra entry operations, additional entry declarations and optional
+joint choices reject at compilation. Existing standalone choices keep working.
+
+RON owns declaration validation, scope producers and lowering. Every factory
+creates fresh child abilities. The engine reuses `ChooseColorAsEnters`,
+`ChooseOpponentAsEnters`, the shared entry/copy pipeline, permanent choice fields,
+exact information snapshots, existing source reference and chosen-player upkeep
+services, casting/payment, stack copying and cloning. No additional player,
+replacement, zone, cost or result system was introduced. The pair stores color
+and player in separate per-visit fields; pending reads cannot follow a returned
+source. No new global last-action state, reflection, Go fallback, card-name
+branch, partial registry, runtime declaration panic or skipped card rule exists.
+
+The new consumer test exposed an invalid opt-in to the older whole-object upkeep
+text-revision path: that path supports a standalone opponent choice. Its RON
+shape detector now preserves that exact boundary. The joint pair can use
+ordinary chosen-player upkeep and resolving chosen-color collections without
+opting into unsupported whole-object text revision. Static/state chosen-color
+consumers, joint text revision, entry payment/results and other entry pairs
+retain separate contracts and remain rejected.
+
+### Rules, source evidence and gap classification
+
+Local `data/ARN.json` confirms Jihad's color-and-opponent choice and nontoken
+condition. CR 105.1/105.4 limits color choices; CR 109.5 identifies the entering
+controller; CR 614.1c/614.12a requires pre-entry choices; CR 616.1c establishes
+copy replacement priority; CR 707.2 excludes donor choices from copied values;
+CR 400.7 and 702.26b–d distinguish new visits from phase cycles.
+
+The missing ordered sequence was an engine composition contract; the joint
+shape and declaration validation were missing compiler adapters. Jihad still
+needs its chosen-player static predicate and chosen-color static/state consumers.
+Psychic Allergy's remaining diagnostic is the opponent-upkeep selector. No
+source-data defect was found or corrected. No RON source changed, so no source
+hash or vocabulary snapshot refresh was required. No environmental/build
+failure blocked the slice.
+
+### Failing-first evidence and card-to-test mappings
+
+- `TestRequiredEntryOperations*` first failed compilation with
+  `undefined: RequiredEntryOperations`.
+- `TestRONCombinedEntryChoiceGameplay` and `Jihad` first failed on
+  `color entry requires one source choice`.
+- `TestRONCombinedEntryChoiceConsumers` then failed definition validation on
+  `upkeep object text contains an unsupported sibling rule`; restricting the
+  old text opt-in to its established standalone shape fixes that failure.
+- A native timing assertion initially used `FindPermanent`, which intentionally
+  exposes the proposed entering permanent. It was corrected to inspect
+  `AllBattlefield` for registration, retaining the order and timing contract.
+- Former rejection tests for the exact newly supported pair were changed to
+  acceptance and unsupported extra-operation coverage. Complete Jihad still
+  must fail at its remaining static predicate. No unsupported full card or
+  skipped instruction is accepted.
+
+**Jihad → `TestRONCombinedEntryChoiceJihad`** reads the complete unchanged ARN
+record, asserts its remaining static diagnostic, validates both source producers
+and executes the exact unchanged entry subrule with the record's metadata.
+This is entry gameplay coverage, not complete Jihad gameplay coverage.
+
+`TestRONCombinedEntryChoiceGameplay` uses strict RON loading and native unpaid/
+paid casting, no announcement choice, permanent spell copies, independent pending
+game clones, different entry controllers/owners, factory instances, control
+changes, phase cycles and return choices. `Invalid` rejects every unsupported
+joint declaration/context. `Jihad` also proves atomic mixed-collection rejection.
+`Consumers` proves chosen-player event timing and an exact old color read after
+source departure and return; the new source's blue choice cannot replace red.
+
+Native `TestRequiredEntryOperationsOrderAndFailure` covers required sequencing,
+input-slice isolation, pre-registration timing, no optional offer, early stop
+and the existing failed-entry graveyard destination. `Declarations` covers nil,
+typed-nil, empty/nested and invalid source definitions. `ChoiceOrder` checks
+color-before-opponent, owner/controller differences, clone field isolation,
+phasing and new-visit return. `CopyReplacementAndBatch` checks acquired joint
+choices after copy replacement and all choices/registrations before batch events.
+Existing color, opponent-entry and chosen-color consumer tests remain passing.
+
+### Verification and measured outcome
+
+Required checks completed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONCombinedEntryChoice -count=1` passed.
+  `go test ./pkg/mage -run TestRequiredEntryOperations -count=1` passed.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+  The engine skill's `go test ./... -short -count=1` also passed.
+- `make lint` passed with 0 issues. Automatic formatting was reviewed; no
+  behavior or assertion changes were introduced.
+- `git diff --check` passed, including the completed ledger update.
+- Final `go run ./cmd/loadcards -json` exited 1 with **2,205 compiled / 240
+  rejected records** and **858 accepted / 128 rejected names**, out of 2,445
+  records and 986 names. Only Jihad's diagnostic changed from its entry
+  declaration to `unsupported static condition player (TheChosenPlayer)`.
+  Accepted-record coverage and all other diagnostics are unchanged. The loader
+  continues to reject the collection atomically.
+
+Actual gains: **zero full names / zero records**, matching the estimate.
+Gameplay contract coverage adds Jihad's exact joint entry, ordered required
+engine entry operations and existing typed consumers of both saved choices.
+Compilation counts do not measure that gameplay gain. Complete Jihad gameplay,
+collection startup, runtime cutover, Go-card deletion and DSL cleanup remain
+unfinished. No removal gate was reached; no DSL function was deleted.
+
+Changed files: new `pkg/mage/required_entry.go`, `required_entry_test.go`;
+new RON `combined_entry_choice.go`, `combined_entry_choice_test.go`;
+RON `color_entry.go`, `color_entry_test.go`, `opponent_entry.go`, `entry_tapped.go`,
+`text_upkeep_object.go`; `pkg/mage/doc.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No card source, generator,
+production registry or broad DSL export changed.
+
+### Ranked next candidates
+
+1. **Opponent upkeep selector — Psychic Allergy.** One estimated full name /
+   one record; the complete entry, damage count and Island-sacrifice primitives
+   exist. Establish controller-relative event detection, independent event
+   captures and compatible text boundaries. Small/medium effort; recompare
+   shared multi-card candidates first.
+2. **Live chosen-player/chosen-color static membership — Jihad.** The joint entry
+   prerequisite is complete. A reusable current source-choice membership service
+   can supply its conditional static bonus; state detection still needs a separate
+   adapter. Zero immediate unlocks for the static prerequisite. Medium effort.
+3. **Mandatory entry exile with announced X — Frankenstein's Monster.** Ordered
+   required child execution now exists. Entry transaction, exact graveyard
+   choices, result/failure routing and combination counters remain. Zero immediate
+   gains from the payment prerequisite; medium/high effort.
+
+This run stops after combined color/opponent entry. Complete migration remains
+gated by the remaining collection, gameplay, runtime and removal work.

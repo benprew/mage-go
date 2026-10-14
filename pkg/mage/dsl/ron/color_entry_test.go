@@ -82,7 +82,7 @@ func TestRONColorEntryInvalid(t *testing.T) {
 		`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor,AnyColor)])`,
 		`AsPermanentEnters(ThisPermanent(),[ChooseAColor(AnyColor)])`,
 		`AsPermanentEnters(HostPermanent,[ChooseAColor(AnyColor)])`,
-		`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor),ChooseAPlayer(Opponent)])`,
+		`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor),ChooseAPlayer(Opponent),EntersTapped])`,
 		`AsPermanentEnters(ThisPermanent,[ChooseAColor(AnyColor),EntersTapped])`,
 		colorEntryRule + `,` + colorEntryRule,
 		colorEntryRule + `,AsPermanentEnters(ThisPermanent,[ChooseABasicLandType])`,
@@ -142,8 +142,8 @@ func TestRONColorEntryInventoryAndRealRequirements(t *testing.T) {
 			if p.ChosenColor != core.Blue || chooser.calls != 1 {
 				t.Fatal("real entry requirement failed")
 			}
-		} else if _, err := compilePermanentEntry(entry); err == nil {
-			t.Fatal("partial combined entry accepted")
+		} else if _, err := compilePermanentEntry(entry); err != nil {
+			t.Fatal(err)
 		}
 	}
 	registry := mage.NewRegistry()

@@ -10,7 +10,12 @@
 // Subjects use current colors and must be present and unphased.
 // RON accepts IsColor(TheChosenColor) in resolving permanent collections
 // with a source entry choice. Static and target predicates stay separate.
-// Combined entry rules need a separate adapter.
+// [RequiredEntryOperations] runs one required sequence before entry.
+// Children run in order. A rejected child stops the sequence and entry.
+// RON accepts one source entry rule with a color choice then an opponent choice.
+// Both choices use existing services and keep separate permanent fields.
+// Copies and returns choose again. Control changes and phasing keep choices.
+// Other joint entry operations and static/state choice reads stay separate.
 //
 // [PreventDamageToSourceByRemovingCounters] removes one matching counter for
 // each damage point and prevents that point. Unpreventable damage still removes

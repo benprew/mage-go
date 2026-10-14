@@ -13,6 +13,9 @@ func validateOpponentEntryChoice(n Node) error {
 	if err != nil {
 		return err
 	}
+	if len(operations) == 2 {
+		return validateCombinedEntryChoice(n)
+	}
 	if len(operations) != 1 || operations[0].Name != "ChooseAPlayer" {
 		return problem(n, "opponent entry requires one player choice")
 	}

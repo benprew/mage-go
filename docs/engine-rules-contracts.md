@@ -19119,7 +19119,8 @@ RON `TestRONColorEntry*` covers strict lowering, invalid declarations, native
 casting, failed payment, pending clones, phasing, return, semantic inventory,
 atomic collection rejection and Psychic Allergy's unchanged entry declaration.
 The resolving chosen-color information contract is recorded below. Combined
-entry choices and Jihad's static/state consumers require separate slices.
+color/opponent entry choices are supported below. Jihad's static/state consumers
+require separate slices.
 Legacy ETB color helpers retain their current callers and behavior.
 
 ## Exact chosen-color collection information
@@ -19148,3 +19149,38 @@ color layers, multicolor members, absent members and pure queries in clones.
 across return. `TestChosenColorInformationDeclarationsAndWaiting` covers
 invalid definitions, pure waiting declarations and clone choice isolation.
 RON contract evidence is in `TestRONChosenColorFilter*`.
+
+
+## Required entry sequences and combined choices
+
+`RequiredEntryOperations(operations ...AsEntersBattlefieldAbility)` returns one
+required entry ability. Children run in declaration order before battlefield
+registration; a false child stops later children and rejects entry through the
+existing failed-entry destination. This service makes no optional offer and
+stores no decision. It copies the input slice. Definition validation rejects
+empty bodies, nil/typed-nil children, invalid nested declarations and use on
+nonpermanent cards.
+
+The combined color/opponent operation uses `ChooseColorAsEnters` followed by
+`ChooseOpponentAsEnters`. The entry controller supplies both choices, regardless
+of ownership (CR 109.5, 614.12a). Color and opponent occupy separate permanent
+fields. Copy replacements run first (CR 616.1c); the acquired sequence chooses
+again instead of inheriting the donor's choices (CR 707.2). Shared batches finish
+all choices and battlefield registrations before any entry observer runs.
+
+Control changes and phase cycles keep both fields (CR 702.26b–d). Return starts
+a new visit and repeats both operations (CR 400.7). Independent factories,
+permanent spell copies and game clones keep separate choices. Announcement and
+failed casting payment do not run entry operations. Existing exact source
+information and chosen-player upkeep detection supply later resolving consumers;
+a returned source cannot replace the pending trigger's saved color choice.
+
+RON accepts only one ordered color/opponent pair on `ThisPermanent`, in one entry
+declaration. This establishes no entry payment transaction, plural payment result,
+static chosen-color membership, state trigger or joint whole-object text revision.
+
+Evidence: `TestRequiredEntryOperationsOrderAndFailure`, `Declarations`,
+`CopyReplacementAndBatch`, `ChoiceOrder`; `TestRONCombinedEntryChoiceGameplay`,
+`Invalid`, `Jihad`, `Consumers`. Jihad uses its complete unchanged record for
+remaining-blocker checks and its exact entry declaration for gameplay. No full
+Jihad gameplay support is claimed.
