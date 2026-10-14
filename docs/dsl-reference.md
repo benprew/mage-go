@@ -15765,3 +15765,35 @@ StateCondition` and `PermanentSetIsEmpty(subjects PermanentSet) StateCondition`.
 Both read current membership without choices or mutation. Detection supplies
 the event's saved permanent facts in a separate query frame. Resolution uses the
 pending ability's own facts. `WithInterveningIf` checks at both times.
+
+## Optional bounded basic-land search
+
+Resolving bodies accept:
+
+```ron
+MayAction(SearchLibrary([
+    FindNumberCardsOfType(Integer(3), And([IsSupertype(Basic), IsCardtype(Land)])),
+    RevealFoundCards,
+    PutFoundCardsIntoHand,
+    Shuffle,
+]))
+```
+
+The fixed bound must be nonnegative. This shape allows up to that many cards;
+it does not require the player to find every available matching card. The
+basic-land conjunction requires exactly the two shown leaves, in either order.
+All four search steps are required, in this order, with bare instruction symbols.
+RON lowers this shape to `MaySearchLibraryToHand(player, maximum, filter)`.
+The current resolving player frame supplies player, including PlayerActions.
+
+Decline does nothing. An accepted search can find zero cards and still shuffles.
+Chosen cards keep distinct saved library visits. The engine reveals them,
+moves them to their owners' hands as one batch, publishes zone events, then
+shuffles. Source departure and control changes cannot change the saved trigger
+controller. Waiting queries read declarations without offering a search.
+
+The complete Land Tax record has gameplay evidence in
+`TestRONBoundedLibrarySearchLandTax` and `Lifecycle`. Invalid declarations,
+semantic inventory, atomic loading, zero bounds and explicit resolving player
+scope have separate tests. Entry/cost contexts, dynamic counts, other filters,
+other destinations and saved found-card results remain unsupported.

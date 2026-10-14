@@ -35,10 +35,10 @@ func compilePlayerActionsWithResults(n Node, ctx scope) (effectFactory, *cardNam
 	ctx.player = playerReferencePlan{action: plan}
 	actions := make([]effectFactory, 0, len(parts))
 	for _, part := range parts {
-		if part.Name == "MayAction" && len(part.Args) == 1 && part.Args[0].Name == "DrawACard" {
-			build, drawErr := compileOptionalTapChoice(part, ctx)
-			if drawErr != nil {
-				return nil, nil, nil, drawErr
+		if part.Name == "MayAction" && len(part.Args) == 1 && (part.Args[0].Name == "DrawACard" || part.Args[0].Name == "SearchLibrary") {
+			build, optionalErr := compileOptionalTapChoice(part, ctx)
+			if optionalErr != nil {
+				return nil, nil, nil, optionalErr
 			}
 			actions = append(actions, build)
 			continue

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [MaySearchLibraryToHand] offers one bounded search at resolution.
+// Acceptance can find zero cards and still shuffles. Decline has no effect.
+// Saved library visits keep selected cards distinct. Return cannot replace them.
+// Public reveal precedes owner hand movement. All moves precede zone events;
+// shuffle follows. Copies and clones keep separate controller frames and zones.
+// Waiting queries retain explicit player source reads without choices or movement.
+// RON accepts resolving MayAction with a fixed nonnegative basic-land search,
+// RevealFoundCards, PutFoundCardsIntoHand and Shuffle. This completes Land Tax.
+// Other filters, dynamic counts, entry payments and saved results need adapters.
+//
 // [PermanentSetCountAtLeast] and [PermanentSetIsEmpty] read current membership.
 // Intervening conditions receive event permanent facts before detection and
 // separate saved facts at resolution. Queries keep the live frame unchanged.

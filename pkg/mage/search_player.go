@@ -111,6 +111,7 @@ func (sp *SearchPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 func (sp *SearchPlayer) ChooseMayAbility(description string) bool {
 	lower := strings.ToLower(description)
 	return lower == "untap another permanent within the limits" ||
+		strings.Contains(lower, "search your library") ||
 		strings.Contains(lower, "draw") ||
 		strings.Contains(lower, "damage") ||
 		strings.Contains(lower, "destroy")

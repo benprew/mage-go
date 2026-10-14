@@ -607,6 +607,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "announcement_value"
 		}
 	case "search_instruction":
+		if n.Name == "FindNumberCardsOfType" && len(n.Args) == 2 {
+			return []string{"value", "library_card_filter"}[index]
+		}
 		if n.Name == "FindACardOfType" && len(n.Args) == 1 {
 			return "library_card_filter"
 		}

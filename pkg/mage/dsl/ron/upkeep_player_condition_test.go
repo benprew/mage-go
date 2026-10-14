@@ -20,7 +20,7 @@ func TestRONUpkeepPlayerConditionsRecords(t *testing.T) {
 			set = "ARN"
 		}
 		n := hostUntapRecord(t, set, name)
-		if name == "Spiritual Sanctuary" {
+		if name == "Spiritual Sanctuary" || name == "Land Tax" {
 			if _, err := Compile(n); err != nil {
 				t.Fatal(err)
 			}
@@ -326,7 +326,7 @@ func TestRONUpkeepPlayerConditionsStrictRecords(t *testing.T) {
 			}
 			count[name]++
 			factory, compileErr := Compile(n)
-			if name == "Spiritual Sanctuary" {
+			if name == "Spiritual Sanctuary" || name == "Land Tax" {
 				if compileErr != nil {
 					t.Fatal(compileErr)
 				}
@@ -339,9 +339,6 @@ func TestRONUpkeepPlayerConditionsStrictRecords(t *testing.T) {
 				}
 			} else {
 				want := "SetController"
-				if name == "Land Tax" {
-					want = "SearchLibrary"
-				}
 				if compileErr == nil || !strings.Contains(compileErr.Error(), want) {
 					t.Fatal("remaining body blocker", name, compileErr)
 				}

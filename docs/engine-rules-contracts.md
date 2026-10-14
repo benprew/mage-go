@@ -20883,3 +20883,47 @@ factory bindings. `DirectionsAndHost` covers both directions, union, nested
 conditions and attachment changes. `Invalid` and `CastingLoadAndInventory` cover
 source diagnostics, typed scopes, printed casting payment/rollback, factory
 validation, strict reprint loading and atomic rejection, and semantic roles.
+
+## Optional bounded library search with public reveal
+
+`MaySearchLibraryToHand(player PlayerRef, maximum int, filter CardFilter)
+ResolvingEffect` offers one optional search at resolution. Decline makes no
+card choice, reveal, move or shuffle. Acceptance permits zero through maximum
+matching cards (CR 701.23b). Acceptance shuffles once even with a zero bound,
+an empty library or no matching cards. A missing player has no effect.
+Definition validation rejects negative maxima, nil and unbound player refs.
+
+The player chooses distinct cards from matching library visits saved after
+acceptance. All choices precede movement. Nil, foreign or duplicate choices
+end selection. The canonical library card supplies the result; a forged card
+with an offered ID cannot change its characteristics. Every chosen visit is
+checked again before movement. Departure and return cannot replace a selected
+visit or join the initial search. Found cards are publicly revealed before
+movement (CR 701.20, 701.23e). All cards move to their owners' hands before
+individual library-to-hand zone events. The search then shuffles (CR 608.2c).
+It does not draw, play lands, or make a casting payment.
+
+The typed player operand declares explicit source reads to waiting delayed
+queries. Queries make no choices or moves. Source departure keeps exact LKI
+controller information for a declared controller reference. Copied abilities
+use their own resolving controller; cloned libraries, visits and public reveal
+history remain separate. SearchPlayer accepts the beneficial library-search
+prompt so native AI simulations execute the action.
+
+RON supports this service only for resolving
+`MayAction(SearchLibrary([FindNumberCardsOfType(Integer(n),
+And([IsSupertype(Basic), IsCardtype(Land)])), RevealFoundCards,
+PutFoundCardsIntoHand, Shuffle]))`, with n >= 0. The two filter leaves may
+appear in either order. Activation, spell, trigger and explicit PlayerActions
+bodies use their existing player frames. Entry, cost, dynamic bounds, other
+filters, destinations and retained search-result bindings need separate
+adapters. Existing single-card search APIs and adapters remain unchanged.
+
+Evidence: `TestBoundedLibrarySearchChoices`, `Visits`,
+`DeclarationsAndEmpty`, `WaitingAndClone`, `NoMatchAndAbsent` and
+`SimulationChoice`; `TestRONBoundedLibrarySearchLandTax`, `Lifecycle`,
+`Invalid`, `Inventory`, `Load` and `ResolvingContexts`.
+Land Tax uses its complete unchanged LEG record, including printed W payment,
+rollback, own upkeep, detection and resolution land-count checks, phasing,
+source departure/return/control/ability loss, independent instances and copies.
+No search replacement or simultaneous multi-player search contract is added.

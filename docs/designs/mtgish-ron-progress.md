@@ -6,16 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **887 accepted / 99 rejected names**
-(986 total), **2,256 compiled / 189 rejected records** (2,445 total).
-The latest slice is **COMBAT-PAIR-SET-CONDITION**. Combat-pair TriggerI checks
-fixed minimum counts and absence over live blocking sets at detection and
-resolution. Separate event facts supply each saved subject and opponent.
-Wall of Caltrops compiles unchanged and has complete RON gameplay evidence.
-Tests cover native combat, both checks, current subtypes, exact visits, phasing,
-source loss/control, copies, independent pending events, factories and clones.
-Estimated and actual gain: **one unique name / one record**. Gameplay gains
-Wall of Caltrops; existing Banding damage-allocation contracts remain in use.
+Latest measured result (2026-10-14): **888 accepted / 98 rejected names**
+(986 total), **2,257 compiled / 188 rejected records** (2,445 total).
+The latest slice is **OPTIONAL-BOUNDED-LIBRARY-SEARCH**. Resolving MayAction
+accepts a fixed bounded basic-land search with reveal, hand movement and shuffle.
+The engine saves distinct library visits and completes movement before zone events.
+Land Tax compiles unchanged and has complete RON gameplay evidence.
+Tests cover optional selection, bounds, exact visits, owner routing, waiting reads,
+upkeep detection/recheck, source lifecycle, independent instances, copies and clones.
+Estimated and actual gain: **one unique name / one record**. Gameplay gains Land Tax.
 No RON source changed. All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -11461,5 +11460,165 @@ docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
    keeping their different producers separate and checking entry dependencies.
 3. **Optional bounded basic-land search**: Land Tax's existing upkeep condition
    and search service may support a small resolving MayAction adapter.
+
+Stop after this slice. All migration completion gates remain unfinished.
+
+
+## 2026-10-14 — OPTIONAL-BOUNDED-LIBRARY-SEARCH
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh make build and uncached RON package tests passed.
+The baseline loader exited 1 for expected atomic collection rejection:
+2,256 compiled / 189 rejected records; 887 accepted / 99 rejected names.
+Read complete records and nested forms for Sword of the Ages, Nameless Race,
+Frankenstein's Monster and Land Tax. Targeted vocabulary queries confirmed the
+one bounded-library-find form, one bounded-entry-life form, two plural-sacrifice
+forms and the separate MayAction family. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Ranked #1: plural activation sacrifice facts/visits | Sword of the Ages; Wood Elemental already has a separate entry producer | 0 for payment alone; 1 for a complete chain | Completed sacrifices, total creature power, exact graveyard visits and exile consumption must remain linked. Source-versus-creature result semantics also need an Oracle audit. Shared plural payment facts can support later payment procedures, but no additional full-card gain was established | Large |
+| Ranked #2: entry payments and retained results | Nameless Race; Frankenstein's Monster | 1 per separate complete producer; 0 for a generic scaffold | Nameless Race needs bounded life payment and persistent P/T results. Frankenstein's Monster needs X creature-card exile, failed-entry routing and counter-combination choices. Both use entry transactions, but their producers and consumers are different contracts | Large |
+| Ranked #3: optional bounded basic-land search | Land Tax | 1 name / 1 record | Own-upkeep detection, opponent land-count comparison and intervening recheck already work. Missing contracts are bounded distinct library selection, reveal and batch hand movement. The shared search choice/visit boundary can support later found-card procedures; Transmute Artifact still needs its own filter, saved facts and payment/destination chain | Small to medium |
+
+Selected optional bounded search. Candidate #1 does not supply a ready
+multi-card unlock or a bounded multi-card prerequisite; finishing its only
+unsupported consumer needs several linked contracts and a source audit.
+Candidate #2 contains two separate entry producers rather than one shared slice.
+No dependency-ready multi-card unlock was established among the compared
+candidates. Search gives the largest credible complete-card gain for this run's
+effort and establishes a reusable library capability. No subsequent slice started.
+
+### Contract and reuse boundary
+
+RON accepts the exact resolving shape:
+`MayAction(SearchLibrary([FindNumberCardsOfType(Integer(n),
+And([IsSupertype(Basic), IsCardtype(Land)])), RevealFoundCards,
+PutFoundCardsIntoHand, Shuffle]))`, for fixed n >= 0. The two filter leaves
+can appear in either order. Activation, spell and trigger action bodies use
+existing frames. Explicit PlayerActions accepts the same optional shape and
+supplies its saved action player. Wrong arity/order, called instruction symbols,
+dynamic or negative bounds, other filters/destinations, entry and cost contexts
+remain declaration errors. Direct bounded SearchLibrary without MayAction is
+not added. Semantic inventory distinguishes the count and library-card filter.
+
+Engine API:
+`MaySearchLibraryToHand(player PlayerRef, maximum int, filter CardFilter)
+ResolvingEffect`. Definition validation rejects nil/unbound refs and negative
+bounds. The filter is reusable; RON owns the basic-land restriction and spelling.
+Decline makes no card choice, reveal, move or shuffle. Acceptance finds zero
+through the bound and shuffles once, even for zero, empty and no-match searches.
+The player reference resolves once. Missing players have no effect.
+
+The engine saves matching library visits after acceptance. Choices are distinct
+and use canonical candidate objects. Nil, foreign and duplicate choices end
+selection. All choices precede movement, and all chosen visits are rechecked.
+Departure/return cannot supply a chosen visit or join the initial search.
+Public reveal precedes owner hand movement; all moves precede individual zone
+events; shuffle follows. No draw, land play or casting payment is substituted.
+Copies use their resolving controller; clones keep separate libraries, visits,
+waiting frames and public reveal history. Explicit player source operands stay
+visible to waiting delayed queries without choices or movement. Saved LKI
+controller reads cannot follow a returned source.
+
+Reused CardFilter, chooseLibrarySearchCard, typed PlayerRef/ControllerOfWithLKI,
+library visits, SetLibrary, owner AddToHand, public reveal snapshots, zone events,
+shuffle, delayed frames, clone/copy services, upkeep and intervening conditions.
+SearchPlayer now accepts the beneficial library-search prompt, as required by
+native simulation tests. Existing single-card search APIs and callers remain.
+CR 701.23b/e/g, 701.20, 701.24, 608.2c and 603.4 supply search, reveal, order and
+upkeep boundaries. No search replacement, simultaneous multi-player search,
+new cost transaction, APNAP or battlefield-entry contract is added.
+
+### Failing-first evidence and card-to-test mapping
+
+The first engine test build exposed a wrong event-observer harness call as well
+as the missing API. Corrected the harness to the existing triggered observer and
+reconfirmed failure only on the undefined bounded-search API before implementation.
+Real RON tests failed at LEG:159:292 on unsupported optional SearchLibrary.
+The new simulation-decision test failed because SearchPlayer declined the search;
+its adapter was then added. A scoped gameplay test exposed the PlayerActions
+allowlist gap; the same supported shape was added without generalizing MayAction.
+
+- **Land Tax -> TestRONBoundedLibrarySearchLandTax**: complete unchanged LEG
+  record, W casting cost, unpaid rollback, entry, own versus opponent upkeep,
+  no choices at announcement/detection, decline and zero/one/two/three choices,
+  bound enforcement, basic versus nonbasic cards, reveal/move/shuffle order.
+- **Land Tax -> Lifecycle**: false detection and resolution conditions,
+  phased lands and phase cycles, source departure/return/phasing/control/ability
+  loss, saved controller after active-player changes, two factory instances,
+  copied ability conditions/controllers and independent copied searches,
+  pending clones and public results.
+- **Land Tax -> Inventory / Load**: complete factory validation, nested syntax
+  roles, unchanged real record and strict duplicate loading, atomic invalid-load
+  rejection. Invalid covers shapes, bounds, filters, instruction symbols and contexts.
+- **ResolvingContexts**: synthetic targeted activation, explicit saved player,
+  reversed basic-land filter leaves and an accepted zero-bound search/shuffle.
+- **TestBoundedLibrarySearchChoices**: bound/choice combinations, optionality,
+  distinct cards, owner destination, batch-complete zone observations and ordering.
+- **Visits**: foreign/duplicate/forged choices, departure and return during
+  selection, return after an earlier choice, canonical cards and owner routing.
+- **DeclarationsAndEmpty / NoMatchAndAbsent**: invalid declarations, missing
+  refs, empty libraries, nonmatching libraries and accepted empty shuffles.
+- **WaitingAndClone / SimulationChoice**: pure explicit source queries, source
+  phase cycle/departure/return, departure controller LKI, delayed resolution,
+  clone zone/history isolation and native beneficial simulation choices.
+
+### Validation and measured result
+
+Required checks passed in fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONBoundedLibrarySearch -count=1`;
+focused engine bounded-search, existing library-search and SearchPlayer regressions;
+`make build`; `go vet ./...`; `go test ./pkg/mage/... -short -count=1`;
+`make test`; `make lint` (0 issues); `git diff --check`;
+`go run ./cmd/loadcards -json` (expected exit 1 for remaining unsupported records).
+
+The first broad engine run found only stale collection-count assertions and
+Land Tax's prior expected rejection. Updated exact counts and required Land Tax
+factory success/validation; preserved the remaining Ghazbán Ogre rejection.
+Reran focused tests, build, vet and the engine suite before the passing full suite.
+Reviewed automatic lint formatting; no semantic or unrelated edit was introduced.
+Post-lint `go test ./pkg/mage ./pkg/mage/dsl/ron -short -count=1` passed.
+
+Final loader: **2,257 compiled / 188 rejected records;
+888 accepted / 98 rejected names**. Exact baseline comparison removed only
+Land Tax's LEG.lines.ron:159:292 diagnostic; no diagnostic was added or changed,
+and no accepted record was lost. Estimated and actual compilation gain match:
+**one unique name / one record**. Complete-card gameplay separately gains Land Tax.
+
+Local data/LEG.json Oracle agrees with Land Tax's complete RON record.
+Sword of the Ages has an unresolved source/result fidelity question: Oracle
+requires damage from only the sacrificed creatures' total power, then exile of
+both the artifact and those creature cards. Its RON uses one plural result for
+both total power and exile, with no separate explicit source-card exile. A result
+that includes the source for exile can incorrectly add an animated artifact's
+power; a result that excludes it for power needs the source card separately for
+exile. Confirm the producer contract and correct the source only with that
+contract established. This is an ambiguity/blocker, not an approved source edit.
+Nameless Race and Frankenstein's Monster keep their separate Oracle producers.
+No source changed. All twelve RON hashes match the vocabulary snapshot, so no
+snapshot refresh is needed. No environment failure remains.
+
+Changed files: mage/bounded_library_search.go and tests, search_player.go, doc.go;
+ron/bounded_library_search.go and tests, tap_choice.go, player_actions.go,
+inventory.go, definition_plan_test.go, inventory_test.go, numeric_consumers_test.go,
+upkeep_player_condition_test.go; docs/dsl-reference.md, engine-rules-contracts.md
+and this ledger. The implement-engine skill supplied engine contract guidance;
+user scope supplied RON integration, gameplay, ledger and the single commit.
+No Go card definition or DSL function was removed. Runtime cutover and removal
+remain gated by complete collection gameplay, loading and native startup.
+
+### Ranked next candidates
+
+1. **Bounded entry life payment/results**: reassess Nameless Race's dynamic
+   white permanent/graveyard cap, life legality and persistent P/T consumers.
+   Keep the producer separate from graveyard-X entry payments.
+2. **Plural activation sacrifice facts and visits**: Sword of the Ages still
+   needs the complete power/sacrifice/graveyard-exile chain and source/result
+   fidelity audit. Reassess shared demand before a payment-only scaffold.
+3. **Entry graveyard-X payments/counter combinations**: Frankenstein's Monster
+   needs an atomic X creature-card exile, failure routing and retained count
+   consumed by its three counter choices. Choose a dependency-ready complete producer.
 
 Stop after this slice. All migration completion gates remain unfinished.
