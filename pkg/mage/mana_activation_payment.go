@@ -90,6 +90,7 @@ func validManaActivationPayment(pool *ManaPool, cost ManaCost, payment ManaActiv
 	}
 	selected := NewManaPool()
 	selected.ManaConversions = pool.ManaConversions
+	selected.spendingPermissions = pool.spendingPermissions
 	total := 0
 	for _, color := range manaPoolColors {
 		if payment[color] < 0 {

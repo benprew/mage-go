@@ -12,6 +12,16 @@
 // ThisGraveyardCard and one EntersNormally in non-Aura graveyard source lists.
 // Other references, entry options and player-action contexts need adapters.
 //
+// [ControllerManaSpending] permits the source controller to pay with one
+// mana color as another color. Active permissions combine, including chains.
+// The payment planner and live payment keep actual colors and spending rules.
+// Rule reads follow object layers and current control. Phasing and ability
+// removal stop the rule. Return starts a new visit. Copies and clones keep
+// separate rules and pools. Queries do not spend mana or make choices.
+// RON accepts PlayerEffect(You, [MaySpendColoredManaAsThoughItWereAnotherColor
+// (color, color)]) with one operation and two of the five mana colors.
+// Other players, temporary permissions and restricted X need separate adapters.
+//
 // [AddRestrictedMana] saves fixed productions with one spending rule.
 // All productions use one shared mana replacement event. Each mana unit
 // keeps its rule through type replacements, payment and game clones.
@@ -19,7 +29,7 @@
 // pay costs or change pools. RON accepts AddManaWithModifiers with fixed
 // mana symbols, nonempty And lists and artifact-only or creature-only spending.
 // The same spending adapter serves repeated one-color resolution production.
-// X payment and as-though color spending need separate contracts.
+// Restricted X payment needs a separate contract.
 //
 // [WithSourceCardInZone] saves a graveyard or face-up exile source visit.
 // Ordinary events use the owner as controller outside the battlefield.

@@ -6,21 +6,21 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **862 accepted / 124 rejected names**
-(986 total), **2,214 compiled / 231 rejected records** (2,445 total).
-The latest slice is **OPTIONAL-GRAVEYARD-SOURCE-RETURN**. Exact non-Aura source-card
-returns offer a resolution-time choice and use the shared battlefield entry path.
+Latest measured result (2026-10-13): **863 accepted / 123 rejected names**
+(986 total), **2,220 compiled / 225 rejected records** (2,445 total).
+The latest slice is **CONTROLLER-COLORED-MANA-SPENDING**. Active controller-only
+permissions share payment legality, planning and actual mana consumption.
 
 Estimated and actual full-card gains are **one name / six records**.
-Nether Shadow now has complete unchanged-record gameplay tests for every reprint.
-Native and RON evidence covers acceptance/decline, ordered intervening conditions,
-choice-time visit rechecks, haste, phasing, entry counters/replacements, immutable
-bindings, independent events, delayed frames, factory isolation, copies and clones.
+Sunglasses of Urza now has complete unchanged-record gameplay tests for all reprints.
+Native and RON evidence covers actual spent colors, restricted mana, combined
+permissions, automatic mana activation payments, hybrid costs, X bounds,
+control, phasing, ability removal/restoration, return, copies and clones.
 All previously accepted records stay accepted; remaining diagnostics are unchanged.
 
 The loader still rejects the collection atomically. Restricted X payment,
-as-though spending, exile counters and other unsupported records remain gaps.
-Runtime cutover, Go-card removal and DSL cleanup stay gated.
+exile counters and other unsupported records remain gaps. Runtime cutover,
+Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
 
@@ -5792,3 +5792,123 @@ or broad DSL functions were removed; all removal gates remain unmet.
    immediate gains; medium/high effort. Compare broader shared candidates afresh.
 
 This run stops after optional exact graveyard source return.
+
+
+## 2026-10-13 — CONTROLLER-COLORED-MANA-SPENDING
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline `go run ./cmd/loadcards -json`
+exited 1 for collection rejection: 2,214 compiled / 231 rejected records,
+862 accepted / 124 rejected names. This was not a build or test failure.
+
+| Candidate | Distinct affected names; estimated full-card gains | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1: controller colored mana spending | Sunglasses of Urza; one name/six records | Its complete records contain one static operation. The pool planner already substitutes colors, but the old static conversion is global. A controller rule and common permission graph enable shared spending legality and future restricted-X interaction. | Medium; compiler, native payment integration, lifecycle and gameplay tests |
+| Ranked #2: restricted X payment | Drain Life; zero immediate gains, one eventual name/six records | `SpendOnlyColorManaOnX(Black)` needs announced cost decomposition; `TheClampedAmountOfDamageDealtThisWay` still blocks life gain. The prerequisite serves announced X legality and spending restrictions. | Medium/high |
+| Ranked #3: exact exile-card counters | All Hallow's Eve; zero immediate gains, one eventual name/record | Exact storage must precede `HasACounterOfType`, `HasNoCountersOfType` and removal. `ExilesWithNumberCounters` and simultaneous each-graveyard return also block the full record. Enables source-zone counter reads and changes. | Medium/high |
+
+Candidate #1 was dependency-ready and had the largest credible complete-card gain
+for this run among the ranked candidates. Complete six-reprint Sunglasses and
+Drain Life records and the complete LEG All Hallow's Eve record were inspected,
+including nested forms. Reprints count once. The two alternatives do not offer
+an immediate multi-card unlock. No Go card definition supplied requirements.
+Local LEA Oracle text confirms white-to-red controller-only spending. No source
+defect was found. CR 106.6, 609.4a/b and 613.11 establish restriction, combined
+permission, actual color and post-layer rule contracts.
+
+### Signatures, supported context and reuse boundary
+
+Native: `mage.ControllerManaSpending(from, to core.Color) mage.ContinuousEffect`.
+Both arguments must be one of the five colors; native definition validation
+rejects invalid colors. The source controller gets the permission while that
+source's exact static declaration remains active. RON accepts exactly
+`PlayerEffect(You, [MaySpendColoredManaAsThoughItWereAnotherColor(color, color)])`
+on a permanent. It rejects other players, multiple operations, malformed arities,
+colorless/any-color arguments, tuple-shaped colors and unsupported contexts.
+`compileManaSpendingRule(Node) (optionFactory, error)` owns syntax and validation;
+`isManaSpendingRule(Node) bool` routes this declaration. Every factory supplies a
+fresh static rule. Inventory children have the `color` role.
+
+The old global `ManaConversion` and public `ManaSolverInputs.Conversions` callers
+remain intact. The engine adds a per-pool value array of spending permissions.
+The existing planner and solver use its transitive graph, so competing destinations,
+chains and cycles do not overwrite each other. Actual pool units retain their
+colors and restrictions. Pool payment, solver bounds and production demand,
+automatic mana activation payment validation and final payment share this graph.
+This permission does not produce mana or emit a mana replacement event.
+
+Active static rules are read after object layers and final control enforcement.
+Phasing refreshes the rule view without a full layer pass; this was a real
+failing gameplay case, not a fixture-only issue. Ability removal and departure
+stop permission. Phase-in, restoration and return read current declarations and
+control. Clones copy permission arrays by value. Copies retain independent static
+rules after donor departure. Queries do not choose or spend. Costs retain the
+existing shared transaction and rollback mechanics. No new target, LKI action,
+replacement ordering or simultaneous-operation subsystem is needed for this rule.
+Restricted X and temporary/other-player spending remain separate contracts.
+
+### Failing-first evidence and card-to-test mappings
+
+Native tests first failed at undefined `ControllerManaSpending`. RON tests then
+failed independently at the expected unsupported operation in all six complete
+Sunglasses records. Initial implementation tests exposed stale permission after
+phasing; post-layer rule reads and phase refresh fixed that failure. Test API
+spellings were corrected (`core.ManaCost` for hybrid and X), without weakening
+assertions. Declaration and strict-loading tests retain unsupported contexts.
+
+- **Sunglasses of Urza → TestRONManaSpendingSunglasses.** All six complete unchanged
+  LEA/LEB/2ED/3ED/CED/CEI records: metadata, paid cast and entry, controller scope,
+  control changes, phasing, ability removal/restoration, leave-and-return and clones.
+- **TestRONManaSpendingAutomatic.** Real Sunglasses and Plains automatic payment,
+  white actual spent color for a red cost, spell resolution and failed payment
+  without mana or hand changes.
+- **TestRONManaSpendingCopies.** Real Sunglasses and Copy Artifact; independent
+  controllers, donor departure and copied static ability removal. This is
+  interaction evidence; it does not add another newly completed name.
+- **TestRONManaSpendingInvalid / StrictLoad.** Bad arities, players, colors,
+  operation lists and contexts; instant/sorcery static rejection; atomic rejected
+  loading preserves a supplied registry. Valid isolated loading succeeds.
+- **TestColoredManaSpending / ActivationAndHybrid / Declarations.** Native
+  affordability and payment purity, actual colors, competing/chained permissions,
+  eligible/ineligible restricted mana, clones, automatic activation payment,
+  hybrid allocation, announced X bounds, independent players and invalid colors.
+
+### Validation and measured result
+
+Focused RON and native tests passed with `-count=1`. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1` and `make test` passed. `make lint`
+passed with 0 issues. Formatting and automatic lint changes were reviewed; no
+unrelated file changed. Focused native and RON tests passed again after formatting.
+`git diff --check` passed. No environment or validation blocker remains.
+
+Fresh loader evidence: **2,220 compiled / 225 rejected records**, **863 accepted /
+123 rejected names**, out of 2,445 records / 986 names. Exit 1 remains expected
+because collection publication is atomic. Baseline/final diagnostic comparison
+removes only six Sunglasses issues and adds none; all other diagnostics are
+unchanged. Estimated one-name/six-record gains match actual gains. Complete-card
+RON gameplay coverage adds Sunglasses of Urza, separately from compilation counts.
+
+Changed files: new native and RON mana_spending.go/test files; mana.go,
+mana_solver.go, mana_activation_payment.go, clone.go, game.go, effect_manager.go,
+doc.go; RON compiler.go/inventory.go and three collection-count test files;
+dsl-reference.md, engine-rules-contracts.md and this ledger. No source RON changed,
+so vocabulary source hashes need no refresh. No production Go card, generator or
+broad DSL function was removed: runtime, test migration and removal gates remain
+unmet. No unrelated user work was present or changed.
+
+### Ranked next candidates
+
+1. **Restricted X payment — Drain Life.** Shared announced-cost decomposition is
+   the next payment prerequisite. Zero immediate full-card gains; clamped damage
+   gain still blocks one eventual name/six records. Reassess broader multi-card
+   prerequisites before selection.
+2. **Exact exile-card counters — All Hallow's Eve.** Shared visit storage and
+   query/mutation contract precede spell-exile modifiers and simultaneous returns.
+   Zero immediate full-card gains, one eventual name/record.
+3. **Clamped actual-damage gain — Drain Life.** Saved damage outcomes are ready;
+   save the recipient's pre-damage life/toughness cap and compose the gain with
+   those outcomes. Zero immediate gains until restricted X is complete.
+
+This run stops after controller colored mana spending.

@@ -14842,3 +14842,44 @@ actions and decline followed by a later offer. `Invalid` covers declaration
 rejection and atomic loading. Native `TestOptionalGraveyardReturn*` covers
 choice-time rechecks, owner/controller separation, entry counters/replacements,
 definition validation and pure waiting queries.
+
+## Controller colored mana spending
+
+`mage.ControllerManaSpending(from, to core.Color) mage.ContinuousEffect`
+permits the source controller to spend one mana color as another color.
+Definition validation requires two of the five colors. It uses a battlefield
+static rule; the RON adapter accepts exactly
+`PlayerEffect(You, [MaySpendColoredManaAsThoughItWereAnotherColor(color, color)])`.
+Other players, operation lists, colorless/any-color arguments, resolving bodies,
+entry operations and instant/sorcery static declarations reject.
+
+RON validates spelling, arguments and context, then builds a fresh static rule
+for each factory. The engine reads active rules after object layers and control
+restrictions. Phase changes refresh permissions without a layer pass. Ability
+removal, departure and phasing stop the rule. Restoration, return and phase-in
+use the current source visit and controller. Copies retain independent rules;
+game clones retain independent permission arrays and pools.
+
+The shared mana pool planner, solver demand limits, relaxed affordability bounds,
+activation-payment validation and final payment use the same permission graph.
+Permissions combine and can form chains or cycles. Each actual mana unit keeps
+its color and restriction. A white unit spent for a red cost is recorded as white.
+No mana production or replacement event occurs for this permission. Queries make
+no choices and spend no resources. Failed payment retains the existing shared
+transaction contract. Existing global `ManaConversion` callers and
+`ManaSolverInputs.Conversions` remain supported. Restricted X is a separate gap.
+
+CR 106.6 preserves spending restrictions; CR 609.4a permits combined as-though
+conditions; CR 609.4b preserves costs and actual spent mana; CR 613.11 applies
+game rules after object layers. Local LEA Oracle text agrees with the unchanged
+six Sunglasses of Urza RON records.
+
+Evidence: `TestRONManaSpendingSunglasses` covers all six complete records and
+metadata, cast/entry, controller scope, control changes, phasing, ability
+removal/restoration, return and game clones. `Automatic` covers Plains auto-payment,
+actual spent colors, resolution and failed payment resource preservation.
+`Copies` covers Copy Artifact, donor departure and copied ability removal.
+`Invalid` and `StrictLoad` cover declaration rejection and atomic loading.
+`TestColoredManaSpending`, `ActivationAndHybrid` and `Declarations` cover
+competing/chained permissions, restricted mana, clone isolation, automatic mana
+activation payments, hybrid costs, X bounds, separate players and invalid colors.

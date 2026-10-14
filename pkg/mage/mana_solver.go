@@ -136,7 +136,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 	if in.Pool != nil {
 		rootPool.RestorePool(in.Pool.SnapshotPool())
 	}
-	rootPool.ManaConversions = in.Conversions
+	rootPool.spendingPermissions = in.effectiveSpendingPermissions()
 
 	for _, source := range in.Sources {
 		for _, ability := range source.Abilities {
@@ -213,7 +213,7 @@ func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap
 				}
 				for _, payment := range manaActivationPayments(node.pool, ability.ManaCost) {
 					for _, choice := range productionChoices[sourceIndex][abilityIndex] {
-						nextPool := cloneManaPoolForSearch(node.pool, in.Conversions)
+						nextPool := cloneManaPoolForSearch(node.pool, in.effectiveSpendingPermissions())
 						if payManaActivationPayment(nextPool, ability.ManaCost, payment) != nil {
 							continue
 						}
@@ -338,13 +338,13 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 		{Red, in.Cost.Red},
 		{Green, in.Cost.Green},
 	} {
-		if relaxedManaAvailableForColor(available, requirement.color, in.Conversions) < requirement.count {
+		if relaxedManaAvailableForColor(available, requirement.color, in.effectiveSpendingPermissions()) < requirement.count {
 			return false
 		}
 	}
 	for _, hybrid := range in.Cost.Hybrid {
-		if relaxedManaAvailableForColor(available, hybrid.A, in.Conversions)+
-			relaxedManaAvailableForColor(available, hybrid.B, in.Conversions) == 0 {
+		if relaxedManaAvailableForColor(available, hybrid.A, in.effectiveSpendingPermissions())+
+			relaxedManaAvailableForColor(available, hybrid.B, in.effectiveSpendingPermissions()) == 0 {
 			return false
 		}
 	}
@@ -358,10 +358,10 @@ func productionRestrictionUsable(restriction ManaRestriction, spellCtx *SpellPay
 	return spellCtx != nil && restriction.IsSatisfiedBy(*spellCtx)
 }
 
-func relaxedManaAvailableForColor(available [AnyColor + 1]int, required Color, conversions map[Color]Color) int {
+func relaxedManaAvailableForColor(available [AnyColor + 1]int, required Color, conversions manaSpendingPermissions) int {
 	total := available[required]
 	for _, from := range manaPoolColors {
-		if from != required && conversions[from] == required {
+		if from != required && conversions.permits(from, required) {
 			total += available[from]
 		}
 	}
@@ -467,10 +467,10 @@ func manaSourceSetWith(used string, sourceIndex int) string {
 	return string(next)
 }
 
-func cloneManaPoolForSearch(pool *ManaPool, conversions map[Color]Color) *ManaPool {
+func cloneManaPoolForSearch(pool *ManaPool, conversions manaSpendingPermissions) *ManaPool {
 	return &ManaPool{
-		pool:            append([]Mana(nil), pool.pool...),
-		ManaConversions: conversions,
+		pool:                append([]Mana(nil), pool.pool...),
+		spendingPermissions: conversions,
 	}
 }
 
@@ -556,11 +556,11 @@ func manaSearchStateKey(pool *ManaPool, used string, spellCtx *SpellPaymentConte
 }
 
 func manaChoiceCapsForInputs(in ManaSolverInputs) manaChoiceCaps {
-	caps := manaChoiceCapsForCost(in.Cost, in.Conversions)
+	caps := manaChoiceCapsForPermissions(in.Cost, in.effectiveSpendingPermissions())
 	for _, source := range in.Sources {
 		var sourceCaps manaChoiceCaps
 		for _, ability := range source.Abilities {
-			abilityCaps := manaChoiceCapsForCost(ability.ManaCost, in.Conversions)
+			abilityCaps := manaChoiceCapsForPermissions(ability.ManaCost, in.effectiveSpendingPermissions())
 			for _, color := range manaPoolColors {
 				sourceCaps[color] = max(sourceCaps[color], abilityCaps[color])
 			}
@@ -572,13 +572,13 @@ func manaChoiceCapsForInputs(in ManaSolverInputs) manaChoiceCaps {
 	return caps
 }
 
-func manaChoiceCapsForCost(cost ManaCost, conversions map[Color]Color) manaChoiceCaps {
+func manaChoiceCapsForPermissions(cost ManaCost, conversions manaSpendingPermissions) manaChoiceCaps {
 	var caps manaChoiceCaps
 	addManaChoiceCaps(&caps, cost, conversions)
 	return caps
 }
 
-func addManaChoiceCaps(caps *manaChoiceCaps, cost ManaCost, conversions map[Color]Color) {
+func addManaChoiceCaps(caps *manaChoiceCaps, cost ManaCost, conversions manaSpendingPermissions) {
 	for _, requirement := range [...]struct {
 		color Color
 		count int
@@ -603,7 +603,7 @@ func addManaChoiceCaps(caps *manaChoiceCaps, cost ManaCost, conversions map[Colo
 	}
 }
 
-func addManaRequirementCaps(caps *manaChoiceCaps, required Color, count int, conversions map[Color]Color) {
+func addManaRequirementCaps(caps *manaChoiceCaps, required Color, count int, conversions manaSpendingPermissions) {
 	if count <= 0 {
 		return
 	}
@@ -616,10 +616,10 @@ func addManaRequirementCaps(caps *manaChoiceCaps, required Color, count int, con
 	}
 }
 
-func markManaRequirementCandidates(candidates *[AnyColor + 1]bool, required Color, conversions map[Color]Color) {
+func markManaRequirementCandidates(candidates *[AnyColor + 1]bool, required Color, conversions manaSpendingPermissions) {
 	candidates[required] = true
 	for _, from := range manaPoolColors {
-		if conversions[from] == required {
+		if conversions.permits(from, required) {
 			candidates[from] = true
 		}
 	}
@@ -860,4 +860,8 @@ func scoreAt(scores []int, i int) int {
 		return scores[i]
 	}
 	return 0
+}
+
+func manaChoiceCapsForCost(cost ManaCost, conversions map[Color]Color) manaChoiceCaps {
+	return manaChoiceCapsForPermissions(cost, (manaSpendingPermissions{}).withLegacy(conversions))
 }

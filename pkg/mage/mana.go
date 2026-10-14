@@ -9,8 +9,9 @@ import (
 
 // ManaPool tracks available mana for a player.
 type ManaPool struct {
-	pool            []Mana
-	ManaConversions map[Color]Color // from → to (set by Sunglasses of Urza etc.)
+	pool                []Mana
+	spendingPermissions manaSpendingPermissions
+	ManaConversions     map[Color]Color // from → to (set by Sunglasses of Urza etc.)
 
 	// ProducedThisTurn records every unit of mana ever added to this pool
 	// during the current turn, for observability when the live pool empties
@@ -188,7 +189,7 @@ func (mp *ManaPool) paymentPlan(mc ManaCost, spellCtx *SpellPaymentContext) ([An
 	if total < mc.CMC() {
 		return [AnyColor + 1]int{}, false
 	}
-	if len(mp.ManaConversions) == 0 && len(mc.Hybrid) == 0 {
+	if len(mp.ManaConversions) == 0 && mp.spendingPermissions == (manaSpendingPermissions{}) && len(mc.Hybrid) == 0 {
 		return directManaPaymentPlan(available, mc)
 	}
 
@@ -293,8 +294,9 @@ func directManaPaymentPlan(available [AnyColor + 1]int, mc ManaCost) ([AnyColor 
 
 func (mp *ManaPool) paymentCandidates(required Color) []Color {
 	candidates := []Color{required}
+	permissions := mp.effectiveSpendingPermissions()
 	for _, from := range manaPoolColors {
-		if from != required && mp.ManaConversions[from] == required {
+		if from != required && permissions.permits(from, required) {
 			candidates = append(candidates, from)
 		}
 	}

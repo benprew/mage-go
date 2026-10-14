@@ -643,6 +643,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "EachPlayerEffect":
 		return compileAllPlayerRule(n)
 	case "PlayerEffect":
+		if isManaSpendingRule(n) {
+			return compileManaSpendingRule(n)
+		}
 		if isHandSizeRule(n) {
 			return compileHandSizeRule(n, ctx)
 		}

@@ -158,6 +158,7 @@ func extractBasePlayer(p Player) *BasePlayer {
 	}
 	// Copy mana pool.
 	bp.manaPool.RestorePool(p.ManaPool().SnapshotPool())
+	bp.manaPool.spendingPermissions = p.ManaPool().spendingPermissions
 	if len(p.ManaPool().ManaConversions) > 0 {
 		bp.manaPool.ManaConversions = make(map[Color]Color)
 		maps.Copy(bp.manaPool.ManaConversions, p.ManaPool().ManaConversions)
@@ -193,6 +194,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	clone.anteVisits = bp.anteVisits
 	// Copy mana pool state.
 	clone.manaPool.RestorePool(bp.manaPool.SnapshotPool())
+	clone.manaPool.spendingPermissions = bp.manaPool.spendingPermissions
 	if len(bp.manaPool.ManaConversions) > 0 {
 		clone.manaPool.ManaConversions = make(map[Color]Color)
 		maps.Copy(clone.manaPool.ManaConversions, bp.manaPool.ManaConversions)

@@ -241,6 +241,7 @@ func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 	if expired {
 		g.ApplyContinuousEffects()
 	}
+	g.syncManaSpendingPermissions()
 	return phased
 }
 
@@ -248,6 +249,7 @@ func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 // not currently phased out are skipped.
 func (g *Game) PhaseIn(ids []uuid.UUID) {
 	g.zones.PhaseIn(ids)
+	g.syncManaSpendingPermissions()
 }
 
 // FindPermanentIncludingPhased finds a permanent by ID even if phased out.
