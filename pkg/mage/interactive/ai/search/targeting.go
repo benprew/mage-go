@@ -59,7 +59,7 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 			return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), []uuid.UUID{targetID}, ability.Targets()...)
 		}
 	}
-	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, 0, allow)
+	combos := topTargetCombinationsFiltered(g, playerID, g.AbilityTargetSource(source.Card, ability, ability.Targets()), ability.Targets(), purpose, damage, 0, allow)
 	result := combos[:0]
 	for _, combo := range combos {
 		if !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), combo, ability.Targets()...) {

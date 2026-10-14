@@ -21675,9 +21675,10 @@ Zero-count groups retain declarations even with no selected occurrences. A futur
 whole-spell/ability domain consumer must inspect every applicable declaration;
 selected `StackObject.TargetSpecs` alone omit zero-choice groups.
 
-This is the bounded declaration prerequisite for Wall of Shadows. It does not
-implement `CanTargetOnly` or identify the active targeting ability. Those
-consumers remain unsupported, so the complete Wall record still rejects.
+This is the bounded declaration prerequisite for Wall of Shadows. Active
+ability identity uses the separate targeting-ability service below. CanTargetOnly
+and complete spell/domain classification remain unsupported, so the complete
+Wall record still rejects.
 
 Evidence: native `TestTargetSubtypeDomain` and
 `TestTargetSubtypeDomainDeclarations` and `TestTargetSubtypeDomainCallers`; RON `TestRONTargetSubtypeDomainGameplay`
@@ -21689,3 +21690,60 @@ Existing Glyph gameplay tests also exercise the changed target lowering.
 No new full-card compilation or gameplay completion is claimed for rejected
 records. Payments, replacement order and simultaneous operations use the existing
 engine contracts.
+
+## Active targeting ability declarations
+
+`(*Game).AbilityTargetSource(card Card, ability Ability, declared []Target) Card`
+retains one activated, triggered or mana ability's declaration ID and the
+complete applicable target list in the existing typed source-information view.
+`TargetSourceAbility(source Card) (uuid.UUID, []Target, bool)` returns that ID,
+a separate list and a known flag. A known empty list is not an unknown ability.
+Absent cards, absent abilities, zero IDs and spell/static abilities cannot
+create a new ability declaration view. The ID identifies the declaration;
+stack IDs identify separate executions. Existing source visits identify the
+source incarnation. These identities must not be replaced by a source card name.
+
+The caller supplies ordinary or selected-mode declarations before target choice.
+The list includes fixed-zero and optional groups with no chosen occurrences.
+Input and query slices cannot change the saved list. Underlying declarations
+keep their existing ownership contract; this API does not grant permission to
+change an ability's target specification. Queries make no choices or payments.
+Current source characteristics and exact departure/phase information use the
+existing source-information service. Ability facts survive those information
+reads without following a returned source (CR 400.7, 602.2a, 608.2b).
+
+Activation target validation, forced/random/opponent choices, grouped targets,
+modal legality and interactive target queries use the selected ability view.
+Graveyard activation validates targets before the shared payment transaction
+and saves aligned specs for resolution. Illegal targets retain the source card
+and resources. Pending ordinary and modal triggers use their saved declaration,
+including after source departure, control changes or phasing (CR 603.3c–d).
+Scheduled delayed triggers receive separate declaration IDs; copies and clones
+retain the scheduled declaration. No global last-ability field is used.
+
+Stack copies and game clones keep ability facts with their independent chosen
+visits and resolution frames. Ability-copy retargeting uses complete saved
+declarations when available, preserving the announced count; legacy callers
+without the new view retain their existing path (CR 707.10c). Resolution
+rechecks current target legality. Protection and source-type restrictions still
+use current source characteristics or exact LKI, not printed characteristics.
+
+RON's existing `Activated`, `ActivatedWithModifiers`, `TriggerA`, `TriggerI`,
+`Modal_ChooseOne`, `Targeted` and target-count lowering already produces fresh
+ability instances and complete groups. No spelling adapter or source edit is
+needed for this engine prerequisite. It does not implement `CanTargetOnly`,
+spell-domain classification or Aura/disjunctive domain proofs. Unknown domains
+must not be treated as unrestricted. Wall of Shadows remains rejected.
+
+Evidence: native `TestTargetingAbilityView`, `Activation`,
+`CurrentCharacteristics`, `Queries`, `PendingAndDelayed`, and `Graveyard`;
+RON `TestRONTargetingAbilityGameplay` (Ali Baba, Goblin Digging Team), `Modal`
+(Balm of Restoration), `Trigger` (The Abyss), `ZeroGroup`, and `Records`.
+`Records` checks distinct factory IDs and exact declaration groups for eleven
+existing accepted subtype-targeted names. These are declaration integration
+checks, not new complete-card gameplay claims.
+
+Interactive regression evidence also includes `TestTargetingAbilitySearch`,
+`TestTargetingAbilityCombat` and `TestTargetingAbilityCombatSolver`. Search,
+regeneration, pump planning and the combat solver keep the actual selected
+ability rather than deriving one from its source card.

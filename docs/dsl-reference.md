@@ -16338,9 +16338,10 @@ Zero-count groups retain declarations even with no selected occurrences. A futur
 whole-spell/ability domain consumer must inspect every applicable declaration;
 selected `StackObject.TargetSpecs` alone omit zero-choice groups.
 
-This is the bounded declaration prerequisite for Wall of Shadows. It does not
-implement `CanTargetOnly` or identify the active targeting ability. Those
-consumers remain unsupported, so the complete Wall record still rejects.
+This is the bounded declaration prerequisite for Wall of Shadows. Active
+ability identity uses the separate targeting-ability service below. CanTargetOnly
+and complete spell/domain classification remain unsupported, so the complete
+Wall record still rejects.
 
 Evidence: native `TestTargetSubtypeDomain` and
 `TestTargetSubtypeDomainDeclarations` and `TestTargetSubtypeDomainCallers`; RON `TestRONTargetSubtypeDomainGameplay`
@@ -16352,3 +16353,28 @@ Existing Glyph gameplay tests also exercise the changed target lowering.
 No new full-card compilation or gameplay completion is claimed for rejected
 records. Payments, replacement order and simultaneous operations use the existing
 engine contracts.
+
+### Active targeting ability declarations
+
+Use `g.AbilityTargetSource(card, ability, declared)` when querying one selected
+activated or triggered ability. Supply its complete target list, or its selected
+mode's list, before choosing targets. `mage.TargetSourceAbility(source)` returns
+the saved declaration ID, a separate target list and a known flag. A known empty
+list identifies an ability that has no applicable target groups. A source card
+alone cannot identify one of its abilities. Stack IDs distinguish executions;
+the existing source-information view keeps the exact source visit.
+
+The shared activation, trigger, copy, clone and interactive paths retain this
+view. Fixed-zero and unchosen optional groups stay in its declaration list.
+Source information still uses current characteristics and exact LKI. Target
+legality, payment rollback, per-instance bindings and resolution timing retain
+shared engine behavior. Graveyard activation checks target legality before
+payment and again during resolution. Copy retargeting keeps announced counts.
+
+Existing RON lowering supplies fresh ability IDs and complete declarations;
+no new RON spelling is introduced. `CanTargetOnly` remains unsupported until
+complete subtype-domain classification and its spell/ability consumers exist.
+Evidence: `TestTargetingAbility*` and `TestRONTargetingAbility*`.
+
+Interactive caller coverage: `TestTargetingAbilitySearch`,
+`TestTargetingAbilityCombat` and `TestTargetingAbilityCombatSolver`.

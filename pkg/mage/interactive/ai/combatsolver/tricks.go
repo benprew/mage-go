@@ -33,6 +33,7 @@ type handPump struct {
 // repeatable resource — it can fire as many times as mana allows — so it is
 // bounded only by the shared mana budget, never consumed.
 type abilityPump struct {
+	ability                mage.ActivatedAbility
 	power, toughness, cost int
 	source                 *mage.Permanent
 	target                 mage.Target
@@ -192,7 +193,7 @@ func applicablePumpUnits(g *mage.Game, playerID uuid.UUID, ours *mage.Permanent,
 		units = append(units, pumpUnit(self))
 	}
 	for _, ap := range abilityPumps {
-		if slices.Contains(ap.target.Possible(playerID, ap.source.Card, g), ours.ID()) {
+		if slices.Contains(ap.target.Possible(playerID, g.AbilityTargetSource(ap.source.Card, ap.ability, ap.ability.Targets()), g), ours.ID()) {
 			units = append(units, pumpUnit{power: ap.power, toughness: ap.toughness, cost: ap.cost})
 		}
 	}
@@ -231,7 +232,7 @@ func gatherAbilityPumps(g *mage.Game, playerID uuid.UUID) []abilityPump {
 			}
 			pumps = append(pumps, abilityPump{
 				power: power, toughness: toughness, cost: cost,
-				source: perm, target: targets[0],
+				source: perm, target: targets[0], ability: ab,
 			})
 		}
 	}

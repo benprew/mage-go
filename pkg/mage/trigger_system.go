@@ -10,6 +10,7 @@ import (
 
 // DelayedTrigger keeps a saved ability until its event or duration ends.
 type DelayedTrigger struct {
+	targetingAbilityID   uuid.UUID
 	modes                []Mode
 	interveningCondition StateCondition
 	targets              []Target
@@ -75,6 +76,9 @@ func NewTriggerSystem() TriggerSystem {
 // RegisterDelayed registers a delayed trigger.
 func (ts *TriggerSystem) RegisterDelayed(dt *DelayedTrigger) {
 	if dt != nil {
+		if dt.targetingAbilityID == uuid.Nil {
+			dt.targetingAbilityID = uuid.New()
+		}
 		ts.delayed = append(ts.delayed, dt)
 	}
 }

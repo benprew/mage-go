@@ -2187,6 +2187,7 @@ func (g *Game) PutTriggersOnStack() {
 			IsAbility:          true,
 		}
 		if dt := pt.delayed; dt != nil && len(dt.modes) == 0 {
+			obj.TargetSource = g.triggerTargetSourceWithDeclarations(pt, dt.targets)
 			obj.Effects = append([]Effect(nil), dt.Effects...)
 			obj.Targets = []uuid.UUID{dt.TargetID}
 			if len(dt.targets) > 0 {
@@ -2195,7 +2196,6 @@ func (g *Game) PutTriggersOnStack() {
 				if !legal {
 					continue
 				}
-				obj.TargetSource = targetSource
 			}
 			obj.EventAmount = pt.event.Amount
 			obj.EventSourceID = pt.event.SourceID
@@ -2217,7 +2217,7 @@ func (g *Game) PutTriggersOnStack() {
 			var labels []string
 			var indices []int
 			for i, mode := range modes {
-				legal := g.targetEventQuery(obj.capturedPlayers, obj.capturedPermanents).hasLegalTargetSelection(pt.controller, targetSource, mode.Targets, 0)
+				legal := g.targetEventQuery(obj.capturedPlayers, obj.capturedPermanents).hasLegalTargetSelection(pt.controller, g.triggerTargetSourceWithDeclarations(pt, mode.Targets), mode.Targets, 0)
 				if legal {
 					labels = append(labels, mode.Label)
 					indices = append(indices, i)
@@ -2237,6 +2237,7 @@ func (g *Game) PutTriggersOnStack() {
 			idx := indices[choice]
 			chosen := modes[idx]
 			obj.Effects = append(obj.Effects, chosen.Effects...)
+			obj.TargetSource = g.triggerTargetSourceWithDeclarations(pt, chosen.Targets)
 			obj.ModeChoice = idx
 			if len(chosen.Targets) > 0 {
 				var legal bool
@@ -2244,12 +2245,12 @@ func (g *Game) PutTriggersOnStack() {
 				if !legal {
 					continue
 				}
-				obj.TargetSource = targetSource
 			}
 			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
 			continue
 		}
+		obj.TargetSource = g.triggerTargetSourceWithDeclarations(pt, pt.ability.Targets())
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
 		// CR 603.3d: when a triggered ability with targets is put on the stack,
 		// its controller chooses the targets. Declared AddTarget(...) entries
@@ -2275,7 +2276,6 @@ func (g *Game) PutTriggersOnStack() {
 					}
 				}
 			}
-			obj.TargetSource = targetSource
 			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
 			continue
@@ -2424,7 +2424,7 @@ func (g *Game) PutTriggersOnStack() {
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, []Target, bool) {
 	query := g.triggerTargetQuery(pt)
 	controller := g.GetPlayer(pt.controller)
-	sourceCard := g.triggerTargetSource(pt)
+	sourceCard := g.triggerTargetSourceWithDeclarations(pt, declared)
 	var out []uuid.UUID
 	var aligned []Target
 	for i, t := range declared {
@@ -3301,6 +3301,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	actionTargets := aa.Targets()
 	actionEffects := aa.Effects()
+	targetSource := g.AbilityTargetSource(perm.Card, aa, actionTargets)
 	var alignedTargets []Target
 	modeChoice := -1
 	var modalTargets [][]uuid.UUID
@@ -3309,7 +3310,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		var available []Mode
 		var indices []int
 		for i, mode := range modes {
-			legal := g.hasLegalTargetSelection(playerID, perm.Card, mode.Targets, g.resolution.X())
+			legal := g.hasLegalTargetSelection(playerID, g.AbilityTargetSource(perm.Card, aa, mode.Targets), mode.Targets, g.resolution.X())
 			if legal {
 				available = append(available, mode)
 				indices = append(indices, i)
@@ -3335,14 +3336,15 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		mode := modes[modeChoice]
 		actionTargets = mode.Targets
 		actionEffects = mode.Effects
-		targets = g.promptTargetsForList(playerID, perm.Card, actionTargets)
+		targetSource = g.AbilityTargetSource(perm.Card, aa, actionTargets)
+		targets = g.promptTargetsForList(playerID, targetSource, actionTargets)
 		modalTargets = make([][]uuid.UUID, len(modes))
 		modalTargets[modeChoice] = append([]uuid.UUID(nil), targets...)
 	}
 
 	if grouped {
 		var err error
-		targets, alignedTargets, err = g.prepareTargetGroups(playerID, perm.Card, actionTargets, groups, g.resolution.X(), "ability target group")
+		targets, alignedTargets, err = g.prepareTargetGroups(playerID, targetSource, actionTargets, groups, g.resolution.X(), "ability target group")
 		if err != nil {
 			return err
 		}
@@ -3352,20 +3354,20 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	// ability doesn't fizzle. The interactive layer relies on this to skip
 	// prompting for targets that offer no real choice.
 	if !grouped && len(targets) == 0 {
-		if forced := ForcedActivationTargets(playerID, perm.Card, actionTargets, g); forced != nil {
+		if forced := ForcedActivationTargets(playerID, targetSource, actionTargets, g); forced != nil {
 			targets = forced
 		}
 	}
 	if !grouped {
-		targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
+		targets = g.acquireRandomTargets(playerID, targetSource, actionTargets, targets, g.resolution.X())
 		if modalTargets == nil {
 			// The mode choice already includes the opponent's target choice.
-			targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+			targets = g.acquireOpponentChosenTargets(playerID, targetSource, actionTargets, targets)
 		}
 	}
 
 	if !grouped {
-		if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X(), "ability"); err != nil {
+		if err := g.validateActionTargets(playerID, targetSource, actionTargets, targets, g.resolution.X(), "ability"); err != nil {
 			return err
 		}
 	}
@@ -3448,7 +3450,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		obj.TargetSpecs = append([]Target(nil), alignedTargets...)
 	}
 	obj.sourceIncarnation = perm.incarnationID
-	obj.TargetSource = perm.Card
+	obj.TargetSource = targetSource
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
 

@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [Game.AbilityTargetSource] retains one selected ability's declaration ID and
+// complete target list. [TargetSourceAbility] returns the ID, a separate list
+// and a known flag. Empty known lists differ from unknown ability sources.
+// Ordinary and selected-mode lists keep zero-choice groups. Current source
+// characteristics and exact LKI use the shared source-information service.
+// Announcement, pending triggers, resolution, copies and clones keep the facts.
+// Graveyard activation checks targets before payment and during resolution.
+// Existing RON lowering supplies fresh ability instances and complete groups.
+// CanTargetOnly and complete spell/domain classification need separate adapters.
+//
 // [TargetHasSubtype] enforces a subtype in a permanent target declaration.
 // [TargetRequiredSubtypes] returns a separate list of those constraints.
 // An empty list supplies no proof about the domain. Opaque filters, negation

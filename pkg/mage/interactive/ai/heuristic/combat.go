@@ -756,7 +756,7 @@ func (s *Strategy) regenerationAbilityAction(playerID uuid.UUID, g *mage.Game, a
 		}
 
 		tgt := ab.Targets()[0]
-		if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
+		if !slices.Contains(tgt.Possible(playerID, g.AbilityTargetSource(source.Card, ab, ab.Targets()), g), target.ID()) {
 			continue
 		}
 		return &interactive.PriorityAction{
@@ -911,7 +911,7 @@ func pumpAbilityTargets(ab mage.ActivatedAbility, source, target *mage.Permanent
 		return nil, source.ID() == target.ID()
 	}
 	tgt := ab.Targets()[0]
-	if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
+	if !slices.Contains(tgt.Possible(playerID, g.AbilityTargetSource(source.Card, ab, ab.Targets()), g), target.ID()) {
 		return nil, false
 	}
 	return []uuid.UUID{target.ID()}, true

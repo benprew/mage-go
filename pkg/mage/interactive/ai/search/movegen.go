@@ -87,7 +87,7 @@ func abilityHasNonRedundantUse(g *mage.Game, playerID uuid.UUID, source *mage.Pe
 	if len(ability.Targets()) != 1 {
 		return true
 	}
-	possible := ability.Targets()[0].Possible(playerID, source.Card, g)
+	possible := ability.Targets()[0].Possible(playerID, g.AbilityTargetSource(source.Card, ability, ability.Targets()), g)
 	return len(ai.NonRedundantKeywordGrantTargets(g, playerID, source.ID(), ability.Effects(), possible, ability.Targets()...)) > 0
 }
 

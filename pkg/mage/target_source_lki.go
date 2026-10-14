@@ -9,14 +9,32 @@ import (
 // A returned card must not supply characteristics for its previous battlefield visit.
 type targetSourceLKI struct {
 	Card
-	incarnation uuid.UUID
-	colors      []core.Color
-	power       int
-	powerKnown  bool
-	spell       bool
+	abilityDeclaration *targetingAbilityDeclaration
+	incarnation        uuid.UUID
+	colors             []core.Color
+	power              int
+	powerKnown         bool
+	spell              bool
 }
 
 func (g *Game) resolutionTargetSource(obj *StackObject) Card {
+	result := g.targetSourceInformation(obj)
+	if !obj.IsAbility || result == nil {
+		return result
+	}
+	view, ok := obj.TargetSource.(targetSourceLKI)
+	if !ok || view.abilityDeclaration == nil {
+		return result
+	}
+	retained, ok := result.(targetSourceLKI)
+	if !ok {
+		retained = targetSourceLKI{Card: result, colors: cardColors(result)}
+	}
+	retained.abilityDeclaration = view.abilityDeclaration
+	return retained
+}
+
+func (g *Game) targetSourceInformation(obj *StackObject) Card {
 	card := obj.Card
 	if obj.TargetSource != nil {
 		card = obj.TargetSource

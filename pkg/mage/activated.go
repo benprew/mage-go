@@ -303,7 +303,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	}
 	if hasTargetDependencies(a.targets) {
 		p := g.FindPermanent(a.source)
-		if p == nil || !g.hasLegalTargetSelection(controller, p.Card, a.targets, x) {
+		if p == nil || !g.hasLegalTargetSelection(controller, g.AbilityTargetSource(p.Card, a, a.targets), a.targets, x) {
 			return false
 		}
 	}

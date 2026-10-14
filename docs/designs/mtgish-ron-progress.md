@@ -8,17 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
 (986 total), **2,282 compiled / 163 rejected records** (2,445 total).
-The latest slice is **DECLARED-TARGET-SUBTYPE-CONSTRAINTS**.
-RON permanent targets retain enforced IsCreatureType constraints as immutable
-engine declaration data, directly or within And. Copies, clones and target
-count wrappers preserve them. Queries supply separate lists without game reads.
-Current subtype changes still affect selection and resolution legality.
-This prepares Wall of Shadows; CanTargetOnly consumers and active targeting
-ability identity remain separate prerequisites. No complete Shadows gameplay
-or new full-card completion is claimed. Fifteen accepted unique names across
-24 records use the changed lowering. Estimated and actual compilation gain:
-**zero names / zero records**. All earlier accepted records remain accepted.
-No RON source or vocabulary baseline changed. Validation and mappings follow.
+The latest slice is **ACTIVE-TARGETING-ABILITY-DECLARATIONS**.
+The engine retains exact selected ability IDs and complete declared target
+lists through announcement, pending triggers, resolution, copies and clones.
+Zero-choice groups remain distinct from unknown declarations. Current source
+characteristics and exact LKI use the existing shared information service.
+Graveyard activation now checks targets before payment and at resolution.
+Existing RON lowering already supplies fresh abilities and complete groups.
+Thirteen accepted names / 17 records have new declaration or gameplay mappings.
+CanTargetOnly and complete subtype-domain classification remain prerequisites.
+Estimated and actual compilation gain: **zero names / zero records**.
+All earlier accepted records remain accepted. No RON source or vocabulary
+baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -14746,3 +14747,210 @@ docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
 Commit title: `feat(ron): implement declared target subtype constraints`.
 Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
 remain gated. This run stops after DECLARED-TARGET-SUBTYPE-CONSTRAINTS.
+
+## 2026-10-14 — ACTIVE-TARGETING-ABILITY-DECLARATIONS
+
+### Baseline, comparison and selection
+
+The working tree was clean. Read AGENTS.md, the engine reference, execution
+design, current status and latest entry only. Inspected the selected engine and
+compiler paths, relevant API/rules contracts and CR 602.2, 603.3 and 707.10.
+Fresh `make build` and `go test ./pkg/mage/dsl/ron -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with **2,282 compiled / 163 rejected
+records; 903 accepted / 83 rejected unique names**. Collection rejection was
+not a build/test failure. No unrelated changes or untracked files were removed.
+
+Compared the latest ranked candidates after reading each complete record and
+its nested forms. Reprints count once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | ---: | --- | --- |
+| Active targeting ability identity and complete declared groups | Wall of Shadows; direct accepted subtype-targeted consumers below | 0 for this prerequisite | Declared subtype constraints exist. Whole-domain proof still needs Aura/disjunction handling and both CanTargetOnly consumers. Exact ability identity also keeps separate abilities, modes, pending events and copied target groups for shared targeting services. | Moderate: one source-information contract, activation/trigger/copy/query integration and native/RON tests |
+| Target-dependent announcement X | Reflecting Mirror | 0 for X alone; at most 1 after all dependencies | Its mana-value equality reads the selected spell's mana value, X is twice that value, then its body needs TargetsPlayer(You) and retargeting to AnyPlayer. Single-target occurrence filtering exists; the target mana-value equality versus twice-mana-value X also needs the source audit already noted by the prior ledger. Target-driven X, player-target predicates and retargeting remain separate contracts. | High for a complete consumer; moderate for X prerequisite |
+| Source damage prevention | Kry Shield | 0 for prevention alone; at most 1 with the layer adapter | Complete record also has AdjustPTX(Zero, PlusX, ManaValueOfPermanent(ActionPermanent)). It needs live mana-value toughness modification as well as temporary prevention of all damage from the exact selected source visit. | Moderate prerequisite; additional layer/value integration for full card |
+
+Selected candidate 1 as the ledger's dependency-ready shared prerequisite.
+The contract retains one active ability's declaration ID and every applicable
+(target or selected-mode) group before target choice. It does not infer an
+ability from a source card, or a domain from selected occurrences. Acceptance
+cases include separate abilities on one source, known empty and zero-choice
+groups, departure/return, phasing, control/ability changes, pending and delayed
+triggers, modes, copies/clones, current source characteristics, legality and
+payment rollback. Estimated compilation gain was zero names / zero records.
+
+### Implementation, signatures and reuse boundary
+
+New engine APIs:
+
+- `(*Game).AbilityTargetSource(card Card, ability Ability, declared []Target) Card`
+- `TargetSourceAbility(source Card) (id uuid.UUID, declared []Target, known bool)`
+
+The source-information view keeps a saved declaration ID and separate target
+list. Input and returned slices cannot change that list. Empty known lists
+remain distinct from absent identity. Nil/zero-ID inputs and spell/static
+abilities cannot create a new ability view. Target specifications retain their
+existing ownership contract. Stack object IDs distinguish executions; source
+incarnation identity remains with the shared information view. No new global
+last-action slot or card-specific executor exists.
+
+Integration covers ordinary/grouped/modal activations, cost-time target
+validation and forced/random/opponent target choices, target-dependent
+CanActivate queries, ordinary/modal pending triggers, delayed declarations,
+ability-copy retargeting, game clones, mana resolution bodies and interactive
+snapshot/heuristic/search queries. Delayed scheduling assigns a declaration ID
+once; queries do not allocate an identity or make a choice. Copied targets keep
+announced counts. Legacy copy callers without a saved view retain their path.
+
+The initial source wrapper exposed printed colors during announcement. A new
+regression assertion failed when a source changed to blue could target a
+creature with protection from blue. The correction uses the existing current
+source-characteristic and exact LKI service. Resolution retains ability facts
+while replacing source characteristics with current/phase/departure facts.
+Returned sources cannot supply the former visit's characteristics.
+
+The graveyard activation caller omitted target validation and aligned resolution
+specs. A new regression assertion, with its source bound through the existing
+lookup API, failed because an illegal target paid the exile cost. This slice
+checks targets before payment and saves aligned specs for resolution rechecks.
+The shared transaction still supplies cost locking, spending and rollback.
+
+RON spelling, lexical scope and fresh factory bindings remain in ron. Existing
+Activated/ActivatedWithModifiers, TriggerA/TriggerI, Targeted, Modal_ChooseOne
+and NumberTargetPermanents lowering already creates fresh ability instances
+and complete declarations. **No missing compiler adapter was found for this
+prerequisite; that exact lowering was reused**, with new RON integration tests.
+No production compiler rewrite or new spelling was needed. CanTargetOnly and
+whole-spell/ability subtype-domain classification remain unsupported. Accepted
+records were not weakened. No RON source defect was corrected. No source record, vocabulary entry or
+file hash changed. Replacement ordering, damage batches and APNAP still
+use the existing services. The Go-card/DSL removal gates remain closed.
+
+### Failing-first tests and card mappings
+
+The initial native and RON tests failed to compile on the absent ability-view
+APIs. Fixture errors were corrected and the missing-API failure was confirmed
+before implementation. A final caller audit then found four raw-card queries
+in search and combat planning. New tests failed in search and heuristic
+assertions and on the missing typed ability field in the combat solver. Their
+caller repairs made these pass. Later source-color, invalid ability-kind and graveyard
+legality assertions failed against the incomplete engine paths, then passed
+with their corrections. No assertion was weakened.
+
+- `TestTargetingAbilityView`: exact selected declaration identity, distinct
+  abilities on one source, input/query slice isolation, known empty lists,
+  absent/nil sources and abilities, zero/invalid kinds and no identity invented
+  for raw cards or spells.
+- `TestTargetingAbilityActivation`: unpaid costs, present/phased/returned
+  sources, control changes and ability removal; retained declaration facts in
+  resolution, retargeted copies and clones; separate resolution gameplay.
+- `TestTargetingAbilityCurrentCharacteristics`: current-color protection and
+  retention of mana/stack on illegal announcement.
+- `TestTargetingAbilityQueries`: a target probe asserts the exact selected
+  ability and full declaration during announcement and resolution queries.
+- `TestTargetingAbilityPendingAndDelayed`: pending and separately scheduled
+  delayed identities, source return, cloned pending queues and copied bodies.
+- `TestTargetingAbilityGraveyard`: bound graveyard source, illegal announcement
+  keeps the source, successful exile cost and later shroud resolution recheck.
+- `TestTargetingAbilitySearch`, `TestTargetingAbilityCombat` and
+  `TestTargetingAbilityCombatSolver`: the search, heuristic pump/regeneration
+  and combat-solver target queries receive the exact selected ability and its
+  complete declaration. The combat planner saves the actual typed ability
+  rather than recovering one from the source card.
+- `TestRONTargetingAbilityGameplay`: complete **Ali Baba** and **Goblin Digging
+  Team**, paid activation, source sacrifice/LKI, stack copy/clone declaration
+  retention and actual tap/destruction gameplay.
+- `TestRONTargetingAbilityModal`: complete **Balm of Restoration**, both modes,
+  exact selected-mode group list, source sacrifice, known empty life mode,
+  copied/cloned identity and actual life/prevention behavior.
+- `TestRONTargetingAbilityTrigger`: complete **The Abyss**, detection before
+  placement, event-player target choice, source return/control/phasing, cloned
+  pending queue and actual destruction.
+- `TestRONTargetingAbilityZeroGroup`: complete synthetic RON activation with
+  a fixed zero-count Wall group. No chosen occurrence is created; original,
+  clone and retargeted copy retain the declaration. Invalid negative/malformed
+  counts and unbound activation X reject atomically.
+- `TestRONTargetingAbilityRecords`: complete records and fresh factory IDs for
+  each direct accepted subtype-targeted consumer below. Their exact declaration
+  groups remain bound to their own ability instance. Complete Wall of Shadows,
+  Reflecting Mirror and Kry Shield comparison records still reject.
+
+Every name in this declaration-integration mapping uses
+`TestRONTargetingAbilityRecords`; new gameplay mappings are separate:
+
+| Unique name | Records | Additional new gameplay mapping |
+| --- | ---: | --- |
+| Ali Baba | 1 | Gameplay |
+| Dwarven Demolition Team | 5 | Declaration integration |
+| Dwarven Lieutenant | 1 | Declaration integration |
+| Elephant Graveyard | 1 | Declaration integration; distinct mana/targeted abilities |
+| Fungal Bloom | 1 | Declaration integration |
+| Goblin Digging Team | 1 | Gameplay |
+| Goblin Wizard | 1 | Declaration integration; distinct untargeted/targeted abilities |
+| Icatian Lieutenant | 1 | Declaration integration |
+| Mishra's Factory | 1 | Declaration integration; distinct mana/animation/targeted abilities |
+| Orcish Captain | 1 | Declaration integration |
+| Thrull Champion | 1 | Declaration integration |
+
+This is **11 direct subtype-targeted unique names / 15 records**, plus complete
+Balm of Restoration and The Abyss gameplay: **13 mapped names / 17 records**.
+The shared caller change also applies to other supported abilities; the fresh
+whole-repository suite supplies their existing regression mappings. No newly
+complete rejected card or exhaustive new gameplay mapping is claimed.
+
+### Validation and actual gain
+
+Final checks passed after the source-characteristic, graveyard and interactive
+caller repairs:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTargetingAbility' -count=1`: pass.
+- `go test ./pkg/mage ./pkg/mage/interactive/ai/search
+  ./pkg/mage/interactive/ai/heuristic ./pkg/mage/interactive/ai/combatsolver
+  -run '^TestTargetingAbility' -count=1`: pass in all four packages.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `go test ./... -short -count=1`: pass, including the implement-engine skill's
+  native repository validation requirement.
+- Initial `make lint` found three test variables named `copy`, which shadowed
+  the built-in function. Renamed them; final `make lint`: pass, **0 issues**.
+  Reviewed automatic formatting/import changes. No unrelated file or semantic
+  change was made by lint. Focused tests repeated after formatting.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,282 compiled /
+  163 rejected records; 903 accepted / 83 rejected names**. Final JSON equals
+  the fresh baseline, including every diagnostic. The collection still rejects
+  atomically. This is not a build/test failure.
+
+Actual compilation gain: **zero names / zero records**, as estimated. The new
+mappings establish selected-ability declaration identity and gameplay on
+existing accepted definitions. No rejected card gains full gameplay completion.
+Build/test/environment blockers: none. Mirror's source semantics remain an
+independent audit prerequisite; no source correction was made here. No RON
+source, vocabulary, file hash or runtime loading policy changed.
+
+### Ranked next candidates
+
+1. Complete subtype-domain schema and proof for all applicable target groups,
+   including Aura enchant targets and disjunctions. Ability identity and
+   zero-choice group retention now exist. Absence of a subtype constraint must
+   remain unknown, not proof that a declaration can target non-Walls. This is
+   the remaining declaration prerequisite for exact Wall of Shadows consumers.
+2. CanTargetOnly(IsCreatureType(Wall)) spell and ability restriction consumers,
+   once candidate 1 is complete. Inspect every applicable group with the exact
+   announcement/resolution identity and shared live restriction lifecycle.
+   Both consumers together can unlock Wall of Shadows; one alone cannot.
+3. Kry Shield: compare the combined source-prevention and live mana-value
+   toughness contract with the next dependency-ready multi-card work. Prevention
+   alone gives zero unlocks. Reflecting Mirror remains a separate source audit,
+   target-driven X, player-target and retargeting chain, at most one name.
+
+Changed files: pkg/mage/targeting_ability.go and native tests;
+activated.go, game.go, graveyard_activated.go, mana_system.go, spell_copy.go,
+target_source_lki.go, trigger_system.go and doc.go; interactive/snapshot.go;
+interactive/ai/search/movegen.go, targeting.go and targeting_ability_test.go;
+interactive/ai/heuristic/heuristic.go, combat.go and targeting_ability_test.go;
+interactive/ai/combatsolver/tricks.go and targeting_ability_test.go;
+pkg/mage/dsl/ron/targeting_ability_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement active targeting ability declarations`.
+Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
+remain gated. This run stops after ACTIVE-TARGETING-ABILITY-DECLARATIONS.

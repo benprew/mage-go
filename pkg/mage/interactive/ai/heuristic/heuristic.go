@@ -397,7 +397,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 
 	var targets []uuid.UUID
 	for _, t := range ab.Targets() {
-		possible := t.Possible(playerID, perm.Card, g)
+		possible := t.Possible(playerID, g.AbilityTargetSource(perm.Card, ab, ab.Targets()), g)
 		possible = ai.NonRedundantKeywordGrantTargets(g, playerID, perm.ID(), ab.Effects(), possible, ab.Targets()...)
 		if len(possible) == 0 {
 			return nil, false

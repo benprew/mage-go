@@ -484,7 +484,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 			obj.sourceIncarnation = sourceIncarnation
 			obj.tappedForMana = !ability.Repeatable
 			obj.manaReplacementOrder = ability.replacementOrder
-			obj.TargetSource = perm.Card
+			obj.TargetSource = g.AbilityTargetSource(perm.Card, activated, activated.Targets())
 			g.resolveStackObject(obj)
 			addConcreteMana(player.ManaPool(), nil, action.BonusColors)
 		}
