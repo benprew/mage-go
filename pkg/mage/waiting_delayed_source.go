@@ -158,6 +158,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		subject = v.subject
 	case permanentInformationValue:
 		subject = v.subject
+	case entryLifePaidValue:
+		subject = v.subject
 	case entrySacrificeCountValue:
 		subject = v.subject
 	case counterResolutionValue:
@@ -176,6 +178,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		return playerRefReadsSourcePermanent(v.subject)
 	case matchingHandCount:
 		return playerRefReadsSourcePermanent(v.player)
+	case graveyardSetCountValue:
+		return playerSetReadsSourcePermanent(v.players)
 	case graveyardCardCountValue:
 		return playerRefReadsSourcePermanent(v.player)
 	case exiledCardCountValue:

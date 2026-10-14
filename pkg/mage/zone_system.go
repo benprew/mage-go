@@ -96,7 +96,8 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	}
 
 	if zs.enteringPermanent != nil {
-		clone.enteringPermanent = zs.enteringPermanent
+		clone.enteringPermanent = &Permanent{}
+		clonePermanentInto(clone.enteringPermanent, zs.enteringPermanent)
 	}
 
 	// Deep copy LKI snapshots.

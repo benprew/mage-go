@@ -20927,3 +20927,65 @@ Land Tax uses its complete unchanged LEG record, including printed W payment,
 rollback, own upkeep, detection and resolution land-count checks, phasing,
 source departure/return/control/ability loss, independent instances and copies.
 No search replacement or simultaneous multi-player search contract is added.
+
+## Bounded entry life payment and saved P/T
+
+`PayLifeUpToAsEnters(maximum ResolutionValue) Ability` reads the cap when its
+entry replacement applies. The entering controller chooses zero through the
+smaller of the nonnegative cap and available life. Zero remains legal with
+nonpositive life. Invalid answers use zero. The shared life-cost transaction
+checks the chosen payment before commit; failure saves zero and spends nothing.
+Successful payment stores its amount on this permanent visit and uses the shared
+life-loss event service. A later cancelled entry does not refund an earlier
+payment; a cancellation before this replacement makes no payment or choice.
+
+The rule participates once in the shared entry replacement process at default
+priority. Copy replacements run first, including newly acquired payment rules.
+Competing entry replacements use the affected player's order. Batch entry keeps
+all entrants and payments complete before battlefield entry observers run.
+Casting affordability and announcement do not choose or pay this entry cost.
+Missing entry controllers save zero. One life producer is permitted per definition.
+
+`PTEqualsEntryLifePaid() ContinuousEffect` applies the saved value in layer 7a.
+Layer 6 ability removal suppresses this CDA; restoration reads the saved payment.
+Later base P/T effects, bonuses, counters and switches keep their existing order.
+`Game.CardPowerToughness` supplies zero outside the battlefield.
+`EntryLifePaidOf(subject PermanentRef) ResolutionValue` reads the current,
+phased or departed exact visit. Return requires a new payment and cannot replace
+the former result. Factory instances, spell copies and entry copies make separate
+payments; game clones and departure snapshots keep separate scalar results.
+ZoneSystem clones also copy the in-progress entering permanent, so a clone made
+during a choice cannot change the original entry result or later inherit its payment.
+Waiting delayed queries retain explicit source subjects without evaluation or choice.
+
+`CountGraveyardCardsAmong(players PlayerSet, filter CardFilter) ResolutionValue`
+counts current matching cards in distinct existing selected players' graveyards.
+Missing players contribute nothing. Typed player-set operands retain explicit
+source reads in waiting queries. Existing singular `CountGraveyardCards` callers
+keep their behavior. This adds a query, without a new graveyard movement service.
+
+RON accepts one `AsPermanentEnters(ThisPermanent,
+[PayAnyAmountOfLifeUpto(maximum)])` operation on a permanent. Optional paired
+`CDA_Power(TheLifePaid)` and `CDA_Toughness(TheLifePaid)` require a creature and
+this producer. Results are local to this source visit; they do not supply an
+activation, resolving, target, host, granted or delayed RON result binding.
+The cap accepts nonnegative `Integer`, recursive `Plus`, supported static
+battlefield count filters, and `TheNumberOfGraveyardCards(And([cardFilter,
+InAPlayersGraveyard(player)]))`. The graveyard operands can be reversed. Players
+are `Opponent` or `SinglePlayer(You)`; card filters use supported characteristic
+`IsCardtype`/`IsNonCardtype`, `IsColor`/`IsNonColor` and nonempty `And`/`Or` groups.
+Malformed, unbound, duplicate and mixed entry declarations reject at compilation.
+
+The sole Nameless Race record previously used `PermanentLayerEffect` with
+`SetPowerAndToughnessBoth(TheLifePaid)`. Local `data/DRK.json` defines its printed
+P/T ability as characteristic-defining under CR 604.3a, 208.2a and 613.4a.
+The source now uses paired CDA declarations. CR 119.4/b supplies payment bounds;
+614.1c, 614.5, 614.12/a and 616.1 supply entry replacement timing and order.
+
+Evidence: `TestEntryLife*` covers legal/invalid bounds, zero and exact life,
+rechecks, definition rejection, layer order, lifecycle/LKI, entry copies, waiting
+reads, clones, batch entry, competing replacement order, cancellation and live
+life-loss events. `TestRONEntryLife*` covers the complete corrected Nameless Race
+record, casting rollback, dynamic white nontoken/opponent/graveyard cap, zero
+P/T state actions, trample metadata, native combat, copied spells, pending clones,
+return, control changes, phasing, strict loading, inventory and invalid contexts.

@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PayLifeUpToAsEnters] reads a typed cap before entry. The entry controller
+// chooses zero through the cap and available life. Shared payment checks run
+// before commit. Invalid answers or failed payments save zero. Copy entry rules
+// choose again. Entry replacements use the affected player's order once each.
+// [PTEqualsEntryLifePaid] applies the saved result in layer 7a. Other zones
+// supply zero. [EntryLifePaidOf] reads current, phase or departure facts by visit.
+// Return requires a new payment. Clones keep separate results and life totals.
+// [CountGraveyardCardsAmong] reads distinct selected players' current graveyards.
+// Waiting queries retain typed source reads without choices or payments.
+// RON accepts one source PayAnyAmountOfLifeUpto entry operation and paired
+// CDA_Power(TheLifePaid)/CDA_Toughness(TheLifePaid) declarations. Fixed bounds,
+// sums, supported battlefield counts and one-player graveyard counts supply caps.
+// This completes Nameless Race. Other entry payment producers need adapters.
+//
 // [MaySearchLibraryToHand] offers one bounded search at resolution.
 // Acceptance can find zero cards and still shuffles. Decline has no effect.
 // Saved library visits keep selected cards distinct. Return cannot replace them.

@@ -1322,6 +1322,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "PayAnyAmountOfLifeUpto" && len(n.Args) == 1 {
+			return "value"
+		}
 		if n.Name == "SacrificeAnyNumberOfPermanents" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

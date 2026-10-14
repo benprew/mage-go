@@ -746,6 +746,7 @@ type Permanent struct {
 	ChosenNumber        int
 	HasChosenNumber     bool
 	EntrySacrificeCount int
+	EntryLifePaid       int
 	ChosenColor         Color
 	ChosenPlayer        uuid.UUID
 	ChosenSubtype       string

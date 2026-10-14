@@ -54,12 +54,13 @@ type battlefieldEntryContext struct {
 }
 
 type battlefieldEntryAction struct {
-	context     battlefieldEntryContext
-	permanent   *Permanent
-	copies      map[entryCopyKey]*entryCopyReplacement
-	variants    map[entryCopyKey]*entryVariantReplacement
-	sacrifices  map[entryCopyKey]*entrySacrificeReplacement
-	textChanges []TextChange
+	context      battlefieldEntryContext
+	permanent    *Permanent
+	copies       map[entryCopyKey]*entryCopyReplacement
+	variants     map[entryCopyKey]*entryVariantReplacement
+	sacrifices   map[entryCopyKey]*entrySacrificeReplacement
+	lifePayments map[entryCopyKey]*entryLifeReplacement
+	textChanges  []TextChange
 }
 
 func (a *battlefieldEntryAction) ActionSource() uuid.UUID { return a.permanent.ID() }
@@ -78,7 +79,26 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 	index := 0
 	variantIndex := 0
 	sacrificeIndex := 0
+	lifeIndex := 0
 	for _, ability := range a.permanent.RuntimeAbilities {
+		if life, ok := UnwrapAbility(ability).(*entryLifeAbility); ok {
+			plan := base.definitionPlan
+			if plan != nil && plan.declarationOrigin != nil {
+				plan = plan.declarationOrigin
+			}
+			key := entryCopyKey{plan, lifeIndex}
+			lifeIndex++
+			if a.lifePayments == nil {
+				a.lifePayments = make(map[entryCopyKey]*entryLifeReplacement)
+			}
+			replacement := a.lifePayments[key]
+			if replacement == nil {
+				replacement = &entryLifeReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityDefault}, ability: life}
+				a.lifePayments[key] = replacement
+			}
+			result = append(result, replacement)
+			continue
+		}
 		if sacrifice, ok := UnwrapAbility(ability).(*entrySacrificeAbility); ok {
 			plan := base.definitionPlan
 			if plan != nil && plan.declarationOrigin != nil {

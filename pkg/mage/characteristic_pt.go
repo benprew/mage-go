@@ -12,6 +12,7 @@ type countCharacteristicPT struct {
 	filter                       PermanentFilter
 	controlled, power, toughness bool
 	entrySacrifice               bool
+	entryLife                    bool
 }
 
 func newCountCharacteristicPT(filter PermanentFilter, controlled, power, toughness bool) ContinuousEffect {
@@ -36,6 +37,12 @@ func (e *countCharacteristicPT) inspectDefinition() definitionNode {
 	return n
 }
 func (e *countCharacteristicPT) count(g *Game, controller uuid.UUID, source *Permanent) int {
+	if e.entryLife {
+		if source == nil {
+			return 0
+		}
+		return source.EntryLifePaid
+	}
 	if e.entrySacrifice {
 		if source == nil {
 			return 0

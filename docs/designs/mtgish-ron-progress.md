@@ -6,16 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **888 accepted / 98 rejected names**
-(986 total), **2,257 compiled / 188 rejected records** (2,445 total).
-The latest slice is **OPTIONAL-BOUNDED-LIBRARY-SEARCH**. Resolving MayAction
-accepts a fixed bounded basic-land search with reveal, hand movement and shuffle.
-The engine saves distinct library visits and completes movement before zone events.
-Land Tax compiles unchanged and has complete RON gameplay evidence.
-Tests cover optional selection, bounds, exact visits, owner routing, waiting reads,
-upkeep detection/recheck, source lifecycle, independent instances, copies and clones.
-Estimated and actual gain: **one unique name / one record**. Gameplay gains Land Tax.
-No RON source changed. All required checks pass; final lint reports 0 issues.
+Latest measured result (2026-10-14): **889 accepted / 97 rejected names**
+(986 total), **2,258 compiled / 187 rejected records** (2,445 total).
+The latest slice is **BOUNDED-ENTRY-LIFE-PAYMENT**. One source entry operation
+chooses and pays life under a typed cap and saves the result by permanent visit.
+Paired life-paid CDAs apply in layer 7a; other zones supply zero.
+Nameless Race compiles and has complete RON gameplay evidence after its CDA fix.
+Tests cover payment, timing, replacements, LKI, lifecycle, batches and clone isolation.
+Estimated and actual gain: **one unique name / one record**. Gameplay gains Nameless Race.
+The sole RON record's CDA defect was corrected; the vocabulary snapshot was refreshed.
+All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,15 +24,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Plural activation sacrifice with saved facts and card visits.** Sword of
-   the Ages needs total power, exact completed sacrifice visits and graveyard exile.
-   Compare shared plural payment/result demand and keep the complete chain together.
-2. **Entry payments and saved results.** Compare Nameless Race's bounded life
-   payment with Frankenstein's Monster's X graveyard payment and counter choices.
-   Keep their different producers separate and select a ready prerequisite.
-3. **Optional bounded basic-land library search.** Reassess Land Tax's existing
-   upkeep condition and search service before adding its resolving MayAction body.
-   Keep more complex search/payment/result procedures separate.
+1. **Damage causation and targeting facts.** Reassess the shared prerequisite
+   for Bronze Horse and Silhouette before static/temporary prevention adapters.
+2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   the full power/sacrifice/graveyard-exile chain and a source/result fidelity audit.
+3. **Entry graveyard-X payment and counter combinations.** Frankenstein's Monster
+   needs an atomic payment, failed-entry routing and retained counter-choice count.
 
 ## Dependencies and source blockers
 
@@ -11620,5 +11617,155 @@ remain gated by complete collection gameplay, loading and native startup.
 3. **Entry graveyard-X payments/counter combinations**: Frankenstein's Monster
    needs an atomic X creature-card exile, failure routing and retained count
    consumed by its three counter choices. Choose a dependency-ready complete producer.
+
+Stop after this slice. All migration completion gates remain unfinished.
+
+## 2026-10-14 — BOUNDED-ENTRY-LIFE-PAYMENT
+
+### Baseline, candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline strict loader exited 1:
+2,257 compiled / 188 rejected records, 888 accepted / 98 rejected unique names.
+This is collection rejection, not a build or test failure. Read AGENTS.md,
+engine reference, execution design, status/latest ledger only, targeted vocabulary,
+selected compiler/engine contracts, and all compared complete RON records.
+
+The latest entry ranked bounded entry life payment first. Reprints count once:
+
+| Candidate | Unique affected cards | Estimated full-card gain | Other blockers / downstream work | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Bounded entry life payment | Nameless Race | 1 | Dynamic opponent battlefield/graveyard cap, saved life result and paired CDA; no independent subsystem blocker. Supplies reusable bounded entry payments and player-set graveyard counts. | Medium: one replacement producer, scalar state, query and existing CDA consumers; lifecycle/choice tests. |
+| Plural activation sacrifice facts/visits | Sword of the Ages | 1 for the complete chain; 0 for payment alone | Total power, retained graveyard visits, exile and source/result ambiguity. Shared plural costs would follow, but Wood Elemental's entry producer is already supported. | High: complete transaction/results/movement chain and source audit. |
+| Graveyard-X entry payment/counter choice | Frankenstein's Monster | 1 for the complete producer | Atomic X creature-card exile, failed-entry destination and three counter combinations. Enables retained entry payment counts; life payment is a separate producer. | High: transaction, entry failure and counter-allocation contracts. |
+
+Also inspected Drafna's Restoration/Sorrow's Path (mixed or grouped target
+prerequisites; zero complete-card gain until library-order/combat-swap consumers)
+and Bronze Horse/Silhouette (shared damage causation/target facts; zero immediate
+gain from the prerequisite, with two concrete downstream cards). These need
+separate missing contracts and more work to produce a complete vertical slice.
+The first ranked candidate was dependency-ready and gave the smallest credible
+complete unlock. No payment-only scaffold was added for a more complex card.
+
+### Supported contract, dependencies and reuse boundary
+
+RON accepts one `AsPermanentEnters(ThisPermanent,
+[PayAnyAmountOfLifeUpto(maximum)])` on a permanent. The cap supports nonnegative
+Integer, recursive Plus, supported static battlefield count filters, and one
+conjunctive graveyard count with a supported characteristic card filter and
+InAPlayersGraveyard(Opponent or SinglePlayer(You)). Graveyard operands can reverse.
+Optional paired CDA_Power(TheLifePaid)/CDA_Toughness(TheLifePaid) require a creature
+and this producer. Duplicate, mixed, unbound, malformed, host, activation,
+resolving and non-CDA result contexts reject. Static declaration order does not
+turn this saved source result into an imperative resolving binding.
+
+Engine APIs: `PayLifeUpToAsEnters(maximum ResolutionValue) Ability`,
+`PTEqualsEntryLifePaid() ContinuousEffect`,
+`EntryLifePaidOf(subject PermanentRef) ResolutionValue`, and
+`CountGraveyardCardsAmong(players PlayerSet, filter CardFilter) ResolutionValue`.
+RON owns spelling, cap syntax and result scope. The engine owns choice, payment,
+entry replacement, scalar visit state and queries. No card-name branch or global
+last-payment slot was added. Existing callers and the broad DSL remain intact.
+
+The cap is read before the choice; legal bounds include zero even with
+nonpositive life. Invalid answers or failed rechecks save zero. Shared life-cost
+transactions check payment before commit and use the life-loss event service.
+Entry cancellation before payment makes no choice; cancellation afterward does
+not refund payment. Copy replacements run first; competing entry replacements
+use the affected player's order and apply once. Batch entrants finish payments
+before entry observations; one payer cannot spend the same life twice.
+
+The saved result applies in layer 7a, before later base overrides, bonuses,
+counters and switches. Ability removal/restoration uses the existing CDA service.
+Other zones read zero. LKI and phasing keep exact visit facts; return and entry
+copies pay anew. Clones keep separate results and life totals. ZoneSystem.Clone
+now copies the entering permanent, so an in-progress choice clone cannot mutate
+the original. Player-set graveyard counts skip missing/duplicate players and
+retain typed source reads in waiting queries without choices or mutation.
+
+Reused typed values/refs/sets, CardFilter, validNumericChoice, LifePayCost,
+shared cost preflight/commit, entry replacement priorities/identity keys,
+countCharacteristicPT, card P/T queries, departure/phase facts and delayed frames.
+CR 119.4/b, 208.2a, 604.3/a, 613.4a/b, 614.1c/5/12/a/b and 616.1 supply boundaries.
+
+### Failing-first evidence, source defect and gameplay mapping
+
+Initial engine tests failed on missing payment/result APIs and the scalar field.
+Real RON failed at DRK:76:188 on unsupported PayAnyAmountOfLifeUpto. A separate
+player-set count test failed on its undefined API. The final entry-clone test
+failed with `entry clone shared payment result` before the ZoneSystem fix.
+Corrected test harness details: explicit layer refresh, a synthetic token owner
+assumption, and counting live payment events separately from transaction probes.
+The first broad engine run found only four stale 2,257/188 count assertions;
+updated them to 2,258/187 and added explicit Nameless Race acceptance.
+
+Nameless Race's sole DRK record used PermanentLayerEffect with
+SetPowerAndToughnessBoth(TheLifePaid), which would place the ability in layer 7b.
+Local data/DRK.json Oracle says its power and toughness are each equal to life
+paid as it entered. This printed source ability meets CR 604.3a; CR 208.2a and
+613.4a require a CDA and zero for an unavailable number. Changed the record to
+paired CDA declarations. No identical reprint exists. Refreshed syntax counts,
+examples, all file hashes and the stale loader-baseline snapshot. No other source
+changed. Sword of the Ages' prior source/result ambiguity remains unresolved.
+
+- Nameless Race -> TestRONEntryLifeNamelessRace: complete corrected RON,
+  3B cast/rollback, announcement versus entry, dynamic white/nontoken/opponent
+  and graveyard cap, invalid bounds, zero-toughness state action, trample and CDA order.
+- Nameless Race -> CopiesClonesAndReturn: independent spell-copy controller and
+  payment, pending clones, control changes, hand P/T zero, return and native combat.
+- Nameless Race -> LoadAndInventory / Invalid / MaximumDeclarations: factory
+  identities, strict atomic loading, inventory roles, unbound/malformed/context
+  rejection, fixed/summed caps, reversed operands and explicit graveyard player.
+- TestEntryLifeBoundsAndTiming / RecheckAndReplacementOrder / Invalid:
+  zero/nonpositive/exact life, invalid answers, controller/owner, payment failure,
+  competing replacement order, single application and definition validation.
+- ResultIdentityAndLayers / CopyAndWaiting / CloneDuringChoice: source visit,
+  phase/departure LKI, return, layer/counter order, copy acquisition, delayed frames,
+  completed and in-progress clone isolation and pure waiting reads.
+- BatchEntrantsAndCancellation / SharedPayerBatch / LossEventsAndPureQueries:
+  complete batch observations, combined affordability, cancellation order,
+  positive/zero live life events and query purity.
+- GraveyardPlayerSet / GraveyardWaitingSource: distinct/missing players,
+  characteristic matching, clone isolation, typed waiting source reads and saved controller LKI.
+
+### Verification, measured gain and next work
+
+Focused RON and engine entry-life tests pass with -count=1. After the clone fix,
+entry sacrifice/number/copy/variant regressions, make build, go vet ./...,
+go test ./pkg/mage/... -short -count=1 and make test all pass.
+`go test ./pkg/mage/dsl/ron -run TestRONEntryLife -count=1` and focused
+engine entry-life/regression checks passed; `make build`; `go vet ./...`;
+`go test ./pkg/mage/... -short -count=1`; `make test`; `make lint` (0 issues);
+`git diff --check`; `go run ./cmd/loadcards -json` (expected exit 1) all completed.
+The first lint found a test variable named copy that shadowed Go's builtin.
+Renamed it to copied, reran focused tests and lint, and reviewed formatting:
+no semantic or unrelated automatic change. Post-lint
+`go test ./pkg/mage ./pkg/mage/dsl/ron -short -count=1` passed.
+
+Final measured loader: **2,258 compiled / 187 rejected records;
+889 accepted / 97 rejected unique names**. Exactly Nameless Race's diagnostic was
+removed from the fresh baseline; no diagnostic was added or changed and no
+accepted record was lost. Estimated and actual gains match: one name/one record.
+Gameplay evidence separately adds Nameless Race; compilation is not a global
+gameplay coverage claim. There is no environment blocker.
+
+Changed files: engine entry_life.go/tests, card/clone/zone state, entry_copy.go,
+characteristic_pt.go, definition.go, graveyard_count.go, waiting_delayed_source.go,
+doc.go; RON entry_life.go/tests, compiler/inventory and three count-regression
+fixtures; DRK RON, vocabulary snapshot, API/rules-contract docs and this ledger.
+No Go definitions or DSL functions were removed; all runtime/removal gates remain.
+The implement-engine skill supplied engine contract guidance; user authorization
+supplied RON wiring, source correction, validation, ledger and the single commit.
+
+### Ranked next candidates
+
+1. **Damage causation and targeting facts** for Bronze Horse and Silhouette:
+   establish exact causing spell/ability identity and saved target facts before
+   static/temporary prevention adapters. Local LEG Oracle confirms both target
+   restrictions. This is a concrete shared prerequisite for two unique cards.
+2. **Plural activation sacrifice facts and visits**: reassess Sword of the Ages'
+   full power/payment/graveyard-exile chain and its source/result fidelity blocker.
+3. **Graveyard-X entry payment and counter combinations**: Frankenstein's Monster
+   needs one atomic producer, failed-entry routing and retained allocation count.
 
 Stop after this slice. All migration completion gates remain unfinished.

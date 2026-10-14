@@ -393,10 +393,17 @@ func InspectDefinition(value any) DefinitionMetadata {
 func ValidateCardDefinition(name string, card Card) error {
 	if !nilDefinition(card) {
 		entrySacrifices := 0
+		entryLifePayments := 0
 		for _, ability := range card.Abilities() {
+			if _, ok := UnwrapAbility(ability).(*entryLifeAbility); ok {
+				entryLifePayments++
+			}
 			if _, ok := UnwrapAbility(ability).(*entrySacrificeAbility); ok {
 				entrySacrifices++
 			}
+		}
+		if entryLifePayments > 1 {
+			return fmt.Errorf("%s: entry life requires one declaration", name)
 		}
 		if entrySacrifices > 1 {
 			return fmt.Errorf("%s: entry sacrifice requires one declaration", name)

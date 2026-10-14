@@ -226,6 +226,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		ChosenNumber:                src.ChosenNumber,
 		HasChosenNumber:             src.HasChosenNumber,
 		EntrySacrificeCount:         src.EntrySacrificeCount,
+		EntryLifePaid:               src.EntryLifePaid,
 		ChosenColor:                 src.ChosenColor,
 		ChosenPlayer:                src.ChosenPlayer,
 		ChosenSubtype:               src.ChosenSubtype,
