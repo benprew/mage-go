@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CreatedTokenLeaves] matches one linked token's exact departure visit.
+// Shared departure snapshots retain the link after the token leaves.
+// Simultaneous moves read the former battlefield. Each member triggers once.
+// Source return cannot inherit old members. Phasing causes no departure.
+// Source phasing and ability removal stop detection. Queued triggers keep
+// their source visit and controller through copies and separate game clones.
+// RON accepts TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens),
+// body) for one permanent-source producer. This event supplies no new binding.
+// Lexical delayed token events and token copying need separate adapters.
+//
 // [CreatedTokenLink] separates one token producer from other producers.
 // [CreateTokenCopiesLinked] saves the declaration and source visit on accepted
 // tokens before entry observations. Repeated creation adds members. Zero adds
@@ -11,7 +21,7 @@
 // RON accepts one permanent-source CreateTokens producer and TheCreatedTokens
 // in later resolving collections. Ambiguous producers and spell sources reject.
 // This supplies a shared prerequisite for Dance of Many and Tetravus. Token
-// copies, linked leave events and linked exile payments need separate adapters.
+// copies and linked exile payments need separate adapters.
 //
 // [CanTargetOnlySubtypeFilter] reads every applicable target declaration.
 // [TargetSourceCanTargetOnlySubtype] requires a nonempty complete list and

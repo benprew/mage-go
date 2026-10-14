@@ -27,6 +27,15 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 		subject := trigger.Args[0]
+		if subject.Name == "TheCreatedTokens" {
+			if subject.Kind != Symbol || ctx.createdTokenLink == nil || !ctx.permanent {
+				return nil, unsupported(subject, "linked token leave event")
+			}
+			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered {
+				return mage.WhenEvent(mage.CreatedTokenLeaves(ctx.createdTokenLink), effect).(*mage.GenericTriggered)
+			}
+			break
+		}
 		if subject.Name != "SinglePermanent" {
 			return nil, unsupported(subject, "source leave event subject")
 		}

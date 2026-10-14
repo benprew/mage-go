@@ -16495,8 +16495,8 @@ RON associates one permanent-source `CreateTokens/2` occurrence with symbol
 `TheCreatedTokens` across that source's rules. The symbol is supported in resolving
 contextual permanent collections, including `Exile([EachPermanent(TheCreatedTokens)],
 [])`. This requires one unambiguous producer and existing supported token syntax;
-it does not accept token copying, linked-token leave events or optional linked
-exile payment. Token ability bodies have a separate scope. Spell sources, missing
+it does not accept token copying or optional linked exile payment. Token ability
+bodies have a separate scope. Spell sources, missing
 or multiple producers, tuple spelling, static and entry collections reject.
 Existing `CreatedTokensBinding` remains a lexical result with dominance checks.
 `CreatedByFilter` remains available to existing callers; its UUID-only contract
@@ -16507,3 +16507,30 @@ and RON `TestRONCreatedTokenLink{Gameplay,DepartedCreation,Invalid}`. The RON ga
 The Hive's unchanged complete record plus a synthetic source-leave consumer;
 this is producer integration evidence, not full coverage of Dance of Many or
 Tetravus. Both complete blocked records continue to reject atomically.
+
+
+## Linked created-token leave events
+
+`mage.CreatedTokenLeaves(link *mage.CreatedTokenLink) mage.EventPattern` matches
+one departing token with the declaration and exact source visit of the watching
+battlefield ability. It reads exact departure information rather than a live
+collection. Simultaneous moves use the former battlefield. Each departing member
+triggers once, regardless of its controller or destination. Source return cannot
+inherit an earlier group. Source phasing and ability removal stop detection;
+token phasing is not departure. Pending triggers retain the detected source visit
+and controller. Copies retain the source visit and use their own controller.
+Game clones keep separate state.
+
+RON supports `TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens),
+body)` with a strict symbol and one unambiguous permanent-source `CreateTokens`
+producer. Existing action lists and targets supply the body. No event binding is
+introduced: `Trigger_ThatPermanent` is still unbound in this context. Missing or
+multiple producers, tuple spelling, spell sources and lexical
+`TheTokensCreatedThisWay` events reject. Token copying and lexical delayed events
+remain separate adapters.
+
+Tests: native `TestCreatedTokenLeave{Lifecycle,Destinations,ExactEvent,Invalid}`
+and RON `TestRONCreatedTokenLeave{Gameplay,SourceReturns,Invalid,CollectionAtomic}`.
+RON gameplay uses The Hive's complete LEB producer with synthetic linked cleanup
+and sacrifice rules. This supplies producer integration evidence; Dance of Many,
+Stangg and Tetravus still reject as complete records.

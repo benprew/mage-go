@@ -8,13 +8,14 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **904 accepted / 82 rejected names**
 (986 total), **2,283 compiled / 162 rejected records** (2,445 total).
-The latest slice is **PERSISTENT-CREATED-TOKEN-COLLECTIONS**.
-One permanent-source token producer can supply `TheCreatedTokens` across rules.
-Accepted tokens retain the producer declaration and exact source visit before
-entry observations. Copies, delays, phasing and game clones keep separate facts.
-This is a shared prerequisite for Dance of Many and Tetravus, with **zero new
-full-card unlocks**, as estimated. Both complete blocked records still reject.
-The Hive's real producer has new integration evidence with a synthetic consumer.
+The latest slice is **LINKED-CREATED-TOKEN-LEAVE-EVENTS**.
+Ordinary battlefield triggers can detect `TheCreatedTokens` departures by exact
+producer declaration and source visit. Shared snapshots retain departed members;
+simultaneous moves use the former battlefield. Return, phasing, ability removal,
+trigger copies and game clones preserve the stated identity and timing contracts.
+This supplies Dance of Many's persistent event prerequisite, with **zero new
+full-card unlocks**, as estimated. Its token-copy producer remains unsupported.
+Stangg's lexical delayed events and Tetravus's linked payments remain separate.
 All required checks pass; loader counts and diagnostics are unchanged.
 No RON source or vocabulary baseline changed. Validation and mappings follow.
 
@@ -25,17 +26,16 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Linked token leave-event selectors:** compare Dance of Many's persistent
-   token group with Stangg's lexical `TheTokensCreatedThisWay` delayed events.
-   Shared exact departure identity is the next link consumer prerequisite.
-   Dance still needs token copying; Stangg needs legendary token syntax and
-   lexical token-result lowering. Neither complete card unlocks from events alone.
-2. **Token copying:** Dance of Many's `TokenCopyOfPermanent` with no modifications.
-   Reuse the existing copy/entry services and persistent producer link. One name,
-   zero unlocks until its linked token leave event is also available.
+1. **Token copying:** evaluate Dance of Many's
+   `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` with existing persistent links
+   and the new linked leave event. Estimated one-name/one-record unlock; compare
+   fresh shared multi-card work before selecting this single-card capability.
+2. **Lexical created-token results and delayed leave events:** Stangg. Reuse exact
+   departure reading and delayed frames. Legendary token syntax remains another
+   blocker; events alone give no full-card unlock.
 3. **Linked optional exile payment/count:** Tetravus. Reuse the persistent
-   collection and existing payment transactions; token `CantBeEnchanted` still
-   needs its own token-rule adapter. Compare fresh shared work before selection.
+   collection and payment transactions; token `CantBeEnchanted` remains unsupported.
+   Compare multi-card payment alternatives before selecting this chain.
 
 ## Dependencies and source blockers
 
@@ -15508,3 +15508,161 @@ clone.go, game.go, token_definition_plan.go, waiting_delayed_source.go and doc.g
 RON compiler.go, contextual_collection.go and token_creation.go; API/rules docs
 and this ledger. Commit title: `feat(ron): implement persistent created-token collections`.
 This run stops after PERSISTENT-CREATED-TOKEN-COLLECTIONS.
+
+## 2026-10-14 — LINKED-CREATED-TOKEN-LEAVE-EVENTS
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh baseline `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Two fresh loader runs were identical:
+2,283 compiled / 162 rejected records, 904 accepted / 82 rejected names.
+The loader's exit 1 was expected collection rejection, not a build/test failure.
+
+Started with the latest ranked candidates. Read complete Dance of Many (DRK),
+Stangg (LEG), Tetravus (ATQ) and all six Hive reprints. Targeted vocabulary queries
+confirmed `TheCreatedTokens`, `TheTokensCreatedThisWay` and the one-argument
+leave-event signature. Nested records, not first diagnostics, supplied the
+following estimates. Each reprinted name counts once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- | --- |
+| Linked-token leave identity and persistent event | Dance of Many directly; Stangg can reuse the exact departure reader in its later lexical event | 0 | Dance still needs token copying. Stangg needs legendary token syntax, lexical token results and delayed event lowering. Exact departure facts support both event consumers without live-collection membership mistakes | Small/medium: one engine event pattern, exact snapshot reader, ordinary RON trigger adapter and lifecycle tests |
+| `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` | Dance of Many | 0 before its linked event; 1 after this prerequisite | Reuse copiable values, token entry and persistent links; dynamic token definitions need a separate contract | Medium: dynamic copy construction, target legality, entry replacements and clone tests |
+| Optional linked-token exile payment and saved count | Tetravus | 0 | Persistent collection and payment transactions exist, but token `CantBeEnchanted` remains unsupported; saved exile counts need their own payment contract | Medium/large: optional subset payment, saved count, transaction rollback and replacement tests |
+
+Candidate #1 is dependency-ready and supplies the next unblocking prerequisite.
+The selected complete context is the persistent ordinary battlefield event;
+lexical delayed events are explicitly deferred. This is one event slice, not an
+attempt to complete either token card. Shared departure reading is reusable by
+Stangg's later lexical adapter, but no Stangg execution is claimed. The other
+ranked candidates are single-card chains with separate contracts. Expected zero
+immediate unlocks matches the measured gain exactly.
+
+Before editing, the stated contract required exact producer and source-visit
+membership after token departure, simultaneous source/token departures, unrelated
+groups, source return, phasing, changed control, ability removal, queued trigger
+identity and clone isolation. Engine mechanics own identity and event detection;
+RON owns spelling, producer validation and ordinary trigger lowering.
+
+### Signatures, context, dependencies and reuse
+
+Added `mage.CreatedTokenLeaves(link *mage.CreatedTokenLink) mage.EventPattern`.
+Definition validation rejects nil/zero link declarations. The private shared
+`departureEventPermanent(event *core.GameEvent, game *Game) *Permanent` reads a
+nonzero exact event incarnation from the pre-event state or retained departure
+snapshot. A returned token cannot replace that snapshot. Entry, a different
+physical ID, an unknown/wrong visit, non-zone notifications and another origin
+zone do not match. Token status, link declaration and producing source visit must
+all match the watching battlefield source. Each departing member triggers once.
+
+RON accepts only ordinary
+`TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens), body)` with a
+strict symbol, permanent source and one unambiguous supported `CreateTokens`
+producer. Existing action/target plans build the body per factory instance.
+The event adds no binding: `Trigger_ThatPermanent` is unbound here. Tuple spelling,
+missing/multiple producers and lexical `TheTokensCreatedThisWay` reject. The
+existing association prepass also rejects spell producers. Token-copy syntax,
+lexical delayed events, entry/static event contexts and optional linked exile
+payments remain separate adapters.
+
+Reused `CreatedTokenLink`, per-token scalar link history, exact incarnation LKI,
+shared simultaneous zone batches and former battlefield views, definition
+validation, ordinary trigger detection, APNAP placement, pending source/controller
+capture, stack copies, game clones and existing activation transactions. No new
+mutable game state, payment, replacement or zone subsystem was needed. Source
+phasing and ability removal suspend detection. Token phasing causes no departure.
+Restoration preserves links. Token control does not change membership. Source
+control at detection determines the trigger's controller. Copies retain the source
+visit and use their own controller. Resolution cannot sacrifice a returned maker.
+
+CR 400.7, 603.3b, 603.6c, 603.10a, 607.1/607.2c and 702.26b/d establish the
+identity, APNAP, look-back, linked-object and phasing contracts. Local Oracle data
+in `data/DRK.json` and `data/LEG.json` confirms the downstream requirements.
+Source defects: none found or corrected. Environment failures: none found.
+API/rules documentation describes only the event behavior established here.
+
+### Failing-first evidence and gameplay mappings
+
+Native tests first failed compilation for missing `CreatedTokenLeaves`. RON
+integration first failed with `unsupported source leave event subject
+(TheCreatedTokens)` on The Hive's complete producer plus a synthetic consumer.
+Routine test setup used the existing `PutTriggersOnStack`, `DoSacrifice` and
+end-of-turn effect removal APIs before confirming those intended red results.
+No gameplay assertion was removed or weakened.
+
+Native `TestCreatedTokenLeave`:
+
+- `Lifecycle`: separate declaration and source instances, multiple members,
+  token control, token/source phasing, simultaneous maker/member departures,
+  pending clone resolution, source return, ability removal/restoration and clone
+  isolation. Simultaneous triggers retain the old controller after source return.
+- `Destinations`: bounce, destruction, sacrifice, exile, exile-instead replacement,
+  regeneration without departure and changed maker control. Sacrifice sends one
+  zone event match, not a second match for its named notification.
+- `ExactEvent`: exact retained snapshots after token reentry, former battlefield
+  views, clones, invalid/unknown visits, wrong physical IDs, event types and zones.
+- `Invalid`: nil and zero link declarations reject during definition validation.
+
+RON `TestRONCreatedTokenLeave`:
+
+- `Gameplay`: complete real Hive producer with synthetic linked cleanup/sacrifice,
+  paid activation, two factory instances, changed token control, a copied trigger,
+  independent clone resolution and group isolation.
+- `SourceReturns`: real producer, token phasing, token departure and maker return
+  before pending resolution; queued sacrifice cannot affect the new visit.
+- `Invalid`: malformed subjects, missing/ambiguous producers, unsupported lexical
+  scope and unbound event reads reject atomically.
+- `CollectionAtomic`: complete Dance of Many, Stangg and Tetravus records still
+  reject and cannot replace an existing explicit registry.
+
+| Unique real card | Complete record scope | Evidence and limits |
+| --- | --- | --- |
+| The Hive | Six reprints read; complete LEB producer executed | New real-producer integration with synthetic linked leave consumers; existing full producer mappings retained |
+| Dance of Many | One DRK record | Persistent event prerequisite now supported; complete record still rejects token copying; no full-card gameplay gain |
+| Stangg | One LEG record | Exact departure reader available for later lexical event work; complete record still rejects legendary tokens; no gameplay support claim |
+| Tetravus | One ATQ record | Candidate comparison and unchanged atomic rejection; linked payment and token rule remain unsupported |
+
+### Validation and measured gain
+
+Required fast-fail checks all passed:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONCreatedTokenLeave' -count=1`.
+- `go test ./pkg/mage -run '^TestCreatedTokenLeave' -count=1`.
+- `make build` and `go vet ./...` (no diagnostics).
+- `go test ./pkg/mage/... -short -count=1`.
+- `make test` across the repository.
+- `go test ./... -short -count=1`, as required by implement-engine.
+- `make lint`: pass, 0 issues. Automatic changes only grouped imports in the new
+  native test; no semantic or unrelated change. Post-lint native focused tests,
+  the entire RON package and `make build` passed.
+- `git diff --check`: pass after implementation, lint and ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, 2,283 compiled /
+  162 rejected records; 904 accepted / 82 rejected names. Parsed final JSON equals
+  both baseline reports, including every diagnostic. Dance of Many still rejects
+  `TokenCopyOfPermanent`; Stangg still rejects token supertypes; Tetravus still
+  rejects its token `PermanentRuleEffect`. The collection remains atomic.
+
+Actual gain: zero newly accepted names or records, zero newly complete cards,
+exactly as estimated. New event contract and producer integration coverage are
+separate from compilation/full-card coverage. No RON source changed, so no
+vocabulary refresh was needed. Existing callers and Go definitions are preserved.
+Runtime cutover, Go-card deletion and unused DSL cleanup gates remain closed.
+
+### Ranked next candidates
+
+1. Evaluate `TokenCopyOfPermanent(ref, NoTokenCopyEffects)` for Dance of Many.
+   Its persistent collection and linked leave event prerequisites now exist;
+   estimated one-name/one-record unlock if the dynamic token-copy contract fits
+   one complete slice. Compare fresh shared multi-card candidates before editing.
+2. Lexical created-token result and delayed leave-event support for Stangg.
+   Reuse the exact departure reader, saved permanent sets and delayed frames;
+   legendary token syntax remains another blocker. No unlock from events alone.
+3. Tetravus's optional linked exile payment/count. Reuse persistent collections
+   and transactions; token `CantBeEnchanted` remains another blocker. Compare
+   multi-card payment work before selecting this single-card chain.
+
+Changed files: new `pkg/mage/created_token_leave.go` and native test;
+RON `created_token_leave_test.go`, `triggers.go` and shared Hive test helper in
+`created_token_link_test.go`; `pkg/mage/doc.go`, API/rules-contract docs and this
+ledger. Commit title: `feat(ron): implement linked created-token leave events`.
+This run stops after LINKED-CREATED-TOKEN-LEAVE-EVENTS.

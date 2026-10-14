@@ -12,6 +12,11 @@ import (
 
 func linkedHiveRegistry(t *testing.T) *mage.Registry {
 	t.Helper()
+	return linkedHiveRegistryWithRules(t, "")
+}
+
+func linkedHiveRegistryWithRules(t *testing.T, extra string) *mage.Registry {
+	t.Helper()
 	data, err := os.ReadFile("../../../../cards/mtgish/LEB.lines.ron")
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +32,7 @@ func linkedHiveRegistry(t *testing.T) *mage.Registry {
 	}
 	leave := `,TriggerA(WhenAPermanentLeavesTheBattlefield(SinglePermanent(ThisPermanent)),ActionList([Exile([EachPermanent(TheCreatedTokens)],[])]))`
 	i := strings.LastIndex(record, "])")
-	record = record[:i] + leave + record[i:]
+	record = record[:i] + leave + extra + record[i:]
 	registry, err := LoadFS(fstest.MapFS{"test.ron": {Data: []byte(record)}}, "*.ron")
 	if err != nil {
 		t.Fatal(err)

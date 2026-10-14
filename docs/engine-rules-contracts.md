@@ -21887,8 +21887,8 @@ engine definition validation. RON requires one unambiguous permanent producer an
 a strict `TheCreatedTokens` symbol in resolving contextual collections. Native
 entry services retain replacement order, event order and existing transaction
 semantics. No new payment or target contract is introduced. Linked-token leave
-matching needs a separate event adapter with departure facts; a live collection
-cannot supply a departed member.
+matching uses `CreatedTokenLeaves`; a live collection cannot supply a departed
+member.
 
 CR 111.2/111.3/111.6, 400.7, 603.6, 607.1/607.2c, 608.2c and 702.26b/d govern
 creator ownership, permanent identity, source departure, linked ability groups,
@@ -21909,3 +21909,52 @@ rejected in `TestRONCreatedTokenLinkInvalid`; neither is a new full-card mapping
 `TestRONCreatedTokenLinkDepartedCreation` also proves that paid and copied
 activations create tokens for the old source visit after departure and return;
 the returned source cannot select those tokens in either cloned game branch.
+
+## Linked created-token departure detection
+
+`CreatedTokenLeaves(link *CreatedTokenLink) EventPattern` is a battlefield-source
+zone-change event. Definition validation rejects nil and zero link declarations.
+The event's nonzero source incarnation selects a present pre-event permanent or
+its exact retained departure snapshot. Matching checks token status, declaration,
+and producing source visit. A returned object cannot replace the snapshot. UUID
+alone, entry, sacrifice notifications and moves from another zone do not match.
+
+The shared dispatcher supplies the former battlefield for simultaneous moves.
+Each linked member produces one ordinary trigger, even when the maker leaves
+with it. The watching source's event-time controller controls the trigger; token
+control is irrelevant. Bounce, destruction, sacrifice and exile use the same
+contract. A graveyard-to-exile replacement still supplies departure; regeneration
+supplies none. The matcher introduces no replacement, payment or zone subsystem.
+APNAP placement, event-time source capture, trigger copies and pending/game clones
+retain their existing contracts. Source departure after detection cannot cancel
+the trigger, but source actions cannot affect a returned source visit.
+
+Source return starts a new group. Phased sources and removed abilities do not
+listen; restored abilities can detect later linked departures. Token phasing
+causes no zone-change trigger. Queries do not create or move tokens, queue a
+trigger, consume resources or change RNG. Immutable declaration identity and
+scalar token history remain in the existing per-permanent game state.
+
+RON lowers only ordinary battlefield
+`TriggerA(WhenAPermanentLeavesTheBattlefield(TheCreatedTokens), body)`, with one
+permanent-source producer and a strict symbol. It creates no event binding.
+Lexical `TheTokensCreatedThisWay` delayed events, token-copy producers and linked
+optional exile payments remain unsupported. CR 400.7, 603.3b, 603.6c, 603.10a,
+607.1/607.2c and 702.26b/d establish identity, placement, look-back, linkage and
+phasing. Local `data/DRK.json` and `data/LEG.json` establish Dance of Many and
+Stangg's requirements; their complete RON records remain rejected without any
+instruction removal or source repair.
+
+Evidence: native `TestCreatedTokenLeaveLifecycle` covers declaration/source
+isolation, token control, simultaneous departures, pending clone resolution,
+source return, phasing and ability removal/restoration. `Destinations` covers
+zone paths, source control, exile replacement and regeneration. `ExactEvent`
+checks exact retained snapshots across token reentry and clones plus invalid
+visits, identities, event types and zones. `Invalid` covers definition validation.
+RON `TestRONCreatedTokenLeaveGameplay` uses the complete Hive producer with a
+synthetic linked sacrifice rule, paid activation, two factory instances, changed
+token control, trigger copying and clone resolution. `SourceReturns` covers phasing and
+a returned source before queued sacrifice resolves. `Invalid` rejects malformed
+subjects, missing/ambiguous producers and out-of-scope reads. `CollectionAtomic`
+checks all complete blocked Dance of Many, Stangg and Tetravus records and proves
+the prior registry survives failed loading. No new full-card coverage is claimed.
