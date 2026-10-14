@@ -19077,8 +19077,8 @@ Evidence: native `TestCounterPointPreventionUnpreventable` and retained
 `Hydra`, `HydraShieldLifetime`, `HydraZeroToughness`, `Inventory` and
 `RasputinSourceCorrection`. Full Hydra records exercise X casting, both mana
 activations, upkeep legality and rollback. Rasputin's test covers only the entry,
-mana and corrected shield prerequisite; full history and counter-cap support
-remain open. Resolved finite shields reuse their existing lifetime contract.
+mana and corrected shield prerequisite; the later turn-start contract adds
+history evidence. Counter-cap support remains open. Resolved finite shields reuse their existing lifetime contract.
 
 
 ## Matching plural graveyard exile payments
@@ -21075,3 +21075,40 @@ Engine evidence: `TestIndefiniteControl`, `Declaration` and
 `OgreNewController`, `RainbowVale`, `RainbowPayment`, `Invalid` and
 `InventoryAndLoad`. Complete unchanged Ghazbán Ogre and Rainbow Vale records
 supply gameplay evidence independently of compilation counts.
+
+
+## Beginning-of-turn untapped history
+
+`Game.BeginActiveTurn()` captures untapped status by exact battlefield visit and
+untapped land counts by controller once per turn and active player. Capture
+follows beginning-of-turn duration expiry and a layer update. It precedes all
+phasing and untapping. Phased-out permanents supply no facts (CR 702.26b).
+Both players' land counts use their characteristics and control at capture.
+The same boundary runs when untap is skipped. Drivers check skipped turns before
+calling it; a skipped turn has no capture (CR 500.11). Extra turns capture again.
+Direct untap execution also enters this shared boundary.
+
+`UntappedLandCountAtTurnStart(PlayerRef) ResolutionValue` resolves the selected
+player in the current frame and reads the saved count. `Game.UntappedLandsAtTurnStart`
+keeps its signature; uncaptured turns return zero. `Game.StartedTurnUntapped(id,
+incarnation uuid.UUID) bool` reads an exact saved visit. `TrackerReader` exposes
+that pure query. `PermanentStartedTurnUntapped(PermanentRef) StateCondition`
+accepts only `This`; definition validation rejects other subjects. Detection
+uses the present visit. Resolution uses the saved source incarnation, including
+a departed or phased source. Departure information is unnecessary because the
+historical fact already has an exact visit. A new visit has no fact until the
+next turn. This historical check does not permit actions on an absent, phased
+or returned source (CR 400.7, 603.4, 608.2a).
+
+Later tap, type, control and zone changes cannot change these facts. Repeated
+boundaries and extra upkeep steps do not recapture. Clones copy both the counts
+and the visit map. Queries do not capture or alter history. Cleanup does not
+recapture; the next actual turn replaces the facts. Existing tracker setters
+and Go callers remain available.
+
+Evidence: engine `TestTurnStartUntappedFacts`, `SkippedUntap`, `Definition` and
+`HistoricalTrigger`; RON `TestRONTurnStartUntappedPowerSurge`, `Intervening`,
+`Invalid` and `InventoryAndLoad`. Power Surge has full-record gameplay evidence.
+Rasputin's fixture exercises entry, both counter payments, mana, finite
+prevention and the history trigger with its independent counter-cap rule removed.
+The complete record still rejects; this is prerequisite evidence only.

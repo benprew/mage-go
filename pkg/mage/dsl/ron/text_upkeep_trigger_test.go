@@ -452,10 +452,10 @@ func TestRONTextUpkeepTriggerInventory(t *testing.T) {
 			records++
 		}
 	}
-	if len(counts) != 63 || records != 125 {
+	if len(counts) != 64 || records != 131 {
 		t.Fatalf("declaration inventory: %d names / %d records", len(counts), records)
 	}
-	if counts["Shapeshifter"] != 1 || counts["The Abyss"] != 1 || counts["Psychic Allergy"] != 1 || counts["Mishra's War Machine"] != 2 || counts["Worms of the Earth"] != 1 || counts["Drop of Honey"] != 1 || counts["Mana Vortex"] != 1 || counts["Tourach's Gate"] != 1 || counts["Serendib Djinn"] != 1 || counts["Ebon Praetor"] != 1 || counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
+	if counts["Power Surge"] != 6 || counts["Shapeshifter"] != 1 || counts["The Abyss"] != 1 || counts["Psychic Allergy"] != 1 || counts["Mishra's War Machine"] != 2 || counts["Worms of the Earth"] != 1 || counts["Drop of Honey"] != 1 || counts["Mana Vortex"] != 1 || counts["Tourach's Gate"] != 1 || counts["Serendib Djinn"] != 1 || counts["Ebon Praetor"] != 1 || counts["Demonic Hordes"] != 6 || counts["Black Vise"] != 6 || counts["The Rack"] != 2 || counts["Ivory Tower"] != 2 || counts["Karma"] != 6 || counts["Force of Nature"] != 6 {
 		t.Fatal("real subject reprints missing")
 	}
 }

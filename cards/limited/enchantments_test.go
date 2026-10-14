@@ -756,15 +756,17 @@ func TestPowerSurge(t *testing.T) {
 			g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest")
 			g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Forest")
 		}
-		// Stop just before turn 2's Untap step, then tap PlayerB's lands so the
-		// snapshot taken at the start of turn 2 sees zero untapped lands.
-		g.StopAt(2, core.Untap)
+		// PlayerB's lands stay tapped through PlayerA's turn.
+		for _, id := range []uuid.UUID{p1, p2, p3} {
+			g.TapPermanent(g.FindPermanent(id))
+		}
+		g.StopAt(2, core.PrecombatMain)
 		g.Execute()
 		for _, id := range []uuid.UUID{p1, p2, p3} {
-			g.FindPermanent(id).Tapped = true
+			if g.FindPermanent(id).Tapped {
+				t.Fatal("land did not untap")
+			}
 		}
-		g.RunStepWithPriority(core.Untap)
-		g.RunStepWithPriority(core.Upkeep)
 		// All Plains were tapped at the start of turn 2 -> snapshot is 0 -> 0 damage.
 		g.AssertLife(gametest.PlayerB, 20)
 	})

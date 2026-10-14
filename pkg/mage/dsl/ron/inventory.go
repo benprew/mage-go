@@ -1609,7 +1609,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "Twice" || n.Name == "HalfRoundedDown" || n.Name == "HalfRoundedUp") && len(n.Args) == 1 {
 			return "value"
 		}
-		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
+		if (n.Name == "TheNumberOfPermanentsOnTheBattlefield" || n.Name == "TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
 		if (n.Name == "Minus" || n.Name == "Plus") && len(n.Args) == 2 {

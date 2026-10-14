@@ -12,6 +12,9 @@ import (
 // Turn trackers reset after the final cleanup step. They remain available during
 // cleanup priority. The reset preserves selected history, such as attackedLastTurn.
 type TurnTrackers struct {
+	untappedStartTurn            int
+	untappedStartPlayer          uuid.UUID
+	untappedStartVisits          map[capturedPermanent]bool
 	blockHistory                 map[blockHistoryPair]uuid.UUID
 	abilityActivations           map[activationHistoryKey]int
 	grantedActivations           map[uuid.UUID]int
@@ -501,6 +504,9 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 		instantsCast:                 cloneUUIDIntMap(t.instantsCast),
 		sorceriesCast:                cloneUUIDIntMap(t.sorceriesCast),
 		untappedLandsAtTurnStart:     cloneUUIDMap(t.untappedLandsAtTurnStart),
+		untappedStartTurn:            t.untappedStartTurn,
+		untappedStartPlayer:          t.untappedStartPlayer,
+		untappedStartVisits:          maps.Clone(t.untappedStartVisits),
 		timesTargeted:                cloneUUIDMap(t.timesTargeted),
 	}
 	if len(t.attackedLastTurn) > 0 {

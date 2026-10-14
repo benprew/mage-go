@@ -14586,7 +14586,7 @@ identity, phasing, ability removal, simultaneous damage and clone services apply
 Rock Hydra now uses its complete RON record. Its finite activation, and Rasputin's
 matching activation, use `NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient`
 with `Permanent(ThisPermanent)`, as required by their local Oracle text.
-Rasputin's turn-start history and counter-cap rules remain unsupported.
+Rasputin's turn-start history now has the contract below. Its counter-cap rule remains unsupported.
 
 
 ## RON matching plural exile from one graveyard
@@ -15905,3 +15905,31 @@ immediate mana production and delayed scheduling. The follow-up body passes
 normal definition and binding checks. No choices or delayed scheduling occur in
 mana queries. Ghazbán Ogre and Rainbow Vale use these forms. See
 `TestRONIndefiniteControl*` and `TestIndefiniteControl*` for contract evidence.
+
+
+## RON beginning-of-turn untapped facts
+
+`mage.UntappedLandCountAtTurnStart(player PlayerRef) ResolutionValue` reads
+one selected player's count from the beginning of the current turn.
+`mage.PermanentStartedTurnUntapped(subject PermanentRef) StateCondition`
+accepts `mage.This` and reads that exact source visit's historical untapped status.
+Invalid or unbound references fail definition validation. Queries make no capture.
+
+RON accepts resolving
+`TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn(And([IsUntapped,
+IsCardtype(Land), ControlledByAPlayer(SinglePlayer(playerRef))]))`.
+The three clauses can occur in any order and must each occur once. The player
+reference uses the ordinary lexical player scope, including a saved upkeep event
+player. Entry and draw replacement contexts reject. Other historical counts,
+filters and plural player selectors require separate adapters.
+
+RON accepts `StartedThisTurnUntapped` as a symbol in
+`TriggerI(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+PermanentPassesFilter(ThisPermanent, StartedThisTurnUntapped), actionBody)`.
+The existing body compiler and intervening-if service perform their usual checks.
+Other subjects and event families retain separate adapters.
+
+Power Surge uses its unchanged full RON in all six reprints. Rasputin Dreamweaver
+still rejects at `CantHaveMoreThanNumberCountersOfType(Integer(7), DreamCounter)`;
+its history tests remove that unsupported rule in a test-only prerequisite fixture.
+They do not establish complete Rasputin gameplay. No production loader accepts it.

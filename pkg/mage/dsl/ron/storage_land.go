@@ -118,7 +118,7 @@ func compileTappedUpkeep(n Node, ctx scope) (optionFactory, error) {
 	if condition.Args[0].Kind != Symbol || condition.Args[0].Name != "ThisPermanent" {
 		return nil, unsupported(condition.Args[0], "intervening-if source")
 	}
-	if condition.Args[1].Kind != Symbol || condition.Args[1].Name != "IsTapped" {
+	if condition.Args[1].Kind != Symbol || (condition.Args[1].Name != "IsTapped" && condition.Args[1].Name != "StartedThisTurnUntapped") {
 		return nil, unsupported(condition.Args[1], "intervening-if filter")
 	}
 	plan, err := compileActions(n.Args[2], ctx)
@@ -127,7 +127,11 @@ func compileTappedUpkeep(n Node, ctx scope) (optionFactory, error) {
 	}
 	return func() mage.CardOption {
 		actions := plan.build()
-		trigger := mage.At(mage.YourUpkeep, mage.Sequence(actions.effects...), mage.WithInterveningIf(mage.PermanentIsTapped(mage.This))).(*mage.GenericTriggered)
+		check := mage.PermanentIsTapped(mage.This)
+		if condition.Args[1].Name == "StartedThisTurnUntapped" {
+			check = mage.PermanentStartedTurnUntapped(mage.This)
+		}
+		trigger := mage.At(mage.YourUpkeep, mage.Sequence(actions.effects...), mage.WithInterveningIf(check)).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

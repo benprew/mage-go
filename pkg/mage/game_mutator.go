@@ -78,6 +78,7 @@ type TrackerReader interface {
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
 	UntappedLandsAtTurnStart(uuid.UUID) int
+	StartedTurnUntapped(uuid.UUID, uuid.UUID) bool
 	GetSorceriesCastThisTurn(uuid.UUID) int
 	GetInstantOrSorceryCastThisTurn(uuid.UUID) int
 	TimesTargetedThisTurn(uuid.UUID) int
@@ -309,6 +310,9 @@ func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
 // player controlled at the start of the current turn (snapshot taken before
 // the untap step). Used by Power Surge.
 func (g *Game) UntappedLandsAtTurnStart(playerID uuid.UUID) int {
+	if g.trackers.Turn.untappedStartTurn != g.CurrentTurn() || g.trackers.Turn.untappedStartPlayer != g.ActivePlayerObj().PlayerID() {
+		return 0
+	}
 	return g.trackers.Turn.UntappedLandsAtTurnStart(playerID)
 }
 

@@ -6,16 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **892 accepted / 94 rejected names**
-(986 total), **2,261 compiled / 184 rejected records** (2,445 total).
-The latest slice is **INDEFINITE-SINGULAR-CONTROL**. Resolving control saves
-an exact permanent visit and player through cleanup and source departure.
-Ghazbán Ogre and Rainbow Vale compile and have complete RON gameplay evidence.
-Tests cover highest-life ties/rechecks, mana payment and rollback, delayed timing,
-visits, phasing, control timestamps, copied triggers and clone isolation.
-Estimated and actual gain: **two unique names / two records**. Gameplay gains both.
-No RON source changed. Silhouette still needs distinct damage-causation facts.
-All required checks pass; final lint reports 0 issues.
+Latest measured result (2026-10-14): **893 accepted / 93 rejected names**
+(986 total), **2,267 compiled / 178 rejected records** (2,445 total).
+The latest slice is **TURN-START-UNTAPPED-FACTS**. The shared turn boundary
+captures exact untapped visits and both players' untapped land counts once,
+before phasing and untapping, including skipped untap steps. Power Surge has
+complete RON gameplay evidence. Rasputin Dreamweaver's history prerequisite
+works; its complete record still rejects at its independent counter cap.
+Estimated and actual gain: **one unique name / six records**. Gameplay gains
+Power Surge. No RON source changed. All required checks pass; lint has 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -24,12 +23,13 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Damage causation for Silhouette.** Spell-source target facts are complete.
-   Reassess shared downstream value before its distinct temporary adapter.
-2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
-   the full power/sacrifice/graveyard-exile chain and a source/result fidelity audit.
-3. **Entry graveyard-X payment and counter combinations.** Frankenstein's Monster
-   needs an atomic payment, failed-entry routing and retained counter-choice count.
+1. **Source counter cap for Rasputin Dreamweaver.** The turn-start prerequisite
+   is complete. Audit replacement ordering and the CR 122 cap contract before
+   lowering its seven-dream-counter rule.
+2. **Damage causation for Silhouette.** Spell-source target facts are complete;
+   distinct causing spell/ability identity is still a prerequisite.
+3. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   the full power/sacrifice/graveyard-exile chain and source/result fidelity audit.
 
 ## Dependencies and source blockers
 
@@ -12079,3 +12079,174 @@ for expected collection rejection, with the counts above. Comparison by card
 and source file confirms exactly two removed diagnostics, zero new diagnostics
 and zero changes to retained diagnostics. There is no environment blocker.
 Commit title: `feat(ron): implement indefinite singular control`.
+
+
+## 2026-10-14 — TURN-START-UNTAPPED-FACTS
+
+### Fresh baseline and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline
+`go run ./cmd/loadcards -json` exited 1 for collection rejection, not a build
+failure: 2,261 compiled / 184 rejected records; 892 accepted / 94 rejected names.
+No environment failure or unrelated user file was present.
+
+Evaluated the latest ranked candidate first, then compared these three:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Damage causation and temporary prevention | Silhouette | 1 after the identity prerequisite | Damage source target snapshots cannot identify a separate causing spell/ability. Needs per-instruction causal frames, ability target visits, replacements and copied-object facts. | High for a complete adapter; one direct collection consumer |
+| Plural activation sacrifice results | Sword of the Ages | 0 for the bounded payment producer | TotalPowerOfPermanents and exact paid-visit graveyard exile need consumers. Oracle includes exiling the artifact too; the source/result fidelity blocker remains. Entry sacrifice Wood Elemental is already supported and is not a new unlock. | High for full chain; medium for producer alone |
+| Beginning-of-turn untapped facts | Power Surge, Rasputin Dreamweaver | 1 name / 6 records | Power Surge's complete nested form has no other blockers. Rasputin's entry, mana, finite prevention and ordinary counter action work; CantHaveMoreThanNumberCountersOfType remains independent. Shared capture unblocks both historical count and intervening-if consumers. | Small engine history plus two bounded adapters and lifecycle tests |
+
+The selected shared prerequisite has a concrete two-card benefit, one immediate
+full-card unlock and the lowest credible effort. Silhouette's distinct causation
+contract is not dependency-ready, and a bounded sacrifice producer has no
+immediate unlock. This is one cohesive capability: immutable untapped facts at
+the beginning of a turn, with its count and source-condition consumers. No second
+slice or counter-cap implementation was started.
+
+Read complete records for Silhouette and Sword of the Ages (LEG:238/252),
+Power Surge in all six source files, and Rasputin Dreamweaver (LEG:211).
+Targeted vocabulary keys: ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient,
+SacrificeAnyNumberOfPermanents, StartedThisTurnUntapped and
+TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn. Also inspected the complete
+Frankenstein's Monster record while evaluating the prior rankings; its composite
+entry cost, failure routing and counter allocation still exceed this bounded slice.
+Local authoritative Oracle records in data/4ED.json and data/LEG.json confirm
+Power Surge and Rasputin semantics. No selected-source defect was found or changed.
+Rules reviewed: CR 500.11–12, 502.1–4, 503.1, 603.4, 608.2a, 400.7 and 702.26b.
+
+### Established contracts and boundaries
+
+Engine signatures:
+
+- `UntappedLandCountAtTurnStart(player PlayerRef) ResolutionValue`.
+- `PermanentStartedTurnUntapped(subject PermanentRef) StateCondition`;
+  supports only This and rejects nil or other subjects during definition checks.
+- `Game.StartedTurnUntapped(id, incarnation uuid.UUID) bool`, also on TrackerReader.
+- Existing `Game.UntappedLandsAtTurnStart(uuid.UUID) int` keeps its signature;
+  uncaptured turns return zero. Existing tracker setters and other callers remain.
+
+Game.BeginActiveTurn is the shared capture boundary. It applies beginning-of-turn
+expiry and current layers, then captures each present unphased visit's untapped
+status and both players' untapped land counts. It captures once per turn/active
+player before phasing and untapping. It also runs for skipped untap steps and
+extra turns; drivers must consume skipped turns first. Direct doUntap callers use
+this same boundary. The former count capture after phasing-in was removed.
+Queries never capture. Later taps, land changes, control changes and departure
+cannot change facts. Uncaptured new turns cannot read the old turn's counts.
+Copies keep saved trigger players and visits; clones copy independent maps.
+
+Source history is a past fact, so a pending trigger reads the saved incarnation
+when the source leaves or phases out. Return cannot supply the old visit for an
+action; new visits have no history until the next turn. Synthetic historical
+GainLife tests distinguish historical checks from live-source requirements.
+Counter actions still require their saved present unphased visit.
+
+RON supports ordinary resolving
+`TheNumberOfPermanentsOnTheBattlefieldAtBeginningOfTurn(And([IsUntapped,
+IsCardtype(Land), ControlledByAPlayer(SinglePlayer(playerRef))]))`.
+All three clauses must occur exactly once, in any order. Player refs use existing
+lexical scopes, including the saved upkeep event player. Entry and draw replacement
+contexts reject. Other historical filters and plural player selectors remain
+unsupported. Inventory walks the new value's argument as a permanent filter.
+
+RON also supports the symbol StartedThisTurnUntapped in the existing source-only
+own-upkeep PermanentPassesFilter TriggerI shape. Ordinary action-body validation
+and intervening-if detection/resolution checks remain. Other subjects, constructor
+forms and events reject. RON owns spelling and shape; mage owns history and visits.
+Reused typed player/source refs, definition validation, layer application,
+turn boundaries, pending trigger frames, payment transactions, finite shields,
+damage replacement pipeline and copy/clone services. No Go factory fallback,
+card-name branch, parallel history subsystem or production partial registry.
+
+### Failing-first evidence and mappings
+
+After correcting test-only TapPermanent argument types, focused tests failed
+with undefined engine APIs and unsupported complete Power Surge/history forms.
+Implementation made those tests pass. Subsequent tests found test-only expected
+count and ability-index errors; corrected them without removing assertions.
+
+- Power Surge -> TestRONTurnStartUntappedPowerSurge: unchanged complete RON,
+  six reprints, unpaid cast rollback, red payment, pre-untap count, own/opponent
+  upkeep, saved event player, later land departure/return/control/phasing,
+  source departure, copied trigger and pending-clone isolation. New actual turns
+  replace the snapshot. One unique card now has full gameplay evidence.
+- Rasputin Dreamweaver -> TestRONTurnStartUntappedIntervening: test-only full
+  record minus the independent counter-cap declaration. Tests entry counters,
+  both counter payments, immediate mana, finite prevention, opponent upkeep,
+  tapped-start versus later untap, later tap, phase/cycle, return, copies and clones.
+  This is prerequisite evidence, not full-card acceptance or complete gameplay.
+- Both shapes -> Invalid: malformed filters and conditions, wrong card type,
+  empty counts, constructor-versus-symbol errors, wrong/unbound player refs and
+  unsupported host conditions reject. Complete Rasputin still rejects at the cap.
+- Power Surge -> InventoryAndLoad / AtomicLoad: semantic roles, validated fresh
+  factories, identical reprints and atomic rejection preserve the prior registry.
+- Engine -> TestTurnStartUntappedFacts, SkippedUntap, Definition,
+  HistoricalTrigger: exact visits, pure queries, pre-phasing capture, skipped
+  untap replacement, both players, idempotence, extra turns, clone maps, source
+  history through departure/return/phasing/control and invalid declarations.
+
+Updated collection assertions in definition_plan_test.go, inventory_test.go and
+numeric_consumers_test.go. Both upkeep text-revision inventories now include
+Power Surge (64 names / 131 records) and assert all six reprints. The prior
+Rasputin shield probe now expects its counter-cap rejection. Full-suite validation
+found that the retained Go Power Surge test tapped lands after the harness had
+entered turn two. Moved this setup before the turn boundary, retained zero-damage
+assertion and added an explicit successful-untap assertion. No Go definition
+changed and no gameplay assertion was weakened. Updated doc.go, API and rules-contract documentation.
+No RON source changed; the vocabulary snapshot needs no refresh. Go-card removal,
+application cutover and broad DSL cleanup remain behind their existing gates.
+No broad DSL export was removed without a whole-repository caller audit.
+
+### Measured gain and diagnostics
+
+Fresh loader: **2,267 compiled / 178 rejected records; 893 accepted / 93 rejected
+names**, of 2,445 records / 986 names. Estimated and actual gains match: **one
+name / six records**, exactly the Power Surge reprints. No accepted record was
+lost and no diagnostic was added. Rasputin's retained diagnostic changed from
+unsupported StartedThisTurnUntapped to
+`LEG.lines.ron:211:883: unsupported self untap operations ()`, originating from
+its CantHaveMoreThanNumberCountersOfType(Integer(7), DreamCounter) declaration.
+All other retained diagnostics are unchanged. Strict loading still rejects the
+collection atomically. Compilation gain and gameplay gain are reported separately.
+
+### Ranked next candidates
+
+1. **Source counter cap for Rasputin Dreamweaver.** History is now complete.
+   Compare CR 122 cap replacement ordering with other useful shared candidates
+   before selecting its bounded adapter; likely one full-card unlock.
+2. **Damage causation identity for Silhouette.** Preserve distinct causing
+   spell/ability identity and damage source identity; audit multi-card downstream
+   value before committing to the single-card temporary adapter.
+3. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   atomic paid visits, saved powers and exact graveyard exile consumers. Audit the
+   artifact-exile source defect with Oracle evidence before correcting RON.
+
+Stop after this slice. Complete collection gameplay, runtime cutover, Go-card
+removal and obsolete DSL cleanup remain unfinished.
+
+Final verification:
+
+- `go test ./pkg/mage/dsl/ron -run TurnStartUntapped -count=1`: pass.
+  Native `go test ./pkg/mage -run TurnStartUntapped -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass after updating the three
+  obsolete inventory/prerequisite expectations described above.
+- `make test`: pass after correcting the retained test's setup boundary.
+  `go test ./cards/limited -run TestPowerSurge -count=1`: pass.
+- `make lint`: pass, **0 issues**. Tracked changes are identical before and
+  after lint. New files have import grouping changes only; reviewed all four.
+  Post-lint `go test ./pkg/mage ./pkg/mage/dsl/ron -run TurnStartUntapped
+  -count=1`: pass. `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: exit 1 for expected atomic collection
+  rejection, with the final counts above. Baseline comparison confirms six
+  removed diagnostics, none added, and only Rasputin's retained diagnostic changed.
+
+Changed files: turn_start_untapped.go/tests in mage and ron; game_mutator.go,
+next_turn_duration.go, tracker_system.go, turn_execution.go and doc.go; RON
+sacrifice_value.go, storage_land.go, inventory.go and six affected test files;
+retained cards/limited/enchantments_test.go; API/rules docs and this ledger.
+No environment or pre-existing test blocker remains. Commit title:
+`feat(ron): implement turn-start untapped facts`.

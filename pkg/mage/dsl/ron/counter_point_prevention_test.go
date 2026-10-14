@@ -217,8 +217,8 @@ func TestRONCounterPointPreventionInventory(t *testing.T) {
 
 func TestRONCounterPointPreventionRasputinSourceCorrection(t *testing.T) {
 	n := repositoryRecord(t, "LEG", "Rasputin Dreamweaver", "rasputin.ron")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "StartedThisTurnUntapped") {
-		t.Fatal("remaining history contract", err)
+	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "unsupported self untap operations") {
+		t.Fatal("remaining counter-cap contract", err)
 	}
 	prerequisite := n
 	prerequisite.Fields = maps.Clone(n.Fields)

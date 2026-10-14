@@ -48,6 +48,7 @@ func (g *Game) BeginActiveTurn() {
 	if g.effects.removeUntilNextTurn(g.ActivePlayerObj().PlayerID(), g.CurrentTurn()) || started {
 		g.ApplyContinuousEffects()
 	}
+	g.captureTurnStartUntapped()
 }
 
 // Each installed rule keeps its own window so clones can enter different turns.

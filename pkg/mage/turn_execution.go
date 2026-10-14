@@ -76,6 +76,7 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 }
 
 func (g *Game) doUntap() {
+	g.BeginActiveTurn()
 	active := g.ActivePlayerObj()
 
 	// CR 502.1: Phase in all phased-out permanents under the active player's control
@@ -97,17 +98,6 @@ func (g *Game) doUntap() {
 	capturedUntap := g.turns.consumeCapturedUntap(active.PlayerID())
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
-
-	// Snapshot the active player's untapped land count before the untap loop
-	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
-	// similar effects read this at upkeep.
-	count := 0
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
-			count++
-		}
-	}
-	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
 
 	blocked := matchingUntap
 	for _, p := range g.zones.battlefield {

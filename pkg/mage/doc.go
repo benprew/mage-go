@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [UntappedLandCountAtTurnStart] reads a selected player's saved land count.
+// [PermanentStartedTurnUntapped] reads the source's exact saved visit.
+// [Game.BeginActiveTurn] captures both facts once, before phasing and untapping.
+// Skipped untap steps keep the capture. Queries do not create history.
+// Later taps, control changes and departure cannot change the saved facts.
+// Return starts a new visit. Pending triggers keep the former visit's fact;
+// permanent actions still require their saved present visit. Clones keep separate
+// history. Extra turns capture again. RON accepts the untapped-land count with
+// one SinglePlayer controller filter and a source upkeep history condition.
+// This completes Power Surge. Rasputin Dreamweaver still needs its counter cap.
+//
 // [Until] accepts [ChangeController] with core.Indefinite. Resolution saves the
 // exact subject visit and selected player. Source departure and cleanup keep
 // the effect. Phasing keeps identity; return starts a new visit. Layer 2 applies
