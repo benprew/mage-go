@@ -16148,3 +16148,29 @@ Returned cards cannot supply an old visit. Already exiled replacement results
 are unchanged. Tokens supply power but no cards. Copies, clones and delayed
 bodies retain separate payment frames. Sword of the Ages now uses the grouped
 source and creature exile form, as required by its Oracle text.
+
+## RON repeated resolving mana payment
+
+`MayCost(PayManaForEach(manaList, count))` and
+`PlayerMayCost(player, PayManaForEach(manaList, count))` require an adjacent
+nonempty `If`, `Unless` or two-body `IfElse` using bare `CostWasPaid` or
+`CostWasntPaid`. The fixed mana list supports generic amounts and W/U/B/R/G;
+X and negative generic amounts are rejected. Counts use the existing typed
+`compileInstanceValue` shapes and scope checks, including fixed nonnegative
+integers, arithmetic and exact-permanent counter information. Negative dynamic
+results supply zero. Entry, replacement, mandatory, casting and activation-cost
+contexts are outside this adapter. Saved references and values require their
+existing producers; payment conditions cannot escape the adjacent continuation.
+
+Lowering uses `mage.IfRepeatedManaPaid`, `mage.UnlessRepeatedManaPaid` or
+`mage.PayRepeatedManaOrElse`. The count is read once before payment; later body
+values are independent live/LKI reads. Each factory builds fresh bindings.
+Existing payment transactions supply mana abilities and rollback. Waiting
+source inspection includes count, payer and both branches without executing
+queries. Cyclone's full record uses its supported wind counter, upkeep trigger,
+source sacrifice and simultaneous creature/player damage services.
+
+Evidence: `TestRONRepeatedManaPaymentCyclone`, `CycloneLifecycle`, `Identity`,
+`Branches`, `Delayed`, `StrictLoad` and `Invalid`; native
+`TestRepeatedManaPayment*`. The shape does not add optional paid-amount results
+or expand Power Leak, Silhouette or other unsupported records.

@@ -144,7 +144,7 @@ func (e *unlessPaidEffect) refersToSourcePermanent() bool {
 }
 
 func (e *resolutionManaPayment) refersToSourcePermanent() bool {
-	return playerRefReadsSourcePermanent(e.player) || resolutionValueReadsSourcePermanent(e.amount) || effectReadsSourcePermanent(e.effect)
+	return playerRefReadsSourcePermanent(e.player) || resolutionValueReadsSourcePermanent(e.amount) || effectReadsSourcePermanent(e.effect) || (e.twoBranches && effectReadsSourcePermanent(e.otherwise))
 }
 
 func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {

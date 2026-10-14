@@ -760,6 +760,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if role == "resolution_cost" && n.Name == "Or" && len(n.Args) == 1 {
 			return "resolution_cost"
 		}
+		if role == "resolution_cost" && n.Name == "PayManaForEach" && len(n.Args) == 2 {
+			return []string{"metadata", "value"}[index]
+		}
 		if n.Name == "PayManaX" && len(n.Args) == 2 {
 			if role == "resolution_cost" {
 				return []string{"metadata", "value"}[index]

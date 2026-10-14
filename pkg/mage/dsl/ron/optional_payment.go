@@ -317,6 +317,9 @@ func compileActionSequenceWithName(parts []Node, ctx scope) ([]effectFactory, *c
 }
 
 func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
+	if len(payment.Args) > 0 && payment.Args[len(payment.Args)-1].Name == "PayManaForEach" {
+		return compileRepeatedManaPayment(payment, continuation, ctx)
+	}
 	if payment.Name == "AnyPlayerMayCost" {
 		return compileEligiblePlayerPayment(payment, continuation, ctx)
 	}

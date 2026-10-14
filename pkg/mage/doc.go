@@ -2324,6 +2324,15 @@
 // the original live permanent. The chosen count is available only in its paid
 // branch. Counter choices and removal use the shared payment transaction.
 //
+// Use [PayRepeatedManaOrElse], [IfRepeatedManaPaid] or [UnlessRepeatedManaPaid]
+// for a fixed generic and colored mana cost repeated at resolution.
+// The count is read once before the offer. Nonpositive counts require a zero
+// payment choice. The shared transaction supplies mana abilities and rollback.
+// Activation reductions do not apply. Continuations keep separate payment
+// results. Typed counts and both branches declare waiting source references.
+// RON accepts PayManaForEach in optional resolving payments with an adjacent
+// If, Unless or IfElse. Casting, activation costs and entry need other adapters.
+//
 // Use [UnlessManaPaid] or [IfManaPaid] for a mana payment during resolution.
 // Supply a mana cost with X and a [ResolutionValue]. The amount is read once
 // before the payment choice. Activation cost reductions do not change it.

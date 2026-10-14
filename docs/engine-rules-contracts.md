@@ -21422,3 +21422,43 @@ Evidence: `TestSavedGraveyardExileBatch`, `Definition`,
 `IdentityAndLegality`, `Frames`, `Invalid`. Existing graveyard-batch and plural
 payment suites retain rollback, phasing, replacement ordering and simultaneous
 sacrifice LKI coverage.
+
+## Repeated resolving mana payment
+
+`IfRepeatedManaPaid(player PlayerRef, cost ManaCost, count ResolutionValue,
+body ResolvingEffect)`, `UnlessRepeatedManaPaid` and
+`PayRepeatedManaOrElse(player PlayerRef, cost ManaCost, count ResolutionValue,
+paid ResolvingEffect, unpaid ResolvingEffect)` repeat a fixed generic/colored
+mana cost. Validation rejects X, hybrid symbols, negative components, missing
+operands and unbound typed references. Existing X payment APIs retain their
+contracts. Each component is multiplied by the count read once before payment
+choices or mana abilities. Nonpositive dynamic counts supply zero; payment
+still requires acknowledgment. Arithmetic overflow returns an error before
+choices or movement. An absent payer runs neither continuation.
+
+The existing `unlessPaidEffect`, mana solver and total-cost transaction own
+payment, spending policies, mana abilities and rollback. Spell/activation cost
+modifiers do not alter this resolution payment. The complete cost must be paid;
+there is no partial repeated payment. A declined or failed payment runs the
+unpaid body. Results stay local to each operation. Continuation values are read
+when their actions execute, independently of the saved payment count.
+
+Typed count/payer reads and both continuation declarations participate in the
+existing waiting delayed source query. Queries make no payment choice and read
+no count. Existing typed permanent information preserves source incarnation,
+LKI and phase facts. Return cannot replace the saved visit; actions still need a
+present subject. Stack copies retain their own controller. Clones keep separate
+mana, counters and resolution frames. Damage and counter replacement services
+remain unchanged. CR 118.2–3, 118.5, 400.7, 608.2h and 605.3a–b supply the
+payment, identity, information and mana-ability boundaries.
+
+Evidence: `TestRepeatedManaPayment*` covers all five colors plus generic mana,
+zero acceptance/decline, dynamic negatives, affordability, mana abilities,
+choice-time count changes, failed-payment rollback, definition validation,
+overflow, absent payer, cost reductions, clones and waiting declarations.
+`TestRONRepeatedManaPayment*` covers full Cyclone casting/upkeep gameplay,
+paid/unpaid paths, prevention and simultaneous observations, live counts,
+departure, return, phasing, control, stack copies and independent clones;
+branch polarity, adjacent payments, delayed execution, strict atomic loading,
+inventory roles and invalid declarations. One unique card gains compilation
+and complete-record gameplay evidence.

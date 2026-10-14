@@ -306,12 +306,7 @@ func TestRONCounterInformationInventoryAndBoundaries(t *testing.T) {
 			t.Fatal("missing semantic role", name, role)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{{"ARN", "Cyclone", "PayManaForEach"}} {
-		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
-			t.Fatalf("%s gap: %v", tc.name, err)
-		}
-	}
-	for _, tc := range []struct{ set, name string }{{"FEM", "Icatian Moneychanger"}, {"LEG", "Voodoo Doll"}, {"DRK", "City of Shadows"}} {
+	for _, tc := range []struct{ set, name string }{{"ARN", "Cyclone"}, {"FEM", "Icatian Moneychanger"}, {"LEG", "Voodoo Doll"}, {"DRK", "City of Shadows"}} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err != nil {
 			t.Fatalf("supported counter information consumer %s: %v", tc.name, err)
 		}

@@ -6,18 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **899 accepted / 87 rejected names**
-(986 total), **2,273 compiled / 172 rejected records** (2,445 total).
-The latest slice is **ADDITIVE-BATTLEFIELD-COUNT-CDA**. Paired creature CDAs
-add a fixed integer to a live battlefield count in every zone. Controller
-selection supports all permanents, your permanents and opponents' permanents.
-Gaea's Avenger now executes its complete RON record. Both controller clauses
-use Opponent, as required by local Oracle data. Native and RON tests cover
-zones, layers, membership, control, phasing, return, copies, clones and LKI.
+Latest measured result (2026-10-14): **900 accepted / 86 rejected names**
+(986 total), **2,274 compiled / 171 rejected records** (2,445 total).
+The latest slice is **REPEATED-RESOLVING-MANA-PAYMENT**. PayManaForEach
+repeats fixed generic/colored mana by a typed count read before the offer.
+Shared payment transactions supply mana abilities, full payment and rollback.
+Cyclone now executes its complete RON record, including its upkeep counter,
+paid damage batch and unpaid sacrifice. Native and RON tests cover timing,
+colors, zero payment, rollback, LKI, phasing, return, copies and clones.
 Estimated and actual gain: **one name / one record**. All earlier accepted
-records remain accepted. The vocabulary snapshot has fresh AST counts,
-positions, source hashes and loader diagnostics. All required checks pass;
-lint reports 0 issues. Final validation evidence is below.
+records remain accepted. No RON source changed; the vocabulary loader baseline
+is current. All required checks pass; lint reports 0 issues. Final validation
+evidence and card-to-test mappings are in the latest entry below.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,12 +26,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Repeated resolving mana cost:** PayManaForEach for Cyclone, using its live
-   wind-counter count and existing paid/unpaid branches and damage batch.
-2. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak;
-   audit the symbol producer and its prevention consumer as one cohesive contract.
-3. **Damage causation identity and prevention:** Silhouette; require concrete
+1. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak;
+   implement its symbol producer, saved paid amount and prevention consumer together.
+2. **Damage causation identity and prevention:** Silhouette; establish concrete
    shared downstream value before selecting an isolated identity prerequisite.
+3. **Printed permanent mana-cost activation payment:** Merseine; audit the live
+   host's mana cost, payer permission and source/host identity before lowering.
 
 ## Dependencies and source blockers
 
@@ -13691,3 +13691,162 @@ startup wiring and the removal gates are still unmet.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after ADDITIVE-BATTLEFIELD-COUNT-CDA.
+
+## 2026-10-14 — REPEATED-RESOLVING-MANA-PAYMENT
+
+### Selection and dependency evidence
+
+The working tree was clean. Read AGENTS.md, the engine API reference, execution
+architecture and removal gates, the top status and latest ledger entry, targeted
+vocabulary keys, compiler/payment/lifecycle services, payment contracts and the
+complete records for the compared cards. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 for
+collection rejection: 2,273 compiled / 172 rejected records; 899 accepted /
+87 rejected names. This was not a build, test or environment failure.
+
+Compared the latest ranked candidates, counting reprints once:
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Dependencies, other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- |
+| Repeated resolving mana cost — selected | Cyclone; 1 name / 1 record | Complete ARN record has supported wind-counter placement/read, controller upkeep, optional paid/unpaid branching, source sacrifice and simultaneous creature/player damage. Only PayManaForEach is missing. Adds reusable fixed-cost repetition with typed resolving counts and waiting declarations. No other full-card blocker. | Small: shared resolution-payment extension, one compiler adapter, native contracts and complete RON gameplay. |
+| Unbounded resolving mana payment and paid-amount prevention | Power Leak; 1 name / 6 identical reprints | Complete records require the symbol PayAnyAmountOfMana, a saved AmountOfManaPaidThisWay and PermanentDealsDamageAndPreventSomeOfIt. Host-controller upkeep and attachment exist. Needs a complete amount choice/payment/result/prevention contract, not just accepting the symbol. Enables saved paid-amount prevention; no demonstrated additional unique full-card unlock. | Medium: player choice, typed per-operation payment output and prevention consumer with ordering tests. |
+| Damage causation identity and prevention | Silhouette; 1 name / 1 record | Complete LEG record requires ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient with TargetsPermanent, AnyDamageSource, the targeted recipient and UntilEndOfTurn. Target identity exists, but a spell/ability cause must be distinct from its damage source. Enables cause-based prevention; no concrete second full-card unlock from this contract alone. | Larger: causation identity through damage producers, saved targets and replacement matching, then prevention lowering. |
+
+Candidate #1 was evaluated first. All three are single-card unlocks; none has a
+proven small multi-card gain in its complete supported context. Choose the
+smallest dependency-ready complete capability. This does not claim that one
+record's first error predicts any unrelated unlock. Estimated and actual gains
+match: one name and one record. The shared prerequisite permits typed repeated
+payments in ordinary spell, activation-resolution, trigger and delayed bodies.
+No card-name branch or fallback is used.
+
+### Established contract and reuse boundary
+
+Engine signatures:
+
+- `IfRepeatedManaPaid(PlayerRef, ManaCost, ResolutionValue, ResolvingEffect) ResolvingEffect`
+- `UnlessRepeatedManaPaid(PlayerRef, ManaCost, ResolutionValue, ResolvingEffect) ResolvingEffect`
+- `PayRepeatedManaOrElse(PlayerRef, ManaCost, ResolutionValue, ResolvingEffect, ResolvingEffect) ResolvingEffect`
+
+RON signatures are `PayManaForEach(manaList, count)/2` inside
+`MayCost(cost)/1` or `PlayerMayCost(player, cost)/2`. An adjacent nonempty
+`If`/`Unless` or two-body `IfElse` consumes bare CostWasPaid/CostWasntPaid.
+Fixed mana supports generic amounts and W/U/B/R/G. X, malformed lists and
+negative generic operands reject. Counts reuse compileInstanceValue and its
+binding checks: fixed nonnegative integers, typed counter information and
+existing resolving arithmetic/values. Negative dynamic counts become zero.
+Casting/activation costs, mandatory payments, entry and replacement contexts
+remain outside this adapter. Conditions cannot escape their continuation.
+
+Extend the existing resolutionManaPayment declaration. Read the count once
+before the offer and multiply every component into one complete cost. Zero
+requires acceptance. Overflow fails before choices or spending. Reuse
+unlessPaidEffect, ManaCostPayment, mana spending policies, the mana solver and
+shared action-payment transaction. Decline or failure selects the unpaid body;
+activation reductions do not apply. The payment does not save a global result.
+Continuation values are read when their own actions execute, so Cyclone damage
+uses its counter count after payment, separately from its saved payment cost.
+
+Definition inspection validates typed operands and traverses both branches.
+Properties combine both continuations. Waiting delayed queries include the
+payer, count and both bodies without reading amounts or making choices.
+Existing source references supply live, departure and phase information for
+exact visits. Return cannot replace a source. Copies retain their own payer;
+clones keep independent mana, counters and pending frames. Existing counter and
+damage replacement/batch services own their rules; no second subsystem was added.
+
+Local CR 118.2–3, 118.5 and 605.3a–b were read for complete payment, zero
+acknowledgment and resolution mana abilities. Existing exact-information
+contracts supply CR 400.7 and 608.2h. Local data/ARN.json Oracle text matches the
+complete Cyclone RON requirements. No source-data defect or RON edit was needed.
+Vocabulary syntax, all source hashes and occurrence counts are unchanged; only
+its loader baseline is refreshed, removing Cyclone's former rejection.
+
+### Failing-first and gameplay evidence
+
+Native tests failed first at compilation for the absent PayRepeatedManaOrElse
+signature. RON Cyclone tests failed first at the unsupported two-branch
+PayManaForEach cost. Implementation passed those contracts. Fixture repairs set
+main-phase casting and supply accepting cloned test players: normal game cloning
+uses SearchPlayer choices and does not retain custom test choice callbacks.
+No gameplay assertion was weakened. Full engine validation then found the two
+ordinary-upkeep inventory assertions still expected 64 names / 131 records;
+changed to 65 / 132 and added an explicit Cyclone count of one. Collection-count
+fixtures changed from 2,273/172 to the measured 2,274/171. The former Cyclone gap
+assertion became a successful compiler regression assertion.
+
+Card-to-test mappings:
+
+- Complete Cyclone -> `TestRONRepeatedManaPaymentCyclone`: failed/successful
+  real four-mana casting, controller-only upkeep, no early counter placement,
+  newly placed counter included in payment, complete green payment, wrong color,
+  insufficient mana, decline/sacrifice, mana abilities, prevention and complete
+  simultaneous creature/player damage before observations.
+- Complete Cyclone lifecycle -> `TestRONRepeatedManaPaymentCycloneLifecycle`:
+  departed/returned/phased source information, present source control changes,
+  copies adding counters and paying independently, independent cloned resolution,
+  original payer retained and returned source counters untouched.
+- Shared repeated-payment RON contracts -> `Identity`: live counter changes,
+  LKI, return, phase cycles, source control, copies and clones; `Branches`:
+  explicit payer, mixed generic/colored repetition, both condition polarities
+  and adjacent independent results; `Delayed`: pure waiting inspection and saved
+  departure counter information; `StrictLoad`: complete-record definition
+  validation, atomic rejection and metadata/value semantic inventory;
+  `Invalid`: X, malformed/negative costs/counts, unbound source reads, malformed
+  condition, empty branch, mandatory context and escaped result.
+- Native `TestRepeatedManaPayment*`: complete costs, all colors, zero
+  acceptance/decline, negative dynamic count, wrong color, short mana, mana
+  abilities, choice-time count capture, failed-payment rollback, clone isolation,
+  missing operands, invalid declarations, absent payer, reductions, overflow and
+  source declarations in either branch or count.
+- `TestResolutionManaPayment*`, `TestRONCounterInformation*` and both ordinary
+  upkeep text inventories remain regression evidence for existing contracts.
+
+### Validation and actual gain
+
+All required checks pass after the inventory fixture updates, in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run RONRepeatedManaPayment -count=1`: pass.
+  Focused native repeated/X payment contracts and related counter/upkeep
+  inventory tests with -count=1: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed automatic formatting/tool changes.
+  Post-lint focused repeated payment/native X regressions, collection inventory,
+  definition reconstruction and ordinary upkeep inventory checks: pass.
+- `git diff --check`: pass, including ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit 1, **2,274 compiled /
+  171 rejected records; 900 accepted / 86 rejected unique names**.
+
+The exact diagnostic comparison removes only Cyclone's former PayManaForEach
+rejection. No new/changed error and no accepted record is lost. One newly
+complete RON gameplay mapping is separate from collection compilation progress.
+Build, test and environment blockers: none. The first broader engine run's stale
+inventory expectations were fixed and the complete required checks rerun.
+
+Changed files: engine resolution_mana.go, waiting_delayed_source.go, doc.go and
+repeated_mana_payment_test.go; RON repeated_mana_payment.go/test, optional_payment.go,
+inventory.go, counter_information_test.go, three collection-count fixtures and
+two upkeep text inventory fixtures; API/rules-contract documentation, vocabulary
+loader baseline and this ledger. Commit title:
+`feat(ron): implement repeated resolving mana payment`.
+
+No Go card, generator or DSL export is removed: complete loading, runtime/test
+cutover, native startup and removal gates remain unmet. No RON source changed.
+The production loader still rejects the entire unsupported collection atomically.
+
+### Ranked next candidates
+
+1. **Unbounded resolving mana payment and paid-amount prevention:** Power Leak.
+   Implement its producer, typed payer/output frame and actual prevention consumer
+   together; count its six reprints as one name.
+2. **Damage causation identity and prevention:** Silhouette. Establish concrete
+   shared downstream value before selecting an isolated zero-unlock identity
+   prerequisite; preserve the distinction between cause and damage source.
+3. **Printed permanent mana-cost activation payment:** Merseine. Reuse current
+   typed host information and the shared activation transaction; audit missing,
+   zero and X costs, payer permission and source/host identity first.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after REPEATED-RESOLVING-MANA-PAYMENT.
