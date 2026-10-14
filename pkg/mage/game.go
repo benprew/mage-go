@@ -1193,31 +1193,35 @@ func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (Card, uuid.UUID,
 // purposes of "one or more cards leave your graveyard" triggers). Returns
 // the removed cards in input order, skipping any that weren't found.
 func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, to Zone) []Card {
+	return g.moveCardsFromGraveyard(playerID, cardIDs, to, nil)
+}
+
+func (g *Game) moveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, to Zone, destination func(Card)) []Card {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return nil
 	}
 	removed := make([]Card, 0, len(cardIDs))
+	var events []GameEvent
 	for _, id := range cardIDs {
 		c, ok := p.RemoveFromGraveyard(id)
 		if !ok {
 			continue
 		}
 		removed = append(removed, c)
-		g.FireEvent(GameEvent{
-			Type:     EvtZoneChange,
-			SourceID: id,
-			PlayerID: playerID,
-			FromZone: ZoneGraveyard,
-			ToZone:   to,
-		})
+		event := GameEvent{Type: EvtZoneChange, SourceID: id, PlayerID: playerID, FromZone: ZoneGraveyard, ToZone: to}
+		if destination == nil {
+			g.FireEvent(event)
+		} else {
+			destination(c)
+			events = append(events, event)
+		}
+	}
+	for _, event := range events {
+		g.FireEvent(event)
 	}
 	if len(removed) > 0 {
-		g.FireEvent(GameEvent{
-			Type:     EvtCardsLeftGraveyard,
-			PlayerID: playerID,
-			Amount:   len(removed),
-		})
+		g.FireEvent(GameEvent{Type: EvtCardsLeftGraveyard, PlayerID: playerID, Amount: len(removed)})
 	}
 	return removed
 }

@@ -984,6 +984,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "action"
 			}
+		case "ReturnNumberCardsFromPlayersGraveyardToHand":
+			if len(n.Args) == 3 {
+				return []string{"value", "card_filter", "player_reference"}[index]
+			}
 		case "ReturnACardFromPlayersGraveyardToBattlefield", "PutEachCardFromEachPlayersGraveyardOntoTheBattlefield":
 			if len(n.Args) == 3 {
 				return []string{"graveyard_card_filter", "player_reference", "entry_operation"}[index]

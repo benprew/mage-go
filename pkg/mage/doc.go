@@ -1,5 +1,20 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DiscardCountInto] saves completed discards after one shared replacement batch.
+// Required choices use distinct saved hand visits. Short hands supply only their
+// available cards. Library replacements count; cancellation and returned visits
+// do not. Zero amounts and missing players clear the saved count.
+// [ReturnChosenGraveyardCardsToHand] selects distinct current graveyard visits
+// at resolution. All choices precede movement. Departure and return cannot
+// supply a saved visit. Cards enter their owners' hands before zone observations.
+// One graveyard departure event reports the actual batch count.
+// Existing callers of [Game.MoveCardsFromGraveyard] keep their event timing.
+// RON accepts DiscardNumberCards with fixed values or bound ValueX, and the
+// lexical NumCardsDiscardedThisWay result after a direct discard instruction.
+// ReturnNumberCardsFromPlayersGraveyardToHand accepts that count, AnyCard and
+// an existing singular player reference. Copies, clones and delayed bodies
+// keep separate result frames. Other amounts and filters need adapters.
+//
 // [WhenCombatPairUntilEndOfCombat] saves one watched battlefield visit.
 // Each new block pair can trigger it until combat priority ends.
 // The creator keeps control. Source control changes and ability removal do not

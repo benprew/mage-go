@@ -15,6 +15,15 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "NumCardsDiscardedThisWay" {
+		if n.Kind != Symbol || ctx.discardCount == nil || ctx.drawReplacementBody || ctx.enteringSource {
+			return nil, problem(n, "unbound or incompatible discard count")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.discardCounts[ctx.discardCount])
+		}, nil
+	}
+
 	if n.Name == "TheClampedAmountOfDamageDealtThisWay" {
 		if ctx.enteringSource || ctx.drawReplacementBody {
 			return nil, problem(n, "damage outcomes require an ordinary resolving body")

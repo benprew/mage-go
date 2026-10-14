@@ -2017,19 +2017,36 @@ func (r damageResultSource) inspectDefinition() definitionNode {
 
 // --- from composable_discard.go ---
 type discardSubjectEffect struct {
-	subject        PlayerRef
-	amount         ResolutionValue
-	cardResult     *CardBinding
-	cardsResult    *CardsBinding
-	optionCount    int
-	setOptionCount int
-	invalidOption  bool
+	countResult      *NumberBinding
+	countOptionCount int
+	subject          PlayerRef
+	amount           ResolutionValue
+	cardResult       *CardBinding
+	cardsResult      *CardsBinding
+	optionCount      int
+	setOptionCount   int
+	invalidOption    bool
 }
 
-// DiscardCardResultOption selects a card result from one discard instruction.
+// DiscardCardResultOption selects a saved result from one discard instruction.
 type DiscardCardResultOption interface {
 	discardCardResultOption()
 	applyDiscardCardResult(*discardSubjectEffect)
+}
+
+type discardedCountOption struct{ binding *NumberBinding }
+
+// DiscardCountInto saves the number of completed discards after replacements.
+func DiscardCountInto(binding *NumberBinding) DiscardCardResultOption {
+	return discardedCountOption{binding}
+}
+func (discardedCountOption) discardCardResultOption() {}
+func (o discardedCountOption) applyDiscardCardResult(e *discardSubjectEffect) {
+	e.countResult = o.binding
+	e.countOptionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
 }
 
 type discardedCardOption struct{ binding *CardBinding }
@@ -2071,7 +2088,11 @@ func (*discardSubjectEffect) Properties() EffectProperties {
 func (e *discardSubjectEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
 	if e.invalidOption {
-		n.problem = "supply a non-nil discard card binding"
+		n.problem = "supply a non-nil discard result binding"
+	} else if e.countOptionCount > 1 {
+		n.problem = "supply the discard count result only once"
+	} else if e.countResult != nil && (e.cardResult != nil || e.cardsResult != nil) {
+		n.problem = "use a separate instruction for card and count results"
 	} else if e.optionCount > 1 {
 		n.problem = "supply the discard card result only once"
 	} else if e.setOptionCount > 1 {
@@ -2080,6 +2101,10 @@ func (e *discardSubjectEffect) inspectDefinition() definitionNode {
 		if fixed, ok := e.amount.(fixedValue); !ok || fixed.n != 1 {
 			n.problem = "discard one card when saving its card result"
 		}
+	}
+	if e.countResult != nil {
+		n.bindingWrites = append(n.bindingWrites, e.countResult)
+		n.children = append(n.children, definitionEdge{"count result", e.countResult})
 	}
 	if e.cardResult != nil {
 		n.bindingWrite = e.cardResult
@@ -2092,6 +2117,24 @@ func (e *discardSubjectEffect) inspectDefinition() definitionNode {
 	return n
 }
 func (e *discardSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.countResult != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.countResult] = 0
+		id, ok := e.subject.resolvePlayer(ctx)
+		if !ok {
+			return nil
+		}
+		player := ctx.Game.GetPlayer(id)
+		if player == nil {
+			return nil
+		}
+		amount := max(0, e.amount.resolveValue(ctx))
+		actions := chooseHandDiscards(ctx, snapshotHandGroup(ctx, player), amount)
+		ctx.Game.resolution.numberBindings[e.countResult] = len(ctx.Game.discardActionsTogetherWithEvents(actions, false))
+		return nil
+	}
 	if e.cardResult != nil {
 		delete(ctx.Game.resolution.cardBindings, e.cardResult)
 	}

@@ -20117,3 +20117,56 @@ spell-created watches and separate captures. `TestRONCombatPairDelayFlotilla`,
 Goblin Flotilla record, exercise optional payment, native combat and extra
 combats, and prove factory isolation and atomic invalid collection rejection.
 `TestRONTextLandwalkRecords` supplies its complete-record islandwalk evidence.
+
+## Required variable discard count and chosen graveyard hand batch
+
+`DiscardCountInto(binding *NumberBinding) DiscardCardResultOption` adds an actual
+count result to `Discard`. Definition checks require one nonnil count binding;
+count and card-result options require separate instructions. Number reads must
+follow a producer. Existing card-result and no-result callers retain their paths.
+
+The new count path uses `snapshotHandGroup`, `chooseHandDiscards` and
+`discardActionsTogetherWithEvents`. It reads the requested amount once, makes
+one required choice capped to the hand, and uses distinct original hand visits.
+Invalid, repeated or incomplete selections use the shared mandatory fallback.
+Replacements are prepared before movement. Events observe the whole discard
+batch. The saved count includes completed library destinations, but excludes
+cancellation and visits that leave and return. Missing players and nonpositive
+amounts clear old values. Shared resolution-number frames retain counts in
+copies, clones and delayed captures; no global action result is added.
+
+`ReturnChosenGraveyardCardsToHand(graveyard PlayerRef, amount ResolutionValue,
+filter CardFilter) ResolvingEffect` reads the amount once and saves the current
+matching graveyard visits. The effect controller makes required distinct
+choices before any move. Invalid choices use the first remaining candidate.
+Empty and short graveyards supply only available cards. Newly added cards cannot
+join the selection; departed and returned visits cannot supply moves. Owners
+receive all actual returns before per-card zone observations and one
+`EvtCardsLeftGraveyard` notification with the actual count. A destination
+callback in the existing graveyard movement service supplies this timing;
+public `MoveCardsFromGraveyard` callers retain their prior event timing.
+The player and amount retain explicit source reads for waiting queries.
+
+CR 701.9a–c defines discard, affected-player choice and hidden replacement
+characteristics. Counts require no card characteristics. CR 608.2c–d and
+609.3 define instruction order, resolving choices and short operations;
+CR 400.7 defines exact zone visits. This shape has no battlefield subject,
+phasing read, target announcement choice or payment rollback. Recall's existing
+X payment and spell-exile services remain responsible for those contracts.
+
+RON owns the spelling and lexical result plan. It accepts direct
+`DiscardNumberCards(ValueX)` and fixed nonnegative discard amounts, the symbol
+`NumCardsDiscardedThisWay` after a direct discard producer, and
+`ReturnNumberCardsFromPlayersGraveyardToHand(NumCardsDiscardedThisWay, AnyCard,
+player)` with existing singular player references. A later producer supplies a
+fresh binding. Branch-local producers do not escape. Existing delayed captures
+retain saved counts. Unbound X/counts, malformed result symbols, negative fixed
+amounts, other filters/return amounts and incompatible players reject before
+execution. No RON source correction or card-name branch is needed for Recall.
+
+Engine evidence: `TestDiscardCountReturnOutcomes`, `ChoicesAndVisits`,
+`Definition`, `SavedFramesAndReset`, `MandatorySelection`.
+RON evidence: `TestRONDiscardCountReturnRecall`, `Invalid`, `StrictLoad`,
+`InstancesAndDelayed`. Recall has complete-record native payment, X=0, short
+hand, copy, clone, factory, resolving return and exile evidence. Bazaar of
+Baghdad, Mindstab Thrull and Mind Bomb retain their existing discard paths.

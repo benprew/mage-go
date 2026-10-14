@@ -170,8 +170,8 @@ func TestRONSpellExileAllHallowsEve(t *testing.T) {
 
 func TestRONSpellExileRecall(t *testing.T) {
 	node := repositoryRecord(t, "LEG", "Recall", "LEG.ron")
-	if _, err := Compile(node); err == nil || !strings.Contains(err.Error(), "discard") {
-		t.Fatalf("unexpected remaining gap: %v", err)
+	if _, err := Compile(node); err != nil {
+		t.Fatalf("complete Recall record rejected: %v", err)
 	}
 	body := node.Fields["Rules"].Args[0].Args[0]
 	body.Args = []Node{{Kind: List, Args: []Node{body.Args[0].Args[2]}}}

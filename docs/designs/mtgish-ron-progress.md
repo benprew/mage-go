@@ -6,36 +6,33 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **873 accepted / 113 rejected names**
-(986 total), **2,241 compiled / 204 rejected records** (2,445 total).
-The latest slice is **COMBAT-BOUNDED-PAIRED-DELAY**. Resolving permanent-source
-bodies accept the source block/becomes-blocked union with matching creature
-filters, ActionList and UntilEndOfCombat. Creation saves the watched visit and
-creator controller; detection saves each opponent before trigger placement.
-The subscription repeats through end-of-combat priority and then expires.
-First-strike grants keep their separate turn lifetime. Return and phasing
-cannot transfer saved identities. Pending bodies, factories, copies and clones
-keep separate frames. Host and single-direction RON forms remain unsupported.
-Estimated and actual full-card gains are **one name / one record**.
-Goblin Flotilla gains complete-record native attack/block and payment evidence.
+Latest measured result (2026-10-14): **874 accepted / 112 rejected names**
+(986 total), **2,242 compiled / 203 rejected records** (2,445 total).
+The latest slice is **DISCARD-COUNT-GRAVEYARD-HAND**. Direct resolving discard
+instructions bind NumCardsDiscardedThisWay; DiscardNumberCards accepts bound X.
+Completed replacement-batch outcomes supply the count. Required selections
+keep distinct exact hand visits. Resolving graveyard choices save distinct visits
+before movement and return cards to their owners' hands before zone observations.
+Short hands, replacement destinations, cancellation and returned visits keep
+actual counts. Factory instances, copies, clones and delayed captures keep
+separate frames. Estimated and actual gains are **one name / one record**.
+Recall gains complete unchanged-record payment, discard, return and exile tests.
 
-The loader still rejects the collection atomically. Only Goblin Flotilla's
-rejection is removed; no remaining diagnostic changed or new rejection appeared.
+The loader still rejects the collection atomically. Only Recall's rejection is
+removed; no remaining diagnostic changed or new rejection appeared.
 Runtime cutover, Go-card removal and DSL cleanup remain gated.
 
 ## Ranked next candidates
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Variable discard result and saved-count return — Recall.** One estimated
-   full-card unlock if both the effect result and count-based return are complete.
-   Use announced X, actual discard outcomes and resolving graveyard choices.
-2. **Delayed damage-event capture — Glyph of Life.** One estimated full-card
-   unlock. Reuse saved delayed frames, exact subjects and damage-event facts;
-   inspect source/recipient filters, replacements and actual damage before editing.
-3. **Granted targeted activation prerequisite — Equinox.** Zero immediate
-   unlocks until its destruction-prediction contract exists. Reassess shared
-   grant consumers before selecting this prerequisite.
+1. **Delayed damage-event capture — Glyph of Life.** One potential full-card
+   unlock after correcting the source predicate to attacking creatures.
+2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
+   unlocks until destruction prediction is available. Reassess shared value.
+3. **Player next-main delayed event and saved spell value — Mana Drain.**
+   Inspect both the event and general resolving-value adapter before estimating
+   a complete-card gain.
 
 ## Dependencies and source blockers
 
@@ -8350,3 +8347,192 @@ the design's cutover/removal gates remain unmet. Stop after this one slice.
 
 Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
 removal and unused DSL cleanup remain incomplete.
+
+## 2026-10-14 — DISCARD-COUNT-GRAVEYARD-HAND
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and the complete RON compiler
+suite passed. The baseline loader exited 1 with 2,241 compiled / 204 rejected
+records and 873 accepted / 113 rejected names. This was atomic collection
+rejection, not a build or test failure. No unrelated change was present.
+
+The latest ranked candidates were inspected first. Candidate 1 had one immediate
+unlock, so all three were compared before selection. Complete records were read
+for Recall, Glyph of Life, Equinox, Bazaar of Baghdad, Mindstab Thrull, Mind Bomb,
+Life Matrix and Zombie Master. Reprints count once.
+
+| Candidate | Distinct affected names and full-card estimate | Remaining blockers | Downstream value | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Variable discard result and saved-count hand return | Recall: 1 name / 1 record. Bazaar of Baghdad and Mindstab Thrull already use supported fixed discards; Mind Bomb already has per-player counts. They gain no new full-card unlock. | None in Recall: X payment and resolving spell exile already work. Count capture and required plural graveyard choice need engine contracts. | Shared required discard-batch outcomes and exact plural graveyard return; existing fixed/card-result/per-player callers remain compatible. | Medium: one count option, one resolving return service, scoped result lowering and identity/replacement/copy/clone tests. |
+| Delayed damage-event capture | Glyph of Life: at most 1 name / 1 record after a source correction; 0 correct full-card unlocks from an adapter alone. | RON filters the damage source as a Wall creature. Local Oracle requires an attacking creature. Needs exact watched recipient, actual damage capture, duration and controller contracts. | Shared damage-event frames in created delayed bodies; concrete current consumer is Glyph of Life. | High relative to this slice: delayed damage subscription, actual damage/prevention/replacement timing and source correction. |
+| Granted targeted activation prerequisite | Equinox: 0 immediate unlocks. Life Matrix and Zombie Master are the other unique activated-grant consumers and already compile with untargeted grants. | Equinox still needs WouldDestroyAPermanent prediction after Targeted lowering. | Target declaration isolation in acquired abilities; no additional current unsupported targeted-grant record was found. | Medium for the prerequisite, plus a separate high-effort destruction prediction contract and interactions. |
+
+Recall wins on a credible complete-card gain with existing dependencies. The
+inspected shared grant work has no immediate additional multi-card gain, and
+Glyph of Life cannot be implemented faithfully without its source audit. This
+run completes only the cohesive discard-outcome-to-hand-return slice.
+
+### Contract, signatures, contexts and reuse
+
+Engine additions:
+
+- `DiscardCountInto(binding *NumberBinding) DiscardCardResultOption` on
+  `Discard(player PlayerRef, amount ResolutionValue, options ...DiscardCardResultOption)`.
+- `ReturnChosenGraveyardCardsToHand(graveyard PlayerRef, amount ResolutionValue,
+  filter CardFilter) ResolvingEffect`.
+
+The count option requires one nonnil binding and rejects mixed count/card-result
+options. A required choice reads the amount once, caps it to the hand, selects
+distinct original visits and uses the shared mandatory fallback for invalid or
+incomplete selections. `snapshotHandGroup`, `chooseHandDiscards` and
+`discardActionsTogetherWithEvents` supply identity, ordering and replacements.
+Completed library destinations count; cancellation and returned visits do not.
+Nonpositive amounts and missing players clear the count. Existing fixed-discard,
+card-result and per-player result callers retain their paths.
+
+The return service saves matching current graveyard visits at resolution. The
+effect controller selects distinct cards before movement. Short graveyards
+supply available cards; invalid choices use the first remaining candidate.
+New cards cannot join the selection. Departure and return cannot supply a saved
+visit. The existing graveyard movement service gains an internal destination
+callback: all selected cards enter their owners' hands before zone observations,
+then one EvtCardsLeftGraveyard reports the actual batch count. Existing public
+MoveCardsFromGraveyard callers retain their prior event timing.
+
+RON accepts `DiscardNumberCards(Integer(n))` for nonnegative n and
+`DiscardNumberCards(ValueX)` with a bound X. A direct DiscardACard or
+DiscardNumberCards instruction can produce the symbol NumCardsDiscardedThisWay
+in its remaining lexical action list. A later direct producer supplies a new
+binding. Branch-local producers cannot escape; existing delayed bodies can
+capture the result. `ReturnNumberCardsFromPlayersGraveyardToHand(
+NumCardsDiscardedThisWay, AnyCard, player)` accepts existing singular player
+references. Other return amounts/filters and other producer shapes need adapters.
+Unbound values, malformed declarations, incompatible players and out-of-scope
+reads reject before factory use. Factories allocate fresh typed result bindings.
+Shared number frames retain isolation through resolutions, copies, clones and
+delayed captures. No global last-action slot or game-time declaration panic exists.
+
+RON owns syntax, roles, source diagnostics and lexical plans. The engine owns
+choices, exact visits, actual results, replacement batches and movement. X mana
+locking, spell-copy controller/identity and resolving spell exile are reused.
+CR 701.9a–c, 608.2c–d, 609.3 and 400.7 supply the rules contracts. This shape
+has no new battlefield LKI/phasing subject, target-announcement choice, cost
+rollback or replacement-order subsystem. Existing payment and replacement
+services retain those responsibilities.
+
+### Failing-first evidence and card-to-test mapping
+
+Engine tests first failed compilation for missing DiscardCountInto and
+ReturnChosenGraveyardCardsToHand. Fixture target/filter API calls were corrected,
+then the failure was confirmed to contain only the new missing signatures.
+Complete-record RON tests failed at LEG.lines.ron:213:183 with
+`unsupported fixed discard amount (ValueX)`; the synthetic count collection
+also rejected. Implementation then supplied the contracts and scoped adapter.
+Later fixture corrections used ActivePlayer for a direct engine application
+without target placement, and resolved each sorcery before casting the next
+factory instance. Native copies provide pending interleaving evidence. No rule
+or assertion was removed to hide an unsupported behavior.
+
+- **Recall → TestRONDiscardCountReturnRecall.** Complete unchanged LEG record;
+  native XXU payment, zero X, short hand, resolving choices, changed copy
+  controller, clone isolation and final exile. Mana is fully consumed as expected.
+- **Recall → TestRONDiscardCountReturnInstancesAndDelayed.** Distinct factories
+  and player hands/counts; a synthetic activation captures an actual discard
+  result in a delayed body with separate cloned-game execution.
+- **Recall → TestRONDiscardCountReturnCompleteLoad.** Complete raw LEG record
+  loads into an explicit registry and creates the card with no fallback.
+- **Recall → TestRONSpellExileRecall.** Preservation test now requires complete
+  record acceptance before retaining the prior isolated exile assertion.
+- **Compiler → TestRONDiscardCountReturnInvalid and StrictLoad.** Unbound and
+  malformed count reads, incompatible filters/players, negative fixed amounts,
+  missing arguments, branch escape, independent producers and atomic registry
+  rejection have explicit assertions. The retained fixed-discard invalid suite
+  rejects unbound ValueX in its original activation context.
+- **Engine → TestDiscardCountReturnOutcomes.** Actual counts for ordinary,
+  library-replaced, cancelled and returned-visit discards; zero/short operations
+  and discard events observing the entire batch.
+- **Engine → TestDiscardCountReturnChoicesAndVisits.** Exact graveyard visits,
+  return during choice, newly added cards, distinct required choices, controller
+  selection, owner destinations, short/zero operations and full destination
+  visibility in the single graveyard departure observation.
+- **Engine → TestDiscardCountReturnDefinition, SavedFramesAndReset and
+  MandatorySelection.** Invalid definitions, producer dominance, source departure,
+  delayed capture, clones, zero/missing-player reset, duplicate/foreign/nil
+  selections and the mandatory distinct-choice fallback.
+- **Preservation → full compiler/engine/repository suites.** Bazaar of Baghdad,
+  Mindstab Thrull, Mind Bomb and prior accepted records retain their paths and
+  tests. Inventory and definition-plan count assertions are updated.
+
+Estimated and actual gains are **1 unique name / 1 record**. Complete-card native
+RON gameplay coverage gains **Recall**. Synthetic service tests add no inventory
+coverage. Compilation progress is separate from gameplay coverage.
+
+### Source defects and removal gates
+
+Recall's RON matches local data/LEG.json Oracle text: discard X, return one card
+per actual discard, then exile the spell. No source correction was needed.
+Glyph of Life at LEG.lines.ron:103 uses
+WhenAPermanentDealsDamageToAPermanent(And([IsCreatureType(Wall),
+IsCardtype(Creature)]), SinglePermanent(Ref_TargetPermanent)). Its local Oracle
+text in data/LEG.json requires damage **by an attacking creature** to the chosen
+Wall. The current source predicate is a transcription defect. A later delayed
+capture slice must correct it with Oracle/rules evidence and validate the whole
+record; this run leaves it explicitly blocked and unchanged.
+
+No RON source changed, so vocabulary source hashes and snapshot remain valid.
+Inventory lowering now assigns value/card-filter/player-reference roles to the
+new return form. No Go definitions, broad DSL functions, generators or runtime
+registries were removed: complete loading, gameplay mapping and native startup
+still gate their removal. No fallback or partial production registry was added.
+
+### Validation and loader evidence
+
+Required checks ran in fast-fail order. `go test ./pkg/mage/dsl/ron -run
+TestRONDiscardCountReturn -count=1` and engine `TestDiscardCountReturn` passed.
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` passed. The implement-engine skill's
+`go test ./... -short -count=1` also passed.
+
+The first `make lint` reported one prealloc issue in the new compiler helper.
+The effect slice now allocates capacity for the producer and body. Focused RON
+checks, build, vet, engine short tests and make test all passed again after that
+fix. Final `make lint` passed with **0 issues**. Automatic formatting and all
+final diffs were reviewed; no unrelated file changed. `git diff --check` passed.
+Focused discard-count, fixed-discard and Recall spell-exile preservation tests
+passed again after lint. No check was weakened and no environment blocker remains.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+records remain: **2,242 compiled / 203 rejected records**, **874 accepted / 112
+rejected names**. A keyed comparison against the fresh baseline removes exactly
+Recall at LEG.lines.ron:213, adds no rejection and changes no remaining diagnostic.
+All previously accepted records remain accepted. Collection publication remains
+atomic and unavailable until the remaining records are supported.
+
+Changed files: engine composable_actions.go, chosen_graveyard_hand.go, game.go
+and discard_count_return_test.go; compiler discard_count_return.go and tests,
+compiler.go, optional_payment.go, player_scope.go, sacrifice_value.go and
+inventory.go; preservation expectations in definition_plan_test.go,
+inventory_test.go, numeric_consumers_test.go and spell_exile_test.go;
+pkg/mage/doc.go, docs/dsl-reference.md, docs/engine-rules-contracts.md and this
+ledger. The top status and candidate list are refreshed; historical entries
+remain unchanged. No RON source changed.
+
+### Ranked next candidates
+
+1. **Delayed damage-event capture — Glyph of Life.** Reuse captured frames and
+   actual damage events. Correct the source predicate to attacking creatures
+   with the local Oracle evidence above. Estimate one full-card unlock; cover
+   exact recipient visits, saved controller, prevention/replacements and expiry.
+2. **Granted targeted activation prerequisite — Equinox.** Zero immediate
+   unlocks until destruction prediction exists. Other activated-grant consumers
+   are already supported; reassess shared value before selecting prediction.
+3. **Player next-main delayed event and saved spell value — Mana Drain.**
+   Its complete LEG record has CounterSpell, the player's next-main event and
+   AddManaRepeated with ManaValueOfSpell. The value currently has a resolution
+   payment adapter, not a general resolving-value adapter. Event lowering alone
+   gives zero immediate unlocks; reassess a cohesive delayed-value slice before
+   claiming a full-card gain. Keep saved departure facts separate from targets.
+
+Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
+removal and unused DSL cleanup remain incomplete. Stop after this slice.

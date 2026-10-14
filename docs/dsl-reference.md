@@ -15305,3 +15305,32 @@ creature filter adapter applies. `Trigger_ThatOtherCreature` and the existing
 Host subjects, single directions, other durations and noncreature filters remain
 unsupported. Goblin Flotilla uses this form with optional red mana payment and
 turn-scoped first strike. No Go card factory supplies its execution.
+
+## Saved discard count and chosen graveyard return
+
+`Discard(player PlayerRef, amount ResolutionValue, DiscardCountInto(result
+*NumberBinding))` saves completed discards from one required choice and shared
+replacement batch. It uses exact hand visits, caps the choice to the available
+hand, and fills incomplete or invalid required selections with distinct legal
+cards. A library destination still counts; cancellation or a returned hand
+visit does not. Zero and missing players clear the result. Count and card-result
+options require separate instructions.
+
+`ReturnChosenGraveyardCardsToHand(graveyard PlayerRef, amount ResolutionValue,
+filter CardFilter) ResolvingEffect` lets the resolving controller select the
+required number of distinct cards, capped to available matching cards. Choices
+save graveyard visits before movement. Cards go to their owners' hands; zone
+observations follow the entire batch. Use a nonzero filter declaration.
+
+RON accepts `DiscardNumberCards(Integer(n))` for nonnegative n and
+`DiscardNumberCards(ValueX)` when X is bound. A direct discard instruction binds
+`NumCardsDiscardedThisWay` in its remaining lexical action list. A later direct
+discard supplies a new result. Branch-local producers cannot escape the branch.
+Saved results can be captured by existing delayed bodies.
+`ReturnNumberCardsFromPlayersGraveyardToHand(NumCardsDiscardedThisWay, AnyCard,
+player)` accepts an existing singular player reference. Other return amounts,
+filters and discard producer forms require adapters.
+
+Evidence: `TestDiscardCountReturn*` and `TestRONDiscardCountReturn*`. Recall's
+complete unchanged LEG record executes X payment, discard, chosen return and
+spell exile through the native stack. Compilation and gameplay gain one card.

@@ -37,6 +37,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	discardCounts        map[*discardCountPlan]*mage.NumberBinding
 	eventAbilities       map[*abilityEventPlan]*mage.AbilityBinding
 	sourceZones          map[*sourceZonePlan]*mage.CardBinding
 	controlExchanges     map[*controlExchangePlan]*mage.ControlExchangeResultBinding

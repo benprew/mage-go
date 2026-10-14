@@ -17,6 +17,7 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	discardCount         *discardCountPlan
 	sourceZone           *sourceZonePlan
 	resolving            bool
 	colorEntryChoice     bool
@@ -1844,6 +1845,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return compilePlayerEffect(n.Args[1], ctx)
 	case "DiscardTheCardDrawnThisWay":
 		return compileDrawnCardDiscard(n, ctx)
+	case "ReturnNumberCardsFromPlayersGraveyardToHand":
+		build, err := compileGraveyardHandReturn(n, ctx)
+		return []effectFactory{build}, err
 	case "DestroyAPermanentNoRegen", "ChooseTwoColorWords", "ChooseTwoBasicLandTypes", "RevealNumberCardsFromHandAtRandomAndDiscardEachCardOfType", "RevealHandAndDiscardACardOfTypeAtRandom", "PutTopOfLibraryInHand", "PutTopOfLibraryInGraveyard", "TakeAnExtraTurn", "ChooseACardName", "AnteTopCardOfLibrary", "DiscardHand", "MillACard", "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "GainLifeForEach", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddManaRepeatedWithModifiers":
@@ -2078,29 +2082,15 @@ func compileLifeEffect(n Node, ctx scope, amount valueFactory) ([]effectFactory,
 }
 
 func compileFixedDiscard(n Node, ctx scope) ([]effectFactory, error) {
-	amount := 1
-	if n.Name == "DiscardACard" {
-		if n.Kind != Symbol {
-			return nil, problem(n, "DiscardACard requires a symbol")
-		}
-	} else {
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		value := n.Args[0]
-		if value.Name != "Integer" {
-			return nil, unsupported(value, "fixed discard amount")
-		}
-		if err := arity(value, 1); err != nil {
-			return nil, err
-		}
-		if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
-			return nil, problem(value, "discard amount must be a nonnegative integer")
-		}
-		amount = value.Args[0].Integer
+	amount, err := compileDiscardAmount(n, ctx)
+	if err != nil {
+		return nil, err
 	}
 	return []effectFactory{func(bindings instanceBindings) mage.Effect {
-		return mage.Discard(ctx.player.build(bindings), mage.Fixed(amount))
+		if n.Name == "DiscardNumberCards" && n.Args[0].Name == "ValueX" {
+			return mage.Discard(ctx.player.build(bindings), amount(bindings), mage.DiscardCountInto(mage.BindNumber("discard count "+n.Position.String())))
+		}
+		return mage.Discard(ctx.player.build(bindings), amount(bindings))
 	}}, nil
 }
 
