@@ -14638,3 +14638,28 @@ controller upkeep, two-Island payment, exact source destruction and regeneration
 `Gameplay`, `Invalid` and `CollectionAndTextBoundary` cover event scope, fresh
 instances, strict loading and text boundaries. Native `TestOpponentUpkeep*`
 covers event capture, source lifetime, delays, copies and definition checks.
+
+## RON live entry choices in static player conditions
+
+`PlayerPassesFilter(player, ControlsA(filter))` and `ControlsNo(filter)` in
+static `If`, `Unless` and `IfElse` accept bare `You` or `TheChosenPlayer`.
+The latter requires the source's validated `ChooseAPlayer(Opponent)` entry
+operation. A resolving player choice cannot supply a static entry choice.
+
+Filters retain the static condition grammar. They also accept
+`IsColor(TheChosenColor)` alone or inside nonempty, nested `And` lists. The
+source must have a validated `ChooseAColor(AnyColor)` entry operation. Existing
+fixed `Or` filters remain valid; a chosen-color read inside `Or` is rejected.
+Tuple reads, missing producers and action-local players are rejected.
+Conditional body and layer restrictions remain unchanged.
+
+Lowering uses `PlayerControls(ChosenPlayerOf(This), filter)` for fixed filters
+and `PlayerControlsChosenColor(player, filter)` for chosen-color conjunctions.
+`ControlsNo` negates the condition. Existing fixed `You` conditions retain their
+prior lowering. Queries use live source choices and current subject membership.
+
+`TestRONChosenStaticJihadRequirement` executes Jihad's exact entry and static
+rules with its unchanged metadata. Its complete record still rejects the
+separate chosen-player no-permanent state event. This test is subrule evidence,
+not full-card gameplay coverage. `TestRONChosenStaticPlayerAndColorContexts`
+and `TestRONChosenStaticInvalid` verify supported contexts and rejection.

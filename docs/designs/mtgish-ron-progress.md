@@ -8,35 +8,32 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **859 accepted / 127 rejected names**
 (986 total), **2,206 compiled / 239 rejected records** (2,445 total).
-The latest slice is **OPPONENT-UPKEEP-EVENT**. Ordinary upkeep triggers can
-select the current source controller's opponent and capture that upkeep player.
-Estimated and actual gains are one full name and one record: Psychic Allergy.
-Its complete unchanged RON record now has entry, damage and payment gameplay
-coverage. The strict loader still rejects the collection atomically.
+The latest slice is **LIVE-ENTRY-CHOICE-STATIC-MEMBERSHIP**. Static player
+conditions read the source's entry-chosen player and color through live engine
+queries. Jihad's exact entry and conditional global P/T rules have gameplay
+coverage. Its complete record still rejects its separate state-event adapter.
+Estimated and actual full-card gains are zero names and zero records.
 
-Pending events keep independent players and controllers through source control
-changes, departure, return, phasing, copies, clones and delayed bodies. Phasing
-and ability removal stop new detection. Opponent upkeep text revision,
-intervening-if and granted-event adapters remain separate.
-Runtime cutover, Go-card removal and DSL cleanup stay gated.
+Source visits, phasing, current controller/color membership, ability removal,
+independent instances and clones have contract evidence. The strict loader still
+rejects the collection atomically. Runtime cutover, Go-card removal and DSL
+cleanup stay gated. Compilation counts do not establish full-card gameplay.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Live chosen-player/chosen-color static membership.** Jihad's joint entry is
-   complete. A live membership service supplies its conditional static bonus;
-   state detection retains a separate adapter. Zero immediate unlocks from the
-   static prerequisite; medium effort. Recompare shared multi-card work first.
-2. **Mandatory entry exile payment with announced X.** Frankenstein's Monster
-   can reuse ordered required entry execution. Entry transaction, result/failure
-   scope and combination counter placement remain. Zero immediate gain from
-   the payment prerequisite; medium/high effort.
-3. **Persistent chosen-number entry and resolving choices.** Shapeshifter needs
-   one per-visit number shared by entry, optional upkeep updates and live P/T.
-   Resolution-only lexical number results cannot supply this lifetime. Separate
-   entry and static adapters remain; medium/high effort.
+1. **Chosen-player no-permanent state event — Jihad.** Entry choices and live
+   static membership are complete. Add state detection with pending-trigger
+   suppression and exact source lifetime. One potential full name / record;
+   medium effort. Recompare shared multi-card candidates before selecting.
+2. **Mandatory entry exile payment with announced X — Frankenstein's Monster.**
+   Entry transaction, result/failure scope and combination counter placement
+   remain. Zero immediate gains from payment alone; medium/high effort.
+3. **Persistent number choices — Shapeshifter.** Entry 0–7 choice, optional
+   controller-upkeep update and live P/T must share one per-visit number. One
+   potential name / record after all three contexts; medium/high effort.
 
 ## Dependencies and source blockers
 
@@ -4791,3 +4788,174 @@ production registry or broad DSL export changed.
 
 This run stops after opponent upkeep. Complete migration remains gated by the
 remaining collection, gameplay, runtime and removal work.
+
+## 2026-10-13 — LIVE-ENTRY-CHOICE-STATIC-MEMBERSHIP
+
+### Baseline, candidate comparison and selection
+
+The working tree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1`
+and `make build` passed. Fresh `go run ./cmd/loadcards -json` exited 1 with
+2,206 compiled / 239 rejected records and 859 accepted / 127 rejected names.
+This was collection rejection, not a build or test failure.
+
+The latest ranked candidates were compared from their complete records:
+
+| Candidate | Distinct affected names | Estimated full-card gains | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- | --- |
+| Live chosen-player/color static membership | Jihad (ARN:44) | 0 names / 0 records | Enables exact global +2/+1 bonus; chosen-player no-permanent state event remains | Medium |
+| Mandatory entry exile payment/results | Frankenstein's Monster (DRK:43) | 0 from payment alone | Ordered entry and announced X exist; exact graveyard payment, entry-local outcomes, failure routing and chosen combination counters remain | Medium/high |
+| Persistent number choices | Shapeshifter (ATQ:61) | 1 name / 1 record after all contexts | Entry 0–7 choice, optional upkeep rechoice and live power / 7-minus-choice toughness need one per-visit lifetime | Medium/high |
+
+Candidate #1 was selected as the ranked dependency-ready prerequisite. Joint
+entry choices already exist, and live membership is a small complete boundary
+that unblocks Jihad's static rule and supplies a condition reusable by later
+state detection. Neither other ranked candidate offers an immediate multi-card
+unlock; both require more new entry state before their complete cards work.
+Reprints are counted once. No frequency-based unlock estimate was used.
+
+The pre-edit contract was a pure live query: keep the source's entry choices,
+read current subject controller/color/token status, exclude phased objects,
+reject stale source visits, and leave state-event adaptation separate. RON owns
+syntax, declaration validation and choice scope. The engine owns membership
+and identity; existing entry and layer services keep their contracts.
+
+### Exact supported shapes, dependencies and reuse
+
+In static `If`, `Unless` and `IfElse`, support:
+
+- `PlayerPassesFilter(You | TheChosenPlayer, ControlsA(filter))`.
+- The same player forms with `ControlsNo(filter)`.
+- Existing static fixed filters, plus `IsColor(TheChosenColor)` alone or in
+  nonempty, nested `And` conjunctions with supported fixed filters.
+
+`TheChosenPlayer` requires the source's validated opponent entry declaration.
+`TheChosenColor` requires its validated five-color entry declaration. A resolving
+choice, tuple read or loop/event player cannot supply these static choices.
+Fixed `Or` filters keep their support. Chosen-color disjunctions, target filters,
+replacement contexts and the chosen-player state-event adapter remain rejected.
+The existing conditional body/layer grammar is unchanged.
+
+Engine signatures:
+
+- `PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition`
+  now also accepts `ChosenPlayerOf(This)`. Existing controller, active-player
+  and saved-player paths use the same shared reader with unchanged semantics.
+- `PlayerControlsChosenColor(player PlayerRef, filter PermanentFilter)
+  StateCondition` accepts `You`, `ActivePlayer` or `ChosenPlayerOf(This)`.
+
+The new condition composes `PlayerControls` with `HasColorFilter`; it does not
+create another battlefield or layer service. `resolveStatePermanent` checks
+present/unphased source identity and `StateContext.SourceIncarnation`.
+`FilterBattlefield`, `While`, `ModifyEachPT`, entry choice services and existing
+layer scheduling provide current control/color checks and global P/T changes.
+No global result slot, mutable compiler capture or card-name branch was added.
+
+An invalid/missing color or player cannot satisfy positive membership. A departed
+or phased source supplies no choice; old contexts cannot read a returned source.
+Static queries never use departure LKI. Control changes keep the chosen player;
+source phase-in restores the same choices. Current subject changes update
+membership. Return makes new entry choices, and clones/instances keep separate
+fields. Ability removal disables the static rule through the existing service.
+Payment, replacement ordering, simultaneous operations and spell-copy entry
+contracts were not changed.
+
+### Rules evidence and source classification
+
+Local `data/ARN.json` confirms Jihad's color/opponent entry choice, all white
+creatures' +2/+1, nontoken membership and separate sacrifice state trigger.
+CR 611.3a–b requires live static membership; CR 613.1b/e–g and 613.4c put control
+and color before the P/T bonus and honor prior ability removal. CR 400.7 separates
+returned visits. CR 702.26b–d excludes phased objects without changing identity.
+CR 603.8 establishes the distinct state-trigger lifecycle that remains a gap.
+
+This slice fills missing compiler adapters and an engine condition contract.
+No source defect or environmental failure was found. No RON source changed;
+the vocabulary source/hash snapshot needs no refresh. Runtime/removal gates
+remain closed. No Go card, generator or broad DSL function was removed.
+
+### Failing-first evidence and card-to-test mapping
+
+- `TestRONChosenStaticJihadRequirement` first failed at
+  `unsupported static condition player (TheChosenPlayer)`.
+- Native `TestChosenStaticCondition*` failed compilation with
+  `undefined: PlayerControlsChosenColor`. Initial fixture filter/phasing names
+  were corrected to existing `Not(IsToken)` and the phase ID-list API before
+  confirming this intended failure.
+- The existing combined-entry Jihad requirement now expects its next actual
+  rejection, `unsupported no-land trigger player reference (TheChosenPlayer)`.
+  Its entry coverage remains intact.
+
+**Jihad → `TestRONChosenStaticJihadRequirement`.** The complete unchanged ARN
+record is inspected and must remain rejected at the state-event gap. A test-only
+projection of its exact entry and static rules, with unchanged metadata, executes
+actual casting and entry before testing the global bonus. It covers both players'
+white creatures, nonwhite exclusion, nontoken and artifact membership, live
+control/color changes, late subjects, source/subject phasing, source control,
+ability removal/restoration, entry return, separate factories and game clones.
+This is entry/static subrule evidence, not complete Jihad gameplay coverage.
+
+`TestRONChosenStaticPlayerAndColorContexts` checks fixed chosen-player filters,
+You with nested chosen-color conjunctions, fixed disjunctions and ControlsNo
+updates after departure. `TestRONChosenStaticInvalid` checks missing producers,
+malformed reads, unsupported choice disjunctions, action-local players, empty
+conjunctions and atomic rejection that preserves an existing registry.
+
+Native `TestChosenStaticConditionIdentity` checks exact/stale source visits,
+invalid player/color, multicolor subjects, nontoken membership, controller changes,
+phasing, departure/return and clone isolation. `Declarations` validates supported
+players and rejects nil, attachment, saved-object and unbound player references.
+Existing entry-copy, cost and layer tests retain their separate contracts.
+
+### Verification and measured result
+
+Required checks passed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run TestRONChosenStatic -count=1` passed.
+  Native `go test ./pkg/mage -run TestChosenStaticCondition -count=1` passed.
+  Broader chosen-color, combined-entry, conditional-static and counter tests
+  passed after updating the existing Jihad diagnostic assertion.
+- `make build` and `go vet ./...` passed.
+- `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+- `make lint` passed with 0 issues. Automatic changes were import grouping
+  only. The new engine/RON groups and related static/entry groups were rerun
+  afterward and passed; no behavior or assertion changes came from lint.
+- `git diff --check` passed, including the final ledger update.
+- Final `go run ./cmd/loadcards -json` exited 1 with **2,206 compiled / 239
+  rejected records**, **859 accepted / 127 rejected names**, out of 2,445
+  records and 986 names. Comparing all diagnostics with the fresh baseline
+  shows no added or removed rejection and just one changed diagnostic: Jihad
+  advances from `unsupported static condition player (TheChosenPlayer)` at
+  ARN:44:249 to `unsupported no-land trigger player reference (TheChosenPlayer)`
+  at ARN:44:470. Accepted records remain accepted. Loading remains atomic.
+
+Actual full-card gain is **zero names / zero records**, matching the prerequisite
+estimate. Gameplay evidence increases for Jihad's entry/static rules only.
+The separate state event still blocks complete Jihad execution. Full collection
+gameplay, embedded runtime startup, application cutover, Go-card deletion and
+DSL cleanup remain unfinished. No removal gate was reached.
+
+Changed files: new `pkg/mage/chosen_static_condition.go`,
+`chosen_static_condition_test.go`, `pkg/mage/dsl/ron/chosen_static.go` and
+`chosen_static_test.go`; updated `pkg/mage/composable_conditions.go`,
+`pkg/mage/dsl/ron/conditional_static.go`, `combined_entry_choice_test.go`,
+`pkg/mage/doc.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. No card source or production registry changed.
+
+### Ranked next candidates
+
+1. **Chosen-player no-permanent state event — Jihad.** This slice completes
+   the live membership prerequisite. Entry choices and both static reads can
+   now support exact state detection; pending-trigger suppression, pending
+   source identity/controller and source phasing/removal must be tested. One
+   potential complete name / record; medium effort. Recompare multi-card work.
+2. **Mandatory entry exile payment/results — Frankenstein's Monster.**
+   Ordered entry and announced X are ready; exact graveyard transaction,
+   entry-local outcomes, failure routing and combination counter choice remain.
+   Zero immediate full-card gains from payment alone; medium/high effort.
+3. **Persistent number choices — Shapeshifter.** Entry 0–7 choice, optional
+   upkeep update and live power / 7-minus-choice toughness still need one
+   per-visit lifetime. One potential complete name / record after all contexts;
+   medium/high effort.
+
+This run stops after live entry-choice static membership. Complete migration
+remains gated by collection, gameplay, runtime and removal work.

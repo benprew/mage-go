@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PlayerControlsChosenColor] checks live subjects against the source entry color.
+// [PlayerControls] also accepts ChosenPlayerOf(This) for the entry player.
+// Both choices stay with the source visit through control changes and phasing.
+// Phased or departed sources cannot supply choices. Return starts a new visit.
+// Subject colors and controllers use current layers. Clones keep separate choices.
+// RON accepts PlayerPassesFilter with You or a source entry-chosen player,
+// ControlsA or ControlsNo, and a chosen-color predicate in a conjunction.
+// Choice disjunctions, target predicates and state-event adapters stay separate.
+//
 // [OpponentUpkeep] checks the source controller when an upkeep begins.
 // It saves that upkeep player in a separate event binding. Pending bodies keep
 // the player and controller through control changes, departure and phasing.

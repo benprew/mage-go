@@ -19216,3 +19216,33 @@ Evidence: `TestOpponentUpkeepCapture`, `SourceLifetime` and `Declarations`;
 `TestRONOpponentUpkeepGameplay`, `PsychicAllergy`, `PsychicAllergyPayment`,
 `Invalid` and `CollectionAndTextBoundary`. Existing color-entry, chosen-color,
 optional sacrifice, upkeep text and collection inventory tests remain required.
+
+## Live source entry choices in static membership
+
+`PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition` now
+also accepts `ChosenPlayerOf(This)`. Existing controller, active-player and
+saved-player callers retain their contracts. Other chosen-permanent references
+are rejected during definition validation.
+
+`PlayerControlsChosenColor(player PlayerRef, filter PermanentFilter)
+StateCondition` accepts `You`, `ActivePlayer` or `ChosenPlayerOf(This)`. It
+requires a present, unphased source with a valid five-color entry choice and
+checks the supplied filter plus that color through `FilterBattlefield`.
+`resolveStatePermanent` checks `StateContext.SourceIncarnation`; an old source
+visit cannot read a returned source's choices. There is no departure LKI read.
+Unbound players, nil references and chosen attachment/saved/target references
+are rejected. The condition stores declarations only, with no mutable choices.
+
+Source control changes keep the chosen player. Subject control and color changes
+update membership. Phasing stops source reads and excludes subjects; phase-in
+restores the same choices. Return makes new entry choices. Clones and separate
+sources keep separate fields. `While` and the shared layer service reevaluate
+membership, apply color/control before P/T and disable a removed source ability
+(CR 611.3a–b, 613.1b/e–g, 613.4c, 400.7, 702.26b–d).
+
+Evidence: `TestChosenStaticConditionIdentity`, `Declarations` and
+`TestRONChosenStatic*`. RON gameplay covers Jihad's entry/static subrules,
+casting/entry timing, both players' white recipients, nonwhite exclusion,
+nontoken membership, changing color/control, late subjects, phasing, source
+return, independent instances, clones and ability removal. State detection,
+replacement ordering, payments and simultaneous actions gain no new contract.

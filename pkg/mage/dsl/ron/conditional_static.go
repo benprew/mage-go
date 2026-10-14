@@ -140,24 +140,7 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		}
 		return mage.OpponentControls(filter), nil
 	case "PlayerPassesFilter":
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != "You" {
-			return nil, unsupported(n.Args[0], "static condition player")
-		}
-		selector := n.Args[1]
-		if selector.Name != "ControlsA" && selector.Name != "ControlsNo" {
-			return nil, unsupported(selector, "static player condition")
-		}
-		if err := arity(selector, 1); err != nil {
-			return nil, err
-		}
-		filter, err := compileStaticConditionFilter(selector.Args[0])
-		if err != nil {
-			return nil, err
-		}
-		if selector.Name == "ControlsNo" {
-			return mage.ControlsNone(filter), nil
-		}
-		return mage.PlayerControls(mage.You, filter), nil
+		return compileStaticPlayerControls(n, ctx)
 	case "PermanentPassesFilter":
 		subject, err := compileConditionalSubject(n.Args[0], ctx)
 		if err != nil {

@@ -641,19 +641,7 @@ func PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition {
 func (playerControlsCondition) stateCondition() {}
 
 func (c playerControlsCondition) checkState(g GameReader, ctx StateContext) bool {
-	var playerID uuid.UUID
-	switch ref := c.player.(type) {
-	case controllerRef:
-		playerID = ctx.ControllerID
-	case activePlayerRef:
-		if active := g.ActivePlayerObj(); active != nil {
-			playerID = active.PlayerID()
-		}
-	case savedPlayerRef:
-		playerID = ctx.players[ref.binding]
-	default:
-		return false
-	}
+	playerID := resolveStatePlayer(g, ctx, c.player)
 	if playerID == uuid.Nil || g.GetPlayer(playerID) == nil {
 		return false
 	}
@@ -667,11 +655,17 @@ func (c playerControlsCondition) checkState(g GameReader, ctx StateContext) bool
 
 func (c playerControlsCondition) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "state-condition", Text: "player controls matching permanent"}
-	switch c.player.(type) {
+	switch ref := c.player.(type) {
 	case controllerRef, activePlayerRef, savedPlayerRef:
 		n.children = []definitionEdge{{"player", c.player}}
+	case chosenPermanentPlayerRef:
+		n.battlefieldSource = true
+		n.children = []definitionEdge{{"player", c.player}}
+		if _, ok := ref.subject.(sourceRef); !ok {
+			n.problem = "state condition chosen player requires This"
+		}
 	default:
-		n.problem = "state condition requires You, ActivePlayer, or a saved player"
+		n.problem = "state condition requires You, ActivePlayer, a saved player, or the source chosen player"
 	}
 	return n
 }
