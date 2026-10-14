@@ -814,6 +814,7 @@ type PermanentTarget struct {
 	fixedLandEnchant             bool
 	typeDependencies             []targetTypeDependency
 	controllerRefs               []PlayerRef
+	excludedBindings             []*PermanentBinding
 	chooserRef                   PlayerRef
 	chooserCount                 int
 	combatRelations              []targetCombatRelation
@@ -903,8 +904,19 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 		}
 		controllers = append(controllers, id)
 	}
+	var excluded []capturedPermanent
+	for _, binding := range t.excludedBindings {
+		value, ok := g.resolution.permanentBindings[binding]
+		if binding == nil || !ok || value.id == uuid.Nil || value.incarnation == uuid.Nil {
+			return nil
+		}
+		excluded = append(excluded, value)
+	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.Contains(excluded, capturedPermanent{p.ID(), p.incarnationID}) {
+			continue
+		}
 		if slices.ContainsFunc(t.typeDependencies, func(dependency targetTypeDependency) bool { return !dependency.matches(p, ctx) }) {
 			continue
 		}

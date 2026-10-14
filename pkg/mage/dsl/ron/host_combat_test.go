@@ -331,7 +331,7 @@ func TestRONHostCombatDelayedAndFactories(t *testing.T) {
 }
 
 func TestRONHostCombatCompleteRecordsStayRejected(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"FEM", "Farrel's Mantle", "unsupported target exclusion"}, {"LEG", "Imprison", "supply one artifact source"}} {
+	for _, tc := range []struct{ set, name, blocker string }{{"LEG", "Imprison", "supply one artifact source"}} {
 		_, err := Compile(repositoryRecord(t, tc.set, tc.name, tc.set+".lines.ron"))
 		if err == nil || !strings.Contains(err.Error(), tc.blocker) {
 			t.Fatalf("%s: %v", tc.name, err)

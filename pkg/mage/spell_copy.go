@@ -224,7 +224,7 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 			continue
 		}
 		old := obj.Targets[offset : offset+count]
-		possible := g.targetPlayerQuery(obj.capturedPlayers).targetBindingsQuery(specs, out, obj.targetIncarnations, obj.XValue).possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
+		possible := g.targetEventQuery(obj.capturedPlayers, obj.capturedPermanents).targetBindingsQuery(specs, out, obj.targetIncarnations, obj.XValue).possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
 		chosen := g.GetPlayer(obj.Controller).ChooseTargets(possible, count, count, g)
 		valid := len(chosen) == count
 		seen := make(map[uuid.UUID]bool, count)

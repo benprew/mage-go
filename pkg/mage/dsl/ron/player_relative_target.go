@@ -8,6 +8,20 @@ func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter,
 	if n.Name == "SharesACardtypeWithPermanent" || n.Name == "SharesACardtypeWithPermanentFromAmongCardtypes" {
 		return compileTargetTypeDependency(n, ctx)
 	}
+	if n.Name == "Other" {
+		if err := arity(n, 1); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		ref, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		if ref.kind == permanentEvent && !ctx.delayedStep {
+			return mage.AnyPermanent, func(bindings instanceBindings) []mage.PermanentTargetOption {
+				return []mage.PermanentTargetOption{mage.TargetOtherThanSavedPermanent(bindings.tapped[ref.event])}
+			}, nil
+		}
+	}
 	if n.Name == "ControlledSinceBeginningOfTurn" || n.Name == "NotControlledSinceBeginningOfTurn" {
 		filter, err := compileCurrentTurnControlFilter(n)
 		return filter, func(instanceBindings) []mage.PermanentTargetOption { return nil }, err

@@ -230,6 +230,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 			}
 			n.children = append(n.children, definitionEdge{"chooser", targetChosenByOption{spec.chooserRef}})
 		}
+		for i, binding := range spec.excludedBindings {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("excludedBindings[%d]", i), targetSavedExclusionOption{binding}})
+		}
 		for i, player := range spec.controllerRefs {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("controllerRefs[%d]", i), targetControlledByOption{player}})
 		}

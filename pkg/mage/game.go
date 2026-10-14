@@ -2146,14 +2146,16 @@ func (g *Game) PutTriggersOnStack() {
 	}
 	for _, pt := range g.triggers.Pending() {
 		targetSource := g.triggerTargetSource(pt)
+		players, permanents := capturedTriggerTargetFacts(pt)
 		obj := &StackObject{
-			stateKey:          pt.stateKey,
-			capturedPlayers:   capturedTriggerTargetPlayers(pt),
-			sourceIncarnation: pt.sourceIncarnation,
-			ID:                uuid.New(),
-			Controller:        pt.controller,
-			SourceID:          pt.sourceID,
-			IsAbility:         true,
+			stateKey:           pt.stateKey,
+			capturedPlayers:    players,
+			capturedPermanents: permanents,
+			sourceIncarnation:  pt.sourceIncarnation,
+			ID:                 uuid.New(),
+			Controller:         pt.controller,
+			SourceID:           pt.sourceID,
+			IsAbility:          true,
 		}
 		if dt := pt.delayed; dt != nil && len(dt.modes) == 0 {
 			obj.Effects = append([]Effect(nil), dt.Effects...)
@@ -2186,7 +2188,7 @@ func (g *Game) PutTriggersOnStack() {
 			var labels []string
 			var indices []int
 			for i, mode := range modes {
-				legal := g.targetPlayerQuery(obj.capturedPlayers).hasLegalTargetSelection(pt.controller, targetSource, mode.Targets, 0)
+				legal := g.targetEventQuery(obj.capturedPlayers, obj.capturedPermanents).hasLegalTargetSelection(pt.controller, targetSource, mode.Targets, 0)
 				if legal {
 					labels = append(labels, mode.Label)
 					indices = append(indices, i)
@@ -2391,7 +2393,7 @@ func (g *Game) PutTriggersOnStack() {
 // chooseTriggerTargets returns false when a required target group cannot be chosen.
 // CR 603.3d removes such a trigger before a player receives priority.
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, []Target, bool) {
-	query := g.targetPlayerQuery(capturedTriggerTargetPlayers(pt))
+	query := g.triggerTargetQuery(pt)
 	controller := g.GetPlayer(pt.controller)
 	sourceCard := g.triggerTargetSource(pt)
 	var out []uuid.UUID

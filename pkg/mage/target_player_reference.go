@@ -24,10 +24,14 @@ func (o targetControlledByOption) inspectDefinition() definitionNode {
 }
 
 func capturedTriggerTargetPlayers(pt *pendingTrigger) map[*PlayerBinding]uuid.UUID {
+	players, _ := capturedTriggerTargetFacts(pt)
+	return players
+}
+
+func capturedTriggerTargetFacts(pt *pendingTrigger) (players map[*PlayerBinding]uuid.UUID, permanents map[*PermanentBinding]capturedPermanent) {
 	// Use the event snapshots without running the ability or its payment.
 	obj := &StackObject{}
 	captureTriggerEventEffects(pt, obj)
-	var players map[*PlayerBinding]uuid.UUID
 	var collect func(Effect)
 	collect = func(effect Effect) {
 		switch effect := effect.(type) {
@@ -36,6 +40,11 @@ func capturedTriggerTargetPlayers(pt *pendingTrigger) map[*PlayerBinding]uuid.UU
 				players = make(map[*PlayerBinding]uuid.UUID)
 			}
 			players[effect.binding] = effect.player
+		case *eventPermanentCapture:
+			if permanents == nil {
+				permanents = make(map[*PermanentBinding]capturedPermanent)
+			}
+			permanents[effect.binding] = effect.value
 		case *sequenceEffect:
 			for _, child := range effect.effects {
 				collect(child)
@@ -45,7 +54,7 @@ func capturedTriggerTargetPlayers(pt *pendingTrigger) map[*PlayerBinding]uuid.UU
 	for _, effect := range obj.Effects {
 		collect(effect)
 	}
-	return players
+	return players, permanents
 }
 
 func (g *Game) targetPlayerQuery(players map[*PlayerBinding]uuid.UUID) *Game {
@@ -53,4 +62,15 @@ func (g *Game) targetPlayerQuery(players map[*PlayerBinding]uuid.UUID) *Game {
 	query := *g
 	query.resolution.playerBindings = players
 	return &query
+}
+
+func (g *Game) targetEventQuery(players map[*PlayerBinding]uuid.UUID, permanents map[*PermanentBinding]capturedPermanent) *Game {
+	query := g.targetPlayerQuery(players)
+	query.resolution.permanentBindings = permanents
+	return query
+}
+
+func (g *Game) triggerTargetQuery(pt *pendingTrigger) *Game {
+	players, permanents := capturedTriggerTargetFacts(pt)
+	return g.targetEventQuery(players, permanents)
 }

@@ -1,5 +1,37 @@
 # Engine rules contracts
 
+## Saved event permanent target exclusion
+
+`TargetOtherThanSavedPermanent(binding *PermanentBinding) PermanentTargetOption`
+excludes the exact battlefield visit saved by an event producer. Use it with
+`DeclarePermanentTarget` and `WithTargets`. Definition validation requires a
+non-nil binding with a producer in scope. Missing runtime bindings give no
+candidates. Existing `TargetOtherThanSource()` callers keep their behavior.
+
+RON supports `Other(eventRef)` in ordinary battlefield trigger bodies with
+singular `TargetPermanent` declarations, including numbered groups and nested
+`And` filters. `eventRef` must lower to a saved permanent event binding, such as
+host-combat `Trigger_ThatCreature` / `Trigger_ThatPermanent`, attached-tap
+`Trigger_ThatPermanent`, or a bound combat opponent. Source aliases retain the
+existing source exclusion adapter. Host references, resolving choices, previous
+targets, death-card references, unbound aliases and delayed target scopes reject.
+
+Target placement, modal availability, copy retargeting and resolution use a
+separate query frame with the event's saved player and permanent facts. Queries
+do not run actions or payments and do not replace live resolution bindings.
+Reattachment, source departure and control changes cannot change the saved
+subject. A phase cycle keeps its visit. Departure and return make a new visit,
+which does not inherit the exclusion. Copies keep the event facts; the copy
+controller chooses new targets. Clones keep separate maps. Normal target
+protections and exact target-visit checks still apply (CR 400.7, 603.3d, 608.2b).
+
+Farrel's Mantle uses this target restriction with the existing damage-payment
+and combat-assignment services. Its Aura controller chooses the target at
+trigger placement. The saved host's current controller chooses whether to pay
+at resolution. Its current power supplies the amount plus two. Prevention does
+not cancel a completed damage payment or its combat-assignment rule. Illegal
+targets stop the ability before payment. The rule ends at cleanup.
+
 ## Saved sacrifice subtype results
 
 `SacrificeChosenBy(player, chooser PlayerRef, subjects PermanentSet,
@@ -19995,4 +20027,5 @@ Evidence: `TestHostCombatDefinition`, `TestHostCombatEventIdentity`,
 The Imprison test runs its unchanged complete combat clause, including optional
 payment and removal from combat. Its activation clause remains unsupported.
 Farrel's Mantle's native test uses its original event and a synthetic observable
-body; its complete target/payment rule remains unsupported.
+body. Its complete target/payment rule now has separate evidence in
+`TestRONEventTargetExclusionMantle` and `TestRONEventTargetExclusionNativeCombat`.

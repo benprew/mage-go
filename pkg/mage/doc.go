@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetOtherThanSavedPermanent] excludes one saved battlefield visit.
+// Target placement, copy choices and resolution use separate event query frames.
+// Missing bindings supply no targets. Departure and phasing keep the saved
+// identity; a returned permanent cannot inherit the exclusion. Reattachment
+// cannot change the event subject. Factories, pending events, copies and clones
+// keep separate facts. Existing target protections and legality checks apply.
+// RON accepts Other(bound event permanent) in singular permanent target filters,
+// including And lists, in ordinary battlefield triggers. Resolving choices,
+// prior targets, death-card references and delayed target scopes need adapters.
+//
 // [AttachedAttacks], [AttachedBlocks], [AttachedAttacksUnblocked] and
 // [AttachedAttacksOrBlocks] save the attached creature at event detection.
 // The union is one ability that matches either declaration event.
@@ -10,8 +20,8 @@
 // RON accepts these host events in battlefield TriggerA bodies. The attack/block
 // Or list requires both events with SinglePermanent(HostPermanent).
 // Trigger_ThatCreature and Trigger_ThatPermanent read the same saved host.
-// Defending-player capture, host becomes-blocked events, activation filters and
-// event-relative target exclusion need separate adapters.
+// Defending-player capture, host becomes-blocked events and activation filters
+// need separate adapters. Saved event target exclusion uses the shared query.
 //
 // [SwitchPowerToughness] uses layer 7d after base values, bonuses and counters.
 // It has one subject and no numeric operands. Definition checks keep the subject
