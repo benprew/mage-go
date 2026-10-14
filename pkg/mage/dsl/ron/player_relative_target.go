@@ -84,6 +84,9 @@ func compilePlayerRelativeTargetFilter(n Node, ctx scope) (mage.PermanentFilter,
 		}, nil
 	}
 	if n.Name == "And" {
+		if _, err := compileTargetSubtypeDomain(n); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err
 		}

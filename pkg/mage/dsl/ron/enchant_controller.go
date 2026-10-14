@@ -22,15 +22,19 @@ func compileEnchantPermanent(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	domain, err := compileTargetSubtypeDomain(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
 	return func() mage.CardOption {
 		var target mage.Target
 		switch controller {
 		case enchantYou:
-			target = mage.TargetPermanentYouControl(filter)
+			target = mage.DeclarePermanentTarget("EnchantPermanent", filter, mage.TargetYouControl(), mage.TargetWithDomain(domain))
 		case enchantOpponent:
-			target = mage.TargetPermanentOpponentControls(filter)
+			target = mage.DeclarePermanentTarget("EnchantPermanent", filter, mage.TargetOpponentControls(), mage.TargetWithDomain(domain))
 		default:
-			target = mage.TargetPermanent(filter)
+			target = mage.DeclarePermanentTarget("EnchantPermanent", filter, mage.TargetWithDomain(domain))
 		}
 		if n.Args[0].Name == "IsCardtype" && len(n.Args[0].Args) == 1 && n.Args[0].Args[0].Kind == Symbol && n.Args[0].Args[0].Name == "Creature" {
 			target = mage.CreatureEnchantTarget()

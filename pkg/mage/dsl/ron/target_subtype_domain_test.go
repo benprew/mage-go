@@ -93,6 +93,9 @@ func TestRONTargetSubtypeDomainRecords(t *testing.T) {
 					for j, target := range action.Targets() {
 						if slices.Contains(mage.TargetRequiredSubtypes(target), tc.subtype) {
 							found = true
+							if !mage.TargetRequiresSubtype(target, tc.subtype) {
+								t.Fatal("missing subtype proof")
+							}
 							result := mage.TargetRequiredSubtypes(target)
 							result[0] = "Changed"
 							if !slices.Contains(mage.TargetRequiredSubtypes(second.Abilities()[i].(*mage.ActionDefinition).Targets()[j]), tc.subtype) {

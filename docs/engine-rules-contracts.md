@@ -21747,3 +21747,63 @@ Interactive regression evidence also includes `TestTargetingAbilitySearch`,
 `TestTargetingAbilityCombat` and `TestTargetingAbilityCombatSolver`. Search,
 regeneration, pump planning and the combat solver keep the actual selected
 ability rather than deriving one from its source card.
+
+
+## Permanent target subtype-domain proof
+
+`PermanentTargetDomain` is an immutable predicate tree. `SubtypeDomain(string)`
+requires a subtype; `NonSubtypeDomain(string)` excludes one.
+`AllPermanentDomains(...PermanentTargetDomain)` and
+`AnyPermanentDomain(...PermanentTargetDomain)` retain nonempty conjunctions and
+disjunctions. `UnknownPermanentDomain()` supplies no subtype information.
+`TargetWithDomain(PermanentTargetDomain) PermanentTargetOption` enforces these
+predicates in both `PermanentTarget.Possible` and `PermanentTarget.Filter`.
+Zero domains, empty groups and empty or outer-space subtype names fail definition
+validation, including through count wrappers. Constructor inputs are copied;
+no public operation can change a domain.
+
+`TargetRequiresSubtype(Target, string) bool` supplies a declaration proof. It
+combines existing `TargetHasSubtype` constraints with the domain predicates.
+It searches subtype assignments with the queried subtype present and absent.
+An impossible subtype formula supplies no proof. Unknown predicates cannot prove
+that a declaration admits a nonmatching target. Other subtypes are independent:
+a permanent can have several creature subtypes. This handles shared constraints
+across unions and contradictions that remove a union branch. Opaque filters
+remain runtime restrictions and cannot supply declaration proof. The query does
+not enumerate battlefield objects, evaluate filters, choose targets, read LKI,
+spend resources or consume randomness. False means that no proof is available;
+it is not proof that the declaration can select a nonmatching object.
+
+RON retains nested `And`, `Or`, `IsCreatureType(symbol)` and
+`IsNonCreatureType(symbol)` in permanent target and `EnchantPermanent` contexts.
+Other supported filters supply unknown leaves and keep their existing behavior.
+Malformed nested predicates and empty target groups reject before publication.
+Source-relative and bound-player restrictions retain their existing typed options.
+Subtype spelling uses the existing RON normalization and does not imply the
+creature card type. Land/enchantment subtype predicates remain opaque to this
+creature-subtype proof. Nonpermanent and union recipient targets supply no proof.
+
+Bindings, fixed/X count groups, zero-choice groups, random and opponent-choice
+wrappers keep the domain. Aura spells expose their enchant declaration (CR
+115.1b, 303.4a). Attachment checks enforce current subtypes without targeting
+an existing host. Spell text checks compare domain structure, and Aura text
+checks accept typed bindings through `UnwrapTarget`. Live subtype changes still
+affect announcement, resolution and attachment legality. Phasing and return use
+the existing visit checks. Source departure, copies and clones keep declarations
+without allowing actions on absent subjects. All-player operations, replacement
+ordering and payment transactions retain their existing contracts.
+
+Evidence: native `TestTargetDomainProof`, `Enforcement` and `Invalid`; RON
+`TestRONTargetDomainProof`, `Aura`, `AuraShapes` and `UnionGameplay`, plus the
+extended `TestRONTargetSubtypeDomainRecords`. Animate Wall supplies complete
+casting, copy/clone, attachment and subtype-change gameplay. King Suleiman
+supplies complete union activation, failed-payment protection, source departure,
+phase/return and resolution-recheck gameplay. The existing 15-name subtype
+record mapping now checks this proof API too. These are 17 names / 31 records
+with declaration or gameplay evidence, not newly unlocked cards.
+
+This supersedes the earlier bounded proof exclusions for disjunctions, negative
+creature-subtype predicates and Aura enchant declarations. `CanTargetOnly` spell
+and ability consumers remain unsupported. They must inspect complete applicable
+declaration groups, including groups with zero choices; the per-group query does
+not select a spell, ability or mode. Wall of Shadows still rejects.

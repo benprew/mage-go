@@ -38,10 +38,16 @@ func (b *targetDeclaration) Min() int                                       { re
 func (b *targetDeclaration) Max() int                                       { return b.spec.Max() }
 func (b *targetDeclaration) BoundsForX(x int) (minimum, maximum int)        { return TargetBounds(b.spec, x) }
 
-// UnwrapTarget returns the underlying Target if wrapped in a targetDeclaration.
+// UnwrapTarget returns the target specification from a declaration or binding.
 func UnwrapTarget(t Target) Target {
 	if td, ok := t.(*targetDeclaration); ok {
-		return td.spec
+		if td != nil {
+			return td.spec
+		}
+		return t
+	}
+	if binding, ok := t.(TargetBinding); ok && !nilDefinition(binding) {
+		return UnwrapTarget(binding.targetSpec())
 	}
 	return t
 }
@@ -220,7 +226,10 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	for i, subtype := range TargetRequiredSubtypes(b.spec) {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("subtypes[%d]", i), targetSubtypeOption{subtype: subtype}})
 	}
-	if spec, ok := b.spec.(*PermanentTarget); ok {
+	if spec := permanentDomainTarget(b.spec); spec != nil {
+		for i, domain := range spec.subtypeDomains {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("domains[%d]", i), domain})
+		}
 		for i, dependency := range spec.typeDependencies {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("typeDependencies[%d]", i), dependency})
 		}

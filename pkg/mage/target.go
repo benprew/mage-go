@@ -811,6 +811,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	requiredSubtypes             []string
+	subtypeDomains               []PermanentTargetDomain
 	fixedCreatureEnchant         bool
 	fixedLandEnchant             bool
 	typeDependencies             []targetTypeDependency
@@ -915,6 +916,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.ContainsFunc(t.subtypeDomains, func(domain PermanentTargetDomain) bool { return !domain.matches(p) }) {
+			continue
+		}
 		if slices.ContainsFunc(t.requiredSubtypes, func(subtype string) bool { return !p.HasSubType(subtype) }) {
 			continue
 		}
@@ -984,7 +988,11 @@ func (t *PermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen [
 
 // Filter returns a combined PermanentFilter that checks all filters.
 func (t *PermanentTarget) Filter() PermanentFilter {
+	domainFilter := NewPermanentFilter("target subtype domain", func(p *Permanent, _ *Game) bool {
+		return !slices.ContainsFunc(t.subtypeDomains, func(d PermanentTargetDomain) bool { return !d.matches(p) })
+	})
 	filters := slices.Clone(t.Filters)
+	filters = append(filters, domainFilter)
 	for _, subtype := range t.requiredSubtypes {
 		filters = append(filters, HasSubType(subtype))
 	}

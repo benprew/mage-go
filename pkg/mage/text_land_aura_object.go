@@ -18,7 +18,7 @@ func landAuraObjectTextContext(card Card) (*StaticAbilityHolder, error) {
 		return nil, err
 	}
 	base := card.(*BaseCard)
-	target := base.castTargets[0].(*PermanentTarget)
+	target := UnwrapTarget(base.castTargets[0]).(*PermanentTarget)
 	if !target.fixedLandEnchant || !sameSpellTextTargetSpec(target, LandEnchantTarget()) {
 		return nil, fmt.Errorf("land Aura object text requires a fixed land enchant target")
 	}

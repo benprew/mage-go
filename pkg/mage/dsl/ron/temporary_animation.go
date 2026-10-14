@@ -96,6 +96,18 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 }
 
 func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	domain, err := compileTargetSubtypeDomain(n)
+	if err != nil {
+		return mage.PermanentFilter{}, nil, err
+	}
+	filter, options, err := compilePermanentTargetFilterBody(n, ctx)
+	if err != nil {
+		return mage.PermanentFilter{}, nil, err
+	}
+	return filter, append(options, mage.TargetWithDomain(domain)), nil
+}
+
+func compilePermanentTargetFilterBody(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
 	if n.Name == "IsCreatureType" {
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err

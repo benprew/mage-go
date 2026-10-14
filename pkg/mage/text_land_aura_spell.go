@@ -20,7 +20,7 @@ func landAuraSpellTextContext(card Card) (landTypeRevisionContext, error) {
 		len(base.additionalCosts) != 0 || len(base.alternateCosts) != 0 || len(base.castTargets) != 1 {
 		return 0, fmt.Errorf("land Aura spell text requires one marked Aura without additional casting costs or other rules")
 	}
-	target, ok := base.castTargets[0].(*PermanentTarget)
+	target, ok := UnwrapTarget(base.castTargets[0]).(*PermanentTarget)
 	if !ok || target == nil || target.Min() != 1 || target.Max() != 1 {
 		return 0, fmt.Errorf("land Aura spell text requires one permanent enchant target")
 	}

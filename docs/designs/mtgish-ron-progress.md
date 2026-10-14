@@ -8,18 +8,18 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
 (986 total), **2,282 compiled / 163 rejected records** (2,445 total).
-The latest slice is **ACTIVE-TARGETING-ABILITY-DECLARATIONS**.
-The engine retains exact selected ability IDs and complete declared target
-lists through announcement, pending triggers, resolution, copies and clones.
-Zero-choice groups remain distinct from unknown declarations. Current source
-characteristics and exact LKI use the existing shared information service.
-Graveyard activation now checks targets before payment and at resolution.
-Existing RON lowering already supplies fresh abilities and complete groups.
-Thirteen accepted names / 17 records have new declaration or gameplay mappings.
-CanTargetOnly and complete subtype-domain classification remain prerequisites.
+The latest slice is **TARGET-SUBTYPE-DOMAIN-PROOF**.
+Immutable subtype predicates now support positive/negative tests, conjunctions,
+disjunctions and Aura enchant declarations. The engine enforces the predicates
+and supplies a declaration proof without reading game state or chosen targets.
+Opaque predicates and contradictory subtype formulas supply no proof.
+Bindings, count/random/opponent-choice wrappers, copies and clones retain facts.
+Aura text checks now accept typed bindings through the shared target adapter.
+Seventeen accepted names / 31 records have new proof or gameplay mappings.
 Estimated and actual compilation gain: **zero names / zero records**.
-All earlier accepted records remain accepted. No RON source or vocabulary
-baseline changed. Validation and mappings follow.
+All prior accepted records and loader diagnostics remain unchanged.
+CanTargetOnly spell and ability consumers remain the next shared consumer slice.
+No RON source or vocabulary baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -14954,3 +14954,189 @@ docs/engine-rules-contracts.md and this ledger.
 Commit title: `feat(ron): implement active targeting ability declarations`.
 Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
 remain gated. This run stops after ACTIVE-TARGETING-ABILITY-DECLARATIONS.
+
+## 2026-10-14 — TARGET-SUBTYPE-DOMAIN-PROOF
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1` and
+`make build` passed. Fresh loader collection rejection was expected: exit 1,
+2,282 compiled / 163 rejected records, 903 accepted / 83 rejected names.
+This was a collection-support gap, not a build, test or environment failure.
+Read the execution design, engine reference and relevant API/rules contracts;
+inspected targeted vocabulary entries and complete records, including nested
+forms, rather than selecting from first-error frequency.
+
+| Candidate | Distinct affected names and estimated unlocks | Blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Complete target subtype-domain proof, ranked #1 | The 15 previously mapped subtype-targeted names below, Animate Wall and King Suleiman: 17 names / 31 records; zero new full-card unlocks | Existing per-instance target groups and active ability identity make this ready. Supplies shared declaration proof for spell/ability restrictions, including Aura and disjunctive target declarations | Moderate: immutable engine predicates, proof query, target/attachment enforcement, compiler adapters and compatibility tests |
+| CanTargetOnly spell and ability consumers, ranked #2 | Wall of Shadows: one name / one record, once both consumers are complete | Candidate #1 is required. Blocked-creature damage prevention and source restriction lifecycle already exist. Must inspect every applicable declaration, including zero-choice groups | Moderate after the prerequisite; not ready at selection |
+| Kry Shield, ranked #3 | Kry Shield: one name / one record if both nested actions are complete | Requires source-damage prevention and a live mana-value toughness bonus in the same body. Prevention alone unlocks zero. No concrete multi-card gain for the same combined shape was found | Moderate across two contracts |
+
+Selected ranked #1 as a ready shared declaration prerequisite. It applies to
+many existing spell and ability declarations and fixes the missing Aura/union
+information needed by CanTargetOnly. Reflecting Mirror's complete record was
+also inspected: its source audit, target-derived X, player-target predicate and
+retargeting chain remain separate. No single-card consumer was started.
+
+Contract stated before editing: retain and enforce immutable positive/negative
+creature-subtype predicates through nested conjunctions/disjunctions, wrappers
+and Aura enchant declarations; provide declaration proof independently of current
+choices and battlefield contents. Opaque filters supply no proof. Acceptance
+includes malformed declarations, target and attachment legality, source departure,
+return, phasing, factory/copy/clone isolation and text-continuation compatibility.
+
+### Exact signatures, contexts and reuse boundary
+
+Engine APIs:
+
+- `PermanentTargetDomain`, with private immutable fields.
+- `SubtypeDomain(string) PermanentTargetDomain` and
+  `NonSubtypeDomain(string) PermanentTargetDomain`.
+- `AllPermanentDomains(...PermanentTargetDomain) PermanentTargetDomain` and
+  `AnyPermanentDomain(...PermanentTargetDomain) PermanentTargetDomain`.
+- `UnknownPermanentDomain() PermanentTargetDomain`.
+- `TargetWithDomain(PermanentTargetDomain) PermanentTargetOption`.
+- `TargetRequiresSubtype(Target, string) bool`.
+
+`ron` owns the AST adapter `compileTargetSubtypeDomain(Node)` and validates
+`IsCreatureType(symbol)`, `IsNonCreatureType(symbol)` and nonempty nested
+`And([..])` / `Or([..])` in supported permanent target and EnchantPermanent
+contexts. Other supported filters supply unknown leaves and keep their existing
+live predicates and typed options. Existing RON subtype normalization applies.
+This adds no implicit creature card-type restriction. Land/enchantment subtype
+predicates and nonpermanent/union-recipient declarations supply no creature
+subtype proof. Fixed creature/land Aura markers retain their existing behavior.
+
+`mage` owns enforcement and proof. Existing TargetHasSubtype constraints join
+the immutable formula. Subtype assignments permit multiple subtypes per permanent;
+negative predicates can eliminate union branches. Contradictory subtype formulas
+supply no proof. False is absence of proof, not proof of a nonmatching domain.
+The query has no game parameter, runtime filter evaluation, choices, LKI reads,
+resource changes or randomness. Constructors copy input slices.
+
+PermanentTarget.Possible and Filter enforce the domains even if additional
+public filters are replaced. Bindings, fixed/X counts, zero-choice groups, random
+and opponent-choice wrappers retain them. Definition validation traverses domains
+through count wrappers. Existing attachment checks use Filter and do not target
+an attached host. Typed Aura bindings require UnwrapTarget to accept bindings;
+land Aura spell/object text checks now use that shared adapter. Spell text
+compatibility retains exact domain structure. Existing source-relative options,
+resolution visit checks, copies, clones and target protections remain in charge.
+
+Rules evidence: local CR 115.1a–d, 115.3, 115.6, 115.8 and 303.4a–d establish
+separate declarations, count/mode behavior, Aura targets and attachment legality.
+No new payment, LKI, event ordering, replacement or simultaneous-operation
+contract was needed. Whole-spell/ability CanTargetOnly consumers are still gated.
+
+### Failing-first tests and mappings
+
+Before implementation, native and RON tests failed compilation for the missing
+PermanentTargetDomain constructors and TargetRequiresSubtype API. Corrected
+initial test references to existing CastTargets and Attachments APIs, then
+confirmed the intended missing-signature failure again.
+
+Native `TestTargetDomainProof` checks conjunction/union proof, unknowns, negative
+predicates, branch elimination, subtype contradictions, legacy constraints,
+nonpermanent targets and count/random/opponent-choice wrappers.
+`Enforcement` checks candidate and attachment filters, enforcement after public
+filter replacement, current subtype changes and text declaration compatibility.
+`Invalid` checks malformed native domains, including wrapped validation.
+`InputIsolation` checks constructor slice isolation and an unknown union branch.
+
+RON `TestRONTargetDomainProof` checks the same nested syntax, malformed nested
+arguments and empty groups, including atomic collection rejection. `AuraShapes`
+checks disjunctive/negative enchant declarations and fresh factory identities.
+`Aura` uses complete Animate Wall: illegal announcement preserves resources,
+paid casting, copied/cloned declarations, actual attachment and attack permission,
+subtype-change attachment removal and clone isolation. `UnionGameplay` uses
+complete King Suleiman: both Djinn/Efreet branches, rejection before tap payment,
+source departure, target return/phasing/phase cycle, current subtype recheck and
+independent cloned destruction. The existing full RON package tests exposed
+raw-target assumptions in land Aura text checks; fixed the shared binding adapter
+and retained every assertion. No test was weakened.
+
+Every entry in the prior 15-name declaration mapping now also asserts
+TargetRequiresSubtype in `TestRONTargetSubtypeDomainRecords`:
+
+| Unique name | Records | New proof/gameplay mapping |
+| --- | ---: | --- |
+| Ali Baba | 1 | SubtypeDomainRecords |
+| Animate Wall | 6 | DomainProofAura |
+| Dwarven Demolition Team | 5 | SubtypeDomainRecords |
+| Dwarven Lieutenant | 1 | SubtypeDomainRecords |
+| Elephant Graveyard | 1 | SubtypeDomainRecords |
+| Fungal Bloom | 1 | SubtypeDomainRecords |
+| Glyph of Destruction | 1 | SubtypeDomainRecords |
+| Glyph of Doom | 1 | SubtypeDomainRecords |
+| Glyph of Life | 1 | SubtypeDomainRecords |
+| Goblin Digging Team | 1 | SubtypeDomainRecords |
+| Goblin Wizard | 1 | SubtypeDomainRecords |
+| Icatian Lieutenant | 1 | SubtypeDomainRecords |
+| King Suleiman | 1 | DomainProofUnionGameplay |
+| Mishra's Factory | 1 | SubtypeDomainRecords |
+| Orcish Captain | 1 | SubtypeDomainRecords |
+| Thrull Champion | 1 | SubtypeDomainRecords |
+| Tunnel | 6 | SubtypeDomainRecords |
+
+This is 17 unique names / 31 records with new declaration or gameplay evidence.
+Compilation progress and complete gameplay coverage remain separate. Existing
+subtype gameplay/count/source-identity regressions also passed.
+
+### Validation and actual gain
+
+Required checks completed in fast-fail order:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTargetDomainProof' -count=1`: pass.
+- `go test ./pkg/mage ./pkg/mage/dsl/ron
+  -run 'Target(DomainProof|SubtypeDomain)' -count=1`: pass.
+- Full `go test ./pkg/mage/dsl/ron -count=1`: pass after the Aura binding repair.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `go test ./... -short -count=1`: pass, including native repository validation
+  required by the implement-engine skill.
+- Initial `make lint` found one gocritic unnamedResult diagnostic on the internal
+  evaluator. Added result names. Final `make lint`: pass, **0 issues**.
+  Reviewed automatic formatting/import changes; no unrelated change occurred.
+  Focused engine/RON domain and land Aura text tests passed again after formatting
+  and the result-name fix. No assertion or required check was weakened.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,282 compiled /
+  163 rejected records; 903 accepted / 83 rejected names**. Parsed final JSON
+  equals the fresh baseline, including every diagnostic. Wall of Shadows still
+  reports `unsupported spell target filter (CanTargetOnly)` at LEG:297:402.
+  This is collection rejection, not a build/test failure.
+
+Actual compilation gain: zero names / zero records, matching the estimate.
+The new evidence covers previously accepted definitions. Every previous accepted
+record remains accepted; the loader still rejects the collection atomically.
+No source-data correction, RON source change, vocabulary refresh or runtime
+registry policy change was needed. Build/test/environment blockers: none.
+The unwrapping repair is compiler/engine compatibility, not a source defect.
+No Go-card definition or DSL function was removed: their removal gates remain
+closed, and no caller audit for deletion was needed in this slice.
+
+### Ranked next candidates
+
+1. Implement both CanTargetOnly(IsCreatureType(Wall)) spell and ability
+   restriction consumers as one cohesive consumer slice. Subtype proof, complete
+   selected ability declarations and zero-choice group retention now exist.
+   Inspect every applicable spell/Aura or exact selected ability group; preserve
+   the shared live rule lifecycle. Together they can unlock Wall of Shadows.
+2. Compare the next shared dependency-ready multi-card work with Kry Shield's
+   combined source-prevention and live mana-value toughness contract. Read
+   complete records to estimate gain; prevention alone unlocks zero names.
+3. Reflecting Mirror remains a source audit, target-derived X, player-target
+   predicate and retargeting chain, at most one name. Defer while useful shared
+   work remains.
+
+Changed files: new pkg/mage/target_domain_proof.go and native tests;
+target.go, composable_target.go, text_spell_continuation.go,
+text_land_aura_spell.go, text_land_aura_object.go and doc.go;
+new pkg/mage/dsl/ron/target_domain_proof.go and RON tests;
+temporary_animation.go, player_relative_target.go, enchant_controller.go and
+target_subtype_domain_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement target subtype domain proof`.
+Complete RON gameplay, runtime loading, Go-card deletion and DSL cleanup remain
+gated. This run stops after TARGET-SUBTYPE-DOMAIN-PROOF.

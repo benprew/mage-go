@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PermanentTargetDomain] retains immutable subtype predicates in declarations.
+// [TargetWithDomain] enforces them in target and attachment checks.
+// [TargetRequiresSubtype] proves a subtype from positive and negative tests,
+// conjunctions and disjunctions. Opaque restrictions supply no proof.
+// Contradictory subtype predicates supply no proof. Counts and chosen targets
+// cannot change declarations. Copies and clones retain the same immutable facts.
+// RON lowers permanent target predicates and Aura enchant predicates.
+// [UnwrapTarget] accepts typed bindings as well as target declarations.
+// Spell text checks retain domain structure. CanTargetOnly consumers stay separate.
+//
 // [Game.AbilityTargetSource] retains one selected ability's declaration ID and
 // complete target list. [TargetSourceAbility] returns the ID, a separate list
 // and a known flag. Empty known lists differ from unknown ability sources.
