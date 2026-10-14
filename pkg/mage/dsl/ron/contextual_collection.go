@@ -126,6 +126,20 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 			}
 			return mage.PermanentsDealtDamageByThisTurn(mage.DamageSourceOf(ref.build(bindings)), mage.MatchingPermanents(mage.AnyPermanent))
 		}, nil
+	case "WasTappedToPayForAbilitiesOfPermanent":
+		if !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+			return nil, problem(n, "paid tap history requires an ordinary resolving collection")
+		}
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		ref, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.PermanentSet {
+			return mage.TappedForAbilitiesThisTurn(ref.build(bindings))
+		}, nil
 	case "WasBlockedByDefenderThisTurn":
 		if err := arity(n, 1); err != nil {
 			return nil, err

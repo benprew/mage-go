@@ -29,6 +29,7 @@ type costPaymentTransaction struct {
 	revealedHandCards      []capturedCard
 	paidCardSets           map[*CardsBinding][]capturedCard
 	paidPermanents         map[*PermanentBinding]capturedPermanent
+	paidTaps               []capturedPermanent
 }
 
 type costPaymentSpec struct {
@@ -469,6 +470,7 @@ func (tx *costPaymentTransaction) Commit() error {
 	tx.revealedHandCards = nil
 	tx.paidCardSets = nil
 	tx.paidPermanents = nil
+	tx.paidTaps = nil
 	for _, cost := range tx.costs {
 		_, random := cost.(*discardRandomCost)
 		_, isSacrifice := cost.(*sacrificeMatchingCost)
@@ -496,6 +498,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 	tx.revealedHandCards = nil
 	tx.paidCardSets = nil
 	tx.paidPermanents = nil
+	tx.paidTaps = nil
 	defer func() {
 		if commitErr != nil {
 			tx.paidNumbers = nil
@@ -503,6 +506,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			tx.revealedHandCards = nil
 			tx.paidCardSets = nil
 			tx.paidPermanents = nil
+			tx.paidTaps = nil
 		}
 	}()
 	player := tx.game.GetPlayer(tx.controller)
@@ -663,6 +667,7 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			}
 			continue
 		}
+		tapVisits := tapCostVisits(cost, tx.sourceID, tx.game)
 		if source, ok := cost.(*sourceCardCost); ok {
 			result, err := source.payCard(tx.sourceID, tx.controller, tx.game)
 			if err != nil {
@@ -674,6 +679,11 @@ func (tx *costPaymentTransaction) commit() (commitErr error) {
 			tx.paidCards[source.result] = result
 		} else if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		for _, visit := range tapVisits {
+			if p := tx.game.FindPermanent(visit.id); p != nil && p.incarnationID == visit.incarnation && p.Tapped {
+				tx.paidTaps = append(tx.paidTaps, visit)
+			}
 		}
 		if exile, ok := cost.(*matchingPermanentExileCost); ok && len(exile.facts) != 0 {
 			if tx.paidNumbers == nil {

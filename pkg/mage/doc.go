@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TappedForAbilitiesThisTurn] selects present payers for one exact source visit.
+// Successful activation costs supply actual tap subjects. Ordinary taps and
+// resolution payments supply no history. Copies do not pay again. Turn cleanup
+// clears history. Untapping and control changes do not clear it. Phased payers
+// are absent. Source departure keeps the facts. Return cannot supply old visits.
+// Game clones keep separate history maps. Waiting queries do not make history.
+// RON accepts WasTappedToPayForAbilitiesOfPermanent(ref) in ordinary resolving
+// collections. This reads current-turn payments and completes Vodalian War Machine.
+// Entry, target, static and cost contexts need separate adapters.
+//
 // RON accepts LifeTotalOfPlayer(playerRef) in ordinary resolving bodies.
 // [LifeTotalOf] reads current life at each instruction. Negative life remains
 // available to arithmetic. Nonpositive life changes do nothing.

@@ -263,8 +263,8 @@ func TestRONTapMatchingWarMachineActivationClauses(t *testing.T) {
 			}
 		})
 	}
-	if _, err := Compile(record); err == nil || !strings.Contains(err.Error(), "WasTappedToPayForAbilitiesOfPermanent") {
-		t.Fatalf("full card must retain history gap: %v", err)
+	if _, err := Compile(record); err != nil {
+		t.Fatalf("full card must compile: %v", err)
 	}
 }
 

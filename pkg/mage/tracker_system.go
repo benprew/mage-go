@@ -15,6 +15,7 @@ type TurnTrackers struct {
 	untappedStartTurn            int
 	untappedStartPlayer          uuid.UUID
 	untappedStartVisits          map[capturedPermanent]bool
+	paidTapHistory               map[paidTapPair]bool
 	blockHistory                 map[blockHistoryPair]uuid.UUID
 	abilityActivations           map[activationHistoryKey]int
 	grantedActivations           map[uuid.UUID]int
@@ -334,6 +335,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.attackedIncarnations = nil
 	t.blocked = make(map[uuid.UUID][]uuid.UUID)
 	t.blockHistory = nil
+	t.paidTapHistory = nil
 	t.instantsCast = make(map[uuid.UUID]int)
 	t.sorceriesCast = make(map[uuid.UUID]int)
 	t.timesTargeted = make(map[uuid.UUID]int)
@@ -476,6 +478,7 @@ func (t *TurnTrackers) CleanupPriorityRounds() int {
 func (t *TurnTrackers) Clone() TurnTrackers {
 	c := TurnTrackers{
 		blockHistory:                 maps.Clone(t.blockHistory),
+		paidTapHistory:               maps.Clone(t.paidTapHistory),
 		abilityActivations:           maps.Clone(t.abilityActivations),
 		grantedActivations:           cloneUUIDMap(t.grantedActivations),
 		cardsPutIntoExile:            t.cardsPutIntoExile,

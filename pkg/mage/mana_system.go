@@ -457,6 +457,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	sourceIncarnation := perm.incarnationID
 	if !ability.Repeatable {
 		g.TapPermanent(perm)
+		g.recordAbilityTapPayment(capturedPermanent{perm.ID(), sourceIncarnation}, capturedPermanent{perm.ID(), sourceIncarnation})
 	}
 	if !ability.ResolveBody {
 		productions := action.Productions
@@ -545,6 +546,7 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	}
 	sourceIncarnation := perm.incarnationID
 	g.TapPermanent(perm)
+	g.recordAbilityTapPayment(capturedPermanent{perm.ID(), sourceIncarnation}, capturedPermanent{perm.ID(), sourceIncarnation})
 	if p := g.GetPlayer(playerID); p != nil {
 		produced, types := ms.addManaProductionsWithTypes(g, chosen, p, perm, preferredColor)
 		if err := ms.RunManaPostProduction(g, chosenAbility, p, perm); err != nil {

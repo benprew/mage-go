@@ -1,5 +1,44 @@
 # DSL reference
 
+## Paid tap history for resolving collections
+
+`TappedForAbilitiesThisTurn(source PermanentRef) PermanentSet` selects present,
+unphased battlefield visits tapped this turn to pay activation costs of that
+exact source visit. Successful activation payments publish their actual tap
+subjects. Ordinary tap instructions and resolution payments do not publish
+activation history. Copies do not pay again. Tap-symbol, matching, multiple,
+attached and exact-subject costs use the shared payment transaction. Direct and
+planned mana activations retain their own source tap, including zero production.
+A failed total payment supplies no history.
+
+Source and payer visits are separate typed identities. Source departure retains
+history for queued death triggers and delayed bodies. Return cannot supply an
+old source or payer. Untapping, control changes and phasing do not erase history;
+phased payers are absent from the result. Queries are pure. Turn cleanup clears
+history through the shared tracker reset; clones copy the map independently.
+Existing collection intersections and destruction batches supply current type
+checks, indestructibility, regeneration and simultaneous moves.
+
+RON accepts `WasTappedToPayForAbilitiesOfPermanent(permanentRef)` with exactly
+one typed reference in an ordinary resolving collection. Its supported meaning
+is current-turn payment history. `data/FEM.json` confirms the “this turn” limit
+for its only collection consumer, Vodalian War Machine. This spelling does not
+request a lifetime history. The existing source-death event supplies
+`Trigger_ThatPermanent`; factories, trigger copies and game clones retain that
+exact binding. Targets, static filters, entry operations and payment filters
+remain separate contexts and reject this adapter. Waiting delayed queries retain
+the exact source without tapping or adding history.
+
+Evidence: `TestRONPaidTapHistoryWarMachine` casts the complete FEM record and
+executes defender, both activations and its death instruction. `Lifetime` tests
+current type, both return identities, current control, phasing, cleanup, ability
+removal, regeneration, indestructibility, copies and clones. `MultiplePayers`
+tests two payments and the shared destruction batch. `Invalid` and `Inventory`
+cover declaration boundaries and typed source reporting. Native
+`TestPaidTapHistoryActivation`, `CostForms`, `RollbackAndBoundaries` and
+`WaitingQuery` cover history storage, payment provenance, reset and pure queries.
+Rules: CR 400.7, 602.2, 701.26 and 702.26b–d.
+
 ## Saved event permanent target exclusion
 
 `TargetOtherThanSavedPermanent(binding *PermanentBinding) PermanentTargetOption`

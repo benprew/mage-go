@@ -6,19 +6,20 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **915 accepted / 71 rejected names**
-(986 total), **2,295 compiled / 150 rejected records** (2,445 total).
-The latest slice is **RESOLVING-LIFE-TOTALS**.
-`LifeTotalOfPlayer` now reads a typed player's current life in an ordinary
-resolving body. `LoseLife_ThatPlayer` binds only the subject of its own loss
-amount. Each referenced subject is saved once with a fresh typed player binding.
-Shared mage snapshot, life, rounding, LKI and clone services supply execution.
-Entry, replacement, cost and static value contexts remain separate adapters.
-All six Personal Incarnation loss fragments and Shahrazad's loss fragment have
-RON execution tests with synthetic producers. Their complete records still
-reject. Lich remains blocked at its entry life loss. Actual full-card gain is
-**zero names / zero records**, as estimated; new coverage is prerequisite and
-fragment coverage. Required checks and unchanged diagnostics are below.
+Latest measured result (2026-10-14): **916 accepted / 70 rejected names**
+(986 total), **2,296 compiled / 149 rejected records** (2,445 total).
+The latest slice is **PAID-TAP-HISTORY**.
+`WasTappedToPayForAbilitiesOfPermanent(ref)` now selects present payers from
+successful activation payments in the current turn. Exact source and payer
+visits keep separate identities. Shared transactions supply actual taps;
+shared turn trackers supply reset and independent clone state. Source departure
+keeps queued death queries valid. Untapping and control changes keep history;
+phased payers are absent and returned objects cannot supply old visits.
+The complete Vodalian War Machine record now compiles and has RON gameplay
+coverage for defender, both activations and its death instruction. Actual gain
+is **one name / one record**, matching the estimate. Native contract tests cover
+tap payment forms, mana paths, rollback, query purity and clone isolation.
+Entry, static, target and cost-filter contexts remain separate adapters.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -16988,3 +16989,153 @@ Changed files: RON `compiler.go`, `player_scope.go`, `sacrifice_value.go`,
 `docs/engine-rules-contracts.md` and this ledger.
 Commit title: `feat(ron): implement resolving life totals`.
 This run stops after RESOLVING-LIFE-TOTALS.
+
+## 2026-10-14 — PAID-TAP-HISTORY
+
+### Baseline, candidates and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1 with
+valid JSON: 915 accepted / 71 rejected names and 2,295 compiled / 150 rejected
+records, from 986 names / 2,445 records. This was expected atomic collection
+rejection, not a build, test or environment failure. No user changes or unrelated
+untracked files were removed.
+
+The latest ledger ranked saved tap facts and paid-tap histories first. Complete
+records and nested rules were read for Phyrexian Gremlins, Vodalian War Machine,
+Giant Shark, Glyph of Delusion and all five Lich reprints. Targeted vocabulary
+inspection found one paid-tap history consumer, one saved singular tap consumer,
+two damage-history symbols in Shark and three distinct block-history consumers.
+These frequencies were not treated as full-card unlock counts.
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Paid activation tap history, the independent history part of candidate #1 | Vodalian War Machine | 1 | Its defender, matching-tap payments, attack permission, temporary P/T and bound source-death event already work. Missing engine provenance must distinguish source and payer visits, actual successful activation payments and the current turn. Shared provenance covers existing tap-symbol, matching, multiple, attached and exact costs plus direct/planned mana paths. It is distinct from resolving tap results. | Medium; one engine history contract, one contextual collection adapter and lifetime/payment tests. |
+| Saved singular tap results and their duration consumer, the other part of candidate #1 | Phyrexian Gremlins | 1 for both parts together; 0 for only the producer | `ThePermanentTappedThisWay` needs an actual-transition producer. A temporary untap-step rule with a source-tapped duration is a separate missing contract. Existing layer-duration and optional-source-untap services are reusable, but an ability grant must not substitute for the untap prohibition. This slice cannot unlock War Machine. | Medium to high; producer clearing, exact visits and separate rule lifetime tests. |
+| Combat history adapters | Giant Shark, Glyph of Delusion | 1 for Shark's damage-history symbol; no Delusion unlock from that shape | Shark's land-dependence and temporary P/T/trample adapters exist. Delusion needs a dependent block-history target and proof for its counter-dependent granted rules. Existing block-history collections do not establish target legality. These are separate shapes. | Low for Shark; medium for Delusion and retained grants. |
+| Entry life loss | Lich | 0 | Shared resolving life totals exist, but entry replacement order needs a distinct adapter. Gain-to-draw replacement, loss immunity, mandatory sacrifices and lose-game behavior still block the complete card. One unique consumer despite five records. | Medium for a zero-unlock entry prerequisite; high for the complete card. |
+
+Selected the dependency-ready history part of the first-ranked candidate. It
+unblocks one full record and establishes provenance through shared payment
+paths. The two tap candidates are not one shared two-card syntax capability.
+No compared candidate credibly unlocks multiple names in one small cohesive
+shape. The cheaper Shark adapter remains a reasonable next slice; it did not
+replace this run's first-ranked unblocking prerequisite. The selected contract,
+engine/compiler boundary and acceptance cases were stated before edits.
+
+### Exact supported shape and engine boundary
+
+RON accepts `WasTappedToPayForAbilitiesOfPermanent(permanentRef)`, exactly one
+typed source/attachment/singular-target/saved-event reference in an ordinary
+resolving permanent collection. It composes with existing collection `And` and
+`Or` operations. The complete card uses
+`And([IsCreatureType(Merfolk), WasTappedToPayForAbilitiesOfPermanent(Trigger_ThatPermanent)])`
+in its bound source-death trigger. Arity, reference type, scope and context
+checks stay in `ron`. Entry, static, target and payment-filter contexts reject.
+No source spelling changed.
+
+New native signature:
+`TappedForAbilitiesThisTurn(source PermanentRef) PermanentSet`.
+The query reads current-turn activation payment history by exact source and
+payer battlefield visits. It returns present, unphased members once each.
+Current type restrictions stay in the existing collection intersection.
+Source death, return, control changes or ability removal cannot rewrite old
+payment facts. Payer return cannot supply the paid visit. Phasing preserves
+identity but hides members during the query. Repeated payments do not duplicate
+members. Shared cleanup resets history; clones copy its map independently.
+
+The existing payment transaction retains actual tap subjects from tap-symbol,
+matching, multiple, attached and exact-subject costs. A successful battlefield
+activation publishes them for its exact source. Costs paid during resolution
+and ordinary tap actions do not publish activation history. Direct/planned
+mana paths retain their source tap as a payment, including zero production.
+Preparation and failed total payments do not publish history. Copies do not
+pay again. No mutable declaration state or global last-action slot was added.
+
+The source-death event already saves `Trigger_ThatPermanent` in a fresh typed
+binding; that adapter was reused. General permanent-information identities keep
+saved subjects readable after departure without making them legal action
+subjects. Shared collection, destruction, replacement, regeneration, trigger
+copy, delayed-source query and clone services supply the rest. Waiting-query
+inspection now traverses the new typed set without execution. API and rules
+contracts document only this established context.
+
+### Oracle evidence and card-to-test mapping
+
+`data/FEM.json` gives Vodalian War Machine's death instruction as destroying all
+Merfolk tapped **this turn** to pay for its abilities. That is the supported
+meaning of the existing RON predicate, whose spelling does not contain a turn
+argument. It must not become a lifetime history. No RON source defect or source
+edit was needed; no vocabulary source hashes changed. Rules consulted locally:
+CR 400.7, 602.2a–b, 701.26a–b and 702.26b–d.
+
+| Unique card | Complete source | RON gameplay evidence |
+| --- | --- | --- |
+| Vodalian War Machine | FEM.lines.ron:101, one record | `TestRONPaidTapHistoryWarMachine` casts the full record, checks insufficient-mana rollback, defender and attack permission, repeated payment for both activations, P/T and death membership. `Lifetime` tests untapping, source/payer control, phasing, departure/return before and after death, current type before and after triggering, cleanup, source ability removal, indestructibility, regeneration, ability/trigger copies and game clones. `MultiplePayers` executes two distinct payments and destroys their shared collection. Existing `TestRONTapMatchingWarMachineActivationClauses` preserves activation legality, payment and duration regressions and now requires the full record to compile. |
+
+`TestRONPaidTapHistoryInvalid` rejects wrong arity, tuple aliases, wrong reference
+types, unbound event reads and unsupported entry/static/target/cost contexts.
+`Inventory` verifies the nested source has the permanent-reference role.
+Native `TestPaidTapHistoryActivation` checks query purity, reset and clone-map
+isolation. `CostForms` checks eight cost/mana paths, including multiple payers.
+`RollbackAndBoundaries` checks failed total payment, ordinary taps, resolution
+payments and invalid native declarations. `WaitingQuery` retains an old exact
+source after departure/return without creating history, including clones.
+
+Failing-first evidence: the RON test failed at the unsupported history predicate;
+the native test failed to compile because `TappedForAbilitiesThisTurn` did not
+exist. After implementation the full RON package exposed four exact census
+assertions, now updated from 2,295/150 to the measured 2,296/149. No rejection
+was bypassed, and no gameplay or loader assertions were weakened.
+
+### Validation and measured result
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONPaidTapHistory' -count=1`: pass.
+- `go test ./pkg/mage -run '^TestPaidTapHistory' -count=1`: pass.
+- `go test ./pkg/mage/dsl/ron -count=1`: pass after the exact census updates.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass.
+- `make lint`: pass, 0 issues. Its automatic edit regrouped imports in the
+  new native test file; reviewed. Both focused suites passed again after lint.
+- `git diff --check`: pass, including the final ledger update.
+- `go run ./cmd/loadcards -json`: valid JSON and expected exit 1. **916 accepted /
+  70 rejected names**, **2,296 compiled / 149 rejected records**, from 986 names /
+  2,445 records. Only Vodalian War Machine's diagnostic was removed. No new
+  diagnostics appeared; every other diagnostic object and its order match the
+  fresh baseline. Accepted records did not regress. Collection loading remains
+  rejected atomically.
+
+Representative remaining diagnostics: Phyrexian Gremlins rejects at
+`ThePermanentTappedThisWay`; Giant Shark at its `WasDealtDamageThisTurn` symbol;
+Glyph of Delusion at its dependent `WasBlockedByDefenderThisTurn` target; Lich
+at entry `LoseLife`. No environment or pre-existing check failure blocks commit.
+
+Estimated and actual full-card gain: **one unique name / one record**, plus one
+complete-card RON gameplay mapping. Shared native payment-history coverage is
+separate from that card mapping. Accepted collection reconstruction remains
+covered by `TestRONDefinitionPlanAcceptedCollection`. Runtime loading, Go-card
+removal, DSL cleanup and native startup remain gated by complete support.
+No definitions, generators or DSL functions were removed in this slice.
+
+### Ranked next candidates
+
+1. Saved singular tap facts and a temporary untap-step rule with an exact
+   source-tapped lifetime for Phyrexian Gremlins. Inspect both contracts; the
+   completed payment history does not supply resolving tap outcomes.
+2. Combat-history adapters: Giant Shark's strict damage-history symbol is a
+   small likely one-card unlock. Glyph of Delusion still needs a distinct
+   dependent target and retained counter-dependent grants; do not count two
+   unlocks from one signature.
+3. Entry life loss for Lich. Reuse typed life totals but compare shared entry
+   replacement prerequisites first; its five records are one unique consumer
+   with several later blockers.
+
+Changed files: native new `paid_tap_history.go` and `paid_tap_history_test.go`,
+`payment_transaction.go`, `game.go`, `mana_system.go`, `tracker_system.go`,
+`waiting_delayed_source.go`, `doc.go`; RON new `paid_tap_history_test.go`,
+`contextual_collection.go`, `inventory.go`, `tap_matching_cost_test.go`,
+`definition_plan_test.go`, `inventory_test.go`, `numeric_consumers_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit title: `feat(ron): implement paid tap history`.
+This run stops after PAID-TAP-HISTORY.

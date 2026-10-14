@@ -168,7 +168,7 @@ func walkInventory(n Node, card, path, role, context string, compiled bool, entr
 	if role == "permanent_collection" && n.Kind != List {
 		if n.Name == "Ref_TargetPermanents" {
 			role = "permanent_collection_reference"
-		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" && n.Name != "DealtDamageToPermanentThisTurn" && n.Name != "BandedWith" {
+		} else if n.Name != "And" && n.Name != "Or" && n.Name != "AttachedToAPermanent" && n.Name != "IsBlockingAttacker" && n.Name != "IsBlockedByDefender" && n.Name != "WasTappedToPayForAbilitiesOfPermanent" && n.Name != "WasBlockedByDefenderThisTurn" && n.Name != "SinglePermanent" && n.Name != "DealtDamageToPermanentThisTurn" && n.Name != "BandedWith" {
 			role = "permanent_filter"
 		}
 	}
@@ -1859,7 +1859,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or" || n.Name == "AttachedToAPermanent") && len(n.Args) == 1 {
 			return role
 		}
-		if (n.Name == "BandedWith" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
+		if (n.Name == "BandedWith" || n.Name == "IsBlockingAttacker" || n.Name == "IsBlockedByDefender" || n.Name == "WasTappedToPayForAbilitiesOfPermanent" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "damage_permanent_collection":
@@ -2031,7 +2031,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "DealtDamageToAnyPlayerThisTurn" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-		if (n.Name == "WasDealtDamageByPermanentThisTurn" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
+		if (n.Name == "WasDealtDamageByPermanentThisTurn" || n.Name == "WasTappedToPayForAbilitiesOfPermanent" || n.Name == "WasBlockedByDefenderThisTurn" || n.Name == "DealtDamageToPermanentThisTurn") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 		if (n.Name == "IsSupertype" || n.Name == "IsNonSupertype") && len(n.Args) == 1 {

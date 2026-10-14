@@ -226,6 +226,8 @@ func permanentSetReadsSourcePermanent(subjects PermanentSet) bool {
 		return damageReadsSourcePermanent(s.source) || permanentSetReadsSourcePermanent(s.candidates)
 	case reverseTurnDamageHistoryPermanents:
 		return permanentRefReadsSourcePermanent(s.recipient) || permanentSetReadsSourcePermanent(s.candidates)
+	case paidTapSet:
+		return permanentRefReadsSourcePermanent(s.source)
 	case blockedThisTurnSet:
 		return permanentRefReadsSourcePermanent(s.blocker)
 	case differencePermanentSet:

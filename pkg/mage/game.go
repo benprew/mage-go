@@ -3245,6 +3245,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if err := payment.Commit(); err != nil {
 			return err
 		}
+		payment.recordAbilityTapPayments(capturedPermanent{permanentID, manaSourceIncarnation})
 		perm = g.FindPermanent(permanentID)
 		p := g.GetPlayer(playerID)
 		produced := 0
@@ -3422,6 +3423,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if err := payment.Commit(); err != nil {
 		return err
 	}
+	payment.recordAbilityTapPayments(capturedPermanent{perm.ID(), perm.incarnationID})
 	if len(payment.paidNumbers) > 0 {
 		if capturedNumbers == nil {
 			capturedNumbers = make(map[*NumberBinding]int)
