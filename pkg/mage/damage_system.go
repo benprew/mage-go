@@ -635,6 +635,7 @@ func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest)
 		source = g.CaptureDamageSource(sourceID)
 	}
 	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
+	action.recipientIncarnation = perm.incarnationID
 	return action
 }
 
@@ -692,7 +693,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		return 0
 	}
 	perm := g.MutablePermanent(a.PermanentID())
-	if perm == nil {
+	if perm == nil || (a.recipientIncarnation != uuid.Nil && perm.incarnationID != a.recipientIncarnation) {
 		return 0
 	}
 	amount := a.Amount()

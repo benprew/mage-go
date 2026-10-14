@@ -46,9 +46,10 @@ type ResolutionState struct {
 	currentEventSourceID uuid.UUID
 
 	// Card currently being resolved from the stack
-	resolvingCard       Card
-	resolvingController uuid.UUID
-	resolvingStackID    uuid.UUID
+	resolvingCard             Card
+	resolvingController       uuid.UUID
+	resolvingStackID          uuid.UUID
+	resolvingPermanentTargets []capturedPermanent
 
 	// Color state installed before target legality check during resolution
 	resolvingColorSourceID uuid.UUID
@@ -104,6 +105,7 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 		s.resolvingStackID = obj.ID
 	}
 	s.resolvingTargets = obj.Targets
+	s.resolvingPermanentTargets = spellPermanentTargetVisits(obj)
 	s.resolvingDamageDistribution = obj.DamageDistribution
 	s.resolvingCounterDistribution = obj.CounterDistribution
 	s.resolvingCastZone = obj.CastZone
@@ -152,6 +154,7 @@ func (s *ResolutionState) Clear() {
 	s.resolvingController = uuid.Nil
 	s.resolvingStackID = uuid.Nil
 	s.resolvingTargets = nil
+	s.resolvingPermanentTargets = nil
 	s.resolvingDamageDistribution = nil
 	s.resolvingCounterDistribution = nil
 	s.resolvingCastZone = ZoneAny
@@ -206,38 +209,39 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
-		drawReplacementRules:   maps.Clone(s.drawReplacementRules),
-		manaProduced:           s.manaProduced,
-		manaColors:             append([]Color(nil), s.manaColors...),
-		manaTracking:           s.manaTracking,
-		permanentBindings:      maps.Clone(s.permanentBindings),
-		createdTokenBindings:   cloneCreatedTokenBindings(s.createdTokenBindings),
-		cardBindings:           maps.Clone(s.cardBindings),
-		cardsBindings:          cloneCardsBindings(s.cardsBindings),
-		spellBindings:          maps.Clone(s.spellBindings),
-		wordPairBindings:       maps.Clone(s.wordPairBindings),
-		cardNameBindings:       maps.Clone(s.cardNameBindings),
-		playerBindings:         maps.Clone(s.playerBindings),
-		numberBindings:         maps.Clone(s.numberBindings),
-		manaTypesBindings:      cloneManaTypesBindings(s.manaTypesBindings),
-		targetQueryBindings:    cloneDelayedTargets(s.targetQueryBindings),
-		targetSpecs:            append([]Target(nil), s.targetSpecs...),
-		targetIncarnations:     maps.Clone(s.targetIncarnations),
-		sourceIncarnation:      s.sourceIncarnation,
-		sourceCaptured:         s.sourceCaptured,
-		currentX:               s.currentX,
-		currentMode:            s.currentMode,
-		currentEventAmount:     s.currentEventAmount,
-		currentEventSourceID:   s.currentEventSourceID,
-		resolvingCard:          s.resolvingCard,
-		resolvingController:    s.resolvingController,
-		resolvingStackID:       s.resolvingStackID,
-		resolvingColorSourceID: s.resolvingColorSourceID,
-		resolvingCastZone:      s.resolvingCastZone,
-		resolvingCastContext:   s.resolvingCastContext,
-		lastSacrificedID:       s.lastSacrificedID,
-		lastCostReveal:         s.lastCostReveal,
-		lastExiledCard:         s.lastExiledCard,
+		drawReplacementRules:      maps.Clone(s.drawReplacementRules),
+		manaProduced:              s.manaProduced,
+		manaColors:                append([]Color(nil), s.manaColors...),
+		manaTracking:              s.manaTracking,
+		permanentBindings:         maps.Clone(s.permanentBindings),
+		createdTokenBindings:      cloneCreatedTokenBindings(s.createdTokenBindings),
+		cardBindings:              maps.Clone(s.cardBindings),
+		cardsBindings:             cloneCardsBindings(s.cardsBindings),
+		spellBindings:             maps.Clone(s.spellBindings),
+		wordPairBindings:          maps.Clone(s.wordPairBindings),
+		cardNameBindings:          maps.Clone(s.cardNameBindings),
+		playerBindings:            maps.Clone(s.playerBindings),
+		numberBindings:            maps.Clone(s.numberBindings),
+		manaTypesBindings:         cloneManaTypesBindings(s.manaTypesBindings),
+		targetQueryBindings:       cloneDelayedTargets(s.targetQueryBindings),
+		targetSpecs:               append([]Target(nil), s.targetSpecs...),
+		targetIncarnations:        maps.Clone(s.targetIncarnations),
+		sourceIncarnation:         s.sourceIncarnation,
+		sourceCaptured:            s.sourceCaptured,
+		currentX:                  s.currentX,
+		currentMode:               s.currentMode,
+		currentEventAmount:        s.currentEventAmount,
+		currentEventSourceID:      s.currentEventSourceID,
+		resolvingCard:             s.resolvingCard,
+		resolvingController:       s.resolvingController,
+		resolvingStackID:          s.resolvingStackID,
+		resolvingPermanentTargets: append([]capturedPermanent(nil), s.resolvingPermanentTargets...),
+		resolvingColorSourceID:    s.resolvingColorSourceID,
+		resolvingCastZone:         s.resolvingCastZone,
+		resolvingCastContext:      s.resolvingCastContext,
+		lastSacrificedID:          s.lastSacrificedID,
+		lastCostReveal:            s.lastCostReveal,
+		lastExiledCard:            s.lastExiledCard,
 	}
 	if len(s.damageSourceBindings) > 0 {
 		c.damageSourceBindings = make(map[*DamageSourceBinding]DamageSource, len(s.damageSourceBindings))

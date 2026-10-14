@@ -16,6 +16,7 @@ type staticDamagePreventionRule struct {
 	allDamage        bool
 	blockedCreatures bool
 	permanentSources bool
+	targetedSpells   bool
 	sourceType       core.CardType
 }
 
@@ -62,6 +63,18 @@ func PreventDamageFromCardType(subject PermanentRef, kind core.CardType) StaticR
 	return staticDamagePreventionRule{subject: subject, allDamage: true, sourceType: kind}
 }
 
+// PreventDamageFromSpellsTargeting prevents spell damage with a saved target visit.
+func PreventDamageFromSpellsTargeting(subject PermanentRef) StaticRule {
+	return staticDamagePreventionRule{subject: subject, targetedSpells: true, allDamage: true}
+}
+
+// PreventDamageFromSpellsTargetingIf checks the live condition before prevention.
+func PreventDamageFromSpellsTargetingIf(subject PermanentRef, condition StateCondition) StaticRule {
+	rule := PreventDamageFromSpellsTargeting(subject).(staticDamagePreventionRule)
+	rule.condition, rule.conditional = condition, true
+	return rule
+}
+
 // PreventDamageFromBlockedCreatures prevents damage from current blocked creatures.
 // A former combat pair cannot supply this prevention through retained information.
 func PreventDamageFromBlockedCreatures(subject PermanentRef) StaticRule {
@@ -74,7 +87,9 @@ func (r staticDamagePreventionRule) inspectDefinition() definitionNode {
 	if !nilDefinition(r.subjects) {
 		node.children = []definitionEdge{{"subjects", r.subjects}}
 	}
-	if r.blockedCreatures {
+	if r.targetedSpells {
+		node.Text = "prevent damage from spells with a matching target"
+	} else if r.blockedCreatures {
 		node.Text = "prevent damage from blocked creatures"
 	} else if r.permanentSources {
 		node.Text = "prevent damage from matching permanent sources"
@@ -185,7 +200,24 @@ func (r *staticDamagePreventionReplacement) Matches(action Action, reader GameRe
 		return false
 	})
 	match := &damagePreventionRuleReplacement{combatOnly: !r.rule.allDamage}
-	if r.rule.allDamage && !r.rule.blockedCreatures && !r.rule.permanentSources && !damageSourceHasCardType(action, g, r.rule.sourceType) {
+	if r.rule.targetedSpells {
+		if !damageActionSource(action).TargetsPermanent(subjects[0]) {
+			return false
+		}
+		switch damage := action.(type) {
+		case *DamageToCreatureAction:
+			if damage.IsCombatDamage() {
+				return false
+			}
+		case *DamageToPlayerAction:
+			if damage.IsCombatDamage() {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	if r.rule.allDamage && !r.rule.targetedSpells && !r.rule.blockedCreatures && !r.rule.permanentSources && !damageSourceHasCardType(action, g, r.rule.sourceType) {
 		return false
 	}
 	if r.rule.outgoing {

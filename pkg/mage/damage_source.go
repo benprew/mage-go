@@ -10,6 +10,7 @@ import (
 )
 
 func cloneDamageSource(s DamageSource) DamageSource {
+	s.permanentTargets = slices.Clone(s.permanentTargets)
 	s.colors = slices.Clone(s.colors)
 	s.keywords = maps.Clone(s.keywords)
 	if s.card != nil {
@@ -21,6 +22,7 @@ func cloneDamageSource(s DamageSource) DamageSource {
 
 // DamageSource records the source state used by one damage instruction.
 type DamageSource struct {
+	permanentTargets                   []capturedPermanent
 	id, incarnation, controller, owner uuid.UUID
 	stackID                            uuid.UUID
 	commandVisit                       uuid.UUID
@@ -39,6 +41,15 @@ func (s DamageSource) Incarnation() uuid.UUID { return s.incarnation }
 
 // StackID keeps separate casts of the same card apart.
 func (s DamageSource) StackID() uuid.UUID { return s.stackID }
+
+// TargetsPermanent checks the saved target visit of a spell source.
+// Target legality does not remove the announced reference.
+func (s DamageSource) TargetsPermanent(permanent *Permanent) bool {
+	if permanent == nil || s.stackID == uuid.Nil || !s.hasExactIdentity() {
+		return false
+	}
+	return slices.Contains(s.permanentTargets, capturedPermanent{id: permanent.ID(), incarnation: permanent.incarnationID})
+}
 
 // CommandVisit keeps separate command-zone entries of one object apart.
 func (s DamageSource) CommandVisit() uuid.UUID { return s.commandVisit }
@@ -155,7 +166,7 @@ func (g *Game) CaptureDamageSource(id uuid.UUID) DamageSource {
 		if g.resolution.ColorSourceID() == id && g.resolution.ColorOverride() != nil {
 			colors = *g.resolution.ColorOverride()
 		}
-		return DamageSource{id: id, stackID: g.resolution.resolvingStackID, controller: controller, owner: card.Owner(), name: card.Name(), card: copied, colors: slices.Clone(colors)}
+		return DamageSource{id: id, stackID: g.resolution.resolvingStackID, controller: controller, owner: card.Owner(), name: card.Name(), card: copied, colors: slices.Clone(colors), permanentTargets: slices.Clone(g.resolution.resolvingPermanentTargets)}
 	}
 	return DamageSource{}
 }

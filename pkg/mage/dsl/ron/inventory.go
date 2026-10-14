@@ -795,6 +795,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "prevention_event":
+		if n.Name == "DamageWouldBeDealtByASpellToRecipient" && len(n.Args) == 2 {
+			return []string{"spell_damage_filter", "prevention_recipient"}[index]
+		}
 		if n.Name == "EachDamageWouldBeDealtToRecipient" && len(n.Args) == 1 {
 			return "prevention_recipient"
 		}
@@ -1737,6 +1740,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "stack_ability_filter":
 		if n.Name == "AbilityOfAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
+		}
+	case "spell_damage_filter":
+		if n.Name == "TargetsPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
 		}
 	case "spell_filter":
 		if n.Name == "IsntTheTargetOfAnAbility" && len(n.Args) == 1 {

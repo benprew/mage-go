@@ -20989,3 +20989,52 @@ life-loss events. `TestRONEntryLife*` covers the complete corrected Nameless Rac
 record, casting rollback, dynamic white nontoken/opponent/graveyard cap, zero
 P/T state actions, trample metadata, native combat, copied spells, pending clones,
 return, control changes, phasing, strict loading, inventory and invalid contexts.
+
+## Spell-source target facts and static prevention
+
+`DamageSource.TargetsPermanent(permanent *Permanent) bool` reads the permanent
+visits announced as targets of that exact spell. `CaptureSpellDamageSource`
+saves these facts from the live stack object. `CaptureDamageSource` saves them
+from the spell's resolution frame after stack departure. Missing stack identity,
+abilities, UUID-only targets and returned visits cannot match. Target legality
+does not erase announced references: a spell with another legal target can
+still deal untargeted damage while its original permanent target is illegal.
+Phasing keeps the target identity, but static subjects must be present.
+Copies use their own stack identities and target lists. Saved source bindings,
+resolution frames and game clones keep separate target arrays. Snapshot facts
+survive spell departure and cannot follow a later cast (CR 400.7, 608.2b, 707.10).
+
+`PreventDamageFromSpellsTargeting(subject PermanentRef) StaticRule` prevents
+noncombat damage from spells that target the current subject.
+`PreventDamageFromSpellsTargetingIf(subject PermanentRef,
+condition StateCondition) StaticRule` requires a valid live condition.
+`This` uses the source visit; `AttachedPermanent` uses an Aura's current host.
+Nil subjects, undeclared target bindings and nil conditions fail validation.
+The existing static lifecycle supplies ability removal, phasing, source visits,
+current controller checks and pure waiting-reference queries. Conditions and
+subjects are checked again after each replacement. Repeated events have no
+shield limit. Unrelated recipients, permanent-source abilities and combat do
+not match. Simultaneous packets, redirection and unpreventable damage retain
+the shared replacement process (CR 120.1, 120.2b, 611.3, 615.1, 615.12, 616.1).
+
+Prepared permanent damage actions now retain their recipient visit through
+replacement rechecks and amount copies. Execution cannot damage a returned
+visit. Existing UUID-only action constructors retain their legacy interface;
+new actions made by redirection retain the existing redirect services.
+
+RON accepts source-only static
+`PreventDamage(DamageWouldBeDealtByASpellToRecipient(
+TargetsPermanent(ThisPermanent), Permanent(ThisPermanent)), [PreventThatDamage])`,
+including supported static If/Unless/IfElse bodies. It requires exactly one
+prevention operation. Host, event, resolving, payment, other filters and other
+recipient contexts reject. Spell/ability causation remains a separate contract:
+a spell that makes a permanent deal damage does not make that permanent a spell
+source. Silhouette's causation event still rejects.
+
+Evidence: engine `TestSpellTargetDamageFacts`, `Prevention`, `Invalid`,
+`CopySnapshots`, `Recheck`, `HostAndWaiting`; RON
+`TestRONSpellTargetDamageBronzeHorse`, `Lifecycle`, `IllegalTargetFacts`,
+`Combat`, `ActivatedAbility`, `Invalid`. Bronze Horse uses its complete unchanged repository record.
+Its casting payment, 4/4 artifact creature metadata, trample and full conditional
+prevention have gameplay evidence. Synthetic fixtures test the reusable service;
+they do not establish Silhouette gameplay support.

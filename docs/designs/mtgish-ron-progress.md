@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **889 accepted / 97 rejected names**
-(986 total), **2,258 compiled / 187 rejected records** (2,445 total).
-The latest slice is **BOUNDED-ENTRY-LIFE-PAYMENT**. One source entry operation
-chooses and pays life under a typed cap and saves the result by permanent visit.
-Paired life-paid CDAs apply in layer 7a; other zones supply zero.
-Nameless Race compiles and has complete RON gameplay evidence after its CDA fix.
-Tests cover payment, timing, replacements, LKI, lifecycle, batches and clone isolation.
-Estimated and actual gain: **one unique name / one record**. Gameplay gains Nameless Race.
-The sole RON record's CDA defect was corrected; the vocabulary snapshot was refreshed.
+Latest measured result (2026-10-14): **890 accepted / 96 rejected names**
+(986 total), **2,259 compiled / 186 rejected records** (2,445 total).
+The latest slice is **SPELL-SOURCE-TARGET-PREVENTION**. Spell damage sources save
+announced permanent target visits across stack departure, snapshots and clones.
+Static prevention checks these facts against the live subject and condition.
+Bronze Horse compiles and has complete RON gameplay evidence.
+Tests cover casting, trample, targets, control, replacements, visits and isolation.
+Estimated and actual gain: **one unique name / one record**. Gameplay gains Bronze Horse.
+No RON source changed; Silhouette still requires distinct damage-causation facts.
 All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -24,8 +24,8 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Damage causation and targeting facts.** Reassess the shared prerequisite
-   for Bronze Horse and Silhouette before static/temporary prevention adapters.
+1. **Damage causation for Silhouette.** Spell-source target facts are complete.
+   Reassess shared downstream value before its distinct temporary adapter.
 2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
    the full power/sacrifice/graveyard-exile chain and a source/result fidelity audit.
 3. **Entry graveyard-X payment and counter combinations.** Frankenstein's Monster
@@ -11769,3 +11769,164 @@ supplied RON wiring, source correction, validation, ledger and the single commit
    needs one atomic producer, failed-entry routing and retained allocation count.
 
 Stop after this slice. All migration completion gates remain unfinished.
+
+## 2026-10-14 — SPELL-SOURCE-TARGET-PREVENTION
+
+### Candidate comparison and selection
+
+The initial working tree was clean. Fresh `make build` and RON package tests
+passed. Baseline loader exited 1 for collection rejection, with 2,258 compiled /
+187 rejected records and 889 accepted / 97 rejected unique names. This was not a
+build, test or environment failure. Read the design, engine reference, relevant
+API/rules contracts, targeted vocabulary signatures and all four complete
+candidate records. Local data/LEG.json confirms the target restrictions on both
+Bronze Horse and Silhouette. Reprints are counted once.
+
+1. Ranked candidate #1, damage causation and targeting facts: two distinct names,
+   Bronze Horse and Silhouette, one record each. A complete spell-source target
+   fact/static prevention shape should unlock Bronze Horse. Silhouette additionally
+   requires the exact causing spell/ability, which can differ from the damaging
+   source. Thus the bounded prerequisite slice estimates one full-card unlock,
+   not two. It saves the shared target-visit representation and establishes the
+   snapshot/query mechanics needed by the future causation service. Estimated
+   effort: one small compiler adapter, source/resolution snapshot integration,
+   existing static-rule integration and focused lifecycle/gameplay tests.
+2. Plural activation sacrifice facts/visits: Sword of the Ages is the one
+   affected unsupported unique name; Wood Elemental already has its separate
+   entry producer. Estimated full unlock is zero for a facts-only prerequisite,
+   or one after the entire transactional payment, total-power and graveyard-exile
+   chain. Source/result fidelity remains an explicit blocker. This enables plural
+   activation payments and visit-preserving payment consumers. Effort is larger
+   because selection, rollback, facts and retained graveyard visits all interact.
+3. Graveyard-X entry payment/counter combinations: Frankenstein's Monster is one
+   unique name/record. Estimated full unlock is one only with atomic payment,
+   failed-entry routing and retained counter allocation. Existing fixed entry
+   operations are insufficient. This enables entry payments with announced X and
+   result-dependent counter choices. Effort is larger than the selected shape.
+
+Selected the dependency-ready spell-source target prerequisite from candidate
+#1, with one immediate unlock and a concrete second consumer. This is one complete
+static shape. It does not accept a partial Silhouette declaration or equate the
+causing effect with its damage source. Other candidates do not offer a larger
+credible multi-card gain for this bounded effort.
+
+### Established contract, dependencies and reuse boundary
+
+Engine signatures:
+
+- `func (s DamageSource) TargetsPermanent(permanent *Permanent) bool`
+- `func PreventDamageFromSpellsTargeting(subject PermanentRef) StaticRule`
+- `func PreventDamageFromSpellsTargetingIf(subject PermanentRef, condition StateCondition) StaticRule`
+
+RON accepts static
+`PreventDamage(DamageWouldBeDealtByASpellToRecipient(TargetsPermanent(ThisPermanent),
+Permanent(ThisPermanent)), [PreventThatDamage])`, including supported static
+If/Unless/IfElse bodies. Both refs must be the source. Exactly one symbol operation
+is required. Malformed arities, unknown refs, host/target/event refs, other filters,
+other recipients, resolving and payment contexts reject. Inventory classifies
+TargetsPermanent as a spell-damage filter with a permanent-reference operand.
+
+The engine captures announced target visits from the live stack object and at
+resolution entry, before target legality removes recipients from resolving
+instructions. Actual spell-source identity is required. Facts survive stack
+removal, retained source bindings and target illegality. Return cannot supply an
+old target; phase cycles keep identity. Copies capture their own targets and stack
+IDs. Resolution arrays, snapshots and game clones keep separate arrays.
+
+Reused DamageSource exact identities, capturedPermanent, target incarnation
+maps, shared target legality/copy services, source snapshots, static subject and
+condition queries, cycle replacement lifetime, pure waiting queries, damage
+batches, replacement priority/rechecks and unpreventable handling. RON owns
+spelling, declaration validation and source-only context. The engine owns
+snapshots and live static prevention. No global last-action slot, card-name branch,
+Go fallback or partial production registry was added. Current callers remain.
+Rules boundaries: CR 120.1/120.2b, 400.7, 608.2b, 611.3, 615.1/615.12, 616.1,
+702.26 and 707.10; API/rules-contract docs describe only this established behavior.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial engine tests failed because the target query and prevention constructors
+were undefined. Real Bronze Horse RON failed at LEG:38:262 on unsupported
+DamageWouldBeDealtByASpellToRecipient. Corrected a test-only PhaseIn call to use
+its slice argument before collecting the engine failing-first log.
+
+The replacement return case then failed on pending damage reaching a returned
+recipient. Prepared DamageToCreatureAction now saves its recipient incarnation;
+execution checks it after replacements. WithAmount preserves that value. Existing
+UUID-only action constructors and redirection interfaces remain compatible.
+This closes the exact-visit contract needed by this slice; it adds no new general
+redirection contract. The short suite found one stale Bronze Horse rejection
+assertion. Replaced it with acceptance plus explicit remaining Silhouette
+causation rejection. Updated the four fresh collection-count assertions.
+
+- Bronze Horse -> `TestRONSpellTargetDamageBronzeHorse`: full unchanged RON,
+  failed unpaid cast, seven-mana payment, artifact creature 4/4 and trample,
+  another-creature condition, repeated targeted spells, untargeted spell damage
+  and permanent-source damage exclusion.
+- Bronze Horse -> `Lifecycle`: spell copies, pending clone isolation, other
+  creature departure/control, current Horse controller, phase cycle, source
+  ability removal and target return legality.
+- Bronze Horse -> `IllegalTargetFacts`: another legal target lets the spell
+  resolve; gaining shroud does not erase the original target fact for prevention.
+- Bronze Horse -> `Combat`: native attack/block damage and trample; combat damage
+  does not become spell-source damage.
+- Bronze Horse -> `ActivatedAbility`: real RON Prodigal Sorcerer activation that
+  targets the Horse still deals damage, despite the Horse's true static condition.
+- `TestRONSpellTargetDamageInvalid`: malformed filters, refs, recipients,
+  operations and resolving context rejection.
+- `TestSpellTargetDamageFacts`, `CopySnapshots`: stack departure, clearing,
+  exact identity, phased/returned visits, separate cast/copy IDs, revised copy
+  targets, retained snapshots and clone-array isolation.
+- `Prevention`, `Invalid`, `Recheck`, `HostAndWaiting`: definition errors,
+  repeated/simultaneous packets, unrelated recipients, combat, unpreventable,
+  condition enable/disable, phase/return, redirection, live Aura host and pure
+  waiting-reference queries. Synthetic fixtures prove reusable engine behavior.
+
+No source defect was found or corrected. No RON source changed, so no vocabulary
+snapshot refresh is required. Sword of the Ages' prior fidelity blocker remains.
+No Go card definitions or broad DSL functions were removed; cutover/removal gates
+remain closed. The implement-engine skill supplied reusable contract guidance;
+the user instruction supplied compiler wiring, ledger, validation and commit scope.
+
+### Verification and measured result
+
+Focused RON and engine tests pass with -count=1. `make build` and `go vet ./...`
+pass. `go test ./pkg/mage/... -short -count=1` and `make test` pass after the stale
+rejection assertion was updated. Lint, formatting review, final loader comparison
+and commit evidence follow below.
+
+Measured loader: **2,259 compiled / 186 rejected records;
+890 accepted / 96 rejected unique names**. Bronze Horse is the only removed
+baseline diagnostic. No diagnostic was added or changed, and no previously
+accepted record was lost. Estimated and actual gains match: one name/one record.
+Gameplay coverage separately gains Bronze Horse. Silhouette remains rejected;
+compilation counts are not a global gameplay-coverage claim.
+
+Changed files: engine damage_source.go, spell_damage_source.go,
+resolution_state.go, static_combat_prevention.go, action_damage.go,
+damage_system.go, doc.go and spell_target_damage_test.go; RON
+spell_target_damage.go/tests, static_prevention.go, inventory.go and the four
+count/blocker test files; API/rules-contract docs and this ledger.
+
+Final `make lint` reports **0 issues**. Reviewed automatic formatting: no
+semantic or unrelated edits. The final invalid-recipient tests use an exact
+recipient substring so they do not accidentally modify the TargetsPermanent
+filter. Their focused RON check passes. Post-lint engine/RON package short tests
+pass. `git diff --check` passes. Final `go run ./cmd/loadcards -json` exits 1
+only for the expected remaining collection rejection and confirms the counts
+above. There is no environment blocker. Commit title:
+`feat(ron): implement spell-source target prevention`.
+
+### Ranked next candidates
+
+1. **Damage causation identity and target facts for Silhouette**: spell-source
+   target snapshots now exist. Its temporary adapter still needs exact causing
+   spell/ability facts separate from the damaging source. Reassess shared
+   downstream value against remaining prerequisites before selecting.
+2. **Plural activation sacrifice facts and visits**: Sword of the Ages still
+   needs the complete power/payment/graveyard-exile chain and fidelity audit.
+3. **Graveyard-X entry payment and counter combinations**: Frankenstein's Monster
+   needs atomic payment, failed-entry routing and retained allocation count.
+
+Stop after this slice. Runtime loading, Go-card removal, DSL cleanup and complete
+collection gameplay remain unfinished.

@@ -27,7 +27,20 @@ func damageSourceFromSpellObject(obj *StackObject) DamageSource {
 		colors = *obj.ColorOverride
 	}
 	return DamageSource{id: obj.Card.ID(), stackID: obj.ID, controller: obj.Controller,
-		owner: obj.Card.Owner(), name: obj.Card.Name(), card: card, colors: slices.Clone(colors)}
+		owner: obj.Card.Owner(), name: obj.Card.Name(), card: card, colors: slices.Clone(colors), permanentTargets: spellPermanentTargetVisits(obj)}
+}
+
+func spellPermanentTargetVisits(obj *StackObject) []capturedPermanent {
+	if obj == nil || obj.IsAbility || obj.Card == nil || obj.ID == uuid.Nil {
+		return nil
+	}
+	var targets []capturedPermanent
+	for _, id := range obj.Targets {
+		if incarnation := obj.targetIncarnations[id]; id != uuid.Nil && incarnation != uuid.Nil {
+			targets = append(targets, capturedPermanent{id: id, incarnation: incarnation})
+		}
+	}
+	return targets
 }
 
 type spellDamageSource struct{ spell StackObjectRef }

@@ -199,8 +199,12 @@ func TestRONLiveStaticCollectionLoadAndScope(t *testing.T) {
 		}
 	}
 	bronze := repositoryRecord(t, "LEG", "Bronze Horse", "bronze.ron")
-	if _, err := Compile(bronze); err == nil || !strings.Contains(err.Error(), "DamageWouldBeDealtByASpellToRecipient") {
-		t.Fatalf("wrong remaining Bronze Horse blocker: %v", err)
+	if _, err := Compile(bronze); err != nil {
+		t.Fatalf("supported Bronze Horse rejected: %v", err)
+	}
+	silhouette := repositoryRecord(t, "LEG", "Silhouette", "silhouette.ron")
+	if _, err := Compile(silhouette); err == nil || !strings.Contains(err.Error(), "ASpellOrAbilityWouldCauseASourceToDealDamageToRecipient") {
+		t.Fatalf("wrong remaining Silhouette blocker: %v", err)
 	}
 }
 

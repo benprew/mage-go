@@ -15859,3 +15859,25 @@ life-loss events. `TestRONEntryLife*` covers the complete corrected Nameless Rac
 record, casting rollback, dynamic white nontoken/opponent/graveyard cap, zero
 P/T state actions, trample metadata, native combat, copied spells, pending clones,
 return, control changes, phasing, strict loading, inventory and invalid contexts.
+
+## RON spell-source target prevention
+
+Static permanent rules accept
+`PreventDamage(DamageWouldBeDealtByASpellToRecipient(
+TargetsPermanent(ThisPermanent), Permanent(ThisPermanent)), [PreventThatDamage])`.
+Supported static `If`, `Unless` and `IfElse` bodies can contain this declaration.
+Both references must be the source. The operation must be the single symbol
+`PreventThatDamage`. Host, event, target, resolving and payment contexts reject.
+
+The engine APIs are `DamageSource.TargetsPermanent(*Permanent) bool`,
+`PreventDamageFromSpellsTargeting(PermanentRef) StaticRule`, and
+`PreventDamageFromSpellsTargetingIf(PermanentRef, StateCondition) StaticRule`.
+Saved spell facts retain announced target visits after stack departure, even
+when a target becomes illegal. Copies and clones retain separate arrays.
+The static rule checks the live recipient, condition and source visit for each
+replacement. It prevents actual spell-source damage with no shield limit.
+Permanent-source ability damage and combat cannot match. RON owns syntax and
+context checks; the engine owns identity and prevention.
+
+This completes Bronze Horse. Silhouette still requires a distinct spell/ability
+causation service. See [the engine contract](engine-rules-contracts.md#spell-source-target-facts-and-static-prevention).

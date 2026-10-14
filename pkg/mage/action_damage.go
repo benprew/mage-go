@@ -39,11 +39,12 @@ func (a *DamageToPlayerAction) WithAmount(amount int) *DamageToPlayerAction {
 
 // DamageToCreatureAction represents damage about to be dealt to a creature.
 type DamageToCreatureAction struct {
-	source       uuid.UUID
-	sourceState  DamageSource
-	permanentID  uuid.UUID
-	amount       int
-	combatDamage bool
+	recipientIncarnation uuid.UUID
+	source               uuid.UUID
+	sourceState          DamageSource
+	permanentID          uuid.UUID
+	amount               int
+	combatDamage         bool
 }
 
 func NewDamageToCreatureAction(source, permanentID uuid.UUID, amount int, combatDamage bool) *DamageToCreatureAction {

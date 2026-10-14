@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [DamageSource.TargetsPermanent] reads a spell's saved target visits.
+// Stack departure and target illegality keep these facts. Return cannot match.
+// Source snapshots, copies and clones keep separate target arrays.
+// [PreventDamageFromSpellsTargeting] checks the current subject before prevention.
+// [PreventDamageFromSpellsTargetingIf] also checks a live condition each time.
+// The shared replacement process supplies rechecks and simultaneous packets.
+// RON accepts source TargetsPermanent in static spell-source prevention.
+// This completes Bronze Horse. Spell/ability causation needs a separate service.
+//
 // [PayLifeUpToAsEnters] reads a typed cap before entry. The entry controller
 // chooses zero through the cap and available life. Shared payment checks run
 // before commit. Invalid answers or failed payments save zero. Copy entry rules
