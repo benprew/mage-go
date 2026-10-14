@@ -409,7 +409,7 @@ func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *
 }
 
 func (g *Game) putOnBattlefieldWithEntry(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, castColorsSpent int, tapped bool) *Permanent {
-	perm := g.prepareBattlefieldEntry(card, controller, colors, castColorsSpent, tapped)
+	perm := g.prepareBattlefieldEntryWithContext(card, controller, colors, battlefieldEntryContext{actor: actor, castColorsSpent: castColorsSpent}, tapped)
 	if perm == nil {
 		return nil
 	}
@@ -429,7 +429,10 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 		g.registerBattlefieldEntry(perm, nil, uuid.Nil)
 	}
 	for _, perm := range permanents {
-		g.completeBattlefieldEntry(perm, controller, controller, 0)
+		g.observeBattlefieldEntryFrom(perm, controller, controller, 0, ZoneAny)
+	}
+	for _, perm := range permanents {
+		g.finishRetainedEntry(perm)
 	}
 	return permanents
 }
@@ -456,6 +459,9 @@ func (g *Game) prepareBattlefieldEntryWithContext(card Card, controller uuid.UUI
 func (g *Game) prepareBattlefieldEntryResultWithContext(card Card, controller uuid.UUID, colors *[]Color, context battlefieldEntryContext, tapped bool) (*Permanent, Card) {
 	if g.IsLandEntryProhibited(card) {
 		return nil, nil
+	}
+	if context.actor == uuid.Nil {
+		context.actor = controller
 	}
 	perm := NewPermanent(card, controller)
 	if colors != nil {
@@ -592,6 +598,11 @@ func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.
 }
 
 func (g *Game) completeBattlefieldEntryFrom(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int, origin Zone) {
+	g.observeBattlefieldEntryFrom(perm, controller, actor, castColorsSpent, origin)
+	g.finishRetainedEntry(perm)
+}
+
+func (g *Game) observeBattlefieldEntryFrom(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int, origin Zone) {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {

@@ -49,11 +49,13 @@ type entryCopyKey struct {
 }
 
 type battlefieldEntryContext struct {
+	actor           uuid.UUID
 	announcedX      int
 	castColorsSpent int
 }
 
 type battlefieldEntryAction struct {
+	retained     map[filteredEntryKey]*retainedEntryReplacement
 	filtered     map[filteredEntryKey]*filteredEntryReplacement
 	context      battlefieldEntryContext
 	permanent    *Permanent

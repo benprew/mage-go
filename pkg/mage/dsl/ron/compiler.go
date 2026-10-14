@@ -673,6 +673,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	switch n.Name {
 	case "FromStack":
 		return compileStackSelfCast(n, ctx)
+	case "ReplaceWouldPutAPermanentOnTheBattlefield":
+		return compileRetainedEntry(n)
 	case "ReplaceWouldEnter":
 		return compileFilteredEntry(n)
 	case "ReplaceWouldDraw":

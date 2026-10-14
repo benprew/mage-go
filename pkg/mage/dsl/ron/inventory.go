@@ -299,6 +299,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "permanent_rule_operation"}[index]
 			}
+		case "ReplaceWouldPutAPermanentOnTheBattlefield":
+			if len(n.Args) == 2 {
+				return []string{"retained_entry_event", "retained_entry_operation"}[index]
+			}
 		case "ReplaceWouldEnter":
 			if len(n.Args) == 2 {
 				return []string{"static_entry_event", "static_entry_operation"}[index]
@@ -335,6 +339,35 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "retained_entry_event":
+		if n.Name == "APlayerWouldPutAPermanentOnTheBattlefield" && len(n.Args) == 2 {
+			return []string{"retained_entry_player_filter", "entry_permanent_filter"}[index]
+		}
+	case "retained_entry_player_filter":
+		switch n.Name {
+		case "And":
+			return role
+		case "ControlsNum":
+			if len(n.Args) == 2 {
+				return []string{"retained_entry_comparison", "entry_permanent_filter"}[index]
+			}
+		}
+	case "retained_entry_comparison":
+		if n.Name == "GreaterThanOrEqualTo" && len(n.Args) == 1 {
+			return "retained_entry_count"
+		}
+	case "retained_entry_count":
+		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
+			return "entry_permanent_filter"
+		}
+	case "retained_entry_operation":
+		if n.Name == "PlayerAction" && len(n.Args) == 2 {
+			return []string{"retained_entry_actor", "retained_entry_sacrifice"}[index]
+		}
+	case "retained_entry_sacrifice":
+		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
+			return "entry_permanent_filter"
 		}
 	case "static_entry_event":
 		if n.Name == "APermanentWouldEnterTheBattlefield" && len(n.Args) == 1 {

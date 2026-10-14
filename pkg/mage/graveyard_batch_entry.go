@@ -66,7 +66,7 @@ func (*graveyardCreatureEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := current.Copy()
 			card.SetID(subject.id)
-			perm, _ := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{}, false)
+			perm, _ := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller}, false)
 			if perm == nil {
 				continue
 			}
@@ -113,7 +113,10 @@ func (*graveyardCreatureEntryEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	for _, entry := range entered {
-		g.completeBattlefieldEntryFrom(entry.permanent, entry.owner, ctx.Controller, 0, core.ZoneGraveyard)
+		g.observeBattlefieldEntryFrom(entry.permanent, entry.owner, ctx.Controller, 0, core.ZoneGraveyard)
+	}
+	for _, entry := range entered {
+		g.finishRetainedEntry(entry.permanent)
 	}
 	return nil
 }

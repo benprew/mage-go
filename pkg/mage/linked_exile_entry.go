@@ -72,7 +72,7 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 			}
 			card := exiled.Card.Copy()
 			card.SetID(subject.id)
-			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{}, false)
+			perm, failed := g.prepareBattlefieldEntryResultWithContext(card, owner.PlayerID(), nil, battlefieldEntryContext{actor: ctx.Controller}, false)
 			if perm == nil {
 				if failed != nil {
 					prepared = append(prepared, preparedExileEntry{subject: subject, failed: failed, owner: owner.PlayerID()})
@@ -150,7 +150,10 @@ func (e *exileEntryEffect) Apply(ctx *EffectContext) error {
 		g.FireEvent(event)
 	}
 	for _, entry := range entered {
-		g.completeBattlefieldEntryFrom(entry.permanent, entry.permanent.ControllerID(), ctx.Controller, 0, core.ZoneExile)
+		g.observeBattlefieldEntryFrom(entry.permanent, entry.permanent.ControllerID(), ctx.Controller, 0, core.ZoneExile)
+	}
+	for _, entry := range entered {
+		g.finishRetainedEntry(entry.permanent)
 	}
 	return nil
 }

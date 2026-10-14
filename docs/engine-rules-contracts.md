@@ -21178,10 +21178,65 @@ cost or resolution result; Kismet casting uses the existing rollback service.
 CR 614.1d, 614.4, 614.5, 614.12 and 616.1 establish timing, availability,
 characteristic matching, one application per event, and affected-player order.
 Local `data/LEG.json` confirms Kismet's complete Oracle text. No source correction
-is needed. Land Equilibrium remains unsupported: its player count predicate,
-retained entrant and mandatory post-entry sacrifice sequence are separate work.
+is needed. Land Equilibrium uses the retained entry sequence described below.
 
 Evidence: native `TestFilteredEntryLifecycle`, `Definition`, `Characteristics`,
 `CopyAndBatch`, `ReplacementOrder`, `ChoiceRecheck` and
 `LiveControlAndProjectionPurity`; RON `TestRONFilteredEntryKismet`,
 `CopiedKismet`, `Invalid` and `InventoryAndAtomicLoad`.
+
+
+## Retained entry and mandatory sacrifice
+
+`PutThenSacrificeFor(players PlayerSet, entrant, counted PermanentFilter,
+minimum ResolutionValue) Ability` adds a live static replacement from a
+permanent source. Definition validation requires a player set, a count value
+and a permanent source. The zero filter matches any permanent. RON supplies
+only typed card-type filters and a source-controller permanent count.
+
+The actor is the player who puts the proposed permanent onto the battlefield.
+Entry preparation now carries this actor through direct entry, graveyard and
+exile returns, and simultaneous returns. The existing controller is the default
+when the caller has no separate actor. Explicit actors can differ from entry
+controllers. This field does not replace entry event `ActorID` or controller
+bindings.
+
+Matching reads the actor's present, unphased controlled permanents before entry,
+and compares that count with the live value in the source's controller frame.
+The proposed entrant is excluded. Entrant types use the existing isolated layer
+projection, after higher-priority copy replacements. Source phasing, face-down
+status, departure and ability removal suspend the rule. Each source visit and
+ability ID has one application per proposed event. A selected replacement
+rechecks its source and predicate after competing replacement choices.
+
+Application saves the actor and sacrifice filter on that exact proposed entrant.
+This is an event continuation, not an ETB trigger or persistent linked ability.
+Cancelled entry never executes it. Successful entry publishes its entry event,
+then completes the required sacrifice before the entry service returns. Batch
+entry registers every entrant and publishes every entry observation before any
+saved sacrifice. All matching decisions use the pre-entry battlefield. Nested
+retained entries finish their saved operations in reverse replacement order
+(CR 616.1g). Source departure after application does not erase an instruction.
+Copies and clones have separate proposed objects and continuation slices.
+
+`SacrificeChosenBy(You, You, MatchingPermanents(filter))` runs in a separate
+actor frame through `ApplyEffect`. It uses existing required choice, exact visit,
+control, phasing, sacrifice replacement, ownership and zone-event services. The
+actor can choose the entrant after entry. A departed and returned choice cannot
+replace the saved visit. A single candidate needs no decision callback. No
+resolution result leaks into the caller's frame. Unavailable sacrifices have no
+effect. This is not an entry payment or an additional cost.
+
+Rules evidence: CR 614.1a, 614.4–7, 614.12, 616.1 and 616.1g, 701.21a.
+Local `data/LEG.json` supplies Land Equilibrium's complete Oracle text. The
+unchanged RON record matches the pre-entry count and retained-entry sequence.
+No source defect was found in this slice.
+
+Native evidence: `TestRetainedEntryCountsAndActor`,
+`LifecycleAndSavedSequence`, `BatchAndEvents`, `Definition`, `ActorAndVisit`,
+`CancellationAndRecheck`, `CopyPriorityAndNestedOrder`,
+`PendingCloneAndReturn`, `BatchUsesOriginalCount`,
+`PhasedEntrantKeepsSequence`, and `ReturnActors`.
+RON evidence: `TestRONRetainedEntryLandEquilibrium`, `CopiedSpell`, `Invalid`,
+and `FactoryAndAtomicLoad`. These tests cover the complete Land Equilibrium
+record. Other retained operations and player predicates remain unsupported.

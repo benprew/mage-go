@@ -15986,3 +15986,43 @@ Kismet's complete unchanged record has gameplay evidence in
 `TestRONFilteredEntryKismet` and `TestRONFilteredEntryCopiedKismet`.
 Compilation support does not establish Land Equilibrium's separate replacement
 sequence or its land-count and sacrifice contracts.
+
+
+## RON retained entry and sacrifice
+
+RON accepts this static rule on a permanent:
+
+```text
+ReplaceWouldPutAPermanentOnTheBattlefield(
+  APlayerWouldPutAPermanentOnTheBattlefield(
+    And([Opponent, ControlsNum(
+      GreaterThanOrEqualTo(TheNumberOfPermanentsOnTheBattlefield(
+        And([typeFilter, ControlledByAPlayer(SinglePlayer(You))]))),
+      countedTypeFilter)]),
+    entrantTypeFilter),
+  [WouldPutPermanentOnBattlefield_PutPermanentOnBattlefield,
+   PlayerAction(WouldPutAPermanentOnBattlefield_ThatPlayer,
+     SacrificeAPermanent(countedTypeFilter))])
+```
+
+Each type filter accepts `IsCardtype`, `IsNonCardtype` and nonempty nested
+`And`/`Or` lists. The source-controller count requires exactly one top-level
+controller clause and at least one type filter. The player conjunction requires
+exactly one `Opponent` symbol and one `ControlsNum` clause. Only the
+`GreaterThanOrEqualTo` comparison is supported. The sacrifice filter must have
+the same structural definition as the actor's count filter. The operation list
+must contain retained entry followed by the actor's mandatory sacrifice.
+
+The engine service is `mage.PutThenSacrificeFor(players, entrant, counted,
+minimum)`. It checks the actor's count before entry, projects entrant types,
+retains the entry, then makes the actor sacrifice after entry observations.
+The actor can differ from the entrant's controller and can choose the entrant
+if they control it. Simultaneous entry retains one common pre-entry battlefield
+for matching. Saved operations survive source departure after application.
+Game clones, spell copies and factory instances keep separate state.
+
+Other player comparisons, count values, operations, resolving use, entry
+payments and unbound references reject during compilation. Land Equilibrium's
+complete unchanged record has casting, gameplay, clone and copied-spell evidence
+in `TestRONRetainedEntry*`. The collection still rejects atomically while other
+unsupported records remain.

@@ -177,7 +177,7 @@ func ExileTargetReturnAtEndStep(onReturn ReturnedPermanentModifier) Effect {
 					if exiled == nil || g.IsLandEntryProhibited(exiled.Card) {
 						return nil
 					}
-					prepared, failed := g.prepareBattlefieldEntryResultWithContext(exiled.Card, owner, nil, battlefieldEntryContext{}, false)
+					prepared, failed := g.prepareBattlefieldEntryResultWithContext(exiled.Card, owner, nil, battlefieldEntryContext{actor: controller}, false)
 					if prepared == nil && failed == nil {
 						return nil
 					}

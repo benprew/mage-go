@@ -6,15 +6,16 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **895 accepted / 91 rejected names**
-(986 total), **2,269 compiled / 176 rejected records** (2,445 total).
-The latest slice is **STATIC-FILTERED-TAPPED-ENTRY**. Live source abilities
-match projected entry types and control through the shared replacement pipeline.
-Copy priority, affected-player order, ability removal, phasing, source visits,
-clones and simultaneous entry have contract tests. Kismet has complete RON
-casting, entry and spell-copy evidence. Land Equilibrium retains separate gaps.
+Latest measured result (2026-10-14): **896 accepted / 90 rejected names**
+(986 total), **2,270 compiled / 175 rejected records** (2,445 total).
+The latest slice is **RETAINED-ENTRY-SACRIFICE**. Live actor counts and projected
+entry types retain entry, then require a sacrifice in a saved actor frame.
+Source lifecycle, exact choice visits, copy priority, nesting, simultaneous
+entry, return actors and copy-on-write clone isolation have contract tests.
+Land Equilibrium has complete RON casting, gameplay and copied-spell evidence.
 Estimated and actual gain: **one unique name / one record**. No RON source changed.
-All required checks pass after two local lint fixes; final lint has 0 issues.
+All required checks pass; lint reports 0 issues. The loader's only removed
+diagnostic is Land Equilibrium's unsupported retained-entry rule.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -23,12 +24,12 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Land Equilibrium's retained entry and sacrifice sequence.** Reuse the new
-   live entry matching/projection prerequisite; land-count and sequence gaps remain.
-2. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+1. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
    atomic saved powers and exact graveyard consumers. Its RON omits artifact exile.
-3. **Damage causation identity.** Silhouette needs distinct causing spell/ability
-   identity; compare shared multi-card work before selecting this one-card adapter.
+2. **Damage causation identity.** Silhouette needs distinct causing spell/ability
+   identity; compare shared multi-card work before selecting its prevention adapter.
+3. **Combat declaration cardinality.** Caverns of Despair needs attack and block
+   caps; compare shared rule contracts and requirement interactions first.
 
 ## Dependencies and source blockers
 
@@ -12557,3 +12558,205 @@ Intended commit title: `feat(ron): implement static filtered tapped entry`.
 
 Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
 cleanup remain unfinished. This run stops after the selected slice.
+
+
+## 2026-10-14 — RETAINED-ENTRY-SACRIFICE
+
+### Candidate comparison and selection
+
+The worktree was clean. Read AGENTS.md, the engine reference, the execution
+design, the progress status and latest entry. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Fresh strict loader exited 1 for
+collection rejection: 2,269 compiled / 176 rejected records, 895 accepted /
+91 rejected names. This was not a build or test failure.
+
+Evaluated the ranked candidates first. Read complete Land Equilibrium, Sword
+of the Ages and Silhouette records in LEG, including all nested forms, and
+queried their exact vocabulary signatures. Each has one record and one unique
+name. Reprints are not counted as independent unlocks.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers / downstream contracts | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Retained entry and mandatory sacrifice | Land Equilibrium | 1 name / 1 record | Live projected entry matching exists. Needs actor count, saved continuation and mandatory post-entry choice. Supplies event-owned entry continuations, actor propagation through returns, nesting and batch timing for subsequent replacement adapters | Medium: one engine rule, one strict adapter, entry integration and identity/order tests |
+| Plural activation sacrifice facts and visits | Sword of the Ages | 0 for the payment producer alone; 1 after all consumers | Needs atomic plural payment, saved powers, exact graveyard visits and exile consumer. RON omits artifact exile, as recorded in the prior entry. Shared payment facts are reusable, but producer and consumers form a larger slice | Large: transactional plural costs plus two distinct consumers and source correction |
+| Damage causation identity | Silhouette | 0 for the identity prerequisite alone; 1 after prevention adapter | Existing damage-source target facts cover Bronze Horse, but the causing spell/ability can differ from the damaging source. Needs separate causing-object identities and a temporary prevention adapter | Large: new causation facts and lifecycle/replacement tests |
+
+Selected the first candidate. It is dependency-ready after STATIC-FILTERED-
+TAPPED-ENTRY and completes one coherent rule with the largest credible immediate
+gain for the bounded effort among these candidates. None offers a bounded
+multi-name full-card gain. The other two need more than an adapter and retain
+independent consumers. No single first-error frequency was treated as a full
+unlock estimate.
+
+Before editing, stated the contract and acceptance cases: pre-entry count,
+actor distinct from controller, retained entrant available for sacrifice, live
+source lifecycle, copy priority, replacement ordering and simultaneous entry.
+RON owns syntax and lexical validation; mage owns matching, continuation,
+required choices and movement. No old composable migration plan selected work.
+
+### Exact supported shapes and reuse boundary
+
+New native signature:
+
+`PutThenSacrificeFor(players PlayerSet, entrant, counted PermanentFilter,
+minimum ResolutionValue) Ability`.
+
+RON supports static `ReplaceWouldPutAPermanentOnTheBattlefield` with:
+
+- `APlayerWouldPutAPermanentOnTheBattlefield(playerFilter, entrantTypeFilter)`.
+- Exactly one `Opponent` symbol and one `ControlsNum` in the player's `And` list.
+- `ControlsNum(GreaterThanOrEqualTo(TheNumberOfPermanentsOnTheBattlefield(
+  And([typeFilters..., ControlledByAPlayer(SinglePlayer(You))]))), countedTypeFilter)`.
+- Type filters are `IsCardtype`, `IsNonCardtype` and nonempty nested And/Or lists.
+  The source count needs one controller clause and at least one type predicate.
+- Exactly two operations, in order:
+  `WouldPutPermanentOnBattlefield_PutPermanentOnBattlefield`, then
+  `PlayerAction(WouldPutAPermanentOnBattlefield_ThatPlayer,
+  SacrificeAPermanent(countedTypeFilter))`.
+- The sacrifice filter has the same structural definition as the actor's count
+  filter. Other predicates, players, comparisons, values, operations, resolving
+  declarations and unbound references remain compile-time errors.
+
+Semantic inventory records separate retained entry event, player predicate,
+comparison, count, operation, actor and sacrifice roles, while reusing type and
+player filter roles. Definitions validate player/value dependencies and a
+permanent source. Factories allocate fresh card and ability IDs.
+
+The entry context now carries the actor before replacements run. Direct entry
+and singular/batch graveyard/exile returns keep explicit actors; callers without
+a separate actor default to the entry controller. Existing event ActorID and
+controller contracts are preserved. Matching counts the actor's current,
+unphased controlled subjects before entry. The entrant does not count.
+`CountPermanents(PermanentsControlledBy(You, filter))` reads the minimum in the
+live source-controller frame. Existing isolated projection supplies entrant
+types after copy replacements.
+
+Each source visit and ability ID supplies a stable replacement identity.
+Runtime abilities, source phasing, departure, face-down status and ability
+removal govern availability. Execution rechecks after replacement choice. Once
+applied, each proposed entrant saves its own actor and filter. Source departure
+cannot erase that instruction. Cancelled entry discards the continuation.
+Successful entry observations precede sacrifice. Batches register and observe
+all entrants before any continuation. Nested retained sequences finish in reverse
+replacement order. Copy-on-write access, including phased objects, consumes the
+current visit's continuation without changing a clone. Permanent cloning copies
+the continuation slice.
+
+`SacrificeChosenBy` executes through `ApplyEffect` in a separate actor frame.
+It reuses required permanent selection, exact visit binding, current control,
+phasing, sacrifice replacement, ownership, zone batching and events. Single
+candidates need no decision callback. A chosen returned card cannot supply an
+old visit. The entrant is an eligible choice if the actor controls it. Caller
+resolution bindings are restored. There is no new zone/cost system, global
+last-action slot, card-name branch or gameplay declaration panic.
+
+No Go definitions or DSL functions were removed. Runtime cutover, Go-card
+removal and DSL cleanup remain gated. No RON source changed, so the vocabulary
+source snapshot needs no refresh. API and rules-contract docs describe only
+this supported behavior.
+
+Rules evidence: local CR 614.1a, 614.4–7, 614.12, 616.1, 616.1g and 701.21a.
+Local `data/LEG.json` supplies Land Equilibrium's exact Oracle text. Its unchanged
+RON record matches that text. Sword of the Ages's previously documented missing
+artifact exile remains a deferred source defect; no unrelated RON was changed.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial test harness API mistakes were corrected before the red baseline.
+RON then failed on unsupported ReplaceWouldPutAPermanentOnTheBattlefield;
+native tests failed only on the missing PutThenSacrificeFor signature.
+After implementation, decision callback assertions exposed the existing shared
+selector's single-candidate optimization. Corrected callback expectations while
+retaining sacrifice and identity assertions. Collection snapshots independently
+failed at 2,270/175, then received those exact measured counts.
+
+The pending clone test found a real copy-on-write bug: clearing a shared
+permanent's continuation erased it in another game. Changed consumption to use
+mutable permanent access, then expanded evidence to a phased entrant. No
+behavior assertion was removed or weakened to hide an implementation failure.
+
+- Land Equilibrium -> `TestRONRetainedEntryLandEquilibrium`: complete unchanged
+  record, unpaid-cast rollback, paid 2UU cast/resolution, zero/below/equal
+  thresholds, own land, opponent land, nonland, source departure and game clone.
+- Land Equilibrium -> `TestRONRetainedEntryCopiedSpell`: real permanent spell
+  copy enters as a separate permanent; opposite controller frames govern their
+  independent replacement rules.
+- Declaration contract -> `TestRONRetainedEntryInvalid`: unsupported player,
+  unbound source-count player, wrong comparison, wrong actor, missing retained
+  operation, wrong sacrifice, wrong conjunction and resolving misuse reject.
+- Loader/inventory/factory -> `TestRONRetainedEntryFactoryAndAtomicLoad`:
+  complete record, fresh card/ability IDs, semantic roles, valid explicit load,
+  invalid collection rejection preserving the existing registry.
+- Native `TestRetainedEntryCountsAndActor`: zero/below threshold, exclusion of
+  proposed entrant, and entry controller distinct from actor.
+- Native `TestRetainedEntryLifecycleAndSavedSequence`: source phasing,
+  restoration, ability removal/restoration, departure after application,
+  inactive departed source and independent game clone.
+- Native `TestRetainedEntryBatchAndEvents`: all simultaneous lands are present
+  at both entry observations; both saved instructions then sacrifice.
+- Native `TestRetainedEntryDefinition`: nonpermanent source, nil players and
+  nil count reject during definition validation.
+- Native `TestRetainedEntryActorAndVisit`: actor-controlled choice, leave/return
+  during the decision, exact choice visit and own actor with opponent controller.
+- Native `TestRetainedEntryCancellationAndRecheck`: competing replacement
+  cancellation discards continuation; source departure during replacement
+  ordering prevents the selected rule from applying.
+- Native `TestRetainedEntryCopyPriorityAndNestedOrder`: copied artifact avoids
+  a land-entry rule; two distinct retained rules finish the inner sequence first.
+- Native `TestRetainedEntryPendingCloneAndReturn`: pending continuations survive
+  clone isolation; source return has a new visit and current controller frame.
+- Native `TestRetainedEntryBatchUsesOriginalCount`: one simultaneous entrant
+  cannot change matching for another entrant.
+- Native `TestRetainedEntryPhasedEntrantKeepsSequence`: entrant phasing keeps
+  the independent sacrifice; continuation consumption preserves clone state.
+- Native `TestRetainedEntryReturnActors`: singular graveyard, batch graveyard
+  and batch exile entry use the actor rather than the entrant's owner/controller.
+
+### Measured gain and verification
+
+Fresh final loader: **2,270 compiled / 175 rejected records; 896 accepted /
+90 rejected names**, of 2,445 records / 986 names. Estimated and actual gains
+match: **one unique name / one record**, Land Equilibrium. That complete card
+also gains RON gameplay evidence; compilation counts are separate from the
+collection's remaining gameplay and runtime gates. Baseline/final diagnostic
+comparison removes only Land Equilibrium's unsupported rule. No diagnostic was
+added or changed. Strict collection loading still rejects atomically with exit 1.
+
+Required checks, in fast-fail order after the clone fix and final native changes:
+
+- `go test ./pkg/mage/dsl/ron -run RetainedEntry -count=1`: pass.
+- `go test ./pkg/mage -run RetainedEntry -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed automatic formatting of new import
+  groups; no unrelated file changed and no semantic lint change was made.
+- Focused RON and native tests rerun after lint: pass.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit 1 for remaining unsupported
+  records, with the counts above. Build/test/environment failures: none.
+
+Changed files: new mage and ron retained_entry.go/tests; card.go and clone.go
+for per-instance continuation state; entry_copy.go, effect_manager.go and game.go
+for proposed event actor, replacement candidates and entry completion;
+effect_cards.go, effect_removal.go, graveyard_batch_entry.go and
+linked_exile_entry.go for exact actor propagation and batch completion;
+RON compiler.go and inventory.go; exact collection snapshots in
+RON definition_plan_test.go, inventory_test.go and numeric_consumers_test.go;
+doc.go, dsl-reference.md, engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement retained entry sacrifice`.
+
+### Ranked next candidates
+
+1. **Plural activation sacrifice facts and visits.** Sword of the Ages needs
+   atomic saved powers and exact graveyard consumers. Reuse shared payment
+   transactions and movement. Correct its documented artifact-exile omission
+   with Oracle evidence when implementing the complete slice.
+2. **Damage causation identity.** Silhouette requires distinct causing spell and
+   ability facts before its temporary prevention adapter. Reassess shared
+   multi-card value against fresh collection evidence.
+3. **Combat declaration cardinality.** Caverns of Despair's complete record
+   needs attack and block caps. Compare existing rules-service reuse, legality
+   and requirement interactions against broader multi-card prerequisites.
+
+Complete collection gameplay, runtime cutover, Go-card deletion and unused DSL
+cleanup remain unfinished. This run stops after RETAINED-ENTRY-SACRIFICE.

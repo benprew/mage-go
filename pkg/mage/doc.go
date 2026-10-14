@@ -1,5 +1,19 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [PutThenSacrificeFor] retains entry and saves a mandatory sacrifice.
+// The player who puts the permanent supplies the count before entry.
+// Current source control supplies You. Copies apply before type matching.
+// Entry events precede the saved sacrifice. All batch entrants are present
+// before observations and sacrifices. The actor can sacrifice the entrant.
+// Each rule applies once. Nested sequences finish in reverse replacement order.
+// Source departure after application cannot cancel the saved instruction.
+// Choices require exact present visits. Return cannot replace a saved choice.
+// Phasing and ability removal suspend the source rule. Clones keep separate lists.
+// RON accepts an opponent count comparison against the source controller's
+// typed permanent count, followed by retained entry and a matching sacrifice.
+// This completes Land Equilibrium. Other player predicates and sequences
+// need separate adapters.
+//
 // [EntersTappedFor] supplies a live static entry replacement for selected players.
 // Current source control supplies You. Ability removal and phasing suspend it.
 // Matching projects entry types and control through shared layers without entry.
@@ -7,8 +21,8 @@
 // Each source visit and ability applies once; execution rechecks after choices.
 // Tapped status precedes entry observations, including simultaneous token entry.
 // RON accepts one opponent controller clause with nested card-type predicates
-// and one EntersTapped symbol. This completes Kismet. Other entry operations
-// and the Land Equilibrium sequence require separate adapters.
+// and one EntersTapped symbol. This completes Kismet. Other tapped-entry
+// operations require separate adapters.
 //
 // [SourceCounterCap] limits one counter type on the source's current visit.
 // Shared entry, single and batch placement apply the cap after replacements.
