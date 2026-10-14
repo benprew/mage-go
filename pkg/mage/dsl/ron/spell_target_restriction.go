@@ -17,7 +17,7 @@ func compileConditionalSpellTargetRestriction(n, operation Node, ctx scope, cond
 	if subject.kind != permanentSource && subject.kind != permanentHost {
 		return nil, unsupported(n.Args[0], "static spell targeting reference")
 	}
-	filter, err := compileSpellFilter(operation.Args[0])
+	filter, err := compileSpellCardFilter(operation.Args[0], true)
 	if err != nil {
 		return nil, err
 	}

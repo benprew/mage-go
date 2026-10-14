@@ -110,7 +110,7 @@ func TestRONTargetSubtypeDomainRecords(t *testing.T) {
 			}
 		})
 	}
-	for _, name := range []string{"Glyph of Delusion", "Glyph of Reincarnation", "Wall of Shadows"} {
+	for _, name := range []string{"Glyph of Delusion", "Glyph of Reincarnation"} {
 		if _, err := Compile(staticBaseRecord(t, "LEG", name)); err == nil {
 			t.Fatalf("published incomplete %s", name)
 		}

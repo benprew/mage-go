@@ -119,7 +119,7 @@ func TestRONAbilityTargetRestrictionInvalid(t *testing.T) {
 	for _, rule := range []string{
 		strings.Replace(valid, "ThisPermanent", "HostPermanent", 1), strings.Replace(valid, "ThisPermanent", "ThisPermanent()", 1), strings.Replace(valid, "ThisPermanent", "Ref_TargetPermanent", 1),
 		strings.Replace(valid, "IsCardtype(Artifact)", "IsCardtype(Artifact())", 1), strings.Replace(valid, "IsCardtype(Artifact)", "IsCardtype(Unknown)", 1), strings.Replace(valid, "IsCardtype(Artifact)", "IsColor(White())", 1), strings.Replace(valid, "IsCardtype(Artifact)", "IsColor(Unknown)", 1), strings.Replace(valid, "IsCardtype(Artifact)", "IsColor(Colorless)", 1),
-		strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "AbilityOfASource()", 1), strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "AnyAbility", 1), strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "CanTargetOnly(IsCreatureType(Wall))", 1),
+		strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "AbilityOfASource()", 1), strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "AnyAbility", 1), strings.Replace(valid, "AbilityOfASource(IsCardtype(Artifact))", "CanTargetOnly(IsCreatureType())", 1),
 		strings.Replace(valid, "IsCardtype(Artifact)", "And([])", 1), strings.Replace(valid, "IsCardtype(Artifact)", "AnySpell", 1), strings.Replace(valid, "IsCardtype(Artifact)", "IsEnchantmentType(Aura)", 1),
 		strings.Replace(valid, "CantBeTheTargetOfAbilities(AbilityOfASource(IsCardtype(Artifact)))", "CantBeTheTargetOfAbilities(AbilityOfASource(IsCardtype(Artifact)),AnyAbility)", 1),
 		`Activated(PayMana([]),ActionList([` + valid + `]))`,

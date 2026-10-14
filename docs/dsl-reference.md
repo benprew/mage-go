@@ -16372,8 +16372,8 @@ shared engine behavior. Graveyard activation checks target legality before
 payment and again during resolution. Copy retargeting keeps announced counts.
 
 Existing RON lowering supplies fresh ability IDs and complete declarations;
-no new RON spelling is introduced. `CanTargetOnly` remains unsupported until
-complete subtype-domain classification and its spell/ability consumers exist.
+no new RON spelling is introduced by this prerequisite. The subtype consumers
+below now use its complete selected declarations.
 Evidence: `TestTargetingAbility*` and `TestRONTargetingAbility*`.
 
 Interactive caller coverage: `TestTargetingAbilitySearch`,
@@ -16434,7 +16434,47 @@ record mapping now checks this proof API too. These are 17 names / 31 records
 with declaration or gameplay evidence, not newly unlocked cards.
 
 This supersedes the earlier bounded proof exclusions for disjunctions, negative
-creature-subtype predicates and Aura enchant declarations. `CanTargetOnly` spell
-and ability consumers remain unsupported. They must inspect complete applicable
-declaration groups, including groups with zero choices; the per-group query does
-not select a spell, ability or mode. Wall of Shadows still rejects.
+creature-subtype predicates and Aura enchant declarations. The subtype consumers
+below inspect complete applicable groups, including groups with zero choices.
+The per-group query does not select a spell, ability or mode.
+
+## CanTargetOnly subtype consumers
+
+`CanTargetOnlySubtypeFilter(subtype string) CardFilter` supplies a declaration
+predicate for `CantBeTargetedBySpells`, `CantBeTargetedBySpellsIf` and
+`CantBeTargetedByAbilities`. Empty names and names with outer spaces produce a
+zero filter, which definition validation rejects. It uses
+`TargetSourceCanTargetOnlySubtype(source Card, subtype string) bool` to require
+a known, nonempty applicable list whose every group passes `TargetRequiresSubtype`.
+Unknown and contradictory domains provide no proof. Neither target choices nor
+current battlefield membership can narrow the declaration. Optional and
+fixed-zero groups remain in the list. An additional player, spell, union-recipient
+or unknown permanent group prevents subtype proof.
+
+`SpellTargetSource(card)` retains ordinary casting or Aura enchant declarations.
+A modal spell without a selected mode supplies no proof.
+`SpellTargetSourceWithDeclarations(card Card, declared []Target) Card` retains
+an explicit selected-mode list, with its own slice. Engine modal announcement
+uses this view before target selection. Resolution and copy retargeting read the
+existing retained spell definition and selected mode, including groups absent
+from occurrence-aligned `TargetSpecs`. Ability queries use the exact selected
+ability's existing declaration view, rather than the source card's other abilities.
+Raw ability cards provide no proof. Copies, clones and source departure retain
+the applicable declaration; current target legality remains a separate check.
+
+RON supports `CanTargetOnly(IsCreatureType(symbol))` in top-level
+`PermanentRuleEffect` spell and ability restrictions. Subjects remain source or
+Aura host references. Spell restrictions also support it within their existing
+nonempty `And`/`Or` filter lists and their existing conditional static context.
+One spell and one ability restriction can share a combined list. This does not
+admit `CanTargetOnly` in characteristic-only spell filters, entry operations,
+payment declarations or arbitrary resolving actions. Other `CanTargetOnly`
+predicates remain declaration errors. This supersedes the prior exclusion of
+these subtype consumers and completes Wall of Shadows.
+
+Evidence: native `TestTargetOnlySubtype`, `SelectedModes`, `MixedZeroGroups`
+and `SourceIsolation`;
+RON `TestRONTargetOnlySubtypeWall`, `AbilityLifecycle`, `ResolutionRecheck`,
+`ZeroGroups`, `Triggered`, `Host`, `Modes` and `Invalid`. Existing strict inventory
+and atomic-loader tests now require the complete Wall of Shadows record to load
+and reject a malformed targeting predicate without replacing the prior registry.

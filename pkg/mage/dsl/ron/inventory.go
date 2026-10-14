@@ -1800,6 +1800,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "ability_filter":
+		if n.Name == "CanTargetOnly" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return role
 		}
@@ -1839,6 +1842,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "spell_filter":
+		if n.Name == "CanTargetOnly" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "IsntTheTargetOfAnAbility" && len(n.Args) == 1 {
 			return "stack_ability_filter"
 		}

@@ -201,16 +201,17 @@ func (g *Game) prepareModalSpellSelection(caster Player, card Card, targets []uu
 		return nil, fmt.Errorf("invalid spell mode")
 	}
 	mode := ms.modes[choice]
+	source := SpellTargetSourceWithDeclarations(card, mode.Targets)
 	if len(targets) == 0 {
-		targets = g.promptTargetsForListWithX(caster.PlayerID(), SpellTargetSource(card), mode.Targets, x)
+		targets = g.promptTargetsForListWithX(caster.PlayerID(), source, mode.Targets, x)
 	} else {
-		targets = g.acquireRandomTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets, x)
-		targets = g.acquireOpponentChosenTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets)
+		targets = g.acquireRandomTargets(caster.PlayerID(), source, mode.Targets, targets, x)
+		targets = g.acquireOpponentChosenTargets(caster.PlayerID(), source, mode.Targets, targets)
 	}
 	if len(mode.Targets) == 0 && len(targets) != 0 {
 		return nil, fmt.Errorf("too many targets for spell mode")
 	}
-	if err := g.validateActionTargets(caster.PlayerID(), SpellTargetSource(card), mode.Targets, targets, x, "spell mode"); err != nil {
+	if err := g.validateActionTargets(caster.PlayerID(), source, mode.Targets, targets, x, "spell mode"); err != nil {
 		return nil, err
 	}
 	targets = append([]uuid.UUID(nil), targets...)

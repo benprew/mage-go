@@ -48,6 +48,10 @@ func compileSpellManaValue(n Node, ctx scope) (valueFactory, error) {
 }
 
 func compileSpellFilter(n Node) (mage.CardFilter, error) {
+	return compileSpellCardFilter(n, false)
+}
+
+func compileSpellCardFilter(n Node, targeting bool) (mage.CardFilter, error) {
 	if n.Kind == Symbol && n.Name == "AnySpell" {
 		return mage.NewCardFilter("any spell", func(mage.Card) bool { return true }), nil
 	}
@@ -55,6 +59,11 @@ func compileSpellFilter(n Node) (mage.CardFilter, error) {
 		return mage.CardFilter{}, err
 	}
 	switch n.Name {
+	case "CanTargetOnly":
+		if !targeting {
+			return mage.CardFilter{}, unsupported(n, "spell characteristic filter")
+		}
+		return compileTargetOnlySubtypeFilter(n)
 	case "IsEnchantmentType":
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Aura" {
 			return mage.CardFilter{}, unsupported(n.Args[0], "spell enchantment subtype")
@@ -84,7 +93,7 @@ func compileSpellFilter(n Node) (mage.CardFilter, error) {
 		}
 		filters := make([]mage.CardFilter, len(parts))
 		for i, part := range parts {
-			filters[i], err = compileSpellFilter(part)
+			filters[i], err = compileSpellCardFilter(part, targeting)
 			if err != nil {
 				return mage.CardFilter{}, err
 			}

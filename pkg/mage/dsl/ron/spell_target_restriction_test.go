@@ -96,7 +96,7 @@ func TestRONSpellTargetRestrictionInvalid(t *testing.T) {
 		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(AnySpell())])`,
 		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(And([]))])`,
 		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(IsEnchantmentType(Saga))])`,
-		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(CanTargetOnly(IsCreatureType(Wall)))])`,
+		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(CanTargetOnly(IsCreatureType()))])`,
 		`PermanentRuleEffect(ThisPermanent,[CantBeTheTargetOfSpells(AnySpell),CantBeTheTargetOfAbilities(AnyAbility)])`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),Rules:[`+rule+`],CardPT:(Power:2,Toughness:3))`), "invalid.ron")

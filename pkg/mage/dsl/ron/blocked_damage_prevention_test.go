@@ -82,7 +82,7 @@ func TestRONBlockedDamagePreventionInvalid(t *testing.T) {
 	}
 }
 
-func TestRONBlockedDamagePreventionShadowsGap(t *testing.T) {
+func TestRONBlockedDamagePreventionShadows(t *testing.T) {
 	data, err := os.ReadFile("../../../../cards/mtgish/LEG.lines.ron")
 	if err != nil {
 		t.Fatal(err)
@@ -95,8 +95,8 @@ func TestRONBlockedDamagePreventionShadowsGap(t *testing.T) {
 		if node.Fields["Name"].String != "Wall of Shadows" {
 			continue
 		}
-		if _, err := Compile(node); err == nil || strings.Contains(err.Error(), "IsBlockedByDefender") {
-			t.Fatalf("remaining restriction gap: %v", err)
+		if _, err := Compile(node); err != nil {
+			t.Fatal(err)
 		}
 		return
 	}
@@ -154,17 +154,23 @@ func TestRONBlockedDamagePreventionStrictInventory(t *testing.T) {
 		t.Fatal("instances shared protection")
 	}
 	files["shadows.ron"] = &fstest.MapFile{Data: []byte(shadows)}
+	if err := LoadInto(registry, files, "*.ron"); err != nil || !registry.CardRegistered("Wall of Shadows") {
+		t.Fatal("complete Shadows record failed", err)
+	}
+	invalid := strings.Replace(shadows, "Wall of Shadows", "Invalid Shadows", 1)
+	invalid = strings.Replace(invalid, "CanTargetOnly(IsCreatureType(Wall))", "CanTargetOnly(IsCreatureType(Wall()))", 1)
+	files["invalid.ron"] = &fstest.MapFile{Data: []byte(invalid)}
 	if partial, err := LoadFS(files, "*.ron"); err == nil || partial != nil {
 		t.Fatal("published incomplete collection")
 	}
-	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 1 {
+	if err := LoadInto(registry, files, "*.ron"); err == nil || len(registry.RegisteredCardNames()) != 2 {
 		t.Fatal("failed load replaced registry")
 	}
 	report, err := InspectFS(files, "*.ron")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Compiled != 2 || len(report.Issues) != 1 || report.Issues[0].Card != "Wall of Shadows" {
+	if report.Compiled != 3 || len(report.Issues) != 1 || report.Issues[0].Card != "Invalid Shadows" {
 		t.Fatal("wrong remaining gap")
 	}
 	found := false

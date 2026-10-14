@@ -41,6 +41,8 @@ func abilityTargetSource(card Card, id uuid.UUID, declared []Target) Card {
 		view = targetSourceLKI{Card: card, colors: cardColors(card)}
 	}
 	view.spell = false
+	view.spellDeclarations = nil
+	view.spellDeclarationsKnown = false
 	view.abilityDeclaration = &targetingAbilityDeclaration{id: id, targets: slices.Clone(declared)}
 	return view
 }

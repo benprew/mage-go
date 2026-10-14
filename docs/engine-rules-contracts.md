@@ -467,7 +467,7 @@ RON supports `PermanentRuleEffect(ThisPermanent|HostPermanent,
 [CantBeTheTargetOfAbilities(AbilityOfASource(filter))])`. Filters are
 `IsCardtype(type)`, `IsColor(color)` for the five colors, and nonempty `And([…])`
 or `Or([…])` compositions. A two-operation rule can combine this restriction
-with `CantBeTheTargetOfSpells`. `CanTargetOnly`, unbound references, malformed
+with `CantBeTheTargetOfSpells`. Other `CanTargetOnly` predicates, unbound references, malformed
 operands and unsupported filters remain compile errors. Conditional restriction
 rules and target-declaration predicates need separate contracts.
 
@@ -9588,7 +9588,7 @@ independent clones and choice followed by damage from that subject.
 Existing static prevention tests retain declaration rejection, casting and
 payment rollback, actual prevention, simultaneous damage and replacement order.
 
-Wall of Shadows still fails its separate `CanTargetOnly` declaration. Legacy
+Wall of Shadows now uses the subtype targeting consumer below. Legacy
 filter-factory static rules and other waiting replacement contexts remain gaps.
 No payment, damage batch, replacement order or general source-choice rule changes.
 
@@ -21676,9 +21676,8 @@ whole-spell/ability domain consumer must inspect every applicable declaration;
 selected `StackObject.TargetSpecs` alone omit zero-choice groups.
 
 This is the bounded declaration prerequisite for Wall of Shadows. Active
-ability identity uses the separate targeting-ability service below. CanTargetOnly
-and complete spell/domain classification remain unsupported, so the complete
-Wall record still rejects.
+ability identity uses the separate targeting-ability service below. The complete
+subtype-domain proof and whole-declaration consumers below complete its rules.
 
 Evidence: native `TestTargetSubtypeDomain` and
 `TestTargetSubtypeDomainDeclarations` and `TestTargetSubtypeDomainCallers`; RON `TestRONTargetSubtypeDomainGameplay`
@@ -21731,9 +21730,8 @@ use current source characteristics or exact LKI, not printed characteristics.
 RON's existing `Activated`, `ActivatedWithModifiers`, `TriggerA`, `TriggerI`,
 `Modal_ChooseOne`, `Targeted` and target-count lowering already produces fresh
 ability instances and complete groups. No spelling adapter or source edit is
-needed for this engine prerequisite. It does not implement `CanTargetOnly`,
-spell-domain classification or Aura/disjunctive domain proofs. Unknown domains
-must not be treated as unrestricted. Wall of Shadows remains rejected.
+needed for this engine prerequisite. The subtype-domain proof and consumer
+services below now use these declarations. Unknown domains cannot supply proof.
 
 Evidence: native `TestTargetingAbilityView`, `Activation`,
 `CurrentCharacteristics`, `Queries`, `PendingAndDelayed`, and `Graveyard`;
@@ -21803,7 +21801,63 @@ record mapping now checks this proof API too. These are 17 names / 31 records
 with declaration or gameplay evidence, not newly unlocked cards.
 
 This supersedes the earlier bounded proof exclusions for disjunctions, negative
-creature-subtype predicates and Aura enchant declarations. `CanTargetOnly` spell
-and ability consumers remain unsupported. They must inspect complete applicable
-declaration groups, including groups with zero choices; the per-group query does
-not select a spell, ability or mode. Wall of Shadows still rejects.
+creature-subtype predicates and Aura enchant declarations. The subtype consumers
+below inspect complete applicable groups, including groups with zero choices.
+The per-group query does not select a spell, ability or mode.
+
+## Whole spell and selected ability subtype targeting proof
+
+`TargetSourceCanTargetOnlySubtype(Card, string) bool` checks the complete applicable
+list of target declarations, using `TargetRequiresSubtype` on each group. The
+list must be known and nonempty. Subtype contradictions and opaque restrictions
+supply no proof. A group that can select a player, spell, union recipient or an
+unknown permanent domain prevents proof. Chosen objects, current battlefield
+membership, target legality, count bounds and zero choices cannot erase a group.
+This checks the declaration's capability, not the chosen targets (CR 115.1,
+115.6). It does not use the different current-target rules in CR 115.9b–c.
+
+`CanTargetOnlySubtypeFilter(string) CardFilter` composes this query with existing
+live spell/ability target restrictions. Empty or outer-space names give a zero
+filter and fail the existing definition checks. No new continuous-effect,
+replacement, cost or global history service is introduced. The current rule
+source, attachment, phasing, ability-removal and incarnation checks remain in
+charge. Attachment without casting is still not targeting (CR 303.4).
+
+Ordinary spell views use `Card.CastTargets`; Aura views use their enchant
+casting declaration. `SpellTargetSourceWithDeclarations(Card, []Target) Card`
+retains a separate selected-mode list. Unselected modal views provide no proof.
+Modal announcement supplies the selected list before choices and payment
+(CR 601.2b–c, 700.2). At resolution and copy retargeting, the existing retained
+`spellTextDefinition` and `ModeChoice` supply all applicable groups. They do not
+use `TargetSpecs`, which aligns with chosen occurrences and can omit zero groups.
+Copies retain modes and complete declarations (CR 707.10, 707.10c). Constructors
+copy input lists; underlying target specifications retain their existing immutable
+ownership contract. Ability conversion clears spell declaration data. Known-empty
+and unknown views both give no subtype proof, without conflating their identity.
+
+Abilities use the exact selected declaration from `AbilityTargetSource`.
+Another ability on the same source cannot supply or remove a target group.
+Pending triggers, source departure, return, control changes, copies and clones
+keep the existing source and declaration identities. No name-based inference or
+LKI substitution for a returned target is allowed. Target selection runs before
+payment; resolution rechecks restored restrictions without refunding costs
+(CR 608.2b). These queries spend no resources and make no choices.
+
+RON lowers only `CanTargetOnly(IsCreatureType(symbol))` in static spell/ability
+restrictions, with source or Aura-host subjects. Its inventory gives the nested
+predicate the permanent-filter role. Characteristic-only spell filters and other
+predicates remain unsupported. This supersedes the prior consumer exclusions.
+
+Evidence: native `TestTargetOnlySubtype` covers declaration categories,
+contradictions, unknown/empty views, input isolation and invalid native filters;
+`SelectedModes` checks illegal announcement, paid broad-mode casting and copies;
+`MixedZeroGroups` checks complete lists, rollback, resolution and copy/clone
+retention when occurrence-aligned lists omit a broad group. `SourceIsolation`
+checks that unrelated cards cannot inherit a spell declaration.
+RON `TestRONTargetOnlySubtype` tests all rules of complete Wall of Shadows, Aura
+and activated restrictions, broad spell effects, blocked/unrelated damage,
+source/target departure, phasing, control, ability removal and restoration,
+selected spell/ability modes, pending triggers, host reattachment, factory
+isolation, malformed declarations and atomic loading. Existing primitive tests
+retain APNAP trigger placement, replacement ordering and simultaneous damage
+coverage; this consumer adds no new timing or payment transaction.

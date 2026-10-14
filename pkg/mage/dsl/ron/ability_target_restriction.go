@@ -18,20 +18,26 @@ func compileAbilityTargetRestriction(n, operation Node, ctx scope) (optionFactor
 	if subject.kind != permanentSource && subject.kind != permanentHost {
 		return nil, unsupported(n.Args[0], "static ability targeting reference")
 	}
-	filterNode := operation.Args[0]
-	if filterNode.Name != "AbilityOfASource" {
-		return nil, unsupported(filterNode, "static ability filter")
-	}
-	if err := arity(filterNode, 1); err != nil {
-		return nil, err
-	}
-	filter, err := compileAbilitySourceFilter(filterNode.Args[0])
+	filter, err := compileAbilityTargetingFilter(operation.Args[0])
 	if err != nil {
 		return nil, err
 	}
 	return func() mage.CardOption {
 		return mage.WithAbility(mage.Static(mage.CantBeTargetedByAbilities(subject.build(instanceBindings{}), filter)))
 	}, nil
+}
+
+func compileAbilityTargetingFilter(n Node) (mage.CardFilter, error) {
+	if n.Name == "CanTargetOnly" {
+		return compileTargetOnlySubtypeFilter(n)
+	}
+	if n.Name != "AbilityOfASource" {
+		return mage.CardFilter{}, unsupported(n, "static ability filter")
+	}
+	if err := arity(n, 1); err != nil {
+		return mage.CardFilter{}, err
+	}
+	return compileAbilitySourceFilter(n.Args[0])
 }
 
 func compileAbilitySourceFilter(n Node) (mage.CardFilter, error) {

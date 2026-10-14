@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [CanTargetOnlySubtypeFilter] reads every applicable target declaration.
+// [TargetSourceCanTargetOnlySubtype] requires a nonempty complete list and
+// subtype proof for each group. Unknown and contradictory domains give no proof.
+// Counts and choices cannot remove a group. Raw ability sources give no proof.
+// [SpellTargetSourceWithDeclarations] retains a selected spell mode's groups.
+// Ordinary spells and Auras use their casting declarations. Resolution and
+// copies use the retained spell definition and selected mode. Existing live
+// restrictions supply phasing, ability removal, attachment and visit checks.
+// RON accepts CanTargetOnly(IsCreatureType(symbol)) in static spell and ability
+// target restrictions. This completes Wall of Shadows. Other predicates and
+// characteristic spell-filter contexts need separate adapters.
+//
 // [PermanentTargetDomain] retains immutable subtype predicates in declarations.
 // [TargetWithDomain] enforces them in target and attachment checks.
 // [TargetRequiresSubtype] proves a subtype from positive and negative tests,
@@ -8,7 +20,7 @@
 // cannot change declarations. Copies and clones retain the same immutable facts.
 // RON lowers permanent target predicates and Aura enchant predicates.
 // [UnwrapTarget] accepts typed bindings as well as target declarations.
-// Spell text checks retain domain structure. CanTargetOnly consumers stay separate.
+// Spell text checks retain domain structure. Subtype consumers use the proof.
 //
 // [Game.AbilityTargetSource] retains one selected ability's declaration ID and
 // complete target list. [TargetSourceAbility] returns the ID, a separate list
@@ -18,7 +30,7 @@
 // Announcement, pending triggers, resolution, copies and clones keep the facts.
 // Graveyard activation checks targets before payment and during resolution.
 // Existing RON lowering supplies fresh ability instances and complete groups.
-// CanTargetOnly and complete spell/domain classification need separate adapters.
+// CanTargetOnly subtype consumers use these complete lists.
 //
 // [TargetHasSubtype] enforces a subtype in a permanent target declaration.
 // [TargetRequiredSubtypes] returns a separate list of those constraints.
@@ -29,7 +41,7 @@
 // Bindings, count wrappers, copies and clones keep the constraint.
 // RON lowers IsCreatureType(symbol) in permanent target filters, directly
 // or within And. This also retains the subtype for fixed and X target counts.
-// CanTargetOnly consumers and active ability identity need separate services.
+// Complete ability and subtype consumers use separate shared services.
 //
 // [SpellWithSingleTarget] counts one announced target occurrence on a spell.
 // Target legality, phasing and departure do not remove the occurrence.

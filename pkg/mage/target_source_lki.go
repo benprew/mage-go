@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -9,18 +11,23 @@ import (
 // A returned card must not supply characteristics for its previous battlefield visit.
 type targetSourceLKI struct {
 	Card
-	abilityDeclaration *targetingAbilityDeclaration
-	incarnation        uuid.UUID
-	colors             []core.Color
-	power              int
-	powerKnown         bool
-	spell              bool
+	abilityDeclaration     *targetingAbilityDeclaration
+	spellDeclarations      []Target
+	spellDeclarationsKnown bool
+	incarnation            uuid.UUID
+	colors                 []core.Color
+	power                  int
+	powerKnown             bool
+	spell                  bool
 }
 
 func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 	result := g.targetSourceInformation(obj)
-	if !obj.IsAbility || result == nil {
-		return result
+	if result == nil {
+		return nil
+	}
+	if !obj.IsAbility {
+		return spellDeclarationSource(obj, result)
 	}
 	view, ok := obj.TargetSource.(targetSourceLKI)
 	if !ok || view.abilityDeclaration == nil {
@@ -78,11 +85,19 @@ func SpellTargetSource(card Card) Card {
 	if card == nil {
 		return nil
 	}
-	if view, ok := card.(targetSourceLKI); ok {
-		view.spell = true
-		return view
+	view, ok := card.(targetSourceLKI)
+	if !ok {
+		view = targetSourceLKI{Card: card, colors: cardColors(card)}
 	}
-	return targetSourceLKI{Card: card, colors: cardColors(card), spell: true}
+	view.spell = true
+	view.abilityDeclaration = nil
+	if !view.spellDeclarationsKnown {
+		if _, modal := getModalSpellAbility(card); !modal {
+			view.spellDeclarations = slices.Clone(card.CastTargets())
+			view.spellDeclarationsKnown = true
+		}
+	}
+	return view
 }
 
 func (g *Game) triggerTargetSource(pt *pendingTrigger) Card {

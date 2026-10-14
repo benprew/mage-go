@@ -6,19 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
-(986 total), **2,282 compiled / 163 rejected records** (2,445 total).
-The latest slice is **TARGET-SUBTYPE-DOMAIN-PROOF**.
-Immutable subtype predicates now support positive/negative tests, conjunctions,
-disjunctions and Aura enchant declarations. The engine enforces the predicates
-and supplies a declaration proof without reading game state or chosen targets.
-Opaque predicates and contradictory subtype formulas supply no proof.
-Bindings, count/random/opponent-choice wrappers, copies and clones retain facts.
-Aura text checks now accept typed bindings through the shared target adapter.
-Seventeen accepted names / 31 records have new proof or gameplay mappings.
-Estimated and actual compilation gain: **zero names / zero records**.
-All prior accepted records and loader diagnostics remain unchanged.
-CanTargetOnly spell and ability consumers remain the next shared consumer slice.
+Latest measured result (2026-10-14): **904 accepted / 82 rejected names**
+(986 total), **2,283 compiled / 162 rejected records** (2,445 total).
+The latest slice is **CAN-TARGET-ONLY-SUBTYPE-CONSUMERS**.
+Static spell and selected-ability restrictions now consume subtype domain proof.
+Complete applicable groups retain modes, Aura declarations and zero choices.
+Unknown or contradictory domains and unrelated sources supply no proof.
+Wall of Shadows now compiles and has complete RON gameplay evidence.
+Estimated and actual gain: **one name / one record**; five names have new mappings.
+All required checks pass. Every prior accepted record and other diagnostic remains.
 No RON source or vocabulary baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -28,12 +24,14 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared spell-target predicate contracts:** Wall of Shadows and Reflecting
-   Mirror. Inspect target declarations and saved spell/ability identities.
-2. **Typed target-dependent announcement X:** Reflecting Mirror. Audit the
-   ValueX equality filter against Oracle before announcement and retargeting work.
-3. **Unlimited source damage prevention:** Kry Shield. Its complete record also
-   needs a subject-scoped dynamic toughness modifier; compare that second blocker.
+1. **Persistent created-token links/results:** Dance of Many and Tetravus.
+   Compare the shared per-source, cross-trigger prerequisite with other fresh
+   multi-card work. Existing lexical CreatedTokensBinding is a reuse candidate;
+   both cards retain additional blockers, so this prerequisite alone unlocks zero.
+2. **Source prevention and live mana-value toughness:** Kry Shield. Both parts
+   must execute before the complete record unlocks; compare shared alternatives.
+3. **Target-derived X and player retargeting:** Reflecting Mirror. Audit the
+   source and complete target-derived-X/player-predicate/retargeting chain.
 
 ## Dependencies and source blockers
 
@@ -15140,3 +15138,189 @@ docs/engine-rules-contracts.md and this ledger.
 Commit title: `feat(ron): implement target subtype domain proof`.
 Complete RON gameplay, runtime loading, Go-card deletion and DSL cleanup remain
 gated. This run stops after TARGET-SUBTYPE-DOMAIN-PROOF.
+
+## 2026-10-14 — CAN-TARGET-ONLY-SUBTYPE-CONSUMERS
+
+### Selection and fresh baseline
+
+The working tree was clean. Fresh `go test ./pkg/mage/dsl/ron -count=1` and
+`make build` passed before implementation. The fresh loader exited 1 with
+2,282 compiled / 163 rejected records and 903 accepted / 83 rejected names.
+This was atomic collection rejection, not a build or environment failure.
+Read the execution design, engine reference, current status and latest ledger
+entry, targeted vocabulary signatures, selected compiler/engine code and complete
+RON records. No Go card definitions supplied requirements. The implement-engine
+skill supplied the reusable engine contract workflow; no removed skill was used.
+
+Compared the latest ranked candidates, counting each reprinted name once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers | Downstream value | Effort |
+| --- | --- | ---: | --- | --- | --- |
+| CanTargetOnly spell and selected-ability subtype consumers | Wall of Shadows | 1 name / 1 record | None after both consumers; defender and blocked-creature prevention already compile | Completes the shared declaration/proof chain; arbitrary subtype consumers can use ordinary spells, Auras, selected abilities and zero groups | Small adapters and one shared engine query; substantial identity/legality tests |
+| Source-damage prevention plus live mana-value toughness | Kry Shield | 1 name / 1 record for both; prevention alone 0 | DamageWouldBeDealtByPermanent and ManaValueOfPermanent(ActionPermanent) must both execute | Reusable saved-source prevention and live layer-7 value read | Medium; two interacting mechanics and replacement/layer tests |
+| Target-derived X, player-target predicate and retargeting | Reflecting Mirror | At most 1 name / 1 record | XIs(Twice(ManaValueOfSpell(target))), TargetsPlayer and ChangeTheTargetsOfSpellToAPlayer; source audit still required | Announcement/retargeting services | High; several dependent contracts |
+
+Selected candidate #1 as directed: the preceding subtype-domain and exact
+selected-ability prerequisites are ready, and this completes their shared
+consumer boundary. Full nested records confirm one credible immediate unlock.
+The other ranked chains offer no larger dependency-ready gain. The engine query
+is reusable for subtype restrictions; RON owns spelling, context and validation.
+Acceptance required complete groups, unknown/contradictory-domain behavior,
+source versus selected ability identity, Aura/mode declarations, zero counts,
+illegal-target rollback, resolution rechecks, phasing/return, host lifecycle,
+copy/clone isolation and all three Wall of Shadows rules.
+
+### Exact supported signatures, contexts and reuse
+
+Engine APIs:
+
+- `SpellTargetSourceWithDeclarations(card Card, declared []Target) Card` retains
+  a separate applicable spell declaration list, including selected modes.
+- `TargetSourceCanTargetOnlySubtype(source Card, subtype string) bool` requires
+  a known nonempty complete list and `TargetRequiresSubtype` for every group.
+- `CanTargetOnlySubtypeFilter(subtype string) CardFilter` supplies that query to
+  the existing live spell/ability restrictions. Empty/outer-space names produce
+  a zero filter and fail definition validation.
+
+RON accepts `CanTargetOnly(IsCreatureType(symbol))` in static
+`CantBeTheTargetOfSpells` and `CantBeTheTargetOfAbilities`. Subjects remain bare
+`ThisPermanent`, or `HostPermanent` on an Aura. Spell filters can compose the
+predicate with their existing nonempty And/Or forms and supported conditional
+static context. One spell and one ability rule can share the combined list.
+Other predicates, malformed arities, invalid references and characteristic-only
+spell-filter contexts remain errors. Inventory descendants have a permanent-filter
+role; this is reporting support, not permissive runtime loading.
+
+Reuse: `PermanentTargetDomain`/`TargetRequiresSubtype`, `AbilityTargetSource`,
+`targetSourceLKI`, `Card.CastTargets`, retained `spellTextDefinition`, `ModeChoice`,
+existing target query/selection, EffectManager restriction lifecycle, shared
+cost transactions, source information/LKI, copy/clone and prevention services.
+Modal spell announcement now supplies its complete selected list before choices.
+Resolution/copy queries use the retained definition and mode, never the chosen
+occurrence-aligned TargetSpecs as a whole declaration. Zero-choice groups remain
+visible. Raw or unrelated ability sources supply no proof. Ability conversion
+clears spell declaration data. Unrelated source cards keep their existing view.
+Opaque and impossible subtype domains supply no proof; current battlefield
+membership and chosen target characteristics cannot narrow a declaration.
+
+Rules evidence: local Oracle data for Wall of Shadows matches the complete RON
+record. CR 115.1a–d, 115.6, 115.8, 303.4, 601.2b–c/h, 608.2b, 700.2 and 707.10/c
+establish declaration/choice separation, Aura targets, modes, payment order,
+resolution legality and copies. CanTargetOnly examines capability, not the
+current-target predicates of CR 115.9b–c. No new replacement-order, APNAP or
+simultaneous-operation service was needed.
+
+### Failing-first tests and gameplay mappings
+
+Initial native tests failed compilation for the three missing engine signatures;
+the complete RON Wall of Shadows gameplay test failed at CanTargetOnly lowering.
+Corrected test setup to use the existing combat visit APIs and player types.
+The selected-mode fixture includes another legal Wall so activation mode filtering
+cannot change the intended choice. Mixed singular/plural count declarations are
+still outside the RON compiler's supported shape: native mixed-zero tests retain
+that contract; RON tests exercise supported single zero-count groups. No production
+shape was added or silently simplified to make a fixture pass.
+
+Native `TestTargetOnlySubtype` covers complete/empty/unknown declarations,
+multiple groups, zero-choice groups, permanent/player/spell categories,
+contradictions, input isolation, raw/unselected views and invalid filters.
+`SelectedModes` covers paid broad-mode casting, rejected Wall-mode announcement,
+copy retargeting and clone resolution. `MixedZeroGroups` proves that an unchosen
+broad group still prevents classification at announcement, resolution and copying.
+`SourceIsolation` was written and observed failing after the engine short suite
+exposed an unrelated-source wrapping regression. The adapter now requires a valid
+spell information view. The existing color-isolation assertion remains intact.
+
+RON `TestRONTargetOnlySubtype` cases:
+
+- `Wall`: complete paid casting, defender, rejected subtype-only Aura/activation
+  before payment, allowed broad Giant Growth, blocked-creature versus unrelated
+  damage and independent cloned prevention.
+- `AbilityLifecycle`: exact selected ability rather than a source's other ability;
+  source departure/return, target return, phasing/cycle, control, ability removal,
+  copies and clone resolution.
+- `ResolutionRecheck`: removed then restored restrictions invalidate previously
+  legal spell/ability targets; source departure and copies keep declarations;
+  failed resolution does not refund costs.
+- `ZeroGroups`: RON spell and activation declarations keep zero groups in source
+  views, without inventing target occurrences; copies/clones retain them.
+- `Triggered`: pending subtype-only and broad triggers keep their exact declaration
+  after source departure/return, including cloned pending events.
+- `Host`: combined spell/ability restrictions, fresh factory identities,
+  reattachment, source phasing/cycle/departure, clone isolation and inventory roles.
+- `Modes`: actual RON spell and activation modes reject subtype-only choices,
+  permit broad choices and retain those choices in copies/clones.
+- `Invalid`: strict argument, predicate and reference rejection before publication.
+
+| Unique real card | Records | New gameplay mapping |
+| --- | ---: | --- |
+| Wall of Shadows | 1 | Wall, AbilityLifecycle, ResolutionRecheck, Triggered, Modes |
+| Animate Wall | 6 | Wall: subtype-only Aura rejection before payment; prior DomainProofAura retains positive attachment/grant coverage |
+| Dwarven Demolition Team | 5 | Wall, ResolutionRecheck: rejected activation and restored-rule fizzle |
+| Giant Growth | 6 | Wall: broad spell remains legal and changes P/T |
+| Tunnel | 6 | ResolutionRecheck, Host: subtype-only spell restriction and fizzle |
+
+This is one newly complete card and additional interaction evidence for four
+already accepted names: 5 names / 24 records mapped to this consumer. Compilation
+progress and complete gameplay coverage remain separate. Earlier gap tests now
+require Shadows acceptance; strict inventory keeps atomic rejection with a
+malformed subtype predicate. Unrelated exile-payment atomic rejection uses the
+still-unsupported complete Kry Shield record. Repository count assertions advance
+by exactly one; no assertion was weakened to admit partial loading.
+
+### Validation and actual gain
+
+Required checks completed in fast-fail order after the source-isolation repair:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTargetOnlySubtype' -count=1`: pass.
+- `go test ./pkg/mage -run '^(TestTargetOnlySubtype|TestTargetLegalitySpellColor)'
+  -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass.
+- `make test`: pass across the whole repository.
+- `go test ./... -short -count=1`: pass, including native repository validation
+  required by the implement-engine skill.
+- `make lint`: pass, **0 issues**. Reviewed the automatic import formatting;
+  all changes are within this slice. No unrelated file changed.
+- After lint, native consumer, color-view and targeting-ability tests passed with
+  `-count=1`; the full RON package passed with `-count=1` (9.129s).
+- `git diff --check`: pass before the final loader and after ledger updates.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,283 compiled /
+  162 rejected records; 904 accepted / 82 rejected names**. Parsed diagnostics
+  equal the fresh baseline with only Wall of Shadows removed. Kry Shield still
+  reports `unsupported combat prevention event (DamageWouldBeDealtByPermanent)`
+  at LEG:154:342; Reflecting Mirror still reports
+  `unsupported source-counter activation X (Twice)` at DRK:85:458.
+  This is required atomic collection rejection, not a build/test failure.
+
+Actual gain matches the estimate: **1 unique name / 1 record**. Every previously
+accepted record remains accepted. Remaining diagnostics are unchanged after
+removing Wall of Shadows. Source defects: none found or corrected. No RON source
+changed; no vocabulary snapshot refresh was required. Environment blockers: none.
+The short-suite source-isolation regression was fixed and its original assertion
+and new declaration test passed. Runtime cutover, Go-card deletion and unused DSL
+removal gates remain closed; no definitions or DSL services were deleted.
+
+### Ranked next candidates
+
+1. Evaluate the shared persistent created-token link/result boundary for Dance of
+   Many and Tetravus. Complete records both read `TheCreatedTokens` outside the
+   producing resolution. Existing lexical `CreatedTokensBinding` is a reuse
+   candidate; cross-trigger, per-source linkage needs its own lifecycle contract.
+   This prerequisite alone estimates zero unlocks: Dance of Many also needs token
+   copying and leave events; Tetravus needs token rule abilities, exile payment
+   and saved exile counts. Concrete downstream value is two distinct names.
+   Compare with other fresh multi-card candidates before selection.
+2. Kry Shield's combined source-prevention and live mana-value toughness remains
+   a bounded one-card chain. Its full record still rejects; prevention alone
+   unlocks zero. Compare shared alternatives before selecting it.
+3. Reflecting Mirror remains the target-derived-X/player-target/retargeting chain,
+   at most one name. Defer while useful shared prerequisites remain.
+
+Changed files: new native and RON target_only_subtype.go/test files;
+target_source_lki.go, targeting_ability.go, spell_cast_stack.go and doc.go;
+RON ability/spell restriction adapters, spell_scope.go and inventory.go;
+prior restriction, blocked-prevention, subtype/ability, exile-payment and
+collection-count tests; API/rules-contract docs and this ledger.
+Commit title: `feat(ron): implement can-target-only subtype consumers`.
+This run stops after CAN-TARGET-ONLY-SUBTYPE-CONSUMERS.
