@@ -1298,6 +1298,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "card_type"
 		}
 	case "entry_operation":
+		if n.Name == "SacrificeAnyNumberOfPermanents" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "ChooseANumberBetween" && len(n.Args) == 2 {
 			return "integer_literal"
 		}
@@ -1510,6 +1513,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "characteristic_count_value":
+		if n.Name == "TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "permanent_reference"}[index]
+		}
 		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

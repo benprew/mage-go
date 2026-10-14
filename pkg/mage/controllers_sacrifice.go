@@ -30,6 +30,10 @@ func (e *controllersSacrificeEachEffect) Apply(ctx *EffectContext) error {
 }
 
 func (g *Game) controllersSacrificePermanents(subjects []*Permanent) {
+	g.controllersSacrificePermanentsCount(subjects, nil, PermanentFilter{})
+}
+
+func (g *Game) controllersSacrificePermanentsCount(subjects []*Permanent, eligible func(*Permanent) bool, counted PermanentFilter) int {
 	var selected []*Permanent
 	seen := make(map[uuid.UUID]bool, len(subjects))
 	for _, p := range subjects {
@@ -37,15 +41,16 @@ func (g *Game) controllersSacrificePermanents(subjects []*Permanent) {
 			continue
 		}
 		current := g.FindPermanent(p.ID())
-		if current == nil || current.PhasedOut || current.incarnationID != p.incarnationID || g.GetPlayer(current.ControllerID()) == nil {
+		if current == nil || current.PhasedOut || current.incarnationID != p.incarnationID || g.GetPlayer(current.ControllerID()) == nil || (eligible != nil && !eligible(current)) {
 			continue
 		}
 		seen[p.ID()] = true
 		selected = append(selected, current)
 	}
 	if len(selected) == 0 {
-		return
+		return 0
 	}
+	count := 0
 	g.withZoneChangeBatch(func() {
 		var prepared []*SacrificePermanentAction
 		for _, player := range []Player{g.ActivePlayerObj(), g.NonActivePlayerObj()} {
@@ -59,10 +64,22 @@ func (g *Game) controllersSacrificePermanents(subjects []*Permanent) {
 			}
 		}
 		g.orderSacrificeGraveyards(prepared)
-		for _, result := range prepared {
-			g.performSacrifice(result)
+		matches := make([]bool, len(prepared))
+		for index, result := range prepared {
+			p := g.FindPermanent(result.permanentID)
+			if p == nil || p.PhasedOut || p.incarnationID != result.incarnation || (eligible != nil && !eligible(p)) {
+				prepared[index] = nil
+				continue
+			}
+			matches[index] = counted.Match(p, g)
+		}
+		for index, result := range prepared {
+			if g.performSacrifice(result) && matches[index] {
+				count++
+			}
 		}
 	})
+	return count
 }
 
 func (g *Game) orderSacrificeGraveyards(actions []*SacrificePermanentAction) {

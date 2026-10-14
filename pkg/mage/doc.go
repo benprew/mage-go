@@ -1,5 +1,15 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [SacrificeAnyNumberAsEnters] offers a bounded permanent choice before entry.
+// The controller can sacrifice only present matching visits they control.
+// Shared replacements and owner ordering precede one simultaneous batch.
+// Completed sacrifices supply the saved count, including exile destinations.
+// [PTEqualsEntrySacrificeCount] applies that count in layer 7a. Other zones
+// supply zero. [EntrySacrificeCountOf] can read exact departure or phase facts.
+// Return and copied entry require new choices. Clones keep separate results.
+// RON accepts one source entry sacrifice and matching dual source CDA reads.
+// Activation payments and retained plural sacrifice results need adapters.
+//
 // [PlayerControlsAny] checks current control of live set members.
 // [PreventDamageFromMatchingPermanentsToSetIf] checks live recipients before
 // each replacement match. Both require a present exact source visit. The source

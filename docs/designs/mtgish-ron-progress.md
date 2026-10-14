@@ -6,17 +6,18 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **880 accepted / 106 rejected names**
-(986 total), **2,249 compiled / 196 rejected records** (2,445 total).
-The latest slice is **LIVE-STATIC-COLLECTION-QUERIES**. Typed live sets supply
-static control conditions and permanent-source prevention recipients. Queries
-use the exact source visit and current controller; waiting references use the
-same membership and condition checks.
-Camel now has complete-record native casting, band formation, combat,
-prevention, spell-copy, phasing, return and clone evidence. Bronze Horse advances
-to its spell-source prevention blocker. Guardian Beast protection still rejects.
+Latest measured result (2026-10-14): **881 accepted / 105 rejected names**
+(986 total), **2,250 compiled / 195 rejected records** (2,445 total).
+The latest slice is **VOLUNTARY-ENTRY-SACRIFICE-COUNT**. One source entry
+operation selects voluntary sacrifices and retains the completed count for
+matching dual CDAs. Shared entry replacements and simultaneous sacrifices
+supply choices, exact visits, owner destinations and departure information.
+Wood Elemental now has complete-record native casting, zero-toughness, combat,
+spell-copy, phasing, return, clone and strict-loading evidence. Sword of the Ages
+still needs optional activation payments, saved power and linked graveyard exile.
 Estimated and actual gains are **one unique name / one record**. No RON source
-changed. Accepted records remain accepted; loader baseline and hashes are fresh.
+changed. Every previously accepted record remains accepted; the vocabulary
+loader baseline is refreshed. All required checks pass on the final code.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -25,13 +26,15 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Shared live static collection queries.** Compare Camel's prevention
-   recipients, Bronze Horse's source exclusion and Guardian Beast's current
-   controller membership before choosing a complete supported query context.
-2. **Conditional artifact protection rules — Guardian Beast.** Live membership
-   and new-Aura/control acquisition restrictions need exact shared contracts.
-3. **Entry payment/result producers.** Compare Nameless Race, Frankenstein's
-   Monster and Wood Elemental before implementing a typed shared prerequisite.
+1. **Entry payment/result contracts.** Compare Nameless Race and Frankenstein's
+   Monster. The shared entry replacement process is ready; life bounds and
+   graveyard exile payments need distinct typed results and exact choices.
+2. **Optional plural sacrifice payments.** Reassess Sword of the Ages. Reuse
+   voluntary selection and completed sacrifice batches; add transactional saved
+   subjects, power and graveyard visits before estimating a full-card unlock.
+3. **Conditional protection.** Compare Guardian Beast, Bronze Horse and Wall of
+   Shadows for shared Aura/control and spell/ability target contracts. Do not
+   count first errors as full-card gains.
 
 ## Dependencies and source blockers
 
@@ -9735,3 +9738,184 @@ vocabulary loader baseline and this progress ledger.
 Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
 Go-set generation and unused DSL cleanup remain incomplete. Stop after this
 live static collection query slice.
+
+
+## 2026-10-14 — VOLUNTARY-ENTRY-SACRIFICE-COUNT
+
+### Selection and fresh baseline
+
+The initial working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -short -count=1` passed. Fresh
+`go run ./cmd/loadcards -json` exited 1 with **2,249 compiled / 196 rejected
+records**, **880 accepted / 106 rejected names**. This was atomic collection
+rejection, not a build or test failure. Complete records were read for Wood
+Elemental, Sword of the Ages, Nameless Race, Frankenstein's Monster, Guardian
+Beast and Bronze Horse. Targeted vocabulary queries confirmed two occurrences
+of the voluntary sacrifice producer in two distinct contexts; no two-card
+unlock was inferred from those occurrences.
+
+| Compared candidate | Distinct affected names | Estimated full-card unlocks in one bounded slice | Other blockers and downstream value | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Saved voluntary sacrifices, candidate 1 | Wood Elemental; Sword of the Ages | 1: Wood Elemental with the entry producer and both CDA consumers | Sword needs transactional plural activation payments, saved total power and linked graveyard visits for exile. Shared completed sacrifice batches and exact optional selection are prerequisites. | Medium: one entry replacement, one retained scalar, CDA lowering, identity/replacement/batch/copy tests. |
+| Other entry payments, candidate 2 | Nameless Race; Frankenstein's Monster | At most 1 per bounded producer; not 2 from a common entry context | Nameless Race needs bounded life choice/payment and retained P/T. Frankenstein's Monster needs X graveyard exile payment, paid/unpaid replacement branches and chosen counter combinations. Typed entry results can serve both, but the producer contracts differ. | Medium to large: life bounds and saved results, or exact graveyard payments, counter combinations and failed entry. |
+| Remaining conditional protection, candidate 3 | Guardian Beast; Bronze Horse | At most 1 per rule contract | Guardian Beast needs Aura attachment and control-acquisition restrictions. Bronze Horse needs spell sources and targeting predicates for prevention. Existing live collection conditions compile. Each rule can serve future protection consumers, but the two complete records require different contracts. | Medium per contract: live restriction checks or spell-source identity/prevention, plus legality and replacement tests. |
+
+Candidate 1 was dependency-ready and selected. The shared choice, visit,
+replacement and zone batch services already existed. The missing contract was
+an entry producer with a retained completed result and matching source CDAs.
+This closes one complete card and advances the shared sacrifice-result boundary
+without pretending that entry selection supplies an activation payment. The
+other candidates remain separate engine contracts. No source-data defect or
+environment failure was found. Local `data/LEG.json` confirms Wood Elemental's
+entry sacrifice and Forest-count Oracle text. The existing misspelling
+`Permenant` is preserved.
+
+### Supported contract, dependencies and reuse boundary
+
+- `SacrificeAnyNumberAsEnters(subjects, counted PermanentFilter) Ability`:
+  one entry declaration per definition; current controller choices; present,
+  unphased, controlled exact visits; bounded optional count and distinct subset.
+  Zero filters retain their match-all meaning. Invalid numeric answers supply
+  zero and required object answers use the existing legal fallback.
+- The entry replacement runs at default priority through
+  `battlefieldEntryAction.replacementCandidates`. Stable per-entry declaration
+  keys prevent repeated application. Copy replacements run first and acquired
+  entry rules make fresh choices. Competing replacements use the shared
+  affected-player ordering service.
+- The existing simultaneous sacrifice service now has a private count-returning
+  path. Eligibility is checked before replacement preparation and again before
+  movement. Counted characteristics are read for the batch before any move.
+  Only completed sacrifices count, including exile replacements. Cancellation,
+  phasing, control changes and returned visits cannot supply a result. APNAP
+  replacement choices, owner graveyard ordering, sacrifice events and former
+  battlefield observations retain their existing contracts and callers.
+- `PTEqualsEntrySacrificeCount() ContinuousEffect` uses the existing count-CDA
+  declaration and layer 7a binding. `Game.CardPowerToughness(card)` returns zero
+  for this CDA in other zones. Ability removal suppresses the CDA; counters and
+  other later layers keep their existing order.
+- `EntrySacrificeCountOf(subject PermanentRef) ResolutionValue` reads current,
+  phase or departure information for the exact visit. Explicit permanent
+  cloning includes `EntrySacrificeCount`; return and copied entry get a new
+  result. The waiting-source query recognizes this value without running it.
+- RON accepts one `AsPermanentEnters(ThisPermanent,
+  [SacrificeAnyNumberOfPermanents(filter)])` on a permanent. Supported filters
+  are existing characteristic predicates, IsUntapped/IsTapped and nonempty
+  nested And/Or groups. Land filters use the existing five-basic-types/Desert
+  adapter and subtype family checks. The engine supplies the control restriction;
+  contextual filters and controller clauses reject.
+- Optional CDA consumers require a creature and both axes with the same
+  `TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield(countFilter,
+  ThisPermanent)` expression. Count filters are characteristic-only. Missing
+  producers, duplicate axes, differing expressions, other source references,
+  multiple entry operations and other payment/resolution contexts reject.
+  Inventory child roles distinguish selection filters, count filters and source
+  references.
+
+RON owns syntax, validation and the definition plan. mage owns choices, entry
+replacements, identity, sacrifice outcomes, result lifetime, LKI and layers.
+Reuse includes `validNumericChoice`, `choosePermanentSubset`, the shared
+sacrifice batch, entry-copy priority and rechecks, characteristic-count effects,
+source incarnation binding, explicit cloning, typed information reads and
+waiting delayed queries. No global last-action slot, parallel zone system,
+Go-card fallback, card-name branch or partial production registry was added.
+Casting costs are unchanged; failed casting cannot start entry choices. This
+slice adds no optional activation-payment or cost rollback contract.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial engine tests failed to compile on the three absent public APIs and the
+new retained field. After correcting test calls to the existing pointer-valued
+TapPermanent API, the expected signature failures remained. Initial RON gameplay
+failed on Wood Elemental's unsupported entry-sacrifice CDA. The later waiting
+read test failed on a missing saved source query before the query adapter was
+added. A new wrong-land-subtype declaration test also failed before the
+existing bounded land subtype and family validators were added. Contract tests
+caught the missing explicit clone field, which also lost
+departure snapshots. A timing fixture now checks AllBattlefield because
+FindPermanent can expose the engine's pending entry object. The copy fixture
+explicitly accepts the optional copy offer. No gameplay assertion was weakened.
+
+- **Wood Elemental (LEG) → `TestRONEntrySacrificeReal`**: complete record,
+  unpaid casting, paid native casting, resolution-time count choice, zero
+  toughness state action, only the controller's untapped Forests, printed
+  Forest subtype membership and native combat damage.
+- **Wood Elemental → `TestRONEntrySacrificeCopiesAndReturn`**: native permanent
+  spell copy, token identity, separate controllers and entry results, phasing,
+  new return result, other-zone zero P/T and cloned battlefield isolation.
+- **Wood Elemental → `TestRONEntrySacrificeLoadAndInventory` / `Invalid`**:
+  complete-record strict subset loading, fresh instances, atomic rejection,
+  inventory compilation and invalid declaration/context checks.
+- `TestEntrySacrificeBatchAndHistory`: distinct choices before movement,
+  owner destinations, completed exile replacement, phase, clone, saved LKI,
+  other-zone zero, return and historical source identity.
+- `TestEntrySacrificeChoiceRechecks`: returned visits, phase, control changes,
+  tapping during selection and cancelled sacrifice cannot move or count.
+- `TestEntrySacrificeCountedFilterAndLayers`: independent count filter,
+  simultaneous sacrifice observations, former battlefield, CDA removal and
+  restoration, and counters after layer 7a.
+- `TestEntrySacrificeBatchEntrants`: separate controllers and counts for
+  simultaneous graveyard entrants; entry observations see both final results.
+- `TestEntrySacrificeReplacementOrder` / `CopyAcquisition`: competing default
+  replacements see the chosen order, each entry rule runs once, and acquired
+  copy entry makes its own choice instead of inheriting the donor result.
+- `TestEntrySacrificeWaitingRead` / `Invalid`: pure waiting source reads,
+  delayed departure count, nil source, nonpermanent entry and duplicate producer
+  rejection. Existing sacrifice batch tests retain replacement, token and
+  graveyard-order evidence.
+
+### Validation, measured gain and preservation
+
+Focused `go test ./pkg/mage/dsl/ron -run TestRONEntrySacrifice -count=1` and
+`go test ./pkg/mage -run TestEntrySacrifice -count=1` passed. The existing
+ControllersSacrifice and SacrificeAllBut focused tests also passed after the
+shared helper changes. `make build`, `go vet ./...`,
+`go test ./pkg/mage/... -short -count=1` and `make test` passed on the final
+implementation. The skill-required `go test ./... -short -count=1` also passed.
+The first lint run reported one prealloc issue in the new three-land fixture;
+allocating its known capacity fixes it. Reviewed automatic import grouping,
+repeated the affected checks, and reran the complete required sequence after
+the bounded subtype validation was added. Final `make lint` passed with
+**0 issues**. Post-lint focused engine and RON tests passed again, and final
+`git diff --check` passed. No test, build or environment blocker remains.
+
+Final required `go run ./cmd/loadcards -json` exited **1**, as expected:
+**2,250 compiled / 195 rejected records**,
+**881 accepted / 105 rejected names**. The only removed diagnostic is Wood
+Elemental LEG 307:384. There are no changed remaining diagnostics or new
+rejections. Every previously accepted record stays accepted. Estimated and
+actual compilation gain match: **one unique name / one record**. Complete RON
+native gameplay coverage gains Wood Elemental; Sword of the Ages gets no
+full-card coverage claim. Four collection-count assertions now use 2,250/195.
+No RON source changed. Vocabulary syntax counts and hashes stay unchanged;
+only its loader baseline is refreshed. The final report equals that baseline,
+and all twelve source hashes match. Atomic collection rejection remains.
+
+Changed files: new mage entry_sacrifice.go / entry_sacrifice_test.go and new ron
+entry_sacrifice.go / entry_sacrifice_test.go; card.go, clone.go,
+characteristic_pt.go, controllers_sacrifice.go, definition.go, entry_copy.go,
+waiting_delayed_source.go; ron compiler.go, inventory.go and three collection
+count test files; doc.go, dsl-reference.md, engine-rules-contracts.md, vocabulary
+loader baseline and this ledger. Production Go definitions, startup paths,
+generators and broad DSL exports are preserved. Their removal gates remain shut.
+
+### Ranked next candidates
+
+1. **Entry payment/result contracts.** Reassess Nameless Race and Frankenstein's
+   Monster against complete records. Entry replacement choices are ready, but
+   bounded life payment, exact graveyard exile payment, failure replacement and
+   chosen counter combinations remain separate contracts. Choose one bounded
+   shared producer or prerequisite before claiming either full-card gain.
+2. **Optional plural sacrifice payments.** Sword of the Ages can reuse bounded
+   subset choices and completed sacrifice batches. It still needs transactional
+   paid visit sets, saved total power and exact graveyard-card results for exile.
+   Compare its shared payment value against other remaining plural costs; do not
+   treat the entry producer as an activation adapter.
+3. **Remaining conditional protection.** Compare Guardian Beast with Bronze
+   Horse and Wall of Shadows. Full Wall of Shadows requires both spell and
+   ability target restrictions; CanTargetOnly is not a simple current-target
+   identity test. Reassess the concrete shared benefit before choosing a
+   single-card adapter.
+
+Complete collection gameplay, runtime cutover, Go-card deletion, obsolete
+Go-set generation and unused DSL cleanup remain incomplete. Stop after this
+voluntary entry sacrifice result slice.

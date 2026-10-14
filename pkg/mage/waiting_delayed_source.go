@@ -158,6 +158,8 @@ func resolutionValueReadsSourcePermanent(value ResolutionValue) bool {
 		subject = v.subject
 	case permanentInformationValue:
 		subject = v.subject
+	case entrySacrificeCountValue:
+		subject = v.subject
 	case counterResolutionValue:
 		subject = v.subject
 	case permanentCounterInformation:

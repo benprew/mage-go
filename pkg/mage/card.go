@@ -745,6 +745,7 @@ type Permanent struct {
 	// effects (CR 614.12) and read by other abilities of the same permanent.
 	ChosenNumber        int
 	HasChosenNumber     bool
+	EntrySacrificeCount int
 	ChosenColor         Color
 	ChosenPlayer        uuid.UUID
 	ChosenSubtype       string

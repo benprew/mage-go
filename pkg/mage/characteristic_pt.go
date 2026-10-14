@@ -11,6 +11,7 @@ type countCharacteristicPT struct {
 	incarnation                  uuid.UUID
 	filter                       PermanentFilter
 	controlled, power, toughness bool
+	entrySacrifice               bool
 }
 
 func newCountCharacteristicPT(filter PermanentFilter, controlled, power, toughness bool) ContinuousEffect {
@@ -34,7 +35,13 @@ func (e *countCharacteristicPT) inspectDefinition() definitionNode {
 	}
 	return n
 }
-func (e *countCharacteristicPT) count(g *Game, controller uuid.UUID) int {
+func (e *countCharacteristicPT) count(g *Game, controller uuid.UUID, source *Permanent) int {
+	if e.entrySacrifice {
+		if source == nil {
+			return 0
+		}
+		return source.EntrySacrificeCount
+	}
 	filter := e.filter
 	if e.controlled {
 		filter = And(ControlledBy(controller), filter)
@@ -46,7 +53,7 @@ func (e *countCharacteristicPT) ApplyContinuous(ctx *EffectContext) error {
 	if p == nil || p.incarnationID != e.incarnation {
 		return nil
 	}
-	count := e.count(ctx.Game, p.ControllerID())
+	count := e.count(ctx.Game, p.ControllerID(), p)
 	if e.power {
 		p.SetCDAPower(count)
 	}
@@ -93,7 +100,7 @@ func (g *Game) CardPowerToughness(card Card) (power, toughness int) {
 			if !ok {
 				continue
 			}
-			count := declaration.count(g, controller)
+			count := declaration.count(g, controller, nil)
 			if declaration.power {
 				power = count
 			}

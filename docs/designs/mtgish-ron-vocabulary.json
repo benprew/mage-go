@@ -1232,7 +1232,7 @@
     {"name": "Zombie", "kind": "symbol", "arity": 0, "occurrences": 39, "examples": ["Scathe Zombies (cards/mtgish/2ED.lines.ron:214:91)", "Scavenging Ghoul (cards/mtgish/2ED.lines.ron:215:93)", "Zombie Master (cards/mtgish/2ED.lines.ron:291:90)"]}
   ],
   "loader_baseline": {
-    "compiled": 2249,
+    "compiled": 2250,
     "issues": [
       {"card": "Animate Dead", "source": {"File": "2ED.lines.ron", "Line": 4, "Column": 1}, "message": "2ED.lines.ron:4:151: unsupported rule (EnchantGraveyardCard)"},
       {"card": "Camouflage", "source": {"File": "2ED.lines.ron", "Line": 28, "Column": 1}, "message": "2ED.lines.ron:28:233: unsupported action (CreateGameEffect)"},
@@ -1428,8 +1428,7 @@
       {"card": "Urborg", "source": {"File": "LEG.lines.ron", "Line": 283, "Column": 1}, "message": "LEG.lines.ron:283:278: unsupported action (ChooseACheckableAbility)"},
       {"card": "Wall of Caltrops", "source": {"File": "LEG.lines.ron", "Line": 290, "Column": 1}, "message": "LEG.lines.ron:290:171: unsupported intervening-if event (WhenACreatureBlocksACreature)"},
       {"card": "Wall of Dust", "source": {"File": "LEG.lines.ron", "Line": 291, "Column": 1}, "message": "LEG.lines.ron:291:294: unsupported temporary combat rule reference (Trigger_ThatOtherPermanent)"},
-      {"card": "Wall of Shadows", "source": {"File": "LEG.lines.ron", "Line": 297, "Column": 1}, "message": "LEG.lines.ron:297:402: unsupported spell target filter (CanTargetOnly)"},
-      {"card": "Wood Elemental", "source": {"File": "LEG.lines.ron", "Line": 307, "Column": 1}, "message": "LEG.lines.ron:307:384: unsupported characteristic count value (TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield)"}
+      {"card": "Wall of Shadows", "source": {"File": "LEG.lines.ron", "Line": 297, "Column": 1}, "message": "LEG.lines.ron:297:402: unsupported spell target filter (CanTargetOnly)"}
     ],
     "records": 2445
   }

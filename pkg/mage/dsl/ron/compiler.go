@@ -390,7 +390,16 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		characteristic, err := compileCharacteristicCounts(rules, permanent && slices.Contains(types, core.TypeCreature))
+		entrySacrifice, err := compileEntrySacrifice(rules, permanent, slices.Contains(types, core.TypeCreature))
+		if err != nil {
+			return nil, err
+		}
+		var characteristic optionFactory
+		if entrySacrifice != nil {
+			options = append(options, definitionAbilityGroupOption(0, entrySacrifice))
+		} else {
+			characteristic, err = compileCharacteristicCounts(rules, permanent && slices.Contains(types, core.TypeCreature))
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -452,6 +461,9 @@ func Compile(n Node) (mage.CardFactory, error) {
 			}
 		}
 		for ruleIndex, rule := range rules {
+			if entrySacrifice != nil && rule.Name == "AsPermanentEnters" {
+				continue
+			}
 			if rule.Name == "CastEffect" || rule.Name == "CDA_Power" || rule.Name == "CDA_Toughness" {
 				continue
 			}

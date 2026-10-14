@@ -58,6 +58,7 @@ type battlefieldEntryAction struct {
 	permanent   *Permanent
 	copies      map[entryCopyKey]*entryCopyReplacement
 	variants    map[entryCopyKey]*entryVariantReplacement
+	sacrifices  map[entryCopyKey]*entrySacrificeReplacement
 	textChanges []TextChange
 }
 
@@ -76,7 +77,26 @@ func (a *battlefieldEntryAction) replacementCandidates() []ReplacementEffect {
 	var result []ReplacementEffect
 	index := 0
 	variantIndex := 0
+	sacrificeIndex := 0
 	for _, ability := range a.permanent.RuntimeAbilities {
+		if sacrifice, ok := UnwrapAbility(ability).(*entrySacrificeAbility); ok {
+			plan := base.definitionPlan
+			if plan != nil && plan.declarationOrigin != nil {
+				plan = plan.declarationOrigin
+			}
+			key := entryCopyKey{plan, sacrificeIndex}
+			sacrificeIndex++
+			if a.sacrifices == nil {
+				a.sacrifices = make(map[entryCopyKey]*entrySacrificeReplacement)
+			}
+			replacement := a.sacrifices[key]
+			if replacement == nil {
+				replacement = &entrySacrificeReplacement{replacementBase: replacementBase{sourceID: a.permanent.ID(), priority: ReplacementPriorityDefault}, ability: sacrifice}
+				a.sacrifices[key] = replacement
+			}
+			result = append(result, replacement)
+			continue
+		}
 		if variant, ok := UnwrapAbility(ability).(*entryVariantAbility); ok {
 			plan := base.definitionPlan
 			if plan != nil && plan.declarationOrigin != nil {

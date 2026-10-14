@@ -15511,3 +15511,55 @@ Camel uses its live source and attacking band. Bronze Horse now accepts the
 other-creature condition but still rejects spell-source prevention. Guardian
 Beast's existing artifact layer selection is retained; its protection operations
 remain unsupported. No production Go cards or RON source records change.
+
+## Voluntary entry sacrifice results
+
+`SacrificeAnyNumberAsEnters(subjects, counted PermanentFilter) Ability` lets the
+entering controller choose zero through the number of eligible permanents, then
+choose that many distinct visits. The controller can sacrifice only present,
+unphased subjects they control. A zero filter matches all. Invalid numeric
+answers supply zero; invalid required object answers use the existing legal
+fallback. All choices precede movement. Subjects must retain their visit,
+control and eligibility through choices and replacements.
+
+The ability participates in the shared entry replacement process at default
+priority. Copy replacements run first; acquired entry rules make fresh choices.
+Competing replacements use the affected player's choice and each entry rule
+applies once. The shared sacrifice service prepares replacements in APNAP order,
+orders owners' graveyard arrivals, saves counted matches before movement, and
+moves the batch before observers run. Exile destinations count as completed
+sacrifices. Cancellation and stale visits do not count or cause another choice.
+Indestructible and regeneration do not prevent sacrifice. One entry sacrifice
+declaration is permitted per definition.
+
+`PTEqualsEntrySacrificeCount() ContinuousEffect` reads the saved count in layer
+7a. Layer 6 ability removal suppresses the CDA; later restoration reads the same
+saved count. Base overrides, bonuses, counters and switches retain their layer
+order. `Game.CardPowerToughness` supplies zero for this CDA outside the battlefield.
+`EntrySacrificeCountOf(subject PermanentRef) ResolutionValue` reads the exact
+current, phase or departure result. A returned permanent cannot replace that
+visit. Return, spell-copy entry and copy entry make fresh choices. Explicit
+permanent cloning includes the scalar result and departure snapshots.
+
+RON accepts one `AsPermanentEnters(ThisPermanent,
+[SacrificeAnyNumberOfPermanents(filter)])` declaration on a permanent. Filters
+use existing characteristic predicates, `IsUntapped`/`IsTapped`, and nonempty
+nested `And`/`Or` groups. Land predicates accept the five basic land types
+and Desert; known conflicting subtype families reject. Contextual references
+and controller clauses reject;
+the engine supplies the controller restriction. Optional consumers require a
+creature and both `CDA_Power(value)` and `CDA_Toughness(value)` with identical
+`TheNumberOfPermanentsSacrificedAsPermenantEnteredBattlefield(countFilter,
+ThisPermanent)` expressions. The count filter uses supported characteristic
+predicates. It is checked before simultaneous departure, independently of the
+selection filter. Missing producers, duplicate axes, mismatched expressions,
+other source references, multiple entry operations, costs and resolving forms
+reject. The source spelling is preserved.
+
+Evidence: native `TestEntrySacrificeBatchAndHistory`, `ChoiceRechecks`,
+`Invalid`, `CountedFilterAndLayers`, `BatchEntrants`, `ReplacementOrder` and
+`CopyAcquisition` and `WaitingRead`; RON `TestRONEntrySacrificeReal`, `CopiesAndReturn`, `Invalid`
+and `LoadAndInventory`. Wood Elemental uses its complete LEG record for native
+failed and paid casting, zero toughness, eligible Forest selection, combat,
+spell copying, phasing, return, cloning and strict subset loading. Sword of the
+Ages still requires activation payment results, saved power and linked exile.

@@ -385,6 +385,17 @@ func InspectDefinition(value any) DefinitionMetadata {
 
 // ValidateCardDefinition checks the expression families that have DSL adapters.
 func ValidateCardDefinition(name string, card Card) error {
+	if !nilDefinition(card) {
+		entrySacrifices := 0
+		for _, ability := range card.Abilities() {
+			if _, ok := UnwrapAbility(ability).(*entrySacrificeAbility); ok {
+				entrySacrifices++
+			}
+		}
+		if entrySacrifices > 1 {
+			return fmt.Errorf("%s: entry sacrifice requires one declaration", name)
+		}
+	}
 	if base, ok := card.(*BaseCard); ok && base != nil && base.upkeepObjectText != 0 {
 		if _, err := upkeepObjectTextContext(card); err != nil {
 			return fmt.Errorf("%s: %w", name, err)
