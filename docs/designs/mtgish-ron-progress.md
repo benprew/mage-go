@@ -8,16 +8,15 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **882 accepted / 104 rejected names**
 (986 total), **2,251 compiled / 194 rejected records** (2,445 total).
-The latest slice is **RESOLVING-GRAVEYARD-BATCH-EXILE**. One resolving player
-reference selects a current graveyard. Exact visits move to face-up exile before
-zone events, with one completed departure count. The existing single-graveyard
-payment helper uses the same movement service. Tormod's Crypt now has complete
-RON native casting, activation, self-target payment, copy, retargeting, clone,
-rollback and strict-loading evidence. Saved plural sacrifice results and entry
-payment producers remain separate contracts. Estimated and actual gains are
-**one unique name / one record**. No RON source changed. Every previously
-accepted record remains accepted; the vocabulary loader baseline is refreshed.
-All required checks pass on the final code.
+The latest slice is **MATCHING-PERMANENT-EXILE-PAYMENT**. Activation and
+additional casting costs can exile one matching permanent controlled by the
+payer. Shared transactions lock exact visits and check total payment before
+commit. City of Shadows's first rule and Soul Exchange's casting payment have
+RON subrule gameplay evidence. Neither complete card is accepted: counter-count
+mana and saved exile/returned-permanent results remain independent blockers.
+Initial estimated gain was one name; corrected estimate and actual gain are
+**zero names / zero records**. Two rejection diagnostics advance. No RON source
+changed. Required checks pass; complete-card gameplay coverage is unchanged.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -26,17 +25,17 @@ removal and DSL cleanup remain gated by complete support and native startup.
 
 Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Entry payment/result contracts.** Compare bounded entry life payment for
-   Nameless Race with exact graveyard exile payment for Frankenstein's Monster.
-   Shared graveyard movement is ready; mandatory paid counts, failed-entry
-   replacement and chosen counter combinations still need distinct contracts.
-2. **Matching permanent exile payments.** Compare City of Shadows and Soul
-   Exchange. Both use APermanent exile costs; Soul Exchange also needs saved
-   Thrull facts and its returned-permanent result. Prefer a shared transactional
-   producer before a single-card consumer.
-3. **Optional plural sacrifice payments.** Sword of the Ages still needs paid
-   visit sets, saved total power and exact resulting graveyard-card visits. The
-   whole-graveyard resolving adapter does not supply those results.
+1. **Dynamic counter-count mana.** City of Shadows now needs only its source
+   Storage-counter mana quantity. Reassess the shared quantity/solver contract
+   against multi-card prerequisites before choosing this one-card completion.
+2. **Saved permanent exile facts and returned-permanent results.** Soul Exchange
+   now pays its casting cost, but needs payment-time Thrull facts and the exact
+   permanent returned by its graveyard-entry instruction. These are distinct
+   result contracts; do not read a global history slot.
+3. **Entry payment/result prerequisites.** Nameless Race and Frankenstein's
+   Monster still need bounded life payment or exact X creature-card exile,
+   failed-entry behavior and counter combinations. Optional plural sacrifice
+   for Sword of the Ages also remains; its paid-card visits are not a graveyard.
 
 ## Dependencies and source blockers
 
@@ -10101,3 +10100,174 @@ attempted, so no caller was removed or changed outside this slice.
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation and unused DSL cleanup remain incomplete. Stop after this
 resolving graveyard batch exile slice.
+
+## 2026-10-14 — MATCHING-PERMANENT-EXILE-PAYMENT
+
+### Candidate comparison and selection
+
+The working tree was clean. Fresh `make build` and the full RON package test
+passed. Baseline loader exit 1 was collection rejection, not a build failure:
+2,251 compiled / 194 rejected records, 882 accepted / 104 rejected unique names.
+Read complete records for Nameless Race, Frankenstein's Monster, City of Shadows,
+Soul Exchange and Sword of the Ages. Targeted vocabulary evidence confirms one
+bounded entry-life form, one entry-counter-combination form, four APermanent
+uses (two payment uses) and two plural-sacrifice forms. Wood Elemental's entry
+plural-sacrifice form already has its separate contract. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Entry payment/result contracts, latest candidate #1 | Nameless Race; Frankenstein's Monster | 0 for a shared payment prerequisite; 1 for each later complete procedure | Race needs bounded entry life, bound/life-result layers; Monster needs exact X creature-card payment, failed entry and selectable counter combinations. Existing graveyard movement alone does not supply these results | Large for complete procedures; medium for one prerequisite with entry/copy/return tests |
+| Matching permanent exile payment, selected | City of Shadows; Soul Exchange | Initially 1; corrected to 0 after contextual compilation | City still lacks counter-count mana lowering. Soul needs saved payment-time Thrull facts and a returned-permanent result. This slice removes the shared transactional choice/movement prerequisite for both | Small/medium: one engine cost, transaction hooks, activation/casting adapters, identity/rollback and RON subrule tests |
+| Optional plural sacrifice payment | Sword of the Ages | 0 for payment prerequisite; 1 after later consumers | Needs optional paid visits, historical total power and the exact resulting graveyard visits. Whole-graveyard exile is incompatible with its result | Large for the full procedure; multiple result contracts, replacements and simultaneous payment tests |
+
+Candidate #1 is not one dependency-ready complete procedure. Selected the shared
+permanent exile payment as the bounded prerequisite with concrete two-card
+benefit and existing exact movement/transaction services. The initial City
+unlock estimate failed to distinguish resolving counter values from the mana
+quantity context. Its full record failed on that separate context immediately
+after payment support. Revised the estimate to zero and retained the slice
+boundary. No counter-mana adapter or second slice was started. This is compiler
+and reusable engine work, not a source defect or environment repair.
+
+### Contract, signatures and reuse boundary
+
+- Engine: `ExileMatchingPermanentCost(filter PermanentFilter, text string) Cost`.
+  Requires one present matching permanent controlled by the payer; source
+  inclusion is allowed. Zero filter and empty text fail definition validation.
+- Pure `CanPay` checks do not choose, move, tap or consume resources. Tapped
+  creatures can pay; phased or wrong-controller subjects cannot. Target
+  protections, indestructible and regeneration cannot stop an exile choice.
+- Shared `costPaymentTransaction.validate` copies the cost and uses the real
+  payer to choose on isolated state. It saves one `capturedPermanent`, including
+  incarnation. `Commit` uses the existing total-payment preflight before live
+  mana/tap/life expenditure. Returned, phased, changed-controller and missing
+  visits cannot replace the choice. Two exile costs cannot use one departed visit.
+- Reused `exilePermanent` for face-up exile, ownership, attributing source,
+  departure information and zone events. Tokens leave and send an exile zone
+  event without leaving a persistent exile card. This is not sacrifice or death.
+  Existing replacement ordering and zone batching policies are unchanged.
+- RON: `Exile([APermanent(filter)], [])` in ordinary activation cost groups and
+  nonmodal `CastEffect(AdditionalCastingCost(...))` for instants/sorceries with
+  `SpellActions`. One conjunctive `ControlledByAPlayer(SinglePlayer(You))` is
+  required. Characteristic filters and nonempty nested And/Or lists reuse the
+  matching tap-payment filter compiler. Controller clauses under Or, duplicate
+  controllers, other players, malformed declarations, modifiers and plural
+  subjects reject. Inventory assigns the subject's child `permanent_filter`.
+- Each factory gets separate cost/ability definitions. Transaction choices stay
+  private to the payment. This resultless payment does not occupy the existing
+  graveyard-exile result plan. Copies do not repeat payment; clones keep separate
+  zones and pending source frames. Source departure, return or phasing cannot
+  redirect the later counter instruction to another visit.
+- RON owns grammar, context validation and diagnostics. Mage owns choices, visit
+  identity, transactions and movement. Saved exile numeric/card/subtype results,
+  entry payments, optional RON exile payments and resolving APermanent exile
+  remain unsupported. No fallback, card-name branch, global action slot,
+  production subset registry or Go definition removal was added.
+
+CR 118, 601.2h, 602.2b, 400.7 and 406 supply payment, identity and destination
+contracts. No source defect was found or corrected. All twelve RON sources and
+semantic source hashes remain unchanged.
+
+### Failing-first evidence and card-to-test mappings
+
+Engine tests first failed on the absent `ExileMatchingPermanentCost` signature.
+Corrected two test API assumptions (controller setter and counter enum), then
+reconfirmed only the intended signature failure. Initial RON tests failed on
+`unsupported exile payment object (APermanent)` and
+`unsupported additional casting cost (Exile)`. After payment implementation,
+complete City compilation exposed `unsupported mana amount
+(TheTotalNumberOfCountersOfTypeAmongPermanents)`. Kept its unchanged first rule
+as an explicit subrule fixture; did not remove the second rule from production
+or claim complete-card coverage. Soul's new first diagnostic concerns missing
+activation-history scope at its unsupported exile-result If.
+
+- **City of Shadows (DRK) → `TestRONMatchingPermanentExileCostCity`**: the
+  unchanged first complete rule from the real RON record; costs precede counter
+  resolution, opponent-owned controlled creature exile, copied ability with a
+  different controller, countering without refund, source departure/return/
+  phasing and cloned pending bodies. This is subrule gameplay evidence only.
+- **Soul Exchange (FEM) → `TestRONMatchingPermanentExileCostAdditional`**: its
+  unchanged CastEffect declaration paired with a synthetic resolving body;
+  native casting exiles a controlled creature before resolution. No saved Thrull
+  result or full return/counter gameplay claim.
+- `TestRONMatchingPermanentExileCostRollback`: total mana/tap/exile activation,
+  one choice, phased/opponent/wrong-type/invalid subjects, double payment and
+  missing mana; failures preserve resources and stack state.
+- `TestRONMatchingPermanentExileCostInvalid`: malformed shape, missing control,
+  empty filter, control under Or, callable/unbound player and modifiers reject.
+- `Records`: both complete records retain their independent gaps; semantic
+  inventory role; resolving/entry contexts and unbound paid results reject.
+- `StrictLoad`: supported synthetic fixture validates with fresh ability state;
+  adding either full unsupported record rejects atomically and preserves the
+  installed registry. This is a test fixture, not a production allowlist.
+- `TestMatchingPermanentExileCostTransaction`: ownership/source attribution,
+  source tap, actual exile, duplicate payment and later life failure rollback,
+  phasing/control/type legality and clone isolation.
+- `StaleVisit`: prepared payments reject departure/return, phasing and changed
+  control before spending live mana or tap resources.
+- `SourceAndDefinition`: source inclusion, missing payer and invalid definition.
+- `QueriesAndEvents`: pure affordability, exactly one real choice, live exile
+  zone event, token handling, shroud/hexproof/indestructible/regeneration and
+  reusable definitions after prior payment. Observation excludes isolated
+  validation/preflight games, so assertions inspect live commit events.
+
+The engine short suite identified one previous counter-information test whose
+expected City error was the old APermanent rejection. Updated it to require the
+exact new unsupported counter-mana diagnostic. No gameplay assertion was weakened.
+
+### Validation and measured outcome
+
+Final focused `go test ./pkg/mage/dsl/ron -run
+'TestRONMatchingPermanentExileCost|TestRONCounterInformationInventoryAndBoundaries'
+-count=1` and `go test ./pkg/mage -run TestMatchingPermanentExileCost -count=1`
+passed. `make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1`
+and `make test` passed. The engine skill's additional `go test ./... -short
+-count=1` passed. Initial lint found parameter grouping and an unused test
+transaction variable. Fixed both. The final required build, vet, engine short,
+full test and lint sequence passed; final lint reported **0 issues**. Reviewed
+automatic import grouping in new files. Focused affected tests were rerun after
+lint and passed. Final `git diff --check` passed. No environmental, build, test
+or lint blocker remains.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as expected, with
+**2,251 compiled / 194 rejected records**, **882 accepted / 104 rejected names**.
+Comparison against the fresh baseline confirms exactly two diagnostics changed:
+City now rejects at DRK 18:409 on its counter-mana amount; Soul now rejects at
+FEM 78:466 on the unsupported result If's activation-history scope. No rejected
+record was added or removed; all other diagnostics and accepted records are
+unchanged. Vocabulary loader baseline refreshed for those two diagnostics;
+all twelve source hashes match. Estimated gain initially one unique card, revised
+estimate and actual gain zero. Complete-card gameplay coverage gains zero;
+RON subrule gameplay coverage adds one payment-bearing rule for each of two
+unique cards. Strict collection rejection remains atomic.
+
+Changed files: new mage `matching_permanent_exile_cost.go` / `_test.go`; mage
+`payment_transaction.go`, `definition.go`, `doc.go`; new ron
+`matching_permanent_exile_cost.go` / `_test.go`; ron `compiler.go`,
+`exile_payment.go`, `activation_timing.go`, `additional_sacrifice.go`,
+`inventory.go`, `counter_information_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, vocabulary loader baseline and this ledger.
+No RON source, Go card definition, generator, runtime wiring or broad DSL export
+changed. No DSL function was removed, so no removal caller audit was needed.
+
+### Ranked next candidates
+
+1. **Dynamic source counter-count mana.** City of Shadows now lacks only the
+   Storage-counter quantity adapter for AddManaRepeated. Reuse exact engine
+   quantity/solver metadata, pure affordability and manual/automatic activation;
+   test zero counters, phasing, copies and clones. One unique card completion is
+   plausible with small effort. Reassess against shared multi-card prerequisites
+   before selecting it; resolving counter information alone is not mana support.
+2. **Saved permanent exile facts / returned-permanent result.** Soul Exchange
+   has its mandatory casting payment, but needs historical Thrull facts and the
+   exact successful graveyard entrant before applying counters. Keep payment
+   and action outputs distinct; compare reusable result producers before consumers.
+3. **Entry payment/result prerequisites.** Nameless Race and Frankenstein's
+   Monster remain candidates for one bounded entry payment contract. Exact X
+   graveyard payment, failure replacement and selectable counters are not one
+   adapter. Sword of the Ages's optional plural sacrifice/result chain also
+   remains separate from whole-graveyard exile.
+
+Complete collection gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation and unused DSL cleanup remain incomplete. Stop after this
+matching permanent exile payment slice.

@@ -15586,3 +15586,27 @@ and `LoadAndInventory`. Wood Elemental uses its complete LEG record for native
 failed and paid casting, zero toughness, eligible Forest selection, combat,
 spell copying, phasing, return, cloning and strict subset loading. Sword of the
 Ages still requires activation payment results, saved power and linked exile.
+
+### RON matching permanent exile payments
+
+`Exile([APermanent(filter)], [])` lowers to
+`mage.ExileMatchingPermanentCost(filter, text)` in activation costs (including
+`And` groups) and nonmodal `CastEffect(AdditionalCastingCost(...))` on instants
+and sorceries. One conjunctive `ControlledByAPlayer(SinglePlayer(You))` clause
+is required. Characteristic filters and nonempty nested `And`/`Or` groups reuse
+the matching payment filter grammar. Control clauses inside `Or`, duplicate
+control clauses, other players, modifiers and multiple subjects reject.
+
+The payer chooses a present matching permanent they control. The source can
+pay, and tapping does not make an exile payment illegal. Queries make no choices.
+The transaction saves the exact visit, validates the total payment on an isolated
+game, and checks stale choices before live resources are spent. Copies do not
+pay again. No saved result is produced. Resolving `APermanent` exile, entry
+payments and optional payment adapters remain unsupported.
+
+`TestRONMatchingPermanentExileCostCity` executes the unchanged first rule from
+City of Shadows. `Additional` executes Soul Exchange's unchanged casting-cost
+rule with a synthetic resolving body. These are subrule tests: neither complete
+card is supported yet. `Records` and `StrictLoad` retain their complete-record
+rejection and atomic loading evidence. `Rollback` and `Invalid` cover payment
+legality and declaration errors.

@@ -20562,3 +20562,30 @@ checks invalid/unbound references and empty/missing players. Existing
 `TestRONGraveyardBatchExile*` covers native casting and activation, resolution
 membership, self-target payment, countering, copies, retargeting, rollback,
 phasing, delayed current/LKI reads, fresh factories, inventory and atomic loading.
+
+## Matching permanent exile payment
+
+`ExileMatchingPermanentCost(filter PermanentFilter, text string) Cost` requires
+one matching permanent controlled by the payer, including the source. Nil
+filters and empty labels fail definition validation. `CanPay` makes no choice
+or mutation. A tapped creature can pay; phasing excludes it. This is a choice,
+so target protections do not apply. Exile is neither destruction nor sacrifice;
+indestructible and regeneration do not stop the payment (CR 118, 601.2h, 602.2b).
+
+The shared payment transaction chooses on its isolated validation state through
+the payer, locks the exact `capturedPermanent`, and checks the full payment again
+before commit. Missing, phased, returned, wrong-controller or changed-filter
+visits fail without spending live mana, life or tap resources. Separate exile
+costs cannot reuse a departed visit. No numeric, card or historical subtype
+result is exported. Definitions do not retain a locked choice from direct Pay.
+
+The shared `exilePermanent` service keeps ownership, face-up visibility, source
+attribution, departure information and zone events. Tokens leave and cause a
+zone event without adding a persistent exile card. Clones keep separate zones
+and pending effect frames. Countering or copying a paid ability does not refund
+or repeat payment. Replacement ordering and simultaneous-operation services
+keep their existing contracts; this operation chooses one subject.
+
+`TestMatchingPermanentExileCostTransaction`, `StaleVisit`,
+`SourceAndDefinition` and `QueriesAndEvents` cover these contracts. RON owns
+spelling and scopes; the engine owns choices, visit identity and movement.

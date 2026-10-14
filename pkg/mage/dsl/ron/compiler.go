@@ -865,6 +865,12 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "Exile":
+		cost, err := compileMatchingPermanentExileCost(n)
+		if err != nil {
+			return nil, false, err
+		}
+		return []costFactory{cost}, false, nil
 	case "DiscardCard":
 		if err := arity(n, 1); err != nil {
 			return nil, false, err

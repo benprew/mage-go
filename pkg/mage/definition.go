@@ -239,6 +239,9 @@ func describeDefinition(v any) definitionNode {
 			if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
+			if _, ok := cost.(*matchingPermanentExileCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if _, ok := cost.(*tapNOtherMatchingCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}

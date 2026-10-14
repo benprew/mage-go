@@ -306,7 +306,7 @@ func TestRONCounterInformationInventoryAndBoundaries(t *testing.T) {
 			t.Fatal("missing semantic role", name, role)
 		}
 	}
-	for _, tc := range []struct{ set, name, gap string }{{"ARN", "Cyclone", "PayManaForEach"}, {"DRK", "City of Shadows", "APermanent"}} {
+	for _, tc := range []struct{ set, name, gap string }{{"ARN", "Cyclone", "PayManaForEach"}, {"DRK", "City of Shadows", "unsupported mana amount (TheTotalNumberOfCountersOfTypeAmongPermanents)"}} {
 		if _, err := Compile(hostUntapRecord(t, tc.set, tc.name)); err == nil || !strings.Contains(err.Error(), tc.gap) {
 			t.Fatalf("%s gap: %v", tc.name, err)
 		}

@@ -1,5 +1,14 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [ExileMatchingPermanentCost] requires one present matching permanent that the
+// payer controls. The source can pay. Queries make no choice. The shared cost
+// transaction locks the chosen visit and checks the total payment before commit.
+// Return, phasing and changed control cannot replace that visit. Exile keeps
+// ownership and uses the shared departure events. Copies do not pay again.
+// RON accepts Exile with one APermanent filter and no modifiers in activation
+// and nonmodal additional casting costs. The filter requires one conjunctive
+// ControlledByAPlayer(SinglePlayer(You)). Saved exile results need an adapter.
+//
 // [ExileGraveyardFor] reads one player's current graveyard at resolution.
 // Saved visits cannot follow returned cards. All moves precede zone events.
 // One graveyard departure event supplies the completed batch count. Cards added

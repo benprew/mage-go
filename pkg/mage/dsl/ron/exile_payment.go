@@ -3,6 +3,7 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 type exilePaymentPlan struct {
+	permanentFilter *mage.PermanentFilter
 	filter          mage.CardFilter
 	singleGraveyard bool
 	amount          int
@@ -29,6 +30,13 @@ func compileExileCost(n Node) (*exilePaymentPlan, error) {
 	}
 	if err := arity(object, 1); err != nil {
 		return nil, err
+	}
+	if object.Name == "APermanent" {
+		filter, err := compileMatchingPermanentExileFilter(object.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return &exilePaymentPlan{permanentFilter: &filter}, nil
 	}
 	if object.Name == "Permanent" {
 		if object.Args[0].Kind != Symbol || object.Args[0].Name != "ThisPermanent" {
@@ -94,7 +102,11 @@ func compileExileCost(n Node) (*exilePaymentPlan, error) {
 
 func compileExilePaymentPlan(cost Node) (*exilePaymentPlan, error) {
 	if cost.Name == "Exile" {
-		return compileExileCost(cost)
+		plan, err := compileExileCost(cost)
+		if plan != nil && plan.permanentFilter != nil {
+			return nil, err
+		}
+		return plan, err
 	}
 	if cost.Name != "And" {
 		return nil, nil
@@ -178,6 +190,11 @@ func compileExileActivationCosts(n Node, ctx scope) ([]boundCostFactory, bool, e
 				return mage.ExileSourceCost()
 			}}, false, nil
 		}
+		if plan.permanentFilter != nil {
+			return []boundCostFactory{func(instanceBindings) mage.Cost {
+				return mage.ExileMatchingPermanentCost(*plan.permanentFilter, "Exile a matching permanent you control")
+			}}, false, nil
+		}
 		if plan.singleGraveyard {
 			return []boundCostFactory{func(instanceBindings) mage.Cost {
 				return mage.ExileMatchingCardsFromSingleGraveyardCost(plan.amount, plan.filter, mage.EachPlayer)
@@ -207,7 +224,7 @@ func compileExilePaymentValue(n Node, ctx scope) (valueFactory, error) {
 		return nil, err
 	}
 	ref := n.Args[0]
-	if ref.Kind != Symbol || ref.Name != "TheCardExiledThisWay" || ctx.exilePayment == nil || ctx.exilePayment.singleGraveyard {
+	if ref.Kind != Symbol || ref.Name != "TheCardExiledThisWay" || ctx.exilePayment == nil || ctx.exilePayment.singleGraveyard || ctx.exilePayment.permanentFilter != nil {
 		return nil, problem(ref, "unbound or incompatible exile payment result")
 	}
 	return func(bindings instanceBindings) mage.ResolutionValue {

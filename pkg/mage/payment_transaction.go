@@ -320,6 +320,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			sacCopy.chooser = tx.game.GetPlayer(tx.controller)
 			validationCost = &sacCopy
 		}
+		if exile, ok := cost.(*matchingPermanentExileCost); ok {
+			locked := *exile
+			locked.chooser = tx.game.GetPlayer(tx.controller)
+			validationCost = &locked
+		}
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok {
 			locked := *taps
 			locked.selected = make([]capturedPermanent, 0, locked.count)
@@ -419,6 +424,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			sacrifice.chooser = nil
 			tx.costs[i] = sacrifice
 		}
+		if exile, ok := validationCost.(*matchingPermanentExileCost); ok {
+			exile.locked = true
+			exile.chooser = nil
+			tx.costs[i] = exile
+		}
 		if taps, ok := validationCost.(*tapNOtherMatchingCost); ok {
 			taps.locked = true
 			taps.chooser = nil
@@ -443,7 +453,8 @@ func (tx *costPaymentTransaction) Commit() error {
 		_, isPlacement := cost.(*putCounterOnMatchingCost)
 		_, isAnte := cost.(*anteCost)
 		_, isSource := cost.(*sourceCardCost)
-		if random || isSacrifice || isPlacement || isAnte || isSource {
+		_, isExile := cost.(*matchingPermanentExileCost)
+		if random || isSacrifice || isPlacement || isAnte || isSource || isExile {
 			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)

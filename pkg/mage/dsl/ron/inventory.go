@@ -729,6 +729,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "exile_payment_object":
+		if n.Name == "APermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "NumberCardsInASingleGraveyard" && len(n.Args) == 3 {
 			return []string{"announcement_value", "card_filter", "player_collection"}[index]
 		}
@@ -845,6 +848,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "card_counter_type"}[index]
 		}
 	case "exile_subject":
+		if n.Name == "APermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "EachCardInGraveyards" && len(n.Args) == 1 {
 			return "graveyard_card_filter"
 		}

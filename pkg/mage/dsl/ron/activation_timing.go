@@ -92,7 +92,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		if ctx.sourceCardPayment.used {
 			bindings.sourceCards = map[*sourceCardPaymentPlan]*mage.CardBinding{ctx.sourceCardPayment: mage.BindCard("paid source card")}
 		}
-		if exile != nil && !exile.singleGraveyard {
+		if exile != nil && !exile.singleGraveyard && exile.permanentFilter == nil {
 			bindings.exiles = map[*exilePaymentPlan]*mage.NumberBinding{exile: mage.BindNumber("paid exile mana value")}
 		}
 		if paid != nil {
