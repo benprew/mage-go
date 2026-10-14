@@ -20,20 +20,8 @@ func TestRONUpkeepPlayerConditionsRecords(t *testing.T) {
 			set = "ARN"
 		}
 		n := hostUntapRecord(t, set, name)
-		if name == "Spiritual Sanctuary" || name == "Land Tax" {
-			if _, err := Compile(n); err != nil {
-				t.Fatal(err)
-			}
-			continue
-		}
-		rule := n.Fields["Rules"].Args[0]
-		nodes, err := Parse(strings.NewReader(`ActionList([GainLife(Integer(1))])`), "probe.ron")
-		if err != nil {
+		if _, err := Compile(n); err != nil {
 			t.Fatal(err)
-		}
-		rule.Args[2] = nodes[0]
-		if _, err := compileRule(rule, scope{permanent: true}); err != nil {
-			t.Fatal(name, err)
 		}
 	}
 }
@@ -326,22 +314,15 @@ func TestRONUpkeepPlayerConditionsStrictRecords(t *testing.T) {
 			}
 			count[name]++
 			factory, compileErr := Compile(n)
-			if name == "Spiritual Sanctuary" || name == "Land Tax" {
-				if compileErr != nil {
-					t.Fatal(compileErr)
-				}
-				first, second := factory(), factory()
-				if first.ID() == second.ID() {
-					t.Fatal("shared factory identity")
-				}
-				if err := mage.ValidateCardDefinition(name, first); err != nil {
-					t.Fatal(err)
-				}
-			} else {
-				want := "SetController"
-				if compileErr == nil || !strings.Contains(compileErr.Error(), want) {
-					t.Fatal("remaining body blocker", name, compileErr)
-				}
+			if compileErr != nil {
+				t.Fatal(compileErr)
+			}
+			first, second := factory(), factory()
+			if first.ID() == second.ID() {
+				t.Fatal("shared factory identity")
+			}
+			if err := mage.ValidateCardDefinition(name, first); err != nil {
+				t.Fatal(err)
 			}
 		}
 		for line := range strings.SplitSeq(string(data), "\n") {

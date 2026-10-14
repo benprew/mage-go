@@ -943,6 +943,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"value", "recipient"}[index]
 			}
+		case "GainControlOfPermanent":
+			if len(n.Args) == 1 {
+				return "permanent_reference"
+			}
 		case "GainControlOfPermanentUntil":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "source_control_duration"}[index]
@@ -1402,7 +1406,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "basic_land_type_choice_reference"
 			}
 		case "SetController":
-			if role == "static_modification" && len(n.Args) == 1 {
+			if (role == "static_modification" || role == "resolving_modification") && len(n.Args) == 1 {
 				return "player_reference"
 			}
 		case "SetPT":
@@ -1628,6 +1632,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "player_action":
+		if n.Name == "GainControlOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "ChooseUptoNumberPermanentsForEach" && len(n.Args) == 3 {
 			return []string{"value", "permanent_filter", "value"}[index]
 		}

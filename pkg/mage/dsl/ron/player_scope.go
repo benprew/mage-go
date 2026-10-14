@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	highestLife         bool
 	active              bool
 	drawReplacement     *drawReplacementPlan
 	choice              *playerChoicePlan
@@ -126,6 +127,8 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "ThePlayerWithTheMostLife":
+			return playerReferencePlan{highestLife: true}, nil
 		case "TheActivePlayer":
 			return playerReferencePlan{active: true}, nil
 		case "WouldDrawACard_ThatPlayer":
@@ -201,6 +204,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.highestLife {
+		return mage.PlayerWithUniqueHighestLife()
+	}
 	if p.active {
 		return mage.ActivePlayer
 	}

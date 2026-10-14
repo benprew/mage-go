@@ -59,7 +59,7 @@ func ModifyPT(subject PermanentRef, power, toughness ResolutionValue) Continuous
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT}
 }
 
-// ChangeController gives one permanent to the selected player until end of turn.
+// ChangeController gives one permanent to the selected player for the supplied duration.
 func ChangeController(subject PermanentRef, controller PlayerRef) ContinuousModification {
 	return &layerModification{subject: subject, controller: controller, layer: LayerControl}
 }
@@ -952,8 +952,8 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	}
 	for i, m := range e.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
-		if !nilDefinition(m) && m.modification().layer == LayerControl && !e.sourcePresent && !e.sourceTapped && (e.sourceBound || e.duration != EndOfTurn) {
-			n.problem = "control modification requires Until(EndOfTurn), UntilSourcePresent or UntilSourceUntaps"
+		if !nilDefinition(m) && m.modification().layer == LayerControl && !e.sourcePresent && !e.sourceTapped && (e.sourceBound || (e.duration != EndOfTurn && e.duration != Indefinite)) {
+			n.problem = "control modification requires Until(EndOfTurn), Until(Indefinite), UntilSourcePresent or UntilSourceUntaps"
 		}
 	}
 	return n

@@ -15881,3 +15881,27 @@ context checks; the engine owns identity and prevention.
 
 This completes Bronze Horse. Silhouette still requires a distinct spell/ability
 causation service. See [the engine contract](engine-rules-contracts.md#spell-source-target-facts-and-static-prevention).
+
+### RON indefinite singular control
+
+Ordinary resolving bodies accept
+`CreatePermanentLayerEffect(subject, [SetController(player)])` with one
+modification and `GainControlOfPermanent(subject)`. The latter gives control to
+the current scoped action player; without a PlayerAction scope it uses You.
+Both use `mage.Until(core.Indefinite, mage.ChangeController(subject, player))`.
+Subjects and players use the existing typed references and lexical bindings.
+The symbol `ThePlayerWithTheMostLife` reads the unique current highest-life
+player through `mage.PlayerWithUniqueHighestLife()`. A tie supplies no player.
+The engine saves the selected controller and exact subject visit at resolution;
+later life changes cannot redirect an installed effect. Source departure and
+cleanup do not end it. Phasing keeps it; return starts a new visit. Entry and
+draw-replacement control bodies reject. Other lifetime forms keep their existing
+adapters.
+
+A source tap activation containing one `AddMana(singleManaSymbol)` then one
+`CreateFutureTrigger(...)` lowers to `mage.NewManaAbility(color, followup...)`
+when the symbol produces one mana. This preserves automatic payment metadata,
+immediate mana production and delayed scheduling. The follow-up body passes
+normal definition and binding checks. No choices or delayed scheduling occur in
+mana queries. Ghazbán Ogre and Rainbow Vale use these forms. See
+`TestRONIndefiniteControl*` and `TestIndefiniteControl*` for contract evidence.

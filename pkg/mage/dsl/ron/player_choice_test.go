@@ -164,7 +164,7 @@ func TestRONPlayerChoiceInvalid(t *testing.T) {
 }
 
 func TestRONPlayerChoiceCompleteRecords(t *testing.T) {
-	for _, tc := range []struct{ set, name, blocker string }{{"LEG", "Backdraft", "ChooseASpellThatResolvedThisTurn"}, {"FEM", "Rainbow Vale", "unsupported value (ThisPermanent)"}} {
+	for _, tc := range []struct{ set, name, blocker string }{{"LEG", "Backdraft", "ChooseASpellThatResolvedThisTurn"}} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + tc.set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)

@@ -30,6 +30,20 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
+		case "SetController":
+			if ctx.enteringSource || ctx.drawReplacementBody {
+				return nil, problem(part, "indefinite control requires an ordinary resolving body")
+			}
+			if err := arity(part, 1); err != nil {
+				return nil, err
+			}
+			controller, err := compilePlayerRef(part.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+				return mage.ChangeController(subject.build(bindings), controller.build(bindings))
+			})
 		case "SetColor":
 			colors, err := compileColorList(part)
 			if err != nil {

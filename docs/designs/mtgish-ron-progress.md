@@ -6,15 +6,15 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **890 accepted / 96 rejected names**
-(986 total), **2,259 compiled / 186 rejected records** (2,445 total).
-The latest slice is **SPELL-SOURCE-TARGET-PREVENTION**. Spell damage sources save
-announced permanent target visits across stack departure, snapshots and clones.
-Static prevention checks these facts against the live subject and condition.
-Bronze Horse compiles and has complete RON gameplay evidence.
-Tests cover casting, trample, targets, control, replacements, visits and isolation.
-Estimated and actual gain: **one unique name / one record**. Gameplay gains Bronze Horse.
-No RON source changed; Silhouette still requires distinct damage-causation facts.
+Latest measured result (2026-10-14): **892 accepted / 94 rejected names**
+(986 total), **2,261 compiled / 184 rejected records** (2,445 total).
+The latest slice is **INDEFINITE-SINGULAR-CONTROL**. Resolving control saves
+an exact permanent visit and player through cleanup and source departure.
+Ghazbán Ogre and Rainbow Vale compile and have complete RON gameplay evidence.
+Tests cover highest-life ties/rechecks, mana payment and rollback, delayed timing,
+visits, phasing, control timestamps, copied triggers and clone isolation.
+Estimated and actual gain: **two unique names / two records**. Gameplay gains both.
+No RON source changed. Silhouette still needs distinct damage-causation facts.
 All required checks pass; final lint reports 0 issues.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
@@ -11930,3 +11930,152 @@ above. There is no environment blocker. Commit title:
 
 Stop after this slice. Runtime loading, Go-card removal, DSL cleanup and complete
 collection gameplay remain unfinished.
+
+## 2026-10-14 — INDEFINITE-SINGULAR-CONTROL
+
+### Candidate comparison and selection
+
+The initial worktree was clean. Fresh `make build` and the RON package tests
+passed. The baseline loader exited 1 for collection rejection: 2,259 compiled /
+186 rejected records, 890 accepted / 96 rejected names. This was not a build or
+test failure. Read the complete Silhouette, Sword of the Ages, Frankenstein's
+Monster, Ghazbán Ogre and Rainbow Vale records, including nested forms. Checked
+the relevant target, control and player-selector vocabulary signatures. Counts
+below are distinct names; no reprint is counted twice.
+
+| Candidate | Affected unique names | Estimated full-card gains | Blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Damage causation identity | Silhouette | 0 for identity prerequisite; 1 with its complete prevention adapter | Spell-source targets exist, but causing spell/ability identity must remain distinct from the damaging source. Requires a producer audit and temporary prevention adapter; does not complete Reverberation's separate source redirection | Large |
+| Plural activation sacrifice facts and visits | Sword of the Ages | 0 for saved payment prerequisite; 1 only after the full chain and fidelity repair | Atomic optional selection, total power, source and creature graveyard visits, then exile are required. Local Oracle data includes the sacrificed artifact itself; its RON result expression needs an audit before claiming fidelity | Large |
+| Indefinite singular control | Ghazbán Ogre; Rainbow Vale | 2 names / 2 records | Highest-life condition, typed chosen player, delayed frames, mana follow-ups and layer control already exist. Needs duration validation and resolving adapters. Supplies reusable no-duration control for future resolving and delayed instructions | Small/medium |
+
+Selected indefinite control for the largest credible complete gain at this size.
+Candidate #1 did not offer shared multi-card value or a small unblocking
+prerequisite. Frankenstein's Monster's complete record confirms that entry
+payment, failed-entry routing and counter allocation remain separate contracts;
+this run does not start them. Local ARN/FEM Oracle data agrees with the selected
+unchanged RON records. No source defect was corrected.
+
+### Established contract, signatures, contexts and reuse
+
+`Until(core.Indefinite, ChangeController(PermanentRef, PlayerRef))` now passes
+engine definition validation. Existing control capture saves the exact subject
+visit and player once at resolution. Missing players or absent/phased subjects
+supply no effect. Highest-life ties select no player. Subsequent life changes,
+source departure/control/ability loss and cleanup do not alter saved control.
+Subject phasing keeps the effect; return cannot inherit it. Layer 2 timestamps
+permit temporary overrides and restoration. Copies and clones keep their frames
+and effect state separate. Unsupported control lifetimes retain their checks.
+
+RON supports one `SetController(playerRef)` in resolving
+`CreatePermanentLayerEffect(permanentRef, [modification])`, and
+`GainControlOfPermanent(permanentRef)` in ordinary resolving instructions,
+including PlayerAction/PlayerActions scopes. The latter uses the scoped player,
+with You as the default. `ThePlayerWithTheMostLife` must be a symbol and lowers
+to the existing `PlayerWithUniqueHighestLife() PlayerRef`. Entry and draw
+replacement control bodies reject. Static and plural control retain separate
+adapters. Existing lexical target, event and choice validation applies.
+
+The full Rainbow Vale payment test found that a generic activated body hides
+its mana from automatic payment. For one exact source tap cost, one
+`AddMana(singleManaSymbol)` producing one mana, followed by one
+`CreateFutureTrigger(...)`, lowering now uses existing
+`NewManaAbility(core.Color, ...Effect) *ManaAbility` follow-up support. All
+future declaration and body checks still run. Production metadata and the
+follow-up have separate jobs: queries advertise mana without scheduling or
+choosing; successful production runs the delayed producer once. Failed total
+payment planning leaves the source, pool and delayed list unchanged.
+
+A failing engine test exposed that ManaAbility follow-up effects bypassed the
+definition walk. They now pass the existing effect/binding validation. No new
+mana solver, control service or global result slot was added. Reused typed
+PermanentRef/PlayerRef, highest-life selector and condition, intervening checks,
+continuous capture, layer timestamps, mana metadata and post-production service,
+shared cost transactions, delayed scheduling, waiting queries, copies and clones.
+RON owns spelling, shape checks and lowering; mage owns execution and lifetimes.
+Current Go callers remain. Rules: CR 603.4, 400.7, 611.2a–c, 613.1b/613.7,
+702.26 and the existing mana/delayed-trigger contracts.
+
+### Failing-first evidence and card-to-test mappings
+
+Corrected test-only API mistakes before collecting expected failing evidence.
+The initial complete-card RON tests then failed at unsupported SetController and
+the unsupported ThisPermanent value reached through GainControlOfPermanent. Engine tests failed at the explicit indefinite control
+validation guard. The follow-up validation test separately failed because an
+unbound controller was accepted. Rainbow Vale automatic-payment tests failed for
+all five colors before the existing mana-follow-up path was wired. None of these
+assertions was removed to get a passing result.
+
+- Ghazbán Ogre -> `TestRONIndefiniteControlOgre`: unchanged full RON, failed
+  unpaid cast, green payment, creature metadata, own/opponent upkeep, ties at
+  detection and resolution, a new highest-life player at resolution, source
+  phase/cycle/return, ability loss, copied trigger and divergent pending clones.
+  Later life changes and cleanup cannot redirect the installed effect.
+- Ghazbán Ogre -> `OgreNewController`: subsequent upkeep detection follows the
+  current controller; a later resolving trigger can change control again.
+- Rainbow Vale -> `RainbowVale`: unchanged full RON, immediate mana ability,
+  tap legality, next-end-step timing, source control/ability changes, phase/cycle,
+  departure/return, two independent delays, copied delayed controller, pending
+  clones, indefinite retention and one-shot scheduling.
+- Rainbow Vale -> `RainbowPayment`: automatic payment for each of the five
+  colors, impossible two-mana rollback, pure exact waiting-source query, and
+  delayed transfer after automatic production.
+- Both -> `Invalid`: malformed arities, wrong kinds, incompatible/unbound refs,
+  mixed indefinite modifications and unsupported static/entry contexts reject.
+- Both -> `InventoryAndLoad`: complete records, semantic roles, factory/ability
+  identity isolation, strict loading and atomic rejection of an added bad record.
+- `TestIndefiniteControl`, `Declaration`, `ManaFollowupValidation`: reusable
+  synthetic engine contracts for definition errors, unbound references, ties,
+  saved controllers, source lifecycle, target phasing/return, timestamps,
+  temporary override restoration, cleanup and clone isolation.
+
+Replaced old Ghazbán Ogre prerequisite probes/rejections with complete-record
+acceptance and validation. Removed Rainbow Vale's obsolete rejection assertion;
+Backdraft still rejects for its independent missing resolved-spell choice.
+Updated four collection count assertions in three test files. No Go definition
+or unused broad DSL function was removed: the design's removal gates remain
+closed. No RON source changed, so the vocabulary snapshot does not need a refresh.
+The implement-engine skill supplied engine-contract guidance; the user request
+supplied the full compiler, documentation, verification and commit scope.
+
+### Verification and measured result
+
+Focused RON and engine tests pass with `-count=1`. `make build`, `go vet ./...`
+and `go test ./pkg/mage/... -short -count=1` pass. Full-suite, lint and final loader
+results are recorded below.
+
+Measured loader: **2,261 compiled / 184 rejected records; 892 accepted / 94
+rejected names**, out of 2,445 records and 986 names. Removed diagnostics are
+exactly Ghazbán Ogre and Rainbow Vale. No diagnostic was added and no accepted
+record was lost. Estimated and actual gains match: **two names / two records**.
+Gameplay evidence separately gains both cards; compilation counts are not a
+claim of complete collection gameplay. The collection still rejects atomically.
+
+Changed files: engine composable_continuous.go, definition.go, doc.go and
+indefinite_control_test.go; RON indefinite_control.go/tests, activation_timing.go,
+compiler.go, indefinite_type.go, player_scope.go, player_actions.go, inventory.go,
+three collection-count test files, player_choice_test.go and
+upkeep_player_condition_test.go; API/rules-contract documentation and this ledger.
+
+### Ranked next candidates
+
+1. **Damage causation identity and temporary prevention for Silhouette.** Reuse
+   spell-source target snapshots; audit causing spell/ability identity separately
+   from the damage source before selecting the next bounded prerequisite.
+2. **Plural activation sacrifice facts and visits.** Sword of the Ages requires
+   atomic selection and saved results, then the power/graveyard-exile consumers.
+   Preserve the explicit artifact-exile fidelity blocker until audited.
+3. **Entry graveyard-X payment and counter allocation.** Frankenstein's Monster
+   needs atomic payment, failed-entry routing and retained allocation counts.
+
+Stop after this slice. Runtime cutover, Go-card removal, unused DSL removal and
+complete collection gameplay remain unfinished.
+
+Final verification: `make test` passes. `make lint` completes with **0 issues**;
+review found no semantic or unrelated automatic edits. Post-lint
+`go test ./pkg/mage ./pkg/mage/dsl/ron -short -count=1` passes. Final
+`git diff --check` passes. Final `go run ./cmd/loadcards -json` exits 1 only
+for expected collection rejection, with the counts above. Comparison by card
+and source file confirms exactly two removed diagnostics, zero new diagnostics
+and zero changes to retained diagnostics. There is no environment blocker.
+Commit title: `feat(ron): implement indefinite singular control`.

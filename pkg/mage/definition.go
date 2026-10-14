@@ -119,6 +119,7 @@ func describeDefinition(v any) definitionNode {
 	}
 	switch e := v.(type) {
 	case *ManaAbility:
+		addEffects(e.postProduction)
 		if e.sourceCounters != nil {
 			n.children = append(n.children, definitionEdge{"sourceCounters", e.sourceCounters})
 		}

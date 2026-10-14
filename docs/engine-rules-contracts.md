@@ -21038,3 +21038,40 @@ Evidence: engine `TestSpellTargetDamageFacts`, `Prevention`, `Invalid`,
 Its casting payment, 4/4 artifact creature metadata, trample and full conditional
 prevention have gameplay evidence. Synthetic fixtures test the reusable service;
 they do not establish Silhouette gameplay support.
+
+## RON indefinite singular control
+
+`Until(core.Indefinite, ChangeController(subject PermanentRef, controller PlayerRef))`
+now passes definition validation. Existing layer capture saves the subject's exact
+battlefield visit and the selected controller at resolution. A missing player or
+phased/departed subject installs no effect. Highest-life ties select no player.
+Later life changes cannot change the saved controller. Source departure, source
+control, ability loss and cleanup do not end this effect. Subject phasing retains
+it; departure and return cannot inherit it. Layer 2 timestamps let later control
+effects override it; removal of a temporary override restores it. Copies and game
+clones retain separate resolution frames and effects. Unsupported control
+durations and source-bound lifetime forms retain their existing validation.
+This follows CR 611.2a–c, 613.1b, 613.7, 400.7 and 702.26.
+
+RON accepts `CreatePermanentLayerEffect(subject, [SetController(player)])` with
+one modification, or `GainControlOfPermanent(subject)` in ordinary resolving
+bodies. The latter uses the scoped action player (default You). Permanent and
+player references use the existing typed scope rules. The symbol
+`ThePlayerWithTheMostLife` lowers to `PlayerWithUniqueHighestLife()` and is read
+at resolution. Entry and draw-replacement control bodies reject. Static control,
+plural control and source-bound durations retain their separate adapters.
+
+A source-tap activation with exactly `AddMana(singleManaSymbol)` followed by
+`CreateFutureTrigger(...)` uses `NewManaAbility(color, afterProduction...)` when
+the symbol produces one mana. This retains automatic-payment color metadata and
+runs the delayed producer immediately after production. Future bodies use their
+existing declaration checks and per-instance bindings. Queries do not schedule
+triggers or choose players. Failed payment planning does not tap the source or
+install a delay. ManaAbility follow-up effects now pass definition validation,
+including binding checks; they no longer bypass the definition walk.
+
+Engine evidence: `TestIndefiniteControl`, `Declaration` and
+`ManaFollowupValidation`. RON evidence: `TestRONIndefiniteControlOgre`,
+`OgreNewController`, `RainbowVale`, `RainbowPayment`, `Invalid` and
+`InventoryAndLoad`. Complete unchanged Ghazbán Ogre and Rainbow Vale records
+supply gameplay evidence independently of compilation counts.

@@ -1,5 +1,17 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [Until] accepts [ChangeController] with core.Indefinite. Resolution saves the
+// exact subject visit and selected player. Source departure and cleanup keep
+// the effect. Phasing keeps identity; return starts a new visit. Layer 2 applies
+// control effects in timestamp order. Removal restores earlier control.
+// [PlayerWithUniqueHighestLife] selects no player on a tie. Later life changes
+// cannot change an installed effect. Copies and clones keep separate frames.
+// RON accepts singular resolving SetController and GainControlOfPermanent.
+// Scoped action players supply the latter's recipient. Entry bodies reject.
+// Source-tap mana with one delayed follow-up uses [NewManaAbility] metadata.
+// Follow-up effects pass definition and binding checks. Queries schedule nothing.
+// This completes Ghazbán Ogre and Rainbow Vale. Plural control needs an adapter.
+//
 // [DamageSource.TargetsPermanent] reads a spell's saved target visits.
 // Stack departure and target illegality keep these facts. Return cannot match.
 // Source snapshots, copies and clones keep separate target arrays.

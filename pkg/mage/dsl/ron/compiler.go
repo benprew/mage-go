@@ -1635,6 +1635,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "GainControlOfPermanent":
+		build, err := compileIndefiniteControl(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "GainControlOfPermanentUntil":
 		build, err := compileSourceControl(n, ctx)
 		if err != nil {
@@ -1959,6 +1965,13 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "GainControlOfPermanent" {
+		build, err := compileIndefiniteControl(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []effectFactory{build}, nil
+	}
 	if n.Name == "DestroyAPermanentNoRegen" {
 		build, err := compileChosenDestruction(n, ctx)
 		if err != nil {
