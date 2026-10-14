@@ -15077,7 +15077,30 @@ exile visit and is copied separately in game clones.
 An absent or returned card fails both conditions. Source departure cannot make
 `HasNoCountersOfType` true. Conditions read current counts at their specified
 timing and preserve the outer resolution frame. Numeric counter comparisons,
-conjunctions, other references, counter removal, placement and spell exile with
+conjunctions, other references, counter placement and spell exile with
 counters need separate adapters. All Hallow's Eve remains incomplete. See
 `TestRONExileCounterCondition*` and `TestExileCounterCondition*` for the supported
 contract and strict declaration checks.
+
+## RON exact exile-source counter removal
+
+An ordinary owner-upkeep `FromExile` action list, including its resolving `If`
+bodies, accepts one instruction:
+
+```ron
+RemoveCounters([ACounterOfTypeFromCardInExile(ScreamCounter, ThisExiledCard)])
+```
+
+The counter kind uses the existing checked parser. Lowering creates
+`mage.RemoveCounterFromExiledCard(mage.FromCard(binding), kind)` with a fresh
+source binding per factory. It removes one available counter from the exact
+present face-up visit. Zero, missing, hidden and returned subjects perform no
+removal; later actions still run. A subsequent zero-counter condition reads the
+updated count. Stack copies share the saved subject visit, while game clones
+keep separate counters and frames.
+
+Other references, source zones, quantities, plural instructions, costs and
+replacement operations remain unsupported. This does not add counter-removal
+trigger events. All Hallow's Eve retains independent spell-exile and mass-entry
+gaps. `TestRONExileCounterRemoval*` and `TestExileCounterRemoval*` provide the
+contract evidence, including its real-record prerequisite projection.

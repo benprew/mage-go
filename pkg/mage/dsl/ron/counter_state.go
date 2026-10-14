@@ -67,6 +67,9 @@ func compileResolvingCounterRemoval(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n, "counter removal requires one instruction")
 	}
 	instruction := instructions[0]
+	if instruction.Name == "ACounterOfTypeFromCardInExile" {
+		return compileResolvingExileCounterRemoval(instruction, ctx)
+	}
 	if instruction.Name != "AllCountersOfTypeFromPermanent" && instruction.Name != "ACounterOfTypeFromPermanent" {
 		return nil, unsupported(instruction, "counter removal instruction")
 	}

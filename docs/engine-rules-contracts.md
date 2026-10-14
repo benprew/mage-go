@@ -19780,3 +19780,41 @@ mass return. The resolving probe uses the original event as `TriggerA` so that
 its zero predicate can run independently of the intervening guard. These tests
 establish prerequisite behavior, not complete-card gameplay. The unchanged full
 record still rejects at `Exile([Spell(ThisSpell)], ...)`.
+
+## Exact exile-source counter removal
+
+`RemoveCounterFromExiledCard(card CardRef, counter core.CounterType)
+ResolvingEffect` removes one available counter of the given kind from a saved
+`FromCard` exile visit. Definition validation rejects other reference kinds,
+nil or unwritten bindings and invalid counter kinds. Execution requires the
+saved visit to remain present and face up; private visibility alone cannot
+supply a face-down source. Missing, wrong-zone, departed and returned subjects
+perform no removal. Zero counters remain zero, and counts above 255 decrease
+without truncation. Other kinds and the zone visit stay unchanged.
+
+The operation uses the existing saved-card resolver, exile visit storage and
+source-zone trigger frames. It makes no choices and pays no costs. Later
+instructions run even when removal does nothing. Resolving predicates observe
+the updated count (CR 608.2c). Departure information cannot supply a subject
+(CR 400.7/400.8); movement clears counters without a removal (CR 122.2).
+Copies retain the same exact visit and read its current counters; clones own
+separate arrays and pending frames. Two factory instances retain separate
+bindings. Ordinary intervening-if checks still run at detection and resolution
+(CR 603.4). Exile cards do not phase. This resolving instruction does not add
+costs, simultaneous plural removals, placement replacements or a counter-removal
+trigger event. Existing permanent removal likewise has no dedicated removal
+event; that event contract remains separate.
+
+RON accepts `RemoveCounters([ACounterOfTypeFromCardInExile(counter,
+ThisExiledCard)])` in an ordinary owner-upkeep `FromExile` action body, including
+nested resolving `If` bodies. It requires exactly one instruction and the
+current source exile reference. Counter kinds use the existing checked parser.
+Other contexts, references, amounts and lists remain errors.
+
+Evidence: native `TestExileCounterRemovalVisits` and `Definition`; RON
+`TestRONExileCounterRemovalGameplay`, `AllHallowsEve`, `Invalid` and `Inventory`.
+The All Hallow's Eve test retains the actual upkeep, intervening guard, removal,
+zero-counter branch and owner-graveyard movement. Only spell exile and mass
+entry use probes. Two upkeeps remove two counters in order; the second moves
+the card to its owner's graveyard. This proves a prerequisite, not complete-card
+coverage. The unchanged full record still rejects at spell exile.

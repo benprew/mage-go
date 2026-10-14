@@ -1,5 +1,13 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [RemoveCounterFromExiledCard] removes one available counter from a saved,
+// present face-up exile visit. Missing, hidden or returned visits supply no
+// subject. Later instructions still run. Counts and saved bodies stay separate
+// in clones. Copies keep the saved visit and read its current count.
+// RON accepts RemoveCounters with one ACounterOfTypeFromCardInExile instruction
+// for ThisExiledCard in resolving FromExile owner-upkeep bodies, including If.
+// Other references, amounts, costs and counter-removal events need adapters.
+//
 // [ExiledCardHasCounter] and [ExiledCardHasNoCounters] check one saved exile visit.
 // Both require a present, face-up card. Departure and return cannot supply reads.
 // Missing visits cannot supply a zero count. Detection and resolution read the
@@ -7,8 +15,8 @@
 // clones keep separate arrays. New exile visits start without counters.
 // RON accepts HasACounterOfType and HasNoCountersOfType in
 // ExiledCardPassesFilter(ThisExiledCard, filter) for owner-upkeep TriggerI and
-// resolving If bodies under FromExile. Counter removal, placement and spell
-// exile with counters require separate adapters.
+// resolving If bodies under FromExile. [RemoveCounterFromExiledCard] supplies
+// singular source removal. Placement and spell exile with counters need adapters.
 //
 // [NewManaAbilityOfColorsOpponentPermanentsCouldProduce] adds one mana of
 // an available color. The source's current controller defines the opponent.

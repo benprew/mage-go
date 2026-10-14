@@ -1245,6 +1245,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_counter_type", "permanent_reference", "value"}[index]
 		}
 	case "counter_removal_instruction":
+		if n.Name == "ACounterOfTypeFromCardInExile" && len(n.Args) == 2 {
+			return []string{"card_counter_type", "card_reference"}[index]
+		}
 		if (n.Name == "ACounterOfTypeFromPermanent" || n.Name == "AnyNumberOfCountersOfTypeFromPermanent" || n.Name == "AllCountersOfTypeFromPermanent") && len(n.Args) == 2 {
 			return []string{"permanent_counter_type", "permanent_reference"}[index]
 		}
