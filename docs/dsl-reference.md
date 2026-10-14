@@ -14555,9 +14555,34 @@ choose a color. Copy entry replacements precede the choice. All choices in a
 shared entry batch precede its battlefield registration and entry events.
 
 Psychic Allergy's unchanged entry declaration has direct gameplay evidence.
-Its complete record still requires the opponent-upkeep selector and chosen-color
-predicates. Jihad's combined
-color/opponent entry declaration, chosen-color predicates, conditional layer
-and state trigger remain rejected. This slice supplies no `TheChosenColor`
-consumer and claims no complete gameplay coverage for either card. Resolving
+Its complete record still requires the opponent-upkeep selector. Resolving
+chosen-color collections are supported by the contract below. Jihad's combined
+color/opponent entry declaration, static chosen-color predicates, conditional layer
+and state trigger remain rejected. The entry-choice slice claims no complete gameplay coverage for either card. Resolving
 color choices retain their existing separate adapter and result lifetime.
+
+## RON resolving chosen-color collections
+
+`IsColor(TheChosenColor)` lowers to
+`mage.PermanentsOfChosenColor(mage.This, mage.MatchingPermanents(mage.AnyPermanent))`
+in resolving permanent collections, including nested `And`/`Or` and battlefield
+counts. The permanent must declare the supported source entry color choice.
+The declaration supplies a source-visit read, not a resolving choice result.
+Wrong arity, tuple reads, plural colors, unbound reads, target predicates, static
+counts/layers, entry and replacement operations remain errors. Resolving color
+choices retain their separate sequence-local color-setting contract.
+
+The reference uses current or exact departure/phase information. Returned
+sources cannot supply the old visit's color. Subjects use current colors and
+controllers; multicolor subjects match if they include the chosen color.
+Phased and absent subjects cannot match. Collection queries make no choices,
+payment or random draws. Factory instances, pending bodies, copies and clones
+retain the existing exact source and resolution frames.
+
+`TestRONChosenColorFilter*` covers strict loading, declaration rejection,
+activation timing and failed costs, departure/return, phasing, copies, clones,
+current control, late members, token exclusion, inventory and atomic rejection.
+Psychic Allergy's unchanged damage body and entry operation execute through a
+synthetic supported upkeep selector; its actual opponent selector stays rejected.
+Jihad's complete record is inspected and remains blocked before its conditional
+static/state consumers. No complete card gameplay or compilation gain is claimed.

@@ -7,6 +7,25 @@ func compileContextualCollection(n Node, ctx scope) (permanentSetFactory, error)
 		return compileLeastPowerCollection(n, ctx)
 	}
 	switch n.Name {
+	case "IsColor":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		value := n.Args[0]
+		if value.Name == "TheChosenColor" {
+			if value.Kind != Symbol || !ctx.permanent || !ctx.colorEntryChoice || !ctx.resolving || ctx.enteringSource || ctx.drawReplacementBody {
+				return nil, problem(value, "chosen color requires a source entry choice in a resolving collection")
+			}
+			return func(instanceBindings) mage.PermanentSet {
+				return mage.PermanentsOfChosenColor(mage.This, mage.MatchingPermanents(mage.AnyPermanent))
+			}, nil
+		}
+		filter, err := compileFilter(n)
+		if err != nil {
+			return nil, err
+		}
+		return func(instanceBindings) mage.PermanentSet { return mage.MatchingPermanents(filter) }, nil
+
 	case "SharesACardtypeWithPermanent", "SharesACardtypeWithPermanentFromAmongCardtypes":
 		return compilePermanentTypeComparison(n, ctx)
 	case "CostWasntPaidForIt":

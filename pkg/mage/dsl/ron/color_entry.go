@@ -46,3 +46,16 @@ func validateColorEntryDeclaration(rules []Node, permanent bool) error {
 	}
 	return nil
 }
+
+func hasColorEntryChoice(rules []Node) bool {
+	for _, rule := range rules {
+		if rule.Name == "AsPermanentEnters" && len(rule.Args) == 2 && rule.Args[1].Kind == List {
+			for _, operation := range rule.Args[1].Args {
+				if operation.Name == "ChooseAColor" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}

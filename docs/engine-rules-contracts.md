@@ -19118,6 +19118,33 @@ priority, acquired declarations and complete-batch visibility to entry events.
 RON `TestRONColorEntry*` covers strict lowering, invalid declarations, native
 casting, failed payment, pending clones, phasing, return, semantic inventory,
 atomic collection rejection and Psychic Allergy's unchanged entry declaration.
-No chosen-color information read or predicate contract is added. LKI consumers,
-combined entry choices and Jihad's dependent rules require separate slices.
+The resolving chosen-color information contract is recorded below. Combined
+entry choices and Jihad's static/state consumers require separate slices.
 Legacy ETB color helpers retain their current callers and behavior.
+
+## Exact chosen-color collection information
+
+`PermanentsOfChosenColor(reference PermanentRef, subjects PermanentSet) PermanentSet`
+reads the color saved on the reference's exact visit. The shared information
+reader supplies current data, exact departure LKI, or the phase snapshot
+(CR 608.2h, 400.7, 702.26). Source, singular target, saved reference and attachment
+host reads use the existing identity service. Unset, wildcard and invalid colors
+select no members (CR 105.1, 105.4). A returned source cannot replace its old visit.
+
+Subjects must remain present and unphased with the same visit. Their current
+layered colors supply membership, including multicolor subjects (CR 105.2,
+105.3). The service removes duplicate subjects. It does not restore absent
+subjects or make choices, payment, randomness or events. Information reads do
+not by themselves establish target legality; target actions keep the existing
+resolution legality checks. Definition validation rejects missing subjects,
+invalid information references and unbound target/saved declarations.
+
+Delayed source inspection traverses both the reference and the subjects without
+executing the collection. Clones keep independent live choices and frozen
+snapshots. `TestChosenColorInformationIdentity` covers current and departure
+facts, return, phasing, phase cycles, missing identity, invalid colors, current
+color layers, multicolor members, absent members and pure queries in clones.
+`TestChosenColorInformationSavedReferences` covers target, saved and host reads
+across return. `TestChosenColorInformationDeclarationsAndWaiting` covers
+invalid definitions, pure waiting declarations and clone choice isolation.
+RON contract evidence is in `TestRONChosenColorFilter*`.

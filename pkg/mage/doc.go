@@ -5,7 +5,12 @@
 // Copies choose again. Phasing and control changes keep the saved choice.
 // Return starts a new visit and a new choice. Clones keep separate storage.
 // RON accepts one ChooseAColor(AnyColor) operation in one source entry rule.
-// Chosen-color predicates and combined entry rules need separate adapters.
+// [PermanentsOfChosenColor] reads the exact reference visit's saved color.
+// Departure and phasing use saved information. Return cannot replace the visit.
+// Subjects use current colors and must be present and unphased.
+// RON accepts IsColor(TheChosenColor) in resolving permanent collections
+// with a source entry choice. Static and target predicates stay separate.
+// Combined entry rules need a separate adapter.
 //
 // [PreventDamageToSourceByRemovingCounters] removes one matching counter for
 // each damage point and prevents that point. Unpreventable damage still removes

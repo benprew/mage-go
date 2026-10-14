@@ -162,7 +162,7 @@ func inventoryShape(n Node) string {
 }
 
 func walkInventory(n Node, card, path, role, context string, compiled bool, entries map[string]*InventorySignature) {
-	if role == "color_list" && n.Kind == Symbol && (n.Name == "TheChosenColor" || n.Name == "TheChosenColors") {
+	if (role == "color_list" || role == "color") && n.Kind == Symbol && (n.Name == "TheChosenColor" || n.Name == "TheChosenColors") {
 		role = "color_choice_reference"
 	}
 	if role == "permanent_collection" && n.Kind != List {

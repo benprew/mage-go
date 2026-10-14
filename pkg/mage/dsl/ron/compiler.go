@@ -17,6 +17,8 @@ type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	resolving            bool
+	colorEntryChoice     bool
 	controlExchange      *controlExchangePlan
 	damageOutcome        *damageOutcomePlan
 	permanentPayment     *permanentPaymentPlan
@@ -392,6 +394,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err := validateColorEntryDeclaration(rules, permanent); err != nil {
 			return nil, err
 		}
+		ctx.colorEntryChoice = hasColorEntryChoice(rules)
 		ctx.opponentEntryChoice, err = compileOpponentEntryDeclaration(rules, permanent)
 		if err != nil {
 			return nil, err
@@ -918,6 +921,7 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 }
 
 func compileActions(n Node, ctx scope) (actionPlan, error) {
+	ctx.resolving = true
 	var plan actionPlan
 	if n.Name == "Targeted" {
 		if err := arity(n, 2); err != nil {
