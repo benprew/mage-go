@@ -1929,6 +1929,10 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type {
+			if dt.combatPair != nil && !dt.combatPair.matchesSubject(&evt, g, g.FindPermanent(dt.MatchEventID)) {
+				remaining = append(remaining, dt)
+				continue
+			}
 			if dt.matchIncarnation != uuid.Nil {
 				matched := observer.FindPermanent(evt.SourceID)
 				if dt.EventType == EvtAttacksUnblocked && (matched == nil || !matched.HasType(TypeCreature) || evt.SourceIncarnation != uuid.Nil && evt.SourceIncarnation != dt.matchIncarnation) {
@@ -1986,6 +1990,9 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				continue
 			}
 			var captures []Effect
+			if dt.combatPair != nil {
+				captures = dt.combatPair.captureDetectedEvent(&evt, g, dt.SourceID)
+			}
 			if dt.deathCapture != nil {
 				captures = dt.deathCapture.captureDetectedEvent(&evt, observer, dt.SourceID)
 				captures = append(captures, &eventPlayerCapture{binding: dt.deathCapture.controller, player: evt.PlayerID})

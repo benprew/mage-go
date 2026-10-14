@@ -1049,7 +1049,7 @@ func captureTriggerEventEffects(pt *pendingTrigger, obj *StackObject) {
 		}
 	}
 	if len(pt.eventCaptures) != 0 {
-		if pt.delayed != nil && pt.delayed.deathCapture != nil {
+		if pt.delayed != nil && (pt.delayed.deathCapture != nil || pt.delayed.combatPair != nil) {
 			for i, effect := range obj.Effects {
 				captured, ok := effect.(*capturedDelayedBody)
 				if !ok {

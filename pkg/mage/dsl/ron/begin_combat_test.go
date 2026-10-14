@@ -212,7 +212,7 @@ func TestRONBeginCombatConsumerBoundaries(t *testing.T) {
 		any                  bool
 	}{
 		{"ATQ", "Battering Ram", "", false},
-		{"FEM", "Goblin Flotilla", "unsupported delayed departure duration (UntilEndOfCombat)", true},
+		{"FEM", "Goblin Flotilla", "", true},
 		{"LEG", "Johan", "optional payment cost", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

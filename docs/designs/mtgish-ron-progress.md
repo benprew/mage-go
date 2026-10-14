@@ -6,40 +6,36 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-14): **872 accepted / 114 rejected names**
-(986 total), **2,240 compiled / 205 rejected records** (2,445 total).
-The latest slice is **HOST-TAP-NONMANA-ACTIVATION**. Battlefield Aura triggers
-accept the exact host/tap-symbol/nonmana conjunction and save the activated
-ability's stack identity. CounterAbility and ControllerOfAbility read that
-scoped identity. Source departure, return, control changes and phasing cannot
-transfer it to another activation. Factories, pending events, copies, delays
-and clones keep separate engine frames; delayed RON reads remain unsupported.
+Latest measured result (2026-10-14): **873 accepted / 113 rejected names**
+(986 total), **2,241 compiled / 204 rejected records** (2,445 total).
+The latest slice is **COMBAT-BOUNDED-PAIRED-DELAY**. Resolving permanent-source
+bodies accept the source block/becomes-blocked union with matching creature
+filters, ActionList and UntilEndOfCombat. Creation saves the watched visit and
+creator controller; detection saves each opponent before trigger placement.
+The subscription repeats through end-of-combat priority and then expires.
+First-strike grants keep their separate turn lifetime. Return and phasing
+cannot transfer saved identities. Pending bodies, factories, copies and clones
+keep separate frames. Host and single-direction RON forms remain unsupported.
 Estimated and actual full-card gains are **one name / one record**.
-Imprison gains complete-record RON gameplay evidence for Aura casting,
-activation payment/countering, source destruction, and native attack/block
-payment with combat removal and unblocking. Declaration, identity, mana
-classification, legality, failed payment, phasing, control and clones are covered.
+Goblin Flotilla gains complete-record native attack/block and payment evidence.
 
-The loader still rejects the collection atomically. Imprison's sole rejection
-is removed; every remaining diagnostic is unchanged. No accepted record
-regressed. Runtime cutover, Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Only Goblin Flotilla's
+rejection is removed; no remaining diagnostic changed or new rejection appeared.
+Runtime cutover, Go-card removal and DSL cleanup remain gated.
 
 ## Ranked next candidates
 
-Reassess these candidates with fresh loader and complete-record evidence under
-[the execution design](mtgish-ron-execution.md). Count reprints once.
+Reassess with fresh loader and complete-record evidence. Count reprints once.
 
-1. **Event-relative target exclusion — Farrel's Mantle.** Host capture is ready.
-   Inspect bound announcement/retarget legality and the complete payment body;
-   estimated one full-card unlock. Reassess shared multi-card work first.
-2. **Host activation filter — Imprison.** Combat capture/union and its complete
-   combat clause are ready. Inspect host, tap-self and nonmana activation filters;
-   estimated one full-card unlock. Search other filters for shared value.
-3. **Combat-bounded paired delayed trigger — Goblin Flotilla.** Pair event and
-   first-strike services exist. Creator control, exact visits, arming and combat
-   expiry need a bounded-subscription contract; estimated one full-card unlock.
-
-Recall's variable discard and saved-count return remain deferred.
+1. **Variable discard result and saved-count return — Recall.** One estimated
+   full-card unlock if both the effect result and count-based return are complete.
+   Use announced X, actual discard outcomes and resolving graveyard choices.
+2. **Delayed damage-event capture — Glyph of Life.** One estimated full-card
+   unlock. Reuse saved delayed frames, exact subjects and damage-event facts;
+   inspect source/recipient filters, replacements and actual damage before editing.
+3. **Granted targeted activation prerequisite — Equinox.** Zero immediate
+   unlocks until its destruction-prediction contract exists. Reassess shared
+   grant consumers before selecting this prerequisite.
 
 ## Dependencies and source blockers
 
@@ -8188,3 +8184,169 @@ Changed files: compiler `host_activation.go`, `ability_target.go`,
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete Go-set
 generation removal and unused DSL cleanup remain gated. This run stops after
 this one complete capability slice.
+
+## 2026-10-14 — COMBAT-BOUNDED-PAIRED-DELAY
+
+### Environment, candidates and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed before editing. Baseline
+`go run ./cmd/loadcards -json` exited 1 with collection rejection:
+2,240 compiled / 205 rejected records, 872 accepted / 114 rejected names.
+This was an unsupported collection, with no build or test failure.
+
+The latest entry's ranked candidates were evaluated from complete records:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- | --- |
+| Combat-bounded pair subscription | Goblin Flotilla | 1 name / 1 FEM record | Pair matching, opponent capture, optional mana and turn keyword grants already exist. Missing creator-controlled repeating subscription and actual combat-phase expiry. Shared saved-frame helper and expiry service support further delayed-event adapters. | Small engine lifecycle and compiler slice, with identity/timing/native combat tests. |
+| Variable discard result and saved-count return | Recall | 1 name / 1 LEG record if both operations are complete | Must use announced X, actual discard outcomes after replacements, and cardinality saved before resolving graveyard choices. This is a discard effect, not a mandatory cost. ThisSpell exile already exists. Enables later actual-discard result consumers. | Larger effect/result/choice contract and replacement tests. |
+| Targeted granted activation | Equinox | 0 for grant prerequisite alone; 1 after a separate prediction capability | Complete Aura record grants a tap activation targeting any spell, then checks WouldDestroyAPermanent for a land controlled by the activation controller. Targeted grant and destruction prediction are distinct gaps. Enables reusable grants but needs a new consumer audit for multi-card value. | Grant machinery plus a substantially larger prediction contract; unsuitable as one small complete card slice. |
+
+No compared candidate offered a credible immediate multi-card unlock. Select
+Goblin Flotilla: candidate #1 is dependency-ready, has one independently
+verified remaining blocker, and supplies the largest credible gain for the
+estimated effort. No Go card definition supplied requirements. Complete RON
+records and targeted vocabulary keys CreateTriggerUntil and the pair events
+were inspected. Local data/FEM.json Oracle text agrees with the unchanged RON.
+No source-data defect, environment failure or missing payment/layer contract
+was found.
+
+### Contract, exact context and reuse boundary
+
+Engine signature:
+`WhenCombatPairUntilEndOfCombat(subject PermanentRef, filter PermanentFilter,
+opponent *PermanentBinding, body ResolvingEffect) ResolvingEffect`.
+It saves the watched incarnation and creator controller at resolution, before
+future events. Each matching pair captures its opponent at detection, before
+APNAP placement. The body receives a separate saved resolution frame with that
+capture. Source control changes and ability removal do not end the subscription.
+Source departure and phasing prevent new matches; a phase cycle preserves the
+visit. Departure/return cannot transfer a watched or opposing identity.
+Pending bodies survive source departure and subscription expiry. A missing or
+phased opponent prevents its action but does not stop subsequent instructions.
+
+`TriggerSystem.ClearEndOfCombat()` removes only combat-bounded subscriptions
+when native EndCombat priority has finished, before effect expiry and combat
+reset. Cleanup also removes unused subscriptions. First-strike grants created
+by the body remain active until their own turn-end expiry. Copies and clones
+keep independent frames, resources and effect lifetimes.
+
+RON signature: `CreateTriggerUntil(Or([WhenACreatureBlocksACreature(
+SinglePermanent(ThisPermanent), filter), WhenACreatureBecomesBlockedByACreature(
+SinglePermanent(ThisPermanent), filter)]), ActionList([...]), UntilEndOfCombat)`.
+It accepts the two directions in either order, with identical operands and the
+existing combat-pair creature-filter grammar, in resolving permanent-source
+contexts. Trigger_ThatOtherCreature and the existing Trigger_ThatOtherPermanent
+alias read the delayed body's opponent. Bindings are fresh per factory.
+Host subjects, single-direction events, other durations, malformed operands,
+empty bodies, noncreature filters and incompatible/unbound aliases reject.
+The engine additionally supports typed watched targets, proved with a synthetic
+spell; this does not broaden the RON adapter.
+
+RON owns spelling, role checks and lexical bindings. The engine reuses
+filteredCombatPairPattern matching/capture, DelayedTrigger persistence, stack
+placement, exact reference services and capturedDelayedBody. The duplicated
+step/departure snapshot code was extracted to captureDelayedBody without a
+behavior change. A shared compileCombatPairEvent plan retains ordinary printed
+pair triggers and their text-layer path. Optional payment, mana rollback,
+keyword layers and native first-strike damage remain existing services.
+No parallel event system, global result, card-name branch or fallback was added.
+
+CR 603.7a–e supplies arming, duration, exact visits and creator control;
+CR 603.3b supplies APNAP placement; CR 511.2 supplies combat-phase expiry;
+CR 400.7 and 702.26 supply return identity and phasing. LKI cannot restore a
+subject for an action. No new replacement ordering or simultaneous-operation
+contract was needed; native combat uses the existing damage batches.
+
+### Failing-first evidence and card-to-test mapping
+
+Engine tests first failed to compile for the missing
+WhenCombatPairUntilEndOfCombat signature. Test fixture calls were corrected to
+GrantKeywordModification and explicit expected life totals. New complete-record
+RON tests then failed at FEM.lines.ron:34:631 with
+`unsupported delayed departure duration (UntilEndOfCombat)`.
+Implementation supplied the engine contract and scoped adapter. Further fixture
+corrections used ManaPool.Count, the loader's pattern argument and the native
+FuncEffect signature. Clone assertions reacquire the game's current permanents
+instead of reading stale pointers. No rule or assertion was removed to hide a gap.
+
+- **Goblin Flotilla → TestRONCombatPairDelayFlotilla.** Complete unchanged record
+  validates. Paid red mana, an affordable decline with mana retained, and an
+  unaffordable payment; resolution timing, source control/departure, trigger
+  copies, repeated matches and separate combat/turn lifetimes are checked.
+- **Goblin Flotilla → TestRONCombatPairDelayNative.** Native beginning of combat,
+  attack and block declarations, both pair directions, opponent first strike,
+  first-strike lethal damage before normal damage, and combat expiry.
+- **Goblin Flotilla → TestRONCombatPairDelayInstancesAndStrictLoad.** Complete raw
+  record loads with no fallback. Invalid aliases reject atomically while keeping
+  the registry. Opposing factory instances and pending opponents stay separate.
+  Clones expire independently. An additional combat chooses payment again.
+- **Goblin Flotilla → TestRONTextLandwalkRecords.** Complete-record islandwalk
+  and text revision evidence now includes Flotilla: 13 names / 23 records.
+- **Compiler → TestRONCombatPairDelayInvalid.** Invalid durations, host scope,
+  duplicate directions, incompatible aliases and empty bodies reject before use.
+- **Engine → TestCombatPairDelayIdentity, DurationAndEvents, Definition,
+  EndPriority, IndependentCaptures, CleanupAndMissing.** Saved creator control,
+  source/opponent return and phasing, phase cycles, ability removal, departure
+  after detection, opponent control, copies/clones, stale event incarnations,
+  multiple events/installations/opponents, continued actions, declaration
+  binding checks, spell-created target watch, end-combat priority, pending expiry,
+  cleanup and absent source all have explicit outcomes.
+- **Preservation → existing compiler suite.** Ordinary pair triggers, grouped
+  combat and host attack/block unions, delayed death/unblocked/step bodies, and
+  accepted collection records retain their tests. Prior Flotilla rejection
+  assertions now require acceptance; collection counts are updated.
+
+Estimated and actual gains are **1 unique name / 1 record**. Complete-card RON
+combat/payment coverage gains **Goblin Flotilla**. Synthetic engine evidence
+adds no inventory coverage. Compilation progress remains separate from gameplay
+coverage; the complete collection still has unsupported behavior.
+
+### Validation and loader evidence
+
+Required checks ran in fast-fail order. Focused TestRONCombatPairDelay and
+TestCombatPairDelay suites passed with -count=1. Preservation checks for the
+complete Flotilla record, combat-start consumers and landwalk also passed.
+`make build`, `go vet ./...`, `go test ./pkg/mage/... -short -count=1` and
+`make test` passed. The implement-engine skill's
+`go test ./... -short -count=1` passed. `make lint` passed with **0 issues**;
+`git diff --check` passed. Automatic formatting and all final diffs were reviewed;
+no unrelated change was introduced. The complete RON compiler suite and focused
+engine pair/death/unblocked/bounded-step preservation checks passed again after
+lint. There is no build, test, vet, lint or environment blocker for this slice.
+
+Final `go run ./cmd/loadcards -json` exited **1**, as required while unsupported
+records remain: **2,241 compiled / 204 rejected records**, **873 accepted / 113
+rejected names**. Comparison by card/file/line removes exactly Goblin Flotilla
+at FEM.lines.ron:34, adds no rejection and changes no remaining diagnostic.
+All previously accepted records remain accepted. Collection publication is
+still atomic and unavailable until remaining records are supported.
+
+Changed files: engine combat_pair_delay.go and tests, combat_pair_matching.go,
+composable_conditions.go, composable_events.go, trigger_system.go, game.go,
+turn.go; compiler combat_pair_delay.go and tests, combat_pair.go,
+departure_delay.go; updated begin_combat_test.go, host_combat_test.go,
+text_landwalk_test.go, inventory_test.go, definition_plan_test.go,
+numeric_consumers_test.go; doc.go, docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger.
+
+No RON source changed, so the vocabulary snapshot and source hashes stay valid.
+No Go definition, registry cutover, generator or broad DSL function was removed;
+the design's cutover/removal gates remain unmet. Stop after this one slice.
+
+### Ranked next candidates
+
+1. **Variable discard result and saved-count return — Recall.** One estimated
+   full-card unlock. Reassess shared discard-result consumers, then cover actual
+   outcomes, replacements, partial discard, X and resolving graveyard choices.
+2. **Delayed damage-event capture — Glyph of Life.** One estimated full-card
+   unlock. Its full record needs a saved recipient and filtered creature damage
+   source with actual amount in the created delayed body. Reuse the captured
+   frame/event fact path; inspect prevention, replacements and saved controller.
+3. **Granted targeted activation prerequisite — Equinox.** Zero immediate
+   unlocks while destruction prediction is missing. Audit other grant consumers
+   and select shared multi-card value before a single-name prediction service.
+
+Complete RON gameplay, runtime loading, Go-card deletion, obsolete generation
+removal and unused DSL cleanup remain incomplete.

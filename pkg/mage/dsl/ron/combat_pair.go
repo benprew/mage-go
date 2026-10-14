@@ -3,67 +3,20 @@ package ron
 import "github.com/benprew/mage-go/pkg/mage"
 
 func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error) {
-	union := event.Name == "Or"
-	if union {
-		if err := arity(event, 1); err != nil {
-			return nil, err
-		}
-		parts, err := list(event.Args[0])
-		if err != nil {
-			return nil, err
-		}
-		if len(parts) != 2 {
-			return nil, problem(event, "combat pair union requires both directions")
-		}
-		first, second := parts[0], parts[1]
+	if event.Name == "Or" && len(event.Args) == 1 && event.Args[0].Kind == List && len(event.Args[0].Args) == 2 {
+		first, second := event.Args[0].Args[0], event.Args[0].Args[1]
 		if first.Name == "WhenACreatureAttacks" || second.Name == "WhenACreatureAttacks" {
 			return compileHostCombatTrigger(event, body, ctx)
 		}
 		if first.Name == "WhenACreatureBlocksAnyNumberOfCreatures" || first.Name == "WhenACreatureBecomesBlockedByAnyNumberOfCreatures" || second.Name == "WhenACreatureBlocksAnyNumberOfCreatures" || second.Name == "WhenACreatureBecomesBlockedByAnyNumberOfCreatures" {
 			return compileGroupedCombatTrigger(event, body, ctx)
 		}
-		if first.Name == "WhenACreatureBecomesBlockedByACreature" {
-			first, second = second, first
-		}
-		if first.Name != "WhenACreatureBlocksACreature" || second.Name != "WhenACreatureBecomesBlockedByACreature" {
-			return nil, unsupported(event, "combat pair union")
-		}
-		if err := arity(first, 2); err != nil {
-			return nil, err
-		}
-		if err := arity(second, 2); err != nil {
-			return nil, err
-		}
-		if definitionKey(first.Args[0]) != definitionKey(second.Args[0]) || definitionKey(first.Args[1]) != definitionKey(second.Args[1]) {
-			return nil, problem(event, "combat pair union requires the same subject and filter")
-		}
-		event = first
 	}
-	if err := arity(event, 2); err != nil {
-		return nil, err
-	}
-	subject := event.Args[0]
-	if subject.Name != "SinglePermanent" {
-		return nil, unsupported(subject, "combat pair subject")
-	}
-	if err := arity(subject, 1); err != nil {
-		return nil, err
-	}
-	ref, err := compilePermanentRef(subject.Args[0], ctx)
+	pair, err := compileCombatPairEvent(event, ctx)
 	if err != nil {
 		return nil, err
 	}
-	if ref.kind != permanentSource && ref.kind != permanentHost {
-		return nil, unsupported(subject.Args[0], "combat pair source")
-	}
-	filter, err := compileCombatPairFilter(event.Args[1])
-	if err != nil {
-		return nil, err
-	}
-	name := "Trigger_ThatOtherCreature"
-	if !union && event.Name == "WhenACreatureBecomesBlockedByACreature" {
-		name = "Trigger_TheBlockingCreature"
-	}
+	name, ref, filter, union := pair.name, pair.subject, pair.filter, pair.union
 	ctx.combatOpponent = &permanentEventPlan{name: name}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
@@ -76,7 +29,7 @@ func compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error
 		subject := ref.build(instanceBindings{})
 		if union {
 			pattern = mage.BlocksOrBecomesBlockedByCreatureMatching(subject, filter).WithOpponent(opponent)
-		} else if event.Name == "WhenACreatureBlocksACreature" {
+		} else if pair.blocks {
 			pattern = mage.BlocksCreatureMatching(subject, filter).WithOpponent(opponent)
 		} else {
 			pattern = mage.BecomesBlockedByCreatureMatching(subject, filter).WithOpponent(opponent)
@@ -185,4 +138,74 @@ func compileCombatPairFilter(n Node) (mage.PermanentFilter, error) {
 		return mage.PermanentFilter{}, problem(n, "combat pair filter requires the creature type")
 	}
 	return mage.And(filters...), nil
+}
+
+type combatPairPlan struct {
+	subject permanentReferencePlan
+	filter  mage.PermanentFilter
+	union   bool
+	blocks  bool
+	name    string
+}
+
+func compileCombatPairEvent(event Node, ctx scope) (combatPairPlan, error) {
+	union := event.Name == "Or"
+	if union {
+		if err := arity(event, 1); err != nil {
+			return combatPairPlan{}, err
+		}
+		parts, err := list(event.Args[0])
+		if err != nil {
+			return combatPairPlan{}, err
+		}
+		if len(parts) != 2 {
+			return combatPairPlan{}, problem(event, "combat pair union requires both directions")
+		}
+		first, second := parts[0], parts[1]
+		if first.Name == "WhenACreatureBecomesBlockedByACreature" {
+			first, second = second, first
+		}
+		if first.Name != "WhenACreatureBlocksACreature" || second.Name != "WhenACreatureBecomesBlockedByACreature" {
+			return combatPairPlan{}, unsupported(event, "combat pair union")
+		}
+		if err := arity(first, 2); err != nil {
+			return combatPairPlan{}, err
+		}
+		if err := arity(second, 2); err != nil {
+			return combatPairPlan{}, err
+		}
+		if definitionKey(first.Args[0]) != definitionKey(second.Args[0]) || definitionKey(first.Args[1]) != definitionKey(second.Args[1]) {
+			return combatPairPlan{}, problem(event, "combat pair union requires the same subject and filter")
+		}
+		event = first
+	}
+	if event.Name != "WhenACreatureBlocksACreature" && event.Name != "WhenACreatureBecomesBlockedByACreature" {
+		return combatPairPlan{}, unsupported(event, "combat pair event")
+	}
+	if err := arity(event, 2); err != nil {
+		return combatPairPlan{}, err
+	}
+	subject := event.Args[0]
+	if subject.Name != "SinglePermanent" {
+		return combatPairPlan{}, unsupported(subject, "combat pair subject")
+	}
+	if err := arity(subject, 1); err != nil {
+		return combatPairPlan{}, err
+	}
+	ref, err := compilePermanentRef(subject.Args[0], ctx)
+	if err != nil {
+		return combatPairPlan{}, err
+	}
+	if ref.kind != permanentSource && ref.kind != permanentHost {
+		return combatPairPlan{}, unsupported(subject.Args[0], "combat pair source")
+	}
+	filter, err := compileCombatPairFilter(event.Args[1])
+	if err != nil {
+		return combatPairPlan{}, err
+	}
+	name := "Trigger_ThatOtherCreature"
+	if !union && event.Name == "WhenACreatureBecomesBlockedByACreature" {
+		name = "Trigger_TheBlockingCreature"
+	}
+	return combatPairPlan{subject: ref, filter: filter, union: union, blocks: event.Name == "WhenACreatureBlocksACreature", name: name}, nil
 }

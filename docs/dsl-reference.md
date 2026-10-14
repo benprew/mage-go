@@ -15278,3 +15278,30 @@ controller reads and independent factory instances. `Invalid` covers the
 supported declaration boundary. Existing artifact activation and ability-target
 suites preserve Artifact Possession, Haunting Wind, Powerleech, Rust, and Ayesha
 Tanaka. Complete collection loading and runtime cutover remain gated.
+
+### Combat-bounded delayed pair triggers
+
+`mage.WhenCombatPairUntilEndOfCombat(subject PermanentRef, filter PermanentFilter,
+opponent *PermanentBinding, body ResolvingEffect) ResolvingEffect` saves one
+battlefield visit when the creating effect resolves. Each subsequent block pair
+that passes the filter can trigger it. The controller is the creator's controller;
+control changes and ability removal on the watched permanent do not remove it.
+Departure and phasing prevent new matches. Each event saves its opponent visit
+before trigger placement. Pending bodies keep their facts after expiry or source
+departure. The body has the opponent binding in its saved resolution frame.
+
+The subscription expires after end-of-combat priority, separately from effects
+that its body creates. `Until(EndOfTurn, GrantKeywordModification(..., FirstStrike))`
+therefore continues after the combat subscription expires. Cleanup also removes
+an unused subscription. Copies and game clones retain independent frames.
+
+RON accepts `CreateTriggerUntil(Or([WhenACreatureBlocksACreature(
+SinglePermanent(ThisPermanent), filter), WhenACreatureBecomesBlockedByACreature(
+SinglePermanent(ThisPermanent), filter)]), ActionList([...]), UntilEndOfCombat)`
+in resolving permanent-source bodies. The directions can be reversed; both
+operands must have identical subjects and filters. The existing combat-pair
+creature filter adapter applies. `Trigger_ThatOtherCreature` and the existing
+`Trigger_ThatOtherPermanent` alias read only this body's saved opponent.
+Host subjects, single directions, other durations and noncreature filters remain
+unsupported. Goblin Flotilla uses this form with optional red mana payment and
+turn-scoped first strike. No Go card factory supplies its execution.

@@ -20071,3 +20071,49 @@ counters the saved activation on payment, destroys its exact source when unpaid,
 and preserves its separate native attack/block payment behavior. Blocking removal
 also makes an attacker blocked only by that creature unblocked; damage follows
 the shared combat service. RON delayed ability reads remain outside this adapter.
+
+## Combat-bounded delayed pair subscription
+
+`WhenCombatPairUntilEndOfCombat(PermanentRef, PermanentFilter,
+*PermanentBinding, ResolvingEffect)` installs a repeating delayed ability for
+one exact battlefield visit. It uses the shared filtered combat-pair matcher,
+`DelayedTrigger`, event capture, saved resolution frames and stack placement.
+The engine accepts typed subjects, including spell targets; the RON adapter
+supports the complete permanent-source union context described below.
+
+Creation happens at resolution (CR 603.7a). Prior events cannot trigger the new
+rule. Its stated duration permits repeated matches (CR 603.7b), with one pending
+body for each matching pair event. The creator's controller remains the delayed
+ability's controller (CR 603.7d–e), even after source control changes. Phasing
+prevents new matches but preserves the watched visit. Ability removal does not
+remove an independently created delayed ability. Departure and return cannot
+transfer the watch or its saved opponent to a new visit (CR 400.7, 603.7c).
+
+Detection saves the exact opposing creature before trigger placement. Each stack
+body receives its own copy of the creator's saved frame plus that event fact.
+Missing, returned or phased opponents cannot receive an action; other body
+instructions still run. Pending bodies survive source departure and subscription
+expiry. Clones and stack copies retain separate resolution frames. The existing
+LKI information services remain available for information reads; LKI cannot
+restore an absent subject for actions.
+
+`TriggerSystem.ClearEndOfCombat` runs after end-of-combat priority and before
+combat reset (CR 511.2). This removes only combat-bounded subscriptions.
+Turn-scoped grants created by their bodies keep their separate layer lifetimes.
+Cleanup removes unused subscriptions as well. No replacement ordering, cost
+rollback or simultaneous damage rule changed. Optional mana payment still uses
+the shared transaction service; first strike uses native combat damage timing.
+
+RON lowers the paired source events in `CreateTriggerUntil` with identical
+creature filters, `ActionList` and symbol `UntilEndOfCombat`. It keeps the
+opponent alias local to the delayed body and allocates fresh binding declarations
+per factory. Host subjects, single directions and other durations reject.
+
+Evidence: `TestCombatPairDelayIdentity`, `DurationAndEvents`, `Definition`,
+`EndPriority` and `IndependentCaptures` cover identity, phasing, saved controller,
+continued actions, copies, clones, pending expiry, event timing, declarations,
+spell-created watches and separate captures. `TestRONCombatPairDelayFlotilla`,
+`Native`, `Invalid` and `InstancesAndStrictLoad` compile the complete unchanged
+Goblin Flotilla record, exercise optional payment, native combat and extra
+combats, and prove factory isolation and atomic invalid collection rejection.
+`TestRONTextLandwalkRecords` supplies its complete-record islandwalk evidence.

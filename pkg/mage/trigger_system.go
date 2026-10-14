@@ -8,14 +8,15 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// DelayedTrigger represents a one-shot triggered ability that fires when
-// a specific event occurs (e.g., "destroy this creature at end of turn").
+// DelayedTrigger keeps a saved ability until its event or duration ends.
 type DelayedTrigger struct {
 	modes                []Mode
 	interveningCondition StateCondition
 	targets              []Target
 	eventPlayerBinding   *PlayerBinding
 	deathCapture         *creatureDiesPattern
+	combatPair           *filteredCombatPairPattern
+	expiresAtCombatEnd   bool
 	matchFlagFalse       bool
 	expiresAtCleanup     bool
 	sourceCaptured       bool
@@ -209,4 +210,15 @@ func cloneDelayedTrigger(dt *DelayedTrigger) *DelayedTrigger {
 	clone.Effects = append([]Effect(nil), dt.Effects...)
 	clone.targets = append([]Target(nil), dt.targets...)
 	return &clone
+}
+
+// ClearEndOfCombat removes subscriptions after combat priority ends.
+func (ts *TriggerSystem) ClearEndOfCombat() {
+	kept := ts.delayed[:0]
+	for _, dt := range ts.delayed {
+		if !dt.expiresAtCombatEnd {
+			kept = append(kept, dt)
+		}
+	}
+	ts.delayed = kept
 }

@@ -158,6 +158,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.PutTriggersOnStack()
 		g.runPriorityRound(false)
 		g.trackers.Turn.ResetCombatHistory()
+		g.triggers.ClearEndOfCombat()
 		g.effects.RemoveEndOfCombat()
 		g.effects.Apply(g)
 		g.combat.Reset()

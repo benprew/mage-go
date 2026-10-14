@@ -338,8 +338,8 @@ func TestRONHostCombatDelayedAndFactories(t *testing.T) {
 	}
 }
 
-func TestRONHostCombatCompleteRecordsStayRejected(t *testing.T) {
-	if _, err := Compile(repositoryRecord(t, "FEM", "Goblin Flotilla", "FEM.lines.ron")); err == nil || !strings.Contains(err.Error(), "delayed departure duration") {
+func TestRONHostCombatCompleteFlotillaRecord(t *testing.T) {
+	if _, err := Compile(repositoryRecord(t, "FEM", "Goblin Flotilla", "FEM.lines.ron")); err != nil {
 		t.Fatalf("Goblin Flotilla: %v", err)
 	}
 }

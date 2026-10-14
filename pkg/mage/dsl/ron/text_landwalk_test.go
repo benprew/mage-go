@@ -31,8 +31,6 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 	}
 	names := map[string]bool{}
 	count := 0
-	rejected := map[string]string{"Goblin Flotilla": "UntilEndOfCombat"}
-	blocked := 0
 	for _, file := range files {
 		data, err := os.ReadFile(file)
 		if err != nil {
@@ -48,14 +46,6 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 					continue
 				}
 				factory, err := Compile(record)
-				name := record.Fields["Name"].String
-				if blocker, ok := rejected[name]; ok {
-					if err == nil || !strings.Contains(err.Error(), blocker) {
-						t.Fatalf("%s: expected blocker %s, got %v", name, blocker, err)
-					}
-					blocked++
-					continue
-				}
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -99,8 +89,8 @@ func TestRONTextLandwalkRecords(t *testing.T) {
 			}
 		}
 	}
-	if len(names) != 12 || count != 22 || blocked != 1 {
-		t.Fatalf("coverage: %d names / %d records / %d blocked", len(names), count, blocked)
+	if len(names) != 13 || count != 23 {
+		t.Fatalf("coverage: %d names / %d records", len(names), count)
 	}
 }
 

@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [WhenCombatPairUntilEndOfCombat] saves one watched battlefield visit.
+// Each new block pair can trigger it until combat priority ends.
+// The creator keeps control. Source control changes and ability removal do not
+// stop the saved rule. Departure and phasing cannot supply a new pair; a phase
+// cycle keeps the visit. Detection saves each opponent before trigger placement.
+// Pending bodies survive expiry and source departure. Return cannot supply a
+// saved opponent. Copies and clones keep separate frames and effect lifetimes.
+// RON accepts CreateTriggerUntil with the source block/becomes-blocked union,
+// matching creature filters, ActionList and UntilEndOfCombat in resolving
+// permanent-source bodies. Trigger_ThatOtherCreature reads the saved opponent.
+// Host subjects, single directions and other durations need separate adapters.
+// First-strike grants use the existing layer service until turn end.
+//
 // [BindAbility] and [FromAbility] keep an activated ability's exact stack identity.
 // [ActivatedAbilityEvent] can require an attached source, a tap symbol and a
 // nonmana ability. [GameEvent.ActivatedAbilityID] is empty for mana activations.

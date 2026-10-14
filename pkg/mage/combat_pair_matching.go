@@ -51,7 +51,11 @@ func (p filteredCombatPairPattern) CheckTriggerCond(event *GameEvent, reader Gam
 		return false
 	}
 	subject, present := p.subject.resolvePermanent(&EffectContext{Game: g, SourceID: source, Controller: controller})
-	if !present || subject.PhasedOut || !subject.HasType(TypeCreature) || subject.ID() != event.SourceID {
+	return present && p.matchesSubject(event, g, subject)
+}
+
+func (p filteredCombatPairPattern) matchesSubject(event *GameEvent, reader *Game, subject *Permanent) bool {
+	if subject == nil || subject.PhasedOut || !subject.HasType(TypeCreature) || subject.ID() != event.SourceID {
 		return false
 	}
 	if event.SourceIncarnation != uuid.Nil && event.SourceIncarnation != subject.incarnationID {
@@ -59,7 +63,7 @@ func (p filteredCombatPairPattern) CheckTriggerCond(event *GameEvent, reader Gam
 	}
 	opponent := reader.FindPermanent(event.TargetID)
 	return opponent != nil && !opponent.PhasedOut && opponent.HasType(TypeCreature) &&
-		(event.TargetIncarnation == uuid.Nil || event.TargetIncarnation == opponent.incarnationID) && p.filter.Match(opponent, g)
+		(event.TargetIncarnation == uuid.Nil || event.TargetIncarnation == opponent.incarnationID) && p.filter.Match(opponent, reader)
 }
 
 func (p filteredCombatPairPattern) captureDetectedEvent(event *GameEvent, reader GameReader, _ uuid.UUID) []Effect {

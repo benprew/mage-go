@@ -186,7 +186,7 @@ func TestRONDefinitionPlanAcceptedCollection(t *testing.T) {
 			}
 		}
 	}
-	if accepted != 2240 || rejected != 205 {
+	if accepted != 2241 || rejected != 204 {
 		t.Fatalf("accepted=%d rejected=%d", accepted, rejected)
 	}
 }

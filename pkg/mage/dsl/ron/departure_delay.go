@@ -14,6 +14,9 @@ func compileDepartureDelay(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if duration == "UntilEndOfCombat" && n.Args[0].Name == "Or" {
+		return compileCombatPairDelay(n, ctx)
+	}
 	if duration != "UntilEndOfTurn" {
 		return nil, unsupported(n.Args[2], "delayed departure duration")
 	}
