@@ -1,5 +1,16 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [TargetHasSubtype] enforces a subtype in a permanent target declaration.
+// [TargetRequiredSubtypes] returns a separate list of those constraints.
+// An empty list supplies no proof about the domain. Opaque filters, negation
+// and disjunction do not supply a constraint. Other filters can narrow it.
+// Target choices, phasing and departure do not change the declaration.
+// Live subtype changes still affect selection and resolution legality.
+// Bindings, count wrappers, copies and clones keep the constraint.
+// RON lowers IsCreatureType(symbol) in permanent target filters, directly
+// or within And. This also retains the subtype for fixed and X target counts.
+// CanTargetOnly consumers and active ability identity need separate services.
+//
 // [SpellWithSingleTarget] counts one announced target occurrence on a spell.
 // Target legality, phasing and departure do not remove the occurrence.
 // Two occurrences of the same object are two targets. Changed target lists

@@ -217,6 +217,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 			n.problem = "supply one contextual spell filter"
 		}
 	}
+	for i, subtype := range TargetRequiredSubtypes(b.spec) {
+		n.children = append(n.children, definitionEdge{fmt.Sprintf("subtypes[%d]", i), targetSubtypeOption{subtype: subtype}})
+	}
 	if spec, ok := b.spec.(*PermanentTarget); ok {
 		for i, dependency := range spec.typeDependencies {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("typeDependencies[%d]", i), dependency})

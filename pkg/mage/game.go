@@ -1746,7 +1746,7 @@ func auraHostIsLegalForController(auraCard Card, host *Permanent, g *Game, contr
 			if tt.controllerOnly && host.ControllerID() != controller || tt.opponentOnly && host.ControllerID() == controller {
 				continue
 			}
-			if filtersMatch(tt.Filters, host, g) {
+			if tt.Filter().Match(host, g) {
 				return true
 			}
 		default:

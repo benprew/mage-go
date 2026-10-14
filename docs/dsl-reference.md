@@ -16300,3 +16300,55 @@ complete Lightning Bolt and Llanowar Elves RON definitions with synthetic
 predicate consumers. They establish the prerequisite, not complete Reflecting
 Mirror gameplay. Replacement order, payment amounts, LKI reads and simultaneous
 movement are unchanged by this query.
+
+## Declared permanent target subtype constraints
+
+`TargetHasSubtype(subtype string) PermanentTargetOption` enforces a subtype on
+one permanent target group. `TargetRequiredSubtypes(target Target) []string`
+returns a separate list of these constraints, in declaration order, without
+choices or game-state reads. Duplicate constraints appear once; distinct
+constraints apply together. An empty list means no declared proof is available.
+It does not mean the group can target every permanent. Existing opaque filters,
+negation and disjunction do not supply this proof.
+
+RON lowers `IsCreatureType(symbol)` in a permanent target filter to this typed
+option. Direct predicates and nested `And` keep the declaration alongside all
+other filters and controller restrictions. Fixed and X-count groups use the same
+service. `IsNonCreatureType`, `Or`, Aura enchant filters and other filter contexts
+retain their existing behavior and supply no new declaration proof. The subtype
+uses the existing RON name normalization. This does not add a creature card-type
+restriction to the existing subtype predicate.
+
+The engine enforces the constraint even if a caller replaces the group's public
+additional filter list. `PermanentTarget.Filter` includes the same constraints.
+Bindings and count/random wrappers retain them. Aura attachment checks use the
+same combined filter without applying targeting restrictions to an existing
+attachment. Spell text continuation checks retain the exact constraints. Invalid empty names and names
+with outer spaces fail definition validation, including through wrappers.
+Malformed RON arguments and incompatible action or spell-filter contexts reject
+before publication. Returned query lists and fresh factory instances do not
+share mutable result storage.
+
+Selection and resolution read current subtypes through the existing targeting
+service (CR 115.1a, 601.2c, 608.2b). A declaration persists when targets phase,
+leave, return or change subtype. It does not authorize actions on those objects:
+existing incarnation, phasing, protection and live filter checks still apply.
+Copies and clones keep the declarations and their own chosen target facts.
+Zero-count groups retain declarations even with no selected occurrences. A future
+whole-spell/ability domain consumer must inspect every applicable declaration;
+selected `StackObject.TargetSpecs` alone omit zero-choice groups.
+
+This is the bounded declaration prerequisite for Wall of Shadows. It does not
+implement `CanTargetOnly` or identify the active targeting ability. Those
+consumers remain unsupported, so the complete Wall record still rejects.
+
+Evidence: native `TestTargetSubtypeDomain` and
+`TestTargetSubtypeDomainDeclarations` and `TestTargetSubtypeDomainCallers`; RON `TestRONTargetSubtypeDomainGameplay`
+(Tunnel), `Activation` (Goblin Digging Team), `ResolutionRecheck`,
+`CountDeclarations`, `Conjunction`, `Records`, and `InvalidAndBoundaries`.
+`Records` checks complete accepted definitions for 15 unique names / 24 records;
+the complete Delusion, Reincarnation and Shadows records remain rejected.
+Existing Glyph gameplay tests also exercise the changed target lowering.
+No new full-card compilation or gameplay completion is claimed for rejected
+records. Payments, replacement order and simultaneous operations use the existing
+engine contracts.

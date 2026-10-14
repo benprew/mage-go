@@ -810,6 +810,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
+	requiredSubtypes             []string
 	fixedCreatureEnchant         bool
 	fixedLandEnchant             bool
 	typeDependencies             []targetTypeDependency
@@ -914,6 +915,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.ContainsFunc(t.requiredSubtypes, func(subtype string) bool { return !p.HasSubType(subtype) }) {
+			continue
+		}
 		if slices.Contains(excluded, capturedPermanent{p.ID(), p.incarnationID}) {
 			continue
 		}
@@ -980,7 +984,11 @@ func (t *PermanentTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen [
 
 // Filter returns a combined PermanentFilter that checks all filters.
 func (t *PermanentTarget) Filter() PermanentFilter {
-	return And(t.Filters...)
+	filters := slices.Clone(t.Filters)
+	for _, subtype := range t.requiredSubtypes {
+		filters = append(filters, HasSubType(subtype))
+	}
+	return And(filters...)
 }
 
 // TargetLand creates a target that selects a land on the battlefield.

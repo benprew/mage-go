@@ -8,18 +8,17 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-14): **903 accepted / 83 rejected names**
 (986 total), **2,282 compiled / 163 rejected records** (2,445 total).
-The latest slice is **SINGLE-TARGET-SPELL-PREDICATE**.
-RON contextual spell filters now accept the strict TargetsOnlyASingleTarget
-symbol. The engine counts announced target occurrences, including illegal or
-departed targets. Two occurrences of the same object count as two targets.
-Selection and resolution use the current list. Copies and clones keep separate
-lists; cast triggers keep detection results. This is a prerequisite for
-Reflecting Mirror, which still has announcement-X and retargeting blockers.
-Estimated and actual compilation gain: **zero names / zero records**.
-Complete Lightning Bolt and Llanowar Elves records supply integration evidence
-with synthetic predicate consumers. No complete Mirror gameplay is claimed.
-All earlier accepted records remain accepted. No RON source or vocabulary
-baseline changed. Validation and mappings are in the latest entry.
+The latest slice is **DECLARED-TARGET-SUBTYPE-CONSTRAINTS**.
+RON permanent targets retain enforced IsCreatureType constraints as immutable
+engine declaration data, directly or within And. Copies, clones and target
+count wrappers preserve them. Queries supply separate lists without game reads.
+Current subtype changes still affect selection and resolution legality.
+This prepares Wall of Shadows; CanTargetOnly consumers and active targeting
+ability identity remain separate prerequisites. No complete Shadows gameplay
+or new full-card completion is claimed. Fifteen accepted unique names across
+24 records use the changed lowering. Estimated and actual compilation gain:
+**zero names / zero records**. All earlier accepted records remain accepted.
+No RON source or vocabulary baseline changed. Validation and mappings follow.
 
 The loader still rejects the collection atomically. Runtime cutover, Go-card
 removal and DSL cleanup remain gated by complete support and native startup.
@@ -14551,3 +14550,199 @@ docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
 Commit title: `feat(ron): implement single-target spell predicate`.
 Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
 remain gated. This run stops after SINGLE-TARGET-SPELL-PREDICATE.
+
+## 2026-10-14 — DECLARED-TARGET-SUBTYPE-CONSTRAINTS
+
+### Baseline and candidate comparison
+
+Initial working tree: clean. Native Go 1.27.2 on darwin/arm64. Fresh
+`go test ./pkg/mage/dsl/ron -count=1` and `make build` passed before edits.
+Fresh `go run ./cmd/loadcards -json` exited 1 with **2,282 compiled / 163
+rejected records**, **903 accepted / 83 rejected unique names**. This was
+atomic collection rejection, not a compiler build failure. No environment or
+pre-existing test failure blocked selection.
+
+Read the execution design, top status block and latest ledger entry, engine API,
+selected target/compiler/caller code and complete records. Targeted vocabulary
+entries: IsCreatureType tuple/1 (109 occurrences in all roles), CanTargetOnly
+tuple/1 (2 occurrences), TargetPermanent, And and numbered target forms.
+The occurrence count was not used as an unlock estimate. CR 115.1a, 115.6,
+601.2c and 608.2b establish declarations, zero choices, announcement and live
+resolution legality; CR 303.4c separates attachment legality from targeting.
+
+| Candidate | Distinct affected names and estimated unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Ranked #1, declared target subtype constraints, selected | Wall of Shadows: **0 immediate names / records**, one eventual card after restriction consumers. Existing direct/conjunctive target consumers listed below supply multi-card integration. | The engine had opaque permanent filters, with no checked declaration-level subtype proof. Required subtype data now survives bindings, counts, copies and clones. Whole active spell/ability declarations, active targeting ability identity, Aura schemas and CanTargetOnly consumers remain. Prepares restrictions against Tunnel, Glyph spells, Dwarven Demolition Team, Ali Baba and Goblin Digging Team without battlefield inference. | Small to medium: enforced typed target option, declaration query/validation, strict lowering, compatibility callers and tests. |
+| Ranked #2, target-dependent announcement X | Reflecting Mirror: **0 standalone unlocks**, at most one eventual unique name / one DRK record. | Complete record also needs TargetsPlayer, retargeting and an audit of the mana-value equality versus twice-mana-value payment. The single-target occurrence prerequisite exists. | High: announcement dependency, payment locking/rollback and target legality. Too large for this adapter run. |
+| Ranked #3, source damage prevention | Kry Shield: **0 standalone unlocks**, at most one eventual unique name / one LEG record. | Complete record also needs AdjustPTX(Zero, PlusX, ManaValueOfPermanent(ActionPermanent)). Enables unlimited source prevention, with its own saved-visit and replacement contracts. | Medium prevention effort; a separate dynamic layer slice still follows. |
+
+Selected one bounded, dependency-ready part of ranked candidate #1: the subtype
+constraint in a permanent target declaration. Active ability identity and the
+CanTargetOnly consumers were not combined into this slice. No compared candidate
+had an immediate multi-card unlock. This prerequisite serves existing multiple
+spell and activation declarations while keeping unknown domains explicit.
+Estimated full-card gain: zero names / records. Actual gain matches that estimate.
+
+### Exact supported contract and engine reuse
+
+Engine signatures:
+
+- `TargetHasSubtype(subtype string) PermanentTargetOption`
+- `TargetRequiredSubtypes(target Target) []string`
+
+The option enforces one permanent subtype and saves that requirement in private
+immutable target data. Distinct requirements apply together; duplicates appear
+once in declaration order. Returned lists are independent. An empty result
+means no proof is supplied, not that the target domain is unrestricted.
+Opaque filters, negative predicates and disjunctions do not supply positive
+constraints. No domain is inferred from the battlefield or chosen UUIDs.
+
+RON lowers `IsCreatureType(symbol)` in permanent target filters, directly or
+within nested And, through existing name normalization to the typed option.
+Singular, fixed-count and X-count target groups use it. Existing controller,
+card-type, combat and other filters remain conjunctive restrictions. The
+predicate keeps its prior subtype semantics; no extra card-type test is added.
+IsNonCreatureType, Or, Aura enchant filters and other contexts keep their
+existing behavior. Malformed forms and incompatible spell-filter/action uses
+reject. CanTargetOnly still rejects in production contexts.
+
+Selection and resolution use current subtypes. The declaration stays fixed
+through subtype changes, target departure/return, phasing and source sacrifice.
+Existing visit and phasing checks control actions. Copies, clones, factory
+instances and count/random wrappers preserve the constraint without sharing
+mutable query results. Zero-choice groups retain their declaration. A future
+whole-domain consumer must read all applicable declarations; aligned selected
+TargetSpecs alone omit groups with zero chosen targets.
+
+Reused PermanentTargetOption, PermanentTarget, typed target declarations,
+HasSubType, current subtype layers, declaration validation, casting/activation
+transactions, incarnation checks, stack copying and Game.Clone. The public
+additional Filters list cannot override the required subtype; Filter includes
+both. A fresh caller audit of `.Filters` across the repository identified Aura
+host checks and spell text continuation. Attachment now uses the combined
+Filter without imposing targeting restrictions on existing attachment. Text
+continuation requires equal subtype constraints. No unrelated caller changed.
+
+RON owns spelling, tuple/symbol validation and lowering. The engine owns the
+constraint, enforcement, wrappers and declaration query. No new result binding,
+LKI store, payment pipeline, replacement service, card-name executor, runtime
+declaration panic, Go factory fallback or partial production registry was added.
+No Go card definitions or DSL exports were removed; the removal gate is closed.
+
+### Failing-first tests and card mappings
+
+Native and RON tests first failed to compile on the absent engine APIs. After
+engine implementation, native tests passed and RON tests failed with empty
+Tunnel and Glyph of Doom domains. Lowering made both groups pass. A later
+whole-caller audit added native assertions that failed on both Aura attachment
+and text continuation; the caller fixes made them pass. No assertion was weakened.
+
+- Native `TestTargetSubtypeDomain`: enforced selection, typed binding reads,
+  query-result isolation, public extra-filter replacement, combined Filter,
+  phasing/departure and absence of inferred constraints from opaque/player targets.
+- Native `TestTargetSubtypeDomainDeclarations`: invalid empty/space-padded names,
+  invalid declarations inside wrappers, deduplication, conjunctive matching,
+  plural/count/random wrapper reads.
+- Native `TestTargetSubtypeDomainCallers`: generic Aura attachment respects the
+  subtype, ignores shroud for existing attachment legality, reads live subtype
+  changes and rejects changed subtype constraints in text continuation.
+- RON `TestRONTargetSubtypeDomainGameplay`: complete Tunnel, illegal casting
+  retains mana/hand/stack, successful destruction, stack copy and game clone
+  declaration retention and gameplay isolation.
+- RON `TestRONTargetSubtypeDomainActivation`: complete Goblin Digging Team;
+  illegal activation retains source and tap state, successful source sacrifice,
+  retained declaration, present/returned/phased/phase-cycle resolution identity.
+- RON `TestRONTargetSubtypeDomainResolutionRecheck`: complete Tunnel retains
+  its Wall declaration but fails to destroy a target changed to Elf before resolution.
+- RON `TestRONTargetSubtypeDomainConjunction`: complete Glyph of Doom, Glyph of
+  Life and Glyph of Destruction keep their Wall constraints with other filters.
+  Existing `TestRONBlockHistoryRealActions`, `TestRONDelayedDamageCaptureGlyph`,
+  `TestRONBoundedDelayedStepGlyphOfDoom` and `TestRONEndCombatLayerGlyph` supply their gameplay
+  regressions in the fresh full suite, including delays, prevention and combat.
+- RON `TestRONTargetSubtypeDomainCountDeclarations`: synthetic complete RON
+  fixed zero/two and X-count declarations retain the Wall constraint and execute
+  the chosen target group. Zero choices do not erase the declaration.
+- RON `TestRONTargetSubtypeDomainInvalidAndBoundaries`: malformed arities and
+  non-symbol subtypes, invalid action/spell contexts, atomic invalid-collection
+  rejection, and no false domain proof from Or/negative/unrestricted filters.
+- RON `TestRONTargetSubtypeDomainRecords`: complete records, factory validation,
+  subtype normalization and separate query lists across fresh instances for all
+  accepted source consumers below; complete rejected records remain rejected.
+
+Fresh AST parsing/compilation and declaration inspection finds **15 accepted
+unique names / 24 records** using the changed lowering. The complete accepted
+consumer-to-test mapping is `TestRONTargetSubtypeDomainRecords` for each of:
+
+| Name | Records | Declared subtype | Additional new gameplay mapping |
+| --- | ---: | --- | --- |
+| Ali Baba | 1 | Wall | Declaration integration |
+| Dwarven Demolition Team | 5 | Wall | Declaration integration |
+| Dwarven Lieutenant | 1 | Dwarf | Declaration integration |
+| Elephant Graveyard | 1 | Elephant | Declaration integration |
+| Fungal Bloom | 1 | Fungus | Declaration integration |
+| Glyph of Destruction | 1 | Wall | Conjunction; existing EndCombatLayerGlyph |
+| Glyph of Doom | 1 | Wall | Conjunction; existing block/delay tests |
+| Glyph of Life | 1 | Wall | Conjunction; existing DelayedDamageCaptureGlyph |
+| Goblin Digging Team | 1 | Wall | Activation |
+| Goblin Wizard | 1 | Goblin | Declaration integration |
+| Icatian Lieutenant | 1 | Soldier | Declaration integration |
+| Mishra's Factory | 1 | Assembly-Worker | Normalized declaration integration |
+| Orcish Captain | 1 | Orc | Declaration integration |
+| Thrull Champion | 1 | Thrull | Declaration integration |
+| Tunnel | 6 | Wall | Gameplay; ResolutionRecheck |
+
+Glyph of Delusion and Glyph of Reincarnation also contain the same source
+predicate but remain rejected at their independent history/casting-window gaps.
+Wall of Shadows is the downstream consumer, still rejected at its CanTargetOnly
+spell restriction. None of these three gains full-card gameplay completion.
+King Suleiman's disjunction and Tower of Coireall's later blocker filter are not
+changed target declarations. Complete comparison/source records were inspected.
+The declaration integration mapping is separate from complete gameplay coverage.
+
+### Validation and actual gain
+
+Final required checks passed after the compatibility caller fixes:
+
+- `go test ./pkg/mage/dsl/ron -run '^TestRONTargetSubtypeDomain' -count=1`: pass.
+  `go test ./pkg/mage -run '^TestTargetSubtypeDomain' -count=1`: pass.
+- `make build`: pass. `go vet ./...`: pass, no diagnostics.
+- `go test ./pkg/mage/... -short -count=1`: pass. `make test`: pass.
+- `make lint`: pass, 0 issues. Reviewed the final formatting and diff; no
+  unrelated file or semantic change was made by lint. Focused tests repeated
+  after lint.
+- `git diff --check`: pass.
+- Final `go run ./cmd/loadcards -json`: expected exit **1**, **2,282 compiled /
+  163 rejected records; 903 accepted / 83 rejected names**. Final JSON equals
+  the fresh baseline, including every diagnostic. The collection still rejects
+  atomically. This is not a build or test failure.
+
+Actual compilation gain: **zero names / zero records**, as estimated. Fifteen
+accepted names now supply checked target subtype declarations. New gameplay
+assertions establish declaration retention and existing behavior for Tunnel and
+Goblin Digging Team; no newly complete rejected card is claimed. Build/test and
+environment blockers: none. No source defect was corrected. Mirror's source
+semantics still need a separate audit. No RON source, file hash, syntax or
+vocabulary snapshot changed.
+
+### Ranked next candidates
+
+1. Active targeting ability identity and complete applicable target declarations
+   for CanTargetOnly, Wall of Shadows. The direct/conjunctive permanent subtype
+   constraint now exists. Retain identity for announcement, resolution, pending
+   triggers and copies; do not identify an ability from source card alone.
+   Include zero-choice groups and explicit Aura/disjunctive schema handling
+   before using absence of subtype proof to classify a whole domain. Zero full
+   unlocks until the spell and ability restriction consumers are both complete.
+2. Target-dependent announcement X, Reflecting Mirror. Audit the mana-value
+   equality and compare the bounded announcement prerequisite with player-target
+   and retargeting contracts. At most one eventual name; other blockers remain.
+3. Source damage prevention, Kry Shield. Its dynamic toughness adapter remains a
+   separate dependency. Zero full unlocks from prevention alone.
+
+Changed files: pkg/mage/target_subtype_domain.go and its native test; target.go,
+composable_target.go, game.go, text_spell_continuation.go and doc.go;
+pkg/mage/dsl/ron/temporary_animation.go and target_subtype_domain_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Commit title: `feat(ron): implement declared target subtype constraints`.
+Complete collection gameplay, runtime loading, Go-card deletion and DSL cleanup
+remain gated. This run stops after DECLARED-TARGET-SUBTYPE-CONSTRAINTS.
