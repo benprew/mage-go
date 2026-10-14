@@ -117,7 +117,7 @@ func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sou
 			abilities = append(abilities, variants...)
 			for _, variant := range variants {
 				for _, p := range variant.Productions {
-					for _, c := range expandProductionColor(p.Color) {
+					for _, c := range manaProductionColors(p) {
 						if !seen[c] {
 							seen[c] = true
 							colors = append(colors, c)
@@ -582,17 +582,15 @@ func (ms *ManaSystem) addManaProductionsWithTypes(g *Game, productions []ManaPro
 				for range prod.Amount {
 					unit := prod
 					unit.Amount = 1
-					unit.Color = p.ChooseManaColor("add mana")
+					unit.Color = chooseManaProductionColor(p, prod, Colorless)
+					unit.colorOptions = [AnyColor]bool{}
 					unit.AnyCombination = false
 					concrete = append(concrete, unit)
 				}
 				continue
 			}
-			if preferredColor != Colorless {
-				prod.Color = preferredColor
-			} else {
-				prod.Color = p.ChooseManaColor("add mana")
-			}
+			prod.Color = chooseManaProductionColor(p, prod, preferredColor)
+			prod.colorOptions = [AnyColor]bool{}
 		}
 		concrete = append(concrete, prod)
 	}

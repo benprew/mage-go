@@ -17,6 +17,7 @@ type ManaProduction struct {
 	Amount         int
 	AnyCombination bool
 	Restriction    ManaRestriction
+	colorOptions   [AnyColor]bool
 }
 
 // ManaProductionFunc derives a mana ability's current production from its
@@ -46,6 +47,7 @@ type ManaAbility struct {
 	Productions        []ManaProduction
 	dynamicProductions ManaProductionFunc
 	conditional        *conditionalManaPlan
+	permanentColors    *permanentManaColorsPlan
 	postProduction     []Effect
 }
 
@@ -158,6 +160,9 @@ func NewDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Ef
 }
 
 func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if ma.permanentColors != nil {
+		return ma.permanentColors.productions(g, sourceID)
+	}
 	if ma.conditional != nil {
 		return ma.conditional.productions(g, sourceID)
 	}

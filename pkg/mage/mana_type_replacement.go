@@ -121,6 +121,7 @@ func (r *tappedManaTypeReplacement) transformed(a *manaProductionAction) *manaPr
 		if !r.exact || result.productions[i].Color == r.from {
 			result.productions[i].Color = r.to
 			result.productions[i].AnyCombination = false
+			result.productions[i].colorOptions = [AnyColor]bool{}
 		}
 	}
 	return &result
@@ -236,6 +237,11 @@ func (g *Game) effectManaProduction(ctx *EffectContext, productions []ManaProduc
 }
 func (g *Game) manaProductionVariants(action *manaProductionAction) []manaReplacementOutcome {
 	expand := false
+	for _, p := range action.productions {
+		if p.colorOptions != ([AnyColor]bool{}) {
+			expand = true
+		}
+	}
 	for _, list := range [][]ReplacementEffect{g.effects.replacements, g.effects.cycleReplacements} {
 		for _, replacement := range list {
 			r, ok := replacement.(*tappedManaTypeReplacement)
@@ -295,44 +301,7 @@ func manaPlanningVariants(g *Game, perm *Permanent, ability manaSourceAbility) [
 // ManaTypesAbilityCouldProduce includes all possible replacement orders.
 // It does not check payment, tap the source, or make a color choice.
 func (g *Game) ManaTypesAbilityCouldProduce(ability Ability, sourceID uuid.UUID) []Color {
-	productions := abilityManaProductions(UnwrapAbility(ability), g, sourceID)
-	if len(productions) == 0 {
-		return nil
-	}
-	p := g.FindPermanent(sourceID)
-	if p == nil {
-		return nil
-	}
-	tapping := false
-	switch a := UnwrapAbility(ability).(type) {
-	case *ManaAbility:
-		tapping = true
-	case *SimpleActivatedAbility:
-		for _, cost := range a.costs {
-			if _, ok := cost.(*tap); ok {
-				tapping = true
-			}
-		}
-	}
-	if !tapping {
-		var types []Color
-		for _, prod := range productions {
-			for _, color := range expandProductionColor(prod.Color) {
-				types = appendProducedColor(types, color)
-			}
-		}
-		return types
-	}
-	outcomes := g.manaProductionVariants(&manaProductionAction{source: sourceID, incarnation: p.incarnationID, player: p.ControllerID(), tapping: true, productions: productions})
-	var types []Color
-	for _, outcome := range outcomes {
-		for _, prod := range outcome.productions {
-			for _, color := range expandProductionColor(prod.Color) {
-				types = appendProducedColor(types, color)
-			}
-		}
-	}
-	return types
+	return newManaCouldProduceQuery(g).types(ability, sourceID)
 }
 
 // WaitingManaReplacementPermanentSources reads exact subjects of active mana rules.

@@ -2852,10 +2852,10 @@ func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredCol
 
 // productionsMatchColor reports whether the production list can satisfy a
 // request for preferredColor. A specific-color production matches its color;
-// an AnyColor production matches every color request.
+// A color choice matches only its available options.
 func productionsMatchColor(productions []ManaProduction, preferredColor Color) bool {
 	for _, p := range productions {
-		if p.Color == preferredColor || p.Color == AnyColor {
+		if slices.Contains(manaProductionColors(p), preferredColor) {
 			return true
 		}
 	}

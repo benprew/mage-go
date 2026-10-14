@@ -19671,3 +19671,67 @@ Evidence: native `TestSpellCopyColorsIdentity`, `Retarget`, `Definition` and
 records have gameplay evidence. CR 707.2, 707.9b–d and 707.10–10c establish the
 copy contract; CR 400.7, 608.2b, 612.1–3 and 702.16 establish identity, resolution,
 text changes and protection interactions.
+
+## Dynamic mana colors from opponent permanents
+
+`NewManaAbilityOfColorsOpponentPermanentsCouldProduce(filter PermanentFilter)
+*ManaAbility` declares one tap-symbol mana ability. Its source's current
+controller defines the opponent. Present, unphased matching permanents supply
+colors from their current abilities and layers. Colorless production does not
+supply an option. The amount is always one, including when the queried ability
+produces several colors or several mana. An empty option set remains a mana
+ability: activation pays the tap cost, produces nothing and uses no stack
+(CR 605.2–3).
+
+`Game.ManaTypesAbilityCouldProduce` retains its signature. A query-local least
+fixed point starts with no colors and adds defined production outcomes. This
+supports cycles with a concrete source, including colors that become defined
+through repeated dependencies and type replacements. Cycles without a concrete
+source stay empty (CR 106.7). It ignores costs, tapped status and activation
+restrictions. Fixed unconditional production, live resolution amounts,
+conditional mana declarations and dynamic production callbacks supply outcomes.
+A direct saved-number amount from `RemoveAnyCountersCost` supplies a hypothetical
+positive removal without testing payment. Other absent saved numbers supply
+zero; the query does not use an active resolution's saved number for that read.
+No query pays, chooses, uses RNG, runs a rider, moves objects or changes bindings.
+Unknown legacy effect bodies do not supply invented outcomes.
+
+The engine keeps finite color options in value metadata. Solver enumeration,
+source preservation, preferred-color matching, manual production and stale-plan
+rechecks use those options. Concrete selection clears option metadata before the
+shared replacement event. Query replacements include all possible orders;
+actual production uses the existing affected-player choice and recheck service.
+A manual choice receives only legal color names through `Player.ChooseString`;
+a missing or invalid answer uses the first legal color. One legal option needs
+no choice. Queried spending restrictions and riders are not copied, while a
+replacement on the producing source still applies to its one mana. Copies and
+clones read independent source/controller facts and game state. Departed land
+LKI supplies no option; a returned land is a new current subject.
+
+RON supports exactly one ordinary
+`Activated(TapPermanent(ThisPermanent), ActionList([AddMana(
+AnyManaColorAPermanentCouldProduce(And([characteristicFilter,
+ControlledByAPlayer(Opponent)])))]))` declaration. The conjunction has exactly
+one characteristic filter and one opponent clause, in either order. The
+characteristic filter uses the existing pure conditional-mana characteristic
+adapter, including its conjunctions and disjunctions. Targets, scoped players,
+other costs, modifiers, multiple actions, repetition, resolving spells, entry
+and replacement contexts reject before factory publication. RON owns syntax;
+the engine owns colors, recursion, identity, choice and mana mechanics.
+
+Evidence: native `TestManaColorsCouldProduceOptions`, `Recursion`,
+`RecursiveReplacements`, `PaymentAndReplacements`, `CounterPaymentResult`,
+`Lifecycle`, `StalePlan`, `DynamicAndRiders`, and `AbsentAbility`; RON
+`TestRONDynamicManaColorsFellwarStone`, `Invalid`, `ChoiceAndRegistry`,
+`OpponentRecords`, and `CopyArtifact`. The sole unchanged DRK Fellwar Stone
+record has complete-card cast, activation and automatic-payment evidence.
+Five complete FEM storage-land records supply direct counter-payment query
+interactions. City of Brass, Dwarven Ruins, Mishra's Workshop and Urza's Tower
+supply existing complete-record production and replacement interactions.
+Rainbow Vale and City of Shadows still reject for unrelated source-reference
+and exile-payment gaps; native fixtures cover dynamic output and riders.
+
+Local `data/DRK.json` Oracle text agrees with the unchanged RON record.
+[Wizards' Commander Masters release notes](https://magic.wizards.com/en/news/feature/commander-masters-release-notes)
+confirm the cost, amount, color, replacement-order and restriction contracts.
+No RON source correction is needed.

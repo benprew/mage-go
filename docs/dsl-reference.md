@@ -15026,3 +15026,31 @@ Healing Salve modes and Fireball X/target costs. Native tests cover copy identit
 allocation transfer, color-definition omission, snapshot provenance, phasing,
 returned targets and invalid definitions. See `TestRONSpellCopyColors*` and
 `TestSpellCopyColors*`. Rules: CR 400.7, 608.2b, 612.1–3, 702.16 and 707.2/9/10.
+
+## RON dynamic mana color options
+
+Use one source tap activation:
+
+```ron
+Activated(TapPermanent(ThisPermanent), ActionList([
+    AddMana(AnyManaColorAPermanentCouldProduce(And([
+        IsCardtype(Land), ControlledByAPlayer(Opponent)
+    ])))
+]))
+```
+
+This is Fellwar Stone's complete production declaration. The outer conjunction
+requires one characteristic filter and one `ControlledByAPlayer(Opponent)`
+clause, in either order. The characteristic filter uses the existing pure mana
+condition filter adapter. Other players, tap subjects, payment forms, modifiers,
+extra actions, repetitions and resolving-action contexts remain unsupported.
+
+The engine constructor is
+`NewManaAbilityOfColorsOpponentPermanentsCouldProduce(filter)`. It adds one mana
+of one available color. Costs and tapped status do not limit queried production;
+current layers, phasing and all applicable replacement orders do. Recursive
+queries use a local fixed point. An undefined cycle supplies no color. Empty
+options still allow activation and payment of the tap cost, producing no mana
+without using the stack. Manual choices and automatic payment share legal
+options. Copies and clones query their own game and current controller.
+Queried mana restrictions and riders do not follow the color onto the new mana.

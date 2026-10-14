@@ -29,7 +29,7 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 			AbilityIndex:    abilityIndex,
 			ManaCost:        manaCost,
 			Productions:     append([]ManaProduction(nil), productions...),
-			Interchangeable: manaAbility.dynamicProductions == nil && len(manaAbility.postProduction) == 0 && manaCost.IsZero(),
+			Interchangeable: manaAbility.dynamicProductions == nil && manaAbility.permanentColors == nil && len(manaAbility.postProduction) == 0 && manaCost.IsZero(),
 		}, true
 	}
 

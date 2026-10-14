@@ -314,7 +314,7 @@ func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
 					available[production.Color] += amount
 					continue
 				}
-				for color := White; color <= Green; color++ {
+				for _, color := range manaProductionColors(production) {
 					available[color] += amount
 				}
 			}
@@ -678,7 +678,7 @@ func concreteManaProductionsForDemand(productions []ManaProduction, caps manaCho
 				continue
 			}
 			if !production.AnyCombination {
-				for color := White; color <= Green; color++ {
+				for _, color := range manaProductionColors(production) {
 					next := cloneConcreteManaProductionState(current)
 					next.amounts[color] += amount
 					next.productions = appendConcreteProduction(next.productions, color, amount, production.Restriction)
@@ -690,7 +690,7 @@ func concreteManaProductionsForDemand(productions []ManaProduction, caps manaCho
 			for _, color := range manaPoolColors {
 				remainingCaps[color] = max(remainingCaps[color]-current.amounts[color], 0)
 			}
-			for _, allocation := range boundedManaAllocations(amount, []Color{White, Blue, Black, Red, Green}, remainingCaps) {
+			for _, allocation := range boundedManaAllocations(amount, manaProductionColors(production), remainingCaps) {
 				next := cloneConcreteManaProductionState(current)
 				for color := White; color <= Green; color++ {
 					if allocation[color] == 0 {

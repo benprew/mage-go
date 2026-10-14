@@ -6,32 +6,32 @@ Use this document for current status and next work.
 
 ## Current status
 
-Latest measured result (2026-10-13): **866 accepted / 120 rejected names**
-(986 total), **2,234 compiled / 211 rejected records** (2,445 total).
-The latest slice is **COLOR-MODIFIED-SPELL-COPY**. Resolving spell bodies now
-copy scoped instant-or-sorcery targets with fixed copiable colors before optional
-retargeting. Estimated and actual full-card gains are **one name / six records**.
-All six unchanged Fork records now compile and have complete-card gameplay tests.
-Native and RON tests cover identity, protection, targets, X, modes, allocations,
-payment timing, copy-of-copy, color definitions, text revision and clone isolation.
-Complete-card gameplay coverage gains Fork; accepted records stay accepted.
+Latest measured result (2026-10-13): **867 accepted / 119 rejected names**
+(986 total), **2,235 compiled / 210 rejected records** (2,445 total).
+The latest slice is **DYNAMIC-MANA-COLOR-OPTIONS**. One source tap activation
+adds one color that matching opponent permanents could produce. Pure queries
+include current layers, hypothetical costs, recursive dependencies and all mana
+replacement orders. Manual choices and automatic payment share finite options.
+Estimated and actual full-card gains are **one name / one record**: Fellwar Stone.
+Complete-card gameplay coverage gains Fellwar Stone; accepted records stay accepted.
+Native and RON tests cover cycles, phasing, control, return, copies, clones,
+replacements, storage-land results, legal choices, stale plans and rollback.
 
-The loader still rejects the collection atomically. Exile counters, dynamic
-mana production and other unsupported records remain gaps. Runtime cutover,
-Go-card removal and DSL cleanup stay gated.
+The loader still rejects the collection atomically. Exile counters and other
+unsupported records remain gaps. Runtime cutover, Go-card removal and DSL cleanup
+stay gated.
 
 ## Ranked next candidates
 
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Dynamic mana-production options — Fellwar Stone.** Assess complete
-   production choices, replacements and pure solver metadata; estimated one
-   name/one record if the shared production query can support the whole shape.
-2. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; storage
-   precedes predicates/removal, spell exile and all-graveyard batch returns.
-3. **Counter-bound duration — Cyclopean Tomb.** Estimated zero immediate gains;
-   exact source/subject visits and counter-removal history remain prerequisites.
+1. **Exile-card counters — All Hallow's Eve.** Zero immediate gains; exact
+   visit storage precedes predicates/removal, spell exile and graveyard batches.
+2. **Counter-bound duration — Cyclopean Tomb.** Estimated zero immediate gains;
+   each-subject visits and source counter history precede delayed removal.
+3. **Player-chosen trigger targets — The Abyss.** Assess the two-argument target
+   shape and a saved event-player chooser; estimated one name/one record.
 
 ## Dependencies and source blockers
 
@@ -6490,3 +6490,163 @@ Go card definitions and generators remain until their cutover gates pass.
    contracts before complete-card execution.
 
 This run stops after fixed-color instant and sorcery copying.
+
+## 2026-10-13 — DYNAMIC-MANA-COLOR-OPTIONS (complete)
+
+### Baseline, comparison and selection
+
+The working tree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. Baseline loader exit 1 was expected
+atomic collection rejection: **2,234 compiled / 211 rejected records** and
+**866 accepted / 120 rejected names**, out of 2,445 records and 986 names.
+There was no build, test or environment failure. Complete RON records and nested
+forms were inspected; reprints count once in the following comparison.
+
+| Candidate | Distinct affected names | Estimated complete-card unlocks | Other blockers and downstream benefit | Full implementation/test effort |
+| --- | --- | --- | --- | --- |
+| Dynamic mana color options | Fellwar Stone | 1 name / 1 record | No other card rule blocked. Shared finite-option metadata and replacement-aware recursive queries also serve native opponent-land rules, storage-land queries and future mana-color declarations. | Moderate; one run, with solver, choice, recursion and replacement tests. |
+| Exact exile-card counters | All Hallow's Eve | 0 | Storage precedes counter predicates/removal; spell exile with counters and simultaneous all-graveyard entry still block the complete card. Enables those dependent source-zone actions. | Moderate for storage; larger for the complete card. |
+| Counter-bound duration | Cyclopean Tomb | 0 | Each-subject binding, source counter placement/removal history and delayed removal remain. Enables counter-conditioned layers and the Tomb's linked cleanup. | Moderate for duration; larger for the complete card. |
+
+Ranked candidate #1 was dependency-ready and gained a complete card. Existing
+mana abilities, type replacements, solver choice enumeration and payment
+transactions supplied its dependencies. Neither alternative could unlock a
+complete card in this run without several additional capabilities. The source
+query is a reusable engine prerequisite; RON owns only spelling and validation.
+Before editing, acceptance cases were fixed: empty production, one legal color
+choice, costs/tapped status ignored in queried lands, current layers/control,
+phasing, recursion, replacement order, clones/copies and failed payment rollback.
+
+### Established contract and reuse boundary
+
+Engine API:
+`NewManaAbilityOfColorsOpponentPermanentsCouldProduce(filter PermanentFilter)
+*ManaAbility`. It creates one tap-symbol ability adding one available color.
+`Game.ManaTypesAbilityCouldProduce(Ability, uuid.UUID) []Color` retains its
+signature. Present, unphased matching subjects supply current production; no
+land LKI or copied spending restriction/rider supplies output. The source's live
+controller defines its opponent. Empty options still allow tap activation and
+produce nothing without a stack object. Return is a new current subject.
+
+Query-local maps use source incarnation and ability ID. A least fixed point
+starts with no colors, includes all shared mana replacement orders, and permits
+colors to become defined through recursive dependencies. Unanchored cycles stay
+empty. No global result slot or game mutation is used. Direct saved counter-cost
+amounts use a hypothetical positive payment without testing affordability or
+reading the active resolution's number bindings. Fixed, conditional and dynamic
+production use shared engine declarations. Unknown legacy bodies supply no
+invented output. Queries do not choose, pay, use RNG or execute riders.
+
+Finite color options use comparable value metadata. Existing solver enumeration,
+preservation, preferred-color matching, manual production and planned-source
+rechecks use the same options. Selection becomes concrete before the shared
+replacement event. Actual choices/order and payment rollback remain in existing
+services. Copies and clones query their own source/controller and game state.
+No engine state, zone, replacement or payment service is duplicated.
+
+RON signature/context:
+`Activated(TapPermanent(ThisPermanent), ActionList([AddMana(
+AnyManaColorAPermanentCouldProduce(And([characteristicFilter,
+ControlledByAPlayer(Opponent)])))]))`. Exactly one characteristic filter and one
+opponent clause are required, in either order. The existing pure mana-condition
+characteristic adapter supplies nested conjunctions/disjunctions. Targets, other
+players/costs/tap subjects, modifiers, repetitions, multiple actions, spells,
+entry and replacement bodies reject before publication. Factories create fresh
+abilities and immutable query plans. Inventory descendants now have permanent
+filter roles. Existing production callers and raw metadata APIs remain.
+
+Local `data/DRK.json` Oracle text matches the unchanged Fellwar Stone record.
+CR 106.7 and 605.2–3 establish queries and immediate mana activation; existing
+mana replacement contracts supply CR 106.6/106.12b and 616 ordering.
+[Wizards' Commander Masters release notes](https://magic.wizards.com/en/news/feature/commander-masters-release-notes)
+confirm one mana, tapped/cost checks, all replacement orders and restriction/rider
+exclusion. No source defect was found; RON and vocabulary hashes are unchanged.
+Rainbow Vale still rejects at its source reference in a delayed control body;
+City of Shadows still rejects at its exile cost. These are separate compiler
+gaps. Their complete records were inspected; native fixtures cover relevant
+dynamic output/riders without claiming complete-card coverage for either.
+
+### Failing-first evidence and card-to-test mapping
+
+Initial native tests failed at the missing constructor; complete Fellwar Stone
+RON tests failed at its unsupported production tuple. After that implementation,
+a direct counter-payment regression failed with no color. A recursive replacement
+regression failed with only green instead of green and white, proving that a
+path guard was insufficient. The fixed point passed it. An absent-ability
+regression exposed a nil-query panic, then passed after the query guard.
+Test-only phase/event API mistakes were corrected; a clone assertion now reads
+the live permanent because the engine uses copy-on-write. Assertions were not
+weakened. Two unsupported source-card fixtures were replaced by explicit native
+contracts; their collection diagnostics remain unchanged.
+
+- **Fellwar Stone (DRK) → TestRONDynamicManaColorsFellwarStone.** Complete casting
+  pays two generic mana, resolves to the battlefield and activates immediately.
+  Empty output, blue/green automatic payments, unavailable colors, two-color
+  overpayment, source/land phasing, ability removal, clone isolation and failed
+  casting payment preserve the required resources and identities.
+- **Fellwar Stone → ChoiceAndRegistry / CopyArtifact.** Strict complete-record
+  loading, fresh factory identities, pure repeated queries, offered legal colors,
+  invalid-answer fallback, one mana from multicolor output and a complete RON
+  Copy Artifact using its own controller's opponent. Inventory roles are tested.
+- **Fellwar Stone → OpponentRecords.** Complete City of Brass, Dwarven Ruins,
+  Bottomless Vault, Sand Silos, Dwarven Hold, Hollow Trees, Icatian Store,
+  Mishra's Workshop and Urza's Tower records supply replacement-aware queries;
+  source costs/restrictions do not pay or carry over. These are interactions,
+  not nine new complete-card coverage claims.
+- **TestRONDynamicManaColorsInvalid.** Malformed syntax, arity, unknown types,
+  empty/duplicate filters, unbound players, illegal costs and contexts reject
+  atomically while retaining the prior registry.
+- **TestManaColorsCouldProduceOptions / Recursion / RecursiveReplacements /
+  PaymentAndReplacements / CounterPaymentResult / Lifecycle / StalePlan /
+  DynamicAndRiders / AbsentAbility.** Exact solver options, undefined/anchored
+  cycles, recursive replacement closure, all competing orders, unpayable queried
+  costs, isolated counter results, live layers/control, phased/departed/returned
+  subjects, clones, stale plans, dynamic amounts, riders and safe absent reads.
+
+Compilation and gameplay remain separate. Estimated and actual gains match:
+one unique name and one record. Complete-card gameplay gains Fellwar Stone.
+Four collection assertions now use the measured **2,235 / 210** counts.
+No Go definition, generator or DSL export was removed; removal gates remain unmet.
+
+### Validation, files and next work
+
+Passed in fast-fail order:
+`go test ./pkg/mage/dsl/ron -run TestRONDynamicManaColors -count=1`, native
+`go test ./pkg/mage -run TestManaColorsCouldProduce -count=1`, `make build`,
+`go vet ./...`, `go test ./pkg/mage/... -short -count=1`, `make test`, and
+skill-required `go test ./... -short -count=1`. Existing mana replacement tests
+also passed with the native slice tests. Initial lint found one new test variable
+shadowing Go's built-in `copy`; it was renamed. Focused RON tests, build and vet
+passed again. Final `make lint` passed with **0 issues**; automatic fixes added
+no unrelated changes. `git diff --check` passed. There is no remaining validation
+or environment blocker.
+
+Final `go run ./cmd/loadcards -json` exited 1 for expected atomic collection
+rejection: **2,235 compiled / 210 rejected records**, **867 accepted / 119 rejected
+names**. Exact baseline comparison removes only Fellwar Stone's diagnostic and
+adds or changes no remaining diagnostic. All previously accepted records stay
+accepted. Estimated and actual gains are one unique name/one record; the separate
+complete-card gameplay gain is Fellwar Stone.
+
+Changed engine files: new `mana_colors_could_produce.go` and its native tests;
+`mana_ability.go`, `mana_type_replacement.go`, `mana_system.go`, `mana_solver.go`,
+`costed_mana.go`, `game.go` and `doc.go`. Changed RON files: new
+`dynamic_mana_colors.go` and its tests; `activation_timing.go`, `inventory.go`,
+`definition_plan_test.go`, `inventory_test.go` and `numeric_consumers_test.go`.
+API/rules docs and this ledger are updated. RON data and vocabulary hashes,
+production Go definitions, generators and DSL exports remain unchanged.
+
+### Ranked next candidates
+
+1. **Exact exile-card counters — All Hallow's Eve.** Zero immediate gains;
+   establish exact exile visits and counter storage before predicates/removal,
+   spell exile with counters and simultaneous all-graveyard entry.
+2. **Counter-bound duration — Cyclopean Tomb.** Zero immediate gains; complete
+   each-subject visits, source counter history and delayed removal dependencies.
+3. **Player-chosen trigger targets — The Abyss.** Its complete record requires
+   the two-argument `TargetPermanentOfPlayersChoice(filter, Trigger_ThatPlayer)`
+   shape and an event-player chooser. Assess typed binding/timing; estimated one
+   unique name/one record, with existing ordinary upkeep and destroy services.
+
+This run stops after dynamic mana color options. Runtime cutover, complete
+collection gameplay, Go-card deletion and DSL cleanup remain gated.

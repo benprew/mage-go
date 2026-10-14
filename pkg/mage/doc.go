@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [NewManaAbilityOfColorsOpponentPermanentsCouldProduce] adds one mana of
+// an available color. The source's current controller defines the opponent.
+// Queries use present abilities and layers. They ignore costs and tapped status.
+// A local fixed point includes recursive production and all replacement orders.
+// Cycles without a defined color produce nothing. Phased subjects supply no color.
+// Queries do not pay, choose or run riders. Source restrictions are not copied.
+// Manual choices and automatic payment use the same finite color options.
+// Empty options still permit the tap activation and produce no mana.
+// Copies and clones read their own source, controller and battlefield.
+// RON accepts one source tap activation with AddMana and
+// AnyManaColorAPermanentCouldProduce over a characteristic filter and Opponent.
+// Other costs, bodies, players and resolving-action contexts need adapters.
+//
 // [CopyInstantOrSorceryWithColors] sets colors within the spell copy process.
 // The copy uses these colors before it can choose new legal targets.
 // Empty lists make colorless copies. Color definitions are omitted.

@@ -1250,6 +1250,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "spell_filter"
 		}
 	case "mana_production":
+		if n.Name == "AnyManaColorAPermanentCouldProduce" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "mana_production"
 		}
