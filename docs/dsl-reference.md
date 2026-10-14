@@ -15183,3 +15183,30 @@ The unchanged Transmutation record has complete gameplay evidence in
 `TestRONPTSwitchTransmutation`, `LayersCopiesAndClones`, `StrictLoad` and
 `SignedPowerAndStateActions`. `SourceAndHost`, `TriggerAndDelay` and `Invalid`
 cover shared contexts and declaration rejection.
+
+
+## RON host combat event capture
+
+Battlefield `TriggerA` accepts `WhenACreatureAttacks`, `WhenACreatureBlocks`
+and `WhenACreatureAttacksAndIsntBlocked` with `SinglePermanent(HostPermanent)`
+on an Aura. It also accepts `Or([WhenACreatureAttacks(SinglePermanent(HostPermanent)),
+WhenACreatureBlocks(SinglePermanent(HostPermanent))])`, in either order.
+The union builds one ability with one body and one event binding.
+
+`Trigger_ThatCreature` and `Trigger_ThatPermanent` refer to the same host visit
+saved at detection. Each factory creates its own `PermanentBinding`. Existing
+resolving actions, branches, targets and future-step bodies can use that binding.
+Reattachment does not redirect it. Shared exact references reject returned visits
+and phased subjects; pending bodies survive source departure and control changes.
+
+The engine exports `AttachedAttacks(*PermanentBinding) EventPattern`,
+`AttachedBlocks(*PermanentBinding) EventPattern`,
+`AttachedAttacksUnblocked(*PermanentBinding) EventPattern`, and
+`AttachedAttacksOrBlocks(*PermanentBinding) EventPattern`.
+They use native combat declaration events, attachment checks, saved references
+and pending-trigger frames. Block events use the singular declaration flag.
+
+Host becomes-blocked events, defending-player capture, arbitrary unions,
+activation filters and event-relative target exclusion remain unsupported.
+Farrel's Mantle still rejects its target exclusion. Imprison still rejects its
+activation filter. Event-clause gameplay tests do not prove either complete card.

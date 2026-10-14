@@ -19970,3 +19970,29 @@ phasing, exact visits and duration expiry. `LayersCopiesAndClones`, `StrictLoad`
 `SourceAndHost`, `SignedPowerAndStateActions`, `TriggerAndDelay` and `Invalid`
 cover independent bindings, atomic loading, attachment LKI, source departure,
 returned visits, state-based actions, delayed frames and invalid declarations.
+
+
+## Attached creature combat events
+
+`AttachedAttacks`, `AttachedBlocks`, `AttachedAttacksUnblocked` and
+`AttachedAttacksOrBlocks` require one named permanent binding. They detect a
+present, unphased creature attached to the source at the event visit. Explicit
+stale event incarnations reject. The attack/block union is one typed pattern;
+`GenericTriggered.CheckEventType` asks that pattern which events it accepts.
+Other existing triggers retain their event-type checks.
+
+CR 508.1 and 509.3a/g supply attack, singular block and unblocked timing.
+A multi-creature block gives one singular block trigger. Pending triggers keep
+CR 603.3a controller facts and the exact captured host. Reattachment cannot
+redirect the body. CR 400.7 return identity and existing phasing/reference rules
+control later actions. Delayed-step capture, stack copies and game clones retain
+separate frames. No damage, cost, replacement or simultaneous-move service changes.
+
+Evidence: `TestHostCombatDefinition`, `TestHostCombatEventIdentity`,
+`TestRONHostCombatIdentity`, `TestRONHostCombatNative`,
+`TestRONHostCombatUnionBlocksOnce`, `TestRONHostCombatImprisonClause`,
+`TestRONHostCombatDelayedAndFactories` and `TestRONHostCombatInvalid`.
+The Imprison test runs its unchanged complete combat clause, including optional
+payment and removal from combat. Its activation clause remains unsupported.
+Farrel's Mantle's native test uses its original event and a synthetic observable
+body; its complete target/payment rule remains unsupported.

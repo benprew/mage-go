@@ -35,7 +35,7 @@ type TriggeredAbility interface {
 type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
 
 // GenericTriggered is a universal triggered ability that replaces bespoke trigger
-// types. It listens for a single EventType and applies an optional condition
+// types. A typed event pattern can match more than one event type. It uses a condition
 // function to decide whether to fire. All existing trigger constructors
 // (AttacksTrigger, BeginningOfUpkeepTrigger, etc.) are thin wrappers that
 // create a GenericTriggered with the appropriate condition.
@@ -207,6 +207,9 @@ func (t *GenericTriggered) Modes() []Mode { return t.modes }
 func (t *GenericTriggered) IsModal() bool { return len(t.modes) > 0 }
 
 func (t *GenericTriggered) CheckEventType(et EventType) bool {
+	if pattern, ok := t.eventDefinition.(interface{ matchesEventType(EventType) bool }); ok {
+		return pattern.matchesEventType(et)
+	}
 	return et == t.eventType
 }
 

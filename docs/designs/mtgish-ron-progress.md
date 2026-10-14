@@ -8,18 +8,20 @@ Use this document for current status and next work.
 
 Latest measured result (2026-10-13): **870 accepted / 116 rejected names**
 (986 total), **2,238 compiled / 207 rejected records** (2,445 total).
-The latest slice is **TEMPORARY-PT-SWITCH**. Singular temporary layer lists
-accept the SwitchPT symbol and use the existing unary layer 7d engine service.
-Definition validation now checks the subject without unused numeric operands.
-Current base values, bonuses and counters apply before switching; two switches
-cancel. Exact visits, target legality, phasing, delayed frames and cleanup use
-shared services. Factories, copies and clones retain separate targets/lifetimes.
-Estimated and actual full-card gains are **one name / one record**.
-Transmutation has complete unchanged-record RON gameplay evidence. Compilation
-coverage and complete-card gameplay each gain this one card.
+The latest slice is **HOST-COMBAT-EVENT-CAPTURE**. Aura-host attack, block,
+unblocked-attack and attack/block union events save one exact host visit.
+Trigger_ThatCreature and Trigger_ThatPermanent read that saved visit. The union
+is one ability; a multi-attacker block gives one trigger. Pending bodies keep
+controller facts across reattachment and source departure/control changes.
+Factories, copies, clones and future-step bodies keep separate event frames.
+Estimated and actual full-card gains are **zero names / zero records**.
+Farrel's Mantle and Imprison gain event-clause evidence; Imprison's unchanged
+complete combat clause also passes payment and native combat gameplay tests.
+Complete-card gameplay coverage does not increase.
 
-The loader still rejects the collection atomically. Only Transmutation's
-SwitchPT diagnostic disappears; every remaining diagnostic is unchanged.
+The loader still rejects the collection atomically. Only Farrel's Mantle's
+diagnostic changes, from the host event to event-relative target exclusion.
+All other diagnostics and accepted-record status remain unchanged.
 Runtime cutover, Go-card removal and DSL cleanup stay gated.
 
 ## Ranked next candidates
@@ -27,17 +29,17 @@ Runtime cutover, Go-card removal and DSL cleanup stay gated.
 Reassess these candidates with fresh loader and complete-record evidence under
 [the execution design](mtgish-ron-execution.md). Count reprints once.
 
-1. **Variable discard and saved discard-count return — Recall.** Self-exile is
-   ready. The result prerequisite gives zero immediate gains; the later return
-   can unlock one name / one record. Keep actual outcomes and lexical lifetimes
-   separate from graveyard choice/return.
-2. **Host combat event capture — Farrel's Mantle and Imprison.** Shared event
-   support can serve two names; the event prerequisite alone unlocks neither.
-   Inspect event aliases, target exclusion, activation filters and grouped events
-   before choosing a complete supported shape.
-3. **End-of-combat bounded paired triggers — Goblin Flotilla.** One name / one
-   record may follow a shared duration adapter. Check exact source/opponent
-   visits, arming during combat and expiry before expanding the existing service.
+1. **Event-relative target exclusion — Farrel's Mantle.** Host capture is ready.
+   Inspect bound announcement/retarget legality and the complete payment body;
+   estimated one full-card unlock. Reassess shared multi-card work first.
+2. **Host activation filter — Imprison.** Combat capture/union and its complete
+   combat clause are ready. Inspect host, tap-self and nonmana activation filters;
+   estimated one full-card unlock. Search other filters for shared value.
+3. **Combat-bounded paired delayed trigger — Goblin Flotilla.** Pair event and
+   first-strike services exist. Creator control, exact visits, arming and combat
+   expiry need a bounded-subscription contract; estimated one full-card unlock.
+
+Recall's variable discard and saved-count return remain deferred.
 
 ## Dependencies and source blockers
 
@@ -7648,3 +7650,165 @@ No RON source, broad DSL export, runtime startup or Go card definition changed.
 Complete collection gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation removal and unused DSL cleanup remain gated. This run stops
 after this completed slice.
+
+
+## 2026-10-13 — HOST-COMBAT-EVENT-CAPTURE
+
+### Candidate comparison and selection
+
+The worktree was clean. Fresh `make build` and
+`go test ./pkg/mage/dsl/ron -count=1` passed. The baseline loader exited 1
+with 2,238 compiled / 207 rejected records and 870 accepted / 116 rejected names.
+This was collection rejection, not a build or test failure.
+Complete records were read for Recall (LEG:213), Farrel's Mantle (FEM:28),
+Imprison (LEG:129), and Goblin Flotilla (FEM:34). Each occurs once.
+Targeted vocabulary queries checked the discard result, return action, combat
+host events, temporary trigger creation and combat duration; the full JSON
+snapshot was not dumped. Reprints count once in the following comparison.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- | --- |
+| Variable discard result | Recall | 0 now; 1 after saved-count return | Variable discard and a lexical actual-count producer precede graveyard choice/return. Self-exile is ready. This prerequisite serves one collection name. | Medium: amount/result adapter, exact discard outcomes, replacements and branch/copy lifetimes; return remains separate. |
+| Host combat event capture | Farrel's Mantle; Imprison | 0 now; 2 after their other adapters | Farrel's Mantle needs event-relative target exclusion. Imprison needs the host/tap/nonmana activation filter. Shared exact host capture supplies both event aliases and Imprison's attack/block union. | Small to medium: four typed patterns, one compiler adapter, event scopes and native timing/identity tests. |
+| Combat-bounded paired delayed trigger | Goblin Flotilla | 1 estimated after the complete adapter | Begin-combat payment, pair filters/capture and first-strike layers exist. Temporary registration must preserve creator controller, exact source visit, repeated pair events, combat-phase expiry and independent turn-long grants. Existing pair events and layer durations alone do not establish that delayed-trigger contract. | Medium to high: bounded event subscription lifecycle plus lowering and native extra-combat/expiry tests. |
+
+Candidate 1 was evaluated first. Its zero-gain prerequisite only serves Recall.
+The shared two-card host prerequisite wins over that single-card procedure and
+the larger bounded-subscription work. Selection, reuse boundary and acceptance
+cases were stated before editing. This run implements only host combat capture.
+
+### Established signatures, contexts and reuse
+
+- Engine signatures are `AttachedAttacks(*PermanentBinding) EventPattern`,
+  `AttachedBlocks(*PermanentBinding) EventPattern`,
+  `AttachedAttacksUnblocked(*PermanentBinding) EventPattern`, and
+  `AttachedAttacksOrBlocks(*PermanentBinding) EventPattern`.
+  Each requires a valid named binding. The union is one ability, not two grants.
+- RON accepts battlefield `TriggerA` with `WhenACreatureAttacks`,
+  `WhenACreatureBlocks`, or `WhenACreatureAttacksAndIsntBlocked`, each with
+  `SinglePermanent(HostPermanent)` on an Aura. `Or` accepts exactly one attack
+  and one block event over that same host, in either order. Other event names,
+  subjects, unions and unbound reads reject during declaration compilation.
+- `scope.hostCombat` identifies one lexical producer. Both
+  `Trigger_ThatCreature` and `Trigger_ThatPermanent` lower to its saved host.
+  Each factory creates its own `PermanentBinding` in the existing instance
+  binding map. Inner delayed unblocked/death event producers retain priority
+  over the corresponding outer aliases. Future-step bodies retain outer facts.
+- RON owns shape, arity, context checks and aliases. The engine owns event
+  membership and capture. `GenericTriggered.CheckEventType` consults an optional
+  private typed-pattern matcher; existing patterns keep their single-type checks.
+  No broad event-list API or current caller was removed.
+- Reused services: native attacker/blocker/unblocked events, the singular-block
+  flag, `EventSourceIsAttachedTo`, `eventPermanentCapture`, `capturedPermanent`,
+  `From`, pending-trigger controller snapshots, resolution maps, optional mana
+  payment, combat removal, temporary layers, future-step capture, stack copies
+  and game clones. No parallel scheduler, zone service or payment system exists.
+- Detection requires a present unphased creature at the attached event visit;
+  explicit stale incarnations reject. Resolution cannot follow a returned host.
+  Reattachment cannot change pending subjects. Phasing uses existing exact
+  reference behavior; phase cycles retain the visit. Source departure and control
+  changes do not erase pending bodies or change their original controller.
+  Missing subjects do not stop independent later actions. No new LKI property,
+  replacement-order or simultaneous-zone contract was needed.
+
+CR 508.1, 509.3a/g and 603.2/603.3a establish declaration timing, singular block
+cardinality and pending control. CR 400.7 and existing phasing/reference services
+supply visit identity. Complete source records were retained unchanged. No data
+defect was corrected. No RON source or vocabulary hash changed, so no vocabulary
+refresh was required. Complete card loading and removal gates remain unmet.
+No Go card definition, generator, production registry or broad DSL function changed.
+
+### Failing-first evidence and card-to-test mapping
+
+`TestRONHostCombatIdentity` and the native tests first failed on
+`unsupported source combat reference (HostPermanent)`; the union also rejected.
+`TestHostCombatDefinition` first failed to compile because all four new API
+signatures were absent. Initial test fixtures used BasePlayer decision helpers
+and an incorrect keyword/helper name; these were fixed before the recorded
+expected failures. The valid declaration tests then exposed a missing binding
+producer declaration, which was fixed in the engine pattern.
+An added unsupported host-becomes-blocked rejection test failed because the
+adapter's default could select the unblocked pattern; explicit event validation
+fixed it. Later fixture corrections used explicit trigger resolution after
+`ExecuteAttackers`, current game pointers after cloning, and the actual remaining
+loader diagnostics. No assertion was removed to bypass unsupported behavior.
+
+- **Farrel's Mantle and Imprison → `TestRONHostCombatNative`.** Complete records
+  are read; their original event nodes run in native attacker/blocker steps with
+  a synthetic observable body. Blocked/unblocked cases establish timing. This
+  is event-clause coverage, not complete-card gameplay evidence.
+- **Imprison → `TestRONHostCombatImprisonClause`.** Its unchanged entire combat
+  trigger clause, including optional `{1}` payment, paid tap/removal and unpaid
+  Aura destruction. Native attack and block cases cover paid, declined and
+  unaffordable paths; declining retains mana. The separate activation clause
+  is deliberately absent from this test fixture and remains a loader error.
+- **Shared capture → `TestRONHostCombatIdentity`.** All three singular events;
+  distinct host/other subjects, reattachment, source departure/control changes,
+  returned hosts, phasing and phase cycles, inactive sources, ability removal,
+  independent pending events, stack copying and clone isolation. Life assertions
+  establish saved trigger controller and independent later-action execution.
+- **Union → `TestRONHostCombatUnionBlocksOnce`.** One enchanted blocker blocks
+  two attackers through native declaration; exactly one life gain results.
+- **Frames/factories → `TestRONHostCombatDelayedAndFactories`.** Two factory
+  instances capture different hosts, arm separate next-end-step bodies, retain
+  visits after reattachment and execute independently in a clone. An absent
+  host does not redirect its delayed action.
+- **Strict boundaries → `TestRONHostCombatInvalid` and
+  `TestRONHostCombatCompleteRecordsStayRejected`.** Unsupported event, malformed
+  reference, incompatible subject/player, mismatched and duplicate unions,
+  escaped event binding, plus complete unchanged records' remaining blockers.
+- **Native declaration/identity → `TestHostCombatDefinition` and
+  `TestHostCombatEventIdentity`.** Valid producer dominance and invalid binding
+  declarations; both union event kinds, unrelated-event exclusion, stale visits,
+  phased subjects and suppression of extra per-attacker block events.
+
+Estimated and actual full-card gains are both **0 names / 0 records**.
+Complete-card gameplay gains are also zero. Two distinct cards gain prerequisite
+and event-clause evidence; Imprison gains its full combat-clause evidence.
+These partial mappings do not satisfy the full-card completion gate.
+
+### Validation and loader evidence
+
+All required checks passed:
+
+1. `go test ./pkg/mage/dsl/ron -run TestRONHostCombat -count=1` and
+   `go test ./pkg/mage -run TestHostCombat -count=1` passed.
+2. `make build` and `go vet ./...` passed.
+3. `go test ./pkg/mage/... -short -count=1` and `make test` passed.
+4. `make lint` passed with **0 issues**; `git diff --check` passed.
+   Automatic output and the resulting diff were reviewed. No unrelated
+   edits or semantic automatic rewrites occurred.
+   Both focused packages passed again after lint.
+5. Final `go run ./cmd/loadcards -json` exited **1**, retaining atomic rejection:
+   **2,238 compiled / 207 rejected records**, **870 accepted / 116 rejected names**.
+   Keyed baseline comparison found no added or removed rejected records and
+   exactly one diagnostic change: Farrel's Mantle moves from
+   `FEM.lines.ron:28:254: unsupported source combat reference (HostPermanent)` to
+   `FEM.lines.ron:28:308: unsupported target exclusion (Trigger_ThatCreature)`.
+   Every other diagnostic is unchanged. No accepted record regressed.
+   No environment, build, test or lint blocker remains.
+
+
+Changed files: engine `composable_host_combat.go`, `triggered.go`,
+`host_combat_test.go` and `doc.go`; compiler `host_combat.go`, `source_attack.go`,
+`combat_pair.go`, `compiler.go`, `permanent_scope.go` and `host_combat_test.go`;
+API/rules documentation `docs/dsl-reference.md` and
+`docs/engine-rules-contracts.md`; status/evidence in this ledger.
+
+### Ranked next candidates
+
+1. **Event-relative target exclusion — Farrel's Mantle.** Inspect binding-aware
+   announcement/retarget legality and the remaining complete payment body.
+   Estimated one full-card unlock after this separate adapter; reassess fresh
+   shared multi-card candidates before choosing single-card work.
+2. **Host activation filter — Imprison.** Inspect the existing activation event
+   capture/counter service with host identity, tap-self cost and nonmana filters.
+   Estimated one full-card unlock; search other activation filters for shared value.
+3. **Combat-bounded paired delayed trigger — Goblin Flotilla.** Estimated one
+   full-card unlock after creator control, exact visit, arming and phase-expiry
+   contracts are established. Do not replace the delayed trigger with a live
+   source grant without proving equivalent control/lifetime semantics.
+
+Recall's variable discard result remains deferred. Complete collection gameplay,
+runtime loading, Go-card deletion, obsolete Go-set generation removal and unused
+DSL cleanup remain gated. This run stops after this one completed prerequisite.

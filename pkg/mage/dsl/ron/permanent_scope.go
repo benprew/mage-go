@@ -49,6 +49,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 		if ctx.unblockedCreature != nil && n.Name == ctx.unblockedCreature.name {
 			return permanentReferencePlan{kind: permanentEvent, event: ctx.unblockedCreature}, nil
 		}
+		if ctx.hostCombat != nil && n.Name == "Trigger_ThatCreature" {
+			return permanentReferencePlan{kind: permanentEvent, event: ctx.hostCombat}, nil
+		}
 		if target := ctx.permanentGroups[n.Name]; target != nil {
 			return permanentReferencePlan{kind: permanentTarget, target: target}, nil
 		}
@@ -93,6 +96,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			}
 			if ctx.hostDeath != nil {
 				return permanentReferencePlan{kind: permanentDeath, death: ctx.hostDeath}, nil
+			}
+			if ctx.hostCombat != nil {
+				return permanentReferencePlan{kind: permanentEvent, event: ctx.hostCombat}, nil
 			}
 			if ctx.counterStateSource || ctx.sourceTapped || ctx.sourceLeaves {
 				return permanentReferencePlan{kind: permanentSource}, nil

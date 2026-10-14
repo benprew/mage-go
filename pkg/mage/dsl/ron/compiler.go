@@ -100,6 +100,7 @@ type scope struct {
 	stepEvent         *stepEventPlan
 	permanentEvent    *permanentEventPlan
 	unblockedCreature *permanentEventPlan
+	hostCombat        *permanentEventPlan
 	landManaEvent     *landManaEventPlan
 	graveyardEvent    *graveyardEventPlan
 	landEntryEvent    *landEntryEventPlan

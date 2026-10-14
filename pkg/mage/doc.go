@@ -1,5 +1,18 @@
 // Package mage implements the two-player Magic: The Gathering rules engine in Go.
 //
+// [AttachedAttacks], [AttachedBlocks], [AttachedAttacksUnblocked] and
+// [AttachedAttacksOrBlocks] save the attached creature at event detection.
+// The union is one ability that matches either declaration event.
+// A block declaration supplies one trigger even with multiple attackers.
+// Reattachment cannot change a saved visit. Pending bodies retain their source
+// controller. Departure, return and phasing use the shared reference services.
+// Copies, clones and delayed bodies keep separate event frames.
+// RON accepts these host events in battlefield TriggerA bodies. The attack/block
+// Or list requires both events with SinglePermanent(HostPermanent).
+// Trigger_ThatCreature and Trigger_ThatPermanent read the same saved host.
+// Defending-player capture, host becomes-blocked events, activation filters and
+// event-relative target exclusion need separate adapters.
+//
 // [SwitchPowerToughness] uses layer 7d after base values, bonuses and counters.
 // It has one subject and no numeric operands. Definition checks keep the subject
 // requirement. [Until] saves the exact visit at resolution. Later bonuses still

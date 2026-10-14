@@ -19,6 +19,9 @@ func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, err
 	if err != nil {
 		return nil, err
 	}
+	if ref.kind == permanentHost {
+		return compileHostCombatTrigger(event, body, ctx)
+	}
 	if ref.kind != permanentSource {
 		return nil, unsupported(subject.Args[0], "source combat reference")
 	}
